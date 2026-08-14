@@ -499,27 +499,30 @@ def stage_ord(stage):
 # spine rows of this table move.
 DRAFTED, APPROVED, FOUNDED = "Drafted", "Approved", "Founded"
 
-# IF rows — the boundary inventory (rung 1). `Stability` is the tier's ONE maturity
-# field (the undeclared `Status` column retired at WI-443's conversion).
-IF_MATURITY = {
-    # An experimental seam is a crossing whose contract is still moving — the
-    # boundary is declared but not settled, which is precisely DRAFTED.
-    "Experimental": DRAFTED,
-    # A stable seam is settled at its tier. NOT Founded: `Stability` says the
-    # contract will not move, it says nothing about the crossing having been
-    # demonstrated, and claiming Founded here would let the boundary rung report
-    # more confidence than the registry holds.
-    "Stable": APPROVED,
-    # A deprecated seam is settled too — it is on its way out, which is a decided
-    # state, not work in flight. Treating it as DRAFTED would hold the boundary
-    # rung open for exactly the rows nobody intends to touch again.
-    "Deprecated": APPROVED,
+# BOUNDARY CROSSINGS — the depth-0 frame's `[boundary.B-##]` rows in
+# `external.toml` (rung 1). `Approval` is the tier's ONE maturity field.
+#
+# THIS TABLE REPLACED AN `IF_MATURITY` KEYED ON `Stability` AT WI-442, and the
+# swap is the whole reason that commit could not be split. `Stability` was the
+# sole input to `boundary_incomplete`; deleting the column without re-keying the
+# predicate in the same commit would have left every IF row reading an
+# unrecognized value, which `_maturity` maps to DRAFTED — rung 1 pinned open
+# forever by a column that no longer exists, reporting the right stage for
+# entirely the wrong reason.
+#
+# NOT Founded on `approved`, for the reason the old table gave and which
+# survives the re-key unchanged: an approval says the crossing is agreed, it says
+# nothing about the crossing having been demonstrated.
+BIF_MATURITY = {
+    "draft": DRAFTED,
+    "approved": APPROVED,
 }
 
 # CMP rows — the partition (rung 3).
 CMP_MATURITY = {
     # A planned component is a partition proposed and not yet realized: the
-    # architecture rung's own work-in-flight state.
+    # architecture rung's own work-in-flight state. (Keys lower-cased — see
+    # `_maturity`.)
     "planned": DRAFTED,
     # Built means the partition exists in the tree — settled as a partition, which
     # is all rung 3 asks. Whether it WORKS is rungs 5-6's question.
@@ -544,8 +547,15 @@ def _maturity(value, table):
     fails the harness), which means an unknown value genuinely can reach here; the
     choice is between "an unreadable row reports finished" and "an unreadable row
     holds its rung open", and only the second is safe on an axis the automation
-    dial reads."""
-    return table.get((value or "").strip(), DRAFTED)
+    dial reads.
+
+    The case-insensitive match is real, not aspirational: the tables are keyed
+    lower-cased below. It used to be a docstring claim only — every key happened
+    to be spelled exactly as the registries spelled it — and WI-442's `approval`
+    tier is the first one whose cells are authored lower-case while the ladder
+    constants are capitalized, which is precisely where an unbacked claim would
+    have started mapping live rows to DRAFTED."""
+    return table.get((value or "").strip().lower(), DRAFTED)
 
 
 def _caps(semantic):
@@ -566,31 +576,50 @@ def _decomposed_sr_ids(llrs, tcs):
     )
 
 
-def boundary_incomplete(ifs, have_registry):
+def boundary_incomplete(bifs, have_registry):
     """Rung 1's predicate — is the BOUNDARY INVENTORY still in work?
 
+    READS `external.toml`'s `[boundary.B-##]` ROWS. Until WI-442 it read the IF
+    registry's `Stability` column and nothing else, which was the honest best
+    available: nothing in the schema typed a crossing as external, so the rung
+    could only report whether the INTERNAL seam inventory had settled and call it
+    the boundary. Sitting 2 ruled the frame into its own tier (§1R.5, decision 3),
+    so the predicate now reads the thing it always claimed to.
+
     APPLIES-WHEN (OI-14's ruled A6 shape, warn-first): the rung applies only when
-    an interfaces registry FILE exists. A project that never adopts the IF tier is
+    an `external.toml` FILE exists. A project that never declares a boundary is
     NOT held at DevStg-Boundary forever — `have_registry` is False and the rung is
     skipped. That is the whole difference between a rung that ships to every
-    adopter and one that ships to the adopters who declared a boundary.
+    adopter and one that ships to the adopters who declared a boundary. The
+    applies-when MOVED with the predicate: a repo that carries interfaces.toml and
+    no external.toml now skips rung 1 rather than being held by its internal
+    seams, which is the correction, not a loosening.
 
     WARN-HONEST WHEN IT DOES APPLY. A registry that exists but declares NO real
     crossing is honestly incomplete: the file says the project intends to type its
-    frame and has not. And any crossing at DRAFTED maturity (`Stability =
-    Experimental`) is a contract still moving, so the boundary is declared but not
-    settled. Both cap the rung.
+    frame and has not. And any crossing at DRAFTED maturity (`approval = "draft"`)
+    is a frame declared and not yet ratified. Both cap the rung.
 
-    NOTE WHAT THIS DOES *NOT* CLAIM. It does not verify that every external
-    crossing is covered — nothing in the schema types a crossing as external
-    today, and inventing that field is OI-14 part B's business, not this rung's.
-    What it reports is the honest weaker fact: the declared inventory is settled,
-    or it is not."""
+    APPROVAL, NOT REALIZATION COVERAGE — the two readings of the ruling, resolved
+    rather than assumed. 13u's wording gates on BIF *approval*; §1R.5's wording
+    ("every declared BIF settled, every BIF realized or explicitly deferred")
+    names approval AND a second conjunct. They are different predicates, and this
+    is the first: whether each declared crossing carries a realizing IF row is
+    DECISION 6, deferred BY RULING to post-schema (sitting-2 §4.0), and gating on
+    it here would take a decision nobody has. It is not a hypothetical gap — four
+    of the six locked crossings are realized by no IF row today, so the second
+    conjunct would hold rung 1 down on work decision 6 has not yet scoped, and it
+    would do so under a predicate that reads like ratification. When decision 6
+    lands, adding the conjunct is a two-line change HERE, with the coverage rule
+    stated in its own docstring.
+
+    NOTE WHAT THIS STILL DOES *NOT* CLAIM. An approved crossing is agreed, not
+    demonstrated. Nothing here reports that anything was built."""
     if not have_registry:
         return False
-    if not ifs:
+    if not bifs:
         return True
-    return any(_caps(_maturity(r.get("Stability"), IF_MATURITY)) for r in ifs)
+    return any(_caps(_maturity(r.get("Approval"), BIF_MATURITY)) for r in bifs)
 
 
 def arch_incomplete(cmps, have_registry):
@@ -619,9 +648,9 @@ def spine_stage(
     tcs,
     sn_ids,
     sn_draft,
-    ifs=None,
+    bifs=None,
     cmps=None,
-    have_ifs=False,
+    have_bifs=False,
     have_cmps=False,
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
@@ -680,13 +709,13 @@ def spine_stage(
     which is precisely backwards. And a RATIFIED-BUT-UNCITED SN is DevStg-Needs,
     applying WI-401's coverage rung on the same subset `_raw_level` uses: a need
     with no requirement answering it is unfinished work at the needs rung."""
-    ifs = ifs or []
+    bifs = bifs or []
     cmps = cmps or []
     if any(u in sn_draft for u in sn_ids) or not sn_ids:
         return STAGE_NEEDS
     if not srs:
         return STAGE_NEEDS
-    if boundary_incomplete(ifs, have_ifs):
+    if boundary_incomplete(bifs, have_bifs):
         return STAGE_BOUNDARY
     if any(is_draft(r) for r in srs):
         return STAGE_REQS
@@ -835,21 +864,19 @@ def compute(docs):
     # sits at DevStg-Boundary or DevStg-Arch. They feed the STAGE axis only —
     # `_raw_level` is untouched, so the runnable bar is computed from exactly the
     # rows it always was and no adopter's strictness moves because of this change.
-    if_path = spine_carrier.resolve(
-        docs / "requirements" / "interfaces.toml", spine_carrier.CARRIERS
+    ext_path = spine_carrier.resolve(
+        docs / "requirements" / "external.toml", spine_carrier.CARRIERS
     )
     cmp_path = spine_carrier.resolve(
         docs / "requirements" / "components.toml", spine_carrier.CARRIERS
     )
-    ifs = (
+    bifs = (
         [
             r
-            for r in spine_carrier.load(
-                docs / "requirements" / "interfaces.toml", "IF-ID"
-            )
-            if r.get("IF-ID") and not is_example(r["IF-ID"])
+            for r in spine_carrier.load(docs / "requirements" / "external.toml", "B-ID")
+            if r.get("B-ID") and not is_example(r["B-ID"])
         ]
-        if if_path is not None
+        if ext_path is not None
         else []
     )
     cmps = (
@@ -928,9 +955,9 @@ def compute(docs):
         tcs,
         sn_ids,
         sn_draft,
-        ifs=ifs,
+        bifs=bifs,
         cmps=cmps,
-        have_ifs=if_path is not None,
+        have_bifs=ext_path is not None,
         have_cmps=cmp_path is not None,
     )
     return {

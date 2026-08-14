@@ -243,39 +243,62 @@ def test_dev_setup_carries_no_engine_line_to_pin():
 # the kit root beside the scripts. Naming the directory per row is what let the
 # `agents` registry join the rule at all rather than stay the one shipped
 # registry pinned to nothing.
+#
+# KEYED BY ID COLUMN, NOT BY PATH, since WI-442. `external.toml` carries THREE
+# tiers in one file (entities, boundary crossings, relationships) and a
+# path-keyed map cannot hold three entries for one path — it would silently keep
+# the last. The id column is what `spine_carrier.REGISTRY_KEYS` keys on anyway,
+# so this is the map agreeing with the schema of record rather than a second
+# convention.
 TOML_REGISTRIES = {
-    "docs/requirements/system-requirements.toml": (
+    "SR-ID": (
+        "docs/requirements/system-requirements.toml",
         "registries/system-requirements.template.toml",
         "requirement",
-        "SR-ID",
     ),
-    "docs/requirements/low-level-requirements.toml": (
+    "LLR-ID": (
+        "docs/requirements/low-level-requirements.toml",
         "registries/low-level-requirements.template.toml",
         "design",
-        "LLR-ID",
     ),
-    "docs/test/test-cases.toml": (
+    "TC-ID": (
+        "docs/test/test-cases.toml",
         "registries/test-cases.template.toml",
         "test",
-        "TC-ID",
     ),
     # batch-2 (repo-lock §8.1) — the SAME rule, deliberately not a second one.
-    "docs/requirements/open-items.toml": (
+    "OI-ID": (
+        "docs/requirements/open-items.toml",
         "registries/open-items.template.toml",
         "open_item",
-        "OI-ID",
     ),
-    "docs/agents.toml": ("agents.template.toml", "agent", "Id"),
+    "Id": ("docs/agents.toml", "agents.template.toml", "agent"),
     # WI-443 / OI-14 part B — the last two registries onto the carrier.
-    "docs/requirements/interfaces.toml": (
+    "IF-ID": (
+        "docs/requirements/interfaces.toml",
         "registries/interfaces.template.toml",
         "interface",
-        "IF-ID",
     ),
-    "docs/requirements/components.toml": (
+    "CMP-ID": (
+        "docs/requirements/components.toml",
         "registries/components.template.toml",
         "component",
-        "CMP-ID",
+    ),
+    # WI-442 — the depth-0 frame, three tiers on ONE path.
+    "EXT-ID": (
+        "docs/requirements/external.toml",
+        "registries/external.template.toml",
+        "entity",
+    ),
+    "B-ID": (
+        "docs/requirements/external.toml",
+        "registries/external.template.toml",
+        "boundary",
+    ),
+    "REL-ID": (
+        "docs/requirements/external.toml",
+        "registries/external.template.toml",
+        "relationship",
     ),
 }
 KIT = ROOT / "project-trajectory"
@@ -334,8 +357,8 @@ def registry_key_drift(template_keys, live_keys, schema_keys, vocabulary):
     return None
 
 
-@pytest.mark.parametrize("live_rel", sorted(TOML_REGISTRIES))
-def test_template_declares_every_key_the_live_registry_uses(live_rel):
+@pytest.mark.parametrize("id_col", sorted(TOML_REGISTRIES))
+def test_template_declares_every_key_the_live_registry_uses(id_col):
     """The TOML analogue of the ordered-header rule — and it had to INVERT.
 
     Under CSV the LIVE file declared its own schema in a header, so "template
@@ -363,14 +386,14 @@ def test_template_declares_every_key_the_live_registry_uses(live_rel):
     had never been pinned to its template at all — joins on the same three
     legs.
     """
-    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
+    live_rel, tmpl_rel, table = TOML_REGISTRIES[id_col]
     live = _toml_keys(ROOT / live_rel, table)
     tmpl = _toml_keys(KIT / tmpl_rel, table)
     schema = set(CARRIER.REGISTRY_KEYS[id_col])
     assert live, live_rel  # a registry with no rows would make this vacuous
     assert schema, id_col  # ...and an empty schema would pass everything
     drift = registry_key_drift(tmpl, live, schema, CARRIER.REGISTRY_COLUMN)
-    assert drift is None, "%s: %s" % (live_rel, drift)
+    assert drift is None, "%s[%s]: %s" % (live_rel, table, drift)
 
 
 def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
@@ -383,18 +406,24 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
     than the example row" is the property that matters, and a registry that
     shrank to its example would still red here."""
     floors = {
-        "docs/requirements/system-requirements.toml": 10,
-        "docs/requirements/low-level-requirements.toml": 10,
-        "docs/test/test-cases.toml": 10,
-        "docs/requirements/open-items.toml": 2,
-        "docs/agents.toml": 2,
-        "docs/requirements/interfaces.toml": 10,
-        "docs/requirements/components.toml": 2,
+        "SR-ID": 10,
+        "LLR-ID": 10,
+        "TC-ID": 10,
+        "OI-ID": 2,
+        "Id": 2,
+        "IF-ID": 10,
+        "CMP-ID": 2,
+        # The frame is small BY RULING and cannot grow to a spine tier's size:
+        # sitting 2 locked it at 5 entities, 6 crossings, 3 relationships. The
+        # floor is still "more than the example", which is the property.
+        "EXT-ID": 1,
+        "B-ID": 1,
+        "REL-ID": 1,
     }
     assert set(floors) == set(TOML_REGISTRIES), "a registry joined with no floor"
-    for live_rel, (_t, table, _id) in TOML_REGISTRIES.items():
+    for id_col, (live_rel, _tmpl, table) in TOML_REGISTRIES.items():
         rows = tomllib.loads((ROOT / live_rel).read_text(encoding="utf-8"))[table]
-        assert len(rows) > floors[live_rel], live_rel
+        assert len(rows) > floors[id_col], "%s[%s]" % (live_rel, table)
 
 
 # --- bite-proofs: each check FAILS on a mutated scratch copy -------------------
@@ -426,8 +455,8 @@ def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
     had quietly stopped being shipped. That is the shape SN-008 forbids, found
     in the replacement rather than in the thing it replaced.
     """
-    live_rel = "docs/requirements/system-requirements.toml"
-    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
+    id_col = "SR-ID"
+    live_rel, tmpl_rel, table = TOML_REGISTRIES[id_col]
     live_src = (ROOT / live_rel).read_text(encoding="utf-8")
     tmpl_src = (KIT / tmpl_rel).read_text(encoding="utf-8")
     schema = set(CARRIER.REGISTRY_KEYS[id_col])
@@ -783,14 +812,20 @@ def _drop_key(src, key):
 
 
 @pytest.mark.parametrize(
-    "live_rel,plant_at",
+    "id_col,plant_at",
     [
-        ("docs/requirements/open-items.toml", "[open_item.OI-000]"),
-        ("docs/agents.toml", "[agent.ANTHROPIC-FABLE]"),
+        ("OI-ID", "[open_item.OI-000]"),
+        ("Id", "[agent.ANTHROPIC-FABLE]"),
+        # WI-442 — the frame joins the bite-proof, and it is the only registry
+        # whose three tiers share a path, so a mutation planted in ONE tier must
+        # be named against THAT tier and not absorbed by a sibling.
+        ("EXT-ID", "[entity.EXT-001]"),
+        ("B-ID", "[boundary.B-01]"),
+        ("REL-ID", "[relationship.REL-001]"),
     ],
 )
 def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(
-    tmp_path, live_rel, plant_at
+    tmp_path, id_col, plant_at
 ):
     """The batch-2 registries get the same bite-proof, in BOTH directions.
 
@@ -804,7 +839,7 @@ def test_bite_the_key_rule_fails_on_a_planted_batch2_defect(
     the keys no shipped row had filled (`ruled_date`/`ruling_ref` on open-items,
     `env` on agents), which is how the rule earned its place on the way in.
     """
-    tmpl_rel, table, id_col = TOML_REGISTRIES[live_rel]
+    live_rel, tmpl_rel, table = TOML_REGISTRIES[id_col]
     live_src = (ROOT / live_rel).read_text(encoding="utf-8")
     tmpl_src = (KIT / tmpl_rel).read_text(encoding="utf-8")
     schema = set(CARRIER.REGISTRY_KEYS[id_col])

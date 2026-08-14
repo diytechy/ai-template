@@ -171,11 +171,16 @@ KEY = {
     # RETIRES here (undeclared since it shipped, overlapping `Stability` on the
     # same row); a stray `Status` cell would therefore key as `Status` and be
     # caught by the schema tier rather than silently absorbed.
+    # `Stability` LEFT this block at WI-442, replaced by `Approval`.
+    # `Direction`/`Counterpart` were ruled out with it and are HELD — see
+    # docs/requirements/interfaces.toml's header and WI-455.
     "Direction": "direction",
     "ThisProject": "this_project",
     "Counterpart": "counterpart",
     "Contract": "contract",
-    "Stability": "stability",
+    "Approval": "approval",
+    "InterfaceFromExternal": "interface_from_external",
+    "InterfaceToExternal": "interface_to_external",
     "Signal": "signal",
     "SignalNote": "signal_note",
     # components (WI-443). `Notes`/`SupersededBy` are ALREADY above.
@@ -185,6 +190,24 @@ KEY = {
     "State": "state",
     "PartOf": "part_of",
     "DetailDoc": "detail_doc",
+    # external — the depth-0 frame (WI-442). This registry never had a CSV
+    # carrier and so is never CONVERTED by this script; the entries exist
+    # because this map is the writer half of the ONE column vocabulary, pinned
+    # as an exact bijection against `spine_carrier.REGISTRY_COLUMN`
+    # (tests/test_rule_sync.py). A tier the vocabulary knows and this map does
+    # not would be a column the reader can name and the writer cannot.
+    # `Approval`/`Notes`/`Name`/`Direction` are ALREADY above (the boundary
+    # tier's in|out|inout reading of `Direction` is the watched collision
+    # spine_carrier's note names).
+    "Class": "class",
+    "Description": "description",
+    "Entity": "entity",
+    "Carries": "carries",
+    "From": "from",
+    "To": "to",
+    "Kind": "kind",
+    "Flow": "flow",
+    "Absorbs": "absorbs",
 }
 
 

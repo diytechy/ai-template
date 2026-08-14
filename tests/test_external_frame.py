@@ -1,0 +1,263 @@
+"""The depth-0 FRAME registry (WI-442, sitting-2 §1R): `external.toml`.
+
+Three tiers on one path — entities (`EXT-###`), boundary crossings (`B-##`) and
+external-to-external relationships (`REL-###`) — plus the directional tie-back an
+`IF-###` row carries when it REALIZES a crossing.
+
+The frame's *content* is a human ruling and nothing here judges it. What is
+mechanized, and what this module pins, is the joining: a crossing names a
+declared entity, a relationship names two, a tie-back names a declared crossing,
+and every row carries the one maturity field the boundary rung reads
+(`derive_gate.boundary_incomplete` — its own tests live in
+tests/test_ratification_level.py).
+"""
+
+import tomllib
+
+from conftest import (
+    ROOT,
+    load_script,
+    make_minimal_project,
+    record_ids,
+    run_py,
+)
+
+CARRIER = load_script("spine_carrier")
+TRACE = load_script("trace")
+
+LIVE = ROOT / "docs" / "requirements" / "external.toml"
+
+# A complete, resolving frame — the fixture every mutation below starts from.
+CLEAN_FRAME = """
+[entity.EXT-001]
+name = "Downstream adopter"
+class = "operational"
+description = "The team that adopts the package."
+approval = "draft"
+
+[boundary.B-01]
+entity = "EXT-001"
+direction = "out"
+carries = "the delivered package"
+approval = "draft"
+
+[relationship.REL-001]
+from = "EXT-001"
+to = "EXT-001"
+kind = "hands-off"
+flow = "a flow this system is not a party to"
+approval = "draft"
+"""
+
+
+def _frame(scaffold, text=CLEAN_FRAME):
+    (scaffold / "docs" / "requirements" / "external.toml").write_text(
+        text, encoding="utf-8"
+    )
+
+
+def _run(scaffold, *args):
+    record_ids(scaffold)
+    return run_py(["scripts/trace.py", *args], cwd=scaffold)
+
+
+# --- the carrier: three tiers, ONE path ---------------------------------------
+
+
+def test_the_three_tiers_load_off_one_path_without_a_new_loader():
+    """The whole reason the carrier keys registries by ID COLUMN rather than by
+    path. `external.toml` is the first file to carry more than one tier, and it
+    needed no loader change at all — `load(path, "B-ID")` returns exactly the
+    crossings because the tier, not the file, is what the key names."""
+    for id_col, table in (
+        ("EXT-ID", "entity"),
+        ("B-ID", "boundary"),
+        ("REL-ID", "relationship"),
+    ):
+        assert CARRIER.REGISTRY_TABLE[id_col] == table
+        rows = CARRIER.load(LIVE, id_col)
+        assert rows, id_col
+        assert all(r[id_col] for r in rows)
+    # ...and the three do not bleed into each other.
+    ext_ids = {r["EXT-ID"] for r in CARRIER.load(LIVE, "EXT-ID")}
+    bif_ids = {r["B-ID"] for r in CARRIER.load(LIVE, "B-ID")}
+    assert not (ext_ids & bif_ids)
+
+
+def test_the_live_frame_is_the_LOCKED_one():
+    """5 entities, 6 crossings, 3 relationships — sitting-2 §1R.7, ruled
+    2026-08-13o and amended at 13u when B-03 was removed. A count is a weak
+    assertion about most registries and a strong one here, because this frame was
+    closed by a ruling: a row appearing or vanishing without a sitting is the
+    defect, not a growth curve."""
+    tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
+    assert len(tables["entity"]) == 5
+    assert len(tables["boundary"]) == 6
+    assert len(tables["relationship"]) == 3
+    # B-03 is ABSENT on purpose (removed 13u) and the gap is load-bearing: it
+    # keeps id and frame name aligned 1:1 rather than renumbering a locked table.
+    assert "B-03" not in tables["boundary"]
+
+
+def test_every_frame_row_carries_the_approval_element():
+    """D12's requirement, from the file's FIRST commit: a frame with no approval
+    element is un-ratifiable, and the rung that reads it would have nothing
+    honest to read. Checked over every row of every tier, because a single
+    unapproved-by-omission crossing is what would silently clear rung 1."""
+    tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
+    for table in ("entity", "boundary", "relationship"):
+        for rid, row in tables[table].items():
+            assert row.get("approval") in ("draft", "approved"), (table, rid)
+
+
+def test_nothing_in_the_live_frame_is_approved_yet():
+    """The flip authority, asserted rather than asked for. `process.toml`'s
+    `human_ratification_through` covers the SPINE tiers only; until sitting-3
+    §3.6 rules the mechanized extension, an `approval` cell here is the OWNER's
+    to flip in a reviewed commit. Nothing this program builds may set one.
+
+    This test is expected to be EDITED by that ratification — deliberately. It
+    is the tripwire that makes a loop-authored approval a red test rather than a
+    quiet line in a diff."""
+    tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
+    approvals = {
+        row.get("approval")
+        for table in ("entity", "boundary", "relationship")
+        for row in tables[table].values()
+    }
+    assert approvals == {"draft"}
+
+
+# --- the join rules ------------------------------------------------------------
+
+
+def test_a_clean_frame_produces_no_finding(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    proc = _run(scaffold, "--strict")
+    assert "frame" not in proc.stdout.lower().split("traceability")[0] or (
+        "FINDING (frame)" not in proc.stdout
+    )
+    assert "FINDING (frame)" not in proc.stdout
+
+
+def test_a_crossing_naming_an_undeclared_entity_is_a_FINDING(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold, CLEAN_FRAME.replace('entity = "EXT-001"', 'entity = "EXT-009"'))
+    proc = _run(scaffold, "--strict")
+    assert "boundary B-01 Entity references unknown EXT-009" in proc.stdout
+    assert proc.returncode == 1
+
+
+def test_a_relationship_naming_an_undeclared_entity_is_a_FINDING(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold, CLEAN_FRAME.replace('to = "EXT-001"', 'to = "EXT-009"'))
+    proc = _run(scaffold, "--strict")
+    assert "relationship REL-001 To references unknown EXT-009" in proc.stdout
+    assert proc.returncode == 1
+
+
+def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'direction = "Provides"\n'
+        'this_project = "src/demo"\n'
+        'counterpart = "downstream adopter"\n'
+        'contract = "the package"\n'
+        'signal = "discrete"\n'
+        'sr_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'approval = "draft"\n'
+        'interface_to_external = "B-99"\n',
+        encoding="utf-8",
+    )
+    proc = _run(scaffold, "--strict")
+    assert "IF IF-001 InterfaceToExternal references unknown crossing B-99" in (
+        proc.stdout
+    )
+    assert proc.returncode == 1
+
+
+def test_the_frame_rules_are_VACUOUS_without_the_registry(scaffold):
+    """The applies-when, at the checker tier. A project that declares no boundary
+    has no `external.toml`, and every rule above must then say nothing at all —
+    not "no entities declared", which would make the frame mandatory by the back
+    door for every adopter who never wanted it."""
+    make_minimal_project(scaffold)
+    # bootstrap SCAFFOLDS the file (inert, `-000` rows only). Deleting it is what
+    # "a project that never adopts the tier" actually looks like — the same act
+    # ADOPTING.md tells an adopter to take for any registry they do not want.
+    (scaffold / "docs" / "requirements" / "external.toml").unlink()
+    proc = _run(scaffold, "--strict")
+    assert "FINDING (frame)" not in proc.stdout
+    assert "depth-0 frame" not in (
+        scaffold / "docs" / "test" / "report.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):
+    """Narrower than the case above and a different failure: the frame file
+    exists but declares no crossings, so a tie-back names nothing that COULD
+    resolve. That is a schema question (why is there a tie-back at all?), not a
+    resolution one, and reporting it as a dangling reference would blame the IF
+    row for the frame's emptiness."""
+    make_minimal_project(scaffold)
+    _frame(scaffold, '[entity.EXT-001]\nname = "A"\nclass = "operational"\n')
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'direction = "Provides"\n'
+        'this_project = "src/demo"\n'
+        'counterpart = "downstream adopter"\n'
+        'contract = "the package"\n'
+        'signal = "discrete"\n'
+        'sr_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'approval = "draft"\n'
+        'interface_to_external = "B-99"\n',
+        encoding="utf-8",
+    )
+    proc = _run(scaffold, "--strict")
+    assert "references unknown crossing" not in proc.stdout
+
+
+# --- the schema tier (warn-first, like IF/CMP) ---------------------------------
+
+
+def test_an_out_of_vocabulary_frame_value_WARNS_and_never_fails(scaffold):
+    """The frame tiers join the ADVISORY schema tier, the same ruled warn-first
+    sequencing IF and CMP got at WI-443 — a vocabulary is closed the moment it is
+    stated, and promotion to ERROR is a later, separate decision. The resolution
+    rules above are hard; a typo in a vocabulary cell is not."""
+    make_minimal_project(scaffold)
+    _frame(scaffold, CLEAN_FRAME.replace('class = "operational"', 'class = "vendor"'))
+    proc = _run(scaffold, "--strict")
+    assert "EXT EXT-001 has Class='vendor'" in proc.stdout
+    assert "not in the closed vocabulary" in proc.stdout
+    # ...and it did not join the failure set.
+    assert "FINDING (frame)" not in proc.stdout
+
+
+def test_an_empty_required_frame_field_WARNS(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold, CLEAN_FRAME.replace('carries = "the delivered package"\n', ""))
+    proc = _run(scaffold, "--strict")
+    assert "B B-01 has empty required field Carries" in proc.stdout
+
+
+def test_the_example_rows_are_inert(scaffold):
+    """The `-000` convention, applied to a registry whose ids are NOT three
+    digits. `B-000` and `EXT-000` must be skipped exactly like `IF-000`, or a
+    freshly bootstrapped repo reports findings against the template it just
+    copied — and the crossing example, which points at `EXT-000`, would resolve
+    against nothing."""
+    make_minimal_project(scaffold)
+    template = (
+        ROOT / "project-trajectory" / "registries" / "external.template.toml"
+    ).read_text(encoding="utf-8")
+    _frame(scaffold, template)
+    proc = _run(scaffold, "--strict")
+    assert "FINDING (frame)" not in proc.stdout
+    assert "EXT-000" not in proc.stdout
+    assert TRACE.is_example("B-000") and TRACE.is_example("EXT-000")

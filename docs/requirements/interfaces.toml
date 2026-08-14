@@ -1,3 +1,53 @@
+# docs/requirements/interfaces.toml — INTERFACE DEFINITIONS.
+#
+# An IF row states what one interface concretely IS. Sitting-2 decision 4
+# (§1R.5) also ruled that it should shed `direction` and `counterpart`, so that
+# provider/consumer roles are IMPLIED BY THE REQUIREMENTS that cite the row — an
+# LLR lists its requirements around PROVIDING an interface, and consumption may
+# stay implied at design.
+#
+# THAT ONE CLAUSE IS NOT EXECUTED YET, AND THE REASON IS RECORDED HERE RATHER
+# THAN DISCOVERED LATER. `direction` + `counterpart` are the SOLE input to two
+# architecture views the dashboard renders — the flat How-SW seam graph and the
+# containerized component drill — and the second of those is ratified work:
+# SR-091 ("gen_trajectory.py shall attach IF seams to visible block input/output
+# ports and aggregate cross-container seams to container boundaries",
+# Verification = Test). Decision 8 makes PROJECT_STATE.html the ONE home for
+# architecture in the same sitting decision 4 deletes the columns it draws from.
+# Executing the shed inside WI-442 would delete a ratified requirement's only
+# input before its replacement exists. So the two columns are HELD, their
+# deletion is bound to WI-455 (the architecture-from-the-registries program,
+# which owns the replacement view), and the finding rides the sitting-3 brief.
+# Everything else decision 4 ruled landed here in full.
+#
+# WHAT DID RETIRE AT WI-442: `stability` (Experimental|Stable|Deprecated),
+# replaced by `approval`. Five rows carried `Experimental` at the retirement and
+# are recorded HERE rather than in their own cells, so that no row carries
+# migration history: IF-057, IF-103, IF-118, IF-119, IF-120.
+#
+# APPROVAL — the one maturity field, closed vocabulary `draft` | `approved`,
+# shared with docs/requirements/external.toml (which carries the full statement
+# of the provisional value set and its D-9 migration). EVERY row reads `draft`
+# today, and that is a deliberate non-claim: `Stable` was a MATURITY assertion
+# (this contract has settled) and `approved` is a RATIFICATION one. Mapping the
+# first onto the second would have manufactured 108 approvals nobody signed.
+#
+# FLIP AUTHORITY. `docs/process.toml [attestation] human_ratification_through`
+# covers the SPINE tiers only and says nothing about this registry. Until
+# sitting-3 §3.6 rules the mechanized extension, AN `approval` CELL IN THIS FILE
+# IS THE OWNER'S TO FLIP, in a reviewed Status-change commit — no loop, no LLM
+# verdict, no script.
+#
+# THE TIE-BACK is directional and appears ONLY on a row that REALIZES a boundary
+# crossing declared in external.toml: `interface_from_external = "B-##"` for an
+# IN crossing, `interface_to_external = "B-##"` for an OUT one, both for in/out
+# (owner naming, 13m). A row with neither is an internal seam, which is how the
+# registry says so without a column claiming it. Eight rows carry one today;
+# that four of the six crossings are realized by NO row is a real finding, and
+# it belongs to decision 6 (BIF rows with no realizing IF), deferred BY RULING
+# to post-schema — which is exactly why rung 1's predicate gates on BIF
+# APPROVAL and not on realization coverage.
+
 [interface.IF-001]
 direction = "Provides"
 this_project = "scripts/trace"
@@ -7,7 +57,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-001", "SR-002", "SR-005"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-002]
 direction = "Provides"
@@ -17,7 +67,7 @@ contract = """check_docs.py CLI: --stale exits 1 on a broken intra-repo link, a 
 signal = "discrete"
 sr_refs = ["SR-012"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-003]
 direction = "Provides"
@@ -27,7 +77,7 @@ contract = """check_flows.py CLI: --no-placeholders; exits 1 when an authored ru
 signal = "discrete"
 sr_refs = ["SR-013"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-004]
 direction = "Provides"
@@ -38,7 +88,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-014", "SR-015"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-005]
 direction = "Provides"
@@ -49,7 +99,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-017", "SR-018"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-006]
 direction = "Provides"
@@ -59,7 +109,7 @@ contract = """check_stubs.py CLI: --strict exits 1 on a stub/NotImplemented/pass
 signal = "discrete"
 sr_refs = ["SR-016"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-008]
 direction = "Provides"
@@ -70,7 +120,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-041"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-009]
 direction = "Provides"
@@ -80,7 +130,7 @@ contract = """check_trajectory.py CLI: exits 1 on a WI id/predecessor/cycle or a
 signal = "discrete"
 sr_refs = ["SR-067", "SR-068", "SR-074"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-010]
 direction = "Provides"
@@ -91,7 +141,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-023"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-011]
 direction = "Provides"
@@ -101,7 +151,7 @@ contract = """gen_trajectory.py CLI: --check exits 1 when root PROJECT_STATE.htm
 signal = "discrete"
 sr_refs = ["SR-072"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-012]
 direction = "Provides"
@@ -112,7 +162,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-042"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-013]
 direction = "Provides"
@@ -122,7 +172,8 @@ contract = """check.py CLI: --gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all w
 signal = "discrete"
 sr_refs = ["SR-006", "SR-007", "SR-008"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-014]
 direction = "Provides"
@@ -132,7 +183,8 @@ contract = """bootstrap.py CLI: --dest DIR [--stack/--domain/--agents/--force] w
 signal = "variable"
 sr_refs = ["SR-009", "SR-010", "SR-011"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-015]
 direction = "Provides"
@@ -143,7 +195,8 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-026", "SR-027", "SR-028", "SR-030"]
 version = "v3"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-016]
 direction = "Provides"
@@ -154,7 +207,8 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-022"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-017]
 direction = "Provides"
@@ -165,7 +219,8 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-024"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 notes = "source"
 
 [interface.IF-018]
@@ -176,7 +231,8 @@ contract = """gen_release_checklist.py CLI: emits the release-gate checklist (ea
 signal = "variable"
 sr_refs = ["SR-033"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-019]
 direction = "Provides"
@@ -186,18 +242,19 @@ contract = """gen_skills_index.py CLI: regenerates skills/INDEX.csv from each SK
 signal = "variable"
 sr_refs = ["SR-025"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-020]
 direction = "Provides"
 this_project = "scripts/subagent_gate"
 counterpart = "agent CLI"
-contract = """subagent_gate.py PreToolUse contract: reads the tool-call JSON on stdin and emits a permissionDecision (deny -> exit 2) per docs/subagent-gate; fails open on any error"""
+contract = """subagent_gate.py PreToolUse contract: reads the tool-call JSON on stdin and emits a permissionDecision (deny -> exit 2) per docs/process.toml [checks] subagent_gate; fails open on any error"""
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-043"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-04"
 
 [interface.IF-021]
 direction = "Consumes"
@@ -207,7 +264,7 @@ contract = """reads the SN/SR/LLR/TC spine plus the off-spine PB/REPO/PART/ASSET
 signal = "variable"
 sr_refs = ["SR-001", "SR-005"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-022]
 direction = "Consumes"
@@ -217,7 +274,7 @@ contract = """reads the declared toolchain (format/lint/test commands, tiers, co
 signal = "variable"
 sr_refs = ["SR-007", "SR-008"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-023]
 direction = "Consumes"
@@ -227,7 +284,7 @@ contract = """reads the WI registry - the docs/work/ spec folder, the one home s
 signal = "variable"
 sr_refs = ["SR-067", "SR-068", "SR-074", "SR-077"]
 version = "v3"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-058]
 direction = "Provides"
@@ -237,7 +294,7 @@ contract = """pure dual-plan round-lifecycle library (WI-194): new_round/ready_s
 signal = "variable"
 sr_refs = ["SR-102"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """source (WI-194) - a pure library: consumes nothing, the coordinator feeds results in; nearest existing seam is IF-053 (schedule.py, the same side-effect-free-library-to-dispatcher shape) but wrong provider module and wrong contract (frontier/classification, not round lifecycle); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -249,7 +306,7 @@ contract = """reads system-requirements.csv (SR-ID/Title/Requirement) and interf
 signal = "variable"
 sr_refs = ["SR-103"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """sink (WI-195) - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process since WI-199). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -261,7 +318,7 @@ contract = """run_coverage invokes the scripts/plan_coverage CLI headless (sys.e
 signal = "variable"
 sr_refs = ["SR-104"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """sink (WI-197) - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process since WI-199). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's counterpart is the external agent CLI, not a kit script); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -274,7 +331,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-105"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """source (WI-198) - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts; ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -286,7 +343,7 @@ contract = """reads interfaces.toml (IF-ID column) and system-requirements.csv (
 signal = "variable"
 sr_refs = ["SR-078"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
 component = "CMP-006"
 notes = """sink (WI-190) - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is WI-197's to declare); nearest existing seam is IF-023 (check_trajectory also joins IF cites) - distinct module needs its own endpoint row"""
 
@@ -298,7 +355,7 @@ contract = """reads the WI registry (the docs/work/ spec folder, the one home si
 signal = "variable"
 sr_refs = ["SR-070", "SR-071"]
 version = "v3"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-025]
 direction = "Consumes"
@@ -308,7 +365,7 @@ contract = """walks the Python source tree (AST) for the symbol map + internal-i
 signal = "variable"
 sr_refs = ["SR-023", "SR-075"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-026]
 direction = "Consumes"
@@ -318,7 +375,7 @@ contract = """parses each *.py under the declared src root (AST) for stub-bodied
 signal = "variable"
 sr_refs = ["SR-016"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-028]
 direction = "Consumes"
@@ -328,7 +385,7 @@ contract = """reads the generated MODULE MAP block as the symbol oracle and scan
 signal = "variable"
 sr_refs = ["SR-041"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-029]
 direction = "Consumes"
@@ -338,7 +395,7 @@ contract = """reads the Runtime flows section (mermaid sequence blocks) and the 
 signal = "variable"
 sr_refs = ["SR-013"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-030]
 direction = "Consumes"
@@ -348,7 +405,7 @@ contract = """reads root *.md + docs/**/*.md for the link graph, the PROJECT-VIS
 signal = "variable"
 sr_refs = ["SR-012"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-031]
 direction = "Consumes"
@@ -358,7 +415,7 @@ contract = """reads the PB-### budgets registry and a measured-metrics JSON, com
 signal = "variable"
 sr_refs = ["SR-014", "SR-015"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-032]
 direction = "Consumes"
@@ -368,7 +425,7 @@ contract = """reads the staged diff / commit message / outgoing range via git an
 signal = "variable"
 sr_refs = ["SR-017", "SR-031"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-033]
 direction = "Consumes"
@@ -378,7 +435,7 @@ contract = """reads the spine registries and the present process docs to emit th
 signal = "variable"
 sr_refs = ["SR-042"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-034]
 direction = "Consumes"
@@ -388,7 +445,7 @@ contract = "reads the SN core-needs table and the PB budgets registry to build t
 signal = "variable"
 sr_refs = ["SR-033"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-035]
 direction = "Consumes"
@@ -398,7 +455,7 @@ contract = """reads each <skill>/SKILL.md applicability frontmatter (name/scope/
 signal = "variable"
 sr_refs = ["SR-025"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-036]
 direction = "Consumes"
@@ -408,7 +465,7 @@ contract = """reads the UPSTREAM manifest and fetches each declared upstream sou
 signal = "variable"
 sr_refs = ["SR-022"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-037]
 direction = "Consumes"
@@ -418,17 +475,17 @@ contract = """reads the next action from docs/status.md (forward-only surface) p
 signal = "variable"
 sr_refs = ["SR-026", "SR-031"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-038]
 direction = "Consumes"
 this_project = "scripts/subagent_gate"
 counterpart = "docs/subagent-gate"
-contract = """reads the docs/subagent-gate policy (off|ask|deny) via the shared declared-line parse and honours the SUBAGENT_GATE launcher override"""
+contract = """reads the subagent-spawn policy (off|ask|deny) from docs/process.toml [checks] subagent_gate via the shared declared-line parse, and honours the SUBAGENT_GATE launcher override"""
 signal = "variable"
 sr_refs = ["SR-043"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-039]
 direction = "Consumes"
@@ -438,7 +495,7 @@ contract = """reads the kit template tree (registries, skills, docs, hooks) and 
 signal = "variable"
 sr_refs = ["SR-009", "SR-010"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-040]
 direction = "Consumes"
@@ -448,7 +505,7 @@ contract = """the pre-commit floor runs check.py --run-step arch-map/trajectory-
 signal = "variable"
 sr_refs = ["SR-019", "SR-072"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-041]
 direction = "Consumes"
@@ -458,7 +515,7 @@ contract = """invokes the configured agent CLI headless (build_argv substitutes 
 signal = "variable"
 sr_refs = ["SR-026", "SR-040"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-042]
 direction = "Consumes"
@@ -468,7 +525,7 @@ contract = """the pre-commit floor runs trace.py --strict-integrity on staged co
 signal = "variable"
 sr_refs = ["SR-019"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-043]
 direction = "Consumes"
@@ -479,7 +536,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-020"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-044]
 direction = "Provides"
@@ -489,7 +546,7 @@ contract = """agent_route.py module/CLI: load_registry/load_enabled + resolve_en
 signal = "variable"
 sr_refs = ["SR-079", "SR-082", "SR-083"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-045]
 direction = "Consumes"
@@ -499,7 +556,7 @@ contract = """reads the docs/agents.csv pair-row model registry (Id/Family/Model
 signal = "variable"
 sr_refs = ["SR-079"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-046]
 direction = "Provides"
@@ -510,7 +567,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-081"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-047]
 direction = "Consumes"
@@ -521,7 +578,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-081"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-048]
 direction = "Provides"
@@ -532,7 +589,8 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-046"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
+interface_to_external = "B-05"
 
 [interface.IF-049]
 direction = "Consumes"
@@ -542,7 +600,7 @@ contract = """reads the [run] section (one <name> = <command> line per capabilit
 signal = "variable"
 sr_refs = ["SR-046"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-050]
 direction = "Provides"
@@ -552,7 +610,7 @@ contract = """docs/gate derived marker: derive_gate writes the computed gate as 
 signal = "variable"
 sr_refs = ["SR-049"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 
 [interface.IF-051]
@@ -563,7 +621,7 @@ contract = """reads SR/LLR/TC Status + the SN section-state to compute per-artif
 signal = "variable"
 sr_refs = ["SR-049"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 
 [interface.IF-052]
@@ -574,7 +632,7 @@ contract = """reads the cached derived gate (first non-comment line, the derive_
 signal = "variable"
 sr_refs = ["SR-050"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 
 [interface.IF-053]
@@ -585,7 +643,7 @@ contract = """the ready-frontier + deterministic-order + safety-classification l
 signal = "variable"
 sr_refs = ["SR-057", "SR-093", "SR-094", "SR-095"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-054]
@@ -596,7 +654,7 @@ contract = """reads the WI registry - Status + hard/soft Predecessors + the opti
 signal = "variable"
 sr_refs = ["SR-057", "SR-093", "SR-094", "SR-095"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-055]
@@ -608,7 +666,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-061"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-056]
@@ -619,7 +677,7 @@ contract = """gen_trajectory's DERIVATION-loader sibling: the dashboard derives 
 signal = "variable"
 sr_refs = ["SR-071", "SR-074", "SR-075", "SR-076"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 
 [interface.IF-064]
@@ -630,7 +688,7 @@ contract = """agent_session.py module: the session-launch layer split out of age
 signal = "variable"
 sr_refs = ["SR-026"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-065]
 direction = "Provides"
@@ -641,7 +699,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-026"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-066]
 direction = "Provides"
@@ -651,7 +709,7 @@ contract = """plan_runner.py module: the dual-plan round runner split out of age
 signal = "variable"
 sr_refs = ["SR-106"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-068]
 direction = "Consumes"
@@ -662,7 +720,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-026"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 notes = "built + consumed at WI-274"
 
 [interface.IF-069]
@@ -674,7 +732,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-110"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-070]
 direction = "Consumes"
@@ -684,7 +742,7 @@ contract = """reads the pytest-cov JSON report (per-file summary.percent_covered
 signal = "variable"
 sr_refs = ["SR-110"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-071]
 direction = "Consumes"
@@ -694,7 +752,7 @@ contract = """the gen_trajectory FAMILY reads the scheduler's ready-frontier for
 signal = "variable"
 sr_refs = ["SR-055", "SR-057"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """WI-290: WI-284 wired the import but omitted this row; completes the dashboard side IF-053 already names."""
 
@@ -706,7 +764,7 @@ contract = """the declared-absence read (WI-308): check_doc_refs reads an option
 signal = "variable"
 sr_refs = ["SR-041"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 notes = "built + consumed at WI-308"
 
 [interface.IF-073]
@@ -717,7 +775,7 @@ contract = """the owner decision registry read (WI-322, OI-10 ruled option (b)):
 signal = "variable"
 sr_refs = ["SR-026"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 notes = "built + consumed at WI-322"
 
 [interface.IF-074]
@@ -728,7 +786,7 @@ contract = """the generated owner surface (WI-322): the ONLY document a human re
 signal = "variable"
 sr_refs = ["SR-026"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 notes = "built at WI-322"
 
 [interface.IF-075]
@@ -739,7 +797,7 @@ contract = """the attestation-model seam (WI-322): gen_open_items imports trace.
 signal = "variable"
 sr_refs = ["SR-049"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 notes = "built + consumed at WI-322"
 
 [interface.IF-076]
@@ -750,7 +808,7 @@ contract = """trace_text.py module: the spine-row TEXT layer split out of trace.
 signal = "variable"
 sr_refs = ["SR-004", "SR-126", "SR-127", "SR-128"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 notes = """source - trace_text consumes NOTHING by design: it is the pure predicate layer (rows in, findings out; no I/O, no git, no filesystem, no argv), which is what makes it testable in isolation and what the pure-core / I-O-shell split asks for. A Consumes seam here would mean the extraction failed to separate the concerns."""
 
@@ -762,7 +820,7 @@ contract = """check_trajectory resolves the ANCHOR half of an open WI's `doc#anc
 signal = "variable"
 sr_refs = ["SR-068", "SR-012"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 
 [interface.IF-078]
@@ -773,7 +831,7 @@ contract = """sibling import for the registry write side: the filing-home resolu
 signal = "variable"
 sr_refs = ["SR-129"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-079]
@@ -784,7 +842,7 @@ contract = """reads either registry FORM - the live docs/work/ spec folder and/o
 signal = "variable"
 sr_refs = ["SR-129"]
 version = "v2"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 
 [interface.IF-080]
@@ -795,7 +853,7 @@ contract = """integrate.py CLI (the local integration seam, concurrency-restruct
 signal = "discrete"
 sr_refs = ["SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-081]
@@ -806,7 +864,7 @@ contract = """trunk_step.py CLI (the serial trunk lane's shared-surface steps, c
 signal = "variable"
 sr_refs = ["SR-130", "SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-082]
@@ -817,7 +875,7 @@ contract = """IF-056's derivation-loader seam, as HELD by the split sibling that
 signal = "variable"
 sr_refs = ["SR-071", "SR-074"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -830,7 +888,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-071", "SR-075"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -843,7 +901,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-071", "SR-076"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -855,7 +913,7 @@ contract = """IF-071's frontier DECISION seam, as HELD by the split sibling that
 signal = "variable"
 sr_refs = ["SR-055", "SR-057"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """WI-280 slice 11: the guarded import moved to traj_parse (its one home); the seam is IF-071's."""
 
@@ -868,7 +926,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-136"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-087]
 direction = "Consumes"
@@ -878,7 +936,7 @@ contract = """reuses doc_files (the root *.md + docs/**/*.md walk with the lingu
 signal = "variable"
 sr_refs = ["SR-136"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 
 [interface.IF-088]
 direction = "Consumes"
@@ -888,7 +946,7 @@ contract = """the dispatcher's exit-banner pending read (docs/concurrency-v2.md 
 signal = "variable"
 sr_refs = ["SR-093"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """sink — the banner renders what the generator family derives; nearest seam IF-084 is the same derivation held by traj_status for the RENDER side, this is the dispatcher's read of it"""
 
@@ -900,7 +958,7 @@ contract = """the empty-frontier gap census (docs/concurrency-v2.md §A4 ladder 
 signal = "variable"
 sr_refs = ["SR-093"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it"""
 
@@ -912,7 +970,7 @@ contract = """the unified trunk-side intake mint (WI-388, R1/R3): intake_after_m
 signal = "variable"
 sr_refs = ["SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-091]
@@ -923,7 +981,7 @@ contract = """reads the WI-380 amendment seam as-is - staged_spine_amendments(ro
 signal = "variable"
 sr_refs = ["SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-092]
@@ -934,7 +992,7 @@ contract = """sibling import for the registry write side (the IF-078 shape): COL
 signal = "variable"
 sr_refs = ["SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-093]
@@ -945,7 +1003,7 @@ contract = """sibling import for the station-cycle render's derived vocabulary (
 signal = "variable"
 sr_refs = ["SR-055"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-002 by the gen_trajectory facade); seam driven by TC-056's WI-389 station sync pins"""
 
@@ -957,7 +1015,7 @@ contract = """sibling import for the station-cycle render's derived vocabulary (
 signal = "variable"
 sr_refs = ["SR-055"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """seam driven by TC-056's WI-389 station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)"""
 
@@ -969,7 +1027,7 @@ contract = """The prompt LOADER seam (SN-032): `load(key, override)` returns one
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = "source: the templates are files under project-trajectory/prompts/, not code."
 
@@ -981,7 +1039,7 @@ contract = """The generated catalogue reads `catalog_rows()` — `(key, file, sl
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """sink: its output is a generated DOCUMENT, not an API any module calls. Freshness-gated and declared in docs/stack.ini [generated]."""
 
@@ -993,7 +1051,7 @@ contract = """The coordinator side of the prompt loader (SN-032, the IF-097 seam
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = "the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097."
 
@@ -1005,7 +1063,7 @@ contract = """The dual-plan hats' side of the prompt loader (SN-032, the IF-097 
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
 
@@ -1017,7 +1075,7 @@ contract = """reads the id watermark so a mint counts from the RECORD, not from 
 signal = "variable"
 sr_refs = ["SR-132"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 
 [interface.IF-102]
@@ -1028,7 +1086,7 @@ contract = """spine_carrier.py module: the requirement spine's registry CARRIER 
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-006"
 notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies is an owner ruling (2026-08-10, repo-lock D-6) that AMENDS the F5 rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly. Counterpart names trace as the first importer; check_trajectory imports it too, and the remaining spine readers join as they convert."""
 
@@ -1041,7 +1099,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
 component = "CMP-006"
 notes = """source - reads the registries and writes beside them; consumes no kit module. Stability is PROVISIONAL on purpose: this is migration scaffolding with a defined end. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson), and it is RETIRABLE once no supported repo is still on the legacy carriers - the same expiry the CSV fallback in spine_carrier and both module-size ratchet entries carry. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
 
@@ -1053,7 +1111,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1065,7 +1123,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1077,7 +1135,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1089,7 +1147,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1101,7 +1159,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1113,7 +1171,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1125,7 +1183,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102) instead o
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1138,7 +1196,7 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1150,7 +1208,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102): the stak
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
 
@@ -1162,7 +1220,7 @@ contract = """The adjudicator side of the prompt loader (the IF-097 seam consume
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
 
@@ -1174,7 +1232,7 @@ contract = """reads the requirement spine through the CARRIER (IF-102): the TC r
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
 
@@ -1186,7 +1244,7 @@ contract = """The adjudicator-brief seam the session engine composes from: `comp
 signal = "variable"
 sr_refs = ["SR-146"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """intra-component (both CMP-004), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
 
@@ -1198,7 +1256,7 @@ contract = """reads the id watermark so BOTH of this module's mints count from t
 signal = "variable"
 sr_refs = ["SR-105"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared when the adversarial review of the D-5 cutover moved these two mints off max(live) + 1, which under repo-lock D-4 re-issued the id of anything deleted."""
 
@@ -1210,7 +1268,7 @@ contract = """the SYMBOL-BINDING seam behind the LLR `CodeSymbol` anchor rule (W
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Stable"
+approval = "draft"
 component = "CMP-007"
 notes = """the cross-component edge CMP-003 -> CMP-002, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the D-6/F5 hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py."""
 
@@ -1222,7 +1280,7 @@ contract = """reads the OWNER DECISION REGISTRY through the CARRIER (IF-102) ins
 signal = "variable"
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
 
@@ -1234,7 +1292,7 @@ contract = """reads the MODEL REGISTRY through the CARRIER (IF-102), so `docs/ag
 signal = "variable"
 sr_refs = ["SR-079"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed. Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
 
@@ -1247,7 +1305,6 @@ signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 sr_refs = ["SR-147"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). Stability was `Provisional` until WI-443 and maps to `Experimental`: `Provisional` was never in the shipped vocabulary (Experimental|Stable|Deprecated) and was validated nowhere."""
-

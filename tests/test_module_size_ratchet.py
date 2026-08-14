@@ -654,7 +654,7 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 3678,  # +221 2026-08-13: WI-443 — the IF/CMP schema tier (required fields, closed vocabularies), the four IF Contract negative rules, and the untagged-endpoint classifier, all warn-first; +8 the adversarial round's refutation recorded in schema_advisories' docstring (reviewed bumps, reasons in the log)
+    "trace.py": 3834,  # +156 2026-08-14: WI-442 — the depth-0 FRAME joins the checker: three tiers loaded off external.toml, their required-field/enum schema rows, the entity/crossing/tie-back resolution rules (`frame_findings` + `tieback_findings`, a --strict failure class of their own) and the report section that reads them out (reviewed bump, reason in the log); earlier +221 2026-08-13: WI-443 — the IF/CMP schema tier (required fields, closed vocabularies), the four IF Contract negative rules, and the untagged-endpoint classifier, all warn-first; +8 the adversarial round's refutation recorded in schema_advisories' docstring (reviewed bumps, reasons in the log)
     # +132 (1926 -> 2058; the last +10 is the F4 BOM hardening: read_rows utf-8-sig + git-show strips), WI-316: staged_spine_findings — the amend-without-
     # flip warn (--staged): content cells of a Verified spine row changed
     # without the Modified marker, suppressed when the owning SR flips in the
@@ -998,7 +998,7 @@ BASELINE = {
     # complexity ratchet DELETE `cross_component_findings`' entry instead of
     # bumping it. The rest is the two docstrings recording why the direction is
     # the fix and why the advisory must never join the exit code.
-    "check_trajectory.py": 4115,  # +40 2026-08-13: WI-445 — OI-21's phase-anchor archetype reads BOTH the canonical [phase]-[reqs|tests] and the retired [g1|g2] spelling, plus the bar-level table and the reworded drop message (reviewed bump, reason in the log); earlier +25 2026-08-13: WI-443 — the seam-TC rule re-keyed off the retired IF Status onto Stability, summarised (reviewed bump, reason in the log); earlier +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
+    "check_trajectory.py": 4109,  # -6 2026-08-14: WI-442, RE-STAMPED DOWN — WI-191's anti-duplication rationale arm and its `_proposed_rationale_present` helper retired with the `Stability` column they armed on, and the seam-TC rule stopped filtering on a maturity value; recorded down rather than left as headroom for the next regression to hide in. Earlier +40 2026-08-13: WI-445 — OI-21's phase-anchor archetype reads BOTH the canonical [phase]-[reqs|tests] and the retired [g1|g2] spelling, plus the bar-level table and the reworded drop message (reviewed bump, reason in the log); earlier +25 2026-08-13: WI-443 — the seam-TC rule re-keyed off the retired IF Status onto Stability, summarised (reviewed bump, reason in the log); earlier +20 2026-08-13: WI-440 review fixes — the lazy covered-pairs read + the one-scan-per-run cache (reviewed bump, reason in the log)
     # NEW ENTRY, +25 (1498 -> 1523), WI-357: the two-stage work-branch claim
     # signal — the on-disk fast path plus the branch-history probe that
     # survives the §2.3 close commit (git log -1 over the claim path), with
@@ -1276,7 +1276,7 @@ BASELINE = {
     # own code is a new module under THRESHOLD, and a MAPPING row is the only
     # way a scaffold ever receives a file. Reviewed bump; re-stamp down with
     # WI-280.
-    "bootstrap.py": 2834,  # +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
+    "bootstrap.py": 2844,  # +10 2026-08-14: WI-442 — external.toml joins MAPPING, the scaffold docstring and the boundary-vs-interface explanation an adopter reads first (reviewed bump, reason in the log); earlier +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one

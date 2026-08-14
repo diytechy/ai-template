@@ -935,12 +935,12 @@ def load_ifs(rows):
     IF integrity (malformed ids, SR-Ref resolution); this loader only feeds the
     warn-first coverage views, so a malformed id is simply skipped here.
 
-    `stability` REPLACES the `status` key this loader carried until WI-443. The
-    IF `Status` column retired with OI-14 part B — it was never one of the fields
-    process.md §8 declared, and `Stable` appeared in it and in `Stability` on the
-    same row meaning different things — so `Stability`
-    (`Experimental`/`Stable`/`Deprecated`) is the one maturity field both rules
-    that read it now key on."""
+    `approval` is the tier's ONE maturity field. It replaced `stability` at
+    WI-442, which had itself replaced `status` at WI-443 — the same defect twice
+    (two columns on one row meaning different kinds of "settled"), fixed the same
+    way. `direction`/`counterpart` were ruled out by the same decision and are
+    HELD (they are SR-091's only input; see interfaces.toml's header and
+    WI-455), so the loader still carries them."""
     out = []
     for r in rows:
         iid = (r.get("IF-ID") or "").strip()
@@ -952,7 +952,7 @@ def load_ifs(rows):
                 "direction": (r.get("Direction") or "").strip().lower(),
                 "this": (r.get("ThisProject") or "").strip(),
                 "counterpart": (r.get("Counterpart") or "").strip(),
-                "stability": (r.get("Stability") or "").strip().lower(),
+                "approval": (r.get("Approval") or "").strip().lower(),
                 "notes": (r.get("Notes") or "").strip().lower(),
             }
         )
@@ -1068,16 +1068,23 @@ def interface_findings(root):
                 "row Notes if it deliberately provides nothing)".format(module)
             )
 
-    # Seam-TC citation: each `Stable` IF id should be cited by >=1 TC (the rung-2
+    # Seam-TC citation: each declared IF id should be cited by >=1 TC (the rung-2
     # seam-TC rule, and process.md §8's "every interface is backed by an SR and a
     # contract/fixture test").
     #
-    # THE ARMING KEY CHANGED AT WI-443 AND THE OLD ONE WAS A TAUTOLOGY. Until the
-    # IF `Status` column retired this read `Status == Active`, and measured on the
-    # live registry that armed EXACTLY the 5 rows that were already TC-cited — so
-    # the rule reported zero findings by construction and could never report
-    # anything else. `Stability == Stable` is the honest successor under the one
-    # maturity field, and it says 103 of 108 Stable seams carry no contract test.
+    # THE ARMING KEY HAS NOW MOVED TWICE, AND THE THIRD SPELLING IS "ALL ROWS".
+    # It first read `Status == Active`, which armed EXACTLY the 5 rows already
+    # TC-cited — zero findings by construction. WI-443 re-keyed it to
+    # `Stability == Stable` (103 of 108 uncited). WI-442 retired `Stability` for
+    # `Approval`, and copying the shape forward as `Approval == "approved"` would
+    # have reproduced the ORIGINAL tautology in a new column: every row reads
+    # `draft` today, so the rule would arm on nothing and report a clean zero.
+    #
+    # So it arms on EVERY real IF row, and the maturity column drops out of the
+    # rule entirely. That is the honest reading of the obligation anyway — an
+    # interface is backed by a contract test or it is not; how settled its
+    # contract is was never the question — and it is the one spelling that cannot
+    # be silently disarmed by a vocabulary change.
     #
     # SUMMARISED, not one line per row, and that is a deliberate ergonomic choice
     # rather than a softening: this function runs in the shipped pre-commit hook,
@@ -1086,13 +1093,11 @@ def interface_findings(root):
     tc_cited = set()
     for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
         tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
-    uncited = [
-        r["id"] for r in ifs if r["stability"] == "stable" and r["id"] not in tc_cited
-    ]
+    uncited = [r["id"] for r in ifs if r["id"] not in tc_cited]
     if uncited:
         shown = ", ".join(uncited[:5])
         out.append(
-            "{} Stable IF seam(s) are cited by no TC (a seam should carry a "
+            "{} IF seam(s) are cited by no TC (a seam should carry a "
             "contract/fixture test, process.md §8){}: {}".format(
                 len(uncited), " — first 5" if len(uncited) > 5 else "", shown
             )
@@ -1686,21 +1691,6 @@ def _spec_interfaces_section(text):
     return rest[: nxt.start()] if nxt else rest
 
 
-def _proposed_rationale_present(section, iid):
-    """True when at least one line citing `iid` carries rationale text beyond the
-    id and the `Proposed` marker — a PRESENCE check (whether the rationale is
-    *honest* and truly names the nearest seam is the Reviewer/critique gap, the
-    spec-interface-hygiene rubric B1)."""
-    for line in section.splitlines():
-        if iid not in line:
-            continue
-        residue = _IF_TOKEN_RE.sub("", line)  # drop the id + any nearest-IF ids
-        residue = re.sub(r"(?i)proposed|[-*•·:()\[\].,;]", "", residue)
-        if len(residue.strip()) >= 8:
-            return True
-    return False
-
-
 def _armed_specs(root):
     """The live `docs/specs/` files that are real specs-of-record, sorted.
 
@@ -1722,18 +1712,31 @@ def _armed_specs(root):
 def spec_interface_findings(root):
     """WI-191 — a spec-of-record acts on DECLARED interface boundaries. A spec's
     `## Interfaces` section must cite only IF-### seams that resolve in
-    `interfaces.toml` (the one seam home, PROCESS.md §8), and a cited
-    `Stability=Experimental` seam must carry a non-empty rationale on its citation line
-    (the forced nearest-existing-IF search that is the anti-duplication
-    mechanism). WARN plain / ERROR under `--strict` (DevBar-Tests+), like
-    `component_findings`; the caller owns that promotion.
+    `interfaces.toml` (the one seam home, PROCESS.md §8). WARN plain / ERROR
+    under `--strict` (DevBar-Tests+), like `component_findings`; the caller owns
+    that promotion.
+
+    THE ANTI-DUPLICATION ARM RETIRED AT WI-442, AND IT IS NOT A SILENT DROP.
+    Until decision 4 this function also demanded a rationale on the citation line
+    of any `Stability = Experimental` seam — the forced nearest-existing-IF
+    search. Its arming input was DELETED: the slimmed tier has one maturity
+    field with two values, and neither means what `Experimental` meant ("proposed
+    and not yet pinned by a second consumer"). Re-keying onto `approval ==
+    "draft"` was the obvious move and is the WRONG one: it silently changes the
+    predicate to "not yet ratified", which on this repo's registry arms 113 of
+    113 rows instead of 5, and it does so at a severity that ERRORS under
+    --strict. A rule whose blast radius multiplies twentyfold while its sentence
+    stays the same is not the same rule.
+
+    So the arm is GONE rather than approximated, and its loss is a recorded
+    finding of the re-tier (log entry, WI-442) with a home at sitting 3: if the
+    forced search is worth keeping, it needs a value that means "proposed",
+    which is a vocabulary decision (D-9/decision 12), not a checker's to invent.
 
     **Vacuous-until-armed:** a spec with no `## Interfaces` heading is skipped, so
     existing specs and downstream repos stay green until they adopt the section.
     An armed section that cites no resolvable IF-### AND states no intra-module
-    escape (PROCESS.md §8) is itself a finding — an empty-ceremony section. The
-    honesty of a rationale and whether a Proposed contract near-duplicates an
-    existing seam are the recorded Reviewer-tier gaps (enforcement-audit.md)."""
+    escape (PROCESS.md §8) is itself a finding — an empty-ceremony section."""
     specs = root / SPECS_DIR
     if not specs.is_dir():
         return []
@@ -1756,19 +1759,10 @@ def spec_interface_findings(root):
                 )
             continue
         for iid in ids:
-            row = if_rows.get(iid)
-            if row is None:
+            if iid not in if_rows:
                 out.append(
                     "{}: `## Interfaces` cites {} which resolves to no row in "
                     "{}".format(rel, iid, IF_CSV)
-                )
-            elif row["stability"] == "experimental" and not _proposed_rationale_present(
-                section, iid
-            ):
-                out.append(
-                    "{}: cites Experimental seam {} with no rationale — name the "
-                    "nearest existing IF-### and why it does not suffice (the "
-                    "anti-duplication search, PROCESS.md §8)".format(rel, iid)
                 )
     return out
 

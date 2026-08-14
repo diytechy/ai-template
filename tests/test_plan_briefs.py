@@ -107,7 +107,7 @@ def _fixture_repo(root):
         'rationale = "{}"\n'
         'sr_refs = ["SR-061"]\n'
         'version = "v1"\n'
-        'stability = "Experimental"\n'
+        'approval = "draft"\n'
         'component = "CMP-004"\n'
         'notes = "note"\n\n'
         "[interface.IF-000]\n"
@@ -118,7 +118,7 @@ def _fixture_repo(root):
         'signal = "discrete"\n'
         'sr_refs = ["SR-000"]\n'
         'version = "v1"\n'
-        'stability = "Experimental"\n'.format(IF_CONTRACT, IF_RATIONALE),
+        'approval = "draft"\n'.format(IF_CONTRACT, IF_RATIONALE),
         encoding="utf-8",
     )
     return root
