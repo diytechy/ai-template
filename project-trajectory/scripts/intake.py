@@ -125,7 +125,7 @@ def normalize_bar(value):
 # recorded at check_trajectory.SPINE_TRACED_CELLS, the cell-split table's
 # home). Keyed per registry so a same-named column elsewhere never rides in.
 ROUTED_TRACED_CELLS = {
-    "docs/requirements/system-requirements.toml": frozenset({"SN-Refs"}),
+    "docs/requirements/system-requirements.toml": frozenset({"SN-Refs", "Boundary-Refs"}),
     "docs/requirements/low-level-requirements.toml": frozenset({"SR-Refs"}),
     "docs/test/test-cases.toml": frozenset({"Verifies"}),
 }

@@ -87,7 +87,7 @@ contract = "call"
 signal = "discrete"
 sr_refs = ["SR-001"]
 version = "1"
-stability = "Stable"
+approval = "approved"
 component = "CMP-001"
 notes = "demo seam"
 """

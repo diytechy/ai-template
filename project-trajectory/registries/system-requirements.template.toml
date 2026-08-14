@@ -15,6 +15,7 @@
 [requirement.SR-000]
 title = "EXAMPLE - delete on first real entry"
 sn_refs = ["SN-000"]
+boundary_refs = ["B-000"]  # the BOUNDARY crossing(s) in docs/requirements/external.toml this requirement states an observable AT (process.md; the frame tier). An SR forms around a crossing, so a row with no Boundary-Refs is either off-boundary on purpose - say so in Rationale - or mis-tiered. An id that does not resolve is a hard finding; a blank cell is a warn-first coverage count.
 requirement = "The system shall <single testable shall-statement>."
 rationale = "Why it exists (link the SN by id; do not restate it)."
 acceptance_criteria = "Measurable condition a test/demo asserts (the contract with the Test Engineer)."

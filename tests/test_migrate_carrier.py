@@ -217,7 +217,10 @@ def test_the_retired_if_status_column_has_no_carrier_key():
     assert "status" not in carrier.REGISTRY_KEYS["IF-ID"]
     assert "signal" in carrier.REGISTRY_KEYS["IF-ID"]
     assert "rationale" in carrier.REGISTRY_KEYS["IF-ID"]
-    assert "stability" in carrier.REGISTRY_KEYS["IF-ID"]
+    # WI-442: `stability` RETIRED in its turn, replaced by `approval` — the
+    # same defect the `Status` retirement above fixed, one column later.
+    assert "stability" not in carrier.REGISTRY_KEYS["IF-ID"]
+    assert "approval" in carrier.REGISTRY_KEYS["IF-ID"]
 
 
 def test_neither_new_registry_survives_under_its_old_carrier():

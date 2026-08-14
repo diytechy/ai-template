@@ -137,13 +137,15 @@ IF_HDR = (
 # hold rather than rewriting every one of them: what those tests are about is
 # coverage, cross-component edges and spec citations, not the carrier — and a
 # translating writer keeps the SUBJECT of each test visible instead of burying
-# it under a schema migration. The two tests that ARE about the vocabulary
-# (`test_seam_tc_citation_warn`, `test_spec_interfaces_experimental_needs_
-# rationale`) speak TOML directly, below.
+# it under a schema migration. `test_seam_tc_citation_warn` is ABOUT the
+# vocabulary and still goes through this translator, which is why the
+# default-never-overwrite rule below is load-bearing rather than tidy. (Its
+# former sibling `test_spec_interfaces_experimental_needs_rationale` was
+# replaced at WI-442 by the test that pins that arm's REMOVAL.)
 #
 # `Status` is DROPPED here, since it retired with the ruling: a body that set
-# `Status=Proposed` is translated to `stability = "Experimental"`, which is the
-# rung that value became.
+# `Status=Proposed` is translated to `approval = "draft"`, which is the rung
+# that value became once WI-442 replaced `Stability` with `Approval`.
 def _csv_body_to_toml(header, table, body):
     import csv as _csv
     import io as _io
@@ -155,7 +157,7 @@ def _csv_body_to_toml(header, table, body):
         "Contract": "contract",
         "SR-Refs": "sr_refs",
         "Version": "version",
-        "Stability": "stability",
+        "Stability": "approval",
         "Component": "component",
         "Notes": "notes",
         "Name": "name",
@@ -172,8 +174,19 @@ def _csv_body_to_toml(header, table, body):
         rid = (row.get(id_col) or "").strip()
         if not rid:
             continue
-        if (row.get("Status") or "").strip().lower() == "proposed":
-            row["Stability"] = "Experimental"
+        # DEFAULT, never overwrite. The first version of this line assigned
+        # unconditionally and silently discarded whatever maturity the caller's
+        # fixture set — which made `test_seam_tc_citation_warn` unable to detect
+        # the very re-arming its comment reasons about (its two rows both became
+        # `approved`, so re-keying the rule on `approval == "approved"` passed
+        # the whole file). A fixture translator that rewrites the cell under
+        # test is a test that cannot fail.
+        if not (row.get("Stability") or "").strip():
+            row["Stability"] = (
+                "draft"
+                if (row.get("Status") or "").strip().lower() == "proposed"
+                else "approved"
+            )
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
             out.append('signal = "discrete"')
@@ -261,18 +274,23 @@ def test_seam_tc_citation_warn(tmp_path):
     # A symmetric pair covers both directions, so only the seam-TC warn fires; a
     # TC that cites IF-001 suppresses its warn, IF-002 still warns.
     #
-    # RE-KEYED AT WI-443, and the old key is why: this armed on `Status=Active`
-    # until OI-14 part B retired that column, and measured on the live registry
-    # `Active` marked EXACTLY the rows that were already TC-cited — the rule
-    # could only ever report zero. It now arms on `Stability=Stable`, the one
-    # maturity field, and reports a COUNT plus the first few ids rather than a
-    # line per row (this runs in the shipped pre-commit hook, where a hundred
-    # warn lines is a check nobody reads).
+    # RE-KEYED TWICE, and the second time the arming key left ENTIRELY. It armed
+    # on `Status=Active` until OI-14 part B retired that column, and measured on
+    # the live registry `Active` marked EXACTLY the rows already TC-cited — the
+    # rule could only report zero. WI-443 re-keyed it to `Stability=Stable`.
+    # WI-442 retired `Stability` for `Approval`, where every live row reads
+    # `draft`, so copying the shape forward as `Approval == "approved"` would
+    # have rebuilt the ORIGINAL tautology in a new column. It arms on EVERY real
+    # IF row now: an interface is backed by a contract test or it is not, and
+    # that is the one spelling no vocabulary change can silently disarm. It still
+    # reports a COUNT plus the first few ids rather than a line per row (this runs
+    # in the shipped pre-commit hook, where a hundred warn lines is a check
+    # nobody reads).
     write_arch(tmp_path, ARCH_2MOD)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
@@ -285,8 +303,11 @@ def test_seam_tc_citation_warn(tmp_path):
     assert "declares no Consumes seam" not in proc.stderr  # symmetric -> covered
     seam = [ln for ln in proc.stderr.splitlines() if "cited by no TC" in ln]
     assert len(seam) == 1, proc.stderr
-    assert "1 Stable IF seam(s)" in seam[0] and "IF-002" in seam[0]
+    assert "1 IF seam(s)" in seam[0] and "IF-002" in seam[0]
     assert "IF-001" not in seam[0]  # the TC citation suppresses it
+    # IF-002 is `draft` and IF-001 `approved`, so the row that warns is the one
+    # NO TC cites regardless of maturity — the arming key really is gone, not
+    # merely renamed.
 
 
 def test_contracts_docstring_citation_warns(tmp_path):
@@ -297,8 +318,8 @@ def test_contracts_docstring_citation_warns(tmp_path):
     write_arch(tmp_path, arch)
     write_ifs(
         tmp_path,
-        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,Stable,Active,,\n'
-        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,Stable,Active,,\n',
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
     )
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -1578,13 +1599,13 @@ def test_components_check_off_silences_the_overlap_advisory(tmp_path):
 
 # --- specs act on declared interface boundaries (WI-191) ----------------------
 
-# One Stable seam + one Proposed seam for the spec-citation checks.
+# Two declared seams for the spec-citation checks.
 SPEC_IFS_ONE = (
-    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,Stable,Stable,,\n'
+    'IF-001,Consumes,scripts/mod_a,docs/stack.ini,"reads",SR-001,v1,approved,Stable,,\n'
 )
 SPEC_IFS_PROPOSED = SPEC_IFS_ONE + (
     'IF-050,Provides,scripts/mod_a,scripts/mod_b,"new seam",SR-001,v1,'
-    "Experimental,Proposed,,\n"
+    "draft,Proposed,,\n"
 )
 
 
@@ -1633,19 +1654,32 @@ def test_spec_interfaces_unresolvable_warns_then_errors_under_strict(tmp_path):
     assert "IF-999 which resolves to no row" in strict.stderr
 
 
-def test_spec_interfaces_experimental_needs_rationale(tmp_path):
+def test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed(tmp_path):
+    """WI-442 removed WI-191's forced nearest-existing-IF search, and this pins
+    the removal so it cannot drift back in half-fed.
+
+    The arm demanded a rationale on the citation line of any
+    `Stability = Experimental` seam. Its input was DELETED by decision 4: the
+    slimmed tier has one maturity field with two values, and neither means
+    "proposed and not yet pinned by a second consumer". Re-keying onto
+    `approval == "draft"` was the obvious move and is the wrong one — it
+    silently becomes "not yet ratified", which on a repo that ratifies nothing
+    before its sitting arms 100% of rows instead of ~4%, at a severity that
+    ERRORS under --strict.
+
+    So a bare citation of a `draft` seam is CLEAN, and the resolution arm below
+    it still bites. If sitting 3 wants the forced search back, it needs a value
+    that means "proposed" — a vocabulary decision, not a checker's to invent."""
     bare = "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed)\n\n## Done-when\n"
     _spec_repo(tmp_path, "WI-001.md", bare, ifs=SPEC_IFS_PROPOSED)
     proc = run_traj(tmp_path)
-    assert "Experimental seam IF-050 with no rationale" in proc.stderr
-    # A rationale naming the nearest existing seam + why it falls short -> clean.
-    ok = (
-        "# WI-001\n\n## Interfaces\n\n- IF-050 (Proposed): a new provide; nearest "
-        "IF-001 is a consume, insufficient because this is the opposite "
-        "direction.\n"
-    )
-    write_spec_file(tmp_path, "WI-001.md", ok)
-    assert "Experimental seam IF-050" not in run_traj(tmp_path).stderr
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "with no rationale" not in proc.stderr
+    assert "IF-050" not in proc.stderr
+    # ...and --strict promotes nothing about IF-050 either. (The fixture's own
+    # R-F "live spec cited by no open WI" finding is what --strict does still
+    # error on, which is why the assertion is about the id and not the code.)
+    assert "IF-050" not in run_traj(tmp_path, "--strict").stderr
 
 
 def test_spec_interfaces_empty_section_warns(tmp_path):

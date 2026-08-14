@@ -282,6 +282,12 @@ REQUIRED_FIELDS = {
     # rows are touched, so demanding one everywhere would manufacture 113 rushed
     # sentences — the bulk rewrite the ruling refused. `SignalNote`, `Component`
     # and `Notes` are optional by design.
+    # WI-442 replaced `Stability` with `Approval` here. The two
+    # `Interface*External` tie-backs are deliberately NOT required — a row
+    # carries one only when it realizes a boundary crossing, and requiring them
+    # would demand every internal seam claim to be a boundary.
+    # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
+    # owner: docs/requirements/interfaces.toml's header.
     "IF": [
         "IF-ID",
         "Direction",
@@ -291,9 +297,14 @@ REQUIRED_FIELDS = {
         "Signal",
         "SR-Refs",
         "Version",
-        "Stability",
+        "Approval",
     ],
     "CMP": ["CMP-ID", "Name", "Category", "State"],
+    # WI-442 — the depth-0 frame's three tiers (docs/requirements/external.toml).
+    # `Absorbs` and `Notes` are optional provenance and are not required.
+    "EXT": ["EXT-ID", "Name", "Class", "Description", "Approval"],
+    "B": ["B-ID", "Entity", "Direction", "Carries", "Approval"],
+    "REL": ["REL-ID", "From", "To", "Kind", "Flow", "Approval"],
 }
 
 # The only *closed* vocabularies the method defines (process.md §4). Priority and
@@ -323,11 +334,31 @@ ENUM_FIELDS = {
     # undeclared, it overlapped `Stability` (the word `Stable` appeared in both
     # on one row meaning different things), and its only consumer was the LLM
     # planning-brief surface, which was being handed it as fact.
+    #
+    # `Stability` LEFT this map at WI-442 and `Approval` took its place — the one
+    # maturity field for both the IF tier and the frame tiers below, which is
+    # what decision 12's "one shared status vocabulary, per-registry subsets"
+    # buys. The subset here is the two-value one; it is PROVISIONAL pending
+    # D-9's ladder, and the migration is stated in
+    # docs/requirements/external.toml's header rather than guessed at here.
     "IF": {
         "Signal": {"discrete", "variable"},
-        "Stability": {"Experimental", "Stable", "Deprecated"},
+        "Approval": {"draft", "approved"},
     },
     "CMP": {"State": {"planned", "built", "verified", "has-gap", "deprecated"}},
+    # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
+    # confirmed (`deliverable` was the ruled addition); `Direction` is read from
+    # the SYSTEM's point of view, which is why it is in|out|inout and not the
+    # IF tier's retired Provides/Consumes.
+    "EXT": {
+        "Class": {"operational", "enabling", "interoperating", "deliverable"},
+        "Approval": {"draft", "approved"},
+    },
+    "B": {
+        "Direction": {"in", "out", "inout"},
+        "Approval": {"draft", "approved"},
+    },
+    "REL": {"Approval": {"draft", "approved"}},
 }
 
 # --- the IF `Contract` negative rules (WI-443, warn-first) --------------------
@@ -1310,6 +1341,184 @@ def schema_advisories(label, rows):
                     f"vocabulary (allowed: {', '.join(sorted(allowed))})"
                 )
     return out
+
+
+def frame_findings(exts, bifs, rels):
+    """Reference resolution inside `external.toml` (WI-442, §1R.5) as a list of
+    finding strings — the frame's own join rules.
+
+    PLAIN STRINGS, not the `(at_fault_id, finding)` pairs the spine's older rules
+    return. The pair shape was written here first and NO caller ever read the id,
+    which documents a contract that does not exist; `tc_citation_findings` keeps
+    its pairs because its caller genuinely keys on them.
+
+    It checks three reference fields — a boundary row's `Entity`, and a
+    relationship's `From` and `To` — and they are the only structural claims the
+    ruled schema makes. Everything else about the frame — is it the RIGHT frame,
+    are the crossings complete — is a human ruling, and a check that pretended
+    otherwise would be inventing a rule nobody wrote.
+
+    FAILURE CLASS, not advisory, unlike the schema tier beside it. A tie-back to
+    an entity that does not exist is not a maturing corpus converging on a
+    vocabulary; it is a dangling reference, exactly like an SR citing an SN that
+    was deleted, and the spine's other reference rules have been hard since they
+    shipped. Note what it does NOT check: a relationship carries no interface
+    vocabulary by design, so there is nothing here that could grow one.
+
+    NO ENTITIES IS ONLY VACUOUS WHEN NOTHING REFERENCES THEM, and getting that
+    wrong was a false green — the one failure this file exists to prevent. The
+    first version returned `[]` on an empty entity set, reasoning that the rules
+    below had nothing to resolve against. They did: 6 crossings referencing 5
+    entities that do not exist resolved to silence, and `_frame_report_section`
+    then printed "every crossing Entity ... resolves" over the top of it. That is
+    the natural state of a half-authored frame (you draw the boundary, then name
+    who is on the far side) and of a refactor that drops an entity block. An
+    empty frame is still vacuous; an empty entity set under a non-empty crossing
+    or relationship set is a finding of its own."""
+    out = []
+    ext_ids = {r["EXT-ID"] for r in exts}
+    if not ext_ids:
+        if bifs or rels:
+            out.append(
+                "external.toml declares {} crossing(s) and {} relationship(s) "
+                "but NO entity — every reference in them resolves to "
+                "nothing".format(len(bifs), len(rels))
+            )
+        return out
+    for r in bifs:
+        bid = r["B-ID"]
+        for x in refs(r.get("Entity")):
+            if x not in ext_ids:
+                out.append(f"boundary {bid} Entity references unknown {x}")
+    for r in rels:
+        rid = r["REL-ID"]
+        for col in ("From", "To"):
+            for x in refs(r.get(col)):
+                if x not in ext_ids:
+                    out.append(f"relationship {rid} {col} references unknown {x}")
+    return out
+
+
+def sr_boundary_findings(srs, bifs, ifs):
+    """SN-037's SR->boundary rule (WI-442), as `(findings, advisories)` — both
+    plain lists of strings, per `frame_findings`' note on the pair shape.
+
+    SN-037's ratified acceptance asks that *"every system-requirement input and
+    output references a declared interface"* and that *"unresolved references ...
+    are mechanical findings"*. Those are two obligations at two severities, and
+    conflating them is what would make this check either useless or unshippable:
+
+      * RESOLUTION IS HARD. An SR whose `Boundary-Refs` names a crossing that is not
+        declared is a dangling reference, exactly like an SR citing a deleted SN,
+        and it joins the --strict failure set with the spine's other reference
+        rules. It is also the only half that can be true today.
+
+      * COVERAGE IS ADVISORY, and deliberately so. Making "every SR names a
+        crossing" an error would red 148 rows the moment the column existed, for
+        work that belongs to the re-tier campaign (WI-451 slice 2) and under a
+        form rule that is itself a GUIDELINE with recorded per-row waivers
+        (2026-08-13v). A gate that is 100% red on the day it ships is a gate
+        someone turns off. So the uncovered count is reported as ONE summary
+        line — the number the campaign has to move — and never as 148 findings.
+
+    THE THIRD CLAUSE IS NOT ENFORCED HERE. "Every declared component-boundary
+    crossing has an interface row" is decision 6 (a BIF with no realizing IF),
+    deferred BY RULING to post-schema, so this reports the realization gap as an
+    advisory and gates nothing on it. `ifs` is read for exactly that count, and
+    the same restraint is why `derive_gate.boundary_incomplete` reads approval
+    and not realization.
+
+    Vacuous with no frame registry: a project that declares no boundary has no
+    crossing an SR could name."""
+    findings, advisories = [], []
+    bif_ids = {r["B-ID"] for r in bifs}
+    if not bif_ids:
+        return findings, advisories
+    named = set()
+    for r in srs:
+        sid = r["SR-ID"]
+        cited = refs(r.get("Boundary-Refs"))
+        named.update(x for x in cited if x in bif_ids)
+        for x in cited:
+            if x not in bif_ids:
+                findings.append(
+                    f"SR {sid} Boundary-Refs references unknown crossing {x}"
+                )
+    uncovered = sum(1 for r in srs if not refs(r.get("Boundary-Refs")))
+    if uncovered:
+        advisories.append(
+            "SR->boundary coverage: {} of {} requirement(s) name no crossing in "
+            "Boundary-Refs (SN-037; the re-tier campaign is what moves this number, "
+            "and a row that legitimately states no boundary observable records "
+            "its reason rather than leaving a blank cell)".format(uncovered, len(srs))
+        )
+    unnamed = sorted(bif_ids - named)
+    if unnamed:
+        advisories.append(
+            "boundary crossing(s) named by NO requirement: {} — a crossing with "
+            "no SR is a frame nobody has stated an observable at".format(
+                ", ".join(unnamed)
+            )
+        )
+    realized = {
+        x
+        for r in ifs
+        for col in ("InterfaceFromExternal", "InterfaceToExternal")
+        for x in refs(r.get(col))
+    }
+    unrealized = sorted(bif_ids - realized)
+    if unrealized:
+        advisories.append(
+            "boundary crossing(s) realized by NO interface row: {} — decision 6's "
+            "question, deferred by ruling; reported, never gated".format(
+                ", ".join(unrealized)
+            )
+        )
+    return findings, advisories
+
+
+def tieback_findings(ifs, bifs):
+    """An IF row's directional tie-back must name a DECLARED crossing (WI-442,
+    owner naming 13m), as a list of finding strings.
+
+    Vacuous with no frame registry, which is the applies-when: a project without
+    `external.toml` has no crossings to name, and a stray tie-back there is a
+    schema question, not a resolution one.
+
+    WHAT THIS CANNOT CATCH, said out loud because the template says it too: a
+    tie-back that RESOLVES but does not belong — an internal seam claiming to
+    realize B-05 — is indistinguishable from a correct one to any check. That
+    judgment is the re-tier's and the reviewer's."""
+    out = []
+    bif_ids = {r["B-ID"] for r in bifs}
+    if not bif_ids:
+        return out
+    for r in ifs:
+        iid = r["IF-ID"]
+        for col in ("InterfaceFromExternal", "InterfaceToExternal"):
+            for x in refs(r.get(col)):
+                if x not in bif_ids:
+                    out.append(f"IF {iid} {col} references unknown crossing {x}")
+    return out
+
+
+def _frame_report_section(exts, bifs, rels, findings):
+    """The report's depth-0 frame block (WI-442), or `[]` when no frame is
+    declared — a named helper rather than another arm inside `render_report`,
+    which the complexity ratchet holds at its committed count and which is
+    already a long list-builder."""
+    if not (exts or bifs or rels):
+        return []
+    body = (
+        [
+            "{} entity, {} boundary-crossing and {} relationship row(s); every "
+            "crossing Entity, relationship From/To and IF tie-back "
+            "resolves.".format(len(exts), len(bifs), len(rels))
+        ]
+        if not findings
+        else ["- {}".format(f) for f in findings]
+    )
+    return ["", "## The depth-0 frame (external.toml resolution)", ""] + body
 
 
 def if_contract_advisories(ifs):
@@ -2505,11 +2714,25 @@ def load_registries(docs):
     # is derived — membership is a `Component` tag on the primitive rows
     # (LLR/IF/ASSET/PART), never restated on the CMP row; absent file -> [].
     raw_cmps = spine_carrier.load(docs / "requirements" / "components.toml", "CMP-ID")
-    # Optional interface-seam registry (IF-###, process.md §8): one row per
-    # directed seam (ThisProject module -> Counterpart module/file/external). Off
-    # the joined spine like PART/ASSET, but its SR-Refs back-link and its endpoint
-    # join keep it traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
+    # Optional interface-definition registry (IF-###, process.md §8): one row per
+    # interface, stating what it concretely IS. Off the joined spine like
+    # PART/ASSET, but its SR-Refs back-link and its endpoint join keep it
+    # traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
     raw_ifs = spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
+    # Optional depth-0 FRAME registry (WI-442, sitting-2 §1R.5): three tiers in
+    # one file — who is outside (EXT-###), what crosses the system boundary
+    # (B-##), and the external-to-external flows the system is not a party to
+    # (REL-###). One `load` per tier; the carrier keys by ID COLUMN, so the
+    # shared path needs no new loader. It is NOT free, and saying so beats an
+    # unbacked "costs nothing": `load` reads and parses the file twice per call
+    # (once for the rows, once for the nested-table check), so three tiers is six
+    # reads and six parses of one small file per run — negligible at this size,
+    # and the number to revisit if the frame ever stops being small. Absent
+    # file -> [] three times, and every rule below is then vacuous, which is the
+    # applies-when a project that declares no boundary needs.
+    raw_exts = spine_carrier.load(docs / "requirements" / "external.toml", "EXT-ID")
+    raw_bifs = spine_carrier.load(docs / "requirements" / "external.toml", "B-ID")
+    raw_rels = spine_carrier.load(docs / "requirements" / "external.toml", "REL-ID")
 
     # The working sets exclude template example rows (ids ending "-000") so a
     # fresh scaffold has nothing to orphan; the raw lists above keep them for the
@@ -2528,6 +2751,9 @@ def load_registries(docs):
     ]
     cmps = [r for r in raw_cmps if r.get("CMP-ID") and not is_example(r["CMP-ID"])]
     ifs = [r for r in raw_ifs if r.get("IF-ID") and not is_example(r["IF-ID"])]
+    exts = [r for r in raw_exts if r.get("EXT-ID") and not is_example(r["EXT-ID"])]
+    bifs = [r for r in raw_bifs if r.get("B-ID") and not is_example(r["B-ID"])]
+    rels = [r for r in raw_rels if r.get("REL-ID") and not is_example(r["REL-ID"])]
 
     sn_ids = set()
     sn_draft = set()
@@ -2556,6 +2782,8 @@ def load_registries(docs):
     reg.raw_pbs, reg.raw_repos, reg.raw_mods = raw_pbs, raw_repos, raw_mods
     reg.raw_parts, reg.raw_assets = raw_parts, raw_assets
     reg.raw_cmps, reg.raw_ifs = raw_cmps, raw_ifs
+    reg.raw_exts, reg.raw_bifs, reg.raw_rels = raw_exts, raw_bifs, raw_rels
+    reg.exts, reg.bifs, reg.rels = exts, bifs, rels
     reg.srs, reg.llrs, reg.tcs, reg.pbs = srs, llrs, tcs, pbs
     reg.mods, reg.parts, reg.assets = mods, parts, assets
     reg.cmps, reg.ifs = cmps, ifs
@@ -2573,6 +2801,7 @@ def analyze(reg, args):
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    exts, bifs, rels = reg.exts, reg.bifs, reg.rels
     sn_ids, sn_draft, sn_md = reg.sn_ids, reg.sn_draft, reg.sn_md
     raw_srs, raw_llrs, raw_tcs = reg.raw_srs, reg.raw_llrs, reg.raw_tcs
     raw_pbs, raw_repos, raw_mods = reg.raw_pbs, reg.raw_repos, reg.raw_mods
@@ -2746,6 +2975,16 @@ def analyze(reg, args):
     interface_backlink_findings, interface_advisories = interface_findings(
         ifs, sr_ids, module_ids
     )
+    # The depth-0 FRAME's own resolution rules (WI-442): a crossing's Entity and
+    # a relationship's From/To must name declared entities, and an IF row's
+    # directional tie-back must name a declared crossing. Its own class rather
+    # than folded into the interface findings above, because the report reads
+    # them out by name and "Interface findings: relationship REL-002 From
+    # references unknown EXT-009" would be a label lying about its contents.
+    sr_frame, sr_frame_advisories = sr_boundary_findings(srs, bifs, ifs)
+    frame_backlink_findings = (
+        frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
+    )
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
     # rather than `schema` on purpose: `schema` joins the --strict failure set,
@@ -2755,6 +2994,10 @@ def analyze(reg, args):
     interface_advisories += (
         schema_advisories("IF", ifs)
         + schema_advisories("CMP", cmps)
+        + schema_advisories("EXT", exts)
+        + schema_advisories("B", bifs)
+        + schema_advisories("REL", rels)
+        + sr_frame_advisories
         + if_contract_advisories(ifs)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
     )
@@ -2968,6 +3211,7 @@ def analyze(reg, args):
     findings.component_findings = component_findings
     findings.knowledge_advisories = knowledge_advisories
     findings.interface_backlink_findings = interface_backlink_findings
+    findings.frame_backlink_findings = frame_backlink_findings
     findings.interface_advisories = interface_advisories
     findings.status_findings = status_findings
     findings.phase_deferred = phase_deferred
@@ -2988,6 +3232,7 @@ def render_report(reg, findings, args, forest):
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    exts, bifs, rels = reg.exts, reg.bifs, reg.rels
     sn_ids, sn_draft = reg.sn_ids, reg.sn_draft
     orphans = findings.orphans
     orphan_ids = findings.orphan_ids
@@ -3004,6 +3249,7 @@ def render_report(reg, findings, args, forest):
     component_findings = findings.component_findings
     knowledge_advisories = findings.knowledge_advisories
     interface_backlink_findings = findings.interface_backlink_findings
+    frame_backlink_findings = findings.frame_backlink_findings
     interface_advisories = findings.interface_advisories
     status_findings = findings.status_findings
     phase_deferred = findings.phase_deferred
@@ -3083,6 +3329,15 @@ def render_report(reg, findings, args, forest):
                 f"| Interface findings | {len(interface_backlink_findings)} |",
             ]
             if ifs
+            else []
+        )
+        + (
+            [
+                f"| Frame: entities/crossings/relationships | "
+                f"{len(exts)}/{len(bifs)}/{len(rels)} |",
+                f"| Frame findings | {len(frame_backlink_findings)} |",
+            ]
+            if exts or bifs or rels
             else []
         )
         + [
@@ -3280,6 +3535,7 @@ def render_report(reg, findings, args, forest):
         if interface_advisories:
             lines += ["", "### Interface endpoint advisories (warn-only)", ""]
             lines += [f"- {a}" for a in interface_advisories]
+    lines += _frame_report_section(exts, bifs, rels, frame_backlink_findings)
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -3314,6 +3570,7 @@ def render_console(reg, findings, args, out, html_out):
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    exts, bifs, rels = reg.exts, reg.bifs, reg.rels
     orphans = findings.orphans
     integrity = findings.integrity
     advisories = findings.advisories
@@ -3337,6 +3594,7 @@ def render_console(reg, findings, args, out, html_out):
     module_findings = findings.module_findings
     component_findings = findings.component_findings
     interface_backlink_findings = findings.interface_backlink_findings
+    frame_backlink_findings = findings.frame_backlink_findings
 
     # Advisories are loud (stdout, not just the report) but never fail the run.
     # One loop over the ordered concatenation, not one loop per pipe: the pipes
@@ -3371,6 +3629,7 @@ def render_console(reg, findings, args, out, html_out):
             ("delegation", module_findings),
             ("component", component_findings),
             ("interface", interface_backlink_findings),
+            ("frame", frame_backlink_findings),
         ]
     elif args.strict_integrity:
         failing = [("integrity", integrity)]
@@ -3447,6 +3706,7 @@ def exit_code(findings, args):
         or findings.module_findings
         or findings.component_findings
         or findings.interface_backlink_findings
+        or findings.frame_backlink_findings
         or findings.provenance
         or findings.form
     ):

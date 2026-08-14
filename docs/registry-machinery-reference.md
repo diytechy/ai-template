@@ -672,7 +672,7 @@ When a **Verified** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Ratified** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Phase`, `Area`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `SupersededBy` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Area`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `SupersededBy` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` | `Title`, `Detail`, `Rationale`, `SR-Refs` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
@@ -698,7 +698,8 @@ All optional; all vacuous when absent or `-000`-only.
 
 | Registry | Id | Back-link cell | Rule |
 |---|---|---|---|
-| `docs/requirements/interfaces.toml` | `IF-###` | `SR-Refs` | Back-links join the `--strict` failure set. The `ThisProject` ↔ LLR `Module` endpoint join is **warn-only**. Citable from a TC's `Verifies`. |
+| `docs/requirements/interfaces.toml` | `IF-###` | `SR-Refs`, `interface_from_external` / `interface_to_external` | Back-links join the `--strict` failure set, and so does a directional tie-back naming a crossing `external.toml` does not declare. The `ThisProject` ↔ LLR `Module` endpoint join is **warn-only**. Citable from a TC's `Verifies`. |
+| `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Approval`; B `Entity`/`Direction`/`Carries`/`Approval`; REL `From`/`To`/`Kind`/`Flow`/`Approval`. `Approval` (`draft`\|`approved`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `derive_gate.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `draft`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). |
 | performance budgets | `PB-###` | `Refs` | Must resolve to a real SR id, LLR id, **or LLR `Module` path**. Empty `Refs` → finding. |
 | `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. |
 | procurement | `PART-###` | `Component` | membership only |

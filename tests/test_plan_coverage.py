@@ -45,7 +45,7 @@ IFS = (
     'signal = "discrete"\n'
     'sr_refs = ["SR-001"]\n'
     'version = "v1"\n'
-    'stability = "Stable"\n'
+    'approval = "approved"\n'
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 

@@ -973,8 +973,8 @@ When this project provides or consumes a contract — shared with another repo, 
 between its **own modules** — record each directed seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
 direction, counterpart (another module, a file, or an external actor), contract,
-its signal type, the `SR-Refs` that realize/rely on it, a rationale, version, and
-stability. The owning
+its signal type, the `SR-Refs` that realize/rely on it, a rationale, a version,
+and its `Approval` state. The owning
 (`Provides`) side holds the authoritative spec; the consuming side links the same
 `IF-###` and pins the version. Every interface is backed by an SR and a
 contract/fixture test. This keeps interlinked projects — and a repo's own modules
@@ -993,8 +993,10 @@ police the difference by FORM, since no check reads intent: no work-item id and
 no decision citation in `Contract` (both age — a cancelled id still reads as
 authority), no rationale connective (*because* / *rather than* / *so that* /
 *since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
-`Stability` (`Experimental` · `Stable` · `Deprecated`) is the row's **one**
-maturity field.
+`Approval` (`draft` · `approved`) is the row's **one** maturity field, shared
+with the boundary tier. A row ties back to a declared boundary crossing —
+`interface_from_external` / `interface_to_external` — only when it REALIZES one;
+a row with neither is an internal seam.
 
 **An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
 feeds the row's surface — `Contract` included — **verbatim** into the dual-plan

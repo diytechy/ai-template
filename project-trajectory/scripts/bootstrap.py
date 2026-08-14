@@ -34,6 +34,7 @@ What it creates in the destination:
     docs/requirements/system-requirements.toml <- registries/system-requirements.template.toml
     docs/requirements/low-level-requirements.toml
     docs/requirements/interfaces.toml          <- registries/interfaces.template.toml
+    docs/requirements/external.toml            <- registries/external.template.toml
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
@@ -159,12 +160,20 @@ launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
 (including its permission-bypass flag — the launchers and the loop banner state
 the consent plainly); the slots stay an EDIT block the repo owns.
 
-The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.toml`)
-are always scaffolded but ship **inert**: they hold only the `IF-000` placeholder
-row (ignored, like every `-000`), so a single-module project can simply leave
-them empty. Fill in `IF-###` rows when this repo declares a contract — with
-another repo **or between its own modules** (process.md §8). `trace.py`
-integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
+The boundary artifacts — `docs/requirements/external.toml` (the depth-0 FRAME:
+who is outside, what crosses, which external-to-external flows you are not a
+party to) and the interface artifacts (`docs/interfaces.md`,
+`docs/requirements/interfaces.toml`) — are always scaffolded but ship **inert**:
+each holds only its `-000` placeholder rows (ignored, like every `-000`), so a
+single-module project can simply leave them empty. THE TWO ARE DIFFERENT TIERS
+and the distinction is the one worth learning first: an `external.toml`
+`[boundary.B-##]` row is a crossing of your SYSTEM boundary, and it is what your
+system requirements form around; an `IF-###` row is a concrete interface
+definition, and it ties BACK to a crossing (`interface_from_external` /
+`interface_to_external`) only when it realizes one. Fill in `IF-###` rows when
+this repo declares a contract — with another repo **or between its own modules**
+(process.md §8). `trace.py` integrity-checks both (id shape, SR-Refs back-link,
+the frame's entity/crossing resolution) and
 `check_trajectory.py` runs the **architecture-connectivity coverage** over the
 arch-map inventory. That coverage is **opt-out, default-on** (the
 `secrets_scan` posture): a multi-module arch-map with no declared seams warns
@@ -1615,6 +1624,7 @@ MAPPING = [
         "docs/requirements/low-level-requirements.toml",
     ),
     ("registries/interfaces.template.toml", "docs/requirements/interfaces.toml"),
+    ("registries/external.template.toml", "docs/requirements/external.toml"),
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",

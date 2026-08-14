@@ -476,9 +476,12 @@ def emit(root):
                 "Interface",
                 (r.get("Name") or "").strip(),
                 desc,
-                # `Stability`, not `Status`: the IF `Status` column retired at
-                # WI-443 (OI-14 part B) and `Stability` is the one maturity field.
-                [(r.get("Stability") or "").strip()],
+                # `Approval`, not `Status` or `Stability`: the IF `Status`
+                # column retired at WI-443 (OI-14 part B), and `Stability`
+                # retired for `Approval` at WI-442 — the tier's one maturity
+                # field. Reading the retired column shipped `tags: []` on all
+                # 113 one-pagers while the live value went nowhere (REVIEW-A).
+                [(r.get("Approval") or "").strip()],
                 "{} ({})".format(if_src, cid),
                 ["**Contract.** {}".format(desc)],
             )

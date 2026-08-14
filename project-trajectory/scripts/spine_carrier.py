@@ -79,11 +79,21 @@ SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
 # behaviour this repo has already watched drift once per copy. The union maps
 # below are what the readers consult; the SPINE_* names stay exactly what they
 # were, so a spine consumer and its pins are untouched.
+#
+# THE FRAME REGISTRY IS THREE ENTRIES ON ONE PATH (WI-442). `external.toml`
+# carries entities, boundary crossings and relationships in one file because
+# they are one statement — but each is its own TIER with its own id column, so
+# it joins the map three times and `load(external.toml, "B-ID")` returns exactly
+# the crossings. Nothing in the loader changed to allow that: keying by id
+# column rather than by path is what already made it work.
 OFFSPINE_TABLE = {
     "OI-ID": "open_item",
     "Id": "agent",
     "IF-ID": "interface",
     "CMP-ID": "component",
+    "EXT-ID": "entity",
+    "B-ID": "boundary",
+    "REL-ID": "relationship",
 }
 REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 
@@ -103,6 +113,14 @@ REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 SPINE_COLUMN = {
     "title": "Title",
     "sn_refs": "SN-Refs",
+    # WI-442 — the SR-side BOUNDARY reference: which declared crossing(s) in
+    # `external.toml` this requirement states an observable AT. Minted here
+    # rather than in the re-tier because a checker cannot be written against a
+    # column that does not exist; WI-451 slice 2 populates it. Named for the
+    # tier it resolves into (`[boundary.B-##]`) and NOT `bif_refs`, which would
+    # have kept the retired `BIF-###` id shape alive in a column name sitting
+    # beside the `B-##` ids that replaced it.
+    "boundary_refs": "Boundary-Refs",
     "sr_refs": "SR-Refs",
     "verifies": "Verifies",
     "requirement": "Requirement",
@@ -156,14 +174,51 @@ OFFSPINE_COLUMN = {
     # `rationale`, `component`, `notes` and `version` are already declared above
     # and are NOT repeated — one column name, one meaning, repo-wide (D-3).
     # There is deliberately no `status` entry for this tier: the IF `Status`
-    # column RETIRED at the conversion, and `stability` is the one maturity field.
+    # column RETIRED at the conversion, and `approval` is the one maturity field.
+    #
+    # `stability` RETIRED IN TURN at WI-442 (decision 4, owner 13u) and is gone
+    # rather than deprecated-in-place: it was the whole input to rung 1's
+    # `boundary_incomplete` predicate, and leaving a dead maturity column beside
+    # the live one is precisely the two-words-one-meaning defect that retired
+    # `Status`.
+    #
+    # `direction` + `counterpart` were ruled to go with it and are HELD pending
+    # WI-455 — evidence and removal owner: docs/requirements/interfaces.toml's
+    # header.
     "direction": "Direction",
     "this_project": "ThisProject",
     "counterpart": "Counterpart",
     "contract": "Contract",
-    "stability": "Stability",
+    "approval": "Approval",
+    "interface_from_external": "InterfaceFromExternal",
+    "interface_to_external": "InterfaceToExternal",
     "signal": "Signal",
     "signal_note": "SignalNote",
+    # external (EXT-###/B-##/REL-###, the depth-0 frame; WI-442, sitting-2
+    # §1R). Shared columns already declared above (`name`, `notes`) are NOT
+    # repeated — one column name, one meaning, repo-wide (D-3).
+    #
+    # `direction` IS THE WATCHED COLLISION IN THIS MAP, stated rather than
+    # hidden — and "in this map" is the honest scope, because `Direction` carries
+    # a THIRD vocabulary repo-wide that this file cannot see: `check_perf.py`
+    # reads `lower-better`/`higher-better` off the perf-budget registry, which is
+    # not on the carrier. It is declared once, above, and the boundary tier reads
+    # it as in|out|inout while the IF tier still reads it as
+    # Provides|Consumes. The vocabularies are
+    # disambiguated per tier by `trace.ENUM_FIELDS`, and they never appear in one
+    # file — but two meanings under one name is the D-3 defect however tidily it
+    # is scoped. It is temporary BY CONSTRUCTION: the collision closes itself the
+    # moment WI-455 deletes the IF reading. If WI-455 slips, the fix is to rename
+    # the boundary column, not to leave this note as the whole enforcement.
+    "class": "Class",
+    "description": "Description",
+    "entity": "Entity",
+    "carries": "Carries",
+    "from": "From",
+    "to": "To",
+    "kind": "Kind",
+    "flow": "Flow",
+    "absorbs": "Absorbs",
     # components (CMP-###, process-options.md "Component layer"; WI-443).
     "name": "Name",
     "category": "Category",
@@ -196,6 +251,7 @@ SPINE_TIER_KEYS = {
     "SR-ID": (
         "title",
         "sn_refs",
+        "boundary_refs",
         "requirement",
         "rationale",
         "acceptance_criteria",
@@ -265,6 +321,12 @@ OFFSPINE_KEYS = {
     # WI-443 / OI-14 part B. `signal` and `rationale` are NEW (nothing in the
     # registry typed a signal at all before this pass, and the why had nowhere
     # in the row to go, so it squatted in `contract`); `status` is GONE.
+    # WI-442: `stability` is GONE and `approval` is the one maturity field; the
+    # two `interface_*_external` keys are the DIRECTIONAL tie-back an IF row
+    # carries ONLY when it realizes a boundary crossing (owner naming, 13m). An
+    # IF row that realizes nothing carries neither — which is how the registry
+    # says "internal seam" without a column claiming it. `direction` and
+    # `counterpart` are HELD pending WI-455 (see above).
     "IF-ID": (
         "direction",
         "this_project",
@@ -275,7 +337,9 @@ OFFSPINE_KEYS = {
         "rationale",
         "sr_refs",
         "version",
-        "stability",
+        "approval",
+        "interface_from_external",
+        "interface_to_external",
         "component",
         "notes",
     ),
@@ -289,6 +353,14 @@ OFFSPINE_KEYS = {
         "detail_doc",
         "notes",
     ),
+    # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each
+    # gets its own schema entry for the same reason every other tier does: the
+    # three-leg drift rule (tests/test_dogfood_sync.py) compares template, live
+    # registry and THIS map per id column, so a column added to crossings
+    # cannot leak into entities.
+    "EXT-ID": ("name", "class", "description", "approval", "absorbs", "notes"),
+    "B-ID": ("entity", "direction", "carries", "approval", "absorbs", "notes"),
+    "REL-ID": ("from", "to", "kind", "flow", "approval", "absorbs", "notes"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
 

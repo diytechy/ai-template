@@ -23,6 +23,8 @@ Three things this module pins, each because a cut got it wrong:
     which reads as "nothing is human-held" and disarms every hold in the repo.
 """
 
+import inspect
+
 import pytest
 from conftest import load_script, set_process_key
 
@@ -363,34 +365,67 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
 # --- the two rungs OI-21 inserted, and their applies-when ----------------------
 
 
-IF_STABLE = {"IF-ID": "IF-001", "Stability": "Stable"}
+# WI-442: rung 1 reads the FRAME's `[boundary.B-##]` rows, not the IF registry.
+BIF_APPROVED = {"B-ID": "B-01", "Approval": "approved"}
 CMP_BUILT = {"CMP-ID": "CMP-001", "State": "built"}
 
 
 def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry():
     """The applies-when, and the reason it is non-negotiable.
 
-    `interfaces` and `components` are OFF-SPINE, OPTIONAL registries. If their
+    `external` and `components` are OFF-SPINE, OPTIONAL registries. If their
     rungs applied unconditionally, every adopter who never adopts them would sit
     at DevStg-Boundary forever and the ladder could never report anything above
-    it — a downstream regression dressed as honesty. `have_ifs`/`have_cmps` is the
-    FILE's existence, so the rung applies exactly to the repos that declared they
-    wanted it."""
-    assert _stage(have_ifs=False, have_cmps=False) == dg.STAGE_RELEASE
+    it — a downstream regression dressed as honesty. `have_bifs`/`have_cmps` is
+    the FILE's existence, so the rung applies exactly to the repos that declared
+    they wanted it.
+
+    THE APPLIES-WHEN MOVED AT WI-442 and the move is asserted, not assumed: a
+    repo carrying `interfaces.toml` and NO `external.toml` is now free of rung 1
+    rather than held by its internal seams. That is the correction decision 3
+    made — internal definitions never typed a boundary — and a repo in exactly
+    that state is every adopter mid-migration."""
+    assert _stage(have_bifs=False, have_cmps=False) == dg.STAGE_RELEASE
 
 
 def test_a_DECLARED_but_EMPTY_boundary_inventory_is_honestly_INCOMPLETE():
     # The warn-honest half: a registry that exists and declares no crossing says
     # the project intends to type its frame and has not.
-    assert _stage(ifs=[], have_ifs=True) == dg.STAGE_BOUNDARY
+    assert _stage(bifs=[], have_bifs=True) == dg.STAGE_BOUNDARY
 
 
-def test_an_EXPERIMENTAL_seam_holds_the_BOUNDARY_rung_open():
-    # `Stability = Experimental` maps to DRAFTED: a contract still moving is a
-    # boundary declared but not settled.
-    experimental = dict(IF_STABLE, Stability="Experimental")
-    assert _stage(ifs=[experimental], have_ifs=True) == dg.STAGE_BOUNDARY
-    assert _stage(ifs=[IF_STABLE], have_ifs=True) == dg.STAGE_RELEASE
+def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
+    # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
+    # ratified. Lower-cased cells against capitalized ladder constants is exactly
+    # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
+    assert _stage(bifs=[dict(BIF_APPROVED, Approval="draft")], have_bifs=True) == (
+        dg.STAGE_BOUNDARY
+    )
+    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
+    assert _stage(bifs=[dict(BIF_APPROVED, Approval="Approved")], have_bifs=True) == (
+        dg.STAGE_RELEASE
+    )
+
+
+def test_rung_1_gates_on_APPROVAL_and_NOT_on_realization_coverage():
+    """THE RULING'S TWO READINGS, RESOLVED — and the resolution pinned so a later
+    pass cannot fold in the second conjunct without touching this test.
+
+    13u's wording gates on BIF approval; §1R.5's names approval AND "every BIF
+    realized (or explicitly deferred)". Whether a crossing has a realizing IF row
+    is DECISION 6, deferred by ruling to post-schema, so the predicate reads
+    approval only. An approved crossing that NOTHING realizes therefore clears
+    rung 1 — which is the live state of four of this repo's six crossings, not a
+    hypothetical."""
+    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
+    # ...and `spine_stage` no longer takes the IF registry at all, which is the
+    # structural half of the same statement: rung 1 CANNOT read realization
+    # coverage, because it is no longer handed the rows that would show it.
+    # Asserted on the SIGNATURE — a bare `pytest.raises(TypeError)` also passes
+    # for any unrelated arity error and would pass against a two-arg stub.
+    params = inspect.signature(dg.spine_stage).parameters
+    assert "bifs" in params and "have_bifs" in params
+    assert "ifs" not in params and "have_ifs" not in params
 
 
 def test_a_PLANNED_component_holds_the_ARCH_rung_open():
@@ -411,7 +446,9 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
 def test_BOUNDARY_outranks_ARCH_because_the_fold_takes_the_LOWEST_rung():
     # Both incomplete: the honest answer is the lower one, since a boundary that
     # is not settled makes the partition below it provisional by construction.
-    assert _stage(ifs=[], have_ifs=True, cmps=[], have_cmps=True) == dg.STAGE_BOUNDARY
+    assert _stage(bifs=[], have_bifs=True, cmps=[], have_cmps=True) == (
+        dg.STAGE_BOUNDARY
+    )
 
 
 def test_an_UNRECOGNIZED_maturity_value_reads_DRAFTED():
@@ -420,7 +457,7 @@ def test_an_UNRECOGNIZED_maturity_value_reads_DRAFTED():
     does arrive here. The choice is between "an unreadable row reports finished"
     and "an unreadable row holds its rung open", and only the second is safe on
     an axis the automation dial reads."""
-    assert dg._maturity("Speculative", dg.IF_MATURITY) == dg.DRAFTED
+    assert dg._maturity("Speculative", dg.BIF_MATURITY) == dg.DRAFTED
     assert dg._maturity("", dg.CMP_MATURITY) == dg.DRAFTED
     assert dg._maturity(None, dg.CMP_MATURITY) == dg.DRAFTED
 
@@ -431,8 +468,14 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     legal registry value would silently take the unrecognized-reads-DRAFTED path
     and hold its rung open forever."""
     trace = load_script("trace")
-    assert set(dg.IF_MATURITY) == trace.ENUM_FIELDS["IF"]["Stability"]
+    assert set(dg.BIF_MATURITY) == trace.ENUM_FIELDS["B"]["Approval"]
     assert set(dg.CMP_MATURITY) == trace.ENUM_FIELDS["CMP"]["State"]
+    # The IF tier shares the frame's approval vocabulary (decision 12: ONE status
+    # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
+    # while each stays internally consistent.
+    assert trace.ENUM_FIELDS["IF"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
+    assert trace.ENUM_FIELDS["EXT"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
+    assert trace.ENUM_FIELDS["REL"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
 
 
 # --- the label carrier's non-negotiable condition -------------------------------

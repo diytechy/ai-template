@@ -52,6 +52,10 @@ def test_scaffold_contains_expected_files(scaffold):
         # The last two registries onto the TOML carrier (WI-443 / OI-14 part B).
         "docs/requirements/components.toml",
         "docs/requirements/interfaces.toml",
+        # WI-442: the depth-0 frame — the tier system requirements form around.
+        # Scaffolded unconditionally beside interfaces.toml, and inert until its
+        # `-000` rows are replaced.
+        "docs/requirements/external.toml",
         # SN-036 / OI-19: the hats roster ships with CONTENT (six starting
         # perspectives), so a fresh scaffold's planner brief carries questions
         # on day one rather than a blank form.
