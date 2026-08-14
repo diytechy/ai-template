@@ -64,7 +64,7 @@ why (one bullet each; cite ids)._
   Session↔Provider, Session↔Reviewer), with all 31 v1 rows dispositioned in
   a count-checked ledger (14 stay folded / 10 Template content / 2
   relationships / 2 session-internal / 3 dissolve with absorbed entities).
-  v1 tables archived. §1R.6 lists the five explicit confirmations owed.
+  v1 tables archived. §1R.7 lists the five explicit confirmations owed (§1R.6 added later that session: the validation-shape guidance).
 
 - **2026-08-13m — Decision 2 CONFIRMED (ports get concrete IF rows; the
   tie-back field goes directional) + the brief cleaned (owner, in session).**

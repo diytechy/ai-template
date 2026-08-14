@@ -261,7 +261,38 @@ flag a draft item?"*) and is expected to retire with the slimming — which
 tension entirely**: internal definitions no longer gate the frame rung, and
 the resync helper's stability is its own affair.
 
-### 1R.6 Completeness + the confirmations this section owes
+### 1R.6 How an SR is written against a bundle crossing — validation shapes (owner + review, 2026-08-13)
+
+Each crossing is a bundle of implementation-specific interfaces; **the SR
+states an observable AT the crossing, and the tier below pins the bundle's
+members.** Two shapes:
+
+- **Artifact-shaped crossings — the observable is a standing thing.**
+  **B-03:** the validation/status surfaces are *generated and fresh*; LLRs
+  name the exact files and expectations; the `--check` freshness steps are the
+  mechanical verification. **B-05:** the package *exists, is complete, and is
+  consumable downstream*; the manifest is already pinned (`bootstrap.py`
+  MAPPING + `test_bootstrap` file lists + `test_dogfood_sync`). **B-06/B-07:**
+  the job files are *present and declare the same bar the local moments run*
+  (`tests/test_ci_tier_declaration.py` against the declared moment→tier
+  table).
+- **Event-shaped crossings — the observable is a VERDICT to a constructed
+  stimulus** (B-04, and B-01/B-02's admission side). SR form: *"when a session
+  attempts ⟨class of act⟩, the system shall ⟨admit/refuse⟩, observably ⟨exit
+  code / named reason / logged decision⟩."* TCs construct the act and assert
+  the verdict — the pattern the suite already uses: stage a crafted secret →
+  pre-commit refuses with the finding named; drive `subagent_gate` with an
+  allowed and a denied spawn → allow/deny verdicts + the record in
+  `out/subagent-gate.log`; malformed `commit-msg` input → refusal.
+
+**The honest limit to write INTO the B-04 SR:** a local hook floor is
+bypassable (`git commit --no-verify`), so *"no unchecked write enters governed
+state"* is only validatable as a **pair** — B-04's verdict at the moment of
+the act plus B-06/B-07's hosted re-run of the same bar as backstop (the
+declared CI mirror). Stating the pairing keeps the green honest. This
+subsection is the SR-writing guidance for WI-451 slice 2's re-statement.
+
+### 1R.7 Completeness + the confirmations this section owes
 
 **Claim (v2):** six entities, eight boundary crossings, four relationships are
 the whole depth-0 frame. **Confirm explicitly:** (1) the ⚠ session/repository-
@@ -454,7 +485,7 @@ system creates does not make each used tool an input* — reclassified the v1
 rows: `dev-setup`/`agent-resume` invocation are NOT inputs, the delivered
 contracts are Template content under one deliverable crossing, and the
 provider/reviewer flows are session relationships. **The live frame is §1R
-v2**; what remains for the sitting is §1R.6's five explicit confirmations.
+v2**; what remains for the sitting is §1R.7's five explicit confirmations.
 
 **The reframe in one paragraph (RULED 2026-08-13k; long form archived).** The
 repository IS the system; the template is NOT the system but what it DELIVERS
