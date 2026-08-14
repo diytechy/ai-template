@@ -36,6 +36,36 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13n — The frame refined: the TEMPLATE is its own entity, and
+  using what the system creates is NOT an input (owner, in session).** Three
+  rulings and a delivered review. **(1) "Template" joins as an entity** — the
+  thing actually delivered, a separate package — which provides its full
+  content to adopters AND feeds back into this same project's development
+  session. **(2) The session widens:** the Development session includes the
+  user's local development environment and the repository contents (read as:
+  the session holds the working copy; the system owns the governed state
+  admitted through the hook floor — interpretation flagged for
+  confirmation). git, OS/Python and the test toolchain dissolve as entities
+  into the session's environment. **(3) The governing principle:** *the
+  system is the act of creating the guardrails and template contents; it
+  provides the methods of acting on repositories autonomously — including
+  itself — but using them does not make them inputs.* Activating autonomous
+  builds from the adopted template (`agent-resume`) is **NOT an input into
+  this system** — it is an input into this repository's development session
+  as for any adopter, and the running loop *"is not differentiable from a
+  human user, an LLM in CLI, or that script launching LLM runners"*;
+  `dev-setup` is only provided template content. **The delivered review:**
+  §1R rewritten as v2 — six entities (Template class `deliverable`,
+  proposed), EIGHT boundary crossings (governed writes; authority; feedback;
+  guardrail verdicts; THE TEMPLATE as the one deliverable crossing B-05
+  whose content carries the delivered contracts as `interface_to_external`
+  IF definitions; CI trigger/verdict; vendored upstream flagged), FOUR
+  relationships (Template→Adopter, Template→Session self-adoption,
+  Session↔Provider, Session↔Reviewer), with all 31 v1 rows dispositioned in
+  a count-checked ledger (14 stay folded / 10 Template content / 2
+  relationships / 2 session-internal / 3 dissolve with absorbed entities).
+  v1 tables archived. §1R.6 lists the five explicit confirmations owed.
+
 - **2026-08-13m — Decision 2 CONFIRMED (ports get concrete IF rows; the
   tie-back field goes directional) + the brief cleaned (owner, in session).**
   Confirmed: every port is the system-side surface of a `BIF` row AND gets a

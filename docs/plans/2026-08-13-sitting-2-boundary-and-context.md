@@ -128,94 +128,89 @@ material, to
 two owner rulings the draft carried stay summarized at §0.2 and recorded in
 [`../log.md`](../log.md) Decisions 2026-08-13e/f.
 
-## 1R. The REBUILT depth-0 frame — the adopted entities (RULED 2026-08-13l)
+## 1R. The depth-0 frame, v2 — the system creates the template (2026-08-13n)
 
-**This is the live frame** (the drafted §1 is archived — see the §1 stub above).
-Decision 1 is ruled: *"Adopt the entities as currently described. Please rebuild
-the boundary draft given these entities."* This is that rebuild — the 2026-08-13k
-reframe's eight entities, the drafted crossings re-attributed to them, and the
-registry shape decisions 3/4/5 settled around them. The sitting's confirmation
-target is this section's tables and the completeness declaration at its end.
+**Status: PROPOSED ROW REVIEW delivered on the owner's 2026-08-13n rulings;
+the dispositions below are the confirmation target.** The v1 tables (31 BIFs
+over 8 entities, RULED-then-amended) are archived in
+[`../archive/plans/2026-08-13-sitting-2-superseded-material.md`](../archive/plans/2026-08-13-sitting-2-superseded-material.md);
+their old ids appear in the *absorbs* columns so nothing is lost.
 
-### 1R.1 The entities
+**The governing principle (owner, verbatim-close):** *the system is the act of
+creating the guardrails and template contents; the system provides the methods
+of acting on repositories autonomously — including itself — but just because
+it happens to USE them as well doesn't mean they are each inputs into the
+system.* The **Template** is its own entity — the thing actually delivered, a
+separate package — which provides its full content to adopters **and feeds
+back into this same project's development session**. Activating autonomous
+builds from that adopted content (`agent-resume`) is **NOT an input into this
+system**: it is an input into this repository's *development session*, exactly
+as it would be for any other adopter — and once running, the loop *"is not
+differentiable from a human user, an LLM in CLI, or that script launching LLM
+runners."* Likewise `dev-setup` is only template content that is provided.
 
-| id (proposed) | Entity | Class | Description |
+### 1R.1 The entities (v2 — six; ids re-proposed, v1 numbering superseded)
+
+| id | Entity | Class | Description |
 |---|---|---|---|
-| **EXT-001** | **Development session** | `operational` | Human or LLM in a terminal — attended, or the unattended loop `agent-resume` launches. ONE entity: it touches both the spine and the test scripts. Who holds authority (human vs loop) is policy and record (`human_ratification_through`, the Sittings table), never an entity split. |
-| **EXT-002** | **Adopter** | `operational` | The downstream team + their repository. Adopts **the template, never this repository**. |
-| **EXT-003** | **Model provider API** | `interoperating` | Rate limits, auth expiry, model retirement behind any LLM session. |
-| **EXT-004** | **External reviewer CLI** | `interoperating` | codex `sol`/`terra` — hostile-review briefs out, findings in. |
-| **EXT-005** | **git** | `interoperating` | The mutation floor: commits, merges, pushes, advisory locks, the hook floor as enforcement. |
-| **EXT-006** | **Hosted CI** | `interoperating` | GitHub Actions: push/PR/schedule triggers, the OS × Python matrix, job verdicts. |
-| **EXT-007** | **OS · filesystem · Python ≥3.11** | `interoperating` | Path semantics, encoding, kernel advisory locks, interpreter presence. |
-| **EXT-008** | **Test / coverage toolchain** | `interoperating` | pytest + coverage feeding the tier floors. |
+| **EXT-001** | **Development session** | `operational` | Human or LLM in a terminal — attended or the `agent-resume` loop, indistinguishable by rule — **plus the user's local development environment and the working copy in its hands** (shell, git client, OS, Python, editors, test runner, LLM runners). ⚠ *Interpretation to confirm:* "includes the repository contents" is read as *the session holds the checkout*; the SYSTEM owns the governed state those edits become once admitted through the hook floor. |
+| **EXT-002** | **Template** | `deliverable` ⚠ | **The delivered package** — every `*.template.*`, the registries, scripts, hooks, skills, launchers (`dev-setup.*`, `agent-resume.*`, `run.*`) — as a separate package. ⚠ `deliverable` is a proposed ADDITION to the class vocabulary (operational/enabling/interoperating do not fit an output package); confirm or rename. From an adopter's frame this package is their *enabling system*. |
+| **EXT-003** | **Adopter** | `operational` | The downstream team + repo. Receives the Template (REL-001), never the repository. |
+| **EXT-004** | **Hosted CI** | `interoperating` | Remote validation: triggers + OS×Python matrix in, job verdicts out. |
+| **EXT-005** | **Model provider API** | `interoperating` | Behind the session's LLM runners. Touches the SESSION, not the system (REL-003). |
+| **EXT-006** | **External reviewer CLI** | `interoperating` | codex `sol`/`terra` — a session-side runner (REL-004). |
 
-No entity is class `enabling` at this depth — developing the template IS this
-repository's operation; the delivered template is the enabling system in the
-ADOPTER's own frame (2026-08-13k rider a).
+**Dissolved as entities** (absorbed into EXT-001's local environment per the
+owner's ruling): git (v1 EXT-005), OS · filesystem · Python (v1 EXT-007), the
+test/coverage toolchain (v1 EXT-008). Their obligations survive as
+**requirements on Template content** (portability, hook behavior, tier floors)
+and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 
-### 1R.2 The boundary interfaces — 31 rows, re-attributed
+### 1R.2 The system's boundary crossings (v2 — eight)
 
-One row per directed frame-level crossing; **`#` keeps the drafted-inventory id** (the archived table / data pack) so
-every row traces to the WI-441 inventory. Dir is the system's point of view.
-Proposed `BIF-###` ids mint at execution, in table order.
+| BIF | Dir | What crosses | Absorbs (v1 / draft ids) |
+|---|---|---|---|
+| **B-01** | IN | **Governed writes**: artifact, registry and config edits admitted **only through the git hook floor** (privacy, format, gate checks) — the one write path from the session into the system's governed state | BIF-004/N-01, BIF-006/M-13, BIF-007-in/M-10, BIF-025/X-09 (the guardrail's read is this crossing's mechanism), the write half of BIF-026/M-16 |
+| **B-02** | IN | **Authority**: rulings, attestations, `Status` flips — the distinguished input the process advances on | BIF-005/M-11 |
+| **B-03** | OUT | **Validation & status feedback to the session**: `PROJECT_STATE.html`, `open-items.html`, `docs/status.md`, `docs/gate`, console reports, the run menu | BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 |
+| **B-04** | OUT | **Guardrail verdicts during a session**: hook-floor accept/reject, `subagent_gate` PreToolUse allow/deny | BIF-012/X-07, the verdict halves of BIF-006/BIF-026 |
+| **B-05** | OUT | **THE TEMPLATE — the packaged deliverable** to EXT-002. The delivered scripts' contracts (`check.py`, `bootstrap.py` + MAPPING, `agent_loop.py`, `check_vendored.py`, `gen_cases.py`, `gen_release_checklist.py`, the hooks, the launchers) are **IF definitions tied `interface_to_external = "B-05"`** — content of the package, not separate system crossings | BIF-014/M-07, BIF-015/M-06, BIF-016…021/X-01…X-06, and BIF-001/M-01 + BIF-002/M-02 as CONTENT (their invocation is the session's, per 13n) |
+| **B-06** | IN | Hosted CI trigger: push · PR · schedule; the OS × Python matrix | BIF-027/M-04 |
+| **B-07** | OUT | Hosted CI job verdict + step log | BIF-028/M-05 |
+| **B-08** | IN | Vendored upstream source read by `check_vendored` ⚠ *to confirm:* arguably session-mediated content (someone vendors it through B-01) rather than a standing crossing | BIF-022/X-10 |
 
-**EXT-001 Development session (13):**
+### 1R.3 The relationships (external-to-external; the system is not a party)
 
-| BIF | # | Dir | What crosses | IF today |
-|---|---|---|---|---|
-| BIF-001 | M-01 | IN | `dev-setup.{sh,cmd,command}` invocation; toolchain probe result back | — |
-| BIF-002 | M-02 | IN | one-command autonomous-run trigger via root `agent-resume.*` | — |
-| BIF-003 | M-12 | IN | instructions / prompt into a direct session | — |
-| BIF-004 | N-01 | IN | `docs/process.toml` — the policy-dial surface the session hand-edits | — |
-| BIF-005 | M-11 | IN | rulings, attestations and `Status` flips into the registries | — |
-| BIF-006 | M-13 | IN* | artifact edits, admitted only through the git hook floor (*§1 listed OUT; re-read: the edits enter the system, the hook verdict is the return half*) | — |
-| BIF-007 | M-10 | IN/OUT | `docs/status.md` — the resume-from-text surface the session also edits | IF-037 partial |
-| BIF-008 | M-03 | OUT | the runnable capability list (`run_menu`) | IF-048 partial |
-| BIF-009 | M-19 | OUT | every script's human-readable report to the terminal | — |
-| BIF-010 | M-09 | OUT | `PROJECT_STATE.html` — validation feedback rendered to the session | — |
-| BIF-011 | M-08 | OUT | `open-items.html` — decision-brief / signing surface | IF-074 partial |
-| BIF-012 | X-07 | OUT | `subagent_gate.py` PreToolUse spawn allow/deny | IF-020 |
-| BIF-013 | X-11 | IN/OUT | `agent_session.py` launches the session's CLI and reads its result | IF-041 |
+| REL | From → To | Flow |
+|---|---|---|
+| **REL-001** | Template → Adopter | full content provided; adopted into their repo (their scaffold, their loop, their hooks) |
+| **REL-002** | Template → Development session | **self-adoption**: this repo's session adopts the same content and activates autonomous builds from it (`agent-resume`) — the 13n NOT-an-input ruling lives here |
+| **REL-003** | Development session ↔ Model provider | LLM runner API: rate limit, auth expiry, model retirement (old M-15) — the backoff obligation reads as a requirement on delivered loop content, exercised session-side |
+| **REL-004** | Development session ↔ External reviewer CLI | hostile-review briefs out, findings in (old M-14) |
 
-**EXT-002 Adopter (9):**
+### 1R.4 The reclassification ledger — every v1 row dispositioned
 
-| BIF | # | Dir | What crosses | IF today |
-|---|---|---|---|---|
-| BIF-014 | M-07 | OUT | **THE DELIVERABLE: the template artifact class** — `*.template.*` + `registries/*` (`test_dogfood_sync` its verification) | — |
-| BIF-015 | M-06 | OUT | the MAPPING: templates → the adopter's `docs/` tree, + kit-version stamp | IF-014 partial |
-| BIF-016 | X-01 | OUT | `check.py` gate/tier harness verdict | IF-013 |
-| BIF-017 | X-02 | OUT | `bootstrap.py` scaffold write + re-sync diff | IF-014 |
-| BIF-018 | X-03 | OUT | `agent_loop.py` unattended coordinator run | IF-015 |
-| BIF-019 | X-04 | OUT | `check_vendored.py` drift verdict | IF-016 |
-| BIF-020 | X-05 | OUT | `gen_cases.py` permutation expansion | IF-017 |
-| BIF-021 | X-06 | OUT | `gen_release_checklist.py` checklist | IF-018 |
-| BIF-022 | X-10 | IN | `check_vendored.py` reads the vendored upstream source | IF-036 |
+**Stay system crossings (folded):** v1 BIF-004/005/006/007/025/026 → B-01/B-02
+(+ verdict halves → B-04); BIF-008…011 → B-03; BIF-012 → B-04; BIF-027/028 →
+B-06/B-07; BIF-022 → B-08 (⚠ flagged).
+**Become Template content (IF definitions under B-05):** BIF-014, BIF-015,
+BIF-016…021 — *strictly outputs*; plus BIF-001 (`dev-setup`) and BIF-002
+(`agent-resume`), **explicitly ruled NOT inputs**.
+**Become relationships:** BIF-023/M-15 → REL-003; BIF-024/M-14 → REL-004; the
+adoption and self-adoption flows → REL-001/REL-002.
+**Dissolve into the session entity:** BIF-003/M-12 (prompts into a session —
+between the human and their runner, inside EXT-001) and BIF-013/X-11 (the loop
+launching its CLI — the session driving itself; the provider behind it is
+REL-003).
+**Dissolve with their absorbed entities:** BIF-029/M-17 (OS · filesystem ·
+Python), BIF-030/M-18 (pytest results) and BIF-031/X-13 (`coverage.json`) —
+their obligations survive as **requirements on Template content** (portability;
+the tier floors) and as B-01/B-03/B-04 mechanics, not as crossings.
+**Count check:** 14 stay (→ B-01…B-04, B-06…B-08) + 10 become Template content
+(→ B-05) + 2 become relationships (→ REL-003/004) + 2 dissolve into the
+session + 3 dissolve with their entities = **31**; none dropped silently.
 
-*(BIF-016…021 are the delivered template's runtime contracts — the promises the
-system's SRs form around, exercised in the adopter's hands. They are the reason
-"the template is the deliverable" does not reduce the frame to one row.)*
-
-**EXT-003…EXT-008 (9):**
-
-| BIF | # | Entity | Dir | What crosses | IF today |
-|---|---|---|---|---|---|
-| BIF-023 | M-15 | EXT-003 | IN | rate limit, auth expiry, retired model (SR-026's backoff clause its only spine home) | — |
-| BIF-024 | M-14 | EXT-004 | IN/OUT | hostile-review brief out, findings in | — |
-| BIF-025 | X-09 | EXT-005 | IN | `check_privacy.py` reads staged/outgoing content | IF-032 |
-| BIF-026 | M-16 | EXT-005 | IN/OUT | commits, merges, pushes, advisory locks, the hook floor as enforcement | IF-032 partial |
-| BIF-027 | M-04 | EXT-006 | IN | push · PR · schedule trigger; the OS × Python matrix | — |
-| BIF-028 | M-05 | EXT-006 | OUT | job verdict + step log | — |
-| BIF-029 | M-17 | EXT-007 | IN | path semantics, encoding, kernel advisory lock, interpreter presence | — |
-| BIF-030 | M-18 | EXT-008 | IN | pytest results feeding the tier floors | IF-070 partial |
-| BIF-031 | X-13 | EXT-008 | IN | `check_coverage.py` reads `coverage.json` | IF-070 |
-
-**Reconciliation.** 36 drafted rows − **N-02** (dissolved: authoring = BIF-003/006)
-− **X-08, X-12, X-14, X-15** (internal under the entity rule, as the draft
-already flagged) = **31 boundary interfaces**. Every §1 crossing is accounted for; none
-was dropped silently.
-
-### 1R.3 The registry shape around them (decisions 3/4/5 as ruled)
+### 1R.5 The registry shape around them (decisions 3/4/5 as ruled)
 
 **`external.toml` holds three kinds of row** — the owner's decision-3/4 ruling
 inverts the earlier split: the boundary interfaces live WITH the entities, so
@@ -266,16 +261,17 @@ flag a draft item?"*) and is expected to retire with the slimming — which
 tension entirely**: internal definitions no longer gate the frame rung, and
 the resync helper's stability is its own affair.
 
-### 1R.4 The completeness declaration (the sitting confirms this)
+### 1R.6 Completeness + the confirmations this section owes
 
-**Claim:** the 8 entities of §1R.1 and the 31 boundary interfaces of §1R.2 are
-the WHOLE depth-0 frame of this repository-as-system. Complete to this
-rebuild's best reading, with the residual uncertainties inherited from the data
-pack §1c (the two the reframe resolved — one adopter, terminal-as-medium — are
-closed): **is git one crossing or three** (BIF-025/026 split read/write/hooks)?
-**is the skills fan-out into a third-party agent's config namespace its own
-crossing?** **is a `docs/knowledge/` pack an input?** and `MULTI_REPO.md`'s
-cross-repo rung stays deliberately unaudited.
+**Claim (v2):** six entities, eight boundary crossings, four relationships are
+the whole depth-0 frame. **Confirm explicitly:** (1) the ⚠ session/repository-
+contents interpretation (1R.1); (2) the `deliverable` class value for the
+Template entity; (3) B-08's vendored-upstream disposition; (4) the dissolution
+of git / OS / toolchain as entities; (5) the residual data-pack uncertainties
+that survive v2 — the skills fan-out into a third-party agent's config
+namespace, and `docs/knowledge/` packs as input (the git one-or-three question
+dissolves with git's absorption; `MULTI_REPO.md`'s cross-repo rung stays
+deliberately unaudited).
 
 ## 2. The port set and the discriminator — what WI-451 executes against
 
@@ -450,10 +446,15 @@ says so.**
 
 ### Decision 1 — Adopt or amend the depth-0 frame (§1)
 
-**RULED 2026-08-13l: the entities are ADOPTED as described, and the boundary
-draft is REBUILT around them — the rebuild is §1R above.** What remains for
-the sitting is confirming §1R.2's 31-row table and §1R.4's completeness
-declaration (three residual uncertainties).
+**RULED 2026-08-13l (entities adopted, rebuild delivered), then AMENDED
+2026-08-13n:** the **Template** joined as its own entity (the delivered
+package), the session absorbed the local development environment (git, OS,
+toolchain dissolve as entities), and the ruled principle — *using what the
+system creates does not make each used tool an input* — reclassified the v1
+rows: `dev-setup`/`agent-resume` invocation are NOT inputs, the delivered
+contracts are Template content under one deliverable crossing, and the
+provider/reviewer flows are session relationships. **The live frame is §1R
+v2**; what remains for the sitting is §1R.6's five explicit confirmations.
 
 **The reframe in one paragraph (RULED 2026-08-13k; long form archived).** The
 repository IS the system; the template is NOT the system but what it DELIVERS
@@ -492,7 +493,14 @@ states the concrete interface definition, tied back through the directional
 field: **`interface_from_external = "BIF-###"`** for an IN crossing,
 **`interface_to_external = "BIF-###"`** for an OUT crossing (both for in/out).
 The concrete IF-side list is deliberately undecidable until decision 1's table
-is locked — it falls out of §1R.2's "IF today" column at execution.
+is locked — under v2 it falls out of B-05's content list and B-01…B-04's
+mechanics at execution.
+
+*(Note on ids: the port list below cites v1 `BIF-###` ids; under §1R v2 the
+delivered script ports tie `interface_to_external = "B-05"` — they are
+Template content — and the session-facing surfaces are the system sides of
+B-01…B-04. **The port SET is unchanged**, so the 18/57 census and WI-451's
+sizing do not move; re-key the references when the v2 table is confirmed.)*
 
 **The port list being adopted** (each is the system side of a §1R.2 row):
 `check.py` (BIF-016) · `bootstrap.py` incl. `--agents`/`--sync` (BIF-015/017) ·
