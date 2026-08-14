@@ -164,7 +164,7 @@ same way §3.5 splits gating:
   `CIF-###`, the owner's **current published version** and each consumer's **pinned**
   version. A consumer pinned below the owner's current version — the owner (parent)
   moved and the dependent didn't — is a **compatibility finding**, weighted by the §8
-  `Stability` tier (an `Experimental` change is expected; a `Stable` one past a pin is
+  `Approval` tier (a `draft` change is expected; an `approved` one past a pin is
   a blocker). This is comparing versions the repos publish as text: no build engine.
 - **The interface's own contract test verifies *compatibility* (already exists).**
   Whether the new version is actually compatible is answered by the dependent repo
@@ -276,7 +276,7 @@ future decision; the model above is what they will operationalize.
   module-published gate/status artifacts, with escalation rules for the judgment gates.
 - **Interface catalog + compatibility reconciliation** — the `CIF-###` catalog registry
   (§3.3) and the §3.7 version-reconciliation check: flag a consumer pinned below the
-  owner's current version (weighted by `Stability`), and sequence the dependent repo's
+  owner's current version (weighted by `Approval`), and sequence the dependent repo's
   contract-test re-run when the parent interface changes. Reads published versions
   across repos; never builds. Same **pull-vs-push** question as the trace join.
 - **Repo creation** — scaffolding a coordinator + N module repos (a `bootstrap

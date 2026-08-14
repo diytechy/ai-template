@@ -1603,7 +1603,7 @@ tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_migrate_carrier.py"
-status = "Draft"
+status = "Planned"
 phase = 5
 
 [test.TC-160]
@@ -1648,5 +1648,16 @@ tier = "Smoke"
 expected = """The live file is reported with its path and line; the default severity exits 0 and --strict exits 1 on the same finding; no carve-out is ever reported, at any depth; a marked line is skipped while its unmarked neighbour is not, and a marked file is skipped whole; the surviving sense of 'gate' is clean; and the meta-repo itself is clean at the ERROR severity, so the assertions cannot pass against fixtures while the conversion rots."""
 automated = "Yes"
 evidence = "tests/test_stage_ladder.py"
+status = "Draft"
+phase = 5
+
+[test.TC-164]
+verifies = ["SR-150", "LLR-170"]
+level = "Unit"
+method = """Construct a needs registry whose need cell plants one token of each declared class (an internal path, an underscore identifier, a registry id and a section mark); run check_need_form.py at both severities; plant a user-facing interface name with and without its reviewed exception-list entry, and with a malformed entry missing the reason separator; plant the same dirty tokens in why/acceptance cells only; plant an English either/or pair, a sibling SN-### citation and a -000 example row; plant a one-level dot-free token both with and without a resolving target in the scanned tree; plant a URL whose tail is path-shaped, in scheme:// and scheme-less www. forms, one sharing its cell with a genuine internal path, one abutting a second path through a comma/semicolon, and a single-label www.-prefixed local path; end a cell with a path token and with an English either/or pair at the full stop; empty the registry file, then strip the need fields from real rows, then leave only a -000 example row; run over a tree with no needs registry at all; and run over the real meta-repo tree."""
+tier = "Smoke"
+expected = """The dirty cell reports the row id AND each offending phrase, one finding per token (the path's inner filename is not a second finding), exit 0 by default and 1 under --strict; the exception-list entry silences exactly its token while the malformed entry silences nothing; exempt cells, either/or pairs, SN cross-references and example rows report nothing; a one-level dot-free token reports as a path only when it resolves on disk, and a URL's path-shaped tail never reports in either form while its cell-mate genuine path, a delimiter-abutting neighbour token and a single-label www.-prefixed local path all still do; a sentence-final path is named without its trailing full stop — so its reviewed exception matches — and a sentence-final either/or pair stays exempt; a registry that is present but yields zero scannable need cells reports as vacuous (strict exit 1) while an absent registry is a clean skip and a -000-only registry stays clean; and the live registry is clean at zero findings, so the assertions cannot pass against fixtures while the tier dirties."""
+automated = "Yes"
+evidence = "tests/test_check_need_form.py"
 status = "Draft"
 phase = 5

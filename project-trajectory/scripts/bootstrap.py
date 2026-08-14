@@ -34,6 +34,7 @@ What it creates in the destination:
     docs/requirements/system-requirements.toml <- registries/system-requirements.template.toml
     docs/requirements/low-level-requirements.toml
     docs/requirements/interfaces.toml          <- registries/interfaces.template.toml
+    docs/requirements/external.toml            <- registries/external.template.toml
     docs/requirements/performance-budgets.csv  <- registries/performance-budgets.template.csv
     docs/requirements/procurement.csv          <- registries/procurement.template.csv
     docs/requirements/assets.csv               <- registries/assets.template.csv
@@ -56,7 +57,7 @@ What it creates in the destination:
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
-    scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_privacy.py, check_vendored.py, check_trajectory.py,
+    scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
                                                (the WI-280 gen_trajectory.py split — copied with it, always)
@@ -159,12 +160,20 @@ launcher's `AGENT_CMD`/`AGENT_MODEL` slots with that agent's example command
 (including its permission-bypass flag — the launchers and the loop banner state
 the consent plainly); the slots stay an EDIT block the repo owns.
 
-The interface artifacts (`docs/interfaces.md`, `docs/requirements/interfaces.toml`)
-are always scaffolded but ship **inert**: they hold only the `IF-000` placeholder
-row (ignored, like every `-000`), so a single-module project can simply leave
-them empty. Fill in `IF-###` rows when this repo declares a contract — with
-another repo **or between its own modules** (process.md §8). `trace.py`
-integrity-checks the seam registry (id shape, SR-Refs back-link, WI-056) and
+The boundary artifacts — `docs/requirements/external.toml` (the depth-0 FRAME:
+who is outside, what crosses, which external-to-external flows you are not a
+party to) and the interface artifacts (`docs/interfaces.md`,
+`docs/requirements/interfaces.toml`) — are always scaffolded but ship **inert**:
+each holds only its `-000` placeholder rows (ignored, like every `-000`), so a
+single-module project can simply leave them empty. THE TWO ARE DIFFERENT TIERS
+and the distinction is the one worth learning first: an `external.toml`
+`[boundary.B-##]` row is a crossing of your SYSTEM boundary, and it is what your
+system requirements form around; an `IF-###` row is a concrete interface
+definition, and it ties BACK to a crossing (`interface_from_external` /
+`interface_to_external`) only when it realizes one. Fill in `IF-###` rows when
+this repo declares a contract — with another repo **or between its own modules**
+(process.md §8). `trace.py` integrity-checks both (id shape, SR-Refs back-link,
+the frame's entity/crossing resolution) and
 `check_trajectory.py` runs the **architecture-connectivity coverage** over the
 arch-map inventory. That coverage is **opt-out, default-on** (the
 `secrets_scan` posture): a multi-module arch-map with no declared seams warns
@@ -1615,6 +1624,7 @@ MAPPING = [
         "docs/requirements/low-level-requirements.toml",
     ),
     ("registries/interfaces.template.toml", "docs/requirements/interfaces.toml"),
+    ("registries/external.template.toml", "docs/requirements/external.toml"),
     (
         "registries/performance-budgets.template.csv",
         "docs/requirements/performance-budgets.csv",
@@ -1634,7 +1644,7 @@ MAPPING = [
     # The HATS ROSTER (SN-036, ruled at OI-19 2026-08-13): the declared expert
     # perspectives a decomposition must face, injected into the planner brief by
     # `plan_briefs.hat_surface`. It ships with CONTENT rather than as a blank
-    # form — six starting hats — because an empty roster is a form with nothing
+    # form — thirteen starting hats — because an empty roster is a form with nothing
     # behind it, and a roster is only useful if it says something on day one.
     # OWNER TEXT: adopters are expected to EDIT it (cut, add, rewrite every
     # `applies_when` against their own vocabulary), which is the only thing that
@@ -1710,6 +1720,10 @@ MAPPING = [
     # their status prose), and the recipe that tells them to convert is worth
     # exactly as much as the check that tells them they missed one.
     ("scripts/check_vocab.py", "scripts/check_vocab.py"),
+    # The need-form check (SN-033, WI-454): warn-first lint keeping SN `need`
+    # cells in stakeholder language. Shipped because the registry it scans is
+    # the adopter's own, and check.py's step table names it at every bar.
+    ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
     # The ready-frontier/safety-classification library (IF-053). Shipped
     # because it is a SIBLING IMPORT of the integration seam, not a nicety:

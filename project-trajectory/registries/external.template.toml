@@ -1,0 +1,57 @@
+# external.template.toml — THE DEPTH-0 FRAME: who is outside your system, what
+# crosses its boundary, and which external-to-external flows you are not a party
+# to. Copy to docs/requirements/external.toml and replace the `-000` example
+# rows (trace.py ignores any id ending `-000`, so they are inert until deleted).
+#
+# WHY THIS FILE IS SEPARATE FROM interfaces.toml. A BOUNDARY crossing is a
+# frame-level fact — it is what your SYSTEM REQUIREMENTS form around, and it
+# exists whether or not any module realizes it yet. An `IF-###` row in
+# interfaces.toml is a concrete internal seam definition; it ties BACK to a
+# crossing here (`interface_from_external` / `interface_to_external`) only when
+# it realizes one. Keeping them in one file made every internal seam look like a
+# boundary and made the frame un-reviewable.
+#
+# THREE ROW KINDS, ONE FILE, because they are one statement:
+#   [entity.EXT-###]        who is outside
+#   [boundary.B-##]         what crosses, from the SYSTEM's point of view
+#   [relationship.REL-###]  external-to-external, the system NOT a party
+#
+# A relationship carries NO interface vocabulary, deliberately: it is not a
+# crossing and must never grow a realizing IF row. If you find yourself wanting
+# one, what you have is a boundary crossing.
+#
+# APPROVAL is the one maturity field, and every row carries it from the file's
+# first commit — a frame with no approval element cannot be ratified, and the
+# stage rung that reads it (`derive_gate.boundary_incomplete`, "is the boundary
+# inventory still in work?") would have nothing honest to read. Closed
+# vocabulary: `draft` | `approved`. Flipping a row to `approved` is a HUMAN act
+# recorded as a reviewed Status-change commit; no loop and no script may do it.
+#
+# APPLIES-WHEN: a project that never declares a boundary simply does not create
+# this file, and the DevStg-Boundary rung is skipped rather than held open
+# forever.
+
+[entity.EXT-000]
+name = "EXAMPLE - delete on first real entry"
+class = "operational"
+description = """One party outside your system. `class` is a CLOSED vocabulary: operational (a user or peer system that acts), enabling (something your system depends on to run), interoperating (a service you exchange with) or deliverable (a package your system produces and hands off)."""
+approval = "draft"
+absorbs = "optional provenance: the earlier ids this row folded in, so a re-drawn frame loses nothing"
+notes = "optional"
+
+[boundary.B-000]
+entity = "EXT-000"
+direction = "in"
+carries = """What crosses, in one testable line. `entity` must resolve to a declared entity above; `direction` is a CLOSED vocabulary read from the SYSTEM's point of view: in | out | inout. A crossing may be a BUNDLE of implementation-specific interfaces - that is legitimate provided the decomposition is broken down or clearly stated in the component details."""
+approval = "draft"
+absorbs = "optional provenance"
+notes = "optional"
+
+[relationship.REL-000]
+from = "EXT-000"
+to = "EXT-000"
+kind = "hands-off"
+flow = """A flow between two EXTERNAL parties that your system is NOT a party to, recorded because it constrains you even though you do not sit in it. `from` and `to` must resolve to declared entities."""
+approval = "draft"
+absorbs = "optional provenance"
+notes = "optional"

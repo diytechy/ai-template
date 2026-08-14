@@ -163,13 +163,30 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     assert not (scaffold / "docs" / "evil.md").exists()
 
 
+def test_an_IF_one_pager_exports_the_live_approval_value(scaffold):
+    # WI-442 REVIEW-A: the generator kept reading the RETIRED `Stability`
+    # column after the Approval migration, so every IF one-pager shipped
+    # `tags: []` while the row's `approval` cell — the tier's one maturity
+    # field — was exported nowhere. The export must carry the live value.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "interfaces.toml").write_text(
+        '[interface.IF-001]\nname = "Seam"\ncontract = "contract text"\n'
+        'approval = "draft"\n',
+        encoding="utf-8",
+    )
+    assert okf(scaffold).returncode == 0
+    page = (bundle(scaffold) / "interfaces" / "IF-001.md").read_text(encoding="utf-8")
+    assert 'tags: ["draft"]' in page
+
+
 def test_prune_removes_emptied_tier_directory(scaffold):
     # A7: deleting the last row of a tier leaves no empty directory behind.
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").write_text(
         '[interface.IF-001]\nname = "Seam"\ncontract = "contract text"\n'
-        'stability = "Stable"\n',
+        'approval = "approved"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0

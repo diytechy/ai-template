@@ -55,6 +55,7 @@ graph LR
     m_scripts_check_docs["scripts/check_docs — Doc navigability & staleness check: keep the ha…"]
     m_scripts_check_figures["scripts/check_figures — Declared-figure provenance — a driven figure ca…"]
     m_scripts_check_flows["scripts/check_flows — Design-time runtime-flow check: the DevBar-Test…"]
+    m_scripts_check_need_form["scripts/check_need_form — Need-form check: stakeholder-need cells stay in…"]
     m_scripts_check_perf["scripts/check_perf — Performance budget & regression comparator: tra…"]
     m_scripts_check_privacy["scripts/check_privacy — Secrets + privacy-leak lint — the deterministic…"]
     m_scripts_check_stubs["scripts/check_stubs — No-stub / substance detector: flag implementati…"]
@@ -123,6 +124,7 @@ graph LR
     m_scripts_check_docs --> m_scripts_spine_carrier
     m_scripts_check_figures --> m_scripts_check_doc_refs
     m_scripts_check_flows --> m_scripts_spine_carrier
+    m_scripts_check_need_form --> m_scripts_spine_carrier
     m_scripts_check_trajectory --> m_scripts_check_docs
     m_scripts_check_trajectory --> m_scripts_spine_carrier
     m_scripts_derive_gate --> m_scripts_spine_carrier
@@ -210,6 +212,7 @@ graph LR
     m_scripts_check_docs -. IF-077 .-> m_scripts_check_trajectory
     m_scripts_check_figures -. IF-086 .-> m_scripts_check
     m_scripts_check_flows -. IF-003 .-> m_scripts_check
+    m_scripts_check_need_form -. IF-121 .-> m_scripts_check
     m_scripts_check_perf -. IF-004 .-> m_scripts_check
     m_scripts_check_privacy -. IF-005 .-> m_scripts_check
     m_scripts_check_stubs -. IF-006 .-> m_scripts_check
@@ -247,6 +250,7 @@ graph LR
     m_scripts_spine_carrier -. IF-104 .-> m_scripts_check_doc_refs
     m_scripts_spine_carrier -. IF-112 .-> m_scripts_check_docs
     m_scripts_spine_carrier -. IF-105 .-> m_scripts_check_flows
+    m_scripts_spine_carrier -. IF-122 .-> m_scripts_check_need_form
     m_scripts_spine_carrier -. IF-106 .-> m_scripts_gen_okf
     m_scripts_spine_carrier -. IF-118 .-> m_scripts_gen_open_items
     m_scripts_spine_carrier -. IF-107 .-> m_scripts_gen_release_checklist
@@ -614,6 +618,18 @@ Contracts (interfaces): IF-003, IF-029, IF-105
 | `mermaid_blocks(section)` | The ```mermaid fenced blocks inside the section, in order. |  |
 | `main()` |  |  |
 
+### `scripts/check_need_form`
+_Need-form check: stakeholder-need cells stay in stakeholder language._
+Imports (internal): `spine_carrier`
+Contracts (interfaces): IF-121, IF-122
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `load_allow(root)` | The reviewed exception tokens from `docs/need-form-allow`, as a set. |  |
+| `need_findings(needs, allow, root)` | `[(row_id, class_label, phrase)]` over the `need` cells of `needs`. | SN-033 |
+| `scan(root)` | `(findings, scanned_count, vacuous)` for the repo at `root`. |  |
+| `main()` |  |  |
+
 ### `scripts/check_perf`
 _Performance budget & regression comparator: track the numbers, alert on drift._
 Contracts (interfaces): IF-004, IF-031
@@ -788,9 +804,9 @@ Contracts (interfaces): IF-050, IF-051
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
 | `sn_bar(sn_id, draft_ids, cited_ids)` | A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a |  |
 | `stage_ord(stage)` | The 0-based position of a stage label on STAGE_ORDER. |  |
-| `boundary_incomplete(ifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
+| `boundary_incomplete(bifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
 | `arch_incomplete(cmps, have_registry)` | Rung 3's predicate — is the PARTITION still in work? |  |
-| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft, ifs, cmps, have_ifs, have_cmps)` | The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and |  |
+| `spine_stage(srs, llrs, tcs, sn_ids, sn_draft, bifs, cmps, have_bifs, have_cmps)` | The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and |  |
 | `stage_to_bar(stage)` | THE DECLARED MAPPING between the two axes — stated once, here, so the |  |
 | `compute(docs)` | Derive the gate from the spine registries under `docs`. Returns a result |  |
 | `basis_line(result)` | The single, deterministic `# basis:` comment line compared by --check | SN-029 |
@@ -1294,6 +1310,9 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `sn_integrity_findings(sn_text)` | Duplicate-id protection for the SN tier — the one tier stored as prose, |  |
 | `schema_findings(label, rows)` | Empty required fields and out-of-vocabulary Verification/Tier values, over |  |
 | `schema_advisories(label, rows)` | `schema_findings`' warn-first twin, for the tiers whose schema is stated |  |
+| `frame_findings(exts, bifs, rels)` | Reference resolution inside `external.toml` (WI-442, §1R.5) as a list of |  |
+| `sr_boundary_findings(srs, bifs, ifs)` | SN-037's SR->boundary rule (WI-442), as `(findings, advisories)` — both | SN-037 |
+| `tieback_findings(ifs, bifs)` | An IF row's directional tie-back must name a DECLARED crossing (WI-442, |  |
 | `if_contract_advisories(ifs)` | The four ruled negative rules on an IF `Contract` cell (WI-443), all |  |
 | `if_endpoint_class_advisories(ifs, module_ids, root)` | Classify every IF endpoint that is NOT an arch-map module, warn-first. |  |
 | `phase_ratified_findings(real)` | The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner |  |

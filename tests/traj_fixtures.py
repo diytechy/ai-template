@@ -176,7 +176,7 @@ def if_row(iid, direction, this, counterpart, contract="call", **cells):
         'signal = "{}"'.format(cells.pop("signal", "discrete")),
         'sr_refs = ["{}"]'.format(cells.pop("sr_refs", "SR-001")),
         'version = "v1"',
-        'stability = "{}"'.format(cells.pop("stability", "Stable")),
+        'approval = "{}"'.format(cells.pop("approval", "approved")),
     ]
     lines += ['{} = "{}"'.format(k, v) for k, v in sorted(cells.items())]
     return "\n".join(lines) + "\n\n"

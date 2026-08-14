@@ -124,3 +124,5 @@ resource: "generated"
 | [IF-118](IF-118.md) |  |
 | [IF-119](IF-119.md) |  |
 | [IF-120](IF-120.md) |  |
+| [IF-121](IF-121.md) |  |
+| [IF-122](IF-122.md) |  |

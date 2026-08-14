@@ -603,7 +603,7 @@ def _ifs_toml(body):
         ("Counterpart", "counterpart"),
         ("Contract", "contract"),
         ("Version", "version"),
-        ("Stability", "stability"),
+        ("Stability", "approval"),
         ("Component", "component"),
         ("Notes", "notes"),
     ]
@@ -692,7 +692,7 @@ def test_if_endpoint_advisory_is_warn_only(scaffold):
 # drift of. Both halves are pinned, per rule.
 
 CLEAN_IF = (
-    'IF-001,Provides,src/demo,git,"reads the ref state",SR-001,v1,Stable,Active,,\n'
+    'IF-001,Provides,src/demo,git,"reads the ref state",SR-001,v1,approved,Active,,\n'
 )
 
 
@@ -736,7 +736,7 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
         'signal = "analog"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'stability = "Stable"\n',
+        'approval = "approved"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -747,13 +747,16 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
     assert "discrete, variable" in proc.stdout
 
 
-def test_stability_refuses_an_unknown_value_as_a_warn(scaffold):
-    # `Provisional` is the real value four live rows carried while `Stability`
-    # was declared by process.md §8 and validated by nothing.
+def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
+    # The successor of the `Stability=Provisional` case (WI-442). `Provisional`
+    # was the real value four live rows carried while `Stability` was declared by
+    # process.md §8 and validated by nothing; the vocabulary is closed now, and
+    # the check has to bite on the SUCCESSOR column or the lesson was migrated
+    # away rather than kept.
     make_minimal_project(scaffold)
-    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Stable,", ",v1,Provisional,"))
-    assert "IF IF-001 has Stability='Provisional'" in out
-    assert "Deprecated, Experimental, Stable" in out
+    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,approved,", ",v1,Provisional,"))
+    assert "IF IF-001 has Approval='Provisional'" in out
+    assert "approved, draft" in out
 
 
 def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -780,7 +783,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'contract = "reads the ref state"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'stability = "Stable"\n',  # no `signal`
+        'approval = "approved"\n',  # no `signal`
         encoding="utf-8",
     )
     record_ids(scaffold)

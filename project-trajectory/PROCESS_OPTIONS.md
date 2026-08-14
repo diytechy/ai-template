@@ -2410,8 +2410,8 @@ releases as a whole.
 - **`IF-###` applies *within* a repo, too.** The interface registry (§8) is not
   only for separate repos: two modules in one repo that share a contract record it
   as an `IF-###`, with the counterpart naming the **other module** instead of
-  another repo and both rows living in the one `interfaces.csv`. Same
-  direction/owner/version/stability discipline, same "one contract, one home,
+  another repo and both rows living in the one `interfaces.toml`. Same
+  direction/owner/version/approval discipline, same "one contract, one home,
   backed by a test" rule — applied to the internal seam, with no cross-repo build
   machinery.
 <!-- /profile -->

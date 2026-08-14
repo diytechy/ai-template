@@ -12,12 +12,18 @@ priority = 3
 
 ## Context
 
-**TC-159 is a `Draft` row — confirm, do not lift (correction ledger #8).**
-Part (2) says *"confirm … that TC-159/TC-160 still exercise the path."* Live:
-TC-159 `Draft` (verifies SR-147 + LLR-165), TC-160 `Planned`, LLR-165 `Planned`
-with `test_refs = TC-159`. Pack §2.3 lifted TC-160 and never TC-159. **Lifting
-TC-159 is a spine window and belongs to sitting 3 §2.2** — this row confirms
-the path runs and records the chain gap; it does not flip a Status.
+**The TC-159 chain gap is CLOSED — this guard is spent (updated 2026-08-14f).**
+Part (2) says *"confirm … that TC-159/TC-160 still exercise the path."* The
+guard that used to stand here said *"confirm, do not lift"* because lifting was
+a spine window owed to sitting 3 §2.2. **That window ran:** the owner ruled
+(log `2026-08-14f`) that §2.3's lift had CROSSED the subject pairs — TC-159
+drives the converter and verifies LLR-165, TC-160 drives the reader and
+verifies LLR-166 — and both halves were aligned in the same act: TC-159 and
+LLR-166 lifted `Draft` → `Planned`. Live now: all four carrier rows
+(LLR-165/166, TC-159/160) are `Planned`. So part (2) is a straight
+confirmation — **run the converter and check the two TCs still exercise the
+path; there is no chain gap left to record, and this row still flips no
+Status.**
 
 **The surface list is fed by two other programs — run last or scope to today.**
 Part (1)'s surface list grows if/when `external.toml` lands (a new registry

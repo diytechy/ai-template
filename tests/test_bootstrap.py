@@ -52,9 +52,13 @@ def test_scaffold_contains_expected_files(scaffold):
         # The last two registries onto the TOML carrier (WI-443 / OI-14 part B).
         "docs/requirements/components.toml",
         "docs/requirements/interfaces.toml",
-        # SN-036 / OI-19: the hats roster ships with CONTENT (six starting
-        # perspectives), so a fresh scaffold's planner brief carries questions
-        # on day one rather than a blank form.
+        # WI-442: the depth-0 frame — the tier system requirements form around.
+        # Scaffolded unconditionally beside interfaces.toml, and inert until its
+        # `-000` rows are replaced.
+        "docs/requirements/external.toml",
+        # SN-036 / OI-19: the hats roster ships with CONTENT (thirteen starting
+        # perspectives since WI-453), so a fresh scaffold's planner brief
+        # carries questions on day one rather than a blank form.
         "docs/requirements/hats.toml",
         # docs/requirements/work-items.csv left this list at the Phase 2c flip:
         # the WI registry scaffolds as docs/work/ below (the CSV template ships
@@ -84,6 +88,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
+        "scripts/check_need_form.py",
         "scripts/check_privacy.py",
         "scripts/check_vendored.py",
         "scripts/check_trajectory.py",

@@ -1,3 +1,27 @@
+# interfaces.template.toml — INTERFACE DEFINITIONS. Copy to
+# docs/requirements/interfaces.toml and replace the `-000` example row.
+#
+# An IF row states what one interface concretely IS — one testable line: CLI
+# flags and exit codes, or the file schema.
+#
+# BOUNDARY vs INTERNAL, and it is the distinction worth learning first. A
+# crossing of your SYSTEM boundary is a row in registries/external.template.toml,
+# not here — that is the tier your system requirements form around. A row here
+# ties BACK to one, directionally, only when it REALIZES a crossing:
+#
+#     interface_from_external = "B-##"   the crossing comes IN
+#     interface_to_external   = "B-##"   it goes OUT
+#     (both, when the crossing is in/out)
+#
+# A row with neither key is an internal seam. That absence IS the statement —
+# there is no column to set to "internal" and get wrong.
+#
+# APPROVAL is the one maturity field: a CLOSED vocabulary, `draft` | `approved`,
+# shared with external.toml. Flipping a cell to `approved` is a human act in a
+# reviewed commit. Do NOT carry a second maturity column beside it; the whole
+# reason this tier has one field is that it once had two that meant different
+# things on the same row (the retired `Status`, then the retired `Stability`).
+
 [interface.IF-000]
 direction = "Provides"
 this_project = "EXAMPLE - delete on first real entry"
@@ -8,7 +32,8 @@ signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable al
 rationale = """WHY the seam is drawn here - the sentence that used to squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take."""
 sr_refs = ["SR-000"]
 version = "v1"
-stability = "Experimental"
+approval = "draft"
+interface_from_external = "B-000"
+interface_to_external = "B-000"
 component = "CMP-000"
-notes = """Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. Stability is the row's ONE maturity field and a CLOSED vocabulary (Experimental|Stable|Deprecated) - the undeclared Status column retired at OI-14 part B, 2026-08-13, and its Proposed rung is now Experimental: a seam a spec-of-record cites BEFORE a second consumer pins it is Experimental - cheap to revise, and the citing spec's ## Interfaces section names the nearest existing IF + why it does not suffice (WI-191; the forced anti-duplication search, process-options.md Spec-of-record)."""
-
+notes = """Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

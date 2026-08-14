@@ -36,6 +36,108 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14g — slice 2's EXECUTION METHOD ruled: layer-by-layer, not
+  row-by-row (owner, in session).** The owner proposed working the spine
+  *"like a real blank-slate breakdown, but reattaching valid work, and then
+  reiterating either from the top down again or from the bottom up if there
+  are dangling / unattached test cases"*, and it is adopted as WI-451 slice
+  2's declared method. **Why it beats the row-centric reading:** the campaign
+  row's own phrasing (*"every demoted row needs a PARENT SR"*) states a true
+  constraint but implies minting a parent per demotion — ~73 thin ad-hoc
+  parents, a worse registry than the 148 mis-tiered rows the campaign began
+  with. Layer-first fixes the order of knowledge: what the SR layer should BE
+  is decided from the needs + the six crossings, the 49 holding/re-stating
+  rows reattach to it, and only then can a demoted row land under the parent
+  its obligation actually belongs to. The bottom-up sweep has a mechanical
+  detector rather than judgment — `trace.py` reports `orphans=9` on the live
+  spine today. Recorded in the WI-451 spec's `## Context` and sitting-3 §0.2.
+  **The migration stays OUT of the layers**, on the evidence the owner asked
+  for: interleaving D-9/D12 per layer was WEIGHED AND REJECTED because
+  `is_draft`/`is_verified`/`is_modified` are global row predicates (only
+  `ENUM_FIELDS` is per-tier), so a partial migration either cannot close the
+  enum (*"a claim with no mechanism"*, §0) or fires §3.1's silent direction
+  (*"`Modified` unmigrated, read by a new `is_drifted` → the row silently
+  vanishes from the re-attest brief"*); the archived checklist independently
+  names step 3 *"the atomic act"* and requires the enum close to land with it
+  *"since the enum and the data must agree at every commit"*. Migrating
+  FIRST was also weighed and rejected: it would open §3.3's
+  no-drift-detector gap across the largest text-change event in the repo's
+  history, and would migrate 26 rows about to be deleted. Order stands:
+  layered re-tier → one atomic migration → one signing wave (`2026-08-14e`).
+- **2026-08-14f — sitting-3 ledger decision 4 RULED and EXECUTED (owner, in
+  session): TC-159 lifted — and the §2.3 lift's crossed pairs aligned both
+  ways.** The evidence decided it: TC-159's procedure drives the CONVERTER
+  (round-trip + loss detector) and verifies LLR-165 ("the spine carrier
+  converter"); TC-160's drives the READER and verifies LLR-166 ("the spine
+  carrier's one reader") — so §2.3 had lifted the converter's LLR without
+  its TC, and the reader's TC without its LLR, one crossed lift making both
+  §2.2 mismatches. Re-pointing LLR-165's `test_refs` at TC-160 (the
+  alternative passed over) would have forged a converter-requirement →
+  reader-test verification edge — false forever, surviving any vocabulary
+  relabeling — where the status mismatch was transient bookkeeping. Executed
+  in the same act: TC-159 and LLR-166 both `Draft` → `Planned`, restoring
+  pair-consistency in both directions; `drafts` 29 → 27, gate regenerated,
+  `check_trajectory --strict` and `trace.py` integrity clean. WI-452 part
+  (2) is unblocked. Ledger: sitting-3 §0.3 row 4; §2.1/§2.2 updated.
+- **2026-08-14e — sitting-3 ledger decision 5 RULED, 6–7 SCHEDULED (owner,
+  in session): the D-9 + D12 vocabulary program executes as ONE SEQUENCE
+  with the ratification wave.** Timing ruled: right after slice 2's re-tier
+  drafts land — so the largest approval wave this repo will run signs ONCE,
+  in the new semantics, instead of signing in the old vocabulary and
+  re-writing every just-ratified status token in a second window. The
+  sequence's fixed points, per sitting-3 §3: the first commit closes the
+  `Status` enum; the §3.3 drift-coverage gap (no drift detector between the
+  migration and D-1's anchor) is recorded owner-visibly; the rung-predicate
+  work lands in the same sequence (OI-21 5c). Decisions 6 (`Planned`'s fate
+  — 16 live rows) and 7 (authority over the off-spine approval flips, and
+  the dial's form) are SCHEDULED into that sequence with their substance
+  ruled at its execution — riding by name, not by lapse. Ledger: sitting-3
+  §0.3 rows 5–7.
+- **2026-08-14d — sitting-3 ledger decisions 8–9 RULED (owner, in session):
+  crossing ownership DEFERRED with a named re-land; the human stays inside
+  EXT-001 — CONFIRMED.** Decision 8 (sitting-2 D6's re-land, restated over
+  the six live crossings after its "31 BIF rows" text was caught as the
+  superseded v1 frame): ownership assignment is deferred until slice 2
+  populates `Boundary-Refs` (0/149 today; trace.py's SN-037 advisory names
+  the campaign as what moves it) and the retirement lane's D-3 re-key lands
+  — at that point both gap lists derive mechanically and the assignment is a
+  short concrete act. The owner expects the question may effectively
+  DISSOLVE in the full re-tier (a demoted/re-stated registry may leave no
+  unowned gap); the deferral is recorded so it re-lands by name either way
+  rather than lapsing. Decision 9 (decision 2's follow-on): CONFIRMED
+  deliberately, as 13k's principle requires — the human stays inside
+  EXT-001, REL-002 carries the surfacing, the frame stays at FIVE entities;
+  a sixth-entity split was the alternative passed over. Ledger: sitting-3
+  §0.3 rows 8–9, marked ruled.
+- **2026-08-14c — sitting-3 ledger decision 3 RULED (owner, in session): the
+  B-05 decomposition axis gains the declared sixth bucket, *package-wide
+  property*.** SR-031 (policy readers agree), SR-034 (stdlib + ledger),
+  SR-035 (stack-agnostic) and SR-114 (cross-OS) each stay ONE SR attached to
+  B-05 in the new bucket — a property of every delivered capability at once,
+  never re-stated per capability group. The 13p invariant already admits the
+  shape (*"one SR per (need, crossing-or-delivered-property)"*); the census's
+  `pkg-wide` label becomes the bucket's name in slice 2's decomposition.
+  Alternative passed over: re-statement inside the five capability groups
+  (~4×5 partial rows — the fragmentation the anti-duplication rule refuses;
+  a rule change would then cost five edits and five re-attestations instead
+  of one). Ledger: sitting-3 §0.3 row 3, marked ruled.
+- **2026-08-14b — sitting-3 ledger decisions 1–2 RULED (owner, in session):
+  the census is RATIFIED; the 26 tombstones DELETE per D-4.** The slice-1
+  census (34 HOLDS / 15 RE-STATES / 73 DEMOTES / 26 tombstones over all 148
+  SRs, `docs/plans/2026-08-14-wi451-slice1-sr-census.md`) is approved as the
+  shape slice 2 executes — with the owner's stated expectation that iteration
+  will follow at this scope, and the judgment that the overhead moves in the
+  right direction. The tombstone ruling SUPERSEDES census §5-F2's
+  class-waiver recommendation (owner challenge upheld against the record):
+  the D-1/D-4 doctrine — *"a registry states what IS; git is the history"* —
+  was performed 2026-08-11 on SR-039's chain (deleted, not marked), and the
+  26 mark-in-place rows predate that first performance. Slice 2 therefore
+  deletes them (SR 149 → 123): one log entry as the forwarding home for all
+  26, citing IF rows deleted with their rows, `sn_refs` coverage re-checked
+  against the replacement rows, and `trace.py`'s supersession machinery plus
+  TC-099 retired by ruling, not by lapse — all under the WI-444 bar.
+  Alternatives passed over: keep + one class waiver, keep + 26 per-row
+  waivers. Ledger: sitting-3 §0.3 rows 1–2, marked ruled.
 - **2026-08-14a — `human_ratification_through` 0 → 4: every spine tier
   human-held (owner, in session).** The owner's expectation — *"at least a
   pause to approve stakeholder needs"* — did not hold at 0: the dial's own
@@ -28338,3 +28440,354 @@ copy) — recorded in status.md rather than silently deleted.
 **Bars.** check_docs: OK — 402 docs, 0 broken. Smoke tier: 1091 passed,
 3 skipped (per-commit runs in each commit's message).
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=659f9b84+worktree -->
+
+## 2026-08-12 — Bounded orthogonal dependency wires
+
+**Why.** The selected-state pixels after WI-434 exposed four defects the first
+pass's tests did not bind: a How route reached `y=-9.1` outside a y=0 viewBox,
+incoming paths visually fused at one centre port, duplicate marker ids hid
+arrowheads, and curved lane transitions formed acute roadmap cusps. The finding
+and its rendered baselines are recorded in
+[WI-435](work/complete/WI-435-orthogonal-bounded-drill-wires.md).
+
+**What changed.** [The generated dashboard](../PROJECT_STATE.html) now draws
+When/How drill dependencies as obstacle-checked orthogonal paths, exposes one
+connector circle per edge on a shared node side, reserves routing gutters for
+backward edges, scopes arrow markers per SVG layer, and pads viewBoxes on all
+four sides. Focused blue-in/amber-out behavior, exact relationship text,
+drill-down, keyboard operation, and the offline single-file contract remain.
+No external dependency or interface-registry change was needed.
+
+**Verification.** Renderer/view/panel suite: **107 passed**; focused routing
+family: **16 passed**; the final declared render matrix writes **36 shots** and
+the selected `CMP-004` Playwright check reports zero duplicate marker ids.
+<!-- fig: cmd="python -m pytest -q tests/test_traj_render.py tests/test_traj_views.py tests/test_traj_panels.py" rev=this-worktree -->
+<!-- fig: cmd="python -m pytest -q tests/test_traj_graph.py -k 'route or port_fan or svg or t8 or orthogonal'" rev=this-worktree -->
+<!-- fig: cmd="node scripts/dashboard-shots/shoot.mjs" rev=this-worktree -->
+
+**Deviations / budgets.** None. No budget-watched file changed.
+
+## 2026-08-14 — The depth-0 frame becomes rows; `Stability` retires; rung 1 re-keys
+
+**Why.** Sitting 2 locked the frame — 5 entities · 6 crossings · 3 relationships
+— and ruled the registry shape around it (decisions 3/4/5/12,
+[§1R.5](plans/2026-08-13-sitting-2-boundary-and-context.md#1r5-the-registry-shape-around-them-decisions-345-as-ruled)).
+Nothing downstream could start without it: the SR re-tier campaign needs
+machine-resolvable crossing ids, and SN-037's checker needs an SR-side column
+that did not exist. This row is that schema.
+
+**What changed.** [`docs/requirements/external.toml`](requirements/external.toml)
+holds the frame in three tiers on one path — `[entity.EXT-###]`,
+`[boundary.B-##]`, `[relationship.REL-###]` — shipped as
+[`registries/external.template.toml`](../project-trajectory/registries/external.template.toml)
+and scaffolded by `bootstrap.py`. The carrier needed no loader change: keying
+registries by ID COLUMN rather than by path already made a three-tier file work.
+`Stability` retired for `Approval` across all 113 IF rows and
+`derive_gate.boundary_incomplete` re-keyed onto crossing approval **in the same
+commit**, because `_maturity` maps an unrecognized value to DRAFTED — the split
+would have pinned rung 1 open forever on a deleted column, giving the right
+stage for the wrong reason. `trace.py` gained the frame's resolution rules as
+their own `--strict` failure class, and SN-037's SR→boundary rule on a new
+`SR.Boundary-Refs`.
+
+**Row ids are `B-##`, not `BIF-###`** — a deviation from §1R.5's sketch that
+resolves a contradiction inside the source. §1R.2's locked table, §3R and this
+WI's own tie-back examples all write `B-01`…`B-07`; v1's `BIF-001`…`BIF-031` are
+a different set of 31 crossings still cited by id in the archive, so that prefix
+would recycle live ids onto new meanings.
+
+**Both ambiguities resolved, stated not assumed.** Rung 1 gates on crossing
+**approval**, not realization coverage: 13u says approval, §1R.5 adds "every BIF
+realized", and realization is decision 6 — deferred by ruling, and not
+hypothetically, since four of six crossings are realized by no IF row today. The
+approval vocabulary ships **provisional** (`draft` | `approved`) with its D-9
+migration written into the registry header rather than waiting on sitting 3,
+which the campaign sits downstream of.
+
+**Every row lands `draft`, all 113 IF rows included** — a deliberate non-claim.
+`Stable` was a maturity assertion; `approved` is a ratification one, and mapping
+one onto the other would have manufactured 108 approvals nobody signed. Flip
+authority is in both registries' prose (`human_ratification_through` covers the
+spine tiers only) and pinned by a test that reds if anything but a ratification
+sets one.
+
+**FINDING — decisions 4 and 8 are in tension, and one clause is HELD.** §1R.5
+rules that an IF row sheds `direction`/`counterpart`; they are SR-091's only
+input (ratified, Verification = Test) and decision 8 makes the dashboard the one
+home for architecture. Measured before deciding: the full shed takes 41 tests
+red, 30 of them the dashboard failing to render. The columns are held and their
+deletion bound to WI-455; a `direction` name collision (D-3) rides with them and
+closes itself when WI-455 lands. The full argument and the evidence are in
+[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s
+Deliverable — not repeated here. **Sitting 3 owes the sequencing call.**
+
+**FINDING — two checks would have become tautologies if copied forward.** The
+seam-TC citation rule had already been re-keyed once off a column whose values
+marked exactly the rows that passed it; `Approval == "approved"` would have
+rebuilt that (every row reads `draft`), so it now arms on every real IF row and
+the maturity column drops out of the rule. WI-191's anti-duplication rationale
+arm is **retired, not re-keyed**: its input meant "proposed, not yet pinned by a
+second consumer", `draft` means "not yet ratified", and the swap would have taken
+its arming set from ~4% to 100% at a severity that errors under `--strict`. Both
+removals are pinned by tests asserting the removal, so neither drifts back
+half-fed. **Sitting 3 owes a value meaning "proposed" if the forced
+anti-duplication search is worth keeping.**
+
+**FINDING — WI-452's `SpecRef` anchor is dangling on trunk**, pre-existing and
+not this row's: `check_trajectory --strict` errors R-E on
+`#55-wi-452--llr-165-resync-helper-resurface`, which names no heading in the
+sitting-2 plan. WI-452 is on the ready frontier and `integrate.py claim` refuses
+a spec with no in-repo-resolving SpecRef, so this blocks that claim.
+
+**Verification**, each figure at the commit it was measured on — the runs are
+not one HEAD and the numbers legitimately differ. At the implementation commit
+`8d777da4`: full suite `pytest -q -n auto` **2472 passed, 11 skipped** (7:30);
+smoke `-m smoke` **1112 passed, 7 skipped** (32 s). At the close commit
+`9b0f1039` (the close adds the record files and their tests): smoke **1116
+passed, 3 skipped** (30 s); `check_docs --stale` 403 docs, 1187 links,
+**0 broken**. The re-key demonstrated both ways, not
+asserted: crossings `draft` → `stage=DevStg-Boundary`; all six flipped to
+`approved` → the rung releases. A throwaway `bootstrap.py --dest` scaffold
+scaffolds `external.toml`, runs `trace.py --strict` clean and reads
+`stage=DevStg-Needs`, so inert `-000` rows hold nobody at the boundary rung.
+Ratchets re-stamped deliberately in both directions: `trace.py` 3678 → 3917,
+`bootstrap.py` 2834 → 2844, `check_trajectory.py` 4115 → 4120,
+`interface_findings` 22 → 13, `build_dependency_diagram` deleted from the
+complexity census.
+
+**Two hostile-briefed reviews, one iteration.** An adversarial correctness pass
+(Opus, separate context) and a cross-family legibility pass (OpenAI gpt-5.6-terra
+via codex). The correctness pass found a **BLOCKER** — `frame_findings` returned
+`[]` on an empty entity set, so crossings referencing entities that do not exist
+resolved to silence while the report printed "every crossing Entity ...
+resolves" over the top of it — plus a fixture that had disarmed its own test,
+every shipped doc still declaring the retired column, and a missing
+`RESYNC_PACK.md` entry for a migration that silently raises an adopted repo's
+reported stage. All fixed and pinned. The full accounting, including what the
+review refused to substantiate and the one point answered rather than fixed
+(`trace.py`'s bump-vs-decompose choice), is in
+[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
+
+**Byte deltas.** `AGENTS.template.md` 9,994 → 9,994 (unchanged; 6 bytes of
+headroom under 10,000). `PROCESS.md` 73,420 → **73,604 (+184)**: §8's
+one-maturity-field sentence re-worded off the retired `Stability` onto
+`Approval` and given the directional tie-back rule — the retirement was landing
+in the registry and the scripts while the load-bearing core still declared the
+dead column. Baseline re-stamped in both `byte-budget-guard` copies.
+`PROCESS_OPTIONS.md` 171,916 → 171,916 (unchanged).
+
+**Deviations from spec.** One clause held (`direction`/`counterpart`, above) and
+one id-shape deviation (`B-##`, above). Both are recorded in
+[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
+No byte-budgeted file was touched.
+
+## 2026-08-14 — WI-454: SN-033's need-form checker lands warn-first, while the tier is clean
+
+One line: the check SN-033's ratified acceptance commissions now exists —
+[`check_need_form.py`](../project-trajectory/scripts/check_need_form.py)
+reports the row and the offending phrase for any SN `need` cell carrying an
+internal path, implementation-only identifier or process citation — landed
+deliberately while the tier is measured clean (0 findings over 27 need cells),
+so the SR re-tier's churn inherits a locked-in state where the first row to
+dirty the tier is the one that reports.
+
+- **Deliverables.** The checker (stdlib, `spine_carrier.load_needs` sibling
+  read, need cells only per SN-033's own exemption); the `need-form` step in
+  [`check.py`](../project-trajectory/scripts/check.py)'s table at every bar
+  **warn-first always** (no `--strict` promotion — gating needs an owner
+  ruling, recorded in the wiring comment); the reviewed exception list
+  `docs/need-form-allow` (`<token> — <reason>` lines, separator required so a
+  malformed entry can only fail loud, **ships empty** — not scaffolded);
+  9 in-process smoke tests
+  ([`tests/test_check_need_form.py`](../tests/test_check_need_form.py));
+  scaffold registration (bootstrap MAPPING + manifest, kit README row,
+  `test_bootstrap` list, `BUILTIN_STEP_NAMES`); the spine chain SR-150
+  (Planned, SN-033's **first** coverage — SN orphans 10 → 9) → LLR-170
+  (Draft, CMP-007) → TC-164 (Draft, Smoke) with IF-121 (Provides, the CLI
+  contract incl. the never-strict posture) + IF-122 (Consumes, the carrier
+  read), all Draft/Planned — **no re-attest window**. Spec closed to
+  [`work/complete/`](work/complete/WI-454-sn-033-need-form-checker.md).
+- **The §6 item-16 rider, executed.** Its *SN comment block* stray rides this
+  registry touch per §6.0: the OI-18 dissolution deleted the Edge-case rows
+  and left the header prose declaring an empty section — the comment block in
+  [`stakeholder-needs.toml`](requirements/stakeholder-needs.toml) now
+  records the deletion instead of inviting rows into a tier the dissolution
+  closed. Item 16's *other* stray (IF-064's inline SN-016) rides the
+  `external.toml` schema row per §6.0 and was not touched.
+- **Deviations / finds, stated plainly.** (1) Two heuristic scope calls the
+  spec's classes forced, both documented in the docstring and pinned by
+  tests: `SN-###` is **not** a process citation (the live SN-025 need hands
+  its launcher clause to SN-034 by id — a stakeholder-tier cross-reference),
+  and a single-slash dot-free token is **not** a path (live English pairs
+  `subjective/perceptual` in SN-024, `requirement/test` in SN-029). Without
+  both, the "live registry clean" acceptance is unmeetable against the
+  ratified text as written. (2) Minting IF-121/122 exposed a real hole:
+  `trace._offspine_ids` read only `open-items.toml`, so the **IF and CMP
+  watermark spaces went vacuous** at the WI-443 CSV→TOML conversion — ids
+  above the mark drew no finding, the OI-26 defect class the function's own
+  docstring records. Re-armed with two registry rows (trace.py ratchet
+  3938 → 3947, reviewed); `--bump-ids` then recorded SR=150 LLR=170 TC=164
+  IF=122. (3) `docs/gate` regenerated **on the branch** — basis tracks the
+  new rows, value unchanged at DevBar-Reqs (the WI-392/393 precedent;
+  `test_derive_gate` requires the committed cache to track the spine).
+  (4) No RESYNC_PACK entry: additive and warn-first, nothing for an adopter
+  to migrate (the check_figures/check_doc_refs precedent — check_vocab's
+  entry documented the vocabulary *break*, not the script's existence).
+  (5) The two `IF-121/122 … no script declares it` WARNs are the arch-map
+  lag; the `Contracts:` line ships in the script and the map regenerates on
+  the trunk at merge (the WI-392 precedent). Follow-up surfaced, not filed:
+  CMP-007's notes cell says "the 8 check_* lints" — a count this landing
+  makes stale, left untouched because the row is provisional with owner
+  ratification owed.
+- **Byte budgets:** none of the budgeted docs (AGENTS.template.md,
+  PROCESS.md, PROCESS_OPTIONS.md) were touched.
+- **Measured on the build commit 790a253a (clean tree):** module suite
+  9 passed in 0.37s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=790a253a -->;
+  smoke tier 1123 passed / 7 skipped in 32.81s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=790a253a -->
+  (membership within the 1150 ceiling, no re-stamp); full unfiltered suite
+  **2484 passed / 11 skipped** in 0:07:02
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=790a253a -->;
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, live checker run
+  clean over 27 need cells
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root ." rev=790a253a -->.
+
+## REVIEW-A round 1 fix (464ec259)
+
+- **Three genuine finds from the cross-family adversarial round, fixed:**
+  (1) the single-slash dot-free path exemption swallowed real one-level
+  internal paths (`docs/archive`, `docs/work`) — a token now reports as a
+  path when it RESOLVES in the scanned tree, and the live English pairs
+  (`subjective/perceptual`, `requirement/test`) resolve nowhere and stay
+  exempt; (2) a URL's path-shaped tail (`https://host/docs/status.md`)
+  reported as an internal path against the docstring's own URL exclusion —
+  URL spans are now pre-suppressed whole, for every class; (3) a
+  present-but-emptied needs registry scanned as a clean tier — driven at the
+  review: with the registry emptied, trace.py default rc=0 and the gate value
+  is coincidentally unchanged at DevBar-Reqs, so NOTHING hard-failed — now
+  reported VACUOUS (absent stays the pre-scaffold clean skip; a `-000`-only
+  scaffold registry stays a blank form).
+- **One challenge refuted with driven evidence:** an allow'd name
+  (`docs/SR-101.md`) suppressing the citation nested inside its own span is
+  deliberate and necessary (otherwise allow-listing `PROJECT_STATE.html`
+  would re-flag its `PROJECT_STATE` substring, self-defeating the reviewed
+  list); an independent `SR-101` outside the span still reports under
+  `--strict`. The Windows-separator claim was refuted in part: `docs\status.md`
+  reports (row + phrase) through the identifier class, and a raw backslash in
+  a TOML basic string is a loud carrier refusal, not a silent miss.
+- **Registry honesty:** LLR-170 detail, TC-164 method/expected and IF-122's
+  contract re-state the changed behavior; the WI Deliverable carries the
+  round-1 record. All rows Draft/draft — no re-attest window.
+- **Measured on the fix commit 464ec259 (clean tree):** module suite
+  13 passed in 0.47s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=464ec259 -->;
+  smoke tier 1127 passed / 7 skipped in 29.56s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=464ec259 -->
+  (the 4 new tests join the tier, membership within the 1150 ceiling);
+  live checker clean over 27 need cells
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root ." rev=464ec259 -->;
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
+
+## REVIEW-A round 2 fix (ce8e351c)
+
+- **Four genuine finds from the round-2 re-verdict, fixed:** (1) the path
+  charset let a sentence-final token drag its full stop into the phrase —
+  `docs/status.md.` was reported instead of the token, so its reviewed
+  exception could never match; the stop is stripped before judging, which
+  also keeps a sentence-final either/or pair (`requirement/test.`) from
+  reading its punctuation as a file suffix; (2) scheme-less `www.` addresses
+  reported as internal paths against LLR-170's own external-address promise —
+  the `_URL` suppression covers them, and a genuine path sharing the cell
+  still reports; (3+4) LLR-170's detail and IF-121's contract stated the
+  allow-list separator as ASCII `' - '` where the parser requires the em-dash
+  — the exact hyphen-authored silent-voiding confusion the loud-direction
+  rule exists for; both cells state the literal separator now.
+- **Measured on the fix commit ce8e351c (clean tree):** module suite
+  15 passed in 0.60s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=ce8e351c -->;
+  smoke tier 1129 passed / 7 skipped in 29.46s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=ce8e351c -->;
+  live checker clean over 27 need cells at both severities
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root . --strict" rev=ce8e351c -->;
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
+
+## REVIEW-A round 3 fix (90f9bbbb)
+
+- **One genuine find (two silent-miss arms), fixed:** the URL span's `\S+`
+  greed swallowed a separate genuine token abutting the address through a
+  comma (`...status.md,docs/gate.md` scanned clean), and the `www.` form
+  swallowed a single-label LOCAL path (`www.assets/logo.png`, directory on
+  disk, scanned clean). The span now stops at `,`/`;` and the `www.` form
+  requires a multi-label host before its first slash. Round 3 re-drove the
+  full round-1/round-2 surface green: sentence-final phrases, separator
+  wording, vacuous/absent/scaffold arms, warn-first wiring at all three
+  bars, live registry clean at 27 cells.
+- **Measured on the fix commit 90f9bbbb (clean tree):** module suite
+  17 passed in 0.64s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=90f9bbbb -->;
+  smoke tier 1131 passed / 7 skipped in 28.85s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=90f9bbbb -->;
+  live checker clean over 27 need cells at both severities
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root . --strict" rev=90f9bbbb -->;
+  both new regression tests fail against the pre-fix checker (ce8e351c);
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
+
+## 2026-08-14 — WI-453: the boundary hats roster executed (Decision 11, rulings 2026-08-13q/r/s)
+
+**Summary.** The `DevStg-Boundary` hats roster lands, all three owed things
+from sitting-2 Decision 11 (accepted 13u): FIRST-RUN-ADOPTER's defective
+predicate re-pointed at the deliverable; the UX pair + five aspect hats added
+with the owner's row text verbatim; the two kinds of silence (by design vs by
+defect) stated in both roster headers. Six hats become thirteen in
+[`../requirements/hats.toml`](requirements/hats.toml) and the shipped
+[`../../project-trajectory/registries/hats.template.toml`](../project-trajectory/registries/hats.template.toml).
+
+**Deliverables.**
+
+- **FIRST-RUN-ADOPTER kept, fixed** (ruling 13s). New predicate
+  `'tags contains "scripts" or tags contains "templates" or tags contains
+  "process"'`, identical in both copies — the kit's product is its shipped
+  scripts, templates and process docs, so those are the deliverable's tags.
+  Driven as a census over every real work-item context (docs/work front
+  matter → `hats.context_from_work_item`): 453 rows; the old `scope ==`
+  clauses fire on 0; the whole old predicate on exactly 1 (WI-131,
+  2026-07-13); the new predicate on 224
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_hats.py -k old_first_run_adopter" rev=ceb6d5d0 (the test derives the census and asserts all four figures) -->.
+- **Seven hats added, row text verbatim from Decision 11** (13u: "the rows
+  below and the FIRST-RUN-ADOPTER predicate fix are the text WI-453
+  executes" — no owner-text-pending remainder). UX-DESIGNER / UX-ENGINEER:
+  `always` in this repo (the REL-002 reader of PROJECT_STATE.html /
+  open-items.html), `render`/`ui`-gated in the shipped template — the
+  accepted VALUES-diverge split, with asks/listens_for pinned byte-identical
+  across copies. SAFETY / LEGAL / DATA-PROTECTION / ACCESSIBILITY /
+  PERFORMANCE: each keyed on its own tag, OFF by the grammar's
+  undeclared-field rule — no `enabled` key, no schema change — proven silent
+  on all 453 real rows and live under their tags.
+- **Header distinction** in both rosters: aspect silence BY DESIGN (awaiting
+  a tag) vs the old FIRST-RUN-ADOPTER silence BY DEFECT (keyed on a `scope`
+  field no context declares — SN-039's job), so no reader has to guess.
+- Tests: three new driven tests in `tests/test_hats.py` (the census
+  defect/fix proof, the aspect on/off proof, the UX split pin); the live
+  and template thirteen-hat pins updated; refusal paths (missing key,
+  unevaluable condition, unknown key, malformed/falsey table) were already
+  driven and stand. Prose counts (six → thirteen) updated in the kit README,
+  `bootstrap.py` and `test_bootstrap.py` comments.
+
+**Deviations from spec.** One, stated plainly: Decision 11 called the old
+predicate "silent"; the census found its `tags contains "templates"` clause
+had fired on exactly one historical row (WI-131, a workstream label no later
+row uses) — so the honest claim is "the `scope ==` clauses never fire and the
+hat was effectively voiceless (1 of 453)", and the test asserts that measured
+truth rather than a literal zero. No byte-budgeted file touched.
+
+**Checks.** Full unfiltered suite: `pytest -q -n auto` → 2495 passed, 11
+skipped in 402.81s
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=ceb6d5d0 -->;
+commit-bar smoke: 1134 passed, 7 skipped in 33.43s
+<!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=ceb6d5d0 -->;
+`check_docs --stale` OK (403 docs, 1183 links, 0 broken);
+`check_trajectory --root . --strict` clean after the close (rc=0).

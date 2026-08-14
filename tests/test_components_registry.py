@@ -246,7 +246,7 @@ def write_if(root, component):
         'signal = "discrete"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'stability = "Stable"\n'
+        'approval = "approved"\n'
         'component = "{}"\n'.format(component),
         encoding="utf-8",
     )
