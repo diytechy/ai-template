@@ -197,6 +197,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "registry-integrity",
         "traceability",
         "vocabulary",
+        "need-form",
         "privacy",
         "doc-navigability",
         "perf-budgets",
@@ -630,6 +631,28 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "vocabulary",
             (),
             vocab_cmd,
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
+            "process",
+        ),
+        # Need-form check (SN-033's declared checker, WI-454): each SN `need`
+        # cell is scanned for internal paths, implementation-only identifiers
+        # and process citations against the reviewed exception list in
+        # docs/need-form-allow (ships empty). At every bar, like vocabulary —
+        # the need registry is authored hardest at the LOWEST bar — but
+        # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
+        # vocab_cmd/traj_cmd. Promoting a form heuristic over ratified
+        # stakeholder prose to a gate is an owner ruling that has not been
+        # made (WI-454's scope guard); the severity ladder stops at WARN until
+        # it is.
+        (
+            "need-form",
+            (),
+            [
+                sys.executable,
+                str(_SCRIPTS / "check_need_form.py"),
+                "--root",
+                ".",
+            ],
             {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),

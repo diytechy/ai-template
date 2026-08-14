@@ -1060,7 +1060,7 @@ BASELINE = {
     # _TRUNK_FRESHNESS_STEPS. Trimmed once before stamping (1649 -> 1638) by
     # merging the two step rationales into one block. Reviewed bump; re-stamp
     # down with WI-280, which owns this module's decomposition.
-    "check.py": 1783,  # +145 2026-08-13: WI-445 — OI-21's bar vocabulary, the bar_ord/_window_ord ordinal lookups replacing the lexical gate comparisons, the retired-tag alias layer with its deprecation posture, and the vocabulary step (reviewed bump, reason in the log)
+    "check.py": 1806,  # +23 2026-08-14: WI-454 — the need-form step (SN-033's declared checker) joins the process floor at every bar, and most of the bump is the comment stating why it NEVER gains --strict there: promoting a form heuristic over ratified stakeholder prose to a gate is an owner ruling, and the wiring is where that boundary had to be recorded (reviewed bump, reason in the log fragment); earlier +145 2026-08-13: WI-445 — OI-21's bar vocabulary, the bar_ord/_window_ord ordinal lookups replacing the lexical gate comparisons, the retired-tag alias layer with its deprecation posture, and the vocabulary step (reviewed bump, reason in the log)
     # +1 (1916 -> 1917), WI-279: one MAPPING row registering the new
     # scripts/check_coverage.py kit gate so it ships downstream — a required
     # one-line registration, not monolith growth (the reviewed-bump escape the
@@ -1276,7 +1276,7 @@ BASELINE = {
     # own code is a new module under THRESHOLD, and a MAPPING row is the only
     # way a scaffold ever receives a file. Reviewed bump; re-stamp down with
     # WI-280.
-    "bootstrap.py": 2844,  # +10 2026-08-14: WI-442 — external.toml joins MAPPING, the scaffold docstring and the boundary-vs-interface explanation an adopter reads first (reviewed bump, reason in the log); earlier +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
+    "bootstrap.py": 2848,  # +4 2026-08-14: WI-454 — check_need_form.py joins the shipped script manifest with its reason (one MAPPING row + three comment lines; the docstring listing absorbed the name on its existing check_* line — the WI-392 shape; reviewed bump, reason in the log fragment); earlier +10 2026-08-14: WI-442 — external.toml joins MAPPING, the scaffold docstring and the boundary-vs-interface explanation an adopter reads first (reviewed bump, reason in the log); earlier +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
