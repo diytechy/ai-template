@@ -36,6 +36,55 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13q — Decisions 7–12 ruled: the architecture becomes derived, the
+  SR tier re-tiers, and every rung-generated row owes an approval element
+  (owner, in session).** **D7 RULED** — and the owner is right it was
+  effectively already decided (2.7(a) + the 13l inversion + §1R.6 settled it);
+  the canonical rule is the owner's fuller sentence: ***the requirement names
+  the interface, and the expectations to generate that interface outcome
+  according to its available inputs*** — the input→outcome relation, not only
+  the naming. **D8 RULED: the hand-authored architecture structure RETIRES —
+  architecture is a DERIVED FACT**, computed from `external.toml` + interfaces
+  + the LLR/component recursion. This *satisfies* SN-040 (*"kept with the
+  architecture, not in session prose"*) more strongly than prose could, and
+  completes a file already 88 % generated. One boundary flagged for
+  confirmation: **narrative** content (Runtime flows, SR-cited and checked by
+  `check_flows.py`) is not derivable and would stay authored-and-checked — the
+  by-KIND cut. **D9 RULED: neither split nor waive — the form findings dissolve
+  into a RE-TIER.** *"SRs must now scope only to their boundary interfaces …
+  the current composition of SRs will likely drop to LLRs."* Four of the six
+  form rows name internal modules, so they are re-tier candidates; splitting
+  would mint ids into rows about to leave the tier. **Scope escalation
+  recorded:** WI-451 grows from *"re-state ~57 SRs"* to *"re-tier the SR
+  registry against 7 crossings"* — plausibly ~100 demotions — with two
+  structural problems to rule first: every demoted row needs a **parent SR**
+  (the join is SN→SR→LLR→TC; demotion also mints ~100 LLR ids, re-points TCs,
+  re-homes `sn_refs`), and **B-05 risks becoming a mega-node** since nearly
+  every script ships in the Template — mitigated by decomposing B-05's SRs by
+  **delivered capability** (harness verdict, scaffold/MAPPING, loop, generators,
+  hook floor), which is the old port list returning legitimately as properties
+  of the deliverable. Do not commit a row count before slice 1's census.
+  **D10 answered:** yes, it is the depth-1 architecture decomposition; D8 does
+  not retire it (component assignment is a chosen INPUT to the derivation), but
+  D9's re-tier delivers ~100 rows needing `Component` values, so the real call
+  is sequencing — ratify now and re-tag, or ratify after the re-tier; free
+  either way (`LLR.Component` is traced, no window), noting WI-448 consumes it
+  as import doctrine. **D11 RULED: add a UX designer and a UX engineer hat**
+  for the output HTML. Scope question answered: the roster **ships** —
+  `registries/hats.template.toml` scaffolds to `docs/requirements/hats.toml` —
+  so it is both template content and this repo's instance; recommended
+  unconditional here, gated by a render/ui `applies_when` in the shipped
+  starting roster so it stays silent rather than falsely universal for
+  adopters with no UI. **D12 RULED: the mechanism is unchanged** (above
+  `human_ratification_through` runs automatically, below pauses) — and the
+  owner's suspected gap is **measured real**: of the registries, hats carries
+  **no** approval element, `interfaces` carries `stability` which decision 4
+  retires **with nothing replacing it**, and **`external.toml` must design one
+  in from its first commit** or the frame itself is un-ratifiable. Ruling
+  sought: every rung-generated registry row carries an approval element as a
+  schema invariant, ideally the one closed vocabulary D-9 lands. Same class as
+  the two unowned checkers (SR→IF, SN-033's need-cell check).
+
 - **2026-08-13p — Decision 7 re-measured: the SN side is already clean, the
   invariant re-keys to the v2 frame (owner-requested examples, in session).**
   Asked to surface worked examples for the duplication policy, the

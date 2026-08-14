@@ -722,6 +722,19 @@ re-scope is the natural first vehicle, §5.2).
 
 ### Decision 7 — The duplication policy for the re-statement pass
 
+**RULED 2026-08-13q — and the owner is right that it was effectively already
+decided.** 2.7(a) (an SR may name an artifact only at a declared crossing), the
+13l inversion (SRs form around the boundary interfaces) and §1R.6 (validation
+shapes) had already settled it; this decision only owed the *sentence*. The
+canonical rule, in the owner's words, which is **fuller than option 3** because
+it carries the input→outcome relation rather than only the naming:
+
+> **The requirement names the interface, and the expectations to generate that
+> interface outcome according to its available inputs.**
+
+That is the rule WI-451 applies per row. The two riders below still need
+ordering. The original question, for the record:
+
 **The question.** §3's option 3 — *the need names the outcome, the requirement
 names the crossing* — or an alternative, **stated as a rule WI-451 slice 2 can
 apply per row**, plus whether SR-035's disposition rides that window.
@@ -775,6 +788,32 @@ multi-need).
 
 ### Decision 8 — Where the boundary record LIVES once ruled
 
+**RULED 2026-08-13q: the hand-authored architecture structure RETIRES — the
+architecture becomes a DERIVED FACT.** The owner's reasoning: with the boundary
+interfaces defined and tied to system requirements, and recursion allowed over
+LLRs and interfaces, the structure is computable rather than authored. So the
+boundary record is **generated** from `external.toml` (entities · boundary
+interfaces · relationships) + `interfaces.toml` + the LLR/component recursion,
+emitted into `docs/architecture.md` beside the existing generated blocks and
+rendered in the dashboard's "How (SW architecture)" tab.
+
+**This SATISFIES SN-040 rather than straining it.** Its ratified acceptance
+asks that the record be *"kept with the architecture, not in session prose"* —
+a generated architecture view is the strongest possible form of that: it cannot
+drift, and `--check` freshness makes staleness a red. It also completes the
+direction the file already had: **~1,402 of its 1,594 lines (88 %) are already
+generated.**
+
+**⚠ One boundary on "the entire structure" to confirm.** The file's ~192
+hand-authored lines are not all structural. **Runtime flows** are *narrative
+sequences*, SR-cited and checked by `check_flows.py` — an ordering of events
+with a rationale, which no registry derives. The honest split (the same
+by-KIND cut §1b drew): **structure derives** (entities, boundary interfaces,
+relationships, module graph, component map — all registry-backed), **narrative
+stays authored-and-checked** (Runtime flows, "Shape of the product"). Confirm
+that reading, or rule the narrative out too and say what replaces
+`check_flows.py`'s obligation.
+
 **The question.** SN-040's ratified acceptance requires the record *"kept with the
 architecture, not in session prose."* **`docs/architecture.md` has NO boundary
 section today** — measured: `grep -n "boundary\|external\|actor"` returns only
@@ -791,6 +830,43 @@ live, measurable gap against its own acceptance text.
 ---
 
 ### Decision 9 — The six one-obligation-per-row form findings (pack §2.1, TABLED)
+
+**RULED 2026-08-13q: neither SPLIT nor WAIVE — the question dissolves into a
+RE-TIER.** The owner: *"SRs must now scope only to their boundary interfaces,
+which right now is much smaller, such that the current composition of SRs will
+likely drop to LLRs."* Four of the six form-finding rows name internal modules
+(SR-042 `gen_okf.py`, SR-050 `gen_trajectory.py`, SR-057 `schedule.py`, and
+SR-130's serial trunk step — `trunk_step`, internal by construction under
+decision 2), so they are **re-tier candidates, not split candidates**. Splitting
+them would mint SR ids into rows about to leave the SR tier — precisely the
+churn the 2026-08-13d tabling was avoiding. **The form rule applies to whatever
+lands after the re-tier**, at whichever tier each obligation ends up.
+
+**⚠ THE SCOPE ESCALATION THIS CREATES — the sitting should size it
+deliberately.** WI-451 was scoped as *"re-state ~57 internal-naming SRs."* Under
+this ruling it becomes **re-tier the SR registry against 7 crossings**. Order of
+magnitude: 148 SRs today; a tier scoped to 7 crossings plausibly sustains a few
+dozen, so **~100 rows may demote to LLR**. That is a different program, and it
+carries two structural problems worth ruling before it runs:
+
+1. **Every demoted SR needs a parent.** The join is SN→SR→LLR→TC; an LLR hangs
+   off an SR. So each demoted row must find a surviving boundary SR to parent
+   under — and the demotion also mints ~100 LLR ids, re-points their TC links,
+   and re-homes `sn_refs` (LLRs do not carry them; the parent SR does).
+2. **B-05 risks becoming a mega-node.** Because the Template is the deliverable
+   and nearly every script ships inside it, most demoted rows parent under the
+   *one* deliverable crossing — one node with ~100 descendants discriminates
+   nothing. **The natural mitigation, and it brings the port list back in a
+   legitimate form:** B-05's SRs decompose by **delivered capability** (the
+   harness-verdict contract, the scaffold/MAPPING contract, the unattended-loop
+   contract, the generators' contracts, the hook-floor contract), each a real
+   obligation of the package with its own observable per §1R.6. Those are the
+   old ports — no longer crossings, now *properties of the deliverable*.
+
+**What to rule here:** confirm the re-tier (vs. holding the SR tier as-is), and
+whether B-05 decomposes by delivered capability as above. The per-row census
+(WI-451 slice 1) is what sizes it honestly — **do not commit to a row count
+before that census runs.**
 
 *Carried in full from the sitting pack §2.1, now archived. It was tabled to this
 sitting because splitting mints ids into SR text the retier may shuffle.*
@@ -862,6 +938,29 @@ options; it tells you the question has been at this door before and the answer
 each time was "not by an agent, and not before the thing that might pre-empt it."
 
 ### Decision 10 — The P5 partition (pack §3): accept or overturn
+
+**Answering the owner's question — yes: this decision IS the architecture
+decomposition**, at depth 1. P5 groups the ~55 shipped modules into four
+components (CMP-006…009); under the OI-21 ladder a partition *is* the next
+level's boundary declaration, so this is the rung below §1R's frame.
+
+**⚠ Its sequencing is now in question (2026-08-13q).** Decision 8 makes the
+architecture a *derived* fact — which does **not** retire this decision, because
+the component assignment is a *chosen* input to that derivation, not an output
+of it. But decision 9's re-tier changes what the partition is partitioning:
+**~100 rows demoting from SR to LLR arrive needing `Component` values**, and
+`LLR.Component` is exactly the cell P5 assigns. Ratifying the partition before
+the re-tier means re-tagging afterwards anyway.
+
+**So the real call is sequencing, and it is cheap either way** — `LLR.Component`
+is a traced cell, so adopting or overturning opens **no re-attest window**
+(pack §3's "cheapest decision in the pack" finding still holds). Options:
+**(a)** ratify P5 now and re-tag the demoted rows as they land; **(b)** keep the
+warn-first provisional adoption and ratify after the re-tier, when the full row
+set is visible. Note WI-448 consumes the partition as import doctrine, so (b)
+delays it — and pack §3's own constraint finding says the partition and the
+common-module program *"must land together."* The full ranking, the four
+components as minted, and the accept-vs-overturn costs follow below unchanged.
 
 *Carried in full from the sitting pack §3, now archived, with three rescued
 caveats and four pointers appended.*
@@ -1043,6 +1142,37 @@ and do not need re-deriving:
 
 ### Decision 11 — The hats roster (pack §4): accept, edit or cut
 
+**RULED 2026-08-13q: ADD a UX designer hat and a UX engineer hat** — *"for the
+output html specifically is where they will play"* (`PROJECT_STATE.html`,
+`open-items.html`).
+
+**Answering the scope question: the roster is BOTH — it ships.**
+`project-trajectory/registries/hats.template.toml` exists and `bootstrap.py`
+scaffolds it to `docs/requirements/hats.toml`, so the six hats are a **starting
+roster delivered to adopters** (B-05 content) *and* this repo's own live
+instance. Under the kit's VALUES-vs-STRUCTURE rule the two may legitimately
+diverge in *content* while the schema stays identical.
+
+**Recommendation on the split:** add both hats to **this repo's** roster
+unconditionally — the dashboard is a real, owner-facing UX surface with a
+critique skill already pointed at it. For the **shipped** roster, add them too
+but gate them, since not every adopter has a UI: an `applies_when` on a
+rendering/UI tag keeps them **silent rather than falsely universal**, exactly
+how `FIRST-RUN-ADOPTER` and `CROSS-PLATFORM` are already gated. Proposed rows
+(owner text to confirm — a roster chosen by an agent and left unread is the
+ceremony SN-036 exists to prevent):
+
+- **`UX-DESIGNER`** — `applies_when = 'tags contains "render" or tags contains "ui"'`
+  · *asks:* "Who reads this surface, what decision are they making on it, and does the layout put that first?"
+  · *listens_for:* "A surface that renders every fact it has instead of the one the reader came for."
+- **`UX-ENGINEER`** — `applies_when = 'tags contains "render" or tags contains "ui"'`
+  · *asks:* "Does this hold up at the real widths, themes and content volumes — and what does it do when the data is empty, huge, or malformed?"
+  · *listens_for:* "A view verified only by reading its generator, never by looking at it rendered."
+
+Note the second is the standing lesson the `render-dashboard-critique` skill
+exists for — *a concurrency diagram reads correct in source and wrong on
+screen.* The existing six hats and the two honest limits follow below.
+
 *Carried in full from the sitting pack §4, now archived.*
 
 Lives at [`../requirements/hats.toml`](../requirements/hats.toml); read by
@@ -1110,6 +1240,39 @@ admitted to prevent — and SN-036's *record* half still has no enforcer either
 way.
 
 ### Decision 12 — The gate sign-off mechanization (OI-21 execution question 3)
+
+**RULED 2026-08-13q: the sign-off MECHANISM is unchanged** — *"anything above
+the human approval rating is performed automatically, anything below pauses and
+waits for approval."* That is `human_ratification_through` (the ordinal that
+replaced the `attended`/`single-ratify`/`autonomous` enum) working as designed;
+this decision does not re-open it.
+
+**The owner's consequence, and it is the real finding:** *"all content generated
+at each rung needs to have a designated element that can define if it's approved
+or not, and that may have some missing pieces currently."* **Measured — there
+are exactly two gaps, and the second is about to be created:**
+
+| Registry | Approval element | Verdict |
+|---|---|---|
+| stakeholder-needs | `kind` | present *(a TYPE field doing double duty as maturity — the D-9 ladder's to fix)* |
+| system-requirements · low-level-requirements · test-cases | `status` | present |
+| open-items | `status` | present |
+| components | `state` | present |
+| work items | the **directory** is the status | present (by construction) |
+| **hats** | **NONE** | ⚠ **GAP** — a roster row cannot be approved-or-not today |
+| **interfaces** | `stability` | ⚠ **GAP IN THE MAKING** — decision 4's direction retires it, and nothing replaces it |
+| **`external.toml`** (entities · boundary interfaces · relationships) | *does not exist yet* | ⚠ **DESIGN IT IN** — the frame's own rows must carry an approval element from the first commit, or the boundary is un-ratifiable |
+
+**What to rule:** that **every registry row a rung generates carries an approval
+element** as a schema invariant, and how the three gaps close — the `external.toml`
+schema mints one from day one (cheapest: the same closed `Status` vocabulary
+D-9 lands, so there is one word across every tier); `interfaces.toml` gains that
+same element as `stability` retires rather than after; and the hats roster either
+gains one or is explicitly declared *not* rung-generated content (defensible —
+it is owner text, not derived — but say so deliberately rather than by
+omission). **This is the same class as the two unowned checkers** (SR→IF,
+SN-033's need-cell check): a stated obligation with no mechanism, and the
+cheapest moment to fix it is before the schema exists.
 
 **The question.** OI-21 ruled *sittings stay their own axis* — fewer sittings than
 boundaries, each naming the rung range it certifies. What was never ruled is
