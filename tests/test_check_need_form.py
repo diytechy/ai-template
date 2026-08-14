@@ -133,6 +133,72 @@ def test_english_either_or_pairs_are_not_paths(tmp_path):
     assert "clean" in proc.stdout, proc.stdout
 
 
+def test_a_one_level_dot_free_token_that_resolves_on_disk_is_a_path(tmp_path):
+    # docs/archive carries no dot and one slash — the English-pair shape — but
+    # it RESOLVES in the scanned tree, so it is an internal path (the round-1
+    # adversarial review's driven find: the blanket exemption swallowed it).
+    make_repo(tmp_path, "The design history lives in docs/archive for auditors.")
+    (tmp_path / "docs" / "archive").mkdir()
+    proc = form(tmp_path)
+    assert "docs/archive" in proc.stdout, proc.stdout
+    assert "internal path" in proc.stdout
+    # The same token with NO target on disk keeps the English-pair exemption.
+    make_repo(tmp_path, "The design history lives in docs2/archive for auditors.")
+    assert "clean" in form(tmp_path).stdout
+
+
+def test_a_url_is_suppressed_whole_however_path_shaped_its_tail(tmp_path):
+    # The round-1 review's driven find: the lookbehind alone reported the
+    # `test/docs/status.md` tail of a URL as an internal path. The whole URL
+    # span is suppressed — for the path class AND the identifier class that
+    # would re-match `status.md` inside it.
+    make_repo(
+        tmp_path,
+        "Docs are published at https://example.test/docs/status.md for readers.",
+    )
+    proc = form(tmp_path)
+    assert proc.returncode == 0
+    assert "clean" in proc.stdout, proc.stdout
+
+
+def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
+    # The round-1 review's driven find: an emptied registry scanned as a clean
+    # tier, and at DevBar-Reqs nothing else in the harness hard-fails on it —
+    # the false green SN-008 forbids, on exactly the registry this check
+    # guards. Absent stays a clean skip; present-but-empty reports.
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "stakeholder-needs.toml").write_text("", encoding="utf-8")
+    proc = form(tmp_path)
+    assert proc.returncode == 0, "warn-first: vacuous must not gate by default"
+    assert "vacuous" in proc.stdout, proc.stdout
+    assert "check_need_form: clean" not in proc.stdout
+    assert form(tmp_path, "--strict").returncode == 1
+    # Real rows that carry no `need` cell at all are the same emptied tier.
+    (reg / "stakeholder-needs.toml").write_text(
+        '[need.SN-050]\nkind = "core"\npriority = "M"\n'
+        'why = """b."""\nacceptance = """c."""\n',
+        encoding="utf-8",
+    )
+    assert "vacuous" in form(tmp_path).stdout
+
+
+def test_an_example_only_registry_is_a_blank_form_not_a_vacuous_tier(tmp_path):
+    # A fresh scaffold's registry holds only `-000` example rows: scanned=0,
+    # but it is a blank form, not an emptied tier — the scaffold pays nothing.
+    reg = tmp_path / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "stakeholder-needs.toml").write_text(
+        '[need.SN-000]\nkind = "core"\npriority = "M"\n'
+        'need = """Example row naming docs/example.md — ignored."""\n'
+        'why = """example."""\nacceptance = """example."""\n',
+        encoding="utf-8",
+    )
+    proc = form(tmp_path)
+    assert proc.returncode == 0
+    assert "clean" in proc.stdout, proc.stdout
+
+
 def test_the_live_registry_is_clean_at_zero_findings():
     # The WI's premise, held as a test: the check landed while the ratified
     # tier was clean (measured 2026-08-13, decision 7 rider 2), so the first

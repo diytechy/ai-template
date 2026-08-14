@@ -26,11 +26,21 @@ WARN-FIRST ALWAYS — no `--strict` promotion anywhere in the shipped wiring;
 the step comment records that gating needs an owner ruling. Two documented
 scope decisions: `SN-###` is not a process citation (a need citing a sibling
 need stays at the stakeholder tier — the live SN-025 hand-off to SN-034), and
-a single-slash dot-free token is not a path (live English pairs
-`subjective/perceptual`, `requirement/test`). Verification: 9 in-process smoke
-tests (`tests/test_check_need_form.py`) covering the dirty-cell row+phrase
-case, `--strict`, the exception list and its malformed-entry arm, the
-exemptions, and the live registry clean at zero findings over 27 need cells.
+a single-slash dot-free token is a path only when it RESOLVES in the scanned
+tree (`docs/archive` reports; live English pairs `subjective/perceptual`,
+`requirement/test` resolve nowhere and stay exempt — REVIEW-A round 1 narrowed
+the original blanket exemption, which swallowed real one-level paths).
+REVIEW-A round 1 (cross-family) drove two further genuine finds, fixed on the
+branch: a URL's path-shaped tail reported as an internal path (URL spans are
+now suppressed whole), and a present-but-emptied registry scanned as a clean
+tier (now reported VACUOUS; absent stays the pre-scaffold clean skip, and a
+`-000`-only scaffold registry stays a blank form). Its allow-span challenge
+was refuted as deliberate: an allow'd name suppresses only its own span, and
+an independent citation outside it still reports. Verification: 13 in-process
+smoke tests (`tests/test_check_need_form.py`) covering the dirty-cell
+row+phrase case, `--strict`, the exception list and its malformed-entry arm,
+the exemptions, the resolving-path and URL arms, the vacuous-registry arms,
+and the live registry clean at zero findings over 27 need cells.
 Spine: SR-150 (Planned, cites SN-033 — its first coverage, orphans 10 → 9) →
 LLR-170 (Draft, CMP-007) → TC-164 (Draft, Smoke), plus IF-121/IF-122
 (approval=draft) and the id watermark at SR=150 LLR=170 TC=164 IF=122.

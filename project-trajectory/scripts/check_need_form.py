@@ -22,11 +22,24 @@ machinery that produces it. Example/placeholder rows (`SN-000`-style ids ending
 in `-000`) are ignored, the same rule trace.py applies. The edge-case tier
 carries no `need` field and so is naturally out of scope.
 
+An ABSENT registry is a clean skip (the pre-scaffold case). A registry that is
+PRESENT but yields zero scannable need cells — an empty file, or real rows
+none of which carries a `need` field — is reported as VACUOUS, never clean:
+zero need cells reading as a clean tier on exactly the registry this check
+guards is the false green SN-008 forbids (the round-1 adversarial review drove
+this: at DevBar-Reqs an emptied registry hard-fails nothing else in the
+harness). A scaffold's `-000`-only registry stays clean — example rows are a
+form, not a vacuous tier.
+
 THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
 
   - **internal path** — a slash-joined repo path (`docs/status.md`,
-    `scripts/check.py`). URLs are deliberately NOT matched: a URL a need names
-    is an external, stakeholder-visible address, not repository internals.
+    `scripts/check.py`), including a one-level dot-free token that RESOLVES in
+    the scanned tree (`docs/archive`). URLs are deliberately NOT matched — a
+    URL a need names is an external, stakeholder-visible address, not
+    repository internals — and the exclusion is enforced by suppressing the
+    whole URL span, so a path-shaped tail (`https://host/docs/status.md`)
+    never reports (round-1 review find).
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
     (`human_ratification_through`), or a `--flag` token.
@@ -91,14 +104,17 @@ ALLOW_SEP = " — "
 CLASSES = (
     (
         "internal path",
-        # Slash-joined path segments. `(?<![\w:/])` refuses a URL's
-        # `scheme://host/...` tail and mid-token starts; the segment charset is
+        # Slash-joined path segments. `(?<![\w:/])` refuses mid-token starts;
+        # URL interiors are handled by the _URL span suppression in
+        # need_findings (the lookbehind alone let a `host.tld/docs/x.md` tail
+        # through — the round-1 review's driven find). The segment charset is
         # the kit's own path alphabet. A single-slash, dot-free token is then
-        # REFUSED by _looks_like_path below — "subjective/perceptual" and
-        # "requirement/test" are English either/or pairs, not paths, and both
-        # are live in the ratified registry. The trade-off is documented: a
-        # bare one-level directory path (`docs/archive`) is missed; a real
-        # internal path in a need almost always names a file or goes deeper.
+        # judged by _looks_like_path below: "subjective/perceptual" and
+        # "requirement/test" are English either/or pairs that resolve to
+        # nothing on disk (both live in the ratified registry), while
+        # `docs/archive` names a real directory and reports. The residual,
+        # documented miss is a one-level dot-free path whose target no longer
+        # exists in the scanned tree.
         re.compile(r"(?<![\w:/])[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.*{}-]+)+"),
     ),
     (
@@ -123,11 +139,29 @@ CLASSES = (
 )
 
 
-def _looks_like_path(token):
+# A URL span: `scheme://` through the next whitespace. Findings inside one are
+# suppressed whole — an external address is stakeholder-visible however
+# path-shaped its tail, and suppressing the SPAN (not just refusing the match
+# start) is what keeps the identifier class from re-matching a `status.md`
+# inside it.
+_URL = re.compile(r"\b[a-z][a-z0-9+.-]*://\S+", re.IGNORECASE)
+
+
+def _looks_like_path(token, root=None):
     """True when a slash-joined token reads as a repo path rather than an
-    English either/or pair: two or more slashes, or any segment carrying a
-    dot (a file suffix)."""
-    return token.count("/") >= 2 or any("." in seg for seg in token.split("/"))
+    English either/or pair: two or more slashes, any segment carrying a dot
+    (a file suffix), or — the remaining one-level dot-free shape — a token
+    that RESOLVES in the scanned tree (`docs/archive` names a real directory;
+    `subjective/perceptual` names nothing). With no root to resolve against,
+    the one-level dot-free shape stays exempt."""
+    if token.count("/") >= 2 or any("." in seg for seg in token.split("/")):
+        return True
+    if root is None:
+        return False
+    try:
+        return (Path(root) / token).exists()
+    except (OSError, ValueError):  # unstattable charset member (e.g. `*`)
+        return False
 
 
 def _utf8_console():
@@ -160,13 +194,14 @@ def load_allow(root):
     return out
 
 
-def need_findings(needs, allow):
+def need_findings(needs, allow, root=None):
     """`[(row_id, class_label, phrase)]` over the `need` cells of `needs`.
 
     One finding per distinct (row, phrase): a token repeated inside one cell is
     one phrase to rewrite. A phrase on the reviewed exception list is skipped —
     that is the list's whole job (SN-033: a name that IS the user-facing
-    interface belongs in the need)."""
+    interface belongs in the need). `root`, when given, lets the path class
+    resolve one-level dot-free tokens against the scanned tree."""
     out = []
     for row in needs:
         rid = row.get("id", "")
@@ -175,11 +210,16 @@ def need_findings(needs, allow):
         cell = row.get("need") or ""
         if not cell:
             continue
-        seen, spans = set(), []
+        # URL spans are pre-suppressed: every class match inside one is the
+        # tail of an external address, not repository internals.
+        seen = set()
+        spans = [(m.start(), m.end()) for m in _URL.finditer(cell)]
         for label, rx in CLASSES:
             for m in rx.finditer(cell):
                 phrase = m.group(0)
-                if label == "internal path" and not _looks_like_path(phrase):
+                if label == "internal path" and not _looks_like_path(
+                    phrase, root
+                ):
                     continue
                 # One token, one finding: a later class re-matching INSIDE an
                 # already-reported span (`status.md` inside `docs/status.md`)
@@ -198,11 +238,21 @@ def need_findings(needs, allow):
 
 
 def scan(root):
-    """`(findings, scanned_count)` for the repo at `root`."""
-    needs = spine_carrier.load_needs(Path(root) / NEEDS)
+    """`(findings, scanned_count, vacuous)` for the repo at `root`.
+
+    `vacuous` is True when the registry file is PRESENT but yields zero
+    scannable need cells — an empty file, or real (non-`-000`) rows none of
+    which carries a `need` cell. An absent registry is not vacuous (the
+    pre-scaffold clean skip), and neither is a `-000`-only scaffold registry:
+    example rows are a blank form, not an emptied tier."""
+    base = Path(root) / NEEDS
+    needs = spine_carrier.load_needs(base)
     allow = load_allow(root)
     scanned = [n for n in needs if (n.get("need") and not n["id"].endswith("-000"))]
-    return need_findings(needs, allow), len(scanned)
+    real = [n for n in needs if n.get("id") and not n["id"].endswith("-000")]
+    present = spine_carrier.resolve(base, spine_carrier.NEED_CARRIERS) is not None
+    vacuous = present and (not needs or bool(real and not scanned))
+    return need_findings(needs, allow, root), len(scanned), vacuous
 
 
 def main():
@@ -218,8 +268,17 @@ def main():
     )
     args = ap.parse_args()
 
-    findings, scanned = scan(args.root)
+    findings, scanned, vacuous = scan(args.root)
     label = "check_need_form: ERROR" if args.strict else "check_need_form: WARN"
+    if vacuous:
+        print(
+            "{} - the needs registry is present but yields no scannable need "
+            "cell (empty file, or rows with no need field) — a vacuous read "
+            "is not a clean tier: the registry this check guards has been "
+            "emptied or lost its schema (SN-008; round-1 review find)".format(
+                label
+            )
+        )
     for rid, cls, phrase in findings:
         article = "an" if cls[0] in "aeiou" else "a"
         print(
@@ -229,7 +288,8 @@ def main():
                 label, rid, article, cls, phrase, ALLOW
             )
         )
-    if not findings:
+    total = len(findings) + (1 if vacuous else 0)
+    if not total:
         print(
             "check_need_form: clean ({} need cell(s); no internal path, "
             "implementation identifier or process citation).".format(scanned)
@@ -237,7 +297,7 @@ def main():
         return 0
     print(
         "check_need_form: {} finding(s) across {} need cell(s){}".format(
-            len(findings), scanned, "" if args.strict else " (warn-first)"
+            total, scanned, "" if args.strict else " (warn-first)"
         )
     )
     return 1 if args.strict else 0
