@@ -1379,6 +1379,84 @@ def frame_findings(exts, bifs, rels):
     return out
 
 
+def sr_boundary_findings(srs, bifs, ifs):
+    """SN-037's SR->boundary rule (WI-442), as
+    ``([(sr_id, finding), ...], [advisory, ...])``.
+
+    SN-037's ratified acceptance asks that *"every system-requirement input and
+    output references a declared interface"* and that *"unresolved references ...
+    are mechanical findings"*. Those are two obligations at two severities, and
+    conflating them is what would make this check either useless or unshippable:
+
+      * RESOLUTION IS HARD. An SR whose `BIF-Refs` names a crossing that is not
+        declared is a dangling reference, exactly like an SR citing a deleted SN,
+        and it joins the --strict failure set with the spine's other reference
+        rules. It is also the only half that can be true today.
+
+      * COVERAGE IS ADVISORY, and deliberately so. Making "every SR names a
+        crossing" an error would red 148 rows the moment the column existed, for
+        work that belongs to the re-tier campaign (WI-451 slice 2) and under a
+        form rule that is itself a GUIDELINE with recorded per-row waivers
+        (2026-08-13v). A gate that is 100% red on the day it ships is a gate
+        someone turns off. So the uncovered count is reported as ONE summary
+        line — the number the campaign has to move — and never as 148 findings.
+
+    THE THIRD CLAUSE IS NOT ENFORCED HERE. "Every declared component-boundary
+    crossing has an interface row" is decision 6 (a BIF with no realizing IF),
+    deferred BY RULING to post-schema, so this reports the realization gap as an
+    advisory and gates nothing on it. `ifs` is read for exactly that count, and
+    the same restraint is why `derive_gate.boundary_incomplete` reads approval
+    and not realization.
+
+    Vacuous with no frame registry: a project that declares no boundary has no
+    crossing an SR could name."""
+    findings, advisories = [], []
+    bif_ids = {r["B-ID"] for r in bifs}
+    if not bif_ids:
+        return findings, advisories
+    named = set()
+    for r in srs:
+        sid = r["SR-ID"]
+        cited = refs(r.get("BIF-Refs"))
+        named.update(x for x in cited if x in bif_ids)
+        for x in cited:
+            if x not in bif_ids:
+                findings.append(
+                    (sid, f"SR {sid} BIF-Refs references unknown crossing {x}")
+                )
+    uncovered = sum(1 for r in srs if not refs(r.get("BIF-Refs")))
+    if uncovered:
+        advisories.append(
+            "SR->boundary coverage: {} of {} requirement(s) name no crossing in "
+            "BIF-Refs (SN-037; the re-tier campaign is what moves this number, "
+            "and a row that legitimately states no boundary observable records "
+            "its reason rather than leaving a blank cell)".format(uncovered, len(srs))
+        )
+    unnamed = sorted(bif_ids - named)
+    if unnamed:
+        advisories.append(
+            "boundary crossing(s) named by NO requirement: {} — a crossing with "
+            "no SR is a frame nobody has stated an observable at".format(
+                ", ".join(unnamed)
+            )
+        )
+    realized = {
+        x
+        for r in ifs
+        for col in ("InterfaceFromExternal", "InterfaceToExternal")
+        for x in refs(r.get(col))
+    }
+    unrealized = sorted(bif_ids - realized)
+    if unrealized:
+        advisories.append(
+            "boundary crossing(s) realized by NO interface row: {} — decision 6's "
+            "question, deferred by ruling; reported, never gated".format(
+                ", ".join(unrealized)
+            )
+        )
+    return findings, advisories
+
+
 def tieback_findings(ifs, bifs):
     """An IF row's directional tie-back must name a DECLARED crossing (WI-442,
     owner naming 13m), as ``[(if_id, finding), ...]``.
@@ -2879,8 +2957,12 @@ def analyze(reg, args):
     # than folded into the interface findings above, because the report reads
     # them out by name and "Interface findings: relationship REL-002 From
     # references unknown EXT-009" would be a label lying about its contents.
+    sr_frame, sr_frame_advisories = sr_boundary_findings(srs, bifs, ifs)
     frame_backlink_findings = [
-        f for _id, f in frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs)
+        f
+        for _id, f in frame_findings(exts, bifs, rels)
+        + tieback_findings(ifs, bifs)
+        + sr_frame
     ]
     # The IF/CMP schema tier and the IF `Contract` negative rules (WI-443 / OI-14
     # part B) — ALWAYS ON and ALWAYS WARN. They ride the interface advisory pipe
@@ -2894,6 +2976,7 @@ def analyze(reg, args):
         + schema_advisories("EXT", exts)
         + schema_advisories("B", bifs)
         + schema_advisories("REL", rels)
+        + sr_frame_advisories
         + if_contract_advisories(ifs)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
     )

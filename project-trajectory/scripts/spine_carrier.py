@@ -113,6 +113,11 @@ REGISTRY_TABLE = dict(SPINE_TABLE, **OFFSPINE_TABLE)
 SPINE_COLUMN = {
     "title": "Title",
     "sn_refs": "SN-Refs",
+    # WI-442 — the SR-side BOUNDARY reference: which declared crossing(s) in
+    # `external.toml` this requirement states an observable AT. Minted here
+    # rather than in the re-tier because a checker cannot be written against
+    # a column that does not exist; WI-451 slice 2 populates it.
+    "bif_refs": "BIF-Refs",
     "sr_refs": "SR-Refs",
     "verifies": "Verifies",
     "requirement": "Requirement",
@@ -240,6 +245,7 @@ SPINE_TIER_KEYS = {
     "SR-ID": (
         "title",
         "sn_refs",
+        "bif_refs",
         "requirement",
         "rationale",
         "acceptance_criteria",

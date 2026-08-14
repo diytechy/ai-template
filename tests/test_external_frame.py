@@ -222,6 +222,96 @@ def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):
     assert "references unknown crossing" not in proc.stdout
 
 
+# --- SN-037's SR -> boundary rule, at its two severities -----------------------
+
+
+def _srs(scaffold, extra_keys=""):
+    # `make_minimal_project` writes the CSV carrier; the dual-home refusal is
+    # deliberate and hard, so the legacy file goes when the TOML one arrives.
+    csv = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    if csv.exists():
+        csv.unlink()
+    (scaffold / "docs" / "requirements" / "system-requirements.toml").write_text(
+        "[requirement.SR-001]\n"
+        'title = "Addition"\n'
+        'sn_refs = ["SN-001"]\n'
+        "{}"
+        'requirement = "The system shall add two numbers."\n'
+        'rationale = "Realizes SN-001."\n'
+        'acceptance_criteria = "add(1,2) == 3"\n'
+        'priority = "M"\n'
+        'verification = "Test"\n'
+        'status = "Verified"\n'.format(extra_keys),
+        encoding="utf-8",
+    )
+
+
+def test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding(scaffold):
+    """The half of SN-037 that can be true today, and the only half that is an
+    error: a dangling reference, exactly like an SR citing a deleted SN."""
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    _srs(scaffold, 'bif_refs = ["B-99"]\n')
+    proc = _run(scaffold, "--strict")
+    assert "SR SR-001 BIF-Refs references unknown crossing B-99" in proc.stdout
+    assert proc.returncode == 1
+
+
+def test_an_SR_naming_a_DECLARED_crossing_is_clean(scaffold):
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    _srs(scaffold, 'bif_refs = ["B-01"]\n')
+    proc = _run(scaffold, "--strict")
+    assert "BIF-Refs references unknown" not in proc.stdout
+    # ...and the crossing is no longer reported as named by nobody.
+    assert "named by NO requirement" not in proc.stdout
+
+
+def test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error(scaffold):
+    """The other half, and the severity split is the point. "Every SR references
+    a declared interface" is SN-037's wording, but enforcing it the day the column
+    ships would red every row in the registry for work the re-tier campaign owns
+    — and under a form rule that is itself a guideline with recorded waivers. A
+    gate that is 100% red on day one is a gate someone turns off.
+
+    So: ONE line carrying the count the campaign has to move, on the advisory
+    pipe, with the exit code untouched."""
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    _srs(scaffold)  # no bif_refs at all
+    proc = _run(scaffold, "--strict")
+    assert "SR->boundary coverage: 1 of 1 requirement(s) name no crossing" in (
+        proc.stdout
+    )
+    assert proc.returncode == 0
+    # One summary line, not one per row — the ergonomic rule the seam-TC warn
+    # already learned.
+    assert len([ln for ln in proc.stdout.splitlines() if "->boundary" in ln]) == 1
+
+
+def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
+    """Decision 6's question — a crossing with no realizing IF row — deferred BY
+    RULING to post-schema. It is visible (a deferral nobody can see is a
+    deferral nobody honours) and it changes no exit code, which is the same
+    restraint that keeps `boundary_incomplete` reading approval rather than
+    realization coverage."""
+    make_minimal_project(scaffold)
+    _frame(scaffold)
+    _srs(scaffold, 'bif_refs = ["B-01"]\n')
+    proc = _run(scaffold, "--strict")
+    assert "boundary crossing(s) realized by NO interface row: B-01" in proc.stdout
+    assert proc.returncode == 0
+
+
+def test_the_SR_boundary_rule_is_vacuous_without_a_frame(scaffold):
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "external.toml").unlink()
+    _srs(scaffold, 'bif_refs = ["B-99"]\n')
+    proc = _run(scaffold, "--strict")
+    assert "BIF-Refs" not in proc.stdout
+    assert "->boundary coverage" not in proc.stdout
+
+
 # --- the schema tier (warn-first, like IF/CMP) ---------------------------------
 
 

@@ -110,7 +110,7 @@ OFFSPINE = {
 # registry stores, and `agent_route._version_key` parses its dotted-numeric
 # tuple out of that text. A carrier change has no licence to renormalise a
 # version string.
-REF_COLS = {"SN-Refs", "SR-Refs", "Verifies", "SupersededBy", "WI-Refs"}
+REF_COLS = {"SN-Refs", "SR-Refs", "BIF-Refs", "Verifies", "SupersededBy", "WI-Refs"}
 INT_COLS = {"Phase"}
 
 # column -> TOML key. EXPLICIT, never derived: a derivation turns `SR-ID` into
@@ -119,6 +119,7 @@ INT_COLS = {"Phase"}
 KEY = {
     "Title": "title",
     "SN-Refs": "sn_refs",
+    "BIF-Refs": "bif_refs",
     "SR-Refs": "sr_refs",
     "Verifies": "verifies",
     "Requirement": "requirement",

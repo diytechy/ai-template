@@ -3188,9 +3188,20 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # halves of that: the unknown-column behaviour, and that every column of the
 # live and shipped-template headers is classified here (so a new column cannot
 # ride in on the residual unnoticed).
+#
+# `BIF-Refs` (SR) joins the TRACED half at WI-442, on `SN-Refs`' own argument
+# rather than a new one: it is the same SHAPE of pointer — which declared
+# boundary crossing does this requirement state an observable at — it carries no
+# prose either side, and whether a re-point moved SCOPE is exactly the judgement
+# the adjudication kind exists to make. So a changed `BIF-Refs` ROUTES to
+# adjudication (intake.ROUTED_TRACED_CELLS) beside `SN-Refs`; it never arms a
+# re-attest window directly. Classifying it ratified instead would arm a window
+# on every row of the re-tier campaign, which is the noise that gets a window
+# ignored — and the campaign's re-statements touch `Requirement` anyway, which
+# IS ratified, so nothing escapes attestation by this choice.
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Phase", "Area", "Lifecycle"}
+        {"SN-Refs", "BIF-Refs", "Phase", "Area", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as
