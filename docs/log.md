@@ -36,6 +36,36 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13r — The hats roster is determined at `DevStg-Boundary` (owner,
+  in session); `FIRST-RUN-ADOPTER`'s necessity raised and assessed.** Ruled:
+  hats are settled at the boundary rung, with the entities rather than after
+  them — a hat is a question put on behalf of a concern, and the frame is
+  where the concerns are enumerated; downstream an adopter determines their
+  roster at their own `DevStg-Boundary`. The rule enables a **coherence
+  check** now recorded in the brief: every declared entity should have a hat
+  speaking for it (Adopter → `FIRST-RUN-ADOPTER`; session-as-loop →
+  `UNATTENDED-OPS`; its local environment → `CROSS-PLATFORM`; session reading
+  B-03's surfaces → the new `UX-DESIGNER`/`UX-ENGINEER`; session-as-future-
+  maintainer → `MAINTAINER`; `SECURITY`/`TEST-ENGINEER` cross-cutting), and
+  every hat should trace to a concern the frame names — which the roster
+  passes. **Open question raised:** is `FIRST-RUN-ADOPTER` necessary given the
+  template ships conventions and examples, and does it still apply to this
+  repo? **Assessment recorded (recommendation: KEEP and FIX, not cut):** under
+  the locked frame it applies *more* — it asks whether a stranger holding only
+  the shipped package could use what we author, which is a question about
+  **B-05, the deliverable this repo produces**, and `EXT-003 Adopter` is a
+  declared entity that would otherwise have no voice in review. Shipped
+  examples are the answer, not the check: the worked instance is `bootstrap.py`'s
+  MAPPING omitting `schedule.py`, where **every fresh scaffold raised
+  `ModuleNotFoundError` while this repo stayed green**. The mechanizable half
+  should nonetheless LEAVE the roster for B-05's contract (package complete and
+  consumable, verified by bootstrapping a real scaffold) — strictly stronger
+  than a review prompt; what cannot mechanize is the authoring-time half (an
+  undocumented convention, an unstated prerequisite). Also surfaced: the hat's
+  `applies_when` is **already broken** — it keys on a `scope` field SN rows do
+  not carry, so its clauses are silent, not true. Cut it only if `MAINTAINER`
+  is judged to cover the authoring-time half, deliberately.
+
 - **2026-08-13q — Decisions 7–12 ruled: the architecture becomes derived, the
   SR tier re-tiers, and every rung-generated row owes an approval element
   (owner, in session).** **D7 RULED** — and the owner is right it was

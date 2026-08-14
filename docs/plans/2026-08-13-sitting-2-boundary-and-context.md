@@ -1142,6 +1142,28 @@ and do not need re-deriving:
 
 ### Decision 11 — The hats roster (pack §4): accept, edit or cut
 
+**RULED 2026-08-13r: THE ROSTER IS DETERMINED AT `DevStg-Boundary`.** Hats are
+settled at the boundary rung — with the entities, not after them — which is why
+this decision belongs to *this* sitting rather than drifting into execution.
+The reason it coheres: a hat is a **question put on behalf of a concern**, and
+the frame is where the concerns are enumerated. Downstream the same rule
+applies — an adopter determines their roster at their own `DevStg-Boundary`.
+
+**The coherence check this enables — does every declared entity have a voice?**
+Mapped against §1R.1's locked frame:
+
+| Entity / concern | Hat speaking for it |
+|---|---|
+| **EXT-003 Adopter** | `FIRST-RUN-ADOPTER` *(see the open question below)* |
+| **EXT-001 session, as the unattended loop** | `UNATTENDED-OPS` |
+| **EXT-001's local environment** (the dissolved OS/toolchain entities) | `CROSS-PLATFORM` |
+| **EXT-001 session, reading B-03's surfaces** | `UX-DESIGNER` · `UX-ENGINEER` *(new)* |
+| **EXT-001 session, as future maintainer** | `MAINTAINER` |
+| cross-cutting (no single entity) | `SECURITY` · `TEST-ENGINEER` |
+
+Every operational entity has a voice, and every hat traces to a concern the
+frame names. That is the test a roster determined at this rung should pass.
+
 **RULED 2026-08-13q: ADD a UX designer hat and a UX engineer hat** — *"for the
 output html specifically is where they will play"* (`PROJECT_STATE.html`,
 `open-items.html`).
@@ -1171,7 +1193,49 @@ ceremony SN-036 exists to prevent):
 
 Note the second is the standing lesson the `render-dashboard-critique` skill
 exists for — *a concurrency diagram reads correct in source and wrong on
-screen.* The existing six hats and the two honest limits follow below.
+screen.*
+
+**⚠ OPEN QUESTION (owner, 2026-08-13r): is `FIRST-RUN-ADOPTER` still necessary
+if the template ships conventions and examples — and does it still apply to
+this repo?** My assessment, for you to rule against:
+
+- **On "it wouldn't apply to this repo any more":** under the locked frame it
+  applies *more*, not less. The hat does not ask *"is this repo a first-run
+  adopter?"* — it asks *"when we author this, could a stranger holding only the
+  shipped package use it?"* That is a question about **B-05, the deliverable**,
+  and this repo is the one authoring B-05. `EXT-003 Adopter` is a declared
+  entity in the frame; cutting its hat would leave a declared entity with **no
+  voice in review**, breaking the coherence check above.
+- **On "the shipped conventions and examples already cover it":** they are the
+  *answer*, not the *check*. Shipping examples does not stop a new requirement
+  assuming knowledge that lives only in this repo's history — and the kit has a
+  worked instance: `bootstrap.py`'s MAPPING omitted `schedule.py`, so **every
+  fresh scaffold raised `ModuleNotFoundError` while this repo stayed green**,
+  because the kit's own `scripts/` dir holds every file and this repo could not
+  see what an adopter would. The standing lesson from it — *a scaffold-surface
+  change is only verified by bootstrapping a scaffold* — is exactly this hat's
+  failure class.
+- **The half of the concern that SHOULD leave the roster.** Under §1R.6 the
+  mechanizable half is now B-05's own contract: *the package exists, is
+  complete and is consumable downstream*, verified by bootstrapping a real
+  scaffold (`test_bootstrap`, `test_dogfood_sync`, the MAPPING-coverage guard
+  that lesson produced). Moving it there is strictly stronger than a review
+  prompt — the repo's governing principle, *prefer a constraint that makes a
+  bad state unrepresentable over a check that detects it*. What **cannot**
+  mechanize is the authoring-time half: *an undocumented convention, a step
+  whose prerequisite is never stated.* No test sees that.
+
+**Recommendation: KEEP it, and fix it rather than cut it.** Its `applies_when`
+is *already broken* — it keys on a `scope` field SN rows do not carry
+(SN-039's job), so its three `scope ==` clauses are **silent today**, not true.
+Re-point it at the deliverable (a `tags contains "templates"`-style predicate
+that actually fires) and let B-05's SRs carry the mechanizable half. **Cut it
+only if** you judge the authoring-time half adequately covered by
+`MAINTAINER` — a defensible call, but it should be made deliberately, and
+`MAINTAINER` asks a different question (*why does this exist?* vs *can a
+stranger use it?*).
+
+The existing six hats and the two honest limits follow below.
 
 *Carried in full from the sitting pack §4, now archived.*
 
