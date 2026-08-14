@@ -108,6 +108,31 @@ on §2's signing surface once slice 2's ledger exists. §2.1 is re-measured
 2026-08-14 (the WI-454 mints included, the census's slated exits as its last
 column) — regenerate once more at convening, per its own rule.
 
+### 0.3 THE DECISION LEDGER — every ruling this sitting owes, in one table
+
+*(The sitting-2 §4.0 pattern. Rule top-down: 1–3 unblock slice 2; 4–7 are the
+vocabulary/verification program; 8–9 are sitting-2 re-lands whose conditions
+are now met. Signing the §2.1 window is an ATTESTATION, not a decision, and
+comes only after slice 2's ledger exists.)*
+
+| # | Decision | Recommendation on record | Depth |
+|---|---|---|---|
+| 1 | **Ratify the census** — the 148-row classification (34 / 15 / 73 / 26) as the shape slice 2 executes | ratify; its findings are deliverables, not failures (13s) | §0.2 · [the ledger](2026-08-14-wi451-slice1-sr-census.md) |
+| 2 | **The 26 tombstones** | **DELETE per D-4** (the census's waiver framing is superseded; follow-through named in §0.2) | §0.2 call 1 |
+| 3 | **The four package-wide B-05 properties** (SR-031/034/035/114) | none on record — declared sixth bucket vs forced five-way split | §0.2 call 2 |
+| 4 | **TC-159** — lift to `Planned` beside the rows it verifies, or re-point LLR-165's `test_refs` | none — pick deliberately; do not let a slice resolve it silently | §2.2 |
+| 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | if executed: first commit closes the `Status` enum; the §3.3 drift-coverage gap is recorded owner-visibly; one sequence with the rung-predicate work (§3.4) | §3 |
+| 6 | **`Planned`'s fate** under the three-word ladder (15 live rows carry it — now 16 with SR-150) | none — admit as a fourth rung or rule it out; MUST be ruled before this window closes | §3.5 |
+| 7 | **Authority over the off-spine approval elements** (`external.toml` / `interfaces.toml` flips), and the dial's form | extend the authority declaration as one act with the vocabulary; a tier-set form re-opens HERE if at all | §3.6 |
+| 8 | **Crossing ownership** (sitting-2 decision 6, ruled unanswerable-as-posed — its condition is now met) | now mechanical: BIF rows with no realizing IF + IF rows owing tie-back are derivable lists — assign owners | [sitting-2 Decision 6](2026-08-13-sitting-2-boundary-and-context.md#decision-6--the-15-missing-crossings--6-partial-ones-who-owns-them) |
+| 9 | **The human-agent entity follow-on** (from decision 2) | keep the human inside EXT-001 and fold the surfacing into REL-002; *"say so deliberately if you reverse it"* (13k: human-vs-loop survives as policy, never an entity split) | [sitting-2 Decision 2](2026-08-13-sitting-2-boundary-and-context.md#decision-2--adopt-or-amend-the-port-list-and-its-discriminator-self-contained) |
+
+**Delegated unless you pull them up:** the census-surfaced authoring calls —
+a dedicated SR for B-06/B-07, the SR-141/SR-148 overlap, the
+migration-history strikes (sitting-2 §6 items 2/5/7 ride this window), and
+SR-060's dead clause — ride slice 2 under the WI-444 token-verification bar;
+the builder executes them row-by-row against decisions 1–3 above.
+
 ---
 
 ## 1. Preconditions — check these mechanically before convening
