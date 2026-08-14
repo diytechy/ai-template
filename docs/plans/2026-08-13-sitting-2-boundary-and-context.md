@@ -119,6 +119,13 @@ is what this sitting exists to clear.
 
 ## 1. The depth-0 frame — what is OUTSIDE, what CROSSES
 
+> **SUPERSEDED AS THE LIVE FRAME — kept as provenance.** The owner's
+> 2026-08-13k reframe re-drew the system boundary (the repository is the
+> system; the template is the deliverable) and decision 1 ruled its entities
+> adopted. **The live frame is §1R below**, which re-attributes every row of
+> this table and accounts for each one. Read this section for the original
+> derivation and the carried draft analysis (§1a/§1b), not for the frame.
+
 *Carried verbatim from the boundary draft §1, now archived at
 [`../archive/plans/2026-08-13-devstg-boundary-draft.md`](../archive/plans/2026-08-13-devstg-boundary-draft.md).*
 
@@ -412,6 +419,153 @@ spine-validation cost.** Measured:
 
 ---
 
+## 1R. The REBUILT depth-0 frame — the adopted entities (RULED 2026-08-13l)
+
+**This section supersedes §1 as the live frame; §1 stays above as provenance.**
+Decision 1 is ruled: *"Adopt the entities as currently described. Please rebuild
+the boundary draft given these entities."* This is that rebuild — the 2026-08-13k
+reframe's eight entities, the §1 crossings re-attributed to them, and the
+registry shape decisions 3/4/5 settled around them. The sitting's confirmation
+target is this section's tables and the completeness declaration at its end.
+
+### 1R.1 The entities
+
+| id (proposed) | Entity | Class | Description |
+|---|---|---|---|
+| **EXT-001** | **Development session** | `operational` | Human or LLM in a terminal — attended, or the unattended loop `agent-resume` launches. ONE entity: it touches both the spine and the test scripts. Who holds authority (human vs loop) is policy and record (`human_ratification_through`, the Sittings table), never an entity split. |
+| **EXT-002** | **Adopter** | `operational` | The downstream team + their repository. Adopts **the template, never this repository**. |
+| **EXT-003** | **Model provider API** | `interoperating` | Rate limits, auth expiry, model retirement behind any LLM session. |
+| **EXT-004** | **External reviewer CLI** | `interoperating` | codex `sol`/`terra` — hostile-review briefs out, findings in. |
+| **EXT-005** | **git** | `interoperating` | The mutation floor: commits, merges, pushes, advisory locks, the hook floor as enforcement. |
+| **EXT-006** | **Hosted CI** | `interoperating` | GitHub Actions: push/PR/schedule triggers, the OS × Python matrix, job verdicts. |
+| **EXT-007** | **OS · filesystem · Python ≥3.11** | `interoperating` | Path semantics, encoding, kernel advisory locks, interpreter presence. |
+| **EXT-008** | **Test / coverage toolchain** | `interoperating` | pytest + coverage feeding the tier floors. |
+
+No entity is class `enabling` at this depth — developing the template IS this
+repository's operation; the delivered template is the enabling system in the
+ADOPTER's own frame (2026-08-13k rider a).
+
+### 1R.2 The boundary interfaces — 31 rows, re-attributed
+
+One row per directed frame-level crossing; **`#` keeps the §1/data-pack id** so
+every row traces to the WI-441 inventory. Dir is the system's point of view.
+Proposed `BIF-###` ids mint at execution, in table order.
+
+**EXT-001 Development session (13):**
+
+| BIF | # | Dir | What crosses | IF today |
+|---|---|---|---|---|
+| BIF-001 | M-01 | IN | `dev-setup.{sh,cmd,command}` invocation; toolchain probe result back | — |
+| BIF-002 | M-02 | IN | one-command autonomous-run trigger via root `agent-resume.*` | — |
+| BIF-003 | M-12 | IN | instructions / prompt into a direct session | — |
+| BIF-004 | N-01 | IN | `docs/process.toml` — the policy-dial surface the session hand-edits | — |
+| BIF-005 | M-11 | IN | rulings, attestations and `Status` flips into the registries | — |
+| BIF-006 | M-13 | IN* | artifact edits, admitted only through the git hook floor (*§1 listed OUT; re-read: the edits enter the system, the hook verdict is the return half*) | — |
+| BIF-007 | M-10 | IN/OUT | `docs/status.md` — the resume-from-text surface the session also edits | IF-037 partial |
+| BIF-008 | M-03 | OUT | the runnable capability list (`run_menu`) | IF-048 partial |
+| BIF-009 | M-19 | OUT | every script's human-readable report to the terminal | — |
+| BIF-010 | M-09 | OUT | `PROJECT_STATE.html` — validation feedback rendered to the session | — |
+| BIF-011 | M-08 | OUT | `open-items.html` — decision-brief / signing surface | IF-074 partial |
+| BIF-012 | X-07 | OUT | `subagent_gate.py` PreToolUse spawn allow/deny | IF-020 |
+| BIF-013 | X-11 | IN/OUT | `agent_session.py` launches the session's CLI and reads its result | IF-041 |
+
+**EXT-002 Adopter (9):**
+
+| BIF | # | Dir | What crosses | IF today |
+|---|---|---|---|---|
+| BIF-014 | M-07 | OUT | **THE DELIVERABLE: the template artifact class** — `*.template.*` + `registries/*` (`test_dogfood_sync` its verification) | — |
+| BIF-015 | M-06 | OUT | the MAPPING: templates → the adopter's `docs/` tree, + kit-version stamp | IF-014 partial |
+| BIF-016 | X-01 | OUT | `check.py` gate/tier harness verdict | IF-013 |
+| BIF-017 | X-02 | OUT | `bootstrap.py` scaffold write + re-sync diff | IF-014 |
+| BIF-018 | X-03 | OUT | `agent_loop.py` unattended coordinator run | IF-015 |
+| BIF-019 | X-04 | OUT | `check_vendored.py` drift verdict | IF-016 |
+| BIF-020 | X-05 | OUT | `gen_cases.py` permutation expansion | IF-017 |
+| BIF-021 | X-06 | OUT | `gen_release_checklist.py` checklist | IF-018 |
+| BIF-022 | X-10 | IN | `check_vendored.py` reads the vendored upstream source | IF-036 |
+
+*(BIF-016…021 are the delivered template's runtime contracts — the promises the
+system's SRs form around, exercised in the adopter's hands. They are the reason
+"the template is the deliverable" does not reduce the frame to one row.)*
+
+**EXT-003…EXT-008 (9):**
+
+| BIF | # | Entity | Dir | What crosses | IF today |
+|---|---|---|---|---|---|
+| BIF-023 | M-15 | EXT-003 | IN | rate limit, auth expiry, retired model (SR-026's backoff clause its only spine home) | — |
+| BIF-024 | M-14 | EXT-004 | IN/OUT | hostile-review brief out, findings in | — |
+| BIF-025 | X-09 | EXT-005 | IN | `check_privacy.py` reads staged/outgoing content | IF-032 |
+| BIF-026 | M-16 | EXT-005 | IN/OUT | commits, merges, pushes, advisory locks, the hook floor as enforcement | IF-032 partial |
+| BIF-027 | M-04 | EXT-006 | IN | push · PR · schedule trigger; the OS × Python matrix | — |
+| BIF-028 | M-05 | EXT-006 | OUT | job verdict + step log | — |
+| BIF-029 | M-17 | EXT-007 | IN | path semantics, encoding, kernel advisory lock, interpreter presence | — |
+| BIF-030 | M-18 | EXT-008 | IN | pytest results feeding the tier floors | IF-070 partial |
+| BIF-031 | X-13 | EXT-008 | IN | `check_coverage.py` reads `coverage.json` | IF-070 |
+
+**Reconciliation.** 36 §1 rows − **N-02** (dissolved: authoring = BIF-003/006)
+− **X-08, X-12, X-14, X-15** (internal under the entity rule, as §1 already
+flagged) = **31 boundary interfaces**. Every §1 crossing is accounted for; none
+was dropped silently.
+
+### 1R.3 The registry shape around them (decisions 3/4/5 as ruled)
+
+**`external.toml` holds three kinds of row** — the owner's decision-3/4 ruling
+inverts the earlier split: the boundary interfaces live WITH the entities, so
+**system requirements form around the boundary interfaces**, and the concrete
+IF rows tie into them:
+
+```toml
+[entity.EXT-001]
+name = "Development session"
+class = "operational"            # operational | enabling | interoperating
+description = "Human or LLM terminal session, attended or the agent-resume loop."
+
+[relationship.REL-001]           # external-to-external only; no interface vocabulary
+from = "EXT-001"
+to   = "EXT-002"
+kind = "hands-off"
+flow = "…"
+
+[boundary.BIF-014]               # a frame-level crossing; SRs form around these
+entity = "EXT-002"               # must resolve to a declared entity
+direction = "out"                # in | out | inout, the system's point of view
+carries = "the template artifact class: *.template.* + registries/*"
+```
+
+**`interfaces.toml` slims to interface DEFINITIONS** (the owner's decision-4
+direction): an IF row states what the interface concretely *is* — its actual
+definition — and sheds the complexity it carries today (`direction`,
+`counterpart`, the argued contracts). An IF carries an **`external_provider` /
+`external_consumer`** field **only** when it realizes a boundary interface,
+valued with the `BIF-###` id; otherwise provider/consumer are **implied by the
+requirements**: **an LLR lists its requirements around PROVIDING that
+interface** (and possibly where it is consumed — consumption may stay implied
+at design). This is also where the owner's decomposition point lands: **an LLR
+may be the provider of information that ends up external** — decomposition
+breaks the system into manageable pieces that still serve the necessary
+output — and the BIF tier is what lets an SR state the boundary obligation
+while the LLR states which piece provides it, without the two fighting over
+one row.
+
+**What this re-keys.** `derive_gate.boundary_incomplete` stops reading IF
+`Stability` and gates rung 1 on **the boundary-interface set**: every declared
+BIF settled, every BIF realized (or explicitly deferred). IF `stability` is
+owner-questioned (*"is it even a useful attribute, if the intent is just to
+flag a draft item?"*) and is expected to retire with the slimming — which
+**dissolves decision 4's five-Experimental-rows question and the IF-103
+tension entirely**: internal definitions no longer gate the frame rung, and
+the resync helper's stability is its own affair.
+
+### 1R.4 The completeness declaration (the sitting confirms this)
+
+**Claim:** the 8 entities of §1R.1 and the 31 boundary interfaces of §1R.2 are
+the WHOLE depth-0 frame of this repository-as-system. Complete to this
+rebuild's best reading, with the residual uncertainties inherited from the data
+pack §1c (the two the reframe resolved — one adopter, terminal-as-medium — are
+closed): **is git one crossing or three** (BIF-025/026 split read/write/hooks)?
+**is the skills fan-out into a third-party agent's config namespace its own
+crossing?** **is a `docs/knowledge/` pack an input?** and `MULTI_REPO.md`'s
+cross-repo rung stays deliberately unaudited.
+
 ## 2. The port set and the discriminator — what WI-451 executes against
 
 *Carried in full from the boundary draft §2, now archived.*
@@ -585,7 +739,12 @@ says so.**
 
 ### Decision 1 — Adopt or amend the depth-0 frame (§1)
 
-**AMENDED BY OWNER REFRAME — RULED IN SESSION, 2026-08-13k.** The drafted frame
+**RULED 2026-08-13l: the entities are ADOPTED as described, and the boundary
+draft is REBUILT around them — the rebuild is §1R above.** What remains for
+the sitting is confirming §1R.2's 31-row table and §1R.4's completeness
+declaration (three residual uncertainties).
+
+**The reframe that produced the entities — RULED IN SESSION, 2026-08-13k.** The drafted frame
 does not match the owner's concept of where the system boundary sits, and the
 owner re-drew it (the staged sequence exists precisely to catch this before the
 SR re-statement runs). The ruling, in the owner's terms:
@@ -664,23 +823,80 @@ moment it is cheap; every row added later re-opens the declaration. *Defer:* run
 **Recommendation on record:** none for the six uncertainties — the draft states
 explicitly they *"stand and are the ruler's, not mine."*
 
-### Decision 2 — Adopt or amend the port list (§2) and its discriminator
+### Decision 2 — Adopt or amend the port list and its discriminator (self-contained)
 
-**The question.** Is §2's discriminator rule the one WI-451 applies, and is §2's
-port list the depth-0 set?
+**What this decision is.** Sitting 1 ruled 2.7(a): *an SR may name an artifact
+only where that artifact is a declared boundary crossing.* For that rule to be
+executable, there must be a declared list of which artifacts those are — the
+**ports**. A port is the **system-side surface of a boundary interface**
+(§1R.2): the thing an external entity actually types, invokes, reads or edits.
+Everything else is an **internal seam** — it belongs to the LLR tier, and an SR
+naming it is naming implementation. This decision adopts (or amends) that list
+and the rule, which is what unblocks WI-451's re-statement of the 57
+internal-naming SRs.
 
-**Two rows to decide explicitly.** **IF-080 / IF-081** (`integrate.py`,
-`trunk_step.py`) declare `downstream adopter` but read as the unattended
-station's internal serialization seams. And: **is a generated surface a port
-while its generator is not?** (§2 says yes: *"The surface is the port; its
-generator is not."*)
+**The discriminator rule, in full** (restated from §2 so nothing else need be
+opened): *an artifact may be named in SR text iff it is the system-side surface
+of a boundary interface whose entity is one of §1R.1's eight — i.e. it is a
+port. Everything else re-states against the interface that types its seam, or
+demotes to the LLR tier.*
 
-**Costs.** *Adopt:* WI-451 slice 2 unblocks against a stated rule; 57 SRs enter a
-re-statement program. *Amend the list:* each addition or removal moves rows
-between the 18 and the 57. *Reject the discriminator:* decision 2.7(a) has no
-executable form and WI-451 stalls indefinitely.
+**The port list being adopted** (each is the system side of a §1R.2 row):
+`check.py` (BIF-016) · `bootstrap.py` incl. `--agents`/`--sync` (BIF-015/017) ·
+`agent_loop.py` + root `agent-resume.*` (BIF-018, BIF-002) · `run.*`/`run_menu`
+(BIF-008) · `dev-setup.*` (BIF-001) · `subagent_gate.py` (BIF-012) · the git
+hook floor `pre-commit`/`pre-push`/`commit-msg` (BIF-006/026) ·
+`check_vendored.py` (BIF-019/022) · `gen_cases.py` (BIF-020) ·
+`gen_release_checklist.py` (BIF-021) · and the declared surfaces a session
+reads or edits: `docs/process.toml` (BIF-004), `docs/status.md` (BIF-007),
+`docs/gate`, `PROJECT_STATE.html` (BIF-010), `open-items.html` (BIF-011),
+`docs/architecture.md`. Measured on the live registry: **18 SRs name only
+these; 57 name at least one internal module** — the re-statement program's
+size.
+
+**Two rows to decide explicitly:**
+
+1. **IF-080 / IF-081** — `integrate.py`'s serialized merge queue and
+   `trunk_step.py`'s trunk step. Their rows *claim* `counterpart = "downstream
+   adopter"`, but both are the unattended station's **internal** serialization
+   machinery — no adopter ever invokes them; the adopter's copy runs inside
+   *their* repo's loop, reached through the delivered template (BIF-014), not
+   through a direct crossing. Under §1R they have **no BIF** and fall internal.
+   Confirming that here is what licenses WI-451 to demote the SRs naming them.
+2. **Is a generated surface a port while its generator is not?** §2's answer,
+   to confirm: **yes** — the session reads `PROJECT_STATE.html` (BIF-010), so
+   the *surface* is the port; `gen_trajectory.py` is CMP-009 realization an SR
+   must not name. Same for `open-items.html` vs `gen_open_items.py`.
+
+**Costs.** *Adopt:* WI-451 slice 2 unblocks against a stated rule; 57 SRs enter
+the re-statement program. *Amend the list:* each addition or removal moves rows
+between the 18 and the 57 — re-run the census before re-sizing. *Reject the
+discriminator:* 2.7(a) has no executable form and WI-451 stalls indefinitely.
 
 ### Decision 3 — The frame's typing axis: mechanics (principle already ruled)
+
+**RULED 2026-08-13l: the boundary interfaces live IN `external.toml`, beside
+the entities.** The owner's shape: *"entities.toml [= the approved
+`external.toml`] defining both the entities and their to/from interfaces; IF
+entries reserved [for the concrete definitions, tying to a boundary interface
+only when they realize one]."* So the frame is typed by **`[boundary.BIF-###]`
+rows** (entity + direction + what crosses — §1R.3's schema), **system
+requirements form around the boundary interfaces**, and real IF rows tie into
+them via `external_provider` / `external_consumer = "BIF-###"`. This **settles
+the `external`-flag question**: no hand-set flag — boundary-ness is a
+first-class row, and an internal seam claiming an adopter counterpart becomes
+unrepresentable, which is what the "declare the entities, derive the rest"
+shape below argued for. The crossing-class axis (CLI · exit status · file
+artifact · …) remains unminted; propose deferring it until a check needs it.
+**Supersedes in part 2026-08-13i's first clarification** ("every
+system-touching crossing stays an IF row"): the *frame-level* crossing is now
+a BIF row in `external.toml`; the *concrete definition* stays an IF row. D-6's
+duplicated-vocabulary hazard is answered by **reference, not duplication** —
+the two registries hold different kinds, linked by resolvable id, so
+divergence is a checkable dangling ref rather than silent drift.
+
+The original question and the shape that anticipated this ruling, for the
+record:
 
 **The question.** §1a's actor-plus-interface rule is ruled and needs no
 re-decision. What it leaves open is **whether the registry grows fields to carry
@@ -715,6 +931,28 @@ per row. **Note this shape is the same mechanism decision 5's `counterpart`-as-
 resolvable-reference needs** — ruling one largely rules the other.
 
 ### Decision 4 — The five `Experimental` rows, and the IF-103 tension
+
+**RULED DIRECTION 2026-08-13l — the question largely DISSOLVES.** Two owner
+points recorded: (1) **`stability` is questioned as an attribute at all** —
+*"is it even useful here, if the intent is just to switch/flag a draft item?"*
+— and is expected to retire with the IF slimming (§1R.3); (2) **an LLR may be
+the provider of information that ends up external** — that is what
+decomposition is *for* (small manageable pieces still serving the necessary
+output) — and the tension that creates with the boundary is resolved by the
+BIF tier: **the SR states the boundary obligation against the BIF; the LLR
+states which piece provides the realizing interface** (`external_provider` on
+the IF row when boundary-tied; implied in the requirement otherwise).
+Consequence: `boundary_incomplete` re-keys from IF `Stability` onto
+**boundary-interface completeness** (every BIF settled and realized-or-
+deferred), so the five `Experimental` rows stop gating rung 1 — they are
+internal definitions — and **the IF-103/WI-452 tension disappears**: the
+resync helper's maturity is its own affair, not the frame's. What survives of
+this decision for the sitting: confirm the re-key, and dispose of the five
+rows' *content* findings (IF-057's undeclared consumer seam; the three
+never-re-reviewed carrier seams) as ordinary registry hygiene rather than
+frame business.
+
+The original question and dispositions, for the record:
 
 **The question.** Five of 113 IF rows carry `Stability = Experimental` and they
 are what `derive_gate.boundary_incomplete` reads — they hold rung 1 down today.
@@ -759,16 +997,18 @@ options, and none is on record as recommended:
 ### Decision 5 — Where the external entities and the CONTEXT live
 
 **RULED IN SESSION, 2026-08-13 (owner): shape 1 APPROVED — `external.toml` is
-minted** as the off-spine home for external entities and the relationships
-among them; no second interfaces registry. Two clarifications recorded with
-the approval (log Decisions 2026-08-13i):
+minted; RE-CONFIRMED 2026-08-13l** with one amendment: per decision 3's
+inversion, `external.toml` also carries the **`[boundary.BIF-###]`** rows
+(§1R.3), so it holds entities + relationships + boundary interfaces. (The
+owner's later message says "entities.toml" — the ruled name stays
+**`external.toml`** per this decision; recorded so the wobble is not read as a
+rename.) The 13i clarifications as amended:
 
-- **Every system-touching crossing stays an IF row** — the owner's read,
-  confirmed: information flowing from/to an external entity to/from the system
-  is and remains `interfaces.toml`'s to describe, IN and OUT. `external.toml`
-  holds only entities and the external-to-external flows the IF registry
-  structurally cannot express (`this_project` is always one side of an IF row).
-  Boundary-ness derives from `counterpart` resolving to a declared entity.
+- ~~Every system-touching crossing stays an IF row~~ — **SUPERSEDED 2026-08-13l
+  (decision 3):** the *frame-level* crossing is a `BIF` row in `external.toml`;
+  `interfaces.toml` keeps the *concrete interface definitions*, tying to a BIF
+  via `external_provider`/`external_consumer` only when boundary-realizing.
+  Boundary-ness is a first-class row, not a derivation from `counterpart`.
 - **External-to-external relationships are laid out as a relationship
   sub-table** — one directed row per relationship (`from` / `to` = resolvable
   entity ids, a `kind`, and `flow` prose), mirroring §8's record-each-seam-once
@@ -817,6 +1057,17 @@ operational/enabling class sits on the **ENTITY**, with the personnel overlap
 recorded as an external-to-external relationship.
 
 ### Decision 6 — The 15 missing crossings + 6 partial ones: who owns them
+
+**BLOCKED — ruled unanswerable as posed (owner, 2026-08-13l):** *"Can't answer
+this until the external interfaces are redesigned around the agreed-upon
+external entities."* Under the §1R rebuild the question re-lands in the new
+shape: mint the 31 `BIF` rows (§1R.2), then the "missing" set becomes **BIF
+rows with no realizing IF reference** and the "partial" set becomes **IF rows
+whose definition must slim and tie back** — both mechanical lists once the
+schema executes. Ownership assignment waits for that execution (the WI-442
+re-scope is the natural first vehicle, §5.2).
+
+The original count, for the record:
 
 **The question.** 13 of the pack's 34 have no IF row at all, plus both new rows
 (N-01, N-02) — an honest missing count of **15** — and 6 more have a partial row

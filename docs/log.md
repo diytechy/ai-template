@@ -36,6 +36,47 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13l — Decisions 1–6 pass: entities adopted, frame rebuilt, the
+  registry shape INVERTED (owner, in session).** Working the sitting-2 brief
+  top to bottom: **D1** the eight 13k entities ADOPTED as described and the
+  boundary draft rebuilt around them — the rebuild is the brief's new **§1R**
+  (8 entities EXT-001…008; **31 boundary interfaces** BIF-001…031
+  re-attributed from the 36 drafted crossings, with N-02 dissolved and
+  X-08/X-12/X-14/X-15 internal; the sitting's remaining act is confirming the
+  table + the completeness declaration, three §1c uncertainties residual).
+  **D2** expanded self-contained in the brief (the port list = the
+  system-side surfaces of BIF rows; IF-080/081 and
+  generated-surface-vs-generator remain its two explicit calls). **D3 RULED —
+  the inversion:** `external.toml` carries the entities AND their to/from
+  **boundary interfaces** (`[boundary.BIF-###]`: entity + direction +
+  carries), **system requirements form around the boundary interfaces**, and
+  `interfaces.toml` slims to concrete interface DEFINITIONS that tie back via
+  `external_provider`/`external_consumer = "BIF-###"` only when
+  boundary-realizing — internal provision/consumption is the LLR's to state
+  (*"an LLR must list its requirements around providing that interface"*;
+  consumption may stay implied at design). This supersedes IN PART
+  2026-08-13i's "every system-touching crossing stays an IF row"; D-6's
+  hazard is answered by reference-not-duplication (two registries, different
+  kinds, resolvable ids — divergence dangles instead of drifting). It also
+  settles decision 3's `external`-flag question: no flag, boundary-ness is a
+  first-class row. **D4 largely DISSOLVES:** IF `stability` is
+  owner-questioned (*"is it even useful, if the intent is just to flag a
+  draft item?"*) and expected to retire with the slimming;
+  `boundary_incomplete` re-keys onto BIF completeness, so the five
+  `Experimental` rows stop gating rung 1 and **the IF-103/WI-452 tension
+  disappears** (the resync helper's maturity is not the frame's business).
+  The owner's decomposition point recorded with it: **an LLR may be the
+  provider of information that ends up external** — the BIF tier is what lets
+  the SR hold the boundary obligation while the LLR names the providing
+  piece. **D5 re-confirmed** as amended (entities + relationships + boundary
+  interfaces in ONE `external.toml`; the name stays `external.toml` — the
+  "entities.toml" wording in the ruling message is recorded as a wobble, not
+  a rename). **D6 BLOCKED as posed** (*"can't answer until the external
+  interfaces are redesigned around the agreed-upon entities"*) — it re-lands
+  mechanically post-schema as "BIF rows with no realizing IF". Execution
+  vehicle: the WI-442 re-scope first (brief §5.2), the new checker and
+  `boundary_incomplete` re-key with it.
+
 - **2026-08-13k — The depth-0 frame RE-DRAWN: the repository is the system,
   the template is the deliverable (owner, in session).** The drafted frame
   (system = "the kit", twelve external entities) did not match the owner's
