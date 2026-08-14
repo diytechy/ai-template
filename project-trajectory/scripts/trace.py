@@ -647,7 +647,16 @@ def _offspine_ids(docs):
     is un-wired by moving a file, a carrier resolve is not. `agents` is
     deliberately absent: its ids are names (`ANTHROPIC-FABLE`), not numbers, so
     it holds no watermark space to lose."""
-    for rel, id_col in (("docs/requirements/open-items.toml", "OI-ID"),):
+    # interfaces + components joined the TOML carrier at WI-443, which un-wired
+    # them from `_csv_ids`' glob exactly as batch-2 did to open-items — found
+    # the same way again (WI-454 minted IF-121/122 past a mark of 120 and got
+    # no finding). external.toml is deliberately absent: its B/EXT/REL spaces
+    # are not watermark spaces.
+    for rel, id_col in (
+        ("docs/requirements/open-items.toml", "OI-ID"),
+        ("docs/requirements/interfaces.toml", "IF-ID"),
+        ("docs/requirements/components.toml", "CMP-ID"),
+    ):
         for row in spine_carrier.load(docs.parent / rel, id_col):
             match = _ANY_ID.match(str(row.get(id_col) or "").strip())
             if match:

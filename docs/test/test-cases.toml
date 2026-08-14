@@ -1650,3 +1650,14 @@ automated = "Yes"
 evidence = "tests/test_stage_ladder.py"
 status = "Draft"
 phase = 5
+
+[test.TC-164]
+verifies = ["SR-150", "LLR-170"]
+level = "Unit"
+method = """Construct a needs registry whose need cell plants one token of each declared class (an internal path, an underscore identifier, a registry id and a section mark); run check_need_form.py at both severities; plant a user-facing interface name with and without its reviewed exception-list entry, and with a malformed entry missing the reason separator; plant the same dirty tokens in why/acceptance cells only; plant an English either/or pair, a sibling SN-### citation and a -000 example row; run over a tree with no needs registry at all; and run over the real meta-repo tree."""
+tier = "Smoke"
+expected = """The dirty cell reports the row id AND each offending phrase, one finding per token (the path's inner filename is not a second finding), exit 0 by default and 1 under --strict; the exception-list entry silences exactly its token while the malformed entry silences nothing; exempt cells, either/or pairs, SN cross-references and example rows report nothing; an absent registry is a clean skip; and the live registry is clean at zero findings, so the assertions cannot pass against fixtures while the tier dirties."""
+automated = "Yes"
+evidence = "tests/test_check_need_form.py"
+status = "Draft"
+phase = 5

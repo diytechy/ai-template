@@ -1726,3 +1726,14 @@ test_refs = "(see TC-163)"
 status = "Draft"
 component = "CMP-007"
 phase = 5
+
+[design.LLR-170]
+sr_refs = ["SR-150"]
+title = "Need-form checker"
+module = "project-trajectory/scripts/check_need_form.py"
+code_symbol = "scan/need_findings/load_allow"
+detail = """Reads the needs registry through spine_carrier.load_needs (either carrier answers; an unreadable registry REFUSES loudly rather than scanning as empty, because zero need cells would read as a clean tier on the registry this check exists to guard). The three token classes are data (CLASSES), labelled with SN-033's own vocabulary so a finding names the class the acceptance names. Two scope decisions are deliberate and documented in the docstring: SN-### is NOT a process citation (the SN registry is the stakeholder's own document, so a need pointing at a sibling need keeps the reader at the stakeholder tier - the live SN-025 case), and a single-slash, dot-free token is not a path (English either/or pairs like subjective/perceptual are live in the ratified registry). One finding per token: a later class re-matching inside an already-reported span is the same phrase to rewrite. The exception list (docs/need-form-allow) requires the ' - reason' separator per entry - a malformed line declares nothing, so it can only ever fail LOUD, never silence a finding. Wired as check.py's need-form step at every bar with NO --strict promotion, deliberately unlike check_vocab's severity ladder: promotion is an owner ruling, and the wiring says so."""
+test_refs = "(see TC-164)"
+status = "Draft"
+component = "CMP-007"
+phase = 5

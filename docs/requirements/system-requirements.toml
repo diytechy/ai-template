@@ -1918,3 +1918,15 @@ verification = "Test"
 status = "Planned"
 phase = 5
 area = "Doc navigability"
+
+[requirement.SR-150]
+title = "Stakeholder-need cells stay in stakeholder language"
+sn_refs = ["SN-033"]
+requirement = """The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text."""
+rationale = """Realizes SN-033 — its ratified acceptance commissions exactly this check, and until this row it did not exist. Landed while the need tier was measured clean (0 of 27 cells; decision 7 rider 2, ruled 2026-08-13u), deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over ratified stakeholder prose must not gate without an owner ruling, and that ruling has not been made."""
+acceptance_criteria = """check_need_form.py reports a constructed need cell planted with an internal path, an implementation-only identifier and a process citation, naming the row id and each offending phrase, exiting 0 by default and 1 under --strict; a token on the reviewed exception list is not reported; the same tokens planted in an acceptance or engineering-requirement cell are not reported; and the live registry reports zero findings."""
+priority = "S"
+verification = "Test"
+status = "Planned"
+phase = 5
+area = "Traceability"

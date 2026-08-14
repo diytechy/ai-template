@@ -1308,3 +1308,26 @@ version = "v1"
 approval = "draft"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""
+
+[interface.IF-121]
+direction = "Provides"
+this_project = "scripts/check_need_form"
+counterpart = "scripts/check"
+contract = """check_need_form.py CLI: reports each SN need cell carrying an internal path, implementation-only identifier or process citation, naming the row and the offending phrase, against the reviewed exception list in docs/need-form-allow (absent = empty; an entry without its ' - reason' separator declares nothing); need cells only - SN-033 exempts acceptance and engineering-requirement cells by its own text; warn-first (exit 0), --strict exits 1 - wired as check.py's need-form step at every bar WITHOUT --strict (gating is an owner ruling not yet made; WI-454's scope guard)"""
+signal = "variable"
+signal_note = """typed at mint (WI-454): the Contract names a typed outcome plus unbounded content (the offending phrases), and any unbounded part makes the whole crossing variable (B1)"""
+sr_refs = ["SR-150"]
+version = "v1"
+approval = "draft"
+
+[interface.IF-122]
+direction = "Consumes"
+this_project = "scripts/check_need_form"
+counterpart = "scripts/spine_carrier"
+contract = """reads the stakeholder-needs registry through the CARRIER (IF-102): consumes spine_carrier.load_needs, so the need tier answers whichever of TOML/legacy-markdown is live and an unreadable registry REFUSES loudly (SystemExit) rather than scanning as empty - zero need cells would read as a clean tier on exactly the registry this check exists to guard, the false green SN-008 forbids."""
+signal = "variable"
+signal_note = """typed at mint (WI-454): the Contract names a typed outcome plus unbounded content, and any unbounded part makes the whole crossing variable (B1)"""
+sr_refs = ["SR-150"]
+version = "v1"
+approval = "draft"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 (LLR-170) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120 carrier-consumption shape."""
