@@ -47,35 +47,21 @@ resource: "generated"
 | [SR-034](SR-034.md) | Kit scripts run on stdlib plus ledger-declared dependencies |
 | [SR-035](SR-035.md) | Stack-agnostic across OSes |
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
-| [SR-037](SR-037.md) | Superseded: Work-item registry validation |
-| [SR-038](SR-038.md) | Superseded: Offline project-state view |
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-041](SR-041.md) | Doc reference validation |
 | [SR-042](SR-042.md) | OKF knowledge-bundle export |
 | [SR-043](SR-043.md) | Subagent spawn gate |
-| [SR-044](SR-044.md) | Superseded: Declared-interface connectivity |
-| [SR-045](SR-045.md) | Superseded: Heterogeneous implementer/reviewer scheduling |
 | [SR-046](SR-046.md) | Run capability menu |
-| [SR-047](SR-047.md) | Superseded: Subjective-quality critique loop |
-| [SR-048](SR-048.md) | Superseded: How-SW top view bounded and containerized |
 | [SR-049](SR-049.md) | Derived gate from artifact states |
 | [SR-050](SR-050.md) | Process reference view |
-| [SR-051](SR-051.md) | Superseded: Tiered drill-down views |
 | [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
 | [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
 | [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
 | [SR-055](SR-055.md) | Ingest and human-decision process loops |
 | [SR-056](SR-056.md) | Decomposition render polish |
 | [SR-057](SR-057.md) | WI-DAG frontier scheduling |
-| [SR-058](SR-058.md) | Superseded: Deterministic safety classification |
 | [SR-059](SR-059.md) | Retire next-wi; generated status surface |
 | [SR-060](SR-060.md) | Explicit worker assignment mode |
-| [SR-061](SR-061.md) | Superseded: Parallel-by-default dispatcher |
-| [SR-062](SR-062.md) | Superseded: Change-train continuation |
-| [SR-063](SR-063.md) | Superseded: Atomic serialized integration |
-| [SR-064](SR-064.md) | Superseded: Crash safety and git-as-authority recovery |
-| [SR-065](SR-065.md) | Superseded: Parallel-execution telemetry and downstream migration |
-| [SR-066](SR-066.md) | Superseded: Dual-plan decomposition round |
 | [SR-067](SR-067.md) | Work-item dependency validation |
 | [SR-068](SR-068.md) | Work-item row coherence |
 | [SR-069](SR-069.md) | Generated status source-of-truth guard |
@@ -104,13 +90,6 @@ resource: "generated"
 | [SR-092](SR-092.md) | One-layer hierarchy navigation |
 | [SR-093](SR-093.md) | Pure safety classification |
 | [SR-094](SR-094.md) | Structural safety cross-check |
-| [SR-095](SR-095.md) | Superseded: Safety-aware traincar packing |
-| [SR-096](SR-096.md) | Superseded: Atomic CAS integration |
-| [SR-097](SR-097.md) | Superseded: Serialized blocked disposition |
-| [SR-098](SR-098.md) | Superseded: Durable publication intent |
-| [SR-099](SR-099.md) | Superseded: Git evidence enumeration |
-| [SR-100](SR-100.md) | Superseded: Ownership-state reconstruction |
-| [SR-101](SR-101.md) | Superseded: Lifecycle-boundary recovery |
 | [SR-102](SR-102.md) | Typed dual-plan state machine |
 | [SR-103](SR-103.md) | Allowlist-only dual-plan briefs |
 | [SR-104](SR-104.md) | Dual-plan coverage-step adapter |
@@ -126,11 +105,6 @@ resource: "generated"
 | [SR-114](SR-114.md) | Kit scripts run across the supported OSes |
 | [SR-115](SR-115.md) | Deterministic ready ordering |
 | [SR-116](SR-116.md) | Generated status surface |
-| [SR-117](SR-117.md) | Superseded: Atomic traincar reservation and lane leasing |
-| [SR-118](SR-118.md) | Superseded: Traincar build and review shape |
-| [SR-119](SR-119.md) | Superseded: Release on early train end |
-| [SR-120](SR-120.md) | Superseded: Blocked-constituent disposition |
-| [SR-121](SR-121.md) | Superseded: Gated downstream migration to the parallel default |
 | [SR-122](SR-122.md) | Dashboard freshness check |
 | [SR-123](SR-123.md) | Critique closure ratchet |
 | [SR-124](SR-124.md) | Contradiction-safe dual-plan dispatcher class |

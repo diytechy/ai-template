@@ -3218,12 +3218,10 @@ SPINE_TRACED_CELLS = {
         {"Verifies", "Evidence", "Automated", "Phase"}
     ),
 }
-# The ratified half. `SupersededBy` (SR) is not named by §A5.1 and is RATIFIED
-# BY RULING (WI-388, the same intake): a supersession is a SCOPE statement —
-# it terminates a requirement's lifecycle in favour of another — precisely the
-# "prose and relevant field attributes" the owner's spine-touch definition
-# names. Unlike the three traced pointers it re-points no live chain; it ends
-# one, and a silent supersession would be a missed window nobody sees.
+# The ratified half. (The SR tier's `SupersededBy` column — ratified by ruling
+# at WI-388 — retired with the supersession tombstone class, D-4 ruling
+# 2026-08-14b; the CMP registry's own SupersededBy is a separate, still-owed
+# item.)
 SPINE_RATIFIED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -3234,7 +3232,6 @@ SPINE_RATIFIED_CELLS = {
             "Permutations",
             "Priority",
             "Verification",
-            "SupersededBy",
         }
     ),
     "docs/requirements/low-level-requirements.toml": frozenset(

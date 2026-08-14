@@ -436,32 +436,6 @@ status = "Verified"
 phase = 1
 area = "Scaffold generation"
 
-[requirement.SR-037]
-title = "Superseded: Work-item registry validation"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """SR-037 is superseded by SR-067;SR-068;SR-069; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-superseded_by = ["SR-067", "SR-068", "SR-069"]
-
-[requirement.SR-038]
-title = "Superseded: Offline project-state view"
-sn_refs = ["SN-010"]
-requirement = """SR-038 is superseded by SR-070;SR-071;SR-072; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-superseded_by = ["SR-070", "SR-071", "SR-072"]
-
 [requirement.SR-040]
 title = "Per-phase routing and review dial"
 sn_refs = ["SN-006"]
@@ -528,32 +502,6 @@ status = "Verified"
 phase = 1
 area = "Unattended coordinator"
 
-[requirement.SR-044]
-title = "Superseded: Declared-interface connectivity"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """SR-044 is superseded by SR-073;SR-074;SR-075;SR-076;SR-077;SR-078; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-superseded_by = ["SR-073", "SR-074", "SR-075", "SR-076", "SR-077", "SR-078"]
-
-[requirement.SR-045]
-title = "Superseded: Heterogeneous implementer/reviewer scheduling"
-sn_refs = ["SN-006"]
-requirement = """SR-045 is superseded by SR-079;SR-080;SR-081;SR-082;SR-083; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-superseded_by = ["SR-079", "SR-080", "SR-081", "SR-082", "SR-083"]
-
 [requirement.SR-046]
 title = "Run capability menu"
 sn_refs = ["SN-001"]
@@ -575,32 +523,6 @@ verification = "Test"
 status = "Verified"
 phase = 1
 area = "Onboarding + dev-setup"
-
-[requirement.SR-047]
-title = "Superseded: Subjective-quality critique loop"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """SR-047 is superseded by SR-084;SR-085;SR-086; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-superseded_by = ["SR-084", "SR-085", "SR-086"]
-
-[requirement.SR-048]
-title = "Superseded: How-SW top view bounded and containerized"
-sn_refs = ["SN-023", "SN-012"]
-requirement = """SR-048 is superseded by SR-087;SR-088; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-superseded_by = ["SR-087", "SR-088"]
 
 [requirement.SR-049]
 title = "Derived gate from artifact states"
@@ -647,19 +569,6 @@ verification = "Test"
 status = "Modified"
 phase = 2
 area = "Trajectory"
-
-[requirement.SR-051]
-title = "Superseded: Tiered drill-down views"
-sn_refs = ["SN-010"]
-requirement = """SR-051 is superseded by SR-089;SR-090;SR-091;SR-092; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "C"
-verification = "Inspection"
-status = "Verified"
-phase = 2
-area = "Trajectory"
-superseded_by = ["SR-089", "SR-090", "SR-091", "SR-092"]
 
 [requirement.SR-052]
 title = "Dashboard accessibility (rubric-adjudicated)"
@@ -750,19 +659,6 @@ status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
-[requirement.SR-058]
-title = "Superseded: Deterministic safety classification"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-058 is superseded by SR-093;SR-094;SR-095; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-093", "SR-094", "SR-095"]
-
 [requirement.SR-059]
 title = "Retire next-wi; generated status surface"
 sn_refs = ["SN-025", "SN-010"]
@@ -799,84 +695,6 @@ verification = "Test"
 status = "Verified"
 phase = 4
 area = "Parallel dispatch"
-
-[requirement.SR-061]
-title = "Superseded: Parallel-by-default dispatcher"
-sn_refs = ["SN-025"]
-requirement = """SR-061 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-062]
-title = "Superseded: Change-train continuation"
-sn_refs = ["SN-025"]
-requirement = """SR-062 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-063]
-title = "Superseded: Atomic serialized integration"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-063 is superseded by SR-096;SR-097;SR-098; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-096", "SR-097", "SR-098"]
-
-[requirement.SR-064]
-title = "Superseded: Crash safety and git-as-authority recovery"
-sn_refs = ["SN-025"]
-requirement = """SR-064 is superseded by SR-099;SR-100;SR-101; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-099", "SR-100", "SR-101"]
-
-[requirement.SR-065]
-title = "Superseded: Parallel-execution telemetry and downstream migration"
-sn_refs = ["SN-025", "SN-012"]
-requirement = """SR-065 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-066]
-title = "Superseded: Dual-plan decomposition round"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """SR-066 is superseded by SR-102;SR-103;SR-104;SR-105;SR-106;SR-107;SR-108; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-superseded_by = ["SR-102", "SR-103", "SR-104", "SR-105", "SR-106", "SR-107", "SR-108"]
 
 [requirement.SR-067]
 title = "Work-item dependency validation"
@@ -1214,97 +1032,6 @@ status = "Verified"
 phase = 4
 area = "Parallel dispatch"
 
-[requirement.SR-095]
-title = "Superseded: Safety-aware traincar packing"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-095 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-096]
-title = "Superseded: Atomic CAS integration"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-096 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-097]
-title = "Superseded: Serialized blocked disposition"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-097 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-098]
-title = "Superseded: Durable publication intent"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-098 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-099]
-title = "Superseded: Git evidence enumeration"
-sn_refs = ["SN-025"]
-requirement = """SR-099 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-100]
-title = "Superseded: Ownership-state reconstruction"
-sn_refs = ["SN-025"]
-requirement = """SR-100 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-101]
-title = "Superseded: Lifecycle-boundary recovery"
-sn_refs = ["SN-025"]
-requirement = """SR-101 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
 [requirement.SR-102]
 title = "Typed dual-plan state machine"
 sn_refs = ["SN-024", "SN-006"]
@@ -1488,71 +1215,6 @@ verification = "Test"
 status = "Verified"
 phase = 4
 area = "Parallel dispatch"
-
-[requirement.SR-117]
-title = "Superseded: Atomic traincar reservation and lane leasing"
-sn_refs = ["SN-025"]
-requirement = """SR-117 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-118]
-title = "Superseded: Traincar build and review shape"
-sn_refs = ["SN-025"]
-requirement = """SR-118 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-119]
-title = "Superseded: Release on early train end"
-sn_refs = ["SN-025"]
-requirement = """SR-119 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-120]
-title = "Superseded: Blocked-constituent disposition"
-sn_refs = ["SN-025"]
-requirement = """SR-120 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-121]
-title = "Superseded: Gated downstream migration to the parallel default"
-sn_refs = ["SN-025", "SN-012"]
-requirement = """SR-121 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
 
 [requirement.SR-122]
 title = "Dashboard freshness check"

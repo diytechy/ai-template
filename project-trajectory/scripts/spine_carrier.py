@@ -261,7 +261,6 @@ SPINE_TIER_KEYS = {
         "status",
         "phase",
         "area",
-        "superseded_by",
     ),
     "LLR-ID": (
         "sr_refs",

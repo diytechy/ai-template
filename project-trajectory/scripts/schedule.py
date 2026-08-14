@@ -3,7 +3,7 @@
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). This is the
 scheduler contract of the parallel-WI-dispatch work (Slice A;
-docs/specs/parallel-wi-dispatch.md SR-057/SR-093..SR-095). It is a **pure, side-effect-free
+docs/specs/parallel-wi-dispatch.md SR-057/SR-093/SR-094). It is a **pure, side-effect-free
 library + CLI** shared by validation, the dashboard, the dispatcher, and tests —
 it never mutates the registry, spawns a worker, or touches git. Readiness is
 DERIVED from the tracked WI registry plus any reservations the caller passes

@@ -93,7 +93,7 @@ a `WI:` trailer (a blocker commits `Blocked-WI:` + `BlockRef:` instead and
 the worker exits 3). Session logs are collision-safe
 (docs/iteration/<tag>-NNN-*.log) and managed review verdicts land under
 docs/reviews/<tag>/ naming the exact reviewed commit, so parallel branches
-never collide. An assignment is ONE review scope (WI-183, SR-062): under
+never collide. An assignment is ONE review scope (WI-183, SR-132): under
 managed routing + review-policy >= 1 the round is scheduled once, after the
 LAST assigned WI commits, over the combined base..HEAD diff. A multi-WI list is
 no longer something the loop packs for itself: session grouping was REMOVED
@@ -2172,7 +2172,7 @@ def session_bookkeeping(
                 # rework round must not read them as "the implementer touched
                 # a review path" (the false-fire this excludes). A gamed
                 # verdict is still caught upstream: the integrator verifies
-                # verdicts on the exact reviewed head (SR-096).
+                # verdicts on the exact reviewed head (SR-132).
                 own = "docs/reviews/{}/".format(worker["train"])
                 changed = [
                     ln
@@ -2349,7 +2349,7 @@ def session_bookkeeping(
         elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
             st.on_committed_build(route_family, wi_label, commits)
             # The review round follows the reviewer dial (S8). A traincar
-            # is ONE review scope (WI-183, SR-062): a worker schedules the
+            # is ONE review scope (WI-183, SR-132): a worker schedules the
             # round only once EVERY assigned WI is built, and the round
             # covers the combined train diff base..HEAD — never a per-WI
             # slice of it. An intermediate constituent commit is

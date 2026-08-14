@@ -121,9 +121,9 @@ def test_meta_okf_bundle_renders_the_knowledge_graph():
     assert kg is not None
     svg, details = kg
     assert len(details) > 200
-    assert details["SR-038"]["type"] == "System Requirement"
+    assert details["SR-070"]["type"] == "System Requirement"
     assert "knowarrow" in svg
-    for cid in ("SN-001", "SR-038", "TC-038"):
+    for cid in ("SN-001", "SR-070", "TC-038"):
         assert (ROOT / details[cid]["href"]).exists()
 
 

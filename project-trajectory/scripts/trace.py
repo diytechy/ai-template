@@ -929,119 +929,6 @@ def bump_watermark(root):
     return marks, raised
 
 
-def _supersession_targets(row, ids):
-    """Return one row's validated targets plus its local findings."""
-    sid = row.get("SR-ID")
-    value = (row.get("SupersededBy") or "").strip()
-    if not sid or not value:
-        return [], []
-    targets = [target.strip() for target in value.split(";")]
-    malformed = any(not target for target in targets) or any(
-        "," in target or any(ch.isspace() for ch in target) for target in targets
-    )
-    if malformed:
-        return [], [f"SR {sid} SupersededBy must be a semicolon-separated SR-id list"]
-    found = []
-    for target in set(targets):
-        if targets.count(target) > 1:
-            found.append(f"SR {sid} SupersededBy repeats {target}")
-        if not ID_PATTERNS["SR"].match(target) or target not in ids:
-            found.append(f"SR {sid} SupersededBy references unknown {target}")
-        elif target == sid:
-            found.append(f"SR {sid} SupersededBy self-links")
-    return targets, found
-
-
-def _supersession_cycle_findings(edges):
-    # Report one deterministic finding per cyclic component. A DFS path is
-    # enough because supersession targets outside the linking subset are leaves.
-    state = {}
-    stack = []
-    reported = set()
-    found = []
-
-    def visit(node):
-        state[node] = 1
-        stack.append(node)
-        for target in edges.get(node, []):
-            if target not in edges:
-                continue
-            if state.get(target, 0) == 0:
-                visit(target)
-            elif state.get(target) == 1:
-                start = stack.index(target)
-                cycle = stack[start:] + [target]
-                key = frozenset(cycle)
-                if key not in reported:
-                    reported.add(key)
-                    found.append("SR SupersededBy cycle: " + " -> ".join(cycle))
-        stack.pop()
-        state[node] = 2
-
-    for sid in sorted(edges):
-        if state.get(sid, 0) == 0:
-            visit(sid)
-    return found
-
-
-def _llr_supersession_findings(llrs, superseded, ids):
-    # Scoped to LLR SR-Refs on purpose: a TC citing a superseded SR is legal and
-    # required — a non-draft superseded SR still owes a TC (see LLR_EXEMPT), and
-    # that TC is the retained evidence record proving nothing live hangs on the
-    # dead scope. Only a decomposition grounds new work on the dead id.
-    # A Draft LLR is NOT exempt: grounding on a dead SR is wrong at any stage,
-    # not a maturity question — the same tier as a duplicated id.
-    found = []
-    for row in llrs:
-        lid = row.get("LLR-ID")
-        if not lid:
-            continue
-        for sid in sorted(set(refs(row.get("SR-Refs")))):
-            if sid in superseded:
-                # Name only successors that exist — an unknown target already
-                # has its own SR-side finding, and pointing the reader at a
-                # nonexistent successor would compound the error.
-                real = [t for t in superseded[sid] if t in ids]
-                where = (
-                    "SupersededBy " + ";".join(real)
-                    if real
-                    else "SupersededBy names no existing successor"
-                )
-                found.append(
-                    f"LLR {lid} SR-Refs cites superseded {sid} ({where}) — "
-                    "re-ground on the successor or delete the LLR"
-                )
-    return found
-
-
-def sr_supersession_findings(srs, llrs=()):
-    """Validate the optional SR ``SupersededBy`` extension.
-
-    A populated cell is a semicolon-separated list of other, existing SR ids.
-    Supersession is identity history rather than decomposition, so malformed
-    targets, self-links, and cycles are always-invalid integrity findings.
-    An LLR whose ``SR-Refs`` cites an SR with a populated cell is the same
-    class of error (WI-364, owner ruling 2026-07-29): the registry is the live
-    surface and the supersession history lives in git, so a live decomposition
-    must re-ground on the successor or be deleted. TC citations of a superseded
-    SR stay legal — they are the retained evidence record.
-    Registries without the optional column remain byte-for-byte compatible.
-    """
-    ids = {r.get("SR-ID") for r in srs if r.get("SR-ID")}
-    edges = {}
-    found = []
-    for row in srs:
-        targets, row_findings = _supersession_targets(row, ids)
-        found.extend(row_findings)
-        if targets:
-            edges[row["SR-ID"]] = targets
-    return (
-        found
-        + _supersession_cycle_findings(edges)
-        + _llr_supersession_findings(llrs, edges, ids)
-    )
-
-
 def triangle_findings(tcs, llrs):
     """SR/LLR citation coherence. A TC may cite an
     SR and an LLR together so one test discharges both the "SR needs a TC" and
@@ -3107,7 +2994,6 @@ def analyze(reg, args):
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += getattr(reg, "sn_integrity", [])
-    integrity += sr_supersession_findings(srs, llrs)
     # SR/LLR citation coherence: a TC that cites an SR and an LLR
     # together must not pair an LLR with an SR it does not decompose. Integrity-
     # class (wrong at any stage), so it joins the --strict-integrity floor.

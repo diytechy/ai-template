@@ -336,10 +336,11 @@ above their marks. `plan_artifacts`' two mints still derived from
 `max(live)+1`; literal reuse was reproduced, then eliminated. **First real
 supersession executed** (WI-426).
 
-**STILL OWED — the `SupersededBy` column deletion**, with its ~80-line
-validator in `trace.py` (semicolon-list shape, no repeats, target exists, no
-self-link, no cycles), the `PartOf`/`SupersededBy` rule, and its `ratified`
-classification in `check_trajectory`. A registry-schema change → §5 step 7.
+**DONE 2026-08-14 (WI-451 slice 2, ruling 2026-08-14b):** the `SupersededBy`
+column deleted with the 26-row tombstone class — the trace.py validator, the
+SR-tier carrier key, and its `ratified` classification in `check_trajectory`
+all retired in the same commit; the log's forwarding entry is the map. The
+CMP-registry `PartOf`/`SupersededBy` rule stays (separate, still live).
 
 ### D-5 — ONE TOML CARRIER for all four tiers
 
