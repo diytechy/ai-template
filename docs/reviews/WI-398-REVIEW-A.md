@@ -4,7 +4,7 @@ Verdict: APPROVE
 
 Reviewed independently against the spec
 (`docs/work/complete/WI-398-a-red-bars-refusal-carries-its-own-error.md`) and
-drain-plan row 7 (`docs/backlog-plan-2026-08-01.md`: "One anchor fix + keep the
+drain-plan row 7 (`docs/archive/history/backlog-plan-2026-08-01.md`: "One anchor fix + keep the
 bar log a refusal points at; no log-management layer"). Diff = two commits
 (`b121aba8` build, `e49fcbd8` close) on
 `wi-398-a-red-bars-refusal-carries-its-own-error` vs `ConcurrencyTrainRewrite`.

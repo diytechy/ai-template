@@ -6,7 +6,7 @@ Reviewed at `cab612c3` (branch `wi-392-driven-figures-carry-their-command`;
 trunk = `ConcurrencyTrainRewrite`). I did not write this work; I drove it to
 break it. Requirement surface read: the spec of record
 `docs/work/complete/WI-392-driven-figures-carry-their-command.md`, drain plan
-row 6 (`docs/backlog-plan-2026-08-01.md` — **rung 1 only**; rung 2
+row 6 (`docs/archive/history/backlog-plan-2026-08-01.md` — **rung 1 only**; rung 2
 deliberately not built), the archived
 `docs/archive/specs/WI-392.2026-08-01.md`, and `PROCESS_OPTIONS.md` "Signed
 measurements". `docs/log.d/` fragments were not read.

@@ -4,7 +4,7 @@ Verdict: APPROVE (round 2 — round 1 was CHANGES-REQUESTED; both findings
 remedied by rework commit `3976bb5d` and re-verified below)
 
 Reviewed independently against the spec (`docs/work/complete/WI-394-a-verified-spine-row-can-cite-evidenc.md`),
-the R2 ruling (`docs/backlog-plan-2026-08-01.md`, option (c): FILE half only,
+the R2 ruling (`docs/archive/history/backlog-plan-2026-08-01.md`, option (c): FILE half only,
 `::node` ruled prose, warn-first), and the archived spec-of-record
 (`docs/archive/specs/WI-394.2026-08-01.md`). Diff = three commits
 (`e1f83167` build, `35c0cdb6` triage, `d21bb6a4` close) on

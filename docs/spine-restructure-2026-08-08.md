@@ -568,7 +568,7 @@ files cite that live path and it exists only under `docs/archive/`. Then
 `_split_changed_cells`; add `docs/work/attest`. **Do not touch `gate-policy`'s <!-- path-ok: proposed or upstream path -->
 three-word vocabulary.** Byte-budget-guard again.
 
-**S6 · Owner ruling on the handback contract.** `docs/handback-contract.md` states
+**S6 · Owner ruling on the handback contract.** `docs/archive/history/handback-contract.md` states
 *"Nothing here executes until ruled."* Its §10 lists five questions; none is
 answered in the tree. Five mechanisms for return-event identity have been driven
 and **all five leaked**; WI-413's merged design had to be reverted off trunk. This
@@ -655,7 +655,7 @@ tuple unpacking) and `gen_arch_map.reference.ps1` (a deliberate PowerShell
 reference port documented in two places — the honest finding is that it is
 *untested*, not dead).
 
-**`docs/parallel-ready` is dead config** (zero readers) but is a **signed** audit
+**`docs/archive/history/parallel-ready` is dead config** (zero readers) but is a **signed** audit
 artifact (WI-208) — **archive it, do not delete**. The kit does not destroy signed
 records.
 

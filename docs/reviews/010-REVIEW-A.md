@@ -2,7 +2,7 @@
 
 Scope: `HEAD~1..HEAD` (`058f033`), reviewed against `AGENTS.md`, the kit
 process master, the requirements registries, and WI-104's recorded
-spec-of-record (`docs/repo-review-2026-07-12b.md#medium`). No SN/SR/LLR/TC row
+spec-of-record (`docs/archive/history/repo-review-2026-07-12b.md#medium`). No SN/SR/LLR/TC row
 changed, so no registry-history consistency sweep applied.
 
 ## Harness - run independently

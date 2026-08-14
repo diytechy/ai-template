@@ -27,7 +27,7 @@
 #
 # **Empty as of the 2026-08-13 re-attest sitting**, which ratified every row that
 # stood here: the last unruled need of the 2026-08-08 mechanized-loop program
-# (`docs/plan-2026-08-08-mechanized-loop.md`, built against five needs) plus the
+# (`docs/archive/history/plan-2026-08-08-mechanized-loop.md`, built against five needs) plus the
 # eight later-minted drafts that had joined it — nine rows, attested by the owner
 # as written and moved into Core needs (`kind = "core"`). That program's other
 # four needs were dispositioned earlier, on 2026-08-10 — one attested into Core
@@ -59,7 +59,7 @@
 #   are English-only by design. The product is a developer-process kit whose
 #   audience and machine vocabulary are English; externalizing strings would add
 #   cost with no stakeholder need behind it (recorded from the
-#   [repo-review-2026-07-22](../repo-review-2026-07-22.md) L-4 finding). If
+#   [repo-review-2026-07-22](../archive/history/repo-review-2026-07-22.md) L-4 finding). If
 #   localization ever becomes a requirement, first separate the **display**
 #   strings from the stable **machine** tokens — policy names, status values,
 #   registry column headers — before translating anything: those tokens are

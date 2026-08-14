@@ -90,7 +90,7 @@ workflow's axes, the `(macos,3.11)` exclusion, the OS-specific-behavior list
 NOT arm64-availability, with the correct note that 3.11 *does* have arm64 macOS
 builds. The shipped AC does **not** claim macOS runs on 3.11; it states 3.x-only
 and then names the excluded cell. **No mismatch, no self-contradiction.** `M-27`
-resolves (docs/repo-review-2026-07-21.md:674) to the CI cost/redundant-matrix-cell
+resolves (docs/archive/history/repo-review-2026-07-21.md:674) to the CI cost/redundant-matrix-cell
 measure — an on-theme citation for a coverage-driven exclusion.
 
 **4. SR-034 evidence is version-agnostic and green.** SR-034's AC is an AST

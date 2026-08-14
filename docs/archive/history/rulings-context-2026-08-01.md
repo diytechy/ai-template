@@ -15,7 +15,7 @@ reply in session, or annotate this file.
 
 - Every work item is one file; the folder it sits in **is** its state:
   `queued/`, `active/`, `deferred/`, `cancelled/`, `complete/`, `draft/`
-  under [docs/work/](work/).
+  under [docs/work/](../../work/).
 - **`blocked` is not a folder.** A row is "blocked" when it sits in `queued/`
   and its header carries a `blockref` line naming *why* it is parked (an open
   decision, another work item, or a note).
@@ -52,7 +52,7 @@ come back to the frontier. Measured: it would not; nothing reads an open
 item's state, so the park was permanent. The correction was to **cancel** the
 row instead — which was the right disposition anyway, since its refutation
 held under every possible ruling. That mis-assumption is the defect WI-395 files (its spec is in
-[docs/work/](work/); un-linked here because a row's file moves folder with
+[docs/work/](../../work/); un-linked here because a row's file moves folder with
 every state change): the repo's own exemplar text *promises* the self-release
 the mechanism does not provide.
 
@@ -99,7 +99,7 @@ Reading against what exists:
   historical park it *could* have served was better answered by cancellation.
 
 **What executes if the owner confirms:** the direction is recorded in
-[log.md](log.md)'s Decisions; the dispatcher row's spec gains the intake arm
+[log.md](../../log.md)'s Decisions; the dispatcher row's spec gains the intake arm
 before it is claimed; WI-395 is executed as the wording fix. If any numbered
 point above misstates the intent, correcting the point corrects the plan.
 
@@ -161,7 +161,7 @@ against the machinery as it now stands:
   live registry this is literally the folder the row's file sits in.
 - **Spec-of-record** = the longer design document many work items carry
   beside their registry row. When a work item closes, that document is
-  archived into one flat folder, [docs/archive/specs/](archive/specs/).
+  archived into one flat folder, [docs/archive/specs/](../specs/).
 
 ### What the design sentence proposed
 
@@ -188,7 +188,7 @@ contents are fine; nothing is broken or missing**:
     use to attribute it — an accident of naming, not of content.
 - For the 92+3 that *do* attribute, the answer **already exists by
   location** — the work item's own file sits in `complete/` or `cancelled/`
-  under [docs/work/](work/). The archive split would be a second,
+  under [docs/work/](../../work/). The archive split would be a second,
   hand-maintained copy of that fact, with no generator keeping it fresh.
 
 So building the split would force a false answer onto 14% of the corpus to
@@ -201,7 +201,7 @@ Only what the **design text** should now say — the build question is closed
 one measured trap for whoever executes it (two declared-absences lines must
 be **restated, never deleted**, or the strict reference checker gains two
 dangling findings), is OI-11 on the owner surface:
-[open-items.html](open-items.html).
+[open-items.html](../../open-items.html).
 
 | Option | What changes | For | Against |
 |---|---|---|---|

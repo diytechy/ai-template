@@ -8,7 +8,7 @@ safety_class = "ordinary"
 
 ## Deliverable
 
-Owner ruling R2 (docs/backlog-plan-2026-08-01.md, 2026-08-01) picked **option
+Owner ruling R2 (docs/archive/history/backlog-plan-2026-08-01.md, 2026-08-01) picked **option
 (c)** — the FILE-EXISTENCE half only, the `::node` selector ruled PROSE — and
 that is what shipped, in `check_doc_refs.py` (commit `WI-394: build the
 Evidence file-existence check`):

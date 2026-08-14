@@ -638,7 +638,7 @@ why (one bullet each; cite ids)._
 
 - **2026-08-01 — R3: handback disposition is loop machinery; the arbitration
   row is minted at intake.** Ruled (owner,
-  [rulings-context-2026-08-01.md](rulings-context-2026-08-01.md) §R3, confirmed
+  [rulings-context-2026-08-01.md](archive/history/rulings-context-2026-08-01.md) §R3, confirmed
   in session): a handed-back row's disposition is completed by the
   **dispatcher**, never by another work item — at intake (when the handback
   merge lands) the mint helper writes a **disposition row of the `adjudication`
@@ -674,7 +674,7 @@ why (one bullet each; cite ids)._
   regenerator. OI-11 ruled; WI-391 stays cancelled.
 
 - **2026-08-01 — R1: a work branch never mints a work-item id.** Ruled (owner,
-  [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) §R1): **minting a
+  [backlog-plan-2026-08-01.md](archive/history/backlog-plan-2026-08-01.md) §R1): **minting a
   work-item id is a serial TRUNK-side act only** — the claim's bookkeeping
   commit, WI-388's mechanical adjudication mint when that row lands, and a
   human trunk commit. A new item takes `max(existing id) + 1` and a lane can
@@ -8932,7 +8932,7 @@ the generated surfaces — closing the parallel-dispatch campaign at **G3**.
 - **Migration gate (SR-065, §14).** `resolve_ceiling` gates the two-worker
   promotion: a repo **holds at `--jobs 1`** until *both* `assess_migration`
   audits pass — the SafetyClass audit (one unclassified open WI holds the whole
-  repo) and the soft-edge audit (each `~` edge signed via `docs/parallel-ready`).
+  repo) and the soft-edge audit (each `~` edge signed via `docs/archive/history/parallel-ready`).
   A **fresh scaffold passes by construction**; the flip is a recorded
   `parallel-enabled` event. `reconcile_legacy` returns legacy `active` rows to
   `queued` (logged finding) and flags `docs/tracks/*` for the one compatibility
@@ -8952,7 +8952,7 @@ the generated surfaces — closing the parallel-dispatch campaign at **G3**.
   acting, so a publish never discards new work (spec §9 "reconciles from the
   development branch"). Found + fixed via the migration fixtures.
 - **Docs.** `downstream-resync` skill (the migration recipe: do the two audits,
-  sign `docs/parallel-ready`, set `AGENT_JOBS=2`) + ADOPTING §6 + PROCESS_OPTIONS
+  sign `docs/archive/history/parallel-ready`, set `AGENT_JOBS=2`) + ADOPTING §6 + PROCESS_OPTIONS
   (telemetry & migration paragraphs). Skill copies re-synced ×2.
 - **Quality debt at the G3 close.** The G3-only **dupes** gate ran for the first
   time since v3 (dormant at G2 all campaign): schedule.py's F5 boilerplate pairs
@@ -9259,7 +9259,7 @@ the `session-protocol` skill (×3 byte-identical), CLAUDE.md, README.md, the
 live `docs/specs/*`. ADOPTING §6 gained the WI-188 migration note (Phase now on
 LLR/TC, integers recommended / `vN` still filters, the grouping column dropped,
 both readers vacuous-until-armed → a re-sync is diffable and non-breaking).
-**Deviation:** `docs/repo-review-2026-07-12b.md` left unscrubbed — a historical
+**Deviation:** `docs/archive/history/repo-review-2026-07-12b.md` left unscrubbed — a historical
 repo-review verdict (same class as the excluded `docs/reviews/`); its path outside
 `docs/reviews/` is the only reason it is not already excluded, and rewording a
 review verdict falsifies the record.
@@ -9276,7 +9276,7 @@ Campaign-column sentence; baseline re-stamped). AGENTS.template.md 9,978
 
 **Acceptance.** `grep -rli campaign` over the repo minus history/owner-only
 (`docs/log.md`, `docs/iteration/`, `docs/archive/`, `docs/reviews/`,
-`OWNER_SCRATCHPAD.md`) + `docs/repo-review-2026-07-12b.md` → **zero**.
+`OWNER_SCRATCHPAD.md`) + `docs/archive/history/repo-review-2026-07-12b.md` → **zero**.
 `derive_gate --print` → numeric per-phase (`1=G3;2=G3;3=G3;4=G3`) + `phase=4`;
 `gen_release_checklist --phase 3` keeps the foundation SRs.
 
@@ -9956,7 +9956,7 @@ to the record, three findings surfaced:
    dispatcher; `--jobs 1` is the explicit serial escape hatch." The legacy
    resume loop survives as the pre-migration mode, gated on the §14
    SafetyClass/soft-edge audits — which **this repo has not run on itself**
-   (no `SafetyClass` column, no `docs/parallel-ready`). Restructure = finish
+   (no `SafetyClass` column, no `docs/archive/history/parallel-ready`). Restructure = finish
    §14 + retire the legacy strata (2–3 WIs, discussed, not yet filed).
 3. **Spine batching residual → WI-204 filed (owner-directed):** the stage-2
    gate pass batches all ready spine work as one whole-project pass
@@ -10185,7 +10185,7 @@ session needs nothing from this conversation:
   `unattended`, strong; ≺ WI-204 done): the `SafetyClass` column + deliberate
   classification of every open row (deferred included, done rows stay blank
   history), the soft-edge audit with promote-or-confirm dispositions,
-  `docs/parallel-ready`, `AGENT_JOBS=2` in all three launchers (`--jobs 1`
+  `docs/archive/history/parallel-ready`, `AGENT_JOBS=2` in all three launchers (`--jobs 1`
   the escape), and one proven boot to the dispatcher banner with zero
   unclassified rows. [specs/WI-208.md](archive/specs/WI-208.2026-07-20.md).
 - **WI-209 — M2, dual-plan auto-dispatch + quiet-park auto-page** (queued,
@@ -10248,7 +10248,7 @@ was open at audit time was reviewed deliberately:
 | WI-123 → `~WI-121` | advisory-confirmed | BUILD-tier relaxation is contextual evidence; the cadence WI defines its own safe adoption conditions. |
 | WI-187 → `~WI-064` | advisory-confirmed | Each residual has its own applies-when trigger; none consumes an unintegrated WI-064 artifact. |
 
-**Promotion + proof:** `docs/parallel-ready` signs both audits against this
+**Promotion + proof:** `docs/archive/history/parallel-ready` signs both audits against this
 WI-208 commit. The POSIX, Windows, and macOS launchers now declare/export
 `AGENT_JOBS=2`; explicit `--jobs 1` remains the serial dispatcher escape and
 an absent variable still selects the compatibility driver. A real
@@ -10614,7 +10614,7 @@ covered source, architecture, requirements/test evidence, docs, security,
 performance, dependencies/configuration, CI, Git history, legal posture, and the
 rendered dashboard; logs/archive/iteration records were excluded. The baseline
 full G3 gate passed 16/16 (1,030 passed / 34 skipped on Python 3.8, 90.98%
-coverage). The report is `docs/repo-review-2026-07-18.md`.
+coverage). The report is `docs/archive/history/repo-review-2026-07-18.md`.
 
 **Confident fixes.** GitHub Actions in both meta workflows and the downstream
 reference now have explicit `contents: read` permissions and immutable verified
@@ -12687,7 +12687,7 @@ deferred. Nothing pushed.
 
 **Session type:** review-tail remediation (owner-directed — "implement all
 recommendations" from an adversarial re-read of
-[repo-review-2026-07-22.md](repo-review-2026-07-22.md)). The re-read's finding:
+[repo-review-2026-07-22.md](archive/history/repo-review-2026-07-22.md)). The re-read's finding:
 the deep review parked **H-2 / M-4 / M-5 / M-7 / L-1 / L-2 / L-4** in that
 report's §1 prose *only*, while M-2 / M-3 / H-3 became registry rows
 (WI-272 / WI-273 / WI-097). Since dated reviews archive and this repo's own
@@ -15238,7 +15238,7 @@ Ratchets re-stamped with the fix-pass deltas (trace 2617, check_trajectory
 The owner launched `agent-resume`. It reserved ONE train — `3-g2-WI-305-6f47`
 carrying WI-305 + WI-315 (correctly co-scheduled by their hard `Predecessors`
 edge) — and then demonstrated, on real money, the deadlock
-[wrap-up-plan.md](wrap-up-plan.md) §4 had predicted an hour earlier.
+[wrap-up-plan.md](archive/history/wrap-up-plan.md) §4 had predicted an hour earlier.
 
 ### What the live run proved
 
@@ -15513,7 +15513,7 @@ links, 0 broken); derived gate **G2** (`modified=6`).
 
 ## 2026-07-26 — 121-CRITIQUE: the batched-render route run end-to-end, on a genuinely non-Anthropic critic
 
-The route [wrap-up-plan.md](wrap-up-plan.md) §4/§7 prescribes, executed once:
+The route [wrap-up-plan.md](archive/history/wrap-up-plan.md) §4/§7 prescribes, executed once:
 land the whole render batch attended, then dispatch **one** critique against the
 last render commit. Verdict: **CHANGES-REQUESTED findings=3** —
 [121-CRITIQUE](reviews/121-CRITIQUE.md). **T2 and T5 pass; T4 fails twice, T8
@@ -15925,7 +15925,7 @@ runs the **warn** tier, so a module can land untagged and only the gate-level
 
 ### Session handoff filed
 
-[handoff-2026-07-26.md](handoff-2026-07-26.md) — the launch surface for the next
+[handoff-2026-07-26.md](archive/history/handoff-2026-07-26.md) — the launch surface for the next
 session: the 60-second start (two commands, and the one red to expect), where
 things live now that `open-items.md` is gone, what is owed and by whom, the three
 standing constraints not to undo by accident, WI-322's invariants, and the traps
@@ -16198,7 +16198,7 @@ re-stamped **2708 → 2778** with its reason inline.
 ## 2026-07-26 — 123-CRITIQUE: the batched route run a second time, and the first round where decomposition visibly paid
 
 One critique, dispatched once against the last render commit of the
-WI-318/319/320 batch, exactly as [wrap-up-plan.md](wrap-up-plan.md) §4/§7
+WI-318/319/320 batch, exactly as [wrap-up-plan.md](archive/history/wrap-up-plan.md) §4/§7
 prescribes. Verdict: **CHANGES-REQUESTED findings=1** —
 [123-CRITIQUE](reviews/123-CRITIQUE.md). **T2, T4 and T5 pass; T8 alone fails.**
 
@@ -16814,11 +16814,11 @@ family, and this repo routes to three — the last three independent reviews all
 ran on a non-Anthropic critic. Model-specific behaviour belongs in the
 `agents.csv` `Env` column, which is per-model and already holds the effort pins.
 
-Handoff for the sitting: [handoff-2026-07-27.md](handoff-2026-07-27.md).
+Handoff for the sitting: [handoff-2026-07-27.md](archive/history/handoff-2026-07-27.md).
 
 ### 2026-07-27 — OI-7 ruled, and the attestation surface gains the context a diff cannot carry
 
-Two owner asks, resumed from [handoff-2026-07-27.md](handoff-2026-07-27.md).
+Two owner asks, resumed from [handoff-2026-07-27.md](archive/history/handoff-2026-07-27.md).
 
 **OI-7 — ruled: keep per-slice review.** *"Previous evidence shows a per slice
 review is advantageous and not to deviate."* The ruling and the alternatives it
@@ -20099,7 +20099,7 @@ now describes the shipped flow — the plain-launch drive mode (WI-374),
   `wi_convert.py`, drain old train worktrees, seed `[generated]`, delete
   retired-surface reliance — `AGENT_JOBS`, `docs/run-state`,
   `docs/rework-wi`, tracks/next-wi/run-phase, `refs/llm/*`,
-  `docs/parallel-ready`); the WI-260 changelog bullet is marked *historical*
+  `docs/archive/history/parallel-ready`); the WI-260 changelog bullet is marked *historical*
   with the serial verdict gate named as the same rule's live home.
 - `skills/downstream-resync/SKILL.md` §3: the "Parallel-dispatch migration"
   recipe (AGENT_JOBS=2, --jobs 1 holds, parallel-ready sign-off — all
@@ -23187,7 +23187,7 @@ a known one rather than a discovered one.
 
 ## 2026-08-01 — Integrator session: the wi-387 refresh red, diagnosed and merged
 
-**Summary.** [handoff-2026-08-01.md](handoff-2026-08-01.md) §2's "one blocking
+**Summary.** [handoff-2026-08-01.md](archive/history/handoff-2026-08-01.md) §2's "one blocking
 thing" is answered, at root cause, and `wi-387` is merged (`a6321c99`). The
 answer is not the one §2 expected: the bar reds **three steps on two causes**,
 one of them **trunk's own**, and **the hypothesis §2 records as "tested and
@@ -23195,7 +23195,7 @@ refuted" was the correct one** — what was wrong was the refutation.
 
 **Deliverables.**
 
-1. **`5222c487` (trunk) — `docs/backlog-plan-2026-08-01.md:109` marked
+1. **`5222c487` (trunk) — `docs/archive/history/backlog-plan-2026-08-01.md:109` marked
    `path-ok`.** R2's background quotes `tests/this_file_has_never_existed.py` as
    the *measured evidence* that an invented Evidence cell clears every strict
    gate; `check_doc_refs --strict` reads it as a dangling repo path. This
@@ -23243,7 +23243,7 @@ set docs/components-check: off
 tests/test_traj_views.py::test_meta_component_top_view_smoke
 E   AssertionError: assert ['scripts/handback'] == []
 
-check_doc_refs: WARN - docs/backlog-plan-2026-08-01.md:109:
+check_doc_refs: WARN - docs/archive/history/backlog-plan-2026-08-01.md:109:
 `tests/this_file_has_never_existed.py` does not exist in the repo
 ```
 
@@ -23267,7 +23267,7 @@ APPROVE and always costs a round: **`WI-374`/`drive.py` was the first instance,
 `WI-387`/`handback.py` is the second, with the identical two rows.** The
 constraint-shaped answer — make the containment owed where the module is
 *added*, not where the inventory is regenerated — is written up in
-[handoff-2026-08-01.md](handoff-2026-08-01.md) §6 along with the
+[handoff-2026-08-01.md](archive/history/handoff-2026-08-01.md) §6 along with the
 `_failure_tail` defect. Neither is filed as a row: a lane may not mint an id,
 and trunk's max is 394 while the unmerged `wi-391` branch carries 395/396, so a
 trunk mint would recreate the collision this session's predecessor caused.
@@ -23584,7 +23584,7 @@ generated status/frontier and owner views regenerated with the merge.
 ## 2026-08-01 — WI-397: a work branch never mints a work-item id
 
 **Summary.** Owner ruling **R1** (2026-08-01,
-[backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) §R1) executed:
+[backlog-plan-2026-08-01.md](archive/history/backlog-plan-2026-08-01.md) §R1) executed:
 minting a work-item id is a **serial trunk-side act only**. A new work item
 takes `max(existing id) + 1`, a lane can only see its own tree, and the
 arithmetic does the rest — on 2026-08-01 two lanes independently minted
@@ -23664,7 +23664,7 @@ have got wrong.
 1. **Claiming a row that a plan doc links to reds trunk's `doc-navigability`
    until the branch merges.** The claim moves the spec `queued/ →
    active/<branch>/`, and
-   [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) links every row
+   [backlog-plan-2026-08-01.md](archive/history/backlog-plan-2026-08-01.md) links every row
    in its execution table by path — so `check_docs` convicted the WI-397 link
    the moment the claim landed, on trunk, with no branch to blame. This branch
    repairs it by hand (the link now names `complete/`, where the spec ends up),
@@ -24148,7 +24148,7 @@ knowledge⇒component `--strict` red could exist. Twice driven with the identica
 two-registry-row remedy, each costing a review round and a station red:
 `drive.py` (WI-374 era) and `handback.py` (WI-387, the 2026-08-01 blocking red
 whose "tested and refuted" hypothesis was in fact correct — the refuting probe
-measured a trunk-vintage map; [handoff-2026-08-01.md](handoff-2026-08-01.md)
+measured a trunk-vintage map; [handoff-2026-08-01.md](archive/history/handoff-2026-08-01.md)
 §2/§6); WI-393 dodged the class the same day only by registering `spec_move.py`
 defensively at build time. The SAME rule now also fires in the lane's own bar
 at the commit that adds the module, keyed off what the lane CAN see with no
@@ -25955,7 +25955,7 @@ integrity=0`, exit 0.
 ### 2026-08-08 — the mechanized-loop program (SN-028..032), built outside the standard workflow
 
 **What ran, and under what authority.** The owner's plan
-([plan-2026-08-08-mechanized-loop.md](plan-2026-08-08-mechanized-loop.md))
+([plan-2026-08-08-mechanized-loop.md](archive/history/plan-2026-08-08-mechanized-loop.md))
 sanctioned its own execution model: one dedicated infrastructure branch, no WI
 minted per change, the **full unfiltered suite** as the bar at each phase close,
 and the spine rows filed as the *record* at the end rather than as the vehicle.

@@ -561,7 +561,7 @@ This diff is a docs-only R3 adjudication disposition. It re-queues WI-413 by cle
 The new shape is legitimate adjudication scope, not inherently an evasion.
 
 - §A5.2 says an adjudication row runs no product bar because its outputs are Status changes and work-registry judgments (`docs/concurrency-v2.md:638-642`).
-- R3 says the dispatcher/intake machinery creates the row, while “the row’s job is the judgement, never the recovery” (`docs/rulings-context-2026-08-01.md:123-139`). Any follow-up is drafted in the adjudication row and minted later by intake, not assigned an ID in-lane (`docs/log.md:28-40`).
+- R3 says the dispatcher/intake machinery creates the row, while “the row’s job is the judgement, never the recovery” (`docs/archive/history/rulings-context-2026-08-01.md:123-139`). Any follow-up is drafted in the adjudication row and minted later by intake, not assigned an ID in-lane (`docs/log.md:28-40`).
 - WI-414 is a direct precedent: it ruled the affected scope and left construction of the exact amendment to the spine row with the real bar (`docs/work/complete/WI-414-adjudicate-tc-056-ratified-routed-cel.md:71-79`).
 - The rewritten records preserve the WI-416 review failures rather than claiming a mechanism fixed them: F1 carries the title-collision loss; F2 makes all four R3 outcomes mandatory; F4 carries both false-provenance starvation controls; F5 records and routes the producer defect; the migration timing is corrected.
 

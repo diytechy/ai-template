@@ -14,7 +14,7 @@ Everything below is scored against two fixed points:
   downstream code that is **maintainable and trustworthy** — readable, deeply
   tested, advanced only through explicit gates. A green gate that certifies
   something false is the worst failure this repo can produce.
-- **The governing principle** ([concurrency-v2.md](concurrency-v2.md) Part I,
+- **The governing principle** ([concurrency-v2.md](../../concurrency-v2.md) Part I,
   owner 2026-07-31): **prefer a constraint that makes a bad state
   unrepresentable over a check that detects it.** Recurring issues usually mean
   the root cause wants further *restriction* — which is less code, not more.
@@ -53,7 +53,7 @@ be made before that row starts; everything else is claimable as specced. Rows
 are named by **plain id, deliberately un-linked**: a row's file moves folder
 with every state change (claiming one broke trunk's doc-navigability on
 2026-08-01 — the driven instance is in the log), so this table points once at
-[docs/work/](work/) and lets the id be found there.
+[docs/work/](../../work/) and lets the id be found there.
 
 | # | Row | What it does | Direction (simplicity lens) | Ruling |
 |---|-----|--------------|------------------------------|--------|
@@ -78,7 +78,7 @@ with every state change (claiming one broke trunk's doc-navigability on
 Each ruling below states the background in plain language (the specs assume
 context the owner should not need), the options with honest costs, a
 recommendation, and how the choice bears on the kit's purpose. An accepted
-ruling is recorded in [log.md](log.md)'s Decisions by the agent that executes
+ruling is recorded in [log.md](../../log.md)'s Decisions by the agent that executes
 the affected row; R4 additionally clears through the open-items flow once
 `wi-391` lands it on the owner surface.
 
@@ -182,7 +182,7 @@ the pause file in a tracked commit — an unpause is auditable by design.
 
 ### R4 — OI-11: the "specs mirror the terminal folders" sentence
 
-- **Background.** The design doc ([concurrency-v2.md](concurrency-v2.md) §B2)
+- **Background.** The design doc ([concurrency-v2.md](../../concurrency-v2.md) §B2)
   says archived spec-of-record files should be split into `complete/` vs
   `cancelled/` folders so location answers "shipped or cancelled?" without
   opening the file. `wi-391` was filed to build exactly that and instead

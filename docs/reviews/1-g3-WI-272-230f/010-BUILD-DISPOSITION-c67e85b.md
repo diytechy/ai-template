@@ -13,7 +13,7 @@ No code changes in this session; this is a documentation-fidelity correction.
 ## Status of WI-272 — OPEN (not complete)
 
 WI-272 (dashboard work-item status fidelity, M-2 in
-`docs/repo-review-2026-07-22.md`) is **open**. Its registry row is `queued`
+`docs/archive/history/repo-review-2026-07-22.md`) is **open**. Its registry row is `queued`
 (`docs/requirements/work-items.csv` — unchanged; a train worker does not edit
 Status cells, the integrator does). Nothing here declares it done, and it must
 not be flipped to `done` until the two gates in the next section clear.

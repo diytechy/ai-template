@@ -9,7 +9,7 @@ safety_class = "ordinary"
 ## Deliverable
 
 RULED: **strip the trailing line suffix**, the direction
-[docs/backlog-plan-2026-08-01.md](../../backlog-plan-2026-08-01.md) row 2
+[docs/archive/history/backlog-plan-2026-08-01.md](../../backlog-plan-2026-08-01.md) row 2
 prefers — one rule that fixes every prefix at once, rather than a tenth entry in
 `PATH_PREFIXES` that would only ever cover the one tree somebody happened to
 cite. `PATH_PREFIXES` is untouched; it stays a list of layout conventions.

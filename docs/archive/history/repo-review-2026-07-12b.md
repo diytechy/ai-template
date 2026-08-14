@@ -47,8 +47,8 @@ below is therefore "unfixed"; the ones with a decided disposition are:
 
 **Update (2026-07-12, same day):** on the owner's direction, every High/Medium
 finding now has a registry home — `Campaign=deep-review-2026-07-12b` in
-[work-items.csv](work/), named in
-[status.md](status.md):
+[work-items.csv](../../work/), named in
+[status.md](../../status.md):
 
 - **H3 → WI-097** (LICENSE; owner ruling). **H4 → WI-098** (thin provenance in
   masters; `~WI-079` soft edge) — H4's strip-at-scaffold half stays on the
@@ -72,7 +72,7 @@ sitting:
   `docs/agents-enabled` + `docs/run-phase` + `docs/guardrails-policy`, and move
   `docs/gate-policy` from `attended` to **`single-ratify`** (one human
   attestation per phase batch) with its deviation register, each in a reviewed
-  commit. Spec: [specs/WI-107.md](archive/specs/WI-107.2026-07-20.md). `status.md`'s Next action
+  commit. Spec: [specs/WI-107.md](../specs/WI-107.2026-07-20.md). `status.md`'s Next action
   now brings WI-107 in first, soft-edged after WI-106 (both edit the launcher
   twins).
 
@@ -142,7 +142,7 @@ gate evidence is green.
 
 **H1. `agent_loop.py:main()` is a ~1,015-line god function.**
 *(Known: WI-080, owner-ruled, deferred.)*
-- **Location:** [agent_loop.py:1112](../project-trajectory/scripts/agent_loop.py#L1112)
+- **Location:** [agent_loop.py:1112](../../../project-trajectory/scripts/agent_loop.py#L1112)
   to end of file (2,126); the iteration loop body alone is ~500 lines, with
   nested closures (`session_model`, `session_template`, `session_prompt`) and
   ~15 mutable loop-state locals (`stall`, `errors`, `cooldowns`, `review_queue`,
@@ -166,8 +166,8 @@ gate evidence is green.
 
 **H2. `trace.py:main()` is ~690 lines; the module docstring is 213 lines.**
 *(Known: WI-081, deferred.)*
-- **Location:** [trace.py:891](../project-trajectory/scripts/trace.py#L891)–1580;
-  docstring [trace.py:2-213](../project-trajectory/scripts/trace.py#L2-L213).
+- **Location:** [trace.py:891](../../../project-trajectory/scripts/trace.py#L891)–1580;
+  docstring [trace.py:2-213](../../../project-trajectory/scripts/trace.py#L2-L213).
 - **Problem:** loading, orphan analysis, integrity checks, report assembly
   (~240 lines of list-building), console summary, and exit-code policy are one
   block. The docstring restates orphan/draft/schema semantics that are normatively
@@ -199,10 +199,10 @@ gate evidence is green.
 *(Partially known: WI-079 covers stripping citations at scaffold; the style issue
 is broader.)*
 - **Location:** pervasive. Examples:
-  [check.py:225](../project-trajectory/scripts/check.py#L225) ("kept a small
+  [check.py:225](../../../project-trajectory/scripts/check.py#L225) ("kept a small
   duplicated helper per the F5 rule (REVIEW_GRIND_FULL C2)"),
-  [agent_loop.py:1383](../project-trajectory/scripts/agent_loop.py#L1383)
-  ("REVIEW_GRIND_A A5"), [conftest.py:30](../tests/conftest.py#L30)
+  [agent_loop.py:1383](../../../project-trajectory/scripts/agent_loop.py#L1383)
+  ("REVIEW_GRIND_A A5"), [conftest.py:30](../../../tests/conftest.py#L30)
   ("THREAD_52_REVIEW.md F5"), trace.py's "(IMPROVEMENT_PLAN.md Thread 50)",
   "owner-ruled 2026-07-09" in a schema check, `hooks/pre-commit`'s
   "(IMPROVEMENT_PLAN.md WI-1.42)" — plus module docstrings that double as design
@@ -227,8 +227,8 @@ is broader.)*
 
 **M1. Hand-synchronized rule duplication between `trace.py` and `derive_gate.py`.**
 - **Location:** `LLR_EXEMPT` at
-  [derive_gate.py:78](../project-trajectory/scripts/derive_gate.py#L78) vs the
-  inline tuple at [trace.py:1024](../project-trajectory/scripts/trace.py#L1024);
+  [derive_gate.py:78](../../../project-trajectory/scripts/derive_gate.py#L78) vs the
+  inline tuple at [trace.py:1024](../../../project-trajectory/scripts/trace.py#L1024);
   `is_draft`, `sn_draft_ids`, `refs`, `load_csv` duplicated wholesale ("kept in
   sync with trace.py's orphan rule" — a comment, not a check).
 - **Problem:** the *gate semantics themselves* (which Verification methods are
@@ -247,9 +247,9 @@ is broader.)*
 
 **M2. `check.py` resolves `docs/gate` and `docs/stack.ini` relative to CWD while
 everything else takes `--root`.**
-- **Location:** [check.py:133](../project-trajectory/scripts/check.py#L133)
+- **Location:** [check.py:133](../../../project-trajectory/scripts/check.py#L133)
   (`PROFILE_FILE = Path("docs/stack.ini")`),
-  [check.py:606](../project-trajectory/scripts/check.py#L606) (`GATE_FILE`), and the
+  [check.py:606](../../../project-trajectory/scripts/check.py#L606) (`GATE_FILE`), and the
   literal `"docs/architecture.md"` in the arch-map step — vs `--root/--docs` on
   trace.py, derive_gate.py, check_docs.py, check_trajectory.py.
 - **Problem:** run `check.py` from anywhere but the repo root and it silently
@@ -263,11 +263,11 @@ everything else takes `--root`.**
 
 **M3. Status-vocabulary case handling is inconsistent.**
 - **Location:** `is_draft()` lowercases
-  ([trace.py:250](../project-trajectory/scripts/trace.py#L250),
-  [derive_gate.py:110](../project-trajectory/scripts/derive_gate.py#L110)); the
+  ([trace.py:250](../../../project-trajectory/scripts/trace.py#L250),
+  [derive_gate.py:110](../../../project-trajectory/scripts/derive_gate.py#L110)); the
   Verified checks compare exact-case (`r.get("Status") == "Verified"`,
-  [trace.py:1163](../project-trajectory/scripts/trace.py#L1163),
-  [derive_gate.py:141](../project-trajectory/scripts/derive_gate.py#L141)).
+  [trace.py:1163](../../../project-trajectory/scripts/trace.py#L1163),
+  [derive_gate.py:141](../../../project-trajectory/scripts/derive_gate.py#L141)).
 - **Problem:** `status=draft` and `Status=Draft` both count as draft, but
   `verified` (lowercase) silently counts as *not* verified. The failure direction
   is safe (a gate under-reports, never over-reports), but the asymmetry is
@@ -280,7 +280,7 @@ everything else takes `--root`.**
 
 **M4. `gen_trajectory.py` redefines the same `_esc` HTML-escape closure six times
 in one file.**
-- **Location:** [gen_trajectory.py:275, 525, 664, 772, 1017, 1707](../project-trajectory/scripts/gen_trajectory.py#L275)
+- **Location:** [gen_trajectory.py:275, 525, 664, 772, 1017, 1707](../../../project-trajectory/scripts/gen_trajectory.py#L275)
   — each panel builder declares its own identical
   `def _esc(s): return html.escape(str(s), quote=True)`.
 - **Problem:** the F5 rule justifies duplication *across* scripts, not *within*
@@ -291,8 +291,8 @@ in one file.**
   for the same decomposition treatment as WI-080/081 when the file next churns.
 
 **M5. `PROCESS_OPTIONS.md` (125 KB) has outgrown the core it optionalizes.**
-- **Location:** [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md)
-  (125,618 B, 24 top-level layers) vs [PROCESS.md](../project-trajectory/PROCESS.md)
+- **Location:** [PROCESS_OPTIONS.md](../../../project-trajectory/PROCESS_OPTIONS.md)
+  (125,618 B, 24 top-level layers) vs [PROCESS.md](../../../project-trajectory/PROCESS.md)
   (59,638 B, byte-budget-watched).
 - **Problem:** the byte-budget discipline guards PROCESS.md and
   AGENTS.template.md, but the growth simply moved next door: the "opt-in" doc is
@@ -313,8 +313,8 @@ in one file.**
 **M6. Dev-dependency versions are unpinned, and the suite has already been
 broken once by a floating dep.**
 - **Location:** CI installs `ruff pytest pytest-cov pytest-xdist` (latest) in
-  [test.yml:39](../.github/workflows/test.yml#L39); no requirements/constraints
-  file exists. [tests/conftest.py:42-46](../tests/conftest.py#L42-L46) documents the
+  [test.yml:39](../../../.github/workflows/test.yml#L39); no requirements/constraints
+  file exists. [tests/conftest.py:42-46](../../../tests/conftest.py#L42-L46) documents the
   pytest-cov 7.0 breakage ("silently unwired every child … the coverage floor
   read a fraction of reality") that had to be worked around after the fact.
 - **Problem:** the kit *runtime* being dependency-free is a genuine strength, but
@@ -331,10 +331,10 @@ broken once by a floating dep.**
   latest to catch upcoming breakage without gating merges on it.
 
 **M7. Stale hand-maintained counts in the shipped pre-commit hook.**
-- **Location:** [hooks/pre-commit:84-86](../project-trajectory/hooks/pre-commit#L84)
+- **Location:** [hooks/pre-commit:84-86](../../../project-trajectory/hooks/pre-commit#L84)
   says "ONE interpreter spawn running **six** independent checks … where this
   hook once chained six separate calls"; the command on
-  [line 134](../project-trajectory/hooks/pre-commit#L134) runs **seven** steps
+  [line 134](../../../project-trajectory/hooks/pre-commit#L134) runs **seven** steps
   (arch-map, okf, trajectory-map, trajectory, registry-integrity, derived-gate,
   skills-sync).
 - **Why it matters:** trivial in isolation, but it is precisely the
@@ -345,9 +345,9 @@ broken once by a floating dep.**
 
 **M8. Quadratic joins in `trace.py`'s report rendering.**
 - **Location:** the SR→LLR/TC matrix loop
-  ([trace.py:1352-1356](../project-trajectory/scripts/trace.py#L1352)) and
+  ([trace.py:1352-1356](../../../project-trajectory/scripts/trace.py#L1352)) and
   `build_forest`'s `sr_node`/`llr_node`
-  ([trace.py:679-730](../project-trajectory/scripts/trace.py#L679)) rescan every
+  ([trace.py:679-730](../../../project-trajectory/scripts/trace.py#L679)) rescan every
   LLR/TC row per SR, re-splitting `refs()` (a regex) on the same cells each
   time — O(SR×LLR + SR×TC + LLR×TC) with per-visit regex parsing.
 - **Why it matters:** invisible at this repo's scale (≈50 rows each) and merely
@@ -363,8 +363,8 @@ coverage-combine race under `-n auto` + subprocess coverage.** *(New — observe
 live during this review.)*
 - **Location:** the measured parallel path: `docs/stack.ini` `[product] test =
   {py} -m pytest -q -n auto` + `[coverage] args = --cov=…`, with
-  [tests/conftest.py `augment_env`](../tests/conftest.py#L62) sharing pytest-cov's
-  datafile with every spawned child and [.coveragerc](../.coveragerc)
+  [tests/conftest.py `augment_env`](../../../tests/conftest.py#L62) sharing pytest-cov's
+  datafile with every spawned child and [.coveragerc](../../../.coveragerc)
   `parallel = true`.
 - **Observed (run 1 — the full gate, `check.py --jobs 0`):** **all 665 tests
   passed**, then pytest-cov's `engine.finish() → cov.stop() →
@@ -389,7 +389,7 @@ live during this review.)*
   the gate turns red on coverage while the true product coverage is unchanged.
 - **Toolchain on this box vs CI:** Python 3.8.10, pytest 7.4.3, **pytest-cov
   4.1.0**, xdist 3.6.1, coverage 7.3.2 — while CI installs *latest* (pytest-cov
-  7.x; [tests/conftest.py](../tests/conftest.py#L42) explicitly handles the
+  7.x; [tests/conftest.py](../../../tests/conftest.py#L42) explicitly handles the
   pytest-cov 7 contract). So the local box and CI run materially different
   coverage plumbing; the race classes above belong to the old-local combo, and
   CI (2-core runners → few workers) under-observes them anyway. This is the
@@ -416,18 +416,18 @@ housekeeping angle). Gitignored, so harmless to git, but interrupted runs never
 get `coverage erase`'d and the leftovers join later combines.
 
 **L2. `PREDICATE_MARKERS` substring matching is looser than it looks.**
-[trace.py:389-414](../project-trajectory/scripts/trace.py#L389): `"per "` matches
+[trace.py:389-414](../../../project-trajectory/scripts/trace.py#L389): `"per "` matches
 "proper ", "wrapper ", "developer "; `"within "` similar — so a comparative AC
 containing any such word is silently considered "pinned" (advisory false
 negative). Warn-only by design, so impact is only lint quality; word-boundary
 regexes would tighten it if the advisory ever earns promotion.
 
 **L3. `parse_model_map` parses four different map kinds** (model/cmd/prompt/tier)
-under a model-specific name ([agent_loop.py:559](../project-trajectory/scripts/agent_loop.py#L559));
+under a model-specific name ([agent_loop.py:559](../../../project-trajectory/scripts/agent_loop.py#L559));
 already noted in the prior pass — rename to `parse_map` when WI-080 lands.
 
 **L4. Duplicated-malformed ids report "malformed" twice, never "duplicated".**
-[trace.py:449-463](../project-trajectory/scripts/trace.py#L449): a malformed id is
+[trace.py:449-463](../../../project-trajectory/scripts/trace.py#L449): a malformed id is
 added to `seen`, so its second occurrence re-reports malformed rather than
 duplicated. Cosmetic — both are integrity failures either way.
 
@@ -437,7 +437,7 @@ truncate in tooling. Convention note, not a defect.
 
 **L6. Template CSVs embed multi-kilobyte manuals inside `-000` placeholder
 cells** (the WI-000 `Deliverable` cell is ~1.4 KB of prose;
-[work-items.template.csv](../project-trajectory/registries/work-items.template.csv)).
+[work-items.template.csv](../../../project-trajectory/registries/work-items.template.csv)).
 Clever — the doc is exactly where the confused editor is looking — but a CSV cell
 is a hostile reading surface (spreadsheet views, diff wrapping), and the same
 rules are stated in PROCESS_OPTIONS, which is the kind of restatement the kit
@@ -455,8 +455,8 @@ No blocker; noted for completeness.
 **L9. The agent-resume launchers' baked-in prompt scopes sessions to an
 archived surface.** *(Post-filing addendum, found while answering the owner's
 model-config question; owner-directed into WI-106.)*
-- **Location:** the `AGENT_PROMPT` slot in [agent-resume.cmd](../agent-resume.cmd)
-  and [agent-resume.sh](../agent-resume.sh): "Work only scope recorded in
+- **Location:** the `AGENT_PROMPT` slot in [agent-resume.cmd](../../../agent-resume.cmd)
+  and [agent-resume.sh](../../../agent-resume.sh): "Work only scope recorded in
   IMPROVEMENT_PLAN.md — a thread or a WI-1.x entry … update … the plan's WI
   log."
 - **Problem:** `IMPROVEMENT_PLAN.md` was archived (`docs/archive/` — "context,

@@ -10,7 +10,7 @@ contended surfaces, and declares the concurrency rules that were previously
 implicit.
 
 Relationship to prior records: this executes several rulings proposed in
-[handoff-2026-07-28c.md](handoff-2026-07-28c.md) by *replacement* rather than
+[handoff-2026-07-28c.md](archive/history/handoff-2026-07-28c.md) by *replacement* rather than
 mothball — the train machinery retires because a forge does its job, not
 because parallelism was abandoned. The dispatcher's measured record (19
 reservations → 8 integrations → 0 gate-verified → 11 rescues) is the evidence

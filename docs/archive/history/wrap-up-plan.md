@@ -7,9 +7,9 @@ old §3/§4/§7 content (OI-4/OI-8 unruled; WI-300/272/273/278/065/062 open) is
 all superseded: those are done, ruled, or retired. This revision replaces them
 with the live wrap-up sequence.
 
-**This file is a POINTER, not a source of truth.** [status.md](status.md) is the
-forward-only working surface, [work-items.csv](work/) is the
-authoritative registry, and [log.md](log.md) holds what shipped. Read those first;
+**This file is a POINTER, not a source of truth.** [status.md](../../status.md) is the
+forward-only working surface, [work-items.csv](../../work/) is the
+authoritative registry, and [log.md](../../log.md) holds what shipped. Read those first;
 this file only adds what they don't carry — a **sequencing recommendation** and a
 **deferred-backlog review**. Where it disagrees with them, they win.
 
@@ -17,7 +17,7 @@ this file only adds what they don't carry — a **sequencing recommendation** an
 
 ## 1. Where the repo actually stands
 
-Read the generated block at the top of [status.md](status.md) for live numbers.
+Read the generated block at the top of [status.md](../../status.md) for live numbers.
 As of 2026-07-26 (branch `dualplan-routing-fix` @ `d09b8d0`, NOT pushed):
 spine SN=25 SR=110 LLR=112 TC=115, `drafts=0`, **`modified=4`**.
 
@@ -28,8 +28,8 @@ amendments awaiting the owner sitting), per-phase `1=DevBar-Tests;3=DevBar-Tests
 flips each row `Modified`→`Verified` (bless) or →`Planned` (evidence
 invalidated) in a reviewed commit and **DevBar-Release re-derives on its own** — no checker
 edits. Sitting inputs, both committed: the generated pending block in
-[open-items.html](open-items.html) (one line per Modified SR) and the before/after
-brief [ratify/2026-07-26-reattest.md](ratify/2026-07-26-reattest.md)
+[open-items.html](../../open-items.html) (one line per Modified SR) and the before/after
+brief [ratify/2026-07-26-reattest.md](../../ratify/2026-07-26-reattest.md)
 (regenerate: `trace.py --ratify modified`; a pre-regime streak needs
 `--since <rev>`). While the window is open the harness bar is the **DevBar-Tests bar**
 (the DevBar-Release-only steps drop out) — don't let it sprawl.
@@ -82,7 +82,7 @@ entirely once its perceptual residue is empty. See §4.
 ## 3. Open owner decisions (nobody else can make these)
 
 Revised 2026-07-26. OI-4 (Apache-2.0) and OI-8 (hosted CI on every branch
-push) are **ruled** — rulings in [log.md](log.md)'s Decisions. WI-273 is
+push) are **ruled** — rulings in [log.md](../../log.md)'s Decisions. WI-273 is
 **attested and integrated**. What remains:
 
 | | Subject | State / recommendation |
@@ -167,7 +167,7 @@ broken link hides. Tiering separates "illustrative placeholder path" from
 binding work (`Verifies: SR-xxx;LLR-xxx`) is actively being built on this
 vocabulary right now (LLR-102..105/TC-105..108 landed just this session), so an
 unreconciled vocabulary risks rework the more binding lands. Spec (archived at
-close): [WI-065](archive/specs/WI-065.2026-07-25.md). **Landed 2026-07-25**,
+close): [WI-065](../specs/WI-065.2026-07-25.md). **Landed 2026-07-25**,
 ahead of the remaining U2/U4/A1/A3/A4 binding exactly as this recommended —
 `Verifies` is the one ruled citation cell and `trace.py` now joins `IF-###`
 tokens against `interfaces.csv`.

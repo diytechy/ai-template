@@ -25,7 +25,8 @@
 # review evidence — the per-round Reviewer/Critique/Grounding artifacts and the
 # top-level whole-repo reviews; kept as the audit trail, referenced from log.md.
 docs/reviews/*
-docs/repo-review-*.md
+# (docs/repo-review-*.md glob retired 2026-08-13w — the root repo-reviews moved
+# to docs/archive/history/, which check_docs exempts structurally.)
 
 # re-attestation briefs — the per-SITTING instrument `trace.py --ratify modified`
 # generates and `ratify-fresh` gates: the owner reads the live one before blessing

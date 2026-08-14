@@ -69,7 +69,7 @@ not a deletion: `docs/enforcement-audit.md` records the **downgrade** of "one
 fact, one home" from Harness to Test-plus-Reviewer with the evidence, and keeps
 the retired census-audit rule as a struck line because its reasoning is reusable
 the next time somebody proposes a classified allowlist; `docs/status.md`,
-`docs/wrap-up-plan.md`, `docs/orphans-allow`, `docs/coverage-floors`,
+`docs/archive/history/wrap-up-plan.md`, `docs/orphans-allow`, `docs/coverage-floors`,
 `project-trajectory/orphans-allow.template` and `tests/conftest.py` all restated
 the standing rule on its surviving half (*editing a declared list to clear a
 finding IS accepting what it measures*) instead of pointing at a dead file;

@@ -28,7 +28,7 @@ home elsewhere — don't restate it here:
   amendment window is CLOSED** — attested at the 2026-07-29 sitting, ruling
   in [log.md](log.md)'s Decisions; the restructure has no open act.
 - **START HERE (current as of 2026-08-13, post-charge-through):**
-  [handoff-2026-08-13-charge-through.md](handoff-2026-08-13-charge-through.md)
+  [handoff-2026-08-13-charge-through.md](archive/history/handoff-2026-08-13-charge-through.md)
   is the boot document. The pre-absence batch ruling
   ([log.md](log.md#decisions-log), 2026-08-13) ruled all fourteen open items;
   the charge-through then EXECUTED fifteen of the sixteen opened programs —
@@ -59,7 +59,7 @@ home elsewhere — don't restate it here:
     decision — and then merge-to-main (`push = "human"`).
 - **START HERE if you are picking up after 2026-08-01** (superseded by the
   line above for the sitting itself):
-  [handoff-2026-08-01.md](handoff-2026-08-01.md). Most of the concurrency-v2
+  [handoff-2026-08-01.md](archive/history/handoff-2026-08-01.md). Most of the concurrency-v2
   program is built and merged. **The refresh red that blocked both open lanes is
   RESOLVED** (§2's resolution box; the account is in [log.md](log.md)): it was
   two causes, not one, and the hypothesis §2 records as "tested and refuted" was
@@ -103,7 +103,7 @@ home elsewhere — don't restate it here:
   "nothing is waiting on you".
 - **THE PROGRAM IN FLIGHT — the fully mechanized loop (SN-028 · SN-029 ·
   SR-137…SR-146):**
-  [plan-2026-08-08-mechanized-loop.md](plan-2026-08-08-mechanized-loop.md).
+  [plan-2026-08-08-mechanized-loop.md](archive/history/plan-2026-08-08-mechanized-loop.md).
   Read its **§11 Addendum first** — it supersedes the earlier sections where
   they conflict — then **§12, the erratum**, which corrects six claims in the
   plan's own text that were re-verified against source (a function name that
@@ -122,7 +122,7 @@ home elsewhere — don't restate it here:
   handoff below, not instead of it — the handoff is the record of what was
   built, this is the record of what is being decided.
 - **The drain plan for the remaining backlog:**
-  [backlog-plan-2026-08-01.md](backlog-plan-2026-08-01.md) — the serial build
+  [backlog-plan-2026-08-01.md](archive/history/backlog-plan-2026-08-01.md) — the serial build
   order for the queued rows, the standing rules every builder inherits, and the
   owner rulings with their context. One of its rules still binds
   mechanically: **a work branch never mints a new work-item id** (the
@@ -147,7 +147,7 @@ home elsewhere — don't restate it here:
   full reasoning are in the 2026-08-02 session entry in [log.md](log.md);
   the queue itself is [work/queued/](work/queued/).
   The older
-  [handoff-2026-07-29.md](handoff-2026-07-29.md) is now **history, not a
+  [handoff-2026-07-29.md](archive/history/handoff-2026-07-29.md) is now **history, not a
   queue** — its sequenced work is all closed; read it for the post-Phase-5
   account only. The working
   program [concurrency-restructure.md](concurrency-restructure.md) is
@@ -185,13 +185,13 @@ home elsewhere — don't restate it here:
   `check_trajectory.py --strict` directly, unfiltered, before claiming
   anything done — the DEFAULTED pre-commit floor stays warn-first by
   design, so the floor's output is never the strict bar. The
-  [handoff-2026-07-28c.md](handoff-2026-07-28c.md) §3 deferred-row
+  [handoff-2026-07-28c.md](archive/history/handoff-2026-07-28c.md) §3 deferred-row
   dispositions are RULED and EXECUTED (2026-07-29): six rows retired with
   their reasons in the registry, and the two survivors were promoted to
   `queued` on 2026-07-31 — **the deferred set is now empty**. The
   pre-restructure
-  handoffs ([2026-07-28b](handoff-2026-07-28b.md) and earlier, plus
-  [wrap-up-plan.md](wrap-up-plan.md)) are history: read them for the
+  handoffs ([2026-07-28b](archive/history/handoff-2026-07-28b.md) and earlier, plus
+  [wrap-up-plan.md](archive/history/wrap-up-plan.md)) are history: read them for the
   account, never as open tasks.
 - **The concurrency-v2 design — [concurrency-v2.md](concurrency-v2.md) —
   is CLOSED and RULED** (2026-07-31; six entries in [log.md](log.md)'s
@@ -248,7 +248,7 @@ home elsewhere — don't restate it here:
 - **Design history:** [archive/](archive/README.md).
 - **RULING CLOSED (2026-08-08), shipped as SR-144 + SR-145** (under SN-027; the
   obligation was written as SN-031 until the 2026-08-10 sitting ruled that tier
-  mis-levelled and demoted it). [handback-contract.md](handback-contract.md) asked whether a returned lane writes a per-return document. It does: a lane that cannot finish closes into the TERMINAL `docs/work/partial/` and writes one immutable report under [`docs/handbacks/`](handbacks/README.md) naming the outcome, the reason, the commit range and the keep/discard split. The report IS the close event's identity, which is what dissolved the starvation class five mutable-proxy dedup mechanisms died on. The four rows that waited on it — WI-413, WI-416, WI-417, WI-418 — are all disposed in `docs/work/cancelled/`. **Nothing is paused.**
+  mis-levelled and demoted it). [handback-contract.md](archive/history/handback-contract.md) asked whether a returned lane writes a per-return document. It does: a lane that cannot finish closes into the TERMINAL `docs/work/partial/` and writes one immutable report under [`docs/handbacks/`](handbacks/README.md) naming the outcome, the reason, the commit range and the keep/discard split. The report IS the close event's identity, which is what dissolved the starvation class five mutable-proxy dedup mechanisms died on. The four rows that waited on it — WI-413, WI-416, WI-417, WI-418 — are all disposed in `docs/work/cancelled/`. **Nothing is paused.**
 
 
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·

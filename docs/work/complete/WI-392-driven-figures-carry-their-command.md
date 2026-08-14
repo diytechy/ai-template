@@ -8,7 +8,7 @@ safety_class = "ordinary"
 
 ## Deliverable
 
-Rung 1 exactly as the drain plan scoped it (docs/backlog-plan-2026-08-01.md
+Rung 1 exactly as the drain plan scoped it (docs/archive/history/backlog-plan-2026-08-01.md
 row 6): the opt-in marker convention plus a presence check. Rung 2
 (re-derivation) is deliberately NOT built and is recorded as a declared
 absence, not implied as covered.

@@ -27,7 +27,7 @@ following remain open deliberately.
 |---|---|---|
 | L1 — codex detection is a name heuristic | Left as-is; trade-off documented in the helper's docstring | Any stronger detection (probing `--help`, a registry column) is speculative design for a failure nobody has hit; the heuristic is bounded (basename prefix) and its worst case is one unknown flag on a lookalike CLI. Needs an owner call on whether a `ResultCapture`-style registry column is worth a schema change. |
 | L2 — `datetime.utcnow()` ×5 (Py 3.12 deprecation) | Deferred | Replacing with aware datetimes changes naive/aware comparison semantics in `blackout_wake` and its callers; it needs its own small WI with focused tests, not a drive-by inside a review commit. No behavior change today on any supported Python. |
-| C1 (carried, 17/17b §0) — `agent_loop.py` monolith, now 6,313 lines; `dispatch_run` C901 | **Now filed as [WI-218](archive/specs/WI-218.2026-07-20.md)** (2026-07-18 correction) | Same reasoning as their H3: high-risk architectural work needing characterization tests and its own review. *Correction:* this report originally said the prior reports had "filed" a decomposition campaign — they had only **recommended** one; no WI existed. Note the prior campaign that did land (WI-080/081, 2026-07-16) decomposed the `main()` *functions*, not the files. WI-218 (verbatim-move file split, no compaction) now tracks the file-level work. |
+| C1 (carried, 17/17b §0) — `agent_loop.py` monolith, now 6,313 lines; `dispatch_run` C901 | **Now filed as [WI-218](../specs/WI-218.2026-07-20.md)** (2026-07-18 correction) | Same reasoning as their H3: high-risk architectural work needing characterization tests and its own review. *Correction:* this report originally said the prior reports had "filed" a decomposition campaign — they had only **recommended** one; no WI existed. Note the prior campaign that did land (WI-080/081, 2026-07-16) decomposed the `main()` *functions*, not the files. WI-218 (verbatim-move file split, no compaction) now tracks the file-level work. |
 | C2 (carried) — no LICENSE file (WI-097/OI-4) | Blocked on the owner's public/private intent | No safe default exists. The only carried item a downstream copy could be legally blocked on. |
 | C3 (carried) — 51 orphan-doc warnings (52 with this report) | Deferred to the documentation-policy WI from the first report | Retention-policy question, not a mechanical fix. |
 | M6 — WI-216's Deliverable cell states "claude keeps {prompt}", reversed by WI-217 | Left as-is | Deliverable cells are point-in-time closure records (log-like); WI-217's own cell records the reversal. Rewriting history cells to match later state would violate the registry's evidence discipline. |
@@ -107,7 +107,7 @@ lifecycle state all hold under the current suite.)
 ### High
 
 **H1. `run_interactive` crashes with `TypeError` on any no-`{prompt}` template.**
-- **Location:** [agent_loop.py:5063](../project-trajectory/scripts/agent_loop.py#L5063)
+- **Location:** [agent_loop.py:5063](../../../project-trajectory/scripts/agent_loop.py#L5063)
   (pre-fix): `proc = subprocess.run(argv, cwd=str(root), input=stdin_input)`.
 - **Problem:** WI-216 made `build_argv` return `(argv, stdin_input)` and every
   headless call site pipes correctly through `run_session`. The interactive
@@ -129,9 +129,9 @@ lifecycle state all hold under the current suite.)
 
 **H2. The ambient-template path still delivers prompts via argv — including the
 dual-plan arbiter under routing-ON.**
-- **Location:** [agent-resume.cmd:25](../agent-resume.cmd#L25) /
-  [agent-resume.sh:24](../agent-resume.sh#L24) (`AGENT_CMD=claude -p {prompt} …`),
-  reaching [agent_loop.py:1420](../project-trajectory/scripts/agent_loop.py#L1420)
+- **Location:** [agent-resume.cmd:25](../../../agent-resume.cmd#L25) /
+  [agent-resume.sh:24](../../../agent-resume.sh#L24) (`AGENT_CMD=claude -p {prompt} …`),
+  reaching [agent_loop.py:1420](../../../project-trajectory/scripts/agent_loop.py#L1420)
   (`_dp_session(template, model, prompt, …)` — the arbiter always rides the
   ambient template) and every routing-off session.
 - **Problem:** WI-217's registry change moved claude/codex rows to stdin, but
@@ -157,10 +157,10 @@ dual-plan arbiter under routing-ON.**
 
 **M1. Five shipped surfaces still document the retired append-to-argv
 contract.**
-- **Location:** [agent_loop.py:14-16](../project-trajectory/scripts/agent_loop.py#L14)
+- **Location:** [agent_loop.py:14-16](../../../project-trajectory/scripts/agent_loop.py#L14)
   ("a template without `{prompt}` gets the resume prompt appended as its final
-  argument"), [agent-resume.cmd:18-19](../agent-resume.cmd#L18),
-  [agent-resume.sh:18-19](../agent-resume.sh#L18),
+  argument"), [agent-resume.cmd:18-19](../../../agent-resume.cmd#L18),
+  [agent-resume.sh:18-19](../../../agent-resume.sh#L18),
   `project-trajectory/scripts/agent-resume.template.cmd:17-18`,
   `agent-resume.template.sh:17-18` ("no `{prompt}` = the resume prompt is
   appended").
@@ -182,7 +182,7 @@ contract.**
 
 **M2. README describes the retired serial resume model as the current
 unattended layer.**
-- **Location:** [README.md](../README.md) lines 53–58 — "Fresh headless sessions
+- **Location:** [README.md](../../../README.md) lines 53–58 — "Fresh headless sessions
   resume from `docs/status.md` until `docs/run-state` reaches an end state";
   "Parallel-by-default execution *(in development, phase `v4` …)*".
 - **Problem:** WI-210 deleted the resume-from-status driver: session scope is
@@ -215,10 +215,10 @@ unattended layer.**
   budget re-verified with the `byte-budget-guard` skill.
 
 **M4. Dual-plan routing ignores the registry's declared `tag-rank` override.**
-- **Location:** [agent_loop.py:1167](../project-trajectory/scripts/agent_loop.py#L1167)
-  (`_dp_routes`) and [agent_loop.py:1331](../project-trajectory/scripts/agent_loop.py#L1331)
+- **Location:** [agent_loop.py:1167](../../../project-trajectory/scripts/agent_loop.py#L1167)
+  (`_dp_routes`) and [agent_loop.py:1331](../../../project-trajectory/scripts/agent_loop.py#L1331)
   (the mid-round fallback): `agent_route.resolve_enabled(enabled, registry)` —
-  no third argument — while [agent_loop.py:6043-6046](../project-trajectory/scripts/agent_loop.py#L6043)
+  no third argument — while [agent_loop.py:6043-6046](../../../project-trajectory/scripts/agent_loop.py#L6043)
   passes `load_tag_rank(docs / "agents.csv")`.
 - **Problem:** a registry that overrides the maturity ranking (`# tag-rank: …`
   or `AGENT_TAG_RANK`) gets **different version-less token resolution** in
@@ -232,9 +232,9 @@ unattended layer.**
   a regression test in `tests/test_dual_plan_routing.py`.
 
 **M5. The kit's own guidance examples still recommend the argv form.**
-- **Location:** [agent_loop.py:2231](../project-trajectory/scripts/agent_loop.py#L2231)
+- **Location:** [agent_loop.py:2231](../../../project-trajectory/scripts/agent_loop.py#L2231)
   (preflight's "fill the AGENT_CMD slot" example: `claude -p {prompt} …`),
-  [agent_loop.py:4656](../project-trajectory/scripts/agent_loop.py#L4656)
+  [agent_loop.py:4656](../../../project-trajectory/scripts/agent_loop.py#L4656)
   (`--agent-cmd` help: "({model}/{prompt} placeholders)").
 - **Problem / why it matters:** the error message an operator sees at the
   exact moment they are wiring `AGENT_CMD` recommends the form the kit itself
@@ -245,7 +245,7 @@ unattended layer.**
 ### Low
 
 **L1. Codex detection in `run_session` is a name heuristic.**
-[`_codex_lastmsg_setup`](../project-trajectory/scripts/agent_loop.py#L2455)
+[`_codex_lastmsg_setup`](../../../project-trajectory/scripts/agent_loop.py#L2455)
 appends `--output-last-message <tmpfile>` to any argv whose basename starts
 with `codex` (case-insensitive). A lookalike CLI (`codex-proxy`) would receive
 an unknown flag; a template that already declares its own
@@ -260,7 +260,7 @@ Python 3.12 (warns; still correct). Migration to aware UTC datetimes touches
 Deferred with reason in §0.
 
 **L3. `map_preflight` indexes `build_argv(...)[0][0]`.**
-[agent_loop.py:4907](../project-trajectory/scripts/agent_loop.py#L4907) — correct
+[agent_loop.py:4907](../../../project-trajectory/scripts/agent_loop.py#L4907) — correct
 but obscure beside the destructured `argv, _ = build_argv(…)` 35 lines above.
 Fixed to match the sibling.
 

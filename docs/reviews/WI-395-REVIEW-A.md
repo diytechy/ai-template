@@ -47,7 +47,7 @@ Verdict: CHANGES-REQUESTED
    words ("This row is now ONLY the wording fix: correct the two byte-identical
    exemplar paragraphs"), so no remedy is owed from this WI; recorded from the
    sweep so nobody re-derives it. The other hits are quotations of the defect,
-   not promises: `docs/backlog-plan-2026-08-01.md:162` (dated ruling brief —
+   not promises: `docs/archive/history/backlog-plan-2026-08-01.md:162` (dated ruling brief —
    its present-tense "the repo's own exemplar text promises the opposite" is
    now stale but sits on a record surface), `PROJECT_STATE.html` (the WI-395
    title), the spec's own title, `docs/log.d/WI-395-blockref-wording-fix.md`,
@@ -73,7 +73,7 @@ fragment was excluded as evidence for independence):
 - **Amendment compliance.** Option A not built: the diff touches four doc
   files and zero scripts. No human sweep named: the residual "reviewed edit
   deleting the `blockref`" path is a per-row edit with no cadence or owner —
-  the same residual mechanism `docs/rulings-context-2026-08-01.md` §R3 itself
+  the same residual mechanism `docs/archive/history/rulings-context-2026-08-01.md` §R3 itself
   states ("the only release today is a person … editing the file") — and the
   ruling's "owner surface remains fallback visibility" is not contradicted.
 - **Deliverable filled and true.** The spec's Deliverable section matches the

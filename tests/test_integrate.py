@@ -3090,7 +3090,7 @@ def test_a_worktree_holding_only_gitignored_files_is_dirty(tmp_path):
     assert "wi-401" in _branches(repo)
 
 
-# The 2026-08-01 drain's holding set, verbatim (docs/backlog-plan-2026-08-01.md
+# The 2026-08-01 drain's holding set, verbatim (docs/archive/history/backlog-plan-2026-08-01.md
 # row 9): every one of the five lane merges exited 1 at unload over these same
 # six ignored paths — pure tool caches plus the gitignored generated trace
 # report — and each worktree had to be removed by hand with --force. As files,

@@ -257,7 +257,7 @@ semantics landed; the SN batch applied as drafts).
 
 **Predecessor records**, kept reachable because they are the account of the
 program *before* this one and are not superseded by it:
-[`handoff-2026-08-08-mechanized-loop.md`](handoff-2026-08-08-mechanized-loop.md)
+[`handoff-2026-08-08-mechanized-loop.md`](archive/history/handoff-2026-08-08-mechanized-loop.md)
 and its build-out plan
 [`spine-restructure-2026-08-08.md`](spine-restructure-2026-08-08.md) — how the
 five needs the sitting has now ruled on were decomposed in the first place.

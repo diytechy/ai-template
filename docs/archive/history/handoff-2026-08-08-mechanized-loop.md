@@ -5,7 +5,7 @@
 
 This document exists so a fresh session can pick up without re-deriving the
 state. It is a *record surface*, not a working one — the working surfaces stay
-[`docs/status.md`](status.md), the registries, and [`docs/log.md`](log.md).
+[`docs/status.md`](../../status.md), the registries, and [`docs/log.md`](../../log.md).
 
 ---
 
@@ -131,7 +131,7 @@ The plan's §10 reserves ratification for a human sitting. It is unheld.
    (SR-137..146, LLR-155..164, TC-150..157) — all `Draft`.
 2. **Settle §2 above** (the ledger's shape).
 3. **Work the combined re-attest brief:**
-   [`docs/ratify/2026-08-08-mechanized-loop.md`](ratify/2026-08-08-mechanized-loop.md)
+   [`docs/ratify/2026-08-08-mechanized-loop.md`](../../ratify/2026-08-08-mechanized-loop.md)
    — 25 `Modified` SR sections, each showing only its CHANGED cells,
    before/after. This combines the 21 rows already owed from 2026-08-07 with
    the rows this program amended.
@@ -231,7 +231,7 @@ Two settings the suite needs here, learned the hard way:
 
 ## 7. If you want the full narrative
 
-[`docs/log.md`](log.md)'s entry for 2026-08-08 records the program, all three
+[`docs/log.md`](../../log.md)'s entry for 2026-08-08 records the program, all three
 review rounds, and the eight BLOCKERs with their before/after behaviour. The
 short version: **every blocker the reviews found was the new machinery quietly
 wrong in the PERMISSIVE direction** — the privacy gate failing open on a
