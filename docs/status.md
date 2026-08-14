@@ -23,29 +23,42 @@ narrated is in those homes.
   `interfaces.toml` slimmed to the approval schema, both sharp hazards held
   in-commit) and the re-tier's slice-1 **census is COMPLETE on its open lane**
   (all 148 SRs classified against the 6 crossings, demotion sized; the census
-  doc rides the lane under [work/active/](work/active/)). What executes next:
-  **sitting 3 ratifies the census before any row is edited**; every demotion
-  needs a parent SR; B-05 decomposes by delivered capability; the one-shall
-  rule applies as a **guideline with recorded waivers** (`2026-08-13v`). The
-  findings the campaign exposes are **a deliverable of it, not a failure of
-  it** (owner, 13s). The remaining rows are in [work/queued/](work/queued/);
-  the generated frontier below names them in build order.
+  doc also sits on trunk at
+  [plans/2026-08-14-wi451-slice1-sr-census.md](plans/2026-08-14-wi451-slice1-sr-census.md)).
+  **The census is RATIFIED and slice 2 is UNBLOCKED** (log `2026-08-14b`/`c`):
+  34 hold · 15 re-state · 73 demote · **26 tombstones DELETE per D-4** (one
+  forwarding log entry, citing IFs go with their rows, `trace.py`'s
+  supersession machinery + TC-099 retire by ruling), and B-05 gains the
+  declared **package-wide-property** sixth bucket so SR-031/034/035/114 each
+  stay one row. What executes next: **slice 2** — every demotion needs a
+  parent SR; the one-shall rule applies as a **guideline with recorded
+  waivers** (`2026-08-13v`); the **token-verification bar** governs
+  re-statement — no obligation weakened, every re-stated cell token-compared
+  (the method is recorded in [log.md](log.md) and in sitting-3 §1
+  precondition 5). The findings the
+  campaign exposes are **a deliverable of it, not a failure of it** (owner,
+  13s). The remaining rows are in [work/queued/](work/queued/); the generated
+  frontier below names them in build order.
 - **The amendment window closes at SITTING 3, not before.** `drafts=27
-  modified=51 uncovered=8`, gate `DevBar-Reqs`, stage `DevStg-Boundary` (1/8)
+  modified=51 uncovered=7`, gate `DevBar-Reqs`, stage `DevStg-Boundary` (1/8)
   — the snapshot below. The window stays open **deliberately** through the
   re-tier;
   [plans/2026-08-13-sitting-3-spine-verification.md](plans/2026-08-13-sitting-3-spine-verification.md)
-  owns its close, the LLR/TC draft ratifications, the TC-159 chain fix, and —
-  folded in by 13u decision 12 — the **one shared status vocabulary across
+  owns its close — its **§0.3 decision ledger is 7-of-9 ruled** (`2026-08-14b`
+  …`f`); the TC-159 chain fix is **DONE** (`14f`, the crossed carrier pairs
+  aligned). What remains there: the LLR/TC draft ratifications (27 rows), and
+  — folded in by 13u decision 12 — the **one shared status vocabulary across
   every registry** (per-registry subsets; change detection deferred
-  off-spine), which makes decision 12 and the D-9 ladder migration **one
-  program** (checklist archived at
+  off-spine), ruled `14e` to execute as **ONE SEQUENCE with the ratification
+  wave** right after slice 2's drafts land, carrying `Planned`'s fate and the
+  off-spine flip authority with it (checklist archived at
   [archive/plans/2026-08-11-status-ladder-migration.md](archive/plans/2026-08-11-status-ladder-migration.md);
-  figures stale — re-derive). Three items re-land as execution reaches them:
-  decision 6's crossing ownership (the schema is landed — sitting-3 ready),
-  the human-agent entity call, and `check_flows`'s Runtime-flows obligation
-  (moved with the flows to `docs/runtime-flows.md` on the retirement lane —
-  never lapsed; re-check at that lane's merge).
+  figures stale — re-derive). One item still re-lands as execution reaches
+  it: `check_flows`'s Runtime-flows obligation (moved with the flows to
+  `docs/runtime-flows.md` on the retirement lane — never lapsed; re-check at
+  that lane's merge). Crossing ownership is **deferred by name** to after
+  slice 2 populates the boundary refs (`14d`), and the human-agent entity
+  call is **confirmed** — five entities, the human inside EXT-001 (`14d`).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the
