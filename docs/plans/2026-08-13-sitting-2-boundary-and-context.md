@@ -130,8 +130,14 @@ two owner rulings the draft carried stay summarized at §0.2 and recorded in
 
 ## 1R. The depth-0 frame, v2 — the system creates the template (2026-08-13n)
 
-**Status: PROPOSED ROW REVIEW delivered on the owner's 2026-08-13n rulings;
-the dispositions below are the confirmation target.** The v1 tables (31 BIFs
+**Status: CONFIRMED — the five §1R.7 confirmations RULED 2026-08-13o**, with
+three amendments applied below: the external reviewer CLI merged into the
+provider entity (*"a model CLI is just a model CLI, whether primary or
+secondary"*), B-08 removed (`check_vendored` is run by the development
+environment, not an input into this design-scope system), and the residual
+skills-fan-out / `docs/knowledge/` uncertainties folded into B-05 — they are
+template content, available from the package whether an adopter uses them or
+not. The v1 tables (31 BIFs
 over 8 entities, RULED-then-amended) are archived in
 [`../archive/plans/2026-08-13-sitting-2-superseded-material.md`](../archive/plans/2026-08-13-sitting-2-superseded-material.md);
 their old ids appear in the *absorbs* columns so nothing is lost.
@@ -149,7 +155,7 @@ as it would be for any other adopter — and once running, the loop *"is not
 differentiable from a human user, an LLM in CLI, or that script launching LLM
 runners."* Likewise `dev-setup` is only template content that is provided.
 
-### 1R.1 The entities (v2 — six; ids re-proposed, v1 numbering superseded)
+### 1R.1 The entities (v2 — five; ids re-proposed, v1 numbering superseded)
 
 | id | Entity | Class | Description |
 |---|---|---|---|
@@ -157,8 +163,7 @@ runners."* Likewise `dev-setup` is only template content that is provided.
 | **EXT-002** | **Template** | `deliverable` ⚠ | **The delivered package** — every `*.template.*`, the registries, scripts, hooks, skills, launchers (`dev-setup.*`, `agent-resume.*`, `run.*`) — as a separate package. ⚠ `deliverable` is a proposed ADDITION to the class vocabulary (operational/enabling/interoperating do not fit an output package); confirm or rename. From an adopter's frame this package is their *enabling system*. |
 | **EXT-003** | **Adopter** | `operational` | The downstream team + repo. Receives the Template (REL-001), never the repository. |
 | **EXT-004** | **Hosted CI** | `interoperating` | Remote validation: triggers + OS×Python matrix in, job verdicts out. |
-| **EXT-005** | **Model provider API** | `interoperating` | Behind the session's LLM runners. Touches the SESSION, not the system (REL-003). |
-| **EXT-006** | **External reviewer CLI** | `interoperating` | codex `sol`/`terra` — a session-side runner (REL-004). |
+| **EXT-005** | **Model provider API(s) / CLI(s)** | `interoperating` | The model services and command-line runners behind any LLM in the session — the primary builder AND the adversarial reviewers (codex `sol`/`terra`) alike: *"a model CLI is just a model CLI, whether primary or secondary"* (owner merge, 2026-08-13o). They touch the SESSION, never the system (REL-003). |
 
 **Dissolved as entities** (absorbed into EXT-001's local environment per the
 owner's ruling): git (v1 EXT-005), OS · filesystem · Python (v1 EXT-007), the
@@ -166,7 +171,7 @@ test/coverage toolchain (v1 EXT-008). Their obligations survive as
 **requirements on Template content** (portability, hook behavior, tier floors)
 and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 
-### 1R.2 The system's boundary crossings (v2 — eight)
+### 1R.2 The system's boundary crossings (v2 — seven; B-08 removed 2026-08-13o)
 
 | BIF | Dir | What crosses | Absorbs (v1 / draft ids) |
 |---|---|---|---|
@@ -177,7 +182,6 @@ and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 | **B-05** | OUT | **THE TEMPLATE — the packaged deliverable** to EXT-002. The delivered scripts' contracts (`check.py`, `bootstrap.py` + MAPPING, `agent_loop.py`, `check_vendored.py`, `gen_cases.py`, `gen_release_checklist.py`, the hooks, the launchers) are **IF definitions tied `interface_to_external = "B-05"`** — content of the package, not separate system crossings | BIF-014/M-07, BIF-015/M-06, BIF-016…021/X-01…X-06, and BIF-001/M-01 + BIF-002/M-02 as CONTENT (their invocation is the session's, per 13n) |
 | **B-06** | IN | Hosted CI trigger: push · PR · schedule; the OS × Python matrix | BIF-027/M-04 |
 | **B-07** | OUT | Hosted CI job verdict + step log | BIF-028/M-05 |
-| **B-08** | IN | Vendored upstream source read by `check_vendored` ⚠ *to confirm:* arguably session-mediated content (someone vendors it through B-01) rather than a standing crossing | BIF-022/X-10 |
 
 ### 1R.3 The relationships (external-to-external; the system is not a party)
 
@@ -185,30 +189,31 @@ and as the mechanics of the B-01/B-04 crossings — not as frame entities.
 |---|---|---|
 | **REL-001** | Template → Adopter | full content provided; adopted into their repo (their scaffold, their loop, their hooks) |
 | **REL-002** | Template → Development session | **self-adoption**: this repo's session adopts the same content and activates autonomous builds from it (`agent-resume`) — the 13n NOT-an-input ruling lives here |
-| **REL-003** | Development session ↔ Model provider | LLM runner API: rate limit, auth expiry, model retirement (old M-15) — the backoff obligation reads as a requirement on delivered loop content, exercised session-side |
-| **REL-004** | Development session ↔ External reviewer CLI | hostile-review briefs out, findings in (old M-14) |
+| **REL-003** | Development session ↔ Model provider API(s)/CLI(s) | the LLM runner surface, primary and adversarial alike: rate limit, auth expiry, model retirement (old M-15) and hostile-review briefs out / findings in (old M-14) — the backoff obligation reads as a requirement on delivered loop content, exercised session-side |
 
 ### 1R.4 The reclassification ledger — every v1 row dispositioned
 
 **Stay system crossings (folded):** v1 BIF-004/005/006/007/025/026 → B-01/B-02
 (+ verdict halves → B-04); BIF-008…011 → B-03; BIF-012 → B-04; BIF-027/028 →
-B-06/B-07; BIF-022 → B-08 (⚠ flagged).
+B-06/B-07.
 **Become Template content (IF definitions under B-05):** BIF-014, BIF-015,
 BIF-016…021 — *strictly outputs*; plus BIF-001 (`dev-setup`) and BIF-002
 (`agent-resume`), **explicitly ruled NOT inputs**.
-**Become relationships:** BIF-023/M-15 → REL-003; BIF-024/M-14 → REL-004; the
-adoption and self-adoption flows → REL-001/REL-002.
+**Become relationships:** BIF-023/M-15 and BIF-024/M-14 → REL-003 (merged
+2026-08-13o); the adoption and self-adoption flows → REL-001/REL-002.
 **Dissolve into the session entity:** BIF-003/M-12 (prompts into a session —
-between the human and their runner, inside EXT-001) and BIF-013/X-11 (the loop
+between the human and their runner, inside EXT-001); BIF-013/X-11 (the loop
 launching its CLI — the session driving itself; the provider behind it is
-REL-003).
+REL-003); and BIF-022/X-10 (`check_vendored` is **run by the development
+environment** — its content input arrives through B-01's governed writes, and
+the tool itself ships as B-05 content; ruled 2026-08-13o).
 **Dissolve with their absorbed entities:** BIF-029/M-17 (OS · filesystem ·
 Python), BIF-030/M-18 (pytest results) and BIF-031/X-13 (`coverage.json`) —
 their obligations survive as **requirements on Template content** (portability;
 the tier floors) and as B-01/B-03/B-04 mechanics, not as crossings.
-**Count check:** 14 stay (→ B-01…B-04, B-06…B-08) + 10 become Template content
-(→ B-05) + 2 become relationships (→ REL-003/004) + 2 dissolve into the
-session + 3 dissolve with their entities = **31**; none dropped silently.
+**Count check:** 13 stay (→ B-01…B-04, B-06…B-07) + 10 become Template content
+(→ B-05) + 2 become relationships (→ REL-003) + 3 dissolve into the session +
+3 dissolve with their entities = **31**; none dropped silently.
 
 ### 1R.5 The registry shape around them (decisions 3/4/5 as ruled)
 
@@ -220,7 +225,7 @@ IF rows tie into them:
 ```toml
 [entity.EXT-001]
 name = "Development session"
-class = "operational"            # operational | enabling | interoperating
+class = "operational"            # operational | enabling | interoperating | deliverable
 description = "Human or LLM terminal session, attended or the agent-resume loop."
 
 [relationship.REL-001]           # external-to-external only; no interface vocabulary
@@ -294,15 +299,21 @@ subsection is the SR-writing guidance for WI-451 slice 2's re-statement.
 
 ### 1R.7 Completeness + the confirmations this section owes
 
-**Claim (v2):** six entities, eight boundary crossings, four relationships are
-the whole depth-0 frame. **Confirm explicitly:** (1) the ⚠ session/repository-
-contents interpretation (1R.1); (2) the `deliverable` class value for the
-Template entity; (3) B-08's vendored-upstream disposition; (4) the dissolution
-of git / OS / toolchain as entities; (5) the residual data-pack uncertainties
-that survive v2 — the skills fan-out into a third-party agent's config
-namespace, and `docs/knowledge/` packs as input (the git one-or-three question
-dissolves with git's absorption; `MULTI_REPO.md`'s cross-repo rung stays
-deliberately unaudited).
+**CONFIRMED 2026-08-13o — the frame is LOCKED.** The five confirmations, as
+ruled: **(1)** the session/working-copy interpretation stands (the session
+holds the checkout; the system owns the governed state admitted through the
+hook floor). **(2)** `deliverable` accepted as the Template's class — noting
+`class` is read by nothing mechanically today and is planned only for the
+generated context view and the advisory schema tier; nothing gates on it.
+**(3)** B-08 removed: `check_vendored` is run by the development environment —
+not an input into this design-scope system. **(4)** the git / OS / toolchain
+entity dissolutions stand (compactness). **(5)** the skills fan-out and
+`docs/knowledge/` packs fold into **B-05**: they are template content,
+available from the package whether an adopter uses them or not.
+
+**The declared frame: 5 entities · 7 boundary crossings · 3 relationships.**
+The one deliberate exclusion: `MULTI_REPO.md`'s cross-repo rung stays
+unaudited. **Decision 1 is CLOSED.**
 
 ## 2. The port set and the discriminator — what WI-451 executes against
 
@@ -485,7 +496,9 @@ system creates does not make each used tool an input* — reclassified the v1
 rows: `dev-setup`/`agent-resume` invocation are NOT inputs, the delivered
 contracts are Template content under one deliverable crossing, and the
 provider/reviewer flows are session relationships. **The live frame is §1R
-v2**; what remains for the sitting is §1R.7's five explicit confirmations.
+v2, CONFIRMED and LOCKED 2026-08-13o** (5 entities · 7 crossings · 3
+relationships; the five §1R.7 confirmations all ruled). **Decision 1 is
+CLOSED.**
 
 **The reframe in one paragraph (RULED 2026-08-13k; long form archived).** The
 repository IS the system; the template is NOT the system but what it DELIVERS

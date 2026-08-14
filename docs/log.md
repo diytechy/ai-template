@@ -36,6 +36,27 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13o — The depth-0 frame CONFIRMED and LOCKED: 5 entities ·
+  7 crossings · 3 relationships (owner, in session).** The five §1R.7
+  confirmations all ruled: **(1)** the session/working-copy interpretation
+  stands — the session holds the checkout, the system owns the governed
+  state admitted through the hook floor; **(2)** `deliverable` accepted as
+  the Template's class (recorded: `class` is mechanically unread today;
+  planned consumers are the generated context view and the advisory schema
+  tier — nothing gates); **(3)** B-08 REMOVED — `check_vendored` *"would be
+  run by the development environment; it's not an input directly into this
+  design-scope system"* (its content input arrives via B-01's governed
+  writes; the tool ships as B-05 content); **(4)** the git / OS / toolchain
+  entity dissolutions stand; **(5)** the skills fan-out and
+  `docs/knowledge/` packs FOLD INTO B-05 — *"they are all a part of the
+  template … they are available from the template"* — whether an adopter
+  uses them is another question. Plus one amendment: the external reviewer
+  CLI MERGES into the provider entity — **"Model provider API(s) / CLI(s)"**
+  — on the owner's lean that *"a model CLI is just a model CLI, whether
+  that's the primary or secondary"*; REL-004 folds into REL-003.
+  **Decision 1 is CLOSED**; the only deliberate exclusion is
+  `MULTI_REPO.md`'s cross-repo rung, unaudited.
+
 - **2026-08-13n — The frame refined: the TEMPLATE is its own entity, and
   using what the system creates is NOT an input (owner, in session).** Three
   rulings and a delivered review. **(1) "Template" joins as an entity** — the
