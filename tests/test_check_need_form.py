@@ -161,6 +161,44 @@ def test_a_url_is_suppressed_whole_however_path_shaped_its_tail(tmp_path):
     assert "clean" in proc.stdout, proc.stdout
 
 
+def test_a_sentence_final_path_names_the_exact_phrase_so_its_exception_matches(
+    tmp_path,
+):
+    # Round-2 review find: the segment charset allows dots, so a sentence-final
+    # token dragged its full stop into the phrase (`docs/status.md.`) — the
+    # report misnamed the token and its reviewed exception could never match.
+    make_repo(tmp_path, "A user resumes work from docs/status.md.")
+    proc = form(tmp_path)
+    assert "'docs/status.md'" in proc.stdout, proc.stdout
+    make_repo(
+        tmp_path,
+        "A user resumes work from docs/status.md.",
+        allow="docs/status.md — the resume surface IS the user-facing entry\n",
+    )
+    assert "clean" in form(tmp_path).stdout
+    # The corollary: a sentence-final English pair must not read its full stop
+    # as a file suffix and false-positive as a path.
+    make_repo(tmp_path, "A reviewer weighs each requirement/test.")
+    assert "clean" in form(tmp_path).stdout
+
+
+def test_a_scheme_less_www_address_is_suppressed_like_a_url(tmp_path):
+    # Round-2 review find: `www.example.test/docs/status.md` reported as an
+    # internal path although it is the same external reference as its
+    # `https://` form. A genuine internal path in the SAME cell still reports.
+    make_repo(tmp_path, "Docs live at www.example.test/docs/status.md for readers.")
+    proc = form(tmp_path)
+    assert "clean" in proc.stdout, proc.stdout
+    make_repo(
+        tmp_path,
+        "Docs live at www.example.test/docs/guide.md, mirrored from "
+        "docs/status.md nightly.",
+    )
+    proc = form(tmp_path)
+    assert "'docs/status.md'" in proc.stdout, proc.stdout
+    assert "guide.md" not in proc.stdout
+
+
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
     # The round-1 review's driven find: an emptied registry scanned as a clean
     # tier, and at DevBar-Reqs nothing else in the harness hard-fails on it —

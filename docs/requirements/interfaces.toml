@@ -1313,7 +1313,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 direction = "Provides"
 this_project = "scripts/check_need_form"
 counterpart = "scripts/check"
-contract = """check_need_form.py CLI: reports each SN need cell carrying an internal path, implementation-only identifier or process citation, naming the row and the offending phrase, against the reviewed exception list in docs/need-form-allow (absent = empty; an entry without its ' - reason' separator declares nothing); need cells only - SN-033 exempts acceptance and engineering-requirement cells by its own text; warn-first (exit 0), --strict exits 1 - wired as check.py's need-form step at every bar WITHOUT --strict (gating is an owner ruling not yet made; WI-454's scope guard)"""
+contract = """check_need_form.py CLI: reports each SN need cell carrying an internal path, implementation-only identifier or process citation, naming the row and the offending phrase, against the reviewed exception list in docs/need-form-allow (absent = empty; an entry without its ' — <reason>' separator — the literal em-dash with spaces — declares nothing); need cells only - SN-033 exempts acceptance and engineering-requirement cells by its own text; warn-first (exit 0), --strict exits 1 - wired as check.py's need-form step at every bar WITHOUT --strict (gating is an owner ruling not yet made; WI-454's scope guard)"""
 signal = "variable"
 signal_note = """typed at mint (WI-454): the Contract names a typed outcome plus unbounded content (the offending phrases), and any unbounded part makes the whole crossing variable (B1)"""
 sr_refs = ["SR-150"]

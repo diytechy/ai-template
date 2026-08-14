@@ -36,10 +36,18 @@ now suppressed whole), and a present-but-emptied registry scanned as a clean
 tier (now reported VACUOUS; absent stays the pre-scaffold clean skip, and a
 `-000`-only scaffold registry stays a blank form). Its allow-span challenge
 was refuted as deliberate: an allow'd name suppresses only its own span, and
-an independent citation outside it still reports. Verification: 13 in-process
-smoke tests (`tests/test_check_need_form.py`) covering the dirty-cell
-row+phrase case, `--strict`, the exception list and its malformed-entry arm,
-the exemptions, the resolving-path and URL arms, the vacuous-registry arms,
+an independent citation outside it still reports. Round 2 drove four more,
+fixed: a sentence-final path dragged its full stop into the phrase (misnaming
+the token and defeating its reviewed exception — the stop is now stripped
+before judging, which also kept a sentence-final either/or pair from reading
+its punctuation as a file suffix); scheme-less `www.` addresses now suppress
+like their `scheme://` forms; and LLR-170/IF-121 mis-stated the allow-list
+separator as an ASCII hyphen where the parser requires the em-dash (the exact
+silent-voiding confusion the loud-direction rule exists for) — both cells now
+state the literal separator. Verification: 15 in-process smoke tests
+(`tests/test_check_need_form.py`) covering the dirty-cell row+phrase case,
+`--strict`, the exception list and its malformed-entry arm, the exemptions,
+the resolving-path, URL and sentence-final arms, the vacuous-registry arms,
 and the live registry clean at zero findings over 27 need cells.
 Spine: SR-150 (Planned, cites SN-033 — its first coverage, orphans 10 → 9) →
 LLR-170 (Draft, CMP-007) → TC-164 (Draft, Smoke), plus IF-121/IF-122

@@ -35,11 +35,14 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
 
   - **internal path** — a slash-joined repo path (`docs/status.md`,
     `scripts/check.py`), including a one-level dot-free token that RESOLVES in
-    the scanned tree (`docs/archive`). URLs are deliberately NOT matched — a
-    URL a need names is an external, stakeholder-visible address, not
-    repository internals — and the exclusion is enforced by suppressing the
-    whole URL span, so a path-shaped tail (`https://host/docs/status.md`)
-    never reports (round-1 review find).
+    the scanned tree (`docs/archive`). URLs — `scheme://` and scheme-less
+    `www.` forms alike — are deliberately NOT matched: an address a need
+    names is an external, stakeholder-visible reference, not repository
+    internals. The exclusion is enforced by suppressing the whole URL span,
+    so a path-shaped tail (`https://host/docs/status.md`) never reports
+    (review rounds 1 and 2). A sentence-final token's trailing full stop is
+    stripped before the phrase is judged or reported, so its reviewed
+    exception matches.
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
     (`human_ratification_through`), or a `--flag` token.
@@ -139,12 +142,13 @@ CLASSES = (
 )
 
 
-# A URL span: `scheme://` through the next whitespace. Findings inside one are
-# suppressed whole — an external address is stakeholder-visible however
-# path-shaped its tail, and suppressing the SPAN (not just refusing the match
-# start) is what keeps the identifier class from re-matching a `status.md`
-# inside it.
-_URL = re.compile(r"\b[a-z][a-z0-9+.-]*://\S+", re.IGNORECASE)
+# A URL span: `scheme://` — or the scheme-less `www.` form — through the next
+# whitespace. Findings inside one are suppressed whole: an external address is
+# stakeholder-visible however path-shaped its tail, and suppressing the SPAN
+# (not just refusing the match start) is what keeps the identifier class from
+# re-matching a `status.md` inside it. (`www.` joined at review round 2: a
+# scheme-less address is the same external reference.)
+_URL = re.compile(r"(?:\b[a-z][a-z0-9+.-]*://|\bwww\.)\S+", re.IGNORECASE)
 
 
 def _looks_like_path(token, root=None):
@@ -217,10 +221,16 @@ def need_findings(needs, allow, root=None):
         for label, rx in CLASSES:
             for m in rx.finditer(cell):
                 phrase = m.group(0)
-                if label == "internal path" and not _looks_like_path(
-                    phrase, root
-                ):
-                    continue
+                if label == "internal path":
+                    # A sentence-final token drags its full stop into the
+                    # match (the segment charset allows dots). Strip it BEFORE
+                    # judging and reporting: `docs/status.md.` must name — and
+                    # allow-list as — `docs/status.md`, and a sentence-final
+                    # English pair (`requirement/test.`) must not read its
+                    # punctuation as a file suffix (review round 2).
+                    phrase = phrase.rstrip(".")
+                    if not _looks_like_path(phrase, root):
+                        continue
                 # One token, one finding: a later class re-matching INSIDE an
                 # already-reported span (`status.md` inside `docs/status.md`)
                 # is the same phrase to rewrite, not a second one.
