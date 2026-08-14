@@ -938,9 +938,9 @@ def load_ifs(rows):
     `approval` is the tier's ONE maturity field. It replaced `stability` at
     WI-442, which had itself replaced `status` at WI-443 — the same defect twice
     (two columns on one row meaning different kinds of "settled"), fixed the same
-    way. `direction`/`counterpart` were ruled out by the same decision and are
-    HELD (they are SR-091's only input; see interfaces.toml's header and
-    WI-455), so the loader still carries them."""
+    way. `direction`/`counterpart` are HELD pending WI-455 — evidence and
+    removal owner: docs/requirements/interfaces.toml's header — so the loader
+    still carries them."""
     out = []
     for r in rows:
         iid = (r.get("IF-ID") or "").strip()
@@ -3189,11 +3189,11 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # live and shipped-template headers is classified here (so a new column cannot
 # ride in on the residual unnoticed).
 #
-# `BIF-Refs` (SR) joins the TRACED half at WI-442, on `SN-Refs`' own argument
+# `Boundary-Refs` (SR) joins the TRACED half at WI-442, on `SN-Refs`' own argument
 # rather than a new one: it is the same SHAPE of pointer — which declared
 # boundary crossing does this requirement state an observable at — it carries no
 # prose either side, and whether a re-point moved SCOPE is exactly the judgement
-# the adjudication kind exists to make. So a changed `BIF-Refs` ROUTES to
+# the adjudication kind exists to make. So a changed `Boundary-Refs` ROUTES to
 # adjudication (intake.ROUTED_TRACED_CELLS) beside `SN-Refs`; it never arms a
 # re-attest window directly. Classifying it ratified instead would arm a window
 # on every row of the re-tier campaign, which is the noise that gets a window
@@ -3201,7 +3201,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # IS ratified, so nothing escapes attestation by this choice.
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "BIF-Refs", "Phase", "Area", "Lifecycle"}
+        {"SN-Refs", "Boundary-Refs", "Phase", "Area", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as

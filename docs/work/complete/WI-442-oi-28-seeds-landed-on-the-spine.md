@@ -77,7 +77,7 @@ never be a label lying about its contents. The three frame tiers join the
 advisory schema tier (required fields + closed vocabularies) on WI-443's ruled
 warn-first sequencing.
 
-SN-037'S CHECKER, AT TWO SEVERITIES. `SR.BIF-Refs` minted (carrier, writer map,
+SN-037'S CHECKER, AT TWO SEVERITIES. `SR.Boundary-Refs` minted (carrier, writer map,
 tier schema, template with its guidance) and `trace.sr_boundary_findings` built
 on it. Resolution is HARD — an SR naming an undeclared crossing is a dangling
 reference like an SR citing a deleted SN. Coverage is ADVISORY, one summary line:
@@ -85,7 +85,7 @@ enforcing "every SR names a crossing" the day the column shipped would have
 redded all 148 rows for work WI-451 slice 2 owns, under a form rule that is
 itself a guideline with recorded per-row waivers (13v), and a gate 100% red on
 day one is a gate someone turns off. SN-037's third clause (every crossing has an
-interface row) is REPORTED, not gated — decision 6 again. `BIF-Refs` joins
+interface row) is REPORTED, not gated — decision 6 again. `Boundary-Refs` joins
 §A5.1's traced half on `SN-Refs`' own argument and ROUTES to adjudication rather
 than arming a re-attest window; nothing escapes attestation by that choice, since
 the campaign's re-statements touch `Requirement`, which is ratified.
@@ -115,9 +115,10 @@ Verification = Test. **Decision 8 makes `PROJECT_STATE.html` the ONE home for
 architecture in the same sitting decision 4 deletes what it draws from.** The
 full shed was implemented first and measured: 41 tests red, 30 of them the
 dashboard failing to render at all. So the columns are HELD, their deletion is
-bound to WI-455 (which owns the replacement view), and the reason is written into
-the registry header, the carrier, the migrator and the checker rather than left
-to be rediscovered. The `direction` name now means two things across two tiers,
+bound to WI-455 (which owns the replacement view). The EVIDENCE has one home —
+`interfaces.toml`'s header, where a maintainer deciding whether to drop the
+columns will look; the carrier, the migrator and the checker carry a one-line
+pointer to it, not a fourth copy of the argument. The `direction` name now means two things across two tiers,
 which is the D-3 defect; it is stated as a WATCHED collision that closes itself
 when WI-455 lands the deletion, with renaming the boundary column as the fix if
 WI-455 slips.

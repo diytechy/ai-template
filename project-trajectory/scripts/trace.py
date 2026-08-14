@@ -286,8 +286,8 @@ REQUIRED_FIELDS = {
     # `Interface*External` tie-backs are deliberately NOT required — a row
     # carries one only when it realizes a boundary crossing, and requiring them
     # would demand every internal seam claim to be a boundary.
-    # `Direction`/`Counterpart` were ruled out by decision 4 and are HELD; see
-    # docs/requirements/interfaces.toml's header and WI-455.
+    # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
+    # owner: docs/requirements/interfaces.toml's header.
     "IF": [
         "IF-ID",
         "Direction",
@@ -1347,11 +1347,11 @@ def frame_findings(exts, bifs, rels):
     """Reference resolution inside `external.toml` (WI-442, §1R.5), as
     ``[(at_fault_id, finding), ...]`` — the frame's own join rules.
 
-    Three of them, and they are the only structural claims the ruled schema
-    makes: a crossing's `Entity` must resolve to a declared entity, and a
-    relationship's `From`/`To` must too. Everything else about the frame — is it
-    the RIGHT frame, are the crossings complete — is a human ruling, and a check
-    that pretended otherwise would be inventing a rule nobody wrote.
+    It checks three reference fields — a boundary row's `Entity`, and a
+    relationship's `From` and `To` — and they are the only structural claims the
+    ruled schema makes. Everything else about the frame — is it the RIGHT frame,
+    are the crossings complete — is a human ruling, and a check that pretended
+    otherwise would be inventing a rule nobody wrote.
 
     FAILURE CLASS, not advisory, unlike the schema tier beside it. A tie-back to
     an entity that does not exist is not a maturing corpus converging on a
@@ -1388,7 +1388,7 @@ def sr_boundary_findings(srs, bifs, ifs):
     are mechanical findings"*. Those are two obligations at two severities, and
     conflating them is what would make this check either useless or unshippable:
 
-      * RESOLUTION IS HARD. An SR whose `BIF-Refs` names a crossing that is not
+      * RESOLUTION IS HARD. An SR whose `Boundary-Refs` names a crossing that is not
         declared is a dangling reference, exactly like an SR citing a deleted SN,
         and it joins the --strict failure set with the spine's other reference
         rules. It is also the only half that can be true today.
@@ -1417,18 +1417,18 @@ def sr_boundary_findings(srs, bifs, ifs):
     named = set()
     for r in srs:
         sid = r["SR-ID"]
-        cited = refs(r.get("BIF-Refs"))
+        cited = refs(r.get("Boundary-Refs"))
         named.update(x for x in cited if x in bif_ids)
         for x in cited:
             if x not in bif_ids:
                 findings.append(
-                    (sid, f"SR {sid} BIF-Refs references unknown crossing {x}")
+                    (sid, f"SR {sid} Boundary-Refs references unknown crossing {x}")
                 )
-    uncovered = sum(1 for r in srs if not refs(r.get("BIF-Refs")))
+    uncovered = sum(1 for r in srs if not refs(r.get("Boundary-Refs")))
     if uncovered:
         advisories.append(
             "SR->boundary coverage: {} of {} requirement(s) name no crossing in "
-            "BIF-Refs (SN-037; the re-tier campaign is what moves this number, "
+            "Boundary-Refs (SN-037; the re-tier campaign is what moves this number, "
             "and a row that legitimately states no boundary observable records "
             "its reason rather than leaving a blank cell)".format(uncovered, len(srs))
         )

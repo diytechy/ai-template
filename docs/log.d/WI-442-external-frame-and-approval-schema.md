@@ -19,7 +19,7 @@ commit**, because `_maturity` maps an unrecognized value to DRAFTED — the spli
 would have pinned rung 1 open forever on a deleted column, giving the right
 stage for the wrong reason. `trace.py` gained the frame's resolution rules as
 their own `--strict` failure class, and SN-037's SR→boundary rule on a new
-`SR.BIF-Refs`.
+`SR.Boundary-Refs`.
 
 **Row ids are `B-##`, not `BIF-###`** — a deviation from §1R.5's sketch that
 resolves a contradiction inside the source. §1R.2's locked table, §3R and this
@@ -43,19 +43,14 @@ spine tiers only) and pinned by a test that reds if anything but a ratification
 sets one.
 
 **FINDING — decisions 4 and 8 are in tension, and one clause is HELD.** §1R.5
-rules that an IF row sheds `direction` and `counterpart`. Those two columns are
-the sole input to the dashboard's How-SW seam graph and its containerized
-component drill, and the second is **ratified work**: SR-091, "shall attach IF
-seams to visible block input/output ports and aggregate cross-container seams to
-container boundaries", Verification = Test. Decision 8 makes
-`PROJECT_STATE.html` the one home for architecture in the same sitting decision 4
-deletes what it draws from. The full shed was implemented first and measured — 41
-tests red, 30 of them the dashboard failing to render at all — so the columns are
-held, their deletion bound to WI-455, and the reason written into the registry
-header, the carrier, the migrator and the checker. Side effect recorded as a
-watched defect: `direction` now means two things across two tiers (D-3), which
-closes itself when WI-455 lands the deletion; renaming the boundary column is the
-fix if WI-455 slips. **Sitting 3 owes the sequencing call.**
+rules that an IF row sheds `direction`/`counterpart`; they are SR-091's only
+input (ratified, Verification = Test) and decision 8 makes the dashboard the one
+home for architecture. Measured before deciding: the full shed takes 41 tests
+red, 30 of them the dashboard failing to render. The columns are held and their
+deletion bound to WI-455; a `direction` name collision (D-3) rides with them and
+closes itself when WI-455 lands. The full argument and the evidence are in
+[WI-442](../work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s
+Deliverable — not repeated here. **Sitting 3 owes the sequencing call.**
 
 **FINDING — two checks would have become tautologies if copied forward.** The
 seam-TC citation rule had already been re-keyed once off a column whose values
@@ -75,9 +70,13 @@ not this row's: `check_trajectory --strict` errors R-E on
 sitting-2 plan. WI-452 is on the ready frontier and `integrate.py claim` refuses
 a spec with no in-repo-resolving SpecRef, so this blocks that claim.
 
-**Verification.** Full suite `pytest -q -n auto`: **2472 passed, 11 skipped**
-(7:30). Smoke `-m smoke`: **1112 passed, 7 skipped** (32 s). `check_docs --stale`:
-402 docs, 1183 links, **0 broken**. The re-key demonstrated both ways, not
+**Verification**, each figure at the commit it was measured on — the runs are
+not one HEAD and the numbers legitimately differ. At the implementation commit
+`8d777da4`: full suite `pytest -q -n auto` **2472 passed, 11 skipped** (7:30);
+smoke `-m smoke` **1112 passed, 7 skipped** (32 s). At the close commit
+`9b0f1039` (the close adds the record files and their tests): smoke **1116
+passed, 3 skipped** (30 s); `check_docs --stale` 403 docs, 1187 links,
+**0 broken**. The re-key demonstrated both ways, not
 asserted: crossings `draft` → `stage=DevStg-Boundary`; all six flipped to
 `approved` → the rung releases. A throwaway `bootstrap.py --dest` scaffold
 scaffolds `external.toml`, runs `trace.py --strict` clean and reads

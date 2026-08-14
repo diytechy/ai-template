@@ -115,9 +115,12 @@ SPINE_COLUMN = {
     "sn_refs": "SN-Refs",
     # WI-442 — the SR-side BOUNDARY reference: which declared crossing(s) in
     # `external.toml` this requirement states an observable AT. Minted here
-    # rather than in the re-tier because a checker cannot be written against
-    # a column that does not exist; WI-451 slice 2 populates it.
-    "bif_refs": "BIF-Refs",
+    # rather than in the re-tier because a checker cannot be written against a
+    # column that does not exist; WI-451 slice 2 populates it. Named for the
+    # tier it resolves into (`[boundary.B-##]`) and NOT `bif_refs`, which would
+    # have kept the retired `BIF-###` id shape alive in a column name sitting
+    # beside the `B-##` ids that replaced it.
+    "boundary_refs": "Boundary-Refs",
     "sr_refs": "SR-Refs",
     "verifies": "Verifies",
     "requirement": "Requirement",
@@ -179,9 +182,9 @@ OFFSPINE_COLUMN = {
     # the live one is precisely the two-words-one-meaning defect that retired
     # `Status`.
     #
-    # `direction` + `counterpart` were ruled to go WITH it and are HELD — see the
-    # header of docs/requirements/interfaces.toml for the evidence (they are
-    # SR-091's only input) and WI-455 for the row that owns their deletion.
+    # `direction` + `counterpart` were ruled to go with it and are HELD pending
+    # WI-455 — evidence and removal owner: docs/requirements/interfaces.toml's
+    # header.
     "direction": "Direction",
     "this_project": "ThisProject",
     "counterpart": "Counterpart",
@@ -200,10 +203,9 @@ OFFSPINE_COLUMN = {
     # the IF tier still reads it as Provides|Consumes. The vocabularies are
     # disambiguated per tier by `trace.ENUM_FIELDS`, and they never appear in one
     # file — but two meanings under one name is the D-3 defect however tidily it
-    # is scoped. It was meant to be temporary by construction: decision 4 retires
-    # the IF reading, and the collision closes itself the moment WI-455 lands
-    # that deletion. If WI-455 slips, the fix is to rename the boundary column,
-    # not to leave this note as the whole enforcement.
+    # is scoped. It is temporary BY CONSTRUCTION: the collision closes itself the
+    # moment WI-455 deletes the IF reading. If WI-455 slips, the fix is to rename
+    # the boundary column, not to leave this note as the whole enforcement.
     "class": "Class",
     "description": "Description",
     "entity": "Entity",
@@ -245,7 +247,7 @@ SPINE_TIER_KEYS = {
     "SR-ID": (
         "title",
         "sn_refs",
-        "bif_refs",
+        "boundary_refs",
         "requirement",
         "rationale",
         "acceptance_criteria",
@@ -320,8 +322,7 @@ OFFSPINE_KEYS = {
     # carries ONLY when it realizes a boundary crossing (owner naming, 13m). An
     # IF row that realizes nothing carries neither — which is how the registry
     # says "internal seam" without a column claiming it. `direction` and
-    # `counterpart` were ruled out in the same decision and are HELD; their
-    # deletion is WI-455's (interfaces.toml's header carries the evidence).
+    # `counterpart` are HELD pending WI-455 (see above).
     "IF-ID": (
         "direction",
         "this_project",

@@ -132,13 +132,18 @@ def test_nothing_in_the_live_frame_is_approved_yet():
 
 
 def test_a_clean_frame_produces_no_finding(scaffold):
+    """The fixture floor every mutation below stands on: if a resolving frame
+    already reported something, none of the bite-proofs would mean anything."""
     make_minimal_project(scaffold)
     _frame(scaffold)
     proc = _run(scaffold, "--strict")
-    assert "frame" not in proc.stdout.lower().split("traceability")[0] or (
-        "FINDING (frame)" not in proc.stdout
-    )
     assert "FINDING (frame)" not in proc.stdout
+    assert "references unknown" not in proc.stdout
+    # ...and the report's frame section reads out the clean counts, so a silently
+    # SKIPPED section cannot masquerade as a clean one.
+    report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
+    assert "## The depth-0 frame" in report
+    assert "1 entity, 1 boundary-crossing and 1 relationship row(s)" in report
 
 
 def test_a_crossing_naming_an_undeclared_entity_is_a_FINDING(scaffold):
@@ -251,18 +256,18 @@ def test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding(scaffold):
     error: a dangling reference, exactly like an SR citing a deleted SN."""
     make_minimal_project(scaffold)
     _frame(scaffold)
-    _srs(scaffold, 'bif_refs = ["B-99"]\n')
+    _srs(scaffold, 'boundary_refs = ["B-99"]\n')
     proc = _run(scaffold, "--strict")
-    assert "SR SR-001 BIF-Refs references unknown crossing B-99" in proc.stdout
+    assert "SR SR-001 Boundary-Refs references unknown crossing B-99" in proc.stdout
     assert proc.returncode == 1
 
 
 def test_an_SR_naming_a_DECLARED_crossing_is_clean(scaffold):
     make_minimal_project(scaffold)
     _frame(scaffold)
-    _srs(scaffold, 'bif_refs = ["B-01"]\n')
+    _srs(scaffold, 'boundary_refs = ["B-01"]\n')
     proc = _run(scaffold, "--strict")
-    assert "BIF-Refs references unknown" not in proc.stdout
+    assert "Boundary-Refs references unknown" not in proc.stdout
     # ...and the crossing is no longer reported as named by nobody.
     assert "named by NO requirement" not in proc.stdout
 
@@ -278,7 +283,7 @@ def test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error(scaffold)
     pipe, with the exit code untouched."""
     make_minimal_project(scaffold)
     _frame(scaffold)
-    _srs(scaffold)  # no bif_refs at all
+    _srs(scaffold)  # no boundary_refs at all
     proc = _run(scaffold, "--strict")
     assert "SR->boundary coverage: 1 of 1 requirement(s) name no crossing" in (
         proc.stdout
@@ -297,7 +302,7 @@ def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
     realization coverage."""
     make_minimal_project(scaffold)
     _frame(scaffold)
-    _srs(scaffold, 'bif_refs = ["B-01"]\n')
+    _srs(scaffold, 'boundary_refs = ["B-01"]\n')
     proc = _run(scaffold, "--strict")
     assert "boundary crossing(s) realized by NO interface row: B-01" in proc.stdout
     assert proc.returncode == 0
@@ -306,9 +311,9 @@ def test_the_realization_gap_is_REPORTED_and_never_gated(scaffold):
 def test_the_SR_boundary_rule_is_vacuous_without_a_frame(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "external.toml").unlink()
-    _srs(scaffold, 'bif_refs = ["B-99"]\n')
+    _srs(scaffold, 'boundary_refs = ["B-99"]\n')
     proc = _run(scaffold, "--strict")
-    assert "BIF-Refs" not in proc.stdout
+    assert "Boundary-Refs" not in proc.stdout
     assert "->boundary coverage" not in proc.stdout
 
 
