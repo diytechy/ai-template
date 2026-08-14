@@ -36,6 +36,22 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-14d — sitting-3 ledger decisions 8–9 RULED (owner, in session):
+  crossing ownership DEFERRED with a named re-land; the human stays inside
+  EXT-001 — CONFIRMED.** Decision 8 (sitting-2 D6's re-land, restated over
+  the six live crossings after its "31 BIF rows" text was caught as the
+  superseded v1 frame): ownership assignment is deferred until slice 2
+  populates `Boundary-Refs` (0/149 today; trace.py's SN-037 advisory names
+  the campaign as what moves it) and the retirement lane's D-3 re-key lands
+  — at that point both gap lists derive mechanically and the assignment is a
+  short concrete act. The owner expects the question may effectively
+  DISSOLVE in the full re-tier (a demoted/re-stated registry may leave no
+  unowned gap); the deferral is recorded so it re-lands by name either way
+  rather than lapsing. Decision 9 (decision 2's follow-on): CONFIRMED
+  deliberately, as 13k's principle requires — the human stays inside
+  EXT-001, REL-002 carries the surfacing, the frame stays at FIVE entities;
+  a sixth-entity split was the alternative passed over. Ledger: sitting-3
+  §0.3 rows 8–9, marked ruled.
 - **2026-08-14c — sitting-3 ledger decision 3 RULED (owner, in session): the
   B-05 decomposition axis gains the declared sixth bucket, *package-wide
   property*.** SR-031 (policy readers agree), SR-034 (stdlib + ledger),
