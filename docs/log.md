@@ -36,6 +36,37 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-13p — Decision 7 re-measured: the SN side is already clean, the
+  invariant re-keys to the v2 frame (owner-requested examples, in session).**
+  Asked to surface worked examples for the duplication policy, the
+  measurement falsified **two of decision 7's own cost lines**: **0 of 27 SN
+  `need` cells** carry an internal path or implementation identifier (the
+  prose batch cleaned them), and **16 of 27 `acceptance` cells** do but are
+  **exempt by ratified SN-033's own scope clause** (*"applies specifically to
+  each SN `need` cell, not to engineering requirements or acceptance
+  evidence"*). So option 3 costs **zero SN edits** and opens no SN re-attest
+  window; its worked example (strip SN-028's filename) was already executed.
+  The draft's chain-3 reading is corrected in place: SN-028's need and
+  SR-137's requirement do **not** say the same thing — they overlap on one
+  clause, and SR-137 adds the filename, the legacy-file rule and the whole
+  line-shape contract. **The invariant re-keys** from *one SR per (need,
+  port)* to ***one SR per (need, crossing-or-delivered-property)***, since
+  under §1R v2 an SR attaches either to a crossing (B-01…B-07) or to a
+  property of the delivered package (B-05) — the old wording had no home for
+  the large class of SRs describing what the template's scripts must do in an
+  adopter's hands. Worked examples recorded in §3: **KEEP** SN-011 →
+  SR-034/SR-114 (healthy fan-out) and SN-028 → SR-137/138 (apparent echo,
+  measures clean); **MERGE-or-RE-STATE** SR-035, the one measured true echo
+  (*"The process and ID scheme shall be stack-agnostic."* / *"The ID scheme
+  is language-neutral."* — no crossing, no mechanism, no measurable
+  criterion); and a class distinction slice 2 must keep — *thin but grounded*
+  rows (SR-072, SR-022, SR-086) belong to the 57-row **re-statement** class,
+  not to duplication. Two riders ordered with decision 7: SR-035's
+  disposition rides WI-451's window (it is `Verified` — a window opens either
+  way), and **SN-033's declared checker is unowned** — it would report zero
+  findings today, so it is cheap and would LOCK the clean state through the
+  SR churn ahead, alongside the SR→IF checker.
+
 - **2026-08-13o — The depth-0 frame CONFIRMED and LOCKED: 5 entities ·
   7 crossings · 3 relationships (owner, in session).** The five §1R.7
   confirmations all ruled: **(1)** the session/working-copy interpretation

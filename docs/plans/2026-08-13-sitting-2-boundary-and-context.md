@@ -432,14 +432,29 @@ records that the backoff clauses were folded in at the 2026-08-13 dissolution
 *because the review round found no SR carried them*. That is the tier earning
 its keep in the record.
 
-**Chain 3 — SN-028 → 2 SRs: the honest near-echo.** SN-028's need cell already
-names `docs/process.toml`, bare `[section]` headers, the dual-reader pin and the
-`--migrate-config` refusal — because its *acceptance* cell does. SR-137 restates
-the one-home-plus-refusal rule; SR-138 adds the migration. **Read SN-028's need
-sentence against SR-137's requirement sentence and they say the same thing.**
-The delta lives entirely in the acceptance cells (SR-137 enumerates *at every
-guarded entry point*: the dispatcher's pre-claim preflight, intake's
-adjudication arm, the integrator's verdict gate). SN-011 → SR-034/035/114 is the
+**Chain 3 — SN-028 → 2 SRs: the near-echo that MEASURES CLEAN.** *(Re-measured
+2026-08-13p; the draft's reading of this chain was wrong and is corrected
+here.)* The draft claimed *"read SN-028's need sentence against SR-137's
+requirement sentence and they say the same thing."* They do not. The live cells:
+
+> **SN-028 `need`:** "The repo owner can find and change every policy dial in
+> **one home** — a **single hand-edited, machine-read file** — and a repo that
+> declares the same dial twice is REFUSED rather than resolved by precedence."
+
+> **SR-137 `requirement`:** "The kit shall read every process policy dial from
+> a single `docs/process.toml`, and shall REFUSE — never resolve by precedence
+> — a repo in which any dial is declared both there and in its legacy one-word
+> file. The file's line shape shall be a checked contract: one `key = value`
+> per line under a bare `[section]` header, no dotted keys, no inline tables,
+> no multi-line strings."
+
+They overlap on **one clause** (one home + refuse-not-precedence — the outcome
+restated at its crossing, which is legitimate). SR-137 then adds the filename,
+the legacy-file specificity and the **entire line-shape contract**, none of
+which is in the need. SR-138 adds the migration. **And SN-028's need cell does
+NOT name `docs/process.toml`** — the prose batch already removed it; the
+filename lives in the *acceptance* cell, which ratified SN-033 explicitly
+exempts. So option 3's worked example on this row **is already executed**. SN-011 → SR-034/035/114 is the
 same shape: SR-035's whole text is *"the process and ID scheme shall be
 stack-agnostic"* with acceptance *"the ID scheme is language-neutral"* — an SR
 that adds **nothing** over its SN. *(Live, for the record, the cell reads with
@@ -449,9 +464,9 @@ stack-agnostic." — no obligation differs.)*
 **The options where the echo is real:**
 
 1. **Tolerate the echo, the acceptance cell carries the delta.** Cheapest; keeps
-   the tiers uniform; but SN-033's ratified rule (*a stakeholder reads the need
-   without knowing how the repo is built*) is violated in the other direction —
-   SN-028's need cell is echoing *downward* into implementation vocabulary.
+   the tiers uniform. *(The draft argued this violates SN-033 by echoing
+   downward — **measured false**: zero of 27 need cells carry an internal path
+   or implementation identifier. See the measurement below.)*
 2. **Merge** — delete the SR, point LLRs at the SN. Breaks the join
    (`trace.py` walks SN→SR→LLR→TC); refuted on machinery grounds alone.
 3. **Split the roles: the SN carries the OUTCOME, the SR carries the PORT
@@ -459,15 +474,42 @@ stack-agnostic." — no obligation differs.)*
    in one home, and a repo declaring a dial twice is refused"* — no filename;
    SR-137 keeps `docs/process.toml`, the line grammar and the refusal points.
 
-**Recommendation: option 3, and note it is already the ratified direction.**
-SN-033 (ratified) forbids internal paths in `need` cells; decision 2.7(a)
-permits them in SR cells *at declared ports*. `docs/process.toml` is a port
-(§2), so SR-137 keeps its name and SN-028 loses it. The two rules compose into
-one sentence: **the need names the outcome, the requirement names the port.**
-Do **not** target 1:1 — 82 of 148 SRs are genuinely multi-need, and forcing 1:1
-would either merge unrelated ports into one row or duplicate one port's contract
-across several. The right invariant is *one SR per (need, port)* pair, which the
-current 232 edges are already a rough approximation of.
+**Recommendation: option 3 — and the SN side is ALREADY DONE.** SN-033
+(ratified) forbids internal paths in `need` cells; decision 2.7(a) permits them
+in SR cells at declared crossings. The two compose into one sentence: **the need
+names the outcome, the requirement names the crossing.** Do **not** target 1:1
+— 82 of 148 SRs are genuinely multi-need, and forcing 1:1 would either merge
+unrelated crossings into one row or duplicate one crossing's contract across
+several.
+
+**The invariant, re-keyed to the §1R v2 frame:** *one SR per **(need,
+crossing-or-delivered-property)*** — because under v2 an SR attaches either to
+a system crossing (**B-01…B-07**) or to a **property of the delivered package**
+(**B-05** content). The old wording said "(need, port)", which had no home for
+the large class of SRs describing what the template's own scripts must do in an
+adopter's hands. The current 232 edges are already a rough approximation.
+
+**The measurement that settles the SN side** *(2026-08-13p)*: **0 of 27 `need`
+cells** contain an internal path or implementation identifier — the prose batch
+cleaned them all. **16 of 27 `acceptance` cells** do, and ratified SN-033's own
+acceptance scopes the rule to exempt exactly those: *"The rule applies
+specifically to each SN `need` cell, not to engineering requirements or
+acceptance evidence."* So option 3 costs **zero SN edits** and opens **no SN
+re-attest window**; what remains of decision 7 is purely an **SR-side rule** for
+slice 2.
+
+<!-- fig: cmd="python3 - tomllib over stakeholder-needs.toml; regex for
+[\w./-]+\.(py|toml|md|csv|html|ini|yml|sh|cmd) and docs//scripts/ paths over
+need vs acceptance cells", rev=e32fd9a0 -->
+
+**Worked examples for slice 2, from the live registry:**
+
+| | Example | Verdict |
+|---|---|---|
+| **Healthy fan-out** | SN-011 → **SR-034** (AST import scan; the ledger row's required fields; a shipped-tier dependency needs a recorded owner ruling) and **SR-114** (the CI matrix spans, plus a reasoned exclusion of the macOS+3.11 cell as redundant coverage) | **KEEP** — the need cannot carry these; each names a distinct observable |
+| **True echo** | **SR-035** — requirement *"The process and ID scheme shall be stack-agnostic."*, acceptance *"The ID scheme is language-neutral."* | **MERGE or RE-STATE** — no crossing, no mechanism, no measurable criterion; the acceptance restates the requirement. Not attachable under v2 either: stack-agnosticism is a **B-05 delivered property**, so a re-statement needs a real observable (e.g. the shipped registries and ID scheme carry no language-specific token; a non-Python adopter's scaffold passes `trace.py`) |
+| **Looks like an echo, is not** | SN-028 → **SR-137 / SR-138** (chain 3 above) | **KEEP** — one clause overlaps; the line-shape contract, the legacy-file rule and the guarded entry points are the SR's own |
+| **Thin but grounded** | SR-072 (`gen_trajectory.py` byte-determinism), SR-022 (`check_vendored.py` drift), SR-086 (`trace.py` accepts `Critique`) | **NOT duplication** — these are short *and* grounded; they belong to the 57-row **re-statement** class, not this decision. Keep the two classes apart in slice 2 |
 
 **One flag for the ruler — CORRECTED.** SR-035 as written adds nothing to SN-011
 and is a real merge candidate. The draft said it "is `Modified`, so touching it
@@ -680,24 +722,56 @@ re-scope is the natural first vehicle, §5.2).
 
 ### Decision 7 — The duplication policy for the re-statement pass
 
-**The question.** §3's option 3 (*the need names the outcome, the requirement
-names the port*), or an alternative — **stated as a rule WI-451 slice 2 can apply
-per row** — plus whether SR-035's merge rides that window.
+**The question.** §3's option 3 — *the need names the outcome, the requirement
+names the crossing* — or an alternative, **stated as a rule WI-451 slice 2 can
+apply per row**, plus whether SR-035's disposition rides that window.
 
-**Context.** WI-451's spec contains **no duplication rule at all**. Slice 2
-cannot run without this; it is not optional colour.
+**Context.** WI-451's spec contains **no duplication rule at all**, and slice 2
+cannot run without one. It matters more now, not less: the §1R v2 frame is
+expected to drive **significant SR churn**, and this rule is what keeps that
+churn from re-introducing echoes while it re-states.
 
-**Costs.** *Option 1 (tolerate the echo):* zero work; SN-028's `need` cell keeps
-echoing downward into implementation vocabulary, against SN-033's ratified rule.
-*Option 2 (merge):* refuted on machinery grounds — it breaks the SN→SR→LLR→TC
-join `trace.py` walks. *Option 3 (split the roles):* each near-echo SN loses its
-filename and its SR keeps it — a small number of SN edits inside a **ratified**
-registry, so they open a re-attest window and must ride sitting 3's. Plus
-SR-035's merge, if you order it (§3's flag).
+**⚠ RE-MEASURED 2026-08-13p — two of this decision's stated costs were false**
+(§3 carries the evidence and the worked examples):
 
-**Recommendation on record:** option 3, noted as *already the ratified direction*
-(SN-033 forbids internal paths in `need` cells; 2.7(a) permits them in SR cells
-at declared ports). Do **not** target 1:1.
+- **The SN side is already clean.** *0 of 27 `need` cells* carry an internal
+  path or implementation identifier. The "SN-028 echoes downward against
+  SN-033" cost line was wrong — its need cell says *"a single hand-edited,
+  machine-read file"*, with the filename in the **acceptance** cell, which
+  ratified SN-033 explicitly exempts (*"not to engineering requirements or
+  acceptance evidence"*).
+- **Option 3 therefore costs ZERO SN edits** and opens **no SN re-attest
+  window** — not "a small number of edits inside a ratified registry" as
+  previously stated. Option 3's own worked example (strip SN-028's filename)
+  **was already executed by the prose batch.**
+
+**Costs, corrected.** *Option 1 (tolerate):* zero work, but no rule exists when
+slice 2 re-states ~57 rows, so echoes re-enter unchallenged. *Option 2
+(merge):* still refuted on machinery grounds — it breaks the SN→SR→LLR→TC join
+`trace.py` walks. *Option 3 (split the roles):* zero SN edits; the cost is
+**per-row judgement inside slice 2's existing window**, which the WI-444
+token-verification bar already governs.
+
+**Recommendation on record:** option 3, with the invariant re-keyed to the v2
+frame — ***one SR per (need, crossing-or-delivered-property)***, an SR
+attaching either to a system crossing (B-01…B-07) or to a property of the
+delivered package (B-05). Do **not** target 1:1 (82 of 148 SRs are genuinely
+multi-need).
+
+**Two riders to order with it:**
+
+1. **SR-035's disposition** — the one measured *true* echo (no crossing, no
+   mechanism, no measurable acceptance). Merge it, or re-state it as a B-05
+   delivered property with a real observable. It is `Verified`, so it opens a
+   window either way — **bundle it into WI-451's**, never a second one.
+2. **SN-033's checker is unowned.** Its ratified acceptance commissions *"a
+   declared check [that] reports the row and phrase when a need cell contains
+   an internal path, implementation-only identifier or process citation"* with
+   a reviewed exception list. It does not exist. It would currently report
+   **zero findings**, which makes it cheap to build and — the point — it would
+   **lock the clean state in** rather than trusting the churn ahead not to
+   dirty it. Sits alongside the SR→IF checker as the second unowned
+   mechanization (§5.4).
 
 ### Decision 8 — Where the boundary record LIVES once ruled
 
