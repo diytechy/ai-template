@@ -28,7 +28,7 @@ What it creates in the destination:
     docs/status.md                             <- STATUS.template.md  (working surface)
     docs/log.md                                <- LOG.template.md  (append-only history)
     docs/plan.md                               <- PLAN.template.md  (plan/build session blocks)
-    docs/architecture.md                       <- ARCHITECTURE.template.md
+    docs/runtime-flows.md                      <- RUNTIME_FLOWS.template.md
     docs/interfaces.md                         <- INTERFACES.template.md
     docs/requirements/stakeholder-needs.toml   <- registries/stakeholder-needs.template.toml
     docs/requirements/system-requirements.toml <- registries/system-requirements.template.toml
@@ -175,7 +175,7 @@ this repo declares a contract — with another repo **or between its own modules
 (process.md §8). `trace.py` integrity-checks both (id shape, SR-Refs back-link,
 the frame's entity/crossing resolution) and
 `check_trajectory.py` runs the **architecture-connectivity coverage** over the
-arch-map inventory. That coverage is **opt-out, default-on** (the
+source-tree inventory (the declared `[paths] src` root). That coverage is **opt-out, default-on** (the
 `secrets_scan` posture): a multi-module arch-map with no declared seams warns
 "connectivity undeclared" rather than passing vacuously — silence it with
 `docs/process.toml` `[checks] interfaces_check = false`, or a single-module
@@ -300,9 +300,11 @@ An explicitly non-Python `--stack` (node|go|rust|powershell) also skips
 appends the harness-rewiring checklist to the fresh status.md's Open items,
 so the remaining hand-edits are visible work items.
 
-It then runs `gen_arch_map.py` and `trace.py` once in the new repo so the
-scaffold starts green — `check.py` would otherwise fail on the template
-placeholder between the architecture markers.
+It then runs `trace.py` and `gen_open_items.py` once in the new repo so the
+scaffold starts green. (The architecture is DERIVED — the dashboard and the
+checks read the registries and the source AST directly; the retired
+`docs/architecture.md` way-station is not scaffolded. WI-455, sitting-2
+decision 8.)
 
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate DevStg-Reqs (see docs/process.md).
@@ -1621,10 +1623,10 @@ MAPPING = [
     # sessions write blocks here, BUILD sessions execute them; status.md stays
     # the lean resume surface and points at it.
     ("PLAN.template.md", "docs/plan.md"),
-    ("ARCHITECTURE.template.md", "docs/architecture.md"),
     # The authored-narrative half of the architecture record (sitting-2
-    # decision 8): the Runtime flows check_flows.py verifies from
-    # DevStg-Tests on live in their own doc, not inside architecture.md.
+    # decision 8, WI-455): the Runtime flows check_flows.py verifies from
+    # DevStg-Tests on. The structural half is DERIVED (dashboard + checks read
+    # the registries and source AST), so no docs/architecture.md is scaffolded.
     ("RUNTIME_FLOWS.template.md", "docs/runtime-flows.md"),
     ("INTERFACES.template.md", "docs/interfaces.md"),
     (
@@ -2076,43 +2078,19 @@ def apply_template_rewrites(dst_rel, dst):
 
 
 def initialize_generated_docs(dest, created):
-    """Run the generators once so the fresh scaffold starts green: the arch-map
-    placeholder would otherwise fail `gen_arch_map.py --check` (and so the
-    harness) until the first manual run.
+    """Run the generators once so the fresh scaffold starts green (the fully
+    generated artifacts would otherwise read as stale/missing to their
+    freshness gates until the first manual run).
 
-    Gated on this run having *created* docs/architecture.md: a re-sync against
-    an adopted repo must never regenerate an artifact another generator owns —
-    a PowerShell repo's map is written by the gen_arch_map .ps1 port, and
-    running the Python generator over it clobbers the generated block (the
-    FileBackup re-sync hit exactly this)."""
-    if "docs/architecture.md" not in created:
+    Gated on this run having *created* docs/status.md — a fresh scaffold, by
+    construction: a re-sync against an adopted repo skips every existing file,
+    so this gate keeps the standing rule that a re-sync must never regenerate
+    an artifact another generator owns (the FileBackup re-sync lesson; the
+    gate rode docs/architecture.md until WI-455 retired that file from the
+    scaffold surface)."""
+    if "docs/status.md" not in created:
         return
-    # Honor the scaffolded profile's arch-map mode: a non-Python scaffold is
-    # seeded `[arch-map] mode = files` (see seed_arch_map_mode), and check.py
-    # will verify freshness in that mode — initializing in symbols mode would
-    # leave the fresh repo stale on day one.
-    arch_cmd = [
-        "scripts/gen_arch_map.py",
-        "--src",
-        "src",
-        "--doc",
-        "docs/architecture.md",
-    ]
-    ini = dest / "docs" / "stack.ini"
-    if ini.exists():
-        cp = configparser.ConfigParser(interpolation=None)
-        try:
-            cp.read_string(ini.read_text(encoding="utf-8"))
-        except configparser.Error:
-            pass  # check.py reports a malformed profile loudly; init stays reference-mode
-        else:
-            if (
-                cp.has_option("arch-map", "mode")
-                and cp.get("arch-map", "mode") == "files"
-            ):
-                arch_cmd += ["--mode", "files"]
     for rel_cmd in (
-        arch_cmd,
         ["scripts/trace.py"],
         # WI-322: the owner decision surface is a fully-generated file, so a
         # MISSING one reads as stale to its freshness gate (the C9 posture its

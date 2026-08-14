@@ -34,7 +34,6 @@ HOOK = KIT / "hooks" / "pre-commit"
 WIRED = {
     "trajectory": "trajectory-map",
     "okf": "okf",
-    "archmap": "arch-map",
     "status": "status-map",
     "gate": "derived-gate",
     "openitems": "open-items",

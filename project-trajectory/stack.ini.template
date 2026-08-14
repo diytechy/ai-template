@@ -82,12 +82,14 @@ threshold = 80
 args = --cov={src} --cov-report=term-missing --cov-fail-under={coverage}
 
 [arch-map]
-# The kit-owned code-map freshness step (gen_arch_map.py --check):
-#   symbols  (default) the Python-AST symbol map + dependency diagram.
-#   files    the stack-neutral one-row-per-file fallback — the honest choice
-#            for a non-Python stack until it ports a symbol-level generator
-#            (ADOPTING.md §3; the marker block is the contract). An explicitly
-#            non-Python bootstrap (--stack node|go|rust|powershell) seeds it.
+# The AST-inventory mode over [paths] src (WI-455 — the derived architecture:
+# check_trajectory's coverage rules, the dashboard's How-SW view and
+# check_doc_refs' sym: tier all scan the source tree live):
+#   symbols  (default) the Python-AST inventory.
+#   files    declares "no Python source here", keeping those layers dormant
+#            rather than vacuously green — the honest choice for a non-Python
+#            stack (ADOPTING.md §3). An explicitly non-Python bootstrap
+#            (--stack node|go|rust|powershell) seeds it.
 mode = symbols
 # files mode only — whitespace-separated comment tokens whose first line is a
 # file's summary, when yours isn't one of the defaults (# // --):
@@ -104,10 +106,10 @@ mode = symbols
 # vendored code. Each row:
 #   <path> = <kind> [| <BEGIN marker> | <END marker>]
 # `path` is an exact repo-relative path or a "/"-terminated directory prefix.
-# `kind` names the regenerator: trajectory | okf | status | archmap. OMIT the
+# `kind` names the regenerator: trajectory | okf | status. OMIT the
 # marker pair for a FULLY generated artifact; NAME the (BEGIN, END) pair for a
 # PARTIALLY generated file where only the marked region regenerates
-# (status.md's and architecture.md's hand-authored prose stays yours). An
+# (status.md's hand-authored prose stays yours). An
 # ABSENT section => these built-in defaults (byte-identical). The skills index
 # is deliberately absent: its neutral source lives only in the kit repo and
 # its per-agent copies are hand-authored source (WI-231).
@@ -123,7 +125,6 @@ mode = symbols
 [generated]
 PROJECT_STATE.html = trajectory
 docs/okf/ = okf
-docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> | <!-- END GENERATED MODULE MAP -->
 docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED STATUS -->
 
 # --- Session-engine dials (IF-068) — the single home -------------------------

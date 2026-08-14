@@ -22,7 +22,6 @@ audits.
 | `STATUS.template.md` | The blackboard's **working surface** (only what happens next) → copy to `docs/status.md`. |
 | `registries/open-items.template.toml` | The **owner decision registry** status.md's Needs-\<human> bullets project from — one `OI-N` ROW per pending decision (blast radius, options, recommendation); `Status` leaves `pending` when the ruling lands in the log's Decisions → copy to `docs/requirements/open-items.toml`. `scripts/gen_open_items.py` renders it, plus every `Drafted`/`Modified` spine row's before/after, into the generated `docs/open-items.html` the owner reads. |
 | `LOG.template.md` | The **append-only history** status.md points at (gate sign-offs, verdicts, ratified decisions — process.md §5) → copy to `docs/log.md`. |
-| `ARCHITECTURE.template.md` | One-page overview + generated map → copy to `docs/architecture.md`. |
 | `RUNTIME_FLOWS.template.md` | The **authored Runtime flows** (Mermaid sequence diagrams citing SR/LLR ids; the narrative half of the architecture record) → copy to `docs/runtime-flows.md`. Required from DevStg-Tests; `check_flows.py` keeps it honest. |
 | `INTERFACES.template.md` | Interface-seam contracts (IF-###) → copy to `docs/interfaces.md`. Cross-project **and** intra-repo (module↔module/file/external). |
 | `registries/stakeholder-needs.template.toml` | SN-### (stakeholder needs + edge cases). |

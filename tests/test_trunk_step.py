@@ -245,7 +245,6 @@ def test_regen_skips_absent_artifact_families(tmp_path, capsys):
     assert ts.regen(tmp_path) == 0
     out = capsys.readouterr().out
     for name in (
-        "arch-map",
         "okf",
         "derived-gate",
         "trajectory",
@@ -259,17 +258,17 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     # The §5.5 fail-loud contract on the regen half: a red generator stops the
     # step at that step (a later one may read its output), exits nonzero, and
     # prints the child's own diagnosis rather than summarizing it away.
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "architecture.md").write_text("# Arch\n", encoding="utf-8")
-    (tmp_path / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = src\n", encoding="utf-8"
+    # The okf family arms on docs/okf/ presence; a registry the generator
+    # cannot parse makes the regen fail loudly at that step.
+    (tmp_path / "docs" / "okf").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements" / "system-requirements.toml").write_text(
+        "[system_requirement.SR-001]\nthis is not TOML =\n", encoding="utf-8"
     )
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "broken.py").write_text("def (:\n", encoding="utf-8")
 
     assert ts.regen(tmp_path) == 1
     err = capsys.readouterr().err
-    assert "regen FAILED at arch-map" in err
+    assert "regen FAILED at okf" in err
     assert "trunk lane is RED" in err
 
 

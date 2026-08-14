@@ -4,7 +4,7 @@
 > draft/spec). It sets up a sustainable, modular, requirement-traced development
 > trajectory with gates and audits. Fill the **PROJECT BRIEF** at the bottom
 > first. Companion files in this folder (`PROCESS.md`, `STATUS.template.md`,
-> `ARCHITECTURE.template.md`, `registries/*`) are the exact artifact formats —
+> `RUNTIME_FLOWS.template.md`, `registries/*`) are the exact artifact formats —
 > tell the agent to copy them in, or it will create equivalents.
 
 ---
@@ -74,7 +74,7 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
   (Software Engineer owns).
 - `docs/test/test-cases.toml` — **TC-###** ↔ requirements (Test Engineer owns).
 - `docs/architecture.md` — one-page overview + a **generated** module/function
-  map (copy `ARCHITECTURE.template.md`; refresh it with `scripts/gen_arch_map.py`).
+  map (derived from the source AST into `PROJECT_STATE.html`'s How-SW tab).
 - `docs/interfaces.md` + `docs/requirements/interfaces.toml` — **IF-###**
   cross-project contracts (copy `INTERFACES.template.md` + the registry).
   **If this project interlinks with another repo or has module-to-module seams**

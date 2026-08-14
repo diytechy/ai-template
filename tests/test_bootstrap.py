@@ -44,9 +44,9 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/requirements/open-items.toml",
         "docs/log.md",
         "docs/plan.md",
-        "docs/architecture.md",
         # WI-455 (sitting-2 decision 8): the authored Runtime flows live in
-        # their own scaffolded doc, no longer inside architecture.md.
+        # their own scaffolded doc; docs/architecture.md is RETIRED from the
+        # scaffold surface (the structural architecture derives live).
         "docs/runtime-flows.md",
         "docs/requirements/system-requirements.toml",
         "docs/requirements/performance-budgets.csv",
@@ -156,8 +156,6 @@ def test_scaffold_stack_ini_declares_generated_artifact_set(scaffold):
     for row in (
         "PROJECT_STATE.html = trajectory",
         "docs/okf/ = okf",
-        "docs/architecture.md = archmap | <!-- BEGIN GENERATED MODULE MAP --> "
-        "| <!-- END GENERATED MODULE MAP -->",
         "docs/status.md = status | <!-- BEGIN GENERATED STATUS --> "
         "| <!-- END GENERATED STATUS -->",
     ):
@@ -389,21 +387,17 @@ def test_plan_build_cadence_surfaces(scaffold):
         )
 
 
-def test_fresh_scaffold_passes_archmap_check_and_trace(scaffold):
-    # Bootstrap runs the generators itself, so --check must pass immediately —
-    # a fresh repo must not start with a failing harness.
-    proc = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
+def test_fresh_scaffold_passes_trace(scaffold):
+    proc = run_py(["scripts/trace.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "orphans=0" in proc.stdout
 
 
-def test_scaffold_architecture_has_generated_diagram_block(scaffold):
-    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
-    assert "BEGIN GENERATED DEPENDENCY DIAGRAM" in arch
-    # Empty src at bootstrap time -> the spliced placeholder, not the template's.
-    assert "(no source scanned)" in arch
+def test_scaffold_ships_no_architecture_doc(scaffold):
+    # WI-455 (sitting-2 decision 8): the structural architecture DERIVES —
+    # the dashboard and checks scan the registries + source AST — so no
+    # docs/architecture.md way-station is scaffolded; the authored narrative
+    # ships as docs/runtime-flows.md instead (asserted in the file list).
+    assert not (scaffold / "docs" / "architecture.md").exists()
 
 
 def test_scaffold_stamps_kit_version(scaffold):
@@ -634,24 +628,22 @@ def test_readme_never_overwritten(tmp_path):
     assert text == "my project's own readme"
 
 
-def test_resync_does_not_regenerate_foreign_arch_map(tmp_path):
-    # Re-sync against an adopted repo whose arch map is owned by a different
-    # generator (e.g. the PowerShell port): bootstrap must not run the Python
-    # generator over it — the generated block would be clobbered (the
-    # FileBackup re-sync hit this). The initializer is gated on this run
-    # having created docs/architecture.md.
-    dest = tmp_path / "repo"
-    (dest / "docs").mkdir(parents=True)
-    sentinel = (
-        "# Arch\n\n<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->\n"
-        "_written by the ps1 port — SENTINEL_\n"
-        "<!-- END GENERATED DEPENDENCY DIAGRAM -->\n"
-    )
-    (dest / "docs" / "architecture.md").write_text(sentinel, encoding="utf-8")
+def test_resync_never_reruns_the_scaffold_initializers(tmp_path):
+    # Re-sync against an adopted repo must not re-run the fresh-scaffold
+    # generator initialization (initialize_generated_docs gates on this run
+    # having CREATED docs/status.md — a re-sync skips existing files, so the
+    # gate holds; it rode docs/architecture.md until WI-455 retired that file
+    # from the scaffold surface). A sentinel open-items surface owned by the
+    # adopter must survive byte-identical.
+    dest = tmp_path / "adopted"
     proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    text = (dest / "docs" / "architecture.md").read_text(encoding="utf-8")
-    assert "SENTINEL" in text, "re-sync must not regenerate a pre-existing map"
+    sentinel = "<!-- FOREIGN GENERATOR OWNS THIS -->\n"
+    (dest / "docs" / "open-items.html").write_text(sentinel, encoding="utf-8")
+    proc = run_py([SCRIPTS / "bootstrap.py", "--dest", dest], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    text = (dest / "docs" / "open-items.html").read_text(encoding="utf-8")
+    assert text == sentinel
 
 
 def test_run_launchers_delegate_to_run_menu(scaffold):

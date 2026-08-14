@@ -1094,7 +1094,7 @@ def flows_block(flows):
     toolchain, per the strict no-external-asset posture), so it embeds the
     same TEXT GitHub/VS Code render natively in the doc itself — a sequence
     diagram's source reads top-to-bottom like a script. Returns "" when no
-    flows are authored, keeping a pre-DevBar-Tests repo's panel
+    flows are authored, keeping a pre-DevStg-Tests repo's panel
     byte-identical."""
     if not flows:
         return ""

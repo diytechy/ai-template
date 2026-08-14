@@ -177,16 +177,10 @@ fi
 #    hook once chained a separate `--run-step`/script call per check. Faster on every
 #    commit, and it reports EVERY stale artifact in one pass (the old `set -e`
 #    chain stopped at the first, hiding the rest until the next attempt). The
-#    delegation keeps each step honoring the declared docs/stack.ini profile —
-#    e.g. [arch-map] mode, so a files-mode repo is never read as stale by the
-#    symbol parser (Finance-Auditor re-sync field report, WI-1.26). The steps:
-#      - arch-map        code map fresh: protects the GENERATED regions from
-#                        hand-edits and catches drift from the source. EDIT FOR
-#                        A PORTED GENERATOR: a repo that swapped in its own
-#                        symbol-level generator (e.g. the PowerShell reference
-#                        port, scripts/gen_arch_map.ps1) replaces this step with
-#                        its own freshness check — any generator that fills the
-#                        same marker block works (ADOPTING.md §3).
+#    delegation keeps each step honoring the declared docs/stack.ini profile
+#    (Finance-Auditor re-sync field report, WI-1.26). The steps (the arch-map
+#    committed-map step retired at WI-455 — the module map derives live from
+#    the source AST):
 #      - okf             knowledge bundle fresh: a registry edit stales docs/okf/
 #                        exactly like the dashboard; vacuous for a non-adopter,
 #                        [checks] okf_export = false silences.
@@ -249,13 +243,13 @@ fi
 #                        `gen_prompt_catalog.py`. Both steps are no-ops where the
 #                        kit-only generator isn't beside check.py, so a
 #                        non-adopter pays nothing.
-#    When a step reports STALE, regenerate in dependency order — arch-map ->
-#    okf -> trajectory (the dashboard consumes the other two); the gate marker via
+#    When a step reports STALE, regenerate in dependency order — okf ->
+#    trajectory (the dashboard consumes the bundle); the gate marker via
 #    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
 #    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
 #    — then re-commit. The two kit-only index/catalogue steps stand alone: each
 #    regenerates with its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps arch-map,okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,skills-index,prompt-catalog,ratify-fresh
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,skills-index,prompt-catalog,ratify-fresh
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

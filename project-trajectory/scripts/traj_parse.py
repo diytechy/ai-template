@@ -294,7 +294,7 @@ def runtime_flows(root):
     inside the check_flows-checked doc that owns >=1 ```mermaid fence, in file
     order — the dashboard embeds them beside the derived How-SW views so
     PROJECT_STATE.html carries the FULL architecture (sitting-2 decision 8).
-    Empty when the doc is absent (a repo not yet at DevBar-Tests pays
+    Empty when the doc is absent (a repo not yet at DevStg-Tests pays
     nothing)."""
     doc = root / "docs" / "runtime-flows.md"
     if not doc.exists():

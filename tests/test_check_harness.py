@@ -42,14 +42,12 @@ def test_minimal_project_is_green(scaffold):
     proc = run_py(["scripts/check.py", "--gate", "all", "--tier", "all"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
-    # The regenerated architecture doc carries the Mermaid dependency diagram.
-    arch = (scaffold / "docs" / "architecture.md").read_text(encoding="utf-8")
-    assert "```mermaid" in arch
-    assert "src/demo" in arch
+    # (No docs/architecture.md exists to regenerate since WI-455 — the module
+    # inventory derives live from src/, exercised by the trajectory step above.)
 
 
 def test_off_root_fails_loudly(tmp_path):
-    # M2 / WI-100: check.py reads docs/gate + docs/stack.ini + docs/architecture.md
+    # M2 / WI-100: check.py reads docs/gate + docs/stack.ini
     # relative to CWD. Run it where there is no docs/ tree and it must FAIL loudly
     # rather than silently fall back to the built-in commands and gate `all` (a
     # different, weaker plan). tmp_path has no docs/, so this stands in for "off
@@ -150,7 +148,6 @@ def test_step_plan_wiring():
     layer_of = {s[0]: s[4] for s in full}
     assert layer_of["traceability"] == "process"
     assert layer_of["design-flows"] == "process"
-    assert layer_of["arch-map"] == "process"
     assert layer_of["format"] == "product"
     assert layer_of["lint"] == "product"
     assert layer_of["tests+coverage"] == "product"
@@ -216,13 +213,12 @@ def test_run_steps_batch_passes_on_clean_project(scaffold):
         [
             "scripts/check.py",
             "--run-steps",
-            "arch-map,okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync",
+            "okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync",
         ],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     for name in (
-        "arch-map",
         "okf",
         "trajectory-map",
         "registry-integrity",
@@ -258,23 +254,21 @@ def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
 def test_run_steps_reports_every_failure(scaffold):
     # Unlike a `set -e` chain of single --run-step calls (which stops at the
     # first stale artifact), the batch names ALL failures in one pass: stale
-    # the code map AND duplicate a registry id, and both steps must FAIL in
+    # the OKF bundle AND duplicate a registry id, and both steps must FAIL in
     # the same run.
     make_minimal_project(scaffold)
-    (scaffold / "src" / "demo.py").write_text(
-        DEMO_SRC + "\n\ndef extra():\n    return 0\n", encoding="utf-8"
-    )
+    (scaffold / "docs" / "okf" / "index.md").write_text("# stale\n", encoding="utf-8")
     sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
     sr.write_text(
         sr.read_text(encoding="utf-8") + SRS.splitlines()[1] + "\n", encoding="utf-8"
     )
     proc = run_py(
-        ["scripts/check.py", "--run-steps", "arch-map,registry-integrity"],
+        ["scripts/check.py", "--run-steps", "okf,registry-integrity"],
         cwd=scaffold,
     )
     assert proc.returncode != 0
     lines = proc.stdout.splitlines()
-    assert any("FAIL" in ln and "arch-map" in ln for ln in lines), proc.stdout
+    assert any("FAIL" in ln and "okf" in ln for ln in lines), proc.stdout
     assert any("FAIL" in ln and "registry-integrity" in ln for ln in lines), proc.stdout
 
 
@@ -312,7 +306,7 @@ def test_step_gate_honours_an_explicit_gate(scaffold):
 
 
 def test_run_steps_unknown_name_fails_loudly(scaffold):
-    proc = run_py(["scripts/check.py", "--run-steps", "arch-map,nope"], cwd=scaffold)
+    proc = run_py(["scripts/check.py", "--run-steps", "okf,nope"], cwd=scaffold)
     assert proc.returncode != 0
     assert "nope" in proc.stdout + proc.stderr
 

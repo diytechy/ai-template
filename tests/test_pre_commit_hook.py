@@ -23,8 +23,6 @@ from conftest import (
 )
 
 HOOK = ".githooks/pre-commit"
-ARCH = "docs/architecture.md"
-MAP_BEGIN = "<!-- BEGIN GENERATED MODULE MAP -->"
 
 
 def test_bootstrap_copies_pre_commit_hook(scaffold):
@@ -34,55 +32,22 @@ def test_bootstrap_copies_pre_commit_hook(scaffold):
 
 
 def test_hook_checks_pass_on_clean_project(scaffold):
-    # The two stdlib checks the hook always runs must pass on a fully-traced,
-    # freshly-mapped project (the hook's "green commit" path).
+    # The stdlib integrity check the hook always runs must pass on a fully
+    # traced project (the hook's "green commit" path). (The gen_arch_map
+    # --check arm retired at WI-455 with the committed map itself.)
     make_minimal_project(scaffold)
-    archmap = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
-    assert archmap.returncode == 0, archmap.stdout + archmap.stderr
     trace = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert trace.returncode == 0, trace.stdout + trace.stderr
 
 
-def test_hook_blocks_stale_generated_block(scaffold):
-    # A hand-edited GENERATED region must be caught by gen_arch_map --check (the
-    # hook's "protect the GENERATED regions" guarantee).
-    make_minimal_project(scaffold)
-    arch = scaffold / ARCH
-    text = arch.read_text(encoding="utf-8")
-    assert MAP_BEGIN in text
-    arch.write_text(
-        text.replace(MAP_BEGIN, MAP_BEGIN + "\nHAND-EDITED — should be rejected.\n"),
-        encoding="utf-8",
-    )
-    archmap = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
-    assert archmap.returncode != 0, "stale generated block must fail --check"
-
-
-def test_hook_arch_map_step_honors_declared_mode(scaffold):
-    # WI-1.26 (Finance-Auditor re-sync field report): the hook's arch-map step
-    # delegates to `check.py --run-step arch-map` (like its format step) so it
-    # honors docs/stack.ini [arch-map]. A files-mode repo would otherwise have
-    # every commit blocked: the hardcoded symbol parser reads a files-mode
-    # architecture.md as stale.
-    make_minimal_project(scaffold)
-    ini = scaffold / "docs" / "stack.ini"
-    ini.write_text(
-        ini.read_text(encoding="utf-8").replace("mode = symbols", "mode = files", 1),
-        encoding="utf-8",
-    )
-    regen = run_py(["scripts/gen_arch_map.py", "--mode", "files"], cwd=scaffold)
-    assert regen.returncode == 0, regen.stdout + regen.stderr
-    # The delegated step (what the hook now runs) agrees with the declared mode…
-    ok = run_py(["scripts/check.py", "--run-step", "arch-map"], cwd=scaffold)
-    assert ok.returncode == 0, ok.stdout + ok.stderr
-    # …where the hook's old hardcoded symbol-mode line reads the same repo as
-    # stale — the every-commit-blocked failure the delegation removes.
-    hard = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
-    assert hard.returncode != 0
-    # And the hook script itself carries the delegation (the batched floor),
-    # not the bare call.
+def test_hook_floor_no_longer_runs_the_retired_arch_map_step(scaffold):
+    # WI-455: the committed docs/architecture.md is not scaffolded and the
+    # arch-map step is gone from check.py, so the hook's batched floor must
+    # not name it — a named-but-unknown step would fail every commit.
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    assert "--run-steps" in hook_text and "arch-map" in hook_text
+    line = next(ln for ln in hook_text.splitlines() if "--run-steps" in ln and ln.strip().startswith('"$PY"'))
+    assert "arch-map" not in line
+    assert "okf" in line and "trajectory-map" in line
 
 
 def test_hook_trajectory_map_step(scaffold):
@@ -285,13 +250,10 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
-    # Tamper with the generated block; the hook must now block the commit.
-    arch = scaffold / ARCH
-    arch.write_text(
-        arch.read_text(encoding="utf-8").replace(
-            MAP_BEGIN, MAP_BEGIN + "\nHAND-EDITED — should be rejected.\n"
-        ),
-        encoding="utf-8",
+    # Tamper with a generated artifact (the OKF bundle, since WI-455 retired
+    # the committed arch map); the hook's batched floor must block the commit.
+    (scaffold / "docs" / "okf" / "index.md").write_text(
+        "# HAND-EDITED — should be rejected\n", encoding="utf-8"
     )
     blocked = subprocess.run(
         [sh, HOOK], cwd=str(scaffold), capture_output=True, text=True
