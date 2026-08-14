@@ -69,3 +69,40 @@ dirty the tier is the one that reports.
   `trace.py` rc=0, `check_trajectory.py --strict` rc=0, live checker run
   clean over 27 need cells
   <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root ." rev=790a253a -->.
+
+## REVIEW-A round 1 fix (464ec259)
+
+- **Three genuine finds from the cross-family adversarial round, fixed:**
+  (1) the single-slash dot-free path exemption swallowed real one-level
+  internal paths (`docs/archive`, `docs/work`) — a token now reports as a
+  path when it RESOLVES in the scanned tree, and the live English pairs
+  (`subjective/perceptual`, `requirement/test`) resolve nowhere and stay
+  exempt; (2) a URL's path-shaped tail (`https://host/docs/status.md`)
+  reported as an internal path against the docstring's own URL exclusion —
+  URL spans are now pre-suppressed whole, for every class; (3) a
+  present-but-emptied needs registry scanned as a clean tier — driven at the
+  review: with the registry emptied, trace.py default rc=0 and the gate value
+  is coincidentally unchanged at DevBar-Reqs, so NOTHING hard-failed — now
+  reported VACUOUS (absent stays the pre-scaffold clean skip; a `-000`-only
+  scaffold registry stays a blank form).
+- **One challenge refuted with driven evidence:** an allow'd name
+  (`docs/SR-101.md`) suppressing the citation nested inside its own span is
+  deliberate and necessary (otherwise allow-listing `PROJECT_STATE.html`
+  would re-flag its `PROJECT_STATE` substring, self-defeating the reviewed
+  list); an independent `SR-101` outside the span still reports under
+  `--strict`. The Windows-separator claim was refuted in part: `docs\status.md`
+  reports (row + phrase) through the identifier class, and a raw backslash in
+  a TOML basic string is a loud carrier refusal, not a silent miss.
+- **Registry honesty:** LLR-170 detail, TC-164 method/expected and IF-122's
+  contract re-state the changed behavior; the WI Deliverable carries the
+  round-1 record. All rows Draft/draft — no re-attest window.
+- **Measured on the fix commit 464ec259 (clean tree):** module suite
+  13 passed in 0.47s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_check_need_form.py" rev=464ec259 -->;
+  smoke tier 1127 passed / 7 skipped in 29.56s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=464ec259 -->
+  (the 4 new tests join the tier, membership within the 1150 ceiling);
+  live checker clean over 27 need cells
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_need_form.py --root ." rev=464ec259 -->;
+  `trace.py` rc=0, `check_trajectory.py --strict` rc=0, `derive_gate.py
+  --check` up to date.
