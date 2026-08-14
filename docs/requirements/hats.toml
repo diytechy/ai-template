@@ -1,13 +1,15 @@
 # The HATS ROSTER — this repo's declared expert perspectives, the ones every
 # applicable decomposition must face (SN-036; ruled at OI-19, 2026-08-13,
-# option (a): ship the six-hat starting roster, injection first, record second).
+# option (a): ship the six-hat starting roster, injection first, record
+# second; grown to thirteen by Decision 11, rulings 2026-08-13q/s — WI-453).
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. It is SHIPPED AS DRAFTED on
-# 2026-08-13 and MARKED FOR THE OWNER'S EDIT AT RETURN: review the six, cut
-# what does not earn its place, add what is missing, and rewrite any
-# `applies_when` that does not match how this repo actually files work. A
-# roster chosen by an agent and left unread is exactly the ceremony SN-036 was
-# admitted to prevent.
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The six original hats SHIPPED AS
+# DRAFTED on 2026-08-13; the UX pair and the five aspect hats below them land
+# ruled owner text (Decision 11, accepted 2026-08-13u). MARKED FOR THE
+# OWNER'S EDIT AT RETURN: review the thirteen, cut what does not earn its
+# place, add what is missing, and rewrite any `applies_when` that does not
+# match how this repo actually files work. A roster chosen by an agent and
+# left unread is exactly the ceremony SN-036 was admitted to prevent.
 #
 # A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must
 # be put to every decomposition it applies to. A domain expert may have no
