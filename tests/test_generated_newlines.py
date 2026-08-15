@@ -21,7 +21,7 @@ translation to get wrong.
 ## Two corrections this module records, because they cost something
 
 **`Path.write_text(newline=...)` is 3.10+, NOT 3.13+.** It is `Path.read_text`
-whose `newline` kwarg is 3.13+, and the two were confused. Verified on the floor
+whose `newline` kwarg is 3.13+, and the two were confused. Approved on the floor
 interpreter (3.11.9): `write_text(newline=)` works, `read_text(newline=)` raises
 `TypeError`. Three other kit scripts had said "3.10+" in their own comments the
 whole time.
@@ -226,10 +226,12 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind,
     # 865 -> 874 when step 4 hoisted the baseline and dropped the stamp, and
     # 874 -> 877 when the module's Contracts: docstring line gained IF-126 (log
-    # 2026-08-15h). That churn is the price of pinning a SITE rather than a
+    # 2026-08-15h), and 877 -> 876 when D-9 step 5's rename retired the third
+    # attestation-card kind that step 2 had added (log 2026-08-15m).
+    # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 877)], sites
+    assert sites == [("gen_open_items.py", 876)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still
@@ -317,7 +319,7 @@ def test_a_regenerated_artifact_has_no_cr_bytes(tmp_path, script, artifact):
     (req / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
         "Permutations,Priority,Verification,Status\n"
-        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Verified\n',
+        'SR-001,T,SN-001,"The system shall.",R,AC,,M,Test,Approved\n',
         encoding="utf-8",
     )
     proc = run_py([SCRIPTS / script, "--root", tmp_path], cwd=tmp_path)

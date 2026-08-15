@@ -729,7 +729,7 @@ def _pending_cards(root):
     2026-08-01: gen_open_items reuses gen_trajectory.pending_block verbatim,
     and the dispatcher's exit banner must derive from that one read so
     agent-resume and the owner surfaces can never disagree about what is
-    blocking). Blocked rows with a BlockRef plus Draft/Modified spine rows;
+    blocking). Blocked rows with a BlockRef plus Drafted/Modified spine rows;
     the tracked-pause card is excluded because a pause has its own earlier
     exit, and the coordinator's git-trailer reads stay for in-flight lanes
     only.
@@ -767,7 +767,7 @@ def _surface_banner(root, surfaced):
     card silently SUPPRESSED two genuinely queued attestation rows, hiding
     work the owner had every reason to see. The reason given for suppressing
     them (that the populations overlap, since `_pending_cards` yields blocked
-    rows with a BlockRef plus Draft/Modified spine rows while `surfaced`
+    rows with a BlockRef plus Drafted/Modified spine rows while `surfaced`
     yields queued gate/attestation frontier rows, and one row can be both)
     justifies never SUMMING them — it does not justify hiding one.
 
@@ -834,40 +834,37 @@ RED_TC_PREFIX = "red TC "
 # was written — see `red_tc_census`; D-9 step 1 closed it, and the exemption
 # form is kept because it still fails toward NAMING a gap.
 #
-# `planned` IS DELIBERATELY ABSENT, against the D-9 step-2 worklist, and the
-# reason is arithmetic rather than taste (measured 2026-08-15, log 2026-08-15g).
-# Step 1 closed `Status` to exactly {Draft, Planned, Modified, Verified} and
-# `Status` is a REQUIRED TC field, so adding `planned` here would make this set
-# the WHOLE vocabulary: the census could then fire only on a row with no Status
-# at all — a state the schema tier already refuses. And such a row cannot even
-# reach a judge, because `adjudicate_brief.TC_CELLS` requires a non-empty
-# `Status` and refuses the brief without one. Census -> mint -> brief would be
-# unreachable end to end, which is not a narrowed rung but a deleted feature
-# (LLR-159) — the §F4 "the migration removes the only detector" failure, one
-# tier down. `Planned` under a claimed implementation is in fact this rung's
-# CLEANEST case: the method is ratified, the work is closed, and the evidence
-# still is not green. Re-decide at step 5, when `Planned`'s fate is ruled: if
-# it folds into `Approved`, this set needs no change at all.
-_TC_NOT_RED = frozenset({"verified", "draft", "modified"})
+# THE `planned` QUESTION DISSOLVED AT D-9 STEP 5, exactly as the step-2 entry
+# said it might. Step 2 declined to add `planned` here on arithmetic rather than
+# taste: `Status` was closed to four values and is a REQUIRED TC field, so a
+# fourth member would have made this set the WHOLE vocabulary and left the
+# census firing only on a row with no Status at all — a state the schema tier
+# refuses and `adjudicate_brief.TC_CELLS` will not brief, so census -> mint ->
+# brief would have been unreachable end to end (a deleted feature, LLR-159, not
+# a narrowed rung). OI-30 D1 then folded `Planned` into `Approved`, so the
+# judgement had nothing left to be about: the set is the SAME three states under
+# the renamed words, and the vocabulary is once again wider than the exemption.
+_TC_NOT_RED = frozenset({"approved", "drafted", "modified"})
 
 
 def red_tc_census(root, reg=None):
     """LLR-159: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION.
 
-    A TC that is not `Verified` is ordinary unfinished work — unless something
+    A TC that is not `Approved` is ordinary unfinished work — unless something
     already claims to have BUILT what it verifies, and that is the state this
     names: a TC outside the three exempt statuses, all of whose `Verifies`
     targets are cited by at least one WI recorded `done`. The pair is a
     contradiction the registries state plainly and nothing was reading: the work
     is closed and the evidence for it is red.
 
-    Status is an OPEN vocabulary, so the rule is stated as exemptions rather
+    Status is CLOSED (D-9 step 1) but the rule stays stated as exemptions rather
     than as a list of red words — anything else is red, which fails toward
-    naming a gap rather than toward missing one:
+    naming a gap rather than toward missing one, and keeps working for a
+    downstream repo mid-migration:
 
-      Verified  green, by definition.
-      Draft     pre-ratification; "not yet green" is its CORRECT state.
-      Modified  the post-attestation amendment state, which the §A5.1 amendment
+      Approved  green, by definition.
+      Drafted   pre-approval; "not yet green" is its CORRECT state.
+      Modified  the post-approval amendment state, which the §A5.1 amendment
                 adjudication already owns. Minting here too would put two
                 judgement rows on one event.
 

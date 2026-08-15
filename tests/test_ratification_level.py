@@ -283,10 +283,10 @@ SR = {
     "SR-ID": "SR-001",
     "SN-Refs": "SN-001",
     "Verification": "Test",
-    "Status": "Verified",
+    "Status": "Approved",
 }
-LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Verified"}
-TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Verified"}
+LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}
+TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}
 
 
 def _stage(srs=(SR,), llrs=(LLR,), tcs=(TC,), sn_ids=("SN-001",), sn_draft=(), **kw):
@@ -322,7 +322,7 @@ def test_a_MODIFIED_requirement_is_the_REQS_rung():
     # The post-attestation amendment state: the text moved after it was
     # attested, so a fresh ratification is owed ON THE SR. Reading it higher up
     # meant a repo at `human_ratification_through = 2` — "the human ratifies SNs
-    # and SRs" — let the loop flip `Modified -> Verified` mechanically, which is
+    # and SRs" — let the loop flip `Modified -> Approved` mechanically, which is
     # a machine ratifying an SR the owner declared human-held.
     assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_REQS
 
@@ -333,8 +333,8 @@ def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
     # during exactly the period they describe.
     assert _stage(llrs=()) == dg.STAGE_LLREQS
     assert _stage(tcs=()) == dg.STAGE_TESTS
-    assert _stage(llrs=(dict(LLR, Status="Draft"),)) == dg.STAGE_LLREQS
-    assert _stage(tcs=(dict(TC, Status="Draft"),)) == dg.STAGE_TESTS
+    assert _stage(llrs=(dict(LLR, Status="Drafted"),)) == dg.STAGE_LLREQS
+    assert _stage(tcs=(dict(TC, Status="Drafted"),)) == dg.STAGE_TESTS
 
 
 def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
@@ -346,20 +346,43 @@ def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
 def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     """THE RUNG INSERTED 2026-08-12, pinned in the exact state that was wrong.
 
-    Every SR decomposed, every TC authored and non-Draft, nothing Verified yet:
+    Every SR decomposed, every TC authored and non-Drafted, nothing Approved yet:
     the test set is WRITTEN, so "TCs in work" is false — what is in work is
     making them pass. This state persists for the entire implementation period,
     which is why reading it as the tests rung labelled the longest stretch of a
     project with the name of a tier that had already finished
     (docs/archive/plans/2026-08-11-stage-gate-semantics.md §3).
 
-    Children are still checked FIRST: an SR reaches Verified only once its LLRs
+    Children are still checked FIRST: an SR reaches Approved only once its LLRs
     and TCs are green, so while a child is in flight the child's rung is the
-    honest answer — the two assertions below pin that half."""
-    assert _stage(srs=(dict(SR, Status="Planned"),)) == dg.STAGE_IMPL
-    unverified = dict(SR, Status="Planned")
+    honest answer — the two assertions below pin that half.
+
+    D-9 STEP 5 MADE THIS RUNG UNREACHABLE-BY-CELL, AND THAT IS RECORDED HERE
+    RATHER THAN PAPERED OVER. The state it describes — decomposed, TCs authored,
+    the SR not yet blessed — was carried by `Planned`, and OI-30 D1 folded
+    `Planned` into `Approved`. Under the narrowed enum every not-`Approved` SR is
+    either `Drafted` or `Modified`, and BOTH are caught by earlier rungs that
+    return DevStg-Reqs, so nothing reaches the Impl test at the bottom of
+    `spine_stage`. This is the STAGE-axis twin of the hazard OI-30 D2 ruled a
+    ceiling for on the BAR axis, and the ceiling covers only the bar: a repo
+    whose SRs are all ex-`Planned` now reads DevStg-Release where it used to read
+    DevStg-Impl. NAMED FOR THE SITTING (log 2026-08-15m), not fixed here —
+    fixing it is the harness driver `spine_stage`'s own CAVEAT already owes,
+    and inventing a second ceiling would pre-empt a ruling nobody has taken.
+    This repo is at DevStg-Boundary, so nothing moved in practice.
+
+    The assertions below therefore pin the CURRENT truth, including the
+    unreachability, so that landing the harness driver reddens this test rather
+    than sliding past it."""
+    for live in ("Drafted", "Modified"):
+        assert _stage(srs=(dict(SR, Status=live),)) == dg.STAGE_REQS, live
+    assert _stage(srs=(dict(SR, Status="Approved"),)) == dg.STAGE_RELEASE
+    # The children-first half is unaffected by the rename and still pins.
+    unverified = dict(SR, Status="Approved")
     assert _stage(srs=(unverified,), tcs=()) == dg.STAGE_TESTS
-    assert _stage(srs=(unverified,), tcs=(dict(TC, Status="Draft"),)) == dg.STAGE_TESTS
+    assert (
+        _stage(srs=(unverified,), tcs=(dict(TC, Status="Drafted"),)) == dg.STAGE_TESTS
+    )
 
 
 # --- the two rungs OI-21 inserted, and their applies-when ----------------------

@@ -2,7 +2,7 @@
 
 The F5 rule lets the kit's scripts duplicate *plumbing* (small CSV/heading loaders)
 so each stays an independently-copyable drop-in. But the two files also duplicate
-*policy* — which SR Verification methods are LLR-exempt, and what "Draft" means —
+*policy* — which SR Verification methods are LLR-exempt, and what "Drafted" means —
 and policy disagreement is a false green or false red at a gate, the exact failure
 class the kit exists to prevent (repo-review-2026-07-12b.md M1 -> WI-099). These
 tests mechanize the "kept in sync" promise the two files used to make only in prose:
@@ -27,7 +27,7 @@ So the ruling now reads, in full:
     count. This was its de-facto state anyway; the census recorded it rather
     than restraining it.
   * duplicated POLICY requires a BEHAVIOURAL PIN IN THIS FILE. A second copy of
-    a decision — what counts as Draft, which methods are LLR-exempt, what a
+    a decision — what counts as Drafted, which methods are LLR-exempt, what a
     tier's table looks like — is licensed only once these tests assert the
     copies agree BY VALUE. Equality alone can be vacuous — the `_sn_fields`
     case proved it — so pin the value, not just the sameness.
@@ -50,40 +50,53 @@ def test_llr_exempt_sets_agree():
     assert set(TRACE.LLR_EXEMPT) == {"Analysis", "Inspection", "Attest"}
 
 
-def test_is_draft_agrees():
-    # Both files decide the pre-ratification Draft state (Status open-vocab, only
-    # "draft" acts). Pin them equivalent across the casing/whitespace/None battery.
+def test_is_drafted_agrees():
+    # Both files decide the pre-approval `Drafted` state. Pin them equivalent
+    # across the casing/whitespace/None battery. THE RETIRED SPELLING IS IN THE
+    # BATTERY DELIBERATELY (D-9 step 5): `draft` must now answer False in BOTH
+    # copies, so a half-migrated tree fails here rather than reading a retired
+    # word in one module and not the other.
     cases = [
+        {"Status": "Drafted"},
+        {"Status": "drafted"},
+        {"Status": "  DRAFTED  "},
         {"Status": "Draft"},
-        {"Status": "draft"},
-        {"Status": "  DRAFT  "},
-        {"Status": "Verified"},
-        {"Status": "Planned"},
+        {"Status": "Approved"},
+        {"Status": "Modified"},
         {"Status": ""},
         {"Status": None},
         {},
     ]
     for row in cases:
-        assert TRACE.is_draft(row) == GATE.is_draft(row), row
+        assert TRACE.is_drafted(row) == GATE.is_drafted(row), row
+    assert TRACE.is_drafted({"Status": "Draft"}) is False
+    assert GATE.is_drafted({"Status": "Draft"}) is False
 
 
-def test_is_verified_agrees():
-    # Both files decide the terminal Verified state (the DevBar-Release --require-verified
+def test_is_approved_agrees():
+    # Both files decide the `Approved` state (the DevBar-Release --require-verified
     # criterion in trace.py, the gate derivation in derive_gate.py). Matched
     # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
-    # two equivalent across the same casing/whitespace/None battery as is_draft.
+    # two equivalent across the same casing/whitespace/None battery as is_drafted.
+    # The two RETIRED spellings that folded into this value (`Verified`,
+    # `Planned`) are in the battery and must both answer False.
     cases = [
+        {"Status": "Approved"},
+        {"Status": "approved"},
+        {"Status": "  APPROVED  "},
         {"Status": "Verified"},
-        {"Status": "verified"},
-        {"Status": "  VERIFIED  "},
-        {"Status": "Draft"},
         {"Status": "Planned"},
+        {"Status": "Drafted"},
+        {"Status": "Modified"},
         {"Status": ""},
         {"Status": None},
         {},
     ]
     for row in cases:
-        assert TRACE.is_verified(row) == GATE.is_verified(row), row
+        assert TRACE.is_approved(row) == GATE.is_approved(row), row
+    for retired in ("Verified", "Planned"):
+        assert TRACE.is_approved({"Status": retired}) is False, retired
+        assert GATE.is_approved({"Status": retired}) is False, retired
 
 
 def test_is_modified_agrees():
@@ -91,15 +104,14 @@ def test_is_modified_agrees():
     # for the chain-consistency warns + the --ratify modified brief, derive_gate.py
     # for the modified=N basis count. Divergence would let a pending re-attest hide
     # from one surface while the other reports it — the same false-green class the
-    # is_draft/is_verified pins exist for. Same casing/whitespace/None battery,
+    # is_drafted/is_approved pins exist for. Same casing/whitespace/None battery,
     # plus the two sibling magic values (each must read NOT-modified in both).
     cases = [
         {"Status": "Modified"},
         {"Status": "modified"},
         {"Status": "  MODIFIED  "},
-        {"Status": "Verified"},
-        {"Status": "Draft"},
-        {"Status": "Planned"},
+        {"Status": "Approved"},
+        {"Status": "Drafted"},
         {"Status": ""},
         {"Status": None},
         {},
@@ -108,38 +120,26 @@ def test_is_modified_agrees():
         assert TRACE.is_modified(row) == GATE.is_modified(row), row
 
 
-def test_is_planned_agrees():
-    # The FOURTH recognized value, added at D-9 step 2 (2026-08-15). Until then
-    # `Planned` sat on 14 live spine rows and NO predicate in the kit read it —
-    # it was indistinguishable from `Bananas`: absent from the re-attest brief,
-    # from the pending-owner-actions projection, from the basis counters, and
-    # never scanned by the amend-without-flip guard. trace.py surfaces it
-    # (open-items + the pending projection); derive_gate.py counts it
-    # (`planned=N`). Same casing/whitespace/None battery as its three siblings,
-    # each of which must read NOT-planned in both copies.
-    cases = [
-        {"Status": "Planned"},
-        {"Status": "planned"},
-        {"Status": "  PLANNED  "},
-        {"Status": "Verified"},
-        {"Status": "Draft"},
-        {"Status": "Modified"},
-        {"Status": ""},
-        {"Status": None},
-        {},
-    ]
-    for row in cases:
-        assert TRACE.is_planned(row) == GATE.is_planned(row), row
+def test_is_planned_is_GONE_from_both_copies():
+    # `is_planned` was step-2 INSURANCE and D-9 step 5 DELETED it, which is what
+    # its own docstring promised — deleted, not re-keyed. OI-30 D1 folded
+    # `Planned` into `Approved`, so the predicate had nothing left to answer for,
+    # and a surviving copy would be a second reader of a retired word.
+    assert not hasattr(TRACE, "is_planned")
+    assert not hasattr(GATE, "is_planned")
 
 
-def test_the_four_recognized_status_values_are_mutually_exclusive():
+def test_the_three_recognized_status_values_are_mutually_exclusive():
     # EXACTLY ONE predicate answers for each declared value, in BOTH copies.
     # This is the assertion that makes `trace.STATUS_VALUES` — the closed enum
     # the integrity floor now enforces — a truthful declaration rather than a
     # list of words: the enum-close-first rule the D-9 migration runs under says
     # the declared set equals the set at least one live predicate recognizes,
     # and this is where "at least one" and "at most one" are both checked.
-    predicates = ("is_draft", "is_planned", "is_modified", "is_verified")
+    # THREE since the step-5 rename narrowed the enum to
+    # {Drafted, Approved, Modified}.
+    predicates = ("is_drafted", "is_modified", "is_approved")
+    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Modified"})
     for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
         for mod in (TRACE, GATE):
@@ -153,6 +153,58 @@ def test_the_four_recognized_status_values_are_mutually_exclusive():
     assert {p[len("is_") :] for p in predicates} == {
         v.lower() for v in TRACE.STATUS_VALUES
     }
+
+
+# The words D-9 retired. `Draft` and `Verified` were renamed; `Planned` was
+# FOLDED (OI-30 D1). None of the three may be honoured by any predicate in any
+# shipped script again.
+_RETIRED_STATUS_WORDS = ("draft", "verified", "planned")
+
+
+def test_no_predicate_anywhere_still_honours_a_RETIRED_status_word():
+    # THE NEGATIVE ASSERTION the migration plan §F3 asks for, and it is a GREP
+    # over the source rather than a call over the two copies above, for the same
+    # reason the id-watermark seed pin is: the failure this guards against is a
+    # THIRD copy — a module that kept comparing `Status` to a retired literal
+    # while `trace` and `derive_gate` moved. A predicate-level battery cannot see
+    # a module it does not import.
+    #
+    # The rule is narrow on purpose: a retired word inside a COMMENT is history
+    # and is welcome (this file is full of it). What is forbidden is a retired
+    # word being COMPARED to a Status-shaped value in running code.
+    import re as _re
+    from pathlib import Path as _Path
+
+    scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
+    # `<something>status<something> == "draft"` and its `in (...)`/`in {...}`
+    # set-membership sibling, in either argument order, case-insensitive.
+    pat = _re.compile(
+        r"status[a-z_]*\s*(?:==|!=|\bin\b)[^\n#]*?[\"'](?:%s)[\"']"
+        % "|".join(_RETIRED_STATUS_WORDS),
+        _re.IGNORECASE,
+    )
+    offenders = []
+    for path in sorted(scripts.glob("*.py")):
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if pat.search(code):
+                offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
+    assert not offenders, "retired Status words still compared in code:\n" + "\n".join(
+        offenders
+    )
+
+
+def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
+    # The declaration half of the same rule: the closed enum and every
+    # approval-claim set must speak only live words. `_APPROVAL_CLAIMED` is here
+    # because it is the set `baseline_snapshot` reads INSTEAD of importing a
+    # predicate (it cannot: `trace` imports it), so it is exactly the third copy
+    # the grep above exists to catch, and it is worth pinning by value too.
+    snap = load_script("baseline_snapshot")
+    assert snap._APPROVAL_CLAIMED == frozenset({"approved"})
+    for word in _RETIRED_STATUS_WORDS:
+        assert word.title() not in TRACE.STATUS_VALUES
+        assert word not in snap._APPROVAL_CLAIMED
 
 
 def test_status_enum_is_declared_for_every_spine_tier():
@@ -173,7 +225,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     # a floor).
     row = {
         "SR-ID": "SR-001",
-        "Status": "Approved",  # the D-9 successor word, not yet live
+        "Status": "Verified",  # RETIRED by the step-5 rename — out of vocabulary
         "Title": "t",
         "Requirement": "r",
         "Rationale": "why",
@@ -183,7 +235,7 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
         "SN-Refs": "SN-001",
     }
     integrity = TRACE.enum_integrity_findings("SR", [row])
-    assert len(integrity) == 1 and "Approved" in integrity[0], integrity
+    assert len(integrity) == 1 and "Verified" in integrity[0], integrity
     assert not [f for f in TRACE.schema_findings("SR", [row]) if "Status" in f]
     # A placeholder row is nobody's integrity failure — that is the -000 rule.
     assert TRACE.enum_integrity_findings("SR", [dict(row, **{"SR-ID": "SR-000"})]) == []
@@ -215,13 +267,13 @@ def test_llr_exempt_agrees():
 
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevBar-Release bar and
-    # derive_gate.sr_bar must agree about which SRs must be Verified before DevBar-Release.
-    # sr_bar has always demanded is_verified for ANY decomposed SR with no
+    # derive_gate.sr_bar must agree about which SRs must be Approved before DevBar-Release.
+    # sr_bar has always demanded is_approved for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for Verification=Test, so
-    # a decomposed Demonstration/Analysis/Inspection SR left Planned could never
+    # a decomposed Demonstration/Analysis/Inspection SR left Approved could never
     # derive DevBar-Release yet passed trace's check — two scripts disagreeing about the gate.
-    # Option A widened trace's bar: its loop now gates only on is_draft (skip) then
-    # is_verified (pass) and NEVER reads Verification, so it is method-blind exactly
+    # Option A widened trace's bar: its loop now gates only on is_drafted (skip) then
+    # is_approved (pass) and NEVER reads Verification, so it is method-blind exactly
     # like sr_bar. Pin the equivalence on the predicates each side actually uses,
     # across the full Verification vocabulary, so neither re-grows a method filter.
     methods = [
@@ -234,44 +286,48 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         "Critique",
     ]
     for m in methods:
-        implemented = {"Verification": m, "Status": "Planned"}
-        verified = {"Verification": m, "Status": "Verified"}
-        # trace's widened bar applies to every ratified (non-Draft) row — the skip
-        # is is_draft, which is method-blind — and then passes iff is_verified. So
-        # a ratified SR of ANY method flags exactly when it is not Verified.
-        assert TRACE.is_draft(implemented) is False, m  # bar applies (ratified)
-        assert TRACE.is_draft(verified) is False, m  # bar applies (ratified)
-        assert TRACE.is_verified(verified) is True, m  # Verified -> passes
-        assert TRACE.is_verified(implemented) is False, m  # not Verified -> flagged
-        # sr_bar's DevBar-Release for a decomposed SR is the SAME is_verified predicate, also
-        # method-blind: Verified reaches DevBar-Release, Planned caps at DevBar-Tests — every method.
+        # RE-POINTED AT D-9 STEP 5: the "ratified but not approved" fixture was
+        # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
+        # only value that still means that is `Modified` — using `Approved` here
+        # would have made both halves of the comparison the same row.
+        implemented = {"Verification": m, "Status": "Modified"}
+        verified = {"Verification": m, "Status": "Approved"}
+        # trace's widened bar applies to every ratified (non-Drafted) row — the skip
+        # is is_drafted, which is method-blind — and then passes iff is_approved. So
+        # a ratified SR of ANY method flags exactly when it is not Approved.
+        assert TRACE.is_drafted(implemented) is False, m  # bar applies (ratified)
+        assert TRACE.is_drafted(verified) is False, m  # bar applies (ratified)
+        assert TRACE.is_approved(verified) is True, m  # Approved -> passes
+        assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
+        # sr_bar for a decomposed SR reads the SAME is_approved predicate, also
+        # method-blind — every method, same answer.
         assert GATE.sr_bar(verified, True, True) == GATE.BAR_RELEASE, m
         assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
-    # A Draft SR is pre-ratification and exempt from BOTH: trace's bar stands down
-    # (is_draft True, so the loop `continue`s) and sr_bar returns DevBar-Below (below DevBar-Reqs).
-    draft = {"Verification": "Test", "Status": "Draft"}
-    assert TRACE.is_draft(draft) is True
+    # A Drafted SR is pre-ratification and exempt from BOTH: trace's bar stands down
+    # (is_drafted True, so the loop `continue`s) and sr_bar returns DevBar-Below (below DevBar-Reqs).
+    draft = {"Verification": "Test", "Status": "Drafted"}
+    assert TRACE.is_drafted(draft) is True
     assert GATE.sr_bar(draft, True, True) == GATE.BAR_BELOW
 
-    # The predicate pins above are necessary but not sufficient: because is_draft/
-    # is_verified read Status (not Verification), restoring a Verification=="Test"
+    # The predicate pins above are necessary but not sufficient: because is_drafted/
+    # is_approved read Status (not Verification), restoring a Verification=="Test"
     # guard INSIDE analyze()'s --require-verified loop would leave them all green.
     # So drive the real loop end-to-end — a decomposed, non-Test (Demonstration) SR
-    # left Planned MUST produce a status finding. This is the assertion that
+    # left below `Approved` MUST produce a status finding. This is the assertion that
     # actually pins the loop side method-blind: restore the Test-only guard and it
     # fails (Demonstration skipped -> status-findings=0 -> exit 0).
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Verified", ",M,Demonstration,Planned"
+            ",M,Test,Approved", ",M,Demonstration,Modified"
         ),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Demonstration but Status=Planned" in proc.stdout
+    assert "Verification=Demonstration but Status=Modified" in proc.stdout
 
 
 def test_sn_draft_ids_agrees():
@@ -279,8 +335,8 @@ def test_sn_draft_ids_agrees():
     # (section-as-state maturity). Pin them equivalent across headings, -000
     # placeholders, and section boundaries.
     texts = [
-        "## Draft\nSN-010 something\n## Ratified\nSN-011 done\n",
-        "# Needs\nSN-001\n### Draft candidates\nSN-020\nSN-021\n",
+        "## Drafted\nSN-010 something\n## Ratified\nSN-011 done\n",
+        "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
         "## DRAFT (in review)\nSN-030 SN-000 SN-031\n",
         "## Ratified only\nSN-040\n",
         "SN-050 no heading at all\n",
@@ -302,7 +358,7 @@ def test_sn_all_ids_agrees():
     texts = [
         "",
         "SN-001 mentioned in prose, no table row at all\n",
-        "| SN-002 | a table row |\n\n## Draft\n\nSN-003\n",
+        "| SN-002 | a table row |\n\n## Drafted\n\nSN-003\n",
         "SN-000 placeholder only\n",
         "## Ratified\n\nSN-004 twice SN-004, then SN-005.\nAnd SN-006#frag.\n",
         "no ids here\n",
@@ -311,10 +367,10 @@ def test_sn_all_ids_agrees():
         assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
     # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
     # universe exactly like a table row (the §2.1 sharp edge: ratified + uncited
-    # means the coverage rung caps the gate at DevBar-Below). Draft-section ids are
+    # means the coverage rung caps the gate at DevBar-Below). Drafted-section ids are
     # included (the draft/coverage split happens later, on sn_draft_ids); only
     # -000 placeholders are excluded.
-    assert GATE.sn_all_ids("prose SN-010\n## Draft\nSN-011 and SN-000\n") == {
+    assert GATE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
         "SN-010",
         "SN-011",
     }
@@ -334,13 +390,13 @@ def test_sn_cited_ids_agrees():
         [{"SN-Refs": " SN-004  SN-005 "}],
         [{"SN-Refs": ""}, {"SN-Refs": None}, {}],
         [{"SN-Refs": "SN-000"}],
-        [{"SN-Refs": "SN-006", "Status": "Draft"}],
+        [{"SN-Refs": "SN-006", "Status": "Drafted"}],
     ]
     for rows in batteries:
         assert TRACE.sn_cited_ids(rows) == GATE.sn_cited_ids(rows), rows
     # Semantics pins: every separator splits; the function filters NOTHING itself.
     # -000 rows are excluded by the CALLER's row filter (compute/analyze), and a
-    # Draft SR's citation is deliberately IN the set — the raw-view exemption the
+    # Drafted SR's citation is deliberately IN the set — the raw-view exemption the
     # double-counting seam manages (derive_gate's ex-draft view re-runs the same
     # parse on the non-draft subset instead of special-casing it here).
     assert GATE.sn_cited_ids([{"SN-Refs": "SN-001;SN-002 SN-003,SN-000"}]) == {
@@ -349,7 +405,9 @@ def test_sn_cited_ids_agrees():
         "SN-003",
         "SN-000",
     }
-    assert TRACE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Draft"}]) == {"SN-006"}
+    assert TRACE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Drafted"}]) == {
+        "SN-006"
+    }
 
 
 def test_the_legacy_ratification_translation_agrees():
@@ -1002,7 +1060,7 @@ def test_is_drifted_has_exactly_ONE_home():
     """The F5 predicate-copy sanction does NOT extend to `is_drifted`, and the
     distinction is worth pinning rather than remembering.
 
-    `is_draft`/`is_planned`/`is_modified`/`is_verified` are duplicated between
+    `is_drafted`/`is_planned`/`is_modified`/`is_approved` are duplicated between
     `trace.py` and `derive_gate.py` on purpose: each reads ONE cell, each script
     stays independently copyable, and the tests above pin the copies equal by
     value. `is_drifted` is a different animal — it joins a live registry against

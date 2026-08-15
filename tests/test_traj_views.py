@@ -222,8 +222,8 @@ def test_nested_components_render_inside_their_parent(tmp_path):
     )
     (req / "low-level-requirements.csv").write_text(
         CONT_LLRS.replace(
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-001",
-            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-003",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-001",
+            "LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-003",
         ),
         encoding="utf-8",
     )
@@ -745,10 +745,10 @@ def test_leaf_wi_block_surfaces_delivery_phase(tmp_path):
 
 # Four one-module components -> the How-SW top view exceeds the > 3 threshold.
 FOUR_CMP_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Verified,CMP-001
-LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Verified,CMP-002
-LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Verified,CMP-003
-LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Verified,CMP-004
+LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
+LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-002
+LLR-003,SR-002,C,scripts/mod_c,gen,d,(see TC),Approved,CMP-003
+LLR-004,SR-002,D,scripts/mod_d,emit,d,(see TC),Approved,CMP-004
 """
 
 FOUR_CMPS = (
@@ -831,7 +831,7 @@ def _spine_with_sns(root, n):
         "Permutations,Priority,Verification,Status\n"
         + "".join(
             'SR-{i:03d},Req {i},SN-{i:03d},"Shall {i}.",R,"ac {i}",,M,Test,'
-            "Verified\n".format(i=i)
+            "Approved\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -840,7 +840,7 @@ def _spine_with_sns(root, n):
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
         + "".join(
             'LLR-{i:03d},SR-{i:03d},Low {i},src/m.py,f{i},"d {i}",(see TC),'
-            "Verified\n".format(i=i)
+            "Approved\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",
@@ -850,7 +850,7 @@ def _spine_with_sns(root, n):
         "Evidence,Status\n"
         + "".join(
             'TC-{i:03d},SR-{i:03d};LLR-{i:03d},Unit,m {i},Smoke,"p","e {i}",Yes,'
-            "tests/t.py::t{i},Verified\n".format(i=i)
+            "tests/t.py::t{i},Approved\n".format(i=i)
             for i in range(1, n + 1)
         ),
         encoding="utf-8",

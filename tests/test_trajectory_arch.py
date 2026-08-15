@@ -295,7 +295,7 @@ def test_seam_tc_citation_warn(tmp_path):
     (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
-        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Verified\n",
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
         encoding="utf-8",
     )
     proc = run_traj(tmp_path)
@@ -377,7 +377,7 @@ def write_tagged_llrs(root, pairs):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     body = "".join(
-        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Verified,{}\n".format(i + 1, mod, cmp)
+        "LLR-{:03d},SR-001,T,{},f,d,(see TC),Approved,{}\n".format(i + 1, mod, cmp)
         for i, (mod, cmp) in enumerate(pairs)
     )
     (req / "low-level-requirements.csv").write_text(

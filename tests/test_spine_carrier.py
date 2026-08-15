@@ -80,7 +80,7 @@ def test_an_EXPLICIT_empty_string_is_REFUSED_not_quietly_accepted(tmp_path):
     away. Normalising would leave the file and the loaded row disagreeing about
     what the author wrote. (Owner ruling owed; this fork was never ruled.)
     """
-    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Verified"\n')
+    path = _write(tmp_path, '[requirement.SR-001]\ntitle = ""\nstatus = "Approved"\n')
     with pytest.raises(SystemExit) as excinfo:
         sc.load(path, SR)
     message = str(excinfo.value)
@@ -152,7 +152,7 @@ def test_the_live_loader_keeps_DUPLICATE_csv_ids_for_the_integrity_check(tmp_pat
     (SR-002)."""
     path = tmp_path / "system-requirements.csv"
     path.write_text(
-        "SR-ID,Title,Status\nSR-001,one,Verified\nSR-001,two,Verified\n",
+        "SR-ID,Title,Status\nSR-001,one,Approved\nSR-001,two,Approved\n",
         encoding="utf-8",
     )
     rows = sc.load(path, SR)

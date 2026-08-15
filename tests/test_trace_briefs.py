@@ -36,7 +36,7 @@ from conftest import (
 
 # --- WI-316: the re-attestation brief (--ratify modified) ----------------------
 # A sitting cannot bless a delta it cannot see: per-cell before/after for every
-# Modified SR's chain, baselined at the git-derived last-Verified revision
+# Modified SR's chain, baselined at the git-derived last-Approved revision
 # (--since overrides). A generator mode: runs no checks, always exits 0.
 
 _REATTEST_SR_H = (
@@ -50,7 +50,7 @@ _REATTEST_TC_H = (
 
 
 def _reattest_repo(root):
-    """A repo with an APPROVED SNAPSHOT (SR-001 Verified, old prose) and a live
+    """A repo with an APPROVED SNAPSHOT (SR-001 Approved, old prose) and a live
     tree that has since been amended (Requirement changed, Status Modified,
     LLR-002 added). Returns the git runner.
 
@@ -80,18 +80,18 @@ def _reattest_repo(root):
         )
         (req / "low-level-requirements.csv").write_text(
             _REATTEST_LLR_H
-            + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Verified\n'
+            + 'LLR-001,SR-001,Add core,src/demo.py,add,"pure add",(see TC-001),Approved\n'
             + extra_llr,
             encoding="utf-8",
         )
         (root / "docs" / "test" / "test-cases.csv").write_text(
             _REATTEST_TC_H
             + 'TC-001,SR-001;LLR-001,Unit,"drive add","Smoke","a=1","sum",Yes,'
-            "tests/test_demo.py::t,Verified\n",
+            "tests/test_demo.py::t,Approved\n",
             encoding="utf-8",
         )
 
-    write_spine("Verified", "the ORIGINAL attested text")
+    write_spine("Approved", "the ORIGINAL attested text")
     run_git("init")
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
@@ -105,7 +105,7 @@ def _reattest_repo(root):
     write_spine(
         "Modified",
         "the AMENDED text",
-        'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Verified\n',
+        'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Approved\n',
     )
     run_git("add", "-A")
     run_git("commit", "-m", "amend + flip")
@@ -128,7 +128,7 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     assert "LLR LLR-002 — ADDED since the snapshot" in out
     assert "docs/archive/last_approved" in out
     # The Status cell itself is excluded from the diff, both directions.
-    assert "before: Verified" not in out
+    assert "before: Approved" not in out
     # The unchanged chain rows (LLR-001, TC-001) emit no section.
     assert "### LLR LLR-001" not in out
     assert "### TC TC-001" not in out
@@ -154,7 +154,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     (tmp_path / "docs" / "test").mkdir(parents=True)
     sr_v1 = (
         _REATTEST_SR_H
-        + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Verified,1'
+        + 'SR-001,Adder,SN-001,"old text","w","a",,C,Test,Approved,1'
         + "\n"
     )
     (req / "system-requirements.csv").write_bytes(
@@ -214,7 +214,7 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
 
 
 def _ratify_repo(tmp_path):
-    """A git repo with a Verified SR chain, amended and flipped to Modified, so
+    """A git repo with a Approved SR chain, amended and flipped to Modified, so
     `--ratify modified` has something real to render. Returns (run_git, rev) with
     `rev` the attested baseline commit."""
     import shutil as _sh
@@ -240,16 +240,16 @@ def _ratify_repo(tmp_path):
         )
         (req / "low-level-requirements.csv").write_text(
             "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
-            "LLR-001,SR-001,{},m.py,why,Verified\n".format(llr_detail),
+            "LLR-001,SR-001,{},m.py,why,Approved\n".format(llr_detail),
             encoding="utf-8",
         )
         (req / "test-cases.csv").write_text(
             "TC-ID,LLR-Refs,Steps,Expected,Automated,Tier,Status\n"
-            "TC-001,LLR-001,step,expected,Yes,smoke,Verified\n",
+            "TC-001,LLR-001,step,expected,Yes,smoke,Approved\n",
             encoding="utf-8",
         )
 
-    write("Verified")
+    write("Approved")
     run_git("init")
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
@@ -313,8 +313,8 @@ def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(
         "LLR-ID,SR-Refs,Detail,Module,Rationale,Status\n"
-        "LLR-001,SR-001,Detail A,m.py,why,Verified\n"
-        "LLR-002,SR-001,Detail B,m.py,why,Verified\n",
+        "LLR-001,SR-001,Detail A,m.py,why,Approved\n"
+        "LLR-002,SR-001,Detail B,m.py,why,Approved\n",
         encoding="utf-8",
     )
     proc = _check(tmp_path)
@@ -350,7 +350,7 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     for what the first without the second looks like."""
     _run_git, _rev, write = _ratify_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    write("Verified", sr_req="The system shall do the AMENDED thing.")
+    write("Approved", sr_req="The system shall do the AMENDED thing.")
     load_script("baseline_snapshot").copy_live(tmp_path)
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -362,12 +362,12 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
 
     An owner who blesses the amendment by moving `Status` alone has changed the
     claim without moving the record of what the claim is about. Under the old
-    git-derived baseline that closed the window — the row read `Verified`, so
+    git-derived baseline that closed the window — the row read `Approved`, so
     the walk stopped at HEAD and the diff was empty. Under the snapshot the row
     still differs from the text a human actually read, so it stays in the brief
     until the copy rides with it."""
     _run_git, _rev, write = _ratify_repo(tmp_path)
-    write("Verified", sr_req="The system shall do the AMENDED thing.")
+    write("Approved", sr_req="The system shall do the AMENDED thing.")
     proc = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
         cwd=tmp_path,

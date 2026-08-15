@@ -203,7 +203,7 @@ def emit_toml_rows(cases, args, strategy, param_str):
         )
         print('automated = "Yes"')
         print('evidence = "(fill: evidence ref)"')
-        print('status = "Draft"')
+        print('status = "Drafted"')
         print()
 
 
@@ -220,7 +220,7 @@ def emit_csv_rows(cases, args, strategy, param_str):
         print(
             'TC-xxx,{},Unit,{} combination,{},"{}",'
             '"Satisfies {} AcceptanceCriteria",Yes,(fill: evidence ref),'
-            "Draft,".format(
+            "Drafted,".format(
                 args.id or "SR-xxx",
                 strategy,
                 args.tier,

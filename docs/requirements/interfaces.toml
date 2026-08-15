@@ -70,18 +70,25 @@
 # are recorded HERE rather than in their own cells, so that no row carries
 # migration history: IF-057, IF-103, IF-118, IF-119, IF-120.
 #
-# APPROVAL — the one maturity field, closed vocabulary `draft` | `approved`,
+# APPROVAL — the one maturity field, closed vocabulary `drafted` | `approved`,
 # shared with docs/requirements/external.toml (which carries the full statement
-# of the provisional value set and its D-9 migration). EVERY row reads `draft`
-# today, and that is a deliberate non-claim: `Stable` was a MATURITY assertion
+# of the value set). `draft` -> `drafted` LANDED AT D-9 MIGRATION STEP 5b
+# (2026-08-15), in the same commit as the spine rename, so ONE word means one
+# thing in every registry; `derive_gate.BIF_MATURITY` moved with it. EVERY row
+# reads `drafted` today, and that is a deliberate non-claim: `Stable` was a MATURITY assertion
 # (this contract has settled) and `approved` is a RATIFICATION one. Mapping the
 # first onto the second would have manufactured 108 approvals nobody signed.
 #
-# FLIP AUTHORITY. `docs/process.toml [attestation] human_ratification_through`
-# covers the SPINE tiers only and says nothing about this registry. Until
-# sitting-3 §3.6 rules the mechanized extension, AN `approval` CELL IN THIS FILE
-# IS THE OWNER'S TO FLIP, in a reviewed Status-change commit — no loop, no LLM
-# verdict, no script.
+# FLIP AUTHORITY — MECHANIZED 2026-08-15 (OI-30 D3). It is DERIVED from the
+# dev-stage ladder rather than declared in a new key: this registry's rung is
+# DevStg-Arch (`derive_gate.arch_incomplete` already gates that rung on the
+# architecture tier), so an `approval` cell here may be machine-flipped only
+# when DevStg-Arch is not human-held under the EXISTING `[attestation]
+# human_ratification_through` dial. The predicate is
+# `agent_common.human_approves(docs, "interfaces")`. At this repo's dial of 4
+# the effect is unchanged from the prose it replaces: AN `approval` CELL IN THIS
+# FILE IS THE OWNER'S TO FLIP, in a reviewed Status-change commit — no loop, no
+# LLM verdict, no script.
 #
 # THE TIE-BACK is directional and appears ONLY on a row that REALIZES a boundary
 # crossing declared in external.toml: `interface_from_external = "B-##"` for an
@@ -103,7 +110,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-157"]
 owner = "SR-157"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-002]
 direction = "Provides"
@@ -114,7 +121,7 @@ signal = "discrete"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-003]
 direction = "Provides"
@@ -125,7 +132,7 @@ signal = "discrete"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-004]
 direction = "Provides"
@@ -137,7 +144,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-006", "SR-015"]
 owner = "LLR-014"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-005]
 direction = "Provides"
@@ -149,7 +156,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-017", "SR-018"]
 owner = "SR-017"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-006]
 direction = "Provides"
@@ -160,7 +167,7 @@ signal = "discrete"
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-008]
 direction = "Provides"
@@ -172,7 +179,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-009]
 direction = "Provides"
@@ -183,7 +190,7 @@ signal = "discrete"
 req_refs = ["SR-157", "SR-159"]
 owner = "SR-157"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-010]
 direction = "Provides"
@@ -195,7 +202,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-011]
 direction = "Provides"
@@ -206,7 +213,7 @@ signal = "discrete"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-012]
 direction = "Provides"
@@ -218,7 +225,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-013]
 direction = "Provides"
@@ -229,7 +236,7 @@ signal = "discrete"
 req_refs = ["SR-006", "SR-007"]
 owner = "SR-006"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-014]
@@ -241,7 +248,7 @@ signal = "variable"
 req_refs = ["SR-009", "SR-010", "SR-011"]
 owner = "SR-010"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-015]
@@ -254,7 +261,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-026", "SR-027", "SR-028"]
 owner = "SR-026"
 version = "v3"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-016]
@@ -267,7 +274,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-022"]
 owner = "SR-022"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-017]
@@ -280,7 +287,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-024"]
 owner = "SR-024"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 notes = "source"
 
@@ -293,7 +300,7 @@ signal = "variable"
 req_refs = ["SR-033"]
 owner = "SR-033"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-019]
@@ -305,7 +312,7 @@ signal = "variable"
 req_refs = ["SR-112"]
 owner = "SR-112"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-020]
 direction = "Provides"
@@ -317,7 +324,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-043"]
 owner = "SR-043"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-04"
 
 [interface.IF-021]
@@ -329,7 +336,7 @@ signal = "variable"
 req_refs = ["SR-157"]
 owner = "SR-157"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-022]
 direction = "Consumes"
@@ -340,7 +347,7 @@ signal = "variable"
 req_refs = ["SR-007", "SR-006"]
 owner = "SR-007"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-023]
 direction = "Consumes"
@@ -351,7 +358,7 @@ signal = "variable"
 req_refs = ["SR-157", "SR-159"]
 owner = "SR-157"
 version = "v3"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-058]
 direction = "Provides"
@@ -362,7 +369,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """source (WI-194) - a pure library: consumes nothing, the coordinator feeds results in; nearest existing seam is IF-053 (schedule.py, the same side-effect-free-library-to-dispatcher shape) but wrong provider module and wrong contract (frontier/classification, not round lifecycle); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -375,7 +382,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """sink (WI-195) - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process since WI-199). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -388,7 +395,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """sink (WI-197) - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process since WI-199). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's counterpart is the external agent CLI, not a kit script); ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -402,7 +409,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """source (WI-198) - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts; ratified out of Proposed at WI-201 (implemented + consumed since WI-199)"""
 
@@ -415,7 +422,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 notes = """sink (WI-190) - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is WI-197's to declare); nearest existing seam is IF-023 (check_trajectory also joins IF cites) - distinct module needs its own endpoint row"""
 
@@ -428,7 +435,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v3"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-025]
 direction = "Consumes"
@@ -439,7 +446,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-026]
 direction = "Consumes"
@@ -450,7 +457,7 @@ signal = "variable"
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-028]
 direction = "Consumes"
@@ -461,7 +468,7 @@ signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-029]
 direction = "Consumes"
@@ -472,7 +479,7 @@ signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-030]
 direction = "Consumes"
@@ -483,7 +490,7 @@ signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-031]
 direction = "Consumes"
@@ -494,7 +501,7 @@ signal = "variable"
 req_refs = ["SR-006", "SR-015"]
 owner = "LLR-014"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-032]
 direction = "Consumes"
@@ -505,7 +512,7 @@ signal = "variable"
 req_refs = ["SR-017", "SR-031"]
 owner = "SR-017"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-033]
 direction = "Consumes"
@@ -516,7 +523,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-034]
 direction = "Consumes"
@@ -527,7 +534,7 @@ signal = "variable"
 req_refs = ["SR-033"]
 owner = "SR-033"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-035]
 direction = "Consumes"
@@ -538,7 +545,7 @@ signal = "variable"
 req_refs = ["SR-112"]
 owner = "SR-112"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-036]
 direction = "Consumes"
@@ -549,7 +556,7 @@ signal = "variable"
 req_refs = ["SR-022"]
 owner = "SR-022"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-037]
 direction = "Consumes"
@@ -560,7 +567,7 @@ signal = "variable"
 req_refs = ["SR-026", "SR-031"]
 owner = "SR-031"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-038]
 direction = "Consumes"
@@ -571,7 +578,7 @@ signal = "variable"
 req_refs = ["SR-043"]
 owner = "SR-043"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-039]
 direction = "Consumes"
@@ -582,7 +589,7 @@ signal = "variable"
 req_refs = ["SR-009", "SR-010"]
 owner = "SR-009"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-040]
 direction = "Consumes"
@@ -593,7 +600,7 @@ signal = "variable"
 req_refs = ["SR-019", "SR-070"]
 owner = "SR-019"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-041]
 direction = "Consumes"
@@ -604,7 +611,7 @@ signal = "variable"
 req_refs = ["SR-026", "SR-040"]
 owner = "SR-040"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-042]
 direction = "Consumes"
@@ -615,7 +622,7 @@ signal = "variable"
 req_refs = ["SR-019"]
 owner = "SR-019"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-043]
 direction = "Consumes"
@@ -627,7 +634,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-020"]
 owner = "SR-020"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-044]
 direction = "Provides"
@@ -638,7 +645,7 @@ signal = "variable"
 req_refs = ["SR-154", "SR-155"]
 owner = "SR-154"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-045]
 direction = "Consumes"
@@ -649,7 +656,7 @@ signal = "variable"
 req_refs = ["SR-154"]
 owner = "SR-154"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-046]
 direction = "Provides"
@@ -661,7 +668,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-154"]
 owner = "SR-154"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-047]
 direction = "Consumes"
@@ -673,7 +680,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-154"]
 owner = "SR-154"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-048]
 direction = "Provides"
@@ -685,7 +692,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-046"]
 owner = "SR-046"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_to_external = "B-05"
 
 [interface.IF-049]
@@ -697,7 +704,7 @@ signal = "variable"
 req_refs = ["SR-046"]
 owner = "SR-046"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-050]
 direction = "Provides"
@@ -708,7 +715,7 @@ signal = "variable"
 req_refs = ["SR-049"]
 owner = "SR-049"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 
 [interface.IF-051]
@@ -720,7 +727,7 @@ signal = "variable"
 req_refs = ["SR-049"]
 owner = "SR-049"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 
 [interface.IF-052]
@@ -732,7 +739,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 
 [interface.IF-053]
@@ -744,7 +751,7 @@ signal = "variable"
 req_refs = ["SR-148"]
 owner = "SR-148"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-054]
@@ -756,7 +763,7 @@ signal = "variable"
 req_refs = ["SR-148"]
 owner = "SR-148"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-055]
@@ -769,7 +776,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-056]
@@ -781,7 +788,7 @@ signal = "variable"
 req_refs = ["SR-070", "SR-159"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 
 [interface.IF-064]
@@ -793,7 +800,7 @@ signal = "variable"
 req_refs = ["SR-026"]
 owner = "SR-026"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-065]
 direction = "Provides"
@@ -805,7 +812,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-026"]
 owner = "SR-026"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-066]
 direction = "Provides"
@@ -816,7 +823,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-068]
 direction = "Consumes"
@@ -828,7 +835,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-026"]
 owner = "SR-026"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 notes = "built + consumed at WI-274"
 
 [interface.IF-069]
@@ -841,7 +848,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-070]
 direction = "Consumes"
@@ -852,7 +859,7 @@ signal = "variable"
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-071]
 direction = "Consumes"
@@ -863,7 +870,7 @@ signal = "variable"
 req_refs = ["SR-070", "SR-148"]
 owner = "SR-148"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """WI-290: WI-284 wired the import but omitted this row; completes the dashboard side IF-053 already names."""
 
@@ -876,7 +883,7 @@ signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = "built + consumed at WI-308"
 
 [interface.IF-073]
@@ -888,7 +895,7 @@ signal = "variable"
 req_refs = ["SR-026"]
 owner = "SR-026"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = "built + consumed at WI-322"
 
 [interface.IF-074]
@@ -900,7 +907,7 @@ signal = "variable"
 req_refs = ["SR-026"]
 owner = "SR-026"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = "built at WI-322"
 
 [interface.IF-075]
@@ -912,7 +919,7 @@ signal = "variable"
 req_refs = ["SR-049"]
 owner = "SR-049"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = "built + consumed at WI-322"
 
 [interface.IF-076]
@@ -924,7 +931,7 @@ signal = "variable"
 req_refs = ["SR-157"]
 owner = "SR-157"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 notes = """source - trace_text consumes NOTHING by design: it is the pure predicate layer (rows in, findings out; no I/O, no git, no filesystem, no argv), which is what makes it testable in isolation and what the pure-core / I-O-shell split asks for. A Consumes seam here would mean the extraction failed to separate the concerns."""
 
@@ -937,7 +944,7 @@ signal = "variable"
 req_refs = ["SR-157", "SR-158"]
 owner = "SR-157"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 
 [interface.IF-078]
@@ -949,7 +956,7 @@ signal = "variable"
 req_refs = ["SR-129"]
 owner = "SR-129"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-079]
@@ -961,7 +968,7 @@ signal = "variable"
 req_refs = ["SR-129"]
 owner = "SR-129"
 version = "v2"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 
 [interface.IF-080]
@@ -973,7 +980,7 @@ signal = "discrete"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-081]
@@ -985,7 +992,7 @@ signal = "variable"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-082]
@@ -997,7 +1004,7 @@ signal = "variable"
 req_refs = ["SR-070", "SR-159"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -1011,7 +1018,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -1025,7 +1032,7 @@ signal_note = """derived at the WI-443 conversion: the Contract text types nothi
 req_refs = ["SR-070", "SR-159"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """sink — wI-280 slice 11: the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
 
@@ -1038,7 +1045,7 @@ signal = "variable"
 req_refs = ["SR-070", "SR-148"]
 owner = "SR-148"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """WI-280 slice 11: the guarded import moved to traj_parse (its one home); the seam is IF-071's."""
 
@@ -1052,7 +1059,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-087]
 direction = "Consumes"
@@ -1063,7 +1070,7 @@ signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-088]
 direction = "Consumes"
@@ -1074,7 +1081,7 @@ signal = "variable"
 req_refs = ["SR-148"]
 owner = "SR-148"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """sink — the banner renders what the generator family derives; nearest seam IF-084 is the same derivation held by traj_status for the RENDER side, this is the dispatcher's read of it"""
 
@@ -1087,7 +1094,7 @@ signal = "variable"
 req_refs = ["SR-148"]
 owner = "SR-148"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it"""
 
@@ -1100,7 +1107,7 @@ signal = "variable"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-091]
@@ -1112,7 +1119,7 @@ signal = "variable"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-092]
@@ -1124,7 +1131,7 @@ signal = "variable"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-093]
@@ -1136,7 +1143,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-002 by the gen_trajectory facade); seam driven by TC-056's WI-389 station sync pins"""
 
@@ -1149,7 +1156,7 @@ signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """seam driven by TC-056's WI-389 station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)"""
 
@@ -1162,7 +1169,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = "source: the templates are files under project-trajectory/prompts/, not code."
 
@@ -1175,7 +1182,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """sink: its output is a generated DOCUMENT, not an API any module calls. Freshness-gated and declared in docs/stack.ini [generated]."""
 
@@ -1188,7 +1195,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = "the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097."
 
@@ -1201,7 +1208,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
 
@@ -1214,7 +1221,7 @@ signal = "variable"
 req_refs = ["SR-156"]
 owner = "SR-156"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 
 [interface.IF-102]
@@ -1226,7 +1233,7 @@ signal = "variable"
 req_refs = ["SR-147"]
 owner = "SR-147"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies is an owner ruling (2026-08-10, repo-lock D-6) that AMENDS the F5 rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly. Counterpart names trace as the first importer; check_trajectory imports it too, and the remaining spine readers join as they convert."""
 
@@ -1240,7 +1247,7 @@ signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typ
 req_refs = ["SR-147"]
 owner = "SR-147"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-006"
 notes = """source - reads the registries and writes beside them; consumes no kit module. Its approval is deliberately unsettled: this is migration scaffolding with a defined end. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson), and it is RETIRABLE once no supported repo is still on the legacy carriers - the same expiry the CSV fallback in spine_carrier and both module-size ratchet entries carry."""
 
@@ -1254,7 +1261,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1268,7 +1275,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1282,7 +1289,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1296,7 +1303,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1310,7 +1317,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001, so the import needs a seam of record. The shared module is an owner ruling (2026-08-10, repo-lock D-6) amending F5 - a duplicated VOCABULARY fails silently, by handing back a row with a cell missing."""
 
@@ -1324,7 +1331,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1338,7 +1345,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1353,7 +1360,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. One home for the vocabulary is an owner ruling (2026-08-10, repo-lock D-6) amending F5."""
 
@@ -1367,7 +1374,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
 
@@ -1380,7 +1387,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
 
@@ -1394,7 +1401,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
 
@@ -1407,7 +1414,7 @@ signal = "variable"
 req_refs = ["SR-146"]
 owner = "SR-146"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """intra-component (both CMP-004), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
 
@@ -1420,7 +1427,7 @@ signal = "variable"
 req_refs = ["SR-155"]
 owner = "SR-155"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared when the adversarial review of the D-5 cutover moved these two mints off max(live) + 1, which under repo-lock D-4 re-issued the id of anything deleted."""
 
@@ -1433,7 +1440,7 @@ signal = "variable"
 req_refs = ["SR-147"]
 owner = "SR-147"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-007"
 notes = """the cross-component edge CMP-003 -> CMP-002, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the D-6/F5 hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py."""
 
@@ -1447,7 +1454,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
 
@@ -1461,7 +1468,7 @@ req_refs = ["SR-154"]
 owner = "SR-154"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
 
@@ -1476,7 +1483,7 @@ req_refs = ["SR-147"]
 owner = "SR-147"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""
 
@@ -1490,7 +1497,7 @@ signal_note = """typed at mint (WI-454): the Contract names a typed outcome plus
 req_refs = ["SR-150"]
 owner = "SR-150"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 
 [interface.IF-122]
 direction = "Consumes"
@@ -1503,7 +1510,7 @@ req_refs = ["SR-150"]
 owner = "SR-150"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 (LLR-170) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120 carrier-consumption shape."""
 
 [interface.IF-123]
@@ -1516,7 +1523,7 @@ signal_note = """typed at mint (WI-456): the Contract names typed outcomes plus 
 req_refs = ["SR-140"]
 owner = "LLR-173"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """MINTED 2026-08-15 (log 2026-08-15h) with LLR-173 and TC-167 — the module landed at log 2026-08-15g with no spine coverage of any kind, which is what check_trajectory's connectivity advisory was naming. Design of record: docs/plans/2026-08-15-baseline-snapshot-design.md. THE REFUSALS ARE THE CONTRACT, and each replaces a convenient degrade. The first snapshot blesses whatever text is in the tree, so it must ride the owner's reviewed signing commit: copy_live will not CREATE the directory, and --seed is reachable only from `intake.py snapshot --seed`. None and {} are opposite claims and the empty one reads as "re-bless everything with no diff shown", which is why an unparseable file raises and rows_for is the ONE place the sentinel collapses. The copy preserves repo-relative paths under the snapshot root, so `snapshot_root / rel` reuses every existing resolver verbatim. COUNTERPART IS intake, THE WRITER: exactly two callers of copy_live are sanctioned (intake._apply_flips, after the status write, and `intake.py snapshot`), and nothing may wire the copy into a freshness step — the snapshot is deliberately behind live whenever an amendment is pending, and that lag IS the signal. OWNER is the DESIGN row, not SR-140, on the Q1 polymorphism: SR-140 states the obligation and is answerable for both halves of it, while this row is one module's concrete surface. PROVISIONAL, for the review sitting to overturn."""
 
 [interface.IF-124]
@@ -1530,7 +1537,7 @@ req_refs = ["SR-140"]
 owner = "LLR-173"
 carried_by = "IF-123"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Minted 2026-08-15 (log 2026-08-15h); covered by TC-161's amendment arm."""
 
 [interface.IF-125]
@@ -1544,7 +1551,7 @@ req_refs = ["SR-140"]
 owner = "LLR-173"
 carried_by = "IF-123"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Minted 2026-08-15 (log 2026-08-15h); cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
 
 [interface.IF-126]
@@ -1558,7 +1565,7 @@ req_refs = ["SR-140"]
 owner = "LLR-173"
 carried_by = "IF-123"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Minted 2026-08-15 (log 2026-08-15h); cited by no TC today."""
 
 [interface.IF-127]
@@ -1571,7 +1578,7 @@ signal_note = """typed at mint (WI-456): the Contract names a typed outcome plus
 req_refs = ["SR-140"]
 owner = "SR-140"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """MINTED 2026-08-15 (log 2026-08-15h) for an edge that was ALREADY undeclared before that session: check_trajectory had been naming scripts/adjudicate_brief (CMP-008) -> scripts/trace (CMP-006) as a cross-component import with no seam of record. ONE model, two renderers, and that is the point — a brief built from a second traversal of the registries could disagree with the document the owner is signing. The lazy import keeps trace off the import path of the loop modules that need only this module's other seams. Owner is SR-140, not a design row: the seam carries the re-attestation obligation itself, not one module's surface (contrast IF-123, owned by LLR-173). PROVISIONAL. Covered by TC-161's amendment arm."""
 
 [interface.IF-128]
@@ -1585,7 +1592,7 @@ req_refs = ["SR-140", "SR-147"]
 owner = "LLR-173"
 carried_by = "IF-102"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. Minted 2026-08-15 (log 2026-08-15h)."""
 
 [interface.IF-129]
@@ -1597,5 +1604,5 @@ signal = "discrete"
 req_refs = ["SR-140"]
 owner = "LLR-158"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is ratified. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it. Minted 2026-08-15 (log 2026-08-15h)."""

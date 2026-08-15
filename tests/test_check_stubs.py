@@ -34,7 +34,7 @@ def todo_ellipsis(): ...
 
 
 def todo_raise():
-    """Planned."""
+    """Approved."""
     raise NotImplementedError("later")
 
 

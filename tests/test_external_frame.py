@@ -33,20 +33,20 @@ CLEAN_FRAME = """
 name = "Downstream adopter"
 class = "operational"
 description = "The team that adopts the package."
-approval = "draft"
+approval = "drafted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the delivered package"
-approval = "draft"
+approval = "drafted"
 
 [relationship.REL-001]
 from = "EXT-001"
 to = "EXT-001"
 kind = "hands-off"
 flow = "a flow this system is not a party to"
-approval = "draft"
+approval = "drafted"
 """
 
 
@@ -107,7 +107,7 @@ def test_every_frame_row_carries_the_approval_element():
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     for table in ("entity", "boundary", "relationship"):
         for rid, row in tables[table].items():
-            assert row.get("approval") in ("draft", "approved"), (table, rid)
+            assert row.get("approval") in ("drafted", "approved"), (table, rid)
 
 
 def test_nothing_in_the_live_frame_is_approved_yet():
@@ -125,7 +125,7 @@ def test_nothing_in_the_live_frame_is_approved_yet():
         for table in ("entity", "boundary", "relationship")
         for row in tables[table].values()
     }
-    assert approvals == {"draft"}
+    assert approvals == {"drafted"}
 
 
 # --- the join rules ------------------------------------------------------------
@@ -174,7 +174,7 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
         'signal = "discrete"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "draft"\n'
+        'approval = "drafted"\n'
         'interface_to_external = "B-99"\n',
         encoding="utf-8",
     )
@@ -256,7 +256,7 @@ def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):
         'signal = "discrete"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "draft"\n'
+        'approval = "drafted"\n'
         'interface_to_external = "B-99"\n',
         encoding="utf-8",
     )
@@ -283,7 +283,7 @@ def _srs(scaffold, extra_keys=""):
         'acceptance_criteria = "add(1,2) == 3"\n'
         'priority = "M"\n'
         'verification = "Test"\n'
-        'status = "Verified"\n'.format(extra_keys),
+        'status = "Approved"\n'.format(extra_keys),
         encoding="utf-8",
     )
 

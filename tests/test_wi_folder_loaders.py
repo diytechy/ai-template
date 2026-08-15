@@ -519,7 +519,7 @@ def _validator_repo(tmp_path):
     """A minimal repo the trajectory validator can run over end-to-end."""
     (tmp_path / "docs" / "requirements").mkdir(parents=True)
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + "SR-001,A,SN-001,does X,R,AC,,M,Test,Draft\n",
+        SR_HEADER + "SR-001,A,SN-001,does X,R,AC,,M,Test,Drafted\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -792,7 +792,7 @@ def test_backlog_staleness_reads_the_folder_registry_end_to_end(tmp_path):
     req = tmp_path / "docs" / "requirements"
     req.mkdir(parents=True)
     (req / "system-requirements.csv").write_text(
-        SR_HEADER + "SR-001,A,SN-001,does X,R,AC,,M,Test,Draft\n",
+        SR_HEADER + "SR-001,A,SN-001,does X,R,AC,,M,Test,Drafted\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -800,7 +800,7 @@ def test_backlog_staleness_reads_the_folder_registry_end_to_end(tmp_path):
     run_git("add", "-A")
     run_git("commit", "-m", "init", at=1000)
     (req / "system-requirements.csv").write_text(
-        SR_HEADER + "SR-001,A,SN-001,does X and Y,R,AC,,M,Test,Draft\n",
+        SR_HEADER + "SR-001,A,SN-001,does X and Y,R,AC,,M,Test,Drafted\n",
         encoding="utf-8",
         newline="\n",
     )

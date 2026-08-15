@@ -77,17 +77,17 @@ SPINE_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Priority,"
     "Verification,Status,Phase,Area\n"
     "SR-001,Adds,SN-001,The system shall add two numbers.,arithmetic is the "
-    "demo,the sum is right,Must,Test,Verified,P1,core\n"
+    "demo,the sum is right,Must,Test,Approved,P1,core\n"
 )
 SPINE_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component,Phase\n"
     "LLR-001,SR-001,add impl,src/demo.py,add,add() returns a + b.,TC-001,"
-    "Verified,,P1\n"
+    "Approved,,P1\n"
 )
 SPINE_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Expected,Automated,Evidence,Status,Phase\n"
     'TC-001,LLR-001,unit,run pytest,fast,"add(2, 2) == 4",yes,'
-    "tests/test_demo.py::test_add,Planned,P1\n"
+    "tests/test_demo.py::test_add,Approved,P1\n"
 )
 
 
@@ -211,7 +211,18 @@ def test_a_report_without_a_typed_commit_range_is_refused(tmp_path):
 # --- the red-TC brief (SN-030 rung 6) -----------------------------------------
 
 
-def _red_tc_repo(tmp_path, tc_status="Planned"):
+# THE RED-TC FIXTURE'S DEFAULT MOVED OUT OF VOCABULARY AT D-9 STEP 5, and the
+# move is a finding rather than a tidy-up. `red_tc_census` names a red TC by
+# EXEMPTION — anything outside `dispatch._TC_NOT_RED` is red — and this fixture
+# used `Planned`, the one LIVE value that sat outside it. OI-30 D1 folded
+# `Planned` into `Approved`, and the narrowed enum is now EXACTLY the exempt set,
+# so no conformant repo can carry a red TC any more. `Implemented` is the honest
+# remaining population: the value a downstream repo mid-migration still carries,
+# which the integrity floor names and this rung still judges. That the rung is
+# otherwise vacuous on a migrated tree is recorded for the sitting (log
+# 2026-08-15m) — it is the step-2 note's own "deleted feature" hazard arriving
+# through the rename rather than through the exempt set.
+def _red_tc_repo(tmp_path, tc_status="Implemented"):
     repo = _repo(tmp_path)
     req = repo / "docs" / "requirements"
     req.mkdir(parents=True)
@@ -220,7 +231,7 @@ def _red_tc_repo(tmp_path, tc_status="Planned"):
     tests = repo / "docs" / "test"
     tests.mkdir(parents=True)
     (tests / "test-cases.csv").write_text(
-        SPINE_TCS.replace(",Planned,", "," + tc_status + ","), encoding="utf-8"
+        SPINE_TCS.replace(",Approved,", "," + tc_status + ","), encoding="utf-8"
     )
     _write_rows(
         repo,
@@ -266,7 +277,7 @@ def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
     assert why is None, why
     assert "the registry stores no test RESULT" in text
     # The TC row's own cells, joined from the registry.
-    assert "- TC-001 — verifies LLR-001 — Status Planned" in text
+    assert "- TC-001 — verifies LLR-001 — Status Implemented" in text
     assert "Method/Expected: run pytest / add(2, 2) == 4" in text
     assert "tests/test_demo.py::test_add" in text
     # The obligation the test exists to prove.
@@ -275,7 +286,7 @@ def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
     assert "OUTCOME: DRAFTED|NEEDS-JUDGEMENT cases=N drafts=M" in text
 
 
-@pytest.mark.parametrize("green", ["Verified", "Draft", "Modified"])
+@pytest.mark.parametrize("green", ["Approved", "Drafted", "Modified"])
 def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     tmp_path, green
 ):
@@ -526,7 +537,7 @@ def test_a_red_tc_rows_session_receives_the_red_tc_brief(tmp_path):
     )
     assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
     assert "the registry stores no test RESULT" in prompts
-    assert "- TC-001 — verifies LLR-001 — Status Planned" in prompts
+    assert "- TC-001 — verifies LLR-001 — Status Implemented" in prompts
     assert "- LLR-001 — add() returns a + b." in prompts
     assert "- WI: WI-301 —" not in prompts
     verdicts = sorted((repo / "docs" / "reviews").rglob("*ADJUDICATE*.md"))
@@ -657,7 +668,7 @@ def test_only_RATIFIED_cells_reach_the_judge(tmp_path):
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(
-            ",Test,Verified,P1,", ",Test,Verified,P9,"
+            ",Test,Approved,P1,", ",Test,Approved,P9,"
         ),
         encoding="utf-8",
     )

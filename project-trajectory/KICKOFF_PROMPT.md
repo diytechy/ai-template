@@ -135,7 +135,7 @@ gate; the `single-ratify`/`autonomous` levels and their mechanics:
 - **DevBar-Release — Implementation (test-first).** Each DevBar-Tests TC becomes a *failing* test
   before the code that satisfies it (red → green → refactor). Build green, lint
   clean, the **full** test tier passes, coverage ≥ threshold; every
-  test-verifiable SR is **Verified**, and every remaining SR is explicitly
+  test-verifiable SR is **Approved**, and every remaining SR is explicitly
   classified **Demonstration / Manual / Inspection / Analysis / Attest /
   Critique** (nothing hand-waved).
 - **DevStg-Release — Release readiness** *(per release; skip for a one-off)*. The

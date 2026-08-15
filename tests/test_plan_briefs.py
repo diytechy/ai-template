@@ -75,7 +75,7 @@ def _fixture_repo(root):
                 "",
                 "M",
                 "Test",
-                "Verified",
+                "Approved",
                 "4",
                 "Dual-plan",
             ],

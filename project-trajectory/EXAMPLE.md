@@ -32,11 +32,11 @@ Edge-case table:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Approved,,
 SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the project's current phase is *derived* as the highest, and only a `Draft` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Aspect` (optional, process.md §1) is blank throughout because none of these rows is cross-cutting — it takes a CLOSED value naming a concern no component partition can express, never a domain or owner tag, and trace.py reports per-aspect SR counts when it is filled.
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the project's current phase is *derived* as the highest, and only a `Drafted` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Aspect` (optional, process.md §1) is blank throughout because none of these rows is cross-cutting — it takes a CLOSED value naming a concern no component partition can express, never a domain or owner tag, and trace.py reports per-aspect SR counts when it is filled.
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 
@@ -62,8 +62,8 @@ growing into a wall of mechanism, justification and edit history at once.
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field=set{plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_export.py::test_to_csv_roundtrip,Verified,
-TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt=set{during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,tests/test_export.py::test_atomic_interrupt,Verified,
+TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field=set{plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_export.py::test_to_csv_roundtrip,Approved,
+TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt=set{during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,tests/test_export.py::test_atomic_interrupt,Approved,
 ```
 
 The `Evidence` column names the **concrete test that provides the proof** — a
@@ -188,7 +188,7 @@ checklist (`gen_release_checklist.py`) finds it:
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Verified,
+TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a write committed just before the kill is readable after",Release,"failure=set{kill,network-loss,disk-full}","Satisfies SR-101 AcceptanceCriteria",No,docs/test/failover-procedure.md,Approved,
 ```
 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
@@ -211,15 +211,15 @@ needs ≥1 TC, whose cell records **who attested and when**:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Verified,,
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Approved,,
 ```
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Verified,
+TC-201,SR-201,System,"Creative review of the rendered main theme against the mood brief",Release,"attested-by=A. Rivera (creative lead); attested-on=2026-07-02","Recorded judgment that SR-201's mood-fit criterion is met (pass, with notes)",No,docs/reviews/main-theme-signoff.md,Approved,
 ```
 
-`trace.py` accepts `SR-201` as legitimately `Verified` but reports it under
+`trace.py` accepts `SR-201` as legitimately `Approved` but reports it under
 **"Verification basis (attested vs mechanized)"** — so an audit always sees how
 much of the project rests on trust versus a runnable check. Note the spine here
 stays at **high altitude**: `SN-040 → SR-201` ensures the theme's mood isn't
@@ -272,7 +272,7 @@ filter its slice:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Approved,,
 SR-050,Deliver export to destination,SN-030,"The system shall upload a completed export to the configured destination and confirm receipt.","Realizes SN-030: the file is useless until it reaches the target.","A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped.","dest=set{local,s3,sftp}",M,Test,Implemented,,
 ```
 
@@ -312,7 +312,7 @@ the SR):
 
 ```csv
 TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,tests/test_delivery_seam.py,Verified,
+TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,tests/test_delivery_seam.py,Approved,
 ```
 
 Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;
@@ -374,8 +374,8 @@ the owner `IF-###`:
 
 ```csv
 IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,Approval
-IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,Stable,Verified
-IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,Stable,Verified
+IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,approved
+IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,approved
 ```
 
 `IF-010`'s spec is owned by a repo that **builds** the surface (`export`); `IF-011` is

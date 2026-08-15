@@ -392,7 +392,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path,
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Verified\n'.format(
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"{}",Approved\n'.format(
                     padded
                 )
             )
@@ -413,7 +413,7 @@ def test_cell_whitespace_is_CONTENT_and_survives_the_conversion(tmp_path):
         tmp_path / "b",
         **{
             "docs/requirements/system-requirements.csv": (
-                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Verified\n'
+                'SR-ID,Title,Requirement,Status\nSR-001,T,"   ",Approved\n'
             )
         },
     )
@@ -463,13 +463,13 @@ def test_the_pack_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
                 "| SN-001 | a need | matters | M | works |\n"
             ),
             "docs/requirements/system-requirements.csv": (
-                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Verified\n"
+                "SR-ID,Title,SN-Refs,Status\nSR-001,Adder,SN-001,Approved\n"
             ),
             "docs/requirements/low-level-requirements.csv": (
-                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Verified\n"
+                "LLR-ID,SR-Refs,Title,Status\nLLR-001,SR-001,Core,Approved\n"
             ),
             "docs/test/test-cases.csv": (
-                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Verified\n"
+                "TC-ID,Verifies,Method,Status\nTC-001,SR-001;LLR-001,run,Approved\n"
             ),
         },
     )

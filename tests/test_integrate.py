@@ -2070,7 +2070,7 @@ def test_the_bar_residue_the_refresh_created_is_shed_but_the_lanes_is_not(tmp_pa
 
 def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     # WI-388's post-merge arm, end to end through the slot: the merged branch
-    # amended a ratified SR cell of a Verified row without the flip, so the
+    # amended a ratified SR cell of a Approved row without the flip, so the
     # intake mints ONE adjudication row as its own bookkeeping commit inside
     # the same held slot — serial by construction, derived description, no
     # model in the path (§A5.2; rulings R1/R3).
@@ -2083,7 +2083,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     )
     (req / "system-requirements.csv").write_text(
         sr_header + 'SR-001,Adder,SN-001,"the original text","why","ac",,C,'
-        "Test,Verified\n",
+        "Test,Approved\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -2108,7 +2108,7 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
     wt = close_branch(root, "wi-401")
     (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
         sr_header + 'SR-001,Adder,SN-001,"the AMENDED text","why","ac",,C,'
-        "Test,Verified\n",
+        "Test,Approved\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -2177,7 +2177,7 @@ def test_an_adjudication_lane_runs_no_bar(tmp_path):
     (wt / "docs" / "requirements" / "system-requirements.csv").write_text(
         "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
         "Permutations,Priority,Verification,Status\n"
-        'SR-001,Adder,SN-001,"t","w","a",,C,Test,Verified\n',
+        'SR-001,Adder,SN-001,"t","w","a",,C,Test,Approved\n',
         encoding="utf-8",
         newline="\n",
     )

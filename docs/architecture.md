@@ -560,7 +560,7 @@ Contracts (interfaces): IF-013, IF-022, IF-040
 | `extra_step_lanes(profile)` | `{step-name: lane}` for `[step:<name>]` sections declaring `lane = <other>` |  |
 | `steps(coverage, tier, gate, phase, profile)` |  |  |
 | `bar_ord(name)` | The ladder position of a bar name; RAISES on anything else. |  |
-| `window_open(gate_file)` | True when an open `Draft`/`Modified` window is holding the derived gate |  |
+| `window_open(gate_file)` | True when an open `Drafted`/`Modified` window is holding the derived gate |  |
 | `run_advisory(advisory, jobs, lane_map)` | Run the warn-only tier and return its results ([] when there is none). |  |
 | `advisory_plan(gate, plan, steps_at)` | Steps a HIGHER gate requires, while an open ratification window holds this |  |
 | `resolve_gate(explicit)` | The gate to run: an explicit --gate wins; else the docs/gate file (the |  |
@@ -827,18 +827,17 @@ Contracts (interfaces): IF-050, IF-051
 | `load_csv(path)` |  |  |
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
-| `is_draft(row)` | A row in the pre-ratification `Draft` state (open-vocab Status). |  |
-| `is_verified(row)` | The terminal `Verified` state, matched case-insensitively — the SAME rule as |  |
+| `is_drafted(row)` | A row in the pre-approval `Drafted` state (closed Status vocabulary since |  |
+| `is_approved(row)` | The `Approved` state — the row's TEXT is blessed by a human — matched |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell. |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
-| `sn_draft_ids(text)` | The set of Draft SN ids in a needs registry's `text`, through whichever |  |
+| `sn_draft_ids(text)` | The set of Drafted SN ids in a needs registry's `text`, through whichever |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
 | `sr_bar(sr, has_llr, has_tc)` | The bar an SR row has reached, from its Status + whether it is decomposed. |  |
-| `maturity_bar(row)` | An LLR/TC caps the bar only when it is Draft (`DevBar-Below` — the new-phase |  |
-| `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
-| `is_planned(row)` | The `Planned` state (process.md §7): ratified TEXT, evidence not yet |  |
-| `sn_bar(sn_id, draft_ids, cited_ids)` | A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a |  |
+| `maturity_bar(row)` | An LLR/TC caps the bar only when its own maturity is DRAFTED (`DevBar-Below` |  |
+| `is_modified(row)` | The post-approval `Modified` state (WI-316, process.md §7): content changed |  |
+| `sn_bar(sn_id, draft_ids, cited_ids)` | A Drafted SN is `DevBar-Below` — and that is the ONLY rung that fires on a |  |
 | `stage_ord(stage)` | The 0-based position of a stage label on STAGE_ORDER. |  |
 | `boundary_incomplete(bifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
 | `arch_incomplete(cmps, have_registry)` | Rung 3's predicate — is the PARTITION still in work? |  |
@@ -1033,7 +1032,7 @@ Contracts (interfaces): IF-090, IF-091, IF-092, IF-101, IF-110
 | `parse_dispositions(text, where)` | `(drafts, refusal)` — the `## Dispositions` section's fenced TOML |  |
 | `intake_after_merge(root, before, after, outcomes, branch)` | THE MERGE-SLOT ARM: triggers (a), (b) and (d) for one landed merge. |  |
 | `mint_gap_rows(root, census)` | THE DISPATCHER'S RUNG-1 ARM (trigger c): the gap census, minted as |  |
-| `adjudication_action(human_held)` | May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2, re-keyed | SN-029 |
+| `adjudication_action(human_held)` | May adjudication FLIP `Modified` -> `Approved`? Ruled decision 2, re-keyed | SN-029 |
 | `flip_verified(root, ids)` | Enact — or recommend — the adjudication row's cheap outcome for spine |  |
 | `main(argv)` |  |  |
 
@@ -1317,13 +1316,12 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | Public item | Summary | Implements |
 |---|---|---|
 | `load_csv(path)` |  |  |
-| `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
-| `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): the row |  |
-| `is_planned(row)` | The `Planned` state (process.md §7): the row's TEXT is ratified and its |  |
+| `is_approved(row)` | The approved state: the row's TEXT is blessed by a human in a reviewed |  |
+| `is_modified(row)` | The post-approval `Modified` state (WI-316, process.md §7): the row landed |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell so a |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
-| `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Verified` |  |
+| `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Approved` |  |
 | `modified_chain_advisories(srs, llrs, tcs)` | Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither |  |
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
@@ -1381,7 +1379,7 @@ Contracts (interfaces): IF-076
 |---|---|---|
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
-| `is_draft(row)` | A row in the pre-ratification `Draft` state (derived-gate model §3): exempt |  |
+| `is_drafted(row)` | A row in the pre-approval `Drafted` state (derived-gate model §3): exempt |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |

@@ -8,7 +8,7 @@ WHY THIS EXISTS (owner directive 2026-08-15; design:
 docs/plans/2026-08-15-baseline-snapshot-design.md). Every "has this attested row
 changed?" question in the kit used to be answered by DERIVING a baseline from
 git — `trace._attested_baseline` walked the registry's history for the newest
-commit at which the row read `Verified`. That derivation is correct only while
+commit at which the row read `Verified` (now `Approved`). That derivation is correct only while
 every amendment flips its row's Status in the same commit, and D-9 deletes the
 flip: under the new ladder an approved row STAYS approved while its text is
 amended, so the newest-approved revision is HEAD and the diff is empty BY
@@ -67,12 +67,17 @@ and joins no failure set; it is promoted to an integrity-class ERROR at
 migration step 7, and not before, because against a pre-seed or pre-rename
 snapshot it would red every row.
 
-PRE-RENAME VOCABULARY NOTE, PROVISIONAL. The design is written against D-9's
-`Approved`, which does not exist yet. In today's vocabulary the
-approval-or-above claim is carried by TWO values — `Verified` (text blessed and
-evidence established) and `Planned` (text blessed, evidence pending) — so
-`_claims_approval` below reads both. That mapping is transitional and is
-deleted, not re-keyed, when step 5 renames the values.
+VOCABULARY NOTE — THE TRANSITIONAL MAPPING IS GONE (D-9 step 5, 2026-08-15).
+This module was written against `Approved` before the value existed, and read
+the two pre-rename values that together carried the claim (`Verified` and
+`Planned`). Step 5 renamed both into `Approved`, so the spine arm of
+`_claims_approval` collapsed to the single value its own docstring promised —
+deleted, not re-keyed. THE SKEW THIS LEAVES IS REAL AND IS THE DESIGN'S §B6
+axis 3: a snapshot copied BEFORE the rename speaks the retired words and would
+read as unanchored everywhere, which is why the snapshot is ONE GENERATION,
+replaced wholesale at each signing and never migrated in place, and why the
+first seed happens AFTER the rename (step 6) and the UNANCHORED rule is armed
+only after that (step 7).
 
 Contracts: IF-123, IF-128, IF-129 — the seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml). IF-123 is what this
@@ -154,10 +159,13 @@ SNAPSHOT_TIERS = (
     ("docs/requirements/external.toml", "REL-ID"),
 )
 
-# The Status values that CLAIM approval-or-above in today's pre-rename
-# vocabulary — see the module docstring's provisional note. Lowercase, matching
-# every other Status comparison in the kit (the one casing rule, process.md §4).
-_APPROVAL_CLAIMED = frozenset({"verified", "planned"})
+# The Status value that CLAIMS approval-or-above. ONE MEMBER since D-9 step 5
+# (it held `verified` and `planned` before the fold). Lowercase, matching every
+# other Status comparison in the kit (the one casing rule, process.md §4). Kept
+# as a set rather than an `is_approved` call because this module must not import
+# `trace` (`trace` imports IT), and a set is the honest way to say "the values
+# that claim" in a module that owns no predicate copy.
+_APPROVAL_CLAIMED = frozenset({"approved"})
 
 # The OFF-SPINE tiers do not have a `Status` cell at all: `interfaces.toml` and
 # `external.toml` carry `Approval`, `components.toml` carries `State`. Reading
@@ -172,8 +180,7 @@ _APPROVAL_CLAIMED = frozenset({"verified", "planned"})
 # "stated here and nowhere else", so a second hand-written set would be a rival
 # answer to "is this row settled" that agrees until someone edits one of them.
 # `Approved` and `Founded` both claim — `Founded` is `Approved` plus a
-# demonstration, and this predicate asks about the TEXT being blessed, exactly as
-# `Verified` and `Planned` both claim on the spine.
+# demonstration, and this predicate asks about the TEXT being blessed.
 _CLAIMED_MATURITY = (derive_gate.APPROVED, derive_gate.FOUNDED)
 _APPROVAL_CELL_CLAIMED = frozenset(
     k for k, v in derive_gate.BIF_MATURITY.items() if v in _CLAIMED_MATURITY
@@ -252,13 +259,13 @@ def _claims_approval(row):
     dispatch on tier because a row carries exactly one of the three cells; an
     explicit tier table would be a second place to keep the mapping right.
 
-    TRANSITIONAL ON THE SPINE HALF, and the docstring says so because the cell
-    values do not: D-9's ladder has one word for this (`Approved`) and today's
-    vocabulary has two. `Verified` is text blessed with evidence established;
-    `Planned` is text blessed with evidence pending. BOTH are ratified TEXT, and
-    this predicate is asked about text — so both claim. When step 5 renames the
-    values, the `Status` arm collapses to `is_approved`; the two off-spine arms
-    are NOT transitional and stay.
+    THE SPINE HALF COLLAPSED AT D-9 STEP 5, as this docstring said it would: the
+    ladder has ONE word for the claim (`Approved`) and the two pre-rename values
+    that split it (`Verified`, `Planned`) folded into it under OI-30 D1. The two
+    off-spine arms were never transitional and are unchanged, except that
+    `BIF_MATURITY`'s below-approval key is spelled `drafted` since 5b — which
+    this reads through `derive_gate` rather than restating, so the re-spelling
+    needed no edit here at all.
 
     **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7): needs carry no
     maturity key at all today, so there is no cell for this predicate to read and
@@ -389,7 +396,7 @@ def is_drifted(rel, id_col, live_row, snapshot_rows):
     from its copy in the snapshot.
 
     A row BELOW approval is never drifted — it has made no claim to fall from,
-    and a `Draft` row differing from its snapshot copy is just work in progress.
+    and a `Drafted` row differing from its snapshot copy is just work in progress.
     A claiming row ABSENT from the snapshot is not drifted either; it is
     UNANCHORED, a harder finding that `unanchored_findings` owns, and conflating
     the two would report "re-attest owed" for a row that was never approved at
@@ -433,7 +440,7 @@ def unanchored_findings(root, snapshot=None):
     snapshot does not contain its id, or contains it at a maturity that makes no
     such claim. The second half is the one that matters and it is only decidable
     because the copy is a WHOLE FILE: a live row reading approved whose snapshot
-    copy reads `Draft` is an approval that never rode a copy. Row extraction
+    copy reads `Drafted` is an approval that never rode a copy. Row extraction
     would have deleted the very evidence this reads.
 
     VACUOUS UNTIL THE SNAPSHOT HOLDS A REGISTRY. Once it holds one, a registry

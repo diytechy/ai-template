@@ -394,12 +394,12 @@ def spine_repo(root, evidence, module="scripts/real.py", symbol="load/save"):
     (root / "docs" / "requirements").mkdir(parents=True)
     (root / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
-        + "TC-001,SR-001,Unit,run it,Full,,ok,Yes,{},Verified,1\n".format(evidence),
+        + "TC-001,SR-001,Unit,run it,Full,,ok,Yes,{},Approved,1\n".format(evidence),
         encoding="utf-8",
     )
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
         LLR_HEADER
-        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Verified,,1\n".format(
+        + "LLR-001,SR-001,T,{},{},detail,,(see TC-001),Approved,,1\n".format(
             module, symbol
         ),
         encoding="utf-8",
@@ -418,7 +418,7 @@ def test_registry_citations_whose_files_exist_pass(tmp_path):
 
 
 def test_an_invented_registry_evidence_citation_reds_under_strict(tmp_path):
-    # The WI-394 finding itself: an Automated=Yes / Status=Verified row citing
+    # The WI-394 finding itself: an Automated=Yes / Status=Approved row citing
     # a file that has never existed. Warn-first names the row and the column.
     spine_repo(tmp_path, "tests/never_existed.py::test_invented")
     proc = refs(tmp_path)
@@ -447,7 +447,7 @@ def test_registry_placeholder_rows_and_symbol_joins_stay_out_of_scope(tmp_path):
     spine_repo(tmp_path, "scripts/real.py", symbol="load/save")
     (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
         TC_HEADER
-        + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Planned,1\n",
+        + "TC-000,SR-000,Unit,example,Full,,ok,Yes,tests/nope.py::test_x,Approved,1\n",
         encoding="utf-8",
     )
     proc = refs(tmp_path, "--strict")
@@ -474,7 +474,7 @@ def test_llr_symbol_anchor_reds_on_a_planted_defect(tmp_path):
     llr.write_text(
         llr.read_text(encoding="utf-8")
         + "LLR-901,SR-001,Planted,scripts/real.py,no_such_symbol_anywhere,"
-        "detail,,(see TC-001),Verified,,1\n",
+        "detail,,(see TC-001),Approved,,1\n",
         encoding="utf-8",
     )
     proc = refs(tmp_path)
@@ -610,7 +610,7 @@ def test_llr_symbol_anchor_skips_placeholder_rows(tmp_path):
     llr.write_text(
         llr.read_text(encoding="utf-8")
         + "LLR-000,SR-000,Example,scripts/real.py,your_symbol_here,"
-        "detail,,(see TC-000),Draft,,1\n",
+        "detail,,(see TC-000),Drafted,,1\n",
         encoding="utf-8",
     )
     assert refs(tmp_path, "--strict").returncode == 0

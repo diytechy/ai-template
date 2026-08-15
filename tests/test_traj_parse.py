@@ -81,27 +81,27 @@ def test_no_git_means_no_stamp_and_stays_deterministic(tmp_path):
 SCRAMBLED_SRS = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
     "Permutations,Priority,Verification,Status\n"
-    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Verified\n'
-    'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Draft\n'
+    'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Approved\n'
+    'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Drafted\n'
     'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Modified\n'
-    'NOTE,Not a requirement,SN-001,"Shall not.",R,"nope",,M,Test,Draft\n'
-    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Verified\n'
+    'NOTE,Not a requirement,SN-001,"Shall not.",R,"nope",,M,Test,Drafted\n'
+    'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Approved\n'
 )
 
 SCRAMBLED_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Planned\n'
-    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Planned\n'
-    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Planned\n"
-    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Planned\n'
+    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Approved\n'
+    'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Approved\n'
+    "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Approved\n"
+    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Approved\n'
 )
 
 SCRAMBLED_TCS = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
-    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Verified\n"
-    "NOTE,LLR-001,Unit,not a case,Smoke,a=0,ok,Yes,Draft\n"
-    "TC-000,LLR-001,Unit,call add,Smoke,a=0,ok,Yes,Draft\n"
-    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Verified\n"
+    "TC-005,LLR-001,Unit,call add,Smoke,a=5,ok,Yes,Approved\n"
+    "NOTE,LLR-001,Unit,not a case,Smoke,a=0,ok,Yes,Drafted\n"
+    "TC-000,LLR-001,Unit,call add,Smoke,a=0,ok,Yes,Drafted\n"
+    "TC-001,LLR-001,Unit,call add,Smoke,a=1,ok,Yes,Approved\n"
 )
 
 
@@ -166,10 +166,10 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     assert "SR-000" in [r["SR-ID"] for r in d_srs]
     assert "LLR-000" in [r["LLR-ID"] for r in d_llrs]
     assert "TC-000" in [r["TC-ID"] for r in d_tcs]
-    # And the rule reaches its real caller: SR-000 is `Draft`, so a leaked
+    # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
     # example row would invent a ratification the owner does not owe.
     pending = gt._spine_pending(root)
-    assert pending, "the Draft/Modified SRs must still project"
+    assert pending, "the Drafted/Modified SRs must still project"
     assert not any("SR-000" in line for line in pending)
     assert any("SR-002" in line for line in pending)  # Modified -> re-attest
 

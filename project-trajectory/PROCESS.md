@@ -317,29 +317,32 @@ The gate value in `docs/gate` is **derived from the artifact states**, not
 hand-set: `scripts/derive_gate.py` generates it as the **min over every in-scope
 artifact's own bar**, so it names the gate the repo must next *pass* and thereby
 selects the strictness the harness runs at ("Stages and gates" below). Closing a
-gate = **ratifying a batch of artifacts in a reviewed commit** (`Status`
-`Draft`→`Planned`, or an SN out of its draft section), never a manual bump (§7
+gate = **approving a batch of artifacts in a reviewed commit** (`Status`
+`Drafted`→`Approved`, or an SN out of its draft section), never a manual bump (§7
 "The derived gate"; the model + parallel/series workflow:
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
-A `Draft` artifact lives in the live spine (exempt from the decomposition rules),
+A `Drafted` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
-`Status` is open-vocabulary with three recognized values, matched
-**case-insensitively** (write them Title-Case). Two bear gate arithmetic:
-`Draft` and `Verified`. The third, `Modified`, marks a **post-attestation
-amendment** — content changed after the row was attested, so a re-attest is
-owed. It adds no arithmetic (a Modified SR is simply not Verified, deriving DevBar-Tests)
+`Status` is a **closed** vocabulary — `Drafted`, `Approved`, `Modified` — matched
+**case-insensitively** (write them Title-Case); a value outside it is an
+always-on integrity finding, not a free label — it was open until 2026-08-15,
+and a word no predicate read announced nothing. Two bear gate arithmetic.
+`Approved` says the row's TEXT is blessed and says nothing about tests passing —
+whether they pass is the harness's answer, never a cell's. The third,
+`Modified`, marks a **post-approval amendment** — content changed after the row
+was attested, so a re-attest is owed. It adds no arithmetic (a Modified SR is
+simply not Approved, deriving DevBar-Tests)
 but is surfaced: the `modified=N` basis count, a pending-owner-actions line, and
 the `trace.py --ratify modified` before/after brief. Re-attest is a reviewed
-Status-change commit like ratification: `Modified`→`Verified` blesses the
-amendment (existing evidence still verifies the amended text);
-`Modified`→`Planned` when the amendment invalidated the evidence, so the row
-re-earns `Verified`. Amend and flip in the **same commit** (a `--staged` warn
+Status-change commit like approval: `Modified`→`Approved` blesses the
+amendment. Amend and flip in the **same commit** (a `--staged` warn
 enforces it); the SR is the attestation unit — flip it whenever its chain
 changes. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
 is still owed, so its rows join the batch a human is already reading. Landing it
 after a re-attest flips freshly-blessed rows straight back to `Modified` and buys
-a second sitting for the same reading. No other value carries mechanical meaning (`Planned` stays the conventional name for the ratified-but-unverified middle).
+a second sitting for the same reading. There is no other value: an adopter
+carrying a wider LLR/TC vocabulary migrates it (`RESYNC_PACK.md`).
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **DevBar-Reqs — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
@@ -365,12 +368,12 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   code to pass, then refactor (red → green → refactor). TDD is *how* DevBar-Release code gets
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
-  (coverage, every in-scope SR Verified) are what that loop drives toward.
+  (coverage, every in-scope SR Approved) are what that loop drives toward.
   Format/lint clean; every source module parses
   (`gen_arch_map.py --strict-parse`); the **full** test tier passes; coverage ≥
   `COVERAGE_THRESHOLD`; registry **schema** holds (required fields non-empty,
   `Verification`/`Tier` in vocabulary — `trace.py --strict-schema`); every
-  **in-scope** test-verifiable SR **Verified** (phase-scoped — see "Phased
+  **in-scope** test-verifiable SR **Approved** (phase-scoped — see "Phased
   delivery" below); every other SR explicitly **Demonstration / Manual /
   Inspection / Analysis / Attest / Critique**; each in-scope SR's implementing symbol is **substantive, not a
   stub** (Inspection — see "No-stub / substance review" below). Sign-offs: System
@@ -484,7 +487,7 @@ human certifying `G1` recorded exactly that, and rewriting it would make the  <!
 record claim something was signed that was not.
 
 **And the derived value floors — it does not achieve.** Being a min, one
-`Draft`/`Modified` row pulls it down (deliberately: that is the new-phase
+`Drafted`/`Modified` row pulls it down (deliberately: that is the new-phase
 signal), so a mature spine holding one draft displays exactly what a fresh
 scaffold displays. The value answers *what must still be passed*, never *what
 has been achieved*; `stage=` and `ex-draft=` on the basis line are what tell the
@@ -542,7 +545,7 @@ ratified phase, mirroring the derived gate (`derive_gate.py --next-phase` prints
 the next number); a phase increments only when re-opened scope is **confirmed**
 — an adjudication verdict that scope moved, or a ratified draft-SN batch —
 never on the raw derived-gate drop.
-Traceability stays phase-blind while the DevBar-Release Verified criterion and DevStg-Release
+Traceability stays phase-blind while the DevBar-Release approval criterion and DevStg-Release
 scope by phase (`check.py --gate DevBar-Release --phase 1`; the foundation phase is always in
 scope), reporting out-of-phase SRs as **phase-deferred**.
 Full semantics in
@@ -577,7 +580,7 @@ physical action) — a **named human's recorded judgment**, **trust-based, the b
 can be checked without the work having happened** (Proportionality doctrine); the
 process's job is to make it explicit, named, and auditable, not pass it off as a
 check. Its TC records **who** attested and **when** (`Parameters`/`Expected` cell,
-`Automated=No`); `trace.py` accepts an `Attest` SR as Verified **and** reports it
+`Automated=No`); `trace.py` accepts an `Attest` SR as Approved **and** reports it
 under "attested vs mechanized" so an audit sees the trust footprint. **`Critique`**
 is the mechanized sibling for *subjective* acceptance: an independent critical eye
 (an LLM one, deliberately separated from human `Attest`) judges a **code-produced**
@@ -920,7 +923,7 @@ pip needed to run them):
   comma otherwise misaligns every later column silently); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
   `--require-verified` adds the DevBar-Release status criterion (every `Verification=Test` SR
-  must be `Verified`); `--phase v1` scopes it for phased delivery (§4).
+  must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
   non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
   `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevBar-Reqs as

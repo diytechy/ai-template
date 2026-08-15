@@ -62,7 +62,7 @@
 # graph must resolve and must be acyclic, and depth past 2 warns. Most rows carry
 # nothing, and an empty cell IS "this is not a constituent".
 #
-# APPROVAL is the one maturity field: a CLOSED vocabulary, `draft` | `approved`,
+# APPROVAL is the one maturity field: a CLOSED vocabulary, `drafted` | `approved`,
 # shared with external.toml. Flipping a cell to `approved` is a human act in a
 # reviewed commit. Do NOT carry a second maturity column beside it; the whole
 # reason this tier has one field is that it once had two that meant different
@@ -80,7 +80,7 @@ req_refs = ["SR-000"]
 owner = "SR-000"
 carried_by = "IF-000"
 version = "v1"
-approval = "draft"
+approval = "drafted"
 interface_from_external = "B-000"
 interface_to_external = "B-000"
 component = "CMP-000"

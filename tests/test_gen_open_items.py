@@ -2,13 +2,13 @@
 
 `docs/open-items.md` is retired: decision briefs are ROWS in
 `docs/requirements/open-items.csv`, and this generator renders them — plus every
-spine row owing a ratification (`Draft`) or a re-attest (`Modified`), with a
+spine row owing a ratification (`Drafted`) or a re-attest (`Modified`), with a
 word-level before/after — into `docs/open-items.html`.
 
 What these guard, in the order the surface can fail a reader:
 
   * the briefs render, and a RULED row does not (it is history, not a decision);
-  * `Draft` AND `Modified` both surface — "new or changed requirement rows
+  * `Drafted` AND `Modified` both surface — "new or changed requirement rows
     awaiting a human" is the whole point, and an earlier draft covered only one;
   * an empty section says CHECK THE BASELINE rather than reading as a confident
     "nothing changed" (the failure that shipped a brief missing 2 of 6 rows);
@@ -141,21 +141,21 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
 
 
 def test_draft_and_modified_rows_both_surface(tmp_path):
-    """ "New or changed" is the requirement: a Draft row owes a first
+    """ "New or changed" is the requirement: a Drafted row owes a first
     ratification, a Modified row owes a re-attest, and a view that renders only
     one of them silently drops half the owner's queue."""
     repo(
         tmp_path,
         sr_rows=(
             "SR-001,A drafted need,SN-001,shall do the new thing,because,"
-            "criteria,,C,Test,Draft,1,W\n"
+            "criteria,,C,Test,Drafted,1,W\n"
             "SR-002,An amended need,SN-001,shall do the changed thing,because,"
             "criteria,,C,Test,Modified,1,W\n"
         ),
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
-    assert 'id="SR-001-attest"' in page and "ratification owed" in page
+    assert 'id="SR-001-attest"' in page and "approval owed" in page
     assert 'id="SR-002-attest"' in page and "re-attest owed" in page
     # With no snapshot at all there is no baseline for ANY row — say so plainly
     # rather than implying a missing git history (which is no longer read).
@@ -167,12 +167,12 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     # must not appear, or the surface cries wolf on every spine row.
     repo(
         tmp_path,
-        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Verified,1,W\n",
+        sr_rows="SR-003,A settled need,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "SR-003" not in page
-    assert "nothing owes a ratification, evidence or a re-attest" in page
+    assert "nothing owes an approval or a re-attest" in page
 
 
 def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_path):
@@ -184,7 +184,7 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     is structurally gone and the advice would now be false. The section says
     what is actually true instead."""
     verified = (
-        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Verified,1,W\n"
+        "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
@@ -192,7 +192,7 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     # Flip to Modified WITHOUT amending anything else: the row asks for a human
     # by its own Status, and no cell has moved away from the approved text.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + verified.replace(",Verified,", ",Modified,"), encoding="utf-8"
+        SR_HEADER + verified.replace(",Approved,", ",Modified,"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
@@ -379,15 +379,15 @@ def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
 
 
 def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
-    """122-REVIEW-A: the whole-section empty state claimed no Draft/Modified
-    SPINE ROW while the model selects SRs only — a Draft LLR under a Verified SR
+    """122-REVIEW-A: the whole-section empty state claimed no Drafted/Modified
+    SPINE ROW while the model selects SRs only — a Drafted LLR under a Approved SR
     is invisible AND was actively denied. Say what was checked."""
     repo(
         tmp_path,
-        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Verified,1,W\n",
+        sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
         llr_rows=(
             "LLR-007,SR-007,A drafted child,mod.py,sym,detail,(see TC-007),"
-            "Draft,CMP-001,1\n"
+            "Drafted,CMP-001,1\n"
         ),
     )
     assert gen(tmp_path).returncode == 0
@@ -494,7 +494,7 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     stdlib test can drive — that needs the Playwright harness, and asserting it
     here would be the proxy this repo refuses."""
     verified = (
-        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Verified,1,W\n"
+        "SR-008,Amended,SN-001,shall do a thing,because,criteria,,C,Test,Approved,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
@@ -505,7 +505,7 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER
         + verified.replace("a thing", "a DIFFERENT thing").replace(
-            ",Verified,", ",Modified,"
+            ",Approved,", ",Modified,"
         ),
         encoding="utf-8",
     )
@@ -548,7 +548,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     stdlib test can drive (the same boundary the collapse guard states)."""
     verified = (
         "SR-009,Amended reasoning,SN-001,shall hold the ORIGINAL requirement,"
-        "because of the old reason,the acceptance criteria,,C,Test,Verified,1,W\n"
+        "because of the old reason,the acceptance criteria,,C,Test,Approved,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
@@ -557,7 +557,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
         SR_HEADER
         + verified.replace(
             "because of the old reason", "because of a NEW reason"
-        ).replace(",Verified,", ",Modified,"),
+        ).replace(",Approved,", ",Modified,"),
         encoding="utf-8",
     )
     assert gen(root).returncode == 0
@@ -592,9 +592,9 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
         "SR-010,A stable requirement,SN-001,shall state the THING BEING VERIFIED,"
         "because,criteria,,C,Test,{},1,W\n"
     )
-    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Verified,CMP-001,1\n"
+    llr = "LLR-010,SR-010,A child,mod.py,sym,{},TC-010,Approved,CMP-001,1\n"
     root = repo(
-        tmp_path, sr_rows=sr.format("Verified"), llr_rows=llr.format("old detail")
+        tmp_path, sr_rows=sr.format("Approved"), llr_rows=llr.format("old detail")
     )
     _git_init(root)
     _approve(root)

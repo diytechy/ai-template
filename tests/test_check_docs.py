@@ -449,7 +449,7 @@ def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
 
 def test_inventory_draft_must_need_not_required_in_readme(scaffold):
     # End-to-end: a Must need still at DRAFT does NOT force a README citation
-    # (it is unratified); the check stays green. Draft-ness is `kind` now, not a
+    # (it is unratified); the check stays green. Drafted-ness is `kind` now, not a
     # heading — the carrier cutover retired section-as-state,
     # which is what stopped a prose mention under a heading from re-drafting an
     # attested need.

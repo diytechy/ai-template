@@ -504,7 +504,7 @@ def _amendment_context(records):
             )
     lines += [
         "",
-        "Outcomes (§A5.2): flip rows back to Verified where no scope moved",
+        "Outcomes (§A5.2): flip rows back to Approved where no scope moved",
         "(per the declared ratification level in docs/process.toml — "
         "recommend-only while the tier is HUMAN-HELD, ruled decision",
         "2), or draft the real scope-change / re-scope / cancellation rows in",
@@ -1370,7 +1370,7 @@ def _cmd_sweep(args):
 
 
 def adjudication_action(human_held):
-    """May adjudication FLIP `Modified` -> `Verified`? Ruled decision 2, re-keyed
+    """May adjudication FLIP `Modified` -> `Approved`? Ruled decision 2, re-keyed
     onto SN-029's ordinal: **recommend-only while the tier is HUMAN-HELD** — the
     flip is a Status change that RECOVERS THE GATE, i.e. a ratification, and a
     human-held tier's ratification is the human's act, so adjudication prepares
@@ -1388,7 +1388,7 @@ def adjudication_action(human_held):
 
 def flip_verified(root, ids):
     """Enact — or recommend — the adjudication row's cheap outcome for spine
-    rows judged no-scope-moved: `Modified` -> `Verified`. Returns
+    rows judged no-scope-moved: `Modified` -> `Approved`. Returns
     `(action, flipped_ids, refusal)`.
 
     The hold is derived from `docs/process.toml`, never passed by hand (the
@@ -1444,7 +1444,7 @@ def flip_verified(root, ids):
     # and the record of WHAT TEXT was blessed are one (repo-lock D-1's standing
     # requirement, discharged by the snapshot rather than by a hash column).
     for rid in flipped:
-        _say("flipped {} Modified -> Verified ({})".format(rid, session_hold))
+        _say("flipped {} Modified -> Approved ({})".format(rid, session_hold))
     return action, flipped, None
 
 
@@ -1521,7 +1521,7 @@ def _multiline_delims(text):
 
 
 def _flip_status_lines(lines, table, rid):
-    """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Verified`, in place.
+    """Rewrite `[<table>.<rid>]`'s `status = ...` line to `Approved`, in place.
     True when a line moved. A LINE REWRITE ON `bootstrap.set_process_key`'s
     PATTERN, and for its reasons: stdlib has no TOML
     writer, and re-serialising the registry to change one cell would normalise
@@ -1557,14 +1557,14 @@ def _flip_status_lines(lines, table, rid):
             in_row = stripped == header
             continue
         if in_row and stripped.split("=")[0].strip() == _STATUS_KEY and opened is None:
-            lines[i] = '{} = "Verified"'.format(_STATUS_KEY)
+            lines[i] = '{} = "Approved"'.format(_STATUS_KEY)
             return True
         open_delim = opened
     return False
 
 
 def _rewrite_toml_statuses(live, rel, ids):
-    """Move every named row's status line to `Verified` in one TOML registry.
+    """Move every named row's status line to `Approved` in one TOML registry.
 
     Split out of `_apply_flips` when the snapshot copy joined it (D-9 step 3):
     the carrier-specific write is a self-contained job with its own refusal, and
@@ -1596,7 +1596,7 @@ def _rewrite_toml_statuses(live, rel, ids):
 
 
 def _apply_flips(root, tables, located):
-    """Move each located `Modified` row to `Verified` and rewrite exactly the
+    """Move each located `Modified` row to `Approved` and rewrite exactly the
     registries that changed; the sorted flipped ids. Per carrier: a CSV rewrite
     re-emits the mutated rows, a TOML rewrite edits the one status LINE."""
     import csv
@@ -1616,13 +1616,18 @@ def _apply_flips(root, tables, located):
                     rid, tables[rel][0], _STATUS_KEY
                 )
             )
+        # THE TRANSITIONAL GUARD, AND IT STAYS THROUGH THE RENAME. `Modified`
+        # survives D-9 step 5 as the live re-attest marker, so this reads the
+        # word it always read. Step 7 retires the value and RESOLVES this line
+        # into an explicit refusal rather than a silent `continue` — a located
+        # row that is not flippable will then be named, not skipped.
         if status != "Modified":
             continue
         live, _rows = tables[rel]
         if live.suffix == ".toml":
             toml_edits.setdefault(rel, []).append(rid)
         else:
-            row[status_ix] = "Verified"
+            row[status_ix] = "Approved"
         flipped.append(rid)
         changed.add(rel)
     for rel, ids in toml_edits.items():

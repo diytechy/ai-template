@@ -2,7 +2,7 @@
 2026-08-15; docs/plans/2026-08-15-baseline-snapshot-design.md).
 
 The mechanism replaces a DERIVED baseline (a git walk for the newest commit at
-which a row read `Verified`) with a copied one. Its whole value rests on four
+which a row read `Approved`) with a copied one. Its whole value rests on four
 properties, and each gets a red->green test here:
 
   * drift is measured against the copy, over a real tree, and only RATIFIED
@@ -191,7 +191,7 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
     root = _seeded(tmp_path)
     base = SNAP.snapshot_root(root)
     stale = base / "docs/requirements/system-requirements.csv"
-    stale.write_text("SR-ID,Title,Status\nSR-001,x,Verified\n", encoding="utf-8")
+    stale.write_text("SR-ID,Title,Status\nSR-001,x,Approved\n", encoding="utf-8")
     # Both carriers present: the resolver refuses, which is the state to clear.
     spine_carrier = load_script("spine_carrier")
     try:
@@ -210,7 +210,7 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
 
 def test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
     root = _seeded(tmp_path)
-    sid, _row = _first_row_at(root, "verified")
+    sid, _row = _first_row_at(root, "approved")
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
     live = {
@@ -235,19 +235,19 @@ def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
     root = _seeded(tmp_path)
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "verified")
+    sid, row = _first_row_at(root, "approved")
     moved = dict(row, Phase="99")  # `Phase` is declared TRACED for the SR tier
     assert CT.spine_cell_class(SR_REL, "Phase") == "traced"
     assert not SNAP.is_drifted(SR_REL, "SR-ID", moved, before)
 
 
 def test_a_row_below_approval_can_never_be_drifted(tmp_path):
-    # It has made no claim to fall from. A Draft row differing from its snapshot
+    # It has made no claim to fall from. A Drafted row differing from its snapshot
     # copy is work in progress, not a broken attestation.
     root = _seeded(tmp_path)
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "draft")
+    sid, row = _first_row_at(root, "drafted")
     amended = dict(row, Title=(row.get("Title") or "") + " (amended)")
     assert amended["Title"] != before[sid].get("Title")
     assert not SNAP.is_drifted(SR_REL, "SR-ID", amended, before)
@@ -259,8 +259,8 @@ def test_status_itself_is_never_the_amendment(tmp_path):
     # invisible behind its own flip.
     root = _seeded(tmp_path)
     before = SNAP.rows_for(SNAP.load_all(root), SR_REL, "SR-ID")
-    sid, row = _first_row_at(root, "verified")
-    assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Planned"), before)
+    sid, row = _first_row_at(root, "approved")
+    assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Approved"), before)
 
 
 # --- the OFF-SPINE tiers, which carry no `Status` at all -----------------------
@@ -300,7 +300,7 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
 def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     # IF (and the depth-0 frame) carry `Approval`, never `Status`.
     root, row, unclaimed = _approved_offspine(
-        tmp_path, IF_REL, "IF-ID", "Approval", ("draft", "approved")
+        tmp_path, IF_REL, "IF-ID", "Approval", ("drafted", "approved")
     )
     before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
     assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # green first
@@ -308,7 +308,7 @@ def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     assert SNAP.is_drifted(IF_REL, "IF-ID", moved, before)
     assert set(SNAP.drifted_cells(IF_REL, "IF-ID", moved, before)) == {"Contract"}
     # ...and a row that has NOT been approved still cannot drift: it has made no
-    # claim to fall from, exactly as a Draft SR cannot.
+    # claim to fall from, exactly as a Drafted SR cannot.
     assert unclaimed, "fixture: every row was approved, so the negative is vacuous"
     still_draft = dict(unclaimed[0], Contract="rewritten entirely")
     assert not SNAP.is_drifted(IF_REL, "IF-ID", still_draft, before)
@@ -343,7 +343,7 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     # edit that silently drops one has to come through this line.
     assert SNAP._claims_approval({"Approval": "approved"})
     assert SNAP._claims_approval({"State": "verified"})
-    assert not SNAP._claims_approval({"Approval": "draft"})
+    assert not SNAP._claims_approval({"Approval": "drafted"})
     assert not SNAP._claims_approval({"State": "planned"})
 
 
@@ -362,7 +362,7 @@ def test_the_SN_tier_is_COPIED_but_claims_nothing_BY_DECISION():
 def test_an_approved_row_ABSENT_from_the_snapshot_is_unanchored(tmp_path):
     root = _seeded(tmp_path)
     assert SNAP.unanchored_findings(root) == []  # green first
-    sid, row = _first_row_at(root, "verified")
+    sid, row = _first_row_at(root, "approved")
     # Delete the row from the SNAPSHOT copy: the live tree still claims it.
     snap_sr = SNAP.snapshot_root(root) / SR_REL
     text = snap_sr.read_text(encoding="utf-8")
@@ -385,18 +385,18 @@ def _rest_after_row(rest):
 def test_an_approval_whose_snapshot_copy_reads_BELOW_approval_is_unanchored(tmp_path):
     """THE CASE THE WHOLE DESIGN EXISTS FOR, and the strongest single argument
     for whole-file copying: the snapshot keeps each row's own `Status`, so a
-    live row reading approved whose copy reads `Draft` is provably an approval
+    live row reading approved whose copy reads `Drafted` is provably an approval
     that never rode a copy. Row extraction would have deleted this evidence."""
     root = _seeded(tmp_path)
-    sid, _row = _first_row_at(root, "verified")
+    sid, _row = _first_row_at(root, "approved")
     snap_sr = SNAP.snapshot_root(root) / SR_REL
     text = snap_sr.read_text(encoding="utf-8")
     head, sep, rest = text.partition("[requirement." + sid + "]")
     assert sep
-    rest = rest.replace('status = "Verified"', 'status = "Draft"', 1)
+    rest = rest.replace('status = "Approved"', 'status = "Drafted"', 1)
     snap_sr.write_text(head + sep + rest, encoding="utf-8")
     found = SNAP.unanchored_findings(root)
-    assert any(sid in f and "Draft" in f for f in found), found
+    assert any(sid in f and "Drafted" in f for f in found), found
 
 
 def test_a_registry_missing_from_an_EXISTING_snapshot_is_reported(tmp_path):
@@ -450,7 +450,7 @@ def test_a_clean_copy_satisfies_the_mirror_invariant(tmp_path):
     # Green first, and it must be green by CONSTRUCTION: a legitimate copy is
     # byte-for-byte and rides the same commit, so this can never warn.
     root, run_git = _git_tree(tmp_path)
-    _rewrite(root, SR_REL, 'status = "Verified"', 'status = "Planned"')
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Approved"')
     SNAP.copy_live(root)
     run_git("add", "-A")
     assert CT.staged_snapshot_findings(root) == []
@@ -472,10 +472,14 @@ def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
     # The realistic slip: the live registry is amended and one snapshot file is
     # refreshed by hand while its sibling is forgotten.
     root, run_git = _git_tree(tmp_path)
-    _rewrite(root, SR_REL, 'status = "Verified"', 'status = "Planned"')
+    # RE-POINTED AT D-9 STEP 5: the first move was Verified->Planned, two live
+    # values that FOLDED into one. Any real cell edit serves — this uses the
+    # Title cell, which is ratified text and therefore exactly what a snapshot
+    # is supposed to record.
+    _rewrite(root, SR_REL, 'title = "', 'title = "amended ')
     shutil.copyfile(root / SR_REL, SNAP.snapshot_root(root) / SR_REL)
     # ...and now the live file moves AGAIN before the commit closes.
-    _rewrite(root, SR_REL, 'status = "Planned"', 'status = "Modified"')
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Modified"')
     run_git("add", "-A")
     found = CT.staged_snapshot_findings(root)
     assert any("byte-identical" in f for f in found), found
@@ -557,10 +561,10 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     snapshot is a baseline that is provably NOT the text under judgement,
     because the mirror invariant proves it was copied in an approval commit."""
     root, run_git = _git_tree(tmp_path)
-    sid, row = _first_row_at(root, "verified")
+    sid, row = _first_row_at(root, "approved")
     # Amend a ratified cell AND flip the row, in one staged change.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
-    _rewrite(root, SR_REL, 'status = "Verified"', 'status = "Modified"')
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Modified"')
     run_git("add", "-A")
     seam = [a for a in CT.staged_spine_amendments(root) if a["id"] == sid]
     assert seam == [], "the seam saw an amend+flip it is documented to miss"

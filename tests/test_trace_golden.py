@@ -21,7 +21,7 @@ GOLDEN = os.path.join(os.path.dirname(__file__), "golden")
 # --- An off-spine-rich, orphan-free spine ------------------------------------
 # Exercises every report section the minimal chain does not: the PB/REPO/PART/
 # ASSET/CMP/IF back-link renders, the knowledge-pack + AC advisories, the draft
-# artifacts section (a Draft SR + a section-as-state Draft SN), the three-way
+# artifacts section (a Drafted SR + a section-as-state Drafted SN), the three-way
 # verification-basis split (an Attest SR — mechanized/demonstrated/attested,
 # WI-259), and the per-Area counts.
 
@@ -40,18 +40,25 @@ RICH_SN = """# Stakeholder Needs (SN-###)
 """
 
 RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,process
-SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Verified,trajectory
-SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Draft,process
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,process
+SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Approved,trajectory
+SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Drafted,process
 """
 
+# LLR-001 is deliberately `Drafted` under an `Approved` TC-001 so this fixture
+# keeps rendering the POPULATED status-coherence advisory section. Before D-9
+# step 5 the shared minimal project carried that case with `Planned`; the fold
+# lifted it to `Approved` and silenced the lint, so the case moved HERE — the
+# fixture whose whole job is exercising every report section — rather than into
+# `make_minimal_project`, where a `Drafted` child would cap the derived gate for
+# every test built on it.
 RICH_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Planned,CMP-001
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Drafted,CMP-001
 """
 
 RICH_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001",Yes,tests/test_demo.py::test_add_sr001,Verified
-TC-002,SR-002,Manual,read the page,Full,,"The page exists",No,,Verified
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001",Yes,tests/test_demo.py::test_add_sr001,Approved
+TC-002,SR-002,Manual,read the page,Full,,"The page exists",No,,Approved
 """
 
 RICH_PBS = """PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
@@ -99,8 +106,8 @@ notes = "demo seam"
 """
 
 ORPHAN_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
-SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Planned
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved
+SR-002,Orphaned,SN-001,"The system shall do something untested.","Demo orphan.","n/a",,M,Test,Approved
 """
 
 

@@ -569,7 +569,7 @@ def human_holds(docs, stage):
 
     BOTH ENDS OF THE LADDER ARE ABSOLUTE. Level 4 holds everything including the
     close, because `DevStg-Release` means "nothing in work: every rung settled and
-    Verified" — the state a bar-advance row runs in, and the shipped default is
+    approved" — the state a bar-advance row runs in, and the shipped default is
     documented as "every tier human-held; the most conservative setting". Level 0
     holds nothing; only the middle consults the stage.
 

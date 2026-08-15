@@ -395,7 +395,7 @@ modified` emits the before/after brief; semantics: PROCESS.md §7)
   no placeholder rows; key runtime flows diagrammed.
 - **DevBar-Release — Implementation.** Code is written **test-first** and passes the full
   harness: format/lint, full test tier, coverage ≥ threshold, schema, every
-  in-scope requirement `Verified`, no stubs.
+  in-scope requirement `Approved`, no stubs.
 - **DevStg-Release — Release readiness** *(per release)*. The release test tier
   passes; the generated release checklist is completed and signed; version
   bumped; changelog + interface versions updated.

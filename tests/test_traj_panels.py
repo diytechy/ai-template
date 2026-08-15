@@ -190,7 +190,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     assert "Artifact lifecycle × gates" in text
     assert "The station cycle" in text
     assert "Slices → phase → gates" in text
-    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Verified,
+    # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
     assert "2 SR · 1 verified" in text

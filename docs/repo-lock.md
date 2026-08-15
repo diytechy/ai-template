@@ -621,7 +621,7 @@ Both closed; archived with §3.
 
 ## 5. What "locked" means — the close-out checklist
 
-Locked = the rulings made, everything below done, `drafts=0 modified=0`, and
+Locked = the rulings made, everything below done, `drafted=0 modified=0`, and
 this file archived.
 
 ### Owed by the owner

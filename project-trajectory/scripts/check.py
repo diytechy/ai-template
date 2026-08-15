@@ -62,7 +62,7 @@ Usage:
                 regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
                 is working toward, not the end-state bar. DevBar-Release (and all) also
-                requires every Verification=Test SR to be Status=Verified
+                requires every Verification=Test SR to be Status=Approved
                 (trace.py --require-verified).
     --tier      Which test tier to run (default: all). Mark fast critical-path
                 tests @pytest.mark.smoke and expensive ones @pytest.mark.release
@@ -474,7 +474,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     if gate in (
         BAR_RELEASE,
         "all",
-    ):  # DevBar-Release criterion: test-verifiable SRs are Verified
+    ):  # DevBar-Release criterion: test-verifiable SRs are Approved
         trace_cmd.append("--require-verified")
         trace_cmd.append(
             "--strict-schema"
@@ -794,7 +794,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Owner decision-surface freshness (WI-322, OI-10 ruled option (b)):
         # docs/open-items.html is generated from docs/requirements/open-items.toml
-        # plus the spine's Draft/Modified rows — the surface that replaced the
+        # plus the spine's Drafted/Modified rows — the surface that replaced the
         # hand-maintained docs/open-items.md. Same generated-artifact contract
         # as its siblings — a pure function of the committed tree since the
         # machine-local advisory region retired with the dispatcher
@@ -991,7 +991,13 @@ GATE_FILE = Path("docs/gate")
 # `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
 # The two counts below say whether the bar is SUPPRESSED by an open ratification
 # window rather than reflecting the project's real maturity.
-_BASIS_RE = re.compile(r"#\s*basis:.*\bdrafts=(\d+)\b.*\bmodified=(\d+)\b")
+# `drafted=` (was `drafts=`) SINCE D-9 MIGRATION STEP 5 — moved in the SAME
+# commit as `derive_gate.basis_line`, which is the whole point: a producer rename
+# that leaves this regex behind blinds the window detector and twelve gate steps
+# stop running silently (the measured 2026-07-26/27 precedent below). The
+# producer-consumer round-trip pin in `tests/test_derive_gate.py` is what makes
+# the next such edit fail loudly.
+_BASIS_RE = re.compile(r"#\s*basis:.*\bdrafted=(\d+)\b.*\bmodified=(\d+)\b")
 # The other two fields the window test needs: the raw computed level (may be
 # `DevBar-Below`, unlike the runnable value on the line below it) and the
 # per-phase breakdown, which is what distinguishes "drafts are holding a MATURE
@@ -1044,7 +1050,7 @@ ADVISORY_EXCLUDE = {"tests+coverage", "module-coverage"}
 
 
 def window_open(gate_file=None):
-    """True when an open `Draft`/`Modified` window is holding the derived gate
+    """True when an open `Drafted`/`Modified` window is holding the derived gate
     below what the artifacts otherwise support.
 
     Why this exists (owner ruling 2026-07-27): a window drops the gate, and the
@@ -1061,14 +1067,14 @@ def window_open(gate_file=None):
     signal is specifically that the gate was *suppressed*.
 
     The two counts are not equally good evidence of that, which the first cut
-    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafts>0`, ordinary DevBar-Below/DevBar-Reqs
+    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafted>0`, ordinary DevBar-Below/DevBar-Reqs
     state, contradicting the very claim above):
 
       * `modified>0` IS conclusive on its own. `Modified` is *defined* as a
-        post-attestation amendment (derive_gate's model, WI-316), so the row can
+        post-approval amendment (derive_gate's model, WI-316), so the row can
         only exist in a spine that has already been ratified. Something that was
-        Verified is pending again — that is a window by construction.
-      * `drafts>0` is ambiguous. A Draft reads DevBar-Below, so drafts drop the gate in a
+        `Approved` is pending again — that is a window by construction.
+      * `drafted>0` is ambiguous. A `Drafted` row reads DevBar-Below, so drafts drop the gate in a
         mature repo starting a new phase AND in a project that has never
         ratified anything. The counts cannot tell those apart — `ex-draft` can,
         by answering the question directly: it is the level the same arithmetic
@@ -1078,7 +1084,7 @@ def window_open(gate_file=None):
 
     `ex-draft` replaced a per-phase heuristic that read the phase breakdown for
     the same evidence (WI-341). The heuristic could not see a SINGLE-phase
-    repo's maturity at all: a Draft added there drops that phase to DevBar-Below, so no
+    repo's maturity at all: a `Drafted` row added there drops that phase to DevBar-Below, so no
     phase remains above `computed` and the mature repo reads exactly like a new
     one — the very blind spot this tier exists to close, reopened by one row
     (128-REVIEW-A MAJOR 3). It is kept below ONLY as the fallback for a gate
@@ -1156,7 +1162,9 @@ def advisory_plan(gate, plan, steps_at):
     BLOCKER 4: the step table is *specialized to the gate it was built for*, so
     `traceability` built at DevBar-Tests carries no `--require-verified`, and no filter
     over it could ever produce the stronger variant — which the owner explicitly
-    ruled IN ("a `Planned` row also fails it, and that is real signal"). The
+    ruled IN (an unapproved-but-decomposed row "also fails it, and that is real
+    signal" — the owner's words named `Planned`, which folded into `Approved` at
+    D-9 step 5; the point survives the word). The
     first cut filtered, so it silently ran neither the DevBar-Release command nor anything
     in its place, while a test asserted traceability was *not* advisory and
     entrenched it.
@@ -1689,7 +1697,7 @@ def main():
         "--phase",
         default=None,
         help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevBar-Release "
-        "Verified criterion to that phase (process.md §4 'Phased delivery')",
+        "approval criterion to that phase (process.md §4 'Phased delivery')",
     )
     ap.add_argument(
         "--lenient",

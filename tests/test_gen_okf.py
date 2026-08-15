@@ -154,7 +154,7 @@ def test_malformed_id_is_ignored_not_path_escape(scaffold):
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8")
-        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Verified\n',
+        + 'SR-/../../evil,Bad,SN-001,"x",R,"y",,M,Test,Approved\n',
         encoding="utf-8",
     )
     proc = okf(scaffold)

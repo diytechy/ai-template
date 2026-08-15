@@ -81,7 +81,7 @@ def _spine(root, skip_example=False):
     """`(srs, llrs, tcs)` — the SR/LLR/TC registry rows, id-prefix-filtered.
 
     The three readers of the spine (the What icicle, the maturity numbers, the
-    Draft/Modified pointer lines) each re-derived the same
+    Drafted/Modified pointer lines) each re-derived the same
     `read_rows(...) if id.startswith(...)` triple; the census charged the eight
     resulting blocks to WI-346 as `spine-load-repeat`. Explicitly NOT the F5
     case: F5 buys cross-SCRIPT copy-ability (a shared `_kitcommon.py` was
@@ -124,12 +124,15 @@ def _spine(root, skip_example=False):
 
 def spine_stats(root):
     """Definition-maturity numbers. 'Definition completeness' = SRs marked
-    Verified / total SRs — how much of the requirement definition is decomposed
-    and confirmed, distinct from execution (work items done)."""
+    `Approved` / total SRs — how much of the requirement definition is decomposed
+    and blessed, distinct from execution (work items done). The key stays
+    `sr_verified` across D-9 step 5's rename: it is a dict key two renderers and
+    their tests read, and re-keying a data contract is a separate act from
+    renaming a cell value."""
     srs, llrs, tcs = _spine(root)
     sr_total = len(srs)
     sr_verified = sum(
-        1 for r in srs if (r.get("Status") or "").strip().lower() == "verified"
+        1 for r in srs if (r.get("Status") or "").strip().lower() == "approved"
     )
     return {
         "sn_total": len(read_sns(root)),

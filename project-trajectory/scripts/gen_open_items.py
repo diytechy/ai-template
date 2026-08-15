@@ -19,8 +19,8 @@ WHAT IT RENDERS, in the order an owner needs it:
   1. PENDING DECISIONS — one card per `Status=pending` row of the registry:
      the one-line, what is being decided, blast radius, options, recommendation,
      and the WI rows that carry the work.
-  2. RATIFICATION & RE-ATTESTATION — every SR whose `Status` is `Draft` (owes a
-     first ratification) or `Modified` (owes a re-attest), with its whole chain:
+  2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
+     first approval) or `Modified` (owes a re-attest), with its whole chain:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
      section reads as *check the baseline*, never as *nothing changed* — the
@@ -565,48 +565,48 @@ def _chain_row(row):
     )
 
 
-# `trace._entry_kind`'s three values -> the pill each card wears. Held as a
-# table rather than a chain of ternaries so a fourth kind is a row here and a
-# KeyError anywhere it was forgotten, which is the loud direction: a card that
-# silently fell back to "re-attest owed" would misdescribe what the owner owes.
+# `trace._entry_kind`'s values -> the pill each card wears. Held as a table
+# rather than a chain of ternaries so a new kind is a row here and a KeyError
+# anywhere it was forgotten, which is the loud direction: a card that silently
+# fell back to "re-attest owed" would misdescribe what the owner owes.
+#
+# BACK TO TWO AT D-9 STEP 5: `plan` ("evidence owed") went out with `Planned`,
+# which OI-30 D1 folded into `Approved`. The KeyError-if-forgotten property is
+# what makes the removal safe in this direction too — a model still emitting the
+# retired kind would fail loudly here rather than render a wrong pill.
 _KIND_LABELS = {
-    "ratify": "ratification owed",
-    "plan": "evidence owed",
+    "ratify": "approval owed",
     "reattest": "re-attest owed",
 }
 
 
 def _attestation_cards(model, srs_by_id=None):
-    """One card per SR owing a ratification, evidence, or a re-attest, its chain
-    beneath.
+    """One card per SR owing an approval or a re-attest, its chain beneath.
 
     `srs_by_id` supplies the SR row's own cells for the case where the SR does
     NOT appear among its chain rows — which happens whenever nothing but the
-    `Verified`→`Modified` flip touched it and an LLR or TC carries the whole
+    `Approved`→`Modified` flip touched it and an LLR or TC carries the whole
     amendment. Without it that owner reads a diff of a child row with no
     statement of the requirement it hangs from."""
     srs_by_id = srs_by_id or {}
     if not model:
         return (
-            '<p class="empty">No <code>Draft</code>, <code>Planned</code> or '
+            '<p class="empty">No <code>Drafted</code> or '
             "<code>Modified</code> "
-            "<strong>SR</strong> — nothing owes a ratification, evidence or a "
+            "<strong>SR</strong> — nothing owes an approval or a "
             "re-attest at "
             "the attestation unit. Say only what was checked: an amended LLR or "
             "TC rides its owning SR's section, so it shows above only when that "
-            "SR is itself <code>Draft</code>/<code>Planned</code>/"
+            "SR is itself <code>Drafted</code>/"
             "<code>Modified</code>; a chain row "
-            "amended under a <code>Verified</code> SR is reported by "
+            "amended under an <code>Approved</code> SR is reported by "
             "<code>trace.py --strict</code>'s chain-consistency warn, not here. "
             "The earlier wording said <em>spine row</em>, which denied a state "
             "this view cannot see (122-REVIEW-A).</p>"
         )
     cards = []
     for entry in model:
-        # THREE kinds since D-9 step 2, and the third is not a synonym: a
-        # `Planned` SR owes EVIDENCE, not a re-read of text nobody disputes.
-        # Labelling it "re-attest owed" would have asked the owner to re-bless
-        # an attestation that never happened.
+        # KeyError on an unknown kind, deliberately (see `_KIND_LABELS`).
         label = _KIND_LABELS[entry["kind"]]
         head = (
             '<h3><span class="rid">{i}</span><span>{t}</span>'
@@ -701,10 +701,10 @@ def render(root):
     earlier render."""
     root = Path(root)
     reg = tr.load_registries(root / "docs")
-    # The model selects on STATE, not on a status literal (D-9 step 4): Draft,
-    # Planned or Modified, or a chain that has DRIFTED from the approved
-    # snapshot. `Planned` joined at step 2 — this page IS the owner's decision
-    # surface, and a Planned SR appeared on no surface at all until then.
+    # The model selects on STATE, not on a status literal (D-9 step 4):
+    # `Drafted` or `Modified`, or a chain that has DRIFTED from the approved
+    # snapshot. Drift is the arm no cell can carry, and the reason this page
+    # survives the rename with nothing to re-key.
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
     items = load_open_items(root)
     pure = pending_block_text(root)
@@ -768,8 +768,7 @@ def render(root):
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
         "by moving the spine row's <code>Status</code> "
-        "<code>Modified</code>→<code>Verified</code> (or →<code>Planned</code> when "
-        "the evidence no longer verifies it) — and from the first signing onward, "
+        "<code>Modified</code>→<code>Approved</code> — and from the first signing onward, "
         "run <code>intake.py snapshot</code> in the SAME commit, or the record of "
         "what was blessed does not move. The gate re-derives on its own.</footer>\n"
         "</div>\n<script>{js}</script>\n</body></html>\n"

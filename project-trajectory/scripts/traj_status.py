@@ -47,7 +47,7 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 # committed-tree state ONLY:
 #   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification
 #       page);
-#   (b) Draft/Modified SR rows (WI-316): a `Draft` SR owes a ratification, a
+#   (b) Drafted/Modified SR rows (WI-316): a `Drafted` SR owes an approval, a
 #       `Modified` SR owes a re-attest (post-attestation amendment, process.md
 #       §7) — one pointer line each, naming the on-demand brief
 #       (`trace.py --ratify <id>` / `--ratify modified`) that carries the depth.
@@ -195,21 +195,22 @@ _SR_REL = "docs/requirements/system-requirements.toml"
 
 
 def _spine_pending(root):
-    """Source (e), WI-316: one pointer line per `Draft` SR (ratification owed),
-    per `Modified` SR (re-attest owed — a post-attestation amendment,
-    process.md §7) and per `Planned` SR (ratified text whose evidence is not yet
-    established). The SR is the attestation unit, so only SR rows project —
+    """Source (e), WI-316: one pointer line per `Drafted` SR (approval owed) and
+    per `Modified` SR (re-attest owed — a post-approval amendment,
+    process.md §7). The SR is the attestation unit, so only SR rows project —
     a Modified LLR/TC rides its owning SR's line (trace.py's chain-consistency
     warn flags the orphaned-child case). Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
     names, `trace.py --ratify modified`, never here. Sorted by id, no clocks.
 
-    `Planned` JOINED AT D-9 STEP 2. This projection is the owner's
-    pending-actions surface, and a Planned SR projected NOTHING here — the
-    single loudest instance of the `Planned`-reads-as-`Bananas` finding, because
-    the state's whole meaning is "a human still owes this row something". Its
-    line says which something: evidence, not a re-read.
+    THE `Planned` ARM LEFT AT D-9 STEP 5, with the word. It had joined at step 2
+    because a Planned SR projected NOTHING on the owner's own pending-actions
+    surface — the loudest instance of the `Planned`-reads-as-`Bananas` finding.
+    OI-30 D1 then ruled the fold: those rows now read `Approved`, and an approved
+    row owes nothing HERE. What it may still owe is caught by the drift arm below
+    and, once the snapshot is seeded, by the UNANCHORED rule — an approval with
+    no copy recording it — which is where "approved but nobody signed it" belongs.
 
     DRIFT JOINED AT D-9 STEP 4, and it is the arm no Status cell can carry: a
     row whose text has moved away from its copy in
@@ -228,35 +229,26 @@ def _spine_pending(root):
     for r in sorted(srs, key=lambda x: x["SR-ID"]):
         status = (r.get("Status") or "").strip().lower()
         drifted = baseline_snapshot.is_drifted(_SR_REL, "SR-ID", r, snap_srs)
-        if status not in ("draft", "modified", "planned") and not drifted:
+        if status not in ("drafted", "modified") and not drifted:
             continue
         sid = r["SR-ID"]
         title = (r.get("Title") or "").strip() or "(untitled)"
         phase = (r.get("Phase") or "").strip()
         phase_note = " (phase {} pulls the derived gate)".format(phase) if phase else ""
-        if status == "draft":
+        if status == "drafted":
             lines.append(
-                "- **{} `Draft` — ratification owed**{}: {} — ratify in a "
-                "reviewed Status-change commit (`Draft`→`Planned`; the "
+                "- **{} `Drafted` — approval owed**{}: {} — approve in a "
+                "reviewed Status-change commit (`Drafted`→`Approved`; the "
                 "`gate-advance` skill); hierarchy brief: `python "
                 "project-trajectory/scripts/trace.py --ratify {}`.".format(
                     sid, phase_note, title, sid
                 )
             )
-        elif status == "planned":
-            lines.append(
-                "- **{} `Planned` — evidence owed**{}: {} — the text is "
-                "ratified and the evidence that verifies it is not yet "
-                "established; establish it, then move the row in a reviewed "
-                "Status-change commit (`Planned`→`Verified`; the "
-                "`gate-advance` skill).".format(sid, phase_note, title)
-            )
         elif status == "modified":
             lines.append(
                 "- **{} `Modified` — re-attest owed**{}: {} — bless the "
                 "amendment in a reviewed Status-change commit "
-                "(`Modified`→`Verified`, or →`Planned` if the evidence no "
-                "longer verifies the amended text) and run `intake.py "
+                "(`Modified`→`Approved`) and run `intake.py "
                 "snapshot` in the SAME commit; before/after brief: `python "
                 "project-trajectory/scripts/trace.py --ratify modified` "
                 "(committed briefs live in `docs/ratify/`).".format(
@@ -322,7 +314,7 @@ def _pause_pending(root):
 
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for the
-    generated owner surface: blocked WI rows with a BlockRef + Draft/Modified
+    generated owner surface: blocked WI rows with a BlockRef + Drafted/Modified
     spine rows owing a ratification/re-attest + the tracked `docs/work/pause`
     declaration. A pure function of the committed tree — deterministic (sorted,
     no clocks) — so the harness `open-items` freshness gate byte-compares the
@@ -333,7 +325,7 @@ def pending_block(root):
     pure_lead = (
         "_Pending owner actions — a generated projection of durable, "
         "committed-tree state (blocked rows with a ratify/attest pointer, "
-        "Draft/Modified spine rows owing a ratification or re-attest, and the "
+        "Drafted/Modified spine rows owing an approval or re-attest, and the "
         "tracked pause declaration); regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
         "This section is freshness-gated by the harness `status-map` step. The "
@@ -374,7 +366,7 @@ def _stage_line(gate, basis, gate_detail):
     """The snapshot's first bullet, STAGE-first.
 
     The bar value alone cannot say whether a boundary is ahead or behind, and —
-    being a min floored by any Draft row — it reads identically for a fresh
+    being a min floored by any Drafted row — it reads identically for a fresh
     scaffold and a mature spine holding one draft. The stage is the state; the bar
     is what must next be cleared, which is also the strictness the harness runs at.
 
@@ -434,7 +426,7 @@ def status_block(root):
         gate_bits.append("derived current **phase={}**".format(basis["phase"]))
     gate_detail = " ({})".format(", ".join(gate_bits)) if gate_bits else ""
 
-    drafts = basis.get("drafts")
+    drafts = basis.get("drafted")  # renamed with the value at D-9 step 5
     draft_bit = ""
     if drafts is not None:
         draft_bit = " ({} draft{})".format(drafts, "" if drafts == "1" else "s")

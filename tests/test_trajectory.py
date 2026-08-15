@@ -105,7 +105,7 @@ def write_srs(root, *sr_ids):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     rows = "".join(
-        '{},Title,SN-001,"The system shall.",R,AC,,M,Test,Draft\n'.format(s)
+        '{},Title,SN-001,"The system shall.",R,AC,,M,Test,Drafted\n'.format(s)
         for s in sr_ids
     )
     (req / "system-requirements.csv").write_text(SR_HEADER + rows, encoding="utf-8")

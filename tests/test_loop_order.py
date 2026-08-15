@@ -114,13 +114,13 @@ def _spine(root, *, tc_status, wi_status="done", verifies="SR-001"):
     )
     (req / "system-requirements.csv").write_text(
         SR_HEADER + "SR-001,Widget,SN-001,Shall widget.,Because.,Widgets.,,1,"
-        "Test,Verified,,,\n",
+        "Test,Approved,,,\n",
         encoding="utf-8",
         newline="\n",
     )
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER + "LLR-001,SR-001,Widget impl,Do it.,Because.,w.py,widget,"
-        "tests/test_w.py,Verified,,\n",
+        "tests/test_w.py,Approved,,\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -151,11 +151,11 @@ def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
     assert dsp.parse_red_tc(census[0]) == ("TC-001", ["SR-001"])
 
 
-@pytest.mark.parametrize("status", ["Verified", "Draft", "Modified"])
+@pytest.mark.parametrize("status", ["Approved", "Drafted", "Modified"])
 def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
     # Stated as EXEMPTIONS because Status is an open vocabulary — anything else
     # is red, so the rule fails toward naming a gap rather than missing one.
-    # Verified is green; Draft is pre-ratification, where "not yet green" is
+    # Approved is green; Drafted is pre-ratification, where "not yet green" is
     # correct; Modified belongs to the §A5.1 amendment adjudication, and two
     # judgement rows for one event is the double-count this avoids.
     _spine(tmp_path, tc_status=status)

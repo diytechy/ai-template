@@ -31,7 +31,7 @@ rationale = "Realizes SN-003 (portability) and SN-012 (right-sizing — a repo g
 acceptance_criteria = """A non-Python profile omits Python-only artifacts and seeds files-mode arch-map; a profile that selects no opt-in layers seeds none of them."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-010]
@@ -43,7 +43,7 @@ rationale = """Realizes SN-001 (a working process without hand-building tooling)
 acceptance_criteria = """bootstrap.py --dest produces a scaffold on which the harness passes; the meta-suite runs every script against that scaffold."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-011]
@@ -55,7 +55,7 @@ rationale = """Realizes SN-001 (safe drop-in onto an existing repo) and SN-007 �
 acceptance_criteria = """A re-run leaves every existing file (kit- or project-owned) byte-unchanged without --force; --force overwrites."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-015]
@@ -128,7 +128,7 @@ rationale = "Realizes SN-010 — a stale vendored doc is caught, not silently tr
 acceptance_criteria = "A drifted vendored copy is a finding; an in-sync copy passes."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-024]
@@ -140,7 +140,7 @@ rationale = """Realizes SN-002 — dimensional coverage is generated from the SR
 acceptance_criteria = """A spec grammar (range/set/bool with @full|@pairwise|@boundaries) yields the expected case set."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-026]
@@ -200,7 +200,7 @@ rationale = """Realizes SN-001 — a new contributor who cannot reach a working 
 acceptance_criteria = "The scaffolded onboard/dev-setup scripts run to a green setup."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-033]
@@ -212,7 +212,7 @@ rationale = """Realizes SN-004 — the release gate has a generated checklist su
 acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-034]
@@ -224,7 +224,7 @@ rationale = """Realizes SN-011 — the kit must impose no *unargued* dependency 
 acceptance_criteria = """An AST scan of scripts/*.py resolves every top-level import to stdlib, a local sibling, or a Kind=python row in docs/dependencies.md; an undeclared non-stdlib import fails the suite; every declared row names what it replaces, why hand-rolling is worse, and the ruling that admitted it; a shipped-tier row (one an adopter is forced to install) exists only with an owner ruling recorded in the ledger, stdlib remaining preferred there."""
 priority = "M"
 verification = "Analysis"
-status = "Verified"
+status = "Approved"
 phase = 1
 aspect = "portability"
 
@@ -250,7 +250,7 @@ rationale = """Realizes SN-001 and SN-007 — picking up kit updates is a delibe
 acceptance_criteria = """Following ADOPTING.md section 6 against the docs/kit-version diff, kit-owned files are taken wholesale, generated docs regenerated, and filled-in files preserved."""
 priority = "M"
 verification = "Inspection"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-040]
@@ -275,7 +275,7 @@ rationale = """Realizes SN-006 (a walk-away run stays safe — bounded, supervis
 acceptance_criteria = """With [checks] subagent_gate = "deny": a Task/Agent spawn is refused (permissionDecision=deny, exit 2); ask defers to approval; off/absent and SUBAGENT_GATE=allow allow it; a non-spawn tool is not gated; a malformed payload fails open (allow) and is logged."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-046]
@@ -372,7 +372,7 @@ rationale = """Realizes SN-007 — without a recorded origin an adopter cannot t
 acceptance_criteria = """docs/kit-version records the kit SHA and date; a scaffold from an uncommitted kit tree is marked -dirty."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-112]
@@ -396,7 +396,7 @@ rationale = """Realizes SN-001 — a process floor that needs a separate opt-in 
 acceptance_criteria = "After dev-setup the pre-commit floor is active without a separate setup step."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [requirement.SR-114]
@@ -434,7 +434,7 @@ rationale = """Two grammars read this file — `tomllib` in Python and the three
 acceptance_criteria = """A dial declared in both homes produces a refusal naming the key and both files, at every guarded entry point (the dispatcher's pre-claim preflight, intake's adjudication arm, the integrator's verdict gate); a dotted key, inline table, multi-line string or hook-read key under the wrong section is refused by the shape check AND still reads ON in both readers; a wrong-typed or out-of-range dial is refused rather than defaulted."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -447,7 +447,7 @@ rationale = """The hard mixed-config refusal in SR-137 is only safe to ship if a
 acceptance_criteria = """A repo carrying legacy files converts in one pass and reports what moved; a second pass is a no-op; a legacy file whose value cannot be written is LEFT IN PLACE with its value intact and named in the report; the retired gate-authority word expands to all three dials it meant rather than to a single key."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -460,7 +460,7 @@ rationale = """The retired three-value enum could not express "TCs are human-hel
 acceptance_criteria = """Level N holds exactly the tiers the shipped template documents (cumulative, strictly-less-than the stage); stage 4 is held by no level, the end-of-run hold being its own dial; an unreadable stage, an absent dial, and a wrong-typed dial all read as human-held; an out-of-range level falls back to the conservative end AND is refused loudly; a legacy gate-policy word reads as all three dials it meant."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -486,7 +486,7 @@ One-shall waiver (13v), HELD AT THREE and not exceeded: record / report-drift / 
 acceptance_criteria = """An artifact whose normative text has moved since the copy that recorded its acceptance is reported whether or not its Status moved; a row claiming approval that no copy records, or whose copy reads at a status making no such claim, is reported rather than passing silently — an approval that never rode a copy; once a record exists, a registry absent from inside it is itself a finding, so the vacuous state is exactly one and it is "nothing has been approved yet"; an acceptance recorded with no acting reviewer, or one whose acting reviewer cannot be told apart from a human's by query, is a finding — releasing a tier delegates the review, it does not skip it; a commit that writes a recorded copy differing from its live counterpart is refused, which is the one comparison that catches a hand edit, a partial copy and a copy-then-amend-live alike; and the same rules hold for a stakeholder need, which has no Status cell for the amendment machinery to watch."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -499,7 +499,7 @@ rationale = """Five successive dedup mechanisms leaked because each reconstructe
 acceptance_criteria = """A partial close is clean under the real validator (the terminal Deliverable rule is exempt, because an early close leaves the spec's definition byte-identical by design); a terminal spec with no report is LOUD rather than silently un-disposed; a second close is refused and leaves no residue in the lane; a multi-spec close that refuses restores every report it wrote."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -512,7 +512,7 @@ rationale = """Prose steers the sessions this loop launches and had been reviewa
 acceptance_criteria = """An unknown or unfilled slot is a refusal; a missing shipped template is a named preflight refusal rather than a first-session crash; the catalogue lists every shipped prompt with its digest and `--check` fails when stale; a line-ending difference is not a digest change; an operator override is named in the session record rather than only in the launch flags."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "process"
 
@@ -525,7 +525,7 @@ rationale = "The two-carrier split has no recorded rationale and costs on both s
 acceptance_criteria = """migrate_carrier.py --check over the live registries exits 0 reporting the round-trip clean for every row of every tier; a cell that is dropped, truncated, re-typed or re-ordered is REFUSED with exit 1 and a finding naming the registry, the row id and the field; and the emitted text re-parses with tomllib."""
 priority = "C"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "trajectory"
 
@@ -538,7 +538,7 @@ rationale = """Without one precedence rule, the same repository can resume into 
 acceptance_criteria = """A ready adjudication row admits ahead of every other class, the ruled rank table unchanged (--explain still reports it) and non-adjudication rows keeping their relative order; an unresolved handback is selected before spine or implementation work, and processing it either resolves the record or mints a provenance-linked successor exactly once; with no unresolved handback, only the earliest incomplete spine tier is eligible; implementation work is ineligible while any required test case remains unlaid; at human_ratification_through = 0 no spine tier produces a human hold, levels 1 through 4 hold exactly their documented cumulative tiers, and a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop; every selection records the chosen class, source identifier and hold decision. Two resumes over the same tracked state select the same eligible set in the same order; an item with missing or contradictory declared inputs is excluded with a stated reason while disjoint classified work stays eligible; no prose surface participates in the derivation; the ordering and exclusion reasons are exposed for replay. A fresh scaffold ships no next-wi/run-phase pointer and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links such a pointer; a build-out lane's phase resolves from its branch name with no pointer file; an upgraded or resynced repository that once carried such a pointer carries neither pointer file after the migration and no live dependency on either survives, so the deletion holds for a migrated repository and not only for a fresh scaffold; the status snapshot regenerates mechanically and its freshness is gated."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 aspect = "unattended-loop"
 
@@ -551,7 +551,7 @@ rationale = """Realizes SN-004 (the ladder's vocabulary is the one the project i
 acceptance_criteria = """check_vocab.py reports a planted retired tag in a live authored file with its path and line, exits 0 under the default severity and 1 under --strict; reports nothing for a file under any declared carve-out class (archive, the project log, attestation briefs, closed and cancelled work-item specs, generated surfaces) including at arbitrary depth; reports nothing for a line carrying the allow marker or a file carrying the allow-file marker; and reports nothing for the word "gate" used to mean a check that can fail."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 
 [requirement.SR-150]
@@ -563,7 +563,7 @@ rationale = """Realizes SN-033 — its ratified acceptance commissions exactly t
 acceptance_criteria = """check_need_form.py reports a constructed need cell planted with an internal path, an implementation-only identifier and a process citation, naming the row id and each offending phrase, exiting 0 by default and 1 under --strict; a token on the reviewed exception list is not reported; the same tokens planted in an acceptance or engineering-requirement cell are not reported; and the live registry reports zero findings."""
 priority = "S"
 verification = "Test"
-status = "Planned"
+status = "Approved"
 phase = 5
 
 [requirement.SR-151]
@@ -575,7 +575,7 @@ rationale = """Realizes SN-005 — one definition of passing per moment, its acc
 acceptance_criteria = """tests/test_ci_tier_declaration.py pins the shipped workflow's trigger set and per-trigger tier against the declared [ci-tiers] table; a workflow trigger absent from the table, or one invoking anything other than the documented harness entry point, is a finding; the declared OS x Python matrix cells appear in the shipped workflow; SR-019's acceptance cross-references this row rather than restating it."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-152]
@@ -587,7 +587,7 @@ rationale = """Realizes SN-008 (a reader can believe a green) and SN-005 at the 
 acceptance_criteria = """The shipped workflow contains no continue-on-error or conditional skip around a required harness step; a nonzero harness exit fails the job; the step log names the harness invocation and its tier. This row is the backstop half of the pair SR-019 states from the local side."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-154]
@@ -599,7 +599,7 @@ rationale = """Realizes SN-026 (cross-family second opinions — every prior car
 acceptance_criteria = "A declared review policy of N schedules N independent reviewer sessions; the declared (family x model x tier) pair-rows in docs/agents.toml are the only candidate source and docs/agents-enabled is the consent surface — absent, managed selection is off and no row is resolved; present, exactly one row resolves per in-process phase and tier; a configured cross-family draw is preferred and its unavailability degrades to the documented mode, never a silent skip; every selection is logged before launch, never a silent model swap; rework iterates within the declared budget and pages per the declared ratification level on exhaustion."
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 1
 aspect = "unattended-loop"
 
@@ -612,7 +612,7 @@ rationale = "Realizes SN-024 (a decomposition judged by a competing plan and an 
 acceptance_criteria = """A row marked for contested planning is refused on the direct build path; the round runs planner pair, cross-critique, mechanical coverage comparison and position-swapped arbitration as fresh sessions within declared budgets; SELECT files children that pass the registry validator atomically; PAGE preserves the round's evidence and maps through the declared ratification level."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 4
 
 [requirement.SR-156]
@@ -624,7 +624,7 @@ rationale = """Realizes SN-027 — fan-out narrows to one serialized gated seam 
 acceptance_criteria = """A finished branch reaches the trunk only through the serial integrator with the declared bar green on the composed tree — a red parks the candidate and stops the queue loudly; log fragments and generated artifacts are compiled and regenerated only by the serial trunk actor and never committed on a work branch; a declared pause stops claiming and drains in-flight lanes to a merged stop; a crash at any lifecycle boundary recovers from git history without double-assignment."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 4
 
 [requirement.SR-157]
@@ -636,7 +636,7 @@ rationale = """Realizes SN-002 (the chain is mechanically verified, not asserted
 acceptance_criteria = "Each declared registry rule violation is reported with row-level attribution; the declared strict set exits nonzero at its gate and advisory classes never join the exit code; absent or placeholder-only optional registries and declared opt-outs are vacuous; the declared verification vocabulary (including Critique) is accepted and an unknown value fails. The declaration this is read against is, as the current set: trace.py's `ID_PATTERNS`, `REQUIRED_FIELDS` and `ENUM_FIELDS` (the id shapes, the required cells, and the closed vocabularies -- SR `Verification`, TC `Tier` -- with the IF/CMP entries advisory by their own recorded ruling), the `--strict` / `--strict-integrity` / `--strict-schema` / `--no-placeholders` flag families and the exit contract stated in that module's docstring; trace_text.py's `form_findings` and `provenance_findings` (gating) beside `paraphrase_advisories` and `ac_advisories` (advisory, never the exit code); and check_trajectory.py's work-item rules R-A, R-D, R-E and R-F with `docs/process.toml [checks] trajectory_check` as the declared opt-out. A rule added at one of those sites is in this row's scope by default: an unreported one is a finding against this row, not an amendment to it."
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 1
 
 [requirement.SR-158]
@@ -648,7 +648,7 @@ rationale = """Realizes SN-010 (navigable, honest documentation) and SN-008 (a g
 acceptance_criteria = "A dead intra-repo link, an absent PROJECT-VISION tag, a stale generated doc under --stale, a dangling backticked path or sym: reference, and a declared fig: marker missing cmd/rev each produce a finding at their declared tier; the declared carve-outs (generated blocks, path-ok and fig-ok lines, unmarked figures, URLs and placeholders) stay silent. The tier for each class is read off its declaration site, as the current set: check.py's built-in `doc-navigability` step, which runs check_docs.py from DevBar-Reqs on -- a broken intra-repo link and a missing or repeated PROJECT-VISION tag exit nonzero, orphans warn unless --strict-orphans, and --stale is warn-only; docs/stack.ini's `[step:doc-refs]` and `[step:figures]` rows, which declare `gates = DevBar-Release` for check_doc_refs.py --strict (gating on dangling alone, with untraced counted and never gating) and check_figures.py --strict; and the carve-out surfaces those checkers read -- `docs/orphans-allow`, `docs/declared-absences`, and the path-ok / fig-ok line markers. A class whose severity is stated at none of those sites is undeclared, and this row is unsatisfied until it is declared there."
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 1
 
 [requirement.SR-159]
@@ -660,7 +660,7 @@ rationale = """Realizes SN-023 (the parts' connections are as much of the truth 
 acceptance_criteria = """Malformed or unresolvable IF rows are findings; undeclared endpoints, uncovered cross-component edges, invalid spec citations and an oversized top view warn plain and fail --strict; declared opt-outs and small or absent inventories are vacuous; declared seams render without changing the verdict. The rules and their opt-outs are read off their declaration sites, as the current set: trace.py for IF/CMP id shape and the off-spine back-link to the spine (`ID_PATTERNS` and the always-on integrity floor, which joins --strict), its `REQUIRED_FIELDS["IF"]` / `["CMP"]` entries and their enums staying advisory by the recorded warn-first sequencing; check_trajectory.py for the connectivity rules -- every arch-map module resolving to at least one IF endpoint (the "connectivity undeclared" warn), a cross-component import no IF row covers, a spec's `## Interfaces` section citing an unresolvable IF-### or neither a seam nor the intra-module escape, and the `TOP_VIEW_MAX` bound of 10 items (warn plain, error under --strict); `docs/process.toml [checks] interfaces_check` and `components_check` as the two declared opt-outs, with a `source`/`sink` token in an IF row's Notes as the per-module honesty valve; and gen_arch_map.py's generated block in docs/architecture.md as the module inventory every one of those rules joins against. A connectivity rule added at one of those sites is in this row's scope by default."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 1
 aspect = "connectivity"
 
@@ -673,7 +673,7 @@ rationale = """Realizes SN-034, whose row is the declared ONE home for launcher-
 acceptance_criteria = """A fresh scaffold and this repository each carry both launcher sets (dev-setup and agent-resume) at the root for Windows, macOS and Linux; each launches its action as a single step on that platform, or documents the single platform-required step (the Linux execute-bit case); with no working python3 each root launcher reports clearly and does not crash cryptically, and with one it runs its action; the adopter-facing guide names the capability and invites reuse."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-161]
@@ -685,7 +685,7 @@ rationale = """Realizes SN-036 — a decomposition produced from one perspective
 acceptance_criteria = """A decomposition round writes the perspective record beside its artifacts; a declared perspective applicable to the decomposition and absent from the record is reported; the record distinguishes not-applicable from considered-with-no-finding; the independent adequacy review reads the record rather than the authoring transcript."""
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-162]
@@ -697,7 +697,7 @@ rationale = """Realizes SN-037 — every promised behavior's entry and exit loca
 acceptance_criteria = """A Boundary-Refs value naming an undeclared crossing joins the --strict failure set naming the row; the uncovered-requirement count, the crossings named by no requirement, and the realization gap are each one advisory line; an interface row carrying no endpoint pair, or a signal value outside the closed discrete/variable vocabulary, is reported naming the row; two joined seams whose declared signal types are incompatible are reported naming both rows; entity and relationship references in the frame registry resolve; a project declaring no frame is vacuous."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-163]
@@ -709,7 +709,7 @@ rationale = """Realizes SN-038 — a supplied file with no recorded purpose is i
 acceptance_criteria = """A declared inventory defines the universe and exclusions; a shipped file absent from it, a stale entry naming a file that no longer ships, an entry whose requirement reference does not resolve to a need, and a file with no mapping are each reported; the declared policy assigns warn versus gate per class; a generated output maps through its generator's row."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-164]
@@ -721,7 +721,7 @@ rationale = """Realizes SN-039 — a need whose audience is ambiguous gets enfor
 acceptance_criteria = "The SN carrier schema declares the scope field; the checker reports a missing or invalid value naming the row; example -000 rows are exempt; every non-example row in the shipped registry and in this repository's filled one carries a valid value."
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [requirement.SR-165]
@@ -733,7 +733,7 @@ rationale = "Realizes SN-040 — a free-form partition leaves no record of the a
 acceptance_criteria = "A partition round writes the derivation record into the tracked component registry, never into session prose or a plan document alone; a live component row with no record, or a record omitting the candidate partitions, the declared objective, the constraints, any candidate's score, the selected partition or the human ruling, is reported naming the missing element; a selected partition the recorded scores do not rank first is reported unless the record carries the human override that chose it; the recorded ranking recomputes from the record's own objective, constraints and scores alone."
 priority = "S"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5
 aspect = "process"
 
@@ -746,5 +746,5 @@ rationale = """Realizes SN-001 (an adopting team gets a working, gated, requirem
 acceptance_criteria = """A manifest entry whose destination a fresh scaffold does not contain fails naming the destination; and a structural divergence between the shipped template and this repository's own instance fails naming the surface. Evidence: tests/test_bootstrap.py (the manifest's destinations against the fresh-scaffold file lists) and tests/test_dogfood_sync.py (shipped template against this repository's instance). Manifest PRESENCE is deliberately NOT restated here — a named source the package does not carry, and a shipped file the manifest does not name, are both SR-163's, reported under its declared warn-versus-gate policy."""
 priority = "M"
 verification = "Test"
-status = "Draft"
+status = "Drafted"
 phase = 5

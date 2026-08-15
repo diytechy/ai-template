@@ -189,12 +189,12 @@ _SPINE_SR_HEADER = (
 )
 
 
-def _sr_row(req="the original attested text", status="Verified"):
+def _sr_row(req="the original attested text", status="Approved"):
     return 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,{},1,\n'.format(req, status)
 
 
 def _init_spine_repo(root):
-    """A git repo whose HEAD holds SR-001 Verified. Returns the git runner."""
+    """A git repo whose HEAD holds SR-001 Approved. Returns the git runner."""
     skip_without_env_gates("git")
     git = shutil.which("git")
 
@@ -223,11 +223,11 @@ def _amend_sr(root, req, status):
 
 
 def test_staged_spine_amend_without_flip_warns(tmp_path):
-    # Amending a Verified SR's content cells while Status stays Verified warns,
+    # Amending a Approved SR's content cells while Status stays Approved warns,
     # naming the row and the changed cells — the write-time discipline the
     # RE-ATTESTATION-PENDING commit-message prose never had (process.md §7).
     run_git = _init_spine_repo(tmp_path)
-    _amend_sr(tmp_path, "the AMENDED text", "Verified")
+    _amend_sr(tmp_path, "the AMENDED text", "Approved")
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -251,7 +251,7 @@ def test_staged_spine_amend_with_flip_is_silent(tmp_path):
 def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
     # Amending an LLR while flipping its OWNING SR in the same commit is the
     # sanctioned path (the SR is the attestation unit) — no child warn. The
-    # identical LLR amendment with the SR left Verified warns on the child.
+    # identical LLR amendment with the SR left Approved warns on the child.
     run_git = _init_spine_repo(tmp_path)
     llr_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
     llr_csv = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
@@ -259,7 +259,7 @@ def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
     def write_llr(detail):
         llr_csv.write_text(
             llr_h
-            + 'LLR-001,SR-001,Core,src/d.py,f,"{}",(see TC),Verified\n'.format(detail),
+            + 'LLR-001,SR-001,Core,src/d.py,f,"{}",(see TC),Approved\n'.format(detail),
             encoding="utf-8",
         )
 
@@ -275,8 +275,8 @@ def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "re-attest marker" not in proc.stderr
 
-    # (2) the same LLR amendment with the SR left Verified -> the child warns.
-    _amend_sr(tmp_path, "the original attested text", "Verified")
+    # (2) the same LLR amendment with the SR left Approved -> the child warns.
+    _amend_sr(tmp_path, "the original attested text", "Approved")
     run_git("add", "-A")
     proc2 = run_traj(tmp_path, "--staged")
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
@@ -297,7 +297,7 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
     run_git("commit", "-m", "BOM'd attested baseline")
     csv_path.write_bytes(
         bytes([0xEF, 0xBB, 0xBF])
-        + (_SPINE_SR_HEADER + _sr_row("the AMENDED text", "Verified")).encode("utf-8")
+        + (_SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved")).encode("utf-8")
     )
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
@@ -308,14 +308,14 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
 
 def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     # A NEW row is not an amendment; a Status-only change (e.g. the re-attest
-    # flip Modified->Verified with no content delta) made a deliberate call the
+    # flip Modified->Approved with no content delta) made a deliberate call the
     # warn does not second-guess. Both stay silent.
     run_git = _init_spine_repo(tmp_path)
     csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         _SPINE_SR_HEADER
         + _sr_row()
-        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Verified,1,\n',
+        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,\n',
         encoding="utf-8",
     )
     run_git("add", "-A")
@@ -342,7 +342,7 @@ _SPINE_TC_HEADER = (
 
 
 def _write_child_registries(root, llr_cells, tc_cells):
-    """Write LLR-001 / TC-001 (both `Verified`, both owned by the Verified
+    """Write LLR-001 / TC-001 (both `Approved`, both owned by the Approved
     SR-001 of `_init_spine_repo`) from the two cell dicts, so a test states only
     the cells it is varying."""
     llr = dict(
@@ -355,7 +355,7 @@ def _write_child_registries(root, llr_cells, tc_cells):
             "Detail": "the original detail",
             "Rationale": "why",
             "TestRefs": "TC-001",
-            "Status": "Verified",
+            "Status": "Approved",
             "Component": "CMP-001",
             "Phase": "1",
         },
@@ -372,7 +372,7 @@ def _write_child_registries(root, llr_cells, tc_cells):
             "Expected": "the original expectation",
             "Automated": "Y",
             "Evidence": "tests/test_d.py",
-            "Status": "Verified",
+            "Status": "Approved",
             "Phase": "1",
         },
         **tc_cells,
@@ -415,7 +415,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
         + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
-        "Test,Verified,4,unattended-loop\n",
+        "Test,Approved,4,unattended-loop\n",
         encoding="utf-8",
     )
     _write_child_registries(
@@ -443,7 +443,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
 def test_staged_spine_ratified_child_cells_still_arm_the_reattest_warn(tmp_path):
     # The complement, so the narrowing cannot be mistaken for a disabling: the
     # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are ratified,
-    # and amending them with the owning SR left Verified still warns per row.
+    # and amending them with the owning SR left Approved still warns per row.
     run_git = _init_full_spine_repo(tmp_path)
     _write_child_registries(
         tmp_path,
@@ -627,7 +627,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     # The ratified half survives the same trip — a rev range is not a second,
     # weaker scan: it is the same rules read against two commits.
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
-        _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Verified"), encoding="utf-8"
+        _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved"), encoding="utf-8"
     )
     run_git("add", "-A")
     run_git("commit", "-m", "amend the Requirement")
@@ -710,7 +710,7 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
 
 CRITIQUE_SR_ROW = (
     'SR-050,Render realism,SN-001,"The render shall look realistic.",'
-    '"Subjective.","Judged against docs/rubrics/render.md.",,S,Critique,Verified\n'
+    '"Subjective.","Judged against docs/rubrics/render.md.",,S,Critique,Approved\n'
 )
 
 
@@ -784,9 +784,9 @@ def test_critique_ratchet_silent_when_verdict_approves(tmp_path):
 # via GIT_*_DATE so the strictly-newer compare is deterministic (two commits in the
 # same wall-clock second would otherwise tie and never warn).
 
-SR_ROW_V1 = 'SR-001,Feature SR,SN-001,"The system shall do X.",R,AC,,M,Test,Draft\n'
+SR_ROW_V1 = 'SR-001,Feature SR,SN-001,"The system shall do X.",R,AC,,M,Test,Drafted\n'
 SR_ROW_V2 = (
-    'SR-001,Feature SR,SN-001,"The system shall do X and Y.",R,AC,,M,Test,Draft\n'
+    'SR-001,Feature SR,SN-001,"The system shall do X and Y.",R,AC,,M,Test,Drafted\n'
 )
 
 

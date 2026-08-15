@@ -42,8 +42,8 @@ The method rules this script mechanizes are stated ONCE elsewhere — they are N
 restated here (the kit's decompose-don't-paraphrase rule applied to itself):
     - the orphan rules (an SR needs an LLR unless Verification is
       Analysis/Inspection/Attest, a TC, and — when a needs file exists — an SN;
-      LLR/TC parentage), the Draft child-completeness exemption, and the
-      Draft->Planned->Verified ladder: process.md §4 + the derived-gate model
+      LLR/TC parentage), the Drafted child-completeness exemption, and the
+      Drafted->Approved ladder: process.md §4 + the derived-gate model
       (docs/archive/specs/derived-gate-model.2026-07-20.md §3, and §4a for section-as-state SN
       maturity).
     - the always-on structural-integrity floor (a CSV data row whose column count
@@ -57,7 +57,7 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       Tier): process.md §4.
 
 Flags in brief: --require-verified adds the DevBar-Release criterion "a Verification=Test SR
-is Status=Verified" (Draft SRs exempt); --no-placeholders flags leftover "-000"
+is Status=Approved" (Drafted SRs exempt); --no-placeholders flags leftover "-000"
 example rows (wire in from DevBar-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
@@ -66,10 +66,10 @@ an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scop
 before/after for every row owing a human act, against its copy in the
 `docs/archive/last_approved/` snapshot (`baseline_snapshot.py`). Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
-comparative acceptance-criterion, an LLR reading below Verified while every
-citing TC is Verified (WI-129), a missing knowledge pack, and an interface
+comparative acceptance-criterion, an LLR reading below Approved while every
+citing TC is Approved (WI-129), a missing knowledge pack, and an interface
 endpoint that resolves to no LLR Module. The report always carries the
-attested-vs-mechanized Verified split (process.md §4 "Attest") and, when the SR
+attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
 Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
@@ -100,7 +100,7 @@ try:
     from trace_text import (
         ac_advisories,
         form_findings,
-        is_draft,
+        is_drafted,
         is_example,
         paraphrase_advisories,
         provenance_findings,
@@ -114,7 +114,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from trace_text import (
         ac_advisories,
         form_findings,
-        is_draft,
+        is_drafted,
         is_example,
         paraphrase_advisories,
         provenance_findings,
@@ -141,52 +141,58 @@ def load_csv(path):
         return list(csv.DictReader(f))
 
 
-def is_verified(row):
-    """The terminal `Verified` state, matched case-insensitively so it follows the
-    SAME rule as is_draft (the one Status-casing rule, process.md §4): both magic
-    Status values are recognized in any case. Status is open-vocabulary; `Verified`
-    is the value the DevBar-Release --require-verified criterion and the gate derivation act on.
-    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
-    return (row.get("Status") or "").strip().lower() == "verified"
+def is_approved(row):
+    """The approved state: the row's TEXT is blessed by a human in a reviewed
+    Status-change commit. Matched case-insensitively so it follows the SAME rule
+    as is_drafted (the one Status-casing rule, process.md §4).
+
+    RENAMED AT D-9 MIGRATION STEP 5 from `is_verified`, and the rename carries a
+    RULING, not just a word. `Verified` used to make TWO claims at once — the
+    text is ratified AND the evidence passed — and the second claim was a
+    hand-set cell asserting a test run nobody re-ran. D-9 deletes the pass claim
+    from the vocabulary: `Approved` says only that the text is blessed, and
+    whether the tests pass is the harness's answer, not a cell's. `Planned`
+    (ratified text, evidence pending) folded into this same value at the same
+    act under OI-30 D1 — the two named one rung and one of them named it more
+    clearly. The consequence the fold created (a decomposed ex-`Planned` row
+    would have read DevBar-Release under the old `sr_bar`) is closed by the
+    `sr_bar` ceiling ruled at OI-30 D2.
+
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "approved"
 
 
 def is_modified(row):
-    """The post-attestation `Modified` state (WI-316, process.md §7): the row
-    landed `Verified` but its content changed after the last attestation, so a
-    re-attest is owed — `Modified`→`Verified` blesses the amendment (existing
-    evidence still verifies the amended text), `Modified`→`Planned` when the
-    amendment invalidated the evidence. Recognized for SURFACING, not gate
-    arithmetic: a Modified SR is simply not Verified, so `derive_gate.sr_gate`
-    already reads it as decomposed-unverified DevBar-Tests with no code of its own — this
-    predicate exists for the `modified=N` basis count, the pending-owner-actions
-    projection, the chain-consistency warns, and the `--ratify modified` brief.
-    Same case-insensitive one-casing rule as the other two recognized values;
-    duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
+    """The post-approval `Modified` state (WI-316, process.md §7): the row landed
+    `Approved` but its content changed after the last approval, so a re-attest is
+    owed — `Modified`→`Approved` blesses the amendment. Recognized for
+    SURFACING, not gate arithmetic: a Modified SR is simply not Approved, so
+    `derive_gate.sr_gate` already reads it as decomposed-unapproved DevBar-Tests
+    with no code of its own — this predicate exists for the `modified=N` basis
+    count, the pending-owner-actions projection, the chain-consistency warns, and
+    the `--ratify modified` brief.
+
+    TRANSITIONAL, AND STILL LIVE. It survives step 5's rename deliberately: its
+    successor (`baseline_snapshot`-backed drift) has to run alongside it through
+    the owner's signing act before the marker can retire, or the migration would
+    delete the only drift detector in the same commit that renames everything it
+    reads. Step 7 retires the word once the last `Modified` row is signed.
+
+    Same case-insensitive one-casing rule as its two live siblings; duplicated in
+    derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "modified"
 
 
-def is_planned(row):
-    """The `Planned` state (process.md §7): the row's TEXT is ratified and its
-    EVIDENCE is not yet established — where a `Modified` row lands when the
-    amendment invalidated the evidence that used to verify it, and where a row
-    ratified requirement-first starts.
-
-    NEW AT D-9 STEP 2, AND IT IS A REPAIR, NOT A FEATURE. `Planned` had been a
-    live cell value on 14 spine rows while NO predicate anywhere in the kit
-    recognized it — it read identically to `Bananas`: absent from the re-attest
-    brief, absent from the pending-owner-actions projection, absent from the
-    basis counters, never scanned by the amend-without-flip guard, and counted
-    as red by the idle-frontier census. WI-458 measured the cost (seven LLR
-    amendments riding no surface at all). This predicate is the surfacing half;
-    the enum closure above is the announcing half.
-
-    TRANSITIONAL BY DESIGN. If `Planned` folds into `Approved` at the rename
-    (migration plan §C, the owner's ruling), this predicate is deleted in that
-    same act — which is cheap, and is why it was worth adding for the interval
-    rather than leaving the value blind. Same case-insensitive one-casing rule
-    as its three siblings; duplicated in derive_gate.py per the F5 rule; pinned
-    equal (and mutually exclusive with them) by test_rule_sync."""
-    return (row.get("Status") or "").strip().lower() == "planned"
+# `is_planned` WAS DELETED AT D-9 MIGRATION STEP 5, not re-keyed — the deletion
+# its own docstring promised. It was step-2 INSURANCE: `Planned` sat on 14 live
+# spine rows while no predicate in the kit recognized it (it read identically to
+# `Bananas`), so it was surfaced for the interval between the closure and the
+# ruling. OI-30 D1 ruled the fold — `Planned` IS `Approved` — so every site that
+# read the predicate now reads `is_approved`, `is_drafted` or `is_modified`, and
+# the word itself is out of `STATUS_VALUES`. `tests/test_rule_sync.py` asserts
+# NEGATIVELY that no predicate in any script honours `Draft`, `Planned` or
+# `Verified` again.
 
 
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
@@ -346,16 +352,21 @@ REQUIRED_FIELDS = {
 # The only *closed* vocabularies the method defines (process.md §4). `Priority`
 # is intentionally left open, so it is not validated here.
 #
-# `Status` CLOSED AT ITS LIVE TRUTH (D-9 migration step 1, 2026-08-15). It was
-# open-vocabulary until now, and the cost was measurable: a value no predicate
-# recognizes — `Planned` was exactly that, and `Bananas` would have read
-# identically — sat in the registry announcing nothing. The enum-close-first
+# `Status` CLOSED AT ITS LIVE TRUTH (D-9 migration step 1, 2026-08-15) and
+# NARROWED TO THE LADDER AT STEP 5 (the rename, 2026-08-15). It was
+# open-vocabulary until step 1, and the cost was measurable: a value no
+# predicate recognizes — `Planned` was exactly that, and `Bananas` would have
+# read identically — sat in the registry announcing nothing. The enum-close-first
 # rule the migration runs under is stated executably: *at every commit, the
 # declared Status enum equals exactly the set of values at least one live
-# predicate recognizes, and that set narrows monotonically*. So this set is the
-# FOUR values live today, not the ladder D-9 is heading for; the rename narrows
-# it in its own atomic act.
-STATUS_VALUES = frozenset({"Draft", "Planned", "Modified", "Verified"})
+# predicate recognizes, and that set narrows monotonically*.
+#
+# `Draft`→`Drafted`, `Verified`→`Approved`, and `Planned`→`Approved` (OI-30 D1:
+# ratified-text-awaiting-evidence and ratified-text-with-evidence are ONE rung
+# once the pass claim leaves the vocabulary). `Modified` survives as the
+# TRANSITIONAL third value and retires at step 7, when the last row it marks has
+# been signed and the snapshot-backed drift rule is armed as its successor.
+STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
 # schema-class (D-9 migration correction C1). `schema_findings` only runs under
@@ -435,7 +446,7 @@ ENUM_FIELDS = {
     "IF": {
         "Direction": {"Provides", "Consumes"},
         "Signal": {"discrete", "variable"},
-        "Approval": {"draft", "approved"},
+        "Approval": {"drafted", "approved"},
     },
     "CMP": {"State": {"planned", "built", "verified", "has-gap", "deprecated"}},
     # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
@@ -444,13 +455,13 @@ ENUM_FIELDS = {
     # IF tier's retired Provides/Consumes.
     "EXT": {
         "Class": {"operational", "enabling", "interoperating", "deliverable"},
-        "Approval": {"draft", "approved"},
+        "Approval": {"drafted", "approved"},
     },
     "B": {
         "Direction": {"in", "out", "inout"},
-        "Approval": {"draft", "approved"},
+        "Approval": {"drafted", "approved"},
     },
-    "REL": {"Approval": {"draft", "approved"}},
+    "REL": {"Approval": {"drafted", "approved"}},
 }
 
 # --- the IF `Contract` negative rules (WI-443, warn-first) --------------------
@@ -483,37 +494,37 @@ IF_CONTRACT_MAX = 500
 
 
 def llr_status_advisories(llrs, tcs):
-    """Warn-only findings (WI-129): an LLR whose Status reads below `Verified`
-    while *every* TC that cites it is already `Verified`. The evidence to lift it
+    """Warn-only findings (WI-129): an LLR whose Status reads below `Approved`
+    while *every* TC that cites it is already `Approved`. The evidence to lift it
     exists, so the gap is a readout drift, not a coverage hole — mechanically
-    harmless (the derived gate ignores LLR/TC Status past `Draft`; only the SR's
-    `Verified` drives DevBar-Tests->DevBar-Release, derive_gate.maturity_gate), but confusing at a
-    ratification review, where an `Implemented` LLR under a `Verified` SR reads
+    harmless (the derived gate ignores LLR/TC Status past `Drafted`; only the SR's
+    `Approved` drives DevBar-Tests->DevBar-Release, derive_gate.maturity_gate), but confusing at a
+    ratification review, where a below-`Approved` LLR under an `Approved` SR reads
     like an unfinished decomposition. Warn only: never promoted to an error (not
     under --strict or --strict-integrity), because making LLR status gate would
     re-introduce the exact LLR-status coupling the derived-gate model dropped.
     An LLR with no citing TC is the orphan rules' job, not this lint's; matching
-    is case-insensitive via the shared is_verified() predicate. A `Modified` LLR
-    is exempt (WI-316): its below-Verified status is DELIBERATE — a
-    post-attestation amendment awaiting re-attest, not a readout drift — so the
-    "lift to Verified" nag would tell the owner to erase the very marker the
+    is case-insensitive via the shared is_approved() predicate. A `Modified` LLR
+    is exempt (WI-316): its below-`Approved` status is DELIBERATE — a
+    post-approval amendment awaiting re-attest, not a readout drift — so the
+    "lift to Approved" nag would tell the owner to erase the very marker the
     sitting needs."""
-    citing = {}  # LLR id -> [is_verified(tc) for each citing TC]
+    citing = {}  # LLR id -> [is_approved(tc) for each citing TC]
     for r in tcs:
-        tc_ok = is_verified(r)
+        tc_ok = is_approved(r)
         for x in refs(r.get("Verifies")):
             if ID_PATTERNS["LLR"].match(x):
                 citing.setdefault(x, []).append(tc_ok)
     out = []
     for r in llrs:
         lid = r.get("LLR-ID")
-        if not lid or is_verified(r) or is_modified(r):
+        if not lid or is_approved(r) or is_modified(r):
             continue
         verdicts = citing.get(lid)
         if verdicts and all(verdicts):
             out.append(
-                "LLR {} reads '{}' but every citing TC is Verified — lift to "
-                "Verified (the evidence already exists)".format(
+                "LLR {} reads '{}' but every citing TC is Approved — lift to "
+                "Approved (the evidence already exists)".format(
                     lid, (r.get("Status") or "").strip()
                 )
             )
@@ -522,7 +533,7 @@ def llr_status_advisories(llrs, tcs):
 
 def modified_chain_advisories(srs, llrs, tcs):
     """Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither
-    `Modified` nor `Draft`. The SR is the ATTESTATION UNIT (process.md §7) — the
+    `Modified` nor `Drafted`. The SR is the ATTESTATION UNIT (process.md §7) — the
     re-attest sitting, the pending-owner-actions projection, and the
     `--ratify modified` brief all key off the SR row — so a chain amendment
     marked only on a child is INVISIBLE to every surface the marker exists to
@@ -540,7 +551,7 @@ def modified_chain_advisories(srs, llrs, tcs):
 
     def _flagged(sr_ids):
         return any(
-            is_modified(sr_by_id[s]) or is_draft(sr_by_id[s])
+            is_modified(sr_by_id[s]) or is_drafted(sr_by_id[s])
             for s in sr_ids
             if s in sr_by_id
         )
@@ -563,7 +574,7 @@ def modified_chain_advisories(srs, llrs, tcs):
             )
         elif not _flagged(owners):
             out.append(
-                "LLR {} is Modified but its owning SR ({}) is not Modified/Draft "
+                "LLR {} is Modified but its owning SR ({}) is not Modified/Drafted "
                 "— flip the attestation unit (the SR) or the amendment is "
                 "invisible to the re-attest sitting".format(lid, ";".join(owners))
             )
@@ -586,7 +597,7 @@ def modified_chain_advisories(srs, llrs, tcs):
             )
         elif not _flagged(owners):
             out.append(
-                "TC {} is Modified but its owning SR ({}) is not Modified/Draft "
+                "TC {} is Modified but its owning SR ({}) is not Modified/Drafted "
                 "— flip the attestation unit (the SR) or the amendment is "
                 "invisible to the re-attest sitting".format(
                     tid, ";".join(sorted(set(owners)))
@@ -595,12 +606,12 @@ def modified_chain_advisories(srs, llrs, tcs):
     return out
 
 
-# Verification methods whose "Verified" state rests on a recorded human judgment,
+# Verification methods whose approval rests on a recorded human judgment,
 # not a runnable check (process.md §4 "Attest"). --require-verified accepts these
-# as legitimately Verified but the report surfaces them distinctly (the
+# as legitimately approved but the report surfaces them distinctly (the
 # verification-basis split), so an audit can always see how much rests on trust.
 ATTESTED_METHODS = {"Attest"}
-# The one method whose "Verified" rests on a runnable, re-executable check
+# The one method whose approval rests on a runnable, re-executable check
 # (process.md §4 "Test"). Everything that is neither Test nor an ATTESTED_METHOD
 # (Demonstration/Manual/Analysis/Inspection/Critique) rests on a human observing
 # an outcome — repeatable, but not a runnable check — and is reported as its own
@@ -1863,7 +1874,7 @@ def _resolves_in_tree(root, endpoint):
 def phase_ratified_findings(real):
     """The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner
     ruling 2026-08-01, WI-402): once the project phases ANY spine row (digit-parse
-    arming — a legacy `v2` cell arms it too), every RATIFIED (non-Draft) SR/LLR/TC
+    arming — a legacy `v2` cell arms it too), every RATIFIED (non-`Drafted`) SR/LLR/TC
     must carry a `Phase` that is a BARE INTEGER — digits only, full cell. Numeric-
     only because two joins match the cell LITERALLY, not by parse: the `--phase` /
     `--ratify` scope filters (`in_phase` / `_scope_srs`) and check_trajectory's
@@ -1874,7 +1885,7 @@ def phase_ratified_findings(real):
     grandfathering, so historical labels still parse in the filters and the
     derived max while this rule migrates the live cells. The rule is **vacuous
     until >=1 artifact is phased** — the arming idiom the component checks use —
-    so a fully-blank downstream registry stays green (a `Draft` row may always
+    so a fully-blank downstream registry stays green (a `Drafted` row may always
     leave `Phase` blank). SN is covered transitively: at DevBar-Reqs+ every ratified SN
     has >=1 SR (the orphan rule) and SRs are phased; pre-DevBar-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
@@ -1887,7 +1898,7 @@ def phase_ratified_findings(real):
         key = id_key(label)
         for r in real.get(label, []):
             cell = (r.get("Phase") or "").strip()
-            if is_draft(r) or re.fullmatch(r"[0-9]+", cell):
+            if is_drafted(r) or re.fullmatch(r"[0-9]+", cell):
                 continue
             shown = f"={cell!r}" if cell else " (blank)"
             out.append(
@@ -1913,10 +1924,13 @@ def _cell(row, col):
 
 
 def _node_class(rid, status, orphan_ids):
-    """A node's view class: orphan (a trace finding) outranks draft (a status)."""
+    """A node's view class: orphan (a trace finding) outranks drafted (a status).
+    The returned token is a CSS/mermaid CLASS NAME, not a Status value — it stays
+    `draft` across D-9's rename because the stylesheet and the mermaid classDef
+    key off it, while the cell it reads is now `Drafted`."""
     if rid in orphan_ids:
         return "orphan"
-    if status.lower() == "draft":
+    if status.lower() == "drafted":
         return "draft"
     return ""
 
@@ -1952,8 +1966,8 @@ def _bucket_by_ref(rows, ref_col):
 def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for
     rows with no valid parent. Shared by the text outline and the HTML tree.
-    `sn_draft` (section-as-state, §4a) labels those SNs `Draft` so the views flag
-    them like a `Status=Draft` SR/LLR/TC row."""
+    `sn_draft` (section-as-state, §4a) labels those SNs `Drafted` so the views
+    flag them like a `Status=Drafted` SR/LLR/TC row."""
     llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
     srs_by_sn = _bucket_by_ref(srs, "SN-Refs")
@@ -1984,7 +1998,9 @@ def build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     roots = []
     for sn in sorted(sn_ids):
         kids = [sr_node(s) for s in srs_by_sn.get(sn, [])]
-        roots.append(_node(sn, "Draft" if sn in sn_draft else "", "", orphan_ids, kids))
+        roots.append(
+            _node(sn, "Drafted" if sn in sn_draft else "", "", orphan_ids, kids)
+        )
     rootless_srs = [s for s in srs if not sn_ids & set(refs(s.get("SN-Refs")))]
     if rootless_srs:
         label = (
@@ -2129,7 +2145,7 @@ def _sn_prose(sn_text):
 #
 # THE BASELINE STOPPED BEING GIT ARCHAEOLOGY AT D-9 STEP 4 (owner directive
 # 2026-08-15). It used to be the newest commit at which the SR row read
-# `Verified`, which is correct only while every amendment flips its row in the
+# `Verified` (now `Approved`), which is correct only while every amendment flips its row in the
 # same commit — and D-9 deletes the flip, so that walk returns HEAD and the diff
 # is empty by construction. The snapshot is a baseline OUTSIDE the live file,
 # which is what the walk could never be.
@@ -2224,20 +2240,19 @@ def _cell_diff_lines(changed, ratified=frozenset()):
 
 
 def _entry_kind(state):
-    """What the model's entry OWES, from the SR's Status: a first ratification,
-    the evidence its ratified text still lacks, or a re-attestation of text that
-    moved after it was blessed.
+    """What the model's entry OWES, from the SR's Status: a first approval, or a
+    re-attestation of text that moved after it was blessed.
 
-    Three-valued since D-9 step 2. `plan` is the new arm and it is not a
-    cosmetic third label: a `Planned` row has no attested baseline (its text was
-    ratified, its evidence never established), so asking git for one is the same
-    category error a `Draft` row's would be — and the renderer that labelled it
-    "re-attest owed" would be telling the owner to re-bless something nobody
-    ever blessed."""
-    if state == "draft":
+    BACK TO TWO ARMS AT D-9 STEP 5. The third (`plan`, for a `Planned` row whose
+    text was ratified and whose evidence was never established) went out with the
+    word: OI-30 D1 ruled `Planned` IS `Approved`, so there is no longer a state
+    that means "blessed text, no evidence" — evidence is the harness's answer,
+    not a cell's. A `Drafted` row owes a first approval and has no baseline to
+    diff against; anything else in the model is here because its text moved after
+    it was blessed, whether it says so (`Modified`) or the snapshot does
+    (drift)."""
+    if state == "drafted":
         return "ratify"
-    if state == "planned":
-        return "plan"
     return "reattest"
 
 
@@ -2283,9 +2298,9 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     be `statuses=("modified",)` — the "hard coupling" the migration plan named,
     because a brief that selects a literal returns a clean bill forever once
     that literal is retired, at exit 0, with nothing to notice. A row now owes
-    an act when it is `Draft` (first ratification), `Planned` (ratified text
-    awaiting evidence), `Modified` (the transitional marker, still honoured
-    until step 7 retires it) — or when its chain has DRIFTED from
+    an act when it is `Drafted` (first approval) or `Modified` (the transitional
+    marker, still honoured until step 7 retires it) — or when its chain has
+    DRIFTED from
     `docs/archive/last_approved/`, which is a property of two files rather than
     of a word, and which no rename can silence.
 
@@ -2327,7 +2342,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         return out
 
     def owes(sr):
-        if is_draft(sr) or is_planned(sr) or is_modified(sr):
+        if is_drafted(sr) or is_modified(sr):
             return True
         return sr_chain_drifts(
             sr.get("SR-ID", ""),
@@ -2363,7 +2378,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
         # A row ABSENT from the snapshot has no baseline to diff against — and
         # under the snapshot that is a statement about a FILE, checkable by
-        # opening it, rather than the old "the row was never Verified in
+        # opening it, rather than the old "the row was never approved in
         # committed history", which was a claim about a git walk.
         if snapshot is None or sid not in snap_rows["SR"]:
             entry["no_baseline_reason"] = (
@@ -2536,7 +2551,7 @@ def reattest_lines(root, srs, llrs, tcs):
     or REMOVED from the chain.
 
     THE BASELINE IS A DIRECTORY, NOT A REVISION (D-9 step 4). It used to be the
-    newest commit at which the SR row still read `Verified`, with `--since` as
+    newest commit at which the SR row still read `Verified` (now `Approved`), with `--since` as
     the escape hatch for a streak that walk could not see. Both are gone: the
     walk dies by construction once an approved row stops flipping on amendment,
     and a snapshot cannot sit after the amendment it is supposed to precede.
@@ -2555,14 +2570,14 @@ def reattest_lines(root, srs, llrs, tcs):
         "# Re-attestation brief — spine rows owing a human act",
         "",
         "_Generated by `trace.py --ratify modified` (WI-316). One section per SR"
-        " (the attestation unit) that is `Draft`, `Planned` or `Modified`, or"
-        " whose chain has DRIFTED from the approved snapshot; each chain row"
+        " (the attestation unit) that is `Drafted` or `Modified`, or whose"
+        " chain has DRIFTED from the approved snapshot; each chain row"
         " shows only its CHANGED cells, before (the snapshot) vs after (the"
         " working tree), ratified cells first. `Status` itself is never listed —"
-        " the marker is not the amendment. Rule on each section: bless →"
-        " `Verified`; evidence no longer verifies the amended text → `Planned`"
-        " (process.md §7). After ruling, run `intake.py snapshot` in the SAME"
-        " commit, or the record of what was blessed does not move._",
+        " the marker is not the amendment. Rule on each section: bless → set"
+        " `Status` to `Approved` (process.md §7) — and from the first signing"
+        " onward, run `intake.py snapshot` in the SAME commit, or the record of"
+        " what was blessed does not move._",
         "",
         "_Baseline: `{}` — {}._".format(
             baseline_snapshot.SNAPSHOT_DIR,
@@ -3030,11 +3045,11 @@ def analyze(reg, args):
     orphan_ids = set()
     for r in srs:
         sid = r["SR-ID"]
-        # A Draft SR is being drafted requirement-first (derived-gate model §3):
+        # A Drafted SR is being drafted requirement-first (derived-gate model §3):
         # exempt from the child-completeness rules (no LLR / no TC) so it lives in
         # the live spine without orphaning. Its SN linkage and every integrity
         # rule still apply.
-        draft = is_draft(r)
+        draft = is_drafted(r)
         analytic = llr_exempt(r)
         if not draft and not analytic and sid not in llr_sr_refs:
             orphans.append(
@@ -3067,9 +3082,9 @@ def analyze(reg, args):
             if p not in sr_ids:
                 orphans.append(f"LLR {lid} references unknown {p}")
                 orphan_ids.add(lid)
-        # A Draft LLR is exempt from the child-completeness (no TC) rule, like a
-        # Draft SR — its SR parent + id integrity still apply (derived-gate §3).
-        if not is_draft(r) and lid not in tc_refs:
+        # A Drafted LLR is exempt from the child-completeness (no TC) rule, like a
+        # Drafted SR — its SR parent + id integrity still apply (derived-gate §3).
+        if not is_drafted(r) and lid not in tc_refs:
             orphans.append(f"LLR {lid} has no test (TC)")
             orphan_ids.add(lid)
 
@@ -3078,10 +3093,10 @@ def analyze(reg, args):
         orphan_ids.add(tid)
 
     for u in sorted(sn_ids):
-        # A Draft SN (section-as-state, §4a) is being drafted requirement-first and
-        # is exempt from the child-completeness rule, like a Draft SR. The gate
+        # A Drafted SN (section-as-state, §4a) is being drafted requirement-first and
+        # is exempt from the child-completeness rule, like a Drafted SR. The gate
         # half of this rule is derive_gate's SN-coverage rung (WI-401): same
-        # cited set (sn_cited_ids), same Draft exemption — this lists the ids,
+        # cited set (sn_cited_ids), same Drafted exemption — this lists the ids,
         # that caps the level, and neither fires twice on one fact.
         if u not in sr_sn_refs and u not in sn_draft:
             orphans.append(f"SN {u} has no SR")
@@ -3237,7 +3252,7 @@ def analyze(reg, args):
     status_findings = []
     phase_deferred = []
     # Verification-basis audit surface (process.md §4): of the SRs the project
-    # reports Verified, how was each reached? Three kinds, most-to-least runnable —
+    # reports Approved, how was each reached? Three kinds, most-to-least runnable —
     # Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
     # Inspection/Critique rest on a human observing an outcome (demonstrated/
     # observed — repeatable, but not a runnable check); Attest rests on a named
@@ -3251,7 +3266,7 @@ def analyze(reg, args):
     # check (--strict-schema separately flags an out-of-vocabulary method).
     mechanized_verified, demonstrated_verified, attested_verified = [], [], []
     for r in srs:
-        if not is_verified(r):
+        if not is_approved(r):
             continue
         method = (r.get("Verification") or "").strip()
         if method in MECHANIZED_METHODS:
@@ -3264,16 +3279,16 @@ def analyze(reg, args):
         for r in srs:
             # The DevBar-Release status bar applies to every ratified SR regardless of
             # Verification method — matching derive_gate.sr_gate, which already
-            # demands is_verified for any decomposed SR before DevBar-Release with no
+            # demands is_approved for any decomposed SR before DevBar-Release with no
             # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
             # Analysis/Inspection SR left Implemented can never derive DevBar-Release yet used
             # to pass this Test-only check — the two scripts disagreeing about the
-            # gate is the false-green the kit exists to prevent). A Draft SR is
-            # pre-ratification (below DevBar-Reqs, derived-gate §3): it makes no Verified
+            # gate is the false-green the kit exists to prevent). A Drafted SR is
+            # pre-approval (below DevBar-Reqs, derived-gate §3): it makes no approval
             # claim yet, so the bar stands down — surfaced in the draft count so
             # the exemption stays auditable. Pinned equivalent to sr_gate's
-            # is_verified-for-decomposed rule by test_rule_sync.
-            if is_draft(r):
+            # is_approved-for-decomposed rule by test_rule_sync.
+            if is_drafted(r):
                 continue
             if not in_phase(r):
                 phase_deferred.append(
@@ -3281,12 +3296,12 @@ def analyze(reg, args):
                     "status check deferred to its own phase"
                 )
                 continue
-            if not is_verified(r):
+            if not is_approved(r):
                 val = (r.get("Status") or "").strip()
                 method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification={method} but Status="
-                    f"{val or '(blank)'} (DevBar-Release requires Verified for every ratified "
+                    f"{val or '(blank)'} (DevBar-Release requires Approved for every ratified "
                     "SR regardless of method — the magic Status values are matched "
                     "case-insensitively, so this is a real mismatch, not a casing "
                     "near-miss)"
@@ -3385,8 +3400,8 @@ def analyze(reg, args):
     # heuristic (lexical overlap), so it warns FOREVER — 38 of 118 LLRs trip it
     # and most are legitimate. Never joins a failure set below.
     paraphrase = paraphrase_advisories(srs, llrs)
-    # Warn-only, always on (WI-129): an LLR reading below Verified while every
-    # citing TC is Verified — a readout drift, never a failure (LLR status is
+    # Warn-only, always on (WI-129): an LLR reading below Approved while every
+    # citing TC is Approved — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
     llr_status_advis = llr_status_advisories(llrs, tcs)
     # Warn-only, always on (WI-316): a Modified LLR/TC whose owning SR is not
@@ -3395,13 +3410,13 @@ def analyze(reg, args):
     # rendered through the same channel (one advisory pipe, two lints).
     llr_status_advis = llr_status_advis + modified_chain_advisories(srs, llrs, tcs)
 
-    # Draft artifacts (derived-gate model §3): the rows exempted from the
+    # Drafted artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
     # so the exemption stays auditable (the whole point of the model is that a
-    # Draft row lives in the live spine while being drafted, not silently).
-    draft_srs = [r for r in srs if is_draft(r)]
-    draft_llrs = [r for r in llrs if is_draft(r)]
-    draft_tcs = [r for r in tcs if is_draft(r)]
+    # Drafted row lives in the live spine while being drafted, not silently).
+    draft_srs = [r for r in srs if is_drafted(r)]
+    draft_llrs = [r for r in llrs if is_drafted(r)]
+    draft_tcs = [r for r in tcs if is_drafted(r)]
     n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
 
     # Optional Aspect column (the ruled cross-cutting review grouping): count
@@ -3502,12 +3517,12 @@ def render_report(reg, findings, args, forest):
             f"| Test cases (TC) | {len(tcs)} |",
             f"| Orphans | {len(orphans)} |",
             f"| Integrity findings | {len(integrity)} |",
-            f"| Verified SRs — mechanized (Test) | {len(mechanized_verified)} |",
-            f"| Verified SRs — demonstrated/observed | {len(demonstrated_verified)} |",
-            f"| Verified SRs — attested (human, §4) | {len(attested_verified)} |",
+            f"| Approved SRs — mechanized (Test) | {len(mechanized_verified)} |",
+            f"| Approved SRs — demonstrated/observed | {len(demonstrated_verified)} |",
+            f"| Approved SRs — attested (human, §4) | {len(attested_verified)} |",
         ]
         + (
-            [f"| Draft artifacts (decomposition-exempt) | {n_draft} |"]
+            [f"| Drafted artifacts (decomposition-exempt) | {n_draft} |"]
             if n_draft
             else []
         )
@@ -3640,7 +3655,7 @@ def render_report(reg, findings, args, forest):
         else [f"- {f}" for f in paraphrase]
     )
     # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
-    # below Verified whose citing TCs are all Verified (lift the Status cell by
+    # below Approved whose citing TCs are all Approved (lift the Status cell by
     # hand — registries are hand-owned SSOT, no generator writes them back), and
     # Modified LLR/TC rows whose owning SR is not flagged (flip the attestation
     # unit or the amendment is invisible to the re-attest sitting).
@@ -3651,15 +3666,15 @@ def render_report(reg, findings, args, forest):
         else [f"- {f}" for f in llr_status_advis]
     )
     # Verification-basis surface (process.md §4): make the project's trust
-    # footprint auditable — of what is "Verified", how much rests on a runnable
+    # footprint auditable — of what is `Approved`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
     # Inspection/Critique), or on a named human's recorded judgment (Attest)? Split
-    # three ways (WI-259) so non-Test Verified claims are never folded into
+    # three ways (WI-259) so non-Test approval claims are never folded into
     # "mechanized"; the demonstrated and attested ids are listed so an audit can
     # see exactly which rows rest on something other than a runnable check.
     lines += ["", "## Verification basis (mechanized / demonstrated / attested)", ""]
     lines += [
-        "_Of the SRs reported `Verified`: `Test` rows rest on a runnable, "
+        "_Of the SRs reported `Approved`: `Test` rows rest on a runnable, "
         "re-executable check (mechanized); `Demonstration`/`Manual`/`Analysis`/"
         "`Inspection`/`Critique` rows rest on a human observing an outcome "
         "(demonstrated/observed — repeatable, but not a runnable check); `Attest` "
@@ -3677,10 +3692,10 @@ def render_report(reg, findings, args, forest):
         + (f" — {', '.join(attested_verified)}" if attested_verified else ""),
     ]
     if n_draft:
-        lines += ["", "## Draft artifacts (decomposition-exempt)", ""]
+        lines += ["", "## Drafted artifacts (decomposition-exempt)", ""]
         lines += [
-            "_`Draft` rows are exempt from the child-completeness orphan rules and "
-            "the DevBar-Release Verified criterion (derived-gate model §3): a requirement lives "
+            "_`Drafted` rows are exempt from the child-completeness orphan rules and "
+            "the DevBar-Release approval criterion (derived-gate model §3): a requirement lives "
             "in the live spine while it is drafted. Listed so the exemption is "
             "auditable._",
             "",
@@ -3780,7 +3795,7 @@ def render_report(reg, findings, args, forest):
         scope = f" — phase scope: {args.phase}" if phases else ""
         lines += ["", f"## Status findings (--require-verified{scope})", ""]
         lines += (
-            ["None. Every in-scope ratified SR is Verified (any method)."]
+            ["None. Every in-scope ratified SR is Approved (any method)."]
             if not status_findings
             else [f"- {s}" for s in status_findings]
         )
@@ -3979,7 +3994,7 @@ def main():
     ap.add_argument(
         "--require-verified",
         action="store_true",
-        help="DevBar-Release criterion: flag Verification=Test SRs not Status=Verified",
+        help="DevBar-Release criterion: flag Verification=Test SRs not Status=Approved",
     )
     ap.add_argument(
         "--phase",

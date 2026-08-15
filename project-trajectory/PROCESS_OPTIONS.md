@@ -162,43 +162,45 @@ adopter upgrades without a red day). The basis line also carries §4's `stage=N`
 and `ex-draft=`.
 
 **Artifact states (no new column).** Maturity is read from existing structure,
-gated by one `Draft` bit. Each row contributes its own bar to the min; `DevBar-Below` below
+gated by one `Drafted` bit. Each row contributes its own bar to the min; `DevBar-Below` below
 is `derive_gate.py`'s internal **below-DevBar-Reqs sentinel** for a row that has not
 earned DevBar-Reqs yet — a fold value, never a gate a repo sits at (§4):
 
-- **SR / LLR / TC** — the open-vocab `Status` gains a leading **`Draft`**:
-  `Draft` → `Planned`/… → `Verified`. Per-artifact bar: an SR is **DevBar-Below** while
-  `Draft`, **DevBar-Reqs** once ratified (Status past `Draft`), **DevBar-Tests** once decomposed (its
+- **SR / LLR / TC** — the CLOSED `Status` vocabulary is
+  `Drafted` → `Approved`, with `Modified` marking an approved row whose text
+  moved. Per-artifact bar: an SR is **DevBar-Below** while
+  `Drafted`, **DevBar-Reqs** once ratified (Status past `Drafted`), **DevBar-Tests** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
-  TC), **DevBar-Release** once `Verified`. An LLR/TC caps only when `Draft`; once present its
-  own Status doesn't gate DevBar-Release — the SR's `Verified` drives that, matching
-  `trace.py --require-verified` (which checks SRs, not LLR/TC status), so a repo
-  whose LLRs read `Implemented` still reaches DevBar-Release.
+  TC). **DevBar-Release is not reachable from a cell** (2026-08-15 ruling): the
+  release bar is what the harness computes from test evidence, and until that
+  driver lands `sr_bar` ceilings at DevBar-Tests and the derived line says so —
+  `DevBar-Tests (Release: pending harness driver)`. An LLR/TC caps only when
+  `Drafted`; once present its own Status doesn't gate — the SR's does.
 - **SN** — maturity is **section-as-state**: an SN under a stakeholder-needs.md
-  heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Draft
+  heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Drafted
   (DevBar-Below); SNs under any other heading are ratified (DevBar-Reqs). No new column — the section
   *is* the state.
 
 The **ratification date is git-derived** — the commit that moved the `Status` (or
 the SN section). No new field.
 
-**A window lowers the bar; it must not create a blind spot.** While `Draft`/
+**A window lowers the bar; it must not create a blind spot.** While `Drafted`/
 `Modified` rows hold the gate down, the steps the *higher* gate requires would
 otherwise stop running entirely — so a regression introduced during the window
 goes unreported until it closes, then lands in one lump. `check.py` therefore
 runs those steps **advisory** (reported, warn-only, exit code unaffected) when
-`docs/gate`'s `# basis:` shows `drafts`/`modified` above zero. Narrow by design:
+`docs/gate`'s `# basis:` shows `drafted`/`modified` above zero. Narrow by design:
 a project genuinely at a lower gate is *not* nagged — only a gate **suppressed by
 a pending ratification** triggers it. The test/coverage step stays out (the
 commit bar already runs the suite, so it is not a blind spot, and re-running it
 every gate run for the life of a window buys nothing).
 
-**Draft artifacts live in the live spine** (§4) — the exemption in detail: a
-Draft SR needs no LLR/TC, a Draft LLR no TC, a Draft SN no SR (`trace.py`'s
+**Drafted artifacts live in the live spine** (§4) — the exemption in detail: a
+Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'s
 child-completeness orphan rules), so a requirement is drafted in the live
 registry before it is decomposed. Parent-linkage + integrity
-still apply (a Draft SR still links an SN; ids stay unique/well-formed), and a
-Draft SR is skipped by the DevBar-Release Verified criterion (it is pre-ratification).
+still apply (a Drafted SR still links an SN; ids stay unique/well-formed), and a
+Drafted SR is skipped by the DevBar-Release approval criterion (pre-approval).
 
 **Ratification = a reviewed Status-change commit** (§4). That commit *is* the
 sign-off (`gate-advance` skill), and it composes with
@@ -225,7 +227,7 @@ exactly where "this also modifies SR-12" and other conflicts surface in one revi
 ```
 Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch review)
               │
-          [phase-N-g2]  decompose to LLR/TC, all Planned      (parallel, batch review)
+          [phase-N-g2]  decompose to LLR/TC, all Approved     (parallel, batch review)
               │
           WI-a ─ DevBar-Tests→DevBar-Release ─┐
           WI-b ─ DevBar-Tests→DevBar-Release ─┤  (series, per-WI vertical slices)
@@ -233,7 +235,7 @@ Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch r
 ```
 
 A reopen during a later phase's g1 revs the phase: the affected verified artifact
-returns to `Draft`/`Planned`, the derived gate for that phase drops, and the batch
+returns to `Drafted`, the derived gate for that phase drops, and the batch
 review sees it alongside the new work. (One sanctioned relaxation of the series
 rule: a run of *independent, off-spine* dev slices may batch into one BUILD
 session + one review round — "Dev-slice batching" under Unattended operation;
@@ -270,8 +272,8 @@ a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
 `v2` → 2, `2` → 2, the same parse `derive_gate` uses), so legacy labels still
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
-- **A blank `Phase` is legal only on a pre-ratification (`Draft`) row.** A ratified
-  SR/LLR/TC (Planned/Verified) — and transitively a ratified SN — must carry a
+- **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** A ratified
+  SR/LLR/TC (`Approved`/`Modified`) — and transitively a ratified SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
   the component checks use), so a fully-blank downstream registry stays green: the
@@ -280,8 +282,8 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
 - **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from DevBar-Tests on,
   whatever its phase — decomposition is cheap and pins the design. An LLR's Phase is
   its parent SR's; a TC's is the max over what it verifies.
-- **The DevBar-Release Verified criterion is phase-scoped.** `check.py --gate DevBar-Release --phase 1`
-  (cumulative for later closures: `--phase 1,2`) requires Verified only for
+- **The DevBar-Release approval criterion is phase-scoped.** `check.py --gate DevBar-Release --phase 1`
+  (cumulative for later closures: `--phase 1,2`) requires `Approved` only for
   in-scope SRs; out-of-scope SRs are listed in the trace report as
   **phase-deferred** — an explicit, recorded exemption, never a silent skip. **The
   foundation (minimum) phase is always in scope** — never phase-deferred — so
@@ -292,16 +294,16 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
 - Later phases re-enter at DevBar-Reqs/DevBar-Tests as requirement increments and close their own
   DevBar-Release/DevStg-Release with the grown phase list.
 - **A project already at DevBar-Release that takes on new scope: the derived gate handles it.**
-  New scope enters as **`Draft` SN/SR in the live spine** — the `-000` / off-spine
+  New scope enters as **`Drafted` SN/SR in the live spine** — the `-000` / off-spine
   placeholder workaround is **retired** by the derived gate model above. The new
   drafts sit at DevBar-Below, so the derived **per-phase** gate for the new phase drops (the
   `[phase]-[g*]` signal) while the shipped phase stays at its level; the shipped
   set still closes at DevBar-Release with `check.py --gate DevBar-Release --phase <shipped>` (per-phase
   scoping, not a marker rewind — rewinding would discard the closed phase's
   attestation). Traceability is phase-blind, so a new-phase SR still reaches
-  **DevBar-Tests-completeness (LLR + TC)** before it is *Verified* — but it no longer waits
-  off-spine to be *drafted*: it is a live `Draft` row from the start (its Phase may
-  stay blank while `Draft` and takes its number at ratification). Only *Verified*
+  **DevBar-Tests-completeness (LLR + TC)** before it is *Approved* — but it no longer waits
+  off-spine to be *drafted*: it is a live `Drafted` row from the start (its Phase may
+  stay blank while `Drafted` and takes its number at approval). Only *Approved*
   and *DevStg-Release* defer by phase; the new phase's SRs read phase-deferred until
   their own DevBar-Release.
 
@@ -1739,7 +1741,7 @@ and renders into **`docs/open-items.html`** — the generated surface the owner
 actually reads, so the review is **one page with all context**.
 
 Registry-plus-view rather than a markdown file, for a reason worth stating: the
-same surface must also carry the *attestation* depth — every `Draft` or
+same surface must also carry the *attestation* depth — every `Drafted` or
 `Modified` spine row's per-cell before/after — and the only readable form of
 that is a **word-level diff**, which markdown cannot mark. Generating the view
 also lets it show what a pointer cannot: which rows ride an SR's line, and the

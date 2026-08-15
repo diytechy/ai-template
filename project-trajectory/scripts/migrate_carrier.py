@@ -21,8 +21,9 @@ code and become properties of the parse:
   * an EMPTY CELL is an ABSENT KEY, so "unset" and "set to empty" stop being
     the same string.
 
-WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps today's
-vocabulary — `Draft` / `Verified` / `Modified` — because retiring `Modified`
+WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps whatever
+vocabulary the tree it converts already uses — `Drafted` / `Approved` /
+`Modified` since D-9 step 5 — because retiring `Modified`
 is what the ladder migration does, and doing it here would stamp 38 rows clean
 and launder the re-blessing they owe (repo-lock Q11). No anchor cells, no
 `Priority` float, no `SupersededBy` deletion, no SN `Status`. Those land once,

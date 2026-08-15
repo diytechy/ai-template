@@ -15,7 +15,7 @@ They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
 asks for, and what makes them cheap to test in isolation.
 
-The row primitives (`refs`, `is_example`, `is_draft`) live here because this is
+The row primitives (`refs`, `is_example`, `is_drafted`) live here because this is
 the lower layer: `trace.py` imports them back rather than the reverse, so the
 dependency runs one way and there is no cycle.
 
@@ -42,13 +42,18 @@ def is_example(rid):
     return (rid or "").endswith("-000")
 
 
-def is_draft(row):
-    """A row in the pre-ratification `Draft` state (derived-gate model §3): exempt
-    from the child-completeness orphan rules (a Draft SR needs no LLR/TC, a Draft
-    LLR needs no TC) and from the --require-verified criterion, so a requirement
-    lives in the live spine while it is being drafted. Status is open-vocabulary;
-    `Draft` is the one value the orphan/status passes act on."""
-    return (row.get("Status") or "").strip().lower() == "draft"
+def is_drafted(row):
+    """A row in the pre-approval `Drafted` state (derived-gate model §3): exempt
+    from the child-completeness orphan rules (a Drafted SR needs no LLR/TC, a
+    Drafted LLR needs no TC) and from the --require-verified criterion, so a
+    requirement lives in the live spine while it is being drafted.
+
+    RENAMED FROM `is_draft` AT D-9 MIGRATION STEP 5 with the value it reads
+    (`Draft` -> `Drafted`). `Status` is a CLOSED vocabulary since step 1 and
+    narrows to `{Drafted, Approved, Modified}` here; no predicate anywhere
+    honours the retired words, which `tests/test_rule_sync.py` asserts
+    negatively over the source of every script."""
+    return (row.get("Status") or "").strip().lower() == "drafted"
 
 
 # Comparative/absolute terms that demand a predicate. Matched on word
@@ -277,7 +282,7 @@ def form_findings(srs, llrs, tcs):
     holding two obligations."""
     out = []
     for rid, r in _real(srs, "SR-ID"):
-        if is_draft(r):
+        if is_drafted(r):
             continue
         req = (r.get("Requirement") or "").strip()
         if not req:
@@ -314,7 +319,7 @@ def form_findings(srs, llrs, tcs):
             # it from the decomposition rules. "TBD" in a Draft acceptance
             # criterion is what Draft MEANS; flagging it would make the state
             # unusable for the drafting it exists to allow.
-            if is_draft(r):
+            if is_drafted(r):
                 continue
             for col in cols:
                 cell = (r.get(col) or "").strip()

@@ -16,12 +16,12 @@ def report_of(root):
 # --- Integrity: duplicate / malformed ids (always on; fail under --strict) -----
 
 DUP_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
-SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Verified
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
+SR-001,Duplicate,SN-001,"The system shall add again.","r.","dup",,M,Test,Approved
 """
 
 MALFORMED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
+SR-XX,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
 """
 
 
@@ -49,12 +49,12 @@ def test_malformed_id_fails_strict(scaffold):
 
 # Permutations cell `set{a,b}` unquoted -> 11 parsed columns vs the 10-col header.
 UNQUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Verified
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",set{a,b},M,Test,Approved
 """
 
 # Same row properly quoted -> exactly 10 columns; the control must stay green.
 QUOTED_COMMA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Verified
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3","set{a,b}",M,Test,Approved
 """
 
 # A short row (trailing cells lost, e.g. a hand-edit that ate the Status cell).
@@ -163,25 +163,25 @@ def test_harness_runs_registry_integrity_at_g1(scaffold):
 # Wrong at any stage -> integrity class (fails --strict-integrity).
 
 _TWO_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
-SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Verified
-SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Verified
+SR-001,Addition,SN-001,"The system shall add.","r.","add(1,2) == 3",,M,Test,Approved
+SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,Test,Approved
 """
 
 _TWO_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Planned
-LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Planned
+LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Approved
+LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Approved
 """
 
 # TC-002 cites SR-002 next to LLR-001, but LLR-001 decomposes SR-001 -> incoherent.
 INCOHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
-TC-002,SR-002;LLR-001,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved
+TC-002,SR-002;LLR-001,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Approved
 """
 
 # Same chain, every LLR paired with its own SR -> coherent.
 COHERENT_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status
-TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Verified
-TC-002,SR-002;LLR-002,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Verified
+TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2","Satisfies SR-001 AcceptanceCriteria",Yes,Approved
+TC-002,SR-002;LLR-002,Unit,call sub,Smoke,"a=3; b=1","Satisfies SR-002 AcceptanceCriteria",Yes,Approved
 """
 
 
@@ -311,7 +311,7 @@ def test_strict_schema_flags_bad_enum(scaffold):
     csv = sr_path(scaffold)
     csv.write_text(
         csv.read_text(encoding="utf-8").replace(
-            ",M,Test,Verified", ",M,Testing,Verified"
+            ",M,Test,Approved", ",M,Testing,Approved"
         ),
         encoding="utf-8",
     )
@@ -322,11 +322,11 @@ def test_strict_schema_flags_bad_enum(scaffold):
 
 def test_strict_schema_leaves_priority_and_status_open(scaffold):
     # The method does not close the Priority/Status vocabularies (process.md §4):
-    # Priority=S and Status=Planned must NOT be schema findings.
+    # Priority=S and Status=Approved must NOT be schema findings.
     make_minimal_project(scaffold)
     csv = sr_path(scaffold)
     csv.write_text(
-        csv.read_text(encoding="utf-8").replace(",M,Test,Verified", ",S,Test,Planned"),
+        csv.read_text(encoding="utf-8").replace(",M,Test,Approved", ",S,Test,Approved"),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
@@ -379,7 +379,7 @@ def test_strict_schema_flags_legacy_tc_header_without_evidence(scaffold):
     tc_path(scaffold).write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n"
         'TC-001,SR-001;LLR-001,Unit,call add,Smoke,"a=1; b=2",'
-        '"Satisfies SR-001 AcceptanceCriteria",Yes,Verified\n',
+        '"Satisfies SR-001 AcceptanceCriteria",Yes,Approved\n',
         encoding="utf-8",
     )
     assert run_py(["scripts/trace.py", "--strict"], cwd=scaffold).returncode == 0

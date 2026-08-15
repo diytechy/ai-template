@@ -65,7 +65,7 @@ closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQU
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
 the **amend-without-flip** warn (WI-316): a staged diff changing the **ratified**
-cells of a `Verified` spine row without setting the `Modified` re-attest marker
+cells of an `Approved` spine row without setting the `Modified` re-attest marker
 (process.md §7), the write-time discipline commit-message prose never had.
 *Ratified*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
 WI-380) rules traceability **traced, not ratified**, so a `Module`/`CodeSymbol`/
@@ -3279,12 +3279,15 @@ def spine_cell_class(csv_path, column):
 # never disagree about what "normative" means.
 
 # The Status values whose ROW TEXT is ratified — the population the
-# amend-without-flip guard scans. `Verified` (text blessed AND evidence
-# established) and `Planned` (text blessed, evidence pending) differ in their
-# EVIDENCE claim, and this guard is about TEXT, so both belong. `Draft` does
-# not: nothing has been blessed, so there is nothing to amend behind a human's
-# back. Lowercase, matching the guard's own normalisation.
-_RATIFIED_TEXT = frozenset({"verified", "planned"})
+# amend-without-flip guard scans. ONE MEMBER SINCE D-9 STEP 5, and it is a
+# CONTRACTION OF SPELLING, NOT OF SCOPE: the set used to hold `verified` and
+# `planned` because the pair split one rung ("text blessed, evidence
+# established" vs "text blessed, evidence pending"), and OI-30 D1 folded them
+# into the single `Approved`. `Drafted` does not belong: nothing has been
+# blessed, so there is nothing to amend behind a human's back. `Modified`
+# does not either: the marker is already set, which is exactly what this guard
+# checks for the absence of. Lowercase, matching the guard's own normalisation.
+_RATIFIED_TEXT = frozenset({"approved"})
 
 
 def split_changed_cells(csv_path, id_col, head, row):
@@ -3341,9 +3344,9 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
 
-    One record per RATIFIED-TEXT spine row (`_RATIFIED_TEXT` — `Verified` or,
-    since D-9 step 2, `Planned`) amended between the two trees without its
-    status moving, each cell sorted into the §A5.1 halves with its before/after:
+    One record per RATIFIED-TEXT spine row (`_RATIFIED_TEXT` — `Approved`, into
+    which `Verified` and `Planned` both folded at D-9 step 5) amended between the
+    two trees without its status moving, each cell sorted into the §A5.1 halves with its before/after:
 
         {"registry": <csv path>, "id": <row id>,
          "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
@@ -3365,7 +3368,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     long; never line-split). Returns [] when not applicable; any missing git
     context is a silent no-op, like staged_findings. A NEW row (id absent on the
     base side) is not an amendment; a row whose Status moved (to Modified,
-    Draft, Planned, anything) made a deliberate call this does not
+    Drafted, anything) made a deliberate call this does not
     second-guess."""
     revs = _spine_revs(
         root,
@@ -3391,15 +3394,15 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     idx_llrs = _index_rows(*SPINE_CSVS[1])
 
     def _flagged_sr(sid):
-        # `planned` is DELIBERATELY NOT HERE (D-9 step 2, decided per-site).
         # This set is an EXEMPTION — "the attestation unit is itself flagged in
-        # this commit, so a human will read the chain anyway". `Draft` and
-        # `Modified` are that; `Planned` is not, because nothing routes a
-        # Planned SR's chain to a re-read. Adding it would have made the guard
-        # QUIETER on the very rows step 2 exists to surface, which is the
-        # silently-less-safe direction the migration's §F3 guard names.
+        # this commit, so a human will read the chain anyway" — which is why it
+        # is the two states that ROUTE a chain to a human read and nothing else.
+        # `Approved` is deliberately absent for the same reason `planned` was
+        # before the fold: an approved SR routes its chain nowhere, so exempting
+        # it would make the guard QUIETER on exactly the rows it exists to
+        # surface, the silently-less-safe direction the migration's §F3 names.
         status = ((idx_srs.get(sid) or {}).get("Status") or "").strip().lower()
-        return status in ("modified", "draft")
+        return status in ("modified", "drafted")
 
     def _owners(csv_path, row):
         if csv_path == SPINE_CSVS[0][0]:
@@ -3442,13 +3445,12 @@ def staged_spine_amendments(root, base="HEAD", head=None):
                 continue
             head_status = (head.get("Status") or "").strip().lower()
             cur_status = (row.get("Status") or "").strip().lower()
-            # RATIFIED-TEXT STATES, both sides, and the SAME one (D-9 step 2).
-            # `Verified` was the only member until now, which left `Planned` —
-            # a row whose TEXT is equally ratified, only its evidence pending —
-            # never scanned by this guard at all: attested prose could be
-            # rewritten under a Planned row and no surface said so. A status
-            # that MOVED between the two sides is still exempt, unchanged: that
-            # is a deliberate call this does not second-guess.
+            # RATIFIED-TEXT STATES, both sides, and the SAME one. Since D-9
+            # step 5 that is the single value `Approved`; before the fold it was
+            # `Verified` OR `Planned`, and requiring the SAME one on both sides
+            # is what kept a legitimate rung move from reading as an amendment.
+            # A status that MOVED between the two sides is still exempt,
+            # unchanged: that is a deliberate call this does not second-guess.
             if head_status != cur_status or head_status not in _RATIFIED_TEXT:
                 continue
             if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
@@ -3464,8 +3466,8 @@ def staged_spine_findings(root):
     by WI-380 to RATIFIED cells only.
 
     A staged diff that changes the ratified cells of a spine row whose Status
-    reads the same ratified-text value (`Verified`, or `Planned` since D-9
-    step 2) in both HEAD and the stage has amended attested prose
+    reads the same ratified-text value (`Approved`, since D-9 step 5) in both
+    HEAD and the stage has amended attested prose
     without setting the `Modified` re-attest marker (process.md §7) — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
@@ -3744,7 +3746,7 @@ def critique_ratchet_findings(root):
 # WI-243. The dashboard GENERATOR (`gen_trajectory.py`, located beside this
 # checker so the path resolves under `--root` in this repo and a downstream
 # scaffold alike) plus the optional meta-only render recipe. A change to either
-# after the latest CRITIQUE means the Verified perceptual stamp judged an older
+# after the latest CRITIQUE means the approved perceptual stamp judged an older
 # render, so the critique should re-fire.
 _RENDER_RECIPE_REL = "scripts/dashboard-shots/shoot.mjs"
 
@@ -3877,7 +3879,7 @@ def critique_staleness_findings(root):
     `backlog_staleness_findings`). A `Verification=Critique` SR is judged by a
     human/critic look recorded in `docs/reviews/*-CRITIQUE.md`, and that verdict
     never re-fires on its own — so once the dashboard *render surface* changes,
-    the Verified stamp is judging an older render. When a render-surface path (the
+    the approval stamp is judging an older render. When a render-surface path (the
     co-located `gen_trajectory.py`, plus the render recipe if present) last
     changed STRICTLY AFTER the latest CRITIQUE evidence, flag that the perceptual
     gate is stale and the dashboard critique should be re-run against the current

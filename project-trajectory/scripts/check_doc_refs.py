@@ -54,7 +54,7 @@ classes links can't see, with false-positive control as the design center
      spine's Evidence-class cells — TC `Evidence`, LLR `Module`/`CodeSymbol`/
      `TestRefs`, the four pointers OUT of the registries into the code and
      test tree — must cite files that EXIST. These cells are exactly what
-     answers "how do you know this row is Verified", and every other link in
+     answers "how do you know this row is Approved", and every other link in
      the chain is mechanized; a deletion never asks what cited the deleted
      file, so they rot silently. A cell is a KNOWN joined list, split before
      the shape test; the FILE half of a `tests/x.py::node` citation is

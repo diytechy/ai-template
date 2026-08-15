@@ -247,7 +247,7 @@ def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
     sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
     sr.write_text(
-        sr.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Planned"),
+        sr.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Modified"),
         encoding="utf-8",
     )
     bad = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)

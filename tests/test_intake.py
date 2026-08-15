@@ -120,7 +120,7 @@ LLR_HEADER = (
 )
 
 
-def write_sr(root, requirement="the original text", status="Verified"):
+def write_sr(root, requirement="the original text", status="Approved"):
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.csv").write_text(
@@ -138,7 +138,7 @@ def write_llr(root, sr_refs="SR-001", module="src/d.py"):
     req.mkdir(parents=True, exist_ok=True)
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER
-        + 'LLR-001,{},Core,{},f,"the detail","why",TC-001,Verified,CMP-001,1\n'.format(
+        + 'LLR-001,{},Core,{},f,"the detail","why",TC-001,Approved,CMP-001,1\n'.format(
             sr_refs, module
         ),
         encoding="utf-8",
@@ -503,7 +503,7 @@ def context_repo(tmp_path):
     write_sr(root)
     (req / "low-level-requirements.csv").write_text(
         LLR_HEADER + 'LLR-001,SR-001,Core,src/widget.py,widget_f,"the detail","why",'
-        "TC-001,Verified,CMP-001,1\n",
+        "TC-001,Approved,CMP-001,1\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -513,7 +513,7 @@ def context_repo(tmp_path):
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,"
         "Evidence,Status,Phase\n"
         "TC-001,SR-001;LLR-001,Unit,run it,smoke,,works,Y,tests/test_widget.py,"
-        "Verified,1\n",
+        "Approved,1\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -621,7 +621,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
     write_sr(root)
     (root / "docs" / "work" / "queued").mkdir(parents=True)
     census = [
-        "SR-001 is not Verified (Status=Draft)",
+        "SR-001 is not Approved (Status=Drafted)",
         "SN SN-002 is a draft need (unratified)",
     ]
     minted, refusal = intake.mint_gap_rows(root, census)
@@ -642,7 +642,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 
 
 def _policy_repo(tmp_path, level):
-    """A repo with one Modified SR, one Verified SR, one Modified LLR, and the
+    """A repo with one Modified SR, one Approved SR, one Modified LLR, and the
     declared gate-policy `level` — the state an adjudication row's cheap
     outcome (no scope moved -> re-verify) acts on."""
     root = git_repo(tmp_path)
@@ -651,7 +651,7 @@ def _policy_repo(tmp_path, level):
     (req / "system-requirements.csv").write_text(
         SR_HEADER
         + 'SR-001,Adder,SN-001,"the text","why","ac",,C,Test,Modified\n'
-        + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Verified\n',
+        + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Approved\n',
         encoding="utf-8",
         newline="\n",
     )
@@ -681,7 +681,7 @@ def _declare_level(root, level):
     with gate.open("w", encoding="utf-8", newline="\n") as fh:
         fh.write(
             "# DERIVED GATE\n"
-            "# basis: SN=1 SR=2 LLR=1 TC=0 drafts=0 modified=2 uncovered=0 "
+            "# basis: SN=1 SR=2 LLR=1 TC=0 drafted=0 modified=2 uncovered=0 "
             "computed=DevBar-Tests ex-draft=DevBar-Tests phase=1 "
             "per-phase=1=DevBar-Tests stage=DevStg-Tests stage-ord=5 "
             "stage-of=8\n"
@@ -709,7 +709,7 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
 def test_below_the_human_level_the_flip_is_enacted(tmp_path):
     # The other arm: once the tier in process sits ABOVE the human's declared
     # ratification level, a recorded LLM verdict already carries ratification
-    # authority, so the helper flips Modified -> Verified — and ONLY the Status
+    # authority, so the helper flips Modified -> Approved — and ONLY the Status
     # cells move (the registries stay byte-identical elsewhere; a re-run is an
     # idempotent no-op). The fixture's rung is `DevStg-Tests`, which only level 4
     # holds (the dial's four notches are the SPINE tiers), so levels 0..2 are the
@@ -734,7 +734,7 @@ def test_below_the_human_level_the_flip_is_enacted(tmp_path):
         for b, a in zip(before_rows, after_rows):
             for col in b:
                 if b["SR-ID"] == "SR-001" and col == "Status":
-                    assert (b[col], a[col]) == ("Modified", "Verified")
+                    assert (b[col], a[col]) == ("Modified", "Approved")
                 else:
                     assert b[col] == a[col], (b["SR-ID"], col)
         llr = (root / "docs" / "requirements" / "low-level-requirements.csv").read_text(
@@ -759,7 +759,7 @@ SR_TOML = (
     "[requirement.SR-002]\n"
     'title = "Widget"\n'
     'sn_refs = ["SN-001"]\n'
-    'status = "Verified"\n'
+    'status = "Approved"\n'
 )
 
 
@@ -785,11 +785,11 @@ def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     assert len(b) == len(a)
     moved = [i for i in range(len(b)) if b[i] != a[i]]
     assert len(moved) == 1, [(b[i], a[i]) for i in moved]
-    assert (b[moved[0]], a[moved[0]]) == ('status = "Modified"', 'status = "Verified"')
+    assert (b[moved[0]], a[moved[0]]) == ('status = "Modified"', 'status = "Approved"')
     # The comments and the untouched row survived, which is the whole reason
     # this is a line rewrite rather than a re-emit.
     assert "# a comment BETWEEN rows" in after
-    assert 'status = "Verified"' in after.split("[requirement.SR-002]")[1]
+    assert 'status = "Approved"' in after.split("[requirement.SR-002]")[1]
     # Idempotent, and it never reaches past the row it was asked for.
     assert intake.flip_verified(root, ["SR-001"]) == ("flip", [], None)
 
@@ -829,7 +829,7 @@ def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
 
     after = sr_toml.read_text(encoding="utf-8")
     # The REAL cell moved...
-    assert tomllib.loads(after)["requirement"]["SR-001"]["status"] == "Verified"
+    assert tomllib.loads(after)["requirement"]["SR-001"]["status"] == "Approved"
     # ...and the prose that merely looks like registry syntax is untouched.
     assert "status = literal prose inside the requirement" in after
     assert "[requirement.SR-999] is not a table header either." in after
@@ -878,7 +878,7 @@ def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
     changed = [
         (b, a) for b, a in zip(before.split(b"\r\n"), after.split(b"\r\n")) if b != a
     ]
-    assert changed == [(b'status = "Modified"', b'status = "Verified"')]
+    assert changed == [(b'status = "Modified"', b'status = "Approved"')]
 
 
 def test_an_lf_registry_is_not_given_crlf_either(tmp_path):

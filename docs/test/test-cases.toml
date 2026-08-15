@@ -6,7 +6,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-001 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-002]
@@ -17,7 +17,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-002 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_registry_checks.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-003]
@@ -28,7 +28,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-003 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_registry_checks.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-004]
@@ -39,7 +39,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-004 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_ac_advisory.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-005]
@@ -50,7 +50,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-005 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_modules_registry.py;tests/test_procurement.py;tests/test_assets.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-006]
@@ -61,7 +61,7 @@ tier = "Full"
 expected = "Satisfies SR-006 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_check_harness.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-007]
@@ -72,7 +72,7 @@ tier = "Full"
 expected = "Satisfies SR-007 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_stack_profile.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-008]
@@ -83,7 +83,7 @@ tier = "Full"
 expected = "Satisfies the profile-refusal acceptance of SR-007 and SR-006 via the LLR-008 detail contract"
 automated = "Yes"
 evidence = "tests/test_stack_profile.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-009]
@@ -94,7 +94,7 @@ tier = "Full"
 expected = "Satisfies SR-009 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_profile.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-010]
@@ -105,7 +105,7 @@ tier = "Full"
 expected = "Satisfies SR-010 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_bootstrap.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-011]
@@ -116,7 +116,7 @@ tier = "Full"
 expected = "Satisfies SR-011 and SR-111 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_bootstrap.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-012]
@@ -127,7 +127,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-012 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_docs.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-013]
@@ -138,7 +138,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-013 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_flows.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-014]
@@ -149,7 +149,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-014 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_perf.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-015]
@@ -160,7 +160,7 @@ tier = "Full"
 expected = "Satisfies SR-015 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_perf_budgets.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-016]
@@ -171,7 +171,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-016 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_stubs.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-017]
@@ -182,7 +182,7 @@ tier = "Full"
 expected = "Satisfies SR-017 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_check_privacy.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-018]
@@ -193,7 +193,7 @@ tier = "Full"
 expected = "Satisfies SR-018 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_check_privacy.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-019]
@@ -204,7 +204,7 @@ tier = "Full"
 expected = "Satisfies SR-019 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_pre_commit_hook.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-020]
@@ -215,7 +215,7 @@ tier = "Full"
 expected = "Satisfies SR-020 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_pre_push_hook.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-021]
@@ -226,7 +226,7 @@ tier = "Full"
 expected = "Satisfies SR-019 and SR-020 AcceptanceCriteria via the LLR-021 interpreter-probe detail contract"
 automated = "Yes"
 evidence = "tests/test_pre_commit_hook.py;tests/test_pre_push_hook.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-022]
@@ -237,7 +237,7 @@ tier = "Full"
 expected = "Satisfies SR-022 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_check_vendored.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-023]
@@ -248,7 +248,7 @@ tier = "Full"
 expected = "A stale map fails --check and a current map passes; regeneration rewrites only the marker block."
 automated = "Yes"
 evidence = "tests/test_gen_arch_map.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-024]
@@ -259,7 +259,7 @@ tier = "Full"
 expected = "Satisfies SR-024 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_gen_cases.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-025]
@@ -270,7 +270,7 @@ tier = "Full"
 expected = "The regenerated INDEX.csv matches the current SKILL.md frontmatter and a drifted index is detected."
 automated = "Yes"
 evidence = "tests/test_skills_index.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-026]
@@ -281,7 +281,7 @@ tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py; tests/test_session_stdin.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-027]
@@ -292,7 +292,7 @@ tier = "Full"
 expected = "Satisfies SR-027 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-028]
@@ -303,7 +303,7 @@ tier = "Full"
 expected = "Satisfies SR-028 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-029]
@@ -314,7 +314,7 @@ tier = "Full"
 expected = "Satisfies SR-027 AcceptanceCriteria via the LLR-029 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-030]
@@ -325,7 +325,7 @@ tier = "Full"
 expected = "Satisfies SR-027 AcceptanceCriteria via the LLR-030 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-031]
@@ -347,7 +347,7 @@ tier = "Full"
 expected = "Satisfies SR-032 and SR-113 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_onboard_devsetup.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-033]
@@ -358,7 +358,7 @@ tier = "Full"
 expected = "Satisfies SR-033 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_check_perf.py::test_release_checklist_lists_perf_budgets"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-034]
@@ -380,7 +380,7 @@ tier = "Full"
 expected = "Satisfies SR-035 and SR-114 AcceptanceCriteria"
 automated = "Yes"
 evidence = ".github/workflows/test.yml"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-036]
@@ -391,7 +391,7 @@ tier = "Full"
 expected = "Satisfies SR-036 AcceptanceCriteria"
 automated = "No"
 evidence = "project-trajectory/ADOPTING.md"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-037]
@@ -402,7 +402,7 @@ tier = "Full"
 expected = """Valid graphs pass; malformed ids, unknown predecessors and cycles fail with named offenders; vacuous cases pass."""
 automated = "Yes"
 evidence = """tests/test_trajectory.py::test_valid_graph_passes; tests/test_trajectory.py::test_cycle_fails; tests/test_trajectory.py::test_unresolved_predecessor_fails; tests/test_trajectory.py::test_malformed_id_fails; tests/test_trajectory.py::test_absent_registry_is_vacuously_clean; tests/test_trajectory.py::test_placeholder_only_is_vacuously_clean; tests/test_trajectory.py::test_opt_out_silences_even_a_broken_registry"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-038]
@@ -413,7 +413,7 @@ tier = "Full"
 expected = "One self-contained root HTML file contains all core views and no external fetches."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory.py::test_generates_self_contained_dashboard; tests/test_traj_graph.py::test_dag_layers_by_dependency_rank"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-040]
@@ -424,7 +424,7 @@ tier = "Full"
 expected = "Satisfies SR-040 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-041]
@@ -435,7 +435,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-038 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_doc_refs.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-042]
@@ -446,7 +446,7 @@ tier = "Full"
 expected = "Typed linked concepts with resolvable graph links and derived Process Guides emit with sources unmodified; regeneration is byte-stable; --check trips on registry/doc edits, missing files and extras and recovers after regen; extras are pruned; placeholder-only is vacuous; off silences."
 automated = "Yes"
 evidence = "tests/test_gen_okf.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-043]
@@ -457,7 +457,7 @@ tier = "Full"
 expected = "Satisfies SR-043 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_subagent_gate.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-044]
@@ -468,7 +468,7 @@ tier = "Full"
 expected = """Integrity and unresolved links fail as declared; endpoint mismatch is advisory; absent registry is vacuous."""
 automated = "Yes"
 evidence = """tests/test_trace.py::test_if_tier_integrity; tests/test_components_registry.py::test_if_component_tag_must_resolve"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-046]
@@ -479,7 +479,7 @@ tier = "Full"
 expected = "Every routing rule is deterministic and legacy Provider registries remain compatible."
 automated = "Yes"
 evidence = """tests/test_agent_route.py::test_load_registry_parses_columns_not_the_id; tests/test_agent_route.py::test_select_honors_preference_order_and_tier; tests/test_agent_route.py::test_select_reviewer_heterogeneity_wins_over_phase_preference; tests/test_agent_route.py::test_select_tiers_up_never_down; tests/test_agent_route.py::test_family_column_and_env_parse; tests/test_agent_route.py::test_resolve_versionless_newest_skips_preview; tests/test_agent_route.py::test_acct2_row_cools_down_independently"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-045]
@@ -490,7 +490,7 @@ tier = "Full"
 expected = "Satisfies SR-112 AcceptanceCriteria (checked per-agent fan-out)"
 automated = "Yes"
 evidence = "tests/test_skills_sync.py::test_drifted_copy_fails_and_sync_restores"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-047]
@@ -501,7 +501,7 @@ tier = "Full"
 expected = "Satisfies SR-046 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_run_menu.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-048]
@@ -512,7 +512,7 @@ tier = "Full"
 expected = """Only Critique-scoped builds schedule a fresh heterogeneous critic and its prompt excludes self-assessment."""
 automated = "Yes"
 evidence = """tests/test_agent_loop_critique.py::test_critique_scheduled_when_critique_sr_in_scope; tests/test_agent_loop_critique.py::test_no_critique_when_no_critique_sr; tests/test_agent_loop_critique.py::test_critique_prompt_is_redacted_and_carries_rubric_and_intent"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-049]
@@ -523,7 +523,7 @@ tier = "Full"
 expected = """Oversized uncontained views warn/fail strict; valid containment clears; nested, small, absent, and opted-out behavior matches the rule."""
 automated = "Yes"
 evidence = """tests/test_trajectory_arch.py::test_top_view_over_bound_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_declaring_components_below_bound_clears_it; tests/test_trajectory_arch.py::test_nested_cmp_counts_only_at_top_level_root; tests/test_trajectory_arch.py::test_top_view_off_switch_silences; tests/test_trajectory_arch.py::test_ten_module_inventory_is_vacuous; tests/test_trajectory_arch.py::test_absent_inventory_top_view_is_vacuous"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-050]
@@ -534,7 +534,7 @@ tier = "Full"
 expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed DevBar-Reqs, decomposed-unverified DevBar-Tests - including a Modified SR, whose phase reads DevBar-Tests with children counted-but-never-capping - and verified DevBar-Release) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
 automated = "Yes"
 evidence = "tests/test_derive_gate.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-051]
@@ -546,7 +546,7 @@ parameters = "tests/test_gen_trajectory.py (the process-tab cases)"
 expected = """Process tab present with data-derived joins correct; links resolve; data-less render byte-identical; deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_process_tab_renders_three_panels_from_live_data tests/test_traj_panels.py::test_process_current_gate_highlight_follows_docs_gate tests/test_traj_panels.py::test_process_link_outs_prefer_the_scaffolded_docs tests/test_traj_panels.py::test_process_wi_counts_join_work_items tests/test_traj_panels.py::test_process_tab_omitted_and_byte_identical_without_gate tests/test_traj_panels.py::test_process_tab_is_byte_deterministic_and_check_stable tests/test_traj_panels.py::test_meta_process_tab_smoke"""
-status = "Verified"
+status = "Approved"
 phase = 2
 
 [test.TC-052]
@@ -557,7 +557,7 @@ tier = "Full"
 expected = """Tier thresholds, phase display, and deduplicated parent edges match the declared hierarchy."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_tiers_by_phase_above_threshold; tests/test_traj_views.py::test_when_view_parent_edge_is_deduped_union_of_child_edges; tests/test_traj_views.py::test_when_view_nests_workstream_tier_inside_a_phase; tests/test_traj_views.py::test_leaf_wi_block_surfaces_delivery_phase"""
-status = "Verified"
+status = "Approved"
 phase = 2
 
 [test.TC-055]
@@ -568,7 +568,7 @@ tier = "Full"
 expected = """APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set (its header states the live set; each retired anchor carries its retirement and binding in place): a verdict cites only anchors the rubric lists live and never a retired one, and a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. (The live/retired enumeration formerly copied here was the third home of that fact and is deliberately not restated.)"""
 automated = "No"
 evidence = "docs/reviews/074-CRITIQUE.md"
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-056]
@@ -580,7 +580,7 @@ parameters = "tests/test_gen_trajectory.py (the process-loop cases)"
 expected = """Both loops are explicit closed cycles (data-cycle=closed on each hoop disc); the LLM_Agent hub renders exactly once as the shared central junction of both hoops; every loop edge is directional (one floparrow marker each), 6 for the 5-stage intake loop + 5 for the 4-stage decision loop = 11; loop A stages = [intake -> triage-to-WI -> scheduler-derived ready frontier -> build/review -> merge]; loop B stages = [open-items population incl. gate-ratification -> human review/ruling -> log Decisions -> merge], each card keyed to its loop (data-node a-*/b-*); all stage links resolve; data-less render byte-identical; deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_process_tab_renders_the_station_cycle tests/test_traj_panels.py::test_station_outcomes_derive_from_the_integrator tests/test_traj_panels.py::test_station_slot_is_the_serial_waist tests/test_traj_panels.py::test_station_refresh_pins_the_bar_attestation tests/test_traj_panels.py::test_station_barrier_and_admission_arms_pin_to_the_dispatcher tests/test_traj_panels.py::test_station_intake_arm_pins_to_the_intake_mint tests/test_traj_panels.py::test_station_links_resolve tests/test_traj_panels.py::test_station_byte_identical_without_data"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-057]
@@ -591,7 +591,7 @@ tier = "Full"
 expected = """Exactly one parent->child arrow per containment edge; each tier column width <= the declared bound MAX_TIER_COL (a named constant = the widest member label + a fixed padding - a declared value, not an adjective); the persistent-highlight attribute is present and keyed to the last-hovered node id (no flash-on-exit); deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_decomposition_one_arrow_per_containment_edge tests/test_traj_views.py::test_tier_column_honors_declared_width_bound tests/test_traj_views.py::test_persistent_hover_highlight_keyed_to_last_node"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-058]
@@ -602,7 +602,7 @@ tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-058 and LLR-123 detail contracts"
 automated = "Yes"
 evidence = "tests/test_schedule.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-059]
@@ -613,7 +613,7 @@ tier = "Full"
 expected = "Each input yields one deterministic class/reason set and all consumers agree."
 automated = "Yes"
 evidence = """tests/test_schedule.py::test_classify_every_declared_value_is_deterministic; tests/test_schedule.py::test_missing_and_unknown_safetyclass_fail_closed_only_for_that_wi; tests/test_schedule.py::test_cli_ready_json_matches_library"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-060]
@@ -624,7 +624,7 @@ tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria, and SR-156 AcceptanceCriteria via the LLR-124 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py; tests/test_gen_trajectory.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-061]
@@ -635,7 +635,7 @@ tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria via the LLR-061 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop_worker.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-067]
@@ -646,7 +646,7 @@ tier = "Smoke"
 expected = "Uncovered cross-component edges warn/fail strict; covered and vacuous cases stay silent."
 automated = "Yes"
 evidence = """tests/test_trajectory_arch.py::test_cross_cmp_import_without_seam_warns_plain_fails_strict; tests/test_trajectory_arch.py::test_cross_cmp_import_with_declared_seam_is_silent; tests/test_trajectory_arch.py::test_cross_cmp_seam_covers_either_direction; tests/test_trajectory_arch.py::test_components_check_off_silences_cross_cmp"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-076]
@@ -657,7 +657,7 @@ tier = "Full"
 expected = """True-plan agreement selects and files; runtime nonresponse falls back once; position bias, missing rubric, or no route pages."""
 automated = "Yes"
 evidence = """tests/test_dual_plan_round.py::test_full_round_unattended_selects_and_files; tests/test_dual_plan_round.py::test_arbiter_disagreement_pages; tests/test_dual_plan_round.py::test_missing_rubric_pages_honestly; tests/test_dual_plan_routing.py"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-075]
@@ -668,7 +668,7 @@ tier = "Smoke"
 expected = """Hand-edited done ids warn/fail by mode; generated/open/unknown/vacuous cases stay silent."""
 automated = "Yes"
 evidence = """tests/test_trajectory.py::test_clean_status_has_no_forward_only_finding; tests/test_trajectory.py::test_done_id_in_status_warns_plain_errors_strict; tests/test_trajectory.py::test_open_ids_in_status_are_not_a_finding; tests/test_trajectory.py::test_generated_marker_stands_the_rule_down; tests/test_trajectory.py::test_forward_only_opt_out_silences; tests/test_trajectory.py::test_forward_only_vacuous_on_placeholder_registry; tests/test_trajectory.py::test_forward_only_unit_over_the_real_meta_repo"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-074]
@@ -679,7 +679,7 @@ tier = "Smoke"
 expected = "Artifacts and queued rows are stable and registry-valid with prior content preserved."
 automated = "Yes"
 evidence = "tests/test_plan_artifacts.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-073]
@@ -690,7 +690,7 @@ tier = "Smoke"
 expected = "Each CLI result becomes the correct typed round outcome and captured report payload."
 automated = "Yes"
 evidence = "tests/test_plan_coverage_step.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-072]
@@ -701,7 +701,7 @@ tier = "Smoke"
 expected = "Fresh-session selection and every PAIR reason/fallback match the declared branch."
 automated = "Yes"
 evidence = """tests/test_agent_route.py::test_planner_pair_two_family_branch; tests/test_agent_route.py::test_planner_pair_one_family_pool_degrades_at_selection; tests/test_agent_route.py::test_planner_pair_single_row_pool_yields_two_fresh_same_id_sessions; tests/test_agent_route.py::test_planner_pair_no_model_available; tests/test_agent_route.py::test_planner_fallback_runtime_nonresponse_branch; tests/test_agent_route.py::test_planner_fallback_no_responding_family"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-071]
@@ -712,7 +712,7 @@ tier = "Smoke"
 expected = """Only SR/IF content appears; sentinels do not; invalid slots fail; override/fallback and hat vocabulary hold."""
 automated = "Yes"
 evidence = "tests/test_plan_briefs.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-070]
@@ -723,7 +723,7 @@ tier = "Smoke"
 expected = """Legal paths select; illegal repeats raise; unstable/exhausted paths page; state round-trips."""
 automated = "Yes"
 evidence = "tests/test_plan_round.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-069]
@@ -734,7 +734,7 @@ tier = "Smoke"
 expected = """Clean plans emit pairwise coverage; findings exit 1; malformed inputs exit 2; absent registries note without failure."""
 automated = "Yes"
 evidence = "tests/test_plan_coverage.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-068]
@@ -745,7 +745,7 @@ tier = "Smoke"
 expected = """Unknown or unjustified seams warn/fail strict; resolvable, justified, intra-module, and unarmed cases pass."""
 automated = "Yes"
 evidence = """tests/test_trajectory_arch.py::test_spec_interfaces_unarmed_is_vacuous; tests/test_trajectory_arch.py::test_spec_interfaces_resolvable_passes; tests/test_trajectory_arch.py::test_spec_interfaces_unresolvable_warns_then_errors_under_strict; tests/test_trajectory_arch.py::test_spec_interfaces_proposed_needs_rationale; tests/test_trajectory_arch.py::test_spec_interfaces_intra_module_escape_passes"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-077]
@@ -756,7 +756,7 @@ tier = "Smoke"
 expected = """Both coherence mismatches fail every run and empty/dangling open specs fail strict; compliant rows pass."""
 automated = "Yes"
 evidence = """tests/test_trajectory.py::test_ra_open_wi_with_deliverable_fails_plain; tests/test_trajectory.py::test_ra_done_wi_with_empty_deliverable_fails_plain; tests/test_trajectory.py::test_re_empty_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_re_dangling_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_compliant_registry_and_status_passes_strict"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-078]
@@ -767,7 +767,7 @@ tier = "Full"
 expected = """Each conditional view appears only with its source and source-less generation is byte-identical."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_view_renders_from_the_module_map; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical; tests/test_traj_panels.py::test_knowledge_tab_renders_from_bundle; tests/test_traj_panels.py::test_knowledge_tab_omitted_and_byte_identical_without_bundle"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-079]
@@ -778,7 +778,7 @@ tier = "Full"
 expected = "Repeated generation is byte-identical with mobile CSS present; stale or missing output fails --check, and as-of behavior is stable in and outside Git."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory.py::test_mobile_responsive_shell; tests/test_gen_trajectory.py::test_generation_is_deterministic; tests/test_gen_trajectory.py::test_check_passes_fresh_and_trips_stale; tests/test_gen_trajectory.py::test_check_missing_html_is_stale; tests/test_traj_parse.py::test_asof_stamp_from_git_and_excluded_from_check; tests/test_traj_parse.py::test_no_git_means_no_stamp_and_stays_deterministic"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-080]
@@ -789,7 +789,7 @@ tier = "Full"
 expected = """Every declared coverage gap warns without failing and each suppression/vacuity case stays silent."""
 automated = "Yes"
 evidence = """tests/test_trajectory_arch.py::test_interface_coverage_warns; tests/test_trajectory_arch.py::test_uncovered_direction_warns; tests/test_trajectory_arch.py::test_source_sink_marker_suppresses_direction_warn; tests/test_trajectory_arch.py::test_seam_tc_citation_warn; tests/test_trajectory_arch.py::test_contracts_docstring_citation_warns; tests/test_trajectory_arch.py::test_interface_warns_never_fail_strict; tests/test_trajectory_arch.py::test_interface_check_off_silences"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-081]
@@ -800,7 +800,7 @@ tier = "Full"
 expected = """Seams render as labeled edges in both views; absent seams retain fallback; output is deterministic."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_graph_renders_seams; tests/test_traj_views.py::test_how_sw_stays_a_table_without_seams; tests/test_gen_arch_map.py::test_contracts_and_if_edges"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-082]
@@ -811,7 +811,7 @@ tier = "Full"
 expected = """Managed scheduling matches policy with redacted logged routing; bad prompts fail preflight; unmanaged mode stays legacy."""
 automated = "Yes"
 evidence = """tests/test_agent_loop_review.py::test_review_policy_1_dispatches_one_heterogeneous_reviewer; tests/test_agent_loop_review.py::test_review_policy_2_schedules_two_providers; tests/test_agent_loop_review.py::test_review_policy_0_schedules_no_reviewer; tests/test_agent_loop_review.py::test_reviewer_prompt_is_redacted_by_construction; tests/test_agent_loop_review.py::test_prompt_map_missing_file_fails_preflight; tests/test_agent_loop_review.py::test_absent_enable_list_keeps_legacy_behavior"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-083]
@@ -822,7 +822,7 @@ tier = "Full"
 expected = """Scores and decay match fixtures; all tripwires fire as gates; length is never positive; persistence is stable."""
 automated = "Yes"
 evidence = "tests/test_score_reviews.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-084]
@@ -855,7 +855,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-083 and LLR-084 (parent SR-157)"
 automated = "Yes"
 evidence = """tests/test_trace.py::test_critique_verification_value; tests/test_trajectory_staged.py::test_critique_ratchet_warns_and_holds; tests/test_trajectory_staged.py::test_critique_ratchet_silent_when_verdict_approves"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-087]
@@ -866,7 +866,7 @@ tier = "Full"
 expected = """Contained views nest and deduplicate crossing seams; no containment stays byte-identical and deterministic."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_containerizes_when_components_contain_modules; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical; tests/test_traj_views.py::test_nested_components_render_inside_their_parent"""
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-088]
@@ -877,7 +877,7 @@ tier = "Full"
 expected = """Containment creates bounded component tiers that descend to modules; uncontained input remains flat."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_collapses_above_component_threshold; tests/test_traj_views.py::test_tier_column_honors_declared_width_bound; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical"""
-status = "Verified"
+status = "Approved"
 phase = 2
 
 [test.TC-089]
@@ -888,7 +888,7 @@ tier = "Full"
 expected = """Visible endpoints use input/output ports and crossing seams aggregate without duplicates."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_seams_wire_to_block_ports; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges"""
-status = "Verified"
+status = "Approved"
 phase = 2
 
 [test.TC-090]
@@ -899,7 +899,7 @@ tier = "Full"
 expected = """Each input descends one layer and breadcrumb restores the parent in the self-contained render."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_double_click_descends_a_layer; tests/test_traj_views.py::test_when_view_breadcrumb_restores_parent; tests/test_traj_render.py::test_a1_drill_leaf_blocks_are_keyboard_focusable"""
-status = "Verified"
+status = "Approved"
 phase = 2
 
 [test.TC-091]
@@ -910,7 +910,7 @@ tier = "Full"
 expected = """Only invalid rows fail closed with reason codes and disjoint valid rows remain schedulable."""
 automated = "Yes"
 evidence = """tests/test_schedule.py::test_missing_and_unknown_safetyclass_fail_closed_only_for_that_wi; tests/test_schedule.py::test_ordinary_declaration_with_structural_spine_fails_closed; tests/test_schedule.py::test_critique_is_parallel_and_ranks_ahead_of_ordinary; tests/test_schedule.py::test_planmode_dual_contradicting_safetyclass_quarantines"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-097]
@@ -921,7 +921,7 @@ tier = "Full"
 expected = "Satisfies SR-155 and SR-148 AcceptanceCriteria via the LLR-095 and LLR-131 detail contracts"
 automated = "Yes"
 evidence = """tests/test_dual_plan_round.py::test_worker_path_refuses_a_dual_wi; tests/test_dual_plan_round.py::test_flag_on_a_non_dual_wi_is_refused; tests/test_schedule.py"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-098]
@@ -943,7 +943,7 @@ tier = "Smoke"
 expected = """Done-with-SpecRef and orphan-spec cases WARN plain (exit 0) and fail --strict (exit 1); the deferred-cited doc and README/-000 files stay clean under --strict."""
 automated = "Yes"
 evidence = """tests/test_trajectory.py::test_rf_done_wi_with_specref_warns_plain_fails_strict; tests/test_trajectory.py::test_rf_orphan_live_spec_warns_plain_fails_strict; tests/test_trajectory.py::test_rf_shared_doc_lives_while_any_open_citer_remains; tests/test_trajectory.py::test_rf_scaffold_boilerplate_excluded"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-101]
@@ -954,7 +954,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-098 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_coverage.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-102]
@@ -966,7 +966,7 @@ parameters = "tests/test_gen_trajectory.py fixtures (tiered_repo / _flat_bundle)
 expected = """Above the threshold the view is start-collapsed; at or below it renders flat. Both directions asserted. This widens to the landing What icicle: above 3 SNs it is a start-collapsed SN drill with NO leaf cell in the opening layer; at or below 3 it stays flat and byte-identical."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_knowledge_graph_collapses_above_type_threshold tests/test_traj_views.py::test_how_sw_collapses_above_component_threshold tests/test_traj_views.py::test_t2_what_icicle_starts_collapsed_above_the_sn_threshold tests/test_traj_views.py::test_t2_small_spine_keeps_the_flat_icicle"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-103]
@@ -978,7 +978,7 @@ parameters = "tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)"
 expected = "Breadcrumb nav present with a root crumb; crumb click restores the ancestor view."
 automated = "Yes"
 evidence = "tests/test_traj_views.py::test_when_view_breadcrumb_restores_parent"
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-104]
@@ -990,7 +990,7 @@ parameters = "tests/test_gen_trajectory.py fixture tiered_repo(TIER_UNION_WIS)"
 expected = """On the shipped artifact: 44 svg containers, 0 role=img, 0 focusable descendants inside a children-presentational subtree, 1171 focusables total (non-vacuous). Asserts NOT-children-presentational rather than role=group specifically, so dropping the role or using graphics-document would also pass - the test must not pin an implementation LLR-101 leaves open."""
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_a2_no_focusable_node_sits_inside_a_children_presentational_svg tests/test_traj_render.py::test_a2_role_predicate_counts_native_links_as_focusable tests/test_traj_render.py::test_a2_the_repos_own_shipped_dashboard_holds_the_invariant tests/test_traj_render.py::test_svg_nodes_carry_escaped_title_tooltips"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-105]
@@ -1002,7 +1002,7 @@ parameters = "tests/test_gen_trajectory.py (pure constant math; no fixture repo 
 expected = """No cross-vocabulary hex collision found; no phase equals --accent; minimum pairwise deltaE >= 15 (achieved 18.1)."""
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_u5_no_hex_reused_across_unrelated_colour_vocabularies tests/test_traj_render.py::test_u5_phase_accents_clear_a_pairwise_deltae_floor"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-106]
@@ -1014,7 +1014,7 @@ parameters = "tests/test_gen_trajectory.py fixtures (tiered_repo / _flat_bundle)
 expected = """Ring token and legend markup identical in shape across every emitter; no retired span.ph/phaselegend selector remains."""
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_u3_ring_token_is_the_one_highlight_idiom_across_every_emitter tests/test_traj_render.py::test_u3_phase_legend_renders_through_the_shared_legend_component"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-107]
@@ -1026,7 +1026,7 @@ parameters = "tests/test_gen_trajectory.py (with_gate DevBar-Tests fixture)"
 expected = """No ad-hoc px font-size remains on .stgt/.stgn/.hooplab/.hubname; all four resolve to a declared CSS custom property."""
 automated = "Yes"
 evidence = "tests/test_traj_render.py::test_u1_process_tab_type_scale_matches_the_shared_tokens"
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-108]
@@ -1038,7 +1038,7 @@ parameters = """tests/test_gen_trajectory.py (constant math for (a); (b) also ge
 expected = """Every declared fill clears >= 3:1 against its computed ring ink; worst case observed ~4.58:1. Half (b) was proven against the pre-fix code first, failing at the critique's measured 1.0596:1 (#4f46e5 on #0369a1)."""
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_a4_ring_ink_clears_the_3to1_floor_against_every_node_fill;tests/test_traj_render.py::test_t5_containment_arrow_clears_the_3to1_floor_against_every_host_fill"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-109]
@@ -1050,7 +1050,7 @@ parameters = """tests/test_gen_trajectory.py - the shipped PROJECT_STATE.html pl
 expected = """Every hex in every rendered document resolves to a declared vocabulary member or a theme token; no emitter paints a concept with a literal."""
 automated = "Yes"
 evidence = """tests/test_traj_render_sweeps.py::test_u2_every_concept_fill_comes_from_one_declared_vocabulary"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-110]
@@ -1062,7 +1062,7 @@ parameters = """tests/test_gen_trajectory.py - the same six-fixture union as TC-
 expected = """All four node kinds render; every node is focusable the shared way and addressed through exactly one declared attribute vocabulary."""
 automated = "Yes"
 evidence = """tests/test_traj_render_sweeps.py::test_u4_one_interaction_idiom_per_node_role_across_every_emitter"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-113]
@@ -1074,7 +1074,7 @@ parameters = """tests/test_gen_trajectory.py - the seven-fixture emitter sweep. 
 expected = """Every control is named, no name is a bare id, and no two navigation landmarks share a name."""
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_a2_every_control_name_is_present_and_not_a_bare_id tests/test_traj_render.py::test_a2_landmark_names_are_distinct"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-114]
@@ -1086,7 +1086,7 @@ parameters = "tests/test_gen_trajectory.py (module constants only)"
 expected = "No pair below its floor; closest surviving pair 12.5 (Process Guide vs phase[2])."
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_u5_pairwise_deltae_holds_within_and_across_every_vocabulary"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-115]
@@ -1098,7 +1098,7 @@ parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
 expected = "No raw weight/alpha/corner literal and no undeclared rx value survives."
 automated = "Yes"
 evidence = """tests/test_traj_render.py::test_u3_every_weight_value_resolves_to_a_declared_token tests/test_traj_render.py::test_u3_svg_corner_radii_match_the_declared_scale"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-116]
@@ -1110,7 +1110,7 @@ parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
 expected = "Zero raw font-size literals; every size names a declared step."
 automated = "Yes"
 evidence = "tests/test_traj_render.py::test_u1_every_font_size_resolves_to_a_declared_scale_step"
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-117]
@@ -1122,7 +1122,7 @@ parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
 expected = """Every wired control is keyboard-focusable; no unclassified, stale, or non-literal selector; no positive tabindex; every control wiring loop that attaches click/dblclick attaches focus or keydown beside it. Verified to fail against a control losing its tabindex, a newly wired selector (single- AND double-quoted), a positive tabindex, and a wiring loop stripped of its focus path."""
 automated = "Yes"
 evidence = """tests/test_traj_render_sweeps.py::test_a1_every_wired_interaction_selector_matches_only_focusable_elements tests/test_traj_render_sweeps.py::test_a1_focus_walk_follows_document_order tests/test_traj_render_sweeps.py::test_a1_every_wired_control_pairs_click_with_focus_or_keydown"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-118]
@@ -1134,7 +1134,7 @@ parameters = "tests/test_gen_trajectory.py - the seven-fixture emitter sweep"
 expected = """Every painted vocabulary member is explained in words in its own document; the tier legend is a TIER_FILL bijection (dict-derived, so a dropped member fails); the emitted JS tierColor/statusColor maps byte-match the Python palettes in every render; the CSS status tokens match STATUS_FILL and stay theme-invariant. Verified to fail against the stale hardcoded TC swatch, a legend entry going missing (the legend-less flat seam graph was caught live on this test's first run), the stale JS map (caught live on the committed artifact before its fix), a drifted --done token, and an emitter dropping a tier member."""
 automated = "Yes"
 evidence = """tests/test_traj_render_sweeps.py::test_a3_every_painted_vocabulary_member_is_explained_in_words tests/test_traj_render_sweeps.py::test_a3_icicle_tier_legend_swatches_are_the_painted_tier_palette tests/test_traj_render_sweeps.py::test_a3_js_detail_maps_mirror_the_declared_palettes tests/test_traj_render_sweeps.py::test_a3_css_status_tokens_mirror_status_fill"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-119]
@@ -1146,7 +1146,7 @@ parameters = """tests/test_gen_trajectory.py (constant math + one with_gate rend
 expected = """Vocabulary set closed at five; every member clears both floors; every CSS fill token classified and floor-checked. Verified to fail against a rogue sixth vocabulary (flat AND nested shapes), an under-floor member (2.54:1), and an unclassified fill token."""
 automated = "Yes"
 evidence = """tests/test_traj_render_sweeps.py::test_a4_the_vocabulary_sweep_is_closed_and_every_member_clears_the_floors tests/test_traj_render_sweeps.py::test_a4_every_css_fill_token_is_classified_and_floor_checked tests/test_traj_render.py::test_a4_node_fills_meet_the_wcag_floor tests/test_traj_render.py::test_a4_every_emitted_dashboard_contrast_pair_meets_floor tests/test_traj_panels.py::test_a4_no_sub_label_opacity_discount tests/test_traj_panels.py::test_a4_theme_token_fills_behind_white_text_meet_the_floor tests/test_traj_panels.py::test_a4_slot_fill_is_not_the_page_accent"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-120]
@@ -1158,7 +1158,7 @@ parameters = """tests/test_gen_trajectory.py (T1_ALL_QUEUED fixture + ARCH_MD mo
 expected = """Each task's entry point is present, labelled, and <= 1 switch from the landing view; the next-work surface is non-empty under a zero-active registry. Verified to fail against the next-work surface dropped and against its label emitted empty (guard-bite; source restored byte-identical)."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_t1_three_core_reading_tasks_reach_labelled_entry_points tests/test_traj_panels.py::test_t1_next_work_names_the_ready_frontier_with_zero_active tests/test_traj_panels.py::test_t1_next_work_annotates_the_blocking_predecessor tests/test_traj_panels.py::test_t1_next_work_says_all_done_when_drained"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-121]
@@ -1170,7 +1170,7 @@ parameters = "tests/test_gen_trajectory.py (8-SN fixture)"
 expected = """Every emitted svg scales to fit its container; zero svgs keep the pre-fix fixed-width shape; the shrink floor is pinned to the one declared constant rather than re-hardcoded in the test."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_t7_every_emitted_svg_scales_to_fit tests/test_traj_views.py::test_t7_shrink_floor_keeps_labels_legible"""
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-122]
@@ -1182,7 +1182,7 @@ parameters = """tests/test_gen_trajectory.py (_every_emitter_document sweep: shi
 expected = """One theme mechanism at :root; zero mixed-family pairs across 900+ classified node pairs and 12 CSS text fills; both families actually occur among the swept rect fills, so the sweep is not vacuous. Guard proven to bite on four independent mutations, each caught by its own assertion: dropping --text from the dark block (half-flip), a phase block's ink switched to var(--text) over its fixed fill, #ice .cell text switched to var(--text) over its invariant host, and a second prefers-color-scheme block scoped to .detail. Source restored byte-identical after each."""
 automated = "Yes"
 evidence = "tests/test_traj_render.py::test_t6_theme_lock_has_one_mechanism_and_no_mixed_family_pair"
-status = "Verified"
+status = "Approved"
 phase = 3
 
 [test.TC-123]
@@ -1194,7 +1194,7 @@ parameters = "tests/test_gen_open_items.py (temp repos; one git-backed fixture f
 expected = """Every assertion holds, each with its negative half. Three defects were caught by these guards during the build and fixed rather than accommodated: a missing UTF-8 console guard, a changed-percent diluted by whitespace tokens, and bootstrap leaving __pycache__ in a fresh scaffold once a generator imported its siblings."""
 automated = "Yes"
 evidence = "tests/test_gen_open_items.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-124]
@@ -1206,7 +1206,7 @@ parameters = """tests/test_gen_trajectory.py (_spine_with_a_long_need: 8 SNs, SN
 expected = """Zero label lines outside their own block across every drill block of the emitted document; the sentence-length need present among them. Guard proven to bite on the original defect: reverted to the pre-fix emitter it fails naming SN-001's ink at x=-241..449 in a block spanning x=18..190, and the fit-path and helper guards fail with it, while the two-line-grid guard correctly passes both before and after (it guards over-application, not the defect). Source restored byte-identical. Second half: the 109-character clause renders whole; past the bound the disclosure is present, operable and lossless. Both proven to bite on the pre-fix emitter, which renders the critic's exact string 'tiering expo…' and has no _NEXT_WORK_TITLE bound at all. Source restored byte-identical."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_t4_no_block_label_renders_outside_its_own_box tests/test_traj_views.py::test_t4_a_sentence_length_sub_label_wraps_and_ellipsizes tests/test_traj_views.py::test_t4_a_short_sub_label_keeps_the_two_line_grid tests/test_traj_views.py::test_fit_lines_breaks_on_words_then_ellipsizes tests/test_traj_panels.py::test_t4_next_work_title_is_not_budgeted_by_character_count tests/test_traj_panels.py::test_t4_an_over_bound_next_work_title_discloses_operably"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-125]
@@ -1218,7 +1218,7 @@ parameters = "tests/test_gen_trajectory.py (_every_emitter_document: shipped + 7
 expected = """Zero wires through a non-endpoint node box; the sweep non-vacuous (wires present, at least one detoured). Guard proven to bite: with the router's blocked-wire branch disabled so every wire keeps its direct cubic, it fails naming a knowledge-graph wire cutting the 'Low-Level Requirement' node at (330,18,96,46). Source restored byte-identical."""
 automated = "Yes"
 evidence = "tests/test_traj_graph.py::test_t8_no_wire_passes_through_an_unrelated_node_box"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-126]
@@ -1229,7 +1229,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-133 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_spine_row_states_the_system_not_its_own_history"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-127]
@@ -1240,7 +1240,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-134 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_requirement_states_one_testable_obligation"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-128]
@@ -1251,7 +1251,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-135 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_child_that_rewords_its_parent_warns_but_never_gates"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-129]
@@ -1262,7 +1262,7 @@ tier = "Full"
 expected = "Satisfies SR-129 AcceptanceCriteria"
 automated = "Yes"
 evidence = """tests/test_wi_convert.py::test_the_live_registry_round_trips_in_whichever_home_is_authoritative"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-130]
@@ -1273,7 +1273,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-137 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py::test_fragments_compile_in_git_order_and_are_deleted"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-131]
@@ -1284,7 +1284,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-138 detail contract"
 automated = "Yes"
 evidence = """tests/test_agent_loop_policy.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop_policy.py::test_legacy_pause_file_no_longer_pauses"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-132]
@@ -1295,7 +1295,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-134]
@@ -1306,7 +1306,7 @@ tier = "Full"
 expected = "Satisfies the work-branch lane-skip acceptance of SR-006 via the LLR-141 detail contract"
 automated = "Yes"
 evidence = "tests/test_check_lane.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-135]
@@ -1317,7 +1317,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
 evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-136]
@@ -1328,7 +1328,7 @@ tier = "Full"
 expected = "The pending block renders 'Paused since <date> - <reason>' with the declared date verbatim (no clock), omits the stamp when since is empty, renders the pinned fail-closed placeholder on malformation, and clears when the pause file is deleted."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory_pending.py::test_tracked_pause_projects_reason_and_declared_since; tests/test_gen_trajectory_pending.py::test_pause_malformed_text_matches_the_coordinator_reader"""
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-137]
@@ -1339,7 +1339,7 @@ tier = "Full"
 expected = "Satisfies SR-026 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_dispatch.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-138]
@@ -1361,7 +1361,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-145 detail contract"
 automated = "Yes"
 evidence = "tests/test_spec_move.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-140]
@@ -1372,7 +1372,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-146 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_figures.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-141]
@@ -1383,7 +1383,7 @@ tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_derive_gate.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-142]
@@ -1394,7 +1394,7 @@ tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_derive_gate.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-143]
@@ -1405,7 +1405,7 @@ tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-149 admission-table detail contract"
 automated = "Yes"
 evidence = "tests/test_dispatch_admission.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-144]
@@ -1416,7 +1416,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
 evidence = "tests/test_dispatch.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-145]
@@ -1427,7 +1427,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-146]
@@ -1438,7 +1438,7 @@ tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
 automated = "Yes"
 evidence = "tests/test_schedule.py; tests/test_integrate.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-147]
@@ -1460,7 +1460,7 @@ tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py; tests/test_dispatch.py"
-status = "Verified"
+status = "Approved"
 phase = 4
 
 [test.TC-149]
@@ -1471,7 +1471,7 @@ tier = "Full"
 expected = "Satisfies the shipped-tier clause of SR-034 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_shipped_tier.py"
-status = "Verified"
+status = "Approved"
 phase = 1
 
 [test.TC-150]
@@ -1482,7 +1482,7 @@ tier = "Full"
 expected = "Satisfies SR-137 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_process_config.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-151]
@@ -1493,7 +1493,7 @@ tier = "Smoke"
 expected = "Satisfies SR-139 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_ratification_level.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-152]
@@ -1504,7 +1504,7 @@ tier = "Full"
 expected = "Satisfies SR-138 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_process_config.py;tests/test_rule_sync.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-153]
@@ -1515,7 +1515,7 @@ tier = "Smoke"
 expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-158 detail contract"
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-154]
@@ -1526,7 +1526,7 @@ tier = "Smoke"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-159 detail contract"
 automated = "Yes"
 evidence = "tests/test_loop_order.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-155]
@@ -1537,7 +1537,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-160 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_loop_order.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-156]
@@ -1548,7 +1548,7 @@ tier = "Full"
 expected = "Satisfies SR-144 AcceptanceCriteria via the LLR-161 detail contract"
 automated = "Yes"
 evidence = "tests/test_handback.py;tests/test_intake.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-157]
@@ -1559,7 +1559,7 @@ tier = "Smoke"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_prompts.py;tests/test_routing_and_prompts.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-158]
@@ -1570,7 +1570,7 @@ tier = "Smoke"
 expected = """A live id above its mark, a missing space, a malformed line, an absent file, a lowered mark and a hand-raised mark each fail loud; headroom left by a deleted row stays legal; the mint returns the next unused id after a deletion and refuses without a mark."""
 automated = "Yes"
 evidence = """tests/test_id_watermark.py::test_the_rules_are_actually_WIRED_INTO_the_integrity_floor; tests/test_id_watermark.py::test_the_mint_does_not_reissue_a_deleted_id"""
-status = "Draft"
+status = "Drafted"
 phase = 4
 
 [test.TC-159]
@@ -1581,7 +1581,7 @@ tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_migrate_carrier.py"
-status = "Planned"
+status = "Approved"
 phase = 5
 
 [test.TC-160]
@@ -1592,7 +1592,7 @@ tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_trajectory_staged.py::test_baseline_read_survives_the_carrier_cutover"
-status = "Planned"
+status = "Approved"
 phase = 5
 
 [test.TC-161]
@@ -1603,7 +1603,7 @@ tier = "Smoke"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_adjudicate_brief.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-162]
@@ -1614,7 +1614,7 @@ tier = "Smoke"
 expected = """Malformed refuses as HatsError, absent reads opt-out; selection honors the closed grammar with undeclared-field silence; the composed block carries every applicable hat's question, no heading injection, and the template/instance structure pin holds."""
 automated = "Yes"
 evidence = "tests/test_hats.py"
-status = "Draft"
+status = "Drafted"
 phase = 4
 
 [test.TC-163]
@@ -1625,7 +1625,7 @@ tier = "Smoke"
 expected = """The live file is reported with its path and line; the default severity exits 0 and --strict exits 1 on the same finding; no carve-out is ever reported, at any depth; a marked line is skipped while its unmarked neighbour is not, and a marked file is skipped whole; the surviving sense of 'gate' is clean; and the meta-repo itself is clean at the ERROR severity, so the assertions cannot pass against fixtures while the conversion rots."""
 automated = "Yes"
 evidence = "tests/test_stage_ladder.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-164]
@@ -1636,7 +1636,7 @@ tier = "Smoke"
 expected = """The dirty cell reports the row id AND each offending phrase, one finding per token (the path's inner filename is not a second finding), exit 0 by default and 1 under --strict; the exception-list entry silences exactly its token while the malformed entry silences nothing; exempt cells, either/or pairs, SN cross-references and example rows report nothing; a one-level dot-free token reports as a path only when it resolves on disk, and a URL's path-shaped tail never reports in either form while its cell-mate genuine path, a delimiter-abutting neighbour token and a single-label www.-prefixed local path all still do; a sentence-final path is named without its trailing full stop — so its reviewed exception matches — and a sentence-final either/or pair stays exempt; a registry that is present but yields zero scannable need cells reports as vacuous (strict exit 1) while an absent registry is a clean skip and a -000-only registry stays clean; and the live registry is clean at zero findings, so the assertions cannot pass against fixtures while the tier dirties."""
 automated = "Yes"
 evidence = "tests/test_check_need_form.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-165]
@@ -1647,7 +1647,7 @@ tier = "Full"
 expected = "Satisfies SR-035 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_bootstrap.py (to be extended at implementation)"
-status = "Draft"
+status = "Drafted"
 phase = 1
 
 [test.TC-166]
@@ -1658,7 +1658,7 @@ tier = "Full"
 expected = "Satisfies SR-165 AcceptanceCriteria via the LLR-172 detail contract"
 automated = "Yes"
 evidence = "tests/test_components_registry.py (to be extended at implementation)"
-status = "Draft"
+status = "Drafted"
 phase = 5
 
 [test.TC-167]
@@ -1669,5 +1669,5 @@ tier = "Full"
 expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, and IF-125/126 are uncited today"
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
-status = "Draft"
+status = "Drafted"
 phase = 5
