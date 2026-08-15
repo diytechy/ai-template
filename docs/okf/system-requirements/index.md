@@ -75,3 +75,4 @@ resource: "generated"
 | [SR-163](SR-163.md) | Every shipped file maps to a stakeholder outcome |
 | [SR-164](SR-164.md) | Stakeholder-need scope is a declared, checked value |
 | [SR-165](SR-165.md) | The component partition carries a reproducible derivation record |
+| [SR-166](SR-166.md) | The delivered package is complete and consumable at its declared manifest |
