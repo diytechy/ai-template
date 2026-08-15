@@ -91,6 +91,25 @@ def test_with_no_snapshot_every_reader_is_vacuous_by_ABSENCE_not_by_silence(tmp_
     assert SNAP.rows_for(None, SR_REL, "SR-ID") == {}
 
 
+def test_a_SCAFFOLDED_but_unsigned_snapshot_is_VACUOUS_TOO(tmp_path):
+    """THE STATE EVERY FRESH ADOPTER SHIPS IN, and the one a directory-existence
+    test gets wrong. `bootstrap.py` scaffolds `docs/archive/last_approved/` with
+    its README and nothing else, deliberately — so a vacuum keyed on the
+    DIRECTORY would report all eight tiers missing in every new repo on day one,
+    which is precisely the reds-everything failure the design defers arming to
+    avoid. The vacuum is keyed on "holds no registry" instead. (Found when the
+    producer was first wired to trace.py — adversarial round 2, 2026-08-15.)"""
+    root = _tree(tmp_path)
+    snap = SNAP.snapshot_root(root)
+    snap.mkdir(parents=True)
+    (snap / "README.md").write_text("# stamp\n", encoding="utf-8")
+    assert SNAP.exists(root) is True  # the directory really is there...
+    assert SNAP.unanchored_findings(root) == []  # ...and it still claims nothing
+    # The pin is only worth having if bootstrap really does scaffold it so.
+    boot = (SCRIPTS / "bootstrap.py").read_text(encoding="utf-8")
+    assert "docs/archive/last_approved/README.md" in boot
+
+
 # --- the bootstrap guard ------------------------------------------------------
 
 
@@ -244,6 +263,99 @@ def test_status_itself_is_never_the_amendment(tmp_path):
     assert not SNAP.is_drifted(SR_REL, "SR-ID", dict(row, Status="Planned"), before)
 
 
+# --- the OFF-SPINE tiers, which carry no `Status` at all -----------------------
+#
+# `SNAPSHOTTED` copies interfaces/external/components precisely because their
+# maturity cells move only by human hand. Until adversarial round 2 (2026-08-15)
+# `_claims_approval` read `Status` alone, so every one of those rows answered
+# False, was never drift-compared, and the copies recorded nothing anyone would
+# ever look at. These tests are the pin that this cannot silently return.
+
+IF_REL = "docs/requirements/interfaces.toml"
+CMP_REL = "docs/requirements/components.toml"
+
+
+def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
+    """A seeded tree in which the FIRST row of `rel` reads approved-or-above on
+    its own maturity cell, on BOTH sides of the comparison.
+
+    The flip happens BEFORE the seed deliberately: every shipped IF row reads
+    `draft` and every CMP row `planned` today, so a fixture that approved
+    nothing would assert against a predicate that is False for the honest
+    reason, and pass while proving nothing."""
+    root = _tree(tmp_path)
+    _rewrite(
+        root,
+        rel,
+        '{} = "{}"'.format(cell.lower(), live_value[0]),
+        '{} = "{}"'.format(cell.lower(), live_value[1]),
+    )
+    SNAP.copy_live(root, seed=True)
+    rows = load_script("spine_carrier").load(root / rel, id_col, keep_examples=False)
+    claiming = [r for r in rows if SNAP._claims_approval(r)]
+    assert claiming, "fixture: no row claims approval on " + cell
+    return root, claiming[0], [r for r in rows if not SNAP._claims_approval(r)]
+
+
+def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
+    # IF (and the depth-0 frame) carry `Approval`, never `Status`.
+    root, row, unclaimed = _approved_offspine(
+        tmp_path, IF_REL, "IF-ID", "Approval", ("draft", "approved")
+    )
+    before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
+    assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # green first
+    moved = dict(row, Contract=(row.get("Contract") or "") + " (amended)")
+    assert SNAP.is_drifted(IF_REL, "IF-ID", moved, before)
+    assert set(SNAP.drifted_cells(IF_REL, "IF-ID", moved, before)) == {"Contract"}
+    # ...and a row that has NOT been approved still cannot drift: it has made no
+    # claim to fall from, exactly as a Draft SR cannot.
+    assert unclaimed, "fixture: every row was approved, so the negative is vacuous"
+    still_draft = dict(unclaimed[0], Contract="rewritten entirely")
+    assert not SNAP.is_drifted(IF_REL, "IF-ID", still_draft, before)
+
+
+def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
+    # CMP carries `State`, whose ladder semantics are derive_gate's, not a
+    # second set written here — `built`/`verified`/`deprecated` are the values
+    # that table maps to Approved-or-above.
+    root, row, _unclaimed = _approved_offspine(
+        tmp_path, CMP_REL, "CMP-ID", "State", ("planned", "verified")
+    )
+    before = SNAP.rows_for(SNAP.load_all(root), CMP_REL, "CMP-ID")
+    assert not SNAP.is_drifted(CMP_REL, "CMP-ID", row, before)  # green first
+    moved = dict(row, Name=(row.get("Name") or "") + " (renamed)")
+    assert SNAP.is_drifted(CMP_REL, "CMP-ID", moved, before)
+
+
+def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
+    """The anti-duplication pin. A hand-written literal set here would be a
+    rival answer to "is this row settled", agreeing with `derive_gate` until
+    someone edits one of them — and the ladder table is the declared one home."""
+    dg = load_script("derive_gate")
+    claimed = (dg.APPROVED, dg.FOUNDED)
+    assert SNAP._APPROVAL_CELL_CLAIMED == frozenset(
+        k for k, v in dg.BIF_MATURITY.items() if v in claimed
+    )
+    assert SNAP._STATE_CELL_CLAIMED == frozenset(
+        k for k, v in dg.CMP_MATURITY.items() if v in claimed
+    )
+    # The values Sol's round-2 repro asked about, stated outright so a table
+    # edit that silently drops one has to come through this line.
+    assert SNAP._claims_approval({"Approval": "approved"})
+    assert SNAP._claims_approval({"State": "verified"})
+    assert not SNAP._claims_approval({"Approval": "draft"})
+    assert not SNAP._claims_approval({"State": "planned"})
+
+
+def test_the_SN_tier_is_COPIED_but_claims_nothing_BY_DECISION():
+    """Design §B7, restated as a test so the omission cannot be mistaken for an
+    oversight: needs carry no maturity key at all, so there is no cell for the
+    claim predicate to read. The tier is still COPIED — the record of what was
+    blessed is complete — it is only the CLAIM that has nothing to stand on."""
+    assert SNAP.NEEDS_REL in SNAP.SNAPSHOTTED
+    assert not any(rel == SNAP.NEEDS_REL for rel, _col in SNAP.SNAPSHOT_TIERS)
+
+
 # --- unanchored, both directions ----------------------------------------------
 
 
@@ -367,6 +479,46 @@ def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
     run_git("add", "-A")
     found = CT.staged_snapshot_findings(root)
     assert any("byte-identical" in f for f in found), found
+
+
+def test_a_snapshot_file_DELETED_while_the_record_STANDS_fails_the_mirror(tmp_path):
+    """The erasure the invariant did not watch (adversarial round 2, 2026-08-15).
+    The deletion path exited silently, so the cheapest laundering was not to
+    forge the record but to remove the page: `unanchored_findings` reports a row
+    whose copy reads below it, and deleting the copy deletes that evidence."""
+    root, run_git = _git_tree(tmp_path)
+    (SNAP.snapshot_root(root) / SR_REL).unlink()
+    run_git("add", "-A")
+    found = CT.staged_snapshot_findings(root)
+    assert any("DELETED" in f and SR_REL in f for f in found), found
+
+
+def test_deleting_the_WHOLE_record_is_SILENT(tmp_path):
+    """The other side of the same rule, and why it is 'while the rest stands'
+    rather than 'never delete': retiring the mechanism, and the wholesale
+    replacement §A1 describes, both remove files legitimately and neither leaves
+    a hole. A rule that fired here would make its own design undeployable."""
+    root, run_git = _git_tree(tmp_path)
+    shutil.rmtree(SNAP.snapshot_root(root))
+    run_git("add", "-A")
+    assert CT.staged_snapshot_findings(root) == []
+
+
+def test_the_unanchored_rule_is_WIRED_into_trace_as_an_advisory():
+    """The round-2 finding in one line: the rule was defined and called by
+    NOTHING, so an approval could bypass the record and no live check would say
+    so. A source pin, and deliberately — the property is "this producer reaches
+    the advisory printer", and a behavioural test would need a seeded snapshot
+    in a full docs tree to assert a list that is empty today either way."""
+    text = (SCRIPTS / "trace.py").read_text(encoding="utf-8")
+    assert "baseline_snapshot.unanchored_findings(" in text
+    assert "findings.snapshot_advisories" in text
+    # ...and it reaches the WARNING printer rather than sitting in the bag.
+    printer = text.split("for a in (", 1)[1].split("):", 1)[0]
+    assert "snapshot_advis" in printer, printer
+    # ADVISORY, never the exit code — the design arms it at migration step 7.
+    exit_policy = text.split("def exit_code(", 1)[1].split("\ndef ", 1)[0]
+    assert "snapshot_advisories" not in exit_policy
 
 
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):

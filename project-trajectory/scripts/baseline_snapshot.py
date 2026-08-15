@@ -99,10 +99,12 @@ from pathlib import Path
 # test) whose sys.path does not yet carry scripts/.
 try:
     import check_trajectory
+    import derive_gate
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory
+    import derive_gate
     import spine_carrier
 
 # The snapshot's root, repo-relative. One generation only: it is REPLACED
@@ -156,6 +158,29 @@ SNAPSHOT_TIERS = (
 # vocabulary — see the module docstring's provisional note. Lowercase, matching
 # every other Status comparison in the kit (the one casing rule, process.md §4).
 _APPROVAL_CLAIMED = frozenset({"verified", "planned"})
+
+# The OFF-SPINE tiers do not have a `Status` cell at all: `interfaces.toml` and
+# `external.toml` carry `Approval`, `components.toml` carries `State`. Reading
+# only `Status` meant those four snapshotted tiers could never claim approval and
+# so were never drift-compared — which defeats the reason `SNAPSHOTTED` copies
+# them in the first place (the comment above says their human-only cells are the
+# point). Found by adversarial round 2, 2026-08-15.
+#
+# DERIVED FROM `derive_gate`'s ONE RULED LADDER TABLE rather than restated as a
+# literal set here, and that is the whole point of deriving it: derive_gate.py's
+# `BIF_MATURITY`/`CMP_MATURITY` are where each vocabulary's ladder semantics are
+# "stated here and nowhere else", so a second hand-written set would be a rival
+# answer to "is this row settled" that agrees until someone edits one of them.
+# `Approved` and `Founded` both claim — `Founded` is `Approved` plus a
+# demonstration, and this predicate asks about the TEXT being blessed, exactly as
+# `Verified` and `Planned` both claim on the spine.
+_CLAIMED_MATURITY = (derive_gate.APPROVED, derive_gate.FOUNDED)
+_APPROVAL_CELL_CLAIMED = frozenset(
+    k for k, v in derive_gate.BIF_MATURITY.items() if v in _CLAIMED_MATURITY
+)
+_STATE_CELL_CLAIMED = frozenset(
+    k for k, v in derive_gate.CMP_MATURITY.items() if v in _CLAIMED_MATURITY
+)
 
 
 def snapshot_root(root):
@@ -215,15 +240,37 @@ def stamp(root):
 
 
 def _claims_approval(row):
-    """True when this row's Status claims approval or above.
+    """True when this row claims approval or above, ON WHICHEVER CELL ITS TIER
+    USES: `Status` on the four spine tiers, `Approval` on interfaces and the
+    depth-0 frame, `State` on components.
 
-    TRANSITIONAL, and the docstring says so because the cell values do not:
-    D-9's ladder has one word for this (`Approved`) and today's vocabulary has
-    two. `Verified` is text blessed with evidence established; `Planned` is text
-    blessed with evidence pending. BOTH are ratified TEXT, and this predicate
-    is asked about text — so both claim. When step 5 renames the values this
-    collapses to `is_approved` and is DELETED here rather than re-keyed."""
-    return (row.get("Status") or "").strip().lower() in _APPROVAL_CLAIMED
+    THREE CELLS RATHER THAN ONE, and the alternative is not "simpler" — it is
+    silently vacuous. `SNAPSHOTTED` copies the off-spine registries precisely
+    because their maturity cells move only by human hand, and a predicate that
+    reads `Status` alone answers False for every one of those rows, so their
+    copies are never compared to anything. The rule is an OR rather than a
+    dispatch on tier because a row carries exactly one of the three cells; an
+    explicit tier table would be a second place to keep the mapping right.
+
+    TRANSITIONAL ON THE SPINE HALF, and the docstring says so because the cell
+    values do not: D-9's ladder has one word for this (`Approved`) and today's
+    vocabulary has two. `Verified` is text blessed with evidence established;
+    `Planned` is text blessed with evidence pending. BOTH are ratified TEXT, and
+    this predicate is asked about text — so both claim. When step 5 renames the
+    values, the `Status` arm collapses to `is_approved`; the two off-spine arms
+    are NOT transitional and stay.
+
+    **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7): needs carry no
+    maturity key at all today, so there is no cell for this predicate to read and
+    SN drift cannot be status-gated until D-9 gives SN a Status. The tier is
+    still COPIED — `stakeholder-needs.toml` is in `SNAPSHOTTED`, so the record of
+    what was blessed is complete — it is only the approval CLAIM that has nothing
+    to read. `SNAPSHOT_TIERS` omits SN for the same reason."""
+    return (
+        (row.get("Status") or "").strip().lower() in _APPROVAL_CLAIMED
+        or (row.get("Approval") or "").strip().lower() in _APPROVAL_CELL_CLAIMED
+        or (row.get("State") or "").strip().lower() in _STATE_CELL_CLAIMED
+    )
 
 
 def load_all(root):
@@ -382,16 +429,28 @@ def unanchored_findings(root, snapshot=None):
     """The successor to repo-lock D-9's "approved-with-no-anchor is an ERROR",
     as ADVISORY STRINGS.
 
-    A row whose live Status claims approval-or-above is UNANCHORED when the
-    snapshot does not contain its id, or contains it at a status that makes no
+    A row whose live maturity claims approval-or-above is UNANCHORED when the
+    snapshot does not contain its id, or contains it at a maturity that makes no
     such claim. The second half is the one that matters and it is only decidable
     because the copy is a WHOLE FILE: a live row reading approved whose snapshot
     copy reads `Draft` is an approval that never rode a copy. Row extraction
     would have deleted the very evidence this reads.
 
-    Vacuous while the snapshot directory does not exist at all. Once it exists,
-    a registry file MISSING from inside it is itself reported here — the vacuum
-    has exactly one state and it is the true one.
+    VACUOUS UNTIL THE SNAPSHOT HOLDS A REGISTRY. Once it holds one, a registry
+    MISSING from beside it is itself reported here — a half-copied record is a
+    record with a hole, which is the state worth being loud about.
+
+    The vacuum is "no registry" rather than "no directory", and the distinction
+    is not academic: `bootstrap.py` SCAFFOLDS `docs/archive/last_approved/` with
+    its README and nothing else, deliberately ("an empty snapshot is the HONEST
+    state for a repo that has approved nothing yet"), so a directory test would
+    report all eight tiers missing in EVERY fresh adopter repo on day one — the
+    reds-everything failure the arming note below exists to avoid, shipped
+    downstream. Caught when this producer was first wired to `trace.py`
+    (adversarial round 2, 2026-08-15): until then nothing called this, so
+    nothing could notice. The deletion half is not lost with it — the mirror
+    invariant refuses a registry deleted from a standing record in the commit
+    that does it (`check_trajectory.staged_snapshot_findings`).
 
     **NOT ARMED.** These are advisory strings today and join no failure set.
     They are promoted to the integrity class — the always-on `--strict-integrity`
@@ -404,6 +463,8 @@ def unanchored_findings(root, snapshot=None):
     if snapshot is None:
         return []
     base = snapshot_root(root)
+    if not any(spine_carrier.resolve(base / rel) for rel in SNAPSHOTTED):
+        return []  # scaffolded-but-unsigned: the pre-signing state, honestly
     out = []
     for rel, id_col in SNAPSHOT_TIERS:
         if spine_carrier.resolve(base / rel) is None:

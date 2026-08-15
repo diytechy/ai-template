@@ -3424,6 +3424,9 @@ def analyze(reg, args):
     # Filled after analyze() returns: the id-watermark rules read the
     # filesystem and git, which analyze()'s pure contract forbids.
     findings.watermark_advisories = []
+    # Filled after analyze() returns, for the same reason: the snapshot's
+    # unanchored rule reads the `docs/archive/last_approved/` tree.
+    findings.snapshot_advisories = []
     findings.provenance = provenance
     findings.form = form
     findings.paraphrase = paraphrase
@@ -3804,6 +3807,7 @@ def render_console(reg, findings, args, out, html_out):
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
     watermark_advis = findings.watermark_advisories
+    snapshot_advis = findings.snapshot_advisories
     mechanized_verified = findings.mechanized_verified
     demonstrated_verified = findings.demonstrated_verified
     attested_verified = findings.attested_verified
@@ -3830,6 +3834,7 @@ def render_console(reg, findings, args, out, html_out):
         + llr_status_advis
         + paraphrase
         + watermark_advis
+        + snapshot_advis
     ):
         print(f"WARNING (advisory): {a}")
     for f in provenance:
@@ -3912,6 +3917,7 @@ def render_console(reg, findings, args, out, html_out):
             else ""
         )
         + (f" watermark-advisories={len(watermark_advis)}" if watermark_advis else "")
+        + (f" unanchored-advisories={len(snapshot_advis)}" if snapshot_advis else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
@@ -4128,6 +4134,27 @@ def main():
             "against (first commit, shallow clone, or off a work tree); the "
             "live-id and complete-space rules still ran".format(WATERMARK)
         )
+    # THE UNANCHORED RULE (snapshot design §B4), as an ALWAYS-ON ADVISORY.
+    # A row whose live maturity claims approval-or-above, with no copy in
+    # `docs/archive/last_approved/` recording it — or a copy that reads below it
+    # — is an approval that never rode a copy, which is the laundering the whole
+    # mechanism exists to make visible. It was DEFINED and CALLED BY NOTHING
+    # until adversarial round 2 (2026-08-15) measured that: an approval could
+    # bypass the record and no live check would say so.
+    #
+    # ADVISORY, and the deferral is the design's, not a softening: §B4 arms this
+    # as an integrity ERROR at migration step 7 and DELIBERATELY NOT BEFORE,
+    # because against a pre-seed snapshot (there is none yet) or a pre-rename one
+    # it reds every row in the repo, and a check that reds everything is a check
+    # that gets switched off. Warn-first is what lets it run in the meantime, and
+    # running is what makes the step-7 promotion a one-line change to a rule
+    # already proven quiet rather than a rule nobody has ever seen fire.
+    # Vacuous today by construction: no snapshot directory exists, so the
+    # function returns [] and this pipe adds nothing to live output.
+    # `wm_root` rather than `args.root` for the reason stated just above it: the
+    # snapshot root is `<root>/docs/archive/last_approved`, so a run pointed at
+    # another docs tree must read THAT tree's record, not this one's.
+    findings.snapshot_advisories = baseline_snapshot.unanchored_findings(wm_root)
     forest = build_forest(
         reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft
     )

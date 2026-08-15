@@ -135,7 +135,7 @@ contract = """check_perf.py CLI: --tier T exits nonzero when a measured metric r
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 req_refs = ["SR-006", "SR-015"]
-owner = "SR-006"
+owner = "LLR-014"
 version = "v1"
 approval = "draft"
 
@@ -492,7 +492,7 @@ counterpart = "docs/requirements/performance-budgets.csv"
 contract = """reads the PB-### budgets registry and a measured-metrics JSON, comparing each in-tier metric to its budget/baseline"""
 signal = "variable"
 req_refs = ["SR-006", "SR-015"]
-owner = "SR-015"
+owner = "LLR-014"
 version = "v1"
 approval = "draft"
 

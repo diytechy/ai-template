@@ -98,6 +98,15 @@ narrated is in those homes.
   `wi416-parked-handback-contract` branch holds a 271-line pre-ruling draft
   that exists nowhere else (its rows are disposed; the 2026-08-08 handback
   ruling superseded it) — delete only after deciding the draft is not wanted.
+- **THE SITTING RUNS FROM ONE DOCUMENT** —
+  [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md):
+  the charge-through's full ledger (log `2026-08-15b`…`i`, every act
+  provisional and overturnable), the three OI-30 rulings it needs first, the
+  recorded judgement items, the adversarial round-2 verdict, and the sitting
+  procedure in order (rule OI-30 → the mechanical rename → review the ratify
+  brief → sign via `intake` → **seed the snapshot in the same reviewed
+  commit** → the follow-on arming). Nothing was signed, renamed or seeded in
+  advance; `docs/archive/last_approved/` deliberately does not exist yet.
 - **RESUME HERE if you are starting cold** —
   [plans/2026-08-15-resume-brief.md](plans/2026-08-15-resume-brief.md) carries
   the process traps that bit and the hardware crosscheck's recorded

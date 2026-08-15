@@ -3497,6 +3497,23 @@ SNAPSHOT_DIR = "docs/archive/last_approved"
 SNAPSHOT_README = "README.md"
 
 
+def _snapshot_survives(root, new_rev):
+    """True when ANYTHING at all remains under the snapshot root in the new tree.
+
+    The two arms are the two things `new_rev` can be (`_spine_revs`' contract):
+    `":"` is the INDEX, which `ls-files --cached` reads and where a staged
+    deletion has already removed the entry; anything else is `"<rev>:"`, whose
+    tree `ls-tree -r` reads. Degrades to False on any git failure, which is the
+    quiet direction — an unanswerable question must not manufacture a finding."""
+    if new_rev == ":":
+        out = _git(root, ["ls-files", "--cached", "--", SNAPSHOT_DIR])
+    else:
+        out = _git(
+            root, ["ls-tree", "-r", "--name-only", new_rev[:-1], "--", SNAPSHOT_DIR]
+        )
+    return bool(out and out.strip())
+
+
 def staged_snapshot_findings(root, base="HEAD", head=None):
     """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
 
@@ -3508,10 +3525,13 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     nothing about a text file stops someone editing it. This is the guard, and
     it is exact rather than heuristic: a legitimate `copy_live` satisfies it
     ALWAYS, by construction, because the copy is byte-for-byte and rides the
-    same commit as the write. Three failures fail it and they are the three
-    that matter — a hand edit (snapshot differs from live), a partial copy (one
-    file mirrored, its sibling not), and a copy-then-amend-live (the copy landed
-    but the live file moved on before the commit closed).
+    same commit as the write. FOUR failures fail it — a hand edit (snapshot
+    differs from live), a partial copy (one file mirrored, its sibling not), a
+    copy-then-amend-live (the copy landed but the live file moved on before the
+    commit closed), and a partial DELETION (one registry removed from the record
+    while the rest of it stands — added at adversarial round 2, 2026-08-15,
+    which found the deletion path exiting silently and so left as an erasure the
+    invariant did not watch).
 
     The consequence worth stating plainly: **the only way to write text into
     the snapshot is to write it into the live registry first** — an approval,
@@ -3539,7 +3559,23 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
         snap_text = _git(root, ["show", new_rev + name])
         live_text = _git(root, ["show", new_rev + live_rel])
         if snap_text is None:
-            continue  # deleted from the snapshot in this commit — not a mirror claim
+            # DELETED from the snapshot in this commit. Silent ONLY when the
+            # whole record went with it — retiring the mechanism, or the
+            # wholesale replacement §A1 describes, are both legitimate and
+            # neither leaves a hole. A single registry deleted while the rest of
+            # the record stands IS a hole, and it is the cheapest possible
+            # laundering: `unanchored_findings` reports a row whose copy reads
+            # below it, so removing the copy outright removed the evidence
+            # instead. (Adversarial round 2, 2026-08-15.)
+            if _snapshot_survives(root, new_rev):
+                out.append(
+                    "{} was DELETED from the {} snapshot while the rest of the "
+                    "record still stands — a registry removed from the record of "
+                    "what was approved is not a smaller record, it is a missing "
+                    "one; the snapshot is replaced WHOLESALE at a signing, never "
+                    "trimmed a file at a time".format(name, SNAPSHOT_DIR)
+                )
+            continue
         if live_text is None:
             out.append(
                 "{} is in the {} snapshot but {} does not exist in this commit — "

@@ -123,6 +123,7 @@ graph LR
     m_scripts_agent_loop --> m_scripts_spine_carrier
     m_scripts_agent_route --> m_scripts_spine_carrier
     m_scripts_baseline_snapshot --> m_scripts_check_trajectory
+    m_scripts_baseline_snapshot --> m_scripts_derive_gate
     m_scripts_baseline_snapshot --> m_scripts_spine_carrier
     m_scripts_check_doc_refs --> m_scripts_gen_arch_map
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
@@ -484,7 +485,7 @@ Contracts (interfaces): IF-041, IF-064
 
 ### `scripts/baseline_snapshot`
 _baseline_snapshot.py — the `last_approved` snapshot: what the spine looked_
-Imports (internal): `check_trajectory`, `spine_carrier`
+Imports (internal): `check_trajectory`, `derive_gate`, `spine_carrier`
 Contracts (interfaces): IF-123, IF-128, IF-129
 
 | Public item | Summary | Implements |

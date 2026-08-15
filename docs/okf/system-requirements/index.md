@@ -48,7 +48,7 @@ resource: "generated"
 | [SR-137](SR-137.md) | One policy home, with a checked shape |
 | [SR-138](SR-138.md) | Legacy config converts automatically and totally |
 | [SR-139](SR-139.md) | Ratification as an ordinal over a derived spine stage |
-| [SR-140](SR-140.md) | The attestation anchor lives on the artifact's own row |
+| [SR-140](SR-140.md) | Each acceptance is recorded by a copy riding its own approval commit |
 | [SR-144](SR-144.md) | Every lane close is a terminal state with an immutable record |
 | [SR-146](SR-146.md) | Prompts are reviewable files with a per-session audit trail |
 | [SR-147](SR-147.md) | One machine-parseable carrier for the requirement spine |
@@ -69,4 +69,4 @@ resource: "generated"
 | [SR-163](SR-163.md) | Every shipped file maps to a stakeholder outcome |
 | [SR-164](SR-164.md) | Stakeholder-need scope is a declared, checked value |
 | [SR-165](SR-165.md) | The component partition carries a reproducible derivation record |
-| [SR-166](SR-166.md) | The delivered package is complete and consumable at its declared manifest |
+| [SR-166](SR-166.md) | The delivered package materializes where its manifest declares it will |
