@@ -250,6 +250,37 @@ for the owner:
 
 ---
 
+## 6b. WHAT IS AUTHORISED, AND WHAT IS NOT — check this before executing anything
+
+**Nothing in this brief is ruled unless it says so here.** As of writing, the
+owner has ruled none of it.
+
+**Safe to do with no ruling** (read-only, reversible, touches no lane):
+
+- Run the §3 audit and produce the 74-row table.
+- Read Core's whiteboard for the four §2 questions.
+- **Write** the rework plan — a sized manifest with migration steps.
+
+**NOT authorised without an explicit ruling:**
+
+- Executing the interface schema inversion (`SR.provides` / `IF.serves`, and
+  dropping the endpoint fields). It is an amendment to an already-ruled item,
+  and its **physical-interface semantics are unresolved** (§7 questions 1–4).
+- Ratifying any spine row. See §4: the wave is ruled to run as one sequence
+  with the vocabulary migration, and the interface field would add a second
+  reason to re-sign.
+
+**THE GUARD YOU MIGHT EXPECT DOES NOT EXIST.**
+`human_ratification_through = 4` holds **attestation-class work only** —
+ordinary and spine BUILD work dispatches at every level. So a session
+instructed to "proceed if risk looks low" *will* rewrite 115 interface rows
+and 64 requirement rows unasked. **The instruction must hold it; the dial will
+not.**
+
+And note why a session's own risk read is untrustworthy here: this repo is pure
+software, so the full suite passes whether or not the model fits hardware. A
+green suite is not evidence on the open question.
+
 ## 7. SUGGESTED ORDER
 
 1. **Rule the five re-tier findings** (§4) — they are mint/merge/re-classify
