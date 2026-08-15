@@ -25,24 +25,32 @@ narrated is in those homes.
   (all 148 SRs classified against the 6 crossings, demotion sized; the census
   doc also sits on trunk at
   [plans/2026-08-14-wi451-slice1-sr-census.md](plans/2026-08-14-wi451-slice1-sr-census.md)).
-  **The census is RATIFIED and slice 2 is UNBLOCKED** (log `2026-08-14b`/`c`):
-  34 hold · 15 re-state · 73 demote · **26 tombstones DELETE per D-4** (one
-  forwarding log entry, citing IFs go with their rows, `trace.py`'s
-  supersession machinery + TC-099 retire by ruling), and B-05 gains the
-  declared **package-wide-property** sixth bucket so SR-031/034/035/114 each
-  stay one row. What executes next: **slice 2** — every demotion needs a
-  parent SR; the one-shall rule applies as a **guideline with recorded
-  waivers** (`2026-08-13v`); the **token-verification bar** governs
-  re-statement — no obligation weakened, every re-stated cell token-compared
-  (the method is recorded in [log.md](log.md) and in sitting-3 §1
-  precondition 5). The findings the
-  campaign exposes are **a deliverable of it, not a failure of it** (owner,
-  13s). The remaining rows are in [work/queued/](work/queued/); the generated
-  frontier below names them in build order.
-- **The amendment window closes at SITTING 3, not before.** `drafts=27
-  modified=51 uncovered=7`, gate `DevBar-Reqs`, stage `DevStg-Boundary` (1/8)
-  — the snapshot below. The window stays open **deliberately** through the
-  re-tier;
+  **The census is RATIFIED** (log `2026-08-14b`/`c`) and **slice 2's three
+  layers are LANDED on the open lane** (`2026-08-14g`'s layer-by-layer
+  method): the 26 tombstones deleted per D-4 with the forwarding log entry,
+  the SR layer decided from the needs and the six crossings (34 reattached ·
+  14 re-stated · SR-141 merged · **15 minted** for the B-06/B-07 pair, four
+  loop parents, three harness parents and the six uncovered needs), and the
+  **73 demotions landed** under those parents. **The spine now closes:
+  `orphans=0 integrity=0`, SN=27 · SR=64 · LLR=153 · TC=148**, and
+  `Boundary-Refs` is populated on all 64 rows (0 uncovered), which MEETS the
+  condition crossing-ownership was deferred against (`14d`). The layer's
+  ledger — per-row dispositions, the shed-clause map, the recorded
+  one-shall waivers — is
+  [plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md).
+  **The campaign's own finding, and a deliverable of it (13s):** the
+  demotions needed **zero new LLRs** — all 73 obligations fit an existing
+  component-level carrier, confirming mechanically that the mis-tiering was
+  altitude, not substance. What remains **on that lane before it can close**:
+  the **Area→aspect conversion** (63 rows + the carrier-schema touch), the
+  one outstanding migration-window call, and a second top-down read of the
+  now-existing 64-row layer. Nothing there self-ratifies —
+  `human_ratification_through = 4` holds every tier for the owner's sitting.
+- **The amendment window closes at SITTING 3, not before.** Gate
+  `DevBar-Reqs`, stage `DevStg-Boundary` (1/8) — the live counts are the
+  generated snapshot below, and the re-tier lane's own basis (`drafts=44
+  modified=102 uncovered=0`) lands with it at merge. The window stays open
+  **deliberately** through the re-tier;
   [plans/2026-08-13-sitting-3-spine-verification.md](plans/2026-08-13-sitting-3-spine-verification.md)
   owns its close — its **§0.3 decision ledger is 7-of-9 ruled** (`2026-08-14b`
   …`f`); the TC-159 chain fix is **DONE** (`14f`, the crossed carrier pairs
