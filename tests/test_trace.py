@@ -994,6 +994,35 @@ def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
     assert "IF IF-001 ThisProject='src/gone' resolves to no module" in out
 
 
+def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
+    """`docs/declared-absences` gets its third reader.
+
+    An endpoint naming a path the repo has DECLARED it does not carry is neither
+    rot nor external — the layer is opt-in and switched off, and the row is
+    honest about what the module would read if it were on. This repo's worked
+    case is `docs/requirements/performance-budgets.csv`: check_perf's budgets
+    registry, absent because process.md §9's perf layer is not enabled, with the
+    reason already written down one directory up. Naming it would have been the
+    checker demanding the repo delete a true statement."""
+    make_minimal_project(scaffold)
+    body = (
+        'IF-001,Provides,src/demo,docs/off/budgets.csv,"x",SR-001,v1,Stable,Active,,\n'
+    )
+    out = _warn_run(scaffold, body)
+    assert "IF IF-001 Counterpart='docs/off/budgets.csv' resolves to no module" in out
+    (scaffold / "docs" / "declared-absences").write_text(
+        "# declared\ndocs/off/budgets.csv — the perf layer is not enabled\n",
+        encoding="utf-8",
+    )
+    out = _warn_run(scaffold, body)
+    assert "resolves to no module" not in out
+    # A line with no reason declares nothing — the file requires one.
+    (scaffold / "docs" / "declared-absences").write_text(
+        "docs/off/budgets.csv\n", encoding="utf-8"
+    )
+    assert "resolves to no module" in _warn_run(scaffold, body)
+
+
 def test_direction_refuses_an_unknown_value_as_a_warn(scaffold):
     # Step 1: `Direction` was the one IF column whose vocabulary process.md §8
     # stated and nothing checked.

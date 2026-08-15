@@ -29,6 +29,8 @@
 # convention rather than a column so that it rides the carrier unchanged and
 # cannot drift out of sync with the endpoint it qualifies. Mark the ones that are
 # genuinely external; leave everything else resolvable, and fix it when it is not.
+# A path your `docs/declared-absences` already declares (an opt-in layer you have
+# switched off) counts as resolved — the reason is stated there, once.
 #
 # An endpoint cell may name SEVERAL endpoints, `;`-separated, when one contract
 # genuinely has more than one far side. Prefer one endpoint per row; use the list

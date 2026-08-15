@@ -1524,6 +1524,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     vocabulary their registry predates."""
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
+    absences = _declared_absences(root)
     files, external, unknown, rows_hit = [], [], [], set()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
@@ -1547,7 +1548,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
                 if _norm_module(endpoint) in norm_modules:
                     continue
                 rows_hit.add(iid)
-                if _resolves_in_tree(root, endpoint):
+                if _resolves_in_tree(root, endpoint) or endpoint in absences:
                     files.append(endpoint)
                 else:
                     unknown.append((iid, col, endpoint))
@@ -1568,6 +1569,40 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
             "outside this tree".format(iid, col, endpoint, EXTERNAL_ENDPOINT_PREFIX)
         )
     return out
+
+
+def _declared_absences(root):
+    """The paths `docs/declared-absences` says this repo deliberately does NOT
+    carry — the THIRD reader of a file whose whole point is that the fact is
+    stated once (`test_dogfood_sync` and `check_doc_refs` are the other two).
+
+    An endpoint naming one of them is neither rot nor external: the layer is
+    opt-in and switched off, and the row is honest about what the module would
+    read if it were on. This repo's worked case is
+    `docs/requirements/performance-budgets.csv` — check_perf's declared budgets
+    registry, absent because process.md §9's perf layer is not enabled, with the
+    reason already written down one directory up. Reporting it as a dangling
+    endpoint would have been the checker demanding the repo delete a true
+    statement.
+
+    Fail-soft in the quiet direction (no file -> no declarations), because that
+    is the state of every repo that has never needed one."""
+    try:
+        text = (root / "docs" / "declared-absences").read_text(encoding="utf-8")
+    except (OSError, ValueError, UnicodeDecodeError):
+        return frozenset()
+    out = set()
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        # `<path> — <reason>`, the em-dash separator the file's own header
+        # declares; a line with no separator is a path with no reason and is
+        # deliberately NOT honoured (the file requires the reason).
+        path, sep, _reason = line.partition("—")
+        if sep:
+            out.add(path.strip())
+    return frozenset(out)
 
 
 def _resolves_in_tree(root, endpoint):
