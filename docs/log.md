@@ -36,6 +36,35 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15d — spine change detection RE-RULED: the snapshot baseline
+  replaces the hash anchor (owner, in session).** The owner's words: the
+  hash/commit-id plan is *"complexity [that] is unnecessary the more we have
+  churned. Instead … approved spine changes just have their respective
+  documents copied to `archive/last_approved`, and then comparisons
+  (Adjudicator or human, as well as html generator) just use … the differences
+  between the two."* This SUPERSEDES repo-lock D-1's anchor half
+  (`TextHash`/`HashedOn` columns, the on-row writer, the co-mutation guard) —
+  none of it gets built. What survives from the superseded analysis
+  ([plans/2026-08-15-d9-migration-plan.md](plans/2026-08-15-d9-migration-plan.md)
+  §D): the *proof* that a baseline outside the live file is forced (under D-9
+  nothing flips Status on amendment, so `_attested_baseline`'s git walk finds
+  HEAD and the diff is empty by construction), and the reuse of the
+  already-tested `normative_text` machinery as the row-comparison basis. A
+  design pass for the snapshot mechanism was commissioned the same session.
+  **Why the snapshot wins:** one directory, diffable by every git tool and by
+  eye, the copy rides the same reviewed commit as the approval it records, and
+  the HTML generators read a diff instead of a hash column nobody can inspect.
+- **2026-08-15c — OI-29 RULED (owner, in session): option (b), the B-05
+  concentration is REAL.** *"Yes b looks right"* — the template package IS the
+  product, so the crossing that delivers it legitimately carries the bulk of
+  the requirement mass (55 of 70 references at measurement). Two riders in the
+  ruling itself: further decomposition/churn may re-balance the distribution
+  later, and the expectation that *"a significant amount of SR definition
+  [will] be output to the template package"* is the load-bearing premise —
+  recorded in the OI so a reader can re-test it. Passed over: (a)
+  B-05-is-under-decomposed — its supporting evidence (the sixth bucket minted
+  at `14c`) stands but does not outweigh the product-shape argument. WI-459's
+  remaining scope narrows to the four unrealized crossings.
 - **2026-08-15b — the re-tier's seven class-A authoring calls EXECUTED, plus
   SR-165's owed chain.** *Executed provisionally under the owner's 2026-08-15
   charge-through instruction; every call here is overturnable at the review
