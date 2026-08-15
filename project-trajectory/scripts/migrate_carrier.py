@@ -188,6 +188,8 @@ KEY = {
     # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
     # owner: docs/requirements/interfaces.toml's header.
     "Req-Refs": "req_refs",
+    "Owner": "owner",
+    "CarriedBy": "carried_by",
     "Direction": "direction",
     "ThisProject": "this_project",
     "Counterpart": "counterpart",

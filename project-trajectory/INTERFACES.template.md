@@ -31,13 +31,15 @@ namespace, parallel to SN/SR/LLR/TC).
 | Column | Meaning |
 |---|---|
 | `IF-ID` | Stable id for this interface. |
-| `Direction` | `Provides` (we expose it) or `Consumes` (we depend on it). |
+| `Direction` | **Flow and coverage — never ownership.** `Provides` (this side authors the contract) or `Consumes` (a cross-component edge is intended, and this row discharges it). A "provide" implies orientation but does not mean the interface is actually *directional*: a bolted joint, a mated connector, a thermal path each have an owner and no flow at all. Who is answerable is `Owner`, and only `Owner`. |
 | `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). Validated against the tree — see `Counterpart`. |
 | `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. **Both endpoint cells are checked against the tree**, warn-first: one that resolves to no module, file or directory is named individually (a spine file that migrated and left its seam row behind is the failure this catches). Prefix a deliberately-outside-the-tree endpoint with `external:` — `external:downstream adopter`, `external:git` — a value convention, not a column, so it rides the carrier and cannot drift from the cell it qualifies. Several `;`-separated endpoints are allowed when one contract genuinely has more than one far side; prefer one per row, and use the list only when splitting would copy the `Contract` text. |
 | `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. **What crosses, typed — nothing else** (process.md §8): no rationale, no work-item id, no decision citation, ≤500 characters. |
 | `Signal` | **Closed**: `discrete` (a finite enumerable alphabet — exit code, gate name, status enum, dial) or `variable` (unbounded content — prose, file bytes, a count, a duration). If both cross, the row is `variable`. |
 | `SignalNote` | Optional. Why the typing is not obvious — a crossing that carries both kinds, or one the `Contract` does not type. |
 | `Rationale` | **Why the seam is drawn here.** Empty is allowed; this is the home the `Contract` cell's argument moves to. |
+| `Owner` | **The one row answerable for this interface**, id-typed and polymorphic: an `SR-###` **or** a design-tier `LLR-###`, resolved against whichever registry the prefix names — both are legitimate because requirements and design rows decompose the same thing at different levels. Exactly one; naming nobody and naming several are both findings. Not `Req-Refs`: that lists everything the seam realizes or relies on, this names the row that answers for it. |
+| `CarriedBy` | Optional. **Interface composition** — a constituent naming the bundle that carries it (`IF-###`). Six seams riding one larger seam name the same carrier, so granularity stops being a forced choice: declare the bundle *and* its parts, and decompose only as far as is useful. The carriage graph must resolve and be acyclic; depth past 2 warns. Empty means "not a constituent", which is most rows. |
 | `Req-Refs` | The requirement(s) here that realize or rely on it — ties the interface into the local spine. **Not the design tier's `SR-Refs`**, which names a row's *parent*: this one names the requirements the seam hangs off, which is a different relationship, so it gets a different name. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
 | `Approval` | **Closed**, and the row's **one** maturity field: `draft` · `approved`. Flipping a cell to `approved` is a human act in a reviewed commit. (Two columns retired into this one: an undeclared `Status` at OI-14 part B, 2026-08-13, and `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, 2026-08-14. Each overlapped its predecessor, which is why the tier now carries exactly one.) |
@@ -71,9 +73,12 @@ namespace, parallel to SN/SR/LLR/TC).
 - **Approval gates change.** Changing an `approved` contract requires a notice
   to the counterpart and a version bump; a `draft` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
-- **Direction drives ownership.** Only the `Provides` side may close the owner's final read on
-  the contract's correctness; the `Consumes` side verifies against the pinned
-  version.
+- **The `Owner` cell's side closes the read** — not `Direction`. The row named
+  in `Owner` is answerable for the contract's correctness and closes the final
+  read on it; a `Consumes` row verifies against the pinned version. (This
+  replaces "Direction drives ownership. Only the `Provides` side may close the
+  owner's final read", which fused two facts: `Direction` is now flow and
+  coverage, and ownership has its own cell.)
 
 ## Worked snippet
 
@@ -86,6 +91,7 @@ contract = "GET /v1/invoices returns the documented JSON schema (see docs/openap
 signal = "variable"
 rationale = "One read model for invoices; the ETL must not re-derive totals."
 req_refs = ["SR-014"]
+owner = "SR-014"
 version = "v1"
 approval = "approved"
 
@@ -96,6 +102,7 @@ counterpart = "billing-api"
 contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json)."
 signal = "variable"
 req_refs = ["SR-031"]
+owner = "SR-031"
 version = "v1"
 approval = "approved"
 ```

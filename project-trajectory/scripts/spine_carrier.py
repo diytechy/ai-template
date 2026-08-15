@@ -195,6 +195,14 @@ OFFSPINE_COLUMN = {
     # is `Req-Refs` and not `SR-Refs`. D-3's one-name-one-meaning rule is what
     # forces the split rather than permitting it.
     "req_refs": "Req-Refs",
+    # The Q1 ruling's ONE answerable row (2026-08-15a), id-typed and POLYMORPHIC:
+    # an `SR-###` or an `LLR-###`, resolved against whichever registry its prefix
+    # names. It is not a second `req_refs` — that cell lists everything the seam
+    # realizes or relies on; this one names the row that answers for it.
+    "owner": "Owner",
+    # Q3: a constituent names the bundle that carries it. Optional by design —
+    # most seams ride nothing, and an empty cell IS "this is not a constituent".
+    "carried_by": "CarriedBy",
     "direction": "Direction",
     "this_project": "ThisProject",
     "counterpart": "Counterpart",
@@ -349,6 +357,8 @@ OFFSPINE_KEYS = {
         # requirements a seam realizes or relies on, and one name for two
         # relationships is the defect D-3 forbids.
         "req_refs",
+        "owner",
+        "carried_by",
         "version",
         "approval",
         "interface_from_external",

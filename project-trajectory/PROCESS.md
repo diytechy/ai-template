@@ -976,10 +976,17 @@ When this project provides or consumes a contract — shared with another repo, 
 between its **own modules** — record each directed seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
 direction, counterpart (another module, a file, or an external actor), contract,
-its signal type, the `Req-Refs` that realize/rely on it, a rationale, a version,
-and its `Approval` state. The owning
-(`Provides`) side holds the authoritative spec; the consuming side links the same
-`IF-###` and pins the version. Every interface is backed by an SR and a
+its signal type, the `Req-Refs` that realize/rely on it, its `Owner`, a
+rationale, a version, and its `Approval` state. `Owner` is the **one** row
+answerable for the seam — an `SR-###` or a design-tier id, exactly one, and the
+cell that answers "who serves this" without reading three others. `Direction` is
+**flow and coverage, never ownership**: a `Provides` implies orientation but not
+that the seam is actually directional (a mated connector has an owner and no
+flow), and a `Consumes` row declares that a cross-component edge is intended and
+that this row discharges it. The `Owner`'s side holds the authoritative spec and
+closes the final read; a consuming side links the same
+`IF-###` and pins the version. A seam may also name the bundle that carries it
+(`CarriedBy`), so one contract can be declared at both grains. Every interface is backed by an SR and a
 contract/fixture test. This keeps interlinked projects — and a repo's own modules
 — from silently drifting apart without imposing a build system. Single-module
 standalone projects skip this section; a multi-repo or multi-module repo declares

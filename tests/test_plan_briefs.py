@@ -200,9 +200,16 @@ def test_if_surface_no_longer_hands_a_planner_the_retired_status_column():
     The tuple is pinned WHOLE rather than only asserting Status' absence: a
     surface that silently GAINS a column is the same defect in the other
     direction, and `Signal`/`Rationale`/`Notes` are all cells a brief must not
-    carry — the planner needs the seam and its contract, not the row."""
+    carry — the planner needs the seam and its contract, not the row.
+
+    `Owner` JOINED at the 2026-08-15 rework, and the pin is what forced the
+    addition to be argued rather than slipped in. It is the one cell that
+    answers "who serves this seam"; before it, a planning model was handed
+    `Direction` + `ThisProject` + `Counterpart` — three cells whose meanings
+    swap on the first — and told they were fact."""
     assert pb.IF_SURFACE_COLUMNS == (
         "IF-ID",
+        "Owner",
         "Direction",
         "ThisProject",
         "Counterpart",

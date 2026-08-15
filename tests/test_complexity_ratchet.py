@@ -257,6 +257,13 @@ BASELINE = {
     # asks for once a function drops below THRESHOLD.
     ("trace.py", "reattest_model"): 21,
     ("trace.py", "render_report"): 17,
+    # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
+    # graph's three rules in one pass — resolve, acyclic, depth-bounded. The
+    # branches ARE the distinct findings a reader acts on (unknown carrier,
+    # not-an-id, self-carriage, several carriers, cycle, too deep), and folding
+    # them would hand back "the carriage graph is invalid" with no cell named.
+    # The walk itself is one loop; the arms are the vocabulary.
+    ("trace.py", "if_carriage_advisories"): 11,
 }
 
 _C901 = re.compile(

@@ -1314,6 +1314,8 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `tieback_findings(ifs, bifs)` | An IF row's directional tie-back must name a DECLARED crossing (WI-442, |  |
 | `if_contract_advisories(ifs)` | The four ruled negative rules on an IF `Contract` cell (WI-443), all |  |
 | `if_endpoint_class_advisories(ifs, module_ids, root)` | Classify every IF endpoint that is NOT an arch-map module, warn-first. |  |
+| `if_ownership_advisories(ifs, sr_ids, llr_ids)` | The `Owner` cell's resolution + uniqueness rules, warn-first (Q1, ruled |  |
+| `if_carriage_advisories(ifs)` | `CarriedBy` — interface composition, warn-first (Q3, ruled 2026-08-15a; |  |
 | `phase_ratified_findings(real)` | The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner |  |
 | `build_forest(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft)` | The SN -> SR -> LLR -> TC chain as nested nodes, plus synthetic groups for |  |
 | `outline_lines(roots)` | Indented Markdown list of the forest — pure text, so it reviews line-by- |  |

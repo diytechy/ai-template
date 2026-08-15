@@ -36,6 +36,32 @@
 # genuinely has more than one far side. Prefer one endpoint per row; use the list
 # only when splitting would copy the same `contract` text into two rows.
 #
+# OWNER is the ONE row that is answerable for this interface, id-typed, and it is
+# POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`, resolved against whichever
+# registry the prefix names. Both are legitimate because requirements and design
+# rows are decompositions of the same thing at different levels. Exactly one —
+# naming nobody and naming several are both findings.
+#
+# `owner` is NOT `req_refs`. `req_refs` lists every requirement the seam realizes
+# or relies on, and several is normal; `owner` names the one that ANSWERS for it.
+# Reading who serves a seam used to take three cells (`direction` +
+# `this_project` + `counterpart`) whose meanings swap on the first. This is that
+# answer in one cell.
+#
+# DIRECTION IS FLOW AND COVERAGE, NEVER OWNERSHIP. `Provides` says this side
+# authors the contract; `Consumes` says a cross-component edge is INTENDED and
+# this row discharges it — a coverage declaration, not a claim on the seam. A
+# "provide" implies orientation but does not mean the interface is actually
+# directional: a bolted joint, a mated connector and a thermal path each have an
+# owner and no flow at all. Ownership lives in `owner`, and only there.
+#
+# CARRIED_BY is OPTIONAL interface composition: a constituent naming the bundle
+# that carries it (`carried_by = "IF-###"`). Six seams riding one larger seam
+# name the same carrier id, so granularity stops being a forced choice — declare
+# the bundle AND its parts and decompose only as far as is useful. The carriage
+# graph must resolve and must be acyclic, and depth past 2 warns. Most rows carry
+# nothing, and an empty cell IS "this is not a constituent".
+#
 # APPROVAL is the one maturity field: a CLOSED vocabulary, `draft` | `approved`,
 # shared with external.toml. Flipping a cell to `approved` is a human act in a
 # reviewed commit. Do NOT carry a second maturity column beside it; the whole
@@ -51,9 +77,11 @@ signal = "discrete"
 signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable alphabet - exit code, gate name, status enum, dial) or variable (unbounded content - prose, file bytes, a count, a duration). If BOTH cross, the row is variable, and this cell says why."""
 rationale = """WHY the seam is drawn here - the sentence that used to squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take."""
 req_refs = ["SR-000"]
+owner = "SR-000"
+carried_by = "IF-000"
 version = "v1"
 approval = "draft"
 interface_from_external = "B-000"
 interface_to_external = "B-000"
 component = "CMP-000"
-notes = """Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""
+notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

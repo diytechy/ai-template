@@ -994,6 +994,128 @@ def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
     assert "IF IF-001 ThisProject='src/gone' resolves to no module" in out
 
 
+# --- 2026-08-15 interface rework, steps 5 + 7: the Owner cell and carriage -----
+# Q1 (an owner may be a requirement OR a design row, exactly one) and Q3 (an IF
+# may name another IF as the bundle carrying it, and that graph must be acyclic
+# and bounded). Both warn-first: the owner cells were seeded mechanically and
+# every multi-ref pick is a provisional judgement, so gating on them would gate
+# on a guess.
+
+
+def _if_row(**kw):
+    base = {
+        "direction": "Provides",
+        "this_project": "src/demo",
+        "counterpart": "external:git",
+        "contract": "reads the ref state",
+        "signal": "discrete",
+        "req_refs": '["SR-001"]',
+        "owner": '"SR-001"',
+        "version": '"v1"',
+        "approval": '"draft"',
+    }
+    base.update(kw)
+    lines = ["[interface.IF-001]"]
+    for k, v in base.items():
+        lines.append("{} = {}".format(k, v if v.startswith(("[", '"')) else '"%s"' % v))
+    return "\n".join(lines) + "\n"
+
+
+def _toml_warn_run(scaffold, text):
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        text, encoding="utf-8"
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr  # warn-first, always
+    return proc.stdout
+
+
+def test_owner_may_be_a_requirement_or_a_design_row(scaffold):
+    # Q1's whole content: BOTH tiers are legitimate, because requirements and
+    # design rows decompose the same thing at different levels.
+    make_minimal_project(scaffold)
+    for oid in ('"SR-001"', '"LLR-001"'):
+        out = _toml_warn_run(scaffold, _if_row(owner=oid))
+        assert "Owner" not in out, oid
+
+
+def test_owner_naming_several_rows_is_a_warn(scaffold):
+    make_minimal_project(scaffold)
+    out = _toml_warn_run(scaffold, _if_row(owner='"SR-001;LLR-001"'))
+    assert "names 2 owners" in out
+    assert "exactly one row is answerable" in out
+
+
+def test_owner_that_resolves_to_nothing_is_a_warn(scaffold):
+    make_minimal_project(scaffold)
+    assert "Owner references unknown SR-404" in _toml_warn_run(
+        scaffold, _if_row(owner='"SR-404"')
+    )
+    assert "Owner references unknown LLR-404" in _toml_warn_run(
+        scaffold, _if_row(owner='"LLR-404"')
+    )
+
+
+def test_owner_that_is_not_an_id_is_a_warn(scaffold):
+    # `this_project` holds a module PATH, which is exactly why Q1 overturned
+    # "derive the owner": a path cannot express "SR-012 owns this".
+    make_minimal_project(scaffold)
+    out = _toml_warn_run(scaffold, _if_row(owner='"src/demo"'))
+    assert "is not an SR-### or LLR-### id" in out
+
+
+def test_a_missing_owner_is_the_required_field_rule_not_a_second_one(scaffold):
+    # One defect, one sentence: an empty cell is already "has empty required
+    # field Owner", and saying it twice teaches the reader there are two rules.
+    make_minimal_project(scaffold)
+    text = _if_row()
+    out = _toml_warn_run(scaffold, text.replace('owner = "SR-001"\n', ""))
+    assert "IF IF-001 has empty required field Owner" in out
+    assert "answerable" not in out
+
+
+def test_carried_by_resolves_and_a_self_carrier_is_named_as_such(scaffold):
+    make_minimal_project(scaffold)
+    out = _toml_warn_run(scaffold, _if_row(carried_by='"IF-404"'))
+    assert "IF IF-001 CarriedBy references unknown IF-404" in out
+    out = _toml_warn_run(scaffold, _if_row(carried_by='"IF-001"'))
+    assert "CarriedBy names itself — leave the cell empty" in out
+
+
+def test_a_carriage_cycle_is_reported_once_per_row_on_it(scaffold):
+    # The obligation Q3 created: `IF-A carried by IF-B carried by IF-A` is
+    # representable the moment a link may point at its own tier.
+    make_minimal_project(scaffold)
+    text = _if_row(carried_by='"IF-002"') + _if_row().replace(
+        "IF-001", "IF-002"
+    ).replace('approval = "draft"\n', 'approval = "draft"\ncarried_by = "IF-001"\n')
+    out = _toml_warn_run(scaffold, text)
+    assert out.count("sits on a CarriedBy CYCLE") == 2
+
+
+def test_carriage_deeper_than_the_bound_warns_and_two_is_clean(scaffold):
+    make_minimal_project(scaffold)
+
+    def chain(n):
+        # IF-001 -> IF-002 -> ... -> IF-00n, the last carrying nothing.
+        out = []
+        for i in range(1, n + 1):
+            row = _if_row().replace("IF-001", "IF-00%d" % i)
+            if i < n:
+                row = row.replace(
+                    'approval = "draft"\n',
+                    'approval = "draft"\ncarried_by = "IF-00%d"\n' % (i + 1),
+                )
+            out.append(row)
+        return "".join(out)
+
+    assert "carriers deep" not in _toml_warn_run(scaffold, chain(3))  # depth 2
+    out = _toml_warn_run(scaffold, chain(4))  # depth 3
+    assert "IF IF-001 is 3 carriers deep (bound 2)" in out
+    assert "the bound is provisional" in out
+
+
 def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
     """`docs/declared-absences` gets its third reader.
 

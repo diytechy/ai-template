@@ -296,6 +296,7 @@ REQUIRED_FIELDS = {
         "Contract",
         "Signal",
         "Req-Refs",
+        "Owner",
         "Version",
         "Approval",
     ],
@@ -1568,6 +1569,139 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
             "real endpoint, or mark it `{}<actor>` if it is deliberately "
             "outside this tree".format(iid, col, endpoint, EXTERNAL_ENDPOINT_PREFIX)
         )
+    return out
+
+
+def if_ownership_advisories(ifs, sr_ids, llr_ids):
+    """The `Owner` cell's resolution + uniqueness rules, warn-first (Q1, ruled
+    2026-08-15a; plan step 5).
+
+    THE INVARIANT IS "EXACTLY ONE OWNER PER INTERFACE", and the ruling is what
+    makes it hard to state in a column type: an owner may be a requirement
+    (`SR-###`) **or** a design row (`LLR-###`), because *"requirements are just
+    decomposition of needs into measurable objectives, and modules are just
+    physical implementations at a lower level that do the same thing"*. So the
+    cell is id-typed and POLYMORPHIC, resolved against whichever registry its
+    prefix names, and the two failure modes are the two halves of "exactly one":
+    naming nobody, and naming several.
+
+    It is not the same question as `Req-Refs`. That cell lists every requirement
+    the seam realizes or relies on — 21 of this repo's 115 rows list more than
+    one — and none of them is thereby answerable FOR the seam. `Owner` names the
+    one that is. Deriving it instead was the plan's first recommendation and Q1
+    overturned it: a derived view can only surface what is already encoded, and
+    `ThisProject` holds a module PATH, not a resolvable id.
+
+    Warn-first, with the whole set: the cells were seeded mechanically from
+    `Req-Refs` and every multi-ref pick is a provisional judgement recorded in
+    the log, so a gate that reds on them would be gating on a guess."""
+    out = []
+    for r in ifs:
+        iid = r.get("IF-ID") or "(unnamed row)"
+        cell = (r.get("Owner") or "").strip()
+        if not cell:
+            continue  # the empty-required-field rule already says this
+        owners = refs(cell)
+        if len(owners) != 1:
+            out.append(
+                "IF {} Owner={!r} names {} owners — exactly one row is "
+                "answerable for an interface (Q1, 2026-08-15); Req-Refs is "
+                "where the several requirements it realizes or relies on "
+                "go".format(iid, cell, len(owners))
+            )
+            continue
+        oid = owners[0]
+        if ID_PATTERNS["SR"].match(oid):
+            known, tier = sr_ids, "system-requirements"
+        elif ID_PATTERNS["LLR"].match(oid):
+            known, tier = llr_ids, "low-level-requirements"
+        else:
+            out.append(
+                "IF {} Owner={!r} is not an SR-### or LLR-### id — an owner is "
+                "a requirement or a design row, id-typed (Q1, "
+                "2026-08-15)".format(iid, oid)
+            )
+            continue
+        if oid not in known:
+            out.append(f"IF {iid} Owner references unknown {oid} ({tier})")
+    return out
+
+
+# The carriage depth this repo warns past. PROVISIONAL, and stated as a number
+# rather than left implicit because Q3 created the obligation ("the carriage
+# graph must be acyclic and its depth bounded") without fixing the bound. Two is
+# the depth the ruling's own worked shape needs — *"6 IFs could have a
+# destination of a larger IF"* is one carrier over its constituents — so a third
+# level is a bundle inside a bundle, which may be right and should be looked at.
+IF_CARRIAGE_MAX_DEPTH = 2
+
+
+def if_carriage_advisories(ifs):
+    """`CarriedBy` — interface composition, warn-first (Q3, ruled 2026-08-15a;
+    plan step 7).
+
+    *"An IF could feasibly have a destination of another IF, so 6 IFs could have
+    a destination of a larger IF to carry them in a single definable signal."*
+    A constituent names its carrier; several constituents riding one bundle name
+    the same carrier id. Granularity stops being a forced choice — declare the
+    bundle AND its parts, related by this link, and decompose only as far as is
+    useful.
+
+    THE OBLIGATION THE RULING CREATED is checked here, because a link that may
+    point at another row of its own tier is representable as `IF-A carried by
+    IF-B carried by IF-A`: the carriage graph must RESOLVE, must be ACYCLIC, and
+    its depth is bounded. A cycle is reported once per row on it rather than once
+    per traversal, so a two-row cycle reads as two findings and not as an
+    infinite one.
+
+    A row carrying itself is called out separately: it is a cycle, but the useful
+    sentence is not "there is a cycle", it is "this cell should be empty"."""
+    out = []
+    ids = {r.get("IF-ID") for r in ifs if r.get("IF-ID")}
+    carrier = {}
+    for r in ifs:
+        iid = r.get("IF-ID")
+        cell = (r.get("CarriedBy") or "").strip()
+        if not iid or not cell:
+            continue
+        named = refs(cell)
+        if len(named) != 1:
+            out.append(
+                "IF {} CarriedBy={!r} names {} carriers — one constituent rides "
+                "one bundle (Q3, 2026-08-15)".format(iid, cell, len(named))
+            )
+            continue
+        cid = named[0]
+        if not ID_PATTERNS["IF"].match(cid):
+            out.append(f"IF {iid} CarriedBy={cid!r} is not an IF-### id")
+            continue
+        if cid == iid:
+            out.append(f"IF {iid} CarriedBy names itself — leave the cell empty")
+            continue
+        if cid not in ids:
+            out.append(f"IF {iid} CarriedBy references unknown {cid}")
+            continue
+        carrier[iid] = cid
+    for start in sorted(carrier):
+        seen, node, depth = {start}, carrier[start], 1
+        while node in carrier:
+            if node in seen:
+                out.append(
+                    "IF {} sits on a CarriedBy CYCLE — a bundle cannot be "
+                    "carried by something it carries".format(start)
+                )
+                break
+            seen.add(node)
+            node, depth = carrier[node], depth + 1
+        else:
+            if depth > IF_CARRIAGE_MAX_DEPTH:
+                out.append(
+                    "IF {} is {} carriers deep (bound {}) — a bundle inside a "
+                    "bundle may be right, but say why in Rationale (the bound "
+                    "is provisional, Q3 2026-08-15)".format(
+                        start, depth, IF_CARRIAGE_MAX_DEPTH
+                    )
+                )
     return out
 
 
@@ -2984,6 +3118,8 @@ def analyze(reg, args):
         + sr_frame_advisories
         + if_contract_advisories(ifs)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
+        + if_ownership_advisories(ifs, sr_ids, llr_ids)
+        + if_carriage_advisories(ifs)
     )
 
     phases = set(refs(args.phase)) if args.phase else None

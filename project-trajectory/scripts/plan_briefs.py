@@ -133,8 +133,17 @@ IF_CSV = "docs/requirements/interfaces.toml"
 # retired; `Signal` is deliberately NOT promoted in its place, because a brief
 # needs the surface, not the schema. What a planner sees is the seam and its
 # contract.
+#
+# `Owner` JOINED at the 2026-08-15 rework, and it is the one addition that
+# answers the complaint this surface caused: reading who serves a seam took
+# three cells (`Direction` + `ThisProject` + `Counterpart`) whose meanings swap
+# on the first, and a planning model was being handed that puzzle as fact. One
+# id-typed cell says it instead (Q1, 2026-08-15a). Nothing was dropped to make
+# room — the endpoint cells still name the surface, which is the only place it
+# is named.
 IF_SURFACE_COLUMNS = (
     "IF-ID",
+    "Owner",
     "Direction",
     "ThisProject",
     "Counterpart",
