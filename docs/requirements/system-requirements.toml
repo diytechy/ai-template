@@ -1,66 +1,7 @@
-[requirement.SR-001]
-title = "Trace join reports orphans"
-sn_refs = ["SN-002"]
-requirement = """trace.py shall join the SN->SR->LLR->TC registries and, with --strict, exit nonzero if any orphan exists."""
-rationale = """Realizes SN-002 — a hand-asserted trace is a claim, not evidence: with no mechanical join an SR can lose its last test and nothing reports it, so a gate passes on a spine that no longer holds. Reviewing the matrix by eye at each gate was rejected — it scales with the registry and fails silently as it grows."""
-acceptance_criteria = """--strict exits 0 on a fully linked chain and 1 when any SR lacks an LLR/TC, any LLR/TC lacks a parent, or any SN lacks an SR; the orphan list names each at-fault id."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-002]
-title = "Integrity floor for ids and registry-CSV structure"
-sn_refs = ["SN-002"]
-requirement = """trace.py shall fail --strict-integrity on a duplicated or malformed registry id, a data row of a CSV registry whose column count differs from its header, or a TC that pairs an LLR with an SR it does not decompose."""
-rationale = """Realizes SN-002 — a misaligned or duplicated id corrupts the join before the orphan rules can notice, so the report is confidently wrong rather than red, and an incoherent SR/LLR citation contradicts the LLR's own parent link, leaving two answers to one question. Checking only at a gate was rejected: these are wrong the moment they are written, and a gate-only check lets a broken join sit in the tree for days."""
-acceptance_criteria = """--strict-integrity exits 1 on a duplicate/malformed SR/LLR/TC/PB/REPO/MOD/PART/ASSET/CMP/IF id, a mis-columned row, or an incoherent SR/LLR pairing in one TC, and 0 otherwise; orphans do not affect it. MOD is the legacy compatibility id for current REPO rows."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-003]
-title = "Placeholder and schema checks"
-sn_refs = ["SN-002"]
-requirement = """trace.py shall, under --no-placeholders, flag any leftover -000 example row, and under --strict-schema, require non-empty required fields and in-vocabulary Verification/Tier values."""
-rationale = """Realizes the dissolved edge expectation that a committed placeholder at a gate is a finding and SN-002 (a real row missing a required cell breaks the trace)."""
-acceptance_criteria = """--no-placeholders reports every -000 row across SR/LLR/TC and the SN doc; --strict-schema reports an empty required field or an out-of-vocabulary Verification/Tier value."""
-priority = "M"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-004]
-title = "Acceptance-criteria advisory"
-sn_refs = ["SN-002"]
-requirement = """trace.py shall warn (never fail) when an SR AcceptanceCriteria uses a comparative term with no pinning predicate in the cell."""
-rationale = """Realizes SN-002 by keeping acceptance criteria testable, while leaving the call to the DevBar-Reqs review — a heuristic lint must not gate."""
-acceptance_criteria = """A comparative claim with no pinning predicate marker emits a stdout WARNING and a report line; the exit code is unchanged."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-005]
-title = "Off-spine registries stay traceable"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """trace.py shall integrity-check the optional off-spine registries (PB/REPO/PART/ASSET, plus legacy MOD compatibility) and validate their back-links without blocking a project that does not use them."""
-rationale = """Realizes SN-002 (off-spine rows stay linked to the spine) and SN-012 (an unused optional registry costs nothing — its -000 row is ignored)."""
-acceptance_criteria = """A PB row whose Refs name no real SR/LLR/Module, or a REPO row (including a legacy MOD row) delegating an unknown SR, is a finding; a -000 example row in any of them is ignored."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Off-spine registries"
-
 [requirement.SR-006]
 title = "Gate/tier harness enforces required steps"
 sn_refs = ["SN-004", "SN-008"]
+boundary_refs = ["B-05"]
 requirement = """check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing."""
 rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and the dissolved edge expectation that a missing tool fails, never skips. The work-branch lane skip is SR-133's obligation (one row, one obligation)."""
 acceptance_criteria = """check.py --gate <bar> runs that bar's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset."""
@@ -68,11 +9,11 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Gate harness"
 
 [requirement.SR-007]
 title = "Declared stack profile"
 sn_refs = ["SN-003"]
+boundary_refs = ["B-05"]
 requirement = """check.py shall read the toolchain (format/lint/test commands, tiers, coverage, arch-map mode) from docs/stack.ini so a stack swap edits only that file."""
 rationale = """Realizes SN-003 — the kit is stack-agnostic; the harness is re-pointed by declaration, not by editing a kit script."""
 acceptance_criteria = """check.py resolves each step's command from stack.ini; changing the profile changes the commands run, with no script edit."""
@@ -80,11 +21,11 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Declared stack profile"
 
 [requirement.SR-008]
 title = "Profile validation fails loudly"
 sn_refs = ["SN-003", "SN-008"]
+boundary_refs = ["B-05"]
 requirement = """check.py shall fail loudly on a malformed stack.ini, a non-integer coverage threshold, or a missing declared binary, rather than proceeding on a bad profile."""
 rationale = """Realizes SN-003 and SN-008 — a broken declaration is a red, never a silent misconfiguration."""
 acceptance_criteria = """A malformed profile, non-integer coverage, or missing binary produces a clear nonzero failure at the relevant step."""
@@ -92,11 +33,11 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Declared stack profile"
 
 [requirement.SR-009]
 title = "Conditional scaffold profiles"
 sn_refs = ["SN-003", "SN-012"]
+boundary_refs = ["B-05"]
 requirement = """bootstrap.py shall seed only the artifacts a chosen profile uses, omitting Python-only files for a non-Python stack."""
 rationale = "Realizes SN-003 (portability) and SN-012 (right-sizing — a repo gets only what it uses)."
 acceptance_criteria = """A non-Python profile omits Python-only artifacts and seeds files-mode arch-map; a profile that selects no opt-in layers seeds none of them."""
@@ -104,11 +45,11 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Conditional scaffold profiles"
 
 [requirement.SR-010]
 title = "Scaffold runs green out of the box"
 sn_refs = ["SN-001", "SN-007"]
+boundary_refs = ["B-05"]
 requirement = """bootstrap.py shall produce a scaffold whose harness runs green immediately after generation."""
 rationale = """Realizes SN-001 (a working process without hand-building tooling) and SN-007 (the suite bootstraps a real scaffold and exercises every script)."""
 acceptance_criteria = """bootstrap.py --dest produces a scaffold on which the harness passes; the meta-suite runs every script against that scaffold."""
@@ -116,11 +57,11 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-011]
 title = "Idempotent re-runnable scaffold"
 sn_refs = ["SN-001", "SN-007"]
+boundary_refs = ["B-05"]
 requirement = "bootstrap.py shall skip an existing file on a re-run unless --force is passed."
 rationale = """Realizes SN-001 (safe drop-in onto an existing repo) and SN-007 — an adopter picking up kit updates must not lose their own edits, and a scaffolder that overwrites cannot be run twice, so it stops being run at all. Overwrite-always with a backup copy was rejected: it leaves the repo carrying a second copy of every file it touched. The deliberate kit-vs-project merge is a separate, operator-driven process (SR-036)."""
 acceptance_criteria = """A re-run leaves every existing file (kit- or project-owned) byte-unchanged without --force; --force overwrites."""
@@ -128,107 +69,60 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
-
-[requirement.SR-012]
-title = "Doc navigability"
-sn_refs = ["SN-010"]
-requirement = """check_docs.py shall fail on a broken intra-repo link or a missing PROJECT-VISION tag, and check generated-doc freshness under --stale."""
-rationale = """Realizes SN-010 — documentation stays navigable and honest; a broken link or undeclared vision is a red."""
-acceptance_criteria = """check_docs.py --stale fails on a dead intra-repo link or absent PROJECT-VISION tag and passes a clean doc set."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Doc navigability"
-
-[requirement.SR-013]
-title = "Runtime-flows check"
-sn_refs = ["SN-010"]
-requirement = """check_flows.py shall validate that the authored runtime-flow docs conform to their contract."""
-rationale = "Realizes SN-010 — a hand-authored flow doc that drifts from its contract is caught."
-acceptance_criteria = "check_flows.py passes a conformant flow doc and fails a malformed one."
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Runtime-flows check"
-
-[requirement.SR-014]
-title = "Perf comparator and budgets"
-sn_refs = ["SN-004", "SN-012"]
-requirement = """check_perf.py shall compare a run against declared budgets and fail when a metric regresses beyond its tolerance."""
-rationale = "Realizes SN-004 (a measurable gate bar) and SN-012 (perf is an opt-in layer)."
-acceptance_criteria = """A metric within tolerance passes; one beyond its budget's tolerance fails at the declared block/warn level."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Perf comparator + budgets"
 
 [requirement.SR-015]
 title = "Performance-budget back-links"
 sn_refs = ["SN-002"]
-requirement = """The performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module."""
-rationale = "Realizes SN-002 — the off-spine budget rows stay traceable to the spine."
+boundary_refs = ["B-05"]
+requirement = "The delivered performance-budgets registry (PB-###) shall keep every row's Refs resolvable to a real SR/LLR/Module."
+rationale = "Realizes SN-002 — the off-spine budget rows stay traceable to the spine. Deliberate pair (census F6): this row states the delivered data invariant; the checker that polices it is the harness's, decomposing under SR-157 — an on-purpose split, not an echo."
 acceptance_criteria = "A PB row with an unresolvable or empty Refs is a finding; a resolvable one passes."
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Perf comparator + budgets"
-
-[requirement.SR-016]
-title = "No-stub detector"
-sn_refs = ["SN-008"]
-requirement = """check_stubs.py shall detect stub/placeholder markers in source at its declared gate and fail when one is present."""
-rationale = "Realizes SN-008 — a green never hides a stub."
-acceptance_criteria = """A stub/NotImplemented/pass-only public function at the declared gate fails; clean source passes."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "No-stub detector"
+aspect = "perf"
 
 [requirement.SR-017]
 title = "Always-on secrets floor"
 sn_refs = ["SN-009"]
-requirement = """check_privacy.py shall scan every commit's staged diff, message, and outgoing range for secret patterns regardless of the privacy toggle, unless docs/process.toml [policies] secrets_scan is explicitly false (the legacy docs/secrets-scan is still read through the migration window)."""
+boundary_refs = ["B-01", "B-04"]
+requirement = "When a session attempts to commit or push content matching a secret pattern, the system shall refuse at the hook floor — scanning every commit's staged diff, message and outgoing range regardless of the privacy toggle, and naming the finding — unless the declared secrets_scan dial is explicitly false."
 rationale = """Realizes SN-009 — a credential that reaches a shared branch must be treated as disclosed and rotated, and expunging it from history is a rewrite every clone has to follow, so the cheap moment to catch it is before the commit and the expensive one is any moment after. Folding the scan into the privacy toggle was rejected: that makes the highest-severity check opt-in alongside a preference. The one opt-out is an explicit declaration, so turning it off is a visible act."""
 acceptance_criteria = """A staged PEM header, token, or key pattern is flagged and blocks; a clean diff passes; the floor runs with privacy-check off, and is disabled only by an explicit secrets_scan = false."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Secrets + privacy lint"
 
 [requirement.SR-018]
 title = "Privacy gate two-axis"
 sn_refs = ["SN-009"]
-requirement = """check_privacy.py shall add PII/identity classes when docs/process.toml [policies] privacy_check is on (the legacy docs/privacy-check is still read through the migration window), exempting configured author identities."""
+boundary_refs = ["B-01", "B-04"]
+requirement = "When the declared privacy_check dial is on, the system shall additionally refuse, at the same hook floor, a commit or push carrying a PII/identity class — exempting configured author identities."
 rationale = """Realizes SN-009 — identity and PII classes are a policy choice a repo makes about its own contributors, unlike a leaked credential, which is a defect in every repo. Making them always-on was rejected because the exemption list they need is project-specific: a repo that has not declared its author identities would have the layer firing on its own commit metadata, and the fix would be to silence the scanner rather than to configure it."""
 acceptance_criteria = """With privacy-check on, an identity/PII class is flagged unless the author is in EXEMPT_EMAILS; with it off, only the secrets floor runs."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Secrets + privacy lint"
 
 [requirement.SR-019]
 title = "Pre-commit hook floor"
 sn_refs = ["SN-005", "SN-009"]
-requirement = """The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally."""
+boundary_refs = ["B-01", "B-04"]
+requirement = """The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally — a LOCAL floor, bypassable by the session (git commit --no-verify), so it discharges "no unchecked write enters governed state" only as a PAIR with the hosted re-run of the same bar (SR-151/SR-152), never alone."""
 rationale = """Realizes SN-005 and SN-009 — a floor only CI enforces is one the local tree crosses freely, and a secret caught after the commit is already in history. Trusting the agent to run the checks was rejected: a floor exists for the times the agent forgets, so it is git-enforced and agent-neutral."""
-acceptance_criteria = """The hook runs trace --strict-integrity and the secrets scan on staged content and blocks a commit that fails either; and the same git+CI floor shares one definition of passing per moment — the reference CI workflow invokes the same harness entry point at the tier the declared moment-to-tier table (docs/stack.ini [ci-tiers]) assigns to each trigger, pinned by tests/test_ci_tier_declaration.py (OI-24, 2026-08-13)."""
+acceptance_criteria = """The hook runs trace --strict-integrity and the secrets scan on staged content and blocks a commit that fails either; a --no-verify commit bypasses it and is caught instead by the hosted re-run, which is what makes the pair — not this row — the honest unit of the claim."""
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-020]
 title = "Pre-push hook outgoing scan"
 sn_refs = ["SN-005", "SN-009"]
+boundary_refs = ["B-01", "B-04"]
 requirement = """The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity."""
 rationale = "Realizes SN-005 and SN-009 — the last gate before content leaves the machine."
 acceptance_criteria = """The hook scans the push range and blocks when a secret (always) or an identity/PII class (privacy-check on) appears."""
@@ -236,23 +130,23 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-021]
 title = "Hook python probe"
 sn_refs = ["SN-001"]
+boundary_refs = ["B-05"]
 requirement = """The git hooks and the root launchers (dev-setup / agent-resume, the coordinator's entry) shall locate a working python3 by running a candidate and skip-or-report clearly when none resolves or a Store-alias exits nonzero."""
-rationale = """Realizes the dissolved edge expectation that the interpreter is probed by running a candidate — no cryptic crash when the interpreter is absent or a Windows Store alias."""
-acceptance_criteria = """With no working python3 the hook and each root launcher report clearly and do not crash cryptically; with one, they run their action. (The launcher half folded in from retired SN-013's expectation at the 2026-08-13 dissolution — the review round caught that SR-021 alone carried only the hooks.)"""
+rationale = "Realizes the dissolved edge expectation that the interpreter is probed by running a candidate — no cryptic crash when the interpreter is absent or a Windows Store alias. (The launcher half joined the hooks' at the 2026-08-13 SN dissolution.)"
+acceptance_criteria = "With no working python3 the hook and each root launcher report clearly and do not crash cryptically; with one, they run their action."
 priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-022]
 title = "Vendored-doc drift"
 sn_refs = ["SN-010"]
+boundary_refs = ["B-05"]
 requirement = """check_vendored.py shall detect a vendored copy of an upstream doc drifting from its source."""
 rationale = "Realizes SN-010 — a stale vendored doc is caught, not silently trusted."
 acceptance_criteria = "A drifted vendored copy is a finding; an in-sync copy passes."
@@ -260,23 +154,11 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Vendored-doc drift"
-
-[requirement.SR-023]
-title = "Arch-map generation"
-sn_refs = ["SN-010"]
-requirement = """gen_arch_map.py shall regenerate the symbol map inside its marker block and, under --check, fail when the committed map has drifted from source."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a generated view cannot silently rot; --check makes drift a red."""
-acceptance_criteria = """--check fails when the map is stale and passes when current; regeneration rewrites only the marker block."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Arch-map generation"
 
 [requirement.SR-024]
 title = "Permutation case generation"
 sn_refs = ["SN-002"]
+boundary_refs = ["B-05"]
 requirement = "gen_cases.py shall expand a Permutations spec into concrete dimensional cases."
 rationale = """Realizes SN-002 — dimensional coverage is generated from the SR's declared inputs, not hand-listed."""
 acceptance_criteria = """A spec grammar (range/set/bool with @full|@pairwise|@boundaries) yields the expected case set."""
@@ -284,41 +166,23 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Permutation case gen"
-
-[requirement.SR-025]
-title = "Skills index + checked per-agent fan-out"
-sn_refs = ["SN-012"]
-requirement = """gen_skills_index.py shall regenerate skills/INDEX.csv from each SKILL.md applicability frontmatter."""
-rationale = """Realizes SN-012 (opt-in accelerators) and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a hand-maintained index drifts from the skills it indexes, and an index that disagrees with its sources is worse than none, because it is trusted. Requiring each author to update the index by hand was rejected for the same reason the traceability matrix is generated: the discipline fails silently."""
-acceptance_criteria = """The regenerated INDEX.csv reflects the current SKILL.md frontmatter, and a drifted index is detectable."""
-priority = "C"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Skills index + fan-out"
 
 [requirement.SR-026]
 title = "Coordinator resumes headless"
 sn_refs = ["SN-006"]
-requirement = """agent_loop.py shall resume headless with stdin closed, never blocking on a
-prompt.
-Resume authority (one path - the serial resume loop is retired): a worker
-resumes from its explicit claimed assignment plus the committed trailer evidence
-on its branch, and the integrator (SR-132) derives claim/queue state from trunk
-history alone.
-docs/status.md is a generated reference surface (SR-059), never a session input."""
+boundary_refs = ["B-05"]
+requirement = "agent_loop.py shall resume headless with stdin closed, never blocking on a prompt: a worker resumes from its explicit claimed assignment plus the committed trailer evidence on its branch, and the integrator derives claim and queue state from trunk history alone — the generated status surface never a session input."
 rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — an unattended run blocked on a prompt is indistinguishable from a hung one and holds its lane until a human notices. Keeping a separate serial resume path beside the dispatcher was rejected: two authorities over one decision drift, and the divergence surfaces as a run that resumes differently depending on how it was started."""
-acceptance_criteria = """A worker reconciles from its assignment + committed evidence and the integrator from trunk history; every mode runs with stdin closed and a prompt cannot wedge it; a model rate limit backs off rather than failing the run, and a stall aborts to protect the budget. (The backoff/budget clauses folded in from retired SN-016's expectation at the 2026-08-13 dissolution — the review round caught that no SR carried them.)"""
+acceptance_criteria = "A worker reconciles from its assignment + committed evidence and the integrator from trunk history; every mode runs with stdin closed and a prompt cannot wedge it; a model rate limit backs off rather than failing the run, and a stall aborts to protect the budget."
 priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-027]
 title = "Coordinator preflight"
 sn_refs = ["SN-006"]
+boundary_refs = ["B-05"]
 requirement = """agent_loop.py shall refuse a broken footing in preflight — not a git repo, no agent CLI, or a private author under privacy-check — exiting a typed nonzero code rather than hanging."""
 rationale = """Realizes SN-006 and the dissolved edge expectation that a preflight on a non-git working directory reports and exits nonzero rather than hanging — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it."""
 acceptance_criteria = """Outside a git repo, with no agent CLI, or with a private author under privacy-check, preflight exits a typed nonzero code."""
@@ -326,11 +190,11 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-028]
 title = "Coordinator typed outcomes"
 sn_refs = ["SN-006"]
+boundary_refs = ["B-05"]
 requirement = """agent_loop.py shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall."""
 rationale = """Realizes SN-006 and the dissolved edge expectations that a repository with no commits yet (HEAD absent) does not crash the loop and that an all-ERROR run is an unavailable agent rather than a work stall — a coordinator ending in an untyped code forces its caller to parse prose; a session that produced no commit still has a HEAD to report, so without a guard an empty run is indistinguishable from a productive one in the record it leaves; and an all-ERROR run reported as a work stall sends a human looking for a blocked work item that does not exist. Treating an agent error as a stall was rejected for that reason: an unreachable agent and a blocked item need different responses, so they need different outcomes."""
 acceptance_criteria = """A repo with no commits does not crash the loop; an agent-CLI error is logged ERROR; an all-ERROR region is reported as an unavailable agent."""
@@ -338,23 +202,11 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
-
-[requirement.SR-029]
-title = "Coordinator lock auto-release"
-sn_refs = ["SN-025"]
-requirement = """The per-worktree coordinator lock shall be a kernel advisory lock the OS releases on process death, leaving no stale-pid wedge."""
-rationale = """Realizes the dissolved edge expectation that a coordinator killed mid-session leaves the next run un-wedged — the dispatcher, each worker and an interactive sitting all take this lock, so a holder that dies without releasing it wedges every one of them behind an entry nobody can safely clear. A pid file plus a liveness check was rejected because it cannot decide the case it exists for: if the pid has been reused the check sees a live process and keeps a dead lock forever, and if it guesses the other way it clears a lock that is still held. A kernel advisory lock releases on process death by construction, so the question never arises."""
-acceptance_criteria = "After the lock holder dies, the next run acquires the lock; no stale-pid file blocks it."
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Parallel tracks"
 
 [requirement.SR-030]
 title = "Second coordinator refused"
 sn_refs = ["SN-006"]
+boundary_refs = ["B-05"]
 requirement = """agent_loop.py shall refuse a second coordinator in the same checkout, preventing a two-writer race."""
 rationale = """Realizes the dissolved edge expectation that a second coordinator launched in the same checkout is refused, and SN-006 — two coordinators in one checkout write the same working tree, and the loser's commits interleave into the winner's diff where no review will separate them. Coordinating by convention was rejected: the failure is silent and shows up only as a garbled history."""
 acceptance_criteria = "A second coordinator on a held lock is refused; only one writer runs per checkout."
@@ -362,23 +214,23 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Parallel tracks"
 
 [requirement.SR-031]
 title = "Declared-policy readers agree"
 sn_refs = ["SN-004", "SN-005"]
-requirement = """The policy readers shall share one parse so the hooks, agent_loop and check_privacy agree on every declared value. Since SN-028 that parse is docs/process.toml, read by two grammars — tomllib and the hooks' pure sh — whose agreement over the file's checked line shape is itself driven; the legacy one-word files stay readable through the migration window, and a dial declared in both homes is REFUSED rather than resolved by precedence."""
-rationale = """Realizes SN-004 (policies drive the gate) and SN-005 (one source, every enforcer reads it the same way)."""
-acceptance_criteria = """Every enforcer reads the same value for the same dial; the hooks' sh and tomllib return the same answer over the adversarial file-shape table (including a trailing-comment decoy, which once made the privacy gate fail OPEN); a legacy file present alongside its key is a refusal naming both."""
+boundary_refs = ["B-05"]
+requirement = "Every delivered enforcer of a declared policy dial shall read the same value for that dial as every other enforcer — one parse, one answer, across the hooks, the loop and the checkers alike."
+rationale = "Realizes SN-004 (policies drive the gate) and SN-005 (one source, every enforcer reads it the same way). Partition with SR-137 (census): the one-home surface and its checked shape are SR-137's obligations at B-01/B-02; this row is the package-wide coherence property those mechanics serve. The shared-parse mechanism and the legacy migration-window read decompose to this row's LLRs."
+acceptance_criteria = "Every enforcer reads the same value for the same dial; the two delivered grammars (tomllib and the hooks' sh) return the same answer over the adversarial file-shape table, including the trailing-comment decoy that once made the privacy gate fail OPEN."
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Declared-policy readers"
 
 [requirement.SR-032]
 title = "Onboarding and dev-setup scaffold"
 sn_refs = ["SN-001"]
+boundary_refs = ["B-05"]
 requirement = """The onboarding and dev-setup templates shall scaffold and run to a green developer setup."""
 rationale = """Realizes SN-001 — a new contributor who cannot reach a working setup from the repo alone is blocked on whoever set it up last, and onboarding prose that is never executed drifts from the commands that work. A README checklist was rejected: nothing fails when it goes stale."""
 acceptance_criteria = "The scaffolded onboard/dev-setup scripts run to a green setup."
@@ -386,11 +238,11 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Onboarding + dev-setup"
 
 [requirement.SR-033]
 title = "Release checklist generation"
 sn_refs = ["SN-004"]
+boundary_refs = ["B-05"]
 requirement = """gen_release_checklist.py shall emit the release-gate checklist, including the warn-tier performance budgets that never fail a gate."""
 rationale = """Realizes SN-004 — the release gate has a generated checklist surfacing the budgets a human must tick off."""
 acceptance_criteria = """Running the generator emits the checklist content: the perf-budget section lists each warn-tier PB with its id and allocation."""
@@ -398,11 +250,11 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Release checklist"
 
 [requirement.SR-034]
 title = "Kit scripts run on stdlib plus ledger-declared dependencies"
 sn_refs = ["SN-011"]
+boundary_refs = ["B-05"]
 requirement = """Every kit script shall run on a clean Python 3.11+ using the standard library plus only those non-stdlib dependencies declared as a reviewed row in docs/dependencies.md."""
 rationale = """Realizes SN-011 — the kit must impose no *unargued* dependency stack on a downstream repo to run its checks, but a blanket ban is itself a design constraint that can force a worse hand-rolled alternative than a well-chosen tool, so the bar is a reviewed argument per dependency (owner RULING-3, 2026-07-28), not abstinence. Leaving the row at "stdlib-only" was rejected: it had already drifted from the standing ruling, leaving the registry and the ledger giving two answers to one question."""
 acceptance_criteria = """An AST scan of scripts/*.py resolves every top-level import to stdlib, a local sibling, or a Kind=python row in docs/dependencies.md; an undeclared non-stdlib import fails the suite; every declared row names what it replaces, why hand-rolling is worse, and the ruling that admitted it; a shipped-tier row (one an adopter is forced to install) exists only with an owner ruling recorded in the ledger, stdlib remaining preferred there."""
@@ -410,23 +262,25 @@ priority = "M"
 verification = "Analysis"
 status = "Verified"
 phase = 1
-area = "Portability"
+aspect = "portability"
 
 [requirement.SR-035]
-title = "Stack-agnostic across OSes"
+title = "No language-specific token in the shipped scheme"
 sn_refs = ["SN-003", "SN-011"]
-requirement = "The process and ID scheme shall be stack-agnostic."
+boundary_refs = ["B-05"]
+requirement = "The delivered process and ID scheme shall carry no language-specific token in the shipped registries and ID vocabulary, such that a non-Python adopter's scaffold passes trace.py unmodified."
 rationale = """Realizes SN-003 — a method that presumes one language is re-derived by every adopter on a different stack, and the re-derivation is where the traceability guarantees get dropped. Shipping per-stack variants was rejected: it multiplies the surface that must stay consistent."""
-acceptance_criteria = "The ID scheme is language-neutral."
+acceptance_criteria = "A non-Python-profile scaffold passes trace.py --strict-integrity --strict-schema unmodified; a token scan of the shipped registry templates and the ID scheme finds no language-specific token."
 priority = "M"
-verification = "Analysis"
-status = "Verified"
+verification = "Test"
+status = "Modified"
 phase = 1
-area = "Portability"
+aspect = "portability"
 
 [requirement.SR-036]
 title = "Deliberate re-sync integration"
 sn_refs = ["SN-001", "SN-007"]
+boundary_refs = ["B-05"]
 requirement = """A re-sync of an existing adoption shall integrate relevant kit updates without clobbering the adopter's filled-in files, per ADOPTING.md section 6 — take kit-owned scripts/hooks wholesale, regenerate generated docs, and preserve filled-in registries/config."""
 rationale = """Realizes SN-001 and SN-007 — picking up kit updates is a deliberate diff-and-merge, not a mechanical operation: bootstrap.py supplies the docs/kit-version stamp and --force (SR-011), while the operator makes the overwrite-vs-preserve call, aided by the downstream-resync skill."""
 acceptance_criteria = """Following ADOPTING.md section 6 against the docs/kit-version diff, kit-owned files are taken wholesale, generated docs regenerated, and filled-in files preserved."""
@@ -434,91 +288,24 @@ priority = "M"
 verification = "Inspection"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
-
-[requirement.SR-037]
-title = "Superseded: Work-item registry validation"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """SR-037 is superseded by SR-067;SR-068;SR-069; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-superseded_by = ["SR-067", "SR-068", "SR-069"]
-
-[requirement.SR-038]
-title = "Superseded: Offline project-state view"
-sn_refs = ["SN-010"]
-requirement = """SR-038 is superseded by SR-070;SR-071;SR-072; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-superseded_by = ["SR-070", "SR-071", "SR-072"]
 
 [requirement.SR-040]
 title = "Per-phase routing and review dial"
 sn_refs = ["SN-006"]
-requirement = """The unattended coordinator shall select the agent command template per
-in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE -
-the coordinator's own activity; the retired docs/run-phase file, deleted by
-SR-059, is not an input) via AGENT_CMD_MAP/--cmd-map, falling back to the single
-AGENT_CMD.
-It shall surface the declared reviewer dial (docs/process.toml [policies]
-review_rounds, default 1; the legacy docs/review-policy is still read through
-the migration window) at run start without enforcing it.
-It shall warn (never block) when a lane resume surface exceeds the declared size
-threshold."""
+boundary_refs = ["B-05"]
+requirement = "The delivered coordinator shall route each in-process session phase (PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/CRITIQUE) through its declared per-phase command template, falling back to the single declared command — surfacing the declared reviewer dial at run start without enforcing it, and warning (never blocking) when a lane resume surface exceeds the declared size threshold."
 rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — two samples of one model share blind spots, so a review by the family that built the change agrees with it for the wrong reasons; cross-family routing is what makes the second opinion independent, and one model for every phase was rejected on that basis. Dispatch stays keyed off the in-process session phase because the alternative, a per-phase code branch, makes adding a phase a code change and so discourages adding one. The resume surface's growth tripwire warns rather than fails because a growing resume surface is a smell and not a defect, and failing on a smell trains an operator to bypass the check."""
 acceptance_criteria = """A mapped session phase invokes its own command template and the default template does not fire; a broken map entry fails preflight before iteration 1; the banner surfaces the reviewer dial from docs/process.toml [policies] review_rounds; an oversized status.md warns on stderr while the run proceeds; AGENT_STATUS_WARN_BYTES=0 silences."""
 priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended loop"
-
-[requirement.SR-041]
-title = "Doc reference validation"
-sn_refs = ["SN-008", "SN-010"]
-requirement = """check_doc_refs.py shall flag a documentation reference to a repository path that does not exist and an asserted sym:<module>.<name> reference missing from the generated module-map inventory, warn-first (exit 0) with --strict gating; absent inventory skips the symbol tier cleanly."""
-rationale = """Realizes SN-004 and SN-008 — link resolution sees a broken link but not prose naming a file that was renamed away, nor an asserted code symbol that no longer exists; both read as correct forever. Validating every backticked word was rejected as unaffordable in false positives, so only path-shaped tokens and an explicit sym: convention are checked, generated marker blocks are exempt, and a path-ok line is the escape hatch for prose that names a path deliberately absent from the tree."""
-acceptance_criteria = """A backticked repo path that does not exist warns and gates only under --strict; URLs, globs, placeholders, generated blocks and path-ok lines are ignored; a dangling sym: reference is flagged against the module map; with no inventory the symbol tier skips and the path tier still runs."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Doc currency"
-
-[requirement.SR-042]
-title = "OKF knowledge-bundle export"
-sn_refs = ["SN-010", "SN-012"]
-requirement = """gen_okf.py shall export the spine registries AND the key process docs as a
-generated Open Knowledge Format bundle under docs/okf:
-one typed markdown concept per real row (graph as resolvable markdown links,
-per-tier indexes);
-plus a Process Guide concept per present process doc (a summary derived from
-that doc and a resource pointer to the unmodified source).
-The bundle shall be deterministic (no clocks), with --check failing on any
-stale, missing or extra bundle file; docs/process.toml [checks] okf_export =
-false silences (the legacy docs/okf-export is still read through the migration
-window) and placeholder-only registries are vacuous."""
-rationale = """Realizes SN-010 and SN-012 — traceability and process knowledge held only in this repo's own formats cannot be read by anything else, so the knowledge is trapped in the tool that produced it. The export is emit-only and stdlib-only, adding no runtime dependency and no parser: introducing a parser was rejected because reading the format back would make the bundle a second source of truth that can drift from the registries, whereas a derived bundle can only be STALE, which --check detects. Leaving the source docs untouched keeps the export non-intrusive, and the dashboard's Knowledge tab (SR-038) is its first consumer, so the bundle has a reader rather than being written for nobody."""
-acceptance_criteria = """One frontmatter-typed file per real SN/SR/LLR/TC row whose graph links resolve; a Process Guide concept for each present process doc carrying a summary derived from the doc (not hand-authored) with the source left unmodified; regeneration is byte-identical; --check trips on a registry OR doc edit, a missing bundle and a hand-added file; the write mode prunes extras; off and placeholder-only registries pass silently, and process guides emit only alongside a real spine."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Knowledge export"
+aspect = "unattended-loop"
 
 [requirement.SR-043]
 title = "Subagent spawn gate"
 sn_refs = ["SN-006", "SN-012"]
+boundary_refs = ["B-04"]
 requirement = """A PreToolUse subagent-spawn gate shall, during an unattended run, refuse or defer subagent spawns per docs/process.toml [checks] subagent_gate (off|ask|deny; absent=off; the legacy docs/subagent-gate is still read through the migration window), honor a launcher-set SUBAGENT_GATE=allow override the model cannot set, and fail open on any error so a broken gate never wedges the tools."""
 rationale = """Realizes SN-006 (a walk-away run stays safe — bounded, supervised fan-out with the override held by the human, not the model) and SN-012 (opt-in: absent/off is a vacuous allow, so a non-adopter pays nothing). Supervision, not security — a model that can edit files can remove the hook (adapted from stop-subagent-fanout, MIT; spec docs/archive/INTEGRATION_PLAN.md Phase 4)."""
 acceptance_criteria = """With [checks] subagent_gate = "deny": a Task/Agent spawn is refused (permissionDecision=deny, exit 2); ask defers to approval; off/absent and SUBAGENT_GATE=allow allow it; a non-spawn tool is not gated; a malformed payload fails open (allow) and is logged."""
@@ -526,37 +313,11 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Unattended coordinator"
-
-[requirement.SR-044]
-title = "Superseded: Declared-interface connectivity"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """SR-044 is superseded by SR-073;SR-074;SR-075;SR-076;SR-077;SR-078; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-superseded_by = ["SR-073", "SR-074", "SR-075", "SR-076", "SR-077", "SR-078"]
-
-[requirement.SR-045]
-title = "Superseded: Heterogeneous implementer/reviewer scheduling"
-sn_refs = ["SN-006"]
-requirement = """SR-045 is superseded by SR-079;SR-080;SR-081;SR-082;SR-083; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-superseded_by = ["SR-079", "SR-080", "SR-081", "SR-082", "SR-083"]
 
 [requirement.SR-046]
 title = "Run capability menu"
-sn_refs = ["SN-001"]
+sn_refs = ["SN-001", "SN-035"]
+boundary_refs = ["B-05"]
 requirement = """The root run.cmd/run.sh/run.command launchers shall present every major
 capability an evaluator runs from a single declaration - one name = command line
 (plus an optional name.desc line) per capability in docs/stack.ini's [run]
@@ -566,860 +327,94 @@ run_menu.py <name> launches one directly with exit-code passthrough;
 and --list emits a stable name<TAB>desc machine listing (the agent surface).
 An absent or empty [run] section prints the no-launch-command-wired-yet guidance
 and exits 1.
-The launch command is declared once (the duplicated RUN_CMD is retired) and
-works on Windows and POSIX."""
+The launch command is declared once and works on Windows and POSIX."""
 rationale = """Realizes SN-001 - the evaluator's rungs make running the product never depend on recalling a command, and the capability set is now declared once in docs/stack.ini instead of hard-wired and duplicated across the platform launchers. A new SR formalizing the launcher surface, which previously existed only as process prose."""
 acceptance_criteria = """run_menu.py --list prints one name<TAB>desc line per declared capability in declaration order; run_menu.py <name> runs that capability's command and returns its exit code; the no-arg menu launches a stdin-selected capability non-interactively and does not hang on closed stdin; an absent/empty [run] section prints guidance and exits 1; a name.desc row renders in the menu and list; the run.* launchers delegate to run_menu.py with no RUN_CMD; the scaffold ships run_menu.py plus the delegate launchers."""
 priority = "S"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
-area = "Onboarding + dev-setup"
-
-[requirement.SR-047]
-title = "Superseded: Subjective-quality critique loop"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """SR-047 is superseded by SR-084;SR-085;SR-086; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-superseded_by = ["SR-084", "SR-085", "SR-086"]
-
-[requirement.SR-048]
-title = "Superseded: How-SW top view bounded and containerized"
-sn_refs = ["SN-023", "SN-012"]
-requirement = """SR-048 is superseded by SR-087;SR-088; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-superseded_by = ["SR-087", "SR-088"]
 
 [requirement.SR-049]
 title = "Derived gate from artifact states"
 sn_refs = ["SN-004", "SN-008"]
-requirement = """derive_gate.py shall compute the gate that must next be passed from the spine artifact states (SN
-section-state + SR/LLR/TC Status maturity) and cache it to docs/gate rather than
-accept a hand-set value, so a gate advances only when the mechanical states do.
-Three Status values are recognized case-insensitively:
-(1) Draft (DevBar-Below + decomposition exemptions);
-(2) Verified (DevBar-Release); and
-(3) Modified — a post-attestation amendment owing a re-attest, deriving DevBar-Tests
-through the existing decomposed-unverified rung with no arithmetic of its own.
-The cached basis line carries modified=N beside drafts=N so the pending state
-never hides."""
+boundary_refs = ["B-05"]
+requirement = "The delivered harness shall derive the gate the project must next pass from the spine artifact states alone, caching it as a derived value — never accepting a hand-set one — with a post-attestation amendment dropping the derived gate exactly as a newly introduced draft does, and the pending-amendment count carried beside the draft count so the pending state never hides."
 rationale = """SSOT applied to the gate itself (docs/archive/specs/derived-gate-model.2026-07-20.md): a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot."""
-acceptance_criteria = """derive_gate.py --print on the meta computes the per-phase gates from the current states (a Modified SR's phase reads DevBar-Tests until re-attested); --check exits nonzero when a state change is not reflected in the cached docs/gate basis; the compared line includes the modified=N count."""
+acceptance_criteria = "derive_gate.py --print on the meta computes the per-phase gates from the current states (an amended row's phase reads the decomposed-unverified rung until re-attested); --check exits nonzero when a state change is not reflected in the cached docs/gate basis; the compared basis line includes the pending-amendment count beside the draft count."
 priority = "M"
 verification = "Test"
-status = "Verified"
-phase = 1
-
-[requirement.SR-050]
-title = "Process reference view"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall render a Process reference tab in PROJECT_STATE.html
-beside the existing views, presenting how the project is built as three linked
-panels:
-(1) artifact lifecycle x gates - Vision -> SN (DevBar-Reqs) -> SR (DevBar-Reqs->DevBar-Tests) -> LLR +
-architecture (DevBar-Tests) -> TC (DevBar-Tests->DevBar-Release) -> code+tests (DevBar-Release), each stage linked to its
-process-doc section and annotated with this repo live tier counts;
-(2) the resume loop - the managed agent_loop flow (read status -> PLAN -> BUILD
--> REVIEW -> INTEGRATE -> commit -> hook/gate -> repeat) with its escalation
-edges;
-(3) slices -> phase -> gates - a per-WI slice ends at the commit bar, a phase
-closes at the gate bar, CI runs the same bar every push.
-The tab shall be data-derived where a canonical source exists (docs/gate, the
-spine registries, the WI registry (docs/work/)); self-contained and
-byte-deterministic; a data-less repo renders byte-identically; --check
-freshness unchanged."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — the dashboard shows project state but not the method that produced it, so a reader sees what is happening without seeing why it is allowed to happen. Restating the process docs in-view was rejected because it creates a second home that drifts: the view links out wherever a canonical home exists and restates only relationships no single doc states. Generating it is the ideal; a static-authored panel downgrades verification to adjudication by an independent critical eye."""
-acceptance_criteria = """The Process tab renders the three panels; the current-gate highlight reflects docs/gate and the tier counts match the registries; process-doc links resolve; a bundle-/data-less repo renders byte-identically; generation is byte-deterministic and --check trips on stale output."""
-priority = "C"
-verification = "Test"
 status = "Modified"
-phase = 2
-area = "Trajectory"
-
-[requirement.SR-051]
-title = "Superseded: Tiered drill-down views"
-sn_refs = ["SN-010"]
-requirement = """SR-051 is superseded by SR-089;SR-090;SR-091;SR-092; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "C"
-verification = "Inspection"
-status = "Verified"
-phase = 2
-area = "Trajectory"
-superseded_by = ["SR-089", "SR-090", "SR-091", "SR-092"]
+phase = 1
 
 [requirement.SR-052]
 title = "Dashboard accessibility (rubric-adjudicated)"
 sn_refs = ["SN-024", "SN-023"]
-requirement = """PROJECT_STATE.html shall be operable and readable without a pointer or full color perception: every interactive element (tabs, expandable blocks, SVG nodes with detail panels) is keyboard-reachable and carries an accessible name (title/aria/visible text); no information is encoded by color alone (status/phase/type encodings carry a text or shape cue); text keeps readable contrast against its fill."""
+boundary_refs = ["B-05"]
+requirement = "The state view the delivered generators produce shall be operable and readable without a pointer or full color perception: every interactive element (tabs, expandable blocks, SVG nodes with detail panels) is keyboard-reachable and carries an accessible name (title/aria/visible text); no information is encoded by color alone (status/phase/type encodings carry a text or shape cue); text keeps readable contrast against its fill."
 rationale = """Realizes SN-024 and SN-023 — perceptual accessibility has no crisp measurable interface, so a row claiming a mechanized verification would assert a green that nothing actually checks. Acceptance is adjudicated by an independent critical eye against a written rubric instead. Leaving the bar unstated was rejected: an unstated accessibility bar silently reads as no bar at all."""
 acceptance_criteria = """A fresh family-heterogeneous CRITIQUE session judging the generated dashboard against docs/rubrics/dashboard-accessibility.md (authored at [v3]-[g2] from this SR's intent) returns APPROVE citing numbered anchors; keyboard reachability, accessible names, color-independent encoding, and contrast are each a rubric anchor."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 3
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-053]
 title = "Dashboard UI uniformity (rubric-adjudicated)"
 sn_refs = ["SN-024", "SN-023"]
-requirement = """PROJECT_STATE.html shall read as one system across its tabs and views: one type scale and spacing rhythm; one status/phase/type color vocabulary applied consistently wherever the same concept renders; uniform node, edge, legend, and detail-panel styling across the SVG emitters; the same interaction idiom (expand, hover, detail) wherever the same structure appears."""
+boundary_refs = ["B-05"]
+requirement = "The state view the delivered generators produce shall read as one system across its tabs and views: one type scale and spacing rhythm; one status/phase/type color vocabulary applied consistently wherever the same concept renders; uniform node, edge, legend, and detail-panel styling across the SVG emitters; the same interaction idiom (expand, hover, detail) wherever the same structure appears."
 rationale = """Realizes SN-024 and SN-023 — how alike is alike enough is subjective at the margins, so cross-view coherence cannot be pinned to a threshold without pinning the wrong thing. It is adjudicated against a written rubric by an independent session rather than by the authoring build, because the build and its author share the assumptions that produced the output: a self-judged view is checked against the intent that made it, not against a reader meeting it cold."""
 acceptance_criteria = """A fresh family-heterogeneous CRITIQUE session judging the generated dashboard against docs/rubrics/dashboard-uniformity.md (authored at [v3]-[g2]) returns APPROVE citing numbered anchors; type scale, color vocabulary, per-emitter node/edge/legend styling, and interaction-idiom consistency are each a rubric anchor."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 3
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-054]
 title = "Dashboard usability (rubric-adjudicated)"
 sn_refs = ["SN-024", "SN-023"]
-requirement = """PROJECT_STATE.html shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text."""
+boundary_refs = ["B-05"]
+requirement = "The state view the delivered generators produce shall support its core reading tasks with low friction: a first-time reviewer finds the project state, the next work, and how the parts connect, each within one tab switch; views default to a legible density (start-collapsed per the greater-than-3 rule) and reveal detail without losing context; labels stay readable at default zoom with no clipped or overlapping text."
 rationale = """Realizes SN-024 and SN-023 — task-level usability is perceptual (is this findable, is this legible), so a test can confirm an element exists and not that a reader can use it. Acceptance is adjudicated against a written rubric derived from the stakeholder intent rather than from the test, because a test written by the builder encodes the builder's own idea of usable."""
 acceptance_criteria = """A fresh family-heterogeneous CRITIQUE session judging the generated dashboard against docs/rubrics/dashboard-usability.md (authored at [v3]-[g2]) returns APPROVE citing numbered anchors. The RUBRIC is the acceptance instrument and the single home for which anchors are live: an anchor whose core has been bound to a test is retired there, and a verdict must not cite a retired anchor. This row therefore does not enumerate the live set - it would be a third copy of it, and the copy that goes stale. A clause of the requirement above that a test now holds is verified through the LLR/TC chain, which the registry already records, not by a verdict."""
 priority = "C"
 verification = "Test"
-status = "Verified"
-phase = 3
-area = "Trajectory"
-
-[requirement.SR-055]
-title = "Ingest and human-decision process loops"
-sn_refs = ["SN-010"]
-requirement = """The Process tab shall additionally render the project's two circular working
-loops as linked flow panels:
-(A) the intake loop - owner/agent intake -> triage into work items with spec
-detail -> the scheduler-derived ready frontier in the WI registry (docs/work/)
--> build/review -> merge; and
-(B) the human-decision loop - open-items population (including the
-gate-ratification table) -> human review and ruling -> the log's Decisions
-record -> merge
-- with the LLM_Agent entry point rendered once and shared by both loops;
-each stage links to its canonical home (status.md, the WI registry
-(docs/work/), open-items.html, log.md);
-the panels stay data-derived where a canonical source exists, self-contained,
-byte-deterministic; a data-less repo renders byte-identically and --check
-freshness is unchanged."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — the Process tab shows the artifact lifecycle, the resume loop and the slice cadence, but not how work ENTERS or how the human decides, which are the two circular flows that close the method's loop; without them a reader sees the machine and not the way into it. Folding them into the existing panels was rejected: they are loops, and a linear lifecycle panel cannot show a cycle."""
-acceptance_criteria = """The Process tab renders both loop panels with the shared LLM_Agent entry point appearing once; every stage's link resolves to its canonical doc; the gate-ratification stage appears in loop B; a data-less repo renders byte-identically; generation is byte-deterministic and --check trips on stale output."""
-priority = "C"
-verification = "Test"
 status = "Modified"
 phase = 3
-area = "Trajectory"
-
-[requirement.SR-056]
-title = "Decomposition render polish"
-sn_refs = ["SN-023", "SN-010"]
-requirement = """The tiered decomposition views shall render right-sized columns (a tier column no wider than its content requires within a declared bound); one horizontal parent-to-child arrow per containment edge, making containment explicit rather than implied by nesting alone; and a hover/focus highlight that persists on the last-hovered item until another takes it (no flash-on-exit); self-contained, byte-deterministic, --check freshness unchanged."""
-rationale = """Realizes SN-023 and SN-010 — the shipped tiering (SR-051) made large projects readable top-down, but a column-wasteful render, implicit containment and a highlight that vanishes on exit each cost the reader something on every visit. These have mechanically assertable outcomes, so verification stays a test; the residual look-and-feel is left to the rubric-adjudicated rows rather than asserted here."""
-acceptance_criteria = """Each containment edge renders exactly one parent-to-child arrow; column widths honor the declared bound; the persistent-highlight contract is present and keyed to the last-hovered node; a data-less repo renders byte-identically; deterministic; --check trips on stale output."""
-priority = "C"
-verification = "Test"
-status = "Verified"
-phase = 3
-area = "Trajectory"
-
-[requirement.SR-057]
-title = "WI-DAG frontier scheduling"
-sn_refs = ["SN-025", "SN-027", "SN-006"]
-requirement = """A stdlib schedule.py library/CLI shall derive the dependency-ready frontier from
-the tracked WI registry plus the active claims - never from prose.
-It shall exclude blocked (queued + blockref), deferred, claimed,
-protected-conflicting and exclusive-conflicting WIs.
-It shall expose ready --explain, ready --format json and simulate --jobs N."""
-rationale = """Realizes SN-025 and SN-006 — readiness read from prose is a decision nobody can reproduce, so the validator, the dashboard, the dispatcher and the tests each answer "what is ready" differently, and the disagreement surfaces as a WI dispatched against an unmet predecessor. Keeping the hand-curated pointer file was rejected: it encodes one person's ordering and goes stale the moment the DAG changes."""
-acceptance_criteria = """On a fixture registry the ready set contains exactly the WIs whose hard predecessors are done, and excludes each blocked/deferred/claimed/exclusive-conflicting WI with a stated reason code."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-058]
-title = "Superseded: Deterministic safety classification"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-058 is superseded by SR-093;SR-094;SR-095; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-093", "SR-094", "SR-095"]
+aspect = "trajectory"
 
 [requirement.SR-059]
 title = "Retire next-wi; generated status surface"
 sn_refs = ["SN-025", "SN-010"]
-requirement = """The migration shall delete docs/next-wi and docs/run-phase outright (fresh
-scaffold and migrated repo) and remove every live dependency on them.
-docs/status.md's derived snapshot is GENERATED (gen_trajectory --status) and
-freshness-gated, never hand-copied.
-(The generated docs/run-state surface this row once paired with retired with the
-dispatcher at Phase 5 - the stop banner and exit codes carry the outcome.)"""
+boundary_refs = ["B-05"]
+requirement = "The delivered scaffold shall ship no hand-curated next-work or run-phase pointer surface — the status surface a session reads being generated and freshness-gated, never hand-copied."
 rationale = """Realizes SN-025 and SN-010 — the WI DAG, gate class, Priority and the scheduler are together the complete ordering contract, so a second hand-curated pointer is a rival source of truth that silently wins wherever it is still read. Leaving the file in place as a deprecated no-op was rejected: a surface that still parses is a surface something still reads."""
-acceptance_criteria = """A fresh scaffold ships no next-wi/run-phase and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links next-wi; a build-out lane's phase resolves from its {phase}-{gate} branch with run-phase absent."""
+acceptance_criteria = "A fresh scaffold ships no next-wi/run-phase pointer and is parallel-by-default; no live instruction or executable surface reads, writes, validates, generates or links such a pointer; a build-out lane's phase resolves from its branch name with no pointer file; the status snapshot regenerates mechanically and its freshness is gated."
 priority = "M"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-060]
-title = "Explicit worker assignment mode"
-sn_refs = ["SN-025", "SN-006"]
-requirement = """The session engine shall run explicit per-worker claimed assignments (--wi, on
-the branch integrate.py claim cut; the session tag defaults to the branch name).
-A worker prompt is assembled from AGENTS.md, the WI row, its SpecRef,
-predecessor context, the current branch diff, and any rework finding (never
-docs/status.md or docs/next-wi).
-Worker branches never edit root status, other branches' claims, the root log,
-or generated artifacts.
-The result channel is committed trailer evidence (WI: / Blocked-WI: +
-BlockRef:)."""
-rationale = """Realizes SN-025 and SN-006 - dynamic lanes/traincars replace long-lived tracks as the assignment unit, and collision-safe per-assignment state lets many workers run without a shared blackboard (docs/specs/parallel-wi-dispatch.md 2/6/8)."""
-acceptance_criteria = """A worker runs from an explicit claimed assignment with no lane files; two concurrent workers write non-colliding logs/review evidence; a worker branch never mutates root coordination truth."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-061]
-title = "Superseded: Parallel-by-default dispatcher"
-sn_refs = ["SN-025"]
-requirement = """SR-061 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-062]
-title = "Superseded: Change-train continuation"
-sn_refs = ["SN-025"]
-requirement = """SR-062 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-063]
-title = "Superseded: Atomic serialized integration"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-063 is superseded by SR-096;SR-097;SR-098; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-096", "SR-097", "SR-098"]
-
-[requirement.SR-064]
-title = "Superseded: Crash safety and git-as-authority recovery"
-sn_refs = ["SN-025"]
-requirement = """SR-064 is superseded by SR-099;SR-100;SR-101; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-099", "SR-100", "SR-101"]
-
-[requirement.SR-065]
-title = "Superseded: Parallel-execution telemetry and downstream migration"
-sn_refs = ["SN-025", "SN-012"]
-requirement = """SR-065 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-066]
-title = "Superseded: Dual-plan decomposition round"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """SR-066 is superseded by SR-102;SR-103;SR-104;SR-105;SR-106;SR-107;SR-108; active requirements, implementation links, and decomposition evidence shall cite the replacement rows."""
-rationale = """Preserves the stable ratified id and its attestation history while removing composite implementation obligations."""
-acceptance_criteria = """Every listed target resolves; the supersession graph is acyclic; no LLR decomposes this row; TC-099 inspects the frozen migration map."""
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-superseded_by = ["SR-102", "SR-103", "SR-104", "SR-105", "SR-106", "SR-107", "SR-108"]
-
-[requirement.SR-067]
-title = "Work-item dependency validation"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """check_trajectory.py shall validate WI id syntax, predecessor resolution, and acyclic hard dependencies; an absent or placeholder-only registry is vacuous and docs/process.toml [checks] trajectory_check = false opts out (the legacy docs/trajectory-check is still read through the migration window)."""
-rationale = """Realizes SN-002;SN-012 by isolating one independently reviewable obligation formerly carried by SR-037."""
-acceptance_criteria = """Valid rows pass; malformed ids, unknown predecessors, and cycles name the offender and fail; absent, placeholder-only, and opted-out registries pass."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-
-[requirement.SR-068]
-title = "Work-item row coherence"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """check_trajectory.py shall require Deliverable to be non-empty exactly when Status is done on every run and, under --strict, require each open WI SpecRef to resolve in-repo."""
-rationale = """Realizes SN-002;SN-012 by isolating one independently reviewable obligation formerly carried by SR-037."""
-acceptance_criteria = """Either Deliverable/status mismatch fails every run; an empty or dangling open-WI SpecRef fails --strict; coherent rows pass."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Trajectory"
-
-[requirement.SR-069]
-title = "Generated status source-of-truth guard"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """check_trajectory.py shall flag a done WI token in hand-edited status.md, warning plain and failing --strict, while standing down for the generated marker, open or unknown ids, opt-out, and absent status.md."""
-rationale = """Realizes SN-002;SN-012 by isolating one independently reviewable obligation formerly carried by SR-037."""
-acceptance_criteria = """The hand-edited done-token case warns/fails by mode; generated status, open/unknown ids, opt-out, and absent status remain silent."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Trajectory"
 
 [requirement.SR-070]
 title = "Offline project-state core"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall generate one self-contained root HTML file containing completeness tiles, the SN-to-SR-to-LLR-to-TC hierarchy, and the WI roadmap DAG."""
+sn_refs = ["SN-010", "SN-023", "SN-012"]
+boundary_refs = ["B-05"]
+requirement = "The delivered generator set shall produce the adopted repository's self-contained, offline, deterministic and freshness-checkable project-state views from the tracked registries alone."
 rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038."""
-acceptance_criteria = """The root file renders all three registry-derived views without external fetches and remains usable offline."""
+acceptance_criteria = "The root state view renders its registry-derived views (completeness tiles, the SN-to-SR-to-LLR-to-TC hierarchy, the WI roadmap DAG) without external fetches and remains usable offline; regeneration from unchanged registries is stable; each generated view carries a --check freshness contract."
 priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Trajectory"
-
-[requirement.SR-071]
-title = "Conditional dashboard architecture and knowledge views"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall render software/component and OKF knowledge views only when their source bundles exist, omitting each view when its source is absent."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-038."""
-acceptance_criteria = """Each source-backed view renders when present; removing its source omits it, and a source-less repo remains byte-stable."""
-priority = "M"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Trajectory"
-
-[requirement.SR-072]
-title = "Deterministic responsive dashboard freshness"
-sn_refs = ["SN-010"]
-requirement = "gen_trajectory.py shall produce byte-deterministic responsive output."
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a generated dashboard that differs between runs cannot be freshness-checked, because every check reports a diff and the real staleness hides among them. Comparing rendered screenshots was rejected: it is expensive and still non-deterministic."""
-acceptance_criteria = "Repeated generation is byte-identical, and mobile CSS is present."
-priority = "M"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Trajectory"
-
-[requirement.SR-073]
-title = "Interface-registry integrity"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """trace.py shall integrity-check IF ids, SR back-links, Component references, and emit the best-effort ThisProject-to-LLR-Module advisory."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """Malformed or duplicate ids and unresolved SR/Component links are findings; unmatched ThisProject emits only an advisory; an absent registry is vacuous."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-074]
-title = "Architecture-connectivity coverage advisory"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """check_trajectory.py shall emit opt-out, warn-first coverage for undeclared endpoints or directions, uncited Active seams, and dangling Contracts citations."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """Each uncovered condition warns without changing exit status; source/sink notes and docs/process.toml [checks] interfaces_check = false suppress their declared cases; a small or absent inventory is vacuous."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-075]
-title = "Declared-interface rendering"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """gen_trajectory.py and gen_arch_map.py shall render declared IF seams in the dashboard and architecture map, retaining the table fallback when seams are absent."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """Declared seams produce labeled graph edges in both views; no seams preserves the fallback; generation remains deterministic."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-076]
-title = "Cross-component import coverage"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """check_trajectory.py shall report an import edge crossing component boundaries when no declared interface covers it, with the declared vacuity, opt-out, and strictness behavior."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """An uncovered mapped cross-component edge warns plain and fails strict; a covering seam, intra-component or unmapped edge, absent imports, and opt-out stay silent."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-077]
-title = "Spec interface-section validation"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """check_trajectory.py shall validate an armed spec's Interfaces section for resolvable ids, Proposed rationales, and the intra-module escape."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """Unknown ids and rationale-less Proposed seams warn plain and fail strict; resolvable citations, justified Proposed seams, intra-module declarations, and unarmed specs pass."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-078]
-title = "Rival-plan coverage comparison"
-sn_refs = ["SN-023", "SN-002"]
-requirement = """plan_coverage.py shall compare rival plans' clause, SR, and interface coverage while distinguishing findings, malformed inputs, and absent-registry notes."""
-rationale = """Realizes SN-023;SN-002 by isolating one independently reviewable obligation formerly carried by SR-044."""
-acceptance_criteria = """Commensurable plans emit per-plan and pairwise coverage; bad refs or plan graphs exit 1; malformed inputs exit 2; absent registries produce notes without failure."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-079]
-title = "Agent pair-row routing"
-sn_refs = ["SN-026", "SN-006"]
-requirement = """agent_route.py shall parse and select the pair-row registry with enable-list resolution, version ordering, Env merge, cooldown, family preference/fallback, and tier-up-never-down."""
-rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Selection obeys registry order and all routing constraints, resolves version-less tokens deterministically, merges Env, preserves legacy Provider compatibility, and reports no route honestly."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-080]
-title = "Managed review-session scheduling"
-sn_refs = ["SN-026", "SN-006"]
-requirement = """The unattended coordinator shall schedule review-policy sessions with redacted prompt-map briefs, parse verdicts, and log selections while preserving unmanaged behavior without an enable-list."""
-rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Policies 0/1/2 schedule zero/one/two reviewers; prompt-map preflight and redaction hold; every selection is logged; unmanaged mode retains legacy behavior."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-081]
-title = "Review substance scoring"
-sn_refs = ["SN-006"]
-requirement = """score_reviews.py shall score review substance into advisory decay history while treating severity hygiene and anti-gaming tripwires as non-scored gates and never rewarding length."""
-rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Component scores, corroboration, decay, and every tripwire match their fixtures; length adds no score; verdict and scoreboard round trips are deterministic."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-082]
-title = "Fixed review escalation"
-sn_refs = ["SN-006"]
-requirement = """The coordinator shall apply fixed win-stay/lose-shift escalation and page for shared failure, contradictions and tripwires per the declared ratification level, keyed on two separate dials: whether the tier in process is still the human's to ratify (human_ratification_through), and whether non-dependent work keeps running while a ratification is queued (keep_nondependent)."""
-rationale = """Realizes SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Two failed gates swap family, a failed swap raises tier, and shared top-tier failure, contradictions, or tripwires page according to the declared ratification level and the run's derived session_hold."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-083]
-title = "Dual-plan planner-pair selection"
-sn_refs = ["SN-026", "SN-006"]
-requirement = """agent_route.py shall select two fresh planner hats across families where possible and use the bounded runtime-nonresponse fallback."""
-rationale = """Realizes SN-026;SN-006 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run, by isolating one independently reviewable obligation formerly carried by SR-045."""
-acceptance_criteria = """Two-family pools diversify; one-family and single-row pools create fresh sessions with reason codes; nonresponse excludes the dead family; no responder is explicit."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-084]
-title = "Independent subjective-quality critique dispatch"
-sn_refs = ["SN-026", "SN-024", "SN-006"]
-requirement = """The coordinator shall trigger a fresh family-heterogeneous Critique session only for Critique-scoped builds and construct its brief from rubric, intent, and artifact recipe without self-assessment."""
-rationale = """Realizes SN-026;SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-047."""
-acceptance_criteria = """Critique-scoped builds schedule the session; other builds do not; the prompt contains rubric/intent/recipe and excludes build transcript and self-assessment."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-085]
-title = "Bounded critique rework loop"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """The coordinator shall iterate BUILD-to-CRITIQUE rework within AGENT_CRITIQUE_MAX and page through the declared ratification level when the cap is exhausted."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-047."""
-acceptance_criteria = """CHANGES-REQUESTED reworks and re-critiques; approval stops; the configured cap pages per the declared ratification level."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-086]
-title = "Critique verification and closure ratchet"
-sn_refs = ["SN-024", "SN-006"]
-requirement = "trace.py shall accept Critique in Verification without exempting its LLR."
-rationale = """Realizes SN-024 and SN-006 — some acceptance is a judgement no assertion settles, and with no vocabulary for it those rows either claim a Test they do not have or drop off the spine. Exempting a Critique row's LLR was rejected: the decomposition is what a critic reads, so removing it removes the thing being judged."""
-acceptance_criteria = "Critique is accepted while unknown methods fail, and its LLR remains required."
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-087]
-title = "Bounded software top view"
-sn_refs = ["SN-023", "SN-012"]
-requirement = """check_trajectory.py shall derive the top-level module/component view and enforce TOP_VIEW_MAX with nesting, opt-out, and small or absent inventory vacuity."""
-rationale = """Realizes SN-023;SN-012 by isolating one independently reviewable obligation formerly carried by SR-048."""
-acceptance_criteria = """An oversized uncontained view warns/fails strict; valid containment clears it; nested components count at roots; opt-out and small/absent inventories are vacuous."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-088]
-title = "Containerized How-SW rendering"
-sn_refs = ["SN-023", "SN-012"]
-requirement = """gen_trajectory.py shall render How-SW membership in component containers with boundary-aggregated seams and retain the flat fallback without containment."""
-rationale = """Realizes SN-023;SN-012 by isolating one independently reviewable obligation formerly carried by SR-048."""
-acceptance_criteria = """Contained modules render under components with deduplicated crossing edges; nested membership is preserved; no containment remains byte-identical and flat."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Architecture connectivity"
-
-[requirement.SR-089]
-title = "Tiered When roadmap view"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall tier the When view phase-to-workstream-to-WI by count, expose delivery phase, and aggregate parent edges from child edges."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
-acceptance_criteria = """Tiers collapse only above threshold, leaf phases are visible, and each parent edge equals the deduplicated union of crossing child edges."""
-priority = "C"
-verification = "Test"
-status = "Modified"
-phase = 2
-area = "Trajectory"
-
-[requirement.SR-090]
-title = "Tiered How-SW hierarchy"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall tier How-SW from components to modules whenever containment exists and bound the top level by TOP_VIEW_MAX."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
-acceptance_criteria = """Contained inventories render component tiers that drill to modules and respect the shared top-view cap; uncontained inventories retain the flat view."""
-priority = "C"
-verification = "Test"
-status = "Modified"
-phase = 2
-area = "Trajectory"
-
-[requirement.SR-091]
-title = "Interface-wired hierarchy ports"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall attach IF seams to visible block input/output ports and aggregate cross-container seams to container boundaries."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
-acceptance_criteria = """At every visible tier seams terminate at the correct ports; crossing seams aggregate at their container boundary without duplication."""
-priority = "C"
-verification = "Test"
-status = "Modified"
-phase = 2
-area = "Trajectory"
-
-[requirement.SR-092]
-title = "One-layer hierarchy navigation"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py shall descend one hierarchy layer by pointer or keyboard and restore parent views through a breadcrumb."""
-rationale = """Realizes SN-010 and the dissolved edge expectation that a generated artifact drifting from its source fails its --check, by isolating one independently reviewable obligation formerly carried by SR-051."""
-acceptance_criteria = """Double-click and Enter/Space descend focused containers exactly one layer; breadcrumb actions restore prior levels; interactions remain self-contained."""
-priority = "C"
-verification = "Test"
-status = "Modified"
-phase = 2
-area = "Trajectory"
-
-[requirement.SR-093]
-title = "Pure safety classification"
-sn_refs = ["SN-027", "SN-008"]
-requirement = """schedule.py shall purely classify every declared safety and policy input into one scheduling class plus deterministic reason codes."""
-rationale = """Realizes SN-027;SN-008 by isolating one independently reviewable obligation formerly carried by SR-058."""
-acceptance_criteria = """Every declared value and policy input maps deterministically; missing, unknown, or contradictory declarations fail closed only for the affected WI; all consumers agree."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-094]
-title = "Structural safety cross-check"
-sn_refs = ["SN-027", "SN-008"]
-requirement = """schedule.py shall cross-check SafetyClass declarations against structural evidence and fail an invalid, missing, or contradictory WI closed without stopping disjoint classified work."""
-rationale = """Realizes SN-027;SN-008 by isolating one independently reviewable obligation formerly carried by SR-058."""
-acceptance_criteria = """Spine, critique, checkpoint, and dual-plan structure override dishonest declarations; the affected WI is quarantined with reasons while disjoint valid work remains schedulable."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-095]
-title = "Superseded: Safety-aware traincar packing"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-095 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-096]
-title = "Superseded: Atomic CAS integration"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-096 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-097]
-title = "Superseded: Serialized blocked disposition"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-097 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-098]
-title = "Superseded: Durable publication intent"
-sn_refs = ["SN-025", "SN-008"]
-requirement = """SR-098 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-099]
-title = "Superseded: Git evidence enumeration"
-sn_refs = ["SN-025"]
-requirement = """SR-099 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-100]
-title = "Superseded: Ownership-state reconstruction"
-sn_refs = ["SN-025"]
-requirement = """SR-100 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-101]
-title = "Superseded: Lifecycle-boundary recovery"
-sn_refs = ["SN-025"]
-requirement = """SR-101 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-102]
-title = "Typed dual-plan state machine"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """plan_round.py shall enforce the typed dual-plan state machine, spend ledger, one-repair and revision caps, position-swap agreement, and PAGE outcomes."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-066."""
-acceptance_criteria = """Happy path selects within budget; illegal repeats raise caps; repair and revision rules hold; arbiter instability or exhaustion pages; state survives JSON round trip."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-103]
-title = "Allowlist-only dual-plan briefs"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """plan_briefs.py shall assemble planner, critic, and arbiter briefs only from SR/IF registries and strict prompt-template filling."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-066."""
-acceptance_criteria = """Briefs contain allowlisted registry material, exclude status/log/self-assessment data, reject unknown or unfilled slots, and honor override then kit fallback."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-104]
-title = "Dual-plan coverage-step adapter"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """plan_coverage_step.py shall adapt mechanical coverage results into clean, implicated-repair, repeated-failure, and malformed round outcomes."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-066."""
-acceptance_criteria = """Exit 0 advances, first findings implicate and repair once, repeated findings page, malformed is distinct and fails closed, and report payload is captured."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-105]
-title = "Stable dual-plan artifacts and WI filing"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """plan_artifacts.py shall persist stable round artifacts and file selected queued child WIs with mapped predecessors and registry-valid fields."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-066."""
-acceptance_criteria = """Round ids and stage names are stable; selected rows receive sequential ids, mapped dependencies, empty Deliverables and valid specs/tiers; line endings and prior log content survive."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-106]
-title = "Fresh-session dual-plan execution"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """plan_runner.py shall run two planners, cross-critiques, bounded revisions, and position-swapped arbiters as fresh sessions and select only on true-plan agreement."""
-rationale = """Realizes SN-024;SN-006 by isolating one independently reviewable obligation formerly carried by SR-066."""
-acceptance_criteria = """The complete round runs unattended with fresh session identities; runtime fallback is bounded; content agreement selects; position bias, missing rubric, or no route pages honestly."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-107]
-title = "Dual-plan direct-path isolation"
-sn_refs = ["SN-024", "SN-006"]
-requirement = "The worker shall refuse a dual row on the direct path."
-rationale = """Realizes SN-024 and SN-006 — a dual-plan row built by the direct worker skips the competing-plan round that is the whole reason it was marked dual, and the skip is silent. Letting the worker fall back to a single plan was rejected: it produces a plausible result that nobody knows was never contested."""
-acceptance_criteria = "Direct workers reject dual rows and --dual-plan rejects non-dual rows."
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-108]
-title = "Dual-plan round disposition"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """The --dual-plan round shall commit SELECT as a docs-only disposition (children filed as queued specs, validated atomically with their generated views) and surface PAGE per the declared ratification level, never silently."""
-rationale = """Realizes SN-024 and the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — a disposition split across commits can land half-applied, and halting every lane for one round's outcome throws away the parallelism for work the outcome does not touch. Applying the disposition per-lane was rejected: the registries are shared, so concurrent writers conflict on every one."""
-acceptance_criteria = """SELECT files children that pass the registry validator; a PAGE preserves the round's evidence on disk."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-109]
-title = "Spec-lifecycle close-side coherence"
-sn_refs = ["SN-002", "SN-012"]
-requirement = """check_trajectory.py shall flag a done WI whose SpecRef is non-empty and a live docs/specs file (scaffold README/-000 exemplars excluded) cited by no open WI, warning on every run and failing under --strict."""
-rationale = """Realizes SN-002 and SN-012 — the open half of the spec-of-record lifecycle was enforced and the close half was not, so a repo accretes stale SpecRefs and orphan live specs (measured at 137 rows and roughly 60 files) until nobody can tell which spec is live. A prose close rule was rejected because it is the control that was already in place while that backlog accumulated: an unenforced rule is indistinguishable from no rule at the point it matters. Opt-in and vacuous on a fresh scaffold."""
-acceptance_criteria = """A done row with a SpecRef and an uncited live spec each produce an R-F WARN with exit 0 on a plain run and exit 1 under --strict; a shared doc cited by any open (incl. deferred/blocked) WI stays clean; docs/specs README and -000 exemplars never flag."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Traceability"
-
-[requirement.SR-110]
-title = "Per-module coverage floors"
-sn_refs = ["SN-008", "SN-012"]
-requirement = """check_coverage.py shall fail when a module listed in the coverage-floor census
-is below its declared per-module line-coverage percentage in the pytest-cov JSON
-report, or is absent from that report — so the global --cov-fail-under floor
-cannot hide a thin high-risk module.
-An absent report skips, and an empty census is a no-op."""
-rationale = """Realizes SN-008 and SN-012 — one aggregate coverage number lets well-tested generators subsidize thin coverage at the security and process boundaries, so a green overstates confidence exactly where it matters most. Raising the single global threshold was rejected: it penalizes every module for the weakest one without ever naming it. Opt-in at the product layer, so a non-adopter pays nothing."""
-acceptance_criteria = """A module below its floor exits 1 naming it; a declared module absent from the report exits 1; all floors holding exits 0; no coverage report (e.g. the smoke tier) SKIPs; an absent or empty census is a clean no-op; a malformed floor line fails loudly."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Coverage floors"
+aspect = "trajectory"
 
 [requirement.SR-111]
 title = "Kit-version stamp"
 sn_refs = ["SN-001", "SN-007"]
+boundary_refs = ["B-05"]
 requirement = """bootstrap.py shall stamp docs/kit-version with the kit commit SHA and date, marked -dirty on an uncommitted kit tree."""
 rationale = """Realizes SN-007 — without a recorded origin an adopter cannot tell which kit version they are on, so a re-sync degrades from a diff into a guess and the ADOPTING.md re-sync procedure has no baseline to diff against. Deriving the version from file hashes was rejected: it reports that something differs without saying from what."""
 acceptance_criteria = """docs/kit-version records the kit SHA and date; a scaffold from an uncommitted kit tree is marked -dirty."""
@@ -1427,11 +422,11 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-112]
 title = "Checked per-agent skill fan-out"
 sn_refs = ["SN-012"]
+boundary_refs = ["B-05"]
 requirement = """The per-agent skill copies (.claude/.gemini/.agents) shall be a checked, generated fan-out of the one neutral skills/ source."""
 rationale = """Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — one skill maintained in three agent-specific copies rots into three different skills, and the copy an agent actually loads is the one nobody edited. Maintaining a single shared directory was rejected because each agent harness looks in its own path; the fan-out is forced, so the copies are generated and drift is a finding."""
 acceptance_criteria = """A per-agent copy that diverges byte-for-byte from source is detectable and refreshed by one command."""
@@ -1439,11 +434,11 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Skills index + fan-out"
 
 [requirement.SR-113]
 title = "Dev-setup wires the process floor"
 sn_refs = ["SN-001"]
+boundary_refs = ["B-05"]
 requirement = "dev-setup shall wire the pre-commit process floor (core.hooksPath) from its baseline."
 rationale = """Realizes SN-001 — a process floor that needs a separate opt-in step is active only for the contributors who already knew about it, which is the reverse of what a floor is for. Documenting the git command was rejected: the floor then protects the rung the contributor read about rather than the one they actually run."""
 acceptance_criteria = "After dev-setup the pre-commit floor is active without a separate setup step."
@@ -1451,262 +446,37 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Onboarding + dev-setup"
 
 [requirement.SR-114]
 title = "Kit scripts run across the supported OSes"
 sn_refs = ["SN-003", "SN-011"]
+boundary_refs = ["B-05"]
 requirement = "The kit scripts shall run on Python 3.11+ across Linux, Windows and macOS."
-rationale = """Realizes SN-011 — a script that works only where its author ran it turns portability into a defect the adopter finds, and the path, line-ending and locking differences that break it are invisible on a single platform. Testing one platform and reading the others by inspection was rejected: every one of those differences has been a real failure here."""
-acceptance_criteria = """The CI matrix spans Linux, Windows and macOS on Python 3.11 and latest (3.x) and is green; macOS runs on current Python only — the 3.11 floor is a platform-agnostic language/stdlib guarantee already exercised on Linux and Windows, while macOS's job is OS-specific behavior (fcntl.flock, paths, git worktrees) that does not vary by Python version, so the macOS+3.11 cell is excluded as a redundant-coverage call, not a runner-availability workaround (3.11 has arm64 macOS builds)."""
+rationale = "Realizes SN-011 — a script that works only where its author ran it turns portability into a defect the adopter finds, and the path, line-ending and locking differences that break it are invisible on a single platform. Testing one platform and reading the others by inspection was rejected: every one of those differences has been a real failure here. The macOS exclusion argument: the 3.11 floor is a platform-agnostic language/stdlib guarantee already exercised on Linux and Windows, while macOS's job is OS-specific behavior (fcntl.flock, paths, git worktrees) that does not vary by Python version — a redundant-coverage call, not a runner-availability workaround (3.11 has arm64 macOS builds)."
+acceptance_criteria = "The CI matrix spans Linux, Windows and macOS on Python 3.11 and latest (3.x) and is green; the macOS+3.11 cell is excluded as a redundant-coverage call recorded in the rationale; the hosted matrix as an evidence surface is SR-152's contract."
 priority = "M"
 verification = "Analysis"
-status = "Verified"
-phase = 1
-area = "Portability"
-
-[requirement.SR-115]
-title = "Deterministic ready ordering"
-sn_refs = ["SN-025", "SN-006"]
-requirement = """schedule.py shall order the eligible ready frontier deterministically by gate class, then Priority descending, then transitive downstream-dependent count descending, then remaining hard-path length descending, then WI id."""
-rationale = """Realizes SN-025 — a frontier that is correct but unordered lets two readers of the same registry dispatch different work, so a rerun stops being reproducible and a scheduling bug cannot be replayed. Ordering by WI id alone was rejected: it ignores the critical path, so the chain everything waits on gets picked last."""
-acceptance_criteria = """Ordering is identical across --explain and --format json; Priority outranks downstream-dependent count within one gate class; simulate --jobs 1 matches the serial order."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-116]
-title = "Generated status surface"
-sn_refs = ["SN-025", "SN-010"]
-requirement = """The trunk lane shall maintain docs/status.md's generated snapshot as a freshness-gated reference surface never written on a worker branch (trunk_step --regen; concurrency-restructure SS5.2). (The docs/run-state half of this row retired with the dispatcher at Phase 5.)"""
-rationale = """Realizes SN-010 — an agent-authored status surface drifts from the state it reports and is trusted anyway, and a worker branch writing it makes the snapshot describe one lane instead of the project. Letting each worker append its own status was rejected: it produces a file that conflicts on every integration and reports no coherent whole."""
-acceptance_criteria = """The status snapshot regenerates on the trunk after a merge and fails its freshness gate when stale; work branches skip the gate and never commit the artifact."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-
-[requirement.SR-117]
-title = "Superseded: Atomic traincar reservation and lane leasing"
-sn_refs = ["SN-025"]
-requirement = """SR-117 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-118]
-title = "Superseded: Traincar build and review shape"
-sn_refs = ["SN-025"]
-requirement = """SR-118 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-119]
-title = "Superseded: Release on early train end"
-sn_refs = ["SN-025"]
-requirement = """SR-119 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-120]
-title = "Superseded: Blocked-constituent disposition"
-sn_refs = ["SN-025"]
-requirement = """SR-120 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "M"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-121]
-title = "Superseded: Gated downstream migration to the parallel default"
-sn_refs = ["SN-025", "SN-012"]
-requirement = """SR-121 is superseded by SR-132 (concurrency-restructure Phase 5, 2026-07-29): the bespoke dispatcher/reservation machinery this specified was deleted outright — git plus the serial local integrator is the integration seam (claims are serial trunk commits, the composed tree is the candidate by construction, recovery is plain git history). Active requirements, implementation links, and decomposition evidence shall cite the replacement row."""
-rationale = """Identity history for the Phase 5 deletion (the SS6 fate table): the requirement's job survives in the integration seam, its machinery does not."""
-acceptance_criteria = "The SupersededBy link resolves to SR-132; no LLR cites this row; TC-133 cites it."
-priority = "S"
-verification = "Inspection"
-status = "Verified"
-phase = 4
-area = "Parallel dispatch"
-superseded_by = ["SR-132"]
-
-[requirement.SR-122]
-title = "Dashboard freshness check"
-sn_refs = ["SN-010"]
-requirement = """gen_trajectory.py --check shall fail on stale or missing output, the visible git-derived as-of stamp being excluded from stamp-only comparisons."""
-rationale = """Realizes the dissolved edge expectation that a generated artifact drifting from its source fails its --check — a committed dashboard that nobody re-checks becomes a confident picture of a project that has moved on, and the as-of stamp changes on every commit, so comparing it would make the check cry wolf and get disabled. Regenerating on read was rejected: the artifact is committed so it can be read without the toolchain."""
-acceptance_criteria = "Stale or missing output fails --check, and as-of behavior is stable in and outside Git."
-priority = "M"
-verification = "Test"
 status = "Modified"
 phase = 1
-area = "Trajectory"
-
-[requirement.SR-123]
-title = "Critique closure ratchet"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """check_trajectory.py shall warn when a Critique WI closes after CHANGES-REQUESTED without validation evidence changing."""
-rationale = """Realizes SN-006 — a changes-requested verdict followed by a close with nothing altered is how a critique becomes a formality, and nothing else in the harness can see that pattern. Hard-failing the close was rejected: the evidence sometimes lands outside the registries, so the check reports rather than adjudicates."""
-acceptance_criteria = """The lax-closure case warns, while an approval or a TC, test or rubric delta stays silent."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Unattended loop"
-
-[requirement.SR-124]
-title = "Contradiction-safe dual-plan dispatcher class"
-sn_refs = ["SN-024", "SN-006"]
-requirement = "schedule.py shall derive a contradiction-safe single-WI scheduling class from PlanMode."
-rationale = """Realizes SN-024 — a row whose PlanMode and SafetyClass disagree has no correct lane, and guessing one dispatches contradictory work rather than surfacing the contradiction. Defaulting to the safer class was rejected: it hides a registry error that only a human can resolve."""
-acceptance_criteria = "PlanMode derives a single-WI class, and a contradictory SafetyClass quarantines the row."
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-125]
-title = "PAGE maps through the declared ratification level"
-sn_refs = ["SN-024", "SN-006"]
-requirement = """The --dual-plan single-shot round shall map a PAGE through the declared ratification level, hard-gating a human only while the tier in process is still HUMAN-HELD and otherwise reaching the pause-free attention (STALL) end state."""
-rationale = """Realizes the dissolved edge expectation that an unattended run never blocks on a prompt, at launch or mid-run — a PAGE that always stops for a human makes the unattended loop attended in practice, while one that never stops discards the judgement the round asked for. Two separate mappings for the dispatcher and the single-shot round were rejected: they drift, and the drift shows up as a loop that hangs on one path only."""
-acceptance_criteria = """A PAGE preserves evidence and follows the declared level (a human-held tier -> NEEDS-HUMAN exit; a loop-held tier -> STALL exit, no human gate); an unreadable level or stage resolves to human-held, so the failure direction is the gate, never past it."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 4
-area = "Dual-plan decomposition"
-
-[requirement.SR-126]
-title = "Spine stand-alone rule"
-sn_refs = ["SN-002", "SN-010"]
-requirement = """trace.py shall fail under --strict when any spine row's normative text cites a work item or a process doc."""
-rationale = """Realizes SN-010 — a row that cites a work item is unreadable to the audience that matters most: a downstream adopter, or an agent, with none of this project's history, who must resolve an id they cannot see before they know what the system does. A process-doc citation fails differently and just as badly: a row that cites the rule it is obeying inverts the relationship, so amending the process silently changes what the row appears to require. Warning instead of failing was tried and rejected: a warn nobody must act on is how 43 such rows accumulated before anyone measured them."""
-acceptance_criteria = """A WI id or a process-doc citation in an SR Title/Requirement/Rationale/AcceptanceCriteria, an LLR Title/Detail/Rationale, or a TC Method/Expected/Parameters exits 1 under --strict and names the registry, row and cell; a script name, artifact path, rubric or sibling spine id does not; pointer columns are out of scope."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-127]
-title = "Requirement form: one testable obligation"
-sn_refs = ["SN-002", "SN-004"]
-requirement = """trace.py shall fail under --strict when a non-Draft requirement repeats its obligation keyword, uses a different modal in normative text, states an obligation with no actor, or uses an unfalsifiable or open-ended term."""
-rationale = """Realizes SN-004 — when one row carries two obligations and only one holds, no id reports the failure, so the gate passes on a partially-met requirement. Undecidable wording fails differently and worse: an unfalsifiable adjective cannot be tested, so the row is signed on impression. Each rule is a LEXICAL proxy for a semantic property and is scoped to what it can actually decide — counting the obligation keyword catches the shape that recurred here and does not claim to find every multi-obligation row. A semantic check was rejected as out of reach for a stdlib checker, and a readability score was rejected as a proxy for the wrong property: it measures prose complexity, not whether a reader can tell what is binding."""
-acceptance_criteria = """A second `shall`, a non-`shall` modal, an actorless `shall be <participle>`, an unfalsifiable term, an open-ended escape clause, or a `shall` in an LLR Detail exits 1 under --strict; a Draft row, a zero-`shall` row, `must` as a project's own obligation keyword, and a multi-clause AcceptanceCriteria do not."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
-
-[requirement.SR-128]
-title = "Paraphrase advisory"
-sn_refs = ["SN-002"]
-requirement = """trace.py shall warn (never fail) when an SR Rationale re-words its own Requirement, or an LLR Detail re-words its parent SR Requirement, past a declared word-overlap threshold."""
-rationale = """Realizes SN-002 — a child that restates its parent adds a second home for one fact and no decomposition, so the trace grows a level without gaining information and a later amendment updates one copy. It warns rather than fails because the detector is word overlap: a short, correct Detail legitimately shares vocabulary with the requirement it decomposes, and gating on a heuristic with a large legitimate majority produces a check that gets scrolled past. The two relationships named are the ones where the parent is unambiguous; a general child-cell rule was rejected because 'the parent' is not well defined for the rest."""
-acceptance_criteria = """An SR Rationale overlapping its own Requirement, or an LLR Detail overlapping its parent SR Requirement, past the declared threshold emits a stdout WARNING and a report line; the exit code is unchanged."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Traceability"
+aspect = "portability"
 
 [requirement.SR-129]
 title = "Registry representation migration"
 sn_refs = ["SN-002", "SN-012"]
-requirement = """The kit shall provide a mechanical converter between the work-item registry's home - the docs/work/ spec folder (status = directory, TOML frontmatter, Deliverable in the body) - and the retired docs/requirements/work-items.csv form, refusing any status outside the known vocabulary, any materialization into a non-empty target, and any conversion while an in-flight active/<branch>/ claim exists (conversion is a drained-stop operation), with the round-trip proven over the live registry before the authority flip."""
+boundary_refs = ["B-05"]
+requirement = "The kit shall provide a mechanical converter between the work-item registry's home - the docs/work/ spec folder (status = directory, TOML frontmatter, Deliverable in the body) - and the retired docs/requirements/work-items.csv form, refusing any status outside the known vocabulary, any materialization into a non-empty target, and any conversion while an in-flight active/<branch>/ claim exists (conversion is a drained-stop operation), with the round-trip provable over the live registry."
 rationale = """The 140-cell lesson: an unproven representation change is where a registry silently loses cells. The converter is the migration path every adopter of the folder home takes, and the single spec writer the filing seam reuses (concurrency-restructure spec, Phase 2)."""
 acceptance_criteria = """wi_convert --verify over a populated registry exits 0 reporting cell-exact equality; an unknown status refuses naming the row; folder->CSV->folder is parse-equal including a hand-filed spec with no order key; an in-flight claim refuses conversion by name."""
 priority = "C"
 verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 4
-area = "Trajectory"
-
-[requirement.SR-130]
-title = "Serial trunk step compiles log fragments and regenerates authority"
-sn_refs = ["SN-027", "SN-008"]
-requirement = """A serial trunk step shall compile docs/log.d/ work-branch log fragments into
-docs/log.md in merge order derived from git history.
-It shall validate every fragment before any write, rebase relative links to the
-log's home, delete compiled fragments, fail loudly at the first error, and never
-commit."""
-rationale = """The §5.1/§5.2 shared-surface rules (concurrency-restructure): no work branch writes log.md, so hand-merged logs become unrepresentable; the one deliberately serial actor stays tiny, idempotent and fail-loud (§5.5). The artifact-regen half is SR-134's obligation (one row, one obligation)."""
-acceptance_criteria = """Two committed fragments compile in git-add order with links rebased docs/-relative and the fragments deleted; an uncommitted or malformed fragment blocks the whole batch with nothing appended; a fragment-free run is a clean no-op."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Trajectory"
-
-[requirement.SR-131]
-title = "Tracked pause drains claiming to a merged stop"
-sn_refs = ["SN-027"]
-requirement = """A tracked docs/work/pause file (TOML: reason, since) shall pause claiming —
-everything in flight finishes and integrates.
-It shall be read via pause_reason as the ONE pause home (the legacy untracked
-docs/pause half retired with the dispatcher at Phase 5), failing closed on
-malformation."""
-rationale = """§5.6: pause means stop claiming and drain to a merged stop - never a strand. The tracked form survives clones, its reason is diffable history, and unpausing is an auditable deletion commit; a broken pause file must still pause, loudly. The pending-surface render is SR-135's obligation (one row, one obligation)."""
-acceptance_criteria = """A tracked pause file pauses the coordinator via pause_reason under the unchanged None/''/reason contract; a malformed file pauses with the pinned loud placeholder; a stray legacy docs/pause file is inert."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Trajectory"
-
-[requirement.SR-132]
-title = "Local integrator: serial fail-closed merge queue"
-sn_refs = ["SN-027", "SN-008"]
-requirement = """The local integrator shall:
-(1) claim work via a serial trunk commit (queued spec to
-docs/work/active/<branch>/, branch cut from that commit, refused while
-docs/work/pause is present);
-(2) merge each finished claimed branch --no-ff onto a candidate worktree with
-the trunk step folded into the merge commit;
-(3) run the declared bar on the composed tree - refusing on a missing or empty
-check declaration and on any SKIP in the bar's own report;
-(4) require the policy-dialed verdict artifacts with git-derived freshness;
-(5) fast-forward the trunk only on green; and
-(6) stop loudly on red."""
-rationale = """The §1.2 seam's default backend: serial => composed-tree gating by construction; fail-closed against the dispatcher's recorded fail-open (a skipped bar merged 8 trains with zero gate-verified). Verdict freshness is git-derived because the WI-scoped §5.4 naming dropped the sha7 filename binding - without it a stale APPROVE clears the gate."""
-acceptance_criteria = """A claim moves the spec and cuts the branch in one serial trunk step and is refused when paused, dirty, name-unsafe, not-ordinary or not-ready; a finished branch is detected from its tree alone; an absent or stale or CHANGES-REQUESTED verdict refuses the merge; a missing stack.ini or empty [product] test refuses; a red bar parks the candidate and stops the queue; the RULING-6 window audit flags a non-merge product commit."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-133]
 title = "Work-branch lane skip for freshness steps"
 sn_refs = ["SN-027", "SN-008"]
+boundary_refs = ["B-05"]
 requirement = """On a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim) check.py's generated-artifact freshness steps shall SKIP with a stated trunk-lane reason - generated artifacts are trunk-only - while every non-freshness step still runs."""
 rationale = """The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk bar. Decomposed from SR-006 so each row states one obligation."""
 acceptance_criteria = """on a claimed work branch the declared freshness steps SKIP with a §5.2 notice and exit code untouched while skills-sync, trajectory and registry-integrity still run; the closing commit and its successors keep the skip (the signal derives from branch history, not the working tree); the trunk lane never skips them."""
@@ -1714,88 +484,50 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 4
-area = "Gate harness"
-
-[requirement.SR-134]
-title = "Trunk step regenerates the declared artifacts in dependency order"
-sn_refs = ["SN-027", "SN-008"]
-requirement = """The serial trunk step shall regenerate the declared generated artifacts in dependency order - the derived gate before its consumers - failing loudly at the first error and never committing."""
-rationale = """Stale-artifact merge conflicts become unrepresentable when only the serial trunk actor regenerates (§5.2/§5.5); dependency order because docs/gate is an input to the dashboard and status views, not an output. Decomposed from SR-130 so each row states one obligation."""
-acceptance_criteria = """--regen skips absent artifact families with a notice and stops loudly at the first failing generator; derive_gate runs before the dashboard/status/open-items regens."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Trajectory"
-
-[requirement.SR-135]
-title = "Pending surface renders the declared pause verbatim"
-sn_refs = ["SN-027"]
-requirement = """The generated pending surface shall render a declared pause's since and reason verbatim - no clock - clearing when the pause file is deleted."""
-rationale = """An open pause is a visible accruing cost, never a forgotten one (the stale-reason lesson). Decomposed from SR-131 so each row states one obligation."""
-acceptance_criteria = """the pending block renders Paused since <date> - <reason> with the declared date verbatim (no clock), omits the stamp when since is empty, renders the pinned fail-closed placeholder on malformation, and clears when the file is deleted."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-area = "Trajectory"
-
-[requirement.SR-136]
-title = "Declared-figure provenance"
-sn_refs = ["SN-008", "SN-010"]
-requirement = """check_figures.py shall flag a declared driven figure - a line opting in under the fig: marker convention - that does not carry both the command that produced it and the revision it was driven at, or a derivation naming the declared figures it is computed from, warn-first (exit 0) with --strict gating; presence only, never truth, and an unmarked figure is out of scope by design."""
-rationale = """Realizes SN-008 and SN-010 - a driven figure is evidence only at the revision it was driven on, and three false figures in one session (2026-08-01) each cost a review round because no record named the producing command or revision, so a stale figure read exactly like a live one. Digit detection was rejected (ids, dates, section numbers and byte budgets drown it, and one false figure had no digits at all), so the marker is opt-in - declare, don't infer - making the honest claim 'declared figures carry provenance', never 'all figures do'. Re-derivation is rung 2, deliberately not built: recorded commands are an execution surface, most figures are legitimately historical, and some commands are expensive or non-deterministic."""
-acceptance_criteria = """A fig: marker missing cmd= or rev= (or carrying only empty or wordless values) warns naming the missing half and gates only under --strict, each marker on a line judged on its own attributes; cmd= plus rev= (bare or quoted), or a non-empty derived=, passes; unmarked figure prose, placeholder-grammar examples, fig-ok lines, GENERATED blocks and docs/reviews/ records are ignored; docs/stack.ini is scanned beside the root and docs markdown surfaces."""
-priority = "S"
-verification = "Test"
-status = "Verified"
-phase = 1
-area = "Doc currency"
 
 [requirement.SR-137]
 title = "One policy home, with a checked shape"
 sn_refs = ["SN-028"]
-requirement = """The kit shall read every process policy dial from a single `docs/process.toml`,
-and shall REFUSE — never resolve by precedence — a repo in which any dial is
-declared both there and in its legacy one-word file.
-The file's line shape shall be a checked contract: one `key = value` per line
-under a bare `[section]` header, no dotted keys, no inline tables, no multi-line
-strings."""
+boundary_refs = ["B-01", "B-04"]
+requirement = "The kit shall read every process policy dial from a single docs/process.toml whose line shape is a checked contract (one key = value per line under a bare [section] header; no dotted keys, inline tables or multi-line strings), refusing — never resolving by precedence — a repo in which any dial is declared both there and in its legacy one-word file."
 rationale = """Two grammars read this file — `tomllib` in Python and the three git hooks in pure sh, so a Python-less box still fails closed on a declared privacy gate (M-42). TOML is far more expressive than a `grep -E` can follow, so every shape only one reader understands is a silent flip of a security gate; the first cut shipped five such shapes, three of them fail-OPEN. Narrowing the shape and CHECKING the narrowing is what makes one file safe for two readers."""
 acceptance_criteria = """A dial declared in both homes produces a refusal naming the key and both files, at every guarded entry point (the dispatcher's pre-claim preflight, intake's adjudication arm, the integrator's verdict gate); a dotted key, inline table, multi-line string or hook-read key under the wrong section is refused by the shape check AND still reads ON in both readers; the hooks' sh and `tomllib` return the same answer over the adversarial file table; a wrong-typed or out-of-range dial is refused rather than defaulted."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-138]
 title = "Legacy config converts automatically and totally"
 sn_refs = ["SN-028"]
-requirement = """`bootstrap.py --migrate-config` shall fold every legacy one-word policy file into `docs/process.toml` and delete it, and shall NEVER delete a file whose value it did not manage to write. Both bootstrap and the documented re-sync shall run it."""
+boundary_refs = ["B-05"]
+requirement = "bootstrap.py --migrate-config — run by both bootstrap and the documented re-sync — shall fold every legacy one-word policy file into docs/process.toml and delete it, never deleting a file whose value it did not manage to write."
 rationale = """The hard mixed-config refusal in SR-137 is only safe to ship if a downstream adopter never meets it un-aided. And the converter's own failure mode is the sharp one: an earlier cut deleted a legacy file on the strength of a write that never happened and reported success, destroying a declared `privacy_check = true` under a green `migrated:` line."""
 acceptance_criteria = """A repo carrying legacy files converts in one pass and reports what moved; a second pass is a no-op; a legacy file whose value cannot be written is LEFT IN PLACE with its value intact and named in the report; the retired gate-authority word expands to all three dials it meant rather than to a single key."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-139]
 title = "Ratification as an ordinal over a derived spine stage"
 sn_refs = ["SN-029"]
-requirement = """The kit shall express human ratification authority as a cumulative integer 0-4 naming the highest spine tier a human still ratifies, compared against a separately derived SPINE STAGE (0=SN..4=nothing in process) with a declared, auditable mapping to the harness gate. Every unreadable or out-of-range input shall resolve toward MORE human involvement."""
+boundary_refs = ["B-02", "B-05"]
+requirement = "The kit shall express human ratification authority as a cumulative integer 0-4 naming the highest spine tier a human still ratifies, compared against a separately derived SPINE STAGE (0=SN..4=nothing in process) with a declared, auditable mapping to the harness gate — every unreadable or out-of-range input resolving toward MORE human involvement."
 rationale = """The retired three-value enum could not express "TCs are human-held but LLRs are not", and four tables each re-interpreted the same word with its own fail-safe direction. The failure that matters is a machine ratifying something a human meant to hold, so every degrade has to point the same way — including the ones that look like kindness: clamping an out-of-range level toward 0 reads as "nothing is human-held" and disarms every hold in the repo."""
 acceptance_criteria = """Level N holds exactly the tiers the shipped template documents (cumulative, strictly-less-than the stage); stage 4 is held by no level, the end-of-run hold being its own dial; an unreadable stage, an absent dial, and a wrong-typed dial all read as human-held; an out-of-range level falls back to the conservative end AND is refused loudly; a legacy gate-policy word reads as all three dials it meant."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-140]
 title = "The attestation anchor lives on the artifact's own row"
 sn_refs = ["SN-029"]
+boundary_refs = ["B-02"]
 requirement = """The kit shall record each acceptance on the accepted artifact's own row - the
 commit whose tree carries the text that was accepted, and a digest of that row's
 NORMATIVE cells - never in a second registry keyed on the same artifact.
@@ -1803,125 +535,82 @@ It shall report text that has moved away from its recorded anchor regardless of
 any Status movement.
 It shall treat an anchor written in the same commit as the text it anchors as an
 error."""
-rationale = """Attestation STATE is already the row's own Status - derive_gate computes the gate from those cells and reads no other source - so a separate ledger was a second home for a fact the row already carried, and three of its seven columns duplicated cells outright (Decision=ratified|meaning IS Status; superseded IS SupersededBy). What the ledger got right is the ANCHOR ITSELF: 'has this been ratified' was answered by walking git for the newest commit where a row read Verified, which is sound only while every amendment flips its row in the same commit - precisely the sanctioned path the staged-amendment guard deliberately ignores. Two cells are kept rather than one because they fail in DIFFERENT directions: the commit is what a human can review and what the before/after brief diffs against, while the digest is what survives a squash-merge, a rebase or a shallow clone, any of which makes a recorded sha unresolvable and would otherwise silence drift detection repo-wide at once. Owner ruling 2026-08-09, docs/repo-lock.md D-1."""
+rationale = "Attestation STATE is already the row's own Status - derive_gate computes the gate from those cells and reads no other source - so a separate ledger was a second home for a fact the row already carried, and three of its seven columns duplicated cells outright (Decision=ratified|meaning IS Status; superseded IS SupersededBy). What the ledger got right is the ANCHOR ITSELF: 'has this been ratified' was answered by walking git for the newest commit where a row read Verified, which is sound only while every amendment flips its row in the same commit - precisely the sanctioned path the staged-amendment guard deliberately ignores. Two cells are kept rather than one because they fail in DIFFERENT directions: the commit is what a human can review and what the before/after brief diffs against, while the digest is what survives a squash-merge, a rebase or a shallow clone, any of which makes a recorded sha unresolvable and would otherwise silence drift detection repo-wide at once. Owner ruling 2026-08-09, docs/repo-lock.md D-1. One-shall waiver (13v): record / report-drift / refuse-same-commit-stamp are one anti-tamper contract whose clauses deliberately fail in different directions; splitting would mint three rows for one (SN-029, B-02) pair against the 13p invariant, and a participle re-word would bury two refusal contracts a TC must target by name."
 acceptance_criteria = """An artifact whose normative text has moved since its recorded anchor is reported whether or not its Status moved; an anchor that cannot be recomputed, or that names an artifact which is not a current row, is a finding rather than silence; a commit that writes an anchor cell while also changing that row's normative cells is refused, because a re-stamp in the same breath as an amendment hides the amendment; and the same rules hold for a stakeholder need, which has no Status cell for the amendment machinery to watch."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
-
-[requirement.SR-141]
-title = "The loop's priority order is stated and pinned"
-sn_refs = ["SN-025"]
-requirement = """Admission shall prefer `adjudication` rows over all other ready work, as a stable partition applied at admission rather than by renumbering the ruled rank table, and shall not thereby admit anything past a human-held stop."""
-rationale = """A ratification is the one act this loop cannot cheaply take back — the ledger is append-only by design — so a spine batch that re-attests requirements must not run ahead of an unjudged claim that may overturn its premise. Renumbering the ruled rank table would migrate every downstream repo's ordering for a rung that belongs to admission, so the two orders are kept distinct and the disagreement is stated."""
-acceptance_criteria = """An adjudication row admits ahead of a ready spine batch; the ruled rank table is unchanged, so `--explain` still reports it; the partition is stable (non-adjudication rows keep their relative order); a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop."""
-priority = "S"
-verification = "Test"
-status = "Planned"
-phase = 5
-area = "Process"
-
-[requirement.SR-142]
-title = "Red test cases under a closed implementation are named and judged"
-sn_refs = ["SN-025"]
-requirement = """The idle census shall name, as its own class, a test case that is not green while every requirement it verifies is cited by a work item recorded `done`, and shall route it to an ADJUDICATION row whose tier is estimated from measured breadth rather than defaulted."""
-rationale = """The pair is a contradiction the registries state plainly and nothing was reading: the work is closed and the evidence for it is red. It is not one situation but three — a stale TC, an optimistic close, or a moved requirement — and choosing between them is a judgement, which is what the adjudication kind is for. The statuses that are NOT red are stated as exemptions because Status is an open vocabulary: failing toward naming a gap beats failing toward missing one."""
-acceptance_criteria = """A not-green TC under a `done` citer is named; `Verified`, `Draft` and `Modified` are exempt (the last belongs to the amendment adjudication, and two judgement rows for one event is a double-count); an open, `partial` or `cancelled` citer makes nothing red; a TC verifying a mix of claimed and unclaimed targets is not red; the census line's grammar has exactly one reader."""
-priority = "S"
-verification = "Test"
-status = "Planned"
-phase = 5
-area = "Process"
-
-[requirement.SR-143]
-title = "Queue overlap is made visible, never blocked"
-sn_refs = ["SN-025"]
-requirement = """The validator shall report, warn-only and never in the exit code, pairs of OPEN work items that overlap by near-identical title, shared requirement citation, or a shared spec of record."""
-rationale = """A queue that silently grows two rows for one job is the failure; a checker that cannot tell a legitimate split from a duplicate must not block on the difference. Overlap is frequently correct — two rows may answer one requirement from different sides — so the whole contribution of the mechanical rung is visibility, and the judgement half belongs to an adjudicator with the scope in front of it."""
-acceptance_criteria = """Each overlapping OPEN pair is named once per signal with both ids, in deterministic order; a closed row never conflicts; the title bar is high enough that ordinary unrelated work is silent and a shared stopword is not a signal; the findings never join the exit code, not even under --strict."""
-priority = "S"
-verification = "Test"
-status = "Planned"
-phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-144]
 title = "Every lane close is a terminal state with an immutable record"
 sn_refs = ["SN-027"]
-requirement = """A lane that cannot finish shall close into a TERMINAL `partial/` state with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split, and shall merge like any other branch. A report declaring neither a split nor an explicit deferral shall be refused, and a second close of the same event shall be refused rather than overwriting the first."""
+boundary_refs = ["B-05"]
+requirement = "The delivered loop content shall close a lane that cannot finish into a TERMINAL partial state that merges like any other branch, with one immutable per-close report naming the claimed outcome, the reason, the commit range and the keep/discard split — refusing a report that declares neither a split nor an explicit deferral, and refusing a second close of the same event rather than overwriting the first."
 rationale = """Five successive dedup mechanisms leaked because each reconstructed the return event from a MUTABLE proxy; a document that never moves dissolves the class instead of mitigating it. The refusals are what make "immutable" a property rather than a claim. The split is a field because its absence merged rejected code onto trunk on 2026-08-03: silence about it is different from saying "I could not judge", and only silence is unactionable."""
 acceptance_criteria = """A partial close is clean under the real validator (the terminal Deliverable rule is exempt, because an early close leaves the spec's definition byte-identical by design); a terminal spec with no report is LOUD rather than silently un-disposed; a second close is refused and leaves no residue in the lane; a multi-spec close that refuses restores every report it wrote."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
-
-[requirement.SR-145]
-title = "A lane's outcome is a claim; the adjudicator overrules by minting"
-sn_refs = ["SN-027"]
-requirement = """Every `partial` and `cancelled` close shall earn one disposition row, keyed on the close's own immutable report path; a `complete` close shall be spot-checked at a declared rate rather than gated. Continuing partial work shall mean DRAFTING A SUCCESSOR carrying explicit lineage, never re-opening a terminal row."""
-rationale = """The lane is entitled to assert what happened; what it MEANS is the adjudicator's, and making that authoritative by minting keeps history honest — the original move is never reversed in place. Keying the disposition on the report PATH rather than on any field of it is what makes re-sweep idempotence correct: an earlier cut keyed on the report's mutable outcome field and re-minted on every edit. Adjudicating every green close would rebuild the verdict gate under a new name, over work two gates already judged."""
-acceptance_criteria = """A partial or cancelled close mints exactly one disposition; a re-sweep mints none; a genuinely second close is a second report and so a second row; a disposition row never mints a disposition for itself (refused at both ends); a successor's lineage survives the id change."""
-priority = "S"
-verification = "Test"
-status = "Planned"
-phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-146]
 title = "Prompts are reviewable files with a per-session audit trail"
 sn_refs = ["SN-005"]
-requirement = """Every prompt the loop launches shall be a shipped file with strictly filled slots, listed by digest in a freshness-gated generated catalogue, with each session recording which template it used and the fingerprint of what that rendered to."""
+boundary_refs = ["B-05"]
+requirement = "Every prompt the delivered loop launches shall be a shipped, reviewable file with strictly filled slots — listed by digest in a freshness-gated generated catalogue, each session recording which template it used and the fingerprint of what it rendered to."
 rationale = """Prose steers the sessions this loop launches and had been reviewable only by reading Python source, which makes the process trusted rather than inspectable. The audit trail is the part that makes the move useful rather than cosmetic: without a per-session digest, "which instruction did this session see" stays an inference. (The argv-vs-shell-string transport decision is design, and lives one tier down in LLR-163.)"""
 acceptance_criteria = """An unknown or unfilled slot is a refusal; a missing shipped template is a named preflight refusal rather than a first-session crash; the catalogue lists every shipped prompt with its digest and `--check` fails when stale; a line-ending difference is not a digest change; an operator override is named in the session record rather than only in the launch flags."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-147]
 title = "One machine-parseable carrier for the requirement spine"
 sn_refs = ["SN-002", "SN-012"]
+boundary_refs = ["B-05"]
 requirement = """The kit shall carry the SN->SR->LLR->TC spine in ONE machine-parseable carrier rather than two (stakeholder needs as markdown prose tables, the other three tiers as CSV, as they were until the 2026-08-10 cutover), and shall provide a mechanical converter that proves the conversion cell-for-cell over the live registries BEFORE the authority flip - refusing, with a nonzero exit that names the row and the field, any conversion in which a cell does not survive the round-trip."""
-rationale = """The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells."""
+rationale = "The two-carrier split has no recorded rationale and costs on both sides. Reading 32 need rows takes ~166 code lines across 14 functions in 8 modules - six bespoke scanners, two of them F5 twins pinned by nothing but a docstring, which have already drifted once and rendered a phantom root in the dashboard - while reading all 436 SR+LLR+TC rows takes csv.DictReader. CSV also cannot represent the cells that actually exist: five hold a literal pipe, 552 hold commas, the longest is 1,553 characters, and an embedded newline has no representation at all. A structured carrier turns three integrity rules into properties of the parse - a duplicate id becomes a decode error, a ref list becomes a typed array (retiring the split-on-whitespace rule that read `and` as an orphan), and an empty cell becomes an absent key, so `unset` and `set to empty` stop being the same value. The converter is the migration's evidence, not its convenience: SR-129's 140-cell lesson is that an unproven representation change is exactly where a registry silently loses cells. One-shall waiver (13v): the single-carrier claim and its converter-proof are one contract — the converter is the migration's evidence — and the converter's mechanics already decompose to this row's LLR chain; splitting would separate a claim from the proof that makes it checkable."
 acceptance_criteria = """migrate_carrier.py --check over the live registries exits 0 reporting the round-trip clean for every row of every tier; a cell that is dropped, truncated, re-typed or re-ordered is REFUSED with exit 1 and a finding naming the registry, the row id and the field; and the emitted text re-parses with tomllib."""
 priority = "C"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-148]
 title = "Autonomous loop phase order"
 sn_refs = ["SN-025", "SN-029"]
-requirement = """Subject to the adjudication-first admission rule, the unattended coordinator shall select work in this order: unresolved handback records, the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order, then implementation work after test-case layout is complete; it shall apply human holds only from the declared ratification level."""
-rationale = """Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice."""
-acceptance_criteria = """A ready adjudication row remains ahead of every class named here; otherwise an unresolved handback is selected before spine or implementation work and processing it either resolves the record or mints a provenance-linked successor exactly once. With no unresolved handback, only the earliest incomplete spine tier is eligible. At human_ratification_through = 0 no spine tier produces a human hold; levels 1 through 4 hold exactly their documented cumulative tiers. Implementation work is ineligible while any required test case remains unlaid. Every selection records the chosen class, source identifier and hold decision."""
+boundary_refs = ["B-05"]
+requirement = "The unattended coordinator shall select work in this order — ready adjudication rows first, as a stable partition applied at admission rather than by renumbering the ruled rank table; then unresolved handback records; then the earliest incomplete spine tier in SN-to-SR-to-LLR-to-TC order; then implementation work after test-case layout is complete — applying human holds only from the declared ratification level and never admitting anything past a human-held stop."
+rationale = "Without one precedence rule, the same repository can resume into implementation while returned obligations or prerequisite requirement tiers remain unresolved. That produces work against stale intent and makes repeated resumes select different next actions. A recorded selection class, source record and hold decision provide replayable evidence of the choice. Absorbs SR-141 (census F5, ruled overlap): both rows stated where adjudication ranks at admission and the acceptance texts had already diverged in nuance — one SR per (SN-025, loop selection order) per 13p; SR-141's stable-partition mechanism lands as an LLR under this row, and its id retires under the D-1/D-4 doctrine with the forwarding record in the log."
+acceptance_criteria = "A ready adjudication row admits ahead of every other class, the ruled rank table unchanged (--explain still reports it) and non-adjudication rows keeping their relative order; an unresolved handback is selected before spine or implementation work, and processing it either resolves the record or mints a provenance-linked successor exactly once; with no unresolved handback, only the earliest incomplete spine tier is eligible; implementation work is ineligible while any required test case remains unlaid; at human_ratification_through = 0 no spine tier produces a human hold, levels 1 through 4 hold exactly their documented cumulative tiers, and a human-held attestation still drains and surfaces with the adjudication row waiting behind the stop; every selection records the chosen class, source identifier and hold decision."
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Unattended loop"
+aspect = "unattended-loop"
 
 [requirement.SR-149]
 title = "Retired-vocabulary refusal in authored surfaces"
 sn_refs = ["SN-004", "SN-010"]
-requirement = """The harness shall report every occurrence of a retired process tag in a live authored surface, naming the file and line and the vocabulary that replaces it, at a severity that warns by default and fails under --strict; and it shall report none in a declared historical, generated or attestation-quoting surface, nor in a line or file marked as a declaration site."""
+boundary_refs = ["B-05"]
+requirement = "The harness shall report every occurrence of a retired process tag in a live authored surface — naming the file and line and the vocabulary that replaces it, at a severity that warns by default and fails under --strict — reporting none in a declared historical, generated or attestation-quoting surface, nor in a line or file marked as a declaration site."
 rationale = """Realizes SN-004 (the ladder's vocabulary is the one the project is held to) and SN-010 (docs stay honest). OI-21 made this check a CONDITION of the vocabulary conversion rather than a follow-up, on measured evidence: an earlier sweep removed a retired-tag construct from this repo's own open-items registry and it REGENERATED within days, caught only by an audit. A ~2,500-edit conversion held in place by attention is a conversion that comes undone. The carve-outs are as load-bearing as the rule: history is not rewritten and an attestation is never re-worded, because a swept sign-off makes a signed record claim something was signed that was not."""
 acceptance_criteria = """check_vocab.py reports a planted retired tag in a live authored file with its path and line, exits 0 under the default severity and 1 under --strict; reports nothing for a file under any declared carve-out class (archive, the project log, attestation briefs, closed and cancelled work-item specs, generated surfaces) including at arbitrary depth; reports nothing for a line carrying the allow marker or a file carrying the allow-file marker; and reports nothing for the word "gate" used to mean a check that can fail."""
 priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Doc navigability"
 
 [requirement.SR-150]
 title = "Stakeholder-need cells stay in stakeholder language"
 sn_refs = ["SN-033"]
+boundary_refs = ["B-05"]
 requirement = """The harness shall report each stakeholder-need `need` cell that contains an internal path, an implementation-only identifier or a process citation, naming the row and the offending phrase — at a severity that warns by default and fails only under --strict, exempting a name declared on a reviewed exception list that ships empty (a name that is itself a user-facing interface belongs in a need), and reporting nothing for acceptance or engineering-requirement cells, which SN-033 exempts by its own text."""
 rationale = """Realizes SN-033 — its ratified acceptance commissions exactly this check, and until this row it did not exist. Landed while the need tier was measured clean (0 of 27 cells; decision 7 rider 2, ruled 2026-08-13u), deliberately AHEAD of the SR re-tier's churn: locking the clean state in costs one warn-first step now; trusting a large re-statement pass not to dirty it costs an audit later. Warn-first is the ruled posture, not a softness — a form heuristic over ratified stakeholder prose must not gate without an owner ruling, and that ruling has not been made."""
 acceptance_criteria = """check_need_form.py reports a constructed need cell planted with an internal path, an implementation-only identifier and a process citation, naming the row id and each offending phrase, exiting 0 by default and 1 under --strict; a token on the reviewed exception list is not reported; the same tokens planted in an acceptance or engineering-requirement cell are not reported; and the live registry reports zero findings."""
@@ -1929,4 +618,186 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Traceability"
+
+[requirement.SR-151]
+title = "Hosted CI runs the declared bar per trigger"
+sn_refs = ["SN-005", "SN-004"]
+boundary_refs = ["B-06"]
+requirement = """The shipped reference CI workflow shall invoke, for each declared hosted trigger (push, pull request, schedule) across its declared OS x Python matrix, the same documented harness entry point at the tier the declared moment-to-tier table (docs/stack.ini [ci-tiers]) assigns to that moment."""
+rationale = """Realizes SN-005 — one definition of passing per moment, its acceptance's own words — and SN-004 at the hosted edge. The obligation existed but had no row of its own: it rode SR-019's acceptance cell (census finding F1), so the B-06 crossing was a frame nobody had stated an observable at. Stated artifact-shaped per §1R.6: the job files are a standing thing whose declarations are pinned by test. An adopter-edited workflow copy is outside this claim, exactly as SN-005 narrows it."""
+acceptance_criteria = """tests/test_ci_tier_declaration.py pins the shipped workflow's trigger set and per-trigger tier against the declared [ci-tiers] table; a workflow trigger absent from the table, or one invoking anything other than the documented harness entry point, is a finding; the declared OS x Python matrix cells appear in the shipped workflow; SR-019's acceptance cross-references this row rather than restating it."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-152]
+title = "Hosted CI verdict is the harness's own"
+sn_refs = ["SN-008", "SN-005"]
+boundary_refs = ["B-07"]
+requirement = """The hosted CI job verdict shall carry the harness's own exit for the declared bar — the job failing when the harness exits nonzero, with a step log naming each step's outcome and no silently skipped required step — as the declared backstop re-run behind the bypassable local hook floor."""
+rationale = """Realizes SN-008 (a reader can believe a green) and SN-005 at the B-07 crossing. This is the second half of the honest-limit pair the frame's B-04 row states: a local floor is bypassable (git commit --no-verify), so no-unchecked-write-enters-governed-state is validatable only as B-04's verdict at the moment of the act PLUS this hosted re-run of the same bar. SR-114 keeps the portability obligation; the CI matrix as an evidence surface is this row's."""
+acceptance_criteria = """The shipped workflow contains no continue-on-error or conditional skip around a required harness step; a nonzero harness exit fails the job; the step log names the harness invocation and its tier. This row is the backstop half of the pair SR-019 states from the local side."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-153]
+title = "Ready work derives from tracked state"
+sn_refs = ["SN-025", "SN-027", "SN-006", "SN-008"]
+boundary_refs = ["B-05"]
+requirement = """The delivered loop content shall derive the work it dispatches next from the repository's tracked registries and git history alone — the eligible set and its order deterministic, and an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item only — never from prose or a hand-maintained pointer."""
+rationale = "Realizes SN-025 (self-direction from tracked state — its acceptance names exactly this contract), SN-027 (the DAG encodes what may proceed), SN-006 and SN-008 (a dishonest declaration cannot buy scheduling). The census demoted every prior carrier of this contract as internal scheduler machinery; this row is the SR-level home their obligations decompose from. Plan-mode classification is an INPUT this row fails closed on, not a need it delivers, so SN-024 stays with the rows that run the critique."
+acceptance_criteria = """Two resumes over the same tracked state select the same eligible set in the same order; an item with missing or contradictory declared inputs is excluded with a stated reason while disjoint classified work stays eligible; no prose surface participates in the derivation; the ordering and exclusion reasons are exposed for replay."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 4
+
+[requirement.SR-154]
+title = "Independent review routed across families"
+sn_refs = ["SN-026", "SN-024", "SN-006"]
+boundary_refs = ["B-05"]
+requirement = """Before unattended work integrates, the delivered loop content shall obtain each review or critique verdict the declared policy requires from a session that did not author the work — drawn from a different model family wherever one is configured, degrading only to the documented same-family mode — with every selection logged before launch and a non-converging rework loop escalated through the declared ratification level."""
+rationale = """Realizes SN-026 (cross-family second opinions — every prior carrier of this contract demoted as routing machinery, so the sn_refs join forced the mint; SR-155 cites SN-026 too, for the planner pair, but only this row states the second opinion itself), SN-024 (an author cannot judge its own output) and SN-006. One row because routing, scheduling, scoring and escalation are one delivered contract — that the second opinion happens, independently, or its absence is documented — whose mechanics are the component details below it."""
+acceptance_criteria = "A declared review policy of N schedules N independent reviewer sessions; a configured cross-family draw is preferred and its unavailability degrades to the documented mode, never a silent skip; every selection is logged before launch; rework iterates within the declared budget and pages per the declared ratification level on exhaustion."
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 1
+aspect = "unattended-loop"
+
+[requirement.SR-155]
+title = "Contested planning rounds for marked work"
+sn_refs = ["SN-024", "SN-006", "SN-026", "SN-002"]
+boundary_refs = ["B-05"]
+requirement = """For work declared as contested planning, the delivered loop content shall produce the selected decomposition through a bounded round of two independently authored rival plans — cross-critiqued, mechanically coverage-compared and arbitrated by fresh sessions — committing the selected outcome atomically as registry-valid queued rows and surfacing a non-converging round through the declared ratification level, never falling back to a single uncontested plan silently."""
+rationale = "Realizes SN-024 (a decomposition judged by a competing plan and an independent arbiter rather than its author), with SN-026 (the planner pair prefers distinct families), SN-002 (the selected outcome lands as registry-valid rows, not prose) and SN-006. One row because the dual-plan round is one delivered capability with one observable outcome class (SELECT or PAGE); its state machine, briefs, adapters and isolation rules are the component tier's."
+acceptance_criteria = """A row marked for contested planning is refused on the direct build path; the round runs planner pair, cross-critique, mechanical coverage comparison and position-swapped arbitration as fresh sessions within declared budgets; SELECT files children that pass the registry validator atomically; PAGE preserves the round's evidence and maps through the declared ratification level."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 4
+
+[requirement.SR-156]
+title = "Serialized, gated integration of parallel lanes"
+sn_refs = ["SN-027", "SN-008", "SN-025", "SN-010"]
+boundary_refs = ["B-05"]
+requirement = """The delivered loop content shall land every lane's finished work through one serial, fail-closed integration seam that runs the declared bar on the composed tree and regenerates the shared authority surfaces only at that seam — draining claiming to a clean merged stop under a declared pause, and recovering from git history alone at any crash boundary — never a half-integrated authoritative state."""
+rationale = """Realizes SN-027 — fan-out narrows to one serialized gated seam before anything lands, in the need's own words — with SN-008 (the seam is fail-closed), SN-025 (recovery from git alone) and SN-010 (the status surface a human reads regenerates at the seam, never on a lane). One row because serial integration is one delivered contract; the trunk step, pause drain, fragment compilation and verdict-freshness mechanics are its component details."""
+acceptance_criteria = """A finished branch reaches the trunk only through the serial integrator with the declared bar green on the composed tree — a red parks the candidate and stops the queue loudly; log fragments and generated artifacts are compiled and regenerated only by the serial trunk actor and never committed on a work branch; a declared pause stops claiming and drains in-flight lanes to a merged stop; a crash at any lifecycle boundary recovers from git history without double-assignment."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 4
+
+[requirement.SR-157]
+title = "Spine and work-registry rules red the harness verdict"
+sn_refs = ["SN-002", "SN-012", "SN-025"]
+boundary_refs = ["B-05"]
+requirement = """The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code."""
+rationale = """Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (queue-overlap visibility). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker."""
+acceptance_criteria = "Each declared registry rule violation is reported with row-level attribution; the declared strict set exits nonzero at its gate and advisory classes never join the exit code; absent or placeholder-only optional registries and declared opt-outs are vacuous; the declared verification vocabulary (including Critique) is accepted and an unknown value fails. The declaration this is read against is, as the current set: trace.py's `ID_PATTERNS`, `REQUIRED_FIELDS` and `ENUM_FIELDS` (the id shapes, the required cells, and the closed vocabularies -- SR `Verification`, TC `Tier` -- with the IF/CMP entries advisory by their own recorded ruling), the `--strict` / `--strict-integrity` / `--strict-schema` / `--no-placeholders` flag families and the exit contract stated in that module's docstring; trace_text.py's `form_findings` and `provenance_findings` (gating) beside `paraphrase_advisories` and `ac_advisories` (advisory, never the exit code); and check_trajectory.py's work-item rules R-A, R-D, R-E and R-F with `docs/process.toml [checks] trajectory_check` as the declared opt-out. A rule added at one of those sites is in this row's scope by default: an unreported one is a finding against this row, not an amendment to it."
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 1
+
+[requirement.SR-158]
+title = "Documentation drift reds or warns per its declared tier"
+sn_refs = ["SN-010", "SN-008"]
+boundary_refs = ["B-05"]
+requirement = """The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class."""
+rationale = """Realizes SN-010 (navigable, honest documentation) and SN-008 (a green never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details."""
+acceptance_criteria = "A dead intra-repo link, an absent PROJECT-VISION tag, a stale generated doc under --stale, a dangling backticked path or sym: reference, and a declared fig: marker missing cmd/rev each produce a finding at their declared tier; the declared carve-outs (generated blocks, path-ok and fig-ok lines, unmarked figures, URLs and placeholders) stay silent. The tier for each class is read off its declaration site, as the current set: check.py's built-in `doc-navigability` step, which runs check_docs.py from DevBar-Reqs on -- a broken intra-repo link and a missing or repeated PROJECT-VISION tag exit nonzero, orphans warn unless --strict-orphans, and --stale is warn-only; docs/stack.ini's `[step:doc-refs]` and `[step:figures]` rows, which declare `gates = DevBar-Release` for check_doc_refs.py --strict (gating on dangling alone, with untraced counted and never gating) and check_figures.py --strict; and the carve-out surfaces those checkers read -- `docs/orphans-allow`, `docs/declared-absences`, and the path-ok / fig-ok line markers. A class whose severity is stated at none of those sites is undeclared, and this row is unsatisfied until it is declared there."
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 1
+
+[requirement.SR-159]
+title = "Declared-architecture connectivity gaps are reported"
+sn_refs = ["SN-023", "SN-002", "SN-012"]
+boundary_refs = ["B-05"]
+requirement = """The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent."""
+rationale = """Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition."""
+acceptance_criteria = """Malformed or unresolvable IF rows are findings; undeclared endpoints, uncovered cross-component edges, invalid spec citations and an oversized top view warn plain and fail --strict; declared opt-outs and small or absent inventories are vacuous; declared seams render without changing the verdict. The rules and their opt-outs are read off their declaration sites, as the current set: trace.py for IF/CMP id shape and the off-spine back-link to the spine (`ID_PATTERNS` and the always-on integrity floor, which joins --strict), its `REQUIRED_FIELDS["IF"]` / `["CMP"]` entries and their enums staying advisory by the recorded warn-first sequencing; check_trajectory.py for the connectivity rules -- every arch-map module resolving to at least one IF endpoint (the "connectivity undeclared" warn), a cross-component import no IF row covers, a spec's `## Interfaces` section citing an unresolvable IF-### or neither a seam nor the intra-module escape, and the `TOP_VIEW_MAX` bound of 10 items (warn plain, error under --strict); `docs/process.toml [checks] interfaces_check` and `components_check` as the two declared opt-outs, with a `source`/`sink` token in an IF row's Notes as the per-module honesty valve; and gen_arch_map.py's generated block in docs/architecture.md as the module inventory every one of those rules joins against. A connectivity rule added at one of those sites is in this row's scope by default."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 1
+aspect = "connectivity"
+
+[requirement.SR-160]
+title = "Front-door launchers for the two universal contributor actions"
+sn_refs = ["SN-034"]
+boundary_refs = ["B-05"]
+requirement = """The delivered scaffold shall place both universal contributor actions — preparing the development environment, and resuming the automated development loop — as launchers at the repository root for each supported platform, each starting its action as a single step, or documenting the one platform-required step where a single click is impossible."""
+rationale = """Realizes SN-034, whose row is the declared ONE home for launcher-class obligations (root visibility, one action per platform, both universal actions). SN-034 had no citing SR — the launcher rows realized SN-001 and left the need an orphan the strict trace names. One row per 13p: (SN-034, scaffold capability); the per-launcher robustness and wiring obligations remain SR-021's and SR-113's, cross-referenced rather than restated."""
+acceptance_criteria = """A fresh scaffold and this repository each carry both launcher sets (dev-setup and agent-resume) at the root for Windows, macOS and Linux; each launches its action as a single step on that platform, or documents the single platform-required step (the Linux execute-bit case); the adopter-facing guide names the capability and invites reuse."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-161]
+title = "Decompositions carry a perspective record"
+sn_refs = ["SN-036"]
+boundary_refs = ["B-05"]
+requirement = """The delivered planning content shall leave, with every decomposition it produces, a machine-readable record of the declared review perspectives — each perspective's applicability decision and the requirements or explicit no-finding it produced — such that an applicable declared perspective missing from the record is a reportable finding."""
+rationale = """Realizes SN-036 — a decomposition produced from one perspective can look complete while omitting security, operations or first-use failures, and the omission is invisible unless the record names what was considered. SN-036 had no citing SR. The declared-perspective inventory is the ruled hats roster; the record proves coverage and provenance while adequacy stays with the independent review, exactly as the need partitions it."""
+acceptance_criteria = """A decomposition round writes the perspective record beside its artifacts; a declared perspective applicable to the decomposition and absent from the record is reported; the record distinguishes not-applicable from considered-with-no-finding; the independent adequacy review reads the record rather than the authoring transcript."""
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-162]
+title = "Requirement boundary references resolve against the declared frame"
+sn_refs = ["SN-037"]
+boundary_refs = ["B-05"]
+requirement = """The delivered harness shall resolve every system-requirement boundary reference against the declared external frame — an unresolvable crossing failing the strict trace naming the row — reporting requirements naming no crossing, crossings named by no requirement, and declared crossings with no realizing interface row each as an advisory, and staying vacuous for a project declaring no frame."""
+rationale = """Realizes SN-037 — every promised behavior's entry and exit locatable at a declared boundary, unresolved references mechanical findings, in the need's own words. SN-037 had no citing SR even though the machinery is already delivered (the frame registry, the boundary-reference field, the resolution and coverage rules); this row is the obligation that machinery enforces. Severity split deliberately: resolution hard, coverage advisory — the ruled warn-first sequencing while the corpus converges."""
+acceptance_criteria = """A Boundary-Refs value naming an undeclared crossing joins the --strict failure set naming the row; the uncovered-requirement count, the crossings named by no requirement, and the realization gap are each one advisory line; entity and relationship references in the frame registry resolve; a project declaring no frame is vacuous."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-163]
+title = "Every shipped file maps to a stakeholder outcome"
+sn_refs = ["SN-038"]
+boundary_refs = ["B-05"]
+requirement = """Every file the delivered package ships shall map, through the declared shipped-file inventory and its recorded exclusions, to at least one system requirement whose references resolve to a stakeholder need — generated outputs mapping through their generator — with missing files, stale inventory entries, unresolved references and unmapped files reported under the declared warning-to-gating policy."""
+rationale = """Realizes SN-038 — a supplied file with no recorded purpose is inherited scope creep, and its absence of purpose must be a named coverage finding rather than hidden in the tree. SN-038 had no citing SR. The scaffold MAPPING is the natural declared inventory: it already enumerates what ships, so the coverage universe is a declaration that exists rather than a second list that drifts."""
+acceptance_criteria = """A declared inventory defines the universe and exclusions; a shipped file absent from it, a stale entry naming a file that no longer ships, an entry whose requirement reference does not resolve to a need, and a file with no mapping are each reported; the declared policy assigns warn versus gate per class; a generated output maps through its generator's row."""
+priority = "M"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-164]
+title = "Stakeholder-need scope is a declared, checked value"
+sn_refs = ["SN-039"]
+boundary_refs = ["B-05"]
+requirement = """Every non-example stakeholder-need row shall carry a scope value from the declared closed vocabulary (template / this repository / both), with a missing or out-of-vocabulary value reported by the harness naming the row."""
+rationale = """Realizes SN-039 — a need whose audience is ambiguous gets enforced against the wrong repositories, and the scope must be a value a check can read, not inferred from prose. SN-039 had no citing SR. The field enters the SN carrier schema in the scheduled schema batch, per the need's own acceptance, rather than as a one-off column."""
+acceptance_criteria = "The SN carrier schema declares the scope field; the checker reports a missing or invalid value naming the row; example -000 rows are exempt; every non-example row in the shipped registry and in this repository's filled one carries a valid value."
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+
+[requirement.SR-165]
+title = "The component partition carries a reproducible derivation record"
+sn_refs = ["SN-040"]
+boundary_refs = ["B-05"]
+requirement = "The delivered planning content shall leave, with every component partition it produces, a machine-readable derivation record in the tracked component registry rather than session prose — the candidate partitions considered, the declared objective and constraints they were scored against, each candidate's score, the selected partition, and the human ruling that named the components and adopted it — such that a live component row whose record omits any of those elements, or a selection the recorded scores do not rank first without a recorded human override, is a reportable finding."
+rationale = "Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Reproducibility is stated as a recomputation from the record's own declared inputs, not as a reviewer re-running a model session, because only the former can fail — the SR-161 form applied to the partition instead of the perspective set. B-05 alone: the human ruling is an element the record must carry, not an observable the system states at the authority input, which is SR-139's and SR-140's ground."
+acceptance_criteria = "A partition round writes the derivation record into the tracked component registry, never into session prose or a plan document alone; a live component row with no record, or a record omitting the candidate partitions, the declared objective, the constraints, any candidate's score, the selected partition or the human ruling, is reported naming the missing element; a selected partition the recorded scores do not rank first is reported unless the record carries the human override that chose it; the recorded ranking recomputes from the record's own objective, constraints and scores alone."
+priority = "S"
+verification = "Test"
+status = "Draft"
+phase = 5
+aspect = "process"

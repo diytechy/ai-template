@@ -2,7 +2,7 @@
 id = "WI-007"
 title = "trace.py - placeholder - schema - AC-advisory checks"
 workstream = "scripts"
-sr_refs = ["SR-003", "SR-004"]
+sr_refs = ["SR-157"]
 needs = ["WI-006"]
 order = 6
 +++

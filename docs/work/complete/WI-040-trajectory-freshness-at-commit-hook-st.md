@@ -2,7 +2,7 @@
 id = "WI-040"
 title = "Trajectory freshness at commit - hook step (F2)"
 workstream = "unattended"
-sr_refs = ["SR-019", "SR-038"]
+sr_refs = ["SR-019", "SR-070"]
 needs = ["WI-022", "WI-031"]
 order = 39
 +++

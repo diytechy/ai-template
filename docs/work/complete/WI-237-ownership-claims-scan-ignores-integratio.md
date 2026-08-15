@@ -2,7 +2,7 @@
 id = "WI-237"
 title = "Ownership claims scan ignores integration-reachable commits - an owner dev-merge into a reserved train must not quarantine as foreign claims (2026-07-19 field finding)"
 workstream = "unattended"
-sr_refs = ["SR-100"]
+sr_refs = ["SR-156"]
 buildtier = "medium"
 safety_class = "high-risk"
 order = 234

@@ -1,20 +1,20 @@
 [design.LLR-001]
-sr_refs = ["SR-001"]
+sr_refs = ["SR-157"]
 title = "SN->SR->LLR->TC join + orphan set"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "main"
-detail = """Loads the four registries, computes the orphan set (SR without LLR/TC, LLR/TC without a parent, SN without an SR), and exits 1 under --strict."""
+detail = "Loads the four registries, computes the orphan set (SR without LLR/TC, LLR/TC without a parent, SN without an SR), and exits 1 under --strict. A fully linked chain exits 0 under --strict, and the orphan report names each at-fault id."
 test_refs = "(see TC-001)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-002]
-sr_refs = ["SR-002"]
+sr_refs = ["SR-157"]
 title = "Id + registry-CSV-structure + citation integrity"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "integrity_findings/structure_findings/triangle_findings"
-detail = """Duplicate/malformed id detection per ID_PATTERNS, a per-row column-count check over each CSV registry, and SR/LLR citation coherence (triangle_findings); the always-valid --strict-integrity floor."""
+detail = "Duplicate/malformed id detection per ID_PATTERNS, a per-row column-count check over each CSV registry, and SR/LLR citation coherence (triangle_findings); the always-valid --strict-integrity floor. The id vocabulary spans SR/LLR/TC/PB/REPO/MOD/PART/ASSET/CMP/IF (MOD the legacy compatibility id for current REPO rows); a clean registry set exits 0, and orphans never affect the --strict-integrity verdict."
 rationale = """These three are wrong the moment they are written rather than at a gate, and each corrupts the join before the orphan rules could notice — so they run on every commit rather than waiting for a gate that would inherit an already-broken registry."""
 test_refs = "(see TC-002)"
 status = "Modified"
@@ -22,35 +22,35 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-003]
-sr_refs = ["SR-003"]
+sr_refs = ["SR-157"]
 title = "Placeholder + schema checks"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "placeholder_findings/schema_findings/phase_ratified_findings"
-detail = """-000 example-row scan and required-field + closed-vocabulary validation over the real (non-placeholder) rows, plus the ratified-phase NUMERIC-ONLY rule (owner ruling 2026-08-01): once any spine row is phased (digit-parse arming), a non-Draft SR/LLR/TC whose Phase is not a full-cell bare integer is a --strict-schema finding (vacuous until armed; a prefixed v2/P1 now fails - the --phase/--ratify filters and the phase-drop join match the cell literally, so a prefix disarms them silently; phase_num stays digit-extract for grandfathering)."""
+detail = "-000 example-row scan and required-field + closed-vocabulary validation over the real (non-placeholder) rows, plus the ratified-phase NUMERIC-ONLY rule (owner ruling 2026-08-01): once any spine row is phased (digit-parse arming), a non-Draft SR/LLR/TC whose Phase is not a full-cell bare integer is a --strict-schema finding (vacuous until armed; a prefixed v2/P1 now fails - the --phase/--ratify filters and the phase-drop join match the cell literally, so a prefix disarms them silently; phase_num stays digit-extract for grandfathering). The -000 example-row scan spans SR/LLR/TC and the SN doc and rides --no-placeholders; --strict-schema is the gate for the required-field and Verification/Tier closed-vocabulary rules."
 test_refs = "(see TC-003)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-004]
-sr_refs = ["SR-004"]
+sr_refs = ["SR-157"]
 title = "Comparative-term advisory"
 module = "project-trajectory/scripts/trace_text.py"
 code_symbol = "ac_advisories"
-detail = """Flags an AcceptanceCriteria comparative term with no predicate marker in the cell; warn-only, never joins the failure set."""
+detail = "Flags an AcceptanceCriteria comparative term with no predicate marker in the cell; warn-only, never joins the failure set. Each finding emits a stdout WARNING plus a report line; the exit code is unchanged."
 test_refs = "(see TC-004)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-005]
-sr_refs = ["SR-005"]
+sr_refs = ["SR-157"]
 title = "Off-spine integrity + back-links"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "integrity_findings/module_findings"
-detail = """Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored."""
+detail = "Integrity-checks the PB/REPO/PART/ASSET ids plus legacy MOD compatibility and resolves REPO/MOD DelegatedSRs against the SR set; -000 example rows ignored. Resolves each PB row's Refs to a real SR/LLR/Module id — an unresolvable or empty Refs is a finding; this is the CHECKER half of the deliberate pair with SR-015's delivered-data invariant, an on-purpose split, not an echo. An unused optional registry never blocks: absent registries are vacuous."
 test_refs = "(see TC-005)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
@@ -121,29 +121,29 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-012]
-sr_refs = ["SR-012"]
+sr_refs = ["SR-158"]
 title = "Link + vision-tag checker"
 module = "project-trajectory/scripts/check_docs.py"
 code_symbol = "main"
-detail = """Resolves intra-repo links, requires a PROJECT-VISION tag, and checks generated-doc freshness under --stale."""
+detail = "Resolves intra-repo links, requires a PROJECT-VISION tag, and checks generated-doc freshness under --stale. A dead intra-repo link or an absent PROJECT-VISION tag fails; a clean doc set passes."
 test_refs = "(see TC-012)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
 [design.LLR-013]
-sr_refs = ["SR-013"]
+sr_refs = ["SR-158"]
 title = "Flow-doc contract checker"
 module = "project-trajectory/scripts/check_flows.py"
 code_symbol = "main"
-detail = """Validates an authored runtime-flow doc against its structural contract; a malformed flow fails."""
+detail = "Validates an authored runtime-flow doc against its structural contract; a malformed flow fails. A conformant doc passes. Bound to its input surface: the authored runtime-flow docs are docs/architecture.md's Runtime flows section, whose retirement is ruled — when that surface goes, this check's input class goes with it and the check stands down, an explicit recorded dependency rather than a silent retirement."
 test_refs = "(see TC-013)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
 [design.LLR-014]
-sr_refs = ["SR-014"]
+sr_refs = ["SR-006"]
 title = "Budget comparator"
 module = "project-trajectory/scripts/check_perf.py"
 code_symbol = "evaluate"
@@ -165,13 +165,13 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-016]
-sr_refs = ["SR-016"]
+sr_refs = ["SR-006"]
 title = "Stub marker detector"
 module = "project-trajectory/scripts/check_stubs.py"
 code_symbol = "find_stubs/scan_source"
-detail = """Walks the AST for stub bodies (pass-only/NotImplemented/ellipsis public functions) at the declared gate."""
+detail = "Walks the AST for stub bodies (pass-only/NotImplemented/ellipsis public functions) at the declared gate. A detected stub fails the run; clean source passes."
 test_refs = "(see TC-016)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
@@ -242,13 +242,13 @@ component = "CMP-007"
 phase = 1
 
 [design.LLR-023]
-sr_refs = ["SR-023"]
+sr_refs = ["SR-070"]
 title = "Arch-map splice + drift check"
 module = "project-trajectory/scripts/gen_arch_map.py"
 code_symbol = "build_map/splice_region"
-detail = """Regenerates the symbol map inside the BEGIN/END marker block and fails --check when the committed map has drifted."""
+detail = "Regenerates the symbol map inside the BEGIN/END marker block and fails --check when the committed map has drifted. --check passes when the committed map is current; regeneration rewrites only the marker block, leaving surrounding text untouched. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering."
 test_refs = "(see TC-023)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
@@ -264,13 +264,13 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-025]
-sr_refs = ["SR-025"]
+sr_refs = ["SR-112"]
 title = "Skills index generator"
 module = "project-trajectory/scripts/gen_skills_index.py"
 code_symbol = "main"
-detail = "Reads each SKILL.md applicability frontmatter and regenerates skills/INDEX.csv."
+detail = "Reads each SKILL.md applicability frontmatter and regenerates skills/INDEX.csv. The regenerated INDEX.csv reflects the current SKILL.md frontmatter, and a drifted index is detectable."
 test_refs = "(see TC-025)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
@@ -309,13 +309,13 @@ component = "CMP-008"
 phase = 1
 
 [design.LLR-029]
-sr_refs = ["SR-029"]
+sr_refs = ["SR-030"]
 title = "Kernel advisory lock"
 module = "project-trajectory/scripts/agent_common.py"
 code_symbol = "acquire_lock/_take_os_lock"
-detail = """Takes an OS advisory lock the kernel releases on process death, so no stale-pid file wedges the next run."""
+detail = "Takes an OS advisory lock the kernel releases on process death, so no stale-pid file wedges the next run. The lock scope is per-worktree — the dispatcher, each worker and an interactive sitting take the same lock for their checkout."
 test_refs = "(see TC-029)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
@@ -364,11 +364,11 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-034]
-sr_refs = ["SR-067"]
+sr_refs = ["SR-157"]
 title = "WI dependency-DAG validation"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "load_wis/validate"
-detail = """Loads the WI registry - the docs/work/ spec folder, the ONE home since the CSV home retired at concurrency-restructure Phase 5 (a stray work-items.csv is itself an integrity finding, never a second home) -; validates WI ids, predecessor resolution, and hard-edge acyclicity; respects the absent/placeholder/opt-out vacuity rules."""
+detail = "Loads the WI registry - the docs/work/ spec folder, the ONE home since the CSV home retired at concurrency-restructure Phase 5 (a stray work-items.csv is itself an integrity finding, never a second home) -; validates WI ids, predecessor resolution, and hard-edge acyclicity; respects the absent/placeholder/opt-out vacuity rules. Findings name the offending row; the declared opt-out home is docs/process.toml [checks] trajectory_check = false, with the legacy one-word docs/trajectory-check still read while the declared migration window stays open."
 test_refs = "(see TC-037)"
 status = "Modified"
 component = "CMP-006"
@@ -397,24 +397,24 @@ component = "CMP-008"
 phase = 1
 
 [design.LLR-038]
-sr_refs = ["SR-041"]
+sr_refs = ["SR-158"]
 title = "Path + sym: reference checker"
 module = "project-trajectory/scripts/check_doc_refs.py"
 code_symbol = "findings_for/load_symbol_oracle/is_path_shaped"
-detail = """Scans root *.md + docs/**/*.md; a backticked token is path-shaped when it carries a separator plus a known extension or top-level prefix (URLs/globs/placeholders excluded); GENERATED marker blocks and path-ok lines are skipped; sym:<module>.<name> is resolved against the module map parsed from architecture.md (module tail -> public symbols); warn-first, --strict exits 1."""
+detail = "Scans root *.md + docs/**/*.md; a backticked token is path-shaped when it carries a separator plus a known extension or top-level prefix (URLs/globs/placeholders excluded); GENERATED marker blocks and path-ok lines are skipped; sym:<module>.<name> is resolved against the module map parsed from architecture.md (module tail -> public symbols); warn-first, --strict exits 1. With no module-map inventory the symbol tier skips cleanly while the path tier still runs."
 test_refs = "(see TC-041)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
 [design.LLR-039]
-sr_refs = ["SR-042"]
+sr_refs = ["SR-070"]
 title = "OKF bundle emitter"
 module = "project-trajectory/scripts/gen_okf.py"
 code_symbol = "emit/concept/_doc_title_and_summary/on_disk"
-detail = """emit() builds {relpath: content} for every real row (sorted, deterministic, no timestamps): frontmatter via JSON-quoted YAML scalars, bodies carrying the row prose plus up/down markdown links from locally built reverse maps, per-tier and root indexes, the UPSTREAM.md spec pin; on_disk() snapshots docs/okf for the byte-compare; write mode writes-if-changed and prunes; small loaders duplicated per the F5 rule (no new sibling import). Layer B2 adds a process-guides tier: _doc_title_and_summary derives each guide title+summary from the doc first heading/paragraph (inline links stripped so nothing dangles), emitted only after the vacuity gate so a fresh scaffold stays vacuous."""
+detail = "emit() builds {relpath: content} for every real row (sorted, deterministic, no timestamps): frontmatter via JSON-quoted YAML scalars, bodies carrying the row prose plus up/down markdown links from locally built reverse maps, per-tier and root indexes, the UPSTREAM.md spec pin; on_disk() snapshots docs/okf for the byte-compare; write mode writes-if-changed and prunes; small loaders duplicated per the F5 rule (no new sibling import). Layer B2 adds a process-guides tier: _doc_title_and_summary derives each guide title+summary from the doc first heading/paragraph (inline links stripped so nothing dangles), emitted only after the vacuity gate so a fresh scaffold stays vacuous. Graph links resolve within the bundle; each Process Guide carries a resource pointer to its source doc, which is left unmodified. --check trips on a registry or doc edit, a missing bundle file and a hand-added extra, recovering after regeneration; docs/process.toml [checks] okf_export = false silences the step, with the legacy docs/okf-export sentinel still read through the SN-028 migration window; off and placeholder-only registries pass silently, and process guides emit only alongside a real spine."
 test_refs = "(see TC-042)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
@@ -430,24 +430,24 @@ component = "CMP-007"
 phase = 1
 
 [design.LLR-041]
-sr_refs = ["SR-073"]
+sr_refs = ["SR-159"]
 title = "IF-tier integrity"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "interface_findings/integrity_findings"
-detail = """Loads interfaces.csv; validates IF ids, SR back-links and Component tags, and emits the best-effort endpoint-module advisory."""
+detail = "Loads interfaces.csv; validates IF ids, SR back-links and Component tags, and emits the best-effort endpoint-module advisory. Malformed or duplicate ids and unresolved SR/Component links are findings; an unmatched ThisProject endpoint stays advisory-only, and an absent interface registry is vacuous."
 test_refs = "(see TC-044)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-042]
-sr_refs = ["SR-074"]
+sr_refs = ["SR-159"]
 title = "Architecture-connectivity coverage warns"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "interface_findings/arch_inventory"
-detail = """Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status."""
+detail = "Emits opt-out warn-first findings for missing endpoints/directions, uncited Active seams, and dangling Contracts citations without changing exit status. A source/sink note suppresses its declared direction case; the opt-out home is docs/process.toml [checks] interfaces_check = false; a small or absent inventory is vacuous."
 test_refs = "(see TC-080)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
@@ -463,35 +463,35 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-044]
-sr_refs = ["SR-079"]
+sr_refs = ["SR-154"]
 title = "Agent pair-row routing"
 module = "project-trajectory/scripts/agent_route.py"
 code_symbol = "load_registry/resolve_enabled/parse_env/select"
-detail = """Parses pair rows and enable tokens; resolves versions; merges Env; selects by tier, family, cooldown, and order with legacy Provider compatibility."""
+detail = "Parses pair rows and enable tokens; resolves versions; merges Env; selects by tier, family, cooldown, and order with legacy Provider compatibility. Selection tiers up and never down, honors family preference with documented fallback, resolves a version-less token deterministically, and reports no available route honestly rather than guessing."
 test_refs = "(see TC-046)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-045]
-sr_refs = ["SR-080"]
+sr_refs = ["SR-154"]
 title = "Managed review dispatch"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "main/reviewer_prompt/phase_tier"
-detail = """Schedules review-policy sessions in managed mode, constructs redacted prompt-map briefs, parses verdicts, logs selections, and preserves unmanaged behavior."""
+detail = "Schedules review-policy sessions in managed mode, constructs redacted prompt-map briefs, parses verdicts, logs selections, and preserves unmanaged behavior. A declared review policy of N schedules N reviewer sessions (0/1/2 -> zero/one/two); a broken prompt map fails preflight before any session launches; an absent enable-list keeps the legacy unmanaged behavior."
 test_refs = "(see TC-082)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-046]
-sr_refs = ["SR-081"]
+sr_refs = ["SR-154"]
 title = "Review substance scorer"
 module = "project-trajectory/scripts/score_reviews.py"
 code_symbol = "substance/fired_tripwires/record_round"
-detail = """Computes advisory substance components and decay history; treats tripwires as gates and never rewards length."""
+detail = "Computes advisory substance components and decay history; treats tripwires as gates and never rewards length. Severity hygiene rides the same non-scored gate path as the anti-gaming tripwires; corroboration feeds the component scores; verdict and scoreboard round trips are deterministic."
 test_refs = "(see TC-083)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
@@ -508,24 +508,24 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-048]
-sr_refs = ["SR-084"]
+sr_refs = ["SR-154"]
 title = "Independent critique dispatch"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "load_critique_srs/build_scope_srs/critique_brief/critique_prompt"
-detail = """Detects Critique-scoped builds and assembles a fresh family-heterogeneous rubric/intent/artifact brief with no self-assessment."""
+detail = "Detects Critique-scoped builds and assembles a fresh family-heterogeneous rubric/intent/artifact brief with no self-assessment. Only a Critique-scoped build schedules the session — any other build does not; the brief carries rubric, intent and artifact recipe and excludes the build transcript as well as self-assessment."
 test_refs = "(see TC-048)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-049]
-sr_refs = ["SR-087"]
+sr_refs = ["SR-159"]
 title = "Bounded software top view"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "component_top_view/component_findings/module_components/load_cmps/_cmp_roots"
-detail = """Derives component roots and uncontained modules; enforces TOP_VIEW_MAX with nesting, opt-out, and vacuity rules."""
+detail = "Derives component roots and uncontained modules; enforces TOP_VIEW_MAX with nesting, opt-out, and vacuity rules. An oversized uncontained view warns plain and fails --strict; valid containment clears it, and nested components count only at their top-level roots."
 test_refs = "(see TC-049)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
@@ -541,24 +541,24 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-051]
-sr_refs = ["SR-050"]
+sr_refs = ["SR-070"]
 title = "Process reference tab"
 module = "project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "process_panel/build_html"
-detail = """Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x gates panel derived from the live registries + docs/gate (current-gate highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> gates panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step)."""
+detail = "Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x gates panel derived from the live registries + docs/gate (current-gate highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> gates panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step). Process-doc link-outs resolve; the tab is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 test_refs = "(see TC-051)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 2
 
 [design.LLR-052]
-sr_refs = ["SR-089"]
+sr_refs = ["SR-070"]
 title = "Tiered When roadmap"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "when_view/_wi_phases"
-detail = """Builds phase/workstream/WI tiers by threshold, surfaces delivery Phase, and aggregates parent edges from deduplicated child edges."""
+detail = "Builds phase/workstream/WI tiers by threshold, surfaces delivery Phase, and aggregates parent edges from deduplicated child edges. Tiers collapse only above the threshold; leaf phases stay visible; each parent edge equals the deduplicated union of crossing child edges."
 test_refs = "(see TC-052)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 2
 
@@ -567,7 +567,7 @@ sr_refs = ["SR-054"]
 title = "Dashboard usability rendering"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "build_html/_nav/when_view"
-detail = """Adjudicated against the usability rubric (docs/rubrics/dashboard-usability.md) by the SR-084/SR-085 critique loop: labels stay readable at default zoom with no clipped or overlapping text, and the reading experience the rubric's remaining anchors describe. Byte-deterministic; --check unchanged. This row keeps ONLY what a test cannot pin: the mechanized cores have left for child rows that name the tests owning them — T2 start-collapse (LLR-099/TC-102), T3 breadcrumb-restores-parent (LLR-100/TC-103, the whole anchor, no residue here) and T1 labelled entry (LLR-115/TC-120, the whole anchor, no residue here). Do NOT restate a child's claim here: an anchor lives in exactly one row."""
+detail = """Adjudicated against the usability rubric (docs/rubrics/dashboard-usability.md) by the LLR-048/LLR-082 critique loop: labels stay readable at default zoom with no clipped or overlapping text, and the reading experience the rubric's remaining anchors describe. Byte-deterministic; --check unchanged. This row keeps ONLY what a test cannot pin: the mechanized cores have left for child rows that name the tests owning them — T2 start-collapse (LLR-099/TC-102), T3 breadcrumb-restores-parent (LLR-100/TC-103, the whole anchor, no residue here) and T1 labelled entry (LLR-115/TC-120, the whole anchor, no residue here). Do NOT restate a child's claim here: an anchor lives in exactly one row."""
 rationale = """A critique that re-judges what a test already enforces spends its budget twice and can disagree with the harness, so an anchor whose bar becomes operational leaves this row entirely rather than being kept as a duplicate. T3 and T1 are the two that left whole: a critique cannot verify T3's return path from a static shot set while a test can click the crumb, and T1's 'obvious' was always glossed as labelled-not-unlabelled, which is mechanizable once written that way."""
 test_refs = "(see TC-055)"
 status = "Verified"
@@ -575,46 +575,46 @@ component = "CMP-009"
 phase = 3
 
 [design.LLR-056]
-sr_refs = ["SR-055"]
+sr_refs = ["SR-070"]
 title = "Process tab intake + human-decision loop panels"
 module = "project-trajectory/scripts/traj_panels.py"
 code_symbol = "process_panel/_station_panel"
-detail = """Extends SR-050's process_panel with the project's two circular working loops as linked flow panels: (A) the intake loop - owner/agent intake -> triage into work items with spec detail -> the scheduler-derived ready frontier in the WI registry (docs/work/) -> build/review -> merge; (B) the human-decision loop - open-items population (incl. the gate-ratification table) -> human review and ruling -> the log's Decisions record -> merge - with the LLM_Agent entry node rendered once and shared by both loops. Each stage links to its canonical home (status.md, the WI registry (docs/work/), open-items.html, log.md); data-derived where a canonical source exists; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step)."""
+detail = "Extends LLR-051's process_panel with the project's two circular working loops as linked flow panels: (A) the intake loop - owner/agent intake -> triage into work items with spec detail -> the scheduler-derived ready frontier in the WI registry (docs/work/) -> build/review -> merge; (B) the human-decision loop - open-items population (incl. the gate-ratification table) -> human review and ruling -> the log's Decisions record -> merge - with the LLM_Agent entry node rendered once and shared by both loops. Each stage links to its canonical home (status.md, the WI registry (docs/work/), open-items.html, log.md); data-derived where a canonical source exists; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step). Every stage link resolves to its canonical doc; generation is byte-deterministic; the loop panels are part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 test_refs = "(see TC-056)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 3
 
 [design.LLR-057]
-sr_refs = ["SR-056"]
+sr_refs = ["SR-070"]
 title = "Decomposition render polish (columns, arrows, persistent hover)"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "when_view/_tier_column/_svg_node"
-detail = """Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with SR-089's tiering without changing its >3 thresholds."""
+detail = "Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with LLR-052's tiering without changing its >3 thresholds. A data-less repo renders byte-identically; the polished decomposition views are part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 test_refs = "(see TC-057)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 3
 
 [design.LLR-058]
-sr_refs = ["SR-057"]
+sr_refs = ["SR-153"]
 title = "WI-DAG frontier + deterministic traincar ordering"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "ready/frontier/evaluate"
-detail = """Derives the dependency-ready frontier from the WI registry + dispatcher reservations (never prose), excludes blocked/deferred/reserved/protected-/exclusive-conflicting WIs with reason codes, and exposes ready --explain / --format json and simulate --jobs N."""
+detail = "Derives the dependency-ready frontier from the WI registry + dispatcher reservations (never prose), excludes blocked/deferred/reserved/protected-/exclusive-conflicting WIs with reason codes, and exposes ready --explain / --format json and simulate --jobs N. The ready set contains exactly the WIs whose hard predecessors are done, and a queued WI carrying a blockref reads as blocked."
 test_refs = "(see TC-058)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-059]
-sr_refs = ["SR-093"]
+sr_refs = ["SR-153"]
 title = "Pure safety classifier"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "classify/safety_class"
-detail = """Maps declared safety and policy inputs to one scheduling class and deterministic reason codes without side effects."""
+detail = "Maps declared safety and policy inputs to one scheduling class and deterministic reason codes without side effects. A missing, unknown or contradictory declaration fails closed with its reason code for the affected WI only, and every consumer of the classification reads the same class."
 test_refs = "(see TC-059)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
@@ -630,29 +630,29 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-061]
-sr_refs = ["SR-060"]
+sr_refs = ["SR-026"]
 title = "Explicit WI/train/worktree worker assignment"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "build_worker_assignment/worker_prompt"
-detail = """Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never status.md/next-wi); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright."""
+detail = "Replaces internal --track assumptions with explicit --wi/--train/worktree assignment; assembles the worker prompt from AGENTS.md + WI row + SpecRef + predecessor context + train diff + rework finding (never the generated status surface); collision-safe per-assignment logs/review evidence naming the exact reviewed commit; the --track lane machinery is retired outright. The assignment is the branch integrate.py's claim cut, and the session tag defaults to the branch name; the prompt never includes docs/status.md; a worker branch never edits root status, another branch's claims, the root log or generated artifacts; the result channel is committed trailer evidence (WI: / Blocked-WI: + BlockRef:)."
 test_refs = "(see TC-061)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-067]
-sr_refs = ["SR-076"]
+sr_refs = ["SR-159"]
 title = "Cross-component import coverage"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "cross_component_findings/arch_inventory"
-detail = """Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules."""
+detail = "Joins imports, component membership, and declared seams; reports uncovered cross-component edges with strict/plain and vacuity rules. Uncovered mapped edges warn plain and fail --strict; a covering seam (in either direction), an intra-component or unmapped edge, absent imports, and the opt-out each stay silent."
 test_refs = "(see TC-067)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-068]
-sr_refs = ["SR-077"]
+sr_refs = ["SR-159"]
 title = "Spec interface-section validation"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "spec_interface_findings/_spec_interfaces_section/_proposed_rationale_present"
@@ -663,73 +663,73 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-069]
-sr_refs = ["SR-078"]
+sr_refs = ["SR-155"]
 title = "Rival-plan coverage comparison"
 module = "project-trajectory/scripts/plan_coverage.py"
 code_symbol = "parse_goal/parse_plan/check_plan/find_cycle/format_report"
-detail = """Parses rival plan tables; resolves clause/SR/IF coverage; validates dependencies; emits pairwise differences and distinct findings/malformed/absent-registry outcomes."""
+detail = "Parses rival plan tables; resolves clause/SR/IF coverage; validates dependencies; emits pairwise differences and distinct findings/malformed/absent-registry outcomes. Commensurable plans emit per-plan and pairwise coverage; findings (bad refs or plan graphs) exit 1, malformed inputs exit 2, and an absent registry notes without failing."
 test_refs = "(see TC-069)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-070]
-sr_refs = ["SR-102"]
+sr_refs = ["SR-155"]
 title = "Typed dual-plan round lifecycle"
 module = "project-trajectory/scripts/plan_round.py"
 code_symbol = "new_round/ready_steps/record/disposition/page_action"
-detail = """Implements typed round steps, spend and action caps, position-swapped agreement, persistence, and PAGE mapping."""
+detail = "Implements typed round steps, spend and action caps, position-swapped agreement, persistence, and PAGE mapping. The spend ledger, one-repair and revision caps hold; an illegal repeated step raises; arbiter instability or budget exhaustion pages; round state survives a JSON round trip."
 test_refs = "(see TC-070)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-071]
-sr_refs = ["SR-103"]
+sr_refs = ["SR-155"]
 title = "Allowlist-only dual-plan briefs"
 module = "project-trajectory/scripts/plan_briefs.py"
 code_symbol = "build_surface/assemble/load_template/strip_dispatcher_block/HAT_KEYS"
-detail = """Builds planner/critic/arbiter briefs only from SR/IF registries with strict template slots and override/fallback loading."""
+detail = "Builds planner/critic/arbiter briefs only from SR/IF registries with strict template slots and override/fallback loading. Status, log and self-assessment data are excluded by construction; an unknown or unfilled template slot is rejected."
 test_refs = "(see TC-071)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-072]
-sr_refs = ["SR-083"]
+sr_refs = ["SR-155"]
 title = "Dual-plan planner pair and fallback"
 module = "project-trajectory/scripts/agent_route.py"
 code_symbol = "planner_pair/planner_fallback"
-detail = """Selects two fresh planner sessions across families where possible and applies the bounded nonresponse fallback with reason codes."""
+detail = "Selects two fresh planner sessions across families where possible and applies the bounded nonresponse fallback with reason codes. A one-family or single-row pool still yields two fresh sessions with reason codes; a runtime nonresponse excludes the dead family; a no-responder outcome is explicit, never silent."
 test_refs = "(see TC-072)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-073]
-sr_refs = ["SR-104"]
+sr_refs = ["SR-155"]
 title = "Coverage-step result adapter"
 module = "project-trajectory/scripts/plan_coverage_step.py"
 code_symbol = "run_coverage/to_record_kwargs/_implicated_plans"
-detail = """Converts coverage CLI results and report payload into clean, implicated-repair, repeated-failure, or malformed round records."""
+detail = "Converts coverage CLI results and report payload into clean, implicated-repair, repeated-failure, or malformed round records. Exit 0 advances the round; a first finding implicates and repairs once; a repeated finding pages; malformed is distinct from findings and fails closed."
 test_refs = "(see TC-073)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-074]
-sr_refs = ["SR-105"]
+sr_refs = ["SR-155"]
 title = "Dual-plan artifact persistence and filer"
 module = "project-trajectory/scripts/plan_artifacts.py"
 code_symbol = "allocate_round_dir/write_stage/file_selected_wis/append_log_summary/parse_plan_wis"
-detail = """Allocates stable round/stage artifacts and appends registry-valid selected child WIs with mapped predecessors and preserved line endings."""
+detail = "Allocates stable round/stage artifacts and appends registry-valid selected child WIs with mapped predecessors and preserved line endings. Round ids and stage names are stable; selected rows receive sequential ids, empty Deliverables and valid specs/tiers; prior log content survives an append."
 test_refs = "(see TC-074)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-075]
-sr_refs = ["SR-069"]
+sr_refs = ["SR-157"]
 title = "Generated-status source-of-truth guard"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "status_forward_only_findings"
@@ -740,18 +740,18 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-076]
-sr_refs = ["SR-106"]
+sr_refs = ["SR-155"]
 title = "Fresh-session dual-plan runner"
 module = "project-trajectory/scripts/plan_runner.py"
 code_symbol = "run_dual_plan_round/_dp_routes/_dp_session"
-detail = """Runs planners, cross-critiques, bounded revisions and position-swapped arbiters as fresh sessions; selects only true-plan agreement."""
+detail = "Runs planners, cross-critiques, bounded revisions and position-swapped arbiters as fresh sessions; selects only true-plan agreement. The complete round runs unattended with fresh session identities; position bias, a missing rubric or no available route pages honestly rather than selecting."
 test_refs = "(see TC-076)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-077]
-sr_refs = ["SR-068"]
+sr_refs = ["SR-157"]
 title = "WI row coherence"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "ssot_findings/spec_ref_findings"
@@ -762,178 +762,178 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-078]
-sr_refs = ["SR-071"]
+sr_refs = ["SR-070"]
 title = "Conditional architecture and knowledge views"
 module = "project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_panels.py"
 code_symbol = "sw_modules/cmp_rows/know_graph/_okf_nodes"
-detail = """Renders software/component and OKF views only when their source bundles exist; omits each otherwise."""
+detail = "Renders software/component and OKF views only when their source bundles exist; omits each otherwise. A source-less repo remains byte-stable."
 test_refs = "(see TC-078)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
 [design.LLR-079]
-sr_refs = ["SR-072"]
+sr_refs = ["SR-070"]
 title = "Deterministic responsive dashboard freshness"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py"
 code_symbol = "main/_asof/ASOF_RE"
-detail = "Produces deterministic responsive HTML."
+detail = "Produces deterministic responsive HTML. Repeated generation is byte-identical and mobile CSS is present in the output."
 test_refs = "(see TC-079)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
 [design.LLR-080]
-sr_refs = ["SR-075"]
+sr_refs = ["SR-070"]
 title = "Declared-interface graph rendering"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_graph/build_html;build_module_map"
-detail = """Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent."""
+detail = "Renders IF-labeled seams in dashboard and architecture views with deterministic table fallback when absent. Declared seams produce labeled graph edges in both views; with no seams the table fallback is preserved. The architecture-map target surface is ruled to retire; the obligation moves with the flows/dashboard rendering."
 test_refs = "(see TC-081)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
 [design.LLR-081]
-sr_refs = ["SR-082"]
+sr_refs = ["SR-154"]
 title = "Fixed review escalation"
 module = "project-trajectory/scripts/agent_route.py"
 code_symbol = "escalate/failure_action"
-detail = """Applies win-stay/lose-shift family swap, tier escalation, and ratification-level-keyed paging for shared failure, contradiction, and tripwires."""
+detail = "Applies win-stay/lose-shift family swap, tier escalation, and ratification-level-keyed paging for shared failure, contradiction, and tripwires. Two failed gates swap family and a failed swap raises tier; shared top-tier failure, contradiction and tripwires page through the run's derived session_hold."
 test_refs = "(see TC-084)"
 status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-082]
-sr_refs = ["SR-085"]
+sr_refs = ["SR-154"]
 title = "Bounded critique rework"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "main/critique_rounds/critique_failure_action"
-detail = """Loops CHANGES-REQUESTED through rework and fresh critique within AGENT_CRITIQUE_MAX, then pages via gate policy."""
+detail = "Loops CHANGES-REQUESTED through rework and fresh critique within AGENT_CRITIQUE_MAX, then pages via gate policy. Approval stops the loop; exhaustion of the configured cap pages per the declared ratification level."
 test_refs = "(see TC-085)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
 [design.LLR-083]
-sr_refs = ["SR-086"]
+sr_refs = ["SR-157"]
 title = "Critique verification vocabulary"
 module = "project-trajectory/scripts/trace.py"
 code_symbol = "VERIFICATION_VALUES/llr_exempt"
-detail = """Accepts Critique as a verification value while retaining the LLR completeness requirement."""
+detail = "Accepts Critique as a verification value while retaining the LLR completeness requirement. An unknown Verification value remains a failure — accepting Critique widens the vocabulary, never the validation."
 test_refs = "(see TC-086)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-084]
-sr_refs = ["SR-123"]
+sr_refs = ["SR-157"]
 title = "Critique closure ratchet"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "critique_ratchet_findings"
-detail = """Warns when a Critique-scoped WI closes after CHANGES-REQUESTED with no TC, test, or rubric delta."""
+detail = "Warns when a Critique-scoped WI closes after CHANGES-REQUESTED with no TC, test, or rubric delta. A closure following an APPROVE verdict stays silent, as does any TC, test or rubric delta; the finding is a warn and never adjudicates the close."
 test_refs = "(see TC-086)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-085]
-sr_refs = ["SR-088"]
+sr_refs = ["SR-070"]
 title = "Containerized How-SW rendering"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_containment/sw_graph"
-detail = """Renders nested component membership and boundary-aggregated seams, falling back byte-identically to the flat view without containment."""
+detail = "Renders nested component membership and boundary-aggregated seams, falling back byte-identically to the flat view without containment. Crossing edges are deduplicated at the container boundary; nested membership is preserved."
 test_refs = "(see TC-087)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
 [design.LLR-086]
-sr_refs = ["SR-090"]
+sr_refs = ["SR-070"]
 title = "Tiered How-SW hierarchy"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_containment/_descend"
-detail = "Tiers component containment to modules and bounds the visible top level by TOP_VIEW_MAX."
+detail = "Tiers component containment to modules and bounds the visible top level by TOP_VIEW_MAX. Uncontained inventories retain the flat view."
 test_refs = "(see TC-088)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 2
 
 [design.LLR-087]
-sr_refs = ["SR-091"]
+sr_refs = ["SR-070"]
 title = "Hierarchy seam ports"
 module = "project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "_drill_svg/_drill_edges"
-detail = """Attaches IF seams to visible input/output ports and aggregates cross-container seams at boundaries."""
+detail = "Attaches IF seams to visible input/output ports and aggregates cross-container seams at boundaries. At every visible tier seams terminate at the correct ports, and boundary aggregation adds no duplicates."
 test_refs = "(see TC-089)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 2
 
 [design.LLR-088]
-sr_refs = ["SR-092"]
+sr_refs = ["SR-070"]
 title = "One-layer hierarchy navigation"
 module = "project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "_descend/_breadcrumb"
-detail = """Handles pointer and keyboard one-layer descent and breadcrumb restoration in self-contained views."""
+detail = "Handles pointer and keyboard one-layer descent and breadcrumb restoration in self-contained views. Double-click and Enter/Space each descend a focused container exactly one layer; breadcrumb actions restore prior levels."
 test_refs = "(see TC-090)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 2
 
 [design.LLR-089]
-sr_refs = ["SR-094"]
+sr_refs = ["SR-153"]
 title = "Structural safety cross-check"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "structural_safety/classify"
-detail = """Cross-checks declarations against spine, critique, checkpoint, and dual-plan evidence; quarantines only the contradictory WI."""
+detail = "Cross-checks declarations against spine, critique, checkpoint, and dual-plan evidence; quarantines only the contradictory WI. Structural evidence overrides a dishonest declaration; an invalid or missing declaration quarantines the same way, with reason codes, while disjoint classified work stays schedulable."
 test_refs = "(see TC-091)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-095]
-sr_refs = ["SR-107"]
+sr_refs = ["SR-155"]
 title = "Dual-plan path isolation"
 module = "project-trajectory/scripts/agent_loop.py;project-trajectory/scripts/schedule.py"
 code_symbol = "classify"
-detail = "Rejects dual rows on the direct worker path."
+detail = "Rejects dual rows on the direct worker path. --dual-plan symmetrically refuses a non-dual row."
 test_refs = "(see TC-097)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-096]
-sr_refs = ["SR-108"]
+sr_refs = ["SR-155"]
 title = "Serialized dual-plan disposition"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "main"
-detail = "Commits SELECT or PAGE as one docs-only disposition and regenerates validation."
+detail = "Commits SELECT or PAGE as one docs-only disposition and regenerates validation. SELECT files the children as queued specs that pass the registry validator, validated atomically with their generated views; a PAGE preserves the round's evidence on disk and never surfaces silently."
 test_refs = "(see TC-098)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-097]
-sr_refs = ["SR-109"]
+sr_refs = ["SR-157"]
 title = "Spec-lifecycle close-side findings"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "spec_lifecycle_findings"
-detail = """Emits R-F findings - done WI with non-empty SpecRef; live docs/specs file (README/-000 excluded, the spec_interface_findings idiom) with no open-WI citer - message-only, riding main's warn-plain/error-under-strict tier with no new branch."""
+detail = "Emits R-F findings - done WI with non-empty SpecRef; live docs/specs file (README/-000 excluded, the spec_interface_findings idiom) with no open-WI citer - message-only, riding main's warn-plain/error-under-strict tier with no new branch. An open-WI citer includes deferred and blocked rows — a shared doc cited by any of them stays clean."
 test_refs = "(see TC-100)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 4
 
 [design.LLR-098]
-sr_refs = ["SR-110"]
+sr_refs = ["SR-006"]
 title = "Per-module coverage-floor comparator"
 module = "project-trajectory/scripts/check_coverage.py"
 code_symbol = "load_floors/load_report/evaluate"
-detail = """Reads the docs/coverage-floors census (module + min percent; blank and # lines ignored) and coverage.py's JSON report (per-file percent_covered, path-normalized), fails on any module below its floor or absent from the report, SKIPs when the report is absent, is a no-op with an empty census, and fails loudly on a malformed floor line."""
+detail = "Reads the docs/coverage-floors census (module + min percent; blank and # lines ignored) and coverage.py's JSON report (per-file percent_covered, path-normalized), fails on any module below its floor or absent from the report, SKIPs when the report is absent, is a no-op with an empty census, and fails loudly on a malformed floor line. A failure names the offending module, and all floors holding exits 0 — the per-module floor is what keeps the global aggregate from hiding a thin high-risk module."
 test_refs = "(see TC-101)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
@@ -942,7 +942,7 @@ sr_refs = ["SR-054"]
 title = "Default-density start-collapse (T2 core)"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/traj_render.py"
 code_symbol = "know_view/sw_view/_render_drill"
-detail = """The mechanized core of usability anchor T2 (docs/rubrics/dashboard-usability.md): a view whose scale EARNS tiering — a bundle spanning more than 3 OKF types, a module set above the component threshold (the SR-089 '>3' rule) — renders START-COLLAPSED as the shared type-tiered drill, one block per type or container, rather than a flat wall of nodes; at or below the threshold it stays flat. Covers the Knowledge, How-SW and landing What views; the What icicle start-collapses to one block per SN with descend-on-click, reusing _drill_layer_svg/_render_drill so the interaction idiom is single-sourced. SCOPE: T2's remaining 'reads legibly at default density' judgement stays perceptual under LLR-055/TC-055."""
+detail = """The mechanized core of usability anchor T2 (docs/rubrics/dashboard-usability.md): a view whose scale EARNS tiering — a bundle spanning more than 3 OKF types, a module set above the component threshold (the LLR-052 '>3' rule) — renders START-COLLAPSED as the shared type-tiered drill, one block per type or container, rather than a flat wall of nodes; at or below the threshold it stays flat. Covers the Knowledge, How-SW and landing What views; the What icicle start-collapses to one block per SN with descend-on-click, reusing _drill_layer_svg/_render_drill so the interaction idiom is single-sourced. SCOPE: T2's remaining 'reads legibly at default density' judgement stays perceptual under LLR-055/TC-055."""
 rationale = """Tiering imposed on a small project costs a click to reach what already fitted on one screen, so it is earned by scale rather than switched on globally. Capping DEPTH instead of collapsing was rejected and the emitter records why: height is leaf-proportional, so stopping at the SR lane still stacks one unit per SR and the wall returns. The What icicle is the case that forced the widening — it rendered the whole spine at LEAF scale, one unit per test case."""
 test_refs = "(see TC-102)"
 status = "Verified"
@@ -1182,7 +1182,7 @@ title = "T4 label legibility, mechanized: ink inside its box, truncation with a 
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_render.py;project-trajectory/scripts/traj_panels.py"
 code_symbol = "_drill_block_label/_fit_lines/_next_work_title"
 detail = """The mechanized floor of usability anchor T4 (docs/rubrics/dashboard-usability.md), widening the anchor's existing owner rather than adding a rubric anchor. The clause made objective: no character a block renders may fall outside that block's own rect, horizontally or vertically. The emitter FITS the sub-label to the column it will actually be drawn in — a second line when one will not hold it, then an ellipsis — with three text lines the ceiling, reusing the grid the id/name wrap idiom already proved fits row_h; a sub-label that already fits one line renders byte-identically to before. SCOPE — PROVEN: for every block of every drill layer in the emitted document, each label line's ink box lies inside its own node rect, measured from the emitted geometry with the emitter's declared per-character widths and the document's declared font sizes, entities counted as the single glyph they render. Second half: this emitter does not truncate the next-work title by a fixed budget — the card emits the whole clause and lets its own width do the fitting, the declared bound _NEXT_WORK_TITLE caps ONE item's HEIGHT rather than its text, and where it bites the remainder discloses through a NATIVE <details> cut at a word so head and remainder rejoin continuously when opened. DELIBERATELY NOT: whether an ellipsis a reader meets is ACTIONABLE — truncated-without-affordance stays T4's perceptual residue under LLR-055/TC-055, so T4 remains a live critique anchor; the full string keeps its homes in the block's title, aria-label and data-summary."""
-rationale = """A label is illegible AS a label the moment its ink leaves the box it names, which is the half of this anchor a reader cannot argue with. Column right-sizing (LLR-057, SR-056) cannot absorb it: right-sizing clamps at MAX_TIER_COL, so a 400-character need asks for a 2000px column and gets 172 — the overflow is structural, not a tuning problem. A FIXED character budget was the shipped approach on the next-work card and is rejected: it spends the same budget at every width, cutting a title mid-word on a wide screen with the card half empty. Native <details> is the point of the reveal — operable by pointer AND keyboard with no script, in a file opened from disk, which is what makes the affordance assertable from the markup instead of needing a browser. The height bound is measured over 320 registry rows: median 44, p90 126, max 609 characters of leading clause."""
+rationale = """A label is illegible AS a label the moment its ink leaves the box it names, which is the half of this anchor a reader cannot argue with. Column right-sizing (LLR-057) cannot absorb it: right-sizing clamps at MAX_TIER_COL, so a 400-character need asks for a 2000px column and gets 172 — the overflow is structural, not a tuning problem. A FIXED character budget was the shipped approach on the next-work card and is rejected: it spends the same budget at every width, cutting a title mid-word on a wide screen with the card half empty. Native <details> is the point of the reveal — operable by pointer AND keyboard with no script, in a file opened from disk, which is what makes the affordance assertable from the markup instead of needing a browser. The height bound is measured over 320 registry rows: median 44, p90 126, max 609 characters of leading clause."""
 test_refs = "(see TC-124)"
 status = "Verified"
 component = "CMP-009"
@@ -1225,43 +1225,43 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-123]
-sr_refs = ["SR-115"]
+sr_refs = ["SR-153"]
 title = "Deterministic traincar ordering"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "frontier/evaluate"
-detail = """Orders eligible traincars by (gate, Priority desc, downstream-dependent count desc, hard-path desc, first WI id)."""
+detail = "Orders eligible traincars by (gate, Priority desc, downstream-dependent count desc, hard-path desc, first WI id). The downstream-dependent count is transitive and the path length is the remaining hard-path length; the order is identical across ready --explain, ready --format json and simulate --jobs 1's serial schedule."
 rationale = """Split from the frontier row: deriving WHICH traincars are eligible and deciding WHICH runs first fail independently, and only the second one makes a run replayable."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-124]
-sr_refs = ["SR-116"]
+sr_refs = ["SR-156"]
 title = "Generated status + run-state"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "REGEN_STEPS/regen"
-detail = """docs/status.md's generated block is maintained by the trunk lane only: trunk_step --regen runs gen_trajectory --status after derive_gate (the gate is its input), and the status-map freshness gate byte-compares it on the trunk while work branches skip (SS5.2). (docs/run-state and its four-valued dispatcher outcome retired with the dispatcher at Phase 5.)"""
+detail = "docs/status.md's generated block is maintained by the trunk lane only: trunk_step --regen runs gen_trajectory --status after derive_gate (the gate is its input), and the status-map freshness gate byte-compares it on the trunk while work branches skip (SS5.2). (docs/run-state and its four-valued dispatcher outcome retired with the dispatcher at Phase 5.) The snapshot is an adopted-toolkit output surface (REL-002), not a system-under-development output; a work branch never commits the artifact."
 rationale = """Split from the retirement row: removing the old pointer and generating the surfaces that replace it are separable, and the second is what keeps the replacement from rotting the same way."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-130]
-sr_refs = ["SR-122"]
+sr_refs = ["SR-070"]
 title = "Dashboard staleness check"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py"
 code_symbol = "main/_asof/ASOF_RE"
-detail = """Implements stale/missing --check with a git as-of stamp excluded from stamp-only comparison."""
+detail = "Implements stale/missing --check with a git as-of stamp excluded from stamp-only comparison. As-of behavior is stable both inside and outside Git, the visible git-derived stamp excluded from stamp-only comparisons."
 rationale = """Split from the determinism row: determinism is what makes the check possible, but a deterministic artifact nobody re-checks still goes stale."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
 [design.LLR-131]
-sr_refs = ["SR-124"]
+sr_refs = ["SR-153"]
 title = "Contradiction-safe dual-plan class"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "classify"
@@ -1273,11 +1273,11 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-132]
-sr_refs = ["SR-125"]
+sr_refs = ["SR-155"]
 title = "PAGE ratification-level mapping"
 module = "project-trajectory/scripts/agent_loop.py"
 code_symbol = "main"
-detail = """Applies the declared level's continuation semantics to a PAGE at both the dispatcher disposition and the --dual-plan single-shot round: `page_action(human_held, keep_nondependent)` over the four cells the retired enum's three words could not span — a human-held tier pages, a loop-held one STALLs, and `None` normalizes to the strictest cell rather than to `bool(None)`'s most permissive one."""
+detail = "Applies the declared level's continuation semantics to a PAGE at both the dispatcher disposition and the --dual-plan single-shot round: `page_action(human_held, keep_nondependent)` over the four cells the retired enum's three words could not span — a human-held tier pages, a loop-held one STALLs, and `None` normalizes to the strictest cell rather than to `bool(None)`'s most permissive one. A PAGE preserves the round's evidence; the human-held cell exits NEEDS-HUMAN and a loop-held one exits STALL with no human gate."
 rationale = """Split from the disposition row: committing the outcome and deciding whether it stops a human are independent, and the second is shared with a second entry point that would otherwise drift."""
 test_refs = "(see TC)"
 status = "Modified"
@@ -1285,38 +1285,38 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-133]
-sr_refs = ["SR-126"]
+sr_refs = ["SR-157"]
 title = "Spine stand-alone rule"
 module = "project-trajectory/scripts/trace_text.py"
 code_symbol = "provenance_findings"
-detail = """provenance_findings flags a WI id or a process-doc citation across the normative cells of all three spine registries, joining the --strict failure set via exit_code."""
+detail = "provenance_findings flags a WI id or a process-doc citation across the normative cells of all three spine registries, joining the --strict failure set via exit_code. The normative cells are the SR Title/Requirement/Rationale/AcceptanceCriteria, the LLR Title/Detail/Rationale, and the TC Method/Expected/Parameters; pointer columns are out of scope, and each finding names the registry, row and cell. Not a finding: an artifact path, a rubric, a sibling spine id, and a port-script name — the ten declared external ports (check.py, bootstrap.py, agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py, subagent_gate.py, run_menu.py, integrate.py, trunk_step.py) — the script-name carve-out reaching no wider than that set."
 rationale = """A citation is a pointer a later reader may be unable to follow, and the row's reason travels with it: when the work item is closed and archived, the row keeps its claim and loses its justification, which is the failure this catches. Applied to every spine registry rather than the SR alone, because the layer the rule could not originally see held the largest pocket of violations — a narrower scope would guard the cleanest layer and miss the dirtiest."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-134]
-sr_refs = ["SR-127"]
+sr_refs = ["SR-157"]
 title = "Requirement form rules"
 module = "project-trajectory/scripts/trace_text.py"
 code_symbol = "form_findings"
-detail = """form_findings applies six rules — one obligation per requirement, no non-obligation modal, no actorless passive, no unfalsifiable term, no open-ended clause, no obligation keyword in an LLR Detail — skipping Draft rows, and joins the --strict failure set via exit_code."""
+detail = "form_findings applies six rules — one obligation per requirement, no non-obligation modal, no actorless passive, no unfalsifiable term, no open-ended clause, no obligation keyword in an LLR Detail — skipping Draft rows, and joins the --strict failure set via exit_code. The negative set holds: a Draft row, a zero-obligation row, a project's own declared alternate obligation keyword, and a multi-clause AcceptanceCriteria are not findings — stated keyword-free here deliberately, since the rule cannot distinguish a mention from a use."
 rationale = """A row carrying two obligations reports neither when one fails, and undecidable wording is signed on impression rather than evidence — that is the failure all six rules exist to prevent. Draft is skipped because a Draft row is exempt from the child-completeness rules elsewhere in this harness and is by convention the state a requirement occupies while still being written, so an unfinished acceptance criterion is expected there rather than defective; flagging it would make the state unusable for the drafting it exists to allow. This cell says "obligation keyword" rather than quoting the keyword itself because the rule cannot distinguish a mention from a use, and an exemption a checker cannot see is one an author can reach for."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
 [design.LLR-135]
-sr_refs = ["SR-128"]
+sr_refs = ["SR-157"]
 title = "Paraphrase advisory"
 module = "project-trajectory/scripts/trace_text.py"
 code_symbol = "paraphrase_advisories"
-detail = """paraphrase_advisories compares a child cell's significant words (alphabetic runs of four characters or more, lowercased) against its parent's and reports when the share of the CHILD's words that also appear in the parent exceeds the declared threshold — the child is the denominator, so a long parent cannot dilute a short echoing child. Reported in its own advisory pipe, which never joins a failure set."""
+detail = "paraphrase_advisories compares a child cell's significant words (alphabetic runs of four characters or more, lowercased) against its parent's and reports when the share of the CHILD's words that also appear in the parent exceeds the declared threshold — the child is the denominator, so a long parent cannot dilute a short echoing child. Reported in its own advisory pipe, which never joins a failure set. The two watched relationships are an SR Rationale against its own Requirement and an LLR Detail against its parent SR Requirement — the pairs where the parent is unambiguous; each finding emits a stdout WARNING plus a report line with the exit code unchanged."
 rationale = """A child that re-words its parent adds a second home for one fact and no decomposition, so a later amendment updates one copy and the two disagree with nothing to report it. The advisory has its own pipe rather than sharing the acceptance-criteria counter because a shared count would report 'ac-advisories' about a finding that is not one, and a reader acts on the counter name."""
 test_refs = "(see TC)"
-status = "Verified"
+status = "Modified"
 component = "CMP-006"
 phase = 1
 
@@ -1333,47 +1333,47 @@ component = "CMP-006"
 phase = 4
 
 [design.LLR-137]
-sr_refs = ["SR-130"]
+sr_refs = ["SR-156"]
 title = "Serial trunk step (log compile + regen)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "compile_log/ordered_fragments/rebase_links"
-detail = """Compiles docs/log.d/*.md into docs/log.md via plan_artifacts.append_log_summary in (git add-time, filename) order - all fragments validated first (name shape, ## heading, reserved section headings refused, an adding commit required - on HEAD, or on MERGE_HEAD during the integrator's merge composition), relative links rebased from docs/log.d/ to docs/, fragments deleted after append, all-or-nothing on any validation error. Never commits; the caller owns the commit. The artifact-regen half is LLR-142 (SR-134)."""
+detail = "Compiles docs/log.d/*.md into docs/log.md via plan_artifacts.append_log_summary in (git add-time, filename) order - all fragments validated first (name shape, ## heading, reserved section headings refused, an adding commit required - on HEAD, or on MERGE_HEAD during the integrator's merge composition), relative links rebased from docs/log.d/ to docs/, fragments deleted after append, all-or-nothing on any validation error. Never commits; the caller owns the commit. The artifact-regen half is LLR-142. A fragment-free run is a clean idempotent no-op."
 rationale = "One serial actor per §5.5."
 test_refs = "(see TC-130)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-138]
-sr_refs = ["SR-131"]
+sr_refs = ["SR-156"]
 title = "Tracked pause reader (dual-home)"
 module = "project-trajectory/scripts/agent_common.py"
 code_symbol = "tracked_pause/pause_reason"
-detail = """pause_reason reads the ONE tracked home docs/work/pause via tracked_pause (TOML reason/since; malformation fails closed to the pinned loud placeholder). The legacy untracked lane/pause half retired with the dispatcher at Phase 5 - a stray local file is inert, pinned by test."""
+detail = "pause_reason reads the ONE tracked home docs/work/pause via tracked_pause (TOML reason/since; malformation fails closed to the pinned loud placeholder). The legacy untracked lane/pause half retired with the dispatcher at Phase 5 - a stray local file is inert, pinned by test. A pause stops claiming only — everything in flight finishes and integrates to a merged stop; pause_reason keeps the unchanged None/''/reason return contract."
 rationale = """A broken pause file must still pause; two homes during the migration window, one meaning."""
 test_refs = "(see TC-131)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
 [design.LLR-139]
-sr_refs = ["SR-135"]
+sr_refs = ["SR-070"]
 title = "Pause surfaced in the pending block"
 module = "project-trajectory/scripts/traj_status.py"
 code_symbol = "_pause_pending/pending_block"
-detail = """Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder."""
+detail = "Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder. The bullet clears when the pause file is deleted; the pending surface is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 rationale = "An open pause is a visible accruing cost, never a forgotten one."
 test_refs = "(see TC-136)"
-status = "Verified"
+status = "Modified"
 component = "CMP-009"
 phase = 4
 
 [design.LLR-140]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "Local integrator (claim + queue + audit)"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "claim/finished_branches/_verdict_gate/integrate_one/audit"
-detail = """claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) using score_reviews.parse_verdict with the verdict's last branch commit required no older than the last non-review non-fragment commit, ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit."""
+detail = "claim: §2.3 steps 1+2 with the refusal ladder (tracked pause via agent_common.tracked_pause, dirty tree, existing branch, unsafe name, non-ordinary safety_class, off-frontier id) before a git mv + trunk commit + branch cut. finished_branches: a claimed branch whose tip holds no spec under active/<branch>/ (the closing move IS the signal). integrate_one: --no-ff --no-commit merge, trunk_step.py folded into the merge commit so it passes its own floor, check.py --jobs 0 at the declared tier on the composed tree read fail-closed (nonzero exit OR any SKIP line refuses), verdict gate per docs/process.toml [policies] review_rounds (legacy docs/review-policy read through the migration window) using score_reviews.parse_verdict with the verdict's last branch commit required no older than the last non-review non-fragment commit, ff-only trunk advance, branch deleted on green, candidate parked on red. audit: git log --first-parent --no-merges over --since..HEAD; paths outside docs/work/, docs/log.d/, docs/log.md and the stack.ini [generated] set flag the commit. A missing stack.ini or an empty [product] test declaration refuses the merge; a red bar parks the candidate and stops the queue rather than composing past it."
 rationale = """One serial actor, one page; every refusal names its reason; the queue stops at the first red rather than composing past it."""
 test_refs = "(see TC-132)"
 status = "Modified"
@@ -1393,7 +1393,7 @@ component = "CMP-007"
 phase = 4
 
 [design.LLR-142]
-sr_refs = ["SR-134"]
+sr_refs = ["SR-156"]
 title = "Trunk-step artifact regen (dependency order)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "regen"
@@ -1417,7 +1417,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-144]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "Terminal lane outcomes (handback + quarantine)"
 module = "project-trajectory/scripts/handback.py"
 code_symbol = "close_partial/quarantine/report_path/render_report/_restore/diff_records"
@@ -1429,7 +1429,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-145]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "Link-aware spec-move ritual (move + relink indivisible)"
 module = "project-trajectory/scripts/spec_move.py"
 code_symbol = "move_spec/expected_relink/archive_dest"
@@ -1441,7 +1441,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-146]
-sr_refs = ["SR-136"]
+sr_refs = ["SR-158"]
 title = "Declared-figure provenance presence check"
 module = "project-trajectory/scripts/check_figures.py"
 code_symbol = "findings_for/judge_marker/marker_segments"
@@ -1477,7 +1477,7 @@ component = "CMP-006"
 phase = 4
 
 [design.LLR-149]
-sr_refs = ["SR-093"]
+sr_refs = ["SR-153"]
 title = "§A8 admission: the kind x ratification-level table + the spine barrier"
 module = "project-trajectory/scripts/dispatch.py"
 code_symbol = "_kind_action/_admission/_lane_count/gap_census"
@@ -1489,7 +1489,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-150]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "Lane mechanics: worktree, worker subprocess, §A2 refresh subprocess"
 module = "project-trajectory/scripts/lane.py"
 code_symbol = "ensure_worktree/worker_argv/spawn_worker/run_worker/spawn_refresh"
@@ -1501,7 +1501,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-151]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "Dispatch-lock claim rung + the spine batch claim"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "_dispatch_lock/claim/_claim_refusal/_abandoned_claim"
@@ -1513,7 +1513,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-152]
-sr_refs = ["SR-093"]
+sr_refs = ["SR-153"]
 title = "The adjudication kind: rank-1 slot + no-bar arm + the bar strictness key"
 module = "project-trajectory/scripts/schedule.py"
 code_symbol = "SAFETY_CLASSES/_KIND_CONCURRENCY/_KIND_RANK"
@@ -1525,7 +1525,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-153]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "The unified trunk-side intake mint + the context block + the ratification-level arms"
 module = "project-trajectory/scripts/intake.py"
 code_symbol = """intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block/flip_verified"""
@@ -1537,7 +1537,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-154]
-sr_refs = ["SR-132"]
+sr_refs = ["SR-156"]
 title = "The merge slot's post-merge intake arm"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "integrate_one/_lane_bar_directives/_refresh_bar"
@@ -1597,11 +1597,11 @@ component = "CMP-006"
 phase = 5
 
 [design.LLR-159]
-sr_refs = ["SR-141", "SR-142"]
+sr_refs = ["SR-148"]
 title = "Admission order and the red-TC census"
 module = "project-trajectory/scripts/dispatch.py"
 code_symbol = "_judgement_first/_admission/red_tc_census/parse_red_tc/_implemented_ids"
-detail = """`_judgement_first` is a STABLE PARTITION over the frontier, applied inside `_admission` before the surface/dispatch split so it can never move work past a human-held stop. `red_tc_census` rides the existing finding-string seam with a distinct prefix; `_red_tc_line` and `parse_red_tc` sit adjacent because the grammar is a contract between two modules, and `intake` routes on the parser rather than re-splitting prose."""
+detail = "`_judgement_first` is a STABLE PARTITION over the frontier, applied inside `_admission` before the surface/dispatch split so it can never move work past a human-held stop. `red_tc_census` rides the existing finding-string seam with a distinct prefix; `_red_tc_line` and `parse_red_tc` sit adjacent because the grammar is a contract between two modules, and `intake` routes on the parser rather than re-splitting prose. red_tc_census names, as its own class, a test case that is not green while every requirement it verifies is cited by a work item recorded done — Verified, Draft and Modified test cases are exempt, an open, partial or cancelled citer makes nothing red, and a test case verifying a mix of claimed and unclaimed targets is not red; each named line routes to an adjudication row whose suggested tier is estimated from measured breadth, never defaulted; the census line's grammar has exactly one reader (parse_red_tc)."
 rationale = """The alternative to the partition — renumbering `schedule._KIND_RANK` — would change ordering for every downstream repo for a rung that belongs to admission. The alternative to the parser is prose carrying control flow, which is the exact defect the typed `suggested_tier` field replaced."""
 test_refs = "TC-154"
 status = "Draft"
@@ -1609,11 +1609,11 @@ component = "CMP-008"
 phase = 5
 
 [design.LLR-160]
-sr_refs = ["SR-143"]
+sr_refs = ["SR-157"]
 title = "The mechanical queue-overlap pre-filter"
 module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "queue_conflict_findings/_title_tokens"
-detail = """Three signals over OPEN rows only — Jaccard over title token sets at a deliberately high bar, shared `SR-Refs`, and a shared anchor-stripped `SpecRef` — each reported once per pair per signal with both ids, in sorted order. Printed on the warn-only line beside backlog staleness; never appended to `errors`."""
+detail = "Three signals over OPEN rows only — Jaccard over title token sets at a deliberately high bar, shared `SR-Refs`, and a shared anchor-stripped `SpecRef` — each reported once per pair per signal with both ids, in sorted order. Printed on the warn-only line beside backlog staleness; never appended to `errors`. A shared stopword alone is never a signal, and the findings stay out of the exit code even under --strict."
 rationale = """A low similarity bar turns a useful warn into noise that gets ignored, which is worse than not having the warn: this rung catches the same job minted twice, not two rows in the same area."""
 test_refs = "TC-155"
 status = "Draft"
@@ -1621,11 +1621,11 @@ component = "CMP-006"
 phase = 5
 
 [design.LLR-161]
-sr_refs = ["SR-144", "SR-145"]
+sr_refs = ["SR-144"]
 title = "The close ritual and the disposition it owes"
 module = "project-trajectory/scripts/handback.py"
 code_symbol = "close_partial/render_report/report_path/_restore/_split_lines"
-detail = """`close_partial` writes the report FIRST (it is the event's identity), refuses when one already exists, and restores EVERY report this call wrote on any refusal — so a multi-spec lane cannot half-close. `intake._close_drafts` titles the disposition on the report PATH and nothing else, and says so LOUDLY when a terminal spec has no report rather than minting zero rows quietly."""
+detail = "`close_partial` writes the report FIRST (it is the event's identity), refuses when one already exists, and restores EVERY report this call wrote on any refusal — so a multi-spec lane cannot half-close. `intake._close_drafts` titles the disposition on the report PATH and nothing else, and says so LOUDLY when a terminal spec has no report rather than minting zero rows quietly. Every partial and cancelled close earns exactly one disposition row — a re-sweep mints none, a genuinely second close is a second report and so a second row, and a disposition row never mints a disposition for itself (refused at both ends); a complete close is spot-checked at the declared rate rather than gated; continuing partial work drafts a successor carrying explicit lineage that survives the id change, never re-opening a terminal row."
 rationale = """The path is the only token in the event's identity that cannot move. An earlier cut folded the report's `claimed_outcome` in as well, which re-read a MUTABLE field on every sweep, so one edit minted a second disposition for the same close — the starvation class returning through a new proxy."""
 test_refs = "TC-156"
 status = "Draft"
@@ -1694,19 +1694,19 @@ phase = 5
 
 
 [design.LLR-167]
-sr_refs = ["SR-146", "SR-145", "SR-142"]
+sr_refs = ["SR-146", "SR-144", "SR-148"]
 title = "The adjudicator briefs' evidence, and the refusal that keeps a half-filled one unsent"
 module = "project-trajectory/scripts/adjudicate_brief.py"
 code_symbol = "compose/disposition_values/red_tc_values"
 detail = """The row's DECLARED `Brief` cell selects the template (`intake` writes it at every adjudication mint); `compose` fills it through `prompts.fill`'s strict both-ways check and `agent_loop.session_body` is the single fork BOTH routing arms take, so a claimed adjudication row gets the same brief whether or not a routing registry is configured. Each assembler returns `(values, None)` or `(None, reason)` and NEVER a partial: `disposition_values` walks SpecRef -> the closed spec -> its immutable per-close report -> that report's TYPED `commit_range` -> `git log`/`--name-status` clipped at the declared 80 lines, and refuses the clean-close spot-check arm because it writes no report; `red_tc_values` RE-RUNS `dispatch.red_tc_census` rather than remembering it, joins each line through `dispatch.parse_red_tc` to the TC row's Method/Expected/Evidence and to the SR/LLR text its targets name, and refuses a census that has come clean. A refusal falls back to the worker assignment and PRINTS why. `conflict` and `amendment` are deliberately unrouted, each with its missing derivation named in the module header."""
-rationale = """Two rules decide the shape. A judge's brief must not carry the claim under judgement as its premise - a leaked self-assessment anchors the judgement to it - so every value is registry-, git- or report-derived and the one claim shown - the lane's report - is the template's own labelled subject. And a HALF-filled brief is worse than the generic prompt: hollow sections read as an investigation that was run and found nothing, which is the expensive way to be wrong, so there is no placeholder path at all. The discriminator is a declared cell rather than a SpecRef shape because that inference is unsound - an amendment to a test-case row and a red-TC census row both cite the TC registry while their briefs give contradictory instructions - and rather than a Title substring because that is the `NEEDS-HUMAN` fold (SR-145)."""
+rationale = """Two rules decide the shape. A judge's brief must not carry the claim under judgement as its premise - a leaked self-assessment anchors the judgement to it - so every value is registry-, git- or report-derived and the one claim shown - the lane's report - is the template's own labelled subject. And a HALF-filled brief is worse than the generic prompt: hollow sections read as an investigation that was run and found nothing, which is the expensive way to be wrong, so there is no placeholder path at all. The discriminator is a declared cell rather than a SpecRef shape because that inference is unsound - an amendment to a test-case row and a red-TC census row both cite the TC registry while their briefs give contradictory instructions - and rather than a Title substring because that is the `NEEDS-HUMAN` fold (LLR-161)."""
 test_refs = "TC-161"
 status = "Draft"
 component = "CMP-008"
 phase = 5
 
 [design.LLR-168]
-sr_refs = ["SR-103"]
+sr_refs = ["SR-155"]
 title = "Hats roster reader + planner-brief injection"
 module = "project-trajectory/scripts/hats.py"
 code_symbol = "load/applicable/brief_block/parse_condition"
@@ -1737,3 +1737,15 @@ test_refs = "(see TC-164)"
 status = "Draft"
 component = "CMP-007"
 phase = 5
+
+[design.LLR-171]
+sr_refs = ["SR-035"]
+title = "Language-neutral registry templates + ID scheme"
+module = "project-trajectory/registries"
+code_symbol = "registry templates / ID vocabulary"
+detail = """The shipped registry templates and the ID scheme (SN/SR/LLR/TC and the off-spine spaces) carry no language-specific token: a scaffold produced with a non-Python profile passes trace.py --strict-integrity --strict-schema unmodified, and a token scan over the shipped templates and the ID vocabulary finds no language-specific token."""
+rationale = """The observable minted for SR-035 by owner ruling (13u rider): stack-agnosticism was a real delivered property with no observable, and this is the check that makes it falsifiable."""
+test_refs = "(see TC-165)"
+status = "Draft"
+component = "CMP-009"
+phase = 1

@@ -2,7 +2,7 @@
 id = "WI-035"
 title = "Doc-currency hardening - symbol-ref validation"
 workstream = "scripts"
-sr_refs = ["SR-041"]
+sr_refs = ["SR-158"]
 needs = ["WI-013", "WI-012"]
 order = 34
 +++

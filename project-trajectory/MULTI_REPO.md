@@ -24,7 +24,7 @@ reviewer should push back on a premature jump:
    `SN→SR→LLR→TC` spine, one gate run, one release.
 2. **Several modules, one repo** (`PROCESS.md` §10) — when a repo grows distinct
    sub-systems that still **build and release as one**. Partition the spine by the
-   `Module`/`Area` columns; no new machinery.
+   `Module`/component columns; no new machinery.
 3. **Several repos + a coordinator** (this document) — **only** when modules genuinely
    need *independent* versioning, ownership, access, or release cadence at a scale one
    repo can't sustain.
@@ -219,7 +219,7 @@ the project's choice — and is deferred (see below).
 
 ## 6. Schema seams (the thin part that ships)
 
-These are optional and schema-safe, the same way `Area`/`Lifecycle` (`PROCESS.md`
+These are optional and schema-safe, the same way `Lifecycle` (`PROCESS.md`
 §1/§4) and `PB-###` (§9) are — they change no required field, and a single-repo
 project never sees them. A coordinator repo adds them by hand (or via the future coordinator
 `bootstrap` variant — deferred).

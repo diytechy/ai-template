@@ -2,7 +2,7 @@
 id = "WI-231"
 title = "Integrator regenerates generated artifacts on conflict + WI-keyed registry union merge (2026-07-18 field finding 2)"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["~WI-226"]
 buildtier = "strong"
 safety_class = "high-risk"

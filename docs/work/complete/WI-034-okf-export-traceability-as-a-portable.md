@@ -2,7 +2,7 @@
 id = "WI-034"
 title = "OKF export - traceability as a portable bundle"
 workstream = "scripts"
-sr_refs = ["SR-042"]
+sr_refs = ["SR-070"]
 needs = ["WI-028"]
 order = 33
 +++

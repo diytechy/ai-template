@@ -163,3 +163,4 @@ resource: "generated"
 | [LLR-168](LLR-168.md) | Hats roster reader + planner-brief injection |
 | [LLR-169](LLR-169.md) | Retired-vocabulary enforcer |
 | [LLR-170](LLR-170.md) | Need-form checker |
+| [LLR-171](LLR-171.md) | Language-neutral registry templates + ID scheme |

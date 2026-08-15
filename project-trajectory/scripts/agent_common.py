@@ -1191,7 +1191,7 @@ def blackout_wait(
             emit(blackout_countdown_line(remaining, resume_at))
 
 
-# --- WI-181: explicit worker assignment (SR-060) --------------------------------
+# --- WI-181: explicit worker assignment (LLR-061) --------------------------------
 # A worker is one agent_loop process driving one claimed assignment on one
 # branch in one worktree (the §2.3 claim model since concurrency-restructure
 # Phase 5). Its inputs are explicit CLI arguments (never a lane file) and its
@@ -1279,7 +1279,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -2450,7 +2450,7 @@ def preflight(root, template, args):
                     "would commit every session under a private identity. "
                     + (proc.stderr or proc.stdout or "").strip()
                 )
-    # --- worker assignment preflight (WI-181, SR-060) -----------------------
+    # --- worker assignment preflight (WI-181, LLR-061) -----------------------
     # Re-grounded on the §2.3 claim model at concurrency-restructure Phase 5:
     # --wi alone is a full assignment (the session tag defaults to the current
     # branch name); --train survives as the optional explicit tag. A worker

@@ -70,7 +70,7 @@ comparative acceptance-criterion, an LLR reading below Verified while every
 citing TC is Verified (WI-129), a missing knowledge pack, and an interface
 endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized Verified split (process.md §4 "Attest") and, when the SR
-registry tags Area, a per-Area count.
+registry tags Aspect, a per-aspect count.
 
 Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
@@ -311,6 +311,23 @@ REQUIRED_FIELDS = {
 # Status are intentionally left open, so they are not validated here.
 ENUM_FIELDS = {
     "SR": {
+        # The ruled aspect vocabulary (sitting-2 decision 10, executed by the
+        # WI-451 re-tier). `Area` was a 31-value free-text column of which 25
+        # values were a component by another name; those were DROPPED at
+        # conversion rather than remapped, and the six SPANNING values — the
+        # cross-cutting concerns no partition can express — became this closed
+        # set. An aspect is a REVIEW grouping, not an ownership claim, so a row
+        # carrying none is normal and never a finding (only a non-empty
+        # out-of-vocabulary value is). NOT the D-9/D12 Status vocabulary, which
+        # is held for its own atomic act (2026-08-14e).
+        "Aspect": {
+            "process",
+            "trajectory",
+            "unattended-loop",
+            "connectivity",
+            "perf",
+            "portability",
+        },
         "Verification": {
             "Test",
             "Demonstration",
@@ -319,7 +336,7 @@ ENUM_FIELDS = {
             "Inspection",
             "Attest",
             "Critique",
-        }
+        },
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},
     # WI-443 / OI-14 part B — the IF tier's first closed vocabularies, advisory
@@ -384,7 +401,7 @@ IF_CONTRACT_MAX = 500
 
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
-# it names its predicate: identical *in what*, judged *how*. (Gilbert's SR-013
+# it names its predicate: identical *in what*, judged *how*. (Gilbert's LLR-013
 # shipped "cannot distinguish source by schema" through DevBar-Reqs and had to be pinned
 # by hand at DevBar-Tests.) Both lists are heuristics — the advisory WARNS and never joins
 # a failure set; the DevBar-Reqs consistency review (process.md §4) makes the call.
@@ -927,119 +944,6 @@ def bump_watermark(root):
         render_watermark(marks, basis), encoding="utf-8", newline="\n"
     )
     return marks, raised
-
-
-def _supersession_targets(row, ids):
-    """Return one row's validated targets plus its local findings."""
-    sid = row.get("SR-ID")
-    value = (row.get("SupersededBy") or "").strip()
-    if not sid or not value:
-        return [], []
-    targets = [target.strip() for target in value.split(";")]
-    malformed = any(not target for target in targets) or any(
-        "," in target or any(ch.isspace() for ch in target) for target in targets
-    )
-    if malformed:
-        return [], [f"SR {sid} SupersededBy must be a semicolon-separated SR-id list"]
-    found = []
-    for target in set(targets):
-        if targets.count(target) > 1:
-            found.append(f"SR {sid} SupersededBy repeats {target}")
-        if not ID_PATTERNS["SR"].match(target) or target not in ids:
-            found.append(f"SR {sid} SupersededBy references unknown {target}")
-        elif target == sid:
-            found.append(f"SR {sid} SupersededBy self-links")
-    return targets, found
-
-
-def _supersession_cycle_findings(edges):
-    # Report one deterministic finding per cyclic component. A DFS path is
-    # enough because supersession targets outside the linking subset are leaves.
-    state = {}
-    stack = []
-    reported = set()
-    found = []
-
-    def visit(node):
-        state[node] = 1
-        stack.append(node)
-        for target in edges.get(node, []):
-            if target not in edges:
-                continue
-            if state.get(target, 0) == 0:
-                visit(target)
-            elif state.get(target) == 1:
-                start = stack.index(target)
-                cycle = stack[start:] + [target]
-                key = frozenset(cycle)
-                if key not in reported:
-                    reported.add(key)
-                    found.append("SR SupersededBy cycle: " + " -> ".join(cycle))
-        stack.pop()
-        state[node] = 2
-
-    for sid in sorted(edges):
-        if state.get(sid, 0) == 0:
-            visit(sid)
-    return found
-
-
-def _llr_supersession_findings(llrs, superseded, ids):
-    # Scoped to LLR SR-Refs on purpose: a TC citing a superseded SR is legal and
-    # required — a non-draft superseded SR still owes a TC (see LLR_EXEMPT), and
-    # that TC is the retained evidence record proving nothing live hangs on the
-    # dead scope. Only a decomposition grounds new work on the dead id.
-    # A Draft LLR is NOT exempt: grounding on a dead SR is wrong at any stage,
-    # not a maturity question — the same tier as a duplicated id.
-    found = []
-    for row in llrs:
-        lid = row.get("LLR-ID")
-        if not lid:
-            continue
-        for sid in sorted(set(refs(row.get("SR-Refs")))):
-            if sid in superseded:
-                # Name only successors that exist — an unknown target already
-                # has its own SR-side finding, and pointing the reader at a
-                # nonexistent successor would compound the error.
-                real = [t for t in superseded[sid] if t in ids]
-                where = (
-                    "SupersededBy " + ";".join(real)
-                    if real
-                    else "SupersededBy names no existing successor"
-                )
-                found.append(
-                    f"LLR {lid} SR-Refs cites superseded {sid} ({where}) — "
-                    "re-ground on the successor or delete the LLR"
-                )
-    return found
-
-
-def sr_supersession_findings(srs, llrs=()):
-    """Validate the optional SR ``SupersededBy`` extension.
-
-    A populated cell is a semicolon-separated list of other, existing SR ids.
-    Supersession is identity history rather than decomposition, so malformed
-    targets, self-links, and cycles are always-invalid integrity findings.
-    An LLR whose ``SR-Refs`` cites an SR with a populated cell is the same
-    class of error (WI-364, owner ruling 2026-07-29): the registry is the live
-    surface and the supersession history lives in git, so a live decomposition
-    must re-ground on the successor or be deleted. TC citations of a superseded
-    SR stay legal — they are the retained evidence record.
-    Registries without the optional column remain byte-for-byte compatible.
-    """
-    ids = {r.get("SR-ID") for r in srs if r.get("SR-ID")}
-    edges = {}
-    found = []
-    for row in srs:
-        targets, row_findings = _supersession_targets(row, ids)
-        found.extend(row_findings)
-        if targets:
-            edges[row["SR-ID"]] = targets
-    return (
-        found
-        + _supersession_cycle_findings(edges)
-        + _llr_supersession_findings(llrs, edges, ids)
-    )
 
 
 def triangle_findings(tcs, llrs):
@@ -2726,7 +2630,7 @@ def load_registries(docs):
     # Optional interface-definition registry (IF-###, process.md §8): one row per
     # interface, stating what it concretely IS. Off the joined spine like
     # PART/ASSET, but its SR-Refs back-link and its endpoint join keep it
-    # traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
+    # traceable (WI-056 closed the LLR-002-era gap). Absent file -> [].
     raw_ifs = spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
     # Optional depth-0 FRAME registry (WI-442, sitting-2 §1R.5): three tiers in
     # one file — who is outside (EXT-###), what crosses the system boundary
@@ -3107,7 +3011,6 @@ def analyze(reg, args):
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += getattr(reg, "sn_integrity", [])
-    integrity += sr_supersession_findings(srs, llrs)
     # SR/LLR citation coherence: a TC that cites an SR and an LLR
     # together must not pair an LLR with an SR it does not decompose. Integrity-
     # class (wrong at any stage), so it joins the --strict-integrity floor.
@@ -3193,12 +3096,14 @@ def analyze(reg, args):
     draft_tcs = [r for r in tcs if is_draft(r)]
     n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
 
-    # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
-    # per Area so hat coverage is visible. Report-only — never a finding, never
-    # an exit-code change; a registry without the column contributes nothing.
+    # Optional Aspect column (the ruled cross-cutting review grouping): count
+    # real SRs per aspect so coverage is visible. Report-only — never a finding,
+    # never an exit-code change; a registry without the column contributes
+    # nothing. The VALUE set is closed and checked by --strict-schema
+    # (ENUM_FIELDS); this is only the count.
     area_counts = {}
     for r in srs:
-        area = (r.get("Area") or "").strip()
+        area = (r.get("Aspect") or "").strip()
         if area:
             area_counts[area] = area_counts.get(area, 0) + 1
     findings = Findings()
@@ -3483,15 +3388,16 @@ def render_report(reg, findings, args, forest):
         untagged = len(srs) - sum(area_counts.values())
         lines += [
             "",
-            "## SRs by Area (report-only)",
+            "## SRs by aspect (report-only)",
             "",
-            "_Optional owner-hat/domain tag (process.md §1). Counts only — "
-            "never a gate; blank cells are simply untagged._",
+            "_The ruled cross-cutting review grouping. Counts only — never a "
+            "gate; a row carrying no aspect is simply not cross-cutting, which "
+            "is normal rather than a gap._",
             "",
         ]
         lines += [f"- {a}: {n}" for a, n in sorted(area_counts.items())]
         if untagged:
-            lines.append(f"- (no Area): {untagged}")
+            lines.append(f"- (no aspect): {untagged}")
     if pbs:
         lines += ["", "## Performance budgets (§9 back-links)", ""]
         lines += (

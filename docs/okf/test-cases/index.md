@@ -62,7 +62,7 @@ resource: "generated"
 | [TC-050](TC-050.md) | derive the gate from fixture states across every per-artifact rule and guard the cache; -… |
 | [TC-051](TC-051.md) | Run the dashboard suite; the Process tab renders its three panels from the live registrie… |
 | [TC-052](TC-052.md) | Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggrega… |
-| [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the gener… |
+| [TC-055](TC-055.md) | A fresh, family-heterogeneous CRITIQUE session (LLR-048/LLR-082 loop) adjudicates the gen… |
 | [TC-056](TC-056.md) | Run the dashboard suite; the Process tab renders both working loops (intake loop A + huma… |
 | [TC-057](TC-057.md) | Run the dashboard suite; the tiered decomposition views render one horizontal parent->chi… |
 | [TC-058](TC-058.md) | Run schedule.py against a fixture registry; the ready frontier, the exclusions with reaso… |
@@ -96,10 +96,9 @@ resource: "generated"
 | [TC-091](TC-091.md) | Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-pla… |
 | [TC-097](TC-097.md) | Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases. |
 | [TC-098](TC-098.md) | Run dispatcher SELECT, human-held PAGE, loop-held PAGE continuation, regeneration failure… |
-| [TC-099](TC-099.md) | Inspect the eleven legacy SR rows, their SupersededBy graph, replacement targets, and pos… |
 | [TC-100](TC-100.md) | Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a def… |
 | [TC-101](TC-101.md) | Run the check_coverage suite; a module below its floor exits 1 naming it, a declared modu… |
-| [TC-102](TC-102.md) | Generate the dashboard against two fixture registries and assert the SR-089 '>3' rule mec… |
+| [TC-102](TC-102.md) | Generate the dashboard against two fixture registries and assert the LLR-052 '>3' rule me… |
 | [TC-103](TC-103.md) | Generate the dashboard from a tiered fixture registry and assert the drill emits <nav cla… |
 | [TC-104](TC-104.md) | Three complementary checks. (1) Unit: _svg_role classifies a native <a href> body, and ta… |
 | [TC-105](TC-105.md) | Assert the U5 palette-decollision invariants directly against the declared Python constan… |
@@ -128,7 +127,6 @@ resource: "generated"
 | [TC-130](TC-130.md) | Run the trunk-step suite: committed fragments compile in git order with links rebased and… |
 | [TC-131](TC-131.md) | Run the pause suites: the tracked home pauses via pause_reason with the unchanged return … |
 | [TC-132](TC-132.md) | Run the integrator suite: each claim refusal fires by name and the green claim moves the … |
-| [TC-133](TC-133.md) | Inspect the fifteen Phase-5 legacy SR rows, their SupersededBy links to SR-132, and the p… |
 | [TC-134](TC-134.md) | Run the check-harness lane suite: a claimed work branch skips the declared freshness step… |
 | [TC-135](TC-135.md) | Run the trunk-step regen suite: --regen skips absent artifact families with a notice and … |
 | [TC-136](TC-136.md) | Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), … |
@@ -160,3 +158,4 @@ resource: "generated"
 | [TC-162](TC-162.md) | Load well-formed, malformed (falsey table, unknown key, bad grammar) and absent rosters; … |
 | [TC-163](TC-163.md) | Plant a retired tag in a live authored file and one in each declared carve-out class (arc… |
 | [TC-164](TC-164.md) | Construct a needs registry whose need cell plants one token of each declared class (an in… |
+| [TC-165](TC-165.md) | Scaffold with a non-Python bootstrap profile into a temp dir and run trace.py --strict-in… |

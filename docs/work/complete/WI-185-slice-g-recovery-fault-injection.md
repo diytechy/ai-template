@@ -2,7 +2,7 @@
 id = "WI-185"
 title = "Slice G - recovery + fault injection"
 workstream = "unattended"
-sr_refs = ["SR-064"]
+sr_refs = ["SR-156"]
 needs = ["WI-182", "WI-184"]
 buildtier = "strong"
 order = 184

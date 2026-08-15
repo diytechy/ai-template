@@ -2,7 +2,7 @@
 id = "WI-073"
 title = "How-SW containment - top view <=10 via CMP + right-sizing rule"
 workstream = "scripts"
-sr_refs = ["SR-048"]
+sr_refs = ["SR-159", "SR-070"]
 needs = ["WI-039", "WI-056"]
 order = 72
 +++

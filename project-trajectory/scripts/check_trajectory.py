@@ -380,7 +380,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -2104,7 +2104,7 @@ def ssot_findings(wis, root):
     return out
 
 
-# --- SR-143: queue-conflict vetting (the mechanical pre-filter) --------
+# --- LLR-160: queue-conflict vetting (the mechanical pre-filter) --------
 # Two rows are OPEN AT ONCE and overlap. Nothing here is an error: overlap is
 # frequently correct (two rows may legitimately answer one SR from different
 # sides), and a checker that cannot tell those apart must not block. What it CAN
@@ -2146,7 +2146,7 @@ def _clip_title(title):
 
 
 def queue_conflict_findings(wis):
-    """SR-143, mechanical half: pairs of OPEN rows that overlap.
+    """LLR-160, mechanical half: pairs of OPEN rows that overlap.
 
     Three signals, warn-only, each named with both row ids so the message is
     actionable without opening the registry:
@@ -2238,7 +2238,7 @@ def spec_lifecycle_findings(root, wis):
         if w["status"] in OPEN_STATUSES:
             open_cited.add(spec.split("#", 1)[0].strip())
         elif w["status"] == "partial":
-            # SR-145: a `partial` row's SpecRef STAYS. R-F exists so a closed
+            # LLR-161: a `partial` row's SpecRef STAYS. R-F exists so a closed
             # row stops pointing at a live spec-of-record that a reader would
             # take as current — but partial work continues by MINTING A
             # SUCCESSOR, and the successor's `supersedes` lineage is worth
@@ -3201,7 +3201,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # IS ratified, so nothing escapes attestation by this choice.
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs", "Phase", "Area", "Lifecycle"}
+        {"SN-Refs", "Boundary-Refs", "Phase", "Aspect", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as
@@ -3218,12 +3218,10 @@ SPINE_TRACED_CELLS = {
         {"Verifies", "Evidence", "Automated", "Phase"}
     ),
 }
-# The ratified half. `SupersededBy` (SR) is not named by §A5.1 and is RATIFIED
-# BY RULING (WI-388, the same intake): a supersession is a SCOPE statement —
-# it terminates a requirement's lifecycle in favour of another — precisely the
-# "prose and relevant field attributes" the owner's spine-touch definition
-# names. Unlike the three traced pointers it re-points no live chain; it ends
-# one, and a silent supersession would be a missed window nobody sees.
+# The ratified half. (The SR tier's `SupersededBy` column — ratified by ruling
+# at WI-388 — retired with the supersession tombstone class, D-4 ruling
+# 2026-08-14b; the CMP registry's own SupersededBy is a separate, still-owed
+# item.)
 SPINE_RATIFIED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
@@ -3234,7 +3232,6 @@ SPINE_RATIFIED_CELLS = {
             "Permutations",
             "Priority",
             "Verification",
-            "SupersededBy",
         }
     ),
     "docs/requirements/low-level-requirements.toml": frozenset(
@@ -4031,7 +4028,7 @@ def main():
     # --strict — advisory is the block's contract, and minted rows satisfy it
     # by construction (their ## Context cites the packs), so it reaches
     # exactly the hand-authored residue.
-    # ...as does SR-143's queue-conflict pre-filter: overlap between
+    # ...as does LLR-160's queue-conflict pre-filter: overlap between
     # two OPEN rows is frequently correct, so this rung's whole contribution is
     # making it visible. Never the exit code, not even under --strict — a
     # checker that cannot tell a legitimate split from a duplicate must not

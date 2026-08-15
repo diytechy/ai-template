@@ -2,7 +2,7 @@
 id = "WI-224"
 title = "Harden salvage scans against git-quoted DP-* paths (WI-220 review finding 3)"
 workstream = "unattended"
-sr_refs = ["SR-063", "SR-066"]
+sr_refs = ["SR-156", "SR-155"]
 needs = ["WI-222"]
 buildtier = "quick"
 safety_class = "ordinary"

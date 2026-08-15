@@ -2,7 +2,7 @@
 id = "WI-243"
 title = "Re-arm the perceptual dashboard critique - re-fire the SR-052/053/054 critique on render-surface diffs + feed the critic rendered pixels (2026-07-20 quality-gap review)"
 workstream = "quality"
-sr_refs = ["SR-047", "SR-054"]
+sr_refs = ["SR-154", "SR-157", "SR-054"]
 buildtier = "strong"
 safety_class = "high-risk"
 order = 240

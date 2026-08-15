@@ -2,7 +2,7 @@
 id = "WI-066"
 title = "OKF self-identification banner + doc-graph exclusion"
 workstream = "scripts"
-sr_refs = ["SR-042"]
+sr_refs = ["SR-070"]
 needs = ["WI-034"]
 order = 69
 +++

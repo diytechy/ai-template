@@ -2,7 +2,7 @@
 id = "WI-068"
 title = "Critique verification + subjective-quality critique loop"
 workstream = "unattended"
-sr_refs = ["SR-047"]
+sr_refs = ["SR-154", "SR-157"]
 needs = ["WI-059"]
 order = 66
 +++

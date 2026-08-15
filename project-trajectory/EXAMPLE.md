@@ -31,12 +31,12 @@ Edge-case table:
 ## 2. System Requirements — `requirements/system-requirements.csv`
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
 SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,
 SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,,
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the project's current phase is *derived* as the highest, and only a `Draft` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Area` (optional owner-hat/domain tag, process.md §1) is blank too — §7 below shows it filled, and trace.py reports per-Area SR counts when it is.
+Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the project's current phase is *derived* as the highest, and only a `Draft` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Aspect` (optional, process.md §1) is blank throughout because none of these rows is cross-cutting — it takes a CLOSED value naming a concern no component partition can express, never a domain or owner tag, and trace.py reports per-aspect SR counts when it is filled.
 
 ## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
 
@@ -150,19 +150,20 @@ Not every requirement is a pure function with a unit test. Operational needs —
 databases, networking, deployment — flow through the **same spine**, with three
 differences: a **domain hat** owns the rows, the verification method is
 **Demonstration** or **Manual** (a human runs it and observes), and the rows
-carry an optional **`Area`** tag so the slice is filterable (process.md §1
-"Domain hats"). No new mechanism — just a different fill of the same columns.
+are identified by their LLRs' **`Module`**/component so the slice is filterable
+(process.md §1 "Domain hats"). No new mechanism — just a different fill of the
+same columns.
 
 Say the **SRE/Ops** hat owns availability and the **DBA** hat owns the data
 store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area,Lifecycle
-SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Infra/DB,Runtime
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Lifecycle
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Runtime
 ```
 
-The trailing **`Area`** column (`Infra/DB`) is an optional tag a project adds so a
-domain hat can filter and own its slice; SRs without it leave it blank. The
+The domain hat filters and owns its slice through the rows' LLR
+**`Module`**/component, not through a tag on the SR. The trailing
 **`Lifecycle`** column (`Runtime`) is the same kind of optional tag for *when in
 the running product's life* the requirement holds (process.md §4 "Lifecycle
 phase").
@@ -193,7 +194,7 @@ TC-101,SR-101;LLR-101,System,"Kill the primary DB; observe promotion and that a 
 `Tier=Release` keeps this slow, environment-heavy test out of the per-push and
 pre-merge runs; it executes at `DevStg-Release`, where the human signs the generated
 checklist. Same registries, same traceability join, same gates — only the
-verification method, the owning hat, and the `Area` tag change.
+verification method and the owning hat change.
 
 ### 7.1 The honest floor — an `Attest` requirement (human judgment, not a check)
 
@@ -209,8 +210,8 @@ to decompose — the deliverable is the asset itself), but like every SR it stil
 needs ≥1 TC, whose cell records **who attested and when**:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
-SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Verified,,Audio
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
+SR-201,Main-theme mood fit,SN-040,"The main theme shall match the game's established mood (heroic, wistful undertone) as judged by the creative lead.","Realizes SN-040: the score sets the emotional tone; no automated check can judge 'fit'.","The creative lead reviews the rendered track against the mood brief and records a pass/fail with notes.",,H,Attest,Verified,,
 ```
 
 ```csv
@@ -261,17 +262,18 @@ The registry here is just the captured, tracked source of truth.
 ## 9. Two modules in one repo — an internal seam
 
 Everything above is **one module**. A larger repo may hold **several** modules on
-the same spine, grouped by the `Module`/`Area` columns, each with an explicit
+the same spine, grouped by the `Module`/component columns, each with an explicit
 contract and an integration test at its seam — no new machinery (process.md §10).
 Say this repo grows a second module, **`delivery`**, that ships a completed export
 to a destination; it consumes the **`export`** module's output. A new stakeholder
 need `SN-030` ("get my export off the box automatically") drives its SR. Tag each
-module's rows with an `Area` so a domain hat can own and filter its slice:
+module's rows through their LLRs' `Module`/component so a domain hat can own and
+filter its slice:
 
 ```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Area
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,export
-SR-050,Deliver export to destination,SN-030,"The system shall upload a completed export to the configured destination and confirm receipt.","Realizes SN-030: the file is useless until it reaches the target.","A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped.","dest=set{local,s3,sftp}",M,Test,Implemented,,delivery
+SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
+SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Verified,,
+SR-050,Deliver export to destination,SN-030,"The system shall upload a completed export to the configured destination and confirm receipt.","Realizes SN-030: the file is useless until it reaches the target.","A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped.","dest=set{local,s3,sftp}",M,Test,Implemented,,
 ```
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
@@ -318,7 +320,7 @@ omitted here to keep the seam in focus), so `SR-050` carries a `delivery`-module
 just as `SR-001` carries its `export` one. `Tier=Full` keeps the cross-module test
 in the pre-merge suite; the whole-repo `python scripts/trace.py --strict` still
 demands **0 orphans across both modules and the seam**. Filtering the registries by
-`Area` (`export` vs `delivery`) is how each hat reviews its own slice — a reading
+`Module`/component (`export` vs `delivery`) is how each hat reviews its own slice — a reading
 convention over columns that already exist, never a separate per-module gate
 (process.md §10).
 
@@ -361,7 +363,7 @@ back-link is allowed here — it is referenced only through the interface catalo
 | coordinator | `SR-010` — records reach the configured destination and receipt is confirmed | `Delegated=REPO-002` |
 | delivery | `SN-001` — deliver a completed export to the destination and confirm receipt | `ParentRef=SR-010` |
 
-`Delegated` and `ParentRef` are optional, schema-safe columns (like `Area`/`Lifecycle`).
+`Delegated` and `ParentRef` are optional, schema-safe columns (like `Lifecycle`).
 The `ParentRef` link points **across the boundary** into the coordinator repo, so no
 single `trace.py` run validates it — that reconciliation is the deferred cross-repo
 join (`MULTI_REPO.md` §7).
@@ -416,7 +418,7 @@ coordinator sequences and reads status; it never builds or runs anything.
 - Tests **cite** acceptance criteria by id; code **annotates** the ids; the matrix
   is **generated**, never hand-kept.
 - **Operational requirements use the same spine** (§7) — a domain hat owns them,
-  `Verification=Demonstration`/`Manual`, an optional `Area` tag, and a
+  `Verification=Demonstration`/`Manual`, and a
   procedure-recording `Release`-tier TC the release checklist finds.
 - **Tag the lifecycle phase** (§7) so the phase your product tends to neglect
   gets written — Provision/Startup for tools, the Runtime *operating environment*
@@ -429,7 +431,7 @@ coordinator sequences and reads status; it never builds or runs anything.
   trace links. It's an Inspection call; `scripts/check_stubs.py` is the optional,
   warn-first Python tripwire that surfaces candidates (process.md §4).
 - **Several modules share one repo and one spine** (§9) — group each module's rows
-  by `Module`/`Area`, record every internal seam as an `IF-###`, and test it with a
+  by `Module`/component, record every internal seam as an `IF-###`, and test it with a
   dedicated integration TC; the whole-repo trace gate stays the source of truth
   (process.md §10). Single-module is still the default — scale up only when the
   scope forces it.

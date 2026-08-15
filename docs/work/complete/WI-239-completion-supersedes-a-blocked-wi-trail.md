@@ -2,7 +2,7 @@
 id = "WI-239"
 title = "Completion supersedes a Blocked-WI trailer - a cured blocker must be survivable without discarding finished work (2026-07-19 field finding)"
 workstream = "unattended"
-sr_refs = ["SR-100"]
+sr_refs = ["SR-156"]
 needs = ["~WI-238"]
 buildtier = "medium"
 safety_class = "high-risk"

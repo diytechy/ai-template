@@ -375,7 +375,7 @@ Contracts (interfaces): IF-015, IF-068, IF-099, IF-109
 
 | Public item | Summary | Implements |
 |---|---|---|
-| `worker_prompt(root, wi_rows, wi, train, base, rework_text)` | The per-session worker prompt (SR-060): the WI row + SpecRef + | SR-060 |
+| `worker_prompt(root, wi_rows, wi, train, base, rework_text)` | The per-session worker prompt (LLR-061): the WI row + SpecRef + | LLR-061 |
 | `guardrails_apply(policy, model)` | Whether to inject the guardrails core for a session on `model`, under |  |
 | `guardrails_core(root)` | The always-on core to prepend to a quick-tier session's prompt, or None. |  |
 | `guardrails_inert(policy, models)` | True when a *guarding* policy (not off / bare all) would guard none of the |  |
@@ -733,7 +733,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `nearest_anchor(frag, anchors)` | The closest existing slug to `frag`, or None. A wrong anchor is nearly |  |
 | `specref_findings(root, w)` | R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags |  |
 | `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
-| `queue_conflict_findings(wis)` | SR-143, mechanical half: pairs of OPEN rows that overlap. | SR-143 |
+| `queue_conflict_findings(wis)` | LLR-160, mechanical half: pairs of OPEN rows that overlap. | LLR-160 |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
 | `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |
 | `tier_completion_findings(findings)` | Split reconciler findings into `(warn_only, gated)`. |  |
@@ -822,8 +822,8 @@ Contracts (interfaces): IF-015
 | Public item | Summary | Implements |
 |---|---|---|
 | `gap_census(root)` | THE WI-388 HANDOFF SEAM — ladder rung 1 (§A4 amendment, ruled |  |
-| `red_tc_census(root, reg)` | SR-142: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION. | SR-142 |
-| `parse_red_tc(line)` | `(tc_id, [target, ...])` for a red-TC census line, or None for any other | SR-145 |
+| `red_tc_census(root, reg)` | LLR-159: TEST CASES LEFT RED UNDER A CLAIMED IMPLEMENTATION. | LLR-159 |
+| `parse_red_tc(line)` | `(tc_id, [target, ...])` for a red-TC census line, or None for any other | LLR-161 |
 | `run(root, args, worker, tier)` | The dispatch loop (docs/concurrency-v2.md §A4). `worker` is the one |  |
 
 ### `scripts/gen_arch_map`
@@ -1183,8 +1183,8 @@ Contracts (interfaces): IF-053, IF-054
 | `read_spec_rows(work_dir, on_error)` | The spec folder's rows in REGISTRY order — by the explicit `order` key, |  |
 | `load_registry_rows(path)` | The work-item rows from the one registry home — the spec folder beside |  |
 | `load_wis(rows)` | Parse work-item rows into a list of scheduler WI dicts (skips the inert |  |
-| `kind_of(wi, *, structural)` | The declared KIND both §A1 axis tables are keyed by — `classify`'s | SR-093, SR-094 |
-| `classify(wi, *, structural)` | `(concurrency, rank, [reason_codes])` for one WI — a pure function. | SR-107 |
+| `kind_of(wi, *, structural)` | The declared KIND both §A1 axis tables are keyed by — `classify`'s | LLR-059, LLR-089 |
+| `classify(wi, *, structural)` | `(concurrency, rank, [reason_codes])` for one WI — a pure function. | LLR-095 |
 | `is_schedulable(concurrency)` | Only a positively-classified WI is eligible; unclassified fails closed. |  |
 | `hard_preds_satisfied(wi, status)` | Every hard predecessor is integrated `done`. An unknown predecessor id |  |
 | `downstream_counts(wis)` | `{id: transitive hard-descendant count}` — how many distinct WIs depend on |  |
@@ -1215,7 +1215,7 @@ Contracts (interfaces): IF-046, IF-047
 | `tripwire_mass_rejection(rejected, total, threshold)` | A prior round's findings were mostly rejected/unaddressed (> threshold) — |  |
 | `fired_tripwires(verdicts, changed_paths, rejected, total_prior)` | Every tripwire that fired over a round's verdict list, as a name list. |  |
 | `merge_verdict(verdicts)` | Mechanical merge, no debate: CHANGES-REQUESTED if any reviewer requests |  |
-| `latest_phase_verdicts(entries)` | The deterministic latest-file-per-phase rule the integrator gate reads — | SR-096 |
+| `latest_phase_verdicts(entries)` | The deterministic latest-file-per-phase rule the integrator gate reads — | LLR-140 |
 | `read_scoreboard(path)` | Parse the scoreboard: ({provider: (substance, rounds)}, [round dict, ...]). |  |
 | `write_scoreboard(path, providers, rounds)` | Write the scoreboard deterministically (LF, providers sorted). |  |
 | `record_round(path, round_info, provider_substance)` | Append a round to the scoreboard and decay the provider tallies. |  |
@@ -1298,7 +1298,6 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `render_watermark(marks, basis)` | The file's text. One `<SPACE> = <int>` per line, deliberately: a merge |  |
 | `committed_watermark(root)` | The highest mark per space across HEAD **and every other parent**. |  |
 | `bump_watermark(root)` | Raise every mark to the live maximum. Returns `(marks, raised)`. |  |
-| `sr_supersession_findings(srs, llrs)` | Validate the optional SR ``SupersededBy`` extension. |  |
 | `triangle_findings(tcs, llrs)` | SR/LLR citation coherence. A TC may cite an | LLR-1, SR-1, SR-2 |
 | `interface_findings(ifs, sr_ids, module_ids)` | The IF-### seam tier's back-link checks (process.md §8), closing the gap |  |
 | `tc_citation_findings(tcs, spine_ids, ifs)` | Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``. |  |
@@ -1367,7 +1366,7 @@ Contracts (interfaces): IF-093, IF-094
 | Public item | Summary | Implements |
 |---|---|---|
 | `know_graph(root)` | The OKF concept graph as (svg, details), or None when there is no bundle |  |
-| `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | SR-089 |
+| `know_view(root)` | The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill | LLR-052 |
 | `process_panel(root, wis, stats)` | The Process tab + panel as (tab, panel), or None when there is no |  |
 
 ### `scripts/traj_parse`
@@ -1416,8 +1415,8 @@ Contracts (interfaces): IF-083
 | `arch_icicle(root)` | SVG icicle (partition) of the SN->SR->LLR->TC spine + (details, descendants). |  |
 | `dag_svg(wis)` | The work-item DAG as one plain SVG string + a details dict for the panel. |  |
 | `sw_graph(root, mods)` | The How-SW interface graph as one plain SVG string, or None when no IF |  |
-| `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092, | SR-090, SR-092 |
-| `when_view(root, wis)` | The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092, | SR-089, SR-091, SR-092 |
+| `sw_containment(root, mods)` | The containerized How-SW top view as a Simulink-style drill (LLR-086..LLR-088, | LLR-086, LLR-088 |
+| `when_view(root, wis)` | The When roadmap as a Simulink-style drill-down (LLR-052/LLR-087/LLR-088, | LLR-052, LLR-087, LLR-088 |
 
 ### `scripts/trunk_step`
 _The serial trunk step — compile the log fragments, regenerate the trunk artifacts._
@@ -1474,25 +1473,31 @@ Hand-authored sequence diagrams of the behaviors most easily misread from
 registry rows — concurrency, what blocks on what, failure handling — each citing
 the SR/LLR ids it renders (PROCESS.md §3, required at DevBar-Tests).
 
-> **Inherited drift, recorded not absorbed (Flow 4).** Flow 4 renders the code
-> as it stands after the concurrency-v2 program (WI-380/381/383/386/387/388).
-> Three rows it cites still describe the model that program replaced — SR-132
-> still specifies the composed-tree bar on a candidate worktree, SR-093 and
-> SR-124 still describe the five-class scheduling ladder — and LLR-143 still
-> names the deleted `drive.py` as its Module. Amending them is
-> [WI-390](work/queued/WI-390-concurrency-v2-program-close.md)'s spine scope
-> (one re-attest window, one owner sitting), so this section states the code
-> truthfully and leaves the rows to their owner rather than editing spine text
-> outside a ratification. Where a diagram and a cited row disagree today, the
-> diagram is the current behavior.
+> **The inherited drift this section used to record is RESOLVED (Flow 4).** Flow
+> 4 renders the code as it stands after the concurrency-v2 program
+> (WI-380/381/383/386/387/388). Three requirement rows it cited still described
+> the model that program replaced — the composed-tree bar on a candidate
+> worktree, and the five-class scheduling ladder — and LLR-143 still named the
+> deleted `drive.py` as its Module. **The WI-451 re-tier closed all four**:
+> those three rows were DEMOTED to the design tier, so the stale requirement
+> text no longer exists to disagree with the diagram, and LLR-143 now names
+> `dispatch.py`. What was owed to
+> [WI-390](work/queued/WI-390-concurrency-v2-program-close.md) as spine scope
+> was discharged by the re-tier instead.
+>
+> **Every citation below was re-pointed onto the carrier that now holds the
+> obligation**, which for the demoted rows is a design row. The old→new map is
+> recorded in the campaign's log fragment rather than here, because naming a
+> deleted id in this section is exactly what `check_flows` refuses — and it is
+> right to: a flow must cite rows that exist.
 
-### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, SR-029, SR-030)
+### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, SR-030, LLR-029)
 
 ```mermaid
 sequenceDiagram
     participant Launcher as agent-resume launcher
     participant Loop as agent_loop.py (coordinator)
-    participant Lock as dispatch lock — out/agent-loop.lock (SR-029/LLR-029)
+    participant Lock as dispatch lock — out/agent-loop.lock (LLR-029)
     participant Disp as dispatch.run — the station (Flow 4)
     participant Worker as agent_loop --wi (lane subprocess)
     participant Agent as agent CLI
@@ -1502,10 +1507,10 @@ sequenceDiagram
         Loop-->>Launcher: typed nonzero exit (EXIT_PREFLIGHT), never hangs
     else ok
         Loop->>Lock: _coordinator_lock (SR-030/LLR-030 refuse a 2nd writer)
-        Lock-->>Loop: held for the process lifetime (kernel-released on death — SR-029)
+        Lock-->>Loop: held for the process lifetime (kernel-released on death — LLR-029)
         Loop->>Disp: _drive_entry — nothing is read from docs/status.md
         Note over Loop,Disp: resume authority is the claimed assignment plus the committed<br/>trailers on its branch (SR-026/LLR-026); the serial<br/>resume-from-status.md loop is retired
-        Disp->>Worker: spawn per admitted lane, stdin closed (SR-060/LLR-061)
+        Disp->>Worker: spawn per admitted lane, stdin closed (LLR-061)
         Worker->>Agent: run headless session(s)
         alt agent errors (retired model / auth)
             Agent-->>Worker: nonzero
@@ -1561,7 +1566,7 @@ sequenceDiagram
     end
 ```
 
-### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (SR-057, SR-093, SR-115, SR-131, SR-132)
+### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140)
 
 One tick of `dispatch.run`. The three properties hardest to read off the rows:
 the **spine barrier** is a property of admission (nothing slips past an
@@ -1572,16 +1577,16 @@ the run keeps going.
 
 ```mermaid
 sequenceDiagram
-    participant Sched as schedule.py frontier (SR-057/SR-115, LLR-152)
+    participant Sched as schedule.py frontier (LLR-058/LLR-123, LLR-152)
     participant Disp as dispatch.py tick loop (LLR-149)
     participant Lane as lane.py worktree + subprocesses (LLR-150)
     participant Hand as handback.py (LLR-144)
     participant Slot as integrate.py merge slot (LLR-140/LLR-151)
     participant Intake as intake.py (LLR-153/LLR-154)
     loop each tick, until a fatal code or a drained queue
-        Disp->>Disp: tracked pause? dirty trunk? (SR-131/LLR-138) — freeze admission, let lanes come home
+        Disp->>Disp: tracked pause? dirty trunk? (LLR-138) — freeze admission, let lanes come home
         Disp->>Sched: re-derive the ready frontier as (WI, kind) pairs
-        Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (SR-093/SR-115)
+        Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (LLR-059/LLR-123)
         alt an exclusive kind is on the frontier
             Note over Disp: THE SPINE BARRIER — admission stops outright;<br/>the batch admits alone, sole toucher of trunk
         else free lane and parallel work

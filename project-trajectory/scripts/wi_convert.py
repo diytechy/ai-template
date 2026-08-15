@@ -104,7 +104,7 @@ COLUMNS = [
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes

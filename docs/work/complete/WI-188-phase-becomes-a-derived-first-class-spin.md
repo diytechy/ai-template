@@ -2,7 +2,7 @@
 id = "WI-188"
 title = "Phase becomes a derived first-class spine property; retire the grouping concept"
 workstream = "self-adoption"
-sr_refs = ["SR-003", "SR-049"]
+sr_refs = ["SR-157", "SR-049"]
 needs = ["~WI-141"]
 buildtier = "strong"
 order = 187

@@ -48,7 +48,7 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
     (`human_ratification_through`), or a `--flag` token.
-  - **process citation** — a sub-stakeholder registry id (`SR-101`, `WI-454`,
+  - **process citation** — a sub-stakeholder registry id (`SR-137`, `WI-454`,
     ...) or a `§`-section reference. A stakeholder should not need the process
     docs to recognize the outcome they asked for. `SN-###` is deliberately NOT
     in this class: the SN registry is the stakeholder's own document, so a need

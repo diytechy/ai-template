@@ -2,7 +2,7 @@
 id = "WI-230"
 title = "Publish under disjoint dirt: publication proceeds when dirty tracked paths are disjoint from the publish diff (2026-07-18 field finding 1)"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["~WI-220"]
 buildtier = "strong"
 safety_class = "high-risk"

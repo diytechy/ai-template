@@ -2,7 +2,7 @@
 id = "WI-134"
 title = "[3]-[g1] Dashboard-UX requirement structuring"
 workstream = "dashboard"
-sr_refs = ["SR-051", "SR-052", "SR-053", "SR-054", "SR-055", "SR-056"]
+sr_refs = ["SR-070", "SR-052", "SR-053", "SR-054"]
 needs = ["~WI-064"]
 buildtier = "strong"
 order = 133

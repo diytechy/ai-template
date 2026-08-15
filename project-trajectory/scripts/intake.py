@@ -134,7 +134,7 @@ ROUTED_TRACED_CELLS = {
 
 # The disposition row's face: the R3 outcome vocabulary, verbatim in the title
 # so the claiming worker reads its whole authority off the row.
-# SR-145 retired R3's `re-queue`: a terminal row is never put back on the
+# LLR-161 retired R3's `re-queue`: a terminal row is never put back on the
 # frontier, so continuing the work means DRAFTING A SUCCESSOR (minted at this
 # row's own merge, carrying `supersedes`). `handback._no_recursion_refusal`
 # states the same four; the two homes must not disagree about a row's authority.
@@ -157,7 +157,7 @@ _DRAFT_KEYS = frozenset(
         "needs",
         "priority",
         "bar",
-        # SR-145 lineage: a successor drafted by a disposition names the row it
+        # LLR-161 lineage: a successor drafted by a disposition names the row it
         # continues, so partial work keeps its thread ACROSS the id change. It
         # is a lineage fact, not a revival — the superseded row stays terminal
         # and its scope stays exactly what it was.
@@ -232,7 +232,7 @@ def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
     if trigger == "amendment":
         return "strong" if gate_moved or rows_touched > 3 else "medium"
     if trigger == "red-tc":
-        # SR-142. One target is a local question (is this TC stale, or
+        # LLR-159. One target is a local question (is this TC stale, or
         # was the close optimistic?); several mean the closed row's claim spans
         # requirements, and the judgement has to hold all of them at once. Same
         # shape as the amendment arm — breadth, counted, never judged — with the
@@ -746,7 +746,7 @@ def _close_drafts(root, outcomes):
                     "kind": "adjudication",
                     "brief": "disposition",
                     "workstream": "process",
-                    # The TYPED field, not a substring of prose (SR-145 / the
+                    # The TYPED field, not a substring of prose (LLR-161 / the
                     # `NEEDS-HUMAN` fold): the close states the tier it thinks
                     # its judgement needs, and a value outside the vocabulary
                     # falls to `medium` rather than silently to whatever a
@@ -1065,7 +1065,7 @@ def _census_drafts(root, census):
 
 
 def _red_tc_draft(root, line, targets):
-    """SR-142: a red TC under a claimed implementation becomes an
+    """LLR-159: a red TC under a claimed implementation becomes an
     ADJUDICATION row, not an ordinary gap-closure row.
 
     The difference is who decides. An ordinary gap row says "the registry is
@@ -1086,7 +1086,7 @@ def _red_tc_draft(root, line, targets):
     exactly one review round: `planmode = "dual"` beside `safety_class =
     "adjudication"` is a shape `schedule.classify` REFUSES — it reads
     `unclassified`, drops off the frontier, and can never be re-minted because
-    exact-title dedup has already claimed the title. The contradiction SR-142
+    exact-title dedup has already claimed the title. The contradiction LLR-159
     exists to surface would have been minted and then permanently
     parked, silently. `_draft_refusal` already refused that pair for a HUMAN
     draft; the automated mint went straight to `_draft_row` and bypassed it,

@@ -41,7 +41,7 @@ Spec grammar (one string; ';'-separated dimensions, optional '@strategy'):
 
 Usage:
     python scripts/gen_cases.py --spec "SPEC" [--strategy S] [--format table|params|toml|csv]
-                                [--id SR-003] [--tier Full]
+                                [--id SR-006] [--tier Full]
 
 Examples:
     python scripts/gen_cases.py --spec "size=range[0..2GiB]; field=set{plain,comma,quote,newline}; enc=set{utf8,utf16}"
@@ -246,7 +246,7 @@ def main():
         "--format", choices=["table", "params", "toml", "csv"], default="table"
     )
     ap.add_argument(
-        "--id", default="", help="requirement id to label rows (e.g. SR-003)"
+        "--id", default="", help="requirement id to label rows (e.g. SR-006)"
     )
     ap.add_argument("--tier", default="Full", help="Tier to stamp on emitted TC rows")
     args = ap.parse_args()

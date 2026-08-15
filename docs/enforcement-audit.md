@@ -21,7 +21,6 @@ records where each one bites.
 |---|---|---|
 | Everything traces `SN→SR→LLR→TC`; 0 orphans before a gate | Harness | `trace.py --strict` (DevBar-Tests/DevBar-Release step; pre-commit `--strict-integrity` floor) |
 | No duplicate/malformed id; CSV structure; citation coherence | Harness | `trace.py --strict-integrity` (pre-commit) |
-| No live LLR grounds on a superseded SR (`SupersededBy` populated) | Harness | `trace.py --strict-integrity` (`sr_supersession_findings`; WI-364, owner-ruled error tier 2026-07-29 — TC citations stay legal, the TC-099/TC-133 evidence record) |
 | Code map is generated, never hand-edited | Harness | `gen_arch_map.py --check` (pre-commit + DevBar-Release) |
 | Trajectory dashboard / OKF bundle stay fresh | Harness | `check.py --run-step trajectory-map / okf` (pre-commit + DevBar-Release) |
 | `status.md` stays forward-only (no closed-WI id accretes) | Harness | `check_trajectory` done-id rule (warn / ERROR `--strict`; WI-200 restored the WI-180-retired R-D, mode-aware — the generated splice block alone is exempt, its freshness being the `status-map` step's job; the hand-authored remainder stays policed, 2026-07-21) |

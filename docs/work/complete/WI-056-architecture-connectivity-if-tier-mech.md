@@ -2,7 +2,7 @@
 id = "WI-056"
 title = "Architecture connectivity - IF tier mechanize + graph views"
 workstream = "scripts"
-sr_refs = ["SR-044"]
+sr_refs = ["SR-159", "SR-070", "SR-155"]
 needs = ["WI-006", "WI-012", "WI-031"]
 order = 55
 +++

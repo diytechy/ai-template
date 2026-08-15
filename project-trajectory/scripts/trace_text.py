@@ -26,8 +26,8 @@ one module. A re-sync copies two files where it copied one (ADOPTING.md §6).
 Contracts: IF-076 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.csv).
 
-Requirements: SR-004 (ac_advisories), SR-126 (provenance_findings),
-SR-127 (form_findings), SR-128 (paraphrase_advisories).
+Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
+LLR-134 (form_findings), LLR-135 (paraphrase_advisories).
 """
 
 import re

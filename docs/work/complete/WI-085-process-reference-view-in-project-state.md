@@ -2,7 +2,7 @@
 id = "WI-085"
 title = "Process reference view in PROJECT_STATE.html"
 workstream = "scripts"
-sr_refs = ["SR-050"]
+sr_refs = ["SR-070"]
 needs = ["WI-039", "WI-070", "WI-117"]
 order = 84
 +++

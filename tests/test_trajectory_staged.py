@@ -185,7 +185,7 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
 
 _SPINE_SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Area\n"
+    "Permutations,Priority,Verification,Status,Phase,Aspect\n"
 )
 
 
@@ -405,7 +405,7 @@ def _init_full_spine_repo(root):
 
 def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     # THE WI-380 CASE. Every traced cell of all three registries moves at once —
-    # the SR's SN-Refs/Phase/Area, the LLR's Module/CodeSymbol/TestRefs/
+    # the SR's SN-Refs/Phase/Aspect, the LLR's Module/CodeSymbol/TestRefs/
     # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
     # Automated/Phase — with every ratified cell and every Status untouched.
     # Silence is the whole point: before this split each of these armed the warn
@@ -415,7 +415,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
         + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
-        "Test,Verified,4,Parallel dispatch\n",
+        "Test,Verified,4,unattended-loop\n",
         encoding="utf-8",
     )
     _write_child_registries(
@@ -536,25 +536,30 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     #     siblings (`SN-Refs`, `Verifies`): re-pointing which SR owns a
     #     decomposition row changes no attested prose on either side, and
     #     whether the re-point moved scope is exactly adjudication's judgement.
-    #   * SR `SupersededBy` -> RATIFIED, confirmed: a supersession IS a scope
-    #     statement — it terminates a requirement's lifecycle in favour of
-    #     another — so a silent one would be a missed window nobody sees.
+    #   * SR `SupersededBy` -> RATIFIED. That half is now VACUOUS by a later
+    #     ruling: the SR-tier column retired with the supersession tombstone
+    #     class (D-4, 2026-08-14b), so there is no cell left to classify. The
+    #     LLR `SR-Refs` half below is the live half, and it is the one this
+    #     re-tier leans on hardest — 83 rows were re-pointed at new owning SRs
+    #     under exactly the traced/adjudication routing it pins.
     # Asked through `spine_cell_class`, the rule every caller goes through, and
     # asked under BOTH carrier suffixes: the tables are keyed by a path that
     # carries one, and a lookup miss reads `ratified` — which would silently
-    # re-arm the window WI-388 ruled these cells out of.
+    # re-arm the window WI-388 ruled these cells out of. The CMP registry's own
+    # `SupersededBy` is a separate rule and is unaffected.
     ct = load_script("check_trajectory")
     for suffix in (".csv", ".toml"):
         llr = "docs/requirements/low-level-requirements" + suffix
         sr = "docs/requirements/system-requirements" + suffix
         assert ct.spine_cell_class(llr, "SR-Refs") == "traced", suffix
-        assert ct.spine_cell_class(sr, "SupersededBy") == "ratified", suffix
         assert ct.spine_cell_class(sr, "SN-Refs") == "traced", suffix
     llr = "docs/requirements/low-level-requirements.toml"
     sr = "docs/requirements/system-requirements.toml"
     assert "SR-Refs" in ct.SPINE_TRACED_CELLS[llr]
     assert "SR-Refs" not in ct.SPINE_RATIFIED_CELLS[llr]
-    assert "SupersededBy" in ct.SPINE_RATIFIED_CELLS[sr]
+    # The retired SR-tier column is absent from BOTH halves — not silently
+    # re-classified into one of them.
+    assert "SupersededBy" not in ct.SPINE_RATIFIED_CELLS[sr]
     assert "SupersededBy" not in ct.SPINE_TRACED_CELLS[sr]
 
 
@@ -657,7 +662,7 @@ def _filled(rows):
     """`{id: {cell: value}}` over NON-EMPTY cells only.
 
     The two carriers are equal on what a row SAYS, and deliberately unequal on
-    how it says nothing: CSV gives every column of the header (`Area: ""`),
+    how it says nothing: CSV gives every column of the header (`Aspect: ""`),
     while TOML omits the key entirely, because "unset" and "set to empty" stop
     being the same value under the new carrier. Every consumer
     reads a cell as `.get(c) or ""`, so the two are identical where it matters —

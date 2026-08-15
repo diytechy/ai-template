@@ -137,7 +137,7 @@ all key off the SR row.
 | `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
 | `Status` | ✔ | open; magic: `Draft`, `Verified`, `Modified` | Drives the gate — §3.2. |
 | `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
-| `Area` | ✘ | free text | **Reporting only** — `trace.py` emits per-Area SR counts and never gates on it. |
+| `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
 
 ¹ under `--strict-schema` (DevBar-Release). ² `name=range[min..max]`; `name=set{a,b,c}`;
 `name=bool`; `@full|@pairwise|@boundaries`.
@@ -146,7 +146,6 @@ Plus two **optional extension columns** not in the shipped template:
 
 | Column | Effect |
 |---|---|
-| `SupersededBy` | `;`-joined existing SR ids. Malformed list, self-link, unknown target, repeated target, or **cycle** → integrity findings. An **LLR** citing a superseded SR → integrity finding (re-ground on the successor or delete). A **TC** citing one stays legal — it is the retained evidence record. (`sr_supersession_findings`) |
 | `Lifecycle` | Recognised in the traced/ratified split; validated nowhere. |
 
 ### 3.1 `Verification` — what it changes
@@ -370,7 +369,7 @@ the itemized listing and the cap can never disagree on one registry state.
 
 | Class | Fails `--strict` | Fails `--strict-integrity` | Contents |
 |---|---|---|---|
-| `integrity` | ✔ | ✔ | dup/malformed/blank ids, supersession errors, triangle incoherence, CSV column-count mismatch |
+| `integrity` | ✔ | ✔ | dup/malformed/blank ids, triangle incoherence, CSV column-count mismatch |
 | `orphans` | ✔ | ✘ | rules 1–11 |
 | `status_findings` | ✔ | ✘ | `--require-verified` misses |
 | `placeholders` | ✔ | ✘ | leftover `-000` rows (collected only under `--no-placeholders`) |
@@ -672,7 +671,7 @@ When a **Verified** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Ratified** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Area`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification`, `SupersededBy` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` | `Title`, `Detail`, `Rationale`, `SR-Refs` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
@@ -787,11 +786,12 @@ A cell reading `SN-001 and SN-002` parses to three tokens, and `and` becomes an
 "unknown reference" orphan. The finding is correct but names the token, not the
 cause.
 
-### 12.9 `SupersededBy` is validator-only
+### 12.9 `SupersededBy` (SR tier) — RETIRED
 
-It is not in the shipped SR template, only in `trace.py`. A downstream repo
-inherits the rules — including the integrity-class LLR re-grounding rule —
-without the column or its documentation.
+The SR-tier supersession column and its ~80-line validator retired with the
+tombstone-class deletion (D-4 ruling 2026-08-14b; the log's forwarding entry
+is the map). The CMP registry's own `PartOf`/`SupersededBy` rule is separate
+and still live.
 
 ### 12.10 `LLR.SR-Refs` is ratified only by the residual
 

@@ -316,9 +316,9 @@ requirement also has a **lifecycle phase**: *at what point in the running
 product's lifetime must this hold, and how often?* Naming it stops the perennial
 miss of writing only steady-state requirements and discovering the install/setup
 ones late. Capture it as an **optional `Lifecycle` tag** on an SN/SR (a column or
-inline tag, mirroring `Area`; blank = unspecified, treat as **Runtime**) — use the
+inline tag; blank = unspecified, treat as **Runtime**) — use the
 distinct name `Lifecycle`, never overload the delivery `Phase` column. The default
-vocabulary is an **open, project-named set** (extend it per scope like `Area`; it
+vocabulary is an **open, project-named set** (extend it per scope; it
 is **not** a fixed enum):
 
 - **Provision** (ready) — must hold *before the process can run at all*: install,
@@ -2386,15 +2386,15 @@ emitting a `docs/test/perf-metrics.json` map of `PB-ID → number`; *comparing* 
 sub-systems that still build and release as one (rung 2 of the scale ladder).
 
 **No new machinery, just partition the spine.** A multi-module repo is the *same*
-spine, grouped by columns that already exist: the LLR **`Module`** column and the
-optional **`Area`** tag on SR/TC (§1 "Domain hats"). Each module is a sub-tree of
+spine, grouped by columns that already exist: the LLR **`Module`** column and its
+component id (§1 "Domain hats"). Each module is a sub-tree of
 `SN→SR→LLR→TC`; where a module needs its own discipline it gets its own **domain
 hat** owning that slice (§1 already allows this). The repo still builds, gates, and
 releases as a whole.
 
 - **Module-scoped review is a convention over the existing columns, not a new
   flag.** A module owner reviews their slice by filtering the registries on
-  `Area`/`Module` (a grep or spreadsheet filter); the **repo-level gate stays the
+  `Module`/component (a grep or spreadsheet filter); the **repo-level gate stays the
   source of truth** — `trace.py --strict` still requires **0 orphans across the
   whole repo, seams included**. The kit deliberately ships **no**
   `--module`/`--area` filter on `trace.py`/`check.py`: a per-module gate would

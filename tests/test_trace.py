@@ -453,20 +453,20 @@ def test_lifecycle_column_is_schema_safe(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
-AREA_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Area
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,math
+ASPECT_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,perf
 """
 
 
-def test_area_column_is_schema_safe(scaffold):
-    # Multi-module scoping groups a module's rows by the optional `Area` tag on
-    # SR/TC (process.md §10). Like `Lifecycle`, `Area` is an extra column outside
+def test_aspect_column_is_schema_safe(scaffold):
+    # Multi-module scoping groups a module's rows by the optional `Aspect` tag on
+    # SR/TC (process.md §10). Like `Lifecycle`, `Aspect` is an extra column outside
     # REQUIRED_FIELDS, so a module-tagged registry passes the strictest schema
     # check with no downstream migration — the precedent that makes module-scoped
     # review a convention over existing columns rather than new machinery.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
-        AREA_SRS, encoding="utf-8"
+        ASPECT_SRS, encoding="utf-8"
     )
     proc = run_py(
         ["scripts/trace.py", "--strict", "--strict-schema", "--no-placeholders"],
@@ -477,8 +477,8 @@ def test_area_column_is_schema_safe(scaffold):
 
 # --- Thread 35: Area is a first-class (still optional) SR column ---------------
 
-AREA_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Area
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,math
+ASPECT_MIXED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,perf
 SR-002,Addition report,SN-001,"The system shall report the sum.","Realizes SN-001.","Sum is printed.",,M,Attest,Verified,
 """
 
@@ -497,14 +497,29 @@ def _template_keys(name, table, example_id):
     return tomllib.loads(text)[table][example_id]
 
 
-def test_shipped_sr_template_carries_area_column():
-    # The shipped schema declares Area so a project records hat ownership
-    # without inventing its own extra column (the Finance-Auditor field report).
+def test_shipped_sr_template_carries_aspect_column():
+    # The shipped schema declares Aspect — the ruled cross-cutting review
+    # grouping (sitting-2 decision 10) that replaced the free-text Area column —
+    # so a project records it without inventing its own extra column (the
+    # Finance-Auditor field report), and the retired name is GONE rather than
+    # left beside it.
     keys = _template_keys("system-requirements.template.toml", "requirement", "SR-000")
-    assert "area" in keys
+    assert "aspect" in keys
+    assert "area" not in keys
     # ...and it is guidance an author can act on, not an empty placeholder — the
-    # failure this replaces was a column present in name only.
-    assert keys["area"].strip()
+    # failure this replaces was a column present in name only. It must also name
+    # the CLOSED value set, since an author cannot honour a vocabulary the
+    # template does not state.
+    assert keys["aspect"].strip()
+    for value in (
+        "process",
+        "trajectory",
+        "unattended-loop",
+        "connectivity",
+        "perf",
+        "portability",
+    ):
+        assert value in keys["aspect"], value
 
 
 def test_shipped_tc_template_carries_evidence_column():
@@ -518,12 +533,13 @@ def test_shipped_tc_template_carries_evidence_column():
     assert "phase" in keys and "status" in keys
 
 
-def test_area_values_yield_report_section(scaffold):
-    # A registry with real Area values gets a per-Area SR count in the report —
-    # report-only: the run stays green, and blank cells count as untagged.
+def test_aspect_values_yield_report_section(scaffold):
+    # A registry with real Aspect values gets a per-aspect SR count in the
+    # report — report-only: the run stays green, and blank cells count as
+    # untagged (a row that is not cross-cutting carries no aspect, by the rule).
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
-    (req / "system-requirements.csv").write_text(AREA_MIXED_SRS, encoding="utf-8")
+    (req / "system-requirements.csv").write_text(ASPECT_MIXED_SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
         'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Implemented\n',
@@ -539,19 +555,59 @@ def test_area_values_yield_report_section(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "## SRs by Area (report-only)" in report
-    assert "- math: 1" in report
-    assert "- (no Area): 1" in report
+    assert "## SRs by aspect (report-only)" in report
+    assert "- perf: 1" in report
+    assert "- (no aspect): 1" in report
 
 
-def test_no_area_values_no_report_section(scaffold):
-    # The minimal project's registry has no Area column at all: the section must
-    # be absent, not rendered empty (legacy CSVs see zero change).
+def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
+    # THE CLOSED VOCABULARY, DRIVEN (sitting-2 decision 10, executed by the
+    # WI-451 re-tier). The point of closing it is that the retired free-text
+    # `Area` let 31 values accrete, 25 of which were a component by another
+    # name. A value outside the ruled six is now a --strict-schema finding that
+    # NAMES the row and the allowed set — a checker that only says "invalid"
+    # teaches the next author nothing.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        ASPECT_SRS.replace(",perf\n", ",Parallel dispatch\n"), encoding="utf-8"
+    )
+    # Reported at the schema tier, and GATING only under --strict — the same
+    # severity contract its Verification/Tier siblings carry.
+    proc = run_py(["scripts/trace.py", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "schema-findings=1" in proc.stdout
+    # ...and under --strict it GATES and the finding names the row, the
+    # offending value and the allowed set.
+    strict = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert "SR-001" in strict.stdout
+    assert "Parallel dispatch" in strict.stdout
+    assert "portability" in strict.stdout, "the allowed set must be reported"
+
+
+def test_blank_aspect_is_never_a_schema_finding(scaffold):
+    # The complement, and it is the ruled behaviour rather than a leniency: an
+    # aspect is a REVIEW grouping, so a requirement that is not cross-cutting
+    # carries none. "Portability's homelessness is not a defect" is the ruling's
+    # own phrasing; a checker that demanded a value on every row would push
+    # authors straight back to inventing component-shaped ones.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        ASPECT_SRS.replace(",perf\n", ",\n"), encoding="utf-8"
+    )
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "schema-findings=0" in proc.stdout
+
+
+def test_no_aspect_values_no_report_section(scaffold):
+    # The minimal project's registry has no Aspect column at all: the section
+    # must be absent, not rendered empty (legacy CSVs see zero change).
     make_minimal_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "SRs by Area" not in report
+    assert "SRs by aspect" not in report
 
 
 def test_require_verified_flags_unverified_test_sr(scaffold):

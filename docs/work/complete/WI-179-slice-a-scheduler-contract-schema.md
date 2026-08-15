@@ -2,7 +2,7 @@
 id = "WI-179"
 title = "Slice A - scheduler contract + schema + safety classifier"
 workstream = "unattended"
-sr_refs = ["SR-057", "SR-058"]
+sr_refs = ["SR-153", "SR-156"]
 needs = ["WI-178"]
 buildtier = "strong"
 order = 178

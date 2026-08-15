@@ -2,7 +2,7 @@
 id = "WI-209"
 title = "M2: dual-plan auto-dispatch + quiet-park auto-page - wire the WI-201 ruling: schedule.classify derives the single-WI-traincar class from PlanMode=dual itself (never a second cell; a contradicting SafetyClass quarantines unclassified); the --jobs build-out auto-runs run_dual_plan_round for a selected dual row (reserve -> round -> SELECT files children / PAGE per plan_round.page_action, pause-free under autonomous); the serial driver pages naming --dual-plan when only dual rows are actionable (no silent park on either path); SR-066 deferral clauses dropped + AC extended with its TC in the same commit"
 workstream = "unattended"
-sr_refs = ["SR-066"]
+sr_refs = ["SR-155"]
 needs = ["WI-208"]
 buildtier = "strong"
 order = 208

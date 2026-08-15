@@ -2,7 +2,7 @@
 id = "WI-165"
 title = "Process tab - render loops A/B as true circular loops intersecting at the shared LLM_Agent node"
 workstream = "dashboard"
-sr_refs = ["SR-055"]
+sr_refs = ["SR-070"]
 needs = ["WI-144"]
 buildtier = "strong"
 order = 164

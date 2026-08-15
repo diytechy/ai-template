@@ -2,7 +2,7 @@
 id = "WI-186"
 title = "Slice H - telemetry + scaffold + migration + dogfood"
 workstream = "unattended"
-sr_refs = ["SR-065", "SR-059"]
+sr_refs = ["SR-156", "SR-059"]
 needs = ["WI-180", "WI-183", "WI-184", "WI-185"]
 buildtier = "medium"
 order = 185

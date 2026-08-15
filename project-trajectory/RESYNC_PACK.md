@@ -699,6 +699,9 @@ scheduling state.
 
 ### An LLR grounding on a superseded SR is an integrity ERROR [since 871625ec]
 
+*(Superseded by the SR-tier `SupersededBy` retirement below — the validator this
+entry describes no longer ships.)*
+
 If your SR registry uses the optional `SupersededBy` field, an LLR whose `SR-Refs`
 cites a superseded SR reds `trace.py` at every gate after this re-sync (`--strict`
 and `--strict-integrity`) — re-ground each such LLR on the successor SR, or delete
@@ -1135,6 +1138,58 @@ stage means** — read that item before re-syncing scripts.
   value, so your uncited-seam count may RISE. WI-191's "a cited `Experimental`
   seam needs a rationale" arm is GONE — its input no longer exists, and
   re-keying it onto `draft` would have armed it on every row.
+
+### The SR tier's `SupersededBy` column RETIRES; supersession is deletion [since fd26a966]
+
+The optional SR `superseded_by` key, its ~110-line `trace.py` validator
+(semicolon-list shape, unknown target, self-link, cycle, the LLR re-grounding
+error above) and its ratified-cell classification are all GONE, on the ruling
+that a supersession row is history wearing a row id: **a registry states what
+IS; git and the log are the history.** A retired row is *deleted*, its id spent
+forever (the id watermark's committed mark keeps the headroom), and one log
+entry is the forwarding home naming the replacement rows.
+
+- **If your SR registry carries `superseded_by` keys:** the carrier now REFUSES
+  the key on an SR row (it is no longer in the tier's declared key set). Before
+  re-syncing scripts, delete each tombstone row, re-point any citing IF rows at
+  the replacement rows, re-check `sn_refs` coverage against the replacements,
+  and record one forwarding log entry for the batch.
+- **TC rows whose `verifies` cite only superseded SRs** must retire with them —
+  a test case verifying nothing is not evidence.
+- The **CMP registry's own `PartOf`/`SupersededBy`** is a different rule and is
+  unchanged.
+
+### `SR.Area` retires for a closed `Aspect` vocabulary [since 9861e957]
+
+The free-text `Area` column is GONE from the SR tier, replaced by `Aspect` —
+a **closed** six-value vocabulary: `process`, `trajectory`, `unattended-loop`,
+`connectivity`, `perf`, `portability`.
+
+**Why it is not a rename, and what that costs you.** The measurement behind
+the ruling: of the kit's own 31 `Area` values, **25 were a component by
+another name** — derivable from your decomposition and therefore redundant —
+while only **6 spanned components**, which is what an aspect IS: a
+cross-cutting concern no partition can express. So the conversion **DROPS**
+the derivable values rather than remapping them. In the kit's own registry
+that took 63 tagged rows down to 21; the other 42 now carry no aspect at all,
+and that is the intended end state, not data loss.
+
+- **Migrating:** for each SR, keep the value only if it names a cross-cutting
+  concern that maps to one of the six; otherwise delete the cell. Do not
+  invent a seventh value to preserve a tag — if your value names a component,
+  your component registry already says it.
+- **A blank cell is NORMAL and never a finding.** A requirement that is not
+  cross-cutting carries no aspect. (In the kit's own spine, `portability`'s
+  three rows have no owning module at all, and that was ruled *not* a defect.)
+- **A non-empty out-of-vocabulary value IS a `--strict-schema` finding**
+  naming the row and the allowed set — reported at the schema tier, gating
+  under `--strict`, exactly like the `Verification`/`Tier` vocabularies.
+- **A surviving `area = ...` key is a column nothing reads.** The carrier's
+  SR-tier key set declares `aspect`; `Area` is absent from the traced-cell
+  table, the OKF fact row, and `trace.py`'s per-tag count (now "SRs by
+  aspect").
+- Nothing else moves: `Aspect` stays REPORT-ONLY for counts, and no gate reads
+  the distribution.
 
 ---
 

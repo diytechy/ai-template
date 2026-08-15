@@ -2,7 +2,7 @@
 id = "WI-059"
 title = "Heterogeneous implementer/reviewer scheduling"
 workstream = "unattended"
-sr_refs = ["SR-045"]
+sr_refs = ["SR-154", "SR-155"]
 needs = ["WI-042"]
 order = 58
 +++

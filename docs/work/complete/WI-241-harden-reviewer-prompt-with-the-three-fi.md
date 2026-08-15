@@ -2,7 +2,7 @@
 id = "WI-241"
 title = "Harden REVIEWER_PROMPT with the three field-proven adversarial clauses + the code-review-adversarial rubric (owner directive 2026-07-19)"
 workstream = "unattended"
-sr_refs = ["SR-080"]
+sr_refs = ["SR-154"]
 buildtier = "medium"
 safety_class = "ordinary"
 order = 238

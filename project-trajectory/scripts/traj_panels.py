@@ -195,7 +195,7 @@ def _okf_root_blocks(ordered_types, groups, type_layer):
 
 def know_view(root):
     """The OKF concept graph as a START-COLLAPSED, type-tiered Simulink-style drill
-    (WI-159, the SR-089 `>3` density rule), or None when the bundle spans <= 3 OKF
+    (WI-159, the LLR-052 `>3` density rule), or None when the bundle spans <= 3 OKF
     types — the caller then keeps the flat concept graph (`know_graph`), byte-
     identical for a small bundle.
 
@@ -219,7 +219,7 @@ def know_view(root):
     groups = {}
     for cid in sorted(nodes):  # sorted -> each group's members are id-ordered
         groups.setdefault(type_of[cid], []).append(cid)
-    # The `>3` rule (SR-089): the tiering is EARNED by scale — a bundle spanning
+    # The `>3` rule (LLR-052): the tiering is EARNED by scale — a bundle spanning
     # <= 3 types stays the flat concept graph, exactly as the When roadmap keeps the
     # flat DAG at <= 3 phases AND <= 3 workstreams.
     if len(groups) <= 3:
@@ -264,7 +264,7 @@ def _know_panel(root, svg, details):
     when there is no bundle and the panel is not appended the artifact is
     byte-identical to before this view existed (the vacuity guarantee).
 
-    Above the SR-089 `>3` type threshold the panel renders the START-COLLAPSED
+    Above the LLR-052 `>3` type threshold the panel renders the START-COLLAPSED
     type-tiered drill (`know_view`, WI-159 — the T2 density fix); at or below it,
     the flat concept graph (`know_graph`) below."""
     tab = tab_button("know", "Knowledge (OKF)")
@@ -442,7 +442,7 @@ def _know_panel(root, svg, details):
     return tab, panel
 
 
-# --- the Process tab: how this project is built (WI-085 / SR-050) --------------
+# --- the Process tab: how this project is built (WI-085 / LLR-051) --------------
 #
 # The method reference view: the dashboard's other tabs show project *state*;
 # this one shows the *process* the state moves through. Data-derived where a

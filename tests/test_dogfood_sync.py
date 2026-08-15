@@ -491,7 +491,7 @@ def test_bite_the_spine_key_rule_fails_on_a_planted_defect(tmp_path):
         return "\n".join(out)
 
     # (1) a live row quietly grows a column nobody shipped.
-    drift = verdict(_plant(live_src, "[requirement.SR-001]"), tmpl_src)
+    drift = verdict(_plant(live_src, "[requirement.SR-006]"), tmpl_src)
     assert drift is not None and "owner_hat" in drift
 
     # (2) the template invents a key the schema does not state.

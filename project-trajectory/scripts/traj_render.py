@@ -454,7 +454,7 @@ def _ring_style(fill):
     return ' style="--ring:{}"'.format(_ring_ink(fill))
 
 
-# --- SR-089..SR-092 (WI-141): the Simulink-style drill renderer ---------------
+# --- LLR-052..LLR-088 (WI-141): the Simulink-style drill renderer ---------------
 #
 # Shared by the tiered When roadmap and the containerized How-SW view: a tier is a
 # diagram of BLOCKS (SVG rectangles) each with an input port (left-middle) and an
@@ -475,7 +475,7 @@ DRILL_GEOM = (
 )  # (col_w, col_gap, row_h, row_gap, pad) — DAG geometry
 PORT_R = 4.5
 
-# SR-056 decomposition-render polish. A drill layer's column is RIGHT-SIZED to its
+# LLR-057 decomposition-render polish. A drill layer's column is RIGHT-SIZED to its
 # widest member's content rather than the former uniform DRILL_GEOM width, capped
 # at the declared bound MAX_TIER_COL (a named value, not an adjective) — narrower
 # columns where content allows, never wider than the bound. Integer/fixed so the
@@ -490,7 +490,7 @@ CEDGE_LEN = 9  # the containment arrow's shaft length (a horizontal parent→chi
 
 
 def _tier_col_width(blocks):
-    """The right-sized column width for one drill layer (SR-056): the widest
+    """The right-sized column width for one drill layer (LLR-057): the widest
     member's content — the block label vs. its sub-label, whichever is wider — plus
     a fixed padding, clamped to [TIER_COL_MIN, MAX_TIER_COL]. A content-light layer
     renders narrower than the bound; nothing exceeds it. Deterministic (fixed ints)."""
@@ -544,7 +544,7 @@ DRILL_STYLE = (
     # cannot fail regardless of which fill it lands on. The static fallback keeps
     # today's behaviour for any node a future emitter doesn't tag with --ring.
     ".drill .block:focus rect{stroke:var(--ring,var(--accent));stroke-width:var(--w-emph);}"
-    # SR-056: the hover/focus highlight persists on the last-hovered block until
+    # LLR-057: the hover/focus highlight persists on the last-hovered block until
     # another takes it (the shared .hl idiom — cf. the icicle/DAG/knowledge views).
     ".drill .block.hl rect{stroke:var(--ring,var(--accent));stroke-width:var(--w-emph);}"
     ".drill .block .blab{font-size:var(--nlabel);font-weight:700;}"
@@ -567,7 +567,7 @@ DRILL_STYLE = (
     ".drill[data-focused-trace] .block.trace-focus rect{stroke:var(--ring,var(--text));stroke-width:var(--w-emph);}"
     ".drill .warrow{fill:var(--muted);}"
     ".drill .warrow-in{fill:var(--trace-in);}.drill .warrow-out{fill:var(--trace-out);}"
-    # SR-056: one horizontal parent→child arrow per containment edge — a distinct
+    # LLR-057: one horizontal parent→child arrow per containment edge — a distinct
     # colour (vs. the muted dependency wire) marks it as a descend/containment edge.
     # WI-317 (T5): that colour was a fixed `var(--accent)`, and the arrow is drawn
     # INSIDE the block, over the node's own fill — 1.06:1 light / 1.99:1 dark on
@@ -618,7 +618,7 @@ DRILL_SCRIPT = (
     "el.addEventListener('dblclick',function(){descend(el);});"
     "el.addEventListener('keydown',function(e){"
     "if(e.key==='Enter'||e.key===' '){e.preventDefault();descend(el);}});}"
-    # SR-056: the highlight persists on the last-hovered/focused block (keyed by its
+    # LLR-057: the highlight persists on the last-hovered/focused block (keyed by its
     # data-node id) until another takes it — no mouseleave clear, so no flash-on-exit.
     "let hl=null;"
     "function visibleLayer(){return byId[trail[trail.length-1].id];}"
@@ -801,7 +801,7 @@ def _drill_layer_svg(blocks, edges, marker_scope):
             pred_map[b].append(a)
             succ_map[a].append(b)
             wire_edges.append((a, b, t))
-    col_w = _tier_col_width(blocks)  # SR-056: right-sized, ≤ MAX_TIER_COL
+    col_w = _tier_col_width(blocks)  # LLR-057: right-sized, ≤ MAX_TIER_COL
     geom = GraphGeom(col_w, *DRILL_GEOM[1:])
     pos, width, height = _layered_layout(
         [{"id": k} for k in keys],
@@ -882,7 +882,7 @@ def _drill_layer_svg(blocks, edges, marker_scope):
                     esc("Descend into " + str(b["label"])),
                 )
             )
-            # SR-056: one horizontal parent→child arrow makes the containment edge
+            # LLR-057: one horizontal parent→child arrow makes the containment edge
             # explicit (top-right, clear of the centred label), not merely implied.
             # WI-317: its head is the marker matching THIS block's ring ink.
             ax = x + col_w - CEDGE_LEN - 6
@@ -900,7 +900,7 @@ def _drill_layer_svg(blocks, edges, marker_scope):
             # — so it must be keyboard-focusable, matching the descend containers'
             # `tabindex`. Its `<title>` supplies the accessible name (A2).
             attrs += ' tabindex="0"'
-        # SR-056: a stable per-block node key so the persistent highlight can be
+        # LLR-057: a stable per-block node key so the persistent highlight can be
         # keyed to the last-hovered node (appended last, preserving the existing
         # `data-tier="…" data-descend="…"` adjacency other views assert on).
         attrs += ' data-node="{}"'.format(esc(b["key"]))

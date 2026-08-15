@@ -2,7 +2,7 @@
 id = "WI-070"
 title = "PROJECT_STATE.html OKF knowledge tab - the first real consumer"
 workstream = "scripts"
-sr_refs = ["SR-038", "SR-042"]
+sr_refs = ["SR-070"]
 needs = ["WI-034", "WI-039"]
 order = 68
 +++

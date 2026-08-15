@@ -2,7 +2,7 @@
 id = "WI-272"
 title = "Dashboard work-item status fidelity — preserve deferred and blocked instead of rewriting both as queued in labels, details, accessible names, and the legend"
 workstream = "dashboard"
-sr_refs = ["SR-038", "SR-053"]
+sr_refs = ["SR-070", "SR-053"]
 needs = ["~WI-267"]
 buildtier = "medium"
 safety_class = "ordinary"

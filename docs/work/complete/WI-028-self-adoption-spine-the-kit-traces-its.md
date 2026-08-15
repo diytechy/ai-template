@@ -2,7 +2,7 @@
 id = "WI-028"
 title = "Self-adoption spine - the kit traces itself"
 workstream = "self-adoption"
-sr_refs = ["SR-001", "SR-010"]
+sr_refs = ["SR-157", "SR-010"]
 needs = ["WI-008", "WI-021", "WI-012"]
 order = 27
 +++

@@ -2,7 +2,7 @@
 id = "WI-065"
 title = "Active-seam TC citation - reconcile trace Verifies vocabulary"
 workstream = "scripts"
-sr_refs = ["SR-074"]
+sr_refs = ["SR-159"]
 needs = ["WI-056"]
 safety_class = "spine"
 order = 64

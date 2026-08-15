@@ -2,7 +2,7 @@
 id = "WI-072"
 title = "OWNER_SCRATCHPAD + check_docs scan-scope (archive/scratchpad)"
 workstream = "scripts"
-sr_refs = ["SR-012"]
+sr_refs = ["SR-158"]
 needs = ["WI-013"]
 order = 71
 +++

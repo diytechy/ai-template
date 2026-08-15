@@ -2,7 +2,7 @@
 id = "WI-177"
 title = "[4]-[g1] Parallel-dispatch requirement structuring (SN-025 + SR-057..065 draft/ratify)"
 workstream = "unattended"
-sr_refs = ["SR-057", "SR-058", "SR-059", "SR-060", "SR-061", "SR-062", "SR-063", "SR-064", "SR-065"]
+sr_refs = ["SR-153", "SR-156", "SR-059", "SR-026"]
 needs = ["WI-176"]
 buildtier = "strong"
 order = 176

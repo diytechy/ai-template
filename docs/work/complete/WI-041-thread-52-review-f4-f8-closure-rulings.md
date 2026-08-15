@@ -2,7 +2,7 @@
 id = "WI-041"
 title = "THREAD_52_REVIEW F4-F8 closure (rulings 2026-07-09)"
 workstream = "scripts"
-sr_refs = ["SR-037", "SR-038"]
+sr_refs = ["SR-157", "SR-070"]
 needs = ["WI-031"]
 order = 40
 +++

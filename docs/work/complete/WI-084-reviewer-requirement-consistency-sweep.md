@@ -2,7 +2,7 @@
 id = "WI-084"
 title = "Reviewer requirement-consistency sweep (Option A)"
 workstream = "unattended"
-sr_refs = ["SR-045"]
+sr_refs = ["SR-154", "SR-155"]
 needs = ["WI-059"]
 order = 83
 +++
