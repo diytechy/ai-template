@@ -246,9 +246,11 @@ above base, and carried below as owed rather than declared clean.
 
 ### Still OWED inside this slice (the open lane's remainder)
 
-1. **The Area→aspect conversion** (rides this window; a carrier-schema act
-   sequenced after the layers, before slice close) — 63 rows convert, SR-049's
-   was minted in act 2.
+1. ~~The Area→aspect conversion~~ — **DONE in act 5** (owner ruling
+   `2026-08-14h`): `Area` retired for the closed `Aspect` vocabulary, the
+   derivable values DROPPED per decision 10 rather than remapped (21 of 64 rows
+   keep an aspect, 42 carry none — the ruled end state). Vocabulary now
+   enforced in `ENUM_FIELDS`; adopters carry a `RESYNC_PACK` entry.
 2. **SR-043's MW clause** (a HOLD row not re-worded in act 2): scrub-or-keep
    call still owed.
 3. **The re-iteration pass the method names** has run once in each direction
