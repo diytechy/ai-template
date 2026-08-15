@@ -102,11 +102,15 @@ narrated is in those homes.
   whose headline measurement ("74 of 115 seams consumed with no declared
   provider") does not survive re-derivation: it is the `direction` split
   restated, and the schema inversion it proposed would take
-  `cross_component_findings` from 0 to 32 ERRORs at `--strict`. **What executes
-  next there:** steps 2/3/8 need no ruling (a warn-first endpoint check, 25
-  rotted/unmarked cells, one dead SR-091 citation in the registry header);
-  steps 1 and 4–7 are the ruled model and need their execution ruled. **The
-  scheduling consequence, and it unblocks the wave:** the owner cell lands on
+  `cross_component_findings` from 0 to 32 ERRORs at `--strict`. **All eight
+  steps are now EXECUTED** under the owner's 2026-08-15 charge-through (log
+  `2026-08-15e`; the plan's own "Execution record" section points at it), and
+  **every execution detail is provisional and overturnable at the review
+  sitting** — no approval or status cell moved. What the sitting owes a look
+  at: the 21 judgement owner picks, the `carried_by` prototype on IF-102 and
+  its provisional depth bound of 2, and the IF-097 / IF-080 calls (both
+  re-verified as already correct rather than changed). **The scheduling
+  consequence, and it unblocks the wave:** the owner cell lands on
   the IF row, so **no SR row gains a field** — merge-and-ratify-now (brief §4
   option (a)) is viable, and the double-signing argument for holding is gone.
 - **Unfiled follow-ups** (from the archived charge-through handoff; no ids

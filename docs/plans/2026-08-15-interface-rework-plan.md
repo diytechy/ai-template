@@ -437,3 +437,27 @@ plan under adversarial review (done — see the revision notice). **Executing an
 step requires an explicit ruling**, and `human_ratification_through = 4` does
 **not** hold them: it covers attestation-class work only, so build work of this
 shape dispatches unasked unless an instruction stops it.
+
+---
+
+## Execution record (2026-08-15)
+
+**Steps 1–8 are EXECUTED.** Landed on trunk (`infra/mechanized-loop`) in five
+commits under the owner's 2026-08-15 charge-through instruction: *everything
+here is provisional and overturnable at the review sitting*, and no approval or
+status cell was moved.
+
+The full record — what landed per step, all 21 judgement owner picks with their
+reasons, the external-marker design, the `carried_by` prototype, and the two
+cells the plan predicted that turned out **not** to be defects (IF-080 and
+IF-097) — is the Decisions-log entry **`2026-08-15e`** in
+[`../log.md`](../log.md). Read that, not this section, for the detail.
+
+Three of this document's own measurements did not survive execution and are
+corrected there rather than edited out of §3: **D1** overstated the gap (the IF
+schema tier largely landed at WI-443; only `Direction` was missing), **D2**'s
+tenth rotted cell was a *declared absence* and the checker was wrong rather than
+the row, and **D4** was a misreading — `IF-080`'s `this_project` is correct as
+written.
+
+**§6's rulings are unchanged.** Nothing in execution reopened Q1–Q4.

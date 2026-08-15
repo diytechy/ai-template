@@ -36,6 +36,127 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15e — the interface rework EXECUTED, all eight steps
+  ([plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
+  §4).** *Executed provisionally under the owner's 2026-08-15 charge-through;
+  the model is ruled (2026-08-15a), the execution details here are overturnable
+  at the review sitting.* No approval or status cell moved. Measured before/
+  after: `interface-findings=0` both ways, endpoint findings **22 -> 0**, and
+  the registry stays at 115 rows / 59 SR rows.
+  - **Step 1 — the IF schema tier.** Mostly ALREADY LANDED at WI-443: the plan's
+    D1 ("no IF key in `REQUIRED_FIELDS`/`ENUM_FIELDS`") was measured before that
+    WI and is stale. What was genuinely missing was `Direction`, the one IF
+    column process.md §8 declared and nothing validated; it joins `ENUM_FIELDS`
+    with its RULED meaning attached. `Owner` joins `REQUIRED_FIELDS` in step 5's
+    commit rather than step 1's, so the tier is never required to carry a cell
+    the registry does not yet have.
+  - **Step 2 — endpoint validation, and the guess it replaced.** The classifier
+    inferred externality from SPELLING (no slash, no extension -> "an external
+    actor"), so `agent CLI` was silently excused while `docs/subagent-gate` — a
+    real path, dead since the policy moved to `docs/process.toml` — was a
+    finding, and a rot that happened to look like a name would have been excused
+    too. **The external marker is a controlled PREFIX on the endpoint value**
+    (`counterpart = "external:downstream adopter"`), chosen over a new column
+    for three reasons: no schema change so it rides the carrier and the CSV
+    fallback unaltered, it reads at the point of use, and it cannot drift out of
+    sync with the cell it qualifies the way a parallel flag would. Both endpoint
+    columns are checked, warn-first, never the exit code.
+  - **Step 3 — 8 rotted cells, 13 external, 1 checker bug, 2 non-defects.** The
+    rot: four rows still read `system-requirements.csv`, plus
+    `stakeholder-needs.md`, `agents.csv`, `open-items.csv` and
+    `docs/subagent-gate`. **Re-pointed SUFFIX-LESS** (`docs/agents`, not
+    `docs/agents.toml`) — a judgement call, on the lesson trace.py's own id-scan
+    docstring records twice: pinning a carrier suffix is what un-wires a
+    reference at the next carrier move. Three `Contract` cells naming the same
+    dead suffix moved with their endpoint, because a row whose endpoint says one
+    carrier and whose contract says another contradicts itself. **The ninth
+    "rot" was the CHECKER being wrong:**
+    `docs/requirements/performance-budgets.csv` is declared in
+    `docs/declared-absences` (§9's perf layer is off, reason already written
+    down one directory up), so that file gets its third reader instead — a
+    declared absence is neither rot nor external.
+  - **Step 3, the two cells the plan predicted and I did NOT change**, both
+    re-verified rather than trusted. **IF-080's `this_project = scripts/integrate`
+    is CORRECT.** Its `Contract` is integrate.py's CLI verbatim (`claim` /
+    `integrate` / `audit`), and handback.py's line reads *"No `Contracts:` line,
+    deliberately: the integrator seam this extends is IF-080"* — it declines a
+    Contracts entry BECAUSE the seam is the integrator's, which is the opposite
+    of the plan's reading. **IF-097 KEEPS its three `;`-joined consumers.** The
+    three share ONE contract (the prompt loader seam), so three rows would be
+    three copies of it, which is the duplication the kit forbids; the `;` list
+    is instead declared as the schema's stated multi-endpoint form. Recorded
+    honestly: `_declared_seam_pairs` does not split on `;`, so IF-097
+    contributes no coverage pair — harmless today (all three consumers are
+    CMP-008, same component as `scripts/prompts`), and left alone because the
+    charge-through forbids changing that function's semantics.
+  - **Step 4 — `sr_refs` -> `req_refs` (`Req-Refs`).** `req`, not `sr`, because
+    Q1 makes both a System Requirement and a Low-Level Requirement legitimate
+    answers, and pinning the SR tier into the column name would re-close what
+    the ruling opened. §8's own language for the relationship is *"realize or
+    rely on"*, which is neither parentage nor one tier — the design tier's
+    `SR-Refs` names a PARENT and is untouched. 115 cells + the template +
+    EXAMPLE.md + INTERFACES.template.md + PROCESS.md §8 + the
+    registry-machinery reference + every reader (spine_carrier's schema and
+    column map, migrate_carrier's `KEY` and `REF_COLS`, trace's required-field
+    list and back-link check, gen_release_checklist's contract section) + seven
+    test fixtures. The three-leg drift rule caught the one that would otherwise
+    have been missed — `REGISTRY_KEYS`.
+  - **Step 5 — `owner` seeded on all 115 rows, 94 mechanically and 21 by
+    judgement. Every one of the 21, with the rule applied** (the SR whose
+    obligation most directly answers for the seam's CONTRACT, not the SR that
+    merely also touches the module): **IF-004 SR-006** (the CLI is a harness
+    gate step; SR-015 governs PB back-links); **IF-005 SR-017** (the always-on
+    secrets floor is the unconditional half of the contract); **IF-009 SR-157**
+    (the exit-code obligation; connectivity is warn-only in that row);
+    **IF-013 SR-006**; **IF-014 SR-010** (*"writes the mapped kit files so the
+    scaffold harness runs green"* is SR-010's sentence); **IF-015 SR-026** (the
+    CLI surface IS how it resumes headless); **IF-022 SR-007** (reading the
+    declared stack profile is SR-007 verbatim); **IF-023 SR-157** (the
+    WI-registry read is SR-157's work-registry half); **IF-031 SR-015** (this
+    row READS the PB registry whose refs SR-015 governs — the mirror of IF-004,
+    and the pair is why the rule is "the contract", not "the module");
+    **IF-032 SR-017** (*"staged diff, message and outgoing range"* is SR-017's
+    own text); **IF-037 SR-031** (*"the shared declared-line parse"* — one
+    parse, one answer); **IF-039 SR-009** (the template-tree read is what
+    profile selection ranges over); **IF-040 SR-019** (the seam is the hook
+    floor invoking the checks, not the artifacts it checks); **IF-041 SR-040**
+    (`{model}`/`{prompt}` substitution is the per-phase template);
+    **IF-044 SR-154**; **IF-056 / IF-082 / IF-084 SR-070** (subject = the
+    loaders/joins, i.e. reading the registries) and **IF-071 / IF-085 SR-148**
+    (subject = the ready-frontier DECISION) — the split between those five is
+    the most overturnable call here, and it turns entirely on what the contract
+    says CROSSES; **IF-077 SR-157** (the consumer's obligation is that a WI
+    SpecRef resolves, not that doc drift is reported).
+  - **Step 6 — flow split from ownership.** `direction` keeps its name and its
+    two values (`traj_views` orients the seam graph from them) and loses its
+    ownership claim, stated verbatim as ruled in the registry header,
+    INTERFACES.template.md and PROCESS.md §8. The rule that DIED is §8's and the
+    template's *"Direction drives ownership. Only the `Provides` side may close
+    the owner's final read"*; its successor is the `owner` cell's side.
+  - **Step 7 — `carried_by` prototyped on the ruled first case.** IF-102
+    (`spine_carrier`'s Provides row, the highest-concentration seam here) and
+    its 14 consumption rows, per log 2026-08-15a Q3. Provisional, including the
+    **depth bound of 2** — two is what the ruling's own worked shape needs
+    (*"6 IFs could have a destination of a larger IF"*), so a third level is a
+    bundle inside a bundle, which may be right and should be looked at rather
+    than refused. The acyclicity check is the obligation the ruling created, not
+    an option taken.
+  - **Step 8 — the header re-based, and the citation was ALREADY half-fixed.**
+    The plan says the hold cites dead SR-091; WI-451 had already re-pointed it
+    at LLR-087, but mechanically — it still quoted SR-091's requirement text and
+    named `Verification = Test`, a field the design tier does not have. Rewritten
+    to cite LLR-087 "Hierarchy seam ports" with its real cells (module
+    `gen_trajectory.py`, `_drill_svg/_drill_edges`, TC-089, under SR-070). **And
+    the hold gained a second, stronger reason** it did not have: deleting the 74
+    `Consumes` rows takes `cross_component_findings` 0 -> 32 under `--strict`.
+  - **Downstream:** ONE `RESYNC_PACK.md` §3 entry covers the whole schema change
+    (rename, owner seeded from refs, external markers, optional `carried_by`),
+    because the pieces only make sense together.
+  - **Reviewed ratchet bumps, all three with their reason at the entry:**
+    trace.py 3,853 -> 4,060 lines (+207 across three commits, roughly half of it
+    the docstrings recording what a review sitting has to be able to overturn);
+    the new `if_carriage_advisories` at C901 11; PROCESS.md 73,819 -> 74,416
+    bytes (+597, re-stamped in the byte-budget skill and its two tracked copies).
 - **2026-08-15d — spine change detection RE-RULED: the snapshot baseline
   replaces the hash anchor (owner, in session).** The owner's words: the
   hash/commit-id plan is *"complexity [that] is unnecessary the more we have

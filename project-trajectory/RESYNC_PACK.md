@@ -1215,6 +1215,64 @@ attached to an unrelated merge, which is the worst moment to diagnose it. If
 your `orphans-allow` is unmodified from the template you can simply overwrite it
 with the kit's copy.
 
+### The interface tier gains an owner, and `sr_refs` becomes `req_refs` [since a61de32d]
+
+**One entry for the whole 2026-08-15 interface rework**, because the pieces only
+make sense together: the tier now says who is answerable for a seam, and stops
+making `Direction` pretend to. Owner rulings of 2026-08-15 (Q1–Q3). The anchor is
+the commit the LAST schema piece landed in; the change spans `f4343653..a61de32d`,
+and taking only part of that range leaves the registry and the checkers disagreeing. Applies to
+every adoption carrying a populated `docs/requirements/interfaces.toml`; a repo
+whose registry is still the `-000` placeholder can skip to step 4 and just
+overwrite the template.
+
+Everything below is **warn-first at every gate** — no exit code changes, so you
+can land it in pieces. Nothing was deleted: `direction`, `this_project` and
+`counterpart` all stay, and so do your `Consumes` rows.
+
+1. **Rename `sr_refs` → `req_refs`** in every interface row (`Req-Refs` if you
+   are still on the CSV carrier). Mechanical, one find-replace *scoped to the
+   interfaces registry* — the design tier's `sr_refs` is a different column and
+   must not move. The two meant different things under one name: an LLR's names
+   its **parent** requirement, an interface's names the requirements that
+   **realize or rely on** the seam.
+
+2. **Add `owner` to every row**, one `SR-###` **or** one design-tier `LLR-###`
+   (both are legitimate; exactly one). Seed it mechanically: where `req_refs`
+   holds a single id, that id is the owner. Where it holds several, someone has
+   to choose the row whose obligation answers for the seam's **contract** — that
+   is a judgement, so make the picks in one pass and write down why, or the
+   cells are unauditable. The kit's own 115 rows went 94 mechanical, 21 by
+   judgement.
+
+3. **Mark external endpoints.** `this_project` / `counterpart` are now validated
+   against your tree, and one that resolves to no module, file or directory is
+   named individually. Prefix the ones that are deliberately outside it:
+   `counterpart = "external:downstream adopter"`. Run
+   `python scripts/trace.py` and fix what it names — expect some of them to be
+   genuine rot (spine files that migrated carrier and left the seam row behind
+   was the kit's own case, 8 rows). A path already listed in
+   `docs/declared-absences` counts as resolved and needs no marker.
+
+4. **Overwrite `registries/interfaces.template.toml` and
+   `docs/interfaces.md`** from the kit, and take the new `trace.py`,
+   `spine_carrier.py`, `migrate_carrier.py`, `plan_briefs.py` and
+   `gen_release_checklist.py` as one set — `spine_carrier` and `migrate_carrier`
+   are pinned as inverses by a test, so a partial take fails loudly rather than
+   silently dropping a cell.
+
+**Optional, and only if you want it:** `carried_by = "IF-###"` lets a
+constituent seam name the bundle that carries it, so one contract can be
+declared at both grains. Leave the cell absent and nothing changes. If you use
+it, the graph must resolve and be acyclic, and depth past 2 warns.
+
+**One reading change to expect:** `Direction` no longer claims ownership. The
+shipped rule was *"only the `Provides` side may close the owner's final read"*;
+it is now the `Owner` cell's side. `Provides`/`Consumes` still mean what your
+`Consumes` rows have always been doing — declaring that a cross-component edge
+is intended and that this row discharges it — and the cross-component seam check
+still reads them, unchanged.
+
 ---
 
 ## 4. Translation helper — concept renames
