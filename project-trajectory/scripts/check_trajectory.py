@@ -3370,6 +3370,15 @@ def current_digests(root):
     return out
 
 
+# The Status values whose ROW TEXT is ratified — the population the
+# amend-without-flip guard scans. `Verified` (text blessed AND evidence
+# established) and `Planned` (text blessed, evidence pending) differ in their
+# EVIDENCE claim, and this guard is about TEXT, so both belong. `Draft` does
+# not: nothing has been blessed, so there is nothing to amend behind a human's
+# back. Lowercase, matching the guard's own normalisation.
+_RATIFIED_TEXT = frozenset({"verified", "planned"})
+
+
 def _split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
     before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
@@ -3424,8 +3433,9 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
 
-    One record per Verified spine row amended between the two trees, each cell
-    sorted into the §A5.1 halves with its before/after:
+    One record per RATIFIED-TEXT spine row (`_RATIFIED_TEXT` — `Verified` or,
+    since D-9 step 2, `Planned`) amended between the two trees without its
+    status moving, each cell sorted into the §A5.1 halves with its before/after:
 
         {"registry": <csv path>, "id": <row id>,
          "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
@@ -3473,6 +3483,13 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     idx_llrs = _index_rows(*SPINE_CSVS[1])
 
     def _flagged_sr(sid):
+        # `planned` is DELIBERATELY NOT HERE (D-9 step 2, decided per-site).
+        # This set is an EXEMPTION — "the attestation unit is itself flagged in
+        # this commit, so a human will read the chain anyway". `Draft` and
+        # `Modified` are that; `Planned` is not, because nothing routes a
+        # Planned SR's chain to a re-read. Adding it would have made the guard
+        # QUIETER on the very rows step 2 exists to surface, which is the
+        # silently-less-safe direction the migration's §F3 guard names.
         status = ((idx_srs.get(sid) or {}).get("Status") or "").strip().lower()
         return status in ("modified", "draft")
 
@@ -3517,7 +3534,14 @@ def staged_spine_amendments(root, base="HEAD", head=None):
                 continue
             head_status = (head.get("Status") or "").strip().lower()
             cur_status = (row.get("Status") or "").strip().lower()
-            if head_status != "verified" or cur_status != "verified":
+            # RATIFIED-TEXT STATES, both sides, and the SAME one (D-9 step 2).
+            # `Verified` was the only member until now, which left `Planned` —
+            # a row whose TEXT is equally ratified, only its evidence pending —
+            # never scanned by this guard at all: attested prose could be
+            # rewritten under a Planned row and no surface said so. A status
+            # that MOVED between the two sides is still exempt, unchanged: that
+            # is a deliberate call this does not second-guess.
+            if head_status != cur_status or head_status not in _RATIFIED_TEXT:
                 continue
             if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
                 continue  # the attestation unit flips in this commit — sanctioned
@@ -3532,7 +3556,8 @@ def staged_spine_findings(root):
     by WI-380 to RATIFIED cells only.
 
     A staged diff that changes the ratified cells of a spine row whose Status
-    reads `Verified` in both HEAD and the stage has amended attested prose
+    reads the same ratified-text value (`Verified`, or `Planned` since D-9
+    step 2) in both HEAD and the stage has amended attested prose
     without setting the `Modified` re-attest marker (process.md §7) — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
@@ -3541,7 +3566,7 @@ def staged_spine_findings(root):
     Index-vs-HEAD by construction — this is the hook's question, so it takes no
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
-        "{}: ratified cell(s) {} amended while Status stays Verified "
+        "{}: ratified cell(s) {} amended while Status stays put "
         "and no owning SR is flagged — a post-attestation amendment "
         "owes the Modified re-attest marker (process.md §7); flip "
         "the owning SR in this commit, or the sitting never sees "

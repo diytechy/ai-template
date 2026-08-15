@@ -40,7 +40,7 @@ _`SN -> SR -> LLR -> TC`; `[Status]` and `[orphan]` flags are inline._
 
 - SN-001
   - SR-001 [Verified] — Addition
-    - LLR-001 [Implemented] — Pure adder
+    - LLR-001 [Planned] — Pure adder
       - TC-001 [Verified] — call add
 - SN-002
   - SR-002 [Verified] — Docs
@@ -102,7 +102,7 @@ None flagged by the overlap heuristic.
 
 ## Status-coherence advisories (warn-only)
 
-- LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+- LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 
 ## Verification basis (mechanized / demonstrated / attested)
 
@@ -166,6 +166,6 @@ None. Every in-scope ratified SR is Verified (any method).
 WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
 WARNING (advisory): IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 1 are marked `external:`, 0 resolve to nothing
 WARNING (advisory): CMP CMP-001 Knowledge ref 'docs/knowledge/missing-pack' names no pack (docs/knowledge/missing-pack.md)
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+WARNING (advisory): LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
 Traceability: SN=3 SR=3 LLR=1 TC=2 orphans=0 integrity=0 verified-mechanized=1 verified-demonstrated=0 verified-attested=1 status-findings=0 drafts=2 budgets=1 budget-findings=0 repos=1 delegation-findings=0 parts=1 assets=1 components=1 component-findings=0 knowledge-advisories=1 interfaces=1 interface-findings=0 ac-advisories=1 llr-status-advisories=1 watermark-advisories=1. Report -> docs/test/report.md + docs/test/report.html

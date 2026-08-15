@@ -154,6 +154,30 @@ def is_modified(row):
     return (row.get("Status") or "").strip().lower() == "modified"
 
 
+def is_planned(row):
+    """The `Planned` state (process.md §7): the row's TEXT is ratified and its
+    EVIDENCE is not yet established — where a `Modified` row lands when the
+    amendment invalidated the evidence that used to verify it, and where a row
+    ratified requirement-first starts.
+
+    NEW AT D-9 STEP 2, AND IT IS A REPAIR, NOT A FEATURE. `Planned` had been a
+    live cell value on 14 spine rows while NO predicate anywhere in the kit
+    recognized it — it read identically to `Bananas`: absent from the re-attest
+    brief, absent from the pending-owner-actions projection, absent from the
+    basis counters, never scanned by the amend-without-flip guard, and counted
+    as red by the idle-frontier census. WI-458 measured the cost (seven LLR
+    amendments riding no surface at all). This predicate is the surfacing half;
+    the enum closure above is the announcing half.
+
+    TRANSITIONAL BY DESIGN. If `Planned` folds into `Approved` at the rename
+    (migration plan §C, the owner's ruling), this predicate is deleted in that
+    same act — which is cheap, and is why it was worth adding for the interval
+    rather than leaving the value blind. Same case-insensitive one-casing rule
+    as its three siblings; duplicated in derive_gate.py per the F5 rule; pinned
+    equal (and mutually exclusive with them) by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "planned"
+
+
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
 # write, only its acceptance to analyze/inspect/attest, so the orphan rule below
 # exempts them from the "SR with no LLR" finding. The derived gate mirrors this
@@ -308,10 +332,34 @@ REQUIRED_FIELDS = {
     "REL": ["REL-ID", "From", "To", "Kind", "Flow", "Approval"],
 }
 
-# The only *closed* vocabularies the method defines (process.md §4). Priority and
-# Status are intentionally left open, so they are not validated here.
+# The only *closed* vocabularies the method defines (process.md §4). `Priority`
+# is intentionally left open, so it is not validated here.
+#
+# `Status` CLOSED AT ITS LIVE TRUTH (D-9 migration step 1, 2026-08-15). It was
+# open-vocabulary until now, and the cost was measurable: a value no predicate
+# recognizes — `Planned` was exactly that, and `Bananas` would have read
+# identically — sat in the registry announcing nothing. The enum-close-first
+# rule the migration runs under is stated executably: *at every commit, the
+# declared Status enum equals exactly the set of values at least one live
+# predicate recognizes, and that set narrows monotonically*. So this set is the
+# FOUR values live today, not the ladder D-9 is heading for; the rename narrows
+# it in its own atomic act.
+STATUS_VALUES = frozenset({"Draft", "Planned", "Modified", "Verified"})
+
+# The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
+# schema-class (D-9 migration correction C1). `schema_findings` only runs under
+# `--strict-schema`, which `check.py` appends at DevBar-Release alone — so a
+# Status vocabulary declared there would be INERT for every repo below the top
+# bar, which is every repo the migration is being run for. A retired Status word
+# is wrong at ANY stage, exactly like a duplicated id, so it joins the always-on
+# `--strict-integrity` floor (and therefore the pre-commit hook) instead. The
+# vocabulary still has ONE home — `ENUM_FIELDS` below — and this names only
+# which pipe reads it.
+INTEGRITY_ENUM_COLS = frozenset({"Status"})
+
 ENUM_FIELDS = {
     "SR": {
+        "Status": STATUS_VALUES,
         # The ruled aspect vocabulary (sitting-2 decision 10, executed by the
         # WI-451 re-tier). `Area` was a 31-value free-text column of which 25
         # values were a component by another name; those were DROPPED at
@@ -339,7 +387,12 @@ ENUM_FIELDS = {
             "Critique",
         },
     },
-    "TC": {"Tier": {"Smoke", "Full", "Release"}},
+    # The LLR tier had NO entry here at all until the Status closure — its
+    # `Status` cell was the one spine vocabulary nothing declared and nothing
+    # validated, which is how seven LLR amendments came to ride `Planned`
+    # (WI-458) with no surface reading them.
+    "LLR": {"Status": STATUS_VALUES},
+    "TC": {"Status": STATUS_VALUES, "Tier": {"Smoke", "Full", "Release"}},
     # WI-443 / OI-14 part B — the IF tier's first closed vocabularies, advisory
     # like its required fields above.
     #
@@ -583,6 +636,41 @@ def integrity_findings(label, raw_rows):
             found.append(f"{label} id {rid!r} is malformed (expected {label}-<digits>)")
         seen.add(rid)
     return found
+
+
+def enum_integrity_findings(label, rows):
+    """Out-of-vocabulary values in the INTEGRITY_ENUM_COLS columns of one
+    registry — today that is `Status` and nothing else.
+
+    THE SAME `ENUM_FIELDS` TABLE `schema_findings` reads, deliberately: a tier's
+    vocabulary has ONE home whatever pipe enforces it, so this is a change to
+    *which list a value's finding is appended to*, never a second copy of the
+    allowed set that can drift from the first. The split exists because the two
+    pipes run at different gates — schema at DevBar-Release only, integrity
+    always — and a retired Status word is wrong at every stage (D-9 correction
+    C1).
+
+    Placeholder `-000` rows are skipped, like every other rule here: a shipped
+    template's example row is the placeholder check's business."""
+    key = id_key(label)
+    out = []
+    for r in rows:
+        rid = (r.get(key) or "").strip()
+        if not rid or is_example(rid):
+            continue
+        for col in sorted(INTEGRITY_ENUM_COLS):
+            allowed = ENUM_FIELDS.get(label, {}).get(col)
+            if not allowed:
+                continue
+            val = (r.get(col) or "").strip()
+            if val and val not in allowed:
+                out.append(
+                    "{} {} has {}={!r}, which is not in the closed vocabulary "
+                    "(allowed: {})".format(
+                        label, rid, col, val, ", ".join(sorted(allowed))
+                    )
+                )
+    return out
 
 
 # --- the id watermark: an id is allocated once, for the life of the repo -------
@@ -1210,6 +1298,8 @@ def schema_findings(label, rows):
             if not (r.get(col) or "").strip():
                 out.append(f"{label} {rid} has empty required field {col}")
         for col, allowed in ENUM_FIELDS.get(label, {}).items():
+            if col in INTEGRITY_ENUM_COLS:
+                continue  # `enum_integrity_findings` owns these — see that name
             val = (r.get(col) or "").strip()
             if val and val not in allowed:
                 out.append(
@@ -2178,6 +2268,24 @@ def _cell_diff_lines(changed):
     return lines
 
 
+def _entry_kind(state):
+    """What the model's entry OWES, from the SR's Status: a first ratification,
+    the evidence its ratified text still lacks, or a re-attestation of text that
+    moved after it was blessed.
+
+    Three-valued since D-9 step 2. `plan` is the new arm and it is not a
+    cosmetic third label: a `Planned` row has no attested baseline (its text was
+    ratified, its evidence never established), so asking git for one is the same
+    category error a `Draft` row's would be — and the renderer that labelled it
+    "re-attest owed" would be telling the owner to re-bless something nobody
+    ever blessed."""
+    if state == "draft":
+        return "ratify"
+    if state == "planned":
+        return "plan"
+    return "reattest"
+
+
 def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
     """The STRUCTURED attestation model: one entry per SR owing an attestation,
     with its baseline, its chain rows, and each row's changed cells.
@@ -2256,7 +2364,7 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
         entry = {
             "id": sid,
             "title": (sr.get("Title") or "").strip(),
-            "kind": "ratify" if state == "draft" else "reattest",
+            "kind": _entry_kind(state),
             "baseline": None,
             "baseline_date": "",
             "from_since": bool(since),
@@ -2266,8 +2374,11 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
         current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
         # A Draft row has never been attested, so there is no baseline to diff
         # against — asking git for one would be a category error, not a miss.
+        # A `Planned` row is the same shape for a different reason: its TEXT was
+        # ratified but no evidence ever verified it, so there is no attestation
+        # to measure a drift from either. Both render current state.
         baseline = None
-        if state != "draft":
+        if state not in ("draft", "planned"):
             baseline = (
                 since if since else (_attested_baseline(root, sid) if git_ok else None)
             )
@@ -2275,6 +2386,9 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
             entry["no_baseline_reason"] = (
                 "awaiting its FIRST ratification — no attested baseline exists"
                 if state == "draft"
+                else "ratified text awaiting its evidence — nothing has been"
+                " attested, so there is no baseline to diff against"
+                if state == "planned"
                 else (
                     "no git history available"
                     if not git_ok
@@ -3215,6 +3329,15 @@ def analyze(reg, args):
         for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+    # The closed `Status` vocabulary (D-9 step 1). INTEGRITY-class rather than
+    # schema-class on purpose: `--strict-schema` runs at DevBar-Release only, so
+    # a Status closure routed there would never execute in the repos this rule
+    # exists for. A row carrying a word no predicate recognizes is invisible to
+    # every surface — the re-attest brief, the pending projection, the basis
+    # counters — which is a silent, not a loud, failure.
+    integrity += [
+        f for label in raw for f in enum_integrity_findings(label, raw[label])
+    ]
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += getattr(reg, "sn_integrity", [])

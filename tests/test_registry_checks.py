@@ -168,8 +168,8 @@ SR-002,Subtraction,SN-001,"The system shall subtract.","r.","sub(3,1) == 2",,M,T
 """
 
 _TWO_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Implemented
-LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Implemented
+LLR-001,SR-001,Pure adder,src/demo,add,"two numbers -> sum",(see TC),Planned
+LLR-002,SR-002,Pure subtractor,src/demo,sub,"two numbers -> difference",(see TC),Planned
 """
 
 # TC-002 cites SR-002 next to LLR-001, but LLR-001 decomposes SR-001 -> incoherent.

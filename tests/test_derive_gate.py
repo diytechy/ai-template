@@ -159,9 +159,9 @@ def test_sr_gate_rules():
 
 def test_maturity_and_sn_gate_rules():
     # A present LLR/TC caps only when Draft; its own Status does not gate DevBar-Release (the
-    # SR's Verified status does), so Implemented and Verified both contribute DevBar-Release.
+    # SR's Verified status does), so Planned and Verified both contribute DevBar-Release.
     assert GATE.maturity_bar({"Status": "Draft"}) == GATE.BAR_BELOW
-    assert GATE.maturity_bar({"Status": "Implemented"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Planned"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Verified"}) == GATE.BAR_RELEASE
     assert GATE.sn_bar("SN-009", {"SN-009"}, set()) == GATE.BAR_BELOW  # draft section
     # WI-401: a ratified SN must be cited by >=1 SR SN-Refs to contribute DevBar-Release;
@@ -207,9 +207,9 @@ def test_decomposed_unverified_is_g2(scaffold):
     make_minimal_project(scaffold)
     _write(
         scaffold,
-        srs=_sr("SR-001", status="Implemented"),
-        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Implemented\n',
-        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Implemented\n',
+        srs=_sr("SR-001", status="Planned"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Planned\n',
+        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Planned\n',
     )
     assert _derive(scaffold)["gate"] == "DevBar-Tests"
 
@@ -235,8 +235,11 @@ def test_modified_sr_reads_g2_and_is_counted(scaffold):
     assert result["modified"] == 1
     assert result["drafts"] == 0
     # The emitted basis line surfaces the count between drafts and computed.
-    assert "drafts=0 modified=1 uncovered=0 computed=DevBar-Tests" in GATE.basis_line(
-        result
+    assert (
+        # `planned=1` is the minimal project's own LLR-001 (D-9 step 2 gave
+        # that counter a home; the fixture's LLR sits below Verified).
+        "drafts=0 modified=1 planned=1 uncovered=0 computed=DevBar-Tests"
+        in GATE.basis_line(result)
     )
 
 
@@ -282,7 +285,7 @@ def test_check_detects_state_drift(scaffold):
     # Un-verify an SR: the derived gate drops but the cache still says DevBar-Release -> STALE.
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
-        srs.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Implemented"),
+        srs.read_text(encoding="utf-8").replace(",Test,Verified", ",Test,Planned"),
         encoding="utf-8",
     )
     check = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
@@ -366,13 +369,13 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     llrs.write_text(
         LLRS_H
         + 'LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Verified\n'
-        + 'LLR-002,SR-002,Part,src/demo,two,"d",(see TC),Implemented\n',
+        + 'LLR-002,SR-002,Part,src/demo,two,"d",(see TC),Planned\n',
         encoding="utf-8",
     )
     tcs.write_text(
         TCS_H
         + 'TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Verified\n'
-        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Implemented\n',
+        + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Planned\n',
         encoding="utf-8",
     )
     assert _derive(scaffold)["gate"] == "DevBar-Tests"
@@ -569,8 +572,8 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     make_minimal_project(scaffold)
     _write(
         scaffold,
-        srs=_sr("SR-001", status="Implemented"),
-        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Implemented\n',
+        srs=_sr("SR-001", status="Planned"),
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Planned\n',
         tcs='TC-001,LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Draft\n',
     )
     result = _derive(scaffold)
@@ -593,8 +596,8 @@ def _mature_single_phase_reopened(scaffold):
     _write(
         scaffold,
         srs=_sr("SR-001") + _sr("SR-002", status="Draft"),
-        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Implemented\n',
-        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Implemented\n',
+        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC-001),Planned\n',
+        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests,Planned\n',
     )
     return _derive(scaffold)
 
@@ -637,3 +640,42 @@ def test_ex_draft_equals_computed_when_nothing_is_pending(scaffold):
     result = _derive(scaffold)
     assert result["drafts"] == 0
     assert result["ex_draft"] == result["raw"]
+
+
+def test_the_basis_line_still_parses_under_checks_window_regexes(scaffold):
+    """THE PRODUCER-CONSUMER ROUND TRIP (D-9 migration §F1, risk 1).
+
+    `check.window_open` decides whether an open ratification window is
+    SUPPRESSING the derived bar, and it decides it by regex over the one line
+    this module writes. When that pairing breaks, nothing fails: the detector
+    silently answers "no window", and the twelve gate steps a window would have
+    kept running stop running — measured, over twelve commits, at the
+    2026-07-26/27 window (check.py's own `window_open` docstring).
+
+    So the pin is the round trip itself, not a literal: every field
+    `check.py` extracts must be extractable from what `basis_line` actually
+    emits. A future field insert that breaks any of the four fails HERE, in the
+    commit that makes it, instead of going quiet in production.
+    """
+    check = load_script("check")
+    make_minimal_project(scaffold)
+    _write(
+        scaffold,
+        srs=_sr("SR-001", status="Modified") + _sr("SR-002", status="Planned"),
+    )
+    result = _derive(scaffold)
+    line = GATE.basis_line(result)
+    basis = check._BASIS_RE.search(line)
+    assert basis is not None, "check._BASIS_RE no longer matches basis_line: " + line
+    # ...and it extracts the two counts the window test reads, by VALUE — a
+    # regex that matched while capturing the wrong groups would be worse than
+    # one that did not match at all.
+    assert basis.group(1) == "0", line  # drafts
+    assert basis.group(2) == "1", line  # modified
+    for name in ("_COMPUTED_RE", "_EX_DRAFT_RE", "_PER_PHASE_RE"):
+        assert getattr(check, name).search(line) is not None, (name, line)
+    # The D-9 step 2 counter is on the line and agrees with the model — a
+    # counter that emitted a stale or hardcoded number would be worse than no
+    # counter, since the whole point is that a pending state cannot hide.
+    assert result["planned"] >= 1, line
+    assert "planned={}".format(result["planned"]) in line, line

@@ -81,16 +81,16 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
     assert "malformed" in report
 
 
-# SR-002 is Status=Implemented (ratified + built, not yet Verified) so the phase
+# SR-002 is Status=Planned (ratified + built, not yet Verified) so the phase
 # scoping of --require-verified is what the tests exercise — a Draft SR would be
 # exempt from --require-verified entirely (WI-089), which is a different axis.
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,v1
-SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Implemented,v2
+SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Planned,v2
 """
 
 PHASED_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Planned
 LLR-002,SR-002,Future part,src/future,todo,"Planned decomposition of the v2 SR.",(see TC),Planned
 """
 
@@ -302,19 +302,19 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     # Listed by id under demonstrated/observed — not miscounted as mechanized.
     assert "Demonstrated/observed" in report and "SR-002" in report
 
-    # The headline widening (M-5): regress SR-002 to Implemented. sr_bar already
+    # The headline widening (M-5): regress SR-002 to Planned. sr_bar already
     # caps it at DevBar-Tests, but the OLD --require-verified (Verification=Test only)
     # silently PASSED it. The widened bar now flags it, naming the real method.
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
-        DEMO_SRS.replace(",H,Analysis,Verified", ",H,Analysis,Implemented"),
+        DEMO_SRS.replace(",H,Analysis,Verified", ",H,Analysis,Planned"),
         encoding="utf-8",
     )
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Analysis but Status=Implemented" in proc.stdout
+    assert "Verification=Analysis but Status=Planned" in proc.stdout
     assert "DevBar-Release requires Verified" in proc.stdout
 
 
@@ -542,7 +542,7 @@ def test_aspect_values_yield_report_section(scaffold):
     (req / "system-requirements.csv").write_text(ASPECT_MIXED_SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(
         "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-        'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Implemented\n',
+        'LLR-001,SR-001,Pure adder,src/demo,add,"Two numbers -> sum.",(see TC),Planned\n',
         encoding="utf-8",
     )
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
@@ -615,7 +615,7 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Verified", ",M,Test,Implemented"
+            ",M,Test,Verified", ",M,Test,Planned"
         ),
         encoding="utf-8",
     )
@@ -1335,7 +1335,7 @@ def test_draft_sr_is_exempt_from_decomposition(scaffold):
 
 # A Draft LLR decomposing SR-001 but with no TC: exempt from the "no TC" rule.
 DRAFT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Planned
 LLR-002,SR-001,Draft sub-part,src/demo,addfast,"A not-yet-tested decomposition.",(see TC),Draft
 """
 
@@ -1349,9 +1349,9 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "LLR LLR-002 has no test (TC)" not in report
-    # Mark it Implemented and the missing TC is an orphan again.
+    # Mark it Planned and the missing TC is an orphan again.
     llrs.write_text(
-        DRAFT_LLRS.replace("(see TC),Draft", "(see TC),Implemented"), encoding="utf-8"
+        DRAFT_LLRS.replace("(see TC),Draft", "(see TC),Planned"), encoding="utf-8"
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
@@ -1360,13 +1360,13 @@ def test_draft_llr_is_exempt_from_tc_rule(scaffold):
 
 
 # SR-002 is fully decomposed (LLR-002 + TC-002) so ONLY the status axis varies:
-# Draft -> exempt from --require-verified; Implemented -> flagged.
+# Draft -> exempt from --require-verified; Planned -> flagged.
 RV_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified
 SR-002,Drafted requirement,SN-001,"The system shall do a drafted thing.","Being drafted.","some measurable outcome",,M,Test,Draft
 """
 RV_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Planned
 LLR-002,SR-002,Draft sub-part,src/demo,addfast,"A drafted decomposition.",(see TC),Draft
 """
 RV_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status
@@ -1387,10 +1387,8 @@ def test_draft_sr_is_exempt_from_require_verified(scaffold):
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "status-findings=0" in proc.stdout
-    # Ratifying it to Implemented (Verification=Test, not yet Verified) flags it.
-    srs.write_text(
-        RV_SRS.replace(",M,Test,Draft", ",M,Test,Implemented"), encoding="utf-8"
-    )
+    # Ratifying it to Planned (Verification=Test, not yet Verified) flags it.
+    srs.write_text(RV_SRS.replace(",M,Test,Draft", ",M,Test,Planned"), encoding="utf-8")
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
@@ -1620,7 +1618,7 @@ def test_require_verified_strips_padded_verification_cell(scaffold):
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Verified", ',M,"Test ",Implemented'
+            ",M,Test,Verified", ',M,"Test ",Planned'
         ),
         encoding="utf-8",
     )

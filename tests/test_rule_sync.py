@@ -106,19 +106,87 @@ def test_is_modified_agrees():
     ]
     for row in cases:
         assert TRACE.is_modified(row) == GATE.is_modified(row), row
-    # The three recognized values are mutually exclusive on any single row.
-    for val in ("Modified", "Draft", "Verified"):
+
+
+def test_is_planned_agrees():
+    # The FOURTH recognized value, added at D-9 step 2 (2026-08-15). Until then
+    # `Planned` sat on 14 live spine rows and NO predicate in the kit read it —
+    # it was indistinguishable from `Bananas`: absent from the re-attest brief,
+    # from the pending-owner-actions projection, from the basis counters, and
+    # never scanned by the amend-without-flip guard. trace.py surfaces it
+    # (open-items + the pending projection); derive_gate.py counts it
+    # (`planned=N`). Same casing/whitespace/None battery as its three siblings,
+    # each of which must read NOT-planned in both copies.
+    cases = [
+        {"Status": "Planned"},
+        {"Status": "planned"},
+        {"Status": "  PLANNED  "},
+        {"Status": "Verified"},
+        {"Status": "Draft"},
+        {"Status": "Modified"},
+        {"Status": ""},
+        {"Status": None},
+        {},
+    ]
+    for row in cases:
+        assert TRACE.is_planned(row) == GATE.is_planned(row), row
+
+
+def test_the_four_recognized_status_values_are_mutually_exclusive():
+    # EXACTLY ONE predicate answers for each declared value, in BOTH copies.
+    # This is the assertion that makes `trace.STATUS_VALUES` — the closed enum
+    # the integrity floor now enforces — a truthful declaration rather than a
+    # list of words: the enum-close-first rule the D-9 migration runs under says
+    # the declared set equals the set at least one live predicate recognizes,
+    # and this is where "at least one" and "at most one" are both checked.
+    predicates = ("is_draft", "is_planned", "is_modified", "is_verified")
+    for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
-        assert (
-            sum(
-                (
-                    TRACE.is_draft(row),
-                    TRACE.is_verified(row),
-                    TRACE.is_modified(row),
-                )
+        for mod in (TRACE, GATE):
+            hits = [name for name in predicates if getattr(mod, name)(row)]
+            assert hits == ["is_" + val.lower()], "{}: {} matched {}".format(
+                mod.__name__, val, hits or "nothing"
             )
-            == 1
-        ), row
+    # ...and the declared enum has no member no predicate answers for, which is
+    # the direction that actually bit: a value can be added to a registry cell
+    # and to this set while every surface stays blind to it.
+    assert {p[len("is_") :] for p in predicates} == {
+        v.lower() for v in TRACE.STATUS_VALUES
+    }
+
+
+def test_status_enum_is_declared_for_every_spine_tier():
+    # D-9 step 1: the SR, LLR and TC tiers each declare the SAME closed Status
+    # vocabulary. LLR had no ENUM_FIELDS entry AT ALL before this, which is how
+    # its Status cell came to be the one spine vocabulary nothing validated.
+    for tier in ("SR", "LLR", "TC"):
+        assert TRACE.ENUM_FIELDS[tier]["Status"] == TRACE.STATUS_VALUES, tier
+
+
+def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
+    # Correction C1 of the migration plan, mechanized. `--strict-schema` runs
+    # only at DevBar-Release (check.py), so a Status closure routed through
+    # `schema_findings` would be INERT for every repo below the top bar — which
+    # is every repo the closure exists for. Assert BOTH directions: the
+    # integrity producer sees a retired word, and the schema producer does not
+    # (a double report would make one of the two pipes a duplicate rather than
+    # a floor).
+    row = {
+        "SR-ID": "SR-001",
+        "Status": "Approved",  # the D-9 successor word, not yet live
+        "Title": "t",
+        "Requirement": "r",
+        "Rationale": "why",
+        "AcceptanceCriteria": "ac",
+        "Verification": "Test",
+        "Priority": "P1",
+        "SN-Refs": "SN-001",
+    }
+    integrity = TRACE.enum_integrity_findings("SR", [row])
+    assert len(integrity) == 1 and "Approved" in integrity[0], integrity
+    assert not [f for f in TRACE.schema_findings("SR", [row]) if "Status" in f]
+    # A placeholder row is nobody's integrity failure — that is the -000 rule.
+    assert TRACE.enum_integrity_findings("SR", [dict(row, **{"SR-ID": "SR-000"})]) == []
 
 
 def test_llr_exempt_agrees():
@@ -150,7 +218,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # derive_gate.sr_bar must agree about which SRs must be Verified before DevBar-Release.
     # sr_bar has always demanded is_verified for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for Verification=Test, so
-    # a decomposed Demonstration/Analysis/Inspection SR left Implemented could never
+    # a decomposed Demonstration/Analysis/Inspection SR left Planned could never
     # derive DevBar-Release yet passed trace's check — two scripts disagreeing about the gate.
     # Option A widened trace's bar: its loop now gates only on is_draft (skip) then
     # is_verified (pass) and NEVER reads Verification, so it is method-blind exactly
@@ -166,7 +234,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         "Critique",
     ]
     for m in methods:
-        implemented = {"Verification": m, "Status": "Implemented"}
+        implemented = {"Verification": m, "Status": "Planned"}
         verified = {"Verification": m, "Status": "Verified"}
         # trace's widened bar applies to every ratified (non-Draft) row — the skip
         # is is_draft, which is method-blind — and then passes iff is_verified. So
@@ -176,7 +244,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         assert TRACE.is_verified(verified) is True, m  # Verified -> passes
         assert TRACE.is_verified(implemented) is False, m  # not Verified -> flagged
         # sr_bar's DevBar-Release for a decomposed SR is the SAME is_verified predicate, also
-        # method-blind: Verified reaches DevBar-Release, Implemented caps at DevBar-Tests — every method.
+        # method-blind: Verified reaches DevBar-Release, Planned caps at DevBar-Tests — every method.
         assert GATE.sr_bar(verified, True, True) == GATE.BAR_RELEASE, m
         assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
     # A Draft SR is pre-ratification and exempt from BOTH: trace's bar stands down
@@ -189,21 +257,21 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # is_verified read Status (not Verification), restoring a Verification=="Test"
     # guard INSIDE analyze()'s --require-verified loop would leave them all green.
     # So drive the real loop end-to-end — a decomposed, non-Test (Demonstration) SR
-    # left Implemented MUST produce a status finding. This is the assertion that
+    # left Planned MUST produce a status finding. This is the assertion that
     # actually pins the loop side method-blind: restore the Test-only guard and it
     # fails (Demonstration skipped -> status-findings=0 -> exit 0).
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
         csv_path.read_text(encoding="utf-8").replace(
-            ",M,Test,Verified", ",M,Demonstration,Implemented"
+            ",M,Test,Verified", ",M,Demonstration,Planned"
         ),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
-    assert "Verification=Demonstration but Status=Implemented" in proc.stdout
+    assert "Verification=Demonstration but Status=Planned" in proc.stdout
 
 
 def test_sn_draft_ids_agrees():

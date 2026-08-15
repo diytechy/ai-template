@@ -802,6 +802,7 @@ Contracts (interfaces): IF-050, IF-051
 | `sr_bar(sr, has_llr, has_tc)` | The bar an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_bar(row)` | An LLR/TC caps the bar only when it is Draft (`DevBar-Below` — the new-phase |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): content |  |
+| `is_planned(row)` | The `Planned` state (process.md §7): ratified TEXT, evidence not yet |  |
 | `sn_bar(sn_id, draft_ids, cited_ids)` | A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a |  |
 | `stage_ord(stage)` | The 0-based position of a stage label on STAGE_ORDER. |  |
 | `boundary_incomplete(bifs, have_registry)` | Rung 1's predicate — is the BOUNDARY INVENTORY still in work? |  |
@@ -1284,6 +1285,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `load_csv(path)` |  |  |
 | `is_verified(row)` | The terminal `Verified` state, matched case-insensitively so it follows the |  |
 | `is_modified(row)` | The post-attestation `Modified` state (WI-316, process.md §7): the row |  |
+| `is_planned(row)` | The `Planned` state (process.md §7): the row's TEXT is ratified and its |  |
 | `llr_exempt(row)` | SR Verification method in LLR_EXEMPT, matched on the stripped cell so a |  |
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
@@ -1292,6 +1294,7 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |
+| `enum_integrity_findings(label, rows)` | Out-of-vocabulary values in the INTEGRITY_ENUM_COLS columns of one |  |
 | `live_max_ids(root)` | `{space: highest id number currently present}` over the WHOLE repo. |  |
 | `read_watermark(root)` | `{space: int}` from `docs/id-watermark`. RAISES on absent or malformed. |  |
 | `watermark_findings(root, previous)` | The id-watermark rules, integrity-class. |  |

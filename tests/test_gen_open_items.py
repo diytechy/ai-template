@@ -164,7 +164,7 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "SR-003" not in page
-    assert "nothing owes a ratification or a re-attest" in page
+    assert "nothing owes a ratification, evidence or a re-attest" in page
 
 
 def test_empty_diff_section_says_check_the_baseline(tmp_path):

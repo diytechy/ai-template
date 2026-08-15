@@ -342,6 +342,17 @@ def is_modified(row):
     return (row.get("Status") or "").strip().lower() == "modified"
 
 
+def is_planned(row):
+    """The `Planned` state (process.md §7): ratified TEXT, evidence not yet
+    established. NO gate arithmetic of its own — a Planned SR is simply not
+    Verified, so `sr_bar` already derives DevBar-Tests for a decomposed one —
+    recognized here only for the `planned=N` basis count, so a value that no
+    predicate read until D-9 step 2 stops being invisible on the one line
+    `check.py` parses the spine's pending state from. Duplicated from trace.py
+    per the F5 no-shared-module rule; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "planned"
+
+
 def sn_bar(sn_id, draft_ids, cited_ids):
     """A Draft SN is `DevBar-Below` — and that is the ONLY rung that fires on a
     draft: it is exempt from the coverage rung below exactly as it is exempt from
@@ -912,6 +923,16 @@ def compute(docs):
         + sum(1 for r in llrs if is_modified(r))
         + sum(1 for r in tcs if is_modified(r))
     )
+    # `Planned` rows (D-9 step 2): ratified text whose evidence is not yet
+    # established. Counted exactly like the two above and for the same reason —
+    # a pending state that no counter names is a pending state that hides. It
+    # was hiding: 14 live rows carried this word while every counter here read
+    # past it.
+    n_planned = (
+        sum(1 for r in srs if is_planned(r))
+        + sum(1 for r in llrs if is_planned(r))
+        + sum(1 for r in tcs if is_planned(r))
+    )
     # Ratified SNs no SR answers (WI-401): normally the count behind the coverage
     # rung's DevBar-Below cap, surfaced on the basis line so a computed=DevBar-Below
     # with drafts=0 names its cause. Not always a cap: with zero real SRs the
@@ -971,6 +992,7 @@ def compute(docs):
         "stage_of": STAGE_OF,
         "drafts": n_draft,
         "modified": n_modified,
+        "planned": n_planned,
         "uncovered": n_uncovered,
         "raw": raw,
         "ex_draft": ex_draft,
@@ -1039,7 +1061,8 @@ def basis_line(result):
     breakdown — everything that must stay in step with the states, excluding the
     volatile compute date).
 
-    `ex-draft=` (WI-341), `uncovered=` (WI-401) and `stage=` (SN-029) are
+    `ex-draft=` (WI-341), `uncovered=` (WI-401), `stage=` (SN-029) and
+    `planned=` (D-9 step 2) are
     additive: a reader that does not know a field is unaffected, and check.py
     falls back to the older per-phase heuristic when `ex-draft` is absent, so a
     gate file written by an earlier derive_gate keeps working until it is next
@@ -1058,19 +1081,30 @@ def basis_line(result):
     recompute, so the retired vocabulary cannot persist past one regeneration.
     There is deliberately NO COMPAT SHIM: a reader that silently accepted both
     vocabularies is exactly how the retired tags would grow back.
+
+    THIS LINE HAS A MACHINE CONSUMER AND IT IS NOT `--check`: `check._BASIS_RE`
+    parses `drafts=`/`modified=` out of it to decide whether an open
+    ratification WINDOW is suppressing the bar — and when that detector goes
+    blind, twelve gate steps stop running silently (the measured
+    2026-07-26/27 precedent at `check.py`'s `window_open`). So a field may be
+    inserted here only with that regex re-read in the SAME commit;
+    `tests/test_derive_gate.py`'s producer-consumer round-trip pin
+    (`check._BASIS_RE.search(derive_gate.basis_line(result))`) is what makes a
+    future edit that breaks it fail loudly instead of quietly.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
         "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafts={d} modified={m} "
-        "uncovered={u} computed={raw} ex-draft={ed} phase={ph} per-phase={pp} "
-        "stage={st} stage-ord={so} stage-of={sof}".format(
+        "planned={pl} uncovered={u} computed={raw} ex-draft={ed} phase={ph} "
+        "per-phase={pp} stage={st} stage-ord={so} stage-of={sof}".format(
             SN=c["SN"],
             SR=c["SR"],
             LLR=c["LLR"],
             TC=c["TC"],
             d=result["drafts"],
             m=result["modified"],
+            pl=result["planned"],
             u=result["uncovered"],
             raw=BAR_NAMES[result["raw"]],
             ed=BAR_NAMES[result["ex_draft"]],

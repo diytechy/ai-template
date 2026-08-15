@@ -27,7 +27,7 @@ def sr_row(rid, title, phase="", verification="Demonstration", status="Verified"
 
 
 def llr_row(rid, sr_refs):
-    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Implemented,,\n'.format(
+    return '{},{},Decomposition,src/mod,func,"Detail.",(see TC),Planned,,\n'.format(
         rid, sr_refs
     )
 

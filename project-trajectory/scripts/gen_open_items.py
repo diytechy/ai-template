@@ -544,8 +544,20 @@ def _chain_row(row):
     )
 
 
+# `trace._entry_kind`'s three values -> the pill each card wears. Held as a
+# table rather than a chain of ternaries so a fourth kind is a row here and a
+# KeyError anywhere it was forgotten, which is the loud direction: a card that
+# silently fell back to "re-attest owed" would misdescribe what the owner owes.
+_KIND_LABELS = {
+    "ratify": "ratification owed",
+    "plan": "evidence owed",
+    "reattest": "re-attest owed",
+}
+
+
 def _attestation_cards(model, srs_by_id=None):
-    """One card per SR owing a ratification or re-attest, its chain beneath.
+    """One card per SR owing a ratification, evidence, or a re-attest, its chain
+    beneath.
 
     `srs_by_id` supplies the SR row's own cells for the case where the SR does
     NOT appear among its chain rows — which happens whenever nothing but the
@@ -555,11 +567,14 @@ def _attestation_cards(model, srs_by_id=None):
     srs_by_id = srs_by_id or {}
     if not model:
         return (
-            '<p class="empty">No <code>Draft</code> or <code>Modified</code> '
-            "<strong>SR</strong> — nothing owes a ratification or a re-attest at "
+            '<p class="empty">No <code>Draft</code>, <code>Planned</code> or '
+            "<code>Modified</code> "
+            "<strong>SR</strong> — nothing owes a ratification, evidence or a "
+            "re-attest at "
             "the attestation unit. Say only what was checked: an amended LLR or "
             "TC rides its owning SR's section, so it shows above only when that "
-            "SR is itself <code>Draft</code>/<code>Modified</code>; a chain row "
+            "SR is itself <code>Draft</code>/<code>Planned</code>/"
+            "<code>Modified</code>; a chain row "
             "amended under a <code>Verified</code> SR is reported by "
             "<code>trace.py --strict</code>'s chain-consistency warn, not here. "
             "The earlier wording said <em>spine row</em>, which denied a state "
@@ -567,14 +582,18 @@ def _attestation_cards(model, srs_by_id=None):
         )
     cards = []
     for entry in model:
-        ratify = entry["kind"] == "ratify"
+        # THREE kinds since D-9 step 2, and the third is not a synonym: a
+        # `Planned` SR owes EVIDENCE, not a re-read of text nobody disputes.
+        # Labelling it "re-attest owed" would have asked the owner to re-bless
+        # an attestation that never happened.
+        label = _KIND_LABELS[entry["kind"]]
         head = (
             '<h3><span class="rid">{i}</span><span>{t}</span>'
             '<span class="pill{cls}">{label}</span></h3>'.format(
                 i=esc(entry["id"]),
                 t=esc(entry["title"] or "(untitled)"),
-                cls=" ratify" if ratify else "",
-                label="ratification owed" if ratify else "re-attest owed",
+                cls="" if entry["kind"] == "reattest" else " ratify",
+                label=label,
             )
         )
         if entry["baseline"]:
@@ -661,8 +680,18 @@ def render(root, since=None):
     reproduces it."""
     root = Path(root)
     reg = tr.load_registries(root / "docs")
+    # `planned` joined the selection at D-9 step 2: this page IS the owner's
+    # decision surface, and a `Planned` SR — ratified text awaiting evidence —
+    # appeared on no surface at all until then. It renders as its own kind
+    # (`plan`), not as a re-attest: nothing about it has been attested, so
+    # there is no baseline to diff and the section carries current state.
     model = tr.reattest_model(
-        root, reg.srs, reg.llrs, reg.tcs, since=since, statuses=("modified", "draft")
+        root,
+        reg.srs,
+        reg.llrs,
+        reg.tcs,
+        since=since,
+        statuses=("modified", "draft", "planned"),
     )
     items = load_open_items(root)
     pure = pending_block_text(root)

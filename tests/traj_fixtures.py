@@ -46,8 +46,8 @@ SR-002,Core sub,SN-001,"Shall subtract.",R,"sub works",,M,Test,Draft
 """
 
 LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status
-LLR-001,SR-001,Adder,src/m,add,"a+b",(see TC),Implemented
-LLR-002,SR-001,Adder edge,src/m,add,"overflow guard",(see TC),Implemented
+LLR-001,SR-001,Adder,src/m,add,"a+b",(see TC),Planned
+LLR-002,SR-001,Adder edge,src/m,add,"overflow guard",(see TC),Planned
 LLR-003,SR-002,Subber,src/m,sub,"a-b",(see TC),Planned
 """
 

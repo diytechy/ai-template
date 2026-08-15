@@ -184,14 +184,21 @@ def _blocked_pending(root):
 
 
 def _spine_pending(root):
-    """Source (e), WI-316: one pointer line per `Draft` SR (ratification owed)
-    and per `Modified` SR (re-attest owed — a post-attestation amendment,
-    process.md §7). The SR is the attestation unit, so only SR rows project —
+    """Source (e), WI-316: one pointer line per `Draft` SR (ratification owed),
+    per `Modified` SR (re-attest owed — a post-attestation amendment,
+    process.md §7) and per `Planned` SR (ratified text whose evidence is not yet
+    established). The SR is the attestation unit, so only SR rows project —
     a Modified LLR/TC rides its owning SR's line (trace.py's chain-consistency
     warn flags the orphaned-child case). Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
-    names, `trace.py --ratify modified`, never here. Sorted by id, no clocks."""
+    names, `trace.py --ratify modified`, never here. Sorted by id, no clocks.
+
+    `Planned` JOINED AT D-9 STEP 2. This projection is the owner's
+    pending-actions surface, and a Planned SR projected NOTHING here — the
+    single loudest instance of the `Planned`-reads-as-`Bananas` finding, because
+    the state's whole meaning is "a human still owes this row something". Its
+    line says which something: evidence, not a re-read."""
     # `skip_example=True`: a copied template's `-000` example row owes no
     # ratification. Only the SR arm projects (the attestation unit), so the
     # LLR/TC arms of the loader go unused here.
@@ -199,7 +206,7 @@ def _spine_pending(root):
     lines = []
     for r in sorted(srs, key=lambda x: x["SR-ID"]):
         status = (r.get("Status") or "").strip().lower()
-        if status not in ("draft", "modified"):
+        if status not in ("draft", "modified", "planned"):
             continue
         sid = r["SR-ID"]
         title = (r.get("Title") or "").strip() or "(untitled)"
@@ -213,6 +220,14 @@ def _spine_pending(root):
                 "project-trajectory/scripts/trace.py --ratify {}`.".format(
                     sid, phase_note, title, sid
                 )
+            )
+        elif status == "planned":
+            lines.append(
+                "- **{} `Planned` — evidence owed**{}: {} — the text is "
+                "ratified and the evidence that verifies it is not yet "
+                "established; establish it, then move the row in a reviewed "
+                "Status-change commit (`Planned`→`Verified`; the "
+                "`gate-advance` skill).".format(sid, phase_note, title)
             )
         else:
             lines.append(

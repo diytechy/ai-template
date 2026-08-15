@@ -27,7 +27,7 @@ _`SN -> SR -> LLR -> TC`; `[Status]` and `[orphan]` flags are inline._
 
 - SN-001
   - SR-001 [Verified] — Addition
-    - LLR-001 [Implemented] — Pure adder
+    - LLR-001 [Planned] — Pure adder
       - TC-001 [Verified] — call add and assert the sum
   - SR-002 [Planned] [orphan] — Orphaned
 
@@ -79,7 +79,7 @@ None flagged by the overlap heuristic.
 
 ## Status-coherence advisories (warn-only)
 
-- LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+- LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 
 ## Verification basis (mechanized / demonstrated / attested)
 
@@ -90,7 +90,7 @@ _Of the SRs reported `Verified`: `Test` rows rest on a runnable, re-executable c
 - Attested (Attest): 0
 
 ===STDOUT===
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+WARNING (advisory): LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
 FINDING (orphan): SR SR-002 has no LLR (and Verification not in Analysis/Inspection/Attest)
 FINDING (orphan): SR SR-002 has no test (TC)

@@ -46,7 +46,7 @@ SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD
 """
 
 RICH_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
-LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Implemented,CMP-001
+LLR-001,SR-001,Pure adder,src/demo,add,"Pure function: two numbers -> sum.",(see TC),Planned,CMP-001
 """
 
 RICH_TCS = """TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status

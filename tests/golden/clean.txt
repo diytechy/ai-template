@@ -29,7 +29,7 @@ _`SN -> SR -> LLR -> TC`; `[Status]` and `[orphan]` flags are inline._
 
 - SN-001
   - SR-001 [Verified] — Addition
-    - LLR-001 [Implemented] — Pure adder
+    - LLR-001 [Planned] — Pure adder
       - TC-001 [Verified] — call add and assert the sum
 
 ## Traceability graph
@@ -76,7 +76,7 @@ None flagged by the overlap heuristic.
 
 ## Status-coherence advisories (warn-only)
 
-- LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+- LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 
 ## Verification basis (mechanized / demonstrated / attested)
 
@@ -99,6 +99,6 @@ None. Required fields present; Verification/Tier in vocabulary.
 None. Every in-scope ratified SR is Verified (any method).
 
 ===STDOUT===
-WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
+WARNING (advisory): LLR LLR-001 reads 'Planned' but every citing TC is Verified — lift to Verified (the evidence already exists)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
 Traceability: SN=1 SR=1 LLR=1 TC=1 orphans=0 integrity=0 status-findings=0 placeholders=0 schema-findings=0 llr-status-advisories=1 watermark-advisories=1. Report -> docs/test/report.md

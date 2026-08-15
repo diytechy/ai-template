@@ -90,10 +90,10 @@ SCRAMBLED_SRS = (
 
 SCRAMBLED_LLRS = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
-    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Implemented\n'
+    'LLR-007,SR-001,Late,src/m,add,"late",(see TC),Planned\n'
     'LLR-000,SR-001,Example,src/m,add,"example",(see TC),Planned\n'
     "NOTE,SR-001,Not an LLR,src/m,add,nope,(see TC),Planned\n"
-    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Implemented\n'
+    'LLR-001,SR-001,First,src/m,add,"first",(see TC),Planned\n'
 )
 
 SCRAMBLED_TCS = (

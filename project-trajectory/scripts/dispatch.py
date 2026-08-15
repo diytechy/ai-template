@@ -830,8 +830,24 @@ def gap_census(root):
 RED_TC_PREFIX = "red TC "
 
 # The three statuses this rung does NOT call red, each because another rung
-# owns it. Stated as exemptions because Status is an open vocabulary — see
-# `red_tc_census`.
+# owns it. Stated as exemptions because Status was an open vocabulary when this
+# was written — see `red_tc_census`; D-9 step 1 closed it, and the exemption
+# form is kept because it still fails toward NAMING a gap.
+#
+# `planned` IS DELIBERATELY ABSENT, against the D-9 step-2 worklist, and the
+# reason is arithmetic rather than taste (measured 2026-08-15, log 2026-08-15g).
+# Step 1 closed `Status` to exactly {Draft, Planned, Modified, Verified} and
+# `Status` is a REQUIRED TC field, so adding `planned` here would make this set
+# the WHOLE vocabulary: the census could then fire only on a row with no Status
+# at all — a state the schema tier already refuses. And such a row cannot even
+# reach a judge, because `adjudicate_brief.TC_CELLS` requires a non-empty
+# `Status` and refuses the brief without one. Census -> mint -> brief would be
+# unreachable end to end, which is not a narrowed rung but a deleted feature
+# (LLR-159) — the §F4 "the migration removes the only detector" failure, one
+# tier down. `Planned` under a claimed implementation is in fact this rung's
+# CLEANEST case: the method is ratified, the work is closed, and the evidence
+# still is not green. Re-decide at step 5, when `Planned`'s fate is ruled: if
+# it folds into `Approved`, this set needs no change at all.
 _TC_NOT_RED = frozenset({"verified", "draft", "modified"})
 
 

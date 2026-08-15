@@ -307,13 +307,13 @@ def test_llr_status_coherence_predicate():
     def warns(llrs, tcs):
         return trace.llr_status_advisories(llrs, tcs)
 
-    impl = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Implemented"}
+    impl = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Planned"}
     ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Verified"}
 
-    # (1) Implemented LLR, sole citing TC Verified -> exactly the warn.
+    # (1) Planned LLR, sole citing TC Verified -> exactly the warn.
     found = warns([impl], [ver_tc])
     assert len(found) == 1, found
-    assert "LLR LLR-010 reads 'Implemented'" in found[0]
+    assert "LLR LLR-010 reads 'Planned'" in found[0]
     assert "every citing TC is Verified" in found[0]
 
     # (1, cont.) Lifting the LLR to Verified silences it.
@@ -336,7 +336,7 @@ def test_modified_llr_is_exempt_from_the_status_advisory():
     # WI-316: a Modified LLR under fully-Verified TCs is DELIBERATE (a
     # post-attestation amendment awaiting re-attest), so the "lift to Verified"
     # nag must stay silent — it would tell the owner to erase the marker the
-    # sitting needs. Mutation proof: the same row as Implemented DOES warn, so
+    # sitting needs. Mutation proof: the same row as Planned DOES warn, so
     # the exemption is the Modified value, not a broken lint.
     from conftest import load_script
 
@@ -344,7 +344,7 @@ def test_modified_llr_is_exempt_from_the_status_advisory():
     ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Verified"}
     modified = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Modified"}
     assert trace.llr_status_advisories([modified], [ver_tc]) == []
-    impl = {**modified, "Status": "Implemented"}
+    impl = {**modified, "Status": "Planned"}
     assert len(trace.llr_status_advisories([impl], [ver_tc])) == 1
 
 
@@ -400,7 +400,7 @@ def test_modified_chain_advisory_is_warn_only(scaffold):
     make_minimal_project(scaffold)
     llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llr_csv.write_text(
-        llr_csv.read_text(encoding="utf-8").replace(",Implemented", ",Modified"),
+        llr_csv.read_text(encoding="utf-8").replace(",Planned", ",Modified"),
         encoding="utf-8",
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
@@ -410,17 +410,17 @@ def test_modified_chain_advisory_is_warn_only(scaffold):
 
 
 def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
-    # Done-when 1+4: the minimal project ships LLR-001 Implemented under a
+    # Done-when 1+4: the minimal project ships LLR-001 Planned under a
     # Verified TC-001, so trace emits the warn on stdout and in the report — but
     # it never changes the --strict or --strict-integrity exit code.
     make_minimal_project(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "WARNING (advisory): LLR LLR-001 reads 'Implemented'" in proc.stdout
+    assert "WARNING (advisory): LLR LLR-001 reads 'Planned'" in proc.stdout
     assert "llr-status-advisories=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "Status-coherence advisories" in report
-    assert "LLR-001 reads 'Implemented'" in report
+    assert "LLR-001 reads 'Planned'" in report
 
     # --strict-integrity likewise unaffected (the warn never joins the integrity set).
     proc2 = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
@@ -429,12 +429,12 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     # Lifting LLR-001 to Verified silences the warn.
     llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llr_csv.write_text(
-        llr_csv.read_text(encoding="utf-8").replace(",Implemented", ",Verified"),
+        llr_csv.read_text(encoding="utf-8").replace(",Planned", ",Verified"),
         encoding="utf-8",
     )
     proc3 = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc3.returncode == 0, proc3.stdout + proc3.stderr
-    assert "reads 'Implemented'" not in proc3.stdout
+    assert "reads 'Planned'" not in proc3.stdout
     assert "llr-status-advisories" not in proc3.stdout
     report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "None. No unlifted LLRs, no orphaned Modified chain rows." in report3
