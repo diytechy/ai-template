@@ -9,7 +9,7 @@ PROCESS.md: it never needs hand-maintaining.
 Usage:
     python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
                             [--phase LIST] [--no-placeholders] [--strict-schema]
-                            [--html] [--ratify SCOPE [--out FILE] [--since REV]]
+                            [--html] [--ratify SCOPE [--out FILE]]
                             [--root DIR] [--docs DIR]
 
 Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine —
@@ -63,8 +63,8 @@ closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
 `modified` (WI-316) emits the re-attestation brief instead — per-cell
-before/after for every `Modified` SR's chain against its attested baseline (the
-newest revision where the SR row read `Verified`; `--since REV` overrides). Warn-only
+before/after for every row owing a human act, against its copy in the
+`docs/archive/last_approved/` snapshot (`baseline_snapshot.py`). Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Verified while every
 citing TC is Verified (WI-129), a missing knowledge pack, and an interface
@@ -86,7 +86,16 @@ from pathlib import Path
 # own dir is sys.path[0] so a plain import resolves; the guard covers an
 # in-process import (a test) whose sys.path does not yet carry scripts/ — the
 # same sanctioned-sibling-import idiom agent_loop and gen_trajectory use.
+#
+# `baseline_snapshot` and (through it) `check_trajectory` joined at D-9 step 4:
+# the re-attestation model's baseline is the `last_approved` snapshot, and its
+# cell comparison is `check_trajectory.split_changed_cells` — the SAME function
+# the amend-without-flip warn reads, which is what stops the brief and the warn
+# from ever disagreeing about which cells are normative. This is the one new
+# import edge the snapshot design declares.
 try:
+    import baseline_snapshot
+    import check_trajectory
     import spine_carrier
     from trace_text import (
         ac_advisories,
@@ -99,6 +108,8 @@ try:
     )
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import baseline_snapshot
+    import check_trajectory
     import spine_carrier
     from trace_text import (
         ac_advisories,
@@ -2044,18 +2055,46 @@ def _rubrics_cited(*cells):
     return sorted(found)
 
 
+# The `--ratify` scopes that are NOT a phase tag or an id list — a CLOSED set,
+# routed to the re-attestation brief instead of the hierarchy view. Held as a set
+# rather than as a literal comparison so the rename at migration step 5
+# (`modified` -> `drifted`) is one edit here plus `check.py`'s `ratify-fresh`
+# step in the same commit, and so a scope that is neither reserved nor
+# resolvable cannot fall through to an empty brief.
+_RESERVED_RATIFY_SCOPES = frozenset({"modified"})
+
+
 def _scope_srs(scope, srs):
     """Resolve a `--ratify` scope to an ordered SR-row list. The scope is either a
     comma/space list of `SR-###` ids (used verbatim) or one-or-more phase tags
     (every SR whose `Phase` cell is one of them). Detection: if *any* token looks
-    like an SR id the whole scope is treated as ids, else as phases."""
+    like an SR id the whole scope is treated as ids, else as phases.
+
+    RAISES on a scope that resolves to NOTHING (migration plan §F2). Until now
+    an unmatched scope fell through to an empty brief at exit 0 — a typo, a
+    retired phase tag, or a reserved word this function does not know produced a
+    document that reads "there is nothing to ratify", which is the most
+    expensive way for this tool to be wrong: an owner reads a short brief and
+    blesses a batch they were never shown. An empty resolution is a REFUSAL, not
+    an output."""
     tokens = refs(scope)
     as_ids = any(re.fullmatch(r"SR-\d+", t, re.IGNORECASE) for t in tokens)
     if as_ids:
         want = {t.upper() for t in tokens}
-        return [s for s in srs if s.get("SR-ID", "").upper() in want]
-    phases = {t.lower() for t in tokens}
-    return [s for s in srs if _cell(s, "Phase").lower() in phases]
+        matched = [s for s in srs if s.get("SR-ID", "").upper() in want]
+    else:
+        phases = {t.lower() for t in tokens}
+        matched = [s for s in srs if _cell(s, "Phase").lower() in phases]
+    if not matched:
+        raise SystemExit(
+            "trace: --ratify {!r} matches no SR — refusing to emit an empty "
+            "brief. A scope is an SR-id list, a phase tag, or one of the "
+            "reserved scopes ({}); an empty brief reads as 'nothing to ratify' "
+            "to the human about to sign it.".format(
+                scope, ", ".join(sorted(_RESERVED_RATIFY_SCOPES))
+            )
+        )
+    return matched
 
 
 _SN_EMPHASIS = re.compile(r"\*\*|`")
@@ -2084,14 +2123,24 @@ def _sn_prose(sn_text):
 
 
 # --- the re-attestation brief (--ratify modified, WI-316) ----------------------
-# A sitting cannot bless a delta it cannot see: for each `Modified` SR the brief
-# shows every chain row's changed cells as BEFORE (the row at the attested
-# baseline revision) vs AFTER (the working tree). The baseline is git-derived —
-# the newest commit at which the SR row read `Verified` — which is correct under
-# the amend+flip-same-commit regime the staged warn enforces; `--since REV`
-# overrides it for pre-regime streaks (amendments that landed while the row
-# stayed Verified, e.g. the WI-316 backfill batch). Git archaeology lives HERE,
-# on demand, never in the pending projection (pointer-only per its charter).
+# A sitting cannot bless a delta it cannot see: for each SR owing a human act the
+# brief shows every chain row's changed cells as BEFORE (the row in the
+# `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
+#
+# THE BASELINE STOPPED BEING GIT ARCHAEOLOGY AT D-9 STEP 4 (owner directive
+# 2026-08-15). It used to be the newest commit at which the SR row read
+# `Verified`, which is correct only while every amendment flips its row in the
+# same commit — and D-9 deletes the flip, so that walk returns HEAD and the diff
+# is empty by construction. The snapshot is a baseline OUTSIDE the live file,
+# which is what the walk could never be.
+#
+# `_rows_at` / `_toml_rows_text` below are the surviving carrier-aware history
+# readers. NO PATH IN THIS MODULE CALLS THEM ANY MORE — they are named here as
+# dead rather than described as reserved, which is the mistake the retired
+# `current_digests` docstring made ("do not delete them for being
+# unreferenced"). Their removal, and their tests', is a follow-up for the review
+# sitting (log 2026-08-15g), kept out of this commit only because it is outside
+# the ruled scope.
 
 SPINE_FILES = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
@@ -2178,74 +2227,6 @@ def _rows_at(root, rev, rel_path, id_col):
     return {}
 
 
-def _attested_baseline(root, sr_id):
-    """The commit whose text `sr_id` was last attested against — DERIVED: the
-    newest commit at which the SR row read `Verified`.
-
-    THE DERIVATION IS ONCE AGAIN THE ONLY PATH. SN-029
-    put a read of `attestations.csv` in front of this walk, so an anchor written
-    at acceptance time won over a reconstruction. That ledger is retired and its
-    replacement — the anchor recorded on the SR's OWN ROW — waits on the carrier
-    ruling (OI-12), so the ledger-first arm is removed rather than left pointing
-    at a file that no longer exists. Nothing regresses: the ledger never held a
-    row, so this walk is what every caller has actually been getting.
-
-    The walk's known blind spot is unchanged and is why the anchor is owed at
-    all: it is correct by construction ONLY while every amendment flips its
-    row's Status in the same commit, and the SANCTIONED amend+flip path is
-    precisely the one `check_trajectory.staged_spine_amendments` deliberately
-    ignores. Callers that need to say so have `no_baseline_reason`.
-
-    Walks the SR registry's commits newest-first; bounded in practice by the
-    streak depth (typically 1-2 revisions). None: off-git, or the row was never
-    Verified in committed history (first attestation still pending).
-
-    THE PATHSPEC NAMES BOTH CARRIERS, and that is the second half of "the one
-    thing that must not be forgotten" — `_rows_at` being carrier-aware is NOT
-    enough on its own. This walk asks git which
-    commits touched the registry, and after the cutover the `.toml` path has
-    exactly one commit (the cutover itself, where every amended row reads
-    `Modified`). A single-carrier pathspec therefore yields a log with no
-    `Verified` revision in it, `None` comes back, and all 25 amended rows render
-    as "no attested baseline — first attestation pending". The owner would then
-    re-bless full text with NO DIFF of what changed, which is precisely the
-    fail-open the carrier-aware read exists to prevent — reached by a different
-    door. Naming both paths makes the log the registry's real history across the
-    carrier change, and `_rows_at` then resolves each revision's own carrier."""
-    log = _git_out(
-        root,
-        ["log", "--format=%H", "--"] + spine_carrier.carriers(SPINE_FILES[0][0]),
-    )
-    if log is None:
-        return None
-    for rev in log.split():
-        row = _rows_at(root, rev, SPINE_FILES[0][0], SPINE_FILES[0][1]).get(sr_id)
-        if row is not None and is_verified(row):
-            return rev
-    return None
-
-
-def _changed_cells(before, after):
-    """(cell, before, after) triples for every differing cell, in column order —
-    EXCEPT the `Verified`→`Modified` Status flip itself: the marker is not the
-    amendment, and listing it would bury the real delta under N identical lines.
-    Every other Status movement (a supersession, the →Planned evidence
-    downgrade) is a real change and shows."""
-    before = before or {}
-    after = after or {}
-    keys = list(dict.fromkeys(list(after) + list(before)))
-    out = []
-    for k in keys:
-        b = (before.get(k) or "").strip()
-        a = (after.get(k) or "").strip()
-        if b == a:
-            continue
-        if k == "Status" and b.lower() == "verified" and a.lower() == "modified":
-            continue
-        out.append((k, b, a))
-    return out
-
-
 def _full_row_bullets(row):
     """The `- **Cell**: value` bullets for a WHOLE registry row, non-empty cells
     only — how the re-attestation brief renders a row it has no baseline to diff
@@ -2259,12 +2240,33 @@ def _full_row_bullets(row):
     ]
 
 
-def _cell_diff_lines(changed):
+def _cell_diff_lines(changed, ratified=frozenset()):
+    """The per-cell before/after bullets, split into the §A5.1 two groups.
+
+    The split is a capability the snapshot comparison hands the reader for free
+    (D-9 step 4): a RATIFIED cell that moved owes an attestation, a TRACED one
+    routes to adjudication and arms no window. Rendering them in one
+    undifferentiated list asked the owner to make that judgement per cell, from
+    memory, mid-sitting. Headings appear only when BOTH groups are present —
+    a lone heading over the only group is noise."""
+    groups = [
+        ("ratified — re-attestation owed", [c for c in changed if c[0] in ratified]),
+        (
+            "traced — routes to adjudication",
+            [c for c in changed if c[0] not in ratified],
+        ),
+    ]
+    show_headings = all(rows for _label, rows in groups)
     lines = []
-    for cell, b, a in changed:
-        lines.append("- **{}**".format(cell))
-        lines.append("  - before: {}".format(b or "(empty)"))
-        lines.append("  - after: {}".format(a or "(empty)"))
+    for label, rows in groups:
+        if not rows:
+            continue
+        if show_headings:
+            lines.append("_{}_".format(label))
+        for cell, b, a in rows:
+            lines.append("- **{}**".format(cell))
+            lines.append("  - before: {}".format(b or "(empty)"))
+            lines.append("  - after: {}".format(a or "(empty)"))
     return lines
 
 
@@ -2286,55 +2288,69 @@ def _entry_kind(state):
     return "reattest"
 
 
-def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
-    """The STRUCTURED attestation model: one entry per SR owing an attestation,
-    with its baseline, its chain rows, and each row's changed cells.
+# "the caller passed nothing" vs "the caller passed None". `None` is a REAL
+# argument here — it means "compare against no snapshot at all", which is the
+# pre-signing state and a legitimate thing to ask for — so the default cannot
+# also be None or a caller could never express the difference.
+_UNSET = object()
+
+
+def sr_chain_drifts(sid, chain, snapshot):
+    """True when ANY row in this SR's chain has drifted from the snapshot.
+
+    The attestation unit is the SR, so a drifted LLR or TC pulls its owning SR
+    into the brief — otherwise an amendment that lands entirely in a child row
+    is invisible to the sitting, which is the WI-316 hole the chain-consistency
+    warn was written to shout about and the model can now simply close."""
+    return any(
+        baseline_snapshot.is_drifted(
+            rel, id_col, row, baseline_snapshot.rows_for(snapshot, rel, id_col)
+        )
+        for kind, _rid, row in chain
+        for rel, id_col in (SPINE_FILES[_KIND_IX[kind]],)
+    )
+
+
+# `chain_of`'s row kinds -> their index in SPINE_FILES. Stated rather than
+# derived from the id prefix: the prefix is data and this is a lookup into a
+# constant, and a mis-derived index would compare an LLR against the SR
+# registry's snapshot rows — which reads as "every cell changed".
+_KIND_IX = {"SR": 0, "LLR": 1, "TC": 2}
+
+
+def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
+    """The STRUCTURED attestation model: one entry per SR owing a human act,
+    with its chain rows and each row's changed cells.
 
     Split out of `reattest_lines` (WI-322) so the computation runs ONCE and two
     renderers consume it — the markdown brief here, and the generated
-    `open-items.html` owner view in `gen_open_items.py`. Duplicating the git
-    archaeology in a second module is exactly the paraphrase-not-decompose
-    failure the kit preaches against; the seam is this function.
+    `open-items.html` owner view in `gen_open_items.py`.
 
-    `statuses` selects which rows owe an attestation: `("modified",)` is the
-    re-attest brief's scope (a post-attestation amendment), `("draft",)` is a
-    first ratification, and both together is what the owner view renders — "new
-    or changed requirement rows awaiting a human". A `draft` SR has no attested
-    baseline BY DEFINITION, so its entry carries `baseline=None` and its rows
-    carry full current content rather than a diff; that is the same honest
-    degrade path an off-git repo takes, not a special case.
+    THE SELECTOR IS NO LONGER A LIST OF STATUS WORDS (D-9 step 4). It used to
+    be `statuses=("modified",)` — the "hard coupling" the migration plan named,
+    because a brief that selects a literal returns a clean bill forever once
+    that literal is retired, at exit 0, with nothing to notice. A row now owes
+    an act when it is `Draft` (first ratification), `Planned` (ratified text
+    awaiting evidence), `Modified` (the transitional marker, still honoured
+    until step 7 retires it) — or when its chain has DRIFTED from
+    `docs/archive/last_approved/`, which is a property of two files rather than
+    of a word, and which no rename can silence.
 
-    Returns `[{id, title, kind, baseline, baseline_date, from_since,
-    no_baseline_reason, rows:[{kind, id, state, cells, full}]}]` where `state`
-    is `changed` | `added` | `removed` | `current`, `cells` is the
-    `(name, before, after)` triples, and `full` is the row dict for the states
-    that render whole rows. Deterministic given HEAD + the working tree."""
-    wanted = tuple(s.strip().lower() for s in statuses)
+    `snapshot` defaults to reading the live one. Pass an explicit `None` to
+    compare against nothing (the vacuous state, which is also every
+    pre-signing repo's): drift then answers False everywhere and the selector
+    falls back to exactly the status arms, which is today's behaviour.
 
-    def owes(row):
-        state = (row.get("Status") or "").strip().lower()
-        return state in wanted
-
-    pending_srs = sorted((r for r in srs if owes(r)), key=lambda r: r.get("SR-ID", ""))
-    if not pending_srs:
-        return []
-    git_ok = _git_out(root, ["rev-parse", "HEAD"]) is not None
-    if since:
-        resolved = _git_out(root, ["rev-parse", "--verify", since + "^{commit}"])
-        if resolved is None:
-            raise SystemExit(
-                "trace: --since {!r} does not resolve to a commit in this "
-                "repository — refusing to render a brief against a fabricated "
-                "baseline".format(since)
-            )
-        since = resolved.strip()
-    base_cache = {}
-
-    def rows_at_cached(rev, rel_path, id_col):
-        per_rev = base_cache.setdefault(rev, {})
-        if rel_path not in per_rev:
-            per_rev[rel_path] = _rows_at(root, rev, rel_path, id_col)
-        return per_rev[rel_path]
+    Returns `[{id, title, kind, baseline, baseline_date, no_baseline_reason,
+    rows:[{kind, id, state, cells, ratified, full}]}]` where `state` is
+    `changed` | `added` | `removed` | `current`, `cells` is the
+    `(name, before, after)` triples ORDERED ratified-first, `ratified` is the
+    subset of those names §A5.1 rules ratified (so a renderer groups by one
+    membership test rather than re-deriving the split), and `full` is the row
+    dict for the states that render whole rows. Deterministic given the working
+    tree and the snapshot."""
+    if snapshot is _UNSET:
+        snapshot = baseline_snapshot.load_all(root)
 
     llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
@@ -2357,64 +2373,71 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
             out.append(("TC", tid, seen_tcs[tid]))
         return out
 
+    def owes(sr):
+        if is_draft(sr) or is_planned(sr) or is_modified(sr):
+            return True
+        return sr_chain_drifts(
+            sr.get("SR-ID", ""),
+            chain_of(sr.get("SR-ID", ""), srs, llrs_by_sr, tcs_by_ref),
+            snapshot,
+        )
+
+    pending_srs = sorted((r for r in srs if owes(r)), key=lambda r: r.get("SR-ID", ""))
+    if not pending_srs:
+        return []
+    stamp_rev, stamp_date = baseline_snapshot.stamp(root) if snapshot else ("", "")
+
+    snap_rows = {
+        kind: baseline_snapshot.rows_for(snapshot, *SPINE_FILES[ix])
+        for kind, ix in _KIND_IX.items()
+    }
+    base_srs = list(snap_rows["SR"].values())
+    base_llrs_by_sr = _bucket_by_ref(list(snap_rows["LLR"].values()), "SR-Refs")
+    base_tcs_by_ref = _bucket_by_ref(list(snap_rows["TC"].values()), "Verifies")
+
     model = []
     for sr in pending_srs:
         sid = sr.get("SR-ID", "")
-        state = (sr.get("Status") or "").strip().lower()
         entry = {
             "id": sid,
             "title": (sr.get("Title") or "").strip(),
-            "kind": _entry_kind(state),
-            "baseline": None,
-            "baseline_date": "",
-            "from_since": bool(since),
+            "kind": _entry_kind((sr.get("Status") or "").strip().lower()),
+            "baseline": "",
+            "baseline_date": stamp_date,
             "no_baseline_reason": "",
             "rows": [],
         }
         current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
-        # A Draft row has never been attested, so there is no baseline to diff
-        # against — asking git for one would be a category error, not a miss.
-        # A `Planned` row is the same shape for a different reason: its TEXT was
-        # ratified but no evidence ever verified it, so there is no attestation
-        # to measure a drift from either. Both render current state.
-        baseline = None
-        if state not in ("draft", "planned"):
-            baseline = (
-                since if since else (_attested_baseline(root, sid) if git_ok else None)
-            )
-        if baseline is None:
+        # A row ABSENT from the snapshot has no baseline to diff against — and
+        # under the snapshot that is a statement about a FILE, checkable by
+        # opening it, rather than the old "the row was never Verified in
+        # committed history", which was a claim about a git walk.
+        if snapshot is None or sid not in snap_rows["SR"]:
             entry["no_baseline_reason"] = (
-                "awaiting its FIRST ratification — no attested baseline exists"
-                if state == "draft"
-                else "ratified text awaiting its evidence — nothing has been"
-                " attested, so there is no baseline to diff against"
-                if state == "planned"
-                else (
-                    "no git history available"
-                    if not git_ok
-                    else "the row was never `Verified` in committed history"
-                    " (first attestation pending)"
+                "no {} snapshot exists yet — this repo has approved nothing, so "
+                "every row awaits a first approval".format(
+                    baseline_snapshot.SNAPSHOT_DIR
+                )
+                if snapshot is None
+                else "absent from the {} snapshot — awaiting its first approval".format(
+                    baseline_snapshot.SNAPSHOT_DIR
                 )
             )
             entry["rows"] = [
-                {"kind": k, "id": i, "state": "current", "cells": [], "full": r}
+                {
+                    "kind": k,
+                    "id": i,
+                    "state": "current",
+                    "cells": [],
+                    "ratified": frozenset(),
+                    "full": r,
+                }
                 for k, i, r in current_chain
             ]
             model.append(entry)
             continue
-        entry["baseline"] = baseline
-        entry["baseline_date"] = (
-            _git_out(root, ["show", "-s", "--format=%cs", baseline]) or ""
-        ).strip()
-        base_srs = list(rows_at_cached(baseline, *SPINE_FILES[0]).values())
-        base_llrs = list(rows_at_cached(baseline, *SPINE_FILES[1]).values())
-        base_tcs = list(rows_at_cached(baseline, *SPINE_FILES[2]).values())
-        base_chain = chain_of(
-            sid,
-            base_srs,
-            _bucket_by_ref(base_llrs, "SR-Refs"),
-            _bucket_by_ref(base_tcs, "Verifies"),
-        )
+        entry["baseline"] = stamp_rev
+        base_chain = chain_of(sid, base_srs, base_llrs_by_sr, base_tcs_by_ref)
         base_by_id = {(k, i): r for k, i, r in base_chain}
         cur_by_id = {(k, i): r for k, i, r in current_chain}
         for kind, rid, row in current_chain:
@@ -2426,18 +2449,30 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
                         "id": rid,
                         "state": "added",
                         "cells": [],
+                        "ratified": frozenset(),
                         "full": row,
                     }
                 )
                 continue
-            changed = _changed_cells(before, row)
-            if changed:
+            rel, id_col = SPINE_FILES[_KIND_IX[kind]]
+            split = check_trajectory.split_changed_cells(rel, id_col, before, row)
+            # RATIFIED FIRST, then traced — the reader's question is "what do I
+            # have to re-bless?", and the §A5.1 split answers it: a ratified
+            # cell owes attestation, a traced one routes to adjudication and
+            # arms no window (the WI-388 ruling).
+            cells = [
+                (name, split[half][name][0], split[half][name][1])
+                for half in ("ratified", "traced")
+                for name in sorted(split[half])
+            ]
+            if cells:
                 entry["rows"].append(
                     {
                         "kind": kind,
                         "id": rid,
                         "state": "changed",
-                        "cells": changed,
+                        "cells": cells,
+                        "ratified": frozenset(split["ratified"]),
                         "full": row,
                     }
                 )
@@ -2449,6 +2484,7 @@ def reattest_model(root, srs, llrs, tcs, since=None, statuses=("modified",)):
                         "id": rid,
                         "state": "removed",
                         "cells": [],
+                        "ratified": frozenset(),
                         "full": row,
                     }
                 )
@@ -2481,38 +2517,23 @@ def newest_ratify_brief(root):
 # short. Both were caught by a human noticing — the weakest enforcement tier
 # `docs/enforcement-audit.md` names.
 #
-# THE CONSTRAINT THAT MAKES THIS HARDER THAN ITS SIBLINGS: the brief SELF-STAMPS
-# its baseline and reuses it, so `--check` must compare against the baseline the
-# FILE declares and must NOT re-derive one. Re-deriving is precisely the WI-322
-# review BLOCKER — a regeneration that silently collapsed 43 chain-row diffs to 18
-# while `--check` certified the loss. A gate that re-derives its own expectation
-# cannot detect the drift it exists to detect.
-_DECLARED_BASELINE_RE = re.compile(
-    r"^_Baseline `([0-9a-fA-F]+)`[^\n]*?— from `--since`\._$", re.M
-)
+# THE CONSTRAINT THAT MADE THIS HARDER THAN ITS SIBLINGS IS GONE (D-9 step 4).
+# The brief used to SELF-STAMP a git-derived baseline, so `--check` had to
+# compare against the baseline the FILE declared and must not re-derive one —
+# because re-deriving was the WI-322 review BLOCKER, a regeneration that
+# silently collapsed 43 chain-row diffs to 18 while `--check` certified the
+# loss. `_DECLARED_BASELINE_RE` and `declared_since` existed only to read that
+# self-stamp back.
+#
+# Under the snapshot there is nothing to re-derive: the baseline is a directory
+# of files that a regeneration cannot move. So this is now the plain
+# regenerate-and-compare its siblings always were, and the WI-325 blocker
+# dissolves rather than being guarded against.
 
 
-def declared_since(text):
-    """The `--since` revision a brief declares, or None when it derived its own.
-
-    Only a brief written WITH `--since` pins a baseline that a re-derivation
-    could move; without it each section is baselined at the git-derived
-    last-Verified revision of its own SR, which is a function of history and is
-    stable as long as history is. So None means "let the renderer derive", not
-    "no baseline".
-
-    More than one distinct `--since` revision cannot come from one run, so it
-    means the file has been hand-edited or spliced: returned as a finding rather
-    than resolved, because guessing which one is current is exactly the silent
-    substitution this whole check exists to prevent."""
-    revs = {m.group(1) for m in _DECLARED_BASELINE_RE.finditer(text)}
-    if len(revs) > 1:
-        return sorted(revs)  # a list signals "ambiguous" to the caller
-    return revs.pop() if revs else None
-
-
-def ratify_check(root, srs, llrs, tcs, out_path, since=None):
-    """`(code, message)` for `--ratify modified --check`.
+def ratify_check(root, srs, llrs, tcs, out_path):
+    """`(code, message)` for `--ratify modified --check` — a plain
+    regenerate-and-compare, like every other freshness gate in the kit.
 
     Fails CLOSED on a difference — a stale brief is read by a human about to
     attest, and the cost of a false green here is an owner blessing rows they
@@ -2522,86 +2543,97 @@ def ratify_check(root, srs, llrs, tcs, out_path, since=None):
     exceptions carved for this repo:
 
       - **no file at `--out`** — a project with no `docs/ratify/` pays nothing;
-      - **no `Modified` SR** — the window is CLOSED, so nothing owes a re-attest
-        and the committed brief is a historical record of a finished sitting, not
-        a surface that can go stale. Checking it against a registry whose rows
-        have since been blessed would fail forever, which is how a check earns
-        its own ignore.
-    """
+      - **no row owes an act** — the window is CLOSED, so the committed brief is
+        a historical record of a finished sitting rather than a surface that can
+        go stale. Checking it against a registry whose rows have since been
+        blessed would fail forever, which is how a check earns its own ignore.
+
+    THE `--since` / `declared_since` MACHINERY IS GONE (D-9 step 4). It existed
+    because the brief self-stamped a git-derived baseline that a re-derivation
+    could move, so `--check` had to read the file's own declaration back rather
+    than compute one. The snapshot is a directory of files; regenerating cannot
+    move it, so the comparison is honest without the self-stamp — and the WI-325
+    "a gate that re-derives its own expectation" blocker dissolves."""
     if not out_path.exists():
         return 0, "no brief at {} — nothing to gate".format(out_path)
-    if not any(is_modified(r) for r in srs):
-        return 0, "no `Modified` SR — the re-attest window is closed"
+    model = reattest_model(root, srs, llrs, tcs)
+    if not model:
+        return 0, "no row owes a ratification or a re-attest — the window is closed"
     try:
         with out_path.open("r", encoding="utf-8", newline="") as fh:
             existing = fh.read()
     except OSError as exc:
         return 1, "cannot read {}: {}".format(out_path, exc)
-
-    baseline = since or declared_since(existing)
-    if isinstance(baseline, list):
-        return 1, (
-            "{} declares {} different `--since` baselines ({}) — one run cannot "
-            "produce that, so the file has been hand-edited; regenerate it".format(
-                out_path, len(baseline), ", ".join(baseline)
-            )
-        )
-    rendered = "\n".join(reattest_lines(root, srs, llrs, tcs, since=baseline)) + "\n"
+    rendered = "\n".join(reattest_lines(root, srs, llrs, tcs)) + "\n"
     if rendered == existing:
-        return 0, "{} is current (baseline {})".format(
-            out_path, baseline or "git-derived"
-        )
+        return 0, "{} is current".format(out_path)
     return 1, (
-        "{} is STALE against the registry (compared at the baseline the file "
-        "itself declares{}, never a re-derived one). Regenerate it with "
-        "`trace.py --ratify modified{} --out {}` and re-read it BEFORE "
+        "{} is STALE against the registry and the {} snapshot. Regenerate it "
+        "with `trace.py --ratify modified --out {}` and re-read it BEFORE "
         "attesting — an owner blessing a short brief blesses rows they were "
-        "never shown.".format(
-            out_path,
-            ": " + baseline if baseline else "",
-            " --since " + baseline if baseline else "",
-            out_path,
-        )
+        "never shown.".format(out_path, baseline_snapshot.SNAPSHOT_DIR, out_path)
     )
 
 
-def reattest_lines(root, srs, llrs, tcs, since=None):
+def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--ratify modified`, WI-316): one
-    section per `Modified` SR — the attestation unit — with per-cell
+    section per SR owing a human act — the attestation unit — with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
-    changed since the attested baseline, plus rows ADDED to or REMOVED from the
-    chain. Baseline = `--since` when given, else the git-derived newest
-    still-Verified revision of the SR row. Off-git (or a never-Verified row) it
-    degrades honestly: current state only, with a stated no-before note.
-    Deterministic given HEAD + the working tree; a generator mode like
-    ratify_lines — runs no checks.
+    differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
+    or REMOVED from the chain.
 
-    The markdown RENDERER over `reattest_model` (WI-322): the model owns the git
-    archaeology and the cell comparison, this owns the prose."""
+    THE BASELINE IS A DIRECTORY, NOT A REVISION (D-9 step 4). It used to be the
+    newest commit at which the SR row still read `Verified`, with `--since` as
+    the escape hatch for a streak that walk could not see. Both are gone: the
+    walk dies by construction once an approved row stops flipping on amendment,
+    and a snapshot cannot sit after the amendment it is supposed to precede.
+
+    Each changed row renders its RATIFIED cells first and its TRACED cells
+    after, under their own heading — the capability the split buys a reader:
+    ratified cells owe an attestation, traced cells route to adjudication and
+    arm no window (§A5.1, the WI-388 ruling).
+
+    Deterministic given the working tree and the snapshot; a generator mode like
+    `ratify_lines` — runs no checks. The markdown RENDERER over `reattest_model`
+    (WI-322): the model owns the comparison, this owns the prose."""
+    model = reattest_model(root, srs, llrs, tcs)
+    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     lines = [
-        "# Re-attestation brief — `Modified` spine rows",
+        "# Re-attestation brief — spine rows owing a human act",
         "",
-        "_Generated by `trace.py --ratify modified` (WI-316). One section per"
-        " `Modified` SR (the attestation unit); each chain row shows only its"
-        " CHANGED cells, before (the attested baseline revision) vs after (the"
-        " working tree). The `Verified`→`Modified` Status flip itself is not"
-        " listed — the marker is not the amendment. Baseline: `--since` when"
-        " given, else the newest revision where the SR row still read"
-        " `Verified` (correct under the amend+flip-same-commit rule the staged"
-        " warn enforces — use `--since` for a pre-regime streak). Rule on each"
-        " section: bless → `Verified`; evidence no longer verifies the amended"
-        " text → `Planned` (process.md §7)._",
+        "_Generated by `trace.py --ratify modified` (WI-316). One section per SR"
+        " (the attestation unit) that is `Draft`, `Planned` or `Modified`, or"
+        " whose chain has DRIFTED from the approved snapshot; each chain row"
+        " shows only its CHANGED cells, before (the snapshot) vs after (the"
+        " working tree), ratified cells first. `Status` itself is never listed —"
+        " the marker is not the amendment. Rule on each section: bless →"
+        " `Verified`; evidence no longer verifies the amended text → `Planned`"
+        " (process.md §7). After ruling, run `intake.py snapshot` in the SAME"
+        " commit, or the record of what was blessed does not move._",
+        "",
+        "_Baseline: `{}` — {}._".format(
+            baseline_snapshot.SNAPSHOT_DIR,
+            "copied {} ({}), the reviewed commit that last moved an approval".format(
+                stamp_date, stamp_rev
+            )
+            if stamp_rev
+            else "no snapshot exists yet, so every row below awaits a FIRST "
+            "approval and renders its current text in full",
+        ),
         "",
     ]
-    if not any(is_modified(r) for r in srs):
-        lines.append("_No `Modified` SR — nothing owes a re-attest._")
+    if not model:
+        lines.append(
+            "_No spine row differs from its `{}` copy, and no row awaits a first"
+            " approval._".format(baseline_snapshot.SNAPSHOT_DIR)
+        )
         return lines
-    for entry in reattest_model(root, srs, llrs, tcs, since, statuses=("modified",)):
+    for entry in model:
         sid, title = entry["id"], entry["title"]
         lines += ["", "## {} — {}".format(sid, title or "(untitled)"), ""]
-        if entry["baseline"] is None:
+        if entry["no_baseline_reason"]:
             lines.append(
-                "_No attested baseline — {}; current state only._".format(
+                "_No approved baseline — {}; current state only._".format(
                     entry["no_baseline_reason"]
                 )
             )
@@ -2609,40 +2641,33 @@ def reattest_lines(root, srs, llrs, tcs, since=None):
                 lines += ["", "### {} {} (current)".format(row["kind"], row["id"])]
                 lines += _full_row_bullets(row)
             continue
-        lines.append(
-            "_Baseline `{}`{}{}._".format(
-                entry["baseline"][:9],
-                " ({})".format(entry["baseline_date"])
-                if entry["baseline_date"]
-                else "",
-                " — from `--since`"
-                if entry["from_since"]
-                else " — newest revision where {} read `Verified`".format(sid),
-            )
-        )
         for row in entry["rows"]:
             if row["state"] == "added":
                 lines += [
                     "",
-                    "### {} {} — ADDED since baseline".format(row["kind"], row["id"]),
+                    "### {} {} — ADDED since the snapshot".format(
+                        row["kind"], row["id"]
+                    ),
                 ]
                 lines += _full_row_bullets(row)
             elif row["state"] == "changed":
                 lines += ["", "### {} {}".format(row["kind"], row["id"])]
-                lines += _cell_diff_lines(row["cells"])
+                lines += _cell_diff_lines(row["cells"], row["ratified"])
             elif row["state"] == "removed":
                 lines += [
                     "",
-                    "### {} {} — REMOVED since baseline".format(row["kind"], row["id"]),
-                    "_In this SR's chain at the baseline, out of it in the working"
+                    "### {} {} — REMOVED since the snapshot".format(
+                        row["kind"], row["id"]
+                    ),
+                    "_In this SR's chain in the snapshot, out of it in the working"
                     " tree — the row was deleted, re-parented, or superseded"
                     " (a superseded row keeps existing; it leaves the chain)._",
                 ]
         if not entry["rows"]:
             lines.append(
-                "_No cell differs from the baseline beyond the Status flip —"
-                " if that is unexpected, the streak may predate the regime;"
-                " re-run with `--since <rev>`._"
+                "_No cell differs from the approved snapshot. The row is here"
+                " because its own `Status` asks for a human, not because its"
+                " text moved._"
             )
     return lines
 
@@ -4028,8 +4053,9 @@ def main():
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
         "(e.g. 'SR-052,SR-053'); a DevBar-Reqs/DevBar-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
-        "RE-ATTESTATION brief instead: per-cell before/after for every Modified "
-        "SR's chain vs its attested baseline (see --since). Prints to stdout "
+        "RE-ATTESTATION brief instead: per-cell before/after for every row owing "
+        "a human act, against its copy in docs/archive/last_approved/. A scope "
+        "matching nothing is REFUSED, never rendered empty. Prints to stdout "
         "unless --out is given; runs no checks",
     )
     ap.add_argument(
@@ -4037,20 +4063,12 @@ def main():
         action="store_true",
         help="with --ratify modified: FRESHNESS mode. Re-render the brief and "
         "compare it against the committed file (--out, else the newest "
-        "docs/ratify/*.md), exiting nonzero when they differ. The comparison "
-        "uses the baseline THAT FILE declares, never a re-derived one (WI-325). "
-        "Silent no-op when there is no brief, or when no SR is Modified (the "
-        "window is closed and the brief is a record, not a live surface)",
-    )
-    ap.add_argument(
-        "--since",
-        metavar="REV",
-        default=None,
-        help="with --ratify modified, override the attested-baseline revision "
-        "for every Modified SR (default: the newest revision where each SR row "
-        "still read Verified — correct under the amend+flip-same-commit rule; "
-        "use this for a pre-regime streak whose amendments landed while the row "
-        "stayed Verified)",
+        "docs/ratify/*.md), exiting nonzero when they differ. A plain "
+        "regenerate-and-compare — the baseline is a directory of files, so "
+        "there is nothing a re-render could move (WI-325's blocker dissolved "
+        "with the git-derived baseline). Silent no-op when there is no brief, "
+        "or when no row owes an act (the window is closed and the brief is a "
+        "record, not a live surface)",
     )
     ap.add_argument(
         "--out",
@@ -4085,13 +4103,16 @@ def main():
     # --ratify is a generator mode, not a checker: emit the batch-scoped
     # ratification hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
-    # The reserved scope `modified` (WI-316) emits the re-attestation brief
-    # instead: per-cell before/after for every Modified SR's chain, baselined at
-    # the git-derived last-Verified revision (or --since).
+    # A RESERVED scope (`_RESERVED_RATIFY_SCOPES` — `modified` today) emits the
+    # re-attestation brief instead: per-cell before/after for every row owing a
+    # human act, against its copy in the `last_approved` snapshot. Anything else
+    # is a phase tag or an id list, and `_scope_srs` REFUSES one that matches
+    # nothing rather than rendering an empty brief.
     if args.ratify is not None:
-        if args.ratify.strip().lower() == "modified" and args.check:
-            # WI-325: freshness, not generation — compare the committed brief
-            # against a render at the baseline THAT FILE declares.
+        reserved = args.ratify.strip().lower() in _RESERVED_RATIFY_SCOPES
+        if reserved and args.check:
+            # WI-325: freshness, not generation. A plain regenerate-and-compare
+            # now that the baseline is a directory rather than a self-stamp.
             code, message = ratify_check(
                 Path(args.root),
                 reg.srs,
@@ -4103,7 +4124,6 @@ def main():
                     newest_ratify_brief(Path(args.root))
                     or Path(args.root) / "docs" / "ratify" / "(none)"
                 ),
-                since=args.since,
             )
             print("trace: ratify-check — {}".format(message), file=sys.stderr)
             # `main()` is called bare at the bottom of this module, so a plain
@@ -4112,10 +4132,8 @@ def main():
             if code:
                 sys.exit(code)
             return 0
-        if args.ratify.strip().lower() == "modified":
-            body = reattest_lines(
-                Path(args.root), reg.srs, reg.llrs, reg.tcs, since=args.since
-            )
+        if reserved:
+            body = reattest_lines(Path(args.root), reg.srs, reg.llrs, reg.tcs)
         else:
             body = ratify_lines(
                 args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta

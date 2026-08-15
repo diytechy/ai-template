@@ -62,6 +62,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gen_trajectory as gt  # noqa: E402  (path set above)
 import spine_carrier  # noqa: E402
+import baseline_snapshot  # noqa: E402
 import trace as tr  # noqa: E402
 
 # The registry names its DESTINATION carrier; `spine_carrier.resolve` finds
@@ -70,12 +71,11 @@ import trace as tr  # noqa: E402
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 OUT_REL = "docs/open-items.html"
 
-# The view RECORDS the baseline it was rendered against, so `--check` re-renders
-# with the same one instead of silently comparing against a different history.
-# Without this, `--since` would be a write-only flag whose output the freshness
-# gate could never reproduce — a generated file nobody could keep green.
-BASELINE_MARK = "<!-- attestation-baseline: {} -->"
-BASELINE_RE = re.compile(r"<!-- attestation-baseline: ([^\s>]*) -->")
+# (The `<!-- attestation-baseline: <rev> -->` stamp retired at D-9 step 4 with
+# `--since`. The view used to RECORD the git revision it was rendered against so
+# `--check` could reproduce that render; the baseline is now a directory of
+# files, identical on every machine and in CI, so there is nothing to stamp and
+# nothing a later run could accidentally re-derive differently.)
 
 # The theme tokens the two owner surfaces must agree on. This is a NAME list,
 # not a value mirror: 122-REVIEW-A refuted the value-mirror version — nine of the
@@ -150,6 +150,13 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .row-head .rid{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;}
 .cellname{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;
   color:var(--muted);}
+/* The §A5.1 group label above a run of cells (D-9 step 4) — ratified cells owe
+   an attestation, traced ones route to adjudication. Set apart from .cellname
+   by weight and a rule rather than by colour alone, so the grouping survives a
+   monochrome print and a low-contrast display. */
+.cellgroup{font-size:var(--xsmall);font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);
+  padding-top:.5rem;margin-top:.35rem;}
 .diff{font-size:var(--small);line-height:1.7;overflow-wrap:anywhere;}
 .diff ins{background:var(--ins-bg);color:var(--ins-ink);text-decoration:none;
   box-shadow:inset 0 -2px 0 var(--ins-rule);border-radius:2px;padding:0 .05em;}
@@ -238,19 +245,6 @@ def read_view(path):
     """The view as written, without universal-newline translation."""
     with path.open(encoding="utf-8", newline="") as fh:
         return fh.read()
-
-
-def stamped_baseline(view_text):
-    """The `--since` revision a rendered view records, or None when it records
-    none (an empty stamp means "auto baseline", not "the empty revision").
-
-    Both callers that need it — the `--check` compare and the write path's
-    baseline REUSE — must read the stamp identically, because the whole point of
-    the stamp is that a later run reproduces an earlier render. They were two
-    copies of the same three lines, which is a place where a one-line divergence
-    would silently split the gate from the generator (WI-334)."""
-    stamped = BASELINE_RE.search(view_text)
-    return (stamped.group(1) if stamped else "") or None
 
 
 def normalize(text):
@@ -491,8 +485,8 @@ def _context_block(full, skip=(), heading="the rest of this row"):
 
 ROW_STATE_TAGS = {
     "changed": "changed",
-    "added": "ADDED since baseline",
-    "removed": "REMOVED since baseline",
+    "added": "ADDED since the snapshot",
+    "removed": "REMOVED since the snapshot",
     "current": "current content",
 }
 
@@ -506,20 +500,44 @@ def _chain_row(row):
     bump, which is the escape the ratchet exists to force."""
     inner = []
     if row["state"] == "changed":
-        for name, before, after in row["cells"]:
-            inner.append(
-                '<div class="cellname">{n} <span class="pill">{p}% of the '
-                'words changed</span></div><div class="diff">{d}</div>'.format(
-                    n=esc(name),
-                    p=changed_percent(before, after),
-                    d=word_diff(before, after),
+        # TWO GROUPS, §A5.1 (D-9 step 4). A RATIFIED cell that moved owes an
+        # attestation; a TRACED one routes to adjudication and arms no window
+        # (the WI-388 ruling). Rendering them in one undifferentiated list asked
+        # the owner to make that judgement per cell, from memory, mid-sitting —
+        # and the snapshot comparison hands the split over for free. The heading
+        # appears only when both groups are present; a lone heading over the
+        # only group is noise.
+        ratified = row.get("ratified") or frozenset()
+        groups = [
+            (
+                "ratified — re-attestation owed",
+                [c for c in row["cells"] if c[0] in ratified],
+            ),
+            (
+                "traced — routes to adjudication",
+                [c for c in row["cells"] if c[0] not in ratified],
+            ),
+        ]
+        both = all(cells for _label, cells in groups)
+        for label, cells in groups:
+            if not cells:
+                continue
+            if both:
+                inner.append('<div class="cellgroup">{}</div>'.format(esc(label)))
+            for name, before, after in cells:
+                inner.append(
+                    '<div class="cellname">{n} <span class="pill">{p}% of the '
+                    'words changed</span></div><div class="diff">{d}</div>'.format(
+                        n=esc(name),
+                        p=changed_percent(before, after),
+                        d=word_diff(before, after),
+                    )
                 )
-            )
         inner.append(
             _context_block(
                 row["full"],
                 skip={name for name, _, _ in row["cells"]},
-                heading="the rest of this {} — unchanged since the baseline".format(
+                heading="the rest of this {} — unchanged since the snapshot".format(
                     row["kind"]
                 ),
             )
@@ -596,20 +614,18 @@ def _attestation_cards(model, srs_by_id=None):
                 label=label,
             )
         )
-        if entry["baseline"]:
-            base = '<p class="baseline">baseline {b}{d} — {why}</p>'.format(
-                b=esc(entry["baseline"][:9]),
-                d=" ({})".format(esc(entry["baseline_date"]))
-                if entry["baseline_date"]
-                else "",
-                why="from --since"
-                if entry["from_since"]
-                else "newest revision where {} read Verified".format(esc(entry["id"])),
-            )
-        else:
-            base = '<p class="baseline">no baseline — {}</p>'.format(
+        # THE BASELINE IS HOISTED (D-9 step 4). It used to be per-card because
+        # every SR carried its OWN git-derived revision; under the snapshot
+        # there is exactly one baseline for the whole page, stated once in the
+        # section header. What stays per-card is the only thing still per-row:
+        # WHY this row has no baseline at all.
+        base = (
+            ""
+            if not entry["no_baseline_reason"]
+            else '<p class="baseline">no baseline — {}</p>'.format(
                 esc(entry["no_baseline_reason"])
             )
+        )
         # The SR's own text, for the section where the SR row itself does not
         # render: nothing but the Status flip touched it, so the amendment sits
         # entirely in a child LLR/TC. The chain hangs off a requirement the
@@ -624,15 +640,16 @@ def _attestation_cards(model, srs_by_id=None):
             )
         body = [_chain_row(row) for row in entry["rows"]]
         if not entry["rows"]:
-            # Never a confident blank: an empty section under an auto-derived
-            # baseline usually means the amendment PREDATES it (a pre-regime
-            # streak), which is a baseline problem, not a no-change finding.
+            # The "check the baseline" advice this used to give was about a
+            # failure mode that no longer exists: an auto-derived baseline could
+            # sit AFTER the amendment, so an empty section meant "the baseline
+            # is wrong", and `--since` was the escape. A snapshot cannot sit
+            # after the amendment it precedes, so an empty section now means
+            # exactly what it says.
             body.append(
-                '<p class="empty">No cell differs from this baseline beyond the '
-                "Status flip. That is a signal to <strong>check the baseline</strong>, "
-                "not a row that is free to bless — an amendment that landed while the "
-                "row still read <code>Verified</code> sits BEFORE an auto-derived "
-                "baseline. Re-run with <code>--since &lt;rev&gt;</code>.</p>"
+                '<p class="empty">No cell differs from the approved snapshot. '
+                "This row is here because its own <code>Status</code> asks for a "
+                "human, not because its text moved.</p>"
             )
         cards.append(
             '<article class="card" id="{i}">{h}{b}{c}{rows}</article>'.format(
@@ -670,41 +687,48 @@ def live_registry_rel(root):
     return spine_carrier.stem(OPEN_ITEMS_REL) + (live.suffix if live else ".toml")
 
 
-def render(root, since=None):
+def render(root):
     """The whole page. Deterministic: every input is sorted upstream.
 
-    `since` overrides the git-derived attestation baseline for the whole view —
-    needed for a PRE-REGIME streak, where the amendment landed while the row
-    still read `Verified` so the auto-baseline sits AFTER it and the section
-    renders empty. The chosen baseline is stamped into the output so `--check`
-    reproduces it."""
+    NO `since` PARAMETER SINCE D-9 STEP 4. It existed to override a git-derived
+    baseline that could sit AFTER the amendment it was supposed to precede — the
+    pre-regime-streak case. A snapshot is a directory of files copied at an
+    approval, so it cannot sit after anything; there is nothing to override, and
+    with it goes the baseline stamp `--check` needed in order to reproduce an
+    earlier render."""
     root = Path(root)
     reg = tr.load_registries(root / "docs")
-    # `planned` joined the selection at D-9 step 2: this page IS the owner's
-    # decision surface, and a `Planned` SR — ratified text awaiting evidence —
-    # appeared on no surface at all until then. It renders as its own kind
-    # (`plan`), not as a re-attest: nothing about it has been attested, so
-    # there is no baseline to diff and the section carries current state.
-    model = tr.reattest_model(
-        root,
-        reg.srs,
-        reg.llrs,
-        reg.tcs,
-        since=since,
-        statuses=("modified", "draft", "planned"),
-    )
+    # The model selects on STATE, not on a status literal (D-9 step 4): Draft,
+    # Planned or Modified, or a chain that has DRIFTED from the approved
+    # snapshot. `Planned` joined at step 2 — this page IS the owner's decision
+    # surface, and a Planned SR appeared on no surface at all until then.
+    model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
     items = load_open_items(root)
     pure = pending_block_text(root)
+    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     counts = {
         "pending": sum(
             1 for r in items if (r.get("Status") or "").strip().lower() == "pending"
         ),
         "attest": len(model),
         "rows": sum(len(e["rows"]) for e in model),
+        # The drifted count is the one number that cannot be read off a Status
+        # cell: a row whose text moved away from what was approved, while its
+        # own Status still claims approval.
+        "drifted": sum(1 for e in model if not e["no_baseline_reason"]),
+        "baseline": (
+            "<code>{}</code> — copied {} ({}), the reviewed commit that last "
+            "moved an approval".format(
+                esc(baseline_snapshot.SNAPSHOT_DIR), esc(stamp_date), esc(stamp_rev)
+            )
+            if stamp_rev
+            else "<code>{}</code> — no snapshot exists yet, so every row below "
+            "awaits a FIRST approval and shows its current text in "
+            "full".format(esc(baseline_snapshot.SNAPSHOT_DIR))
+        ),
     }
     return (
         "<!doctype html>\n"
-        "{basemark}\n"
         '<html lang="en"><head><meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         "<title>Open items — owner decision surface</title>\n"
@@ -719,11 +743,13 @@ def render(root, since=None):
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — owner decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} spine row(s) owing a '
-        "ratification or re-attest, across {rows} chain row change(s). Briefs are rows "
+        "ratification, evidence or a re-attest, across {rows} chain row change(s); "
+        "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
         "in <code>{registry}</code>; the attestation depth is "
         "computed by <code>trace.reattest_model</code>, the same code behind "
         "<code>trace.py --ratify</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
+        '<p class="baseline">Baseline: {baseline}</p>\n'
         "</header>\n"
         '<section class="band"><p class="eyebrow">1 · Pending decisions</p>{briefs}</section>\n'
         '<div class="toolbar"><label><input type="checkbox" id="focus" checked> '
@@ -740,12 +766,13 @@ def render(root, since=None):
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
         "by moving the spine row's <code>Status</code> "
         "<code>Modified</code>→<code>Verified</code> (or →<code>Planned</code> when "
-        "the evidence no longer verifies it). The gate re-derives on its own.</footer>\n"
+        "the evidence no longer verifies it) — and from the first signing onward, "
+        "run <code>intake.py snapshot</code> in the SAME commit, or the record of "
+        "what was blessed does not move. The gate re-derives on its own.</footer>\n"
         "</div>\n<script>{js}</script>\n</body></html>\n"
     ).format(
         css=CSS,
         js=JS,
-        basemark=BASELINE_MARK.format(since or ""),
         briefs=_brief_cards(items),
         attestations=_attestation_cards(
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
@@ -773,16 +800,6 @@ def main(argv=None):
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument(
         "--out", default=None, help="output path (default {})".format(OUT_REL)
-    )
-    ap.add_argument(
-        "--since",
-        default=None,
-        help="attestation baseline revision for the whole view — use for a "
-        "PRE-REGIME streak, where an amendment landed while the row still read "
-        "Verified so the auto-derived baseline sits after it and the section "
-        "renders empty. Stamped into the output, and REUSED by later runs that "
-        "pass no --since (so the unattended loop cannot silently regenerate the "
-        "depth away). Pass an empty string to opt back to the auto baseline.",
     )
     ap.add_argument(
         "--check",
@@ -828,10 +845,7 @@ def main(argv=None):
             )
             return 1
         current = read_view(out)
-        # Re-render against the baseline the FILE declares (not this run's flag),
-        # so the gate compares like with like on every machine and in CI.
-        since = stamped_baseline(current)
-        fresh = render(root, since=since)
+        fresh = render(root)
         if normalize(current) != normalize(fresh):
             print(
                 "gen_open_items: {} STALE — run "
@@ -840,18 +854,13 @@ def main(argv=None):
             return 1
         print("gen_open_items: open-items view up to date.")
         return 0
-    # BASELINE REUSE IS THE GENERATOR'S RULE, not just --check's (122-REVIEW-A
-    # BLOCKER). The unattended loop regenerates this file with no --since; if
-    # that meant "fall back to the auto baseline", every regeneration would
-    # silently DESTROY the depth an owner is about to attest from — driven, it
-    # collapsed 43 chain-row diffs to 18 and emptied two sections, and --check
-    # then certified the loss because the file matched its own degraded render.
-    # So an existing view's stamp is authoritative unless a run overrides it;
-    # `--since ""` is the explicit opt-back-to-auto.
-    since = args.since
-    if since is None and out.is_file():
-        since = stamped_baseline(read_view(out))
-    fresh = render(root, since=since)
+    # THE BASELINE-REUSE RULE RETIRED WITH `--since` (D-9 step 4). It existed
+    # because a regeneration could silently pick a DIFFERENT git-derived
+    # baseline and destroy the depth an owner was about to attest from — driven
+    # at 122-REVIEW-A, it collapsed 43 chain-row diffs to 18 and `--check` then
+    # certified the loss. The snapshot is the same directory on every machine
+    # and in CI, so a regeneration cannot move it and there is nothing to reuse.
+    fresh = render(root)
     if out.is_file() and normalize(read_view(out)) == normalize(fresh):
         print("gen_open_items: already up to date -> {}".format(out))
         return 0

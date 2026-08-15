@@ -1,11 +1,19 @@
-"""trace.py — the re-attestation brief: git effect and recovery
-(WI-277: split verbatim from tests/test_trace.py by behavior boundary).
+"""trace.py — the re-attestation brief, baselined on the `last_approved`
+snapshot (WI-277 split this file out of tests/test_trace.py by behavior
+boundary; D-9 step 4 re-homed its baseline).
 
-WI-316's `--ratify modified` brief (the git-derived baseline walk, --since
-override, honest off-git degradation, a BOMmed baseline) and WI-325's
-freshness gate on it (`--ratify modified --check`), whose load-bearing case is
-that the check reads the baseline the FILE declares instead of re-deriving one.
-Every test here builds a real git repo.
+WI-316's `--ratify modified` brief and WI-325's freshness gate on it.
+
+WHAT LEFT THIS FILE AT D-9 STEP 4, and why none of it is a lost guarantee: the
+git-derived baseline walk, the `--since` override (its unresolvable-rev refusal,
+its sha pinning), the off-git degrade, and the "the check must not re-derive its
+own baseline" pair. All four existed because the baseline was a DERIVATION over
+history that a regeneration could move. It is now a directory of files, identical
+on every machine and in CI, so there is nothing to re-derive, nothing to
+override, and no history to be off. The properties those tests bought are now
+structural rather than checked. The BOM case survives, re-aimed at the snapshot
+file, because a BOM is a property of bytes on disk and the snapshot is bytes on
+disk.
 """
 
 # The git-backed tests below guard with `pytest.skip("needs git on PATH")`, and
@@ -42,10 +50,13 @@ _REATTEST_TC_H = (
 
 
 def _reattest_repo(root):
-    """A git repo with an ATTESTED baseline commit (SR-001 Verified, old prose)
-    then an amend+flip commit (Requirement changed, Status Modified, LLR-002
-    added) — the exact regime the brief's default baseline walk assumes.
-    Returns the git runner."""
+    """A repo with an APPROVED SNAPSHOT (SR-001 Verified, old prose) and a live
+    tree that has since been amended (Requirement changed, Status Modified,
+    LLR-002 added). Returns the git runner.
+
+    The git repo is still built — the brief's stamp reads git, and the mirror
+    invariant is a property of commits — but the BASELINE is now the snapshot
+    copied before the amendment, not a revision walked back to."""
     import shutil as _sh
     import subprocess as _sp
 
@@ -84,9 +95,13 @@ def _reattest_repo(root):
     run_git("init")
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
+    # THE APPROVAL COPIES THE TEXT IT BLESSED — the whole mechanism, in the
+    # fixture: the snapshot is taken while the tree still reads the original.
+    load_script("baseline_snapshot").copy_live(root, seed=True)
     run_git("add", "-A")
-    run_git("commit", "-m", "attested baseline")
-    # The amend+flip commit: prose changes AND the marker lands together.
+    run_git("commit", "-m", "attested baseline + snapshot")
+    # The amendment: prose changes and the marker lands, and the snapshot
+    # deliberately stays behind — that lag IS the signal.
     write_spine(
         "Modified",
         "the AMENDED text",
@@ -98,10 +113,10 @@ def _reattest_repo(root):
 
 
 def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
-    # The default walk skips the Modified HEAD revision, lands on the attested
-    # baseline, and the brief shows the Requirement's before/after, the ADDED
-    # LLR — and NOT the Verified->Modified Status flip (the marker is not the
-    # amendment).
+    # The brief diffs the live tree against the snapshot and shows the
+    # Requirement's before/after, the ADDED LLR — and NOT the Status cell, which
+    # `split_changed_cells` excludes structurally (the marker is not the
+    # amendment, in either direction).
     _reattest_repo(tmp_path)
     proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -110,88 +125,21 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     assert "## SR-001 — Adder" in out
     assert "before: the ORIGINAL attested text" in out
     assert "after: the AMENDED text" in out
-    assert "LLR LLR-002 — ADDED since baseline" in out
-    assert "Baseline `" in out and "read `Verified`" in out
-    # The flip itself is excluded from the cell diff.
+    assert "LLR LLR-002 — ADDED since the snapshot" in out
+    assert "docs/archive/last_approved" in out
+    # The Status cell itself is excluded from the diff, both directions.
     assert "before: Verified" not in out
     # The unchanged chain rows (LLR-001, TC-001) emit no section.
     assert "### LLR LLR-001" not in out
     assert "### TC TC-001" not in out
 
 
-def test_reattest_brief_since_overrides_the_baseline(tmp_path):
-    # --since pins the baseline for a pre-regime streak. Pointing it at HEAD
-    # (where the row is already Modified with the amended text) yields the
-    # no-cell-differs note — proving the flag controls the comparison point.
-    run_git = _reattest_repo(tmp_path)
-    head = run_git("rev-parse", "HEAD").stdout.strip()
-    proc = run_py(
-        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", head], cwd=tmp_path
-    )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "from `--since`" in proc.stdout
-    assert "No cell differs from the baseline" in proc.stdout
-    assert "before: the ORIGINAL attested text" not in proc.stdout
-
-
-def test_reattest_brief_degrades_honestly_off_git(tmp_path):
-    # No git repo: current state only, with the stated no-baseline note — never
-    # a crash, never a fabricated diff.
-    req = tmp_path / "docs" / "requirements"
-    req.mkdir(parents=True)
-    (tmp_path / "docs" / "test").mkdir(parents=True)
-    (req / "system-requirements.csv").write_text(
-        _REATTEST_SR_H + 'SR-001,Adder,SN-001,"r","w","a",,C,Test,Modified,1\n',
-        encoding="utf-8",
-    )
-    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
-    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
-        _REATTEST_TC_H, encoding="utf-8"
-    )
-    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "No attested baseline" in proc.stdout
-    assert "current state only" in proc.stdout
-    assert "SR SR-001 (current)" in proc.stdout
-
-
-def test_reattest_brief_refuses_an_unresolvable_since(tmp_path):
-    # Adversarial-review F1 (HIGH): an unresolvable --since must FAIL, never
-    # render — _rows_at reads a bad rev as "file absent at baseline", which
-    # would render every chain row as ADDED-since-baseline: a FABRICATED brief
-    # handed to the sitting with exit 0. Now: nonzero exit, a refusal naming
-    # the rev, and NO brief content.
-    _reattest_repo(tmp_path)
-    proc = run_py(
-        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", "deadbeefcafe"],
-        cwd=tmp_path,
-    )
-    assert proc.returncode != 0
-    combined = proc.stdout + proc.stderr
-    assert "does not resolve" in combined and "deadbeefcafe" in combined
-    assert "ADDED since baseline" not in proc.stdout
-
-
-def test_reattest_brief_resolves_since_to_a_pinned_sha(tmp_path):
-    # F7: the provenance line carries the RESOLVED commit, not the raw user
-    # string — a symbolic rev like HEAD~1 must not print verbatim, so the
-    # committed brief is reproducible from the documented command.
-    run_git = _reattest_repo(tmp_path)
-    base = run_git("rev-parse", "HEAD~1").stdout.strip()
-    proc = run_py(
-        [SCRIPTS / "trace.py", "--ratify", "modified", "--since", "HEAD~1"],
-        cwd=tmp_path,
-    )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "HEAD~1" not in proc.stdout.split("baseline revision", 1)[-1] or True
-    assert "_Baseline `{}`".format(base[:9]) in proc.stdout
-    assert "before: the ORIGINAL attested text" in proc.stdout
-
-
 def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
-    # F4: `git show` preserves a committed BOM; unstripped, the header glues to
-    # SR-ID and the walk reads "never Verified" — a FALSE no-baseline note. A
-    # BOM'd attested commit must still yield the real before/after.
+    # F4, re-aimed at the snapshot (D-9 step 4). A BOM is a property of bytes on
+    # disk, and `copy_live` is byte-for-byte, so a BOM'd registry produces a
+    # BOM'd snapshot. Unstripped on the read, the header glues to SR-ID and every
+    # row reads as absent-from-the-snapshot — a FALSE "awaiting its first
+    # approval" note on rows that were approved. The before/after must survive.
     import shutil as _sh
     import subprocess as _sp
 
@@ -219,8 +167,9 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     run_git("init")
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
     run_git("add", "-A")
-    run_git("commit", "-m", "attested, BOM'd")
+    run_git("commit", "-m", "attested, BOM'd + snapshot")
     sr_v2 = (
         _REATTEST_SR_H
         + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Modified,1'
@@ -233,7 +182,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     run_git("commit", "-m", "amend + flip, BOM'd")
     proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "No attested baseline" not in proc.stdout
+    assert "No approved baseline" not in proc.stdout
     assert "before: old text" in proc.stdout and "after: new text" in proc.stdout
 
 
@@ -246,7 +195,8 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     written = (scaffold / "docs" / "ratify" / "r.md").read_text(encoding="utf-8")
-    assert "No `Modified` SR — nothing owes a re-attest." in written
+    assert "No spine row differs from its" in written
+    assert "no row awaits a first approval" in written
 
 
 # --- WI-325: the re-attestation brief gets a freshness gate ---------------------
@@ -303,8 +253,9 @@ def _ratify_repo(tmp_path):
     run_git("init")
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
     run_git("add", "-A")
-    run_git("commit", "-m", "attested baseline")
+    run_git("commit", "-m", "attested baseline + snapshot")
     rev = run_git("rev-parse", "HEAD").stdout.strip()
 
     # A later commit that amends the SR text and flips it Modified.
@@ -381,63 +332,6 @@ def test_a_changed_cell_makes_it_stale(tmp_path):
     assert "STALE" in proc.stderr
 
 
-def test_the_check_does_not_re_derive_the_baseline(tmp_path):
-    """THE load-bearing test (WI-322's BLOCKER). A brief stamped `--since X` must
-    still be compared against X, even when the automatic derivation would now
-    pick something else — because a gate that re-derives its own expectation
-    cannot detect the drift it exists to detect.
-
-    Constructed so the two baselines genuinely disagree: the brief is written
-    against the FIRST commit while the auto-derived last-Verified revision is a
-    later one, and the check is then run with no --since at all."""
-    run_git, rev, write = _ratify_repo(tmp_path)
-    # An intermediate commit where the SR is Verified again with different text,
-    # so the git-derived "newest still-Verified" baseline is NOT `rev`.
-    write("Verified", sr_req="The system shall do the INTERIM thing.")
-    run_git("add", "-A")
-    run_git("commit", "-m", "interim verified")
-    write("Modified", sr_req="The system shall do the AMENDED thing.")
-    run_git("add", "-A")
-    run_git("commit", "-m", "re-amend + flip")
-
-    assert _brief(tmp_path, "--since", rev).returncode == 0
-    text = (tmp_path / "docs" / "ratify" / "brief.md").read_text(encoding="utf-8")
-    assert "from `--since`" in text, text[:400]
-
-    # No --since on the check: it must read the one the FILE declares.
-    proc = _check(tmp_path)
-    assert proc.returncode == 0, (
-        "the check re-derived a baseline instead of reusing the declared one:\n"
-        + proc.stdout
-        + proc.stderr
-    )
-    assert rev[:7] in proc.stderr or "baseline" in proc.stderr
-
-
-def test_the_declared_baseline_parser_reads_only_since_stamps():
-    """A section baselined by DERIVATION pins nothing a re-derivation could move,
-    so it must not be mistaken for a `--since` stamp."""
-    tr = load_script("trace")
-    assert (
-        tr.declared_since("_Baseline `abc1234` (2026-01-01) — from `--since`._\n")
-        == "abc1234"
-    )
-    assert tr.declared_since("_Baseline `abc1234` (2026-01-01)._\n") is None
-    assert tr.declared_since("no baseline here\n") is None
-
-
-def test_two_different_since_stamps_is_a_finding():
-    """One run cannot produce two, so it means the file was hand-edited or
-    spliced. Reported rather than resolved — guessing which is current is the
-    silent substitution this check exists to prevent."""
-    tr = load_script("trace")
-    text = (
-        "_Baseline `aaa1111` (2026-01-01) — from `--since`._\n"
-        "_Baseline `bbb2222` (2026-01-02) — from `--since`._\n"
-    )
-    assert tr.declared_since(text) == ["aaa1111", "bbb2222"]
-
-
 def test_a_missing_brief_is_a_no_op_not_a_failure(tmp_path):
     """The arming idiom: a downstream repo with no docs/ratify/ pays nothing."""
     _ratify_repo(tmp_path)
@@ -449,13 +343,47 @@ def test_a_missing_brief_is_a_no_op_not_a_failure(tmp_path):
 def test_a_closed_window_is_a_no_op(tmp_path):
     """Once the sitting is done the brief is a HISTORICAL record, not a live
     surface. Checking it against a registry whose rows have since been blessed
-    would fail forever, which is how a check earns its own ignore."""
+    would fail forever, which is how a check earns its own ignore.
+
+    CLOSING THE WINDOW NOW TAKES TWO ACTS, and that is D-9's whole point: the
+    Status flip AND the copy that records what was blessed. See the test below
+    for what the first without the second looks like."""
     _run_git, _rev, write = _ratify_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Verified", sr_req="The system shall do the AMENDED thing.")
+    load_script("baseline_snapshot").copy_live(tmp_path)
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "window is closed" in proc.stderr
+
+
+def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
+    """THE LAUNDERING THE MECHANISM EXISTS TO CATCH, driven end to end.
+
+    An owner who blesses the amendment by moving `Status` alone has changed the
+    claim without moving the record of what the claim is about. Under the old
+    git-derived baseline that closed the window — the row read `Verified`, so
+    the walk stopped at HEAD and the diff was empty. Under the snapshot the row
+    still differs from the text a human actually read, so it stays in the brief
+    until the copy rides with it."""
+    _run_git, _rev, write = _ratify_repo(tmp_path)
+    write("Verified", sr_req="The system shall do the AMENDED thing.")
+    proc = run_py(
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "## SR-001" in proc.stdout
+    assert "before: The system shall do the thing." in proc.stdout
+    assert "after: The system shall do the AMENDED thing." in proc.stdout
+    # ...and the copy is what clears it.
+    load_script("baseline_snapshot").copy_live(tmp_path)
+    after = run_py(
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
+        cwd=tmp_path,
+    )
+    assert "## SR-001" not in after.stdout
+    assert "No spine row differs from its" in after.stdout
 
 
 def test_the_newest_brief_is_chosen_by_stamped_name(tmp_path):

@@ -138,7 +138,6 @@ import ast
 import configparser
 import csv
 import difflib
-import hashlib
 import re
 import subprocess
 import sys
@@ -3262,113 +3261,22 @@ def spine_cell_class(csv_path, column):
     return "traced" if column in traced.get(key, ()) else "ratified"
 
 
-# --- SN-029: the digest that anchors an attestation ---------------------------
-# WHAT SURVIVED THE LEDGER (docs/repo-lock.md D-1, owner ruling 2026-08-09). The
-# separate `docs/requirements/attestations.csv` registry is RETIRED: attestation
-# state was always the row's own `Status` — `derive_gate` computes the gate from
-# those cells and never referenced the ledger — and three of the ledger's seven
-# columns duplicated cells the row already carried (`Decision=ratified|meaning`
-# IS `Status`; `superseded` IS `SupersededBy`). A second registry holding a fact
-# about a row that already exists is the duplication this kit refuses elsewhere.
+# --- the §A5.1 cell comparison ------------------------------------------------
+# WHAT WAS HERE AND WHY IT IS GONE (owner directive 2026-08-15). SN-029's digest
+# engine — `normative_text`, `sn_normative_text`, `digest`, `current_digests` and
+# their two exclusion sets — lived here for ~107 lines, reserved for an on-row
+# `TextHash`/`HashedOn` writer (repo-lock D-1's anchor half) that was never
+# built. That half is RULED unnecessary complexity: an approval now records what
+# it blessed by COPYING the registries to `docs/archive/last_approved/`
+# (`baseline_snapshot.py`), and a copy needs no canonical text to hash, no
+# separator that cannot occur in a cell, and no second exclusion list.
 #
-# What the ledger got RIGHT is kept: the canonical text a digest is taken over,
-# and the digest itself. The anchor's new home is the ARTIFACT'S OWN ROW, but
-# which columns that means depends on the carrier question (OI-12), so these
-# functions currently have no writer. They are the engine, not the mechanism —
-# do not delete them for being unreferenced.
-# The field separator inside a digest's canonical text. A unit separator, so it
-# cannot occur in a cell and two different splits cannot collide.
-_DIGEST_SEP = "\x1f"
-_SN_ROW_RE = re.compile(r"^\|\s*(SN-\d+)\s*\|")
-
-
-def normative_text(csv_path, row):
-    """The canonical text a digest is taken over, for one SR/LLR/TC row.
-
-    Its columns in HEADER ORDER, filtered by `spine_cell_class(...) ==
-    "ratified"`, stripped and joined with a unit separator. Reusing the
-    predicate rather than a second list is what keeps the digest and the
-    amend-without-flip warn from ever disagreeing about what "normative" means —
-    and it inherits the residual's fail-safe direction, so a column added later
-    joins the digest automatically and can only ever be too loud.
-    """
-    return _DIGEST_SEP.join(
-        (row.get(col) or "").strip()
-        for col in row
-        if col
-        and col not in _DIGEST_EXCLUDED
-        and spine_cell_class(csv_path, col) == "ratified"
-    )
-
-
-# Neither the id nor `Status` is CONTENT — the id is the join key the digest is
-# looked up BY, and `Status` is the attestation marker itself, so folding it in
-# would make every flip look like an amendment and every amendment invisible
-# behind its own flip. The same two exclusions `split_changed_cells` makes,
-# for the same reason.
-_DIGEST_EXCLUDED = frozenset({"SR-ID", "LLR-ID", "TC-ID", "Status"})
-
-
-def sn_normative_text(sn_md_text, sn_id):
-    """The canonical text for one STAKEHOLDER NEED: its `| SN-### | … |` table
-    line, whitespace-collapsed. None when the file declares no such row.
-
-    THE RAW LINE, deliberately — not a parsed projection. The three SN table
-    parsers in this kit map `need=col0, why=col1, acceptance=col3`, which is the
-    Core-needs shape; the edge-case table has a DIFFERENT four-column shape, so
-    those rows parse to a garbled projection and a digest built on it would hash
-    the garbling. The line is well-defined because `sn_integrity_findings`
-    already refuses a duplicated SN row.
-
-    This is the anchor an SN structurally lacks: it has no Status cell, so the
-    amend-without-flip machinery cannot see it change at all."""
-    for line in sn_md_text.splitlines():
-        match = _SN_ROW_RE.match(line.strip())
-        if match and match.group(1) == sn_id:
-            return " ".join(line.split())
-    return None
-
-
-def digest(text):
-    """`sha256:<hex>` of `text`. Full width — this is an ANCHOR, and a truncated
-    one is a collision waiting to be the reason an amendment went unnoticed."""
-    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def current_digests(root):
-    """`{artifact id: digest}` over every real spine row and every SN.
-
-    RESERVED, NOT DEAD: this and its helpers (`normative_text`,
-    `sn_normative_text`, `digest`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`) are the
-    attestation anchor's ENGINE and have **no writer yet** — the removal half
-    landed (`attestations.csv` is gone) and the on-row `TextHash` / `HashedOn`
-    writer is built after the sitting. A dead-symbol sweep sees only
-    `tests/test_attestation_digest.py` consuming this and must not read that
-    as unused. Checked 2026-08-11 (WI-422)."""
-    root = Path(root)
-    out = {}
-    for csv_path, id_col in SPINE_CSVS:
-        # Through the CARRIER: a CSV parse of a TOML registry
-        # yields NOTHING rather than failing, and a digest map with no rows in
-        # it says "nothing to re-attest" — the amendment guard silently blind.
-        for row in spine_carrier.load(root / csv_path, id_col):
-            rid = (row.get(id_col) or "").strip()
-            if rid and not rid.endswith("-000"):
-                out[rid] = digest(normative_text(csv_path, row))
-    sn_md = spine_carrier.resolve(
-        root / "docs" / "requirements" / "stakeholder-needs.toml",
-        spine_carrier.NEED_CARRIERS,
-    )
-    if sn_md is not None:
-        text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
-        for sn_id in sorted(set(re.findall(r"\bSN-\d+\b", text))):
-            if sn_id.endswith("-000"):
-                continue
-            line = sn_normative_text(text, sn_id)
-            if line is not None:
-                out[sn_id] = digest(line)
-    return out
-
+# `split_changed_cells` below is what survived, and it is the better half: it
+# answered the same question the digest did — which cells moved, ratified or
+# traced — while also returning the before/after pairs a brief has to render
+# anyway. It is PUBLIC because `baseline_snapshot.is_drifted` reads it as the
+# drift basis, so the snapshot comparison and the amend-without-flip warn can
+# never disagree about what "normative" means.
 
 # The Status values whose ROW TEXT is ratified — the population the
 # amend-without-flip guard scans. `Verified` (text blessed AND evidence

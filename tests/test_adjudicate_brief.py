@@ -32,6 +32,7 @@ import pytest
 from conftest import env_gate_skipif, load_script, run_py, SCRIPTS
 
 ab = load_script("adjudicate_brief")
+baseline_snapshot = load_script("baseline_snapshot")
 agent_loop = load_script("agent_loop")
 wi_convert = load_script("wi_convert")
 intake = load_script("intake")
@@ -348,18 +349,19 @@ def test_the_discriminator_is_the_declared_cell_not_the_specref(tmp_path):
     assert other is None and "amendment" in why
 
 
-@pytest.mark.parametrize("brief", ["amendment", "conflict"])
-def test_the_two_unrouted_briefs_refuse_and_name_themselves(tmp_path, brief):
-    """Left unrouted on purpose (see adjudicate_brief.py's header): `conflict`
-    has no minting path and a `{digests}` slot no function computes, and
-    `amendment`'s `{rows}` producer selects the rows its own minting condition
-    excludes. Wiring either would mean filling a slot with something, which is
-    the failure this whole module is shaped around."""
+def test_the_one_unrouted_brief_refuses_and_names_itself(tmp_path):
+    """`conflict` is left unrouted on purpose (see adjudicate_brief.py's
+    header): nothing mints a queue-conflict row at all, and its `{digests}` slot
+    names a pair no function computes. Wiring it would mean filling a slot with
+    something, which is the failure this whole module is shaped around.
+
+    `amendment` was the second one until D-9 step 4b — see the tests below,
+    which are its positive successors."""
     repo = _repo(tmp_path)
-    text, why = ab.compose(repo, {"WI-ID": "WI-9", "Brief": brief}, repo / "v.md")
+    text, why = ab.compose(repo, {"WI-ID": "WI-9", "Brief": "conflict"}, repo / "v.md")
     assert text is None
-    assert brief in why and "no evidence assembler" in why
-    assert brief not in ab.ROUTED
+    assert "conflict" in why and "no evidence assembler" in why
+    assert "conflict" not in ab.ROUTED
 
 
 def test_an_absent_or_unknown_brief_refuses_rather_than_guessing(tmp_path):
@@ -426,7 +428,10 @@ with open(str(ctl / "prompts.txt"), "a", encoding="utf-8") as fh:
     fh.write("=== session ===\n" + args.prompt + "\n")
 if "INDEPENDENT adjudicator" in args.prompt:
     where = re.search(r"Write your verdict to (\S+)", args.prompt).group(1)
-    vpath = pathlib.Path(where.rstrip(":"))
+    # `.` joins `:` in the strip set: the amendment template ends its sentence
+    # with a period, so the greedy \S+ swallows it and the verdict landed at
+    # "<path>." — a file the checker never looks at, so the row stayed open.
+    vpath = pathlib.Path(where.rstrip(":."))
     wi = re.search(r"trailer .WI: (WI-\d+).", args.prompt).group(1)
     line = (ctl / "verdict").read_text(encoding="utf-8").strip()
     # NONE models the judge that commits but never rules: the WI trailer that
@@ -556,12 +561,64 @@ def test_an_unfillable_declared_brief_HOLDS_rather_than_dispatching_a_builder(
     assert "WI-301" not in _git(repo, "log", "--format=%(trailers:key=WI,valueonly)")
 
 
-def test_the_live_amendment_mint_is_held_not_dispatched(tmp_path):
-    """The specific live path the fallback re-opened. `intake._amendment_drafts`
-    mints `brief = "amendment"` today and `_ASSEMBLERS` cannot serve it (the
-    producer its slots name selects the rows its own minting condition
-    excludes), so the row must HOLD — not build."""
+def test_the_live_amendment_mint_is_now_BRIEFED_not_held(tmp_path):
+    """THE CAPABILITY UNLOCK (D-9 step 4b). `intake._amendment_drafts` mints
+    `brief = "amendment"` routinely, and until the snapshot landed every one of
+    those rows HELD for a human — the largest live hold in the machinery. Two
+    things blocked it, and the snapshot answers both: the `{rows}` producer
+    selected on a status literal that the minting condition excluded by
+    construction, and `{baseline}` resolved to the amendment commit itself, i.e.
+    the text under judgement as its own accepted anchor.
+
+    This is the inverse of the test it replaces: the row now composes."""
+    repo = _amendment_repo(tmp_path)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "seed")
+    proc, prompts = _session(tmp_path, repo, "WI-301", "VERDICT: MEANING rows=1")
+    assert proc.returncode == agent_loop.EXIT_DONE, proc.stdout + proc.stderr
+    # The judge received the amendment brief, with the snapshot as its anchor
+    # and the before/after the model computed — not the generic worker prompt.
+    assert "Did this amendment change the requirement's MEANING" in prompts
+    assert baseline_snapshot.SNAPSHOT_DIR in prompts
+    assert "The system shall add two numbers." in prompts  # the blessed text
+    assert "refuse floats" in prompts  # the text under judgement
+
+
+def _spine_repo(tmp_path):
+    """A repo carrying the demo spine and nothing else — the base both the
+    red-TC and the amendment fixtures build on. Written separately from
+    `_red_tc_repo` because that one also mints its OWN `WI-301`, and a second
+    row with the same id would leave the loader picking between two briefs."""
     repo = _repo(tmp_path)
+    req = repo / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(SPINE_SRS, encoding="utf-8")
+    (req / "low-level-requirements.csv").write_text(SPINE_LLRS, encoding="utf-8")
+    tests = repo / "docs" / "test"
+    tests.mkdir(parents=True)
+    (tests / "test-cases.csv").write_text(SPINE_TCS, encoding="utf-8")
+    return repo
+
+
+def _amend(repo):
+    """Move SR-001's `Requirement` — a RATIFIED cell — leaving its Status put.
+    This is the D-9 shape exactly: the text changed and nothing flipped."""
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            "The system shall add two numbers.",
+            "The system shall add two integers and refuse floats.",
+        ),
+        encoding="utf-8",
+    )
+
+
+def _amendment_repo(tmp_path):
+    """A repo with a spine, an approved snapshot, an amended ratified cell, and
+    the adjudication row `intake` would have minted for it."""
+    repo = _spine_repo(tmp_path)
+    baseline_snapshot.copy_live(repo, seed=True)
+    _amend(repo)
     _write_rows(
         repo,
         [
@@ -574,12 +631,56 @@ def test_the_live_amendment_mint_is_held_not_dispatched(tmp_path):
             }
         ],
     )
-    _git(repo, "add", "-A")
-    _git(repo, "commit", "-q", "-m", "seed")
-    proc, prompts = _session(tmp_path, repo, "WI-301", "unused")
-    assert proc.returncode == agent_loop.EXIT_NEEDS_HUMAN, proc.stdout + proc.stderr
-    assert prompts == ""
-    assert "no evidence assembler" in proc.stdout
+    return repo
+
+
+def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
+    # Rule 1, mechanized for this brief: the anchor must be the text a human
+    # blessed BEFORE the change, never the change itself. Both halves are
+    # asserted — the before text is present, and it is labelled as not being
+    # the thing under judgement.
+    repo = _amendment_repo(tmp_path)
+    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    assert why is None, why
+    assert baseline_snapshot.SNAPSHOT_DIR in values["baseline"]
+    assert "not the change under judgement" in values["baseline"]
+    assert "The system shall add two numbers." in values["rows"]  # before
+    assert "refuse floats" in values["rows"]  # after
+
+
+def test_only_RATIFIED_cells_reach_the_judge(tmp_path):
+    # A traced cell is ruled non-attesting (§A5.1), so asking a judge to rule
+    # "meaning or clarity" on a re-pointed Phase cell asks a question the
+    # ruling already answers. Drive it: move ONLY a traced cell.
+    repo = _spine_repo(tmp_path)
+    baseline_snapshot.copy_live(repo, seed=True)
+    srs = repo / "docs" / "requirements" / "system-requirements.csv"
+    srs.write_text(
+        srs.read_text(encoding="utf-8").replace(
+            ",Test,Verified,P1,", ",Test,Verified,P9,"
+        ),
+        encoding="utf-8",
+    )
+    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    # Stronger than "the cell is filtered out of the listing": a traced-only
+    # change never makes the row DRIFT in the first place, so it does not reach
+    # the model, the brief, or a judge. One ruling (§A5.1), enforced once.
+    assert values is None
+    assert "differs from its" in why, why
+
+
+def test_with_no_snapshot_the_brief_HOLDS_and_says_FIRST_APPROVAL(tmp_path):
+    # The honest degrade, and it is a HOLD rather than a brief. A repo that has
+    # never signed has no accepted anchor at all, so "did this amendment change
+    # the meaning?" is not the question its rows pose. Fabricating an anchor is
+    # the failure rule 1 exists to prevent; rendering a before/after with an
+    # empty before is the failure rule 2 exists to prevent. Naming the state is
+    # neither.
+    repo = _spine_repo(tmp_path)
+    assert not baseline_snapshot.exists(repo)
+    values, why = ab.amendment_values(repo, {"WI-ID": "WI-301", "Brief": "amendment"})
+    assert values is None
+    assert "FIRST-APPROVAL" in why and "no accepted anchor" in why
 
 
 def test_an_adjudication_row_declaring_no_brief_still_builds(tmp_path):

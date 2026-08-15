@@ -12,6 +12,7 @@ check_trajectory, as held by the sibling that now carries the import.
 import re
 import sys
 
+import baseline_snapshot
 import check_trajectory as ct
 import traj_parse
 from traj_parse import _spine, cmp_rows, spine_stats
@@ -183,6 +184,13 @@ def _blocked_pending(root):
     return lines, ids
 
 
+# The SR registry, for the snapshot join. Restated rather than imported from
+# `trace.SPINE_FILES[0]`: this module deliberately does not import `trace`
+# (the dashboard reads the spine through `traj_parse`), and one path string is
+# the cheapest thing in the kit to duplicate.
+_SR_REL = "docs/requirements/system-requirements.toml"
+
+
 def _spine_pending(root):
     """Source (e), WI-316: one pointer line per `Draft` SR (ratification owed),
     per `Modified` SR (re-attest owed — a post-attestation amendment,
@@ -198,15 +206,26 @@ def _spine_pending(root):
     pending-actions surface, and a Planned SR projected NOTHING here — the
     single loudest instance of the `Planned`-reads-as-`Bananas` finding, because
     the state's whole meaning is "a human still owes this row something". Its
-    line says which something: evidence, not a re-read."""
+    line says which something: evidence, not a re-read.
+
+    DRIFT JOINED AT D-9 STEP 4, and it is the arm no Status cell can carry: a
+    row whose text has moved away from its copy in
+    `docs/archive/last_approved/` while its own Status still claims approval.
+    That is the state the migration exists for — under the new ladder an
+    amendment no longer flips its row, so a projection keyed on status words
+    alone goes quiet exactly when it matters. Vacuous while no snapshot
+    exists."""
     # `skip_example=True`: a copied template's `-000` example row owes no
     # ratification. Only the SR arm projects (the attestation unit), so the
     # LLR/TC arms of the loader go unused here.
     srs = _spine(root, skip_example=True)[0]
+    snapshot = baseline_snapshot.load_all(root)
+    snap_srs = baseline_snapshot.rows_for(snapshot, _SR_REL, "SR-ID")
     lines = []
     for r in sorted(srs, key=lambda x: x["SR-ID"]):
         status = (r.get("Status") or "").strip().lower()
-        if status not in ("draft", "modified", "planned"):
+        drifted = baseline_snapshot.is_drifted(_SR_REL, "SR-ID", r, snap_srs)
+        if status not in ("draft", "modified", "planned") and not drifted:
             continue
         sid = r["SR-ID"]
         title = (r.get("Title") or "").strip() or "(untitled)"
@@ -229,17 +248,27 @@ def _spine_pending(root):
                 "Status-change commit (`Planned`→`Verified`; the "
                 "`gate-advance` skill).".format(sid, phase_note, title)
             )
-        else:
+        elif status == "modified":
             lines.append(
                 "- **{} `Modified` — re-attest owed**{}: {} — bless the "
                 "amendment in a reviewed Status-change commit "
                 "(`Modified`→`Verified`, or →`Planned` if the evidence no "
-                "longer verifies the amended text); before/after brief: "
-                "`python project-trajectory/scripts/trace.py --ratify "
-                "modified` (a pre-regime streak — amendments that landed "
-                "while the row stayed Verified — needs `--since <rev>`; "
-                "committed briefs live in `docs/ratify/`).".format(
+                "longer verifies the amended text) and run `intake.py "
+                "snapshot` in the SAME commit; before/after brief: `python "
+                "project-trajectory/scripts/trace.py --ratify modified` "
+                "(committed briefs live in `docs/ratify/`).".format(
                     sid, phase_note, title
+                )
+            )
+        else:
+            lines.append(
+                "- **{} DRIFTED from the approved snapshot**{}: {} — its "
+                "ratified text differs from its copy in `{}` while its own "
+                "Status still claims approval, so nobody has read the change. "
+                "Re-attest it, then run `intake.py snapshot` in the same "
+                "commit; before/after brief: `python "
+                "project-trajectory/scripts/trace.py --ratify modified`.".format(
+                    sid, phase_note, title, baseline_snapshot.SNAPSHOT_DIR
                 )
             )
     return lines

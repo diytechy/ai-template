@@ -223,11 +223,12 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # The line number moves whenever anything above it in that module does —
     # 781 -> 835 when `md_block` landed (2026-08-12), 835 -> 836 when the
     # retired-open-items warning was re-pointed at RESYNC_PACK.md (WI-447),
-    # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind. That
+    # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind,
+    # 865 -> 874 when step 4 hoisted the baseline and dropped the stamp. That
     # churn is the price of pinning a SITE rather than a count, and it is the
     # right trade: a count would stay green if this site were deleted and a
     # different one added.
-    assert sites == [("gen_open_items.py", 865)], sites
+    assert sites == [("gen_open_items.py", 874)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

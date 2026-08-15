@@ -52,28 +52,29 @@ asks for a `Status` cell to be judged). Deriving it from the TITLE instead is
 the `NEEDS-HUMAN` fold this repo wrote in blood (WI-417): prose that carries
 control flow must be a typed field. So it is a typed field.
 
-TWO OF THE FOUR BRIEFS ARE ROUTED (`ROUTED`); the other two have no producer
-for their evidence, so a row declaring one is HELD for a human (rule 3) rather
-than built. `amendment` is minted routinely today, so this is a live hold, and
-it is the correct outcome: the anchor question below is a decision, not a bug:
+THREE OF THE FOUR BRIEFS ARE ROUTED (`ROUTED`); the last has no producer for
+its evidence, so a row declaring it is HELD for a human (rule 3) rather than
+built:
 
   * `conflict` — nothing mints a queue-conflict adjudication row at all
     (`check_trajectory.queue_conflict_findings` is a warn that never becomes a
     row), so there is no session to brief; and its `{digests}` slot names a
     scope+spine digest pair no function computes.
-  * `amendment` — its `{rows}` slot names `trace.reattest_model`, which selects
-    rows whose Status is `Modified`; but `check_trajectory.staged_spine_amendments`,
-    the function that MINTS these rows, fires only when the row and its owning
-    SR both stayed `Verified` (the amend-without-flip case). The two populations
-    are disjoint by construction, so that producer returns nothing here. Worse,
-    `{baseline}` asks for "the accepted anchor this diff is measured against"
-    and `trace._attested_baseline` — for a row that never flipped — resolves to
-    the amendment commit ITSELF, i.e. the text under judgement. Presenting that
-    as the accepted anchor would be the exact failure rule 2 exists to prevent.
-    An amendment row still DECLARES `brief = "amendment"`: the declaration is a
-    fact about the row, and routing it is one entry in `_ASSEMBLERS` away once
-    the anchor question has an answer. Until then every such row pages, which
-    is the honest cost of not having one.
+  * `conflict`'s sibling `amendment` USED to be the second one, and it is the
+    capability the `last_approved` snapshot unlocked (D-9 step 4b, owner
+    directive 2026-08-15). Two things blocked it and the snapshot answers both.
+    Its `{rows}` slot named `trace.reattest_model`, which selected rows whose
+    Status was `Modified`, while `check_trajectory.staged_spine_amendments` —
+    the function that MINTS these rows — fires only when the row and its owning
+    SR both stayed put: the two populations were disjoint BY CONSTRUCTION, so
+    the producer returned nothing. The model now selects on DRIFT, a property of
+    two files rather than of a status word, and the two populations become the
+    same population. And `{baseline}` asked for "the accepted anchor this diff
+    is measured against", which `trace._attested_baseline` — for a row that
+    never flipped — resolved to the amendment commit ITSELF, i.e. the text under
+    judgement. The snapshot is an accepted anchor that is PROVABLY not the text
+    under judgement: the mirror invariant proves it was copied in a reviewed
+    approval commit, and nothing but a copy can write it.
 
 Contracts: IF-113, IF-114, IF-115 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.csv). Both are
@@ -91,6 +92,7 @@ import re
 from pathlib import Path
 
 import agent_common as ac
+import baseline_snapshot
 import prompts
 import spine_carrier
 
@@ -368,10 +370,98 @@ def _spine_excerpt(root, ids):
     return "\n".join(out), sorted(set(ids) - found)
 
 
+# --- the amendment brief (SN-029; routed at D-9 step 4b) ----------------------
+
+
+def amendment_values(root, row):
+    """`({baseline, rows}, None)` for a spine row whose ratified text moved after
+    it was approved, or `(None, reason)`.
+
+    `{baseline}` is the SNAPSHOT STAMP, and the substitution is the whole point
+    of this assembler existing. The slot asks for "the accepted anchor this diff
+    is measured against"; the old derivation resolved, for a row that never
+    flipped, to the amendment commit ITSELF — presenting the text under
+    judgement as its own accepted anchor, which is precisely the failure rule 1
+    exists to prevent. `docs/archive/last_approved/` is an anchor that is
+    provably NOT the text under judgement: the mirror invariant means it can
+    only have been written by copying a live registry in a reviewed approval
+    commit.
+
+    `{rows}` is `trace.reattest_model`'s RATIFIED cells — the same model behind
+    `trace.py --ratify` and `open-items.html`, so the judge, the brief and the
+    owner surface can never show three different diffs. Traced cells are
+    deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
+    rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
+    question the ruling already answers.
+
+    NO SNAPSHOT IS A HOLD, AND IT SAYS WHY. A repo that has never signed has no
+    accepted anchor at all, so "did this amendment change the meaning?" is not
+    the question its rows pose — a FIRST APPROVAL is. Refusing names that
+    exactly, rather than fabricating an anchor (rule 1) or rendering a
+    before/after with an empty before (rule 2). The stamp itself is advisory:
+    off git, or before the snapshot's own commit lands, it is empty and the
+    baseline line simply omits the date."""
+    import trace as tr
+
+    root = Path(root)
+    if not baseline_snapshot.exists(root):
+        return None, (
+            "no {} snapshot exists yet, so nothing has been approved — every row "
+            "here poses a FIRST-APPROVAL question rather than a "
+            "meaning-or-clarity one, and there is no accepted anchor to measure "
+            "an amendment against".format(baseline_snapshot.SNAPSHOT_DIR)
+        )
+    reg = tr.load_registries(root / "docs")
+    model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    if not model:
+        return None, (
+            "no spine row differs from its {} copy and none awaits a first "
+            "approval — there is nothing to judge".format(
+                baseline_snapshot.SNAPSHOT_DIR
+            )
+        )
+    stamp_rev, stamp_date = baseline_snapshot.stamp(root)
+    baseline = (
+        "{}{} — the approved text as a human last blessed it. This is the text "
+        "BEFORE the change below; it is not the change under judgement, and it "
+        "could only have been written by copying a live registry in an approval "
+        "commit.".format(
+            baseline_snapshot.SNAPSHOT_DIR,
+            ", copied {} (commit {})".format(stamp_date, stamp_rev)
+            if stamp_rev
+            else " (not yet committed, so no copy stamp)",
+        )
+    )
+    lines = []
+    for entry in model:
+        for chain_row in entry["rows"]:
+            ratified = chain_row.get("ratified") or frozenset()
+            cells = [c for c in chain_row["cells"] if c[0] in ratified]
+            if not cells:
+                continue
+            lines.append(
+                "- {} {} (chain of {})".format(
+                    chain_row["kind"], chain_row["id"], entry["id"]
+                )
+            )
+            for name, before, after in cells:
+                lines.append("  - {}".format(name))
+                lines.append("    - before: {}".format(before or "(empty)"))
+                lines.append("    - after: {}".format(after or "(empty)"))
+    if not lines:
+        return None, (
+            "every selected row awaits a FIRST approval or moved only TRACED "
+            "cells — neither is a meaning-or-clarity question, so there is no "
+            "amendment to rule on"
+        )
+    return {"baseline": baseline, "rows": "\n".join(lines)}, None
+
+
 # The briefs whose EVERY slot has a real producer today. A key absent here is
 # documented in this module's header with the derivation it is missing; adding
 # one is adding its assembler, never relaxing the fill.
 _ASSEMBLERS = {
+    "amendment": amendment_values,
     "disposition": disposition_values,
     "red-tc": red_tc_values,
 }

@@ -1273,6 +1273,60 @@ it is now the `Owner` cell's side. `Provides`/`Consumes` still mean what your
 is intended and that this row discharges it — and the cross-component seam check
 still reads them, unchanged.
 
+### The `Status` vocabulary closes, and the attestation baseline moves out of git and onto disk [since 1d45730e]
+
+*(Anchored at the first commit of the D-9 mechanical prefix; the mechanism lands across the three commits that follow it. Take them as one set.)*
+
+**`Status` is now a CLOSED vocabulary on the spine — `{Draft, Planned, Modified, Verified}` for SR, LLR and TC — and an out-of-vocabulary value is an INTEGRITY finding**, which means it reds `trace.py --strict-integrity` and the pre-commit hook at every gate, not just at DevBar-Release. This is the one entry here that can break a repo on the re-sync itself. If your LLR or TC rows carry maturity words of your own (`Implemented`, `In-Review`, …) — which the kit's own prose invited until now — map them onto the four before you take this. `Planned` is the closest fit for "ratified, not yet Verified"; the derived gate reads LLR/TC status only for `Draft`, so the mapping does not move your bar. Why the closure: the `Status` ladder D-9 is heading for renames these values, and a retired word that no predicate recognizes vanishes SILENTLY from the re-attest brief — an open vocabulary has no way to say "this row was left behind".
+
+**What an approval records changed, and one CLI surface was deleted.** Until
+now, "has this attested row changed since a human blessed it?" was answered by
+walking git for the newest commit at which the row read `Verified`. That walk is
+correct only while every amendment flips its row's `Status` in the same commit —
+and the `Status` ladder D-9 is heading for deletes the flip, at which point the
+newest-approved revision is HEAD and the diff is empty **by construction**: the
+brief returns a clean bill forever, at exit 0, on exactly the rows a sitting
+exists to judge.
+
+So the baseline is now a **copy on disk**. What you receive:
+
+- **`scripts/baseline_snapshot.py`** (new, and a sibling import of both
+  `intake.py` and `trace.py` — take it with them or neither runs). It mirrors
+  the four spine registries plus `interfaces.toml`, `external.toml` and
+  `components.toml` into `docs/archive/last_approved/`, byte for byte, with
+  repo-relative paths preserved.
+- **`intake.py snapshot [--seed]`** — the human path. At a ratification sitting:
+  edit the `Status` cells, run it, commit both together. The mechanical
+  adjudication flip copies in the same act.
+- **`docs/archive/last_approved/README.md`** in the scaffold (`bootstrap.py`
+  MAPPING). That is the ONLY thing a fresh scaffold receives: an empty snapshot
+  is the honest state for a repo that has approved nothing yet.
+- **A new warn** — `check_trajectory`'s staged pass reports any commit that
+  leaves a snapshot file differing from its live counterpart.
+
+**Nothing happens to your repo until you seed it.** Every reader is vacuous
+while `docs/archive/last_approved/` does not exist, so a re-sync alone changes no
+output and fails no gate. When you are ready, run `intake.py snapshot --seed`
+**in the reviewed commit that blesses your spine, after every pending row has
+been ruled** — seeding earlier records a blessing of text nobody read. That is
+the only moment the directory is created; the flag is unreachable from every
+loop module, hook and `check.py`, and a test pins it so.
+
+**DELETED, and you must stop passing it:** `trace.py --ratify modified --since
+<rev>` and `gen_open_items.py --since <rev>`, plus the
+`<!-- attestation-baseline: … -->` stamp the generated view carried. They
+existed to override or reproduce a git-derived baseline that a regeneration
+could move. A snapshot cannot sit after the amendment it precedes and is
+identical on every machine and in CI, so there is nothing to override and
+nothing to reproduce. A script or CI job passing `--since` now fails on an
+unrecognized argument — which is the loud direction.
+
+**One behaviour change worth expecting.** `trace.py --ratify <scope>` now
+REFUSES a scope that matches no SR instead of emitting an empty brief at exit 0.
+If you have a job that ratifies a phase tag which no longer exists, it will
+start failing; that is the point, because the empty brief it used to produce
+read as *"there is nothing to ratify"* to the human about to sign it.
+
 ---
 
 ## 4. Translation helper — concept renames

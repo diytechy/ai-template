@@ -996,3 +996,29 @@ def test_ref_splitting_agrees_across_plan_coverage_and_check_trajectory():
         "SR-001\nSR-002",
     ):
         assert pc.split_refs(cell) == ct._split_refs(cell), repr(cell)
+
+
+def test_is_drifted_has_exactly_ONE_home():
+    """The F5 predicate-copy sanction does NOT extend to `is_drifted`, and the
+    distinction is worth pinning rather than remembering.
+
+    `is_draft`/`is_planned`/`is_modified`/`is_verified` are duplicated between
+    `trace.py` and `derive_gate.py` on purpose: each reads ONE cell, each script
+    stays independently copyable, and the tests above pin the copies equal by
+    value. `is_drifted` is a different animal — it joins a live registry against
+    a snapshot tree through the carrier resolver and the §A5.1 cell split, so a
+    second copy would not be a five-line duplicate, it would be a second opinion
+    about what "the approved text" is. Two answers to that question is the
+    failure the whole `last_approved` mechanism exists to prevent.
+
+    So: exactly one definition, in `baseline_snapshot.py`, and every consumer
+    imports it."""
+    import ast
+
+    homes = []
+    for path in sorted((KIT / "scripts").glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == "is_drifted":
+                homes.append(path.name)
+    assert homes == ["baseline_snapshot.py"], homes

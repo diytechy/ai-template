@@ -255,7 +255,13 @@ BASELINE = {
     # entirely (`_full_row_bullets` absorbed the two whole-row render arms), so
     # its entry is DELETED rather than re-stamped, which is what this ratchet
     # asks for once a function drops below THRESHOLD.
-    ("trace.py", "reattest_model"): 21,
+    # RE-STAMPED DOWN 21 -> 18, D-9 step 4 (log 2026-08-15g): the git-derived
+    # baseline went with `_attested_baseline`, and with it the `--since`
+    # resolution arm, the `git_ok` off-git arm, the per-revision row cache and
+    # the three-way no-baseline-reason ternary. What remains is one dict lookup
+    # against the snapshot. Recorded DOWN rather than left as headroom for the
+    # next regression to hide in.
+    ("trace.py", "reattest_model"): 18,
     ("trace.py", "render_report"): 17,
     # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The

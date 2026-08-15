@@ -8,9 +8,15 @@
 
      Slots (single-brace, strict fill — a missing one refuses):
        {rows}      the per-cell before/after listing, rendered from
-                   trace.reattest_model. Registry-derived ONLY.
-       {baseline}  the accepted anchor this diff is measured against: an
-                   attestation-ledger row id plus its commit.
+                   trace.reattest_model — RATIFIED cells only, since a traced
+                   cell is ruled non-attesting (section A5.1). Registry-derived ONLY.
+       {baseline}  the accepted anchor this diff is measured against: the
+                   docs/archive/last_approved/ snapshot and the reviewed commit
+                   that copied it. That directory can only have been written by
+                   copying a live registry in an approval commit (the mirror
+                   invariant), which is what makes it an anchor that is provably
+                   NOT the text under judgement. When no snapshot exists yet the
+                   slot says so and the session is a FIRST-APPROVAL adjudication.
        {verdict}   the repo path this session writes its verdict to.
        {wi}        this adjudication row's own id, for the result trailer.
 

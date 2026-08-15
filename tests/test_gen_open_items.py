@@ -83,10 +83,18 @@ def write_view(root, text):
 
 
 def _git_init(root):
-    """A committed git repo — the attestation baseline is git-derived, so the
-    baseline paths need real history to walk."""
+    """A committed git repo. History no longer supplies the baseline (D-9 step
+    4) but the snapshot's stamp reads git, so the paths still want a checkout."""
     subprocess.run(["git", "init", "-q", str(root)], check=True)
     _git_commit(root, "seed")
+
+
+def _approve(root):
+    """The approval act, in a fixture: copy the spine into
+    `docs/archive/last_approved/`. Everything the diff renders is measured
+    against what this call captured, so a fixture that amends WITHOUT calling it
+    first has no baseline and renders current state — which is a different test."""
+    load_script("baseline_snapshot").copy_live(root, seed=True)
 
 
 def _git_commit(root, message):
@@ -149,9 +157,9 @@ def test_draft_and_modified_rows_both_surface(tmp_path):
     page = html_of(tmp_path)
     assert 'id="SR-001-attest"' in page and "ratification owed" in page
     assert 'id="SR-002-attest"' in page and "re-attest owed" in page
-    # A Draft row has no attested baseline BY DEFINITION — say so, don't imply a
-    # missing git history.
-    assert "awaiting its FIRST ratification" in page
+    # With no snapshot at all there is no baseline for ANY row — say so plainly
+    # rather than implying a missing git history (which is no longer read).
+    assert "no docs/archive/last_approved snapshot exists yet" in page
 
 
 def test_verified_rows_are_not_in_the_queue(tmp_path):
@@ -167,43 +175,31 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     assert "nothing owes a ratification, evidence or a re-attest" in page
 
 
-def test_empty_diff_section_says_check_the_baseline(tmp_path):
-    """The lesson from the stale-brief defect: an auto-derived baseline that
-    sits AFTER the amendment renders a section with no cells. That must read as
-    'check the baseline', never as 'nothing changed' — a confident blank in
-    front of a human about to attest is how two of six rows got blessed unseen."""
+def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_path):
+    """THE SUCCESSOR to `test_empty_diff_section_says_check_the_baseline`
+    (D-9 step 4). That test guarded a real hazard: an auto-derived baseline could
+    sit AFTER the amendment, so an empty section meant "the baseline is wrong",
+    and reading it as "nothing changed" is how two of six rows got blessed
+    unseen. A snapshot cannot sit after the amendment it precedes, so the hazard
+    is structurally gone and the advice would now be false. The section says
+    what is actually true instead."""
     verified = (
         "SR-004,No visible delta,SN-001,shall,because,criteria,,C,Test,Verified,1,W\n"
     )
     root = repo(tmp_path, sr_rows=verified)
-    subprocess.run(["git", "init", "-q", str(root)], check=True)
-    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True)
-    subprocess.run(
-        [
-            "git",
-            "-C",
-            str(root),
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "-qm",
-            "seed",
-        ],
-        check=True,
-    )
-    # Flip to Modified WITHOUT amending anything else — the pre-regime streak's
-    # shape: the real amendment (if any) landed before the newest still-Verified
-    # revision, so the auto-baseline finds no delta.
+    _git_init(root)
+    _approve(root)
+    # Flip to Modified WITHOUT amending anything else: the row asks for a human
+    # by its own Status, and no cell has moved away from the approved text.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + verified.replace(",Verified,", ",Modified,"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert "check the baseline" in page.lower()
-    assert "Re-run with" in page
-    # The negative half: it must NOT read as a settled, blessable row.
+    assert "No cell differs from the approved snapshot" in page
+    assert "its own <code>Status</code> asks for a human" in page
+    # The negative halves: neither the retired advice nor a settled reading.
+    assert "check the baseline" not in page.lower()
     assert "nothing changed" not in page.lower()
 
 
@@ -214,12 +210,13 @@ def test_check_bites_on_drift_and_reproduces_the_stamped_baseline(tmp_path):
     write_view(root, html_of(root).replace("Pick a licence", "Pick a LICENCE"))
     stale = gen(root, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stdout
-    # The file DECLARES the baseline it was rendered against, so --check
-    # re-renders with the same one instead of comparing against a different
-    # history — without it, --since would be a flag whose output no gate could
-    # ever reproduce.
+    # The baseline STAMP retired with `--since` (D-9 step 4): the view no longer
+    # records the revision it was rendered against, because the baseline is a
+    # directory that is identical on every machine and in CI. `--check` is a
+    # plain regenerate-and-compare, and the assertion is that it stays one.
     gi = load_script("gen_open_items")
-    assert gi.BASELINE_RE.search(html_of(root)) is not None
+    assert not hasattr(gi, "BASELINE_RE")
+    assert "attestation-baseline" not in html_of(root)
 
 
 # (test_check_masks_the_machine_local_region retired at concurrency-restructure
@@ -328,54 +325,12 @@ def test_the_view_names_its_authority(tmp_path):
 # --- 122-REVIEW-A regressions: one per finding, each proven against the defect --
 
 
-def test_baseline_is_reused_when_no_since_is_passed(tmp_path):
-    """122-REVIEW-A's BLOCKER, as a regression. The unattended loop regenerates
-    this file with no `--since`; if that meant "fall back to the auto baseline",
-    every regeneration would silently DESTROY the depth an owner is about to
-    attest from — driven, it collapsed 43 chain-row diffs to 18 and emptied two
-    sections, and `--check` then certified the loss. An existing view's stamp is
-    authoritative unless a run overrides it."""
-    verified = (
-        "SR-005,Reused baseline,SN-001,shall do the original thing,because,"
-        "criteria,,C,Test,Verified,1,W\n"
-    )
-    root = repo(tmp_path, sr_rows=verified)
-    _git_init(root)
-    base = subprocess.run(
-        ["git", "-C", str(root), "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stdout.strip()
-    # The amendment lands while the row still reads Verified (the pre-regime
-    # streak), then the flip — so the AUTO baseline sees no delta and only the
-    # pinned one does.
-    amended = verified.replace("the original thing", "the AMENDED thing")
-    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + amended, encoding="utf-8"
-    )
-    _git_commit(root, "amend while Verified")
-    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + amended.replace(",Verified,", ",Modified,"), encoding="utf-8"
-    )
-
-    assert gen(root, "--since", base).returncode == 0
-    assert "AMENDED" in html_of(root), "the pinned baseline must show the amendment"
-
-    # The loop's exact invocation: no --since, no flags.
-    assert gen(root).returncode == 0
-    after = html_of(root)
-    assert "AMENDED" in after, (
-        "regenerating with no --since destroyed the attestation depth the file "
-        "itself declared a baseline for"
-    )
-    assert base[:9] in after
-    assert gen(root, "--check").returncode == 0
-
-    # The negative half: `--since ""` is the explicit opt-back-to-auto, so the
-    # reuse is a default, not a trap you cannot escape.
-    assert gen(root, "--since", "").returncode == 0
-    assert "check the baseline" in html_of(root).lower()
+# (`test_baseline_is_reused_when_no_since_is_passed` retired at D-9 step 4. It
+# was 122-REVIEW-A's BLOCKER as a regression: regenerating with no `--since`
+# used to fall back to a re-derived baseline and DESTROY the attestation depth
+# an owner was about to read — driven, it collapsed 43 chain-row diffs to 18.
+# The stamp-and-reuse rule it pinned has no subject any more: there is one
+# baseline, it is a directory, and no run can pick a different one.)
 
 
 def test_crlf_cell_is_stripped_at_the_source(tmp_path):
@@ -543,6 +498,7 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
+    _approve(root)
     # A real amendment, so a real diff renders: the `.eq` runs only exist where
     # unchanged text sits BESIDE a change, which is exactly what the toggle
     # collapses.
@@ -596,6 +552,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     )
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
+    _approve(root)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER
         + verified.replace(
@@ -640,6 +597,7 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
         tmp_path, sr_rows=sr.format("Verified"), llr_rows=llr.format("old detail")
     )
     _git_init(root)
+    _approve(root)
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER + sr.format("Modified"), encoding="utf-8"
     )

@@ -36,6 +36,101 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15g — the D-9 migration's mechanical prefix LANDED: the Status
+  vocabulary closes, `Planned` stops reading as `Bananas`, and the attestation
+  baseline moves out of git history and onto disk.** *Executed provisionally
+  under the owner's 2026-08-15 charge-through and overturnable at the review
+  sitting.* Steps 1, 2, 3, 4 and 4b of
+  [plans/2026-08-15-d9-migration-plan.md](plans/2026-08-15-d9-migration-plan.md),
+  against [plans/2026-08-15-baseline-snapshot-design.md](plans/2026-08-15-baseline-snapshot-design.md).
+  **No registry cell moved in any direction, and no status VALUE was renamed.**
+  - **Step 1 — `Status` is a closed vocabulary and it rides the floor that
+    actually runs.** `{Draft, Planned, Modified, Verified}` for SR, TC and — for
+    the first time, the tier had no `ENUM_FIELDS` entry of any kind — LLR. The
+    findings are **integrity**-class, not schema-class: `--strict-schema` runs
+    only at DevBar-Release, so a closure routed there would never execute in any
+    repo below the top bar, which is every repo this exists for (plan correction
+    C1). The vocabulary keeps ONE home; `INTEGRITY_ENUM_COLS` names only the
+    pipe.
+  - **Step 2 — `is_planned`, and it is a repair rather than a feature.**
+    `Planned` was live on 14 spine rows while NO predicate in the kit recognized
+    it: absent from the re-attest brief, from the pending-owner-actions
+    projection, from the basis counters, and never scanned by the
+    amend-without-flip guard. It now surfaces on all four (10 SRs that projected
+    nothing now do; open-items went 37 → 47 rows owing a human), and the guard —
+    which compared `verified→verified` — now covers `planned→planned`, closing a
+    hole where attested PROSE could be rewritten under a `Planned` row with no
+    surface saying so.
+  - **Steps 3/4/4b — the baseline is a directory, not a git derivation.** An
+    approval records what it blessed by COPYING the registries to
+    `docs/archive/last_approved/`. This supersedes **D-1's anchor half** whole
+    (no `TextHash`/`HashedOn`, no co-mutation guard, no third cell class, and
+    Q3 answered structurally: exactly one generation), and **D-2's owed half**
+    with it. `check_trajectory`'s SN-029 digest engine — `normative_text`,
+    `sn_normative_text`, `digest`, `current_digests` and their exclusion sets —
+    is DELETED, together with `trace._attested_baseline`, `_changed_cells`,
+    `declared_since` and the entire `--since` CLI surface.
+  - **The capability unlock, and it was a live hold.** The `amendment`
+    adjudicator is ROUTED. Two things blocked it and the snapshot answers both:
+    its `{rows}` producer selected a status literal that the minting condition
+    excluded *by construction*, and `{baseline}` resolved — for a row that never
+    flipped — to the amendment commit ITSELF, presenting the text under
+    judgement as its own accepted anchor. Every amendment row paged a human
+    until now.
+  - **DELIBERATELY NOT LANDED, each waiting on a named ruling:** step 5/5b (the
+    rename) awaits **OI-30 D1** — `Draft`/`Planned`/`Modified`/`Verified` remain
+    the live vocabulary and `Drafted`/`Approved`/`Founded` remain
+    `derive_gate`-internal; the **first snapshot** awaits the owner's signing act
+    (`docs/archive/last_approved/` does not exist, `copy_live` REFUSES to create
+    it, and `--seed` is pinned unreachable from every loop module, hook and
+    `check.py`); the **UNANCHORED rule** is implemented and advisory, armed as an
+    ERROR only at step 7; the **`sr_bar` ceiling** awaits **OI-30 D2**; the
+    **`human_approval_registries` authority list** awaits **OI-30 D3**.
+  - **JUDGEMENT CALL — `dispatch._TC_NOT_RED` did NOT gain `planned`, against
+    the step-2 worklist, on measurement.** With the enum closed and `Status` a
+    REQUIRED TC field, adding it would make the exempt set the WHOLE vocabulary:
+    LLR-159's rung could then fire only on a row with no `Status` at all, a
+    state the schema tier already refuses — and such a row cannot reach a judge
+    anyway, because `adjudicate_brief.TC_CELLS` requires a non-empty `Status`.
+    Census → mint → brief would be unreachable end to end, which is a DELETED
+    feature rather than a narrowed rung (§F4's failure, one tier down). Measured:
+    the census is empty either way on this tree, so the change buys nothing
+    today. Re-decide at step 5, when `Planned`'s fate is ruled — if it folds into
+    `Approved`, the set needs no change at all. The sibling call went the other
+    way for the same reason: `check_trajectory._flagged_sr` did NOT gain it,
+    because that set is an EXEMPTION and adding it would quiet the guard on the
+    very rows step 2 exists to surface.
+  - **JUDGEMENT CALL — the drift gate reads `Verified` OR `Planned`, and the
+    mapping is PROVISIONAL.** The design is written against D-9's `Approved`,
+    which does not exist yet. In today's vocabulary the approval-or-above claim
+    is carried by two values: `Verified` (text blessed, evidence established) and
+    `Planned` (text blessed, evidence pending). Both are ratified TEXT and this
+    predicate is asked about text, so `baseline_snapshot._claims_approval` reads
+    both. It is deleted, not re-keyed, when step 5 renames the values.
+  - **JUDGEMENT CALL — the closure retires the kit's "Status is an open
+    vocabulary" promise for the three spine tiers, and three shipped documents
+    now state something false.** `PROCESS.md` §4 ("open-vocabulary with three
+    recognized values"), `PROCESS_OPTIONS.md` (~L176, "a repo whose LLRs read
+    `Implemented` still reaches DevBar-Release") and
+    `docs/registry-machinery-reference.md` (~L53, "`Planned`, `Implemented`,
+    `In-Review`, … is legal, unvalidated"). Not edited here: the migration plan
+    puts prose in step 5's commit, and this session's doc scope was three named
+    files. **Owed at the sitting.** Adopters carrying wider LLR/TC vocabularies
+    are broken by the closure — covered by the RESYNC entry, and the honest
+    reading is that this is a decision the sitting should confirm rather than a
+    mechanical consequence.
+  - **OWED AT THE SITTING, carried forward:** (a) **LLR-158 and TC-153 name the
+    deleted digest machinery** and must be re-pointed at the snapshot mechanism
+    — registry cells were off limits this session, so they still describe an
+    engine that no longer exists; (b) the new module's **SR/LLR/TC rows and its
+    `IF-###` seam** are unwritten, which is why `scripts/baseline_snapshot` reads
+    as an uncontained module in the component top view (named in the test, not
+    suppressed); (c) `trace._rows_at` and `_toml_rows_text` are now **DEAD** —
+    no path in the module calls them — and are named as such in a comment rather
+    than described as reserved, which is precisely the mistake the deleted
+    `current_digests` docstring made; their removal is outside this session's
+    ruled scope.
+
 - **2026-08-15f — the three adjudication rows CLOSED: crossing ownership
   answered, 16 amended SR cells judged, the WI-451 close confirmed.**
   *Executed provisionally under the owner's 2026-08-15 charge-through and

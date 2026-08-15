@@ -269,34 +269,57 @@ anchor, `TextHash` the **git-independent tripwire** that survives squash,
 rebase and shallow clone. Replacement guard is **co-mutation**, not
 equivalence — weaker than append-only and must be described that way.
 
-**Removal half: DONE.** Warning for a dead-symbol sweep: `normative_text`,
-`sn_normative_text`, `digest`, `current_digests`, `_DIGEST_SEP` and
-`_DIGEST_EXCLUDED` survive as the anchor's engine **with no writer yet** — they
-are not unused. (WI-429's sweep already honoured this.)
+**Removal half: DONE.**
 
-**ANCHOR HALF — STILL OWED, and it is §5 step 7's core:**
-
-1. the two cells on the spine rows, and on SNs (D-2);
-2. both cells into **`_DIGEST_EXCLUDED`** — otherwise the digest is
-   **self-referential** and every stamped row reads as drifted, permanently,
-   from the first stamp;
-3. a **third cell class** — an anchor cell is neither `ratified` prose nor a
-   `traced` pointer, and `spine_cell_class`'s residual fails safe by reading an
-   unclassified column as *ratified*, which would arm hazard 2;
-4. the **co-mutation guard** (a commit writing `TextHash` writes the digest of
-   that row's text as it stands in that same commit, and sets `HashedOn` to
-   itself);
-5. the template columns — a fresh scaffold without them has a **vacuous
-   check**, the exact "green hides a skipped check" SN-008 forbids;
-6. **Q3, still open and build-time:** how far back the co-mutation guard
-   compares. Until decided, its docstring must say it is partial.
+> ### ~~ANCHOR HALF — STILL OWED~~ **SUPERSEDED, owner directive 2026-08-15.**
+>
+> **The anchor half is ruled UNNECESSARY COMPLEXITY and is not built.** An
+> approval records what it blessed by **copying its documents** to
+> `docs/archive/last_approved/`; every comparison — the adjudicator, the human
+> re-attest read, the HTML generators — diffs the live registries against that
+> copy. Design: [plans/2026-08-15-baseline-snapshot-design.md](plans/2026-08-15-baseline-snapshot-design.md);
+> executed at migration steps 3–4b, log **2026-08-15g**.
+>
+> **All six owed items die, and each dies for a stated reason** — the list is
+> kept because it is the record of what a copy makes unnecessary:
+>
+> 1. ~~the two cells (`TextHash`/`HashedOn`) on the spine rows and on SNs~~ — a
+>    copy needs no hash, and the copy carries every cell including `Status`,
+>    which is what makes the unanchored rule decidable at all;
+> 2. ~~both cells into `_DIGEST_EXCLUDED`~~ — there is no digest, and
+>    `_DIGEST_EXCLUDED` itself is deleted;
+> 3. ~~a third cell class~~ — nothing is written to the row, so
+>    `spine_cell_class`'s two halves still partition every column;
+> 4. ~~the co-mutation guard~~ — replaced by the **mirror invariant**, which is
+>    strictly stronger: in any commit touching a snapshot file, that file must
+>    be byte-identical to its live counterpart
+>    (`check_trajectory.staged_snapshot_findings`). A hand edit, a partial copy
+>    and a copy-then-amend-live all fail one comparison;
+> 5. ~~the template columns~~ — `bootstrap.MAPPING` ships the snapshot README
+>    instead, and an empty snapshot is the HONEST state for a repo that has
+>    approved nothing (a vacuous *check* was the hazard; a vacuous *record* that
+>    says so is not);
+> 6. ~~**Q3** — how far back the co-mutation guard compares~~ — **answered
+>    structurally: exactly one generation.** The snapshot is replaced wholesale
+>    at each approval and never migrated in place; git holds the history.
+>
+> The engine those items needed — `normative_text`, `sn_normative_text`,
+> `digest`, `current_digests`, `_DIGEST_SEP`, `_DIGEST_EXCLUDED`, `_SN_ROW_RE`
+> — is **DELETED** (2026-08-15). The dead-symbol warning above is rescinded with
+> it: they were reserved for a writer that is now ruled never to be built.
 
 ### D-2 — stakeholder needs gain FIELDS rather than a new carrier
 
 **Ruled 2026-08-09**, and **largely dissolved by D-5**: under TOML an SN is an
-element with keys, so "where do the fields go" has no referent. **Owed with the
-anchor half:** the SN anchor fields, and the column-count truncation in
-`sn_normative_text` so the anchor is not hashed into its own digest.
+element with keys, so "where do the fields go" has no referent.
+
+~~**Owed with the anchor half:** the SN anchor fields, and the column-count
+truncation in `sn_normative_text`.~~ **SUPERSEDED with D-1's anchor half**
+(owner directive 2026-08-15; log 2026-08-15g). There are no anchor fields to
+add, and `sn_normative_text` is deleted. The SN tier is snapshotted like every
+other registry — `stakeholder-needs.toml` is copied whole, so the tier that
+structurally lacked a `Status` cell gains a baseline anyway. **D-2 is now
+fully dissolved.**
 
 ### D-3 — a column name means ONE thing repo-wide
 
@@ -443,9 +466,28 @@ spends the word six times meaning compress-to-essence) · `Grounded`
 
 1. **`Draft`, `Verified` and `Modified` all leave the vocabulary.** Drift
    becomes a **derived overlay**, not a value — `Approved (drifted)` preserves
-   which rung a row fell from. Therefore **a row at `Approved` or above
-   carrying no hash is an ERROR**, or drift detection is vacuous exactly where
-   it matters.
+   which rung a row fell from.
+
+   > **RESTATED, owner directive 2026-08-15** (log 2026-08-15g; design:
+   > [plans/2026-08-15-baseline-snapshot-design.md](plans/2026-08-15-baseline-snapshot-design.md) §B4).
+   > The original clause read *"a row at `Approved` or above carrying no hash
+   > is an ERROR"*. There are no hashes. Its successor keys off the snapshot
+   > and is strictly more informative, because a copy carries the row's own
+   > `Status` where a hash carried nothing:
+   >
+   > **A row whose live `Status` is `Approved` or above is UNANCHORED — an
+   > ERROR — when the `docs/archive/last_approved/` snapshot does not contain
+   > that id, or contains it at a status below `Approved`.** Vacuous only while
+   > the snapshot directory does not exist at all; once it exists, a missing
+   > registry file inside it is itself the error.
+   >
+   > The second arm is the one a hash could never have: a live row reading
+   > `Approved` whose snapshot copy reads `Drafted` is an approval that never
+   > rode a copy. Finding class **integrity** (the always-on floor plus the
+   > pre-commit hook), never schema — `--strict-schema` runs at DevBar-Release
+   > only. **Implemented advisory at step 4; ARMED as an ERROR at step 7**, and
+   > not before: against a pre-seed or pre-rename snapshot it would red every
+   > row in the repo.
 2. **`Founded` is computed and must never be hand-authored.** Open: does a tool
    **write** it into the cell (anchor-cell precedent) or is it layered at read
    time? That decides what a human sees in the file — and whether an *authored*
@@ -551,12 +593,16 @@ the gap that nothing durably records who certified what — the Sittings
 table being its gate-granularity twin, hand-maintained and last filled
 2026-07-07.
 
-**SEQUENCING — Q11 binds.** Fixing the vocabulary is safe; **migrating is
-not.** The 38 `Modified` rows must be resolved at the sitting first, or
-stamping hashes over their current text launders the re-blessing they owe — and
-`Modified`-as-derived needs `TextHash`/`HashedOn` to exist at all (D-1's anchor
-half). The ladder migration runs after the sitting, in one atomic act with the
-predicates and the pin.
+**SEQUENCING — Q11 binds, and the ordering argument survives the mechanism
+change verbatim.** Fixing the vocabulary is safe; **migrating is not.** The
+`Modified` rows must be resolved at the sitting first, or **copying files** over
+their current text launders the re-blessing they owe. (The clause read
+"stamping hashes" until 2026-08-15; the anchor half is superseded by the
+`last_approved` snapshot — D-1, log 2026-08-15g — and swapping the two words is
+the whole edit, which is itself evidence the argument was about ORDER rather
+than about hashing.) The ladder migration runs after the sitting, in one atomic
+act with the predicates and the pin; the first snapshot is seeded in that same
+act and nowhere else.
 
 ---
 

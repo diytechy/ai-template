@@ -83,6 +83,7 @@ which is the correct loud state for a module whose seam is not yet declared.
 from __future__ import annotations
 
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -167,6 +168,43 @@ def exists(root):
     fresh adopter's. `copy_live`'s refusal is for the HUMAN path, where "you
     meant `--seed`" is the useful answer."""
     return snapshot_root(root).is_dir()
+
+
+def stamp(root):
+    """`(short rev, date)` of the commit that last wrote the snapshot, or
+    `("", "")` when there is none, git cannot answer, or this is not a checkout.
+
+    ADVISORY, AND FROM GIT RATHER THAN FROM A FILE — deliberately. The stamp is
+    a courtesy for a human reading a brief ("the baseline you are diffing
+    against is from this date"), and it is derived, so it can never be the
+    ledger the README's first line promises it is not. Every arm degrades to
+    `("", "")` rather than raising: a missing stamp costs a reader one line of
+    context, and nothing computes anything from it."""
+    if not exists(root):
+        return "", ""
+    try:
+        proc = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "log",
+                "-1",
+                "--format=%h %cs",
+                "--",
+                SNAPSHOT_DIR,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, ValueError):
+        return "", ""
+    if proc.returncode != 0:
+        return "", ""
+    parts = proc.stdout.strip().split()
+    return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 
 def _claims_approval(row):
