@@ -181,22 +181,40 @@ Nothing below deletes a column, so nothing below can break B1–B4.
 | 2 | **Validate endpoints against the tree**, warn-first: an unresolvable `counterpart` or `this_project` that carries no `external` marker is a finding. | ~20 lines; +1 TC | none — new warn-first check |
 | 3 | **Fix what step 2 finds** — 10 rotted paths, 14 external endpoints marked, `IF-097` split or its field made a list (D3), `IF-080` corrected (D4). | 25 cells, 1 possible row split | none — cell corrections |
 | 4 | **Rename `IF.sr_refs`** to something that does not collide with the design tier's meaning (D6). | 115 cells, mechanical; template + PROCESS §8 + EXAMPLE.md in lockstep | **RULING** (a shipped column name) |
-| 5 | **Make the provider readable in one place** (D5). Two candidates, and this is the real design question: **(a)** a derived `provider` view — no new authored cell, computed from `direction`+`this_project`, surfaced in `plan_briefs` and the dashboard; **(b)** an authored `owner` cell, with `direction` retained. **(a) is recommended** — it fixes legibility with zero new authored state and zero migration. | (a): ~15 lines + the brief surface | **RULING** |
-| 6 | **Re-base the `interfaces.toml` header off dead SR-091** — it holds `direction`/`counterpart` on the grounds that deleting them would remove *"a ratified requirement's only input"*, naming SR-091. **SR-091 does not exist on the lane**; the census demoted it and its obligation is now the design row *"Hierarchy seam ports."* The constraint holds; the citation is dead. | 1 header block | none — prose |
+| 5 | **Author the owner cell** (D5) — `owner`, id-typed, holding an `SR-###` **or** a design-tier id (Q1), resolved against either registry, invariant "exactly one owner per interface". Replaces the three-cell read (`direction`+`this_project`+`counterpart`) that is the owner's original complaint. **Revised from "derive it" by Q1** — see §6. | 115 cells to populate (mechanically seeded from `this_project`, then 115 judgement reads); +1 resolver, +2 TC | **RULING** |
+| 6 | **Split flow out of `direction`** (Q2) — ownership orientation moves to step 5's cell; what remains is a **flow** property that is genuinely often absent. `traj_views` is its live consumer and keeps reading it. Restate the 74 `Consumes` rows as **coverage declarations**, which is what §2 B1 shows they already are. | 1 column renamed/re-scoped; `traj_views` + its TCs; the 74 rows' meaning stated, cells unchanged | **RULING** |
+| 7 | **Interface composition** (Q3) — an IF may name another IF as its destination; add the carriage field, an **acyclicity check** and a depth bound. Prove it on `IF-102` (`spine_carrier`, 14 constituents, the highest-concentration seam in the audit) before generalising. | 1 field + 1 check + 1 TC; 1 worked bundle (15 rows touched) | **RULING** |
+| 8 | **Re-base the `interfaces.toml` header off dead SR-091** — it holds `direction`/`counterpart` on the grounds that deleting them would remove *"a ratified requirement's only input"*, naming SR-091. **SR-091 does not exist on the lane**; the census demoted it and its obligation is now the design row *"Hierarchy seam ports."* The constraint holds; the citation is dead. | 1 header block | none — prose |
 
 **Deferred, explicitly:** `SR.provides` / `IF.serves`, dropping the endpoint
 fields, and minting provider rows. B1–B4 are the reasons. If the inversion is
 revived it must first answer B1 (what covers the 32 cross-component edges) and
 B2 (where the 35 non-module facts go).
 
-### The `Aspect`-style question step 5 does not answer
+**Note what the rulings did to the inversion's case.** Q1 and Q2 give the owner
+his original complaint's answer — one id-typed cell says who owns it, and
+ownership no longer pretends to be flow — **without deleting a column**. The
+inversion's stated purpose was legibility; steps 5 and 6 deliver that, and
+B1–B4 remain unanswered. The inversion is now not merely blocked but
+unmotivated.
 
-Core's ratified glossary gives an interface **four views** (Mechanical /
-Electrical / Network / Software) — one row, four facets, and a slot is filled
-only if all four are satisfied. If a `views` facet is wanted it is a new column
-and belongs in step 1's schema tier, not bolted on later. **This plan does not
-propose it**, because this repo has no physical seams to populate it and a
-column no row uses is the failure mode the `Area` retirement just corrected.
+### What the rulings did and did not add
+
+Steps 5–7 are new or revised by the 2026-08-15 rulings (§6). Step 5 changed
+direction — from *derive the provider* to *author an owner cell* — because Q1
+makes the owner polymorphic across tiers and today's `this_project` holds a path
+string, not a resolvable id.
+
+**Q4's `views` facet is deliberately NOT a step.** It is ruled for the model;
+this repo is pure software, nothing here would populate the column, and a column
+no row uses is the failure the `Area` retirement just corrected. Whether it
+ships in the **template** ahead of this repo's own registry is a separate call
+and is not taken here.
+
+**Sequencing inside the rulings:** step 6 depends on step 5 (flow can only be
+split out once ownership has somewhere else to live), and step 7 depends on step
+1 (the carriage field needs the schema tier to validate it). Steps 5–7 do not
+depend on each other beyond that.
 
 ---
 
@@ -238,31 +256,130 @@ prevent.
 
 ---
 
-## 6. The four open questions
+## 6. The four open questions — RULED (owner, in session, 2026-08-15)
 
-| # | Question | Answer |
+All four are ruled. The rulings are recorded verbatim, then what each changes.
+
+### Q1 — Owner: a requirement or a module? **BOTH.**
+
+> *"An interface can serve both. Requirements are just decomposition of needs
+> into measurable objectives, and modules are just physical implementations at a
+> lower level that do the same thing. Thus, a requirement and a module can
+> provide/own an interface."*
+
+**What it settles:** the contradiction the review found — this plan answering
+"requirement, because a module is a placement" while handing mutual seams to a
+component — was a false dichotomy. Both tiers are decompositions of the same
+thing at different levels, so both are legitimate owners.
+
+**What it changes:** the ownership pointer is **polymorphic and id-typed** — one
+cell holding an `SR-###` *or* a design-tier id, resolved against either
+registry, under one invariant ("exactly one owner"). It does **not** become two
+authored fields (`SR.provides` + `LLR.provides`); that would double the authored
+surface and re-open which tier signs.
+
+**And it moves this plan's recommendation.** §4 step 5 offered (a) a *derived*
+provider view and (b) an *authored* owner cell, and recommended (a). **(a) is no
+longer sufficient:** a derived view can only surface what is already encoded,
+and `this_project` holds a module **path string**, not a resolvable id — it
+cannot express "SR-012 owns this." **Step 5(b) is now the answer**, and §4 is
+updated below.
+
+### Q2 — Bidirectional seams: **ownership implies orientation; orientation is not flow.**
+
+> *"A 'provide' from one requirement or module implies directionality, but does
+> not mean it is actually directional."*
+
+**This is the ruling with the widest reach, and it dissolves three problems at
+once.** It separates two facts the `direction` column currently fuses:
+
+| | What it is | Where it belongs |
 |---|---|---|
-| 1 | Owner: a **requirement** or a **module**? | **Not answered, and this plan no longer needs to answer it** — step 5(a) derives the provider from the existing fields and authors no ownership claim. It must be answered before any inversion. Note the first version answered "requirement" and then handed mutual seams to a component, which is a module; Core's own answer is an *owner hat* (integration), which is neither. |
-| 2 | **Bidirectional seams** | Two interfaces, one per direction. Zero rows claim bidirectionality today. *Unchanged, low cost either way.* |
-| 3 | **Signal granularity** | One row per contract, not per field. Core's narrow-waist target is ≤6 rows per assembly (mount, power, data). *Medium-high — a ruled method plus a worked adopter, no populated registry.* |
-| 4 | Does physical get its own **kind**? | **No** — Core's ratified vocabulary is one interface with four *views*. But see §4: a `views` column is not proposed here, because nothing in this repo would populate it. |
+| **Ownership orientation** | who is answerable for the interface — bookkeeping | implied by the owner cell; never authored twice |
+| **Flow directionality** | whether anything actually travels one way | a **property of the interface**, and often absent |
+
+Consequences:
+
+1. **The bidirectional question dissolves.** No "two interfaces, one per
+   direction" rule is needed. One row, one owner; whether it is actually
+   directional is a separate and possibly empty property.
+2. **The physical/mutual case is solved without a special rule** — and better
+   than either prior answer. A bolted joint, a mated connector, a thermal path:
+   *owner* = whoever is answerable, *flow* = none. The proposal's **custodian**
+   and this plan's first version's **reify-as-component** were both workarounds
+   for a conflation that Q2 simply removes. No second rule, no new kind, no
+   promotion of seams to components.
+3. **`direction` is misnamed and mixed-purpose.** `Provides` is doing *ownership*
+   work under a flow-sounding name, and `Consumes` — under Q2 — is not an
+   ownership claim at all. Which reconciles with §2 B1 rather than threatening
+   it: the 74 `Consumes` rows are **coverage declarations** (this cross-component
+   edge is intended, and here is the row that discharges it), not ownership
+   rows. They stay; what they are called and what they claim gets stated.
+
+Flow direction keeps a live consumer — `traj_views` orients the seam graph from
+it — so it is a real field, not a speculative one.
+
+### Q3 — Signal granularity: **one row per contract, AND contracts compose.**
+
+> *"Yes — and I'll note an IF could feasibly have a destination of another IF, so
+> 6 IFs could have a destination of a larger IF to carry them in a single
+> definable signal. They themselves can be decomposed to an extent."*
+
+**This is new structure, not in any prior version of this plan or the proposal:
+an interface may name another interface as its destination.** Six constituent
+IFs ride inside one carrier IF.
+
+**What it settles:** granularity stops being a forced choice. You declare the
+bundle *and* its constituents, related by a carriage link, and decompose only as
+far as is useful.
+
+**It answers HARNESS directly** — Core's loom, *"pure interface: its IF rows are
+its existence"*, is one carrier IF; the joint bus, power rails and e-stop loop
+it carries are IFs whose destination is that carrier. Core needed no such
+concept only because it has written zero physical rows.
+
+**It has an immediate, testable application in this repo.** `IF-102` —
+`spine_carrier`, literally named a carrier and consumed by 14 modules, the
+highest-concentration seam in the audit — is the natural first bundle, with the
+14 consumption seams as constituents. That is the cheapest available test of
+whether the concept earns its column.
+
+**It also may bear on §2 B1** — if a carrier row can cover the edges its
+constituents cover, one bundle could discharge many cross-component import
+edges. *Flagged as worth testing, not claimed.*
+
+**New obligation it creates:** the carriage graph must be **acyclic** and its
+depth bounded, or `IF-A carried by IF-B carried by IF-A` is representable. That
+is a check, and it belongs in step 1's schema tier.
+
+### Q4 — Does physical get its own kind? **No — a `views` facet.** *(Agreed.)*
+
+Core's ratified vocabulary: one Interface, four views (Mechanical / Electrical /
+Network / Software); a slot is filled iff all four are satisfied. Ruled for the
+**model**. The **column stays out of this repo's schema for now**, stated
+explicitly rather than silently: this repo is pure software, nothing here would
+populate it, and a column no row uses is the exact failure the `Area` retirement
+just corrected. It lands when a physical adopter needs it — or in the shipped
+template ahead of this repo, which is a separate call.
 
 ---
 
 ## 7. Sequencing
 
-1. **Steps 2, 3 and 6 now** — a warn-first check, 25 cell corrections, one dead
+1. **Steps 2, 3 and 8 now** — a warn-first check, 25 cell corrections, one dead
    citation. No column changes, no ruling needed beyond noting them.
 2. **Rule the five re-tier findings** (brief §4: H1, H4, H5, M1, M3) and the two
    flagged crossing attributions.
-3. **Merge the lane, hold the ratification wave** — brief §4 option (c). Still
-   the recommendation, and now *cheaper*: with the inversion deferred, no SR row
-   gains a field, so the double-signing risk that motivated holding is much
-   reduced. **If the owner accepts this plan, option (a) — merge and ratify now
-   — becomes viable again.** That is the single biggest scheduling consequence
-   of this rewrite.
-4. **Rule steps 1, 4 and 5** — the schema tier, the column rename, the derived
-   provider view.
+3. **Merge the lane — and the ratification wave is no longer blocked by this
+   work.** Brief §4 option **(a)** — merge and ratify now — is viable, and the
+   2026-08-15 rulings do **not** re-open it. The reason is specific and worth
+   checking rather than trusting: under Q1 the owner cell lives on the **IF
+   row**, holding an `SR-###` or a design id. **No SR row gains a field**, so
+   nothing in steps 1–8 gives cause to sign the same requirement twice. That was
+   the entire argument for holding, and it is gone.
+4. **Rule steps 1 and 4–7** — the schema tier, the `sr_refs` rename, the owner
+   cell, the flow split, and interface composition. Steps 5–7 are the rulings of
+   §6 being executed; step 1 is their precondition.
 5. **D-3 stays scoped as it is** (shedding `direction`/`counterpart`) and stays
    **blocked** — B1 and B2 are the blockers, and they are new information for
    it.

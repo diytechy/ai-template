@@ -74,17 +74,20 @@ narrated is in those homes.
   above describes TRUNK**, which the lane has not yet reached. The interface
   question is now carried by
   [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
-  — reviewed adversarially, rewritten, and awaiting a ruling. It **supersedes**
+  — reviewed adversarially, rewritten, and its **four open questions RULED**
+  (log `2026-08-15a`; the plan's §6 carries each verbatim). It **supersedes**
   the earlier
   [interface-model-proposal](plans/2026-08-15-interface-model-proposal.md),
   whose headline measurement ("74 of 115 seams consumed with no declared
   provider") does not survive re-derivation: it is the `direction` split
   restated, and the schema inversion it proposed would take
-  `cross_component_findings` from 0 to 32 ERRORs at `--strict`. **The
-  scheduling consequence:** with the inversion deferred, no SR row gains a
-  field, so the double-signing risk that argued for holding the ratification
-  wave is much reduced — the merge/ratify sequencing is open again and needs a
-  ruling.
+  `cross_component_findings` from 0 to 32 ERRORs at `--strict`. **What executes
+  next there:** steps 2/3/8 need no ruling (a warn-first endpoint check, 25
+  rotted/unmarked cells, one dead SR-091 citation in the registry header);
+  steps 1 and 4–7 are the ruled model and need their execution ruled. **The
+  scheduling consequence, and it unblocks the wave:** the owner cell lands on
+  the IF row, so **no SR row gains a field** — merge-and-ratify-now (brief §4
+  option (a)) is viable, and the double-signing argument for holding is gone.
 - **Unfiled follow-ups** (from the archived charge-through handoff; no ids
   yet, so listed as topics): the stage-ladder program's deferred codex review
   round; the SN-036 per-decomposition coverage record (its need is in the

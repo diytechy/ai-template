@@ -36,6 +36,46 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15a — the interface model's four open questions RULED (owner, in
+  session), and the schema inversion is left both blocked and unmotivated.**
+  Ruled against
+  [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
+  §6, which carries each ruling verbatim. **Q1 — a requirement AND a module may
+  own an interface**, on the reasoning that *"requirements are just
+  decomposition of needs into measurable objectives, and modules are just
+  physical implementations at a lower level that do the same thing"*; so the
+  owner cell is polymorphic and id-typed (one `SR-###` or design id, one
+  invariant), not two authored fields, and the plan's earlier "derive the
+  provider" recommendation is overturned — `this_project` holds a path string
+  and cannot express requirement ownership. **Q2 — ownership implies
+  orientation but not flow** (*"a 'provide' … implies directionality, but does
+  not mean it is actually directional"*); this is the ruling with the widest
+  reach: it dissolves the bidirectional-seam question, and it solves the
+  physical/mutual case (bolted joint, mated connector, thermal path) with no
+  special rule at all — retiring BOTH the proposal's `custodian` and this
+  plan's own `reify-as-component`, which were each workarounds for the
+  conflation Q2 removes. It also reconciles with the finding that deleting the
+  74 `Consumes` rows takes `cross_component_findings` 0→32 under `--strict`:
+  those rows are COVERAGE declarations, never ownership claims. **Q3 — one row
+  per contract, AND contracts compose**: an IF may name another IF as its
+  destination, so *"6 IFs could have a destination of a larger IF to carry them
+  in a single definable signal"*. New structure, in neither the proposal nor any
+  prior plan version; it answers Core's HARNESS (*"pure interface: its IF rows
+  are its existence"*) directly, is first testable here on `IF-102`
+  (`spine_carrier`, 14 constituents), and creates one new obligation — the
+  carriage graph must be checked acyclic. **Q4 — no separate physical kind; a
+  `views` facet** (Core's ratified four views), ruled for the MODEL with the
+  column deliberately withheld from this repo's schema while nothing would
+  populate it. **Scheduling consequence, and it is the load-bearing one:** the
+  owner cell lands on the IF row, so **no SR row gains a field** — the
+  double-signing risk that argued for holding the ratification wave is gone and
+  brief §4 option (a), merge-and-ratify-now, is viable. **Passed over:**
+  `SR.provides`/`IF.serves` with the endpoint fields dropped — now not merely
+  blocked (32 cross-component ERRORs at `--strict`; 35 non-module-endpoint rows
+  with nowhere to go; Python-only derivation in a stack-agnostic kit; Core's
+  ratified glossary defining an interface as a contract *between Modules*) but
+  **unmotivated**, since Q1+Q2 deliver the legibility it was for without
+  deleting a column.
 - **2026-08-14g — slice 2's EXECUTION METHOD ruled: layer-by-layer, not
   row-by-row (owner, in session).** The owner proposed working the spine
   *"like a real blank-slate breakdown, but reattaching valid work, and then
