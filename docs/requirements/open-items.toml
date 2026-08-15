@@ -852,3 +852,34 @@ recommendation = """(a) SEED AT THE BOUNDARY, executed with OI-14's rung-1 work 
 - SEED TWO, the templates: one SR declaring the shipped template set a traced product artifact class - each template owned by the requirement whose obligation it scaffolds, with `test_dogfood_sync` as the verification - rather than an LLR per file.
 - The OI-20 guard rides along: rule template paths admissible-or-not in the `CodeSymbol`/`Module` grammar explicitly, so the non-py skip stops being the silent answer.
 - Reject (c) on the owner's own framing: an interface that -lets an agent outside the mechanization modify artifacts- is exactly the kind of fact this system exists to make explicit rather than ambient."""
+
+[open_item.OI-29]
+title = "Does the six-crossing frame partition this repository, or does B-05 need decomposing?"
+status = "pending"
+raised = "2026-08-15"
+wi_refs = ["WI-459"]
+one_line = "B-05 carries 55 of 70 boundary references (79%) while B-06 and B-07 carry one each, and four of six crossings are realized by no interface row - decide whether B-05 is under-decomposed or the imbalance is a true fact about this repo"
+options = """MEASURED ON MERGED TRUNK, 2026-08-15, after the re-tier landed (SN=27 SR=64 LLR=153 TC=148, Boundary-Refs populated on all 64 rows):
+
+| Crossing | SRs referencing it | Interfaces realizing it |
+|---|---|---|
+| B-01 | 5 | 0 |
+| B-02 | 2 | 0 |
+| B-05 | 55 | 7 |
+| B-04 | 6 | 1 |
+| B-06 | 1 | 0 |
+| B-07 | 1 | 0 |
+
+A partition in which one cell holds four fifths of the population is not classifying anything; it is a default with five exceptions. Two readings, and NOTHING IN THE REGISTRY DISTINGUISHES THEM:
+
+- (a) B-05 IS UNDER-DECOMPOSED. Supporting evidence, and it is not weak: B-05 already required a SIXTH bucket - the -package-wide property- class minted at ruling 2026-08-14c - to absorb four rows (SR-031/034/035/114) that fit none of its five. A bucket set that needed widening once under pressure may need it again. Under this reading the re-tier is not finished: the largest crossing has never been decomposed the way the frame decomposed everything else.
+- (b) THE FRAME IS RIGHT AND THE IMBALANCE IS REAL. This repo's product genuinely is ONE PACKAGE crossing ONE boundary (the template, to an adopter); the other five crossings are thin because the repo is thin there. Under this reading, forcing balance would manufacture structure to satisfy a symmetry nobody required, which is the failure the Area retirement just corrected.
+
+THE SECOND HALF, and it is a separate question with the same owner: FOUR OF SIX CROSSINGS (B-01, B-02, B-06, B-07) are realized by NO interface row. That is the unmet second condition on sitting-3 decision 8, whose first condition (Boundary-Refs populated) is now MET. Either those crossings genuinely cross without an interface - which should be stated, not left silent - or the IF tie-back re-key that D-3 owns will supply them, in which case this item waits on that lane rather than on a ruling."""
+recommendation = """RULE (a) OR (b) EXPLICITLY, AND DO NOT LET IT STAND BY OMISSION - that is the whole point of raising it. The re-tier's stated purpose is BOTH the re-tiering AND -to make sure the new constraints properly can express this repository itself (and if not, where the gaps are)- (owner, 2026-08-15). This is the largest measured place where the answer to the second half is unknown, and an unruled 79% concentration reads as a finished partition to every later reader.
+
+The author has NO recommendation between (a) and (b) and says so deliberately rather than manufacturing one: the evidence genuinely cuts both ways, and the tie-breaker is knowledge about the product's intended shape that lives with the owner, not in the registry.
+
+WHAT WOULD SETTLE IT MECHANICALLY, if a ruling is not wanted yet: take the 55 B-05 rows and ask whether they group into stable sub-observables without a bucket having to be invented for the leftovers. If they do, that is (a) with the decomposition already in hand. If the leftovers need a seventh bucket, that is evidence for (b) - a category that keeps needing new cells to hold its exceptions is describing one thing, not five.
+
+SCOPED TO WI-459, which pulls sitting-3 decision 8 forward. That pull-forward REMOVES work from sitting 3 and adds none: nothing here flips a Status, closes an enum, or touches the D-9/D12 ratification wave."""
