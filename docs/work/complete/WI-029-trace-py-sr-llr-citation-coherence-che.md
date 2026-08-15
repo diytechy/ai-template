@@ -2,7 +2,7 @@
 id = "WI-029"
 title = "trace.py - SR/LLR citation-coherence check"
 workstream = "self-adoption"
-sr_refs = ["SR-002"]
+sr_refs = ["SR-157"]
 needs = ["WI-028"]
 order = 28
 +++

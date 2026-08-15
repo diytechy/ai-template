@@ -1648,4 +1648,4 @@ expected = "Satisfies SR-035 AcceptanceCriteria"
 automated = "Yes"
 evidence = "tests/test_bootstrap.py (to be extended at implementation)"
 status = "Draft"
-phase = 5
+phase = 1

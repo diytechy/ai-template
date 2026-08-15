@@ -2,7 +2,7 @@
 id = "WI-232"
 title = "Make needs-re-review actionable: dispatch the focused re-review or page NEEDS-HUMAN with the named conflict (2026-07-18 field finding 3)"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["~WI-231"]
 buildtier = "medium"
 safety_class = "high-risk"

@@ -2,7 +2,7 @@
 id = "WI-269"
 title = "Brace the dual-plan PAGE single-ratify mapping with integration tests (WI-268 / 113-REVIEW-A follow-up)"
 workstream = "unattended"
-sr_refs = ["SR-108"]
+sr_refs = ["SR-155"]
 needs = ["~WI-268"]
 buildtier = "quick"
 safety_class = "ordinary"

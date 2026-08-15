@@ -2,7 +2,7 @@
 id = "WI-141"
 title = "[v3] dev slice: SR-051-rev interface-wired render + descend-a-layer"
 workstream = "dashboard"
-sr_refs = ["SR-051"]
+sr_refs = ["SR-070"]
 needs = ["WI-135", "WI-145"]
 order = 140
 +++

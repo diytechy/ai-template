@@ -2,7 +2,7 @@
 id = "WI-220"
 title = "Dispatcher hardening - diverged-dev NEEDS-HUMAN guard + disposition freshness regen + evidence salvage (gilbert kit bugs 5/6/7)"
 workstream = "unattended"
-sr_refs = ["SR-063", "SR-066"]
+sr_refs = ["SR-156", "SR-155"]
 needs = ["~WI-218"]
 buildtier = "strong"
 safety_class = "high-risk"

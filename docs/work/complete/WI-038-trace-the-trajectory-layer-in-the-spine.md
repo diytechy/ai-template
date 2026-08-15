@@ -2,7 +2,7 @@
 id = "WI-038"
 title = "Trace the trajectory layer in the spine (F1)"
 workstream = "self-adoption"
-sr_refs = ["SR-037", "SR-038"]
+sr_refs = ["SR-157", "SR-070"]
 needs = ["WI-033"]
 order = 37
 +++

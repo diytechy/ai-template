@@ -2,7 +2,7 @@
 id = "WI-044"
 title = "OKF Layer B2 - process docs as concepts"
 workstream = "scripts"
-sr_refs = ["SR-042"]
+sr_refs = ["SR-070"]
 needs = ["WI-034"]
 order = 43
 +++

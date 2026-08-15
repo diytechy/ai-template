@@ -2,7 +2,7 @@
 id = "WI-240"
 title = "Park/quarantine details carry the failing step - shared failure-tail helper replaces the [:200] head truncation (2026-07-19 field finding; third bite)"
 workstream = "unattended"
-sr_refs = ["SR-096"]
+sr_refs = ["SR-156"]
 buildtier = "quick"
 safety_class = "ordinary"
 order = 237

@@ -2,7 +2,7 @@
 id = "WI-013"
 title = "check_docs.py - doc navigability + vision/SN"
 workstream = "scripts"
-sr_refs = ["SR-012"]
+sr_refs = ["SR-158"]
 needs = ["WI-008"]
 order = 12
 +++

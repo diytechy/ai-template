@@ -2,7 +2,7 @@
 id = "WI-169"
 title = "Review 084 remediation - scope the Process-tab loop box/arrow CSS to the wrapper div.loop (kill the nested double racetrack) + de-tautologize the TC-056 degree assertion"
 workstream = "dashboard"
-sr_refs = ["SR-055"]
+sr_refs = ["SR-070"]
 needs = ["WI-165"]
 buildtier = "strong"
 order = 168

@@ -2,7 +2,7 @@
 id = "WI-215"
 title = "Fix two latent routing-ON dual-plan defects found downstream in gilbert"
 workstream = "unattended"
-sr_refs = ["SR-066"]
+sr_refs = ["SR-155"]
 buildtier = "medium"
 order = 212
 +++

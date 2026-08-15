@@ -2,7 +2,7 @@
 id = "WI-223"
 title = "Decide dual-plan regen fail-closed semantics - trajectory-validator strictness can now abort a completed round (WI-220 review finding 2)"
 workstream = "unattended"
-sr_refs = ["SR-066"]
+sr_refs = ["SR-155"]
 needs = ["~WI-220"]
 buildtier = "medium"
 safety_class = "high-risk"

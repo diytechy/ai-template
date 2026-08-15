@@ -2,7 +2,7 @@
 id = "WI-251"
 title = "Spec-lifecycle close side: absorb-verify sweep (archive done-WI specs after confirming a spine/architecture home, clear the 137 stale done-row SpecRefs) + fail-closed R-F in check_trajectory (done WI => empty SpecRef; a live docs/specs file needs an open citing WI; WARN commit bar / ERROR --strict per WI-243) + dogfood the scaffold boilerplate this repo predates (specs+rubrics README/-000 exemplars, .githooks/commit-msg; fix the WI-000 delete-banner template-side first) + test_dogfood_sync walks bootstrap.MAPPING against a declared-omissions list (2026-07-20 owner directive, scope re-affirmed same day)"
 workstream = "quality"
-sr_refs = ["SR-109"]
+sr_refs = ["SR-157"]
 buildtier = "strong"
 safety_class = "high-risk"
 order = 248

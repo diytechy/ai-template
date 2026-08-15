@@ -2,7 +2,7 @@
 id = "WI-268"
 title = "--dual-plan flag path honors autonomous (pause-free STALL, not NEEDS-HUMAN); widen SR-108 to both dual-plan PAGE entries"
 workstream = "unattended"
-sr_refs = ["SR-108"]
+sr_refs = ["SR-155"]
 needs = ["~WI-209"]
 buildtier = "strong"
 safety_class = "ordinary"

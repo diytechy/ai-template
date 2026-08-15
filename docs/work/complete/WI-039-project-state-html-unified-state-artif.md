@@ -2,7 +2,7 @@
 id = "WI-039"
 title = "PROJECT_STATE.html - unified state artifact"
 workstream = "scripts"
-sr_refs = ["SR-038"]
+sr_refs = ["SR-070"]
 needs = ["WI-031", "WI-038"]
 order = 38
 +++

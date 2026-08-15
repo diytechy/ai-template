@@ -2,7 +2,7 @@
 id = "WI-182"
 title = "Slice D - dispatcher + worktree pool + reservations"
 workstream = "unattended"
-sr_refs = ["SR-061"]
+sr_refs = ["SR-156"]
 needs = ["WI-179", "WI-181"]
 buildtier = "strong"
 order = 181

@@ -2,7 +2,7 @@
 id = "WI-143"
 title = "[v3] dev slice: decomposition render polish (columns/arrows/hover)"
 workstream = "dashboard"
-sr_refs = ["SR-056"]
+sr_refs = ["SR-070"]
 needs = ["WI-135", "WI-145"]
 order = 142
 +++

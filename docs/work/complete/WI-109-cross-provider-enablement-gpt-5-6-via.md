@@ -2,7 +2,7 @@
 id = "WI-109"
 title = "Cross-provider enablement - GPT-5.6 via opencode + agent-CLI dev tools + routing failure context"
 workstream = "unattended"
-sr_refs = ["SR-045"]
+sr_refs = ["SR-154", "SR-155"]
 needs = ["WI-107", "WI-059"]
 order = 108
 +++

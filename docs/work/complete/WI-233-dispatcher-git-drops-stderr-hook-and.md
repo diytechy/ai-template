@@ -2,7 +2,7 @@
 id = "WI-233"
 title = "Dispatcher git() drops stderr - hook and porcelain failures park with blank error details (2026-07-18 field finding 4 - downstream gilbert)"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["~WI-232"]
 buildtier = "medium"
 safety_class = "high-risk"

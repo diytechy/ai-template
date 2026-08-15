@@ -2,7 +2,7 @@
 id = "WI-087"
 title = "Hierarchical phase-aware When & How drill-down views"
 workstream = "scripts"
-sr_refs = ["SR-051"]
+sr_refs = ["SR-070"]
 needs = ["WI-073", "WI-074", "WI-117"]
 order = 86
 +++

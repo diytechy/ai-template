@@ -2,7 +2,7 @@
 id = "WI-064"
 title = "AXES residuals: cross-CMP-edge-without-IF check (+ IF tag validation)"
 workstream = "scripts"
-sr_refs = ["SR-044"]
+sr_refs = ["SR-159", "SR-070", "SR-155"]
 buildtier = "strong"
 order = 63
 +++

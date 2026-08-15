@@ -10,7 +10,7 @@ Per-row dispositions, riders and the shed-clause map:
 
 **The finding worth recording as a deliverable (13s): ZERO new LLRs were
 needed.** All 73 obligations fit an existing component-level carrier — 83 LLRs
-re-grounded, 69 taking a `detail` addendum folding the tokens the LLR did not
+re-grounded, 68 taking a `detail` addendum folding the tokens the LLR did not
 already state, and not one row left homeless. That is the census's central
 claim — *these rows were always LLRs wearing SR ids* — confirmed mechanically
 rather than asserted. Had the mis-tiering been about substance rather than
@@ -22,7 +22,7 @@ altitude, the demotions would have had nowhere to land.
   top-down pass closed it; the one orphan act 2 left behind (SR-035's
   Analysis→Test flip) is discharged by minting **LLR-171 + TC-165** (watermark
   TC 164 → 165).
-- **68 TCs re-pointed**, and 32 `expected` cells that read *"Satisfies SR-NNN
+- **78 TCs re-pointed**, and 42 `expected` cells that read *"Satisfies SR-NNN
   AcceptanceCriteria"* rewritten to name the parent plus the LLR that now
   carries the acceptance — a dangling "satisfies" pointer is precisely the
   silent-rot class this campaign exists to remove.
@@ -39,7 +39,7 @@ altitude, the demotions would have had nowhere to land.
   pause window CLOSED); D8 dependencies stated rather than silently retired;
   B03 render rows reframed as REL-002 adopted-toolkit outputs with every
   obligation kept.
-- **Status movement:** 69 addendum-bearing `Verified` LLRs flip `Modified`
+- **Status movement:** 58 re-parented `Verified` LLRs flip `Modified`
   (the sanctioned amend-and-flip; `modified` 65 → 102). Nothing self-ratifies
   — `human_ratification_through = 4`, and the whole layer awaits the owner's
   sitting.

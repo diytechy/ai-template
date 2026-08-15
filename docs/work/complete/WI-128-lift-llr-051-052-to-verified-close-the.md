@@ -2,7 +2,7 @@
 id = "WI-128"
 title = "Lift LLR-051/052 to Verified - close the v2 LLR status inconsistency"
 workstream = "registries"
-sr_refs = ["SR-050", "SR-051"]
+sr_refs = ["SR-070"]
 needs = ["~WI-127"]
 order = 127
 +++

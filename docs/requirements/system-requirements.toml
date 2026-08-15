@@ -685,7 +685,7 @@ acceptance_criteria = """Two resumes over the same tracked state select the same
 priority = "M"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 4
 area = "Parallel dispatch"
 
 [requirement.SR-154]
@@ -698,7 +698,7 @@ acceptance_criteria = """A declared review policy of N schedules N independent r
 priority = "S"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 1
 area = "Unattended loop"
 
 [requirement.SR-155]
@@ -711,7 +711,7 @@ acceptance_criteria = """A row marked for contested planning is refused on the d
 priority = "S"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 4
 area = "Dual-plan decomposition"
 
 [requirement.SR-156]
@@ -724,7 +724,7 @@ acceptance_criteria = """A finished branch reaches the trunk only through the se
 priority = "M"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 4
 area = "Parallel dispatch"
 
 [requirement.SR-157]
@@ -737,7 +737,7 @@ acceptance_criteria = """Each declared registry rule violation is reported with 
 priority = "M"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 1
 area = "Traceability"
 
 [requirement.SR-158]
@@ -750,7 +750,7 @@ acceptance_criteria = """A dead intra-repo link, an absent PROJECT-VISION tag, a
 priority = "S"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 1
 area = "Doc currency"
 
 [requirement.SR-159]
@@ -763,7 +763,7 @@ acceptance_criteria = """Malformed or unresolvable IF rows are findings; undecla
 priority = "S"
 verification = "Test"
 status = "Draft"
-phase = 5
+phase = 1
 area = "Architecture connectivity"
 
 [requirement.SR-160]

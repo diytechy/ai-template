@@ -2,7 +2,7 @@
 id = "WI-053"
 title = "SSOT mechanize - SpecRef column + status coherence rules"
 workstream = "scripts"
-sr_refs = ["SR-037"]
+sr_refs = ["SR-157"]
 needs = ["WI-030"]
 order = 52
 +++

@@ -2,7 +2,7 @@
 id = "WI-116"
 title = "[2]-[g1] Dashboard-views requirement structuring"
 workstream = "self-adoption"
-sr_refs = ["SR-050", "SR-051"]
+sr_refs = ["SR-070"]
 needs = ["WI-096"]
 order = 115
 +++

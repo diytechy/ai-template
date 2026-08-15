@@ -2,7 +2,7 @@
 id = "WI-250"
 title = "Process tab working loops rendered as CSS-grid 'racetracks' with no visible flow direction or clear shared junction - redraw as two intersecting SVG hoops, each a directed closed cycle of arrow-wired stage cards meeting at one shared LLM_Agent hub"
 workstream = "dashboard"
-sr_refs = ["SR-055"]
+sr_refs = ["SR-070"]
 buildtier = "medium"
 safety_class = "ordinary"
 order = 247

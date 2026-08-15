@@ -2,7 +2,7 @@
 id = "WI-058"
 title = "Cross-agent skill sync - checked fan-out from one source"
 workstream = "scripts"
-sr_refs = ["SR-025"]
+sr_refs = ["SR-112"]
 needs = ["WI-010", "WI-019"]
 order = 57
 +++

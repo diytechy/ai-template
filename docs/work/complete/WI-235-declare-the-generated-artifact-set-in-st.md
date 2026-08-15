@@ -2,7 +2,7 @@
 id = "WI-235"
 title = "Declare the generated-artifact set in stack.ini instead of hardcoding GENERATED_ARTIFACTS in the integrator (owner question 2026-07-19)"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["~WI-231"]
 buildtier = "medium"
 safety_class = "high-risk"

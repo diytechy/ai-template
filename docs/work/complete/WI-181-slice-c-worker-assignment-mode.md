@@ -2,7 +2,7 @@
 id = "WI-181"
 title = "Slice C - worker assignment mode"
 workstream = "unattended"
-sr_refs = ["SR-060"]
+sr_refs = ["SR-026"]
 needs = ["WI-179"]
 buildtier = "strong"
 order = 180

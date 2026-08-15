@@ -2,7 +2,7 @@
 id = "WI-221"
 title = "Raise DEFAULT_ROUND_BUDGET 10 -> 14 (field-proven; zero fallback headroom bit gilbert twice)"
 workstream = "unattended"
-sr_refs = ["SR-066"]
+sr_refs = ["SR-155"]
 buildtier = "quick"
 safety_class = "ordinary"
 order = 218

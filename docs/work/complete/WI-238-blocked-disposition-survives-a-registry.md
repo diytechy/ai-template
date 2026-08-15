@@ -2,7 +2,7 @@
 id = "WI-238"
 title = "blocked_disposition survives a registry without a BlockRef column - extend the schema in-transaction or fail loudly (2026-07-19 field finding)"
 workstream = "unattended"
-sr_refs = ["SR-097"]
+sr_refs = ["SR-156"]
 buildtier = "medium"
 safety_class = "high-risk"
 order = 235

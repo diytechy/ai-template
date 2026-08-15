@@ -2,7 +2,7 @@
 id = "WI-222"
 title = "Salvage committed round evidence on post-commit disposition resets (WI-220 review finding 1)"
 workstream = "unattended"
-sr_refs = ["SR-063", "SR-066"]
+sr_refs = ["SR-156", "SR-155"]
 needs = ["~WI-220"]
 buildtier = "medium"
 safety_class = "high-risk"

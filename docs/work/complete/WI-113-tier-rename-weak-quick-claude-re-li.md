@@ -2,7 +2,7 @@
 id = "WI-113"
 title = "Tier rename (weak->quick) + Claude re-lineup (Fable/Opus/Sonnet) + full model re-verification"
 workstream = "unattended"
-sr_refs = ["SR-045"]
+sr_refs = ["SR-154", "SR-155"]
 needs = ["WI-109", "WI-112"]
 order = 112
 +++

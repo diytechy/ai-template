@@ -2,7 +2,7 @@
 id = "WI-183"
 title = "Slice E - change-train continuation + fork/join"
 workstream = "unattended"
-sr_refs = ["SR-062"]
+sr_refs = ["SR-156"]
 needs = ["WI-182"]
 buildtier = "strong"
 order = 182

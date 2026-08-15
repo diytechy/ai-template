@@ -2,7 +2,7 @@
 id = "WI-069"
 title = "Pair-row agent registry - Family/Env + version-less resolution"
 workstream = "unattended"
-sr_refs = ["SR-045"]
+sr_refs = ["SR-154", "SR-155"]
 needs = ["WI-059"]
 order = 67
 +++

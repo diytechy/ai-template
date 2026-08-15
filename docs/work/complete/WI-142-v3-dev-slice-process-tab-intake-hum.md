@@ -2,7 +2,7 @@
 id = "WI-142"
 title = "[v3] dev slice: Process tab intake + human-decision loops"
 workstream = "dashboard"
-sr_refs = ["SR-055"]
+sr_refs = ["SR-070"]
 needs = ["WI-135", "WI-145"]
 order = 141
 +++

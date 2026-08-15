@@ -2,7 +2,7 @@
 id = "WI-019"
 title = "gen_skills_index.py - skills index"
 workstream = "scripts"
-sr_refs = ["SR-025"]
+sr_refs = ["SR-112"]
 needs = ["WI-008"]
 order = 18
 +++

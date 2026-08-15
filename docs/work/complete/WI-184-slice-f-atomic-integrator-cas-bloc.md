@@ -2,7 +2,7 @@
 id = "WI-184"
 title = "Slice F - atomic integrator + CAS + blocked-disposition"
 workstream = "unattended"
-sr_refs = ["SR-063"]
+sr_refs = ["SR-156"]
 needs = ["WI-180", "WI-182"]
 buildtier = "strong"
 order = 183
