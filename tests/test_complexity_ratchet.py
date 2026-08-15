@@ -156,7 +156,7 @@ BASELINE = {
     # `staged_spine_amendments` (which returns the structured §A5.1 split) and
     # `staged_spine_findings` became a thin formatter over it — under the limit,
     # so its entry is DELETED. The §A5.1 classification loop that would have
-    # taken this to 23 was extracted as `_split_changed_cells` instead, holding
+    # taken this to 23 was extracted as `split_changed_cells` instead, holding
     # the scan at its old 20: decomposition, which is the escape this ratchet
     # prefers over a bump.
     # SN-029 (2026-08-08): 20 -> 19. The "git could not answer" and "nothing

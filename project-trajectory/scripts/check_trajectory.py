@@ -3304,7 +3304,7 @@ def normative_text(csv_path, row):
 # Neither the id nor `Status` is CONTENT — the id is the join key the digest is
 # looked up BY, and `Status` is the attestation marker itself, so folding it in
 # would make every flip look like an amendment and every amendment invisible
-# behind its own flip. The same two exclusions `_split_changed_cells` makes,
+# behind its own flip. The same two exclusions `split_changed_cells` makes,
 # for the same reason.
 _DIGEST_EXCLUDED = frozenset({"SR-ID", "LLR-ID", "TC-ID", "Status"})
 
@@ -3379,7 +3379,7 @@ def current_digests(root):
 _RATIFIED_TEXT = frozenset({"verified", "planned"})
 
 
-def _split_changed_cells(csv_path, id_col, head, row):
+def split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
     before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
     The id column and `Status` are not content (the id is the join key; Status
@@ -3545,7 +3545,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
                 continue
             if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
                 continue  # the attestation unit flips in this commit — sanctioned
-            changed = _split_changed_cells(csv_path, id_col, head, row)
+            changed = split_changed_cells(csv_path, id_col, head, row)
             if changed["ratified"] or changed["traced"]:
                 out.append(dict(changed, registry=registry, id=rid))
     return out
@@ -3574,6 +3574,79 @@ def staged_spine_findings(root):
         for a in staged_spine_amendments(root)
         if a["ratified"]
     ]
+
+
+# The `last_approved` snapshot's root, repo-relative. RESTATED rather than
+# imported from `baseline_snapshot`: the import edge runs the other way (that
+# module reads `split_changed_cells` from here), and a back-import would make
+# the pair un-loadable. One string, pinned equal by
+# tests/test_baseline_snapshot.py — the F5 plumbing-duplication sanction, with
+# the behavioural pin the D-7 ruling requires.
+SNAPSHOT_DIR = "docs/archive/last_approved"
+
+# The snapshot's prose stamp: rendered for a human, PARSED BY NOTHING, and so
+# the one file under the snapshot root with no live counterpart to mirror.
+SNAPSHOT_README = "README.md"
+
+
+def staged_snapshot_findings(root, base="HEAD", head=None):
+    """THE MIRROR INVARIANT (snapshot design §F3), as warn strings.
+
+    > In any commit that touches a file under `docs/archive/last_approved/`,
+    > that file must be byte-identical to its live counterpart in that same
+    > commit.
+
+    The snapshot is the record of what a human blessed, and it is just files —
+    nothing about a text file stops someone editing it. This is the guard, and
+    it is exact rather than heuristic: a legitimate `copy_live` satisfies it
+    ALWAYS, by construction, because the copy is byte-for-byte and rides the
+    same commit as the write. Three failures fail it and they are the three
+    that matter — a hand edit (snapshot differs from live), a partial copy (one
+    file mirrored, its sibling not), and a copy-then-amend-live (the copy landed
+    but the live file moved on before the commit closed).
+
+    The consequence worth stating plainly: **the only way to write text into
+    the snapshot is to write it into the live registry first** — an approval,
+    in a reviewed commit, exactly as ruled.
+
+    Index-vs-HEAD by default (the hook's question); `head` takes a commit-ish
+    for the post-commit view, matching `staged_spine_amendments`' shape. Silent
+    no-op when git cannot answer or no snapshot file moved — the same degrade
+    every other scan here takes. WARN-class today; the design promotes it to the
+    integrity floor with the rest of the mechanism at migration step 7."""
+    revs = _spine_revs(root, base, head)
+    if revs is None:
+        return []
+    staged_names, _old_rev, new_rev = revs
+    prefix = SNAPSHOT_DIR + "/"
+    out = []
+    for name in sorted(n for n in staged_names if n.startswith(prefix)):
+        live_rel = name[len(prefix) :]
+        # The README is PROSE (design §F8) — a stamp for a human, parsed by
+        # nothing, with no live counterpart to mirror. Excluding it by name
+        # rather than by "no counterpart exists" keeps a genuinely missing
+        # registry loud.
+        if live_rel == SNAPSHOT_README:
+            continue
+        snap_text = _git(root, ["show", new_rev + name])
+        live_text = _git(root, ["show", new_rev + live_rel])
+        if snap_text is None:
+            continue  # deleted from the snapshot in this commit — not a mirror claim
+        if live_text is None:
+            out.append(
+                "{} is in the {} snapshot but {} does not exist in this commit — "
+                "a snapshot file with no live counterpart is a record of text "
+                "the repo no longer has".format(name, SNAPSHOT_DIR, live_rel)
+            )
+        elif snap_text != live_text:
+            out.append(
+                "{} is NOT byte-identical to {} in this commit — the snapshot is "
+                "the record of what a human blessed, so it may only ever be "
+                "written by copying the live file (`intake.py snapshot`). A hand "
+                "edit, a partial copy and a copy-then-amend-live all land "
+                "here".format(name, live_rel)
+            )
+    return out
 
 
 # The critique-loop ratchet (WI-068). A `Verification=Critique` SR and its latest
@@ -3953,13 +4026,14 @@ def main():
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
-            # The three attestation-ledger rungs that used to ride this tier are
-            # gone with the ledger (D-1). Their replacement — a co-mutation guard
-            # over the row's own anchor cells — lands with the anchor half, once
-            # OI-12 rules the carrier. Until then the amend-without-flip warn
-            # above is the only spine-amendment signal at commit time, which is
-            # exactly the state that preceded SN-029; nothing regressed, because
-            # the ledger never held a row.
+            # The MIRROR INVARIANT (snapshot design §F3): a commit that touches
+            # the `last_approved` snapshot must leave every touched file
+            # byte-identical to its live counterpart. This is the replacement
+            # for the co-mutation guard D-1's anchor half would have needed —
+            # and it is a stronger rule, because it makes "the only way to write
+            # the snapshot is to copy the live file" a decidable property rather
+            # than a convention. Vacuous until a snapshot exists.
+            + staged_snapshot_findings(root)
             + staged_completion_findings(root)
         ):
             print("check_trajectory: WARN - {}".format(w), file=sys.stderr)

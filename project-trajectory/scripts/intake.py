@@ -74,6 +74,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_carrier
 
 import agent_common as ac
+import baseline_snapshot
 import check_trajectory
 import schedule
 import trace
@@ -1438,15 +1439,10 @@ def flip_verified(root, ids):
             )
         return action, [], None
     flipped = _apply_flips(root, tables, located)
-    # THE ANCHOR IS STILL OWED HERE (docs/repo-lock.md D-1). The flip and the
-    # record of WHAT TEXT was blessed have to be one act: a ratification whose
-    # anchor is written later is a window in which the registry says `Verified`
-    # and nothing says what it agreed to. The ledger append that used to sit on
-    # this line is retired with `attestations.csv`; the on-row anchor replacing
-    # it waits on the carrier ruling (OI-12). Until then the flip stands alone
-    # and the baseline degrades to the git walk `trace._attested_baseline` has
-    # always fallen back to — which is where it stood before SN-029, since the
-    # ledger never held a row.
+    # THE ANCHOR IS NO LONGER OWED HERE: `_apply_flips` copies the flipped
+    # registries into `docs/archive/last_approved/` in the same act, so the flip
+    # and the record of WHAT TEXT was blessed are one (repo-lock D-1's standing
+    # requirement, discharged by the snapshot rather than by a hash column).
     for rid in flipped:
         _say("flipped {} Modified -> Verified ({})".format(rid, session_hold))
     return action, flipped, None
@@ -1567,6 +1563,38 @@ def _flip_status_lines(lines, table, rid):
     return False
 
 
+def _rewrite_toml_statuses(live, rel, ids):
+    """Move every named row's status line to `Verified` in one TOML registry.
+
+    Split out of `_apply_flips` when the snapshot copy joined it (D-9 step 3):
+    the carrier-specific write is a self-contained job with its own refusal, and
+    keeping it inline made the caller's branch count grow every time a step was
+    added to an act that is really "flip, then record what was flipped".
+
+    The file's OWN newline style is preserved. The contract this writer
+    advertises is that every byte except the one status cell is unchanged, and
+    silently converting a CRLF registry to LF makes a one-word ratification a
+    whole-file diff — on exactly the registry whose diffs the amendment guard
+    reads. `newline=""` keeps the bytes; the split is on the detected
+    terminator."""
+    table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
+    raw = live.read_text(encoding="utf-8-sig", newline="")
+    eol = "\r\n" if "\r\n" in raw else "\n"
+    lines = raw.split(eol)
+    for rid in ids:
+        if not _flip_status_lines(lines, table, rid):
+            # A located row whose status line cannot be found is a refusal to
+            # write, never a silent skip: the caller already reported the flip,
+            # so a no-op here would claim a ratification that is not in the file.
+            raise SystemExit(
+                "intake: {} has no `{}` line under [{}.{}] — refusing to "
+                "report a flip that was not written".format(
+                    live, _STATUS_KEY, table, rid
+                )
+            )
+    live.write_text(eol.join(lines), encoding="utf-8", newline="")
+
+
 def _apply_flips(root, tables, located):
     """Move each located `Modified` row to `Verified` and rewrite exactly the
     registries that changed; the sorted flipped ids. Per carrier: a CSV rewrite
@@ -1598,30 +1626,7 @@ def _apply_flips(root, tables, located):
         flipped.append(rid)
         changed.add(rel)
     for rel, ids in toml_edits.items():
-        live, _rows = tables[rel]
-        table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
-        # The file's OWN newline style is preserved (the
-        # contract this writer advertises is that every byte except the one
-        # status cell is unchanged, and silently converting a CRLF registry to
-        # LF makes a one-word ratification a whole-file diff — on exactly the
-        # registry whose diffs the amendment guard reads). `newline=""` keeps
-        # the bytes; the split is on the detected terminator.
-        raw = live.read_text(encoding="utf-8-sig", newline="")
-        eol = "\r\n" if "\r\n" in raw else "\n"
-        lines = raw.split(eol)
-        for rid in ids:
-            if not _flip_status_lines(lines, table, rid):
-                # A located row whose status line cannot be found is a refusal
-                # to write, never a silent skip: the caller already reported the
-                # flip, so a no-op here would claim a ratification that is not
-                # in the file.
-                raise SystemExit(
-                    "intake: {} has no `{}` line under [{}.{}] — refusing to "
-                    "report a flip that was not written".format(
-                        live, _STATUS_KEY, table, rid
-                    )
-                )
-        live.write_text(eol.join(lines), encoding="utf-8", newline="")
+        _rewrite_toml_statuses(tables[rel][0], rel, ids)
     for rel in changed:
         live, rows = tables[rel]
         if rows is None:
@@ -1630,6 +1635,22 @@ def _apply_flips(root, tables, located):
             csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerows(
                 rows
             )
+    # THE COPY RIDES THE FLIP, AND THE ORDER IS LOAD-BEARING. It runs AFTER both
+    # write loops, so the snapshot captures each registry WITH the flip already
+    # written — which is what makes the unanchored rule decidable: the snapshot
+    # row itself reads the approved value, so a live approval whose snapshot
+    # copy reads below approval is provably an approval that never rode a copy.
+    # Copying first would snapshot the pre-flip text and invert that evidence.
+    #
+    # Only `if flipped`: a run that ruled nothing must not touch the record of
+    # what was blessed. And only `if exists`: before the first signing there is
+    # no snapshot, and the FIRST one must be the owner's deliberate act
+    # (`intake.py snapshot --seed`) rather than a side effect of the mechanical
+    # path — so this arm is VACUOUS BY ABSENCE, never a refusal. Refusing here
+    # would break adjudication in every repo that has not signed yet, which is
+    # every fresh adopter.
+    if flipped and baseline_snapshot.exists(root):
+        baseline_snapshot.copy_live(root)
     return sorted(flipped)
 
 
@@ -1672,6 +1693,34 @@ def _cmd_census(args):
     )
 
 
+def _cmd_snapshot(args):
+    """THE HUMAN PATH to the `last_approved` snapshot: copy every snapshotted
+    registry into `docs/archive/last_approved/`.
+
+    The owner's hand sequence at a sitting is: edit the Status cells in the
+    reviewed commit -> run `intake.py snapshot` -> commit both together. The
+    mirror invariant (`check_trajectory.staged_snapshot_findings`) is what makes
+    "together" checkable rather than remembered.
+
+    `--seed` is the ONLY way the directory is created, and it exists for one
+    commit in the life of a repo: the signing act that first blesses the spine,
+    after every pending row has been ruled. Copying before that sitting would
+    launder exactly the re-blessing those rows owe (repo-lock D-10's sequencing
+    rule, with "stamping hashes" swapped for "copying files")."""
+    root = Path(args.root).resolve()
+    written = baseline_snapshot.copy_live(root, seed=args.seed)
+    return _cli_result(
+        None,
+        "snapshot: {} registry file(s) copied to {}{}".format(
+            len(written),
+            baseline_snapshot.SNAPSHOT_DIR,
+            " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
+            if args.seed
+            else "",
+        ),
+    )
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -1698,10 +1747,25 @@ def main(argv=None):
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
     )
     adj.set_defaults(func=_cmd_adjudicate)
-    # The `attest` subcommand retired with `attestations.csv`. It returns with
-    # the anchor half, writing the accepted digest to the artifact's own row
-    # instead of appending a ledger line — same name, same
-    # `--rows`/`--decision` contract, different destination.
+    # The slot the retired `attest` subcommand reserved, filled. The destination
+    # changed — a whole-file copy, not a ledger line or a digest cell — so the
+    # name changed with it, and there is deliberately no `--rows`: a whole-file
+    # mirror has no row scope to take.
+    snap = sub.add_parser(
+        "snapshot",
+        help="copy every spine + approval-carrying registry into "
+        "docs/archive/last_approved/ — the record of WHAT TEXT an approval "
+        "blessed. Run it in the same reviewed commit as the Status edits",
+    )
+    snap.add_argument(
+        "--seed",
+        action="store_true",
+        help="CREATE the snapshot directory. For the FIRST snapshot only, in "
+        "the owner's signing commit, after every pending row has been ruled — "
+        "seeding earlier blesses text nobody read. Unreachable from every loop "
+        "module and hook (pinned by tests/test_baseline_snapshot.py)",
+    )
+    snap.set_defaults(func=_cmd_snapshot)
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):
         ap.print_help()

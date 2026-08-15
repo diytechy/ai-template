@@ -48,6 +48,7 @@ graph LR
     m_scripts_agent_loop["scripts/agent_loop — Headless session engine: one claimed worker ass…"]
     m_scripts_agent_route["scripts/agent_route — Model routing for the unattended coordinator — …"]
     m_scripts_agent_session["scripts/agent_session — One headless agent session: argv/stdin construc…"]
+    m_scripts_baseline_snapshot["scripts/baseline_snapshot — baseline_snapshot.py — the `last_approved` snap…"]
     m_scripts_bootstrap["scripts/bootstrap — Scaffold a new project from this trajectory kit."]
     m_scripts_check["scripts/check — The check harness — one command that runs every…"]
     m_scripts_check_coverage["scripts/check_coverage — Per-module coverage floors: stop the global flo…"]
@@ -119,6 +120,8 @@ graph LR
     m_scripts_agent_loop --> m_scripts_score_reviews
     m_scripts_agent_loop --> m_scripts_spine_carrier
     m_scripts_agent_route --> m_scripts_spine_carrier
+    m_scripts_baseline_snapshot --> m_scripts_check_trajectory
+    m_scripts_baseline_snapshot --> m_scripts_spine_carrier
     m_scripts_check_doc_refs --> m_scripts_gen_arch_map
     m_scripts_check_doc_refs --> m_scripts_spine_carrier
     m_scripts_check_docs --> m_scripts_spine_carrier
@@ -154,6 +157,7 @@ graph LR
     m_scripts_handback --> m_scripts_integrate
     m_scripts_handback --> m_scripts_spec_move
     m_scripts_intake --> m_scripts_agent_common
+    m_scripts_intake --> m_scripts_baseline_snapshot
     m_scripts_intake --> m_scripts_check_trajectory
     m_scripts_intake --> m_scripts_dispatch
     m_scripts_intake --> m_scripts_schedule
@@ -464,6 +468,21 @@ Contracts (interfaces): IF-041, IF-064
 | `  methods` | event · finish |  |
 | `run_session(argv, root, timeout, env, on_line, stdin_input)` | One fresh headless driver session. Returns (exit_code, output, | SN-016 |
 
+### `scripts/baseline_snapshot`
+_baseline_snapshot.py — the `last_approved` snapshot: what the spine looked_
+Imports (internal): `check_trajectory`, `spine_carrier`
+
+| Public item | Summary | Implements |
+|---|---|---|
+| `snapshot_root(root)` | The snapshot's directory as a path. Does not create it and does not |  |
+| `exists(root)` | True when this repo has a snapshot at all — the vacuous-by-absence test. |  |
+| `load_all(root)` | Every snapshotted registry, parsed off the snapshot tree. |  |
+| `rows_for(snapshot, rel, id_col)` | One tier's snapshot rows, or `{}` when there is no snapshot at all. |  |
+| `copy_live(root, *, seed)` | Mirror every SNAPSHOTTED registry into `docs/archive/last_approved/`; |  |
+| `is_drifted(rel, id_col, live_row, snapshot_rows)` | True when this row claims approval-or-above AND its RATIFIED cells differ |  |
+| `drifted_cells(rel, id_col, live_row, snapshot_rows)` | `{cell: (before, after)}` for the ratified cells `is_drifted` fired on, |  |
+| `unanchored_findings(root, snapshot)` | The successor to repo-lock D-9's "approved-with-no-anchor is an ERROR", |  |
+
 ### `scripts/bootstrap`
 _Scaffold a new project from this trajectory kit._
 Contracts (interfaces): IF-014, IF-039
@@ -748,8 +767,10 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `sn_normative_text(sn_md_text, sn_id)` | The canonical text for one STAKEHOLDER NEED: its `\| SN-### \| … \|` table |  |
 | `digest(text)` | `sha256:<hex>` of `text`. Full width — this is an ANCHOR, and a truncated |  |
 | `current_digests(root)` | `{artifact id: digest}` over every real spine row and every SN. |  |
+| `split_changed_cells(csv_path, id_col, head, row)` | One row's changed cells, split into the §A5.1 halves with their |  |
 | `staged_spine_amendments(root, base, head)` | The structured amendment set behind the amend-without-flip warn (WI-316, |  |
 | `staged_spine_findings(root)` | The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped |  |
+| `staged_snapshot_findings(root, base, head)` | THE MIRROR INVARIANT (snapshot design §F3), as warn strings. |  |
 | `ratify_brief_findings(root)` | Warn-first brief lint (WI-146b): an open-items row whose decision is a |  |
 | `critique_ratchet_findings(root)` | The lax-TC ratchet for the critique loop (WI-068; warn-first, the same |  |
 | `critique_staleness_findings(root)` | The perceptual re-fire finding (WI-243; git-time staleness like |  |
@@ -987,7 +1008,7 @@ _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to
 
 ### `scripts/intake`
 _intake.py — the unified trunk-side intake mint (WI-388; docs/concurrency-v2.md §A5.2)._
-Imports (internal): `agent_common`, `check_trajectory`, `dispatch`, `schedule`, `spine_carrier`, `trace`, `wi_convert`
+Imports (internal): `agent_common`, `baseline_snapshot`, `check_trajectory`, `dispatch`, `schedule`, `spine_carrier`, `trace`, `wi_convert`
 Contracts (interfaces): IF-090, IF-091, IF-092, IF-101, IF-110
 
 | Public item | Summary | Implements |

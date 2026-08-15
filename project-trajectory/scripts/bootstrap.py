@@ -1597,9 +1597,21 @@ MAPPING = [
     # per pending decision, deleted when the ruling lands in log.md Decisions.
     ("registries/open-items.template.toml", "docs/requirements/open-items.toml"),
     # (SN-029's separate attestation ledger was scaffolded here until it was
-    # retired. The anchor it carried moves onto the artifact's own row, so
-    # there is no second registry for an adopter to scaffold; the columns
-    # arrive in the spine templates with the anchor half.)
+    # retired, and the on-row anchor that was to replace it was ruled
+    # unnecessary complexity in turn — owner directive 2026-08-15. What an
+    # approval blessed is recorded by COPYING the registries, and the README
+    # below is the only part of that mechanism a fresh scaffold receives.)
+    #
+    # The `last_approved` snapshot's prose stamp. THE DIRECTORY IS SCAFFOLDED
+    # WITH ONLY THIS FILE, deliberately: an empty snapshot is the HONEST state
+    # for a repo that has approved nothing yet, and shipping pre-filled copies
+    # would hand every new project a record claiming a human blessed text they
+    # have never seen. The registries land in it at the project's first signing
+    # (`intake.py snapshot --seed`), and not before.
+    (
+        "registries/last-approved-README.template.md",
+        "docs/archive/last_approved/README.md",
+    ),
     # The append-only history status.md points at (Thread 36, process.md §5):
     # sign-offs, verdicts, and ratified decisions append here, keeping the
     # per-session status.md reload cheap.
@@ -1725,6 +1737,11 @@ MAPPING = [
     # the adopter's own, and check.py's step table names it at every bar.
     ("scripts/check_need_form.py", "scripts/check_need_form.py"),
     ("scripts/check_trajectory.py", "scripts/check_trajectory.py"),
+    # The `last_approved` snapshot reader/writer (owner directive 2026-08-15).
+    # Shipped because it is a SIBLING IMPORT of `intake.py` — the adjudication
+    # flip copies the registries in the same act — and because `trace.py` reads
+    # it for the drift overlay. A scaffold without it cannot run either.
+    ("scripts/baseline_snapshot.py", "scripts/baseline_snapshot.py"),
     # The ready-frontier/safety-classification library (IF-053). Shipped
     # because it is a SIBLING IMPORT of the integration seam, not a nicety:
     # integrate.py's claim refusal ladder and dispatch.py's cycle both
