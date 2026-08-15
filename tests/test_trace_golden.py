@@ -39,10 +39,10 @@ RICH_SN = """# Stakeholder Needs (SN-###)
 | SN-003 | A future capability. | Later. | C | TBD. |
 """
 
-RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Area
-SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,Core
-SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Verified,Docs
-SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Draft,Core
+RICH_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Aspect
+SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Verified,process
+SR-002,Docs,SN-002,"The system shall ship a doc.","Realizes SN-002.","the page is identical to the source",,S,Attest,Verified,trajectory
+SR-003,Future,SN-002,"The system shall do a future thing.","Drafted first.","TBD",,C,Test,Draft,process
 """
 
 RICH_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component

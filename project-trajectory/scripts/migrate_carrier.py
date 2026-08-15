@@ -137,7 +137,7 @@ KEY = {
     "Verification": "verification",
     "Status": "status",
     "Phase": "phase",
-    "Area": "area",
+    "Aspect": "aspect",
     "SupersededBy": "superseded_by",
     "Lifecycle": "lifecycle",
     "Detail": "detail",

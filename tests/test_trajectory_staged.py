@@ -185,7 +185,7 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
 
 _SPINE_SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Area\n"
+    "Permutations,Priority,Verification,Status,Phase,Aspect\n"
 )
 
 
@@ -405,7 +405,7 @@ def _init_full_spine_repo(root):
 
 def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     # THE WI-380 CASE. Every traced cell of all three registries moves at once —
-    # the SR's SN-Refs/Phase/Area, the LLR's Module/CodeSymbol/TestRefs/
+    # the SR's SN-Refs/Phase/Aspect, the LLR's Module/CodeSymbol/TestRefs/
     # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
     # Automated/Phase — with every ratified cell and every Status untouched.
     # Silence is the whole point: before this split each of these armed the warn
@@ -415,7 +415,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
         + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
-        "Test,Verified,4,Parallel dispatch\n",
+        "Test,Verified,4,unattended-loop\n",
         encoding="utf-8",
     )
     _write_child_registries(
@@ -662,7 +662,7 @@ def _filled(rows):
     """`{id: {cell: value}}` over NON-EMPTY cells only.
 
     The two carriers are equal on what a row SAYS, and deliberately unequal on
-    how it says nothing: CSV gives every column of the header (`Area: ""`),
+    how it says nothing: CSV gives every column of the header (`Aspect: ""`),
     while TOML omits the key entirely, because "unset" and "set to empty" stop
     being the same value under the new carrier. Every consumer
     reads a cell as `.get(c) or ""`, so the two are identical where it matters —

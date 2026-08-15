@@ -3201,7 +3201,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # IS ratified, so nothing escapes attestation by this choice.
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs", "Phase", "Area", "Lifecycle"}
+        {"SN-Refs", "Boundary-Refs", "Phase", "Aspect", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as

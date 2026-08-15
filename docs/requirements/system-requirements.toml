@@ -9,7 +9,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Gate harness"
 
 [requirement.SR-007]
 title = "Declared stack profile"
@@ -22,7 +21,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Declared stack profile"
 
 [requirement.SR-008]
 title = "Profile validation fails loudly"
@@ -35,7 +33,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Declared stack profile"
 
 [requirement.SR-009]
 title = "Conditional scaffold profiles"
@@ -48,7 +45,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Conditional scaffold profiles"
 
 [requirement.SR-010]
 title = "Scaffold runs green out of the box"
@@ -61,7 +57,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-011]
 title = "Idempotent re-runnable scaffold"
@@ -74,7 +69,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-015]
 title = "Performance-budget back-links"
@@ -87,7 +81,7 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Perf comparator + budgets"
+aspect = "perf"
 
 [requirement.SR-017]
 title = "Always-on secrets floor"
@@ -100,7 +94,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Secrets + privacy lint"
 
 [requirement.SR-018]
 title = "Privacy gate two-axis"
@@ -113,7 +106,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Secrets + privacy lint"
 
 [requirement.SR-019]
 title = "Pre-commit hook floor"
@@ -126,7 +118,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-020]
 title = "Pre-push hook outgoing scan"
@@ -139,7 +130,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-021]
 title = "Hook python probe"
@@ -152,7 +142,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Git hooks"
 
 [requirement.SR-022]
 title = "Vendored-doc drift"
@@ -165,7 +154,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Vendored-doc drift"
 
 [requirement.SR-024]
 title = "Permutation case generation"
@@ -178,7 +166,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Permutation case gen"
 
 [requirement.SR-026]
 title = "Coordinator resumes headless"
@@ -191,7 +178,6 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-027]
 title = "Coordinator preflight"
@@ -204,7 +190,6 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-028]
 title = "Coordinator typed outcomes"
@@ -217,7 +202,6 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-030]
 title = "Second coordinator refused"
@@ -230,7 +214,6 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Parallel tracks"
 
 [requirement.SR-031]
 title = "Declared-policy readers agree"
@@ -243,7 +226,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Declared-policy readers"
 
 [requirement.SR-032]
 title = "Onboarding and dev-setup scaffold"
@@ -256,7 +238,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Onboarding + dev-setup"
 
 [requirement.SR-033]
 title = "Release checklist generation"
@@ -269,7 +250,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Release checklist"
 
 [requirement.SR-034]
 title = "Kit scripts run on stdlib plus ledger-declared dependencies"
@@ -282,7 +262,7 @@ priority = "M"
 verification = "Analysis"
 status = "Verified"
 phase = 1
-area = "Portability"
+aspect = "portability"
 
 [requirement.SR-035]
 title = "Stack-agnostic across OSes"
@@ -295,7 +275,7 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Portability"
+aspect = "portability"
 
 [requirement.SR-036]
 title = "Deliberate re-sync integration"
@@ -308,7 +288,6 @@ priority = "M"
 verification = "Inspection"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-040]
 title = "Per-phase routing and review dial"
@@ -321,7 +300,7 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Unattended loop"
+aspect = "unattended-loop"
 
 [requirement.SR-043]
 title = "Subagent spawn gate"
@@ -334,7 +313,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Unattended coordinator"
 
 [requirement.SR-046]
 title = "Run capability menu"
@@ -356,7 +334,6 @@ priority = "S"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Onboarding + dev-setup"
 
 [requirement.SR-049]
 title = "Derived gate from artifact states"
@@ -381,7 +358,7 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 3
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-053]
 title = "Dashboard UI uniformity (rubric-adjudicated)"
@@ -394,7 +371,7 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 3
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-054]
 title = "Dashboard usability (rubric-adjudicated)"
@@ -407,7 +384,7 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 3
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-059]
 title = "Retire next-wi; generated status surface"
@@ -420,7 +397,6 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 4
-area = "Parallel dispatch"
 
 [requirement.SR-070]
 title = "Offline project-state core"
@@ -433,7 +409,7 @@ priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-111]
 title = "Kit-version stamp"
@@ -446,7 +422,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Scaffold generation"
 
 [requirement.SR-112]
 title = "Checked per-agent skill fan-out"
@@ -459,7 +434,6 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 1
-area = "Skills index + fan-out"
 
 [requirement.SR-113]
 title = "Dev-setup wires the process floor"
@@ -472,7 +446,6 @@ priority = "S"
 verification = "Test"
 status = "Verified"
 phase = 1
-area = "Onboarding + dev-setup"
 
 [requirement.SR-114]
 title = "Kit scripts run across the supported OSes"
@@ -485,7 +458,7 @@ priority = "M"
 verification = "Analysis"
 status = "Modified"
 phase = 1
-area = "Portability"
+aspect = "portability"
 
 [requirement.SR-129]
 title = "Registry representation migration"
@@ -498,7 +471,7 @@ priority = "C"
 verification = "Test"
 status = "Modified"
 phase = 4
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-133]
 title = "Work-branch lane skip for freshness steps"
@@ -511,7 +484,6 @@ priority = "M"
 verification = "Test"
 status = "Verified"
 phase = 4
-area = "Gate harness"
 
 [requirement.SR-137]
 title = "One policy home, with a checked shape"
@@ -524,7 +496,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-138]
 title = "Legacy config converts automatically and totally"
@@ -537,7 +509,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-139]
 title = "Ratification as an ordinal over a derived spine stage"
@@ -550,7 +522,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-140]
 title = "The attestation anchor lives on the artifact's own row"
@@ -569,7 +541,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-144]
 title = "Every lane close is a terminal state with an immutable record"
@@ -582,7 +554,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-146]
 title = "Prompts are reviewable files with a per-session audit trail"
@@ -595,7 +567,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Process"
+aspect = "process"
 
 [requirement.SR-147]
 title = "One machine-parseable carrier for the requirement spine"
@@ -608,7 +580,7 @@ priority = "C"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Trajectory"
+aspect = "trajectory"
 
 [requirement.SR-148]
 title = "Autonomous loop phase order"
@@ -621,7 +593,7 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Unattended loop"
+aspect = "unattended-loop"
 
 [requirement.SR-149]
 title = "Retired-vocabulary refusal in authored surfaces"
@@ -634,7 +606,6 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Doc navigability"
 
 [requirement.SR-150]
 title = "Stakeholder-need cells stay in stakeholder language"
@@ -647,7 +618,6 @@ priority = "S"
 verification = "Test"
 status = "Planned"
 phase = 5
-area = "Traceability"
 
 [requirement.SR-151]
 title = "Hosted CI runs the declared bar per trigger"
@@ -660,7 +630,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Gate harness"
 
 [requirement.SR-152]
 title = "Hosted CI verdict is the harness's own"
@@ -673,7 +642,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Gate harness"
 
 [requirement.SR-153]
 title = "Ready work derives from tracked state"
@@ -686,7 +654,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 4
-area = "Parallel dispatch"
 
 [requirement.SR-154]
 title = "Independent review routed across families"
@@ -699,7 +666,7 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 1
-area = "Unattended loop"
+aspect = "unattended-loop"
 
 [requirement.SR-155]
 title = "Contested planning rounds for marked work"
@@ -712,7 +679,6 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 4
-area = "Dual-plan decomposition"
 
 [requirement.SR-156]
 title = "Serialized, gated integration of parallel lanes"
@@ -725,7 +691,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 4
-area = "Parallel dispatch"
 
 [requirement.SR-157]
 title = "Spine and work-registry rules red the harness verdict"
@@ -738,7 +703,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 1
-area = "Traceability"
 
 [requirement.SR-158]
 title = "Documentation drift reds or warns per its declared tier"
@@ -751,7 +715,6 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 1
-area = "Doc currency"
 
 [requirement.SR-159]
 title = "Declared-architecture connectivity gaps are reported"
@@ -764,7 +727,7 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 1
-area = "Architecture connectivity"
+aspect = "connectivity"
 
 [requirement.SR-160]
 title = "Front-door launchers for the two universal contributor actions"
@@ -777,7 +740,6 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Onboarding + dev-setup"
 
 [requirement.SR-161]
 title = "Decompositions carry a perspective record"
@@ -790,7 +752,6 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Dual-plan decomposition"
 
 [requirement.SR-162]
 title = "Requirement boundary references resolve against the declared frame"
@@ -803,7 +764,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Traceability"
 
 [requirement.SR-163]
 title = "Every shipped file maps to a stakeholder outcome"
@@ -816,7 +776,6 @@ priority = "M"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Scaffold generation"
 
 [requirement.SR-164]
 title = "Stakeholder-need scope is a declared, checked value"
@@ -829,7 +788,6 @@ priority = "S"
 verification = "Test"
 status = "Draft"
 phase = 5
-area = "Traceability"
 
 [requirement.SR-165]
 title = "The component partition carries a reproducible derivation record"
@@ -842,4 +800,4 @@ priority = "S"
 verification = "Inspection"
 status = "Draft"
 phase = 5
-area = "Process"
+aspect = "process"

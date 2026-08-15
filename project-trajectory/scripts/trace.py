@@ -70,7 +70,7 @@ comparative acceptance-criterion, an LLR reading below Verified while every
 citing TC is Verified (WI-129), a missing knowledge pack, and an interface
 endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized Verified split (process.md §4 "Attest") and, when the SR
-registry tags Area, a per-Area count.
+registry tags Aspect, a per-aspect count.
 
 Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
 """
@@ -311,6 +311,23 @@ REQUIRED_FIELDS = {
 # Status are intentionally left open, so they are not validated here.
 ENUM_FIELDS = {
     "SR": {
+        # The ruled aspect vocabulary (sitting-2 decision 10, executed by the
+        # WI-451 re-tier). `Area` was a 31-value free-text column of which 25
+        # values were a component by another name; those were DROPPED at
+        # conversion rather than remapped, and the six SPANNING values — the
+        # cross-cutting concerns no partition can express — became this closed
+        # set. An aspect is a REVIEW grouping, not an ownership claim, so a row
+        # carrying none is normal and never a finding (only a non-empty
+        # out-of-vocabulary value is). NOT the D-9/D12 Status vocabulary, which
+        # is held for its own atomic act (2026-08-14e).
+        "Aspect": {
+            "process",
+            "trajectory",
+            "unattended-loop",
+            "connectivity",
+            "perf",
+            "portability",
+        },
         "Verification": {
             "Test",
             "Demonstration",
@@ -3079,12 +3096,14 @@ def analyze(reg, args):
     draft_tcs = [r for r in tcs if is_draft(r)]
     n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
 
-    # Optional Area column (owner-hat/domain tag, process.md §1): count real SRs
-    # per Area so hat coverage is visible. Report-only — never a finding, never
-    # an exit-code change; a registry without the column contributes nothing.
+    # Optional Aspect column (the ruled cross-cutting review grouping): count
+    # real SRs per aspect so coverage is visible. Report-only — never a finding,
+    # never an exit-code change; a registry without the column contributes
+    # nothing. The VALUE set is closed and checked by --strict-schema
+    # (ENUM_FIELDS); this is only the count.
     area_counts = {}
     for r in srs:
-        area = (r.get("Area") or "").strip()
+        area = (r.get("Aspect") or "").strip()
         if area:
             area_counts[area] = area_counts.get(area, 0) + 1
     findings = Findings()
@@ -3369,15 +3388,16 @@ def render_report(reg, findings, args, forest):
         untagged = len(srs) - sum(area_counts.values())
         lines += [
             "",
-            "## SRs by Area (report-only)",
+            "## SRs by aspect (report-only)",
             "",
-            "_Optional owner-hat/domain tag (process.md §1). Counts only — "
-            "never a gate; blank cells are simply untagged._",
+            "_The ruled cross-cutting review grouping. Counts only — never a "
+            "gate; a row carrying no aspect is simply not cross-cutting, which "
+            "is normal rather than a gap._",
             "",
         ]
         lines += [f"- {a}: {n}" for a, n in sorted(area_counts.items())]
         if untagged:
-            lines.append(f"- (no Area): {untagged}")
+            lines.append(f"- (no aspect): {untagged}")
     if pbs:
         lines += ["", "## Performance budgets (§9 back-links)", ""]
         lines += (

@@ -392,7 +392,7 @@ def emit(root):
                 (r.get("Priority") or "").strip(),
                 (r.get("Verification") or "").strip(),
                 (r.get("Status") or "").strip(),
-                (r.get("Area") or "").strip(),
+                (r.get("Aspect") or "").strip(),
             ],
             "{} ({})".format(sr_src, cid),
             body,

@@ -131,7 +131,7 @@ SPINE_COLUMN = {
     "verification": "Verification",
     "status": "Status",
     "phase": "Phase",
-    "area": "Area",
+    "aspect": "Aspect",
     "superseded_by": "SupersededBy",
     "lifecycle": "Lifecycle",
     "detail": "Detail",
@@ -260,7 +260,7 @@ SPINE_TIER_KEYS = {
         "verification",
         "status",
         "phase",
-        "area",
+        "aspect",
     ),
     "LLR-ID": (
         "sr_refs",

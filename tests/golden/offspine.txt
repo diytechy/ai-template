@@ -119,12 +119,12 @@ _`Draft` rows are exempt from the child-completeness orphan rules and the DevBar
 - SN-003 (SN, unratified section)
 - SR-003 — Future
 
-## SRs by Area (report-only)
+## SRs by aspect (report-only)
 
-_Optional owner-hat/domain tag (process.md §1). Counts only — never a gate; blank cells are simply untagged._
+_The ruled cross-cutting review grouping. Counts only — never a gate; a row carrying no aspect is simply not cross-cutting, which is normal rather than a gap._
 
-- Core: 2
-- Docs: 1
+- process: 2
+- trajectory: 1
 
 ## Performance budgets (§9 back-links)
 

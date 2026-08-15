@@ -137,7 +137,7 @@ all key off the SR row.
 | `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
 | `Status` | ✔ | open; magic: `Draft`, `Verified`, `Modified` | Drives the gate — §3.2. |
 | `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
-| `Area` | ✘ | free text | **Reporting only** — `trace.py` emits per-Area SR counts and never gates on it. |
+| `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
 
 ¹ under `--strict-schema` (DevBar-Release). ² `name=range[min..max]`; `name=set{a,b,c}`;
 `name=bool`; `@full|@pairwise|@boundaries`.
@@ -671,7 +671,7 @@ When a **Verified** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Ratified** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Area`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` | `Title`, `Detail`, `Rationale`, `SR-Refs` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
