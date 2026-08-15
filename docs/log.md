@@ -36,6 +36,207 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15i — the SECOND top-down read of the SR layer, on the settled
+  state, and the SILENT-SKIP GUARD built at last.** *Executed provisionally
+  under the owner's 2026-08-15 charge-through and overturnable at the review
+  sitting; no Status, `approval` or attestation cell moved in any direction, and
+  `WI-460` is NOT closed — the adversarial round is the orchestrator's, run
+  cross-family after this.* The read is `WI-460`'s first Done-when clause: 59
+  rows read top-down against the six locked crossings in
+  [requirements/external.toml](requirements/external.toml), AFTER `WI-458`'s
+  merges/demotions/mints, the crossing confirmations, the interface
+  owner/`req_refs` rework and the M3 coverage extensions. **Six findings on 59
+  rows** against the first read's base rate of five on 64 — two fixed
+  mechanically, four recorded for the sitting.
+  - **H1 — RECORDED. `SR-166` restates two of `SR-163`'s four reported classes,
+    at a CONFLICTING severity.** `SR-163` (SN-038): *"a shipped file absent from
+    it"* and *"a stale entry naming a file that no longer ships"* are each
+    reported, *"the declared policy assigns warn versus gate per class"*.
+    `SR-166` (SN-001+SN-007, minted at `2026-08-15b`): *"a file the package
+    ships that the manifest does not name"* **FAILS**, and *"a manifest entry
+    whose source the package does not carry"* **FAILS**. Same two observables,
+    two rows, and a checker author reading one warns while the other reds — the
+    sharpest form of the defect this campaign exists to remove. Different needs,
+    so the 13p invariant is not literally breached; the ONE-HOME rule is.
+    SR-166's own rationale claims the distinction (*"SR-163 asks why each
+    shipped file EXISTS … this row asks whether what was promised is what
+    arrives"*) and it holds for its OTHER two clauses — destination
+    materialization in a fresh scaffold, and this repo's structural parity with
+    the template it ships — which are genuinely its own. **Recommendation for
+    the sitting: `SR-166` sheds the two shared classes and cross-references
+    `SR-163`, the H5 move applied again** (SN-038's own acceptance names
+    missing-files and stale-entries, so `SR-163` cannot shed them and stay a
+    carrier for its need). NOT applied: shedding clauses from a requirement is
+    an authoring call on a row three log entries old, and the charge-through's
+    fix-mechanical/record-judgement line puts it here.
+  - **H2 — FIXED (mechanical cell correction). `IF-037`'s contract asserted a
+    read that `SR-148` and `SR-026` FORBID, and named a retired file.** It read
+    *"reads the next action from docs/status.md (forward-only surface) plus
+    docs/gate, docs/run-state and docs/*-policy via the shared declared-line
+    parse"*. Three things wrong, verified against the module rather than
+    inferred: `docs/run-state` **retired with the dispatcher** (agent_common.py's
+    own comment says so, concurrency-restructure Phase 5); `agent_common` reads
+    **no next action** from status.md — `current_state_excerpt` lifts the
+    `## Current State` section for a STOPPING coordinator's exit banner, an
+    output surface; and `docs/process.toml`, the one policy home the module
+    actually reads first, was absent from the cell. The contract therefore
+    claimed exactly the pointer-surface read `SR-148` forbids (*"no hand-curated
+    next-work or run-phase pointer surface for any live instruction or
+    executable surface to read"*) and `SR-026` denies (*"the generated status
+    surface never a session input"*). Rewritten to the real seam; `owner`,
+    `req_refs`, `direction`, endpoints and `approval` untouched, and both refs
+    still fit the corrected text. **The class matters more than the row:** the
+    2026-08-15e endpoint validator checks ENDPOINT cells, so a retired path
+    named in a CONTRACT cell is unchecked — `2026-08-15e` step 3 swept eight
+    rotted endpoints and this one survived in the next column.
+  - **M1 — RECORDED. `SR-159` and `SR-162` both claim the IF endpoint-pair and
+    `Signal`-vocabulary declaration site.** `trace.py` carries
+    `REQUIRED_FIELDS["IF"]` (with `ThisProject`/`Counterpart`/`Signal`) and
+    `ENUM_FIELDS["IF"]["Signal"] = {discrete, variable}`. `SR-159`'s acceptance
+    names *"its `REQUIRED_FIELDS["IF"]` / `["CMP"]` entries and their enums"*
+    and closes with *"a connectivity rule added at one of those sites is in this
+    row's scope by default"*; `SR-162`'s acceptance names *"an interface row
+    carrying no endpoint pair, or a signal value outside the closed
+    discrete/variable vocabulary"*. The overlap was CREATED by `2026-08-15b`'s
+    M3 extension, which landed SN-037's signal-typing clause on `SR-162` without
+    reading `SR-159`'s declaration-site list. **Recommendation: `SR-162` keeps
+    both — it is the row minted for SN-037, whose acceptance says the interface
+    *"identifies its boundary endpoints and whether its signal is discrete or
+    variable"* in the need's own words — and `SR-159`'s by-default clause gains
+    the carve-out naming it,** the same two-sided partition `SR-157`/`SR-159`
+    already state to each other. Both rows are `Draft`, so no attestation is at
+    stake either way; the direction is still an owner call.
+  - **M2 — FIXED (cross-reference repair). `SN-029`'s drop-the-derived-stage
+    clause had a carrier that did not cite it.** The need's acceptance says
+    *"an AMENDED requirement drops the derived stage exactly as a newly
+    introduced one does"*; the ONLY statement of it in the SR layer is
+    `SR-049`'s shall (*"a post-attestation amendment dropping the derived gate
+    exactly as a newly introduced draft does"*), and `SR-049` cited SN-004 +
+    SN-008 alone. So a reader asking which rows realize SN-029 got `SR-139`
+    (which tiers are held), `SR-140` (what an acceptance record contains) and
+    `SR-148` (loop selection) — none of which carries the clause. This is the
+    M3 class **inverted**: M3 found need clauses with no textual carrier while
+    `orphans=0` held; this is a carrier with no recorded join, which an orphan
+    count cannot see either. `SN-029` joined `SR-049`'s `sn_refs`, with the
+    reason stated in the row. No text moved between rows; the citation now
+    matches text that was already there. `SR-049` was already `Modified`, so no
+    attestation is overridden.
+  - **M3 — RECORDED. `trace.py`'s llr-status advisory now states something
+    FALSE, and it says it seven times.** `modified_chain_advisories` warns that a
+    `Modified` child under a non-`Modified`/`Draft` SR is *"invisible to the
+    re-attest sitting"*, and its docstring names the three surfaces that key off
+    the SR row. **`2026-08-15g` step 2 made two of those three read `Planned`**
+    — `trace.reattest_model.owes()` gained `is_planned`, and `traj_status`
+    projects a `Planned` SR — but `_flagged()` did not, so the seven LLR
+    amendments under `Planned` `SR-148` still warn that they ride no surface.
+    **The `WI-460` brief's checkpoint is DISCHARGED and the answer is yes: the
+    surfaces do show them** — measured, not assumed: `trace.py --ratify
+    modified` emits SR-148's whole chain (26 mentions of LLR-058/059/089/123/
+    131/149/152), and `_spine_pending` projects all 47 pending SRs including
+    SR-148. What is left is the advisory's own WORDING. Not fixed here for one
+    recorded reason: `2026-08-15g` made a deliberate per-site call about
+    `Planned` in the sibling exemption sets (`check_trajectory._flagged_sr`,
+    `dispatch._TC_NOT_RED`), and re-deciding half of it the next day without the
+    owner is the move the charge-through says to record. **Recommendation:
+    correct the MESSAGE rather than silencing the warn** — a `Planned` parent's
+    projection line reads *"evidence owed"*, not *"re-attest owed"*, so the child
+    text genuinely is not surfaced AS text to bless, which is a true and useful
+    thing to say and is not what the string says now.
+  - **L1 — RE-AFFIRMED, not newly found. `SR-151`'s `["B-06"]` against its
+    B-05-flavored subject** (*"the shipped reference CI workflow"* — delivered
+    content) was flagged at `2026-08-15f` and left untouched for the sitting.
+    The second read adds the argument the flag lacked: **the `X2` precedent
+    decides it.** `SR-139` took `["B-02","B-05"]` because its acceptance clause
+    *"Level N holds exactly the tiers the SHIPPED TEMPLATE documents"* is
+    falsifiable against the package alone with no crossing act performed.
+    `SR-151`'s acceptance is the same shape — `tests/test_ci_tier_declaration.py`
+    pins the shipped workflow's trigger set against the declared `[ci-tiers]`
+    table, against the package alone. On that reading `["B-06","B-05"]` is the
+    consistent cell. Still the owner's, and still recorded rather than applied:
+    a same-session entry deliberately left it alone.
+  - **L2 — RECORDED, an obligation gap the owner spot-check surfaced. No SR
+    states that a perf-budget REGRESSION fails.** `IF-004`'s contract is
+    *"check_perf.py CLI: --tier T exits nonzero when a measured metric regresses
+    beyond its declared PB budget tolerance"* and `IF-031`'s is the matching
+    read; their owners are `SR-006` (the harness's step plan and its missing-tool
+    refusal) and `SR-015` (PB rows' `Refs` stay resolvable). Neither states the
+    tolerance verdict, and `SR-033` states only that the release checklist lists
+    *"the warn-tier performance budgets that never fail a gate"*. Vacuous in this
+    repo — §9's perf layer is declared absent — so it is an L, but the template
+    ships the layer, and `2026-08-15e` step 5 already recorded IF-004/IF-031 as
+    among the most overturnable owner picks. Their contract has no home to point
+    at, which is the more likely reason.
+  - **THE LENSES THAT READ CLEAN, reported explicitly** because a read that
+    finds nothing under a lens has to say so. **(a) Duplicate observables:** a
+    3-shingle overlap scan across all 59 requirement+acceptance texts returns
+    exactly three pairs above noise — `SR-052`/`SR-053`/`SR-054`, the declared
+    rubric triple, whose overlap is their shared frame and whose properties
+    (accessibility / uniformity / usability) differ. Nothing else. **(b) One
+    shall:** 57 of 59 rows carry exactly one; the two that do not (`SR-140` at
+    three, `SR-147` at two) are the recorded 13v waivers, unchanged.
+    **(c) `SR-148` is NOT a mega-row** — one `shall` after absorbing SR-141 +
+    SR-153 + SR-059, and SN-025's five acceptance clauses are each carried
+    (derivation source, no-pointer, no-predefined-track, deterministic order,
+    generated status surface). **(d) The M3 extensions carry their needs:**
+    `docs/agents-enabled` + the `(family x model x tier)` pair-rows appear ONLY
+    in `SR-154`; `discrete`/`signal type`/`endpoint pair` ONLY in `SR-162`;
+    `acting reviewer` + `distinguishable by query` ONLY in `SR-140`. Each is one
+    home, and each is the right one. **(e) Crossing coverage:** all six
+    crossings carry at least one row (B-01 5 · B-02 2 · B-04 6 · B-05 50 · B-06
+    1 · B-07 1), and B-04's two carried things are BOTH stated at SR level
+    (`SR-019`/`SR-020` the hook floor, `SR-043` subagent_gate) — the
+    half-realization `2026-08-15f` found is at the IF tier, not this one.
+    **(f) Dead ids:** every `SR-\d{3}` in a requirement, acceptance or title
+    cell resolves live; the eight dead ones all sit in `rationale` as absorbed
+    provenance, which is where the campaign put them. **(g) Aspect:** exactly 21
+    of 59 carry one and every value is in `ENUM_FIELDS`. **(h) Demotion
+    receivers:** LLR-008 (SR-007+SR-006), LLR-021 (SR-019+SR-020), LLR-029/030
+    (SR-027), LLR-141 (SR-006+SR-156) all resolve with the split parents the
+    demotion described, and `SR-160`'s absorbed launcher clause is stated in the
+    row with no LLR yet — correct for a `Draft` row, whose decomposition is owed
+    at the next bar, not now.
+  - **THE SILENT-SKIP GUARD — BUILT, and the refusal deliberately NOT taken.**
+    `WI-460`'s third Done-when. The gap was exactly where the brief said: the
+    refresh/integrate bar already treats a SKIP as a refusal, but the per-commit
+    hook path runs `check.py --run-step`/`--run-steps` with `lenient=True`
+    hardcoded, so a missing tool is SKIP + exit 0. That is a deliberate property
+    (*"a not-yet-set-up repo can still commit"*) and it is what let a lane
+    worktree with no `ruff` SKIP `format` on all nine commits of a branch.
+    **Shipped: `check.py.missing_tool_banner`** — a boxed stderr banner, printed
+    after a stdout flush so it is the LAST thing on screen, naming every
+    PRODUCT-layer step that SKIPped for a missing tool. **The selector is the
+    whole design:** `layer == "product"` means the command came from this repo's
+    own `docs/stack.ini` (`[product] format/lint/test`, plus any `[step:*]`
+    declaring `layer = product`), which is the repo declaring it wants that tool
+    run — while process-layer steps are kit-owned and stdlib-only, and every
+    trunk-lane freshness skip is process-layer, so a deliberate, already-
+    explained skip is never dressed as a defect. `tests/test_check_skip_guard.py`
+    pins all four arms (product SKIP banners, process SKIP does not, PASS/FAIL
+    never, empty is silent).
+    - **REFUSAL WEIGHED AND LEFT TO THE OWNER, named rather than quietly
+      declined.** Making a declared-but-absent tool FAIL on the hook path is the
+      stronger guard and closes the streak outright. It also breaks every
+      adopter whose contributor has not yet run dev-setup — a downstream
+      migration this session has no authority to impose (CLAUDE.md: *flag
+      anything that would force downstream repos to migrate*). **The risk that
+      remains after this commit is therefore accepted BY THE OWNER at the
+      sitting, and it is stated so it can be accepted or refused:** a lenient
+      SKIP still exits 0, so a contributor who ignores an unmissable banner
+      still commits. The two shapes passed over are recorded with it — a
+      `[checks]` dial making refusal opt-in (a new schema key, its template,
+      tests and docs, for a repo that could equally install the tool), and a
+      streak counter (needs durable state on disk, which is the class of file
+      this kit removes rather than adds). The refusal alternative is written
+      into `missing_tool_banner`'s own docstring, so it is discoverable from the
+      code and not only from here.
+    - **SCOPE, stated: the hook path only.** `--lenient` on the full plan still
+      SKIPs quietly. That flag is an explicit operator act ("local dev only"),
+      not the per-commit default, and widening the banner to it was left out
+      under the smallest-honest-guard rule.
+    - Reviewed ratchet bump with its reason at the entry: `check.py`
+      1,806 -> 1,877 lines (+71; ~15 are the guard, the rest the recorded why —
+      including the refusal alternative above).
+
 - **2026-08-15h — the snapshot's spine coverage: two rows re-pointed off the
   deleted digest engine, one module given the LLR/TC/IF rows it shipped
   without, and the dead history readers deleted.** *Executed provisionally under

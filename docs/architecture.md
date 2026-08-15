@@ -563,6 +563,7 @@ Contracts (interfaces): IF-013, IF-022, IF-040
 | `run_advisory(advisory, jobs, lane_map)` | Run the warn-only tier and return its results ([] when there is none). |  |
 | `advisory_plan(gate, plan, steps_at)` | Steps a HIGHER gate requires, while an open ratification window holds this |  |
 | `resolve_gate(explicit)` | The gate to run: an explicit --gate wins; else the docs/gate file (the |  |
+| `missing_tool_banner(skipped)` | The SILENT-SKIP GUARD (WI-460): a boxed stderr banner naming every |  |
 | `run_step(name, requires, cmd, lenient)` | Run one step, streaming its output live (the sequential path). |  |
 | `run_step_captured(name, requires, cmd, lenient)` | run_step with the child's output captured instead of streamed — the |  |
 | `run_plan(plan, lenient, jobs, lane_map)` | Execute the plan's steps; returns [(name, status, detail)] in plan order. |  |

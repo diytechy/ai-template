@@ -20,7 +20,12 @@ Design choices that keep it honest and CI-friendly:
     - **Missing tool != pass.** If a step's required module isn't importable, or
       its command's executable can't be found (a rewired non-Python toolchain
       that isn't installed), the step is reported SKIP(missing) and (outside
-      --lenient) fails the run, so CI can't silently skip linting.
+      --lenient) fails the run, so CI can't silently skip linting. On the hook
+      path, where the skip is deliberately allowed (`--run-step`/`--run-steps`
+      run lenient so a not-yet-set-up repo can commit), a SKIPped PRODUCT-layer
+      step — one whose command this repo itself declared in docs/stack.ini —
+      also raises `missing_tool_banner`, because a dim SKIP line repeated on
+      every commit of a branch is how two of this kit's four late defects hid.
     - **One interpreter.** Tools run as `python -m ruff` / `python -m pytest` with
       the same interpreter running this script, so the launchers' venv python is
       enough — no activated venv or PATH entry required.
@@ -1459,6 +1464,68 @@ def _step_guard(requires, cmd, lenient):
     return None, exe
 
 
+def missing_tool_banner(skipped):
+    """The SILENT-SKIP GUARD (WI-460): a boxed stderr banner naming every
+    PRODUCT-layer step that SKIPped because its tool is not installed.
+
+    Why a banner and not a refusal. The hook path (`--run-step` /
+    `--run-steps`) runs every step LENIENT on purpose — a missing tool is SKIP,
+    exit 0 — so a not-yet-set-up repo can still commit. That leniency is right
+    and it has a measured cost: a lane worktree with no `ruff` SKIPped `format`
+    on EVERY commit of a nine-commit branch, and two unformatted files rode to
+    the merge. Nothing was hidden — one dim `SKIP format ...` line printed each
+    time, in the middle of a twelve-step batch, and a dim line repeated nine
+    times is a line nobody reads. So the smallest honest fix is to make the
+    same fact unmissable, not to change what the commit is allowed to do.
+
+    PRODUCT layer only, and that is the whole selector. A product step's command
+    is the one the repo WROTE DOWN in docs/stack.ini (`[product] format/lint/
+    test`, and each `[step:*]` declaring `layer = product`) — declaring it is
+    the repo saying it wants that tool run. Process-layer steps are kit-owned
+    and stdlib-only, so they have no third-party tool to go missing, and the
+    trunk-lane freshness skips (`_TRUNK_FRESHNESS_STEPS`) are all process-layer
+    — a DELIBERATE, already-explained skip must never be dressed as a defect.
+
+    Refusal was weighed and left to the owner: making a declared-but-absent tool
+    FAIL on the hook path is the stronger guard, and it breaks every adopter
+    whose contributor has not run dev-setup yet — a migration this session has
+    no authority to impose. Recorded in the log rather than taken quietly."""
+    if not skipped:
+        return
+    sys.stdout.flush()  # the banner is the LAST thing on screen, deterministically
+    print("", file=sys.stderr)
+    print("!" * 72, file=sys.stderr)
+    print(
+        "!! A DECLARED CHECK DID NOT RUN — this commit was NOT graded by it.",
+        file=sys.stderr,
+    )
+    for name, detail in skipped:
+        print("!!   {:16} {}".format(name, detail), file=sys.stderr)
+    print(
+        "!! These steps come from docs/stack.ini, so this repo declares them.",
+        file=sys.stderr,
+    )
+    print(
+        "!! Install the toolchain (scripts/dev-setup) — a step that skips on",
+        file=sys.stderr,
+    )
+    print(
+        "!! every commit of a branch is a bar that is not being run.", file=sys.stderr
+    )
+    print("!" * 72, file=sys.stderr)
+
+
+def _skipped_product_steps(results, by_name):
+    """[(name, detail)] for the results whose step is PRODUCT-layer and SKIPped.
+    `by_name` maps a step name to its plan tuple (name, requires, cmd, gates,
+    layer)."""
+    return [
+        (name, detail)
+        for name, status, detail in results
+        if status == "SKIP" and (by_name.get(name) or (None,) * 5)[4] == "product"
+    ]
+
+
 def run_step(name, requires, cmd, lenient):
     """Run one step, streaming its output live (the sequential path).
     Returns (status, detail) where status in PASS/FAIL/SKIP."""
@@ -1722,6 +1789,9 @@ def main():
         name, requires, cmd, _gates, _layer = match[0]
         status, detail = run_step(name, requires, cmd, lenient=True)
         print("  {:5} {:16} {}".format(status, name, detail))
+        missing_tool_banner(
+            _skipped_product_steps([(name, status, detail)], {name: match[0]})
+        )
         sys.exit(1 if status == "FAIL" else 0)
 
     # The batch form of --run-step (the hook's floor in ONE interpreter spawn):
@@ -1746,6 +1816,7 @@ def main():
             jobs=jobs or len(names),
             lane_map=lane_map,
         )
+        missing_tool_banner(_skipped_product_steps(results, by_name))
         sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
 
     all_for_gate = steps(coverage, args.tier, gate, args.phase, profile)
