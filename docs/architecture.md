@@ -1473,25 +1473,31 @@ Hand-authored sequence diagrams of the behaviors most easily misread from
 registry rows — concurrency, what blocks on what, failure handling — each citing
 the SR/LLR ids it renders (PROCESS.md §3, required at DevBar-Tests).
 
-> **Inherited drift, recorded not absorbed (Flow 4).** Flow 4 renders the code
-> as it stands after the concurrency-v2 program (WI-380/381/383/386/387/388).
-> Three rows it cites still describe the model that program replaced — SR-132
-> still specifies the composed-tree bar on a candidate worktree, SR-093 and
-> SR-124 still describe the five-class scheduling ladder — and LLR-143 still
-> names the deleted `drive.py` as its Module. Amending them is
-> [WI-390](work/queued/WI-390-concurrency-v2-program-close.md)'s spine scope
-> (one re-attest window, one owner sitting), so this section states the code
-> truthfully and leaves the rows to their owner rather than editing spine text
-> outside a ratification. Where a diagram and a cited row disagree today, the
-> diagram is the current behavior.
+> **The inherited drift this section used to record is RESOLVED (Flow 4).** Flow
+> 4 renders the code as it stands after the concurrency-v2 program
+> (WI-380/381/383/386/387/388). Three requirement rows it cited still described
+> the model that program replaced — the composed-tree bar on a candidate
+> worktree, and the five-class scheduling ladder — and LLR-143 still named the
+> deleted `drive.py` as its Module. **The WI-451 re-tier closed all four**:
+> those three rows were DEMOTED to the design tier, so the stale requirement
+> text no longer exists to disagree with the diagram, and LLR-143 now names
+> `dispatch.py`. What was owed to
+> [WI-390](work/queued/WI-390-concurrency-v2-program-close.md) as spine scope
+> was discharged by the re-tier instead.
+>
+> **Every citation below was re-pointed onto the carrier that now holds the
+> obligation**, which for the demoted rows is a design row. The old→new map is
+> recorded in the campaign's log fragment rather than here, because naming a
+> deleted id in this section is exactly what `check_flows` refuses — and it is
+> right to: a flow must cite rows that exist.
 
-### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, SR-029, SR-030)
+### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, SR-030, LLR-029)
 
 ```mermaid
 sequenceDiagram
     participant Launcher as agent-resume launcher
     participant Loop as agent_loop.py (coordinator)
-    participant Lock as dispatch lock — out/agent-loop.lock (SR-029/LLR-029)
+    participant Lock as dispatch lock — out/agent-loop.lock (LLR-029)
     participant Disp as dispatch.run — the station (Flow 4)
     participant Worker as agent_loop --wi (lane subprocess)
     participant Agent as agent CLI
@@ -1501,10 +1507,10 @@ sequenceDiagram
         Loop-->>Launcher: typed nonzero exit (EXIT_PREFLIGHT), never hangs
     else ok
         Loop->>Lock: _coordinator_lock (SR-030/LLR-030 refuse a 2nd writer)
-        Lock-->>Loop: held for the process lifetime (kernel-released on death — SR-029)
+        Lock-->>Loop: held for the process lifetime (kernel-released on death — LLR-029)
         Loop->>Disp: _drive_entry — nothing is read from docs/status.md
         Note over Loop,Disp: resume authority is the claimed assignment plus the committed<br/>trailers on its branch (SR-026/LLR-026); the serial<br/>resume-from-status.md loop is retired
-        Disp->>Worker: spawn per admitted lane, stdin closed (SR-060/LLR-061)
+        Disp->>Worker: spawn per admitted lane, stdin closed (LLR-061)
         Worker->>Agent: run headless session(s)
         alt agent errors (retired model / auth)
             Agent-->>Worker: nonzero
@@ -1560,7 +1566,7 @@ sequenceDiagram
     end
 ```
 
-### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (SR-057, SR-093, SR-115, SR-131, SR-132)
+### Flow 4 — Station cycle: admission, lane, refresh, merge slot, intake (LLR-058, LLR-059, LLR-123, LLR-138, LLR-140)
 
 One tick of `dispatch.run`. The three properties hardest to read off the rows:
 the **spine barrier** is a property of admission (nothing slips past an
@@ -1571,16 +1577,16 @@ the run keeps going.
 
 ```mermaid
 sequenceDiagram
-    participant Sched as schedule.py frontier (SR-057/SR-115, LLR-152)
+    participant Sched as schedule.py frontier (LLR-058/LLR-123, LLR-152)
     participant Disp as dispatch.py tick loop (LLR-149)
     participant Lane as lane.py worktree + subprocesses (LLR-150)
     participant Hand as handback.py (LLR-144)
     participant Slot as integrate.py merge slot (LLR-140/LLR-151)
     participant Intake as intake.py (LLR-153/LLR-154)
     loop each tick, until a fatal code or a drained queue
-        Disp->>Disp: tracked pause? dirty trunk? (SR-131/LLR-138) — freeze admission, let lanes come home
+        Disp->>Disp: tracked pause? dirty trunk? (LLR-138) — freeze admission, let lanes come home
         Disp->>Sched: re-derive the ready frontier as (WI, kind) pairs
-        Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (SR-093/SR-115)
+        Sched-->>Disp: exclusive kinds ranked ahead of parallel ones (LLR-059/LLR-123)
         alt an exclusive kind is on the frontier
             Note over Disp: THE SPINE BARRIER — admission stops outright;<br/>the batch admits alone, sole toucher of trunk
         else free lane and parallel work

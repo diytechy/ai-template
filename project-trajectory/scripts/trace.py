@@ -336,7 +336,7 @@ ENUM_FIELDS = {
             "Inspection",
             "Attest",
             "Critique",
-        }
+        },
     },
     "TC": {"Tier": {"Smoke", "Full", "Release"}},
     # WI-443 / OI-14 part B — the IF tier's first closed vocabularies, advisory

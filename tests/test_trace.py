@@ -511,8 +511,14 @@ def test_shipped_sr_template_carries_aspect_column():
     # the CLOSED value set, since an author cannot honour a vocabulary the
     # template does not state.
     assert keys["aspect"].strip()
-    for value in ("process", "trajectory", "unattended-loop",
-                  "connectivity", "perf", "portability"):
+    for value in (
+        "process",
+        "trajectory",
+        "unattended-loop",
+        "connectivity",
+        "perf",
+        "portability",
+    ):
         assert value in keys["aspect"], value
 
 
@@ -572,9 +578,7 @@ def test_out_of_vocabulary_aspect_is_a_schema_finding(scaffold):
     assert "schema-findings=1" in proc.stdout
     # ...and under --strict it GATES and the finding names the row, the
     # offending value and the allowed set.
-    strict = run_py(
-        ["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold
-    )
+    strict = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert strict.returncode == 1, strict.stdout + strict.stderr
     assert "SR-001" in strict.stdout
     assert "Parallel dispatch" in strict.stdout
@@ -591,9 +595,7 @@ def test_blank_aspect_is_never_a_schema_finding(scaffold):
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
         ASPECT_SRS.replace(",perf\n", ",\n"), encoding="utf-8"
     )
-    proc = run_py(
-        ["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold
-    )
+    proc = run_py(["scripts/trace.py", "--strict", "--strict-schema"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "schema-findings=0" in proc.stdout
 

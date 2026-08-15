@@ -53,3 +53,38 @@ where an obligation fit no existing carrier; none were required. The demotions
 were applied from three cluster manifests (harness 27 · generators 16 · loop
 30), each authored against the WI-444 token bar and machine-checked for
 coverage before application.
+
+## The runtime-flows re-pointing (found at the merge bar, not before it)
+
+`check_flows` refused the merge: `docs/architecture.md`'s Runtime flows section
+cited **eight requirement ids the campaign had demoted** — SR-029, SR-057,
+SR-060, SR-093, SR-115, SR-124, SR-131, SR-132. Nothing earlier in the campaign
+caught it, because the flows are hand-authored prose that only `check_flows`
+reads, and the per-commit smoke tier does not run it. It is the same lesson act
+4 already recorded about the smoke-only bar, reaching a different artifact.
+
+Each citation was re-pointed onto the design row that now carries the
+obligation. The map is the census disposition read onto the surviving carrier's
+title — mechanical re-pointing, not re-statement:
+
+| Demoted | Census disposition | Carrier | Carrier title |
+|---|---|---|---|
+| SR-029 | pins the mechanism (kernel advisory lock) | LLR-029 | Kernel advisory lock |
+| SR-057 | CMP-008 frontier machinery | LLR-058 | WI-DAG frontier + deterministic traincar ordering |
+| SR-060 | worker-protocol mechanics | LLR-061 | Explicit WI/train/worktree worker assignment |
+| SR-093 | classification machinery | LLR-059 | Pure safety classifier |
+| SR-115 | ordering machinery | LLR-123 | Deterministic traincar ordering |
+| SR-124 | PlanMode-class machinery | LLR-131 | Contradiction-safe dual-plan class |
+| SR-131 | pause-drain mechanics | LLR-138 | Tracked pause reader (dual-home) |
+| SR-132 | `integrate.py` = IF-080, ruled internal | LLR-140 | Local integrator (claim + queue + audit) |
+
+**A finding worth keeping:** the section carried a standing note recording
+"inherited drift" — SR-132 still specifying the composed-tree bar, SR-093 and
+SR-124 still describing the five-class ladder, LLR-143 still naming the deleted
+`drive.py`. That drift was scoped to WI-390 as spine work needing an owner
+sitting. **The re-tier discharged it instead**, by deleting the rows that were
+drifting. The note is rewritten to say so.
+
+**Open to overrule.** Eight carrier choices were made mechanically from titles;
+none was ruled. SR-115→LLR-123 and SR-057→LLR-058 are the two worth a second
+look, since LLR-058's own title spans both frontier *and* ordering.
