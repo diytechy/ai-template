@@ -253,7 +253,7 @@ def _refresh_or_quarantine(root, branch, tier):
     return refusal
 
 
-def _kind_action(kind, human_held):
+def _kind_action(kind, human_held, approval_held=False):
     """The §A8 policy table — what the dispatcher does with a frontier row of
     `kind`, and the one place this module must not invent policy:
 
@@ -276,13 +276,33 @@ def _kind_action(kind, human_held):
     job. `attestation`/`gate` close a window, which on a human-held tier is the
     human's act (drain, surface the cards, exit 0) and otherwise dispatches — a
     recorded fresh-context reviewer verdict ratifies. The last arm also covers
-    `adjudication`: exclusive, like every non-parallel kind."""
+    `adjudication`: exclusive, like every non-parallel kind.
+
+    `approval_held` IS THE OFF-SPINE AXIS (owner ruling OI-30 D3, 2026-08-15),
+    and it is a SECOND reason to surface rather than a widening of the first.
+    `human_held` answers about the SPINE tier the repo is in; a WI whose action
+    would move an `approval` cell in an off-spine registry is governed by THAT
+    registry's own rung — `agent_common.human_approves(docs, registry)`, which
+    reads the same `human_ratification_through` dial through
+    `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
+    write an approval a human owes, even on a spine tier the project has
+    declared machine-ratifiable.
+
+    IT DEFAULTS FALSE AND EVERY CALLER IN THIS MODULE PASSES THE DEFAULT, which
+    is stated rather than hidden: NO WI KIND CARRIES A REGISTRY IDENTITY TODAY.
+    The frontier is `(id, kind)` pairs, and threading a registry through
+    admission to satisfy a rule with no live writer would be building the wrong
+    half first. This parameter is the SEAM the rule is enforced at, placed so the
+    caller that first learns which registry a row would touch has somewhere to
+    say so — and `tests/test_ratification_level.py` pins that no shipped loop
+    module writes an `approval` cell in the meantime, which is the guard that
+    actually bites today."""
     if kind in ("ordinary", "critique"):
         return "parallel"
     if kind == "spine":
         return "batch"
     if kind in ("attestation", "gate"):
-        return "surface" if human_held else "exclusive"
+        return "surface" if (human_held or approval_held) else "exclusive"
     return "exclusive"
 
 

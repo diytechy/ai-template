@@ -24,6 +24,9 @@ signing acts are all still yours.
 | LLR-158/TC-153 re-pointed onto the surviving mechanism; LLR-173/TC-167/IF-123–129 mint the snapshot module's spine coverage; dead `_rows_at`/`_toml_rows_text` deleted | `2026-08-15h` | done |
 | The second top-down read (6 findings: 2 fixed, 4 recorded — §3) + the SKIP guard (built; the stronger refusal shape is yours to accept or decline — §3) | `2026-08-15i` | done |
 | Adversarial round 2 — CHANGES-REQUESTED, 7 MAJOR (5 confirmed+fixed, 1 half-confirmed+fixed, 1 dispositioned — §4); `WI-460` CLOSED, the re-tier's verification COMPLETE | `2026-08-15j` | done, fixes overturnable |
+| **D-9 migration step 5/5b — THE RENAME**: the Status enum narrows to `{Drafted, Approved, Modified}` (SR 15/22/22, LLR 17/59/79, TC 16/127/7) · `Planned` FOLDS into `Approved` per your D1 and `is_planned` is deleted in both homes · 136 off-spine `approval` cells `draft`→`drafted` · `drafts=`→`drafted=` and `planned=` gone from the basis line with `check._BASIS_RE` in the same commit · shipped prose + templates + ~185 test literals + 3 goldens. **The gate did not move: DevBar-Reqs, stage DevStg-Boundary.** | `2026-08-15m` | done, overturnable |
+| **The `sr_bar` ceiling + its marker (your D2)** — `DevBar-Release` unreachable-by-cell, regression pin commented as deliberately deleted when the harness driver lands; the derived line renders `DevBar-Tests (Release: pending harness driver)` from one home. **§3 gains a measured finding: the ceiling's "loosens nothing" premise is FALSE for 11 harness steps** — read it before you accept the ceiling as ruled. | `2026-08-15m` | done; **one finding for you** |
+| **Ladder-derived off-spine approval authority (your D3)** — `agent_common.APPROVAL_RUNGS` + `human_approves`, no new key and no new enum; the dispatcher seam + the writer-side contract, with the honest note that no WI kind carries a registry identity today | `2026-08-15m` | done |
 
 **Measured state:** `SN=27 SR=59 LLR=155 TC=150 orphans=0 integrity=0
 component-findings=0 interfaces=122 interface-findings=0 form-findings=2` (the
@@ -122,26 +125,31 @@ Detail and reasoning: log `2026-08-15j`.
 1. **Rule OI-30** (§2, three calls). Everything after step 2 is shaped by them.
 2. **Sweep §3's judgement items** — each is a one-line confirm/overrule; the
    log entries carry the detail.
-3. **The rename (migration step 5/5b) executes** — mechanical, ~30 min of
-   agent work once OI-30 D1 is ruled: `Draft→Drafted`, `Verified→Approved`,
-   `Planned→` per your D1 ruling, predicates, templates, shipped prose, the
-   basis-line + `_BASIS_RE` in one commit, the `--ratify` scope rename. The
-   complete touchpoint table is
-   [2026-08-15-d9-migration-plan.md](2026-08-15-d9-migration-plan.md) §B.
-4. **Review the ratification brief** —
+3. **Review the ratification brief** —
    [docs/ratify/2026-08-13-wi444.md](../ratify/2026-08-13-wi444.md)
    (regenerate first: `trace.py --ratify modified --out …`) and
    [open-items.html](../open-items.html) §2. The wave signs the `Modified`
    rows and ratifies the Draft ones — this is sitting-3's §2.1 window, and the
    status-vocabulary program rides it as one sequence (ruling `2026-08-14e`).
-5. **Sign** — `intake.py`'s flip writer records your rulings; then **seed the
+4. **Sign** — `intake.py`'s flip writer records your rulings; then **seed the
    snapshot**: `python project-trajectory/scripts/intake.py snapshot --seed`
    in the same reviewed commit. This is the first copy to
    `docs/archive/last_approved/` and the birth of drift detection.
-6. **Steps 7–8 execute** (mechanical follow-on, same reviewed act): retire
-   `Modified` + the transitional predicates, arm the UNANCHORED rule on the
-   integrity floor, apply the `sr_bar` ceiling per your D2 ruling.
-7. **`push = "human"` remains yours**, as does the merge-to-main call.
+5. **Step 7 executes** (mechanical follow-on, same reviewed act): retire
+   `Modified` + the transitional predicate, narrow the enum to two, resolve
+   `intake`'s `!= "Modified"` guard into a refusal, and arm the UNANCHORED rule
+   as an ERROR on the integrity floor. (The `sr_bar` ceiling of your D2 is
+   already landed — see §1 and its finding in §3.)
+6. **`push = "human"` remains yours**, as does the merge-to-main call.
+
+**THE RENAME IS NO LONGER A SITTING STEP.** Migration step 5/5b executed
+2026-08-15 under your three OI-30 rulings (`2026-08-15m`); the brief in step 3
+has been REGENERATED and its cells now read the new words. What changed for you:
+the brief went from 47 SR sections to **37**, because the 10 SRs that read
+`Planned` now read `Approved` and an approved row owes no re-attest. Those ten
+are named in the log entry — **they are the rows the fold moved past you**, and
+they are unanchored until the seed, so step 4 blesses their text whether or not
+you read it here. Read them from the log's list, or overrule the fold.
 
 ---
 

@@ -1711,7 +1711,21 @@ def _cmd_snapshot(args):
     commit in the life of a repo: the signing act that first blesses the spine,
     after every pending row has been ruled. Copying before that sitting would
     launder exactly the re-blessing those rows owe (repo-lock D-10's sequencing
-    rule, with "stamping hashes" swapped for "copying files")."""
+    rule, with "stamping hashes" swapped for "copying files").
+
+    IT COPIES OFF-SPINE APPROVAL CELLS AND DOES NOT MOVE THEM, which is the
+    distinction OI-30 D3 makes and the reason this path needs no
+    `agent_common.human_approves` refusal. `SNAPSHOTTED` includes
+    `interfaces.toml`, `external.toml` and `components.toml` precisely so the
+    record of what was blessed is whole — but a COPY records a human's decision,
+    it never makes one, so no authority question arises. The refusal belongs on
+    a WRITER, and this module ships none: `_apply_flips` moves SPINE `status`
+    cells only (`check_trajectory.SPINE_CSVS` is its universe). If a future
+    command here learns to write an `approval`, it must consult
+    `agent_common.human_approves(root / "docs", <registry stem>)` and refuse
+    when it answers True — the contract is stated at the predicate, and
+    `tests/test_ratification_level.py` fails the moment a shipped loop module
+    starts writing one."""
     root = Path(args.root).resolve()
     written = baseline_snapshot.copy_live(root, seed=args.seed)
     return _cli_result(

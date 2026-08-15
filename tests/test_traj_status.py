@@ -82,7 +82,10 @@ def test_status_splices_derived_facts(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     block = block_of(tmp_path)
     # derived gate + spine come from the docs/gate basis line (the SSOT cache)
-    assert "derived **DevBar-Tests**" in block
+    # THE CEILING MARKER (OI-30 D2), rendered from `derive_gate.bar_label` — its
+    # one home — so this surface and PROJECT_STATE.html cannot disagree about
+    # whether a withheld top bar is announced.
+    assert "derived **DevBar-Tests (Release: pending harness driver)**" in block
     assert "per-phase `1=DevBar-Release;2=DevBar-Tests`" in block and "phase=2" in block
     assert "SN=1 SR=2 LLR=3 TC=4" in block and "(1 draft)" in block
     # the hand-authored intent + Scope stay OUTSIDE the markers, untouched

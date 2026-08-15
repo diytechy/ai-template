@@ -17,6 +17,12 @@ import sys
 
 import baseline_snapshot
 import check_trajectory as ct
+
+# The bar-name RENDERER only (`bar_label`) — not a second gate derivation. The
+# value still comes from `docs/gate`'s cached basis line; this module asks
+# derive_gate how a human should READ that value, which is the one home for the
+# OI-30 D2 ceiling note.
+import derive_gate
 import traj_parse
 from traj_parse import _spine, cmp_rows, spine_stats
 
@@ -373,8 +379,14 @@ def _stage_line(gate, basis, gate_detail):
     A `docs/gate` predating the `stage=` field, or carrying a label this ladder
     does not name (including a cache still holding the retired integer form),
     degrades to the bar-only wording rather than inventing a stage — the same
-    absent-means-absent direction derive_gate takes."""
-    gate_txt = gate or "(none)"
+    absent-means-absent direction derive_gate takes.
+
+    THE BAR NAME IS RENDERED THROUGH `derive_gate.bar_label`, not interpolated
+    raw: while the OI-30 D2 ceiling holds, the name carries "(Release: pending
+    harness driver)" so a reader never mistakes a withheld top bar for a
+    regression. One home, so this surface and `PROJECT_STATE.html` (which renders
+    this same block) cannot disagree."""
+    gate_txt = derive_gate.bar_label(gate) if gate else "(none)"
     stage = basis.get("stage")
     link = "[`derive_gate.py`](../project-trajectory/scripts/derive_gate.py)"
     if stage in _STAGE_LABELS:

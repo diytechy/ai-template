@@ -1327,6 +1327,60 @@ If you have a job that ratifies a phase tag which no longer exists, it will
 start failing; that is the point, because the empty brief it used to produce
 read as *"there is nothing to ratify"* to the human about to sign it.
 
+### The `Status` ladder RENAME: `Draft`→`Drafted`, `Planned`/`Verified`→`Approved` [since 3771c003]
+
+The successor to the entry above, and the one that moves **cells**, not just
+machinery. The enum narrows from four values to three — `{Drafted, Approved,
+Modified}` — and it is enforced on the always-on `--strict-integrity` floor, so
+an unmigrated cell is a hard finding on your very next commit, not a silent
+inertness. **Order matters; each step below is a separate failure if skipped.**
+
+1. **The value map, applied to every SR/LLR/TC `status` cell.** `Draft` →
+   `Drafted`; `Verified` → `Approved`; **`Planned` → `Approved`**. The third is
+   a FOLD, not a rename: `Planned` (text ratified, evidence pending) and
+   `Verified` (text ratified, evidence established) named one rung once the
+   vocabulary stopped making a pass claim, so they collapse. Matching stays
+   case-insensitive, so casing in your cells is not the issue — spelling is.
+2. **The off-spine approval cells:** `approval = "draft"` → `"drafted"` in
+   `docs/requirements/interfaces.toml` and `external.toml` (the `approved`
+   spelling is unchanged). One word, one meaning, across every registry.
+3. **The predicate renames, if you patched or imported them:** `is_draft` →
+   `is_drafted` (in `trace_text.py`, re-exported by `trace.py`), `is_verified` →
+   `is_approved` (in `trace.py` AND `derive_gate.py` — they are F5 duplicates
+   and both move). **`is_planned` is DELETED, not re-keyed**; every site that
+   read it now reads one of the three live predicates.
+4. **The templates.** Overwrite `registries/*.template.toml`: the SR and TC
+   examples now ship `status = "Drafted"` and the LLR example `status =
+   "Approved"`. A scaffold created before this change still ships the retired
+   words in its `-000` rows; those rows are placeholder-exempt from the
+   integrity rule, so nothing fails — but leaving them means your template
+   teaches a vocabulary the checker refuses.
+5. **THE ONE THAT BITES SILENTLY — the `# basis:` line format.**
+   `derive_gate.py` now emits `drafted=N` where it emitted `drafts=N`, and it no
+   longer emits `planned=N` at all. Any consumer that parses that line by regex
+   must move in the same commit or it goes BLIND rather than red — the kit's own
+   `check._BASIS_RE` did exactly this once and twelve gate steps stopped running
+   for twelve commits before anyone noticed. If you have local tooling reading
+   `docs/gate`'s basis line, grep it for `drafts=` and `planned=` first.
+   Regenerating `docs/gate` (`python scripts/derive_gate.py`) is required
+   regardless: `--check` compares the line whole.
+
+**If you carry a WIDER LLR/TC vocabulary** (`Implemented`, `In-Review`, …), this
+is the change that ends it. The kit used to document `Status` as open with three
+magic values and everything else "legal, unvalidated, and mechanically inert";
+that promise is retired, and prose in `process.md` §4,
+`process-options.md` and `docs/registry-machinery-reference.md` now says so. Map
+your extra values onto the three before re-syncing — anything below approval is
+`Drafted`, anything blessed is `Approved` — or every such row becomes an
+integrity finding.
+
+**A behaviour change to expect on the derived gate.** `sr_bar` now ceilings at
+`DevBar-Tests`: `DevBar-Release` is unreachable from a Status cell, and the
+rendered bar says so — `DevBar-Tests (Release: pending harness driver)`. This is
+deliberate and it is what keeps the `Planned`→`Approved` fold from RAISING your
+derived gate for rows that never passed anything. `check.py --gate
+DevBar-Release` stays explicitly invocable at any time.
+
 ---
 
 ## 4. Translation helper — concept renames

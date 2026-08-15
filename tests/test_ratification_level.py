@@ -24,6 +24,7 @@ Three things this module pins, each because a cut got it wrong:
 """
 
 import inspect
+from pathlib import Path as _Path
 
 import pytest
 from conftest import load_script, set_process_key
@@ -645,3 +646,125 @@ def test_the_clean_close_sample_is_DETERMINISTIC(tmp_path):
     assert picked == {"WI-004", "WI-008", "WI-012"}
     # ...and `off` really means none, whatever the rate says.
     assert intake._complete_spot_checks(tmp_path, outcomes) == [] or True
+
+
+# --- OI-30 D3: off-spine approval authority, DERIVED from the same dial --------
+def test_APPROVAL_RUNGS_is_the_off_spine_sibling_of_DIAL_HOLDS(tmp_path):
+    """The map is small, closed, and every value is a REAL rung of the ladder.
+
+    A typo'd rung would send `human_approves` through `human_holds`' unrecognized
+    arm, which answers True — safe, but silently: the registry would read as held
+    for a reason nobody intended. Pin the values against the ladder itself."""
+    assert set(ac.APPROVAL_RUNGS) == {"external", "interfaces", "components"}
+    for registry, rung in ac.APPROVAL_RUNGS.items():
+        assert rung in ac.LADDER_RUNGS, (registry, rung)
+    # The ruled mapping, verbatim: each registry gets the rung `derive_gate`
+    # ALREADY gates on it — external.toml is what `boundary_incomplete` reads,
+    # the component registry is what `arch_incomplete` reads.
+    assert ac.APPROVAL_RUNGS["external"] == dg.STAGE_BOUNDARY
+    assert ac.APPROVAL_RUNGS["interfaces"] == dg.STAGE_ARCH
+    assert ac.APPROVAL_RUNGS["components"] == dg.STAGE_ARCH
+    # NO NEW KEY: the ruling's whole point. `human_approves` must answer from the
+    # existing dial, so a repo that never declares anything new still gets it.
+    # The OVERTURNED proposal's key must exist NOWHERE that a reader could take
+    # for a live declaration — not as a module attribute, and not as a line in
+    # the one policy home or the template it ships. (It is NAMED in prose, in
+    # `agent_common`'s comment and in `docs/process.toml`'s, because recording
+    # what was overturned is how the next author knows not to re-propose it.)
+    assert not hasattr(ac, "human_approval_registries")
+    assert not hasattr(ac, "HUMAN_APPROVAL_REGISTRIES")
+    root = _Path(__file__).resolve().parents[1]
+    for rel in ("docs/process.toml", "project-trajectory/process.template.toml"):
+        path = root / rel
+        if not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            code = line.split("#", 1)[0]
+            assert "human_approval_registries" not in code, (rel, line)
+
+
+def test_human_approves_MAPPED_and_HELD_at_this_repos_dial(tmp_path):
+    """Arm 1 — the state this repo is in. At level 4 every rung is held, so every
+    mapped registry's approval cells are the owner's."""
+    docs = _docs(tmp_path, level=4)
+    for registry in ac.APPROVAL_RUNGS:
+        assert ac.human_approves(docs, registry) is True, registry
+
+
+def test_human_approves_MAPPED_and_FREE_at_a_low_dial(tmp_path):
+    """Arm 2 — the arm that proves the predicate is DERIVED rather than a
+    constant `True` wearing a lookup. At level 1 only Needs/Boundary are held, so
+    `external` (DevStg-Boundary) stays the human's while `interfaces` and
+    `components` (DevStg-Arch) become machine-flippable."""
+    docs = _docs(tmp_path, level=1)
+    assert ac.human_approves(docs, "external") is True
+    assert ac.human_approves(docs, "interfaces") is False
+    assert ac.human_approves(docs, "components") is False
+    # ...and at level 0 nothing is held at all, which is what "no new enum"
+    # buys: the off-spine axis moves with the one dial and never independently.
+    docs0 = _docs(tmp_path / "zero", level=0)
+    for registry in ac.APPROVAL_RUNGS:
+        assert ac.human_approves(docs0, registry) is False, registry
+
+
+def test_human_approves_UNMAPPED_is_HELD_fail_safe(tmp_path):
+    """Arm 3 — the fail-safe direction, ruled explicitly: an approval-carrying
+    registry with no rung mapping is HELD, because a registry nobody has
+    associated with a rung is one nobody has ruled on."""
+    docs = _docs(tmp_path, level=0)  # the MOST permissive dial there is
+    for unknown in ("assets", "procurement", "", None, "Interfaces "):
+        # (`"Interfaces "` is the casing/whitespace arm: it MAPS, because the
+        # lookup normalises — an unmapped answer there would be a false hold
+        # hiding a real one.)
+        expected = unknown is not None and unknown.strip().lower() in ac.APPROVAL_RUNGS
+        assert ac.human_approves(docs, unknown) is (not expected), unknown
+
+
+def test_no_shipped_loop_module_WRITES_an_approval_cell():
+    """THE GUARD THAT ACTUALLY BITES TODAY (OI-30 D3's writer-side contract).
+
+    No WI kind carries a registry identity, so `dispatch._kind_action`'s
+    `approval_held` seam has no live caller — which is stated in its docstring
+    rather than dressed up. What CAN be enforced now is the premise that makes
+    that acceptable: the kit ships NO automated writer of an off-spine `approval`
+    cell. The moment one is added this fails, and whoever adds it has to route it
+    through `agent_common.human_approves` first.
+
+    Narrow on purpose: an `approval` word in a comment is documentation (these
+    modules are full of it). What is forbidden is ASSIGNING the approved value to
+    an approval-shaped key in running code."""
+    import re as _re
+    from pathlib import Path as _Path
+
+    scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
+    # `approval = "approved"`, `approval: "approved"`, `["approval"] = "approved"`
+    # and the TOML line an emitter would write.
+    pat = _re.compile(r"""approval["'\]]*\s*[:=]\s*["']approved["']""", _re.IGNORECASE)
+    offenders = []
+    for path in sorted(scripts.glob("*.py")):
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            code = line.split("#", 1)[0]
+            if pat.search(code):
+                offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
+    assert not offenders, (
+        "a shipped script writes an off-spine `approval` cell — route it through "
+        "`agent_common.human_approves(docs, registry)` and REFUSE when it "
+        "answers True (OI-30 D3):\n" + "\n".join(offenders)
+    )
+
+
+def test_the_dispatcher_seam_surfaces_on_EITHER_hold():
+    """`approval_held` is a second reason to surface, not a widening of the
+    spine one: a held approval surfaces an attestation/gate row even on a spine
+    tier the project declared machine-ratifiable."""
+    dispatch = load_script("dispatch")
+    assert dispatch._kind_action("attestation", False) == "exclusive"
+    assert dispatch._kind_action("attestation", False, approval_held=True) == "surface"
+    assert dispatch._kind_action("gate", False, approval_held=True) == "surface"
+    assert dispatch._kind_action("attestation", True, approval_held=False) == "surface"
+    # Every other kind is untouched by the off-spine axis — the ruling is about
+    # who may write an approval, not about what may run.
+    for kind in ("ordinary", "critique", "spine", "high-risk", "adjudication"):
+        assert dispatch._kind_action(kind, False, approval_held=True) == (
+            dispatch._kind_action(kind, False)
+        ), kind

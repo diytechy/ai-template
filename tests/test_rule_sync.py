@@ -299,9 +299,12 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         assert TRACE.is_drafted(verified) is False, m  # bar applies (ratified)
         assert TRACE.is_approved(verified) is True, m  # Approved -> passes
         assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
-        # sr_bar for a decomposed SR reads the SAME is_approved predicate, also
-        # method-blind — every method, same answer.
-        assert GATE.sr_bar(verified, True, True) == GATE.BAR_RELEASE, m
+        # sr_bar for a decomposed SR is method-blind too — every method, same
+        # answer. Since OI-30 D2 that answer is DevBar-Tests for BOTH sides (the
+        # ceiling), so the equivalence this test pins now lives entirely on the
+        # trace side above; the assertion below keeps sr_bar method-blind, which
+        # is the half the ceiling does not touch.
+        assert GATE.sr_bar(verified, True, True) == GATE.BAR_TESTS, m
         assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
     # A Drafted SR is pre-ratification and exempt from BOTH: trace's bar stands down
     # (is_drafted True, so the loop `continue`s) and sr_bar returns DevBar-Below (below DevBar-Reqs).

@@ -119,7 +119,9 @@ def write_watermark(root, **marks):
     return path
 
 
-def spec_text(wid, safety="ordinary", specref=None, deliverable="A widget, shipped."):
+def spec_text(
+    wid, safety="ordinary", specref=None, deliverable="A widget, shipped.", bar=None
+):
     lines = [
         'id = "{}"'.format(wid),
         'title = "Widget"',
@@ -129,6 +131,8 @@ def spec_text(wid, safety="ordinary", specref=None, deliverable="A widget, shipp
         'safety_class = "{}"'.format(safety),
         "order = 0",
     ]
+    if bar:
+        lines.append('bar = "{}"'.format(bar))
     if specref:
         lines.append('specref = "{}"'.format(specref))
     text = "+++\n" + "".join(ln + "\n" for ln in lines) + "+++\n"
@@ -570,7 +574,7 @@ def add(a, b):
 '''
 
 
-def scaffold_with_queued_wi(tmp_path):
+def scaffold_with_queued_wi(tmp_path, bar=None):
     """A bootstrapped, DevBar-Release-complete scaffold with WI-401 queued — the state a
     plain launch starts from. Mirrors test_integrate.scaffolded_closed_branch
     (fixture notes there), except the WI is still QUEUED: claiming it is the
@@ -589,7 +593,7 @@ def scaffold_with_queued_wi(tmp_path):
     disable_blackout(repo)
     with (repo / ".gitignore").open("a", encoding="utf-8", newline="\n") as fh:
         fh.write("out/\n")
-    write_spec(repo, "queued", "WI-401", specref="docs/log.md")
+    write_spec(repo, "queued", "WI-401", specref="docs/log.md", bar=bar)
     record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
     _git(repo, "config", "user.email", "t@example.com")
@@ -659,7 +663,22 @@ def test_drive_stops_on_a_red_refresh_bar(tmp_path, capfd):
     # and the driver STOPS with the branch still claimed. Nothing merged,
     # nothing skipped, and (unlike the composed-tree bar this replaced) nothing
     # parked on a candidate branch for someone to go and read.
-    repo = scaffold_with_queued_wi(tmp_path)
+    #
+    # THE WI PINS ITS OWN `bar:` SINCE THE OI-30 D2 CEILING, and that is not
+    # test-plumbing — it is this test proving the escape hatch the ruling rests
+    # on. `sr_bar` now stops at DevBar-Tests, so a fully approved scaffold no
+    # longer DERIVES DevBar-Release, and the `tests+coverage` step is tagged for
+    # DevBar-Release alone: without the pin the broken product source below would
+    # sail through a green bar. The `bar:` frontmatter key (WI-388) is exactly
+    # the "`--gate DevBar-Release` stays explicitly invocable" half of the
+    # ruling, and it is what a lane that wants the strict plan uses.
+    #
+    # MEASURED CONSEQUENCE, NAMED FOR THE SITTING (log 2026-08-15m): under the
+    # ceiling, a derived-gate plan never reaches DevBar-Release, so
+    # `tests+coverage` and `module-coverage` stop being selected by derivation
+    # for every repo — they are in `check.ADVISORY_EXCLUDE`, so the open-window
+    # advisory tier does not cover them either.
+    repo = scaffold_with_queued_wi(tmp_path, bar="DevBar-Release")
 
     rc = drv.run(repo, drive_args(), worker=closing_worker(E2E_BAD_SRC), tier="smoke")
     assert rc == 1

@@ -553,6 +553,39 @@ DIAL_HOLDS = {
 }
 
 
+# THE OFF-SPINE SIBLING OF `DIAL_HOLDS` (owner ruling OI-30 D3, 2026-08-15).
+#
+# `human_ratification_through` governs the SPINE tiers. The off-spine registries
+# that carry an `approval` cell — `interfaces.toml`, `external.toml`,
+# `components.toml` — were governed by PROSE ONLY: their headers said the cells
+# were the owner's to flip, and at any dial below 4 nothing refused a loop
+# session that wrote `approved`.
+#
+# THE RULED SHAPE IS DERIVED, NOT DECLARED, and the owner's question is why:
+# *"I thought this would follow the dev-stage directly? Why build a new enum?"*
+# The proposal on the table was a new `[attestation] human_approval_registries`
+# list; it was OVERTURNED because the registry-to-rung association ALREADY
+# EXISTS in `derive_gate` — `boundary_incomplete` gates DevStg-Boundary on
+# `external.toml`'s approvals, and `arch_incomplete` gates DevStg-Arch on the
+# component registry. So the association is existing fact, and a second
+# declaration of it would be a rival answer that agrees until someone edits one.
+#
+# NO NEW KEY AND NO NEW ENUM: authority over an approval cell in registry R is
+# whether R's stage rung is human-held under the EXISTING dial. At this repo's
+# dial of 4 the effect is identical to the prose it replaces — derived rather
+# than declared.
+#
+# AN UNMAPPED APPROVAL-CARRYING REGISTRY IS HELD. The map is small and the
+# registries are optional, so "I do not know which rung governs this" must
+# resolve toward more human involvement, exactly as `human_holds` resolves an
+# unreadable dial and an unrecognized rung.
+APPROVAL_RUNGS = {
+    "external": "DevStg-Boundary",
+    "interfaces": "DevStg-Arch",
+    "components": "DevStg-Arch",
+}
+
+
 def human_holds(docs, stage):
     """Is work at spine `stage` still the HUMAN's to ratify?
 
@@ -587,6 +620,42 @@ def human_holds(docs, stage):
     if stage not in LADDER_RUNGS:
         return True
     return stage in DIAL_HOLDS.get(level, frozenset())
+
+
+def human_approves(docs, registry):
+    """May only a HUMAN move an `approval` cell in this off-spine `registry`?
+
+    True means HELD — the cell is the owner's, in a reviewed Status-change
+    commit. The mirror of `human_holds`, and deliberately the same shape: one
+    predicate, one home, consulting one table.
+
+    `registry` is the registry's STEM as the repo names it — `"interfaces"`,
+    `"external"`, `"components"` — not a path, because the caller that knows it
+    is a work item's action rather than a file reader.
+
+    THREE ARMS, and only the third is new thinking:
+      * MAPPED and its rung is human-held under `human_ratification_through`
+        -> True (held). This is every registry at this repo's dial of 4.
+      * MAPPED and its rung is not held -> False (a loop session may write it,
+        because the project has declared that rung machine-ratifiable).
+      * UNMAPPED -> True (held), FAIL-SAFE. An approval-carrying registry nobody
+        has associated with a rung is one nobody has ruled on, and the only safe
+        answer to that is "the human does".
+
+    THE WRITER-SIDE CONTRACT, stated here because this predicate is the only
+    home for it. Any code path that would set an `approval` cell to `approved`
+    MUST consult this first and refuse when it answers True. Today the kit ships
+    no such automated writer — off-spine approvals are hand-edited — so the
+    live consumers are the dispatcher's attestation/gate arm (`dispatch.
+    _kind_action`, which surfaces rather than dispatching a WI whose action
+    would move a held registry's approvals) and `intake`'s snapshot/flip path,
+    which is where the first machine writer would land. That is the honest
+    statement of scope: the predicate is enforced where a writer exists, and it
+    exists so the next writer cannot be added without meeting it."""
+    rung = APPROVAL_RUNGS.get((registry or "").strip().lower())
+    if rung is None:
+        return True
+    return human_holds(docs, rung)
 
 
 def final_review(docs):

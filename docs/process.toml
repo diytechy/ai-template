@@ -67,6 +67,19 @@
 # ordinal is the shadowing defect the template names, and the kit must
 # not carry in its own config the shape it refuses downstream.
 human_ratification_through = 4
+# OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
+# (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
+# cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
+# each one already gates: `external` -> DevStg-Boundary, `interfaces` and
+# `components` -> DevStg-Arch. An `approval` cell may be machine-flipped only
+# when its registry's rung is not human-held by the number above; an
+# approval-carrying registry with NO rung mapping is HELD. A declared list was
+# proposed and OVERTURNED — the registry-to-rung association already exists in
+# `derive_gate` (`boundary_incomplete`, `arch_incomplete`), so a second
+# declaration would be a rival answer to a question already answered. The map
+# lives beside `DIAL_HOLDS` in `agent_common.py` as `APPROVAL_RUNGS`, read by
+# `agent_common.human_approves`. THIS IS A COMMENT, NOT A KEY: there is nothing
+# here to configure, which is the point of deriving it.
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
 #   "always" — the loop stops for a final human read even when the level would

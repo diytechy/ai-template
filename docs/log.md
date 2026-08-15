@@ -36,6 +36,123 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15m — THE RENAME LANDED, the ceiling with it, and off-spine
+  approval authority became derived rather than declared.** *Executed
+  provisionally under the owner's 2026-08-15 charge-through and overturnable at
+  the review sitting; no `Modified` row was signed, no snapshot was seeded, and
+  step 7 was not started — those three remain the sitting's.* Migration steps
+  5/5b (plan §A/§B) plus OI-30 D2 and D3, in two commits.
+  - **THE VALUES, measured before and after.** `Draft`→`Drafted`,
+    `Verified`→`Approved`, **`Planned`→`Approved` (the D1 fold)**. SR: 15 Draft
+    + 10 Planned + 12 Verified + 22 Modified → **15 Drafted, 22 Approved, 22
+    Modified**. LLR: 17 + 2 + 57 + 79 → **17 Drafted, 59 Approved, 79
+    Modified**. TC: 16 + 2 + 125 + 7 → **16 Drafted, 127 Approved, 7 Modified**.
+    5b: **122** `interfaces.toml` + **14** `external.toml` `approval` cells
+    `draft`→`drafted`, both file headers, both shipped templates,
+    `BIF_MATURITY`'s key. `Modified` SURVIVES to step 7 — deleting the only
+    drift detector in the commit that renames everything it reads is §F4.
+  - **`is_planned` DELETED, not re-keyed**, in both homes, as its own docstring
+    promised; with it went the `planned=` basis counter and five surface
+    wirings. `trace.py`'s enum is `{Drafted, Approved, Modified}` on the
+    always-on integrity floor, and `test_rule_sync` gained the **negative**
+    assertion: a grep over every shipped script proving no predicate compares a
+    Status to `draft`, `verified` or `planned` again, plus a declaration-side
+    pin on `baseline_snapshot._APPROVAL_CLAIMED` — the third copy a
+    predicate-level battery cannot see.
+  - **The basis line moved WITH its consumer.** `drafts=`→`drafted=`,
+    `planned=` gone, `check._BASIS_RE` re-read in the same commit, and the
+    round-trip pin now asserts the rename in both directions. That pairing is
+    the twelve-commit precedent, and it is the one thing in this program that
+    fails silently rather than loudly.
+  - **THE GATE DID NOT MOVE.** `docs/gate` re-derives to **DevBar-Reqs**,
+    `computed=DevBar-Below`, `ex-draft=DevBar-Below`, `stage=DevStg-Boundary` —
+    identical to before, under the new words. `trace.py --strict`: **orphans=0
+    integrity=0**, the two 13v form waivers surviving. The ratify brief
+    REGENERATED and `ratify-fresh` is green.
+  - **THE FOLD SHRANK THE OWNER'S DECISION SURFACE BY TEN ROWS, and that is the
+    finding of this entry rather than a footnote.** The re-attest brief went
+    from 47 SR sections to 37: **SR-137, SR-138, SR-139, SR-140, SR-144,
+    SR-146, SR-147, SR-148, SR-149, SR-150** read `Planned` and now read
+    `Approved`, so they owe no re-attest and left the brief. This is D1 working
+    as ruled — `Planned` already asserted ratified TEXT — but the consequence is
+    that the sitting will not be shown them, while the seed (step 6) will bless
+    their text. They are UNANCHORED until then, and `unanchored_findings` is
+    vacuous while no snapshot exists, so today they sit on no surface at all.
+    Listed here so the sitting can read them deliberately or overrule the fold.
+  - **THE CEILING (D2) AND ITS MARKER.** `sr_bar` stops at `BAR_TESTS`;
+    `DevBar-Release` is unreachable-by-cell, with a regression pin commented as
+    *deliberately deleted* in the commit that lands the harness driver. The
+    mitigation rides it from ONE home: `derive_gate.bar_label` renders
+    `DevBar-Tests (Release: pending harness driver)`, `traj_status` calls it,
+    and a structural pin asserts the note's text appears in exactly one shipped
+    script and never on `docs/gate`'s machine value.
+  - **AND THE CEILING'S PREMISE IS FALSE AS MEASURED — OWED AT THE SITTING.**
+    The ruling rests on "every `DevBar-Release` consumer is monotone-stricter,
+    so the ceiling withholds escalation and loosens nothing". Measured with
+    `check.py --list`: withholding the top bar drops **`tests+coverage` and
+    `module-coverage` out of every derived plan entirely** (they are in
+    `check.ADVISORY_EXCLUDE`, so the open-window advisory tier does not carry
+    them either) and demotes **nine more** — `format`, `lint`, `doc-refs`,
+    `figures`, `arch-map`, `trajectory-map`, `status-map`, `open-items`,
+    `okf`, `skills-sync` — from gating to advisory. It bit immediately and
+    mechanically: `test_drive_stops_on_a_red_refresh_bar` went GREEN on broken
+    product source, because the unattended driver's refresh bar stopped running
+    the suite. The test is re-pointed onto the WI `bar:` key — which is the
+    "`--gate DevBar-Release` stays explicitly invocable" half of the ruling,
+    now exercised — but the general case stands: **on this ceiling, no repo's
+    derived gate ever selects the test suite again.** The ceiling was landed as
+    ruled rather than held, because D1's fold has already landed and the
+    ceiling is its named guard rail; the sitting should decide whether the
+    step-tag table needs re-cutting under a permanent DevBar-Tests ceiling.
+  - **A SECOND UNRULED CONSEQUENCE OF THE FOLD: `DevStg-Impl` is now
+    unreachable-by-cell too.** That rung meant "decomposed, TCs authored, not
+    yet blessed" — the state `Planned` carried. Every remaining not-`Approved`
+    value (`Drafted`, `Modified`) is caught by an earlier rung returning
+    `DevStg-Reqs`, so a repo whose SRs are all ex-`Planned` now reads
+    `DevStg-Release` where it read `DevStg-Impl`. That is the STAGE-axis twin
+    of the hazard D2 ceilinged on the BAR axis, and D2 covers only the bar.
+    NOT fixed here: a second ceiling is a ruling nobody has taken, and
+    `spine_stage`'s own CAVEAT already owes the harness driver. This repo is at
+    DevStg-Boundary, so nothing moved. Pinned in
+    `test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung`, which now
+    asserts the unreachability with its reason.
+  - **A THIRD: `red_tc_census` (LLR-159) is vacuous on a conformant repo.** Its
+    rung names a red TC by EXEMPTION from `dispatch._TC_NOT_RED`, and the
+    narrowed enum is now EXACTLY that set. The step-2 entry predicted this
+    shape and expected the fold to dissolve it; the fold instead completed it
+    from the other side. `_TC_NOT_RED` moved to the renamed words as instructed
+    and the fixtures re-pointed onto `Implemented` — the mid-migration adopter
+    value the integrity floor names and this rung can still judge. Owed at the
+    sitting: the rung needs a discriminator that is not Status-exemption.
+  - **AUTHORITY (D3), DERIVED.** `agent_common.APPROVAL_RUNGS` sits beside
+    `DIAL_HOLDS` as its off-spine sibling (`external`→DevStg-Boundary,
+    `interfaces`/`components`→DevStg-Arch) and `human_approves(docs, registry)`
+    mirrors `human_holds`: held when the registry's rung is human-held under
+    the EXISTING dial, held (fail-safe) when the registry is unmapped. **No new
+    key, no new enum** — pinned negatively against `docs/process.toml` and the
+    module. The dispatcher gained the seam (`_kind_action(..., approval_held)`)
+    and the honest note that **no WI kind carries a registry identity today**,
+    so the guard that actually bites is a grep pin: no shipped loop module
+    writes an `approval` cell, and the next one that tries fails that test.
+    `intake`'s snapshot path documents why it needs no refusal — a COPY records
+    a decision, it never makes one.
+  - **NOT DONE, deliberately: PROCESS.md's attestation paragraph.** The
+    instruction was conditional on it speaking of approval cells; it does not —
+    it speaks of gate authority, and it still names the RETIRED three-level
+    enum (`attended`/`single-ratify`/`autonomous`) that OI-25 replaced with the
+    0–4 ordinal. That rot is pre-existing and is surfaced as its own finding
+    rather than fixed inline. The derivation is recorded where it belongs:
+    `docs/process.toml`'s `[attestation]` header comment, as a comment and not
+    a key.
+  - **Byte budgets:** PROCESS.md 74,416 → 74,536 (+120), PROCESS_OPTIONS.md
+    171,869 → 171,974 (+105), both flagged and re-stamped in source and the two
+    skill copies; AGENTS.template.md untouched at 9,994.
+  - **STILL AWAITING THE SITTING:** the signing (rule each `Modified` row),
+    the seed (`intake.py snapshot --seed`, the first and only seeding), and
+    step 7 (retire `Modified`, narrow the enum to two, resolve
+    `intake.py`'s `!= "Modified"` guard into a refusal, arm UNANCHORED as an
+    ERROR). Plus the four findings above.
+
 - **2026-08-15l — OI-30 decision 2 RULED (owner, in session): the `sr_bar`
   ceiling STANDS, and OI-30 CLOSES fully ruled.** *"Yes that sounds fine"* —
   after the consumers of `DevBar-Release` were enumerated before the ruling

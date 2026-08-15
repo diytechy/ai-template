@@ -216,11 +216,13 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
 
     _wi_001("docs/specs/WI-404.md")
     # No --gate (what the pre-commit hook passes): the floor stays warn-first even
-    # though the scaffold's own docs/gate says DevBar-Release — a defaulted --gate must not be
-    # resolved through docs/gate, or every commit would be held to the gate bar.
+    # though the scaffold's own docs/gate declares a real bar — a defaulted --gate
+    # must not be resolved through docs/gate, or every commit would be held to the
+    # gate bar. The declared value is DevBar-Tests since OI-30 D2 ceilinged
+    # `sr_bar`; what matters here is only that it is ABOVE the warn-first floor.
     gate_lines = (scaffold / "docs" / "gate").read_text(encoding="utf-8").splitlines()
     declared = [ln.strip() for ln in gate_lines if ln.strip()[:1] not in ("", "#")]
-    assert declared == ["DevBar-Release"], declared
+    assert declared == ["DevBar-Tests"], declared
     warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
     # Explicitly asking for the DevBar-Release bar really gates it (the WI-354 session read

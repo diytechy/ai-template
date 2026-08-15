@@ -312,17 +312,72 @@ def sn_cited_ids(srs):
 
 
 # --- per-artifact bar rules (docs/archive/specs/derived-gate-model.2026-07-20.md §3) -------------
+# THE CEILING (owner ruling OI-30 D2, 2026-08-15). `sr_bar` stops at
+# `BAR_TESTS`: `DevBar-Release` is UNREACHABLE FROM A STATUS CELL until a harness
+# driver computes the release bar from test evidence.
+#
+# WHY IT IS A GUARD RAIL AND NOT A DOWNGRADE. `Verified` used to make two claims
+# at once — the text is ratified AND the evidence passed — and `sr_bar` read the
+# pair as decomposed+Verified -> DevBar-Release. D-9 step 5 deleted the pass claim
+# from the vocabulary (OI-30 D1 folded `Planned` in beside `Verified`), so
+# WITHOUT this ceiling a formerly-`Planned` row with children would satisfy the
+# old rule and the derived gate would RISE to DevBar-Release for rows that never
+# passed anything. That is the migration plan's §F5 risk, and this is its named
+# mitigation.
+#
+# WHY IT LOOSENS NOTHING. Every consumer of `DevBar-Release` was enumerated before
+# the ruling — harness strictness selection, the rung-6/7 stage record, the
+# release checklist; explicitly NOT scheduling — and every one is
+# monotone-stricter in the bar. Withholding the top bar therefore withholds
+# ESCALATION and relaxes no check that was running. `check.py --gate
+# DevBar-Release` stays explicitly invocable at any time, so the strict plan is
+# never unreachable, only never AUTO-SELECTED from a hand-set cell.
+#
+# THE OWNER'S FRAMING, recorded as the design intent: the derived gate can only
+# be truly computed by RUNNING the test sequence, which is more honest than
+# inferring it from a status cell.
+#
+# HOW IT LEAVES. Delete these three lines and the `_RELEASE_CEILING` flag when
+# the harness driver lands; `tests/test_derive_gate.py`'s ceiling pin is
+# commented as deliberately deleted at that moment, so removal is an act rather
+# than a drift.
+_RELEASE_CEILING = BAR_TESTS
+
+# The suffix a HUMAN-FACING render of the bar name carries while the ceiling
+# holds, so the ceiling is never read as a regression. ONE HOME: `bar_label`
+# below is the only place that composes it, and every human surface calls that
+# rather than formatting the name itself. It is deliberately NOT part of
+# `BAR_NAMES` or of `docs/gate`'s runnable last line — those are MACHINE values
+# that `check.py` and CI match exactly, and annotating them would break every
+# consumer to make a note to a reader.
+_CEILING_NOTE = "(Release: pending harness driver)"
+
+
+def bar_label(name):
+    """A bar name as a HUMAN reads it: the machine value, plus the ceiling note
+    when the value is the one the ceiling holds it at.
+
+    The ONE rendering home (OI-30 D2's mitigation). `traj_status` and any other
+    prose surface call this instead of interpolating `name`, so the note cannot
+    appear on one surface and not another — the failure mode a second rendering
+    path guarantees. Unknown or empty names pass through untouched: a surface
+    reading an older `docs/gate` should say what it found, not decorate it."""
+    if name == BAR_NAMES[_RELEASE_CEILING]:
+        return "{} {}".format(name, _CEILING_NOTE)
+    return name
+
+
 def sr_bar(sr, has_llr, has_tc):
-    """The bar an SR row has reached, from its Status + whether it is decomposed."""
+    """The bar an SR row has reached, from its Status + whether it is decomposed.
+
+    CEILINGED AT `BAR_TESTS` since OI-30 D2 — see the block above for why, and
+    for how the ceiling is removed when the harness driver lands."""
     if is_drafted(sr):
         return BAR_BELOW
     exempt = llr_exempt(sr)
     decomposed = (exempt or has_llr) and has_tc
-    verified = is_approved(sr)
-    if decomposed and verified:
-        return BAR_RELEASE
     if decomposed:
-        return BAR_TESTS
+        return _RELEASE_CEILING
     return BAR_REQS  # a ratified requirement not yet decomposed
 
 

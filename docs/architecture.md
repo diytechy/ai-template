@@ -205,6 +205,7 @@ graph LR
     m_scripts_traj_render --> m_scripts_traj_graph
     m_scripts_traj_status --> m_scripts_baseline_snapshot
     m_scripts_traj_status --> m_scripts_check_trajectory
+    m_scripts_traj_status --> m_scripts_derive_gate
     m_scripts_traj_status --> m_scripts_traj_parse
     m_scripts_traj_views --> m_scripts_check_trajectory
     m_scripts_traj_views --> m_scripts_traj_graph
@@ -328,6 +329,7 @@ Contracts (interfaces): IF-037, IF-065
 | `legacy_ratification(word, key)` | One dial's value under a legacy `gate-policy` word, or None when the word |  |
 | `ratification_level(docs)` | `[attestation] human_ratification_through` as an int 0-4. |  |
 | `human_holds(docs, stage)` | Is work at spine `stage` still the HUMAN's to ratify? |  |
+| `human_approves(docs, registry)` | May only a HUMAN move an `approval` cell in this off-spine `registry`? |  |
 | `final_review(docs)` | Does the run stop for a FINAL human read even when the level let it |  |
 | `complete_review(docs)` | `(mode, rate)` for adjudicating a CLEAN close — `"off" \| "sample" \| |  |
 | `keep_nondependent(docs)` | The orthogonal dial the ordinal cannot carry: may other lanes keep |  |
@@ -834,6 +836,7 @@ Contracts (interfaces): IF-050, IF-051
 | `sn_all_ids(text)` | The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md |  |
 | `sn_draft_ids(text)` | The set of Drafted SN ids in a needs registry's `text`, through whichever |  |
 | `sn_cited_ids(srs)` | Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the |  |
+| `bar_label(name)` | A bar name as a HUMAN reads it: the machine value, plus the ceiling note |  |
 | `sr_bar(sr, has_llr, has_tc)` | The bar an SR row has reached, from its Status + whether it is decomposed. |  |
 | `maturity_bar(row)` | An LLR/TC caps the bar only when its own maturity is DRAFTED (`DevBar-Below` |  |
 | `is_modified(row)` | The post-approval `Modified` state (WI-316, process.md §7): content changed |  |
@@ -1432,7 +1435,7 @@ Imports (internal): `traj_graph`
 
 ### `scripts/traj_status`
 _The --status snapshot + pending projection (WI-280 split of gen_trajectory.py)._
-Imports (internal): `baseline_snapshot`, `check_trajectory`, `traj_parse`
+Imports (internal): `baseline_snapshot`, `check_trajectory`, `derive_gate`, `traj_parse`
 Contracts (interfaces): IF-084, IF-125
 
 | Public item | Summary | Implements |
