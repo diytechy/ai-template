@@ -74,10 +74,17 @@ evidence established) and `Planned` (text blessed, evidence pending) — so
 `_claims_approval` below reads both. That mapping is transitional and is
 deleted, not re-keyed, when step 5 renames the values.
 
-Contracts: this module declares no IF-### row yet — the interface row and its
-LLR/TC are owed at the review sitting that rules the snapshot design (log
-2026-08-15g). `check_trajectory`'s connectivity advisory names it meanwhile,
-which is the correct loud state for a module whose seam is not yet declared.
+Contracts: IF-123, IF-128, IF-129 — the seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml). IF-123 is what this
+module PROVIDES; IF-128 and IF-129 are what it consumes — the registry CARRIER
+and the ONE cell-comparison basis. MINTED 2026-08-15 (log 2026-08-15h) with the
+design row LLR-173 and TC-167, closing the gap the previous version of this line
+recorded honestly: the module shipped with no spine coverage of any kind. The
+three rows that consume it are IF-124 (adjudicate_brief), IF-125 (traj_status)
+and IF-126 (gen_open_items), each declared by its own module; `intake` is the
+WRITER and is named as IF-123's counterpart. Everything here is PROVISIONAL —
+the parent SR and the owner cells are recorded picks for the sitting to
+overturn.
 """
 
 from __future__ import annotations
@@ -237,8 +244,9 @@ def load_all(root):
     already refuses rather than returning `[]`, and that refusal is the right
     one here for the reason its own docstring gives one level up: unlike git
     history, a snapshot file is on disk and a person can fix it. The
-    advisory-print degrade `trace._rows_at` uses is correct for HISTORY and
-    wrong here."""
+    advisory-print-and-fall-back degrade that a GIT-HISTORY reader is right to
+    use (`check_trajectory._spine_rows_at`, reading a revision nobody can now
+    edit) is wrong here."""
     base = snapshot_root(root)
     if not base.is_dir():
         return None

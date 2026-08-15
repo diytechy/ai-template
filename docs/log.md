@@ -36,6 +36,69 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15h — the snapshot's spine coverage: two rows re-pointed off the
+  deleted digest engine, one module given the LLR/TC/IF rows it shipped
+  without, and the dead history readers deleted.** *Executed provisionally under
+  the owner's 2026-08-15 charge-through and overturnable at the review sitting;
+  no Status moves upward, and every parent/owner pick below is a recorded pick,
+  not a ruling.* The three registry incoherences 2026-08-15g left behind,
+  cleared: `check_trajectory` WARNs 20 -> 17.
+  - **RE-POINTED, not weakened.** LLR-158 documented
+    `normative_text/sn_normative_text/digest/current_digests` — machinery
+    2026-08-15g deleted whole — and TC-153 cited
+    `tests/test_attestation_digest.py`, a file that no longer exists. Both now
+    describe the mechanism that SURVIVED: LLR-158 is
+    `check_trajectory.split_changed_cells` (the ONE cell-comparison basis, with
+    the id and `Status` excluded structurally and the remainder split by the
+    same `spine_cell_class` the amend-without-flip guard reads), TC-153 names
+    the four drift tests plus the ported premise test in
+    `tests/test_baseline_snapshot.py`. The obligation is untouched — SR-140 still
+    asks that text moved away from its anchor be reported regardless of Status
+    movement, and it still is.
+  - **BOTH STAYED `Draft`, deliberately.** The brief allowed a move to
+    `Modified` "if not already"; both rows read `Draft`, and `Draft` -> `Modified`
+    is not a lateral relabel — `Modified` asserts that a row WAS approved and has
+    since been amended, so it would manufacture an approval nobody signed and
+    put two never-blessed rows on the re-attest brief. Judgement recorded rather
+    than silently taken.
+  - **MINTED (all `Draft`): LLR-173 + TC-167 (`Tier=Full`) for
+    `scripts/baseline_snapshot`,** which landed at 2026-08-15g with no LLR
+    naming it as `Module`, no component membership and no IF row — exactly what
+    `check_trajectory`'s connectivity advisory was for. **Parent is SR-140, and
+    the pick is provisional.** The two candidates were the same row: LLR-158's
+    parent IS SR-140, and SR-140 is also where the delegated-approval record was
+    extended on 2026-08-15. SR-139 was read and passed over — it is the
+    ratification ORDINAL (which tiers a human holds), while this module is the
+    RECORD of what an acceptance blessed, which is SR-140's first clause
+    verbatim. `Component = CMP-006` matches its siblings (`trace`,
+    `spine_carrier`, `check_trajectory` all carry it) and is what clears the
+    knowledge⇒component coverage WARN.
+  - **SEVEN IF ROWS, five of them cross-component discharges.** IF-123 is the
+    provider (counterpart `intake`, the WRITER); IF-124/125/126 are the
+    consumption rows for `adjudicate_brief`, `traj_status` and `gen_open_items`,
+    all CMP-008/009 -> CMP-006 edges the arch-map already carried undeclared.
+    IF-127 discharges an edge that was undeclared BEFORE this session —
+    `adjudicate_brief` -> `trace`, the re-attestation model read. IF-128/129
+    (carrier, comparison basis) are intra-CMP-006 and were not demanded by any
+    rule; they exist because the module genuinely consumes and the `source`
+    marker the "declares no Consumes seam" WARN suggests would have been a false
+    claim. Owner cells are the Q1 polymorphism at work: LLR-173 owns the module
+    surface, LLR-158 owns the comparison it defines, SR-140 owns IF-127's
+    obligation-carrying seam. Every `approval` reads `draft`.
+  - **DEAD CODE DELETED.** `trace._rows_at` and `trace._toml_rows_text` — which
+    2026-08-15g named DEAD in place rather than describing as reserved, and left
+    for this session — had exactly zero readers outside their own three tests
+    (`test_trajectory_staged.py`). Gone, with those tests and the `_filled`
+    helper; ratchet re-stamped DOWN, `trace.py` 4201 -> 4154. Nothing is lost:
+    `check_trajectory._spine_rows_at` is the surviving carrier-aware `git show`
+    reader and the cutover suite still drives the D-5 hazard where that reader
+    actually lives.
+  - **KNOWN, NOT HIDDEN.** The "IF seams cited by no TC" count rises 110 -> 112:
+    five of the seven mints are cited (IF-123/128/129 by TC-167, IF-124/127 by
+    TC-161, each against a suite that genuinely drives them), and IF-125/126 are
+    not, their consumers having no TC to cite them from. Citing them anyway
+    would have been evidence that does not exist.
+
 - **2026-08-15g — the D-9 migration's mechanical prefix LANDED: the Status
   vocabulary closes, `Planned` stops reading as `Bananas`, and the attestation
   baseline moves out of git history and onto disk.** *Executed provisionally

@@ -1505,3 +1505,97 @@ carried_by = "IF-102"
 version = "v1"
 approval = "draft"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 (LLR-170) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120 carrier-consumption shape."""
+
+[interface.IF-123]
+direction = "Provides"
+this_project = "scripts/baseline_snapshot"
+counterpart = "scripts/intake"
+contract = """baseline_snapshot.py: the `last_approved` baseline. copy_live(root, seed=False) -> paths written; byte-for-byte mirror of SNAPSHOTTED into docs/archive/last_approved/; stale carriers deleted; SystemExit without seed=True. load_all(root) -> {(stem, id col): {id: row}}; None when absent; RAISES on an unparseable file; rows_for collapses that None to {}. exists(root) -> bool; stamp(root) -> (rev, date); is_drifted / drifted_cells -> ratified cells only; unanchored_findings -> advisory strings."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names typed outcomes plus unbounded content (the finding strings, the copied registry text), and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140"]
+owner = "LLR-173"
+version = "v1"
+approval = "draft"
+notes = """MINTED 2026-08-15 (log 2026-08-15h) with LLR-173 and TC-167 — the module landed at log 2026-08-15g with no spine coverage of any kind, which is what check_trajectory's connectivity advisory was naming. Design of record: docs/plans/2026-08-15-baseline-snapshot-design.md. THE REFUSALS ARE THE CONTRACT, and each replaces a convenient degrade. The first snapshot blesses whatever text is in the tree, so it must ride the owner's reviewed signing commit: copy_live will not CREATE the directory, and --seed is reachable only from `intake.py snapshot --seed`. None and {} are opposite claims and the empty one reads as "re-bless everything with no diff shown", which is why an unparseable file raises and rows_for is the ONE place the sentinel collapses. The copy preserves repo-relative paths under the snapshot root, so `snapshot_root / rel` reuses every existing resolver verbatim. COUNTERPART IS intake, THE WRITER: exactly two callers of copy_live are sanctioned (intake._apply_flips, after the status write, and `intake.py snapshot`), and nothing may wire the copy into a freshness step — the snapshot is deliberately behind live whenever an amendment is pending, and that lag IS the signal. OWNER is the DESIGN row, not SR-140, on the Q1 polymorphism: SR-140 states the obligation and is answerable for both halves of it, while this row is one module's concrete surface. PROVISIONAL, for the review sitting to overturn."""
+
+[interface.IF-124]
+direction = "Consumes"
+this_project = "scripts/adjudicate_brief"
+counterpart = "scripts/baseline_snapshot"
+contract = """reads the approval baseline through IF-123: consumes baseline_snapshot.exists, SNAPSHOT_DIR and stamp, so the re-attestation brief measures an amendment against an anchor that is not the text under judgement. The half the CONSUMER owes is the refusal: with no snapshot the brief HOLDS and names a FIRST-APPROVAL question, never fabricating an anchor and never rendering a before/after with an empty before. The stamp is advisory - off git, the baseline line omits the date."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names a typed outcome plus unbounded content (the refusal prose), and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140"]
+owner = "LLR-173"
+carried_by = "IF-123"
+version = "v1"
+approval = "draft"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Minted 2026-08-15 (log 2026-08-15h); covered by TC-161's amendment arm."""
+
+[interface.IF-125]
+direction = "Consumes"
+this_project = "scripts/traj_status"
+counterpart = "scripts/baseline_snapshot"
+contract = """reads the approval baseline through IF-123 so the generated status and dashboard surface reports pending amendments against what was blessed, not against HEAD. Consumes the READ half only - load_all, rows_for, is_drifted and the SNAPSHOT_DIR constant - and never copy_live. Vacuous by absence: with no snapshot the surface reports nothing approved, never everything drifted."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names a typed outcome plus unbounded rendered content, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140"]
+owner = "LLR-173"
+carried_by = "IF-123"
+version = "v1"
+approval = "draft"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Minted 2026-08-15 (log 2026-08-15h); cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
+
+[interface.IF-126]
+direction = "Consumes"
+this_project = "scripts/gen_open_items"
+counterpart = "scripts/baseline_snapshot"
+contract = """reads the approval baseline through IF-123 so the generated open-items surface can say which decision rows have moved after the last signing. Consumes the READ half only - load_all, rows_for and the SNAPSHOT_DIR constant - never copy_live. An absent snapshot is the clean pre-signing skip, never an empty baseline."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names a typed outcome plus unbounded rendered content, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140"]
+owner = "LLR-173"
+carried_by = "IF-123"
+version = "v1"
+approval = "draft"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Minted 2026-08-15 (log 2026-08-15h); cited by no TC today."""
+
+[interface.IF-127]
+direction = "Consumes"
+this_project = "scripts/adjudicate_brief"
+counterpart = "scripts/trace"
+contract = """reads the re-attestation MODEL through trace: consumes trace.load_registries and trace.reattest_model, so the adjudication brief is composed from the same rows, the same snapshot baseline and the same ratified/traced split that `trace.py --ratify` renders. Imported LAZILY. An EMPTY model is a refusal, not an empty brief: no spine row differing from its snapshot copy and none awaiting a first approval means there is nothing to judge, and the caller is told so by name."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names a typed outcome plus unbounded content (the composed brief), and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140"]
+owner = "SR-140"
+version = "v1"
+approval = "draft"
+notes = """MINTED 2026-08-15 (log 2026-08-15h) for an edge that was ALREADY undeclared before that session: check_trajectory had been naming scripts/adjudicate_brief (CMP-008) -> scripts/trace (CMP-006) as a cross-component import with no seam of record. ONE model, two renderers, and that is the point — a brief built from a second traversal of the registries could disagree with the document the owner is signing. The lazy import keeps trace off the import path of the loop modules that need only this module's other seams. Owner is SR-140, not a design row: the seam carries the re-attestation obligation itself, not one module's surface (contrast IF-123, owned by LLR-173). PROVISIONAL. Covered by TC-161's amendment arm."""
+
+[interface.IF-128]
+direction = "Consumes"
+this_project = "scripts/baseline_snapshot"
+counterpart = "scripts/spine_carrier"
+contract = """reads and RESOLVES every snapshotted registry through the CARRIER (IF-102): consumes spine_carrier.resolve / carriers / stem / load / load_needs / CARRIERS / NEED_CARRIERS / OFFSPINE_TABLE. `snapshot_root / rel` reuses every existing resolver verbatim, carrier fallback included, and a snapshot taken under one carrier and read under another joins on the carrier-STRIPPED stem. Two refusals ride this seam: resolve() RAISES on a stem present under both carriers, load() on a file that will not parse."""
+signal = "variable"
+signal_note = """typed at mint (WI-456): the Contract names typed outcomes plus unbounded registry content, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-140", "SR-147"]
+owner = "LLR-173"
+carried_by = "IF-102"
+version = "v1"
+approval = "draft"
+notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. Minted 2026-08-15 (log 2026-08-15h)."""
+
+[interface.IF-129]
+direction = "Consumes"
+this_project = "scripts/baseline_snapshot"
+counterpart = "scripts/check_trajectory"
+contract = """reads the ONE cell-comparison basis (LLR-158): consumes check_trajectory.split_changed_cells(rel, id_col, before, live_row) -> {"ratified": {cell: (before, after)}, "traced": {...}}, the drift basis for is_drifted and drifted_cells, which arm on the RATIFIED half alone. The id column and Status are excluded structurally by the callee. The import runs THIS way only: there is no back-import from check_trajectory into baseline_snapshot."""
+signal = "discrete"
+req_refs = ["SR-140"]
+owner = "LLR-158"
+version = "v1"
+approval = "draft"
+notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is ratified. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it. Minted 2026-08-15 (log 2026-08-15h)."""

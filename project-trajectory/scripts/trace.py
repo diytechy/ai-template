@@ -2134,13 +2134,17 @@ def _sn_prose(sn_text):
 # is empty by construction. The snapshot is a baseline OUTSIDE the live file,
 # which is what the walk could never be.
 #
-# `_rows_at` / `_toml_rows_text` below are the surviving carrier-aware history
-# readers. NO PATH IN THIS MODULE CALLS THEM ANY MORE — they are named here as
-# dead rather than described as reserved, which is the mistake the retired
-# `current_digests` docstring made ("do not delete them for being
-# unreferenced"). Their removal, and their tests', is a follow-up for the review
-# sitting (log 2026-08-15g), kept out of this commit only because it is outside
-# the ruled scope.
+# `_rows_at` and `_toml_rows_text` — the carrier-aware history readers that
+# survived step 4 with no caller — ARE GONE (2026-08-15, log 2026-08-15h). The
+# previous revision named them DEAD rather than describing them as reserved,
+# which is the mistake the retired `current_digests` docstring made ("do not
+# delete them for being unreferenced"), and this is that note being honoured:
+# the only readers left were their own three tests. Nothing is lost by the
+# deletion — `check_trajectory._spine_rows_at` is the surviving carrier-aware
+# `git show` reader, still exercised by the cutover suite, so the D-5 hazard
+# those tests guarded (a baseline read that knows only the live carrier reports
+# every pre-migration revision as an EMPTY baseline, and the owner re-blesses
+# full text with no diff) is still covered where the reader actually lives.
 
 SPINE_FILES = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
@@ -2160,16 +2164,6 @@ SPINE_COLUMN = spine_carrier.SPINE_COLUMN
 _spine_stem = spine_carrier.stem
 
 
-def _toml_rows_text(text, rel_path, id_col):
-    """{id: row} from the TOML carrier, or None when the text does not parse.
-    Thin over `spine_carrier`, keeping the `-000` filter this module's callers
-    expect (an example row is inert to every rule here — `is_example`)."""
-    rows = spine_carrier.rows_from_toml(text, id_col)
-    if rows is None:
-        return None
-    return {rid: row for rid, row in rows.items() if not is_example(rid)}
-
-
 def _git_out(root, args):
     """stdout of a git command under `root`, or None on ANY failure (no git
     binary, not a repo, unknown rev/path) — the best-effort-off-git pattern."""
@@ -2184,47 +2178,6 @@ def _git_out(root, args):
     except (OSError, ValueError):
         return None
     return proc.stdout if proc.returncode == 0 else None
-
-
-def _rows_at(root, rev, rel_path, id_col):
-    """{id: row} of a spine registry at `rev`, read through whichever CARRIER
-    that revision actually used (`git show`; -000 example rows dropped).
-
-    CARRIER-AWARE BY NECESSITY, not for tidiness — this is "the one thing
-    that must not be forgotten". The spine moved from CSV to TOML, and a
-    baseline read that knows only the live carrier gets `None` back from
-    `git show` at every pre-migration revision — which this function's own
-    contract then reads as "nothing existed = an empty baseline". Every
-    `Modified` row would render as *"no baseline — awaiting its FIRST
-    ratification"* and the owner would re-bless full text with NO DIFF of what
-    changed, silently. That is the same fail-open shape D-1 rejected in ALT-1,
-    and it fires on the exact rows the sitting exists to judge.
-
-    So each side resolves its own carrier independently: try the TOML path at
-    that revision, fall back to the CSV path. The file WAS CSV then, so reading
-    it that way is honest history rather than a shim — and because the two
-    sides resolve separately, a diff ACROSS the cutover reads CSV on the old
-    side and TOML on the new one and compares cells. That is the property worth
-    having: the cutover commit is not exempt from the amendment guard, it is
-    proven by it, independently of the converter's own round-trip check.
-
-    Rows come back under TODAY'S COLUMN NAMES whichever carrier answered, so
-    nothing past this point learns which one did."""
-    for cand in spine_carrier.carriers(rel_path):
-        text = _git_out(root, ["show", "{}:{}".format(rev, cand)])
-        if text is None:
-            continue
-        rows = spine_carrier.rows_from_text(text, id_col, "." + cand.rsplit(".", 1)[1])
-        if rows is None:  # the carrier is there but does not parse — say so
-            print(
-                "WARNING (advisory): the spine carrier {} does not parse at {} —"
-                " falling back to the other carrier; a baseline that cannot be"
-                " read is reported as absent, never as empty".format(cand, rev[:12]),
-                file=sys.stderr,
-            )
-            continue
-        return {rid: row for rid, row in rows.items() if not is_example(rid)}
-    return {}
 
 
 def _full_row_bullets(row):

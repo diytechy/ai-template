@@ -146,7 +146,7 @@ resource: "generated"
 | [TC-150](TC-150.md) | Run the process-config suite: it sources the SHIPPED hook's own sh functions and drives t… |
 | [TC-151](TC-151.md) | Run the ratification-level suite: the full level x stage matrix against the ladder the sh… |
 | [TC-152](TC-152.md) | Run the migration cases in the process-config suite: a full conversion deletes every lega… |
-| [TC-153](TC-153.md) | Run the attestation-digest suite: it DRIVES the premise rather than asserting it - the am… |
+| [TC-153](TC-153.md) | RE-POINTED 2026-08-15 (log 2026-08-15h) off the deleted digest suite onto the tests that … |
 | [TC-154](TC-154.md) | Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while t… |
 | [TC-155](TC-155.md) | Run the queue-conflict cases: each of the three signals fires with both ids in determinis… |
 | [TC-156](TC-156.md) | Run the handback suite over real git worktrees: a partial close is clean under the REAL t… |
@@ -160,3 +160,4 @@ resource: "generated"
 | [TC-164](TC-164.md) | Construct a needs registry whose need cell plants one token of each declared class (an in… |
 | [TC-165](TC-165.md) | Scaffold with a non-Python bootstrap profile into a temp dir and run trace.py --strict-in… |
 | [TC-166](TC-166.md) | Run trace.py's component pass over fixture component registries: (a) a complete derivatio… |
+| [TC-167](TC-167.md) | Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153… |

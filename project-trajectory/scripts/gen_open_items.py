@@ -48,7 +48,10 @@ clone.
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
 
-Contracts: IF-073, IF-074, IF-075, IF-118 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-073, IF-074, IF-075, IF-118, IF-126 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+IF-126 is the READ-ONLY consumption of the `last_approved` baseline whose
+provider row is IF-123: this is a generator, so it reads what was blessed and
+never refreshes it.
 """
 
 import argparse

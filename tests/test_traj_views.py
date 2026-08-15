@@ -248,12 +248,14 @@ def test_meta_component_top_view_smoke(tmp_path):
     assert v["count"] <= ct.TOP_VIEW_MAX
     # A module is CONTAINED by the `Component` cell of an LLR whose `Module`
     # names it, so a module that has landed ahead of its spine rows reads as
-    # uncontained. `scripts/baseline_snapshot` is exactly that: the D-9 step-3
-    # session was a code-and-tests program with registry cells off limits, so
-    # its SR/LLR/TC and its IF-### seam are owed at the review sitting (log
-    # 2026-08-15g). NAMED rather than allowed by count — a second uncontained
-    # module still reds here, which is what this assertion is for.
-    assert v["uncontained"] == ["scripts/baseline_snapshot"], v["uncontained"]
+    # uncontained. `scripts/baseline_snapshot` was exactly that for one session
+    # — the D-9 step-3 program was code-and-tests with registry cells off limits
+    # — and it is contained again as of log 2026-08-15h, which minted LLR-173
+    # (module `baseline_snapshot.py`, `Component = CMP-006`) with TC-167 and the
+    # IF-123..129 seams. So the expectation goes back to EMPTY, which is the
+    # stronger form: any module landing ahead of its spine rows reds here, and
+    # the allowance no longer has to be renewed by hand.
+    assert v["uncontained"] == [], v["uncontained"]
     assert len(v["top_roots"]) == 4
     gt = load_script("gen_trajectory")
     cont = gt.sw_containment(root, gt.sw_modules(root))

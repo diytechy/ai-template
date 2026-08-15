@@ -1510,11 +1510,11 @@ phase = 5
 [test.TC-153]
 verifies = ["SR-140", "LLR-158"]
 level = "Integration"
-method = """Run the attestation-digest suite: it DRIVES the premise rather than asserting it - the amendment seam is shown blind to a sanctioned amend+flip over a real two-commit git repo, which is why an anchor recorded at acceptance time is owed at all - then pins what the digest is taken over (a traced cell and the Status marker must not move it; a ratified cell must), that a need's digest is its raw table line and survives re-indentation, and that current_digests covers every real spine row and every real need while excluding -000 rows and ids that appear only in prose."""
+method = """RE-POINTED 2026-08-15 (log 2026-08-15h) off the deleted digest suite onto the tests that verify the surviving basis. Run the drift half of the baseline-snapshot suite: it DRIVES the premise rather than asserting it - test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo, which is why a baseline recorded at acceptance time is owed at all - and then pins exactly what a change is taken over. test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT (a ratified cell MUST move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one) and test_a_row_below_approval_can_never_be_drifted (no claim to fall from) are the four corners of the split. That the guard and the snapshot comparison agree is no longer a test at all but a property of the code: split_changed_cells is the ONE public basis both staged_spine_amendments and baseline_snapshot.is_drifted call, so there is no second answer to disagree with."""
 tier = "Smoke"
-expected = "Satisfies SR-140 AcceptanceCriteria"
+expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-158 detail contract"
 automated = "Yes"
-evidence = "tests/test_attestation_digest.py"
+evidence = "tests/test_baseline_snapshot.py"
 status = "Draft"
 phase = 5
 
@@ -1596,9 +1596,9 @@ status = "Planned"
 phase = 5
 
 [test.TC-161]
-verifies = ["LLR-167"]
+verifies = ["LLR-167", "IF-124", "IF-127"]
 level = "Integration"
-method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason PRINTED. Pin the discriminator against the ambiguity it exists for - two rows with an IDENTICAL SpecRef and different declared `Brief` cells compose differently - and pin the two unrouted briefs as unrouted, naming themselves in the refusal."""
+method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per ROUTED brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason PRINTED. Pin the discriminator against the ambiguity it exists for - two rows with an IDENTICAL SpecRef and different declared `Brief` cells compose differently - and pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers the two seams cited above (added 2026-08-15, log 2026-08-15h): IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only RATIFIED cells reach the judge, and with NO snapshot the brief HOLDS and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation MODEL, which is what makes the brief and the document the owner signs one traversal rather than two."""
 tier = "Smoke"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
@@ -1658,5 +1658,16 @@ tier = "Full"
 expected = "Satisfies SR-165 AcceptanceCriteria via the LLR-172 detail contract"
 automated = "Yes"
 evidence = "tests/test_components_registry.py (to be extended at implementation)"
+status = "Draft"
+phase = 5
+
+[test.TC-167]
+verifies = ["SR-140", "LLR-173", "IF-123", "IF-128", "IF-129"]
+level = "Integration"
+method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) THE MIRROR INVARIANT: a clean copy passes; a hand-edited snapshot and a partial copy each fail; the prose README is exempt. (f) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes."""
+tier = "Full"
+expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, and IF-125/126 are uncited today"
+automated = "Yes"
+evidence = "tests/test_baseline_snapshot.py"
 status = "Draft"
 phase = 5

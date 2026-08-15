@@ -658,50 +658,6 @@ def _cutover(root, run_git, message="cut the carrier over to TOML"):
     return written
 
 
-def _filled(rows):
-    """`{id: {cell: value}}` over NON-EMPTY cells only.
-
-    The two carriers are equal on what a row SAYS, and deliberately unequal on
-    how it says nothing: CSV gives every column of the header (`Aspect: ""`),
-    while TOML omits the key entirely, because "unset" and "set to empty" stop
-    being the same value under the new carrier. Every consumer
-    reads a cell as `.get(c) or ""`, so the two are identical where it matters —
-    which is the claim this projection makes checkable instead of assumed."""
-    return {
-        rid: {k: v for k, v in row.items() if (v or "").strip()}
-        for rid, row in rows.items()
-    }
-
-
-def test_baseline_read_survives_the_carrier_cutover(tmp_path):
-    # THE hazard D-5 flags as "the one thing that must not be forgotten".
-    # `_rows_at` reads the baseline through `git show <rev>:<path>`; a read that
-    # knows only the live carrier gets None at every pre-migration revision and
-    # its own contract turns that into "nothing existed = an empty baseline".
-    # Every Modified row would then render as "no baseline - awaiting its FIRST
-    # ratification" and be re-blessed with NO diff of what changed, silently.
-    run_git = _init_spine_repo(tmp_path)
-    trace = load_script("trace")
-    rel, id_col = trace.SPINE_FILES[0]
-
-    before = trace._rows_at(tmp_path, "HEAD", rel, id_col)
-    assert list(before) == ["SR-001"]
-
-    _cutover(tmp_path, run_git)
-
-    # The PRE-migration revision still reads, through the carrier it used then.
-    # Reading it as CSV is honest history, not a shim: the file WAS CSV there.
-    assert trace._rows_at(tmp_path, "HEAD~1", rel, id_col) == before
-    # ...and the post-migration revision reads through the new one, presenting
-    # the SAME column names, so nothing downstream learns which carrier answered.
-    after = trace._rows_at(tmp_path, "HEAD", rel, id_col)
-    assert _filled(after) == _filled(before)
-    assert after["SR-001"]["Requirement"] == "the original attested text"
-    # And it is NOT the degrade this test exists to forbid: an empty dict here
-    # is what makes a Modified row render as "awaiting its FIRST ratification".
-    assert after != {}
-
-
 def test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it(
     tmp_path,
 ):
@@ -748,39 +704,6 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     assert amendments[0]["ratified"] == {
         "Requirement": ("the original attested text", "text nobody agreed to")
     }
-
-
-def test_a_baseline_carrier_that_does_not_parse_is_absent_never_empty(tmp_path):
-    # A decode error and an empty registry are OPPOSITE claims: `{}` says "this
-    # registry had no rows", which for a baseline read means "re-bless
-    # everything with no diff". `_toml_rows_text` returns None so the caller can
-    # tell them apart, and the resolver says so on stderr rather than degrading
-    # into the reading that fails open.
-    trace = load_script("trace")
-    rel, id_col = trace.SPINE_FILES[0]
-    assert trace._toml_rows_text("[requirement.SR-001]\ntitle = ", rel, id_col) is None
-    # A duplicate id is a decode error rather than a check, which is one of the
-    # three integrity rules the carrier turns into a property of the parse.
-    dupe = '[requirement.SR-001]\ntitle = "a"\n\n[requirement.SR-001]\ntitle = "b"\n'
-    assert trace._toml_rows_text(dupe, rel, id_col) is None
-
-
-def test_the_two_carrier_readers_agree_cell_for_cell(tmp_path):
-    # trace.py and check_trajectory.py each carry their own reader (the F5
-    # independently-copyable rule). test_rule_sync pins their CONSTANTS equal;
-    # this pins their OUTPUT equal over a real repo, because two readers of one
-    # carrier that disagree are the false green this kit exists to prevent.
-    run_git = _init_spine_repo(tmp_path)
-    trace = load_script("trace")
-    ct = load_script("check_trajectory")
-    _cutover(tmp_path, run_git)
-    seen = 0
-    for (rel, id_col), (ct_rel, ct_id) in zip(trace.SPINE_FILES, ct.SPINE_CSVS):
-        assert (rel, id_col) == (ct_rel, ct_id)
-        rows = trace._rows_at(tmp_path, "HEAD", rel, id_col)
-        assert rows == ct._spine_rows_at(tmp_path, "HEAD:", rel, id_col)
-        seen += len(rows)
-    assert seen, "the fixture wrote no spine rows — the agreement would be vacuous"
 
 
 # --- WI-068: the critique-loop ratchet (--staged, warn-first) ------------------

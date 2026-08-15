@@ -76,14 +76,20 @@ built:
     under judgement: the mirror invariant proves it was copied in a reviewed
     approval commit, and nothing but a copy can write it.
 
-Contracts: IF-113, IF-114, IF-115 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.csv). Both are
-CONSUMED sides: IF-113 is the prompt loader whose strict fill becomes this
-module's refusal (the provider side is IF-097), and IF-114 is the spine
-carrier the red-TC evidence is read through. IF-115 is what this module
-PROVIDES to `agent_loop.session_body`, its one caller — and the half of that
-contract the CALLER owes is the fail-closed rule: a row declaring a brief this
-seam cannot compose is held for a human, never dispatched as a build.
+Contracts: IF-113, IF-114, IF-115, IF-124, IF-127 — the interface seams this
+module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml). Four are CONSUMED sides: IF-113 is the
+prompt loader whose strict fill becomes this module's refusal (the provider side
+is IF-097), IF-114 is the spine carrier the red-TC evidence is read through,
+IF-124 is the `last_approved` baseline (IF-123) this module measures an
+amendment against, and IF-127 is the re-attestation MODEL read lazily through
+`trace` so the brief and the document the owner signs are one traversal rather
+than two that could disagree. IF-115 is what this module PROVIDES to
+`agent_loop.session_body`, its one caller — and the half of that contract the
+CALLER owes is the fail-closed rule: a row declaring a brief this seam cannot
+compose is held for a human, never dispatched as a build. IF-124/IF-127 were
+minted 2026-08-15 (log 2026-08-15h); the IF-127 edge had been undeclared since
+before that session.
 """
 
 from __future__ import annotations
