@@ -27,7 +27,7 @@ signing acts are all still yours.
 
 **Measured state:** `SN=27 SR=59 LLR=155 TC=150 orphans=0 integrity=0
 component-findings=0 interfaces=122 interface-findings=0 form-findings=2` (the
-two recorded 13v waivers). Full suite at last run: **2525 passed, 10 skipped**.
+two recorded 13v waivers). Full suite at last run: **2533 passed, 10 skipped**.
 Gate unchanged at `DevBar-Reqs`.
 
 ---
