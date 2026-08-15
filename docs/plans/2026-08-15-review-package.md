@@ -42,12 +42,13 @@ All three are surfaced on [open-items.html](../open-items.html) /
 1. **`Planned`'s fate — RULED: fold out into `Approved`** at the rename.
    Your words: functionally equivalent — both fire the breakdown into expected
    children — and "approved" is clearer.
-2. **The `sr_bar` ceiling — PENDING, clarified.** It is the conversion's guard
-   rail: the rename deletes the pass-claim word, so without the ceiling a
-   formerly-`Planned` decomposed row would read `DevBar-Release` — the gate
-   rising for rows that never passed. Ceiling at `BAR_TESTS`, pinned, until
-   the harness driver lands. Zero visible impact at today's `DevBar-Reqs`.
-   **A yes/no closes OI-30.**
+2. **The `sr_bar` ceiling — RULED: it stands** (log `2026-08-15l`), with the
+   mitigation folded in: while it holds, the derived gate line reads
+   `DevBar-Tests (Release: pending harness driver)` so the ceiling is never
+   mistaken for a regression. Consumers were enumerated before the ruling —
+   all monotone-stricter, `--gate DevBar-Release` stays invocable — and your
+   framing is the recorded intent: the gate is computed by running the bar,
+   not inferred from a cell. **OI-30 is CLOSED, fully ruled.**
 3. **Off-spine approval authority — RULED, on your simpler shape:** it
    follows the **dev-stage ladder directly** — no new key, no new enum. The
    registry→rung association already exists in `derive_gate`

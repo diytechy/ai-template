@@ -889,9 +889,13 @@ SCOPED TO WI-459, which pulls sitting-3 decision 8 forward. That pull-forward RE
 
 [open_item.OI-30]
 title = "The D-9/D12 vocabulary migration's three execution decisions - Planned's fate, the sr_bar ceiling, and the off-spine approval authority"
-status = "pending"
+status = "ruled"
 raised = "2026-08-15"
-decision = """TWO OF THREE RULED (owner, in session, 2026-08-15); D2 pending a confirm after clarification.
+ruled_date = "2026-08-15"
+ruling_ref = "docs/log.md#decisions-log"
+decision = """ALL THREE RULED (owner, in session, 2026-08-15).
+
+DECISION 2 - RULED: THE CEILING STANDS ("Yes that sounds fine"), with the mitigation folded in: while the ceiling holds, the derived gate line carries the gap explicitly - DevBar-Tests (Release: pending harness driver) - so the ceiling is never read as a regression. The owner's framing is recorded as the design intent: the derived gate can only be truly computed by running the test sequence, which is more honest than inferring it from a status cell; DevBar-Release's consumers were enumerated before ruling (harness strictness selection, the rung 6-7 stage record, the checklist; explicitly NOT scheduling) and every one is monotone-stricter, so the ceiling withholds escalation and loosens nothing, while --gate DevBar-Release stays explicitly invocable at any time.
 
 DECISION 1 - RULED: FOLD OUT (option 1b). The owner's words: "functionally approved is equivalent of planned, they both result in the breakdown of the item into its expected children now firing, but 'approved' is more clear." Planned folds into Approved at the rename; no fourth rung; the CMP_MATURITY collision never arises.
 

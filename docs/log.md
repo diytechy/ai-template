@@ -36,6 +36,21 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15l — OI-30 decision 2 RULED (owner, in session): the `sr_bar`
+  ceiling STANDS, and OI-30 CLOSES fully ruled.** *"Yes that sounds fine"* —
+  after the consumers of `DevBar-Release` were enumerated before the ruling
+  (harness strictness selection, the rung-6/7 stage record, the checklist;
+  explicitly not scheduling) and shown monotone-stricter, so the ceiling
+  withholds escalation and loosens nothing while `--gate DevBar-Release`
+  stays explicitly invocable. The mitigation rides the ruling: while the
+  ceiling holds, the derived gate line carries the gap explicitly —
+  `DevBar-Tests (Release: pending harness driver)` — so it is never read as
+  a regression. The owner's framing is the recorded design intent: the gate
+  is truly computed by running the test sequence, not inferred from a cell.
+  **With all three OI-30 rulings in, the mechanical rename (migration step
+  5/5b), the ceiling, and the ladder-derived approval authority are
+  unblocked for execution; the signing (step 6) and the seed remain the
+  sitting's.**
 - **2026-08-15k — OI-30 decisions 1 and 3 RULED (owner, in session); decision
   2 clarified and pending.** **D1 — `Planned` FOLDS OUT into `Approved`** at
   the rename: *"functionally approved is equivalent of planned, they both
