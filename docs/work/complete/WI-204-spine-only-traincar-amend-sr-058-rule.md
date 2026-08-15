@@ -2,7 +2,7 @@
 id = "WI-204"
 title = "Spine-only traincar - amend SR-058 rule 1 so mid-run spine-serial WIs (spine/gate/attestation) pack together into ONE serial spine-only traincar (never with ordinary/protected/high-risk/critique/checkpoint work; whole-project drain + one-active-spine-train invariants unchanged), closing the N-sequential-single-trains residual to match the stage-2 gate pass batching; precedes the dispatcher-migration set so repos migrate onto the amended rule"
 workstream = "unattended"
-sr_refs = ["SR-153", "SR-156"]
+sr_refs = ["SR-148", "SR-156"]
 buildtier = "strong"
 order = 203
 +++

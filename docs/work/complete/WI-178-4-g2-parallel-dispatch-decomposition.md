@@ -2,7 +2,7 @@
 id = "WI-178"
 title = "[4]-[g2] Parallel-dispatch decomposition (LLR-058..066 + TC-058..066 to Planned)"
 workstream = "unattended"
-sr_refs = ["SR-153", "SR-156", "SR-059", "SR-026"]
+sr_refs = ["SR-148", "SR-156", "SR-026"]
 needs = ["WI-177"]
 buildtier = "strong"
 order = 177

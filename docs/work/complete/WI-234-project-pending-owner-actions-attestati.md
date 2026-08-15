@@ -2,7 +2,7 @@
 id = "WI-234"
 title = "Project pending owner actions (attestation blocks + conflict asks + quarantines) into a generated open-items section (owner directive 2026-07-19)"
 workstream = "unattended"
-sr_refs = ["SR-059"]
+sr_refs = ["SR-148"]
 needs = ["~WI-232"]
 buildtier = "medium"
 safety_class = "high-risk"

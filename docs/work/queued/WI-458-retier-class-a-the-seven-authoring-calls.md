@@ -3,7 +3,7 @@ id = "WI-458"
 title = "Complete the re-tier's class-A authoring calls: the seven unruled mint/merge/re-classify decisions the top-down read surfaced (H1 the unminted B-05 MAPPING observable; H4 the SR-148/SR-153/SR-059 triple statement of SN-025; H5 the SR-031/SR-137 duplicate tomllib-vs-sh observable, already diverged; M1 the four rows that escaped demotion against the campaign's own criterion, two of them Verified; M3 the three needs with zero textual coverage despite orphans=0; X1/X2 the two crossing attributions revised in act 7 and flagged for overrule), plus SR-165's missing design row and test case without which it cannot leave Draft. Each call carries a recommendation; the owner rules, the builder executes. Same class as the SR-141 merge already performed inline this month - NOT a sitting."
 specref = "docs/plans/2026-08-15-retier-completion.md#2-blocker-class-a--seven-unruled-authoring-calls"
 workstream = "process"
-sr_refs = ["SR-008", "SR-021", "SR-030", "SR-031", "SR-059", "SR-133", "SR-137", "SR-139"]
+sr_refs = ["SR-008", "SR-021", "SR-030", "SR-031", "SR-148", "SR-133", "SR-137", "SR-139"]
 needs = []
 buildtier = "strong"
 safety_class = "adjudication"

@@ -2,7 +2,7 @@
 id = "WI-180"
 title = "Slice B - de-author status + remove next-wi"
 workstream = "unattended"
-sr_refs = ["SR-059"]
+sr_refs = ["SR-148"]
 needs = ["WI-179"]
 buildtier = "medium"
 order = 179

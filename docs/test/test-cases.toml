@@ -595,18 +595,18 @@ status = "Verified"
 phase = 3
 
 [test.TC-058]
-verifies = ["SR-153", "LLR-058", "LLR-123"]
+verifies = ["SR-148", "LLR-058", "LLR-123"]
 level = "Integration"
 method = """Run schedule.py against a fixture registry; the ready frontier, the exclusions with reason codes, and the deterministic traincar order match across ready --explain, ready --format json, simulate, and the dispatcher; a soft edge never blocks and Priority outranks downstream-dependent count within a gate class."""
 tier = "Full"
-expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-058 and LLR-123 detail contracts"
+expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-058 and LLR-123 detail contracts"
 automated = "Yes"
 evidence = "tests/test_schedule.py"
 status = "Verified"
 phase = 4
 
 [test.TC-059]
-verifies = ["SR-153", "LLR-059"]
+verifies = ["SR-148", "LLR-059"]
 level = "Unit"
 method = """Drive the pure classifier over every declared safety and policy input and compare consumer outputs."""
 tier = "Full"
@@ -617,11 +617,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-060]
-verifies = ["SR-059", "LLR-060", "SR-156", "LLR-124"]
+verifies = ["SR-148", "LLR-060", "SR-156", "LLR-124"]
 level = "Integration"
 method = """Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the snapshot regenerates on the trunk, fails fresh when stale, and no next-wi/run-phase surface exists."""
 tier = "Full"
-expected = "Satisfies SR-059 AcceptanceCriteria, and SR-156 AcceptanceCriteria via the LLR-124 detail contract"
+expected = "Satisfies SR-148 AcceptanceCriteria, and SR-156 AcceptanceCriteria via the LLR-124 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py; tests/test_gen_trajectory.py"
 status = "Verified"
@@ -903,7 +903,7 @@ status = "Verified"
 phase = 2
 
 [test.TC-091]
-verifies = ["SR-153", "LLR-089"]
+verifies = ["SR-148", "LLR-089"]
 level = "Unit"
 method = """Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-plan WIs beside disjoint valid work."""
 tier = "Full"
@@ -914,11 +914,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-097]
-verifies = ["SR-155", "LLR-095", "SR-153", "LLR-131"]
+verifies = ["SR-155", "LLR-095", "SR-148", "LLR-131"]
 level = "Integration"
 method = "Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases."
 tier = "Full"
-expected = "Satisfies SR-155 and SR-153 AcceptanceCriteria via the LLR-095 and LLR-131 detail contracts"
+expected = "Satisfies SR-155 and SR-148 AcceptanceCriteria via the LLR-095 and LLR-131 detail contracts"
 automated = "Yes"
 evidence = """tests/test_dual_plan_round.py::test_worker_path_refuses_a_dual_wi; tests/test_dual_plan_round.py::test_flag_on_a_non_dual_wi_is_refused; tests/test_schedule.py"""
 status = "Verified"
@@ -1398,11 +1398,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-143]
-verifies = ["SR-153", "LLR-149"]
+verifies = ["SR-148", "LLR-149"]
 level = "Unit"
 method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-ratify keeps non-dependent work and admits the queued ratification batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
 tier = "Full"
-expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-149 admission-table detail contract"
+expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-149 admission-table detail contract"
 automated = "Yes"
 evidence = "tests/test_dispatch_admission.py"
 status = "Verified"
@@ -1431,11 +1431,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-146]
-verifies = ["SR-153", "LLR-152"]
+verifies = ["SR-148", "LLR-152"]
 level = "Unit"
 method = """Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at rank 1 (the reserved slot, pinned by name); an adjudication-only lane's refresh runs NO bar yet still commits a verified Bar-Green attestation whose summary says no-bar, while a mixed batch bars as usual (fail toward the bar); bar = DevBar-Tests reaches check.py as --gate DevBar-Tests (asserted off the recording stub's own argv), an undeclared bar passes no --gate, and a malformed value refuses the refresh naming it."""
 tier = "Full"
-expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
+expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
 automated = "Yes"
 evidence = "tests/test_schedule.py; tests/test_integrate.py"
 status = "Verified"

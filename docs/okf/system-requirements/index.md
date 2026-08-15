@@ -42,7 +42,6 @@ resource: "generated"
 | [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
 | [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
 | [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
-| [SR-059](SR-059.md) | Retire next-wi; generated status surface |
 | [SR-070](SR-070.md) | Offline project-state core |
 | [SR-111](SR-111.md) | Kit-version stamp |
 | [SR-112](SR-112.md) | Checked per-agent skill fan-out |
@@ -57,12 +56,11 @@ resource: "generated"
 | [SR-144](SR-144.md) | Every lane close is a terminal state with an immutable record |
 | [SR-146](SR-146.md) | Prompts are reviewable files with a per-session audit trail |
 | [SR-147](SR-147.md) | One machine-parseable carrier for the requirement spine |
-| [SR-148](SR-148.md) | Autonomous loop phase order |
+| [SR-148](SR-148.md) | Autonomous loop work selection: what it derives from, and in what order |
 | [SR-149](SR-149.md) | Retired-vocabulary refusal in authored surfaces |
 | [SR-150](SR-150.md) | Stakeholder-need cells stay in stakeholder language |
 | [SR-151](SR-151.md) | Hosted CI runs the declared bar per trigger |
 | [SR-152](SR-152.md) | Hosted CI verdict is the harness's own |
-| [SR-153](SR-153.md) | Ready work derives from tracked state |
 | [SR-154](SR-154.md) | Independent review routed across families |
 | [SR-155](SR-155.md) | Contested planning rounds for marked work |
 | [SR-156](SR-156.md) | Serialized, gated integration of parallel lanes |
