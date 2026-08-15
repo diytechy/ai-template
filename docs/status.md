@@ -71,15 +71,20 @@ narrated is in those homes.
   lane** (its registry reads 64 SR rows where trunk still reads 149), its five
   open owner rulings, the seven process traps that bit, and the hardware
   crosscheck's already-recorded conclusions. **The forward view in the bullets
-  above describes TRUNK**, which the lane has not yet reached. A second,
-  unruled proposal —
-  [plans/2026-08-15-interface-model-proposal.md](plans/2026-08-15-interface-model-proposal.md)
-  — would drop the interface endpoint fields for an `SR.provides` /
-  `IF.serves` pair; it is an AMENDMENT to an already-ruled open item, not a new
-  program, and it carries a read-only audit finding 74 of 115 seams consumed
-  with no declared provider. **The scheduling fact that decides both:** if that
-  model lands, every SR row gains a field, so ratifying the spine first means
-  signing the same rows twice.
+  above describes TRUNK**, which the lane has not yet reached. The interface
+  question is now carried by
+  [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
+  — reviewed adversarially, rewritten, and awaiting a ruling. It **supersedes**
+  the earlier
+  [interface-model-proposal](plans/2026-08-15-interface-model-proposal.md),
+  whose headline measurement ("74 of 115 seams consumed with no declared
+  provider") does not survive re-derivation: it is the `direction` split
+  restated, and the schema inversion it proposed would take
+  `cross_component_findings` from 0 to 32 ERRORs at `--strict`. **The
+  scheduling consequence:** with the inversion deferred, no SR row gains a
+  field, so the double-signing risk that argued for holding the ratification
+  wave is much reduced — the merge/ratify sequencing is open again and needs a
+  ruling.
 - **Unfiled follow-ups** (from the archived charge-through handoff; no ids
   yet, so listed as topics): the stage-ladder program's deferred codex review
   round; the SN-036 per-decomposition coverage record (its need is in the
