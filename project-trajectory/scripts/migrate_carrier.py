@@ -113,6 +113,7 @@ OFFSPINE = {
 REF_COLS = {
     "SN-Refs",
     "SR-Refs",
+    "Req-Refs",
     "Boundary-Refs",
     "Verifies",
     "SupersededBy",
@@ -173,15 +174,20 @@ KEY = {
     "Version": "version",
     "CmdTemplate": "cmd_template",
     "Env": "env",
-    # interfaces (WI-443 / OI-14 part B). `SR-Refs`/`Rationale`/`Component`/
-    # `Notes`/`Version` are ALREADY above and deliberately not repeated — D-3's
-    # one-name-one-meaning rule again. `Status` has NO entry because the column
+    # interfaces (WI-443 / OI-14 part B). `Rationale`/`Component`/`Notes`/
+    # `Version` are ALREADY above and deliberately not repeated — D-3's
+    # one-name-one-meaning rule again. `Req-Refs` IS repeated-looking but is not:
+    # it is a DIFFERENT column from the spine's `SR-Refs`, split out at the
+    # 2026-08-15 rework because the one name carried two relationships (an LLR's
+    # parent requirement; an interface's realizing/relying requirements). D-3 is
+    # what forced the split. `Status` has NO entry because the column
     # RETIRES here (undeclared since it shipped, overlapping `Stability` on the
     # same row); a stray `Status` cell would therefore key as `Status` and be
     # caught by the schema tier rather than silently absorbed.
     # `Stability` LEFT this block at WI-442, replaced by `Approval`.
     # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
     # owner: docs/requirements/interfaces.toml's header.
+    "Req-Refs": "req_refs",
     "Direction": "direction",
     "ThisProject": "this_project",
     "Counterpart": "counterpart",

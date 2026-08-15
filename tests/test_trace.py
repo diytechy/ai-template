@@ -636,7 +636,7 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
 # advisory. The full architecture-connectivity coverage lives in check_trajectory.
 
 IF_HEADER = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
     "Stability,Status,Component,Notes\n"
 )
 
@@ -674,9 +674,9 @@ def _ifs_toml(body):
             value = (r.get(col) or "").strip()
             if value:
                 out.append('{} = """{}"""'.format(key, value))
-        refs = [t for t in (r.get("SR-Refs") or "").split(";") if t.strip()]
+        refs = [t for t in (r.get("Req-Refs") or "").split(";") if t.strip()]
         if refs:
-            out.append("sr_refs = [{}]".format(", ".join('"%s"' % t for t in refs)))
+            out.append("req_refs = [{}]".format(", ".join('"%s"' % t for t in refs)))
         out.append("")
     return "\n".join(out) + "\n"
 
@@ -792,7 +792,7 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
         'counterpart = "git"\n'
         'contract = "reads the ref state"\n'
         'signal = "analog"\n'
-        'sr_refs = ["SR-001"]\n'
+        'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
         'approval = "approved"\n',
         encoding="utf-8",
@@ -839,7 +839,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'this_project = "src/demo"\n'
         'counterpart = "git"\n'
         'contract = "reads the ref state"\n'
-        'sr_refs = ["SR-001"]\n'
+        'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
         'approval = "approved"\n',  # no `signal`
         encoding="utf-8",
@@ -1054,7 +1054,7 @@ def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
     legacy = (
-        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
         "Stability,Status,Component\n"
     )
     (req / "interfaces.csv").write_text(
@@ -1076,7 +1076,7 @@ def test_both_interface_carriers_at_once_is_refused(scaffold):
     req = scaffold / "docs" / "requirements"
     assert (req / "interfaces.toml").exists()
     (req / "interfaces.csv").write_text(
-        "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+        "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
         "Stability,Component,Notes\n",
         encoding="utf-8",
     )

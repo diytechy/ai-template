@@ -295,7 +295,7 @@ REQUIRED_FIELDS = {
         "Counterpart",
         "Contract",
         "Signal",
-        "SR-Refs",
+        "Req-Refs",
         "Version",
         "Approval",
     ],
@@ -1024,7 +1024,7 @@ def interface_findings(ifs, sr_ids, module_ids):
     """The IF-### seam tier's back-link checks (process.md §8), closing the gap
     where trace.py never read the interface catalog (WI-056). Returns
     ``(findings, advisories)``: *findings* join the --strict failure set like PB's
-    back-links (an IF row's SR-Refs is empty or names an unknown SR — every seam
+    back-links (an IF row's Req-Refs is empty or names an unknown SR — every seam
     links the spine so it stays transitively TC-covered); *advisories* are
     warn-only (an IF row's ThisProject endpoint resolves to no LLR Module after
     normalization). The endpoint join is best-effort: the LLR Module set is a
@@ -1035,9 +1035,9 @@ def interface_findings(ifs, sr_ids, module_ids):
     norm_modules.discard("")
     for r in ifs:
         iid = r["IF-ID"]
-        srrefs = refs(r.get("SR-Refs"))
+        srrefs = refs(r.get("Req-Refs"))
         if not srrefs:
-            findings.append(f"IF {iid} links no SR (SR-Refs is empty)")
+            findings.append(f"IF {iid} links no SR (Req-Refs is empty)")
         for x in srrefs:
             if x not in sr_ids:
                 findings.append(f"IF {iid} references unknown {x}")
@@ -2700,7 +2700,7 @@ def load_registries(docs):
     raw_cmps = spine_carrier.load(docs / "requirements" / "components.toml", "CMP-ID")
     # Optional interface-definition registry (IF-###, process.md §8): one row per
     # interface, stating what it concretely IS. Off the joined spine like
-    # PART/ASSET, but its SR-Refs back-link and its endpoint join keep it
+    # PART/ASSET, but its Req-Refs back-link and its endpoint join keep it
     # traceable (WI-056 closed the LLR-002-era gap). Absent file -> [].
     raw_ifs = spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
     # Optional depth-0 FRAME registry (WI-442, sitting-2 §1R.5): three tiers in
@@ -2953,7 +2953,7 @@ def analyze(reg, args):
                     f"CMP {cid} Knowledge ref '{ref}' names no pack ({kn_prefix}{rel})"
                 )
 
-    # Interface seams (IF-###, process.md §8): SR-Refs back-links join the
+    # Interface seams (IF-###, process.md §8): Req-Refs back-links join the
     # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
     # is a warn-only advisory (module_ids reused from the PB back-link check above).
     interface_backlink_findings, interface_advisories = interface_findings(
@@ -3116,7 +3116,7 @@ def analyze(reg, args):
     # The interface-seam registry (IF-###, process.md §8) is the same optional
     # off-spine kind — integrity-checked (malformed/duplicate id), out of the
     # placeholder/schema sweeps, so an IF-000 placeholder never blocks a gate; its
-    # SR-Refs back-link and endpoint join are checked below.
+    # Req-Refs back-link and endpoint join are checked below.
     integrity += integrity_findings("IF", raw_ifs)
     placeholders = (
         [f for label in raw for f in placeholder_findings(label, raw[label])]
@@ -3514,7 +3514,7 @@ def render_report(reg, findings, args, forest):
     if ifs:
         lines += ["", "## Interface seams (process.md §8 back-links)", ""]
         lines += (
-            [f"{len(ifs)} interface-seam row(s); every SR-Refs resolves to a real SR."]
+            [f"{len(ifs)} interface-seam row(s); every Req-Refs resolves to a real SR."]
             if not interface_backlink_findings
             else [f"- {f}" for f in interface_backlink_findings]
         )

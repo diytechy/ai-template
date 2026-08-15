@@ -127,7 +127,7 @@ _A._
 """
 
 IF_HDR = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,"
+    "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
     "Stability,Status,Component,Notes\n"
 )
 
@@ -155,7 +155,7 @@ def _csv_body_to_toml(header, table, body):
         "ThisProject": "this_project",
         "Counterpart": "counterpart",
         "Contract": "contract",
-        "SR-Refs": "sr_refs",
+        "Req-Refs": "req_refs",
         "Version": "version",
         "Stability": "approval",
         "Component": "component",
@@ -194,7 +194,7 @@ def _csv_body_to_toml(header, table, body):
             value = (row.get(col) or "").strip()
             if not value:
                 continue
-            if key in ("sr_refs", "superseded_by", "part_of"):
+            if key in ("req_refs", "superseded_by", "part_of"):
                 items = ", ".join('"{}"'.format(t) for t in value.split(";") if t)
                 out.append("{} = [{}]".format(key, items))
             else:

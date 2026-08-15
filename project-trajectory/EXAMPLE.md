@@ -289,7 +289,7 @@ counterpart = "delivery"
 contract = "Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001)."
 signal = "variable"
 rationale = "One writer for the export file; delivery must not re-derive its schema."
-sr_refs = ["SR-001"]
+req_refs = ["SR-001"]
 version = "v1"
 approval = "approved"
 
@@ -299,7 +299,7 @@ this_project = "delivery"
 counterpart = "export"
 contract = "Reads the export file produced per IF-001 v1 before uploading it."
 signal = "variable"
-sr_refs = ["SR-050"]
+req_refs = ["SR-050"]
 version = "v1"
 approval = "approved"
 ```
@@ -373,7 +373,7 @@ contract's spec lives once in its **owner**; the coordinator's catalog only refe
 the owner `IF-###`:
 
 ```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,SR-Refs,Version,Approval
+IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,Approval
 IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,Stable,Verified
 IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,Stable,Verified
 ```

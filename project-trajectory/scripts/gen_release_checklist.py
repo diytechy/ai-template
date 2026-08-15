@@ -267,7 +267,7 @@ def main():
                     r.get("Version", ""),
                     r.get("Approval", ""),
                     r.get("Counterpart", ""),
-                    r.get("SR-Refs", ""),
+                    r.get("Req-Refs", ""),
                 )
             )
 

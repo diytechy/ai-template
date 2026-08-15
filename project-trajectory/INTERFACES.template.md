@@ -38,7 +38,7 @@ namespace, parallel to SN/SR/LLR/TC).
 | `Signal` | **Closed**: `discrete` (a finite enumerable alphabet — exit code, gate name, status enum, dial) or `variable` (unbounded content — prose, file bytes, a count, a duration). If both cross, the row is `variable`. |
 | `SignalNote` | Optional. Why the typing is not obvious — a crossing that carries both kinds, or one the `Contract` does not type. |
 | `Rationale` | **Why the seam is drawn here.** Empty is allowed; this is the home the `Contract` cell's argument moves to. |
-| `SR-Refs` | The system requirement(s) here that realize or rely on it — ties the interface into the local spine. |
+| `Req-Refs` | The requirement(s) here that realize or rely on it — ties the interface into the local spine. **Not the design tier's `SR-Refs`**, which names a row's *parent*: this one names the requirements the seam hangs off, which is a different relationship, so it gets a different name. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
 | `Approval` | **Closed**, and the row's **one** maturity field: `draft` · `approved`. Flipping a cell to `approved` is a human act in a reviewed commit. (Two columns retired into this one: an undeclared `Status` at OI-14 part B, 2026-08-13, and `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, 2026-08-14. Each overlapped its predecessor, which is why the tier now carries exactly one.) |
 | `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement, so there is no "internal" value to set wrongly. |
@@ -85,7 +85,7 @@ counterpart = "reporting-etl"
 contract = "GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice)."
 signal = "variable"
 rationale = "One read model for invoices; the ETL must not re-derive totals."
-sr_refs = ["SR-014"]
+req_refs = ["SR-014"]
 version = "v1"
 approval = "approved"
 
@@ -95,7 +95,7 @@ this_project = "reporting-etl"
 counterpart = "billing-api"
 contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json)."
 signal = "variable"
-sr_refs = ["SR-031"]
+req_refs = ["SR-031"]
 version = "v1"
 approval = "approved"
 ```

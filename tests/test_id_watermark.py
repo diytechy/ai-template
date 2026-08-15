@@ -451,7 +451,7 @@ def test_a_reference_column_before_the_id_column_does_not_hide_the_id(tmp_path):
     # the one direction this scan must not fail in.
     root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES})
     (root / "docs" / "requirements" / "interfaces.csv").write_text(
-        "IF-ID,SR-Refs,Contract\nIF-900,SR-001,x\n", encoding="utf-8"
+        "IF-ID,Req-Refs,Contract\nIF-900,SR-001,x\n", encoding="utf-8"
     )
     assert TRACE.live_max_ids(root)["IF"] == 900
 

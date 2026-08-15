@@ -185,6 +185,16 @@ OFFSPINE_COLUMN = {
     # `direction` + `counterpart` were ruled to go with it and are HELD pending
     # WI-455 — evidence and removal owner: docs/requirements/interfaces.toml's
     # header.
+    # `req_refs` IS THE IF TIER'S OWN REQUIREMENT LINK, and it is here rather
+    # than sharing the spine's `sr_refs` because the two are different
+    # relationships wearing one name (the 2026-08-15 rework, D6). An LLR's
+    # `SR-Refs` names its PARENT — the requirement it decomposes, one tier up.
+    # An IF row's names the requirements that REALIZE OR RELY ON the seam, which
+    # is neither parentage nor a single tier: under the Q1 ruling (2026-08-15a)
+    # a requirement and a design row are both legitimate answers, so the column
+    # is `Req-Refs` and not `SR-Refs`. D-3's one-name-one-meaning rule is what
+    # forces the split rather than permitting it.
+    "req_refs": "Req-Refs",
     "direction": "Direction",
     "this_project": "ThisProject",
     "counterpart": "Counterpart",
@@ -334,7 +344,11 @@ OFFSPINE_KEYS = {
         "signal",
         "signal_note",
         "rationale",
-        "sr_refs",
+        # RENAMED from `sr_refs` at the 2026-08-15 rework (D6): the spine's
+        # `sr_refs` names a row's PARENT requirement, this one names the
+        # requirements a seam realizes or relies on, and one name for two
+        # relationships is the defect D-3 forbids.
+        "req_refs",
         "version",
         "approval",
         "interface_from_external",
