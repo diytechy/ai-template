@@ -226,7 +226,7 @@ record an explicit n/a where one truly doesn't apply.
   recommendation in "How to start")_
 - **Project scale (default: one module, one repo):** _(bias **low** — pick the
   lowest rung the scope forces. A repo may hold several modules on one spine
-  (grouped by `Module`/`Area`) if it grows distinct sub-systems; a multi-repo split
+  (grouped by `Module`/component) if it grows distinct sub-systems; a multi-repo split
   under a coordinator is **rare**, only for modules that need independent
   versioning/ownership/release at a scale one repo can't sustain, and is revisitable
   later — see process.md §10 / `MULTI_REPO.md`. You almost certainly want one repo.)_

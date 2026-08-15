@@ -244,6 +244,76 @@ phase mismatches from **19 (base) to 144**. Each new parent now takes the phase
 its decomposed work actually shipped in; mismatches stand at **38** — still
 above base, and carried below as owed rather than declared clean.
 
+## Act 6 — the re-iteration pass: two calls made, the docs finished, and the layer read top-down
+
+The method's `re-iterate — top-down again` step (`2026-08-14g`), run as an
+INDEPENDENT read of the 64-row layer against the six crossings now that the
+layer exists to read.
+
+**Two owed calls, closed** (above): SR-043's window KEPT on driven evidence,
+and the phase spread RECORDED as intended with its analysis.
+
+**The conversion finished where act 5 left it half-done.** Act 5 changed the
+registry, the carrier schema and the shipped template — but left every
+`PROCESS.md` / `PROCESS_OPTIONS.md` / `EXAMPLE.md` / `MULTI_REPO.md` /
+`KICKOFF_PROMPT.md` passage still TEACHING the retired `Area` column. An
+adopter following `EXAMPLE.md` would have authored a column the carrier no
+longer declares — the half-migrated state this repo treats as a hazard class.
+All live prose now teaches the new schema. **Two traps found in that sweep,
+both the opposite of a mechanical rename:**
+
+1. **`Lifecycle` was documented as "mirroring `Area`" — an OPEN, project-named
+   vocabulary.** Re-pointing that analogy at `Aspect` would have taught the
+   exact opposite of the new rule, since `Aspect` is CLOSED. The analogy is
+   STRUCK, not re-pointed.
+2. **`Area` was an OWNERSHIP tag; `Aspect` explicitly is not one** ("a REVIEW
+   grouping, not an ownership claim"). Every domain-hat and module-partition
+   passage that leaned on `Area` for ownership re-anchors on the LLR
+   `Module`/component — which is decision 10's own reasoning (25 of 31 values
+   were a component by another name), applied to the docs.
+
+**Downstream consequence, surfaced not buried:** retiring `Area` from the
+SHIPPED template removes a capability adopters had — a free-text owner/domain
+tag — that `Aspect` does NOT replace. The dogfood rule forces it (STRUCTURE
+must not diverge, and `test_dogfood_sync` enforces it), so this is a
+consequence of the ruling rather than a separate choice; it is named here
+because an adopter will notice and the `RESYNC_PACK` entry now says so.
+
+### The top-down read's findings (a DELIVERABLE per 13s, not a failure)
+
+Re-verified before recording; two were fixed in this act, the rest are OWED
+with named ids. The two fixed:
+
+- **F2 — SR-152 carried a FALSE acceptance criterion** (self-inflicted in act
+  2): it asserted the B-04 pairing was *"cross-referenced from theirs"* when no
+  B-04 row cited SR-152 at all — and asserting registry prose is not a testable
+  criterion in the first place. Clause removed.
+- **F3 — §1R.6's explicit instruction was unexecuted:** the honest limit
+  belongs *in the B-04 crossing's SR*, and `--no-verify` appeared only in
+  SR-152's rationale (a B-07 row). **SR-019 now states it**: a local floor
+  bypassable by the session, discharging its claim only as a PAIR with the
+  hosted re-run.
+
+**Still OPEN, ranked (each needs a decision or an act, none is mechanical):**
+
+| # | Finding | Why it matters |
+|---|---|---|
+| H1 | **The frame's own named B-05 observable has NO row** — "the package exists, is complete and consumable", the MAPPING manifest. 15 rows were minted and the one §1R.6 spelled out was not; `MAPPING` appears only in SR-163's *rationale*. Already pinned by `test_bootstrap`/`test_dogfood_sync`, so the obligation is real and merely unstated. | a crossing the frame describes with no requirement at it |
+| H4 | **SR-148 / SR-153 / SR-059 all state (SN-025, loop work-selection)** — ordering twice, "no hand-maintained pointer" three times. Textually the same class as the SR-141 merge this campaign already performed. | 13p invariant |
+| H5 | **SR-031 and SR-137 both claim the tomllib-vs-sh adversarial-table observable**, and the texts have already DIVERGED — only SR-031 names the fail-OPEN decoy. The act-2 partition note was written into SR-031's rationale but the observable itself was not moved. | two homes, already drifting |
+| M1 | **Four rows escaped demotion against the campaign's own criterion** — SR-008, SR-021, SR-030, SR-133 (SR-133's rationale literally reads *"Decomposed from SR-006"*). | the census's own test |
+| M2 | **"declared" is a floating referent in SR-157/158/159** ("the declared spine rules", "declared severity") — their acceptance cannot be enumerated without naming where the declaration lives. | unfalsifiable acceptance |
+| M3 | **Three needs have ZERO occurrences in the SR layer's text**: SN-026's `agents.toml`/`agents-enabled` consent surface, SN-037's discrete/variable signal typing, SN-029's delegated-approval record. `orphans=0` only proves each SN has ≥1 citing row, never that the row carries the whole need. | thin coverage the detector cannot see |
+| M4 | **`boundary_refs` disagree with the shall** on SR-137, SR-139, SR-165. | resolution is hard, correctness is not |
+| M5 | **SR-165 reads as a placeholder** (Inspection, subject "a decomposition run", unfalsifiable acceptance); dead acceptance clauses in SR-154/SR-164; `sn_refs` inflation on SR-153/SR-155. | the fast-authored mints |
+| L1 | SR-035 title/requirement mismatch; the B-05 hook-floor bucket is thin; `external.toml`'s B-05 note lists FIVE capability buckets where practice now uses six (the ruled `package-wide property` is missing from the note). | small, mechanical |
+
+These are the campaign working as designed: a layer that did not exist an act
+ago can now be read as one, and reading it produced a ranked list instead of a
+feeling. **None is a regression** — every one names a state the pre-campaign
+registry also had, or a gap the campaign's own mints introduced and this pass
+caught before the owner's sitting.
+
 ### Still OWED inside this slice (the open lane's remainder)
 
 1. ~~The Area→aspect conversion~~ — **DONE in act 5** (owner ruling
@@ -251,17 +321,43 @@ above base, and carried below as owed rather than declared clean.
    derivable values DROPPED per decision 10 rather than remapped (21 of 64 rows
    keep an aspect, 42 carry none — the ruled end state). Vocabulary now
    enforced in `ENUM_FIELDS`; adopters carry a `RESYNC_PACK` entry.
-2. **SR-043's MW clause** (a HOLD row not re-worded in act 2): scrub-or-keep
-   call still owed.
+2. ~~SR-043's MW clause~~ — **CALLED: KEEP** (act 6). Driven, not judged:
+   `subagent_gate.py` declares `LEGACY_POLICY = "docs/subagent-gate"` and
+   `read_process_policy` falls through to it, and `agent_common.PROCESS_KEYS`
+   plus `bootstrap.py --migrate-config` both still carry the legacy key. The
+   window is a LIVE obligation, so the clause stays. Same evidence standard as
+   SR-067's and SR-042's keeps; SR-131's pause window was CLOSED on the same
+   standard, which is what makes these keeps a finding rather than a default.
 3. **The re-iteration pass the method names** has run once in each direction
    and closed the orphan set; a *second* top-down read of the 64-row layer
    against the six crossings — now that the layer exists to read — is the
    honest remaining check before the owner's sitting.
-4. **The residual child/parent phase spread: 38, against a base of 19.** The
-   19 pre-existing are tolerated by the registry's own convention; the ~19 this
-   campaign added sit on rows whose parent legitimately spans phases. Either
-   reconcile them or record the spread as intended — do not leave it as an
-   unexplained delta.
+4. ~~The residual child/parent phase spread~~ — **RECORDED AS INTENDED**
+   (act 6), with the analysis rather than a shrug. All 38 sit under just **six**
+   parents, and **three of those six (SR-026, SR-049, SR-054) are already in the
+   base 19** — i.e. the phenomenon predates this campaign and the campaign
+   concentrated it rather than inventing it. The other three (SR-070×16,
+   SR-157×4, SR-155×4) are exactly the parents that absorbed demotions from
+   several delivery phases at once.
+
+   **Why aligning them would be worse.** A phase records WHEN a piece shipped.
+   The generators obligation (SR-070) was genuinely built across phases 1–4; to
+   make every child match its parent you would either falsify those dates or
+   split the parent per phase — re-fragmenting the very layer this campaign
+   consolidated, and against the 13p invariant (one SR per need+property, not
+   per need+property+phase).
+
+   **The two directions, separated, because only one is even mildly odd.**
+   `child-later-than-parent` (28 of 38: 4→1, 3→1, 2→1, 5→1) is the ordinary
+   case — the obligation was stated early and more of it shipped later.
+   `child-earlier-than-parent` (10: 1→4 under SR-155, 4→3 under SR-054) reads
+   as machinery that existed before its contract was stated at SR level, which
+   is precisely the mis-tiering this campaign was convened to correct — so it is
+   a symptom being *recorded*, not a new defect.
+
+   **Failure direction checked:** `derive_gate` reads a draft child's phase, so
+   a draft under a differently-phased parent drops THAT phase's gate — toward
+   more scrutiny, never less. Full suite green at 2490.
 5. **What slice 2 does NOT do:** the D-9/D12 vocabulary migration
    (`2026-08-14e` — one atomic act after these drafts land) and any
    ratification (every status movement above is into in-process states).

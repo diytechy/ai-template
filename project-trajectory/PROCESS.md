@@ -70,8 +70,11 @@ hats at setup to match the scope — e.g. **Network**, **Security**, **Data/ML**
 **Hardware/Mechanical**, **Mechatronics**, **DBA**, **SRE/Ops**, and an
 **Integration/Coordination** hat that allocates cross-module budgets
 (`performance-budgets.csv`, §9). A domain hat owns the `SR`/`LLR` rows in its
-area (tag them, e.g. an `Area` column or `SR-NET-###` prefix) and brings its own
-edge-case and release-checklist items. Record the **active hats** in
+area (identify them by the LLR `Module`, its component id, or an
+`SR-NET-###` prefix) and brings its own edge-case and release-checklist items.
+The SR `Aspect` tag is **not** that grouping: it is an optional, closed-vocabulary
+label for a **cross-cutting** concern no component partition can express, and a
+row that is not cross-cutting carries none. Record the **active hats** in
 `status.md`; don't wear a hat the scope doesn't need. Like the others, it is
 usually the same driver switching context — spawn a separate specialist agent
 only for an independent high-risk review (§6).
@@ -492,7 +495,7 @@ checks `trace.py` runs — orphans, duplicate ids, schema — the **System Engin
 hat reads the needs and requirements **against each other** for the conflicts a
 script can't see: contradictory acceptance criteria or limits, mutually exclusive
 behaviors, duplicate or overlapping requirements, ambiguous / underspecified
-needs, and overlapping `Area`/hat ownership. One recurring ambiguity gets its own
+needs, and overlapping module/hat ownership. One recurring ambiguity gets its own
 rule: **every comparative or absolute term in an acceptance criterion must name
 its predicate** — "identical" / "indistinguishable" / "equivalent" / "same as" /
 "matches" is untestable until it says identical *in what*, judged *how* ("cannot
@@ -549,7 +552,7 @@ deliverables skip it.
 **Lifecycle phase (when in the product's life a requirement holds) — opt-in.**
 *Applies when* install/startup requirements are easy to miss (most non-trivial
 products). Distinct from the delivery `Phase` above, an optional **`Lifecycle`**
-tag (mirroring `Area`; blank = **Runtime**) records *at what point in the running
+tag (blank = **Runtime**) records *at what point in the running
 product's lifetime must this hold, and how often?* — default vocabulary
 **Provision** (ready) · **Startup** (set) · **Runtime** (go), an open,
 project-named set. Naming it stops the perennial miss of writing only
@@ -1087,7 +1090,7 @@ coordination cost a single module never pays.
    gate run, one release.
 2. **Several modules, one repo** — distinct sub-systems that still **build and
    release as one**. No new machinery: partition the same spine by the columns that
-   already exist (the LLR **`Module`** column and the optional **`Area`** tag,
+   already exist (the LLR **`Module`** column and its component id,
    §1), give each module its own **domain hat**, add **integration TCs** for the
    seams, and record shared internal contracts as `IF-###` (§8). The **repo-level
    gate stays the source of truth** — `trace.py --strict` requires 0 orphans
