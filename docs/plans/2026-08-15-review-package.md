@@ -36,18 +36,26 @@ Gate unchanged at `DevBar-Reqs`.
 
 All three are surfaced on [open-items.html](../open-items.html) /
 `docs/requirements/open-items.toml` OI-30, with the full analysis in
-[2026-08-15-d9-migration-plan.md](2026-08-15-d9-migration-plan.md):
+[2026-08-15-d9-migration-plan.md](2026-08-15-d9-migration-plan.md).
+**Two of three are RULED (owner, in session, 2026-08-15 — log `2026-08-15k`):**
 
-1. **`Planned`'s fate** — recommendation: fold out into `Approved` at the
-   rename (it is the same rung; a fourth rung collides with `CMP_MATURITY`'s
-   `"planned"` and re-opens the uniformity ruling).
-2. **The `sr_bar` ceiling** — recommendation: ceiling at `BAR_TESTS` with a
-   regression pin until the harness driver lands (otherwise the migration
-   silently collapses DevBar-Tests into DevBar-Release).
-3. **Off-spine approval authority** — recommendation: keep the 0–4 ordinal
-   untouched; add `[attestation] human_approval_registries = ["interfaces",
-   "external", "components"]`, unlisted-means-held, enforced by a new
-   `human_approves()` read by the dispatcher and every approving writer.
+1. **`Planned`'s fate — RULED: fold out into `Approved`** at the rename.
+   Your words: functionally equivalent — both fire the breakdown into expected
+   children — and "approved" is clearer.
+2. **The `sr_bar` ceiling — PENDING, clarified.** It is the conversion's guard
+   rail: the rename deletes the pass-claim word, so without the ceiling a
+   formerly-`Planned` decomposed row would read `DevBar-Release` — the gate
+   rising for rows that never passed. Ceiling at `BAR_TESTS`, pinned, until
+   the harness driver lands. Zero visible impact at today's `DevBar-Reqs`.
+   **A yes/no closes OI-30.**
+3. **Off-spine approval authority — RULED, on your simpler shape:** it
+   follows the **dev-stage ladder directly** — no new key, no new enum. The
+   registry→rung association already exists in `derive_gate`
+   (`boundary_incomplete` gates DevStg-Boundary on `external.toml`;
+   `arch_incomplete` gates DevStg-Arch on components): `external.toml` is held
+   at dial ≥1, `interfaces.toml`/`components.toml` at ≥2, an unmapped
+   approval-carrying registry is held. At your dial of 4, identical effect to
+   today — derived rather than declared.
 
 ---
 

@@ -36,6 +36,31 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15k — OI-30 decisions 1 and 3 RULED (owner, in session); decision
+  2 clarified and pending.** **D1 — `Planned` FOLDS OUT into `Approved`** at
+  the rename: *"functionally approved is equivalent of planned, they both
+  result in the breakdown of the item into its expected children now firing,
+  but 'approved' is more clear."* The fourth-rung option dies with its
+  `CMP_MATURITY` collision. **D3 — the proposed `human_approval_registries`
+  list is OVERTURNED for the owner's simpler shape: off-spine approval
+  authority follows the dev-stage ladder directly.** *"I thought this would
+  follow the dev-stage directly? Why build a new enum?"* — and the repo's own
+  code corroborates: `derive_gate.boundary_incomplete` already gates rung 1
+  (DevStg-Boundary) on `external.toml`'s approvals and `arch_incomplete` gates
+  rung 3 (DevStg-Arch) on the component registry, so the registry→rung
+  association is existing fact, not new declaration. Ruled mapping:
+  `external.toml`→DevStg-Boundary (held at dial ≥1);
+  `interfaces.toml`/`components.toml`→DevStg-Arch (held at ≥2); an
+  approval-carrying registry with no mapping is HELD (fail-safe unchanged). At
+  this repo's dial of 4 the effect is identical to today — derived rather
+  than declared, no new key, no new enum. Enforcement home stays the
+  `human_approves` predicate beside `human_holds`, consulting the
+  registry→rung map as `DIAL_HOLDS`' off-spine sibling. **D2 (the `sr_bar`
+  ceiling) is pending**: the owner asked whether it relates to the
+  conversion; answered yes — it is the conversion's guard rail against the
+  derived gate RISING when the pass-claim word is deleted — and the ruling
+  awaits a confirm. OI-30's decision cell carries all three verbatim.
+
 - **2026-08-15j — ADVERSARIAL ROUND 2 returned CHANGES-REQUESTED, and the
   finding that mattered most is that a requirement had outlived its own
   mechanism.** *Executed provisionally under the owner's 2026-08-15
