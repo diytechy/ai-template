@@ -16,6 +16,24 @@
 # A row with neither key is an internal seam. That absence IS the statement —
 # there is no column to set to "internal" and get wrong.
 #
+# ENDPOINTS ARE VALIDATED AGAINST THE TREE. `this_project` and `counterpart` are
+# checked, warn-first, against the arch-map modules and then against the files
+# and directories that actually exist; an endpoint that resolves to NOTHING is
+# named individually, because a spine file that migrated (`.csv` -> `.toml`) and
+# left its seam row behind is the failure this rule was written for.
+#
+#     counterpart = "external:downstream adopter"
+#
+# The `external:` PREFIX is how a row says an endpoint is deliberately outside
+# this tree — an adopter, `git`, an agent CLI, an upstream doc set. It is a value
+# convention rather than a column so that it rides the carrier unchanged and
+# cannot drift out of sync with the endpoint it qualifies. Mark the ones that are
+# genuinely external; leave everything else resolvable, and fix it when it is not.
+#
+# An endpoint cell may name SEVERAL endpoints, `;`-separated, when one contract
+# genuinely has more than one far side. Prefer one endpoint per row; use the list
+# only when splitting would copy the same `contract` text into two rows.
+#
 # APPROVAL is the one maturity field: a CLOSED vocabulary, `draft` | `approved`,
 # shared with external.toml. Flipping a cell to `approved` is a human act in a
 # reviewed commit. Do NOT carry a second maturity column beside it; the whole

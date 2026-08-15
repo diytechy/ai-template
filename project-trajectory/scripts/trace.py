@@ -358,7 +358,17 @@ ENUM_FIELDS = {
     # buys. The subset here is the two-value one; it is PROVISIONAL pending
     # D-9's ladder, and the migration is stated in
     # docs/requirements/external.toml's header rather than guessed at here.
+    #
+    # `Direction` joined at the 2026-08-15 interface rework (plan step 1). It was
+    # the one IF column carrying a vocabulary that §8 states and nothing checked,
+    # and it is stated here with its RULED meaning (Q2, 2026-08-15a): the cell is
+    # the seam's FLOW/COVERAGE declaration, never an ownership claim — ownership
+    # is the `Owner` cell. A `Provides` row says this side authors the contract;
+    # a `Consumes` row is a coverage declaration (this cross-component edge is
+    # intended, and this row discharges it), which is exactly what
+    # check_trajectory's `_declared_seam_pairs` reads the 74 of them for.
     "IF": {
+        "Direction": {"Provides", "Consumes"},
         "Signal": {"discrete", "variable"},
         "Approval": {"draft", "approved"},
     },
@@ -1472,9 +1482,21 @@ def if_contract_advisories(ifs):
     return out
 
 
-# Endpoint spellings that are ACTORS rather than paths. An actor has no `/`, no
-# file extension and no dot — `downstream adopter`, `agent CLI`, `git`.
-_PATHY_RE = re.compile(r"[/\\]|\.[A-Za-z0-9]{1,5}$")
+# The ONE declared way an IF row says "this endpoint is deliberately outside this
+# tree" (2026-08-15 interface rework, plan step 2). A controlled PREFIX on the
+# endpoint value, not a new column, and the shape was chosen for three reasons a
+# column does not have: it needs no schema change so it rides the carrier and the
+# CSV fallback unaltered, it reads at the point of use (the cell that is
+# unresolvable is the cell that says why), and it cannot drift out of sync with
+# the endpoint it qualifies the way a parallel `external = true` flag would.
+#
+# Before it existed, an external actor and a rotted path were INDISTINGUISHABLE:
+# the classifier guessed from spelling — anything without a slash or an extension
+# "read as an external actor" — so `docs/subagent-gate` (a real path, dead since
+# the policy moved to docs/process.toml) was a finding while `agent CLI` was
+# silently fine, and a rot that happened to look like a name would have been
+# silently fine too. The marker replaces the guess with a claim someone made.
+EXTERNAL_ENDPOINT_PREFIX = "external:"
 
 
 def if_endpoint_class_advisories(ifs, module_ids, root):
@@ -1489,14 +1511,20 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     data files, directories and external actors, which are never arch-map
     modules. So a green from either rule said nothing at all about these rows.
 
-    It does not make them findings — a data-file endpoint and an external actor
-    are both legitimate. It makes them VISIBLE, which is the whole gap: the
-    summary counts each class, and only the endpoints that resolve to NOTHING —
-    path-shaped and absent from the tree — are named individually, because those
-    are the only ones a reader can act on."""
+    THE RULE, since the 2026-08-15 rework (plan step 2): an endpoint — in
+    `ThisProject` **or** `Counterpart` — that resolves to no module, no file and
+    no directory AND carries no `external:` marker is a NAMED finding. A
+    file/directory endpoint and a marked external one are both legitimate and
+    stay counted-not-named; the summary still reports every class, because the
+    vacuity it records is real whatever the endpoint turns out to be.
+
+    Warn-first, like every rule in this pipe: it never joins a failure set at any
+    gate. Promotion is a later, separate decision, and the reason to hold is that
+    the marker is a NEW convention — an adopter mid-migration would be red for a
+    vocabulary their registry predates."""
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
-    files, actors, unknown, rows_hit = [], [], [], set()
+    files, external, unknown, rows_hit = [], [], [], set()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
         for col in ("ThisProject", "Counterpart"):
@@ -1506,30 +1534,38 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
             # contain a space (`downstream adopter`) or a comma.
             cell = (r.get(col) or "").strip()
             for endpoint in [e.strip() for e in cell.split(";") if e.strip()]:
+                if endpoint.startswith(EXTERNAL_ENDPOINT_PREFIX):
+                    rows_hit.add(iid)
+                    named = endpoint[len(EXTERNAL_ENDPOINT_PREFIX) :].strip()
+                    if named:
+                        external.append(named)
+                    else:
+                        # A bare marker names nobody, which is the one way this
+                        # convention can be worse than the guess it replaced.
+                        unknown.append((iid, col, endpoint))
+                    continue
                 if _norm_module(endpoint) in norm_modules:
                     continue
                 rows_hit.add(iid)
                 if _resolves_in_tree(root, endpoint):
                     files.append(endpoint)
-                elif _PATHY_RE.search(endpoint):
-                    unknown.append((iid, col, endpoint))
                 else:
-                    actors.append(endpoint)
+                    unknown.append((iid, col, endpoint))
     if not rows_hit:
         return []
     out = [
         "IF endpoint coverage: {} of {} row(s) carry an endpoint that is not an "
         "arch-map module, so the cross-component rules are VACUOUS for them — "
-        "{} resolve to a file or directory in the tree, {} read as external "
-        "actors, {} resolve to nothing".format(
-            len(rows_hit), len(ifs), len(files), len(actors), len(unknown)
+        "{} resolve to a file or directory in the tree, {} are marked "
+        "`external:`, {} resolve to nothing".format(
+            len(rows_hit), len(ifs), len(files), len(external), len(unknown)
         )
     ]
     for iid, col, endpoint in unknown:
         out.append(
-            "IF {} {}={!r} is path-shaped and resolves to no module, file or "
-            "directory — name a real endpoint, or spell it as the external "
-            "actor it is".format(iid, col, endpoint)
+            "IF {} {}={!r} resolves to no module, file or directory — name a "
+            "real endpoint, or mark it `{}<actor>` if it is deliberately "
+            "outside this tree".format(iid, col, endpoint, EXTERNAL_ENDPOINT_PREFIX)
         )
     return out
 

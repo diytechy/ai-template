@@ -32,8 +32,8 @@ namespace, parallel to SN/SR/LLR/TC).
 |---|---|
 | `IF-ID` | Stable id for this interface. |
 | `Direction` | `Provides` (we expose it) or `Consumes` (we depend on it). |
-| `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). |
-| `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. |
+| `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). Validated against the tree — see `Counterpart`. |
+| `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. **Both endpoint cells are checked against the tree**, warn-first: one that resolves to no module, file or directory is named individually (a spine file that migrated and left its seam row behind is the failure this catches). Prefix a deliberately-outside-the-tree endpoint with `external:` — `external:downstream adopter`, `external:git` — a value convention, not a column, so it rides the carrier and cannot drift from the cell it qualifies. Several `;`-separated endpoints are allowed when one contract genuinely has more than one far side; prefer one per row, and use the list only when splitting would copy the `Contract` text. |
 | `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. **What crosses, typed — nothing else** (process.md §8): no rationale, no work-item id, no decision citation, ≤500 characters. |
 | `Signal` | **Closed**: `discrete` (a finite enumerable alphabet — exit code, gate name, status enum, dial) or `variable` (unbounded content — prose, file bytes, a count, a duration). If both cross, the row is `variable`. |
 | `SignalNote` | Optional. Why the typing is not obvious — a crossing that carries both kinds, or one the `Contract` does not type. |

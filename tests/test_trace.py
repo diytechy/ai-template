@@ -748,7 +748,8 @@ def test_if_endpoint_advisory_is_warn_only(scaffold):
 # drift of. Both halves are pinned, per rule.
 
 CLEAN_IF = (
-    'IF-001,Provides,src/demo,git,"reads the ref state",SR-001,v1,approved,Active,,\n'
+    'IF-001,Provides,src/demo,external:git,"reads the ref state",'
+    "SR-001,v1,approved,Active,,\n"
 )
 
 
@@ -774,6 +775,7 @@ def test_clean_if_row_trips_none_of_the_new_rules(scaffold):
         "ceiling 500",
         "has empty required field",
         "closed vocabulary",
+        "resolves to no module, file or directory",
     ):
         assert noise not in out, noise
 
@@ -915,22 +917,25 @@ def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffol
     out = _warn_run(
         scaffold,
         'IF-001,Provides,src/demo,docs/status.md,"writes",SR-001,v1,Stable,Active,,\n'
-        'IF-002,Provides,src/demo,downstream adopter,"cli",SR-001,v1,Stable,Active,,\n'
+        'IF-002,Provides,src/demo,external:downstream adopter,"cli",'
+        "SR-001,v1,Stable,Active,,\n"
         'IF-003,Provides,src/demo,docs/gone/nowhere.md,"x",SR-001,v1,Stable,Active,,\n',
     )
     assert "IF endpoint coverage:" in out
     assert "1 resolve to a file or directory in the tree" in out
-    assert "1 read as external actors" in out
+    assert "1 are marked `external:`" in out
     assert "1 resolve to nothing" in out
     # Only the unresolved one is named individually.
-    assert "IF IF-003 Counterpart='docs/gone/nowhere.md' is path-shaped" in out
+    assert "IF IF-003 Counterpart='docs/gone/nowhere.md' resolves to no module" in out
     assert "IF IF-001 Counterpart" not in out
     assert "IF IF-002 Counterpart" not in out
 
 
 def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
     # A `;`-joined cell names SEVERAL endpoints; reading it as one reported a
-    # real three-module seam (IF-097) as a dangling path.
+    # real three-module seam (IF-097) as a dangling path. IF-097 KEPT this shape
+    # at the 2026-08-15 rework rather than splitting into three rows: the three
+    # consumers share ONE contract, and three rows would be three copies of it.
     make_minimal_project(scaffold)
     out = _warn_run(
         scaffold,
@@ -939,6 +944,63 @@ def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
     )
     assert "2 resolve to a file or directory in the tree" in out
     assert "resolve to nothing" in out and "0 resolve to nothing" in out
+
+
+# --- 2026-08-15 interface rework, step 2: endpoint validation ------------------
+# The rule the plan asks for: an endpoint that resolves to NOTHING and carries no
+# external marker is a named warn — in EITHER endpoint column, path-shaped or
+# not. Before this, the classifier guessed from spelling, so a name-shaped rot
+# was silently "an external actor" and a real actor could never be distinguished
+# from one.
+
+
+def test_actor_shaped_endpoint_without_the_marker_is_now_named(scaffold):
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        'IF-001,Provides,src/demo,agent CLI,"x",SR-001,v1,Stable,Active,,\n',
+    )
+    assert "IF IF-001 Counterpart='agent CLI' resolves to no module" in out
+    assert "mark it `external:<actor>`" in out
+    assert "0 are marked `external:`" in out
+
+
+def test_the_external_marker_silences_it_and_is_counted(scaffold):
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        'IF-001,Provides,src/demo,external:agent CLI,"x",SR-001,v1,Stable,Active,,\n',
+    )
+    assert "resolves to no module" not in out
+    assert "1 are marked `external:`" in out
+
+
+def test_a_bare_external_marker_names_nobody_and_still_warns(scaffold):
+    # The one way the marker could be worse than the guess it replaced: a cell
+    # that claims externality without saying what is on the far side.
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold, 'IF-001,Provides,src/demo,external:,"x",SR-001,v1,Stable,Active,,\n'
+    )
+    assert "IF IF-001 Counterpart='external:' resolves to no module" in out
+
+
+def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
+    make_minimal_project(scaffold)
+    out = _warn_run(
+        scaffold,
+        'IF-001,Provides,src/gone,docs/status.md,"x",SR-001,v1,Stable,Active,,\n',
+    )
+    assert "IF IF-001 ThisProject='src/gone' resolves to no module" in out
+
+
+def test_direction_refuses_an_unknown_value_as_a_warn(scaffold):
+    # Step 1: `Direction` was the one IF column whose vocabulary process.md §8
+    # stated and nothing checked.
+    make_minimal_project(scaffold)
+    out = _warn_run(scaffold, CLEAN_IF.replace("IF-001,Provides,", "IF-001,Serves,"))
+    assert "IF IF-001 has Direction='Serves'" in out
+    assert "Consumes, Provides" in out
 
 
 def test_if_placeholder_and_absent_are_free(scaffold):
