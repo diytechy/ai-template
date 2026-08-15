@@ -36,6 +36,201 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15b — the re-tier's seven class-A authoring calls EXECUTED, plus
+  SR-165's owed chain.** *Executed provisionally under the owner's 2026-08-15
+  charge-through instruction; every call here is overturnable at the review
+  sitting.* Nothing was flipped toward `Verified` or `Approved`; new rows land
+  `Draft`, amended rows `Modified`. Ruled against
+  [plans/2026-08-15-retier-completion.md](plans/2026-08-15-retier-completion.md)
+  §2, whose measured IF-row impacts were verified by grep rather than trusted —
+  the predicted 11 moved rows were exactly the 11 found. Measured after:
+  `SN=27 SR=59 LLR=154 TC=149 orphans=0 integrity=0 form-findings=2` (the two
+  recorded 13v waivers), interface-findings=0, component-findings=0.
+  - **H1 — MINT. `SR-166`** (Draft, `B-05`, `SN-001`+`SN-007`): the package is
+    complete and consumable against its own declared manifest. §1R.6 names this
+    as B-05's artifact-shaped observable in its own words and names the manifest
+    that pins it; the campaign minted fifteen rows and not this one, leaving
+    `MAPPING` alive only in SR-163's rationale. The obligation was never
+    unenforced, only unstated — `tests/test_bootstrap.py` and
+    `tests/test_dogfood_sync.py` are named IN the row as its verification
+    evidence, which is why the row is `Verification = Test` and not a promise.
+  - **H4 — MERGE, on the SR-141 precedent. `SR-153` → `SR-148`, `SR-059` →
+    `SR-148`; both ids RETIRE** (watermark now `SR=166`, so neither number is
+    ever handed out again). All three stated (SN-025, loop work-selection): the
+    ordering claim twice, "no hand-maintained pointer" three times, against
+    13p's one-SR-per-(need, property) invariant. Survivor chosen as the row that
+    had already absorbed SR-141 on this same question. `sn_refs` unions to
+    SN-025 + SN-029 + SN-027 + SN-006 + SN-008 + SN-010; `boundary_refs` stays
+    `["B-05"]` (all three agreed); the requirement still carries exactly ONE
+    `shall`. The alternative — an explicit three-way partition — was rejected
+    for census F5's reason: the partition already existed textually and still
+    produced duplicated acceptance.
+    - **Shed-clause map (14 clauses, token-compared against their destination
+      BEFORE either row was deleted; 14 present, none weakened).** From SR-153's
+      requirement: derivation from tracked registries and git history alone →
+      SR-148 REQ; determinism of the eligible set and its order → REQ;
+      fail-closed for that item only on missing/undeclared/contradictory
+      declared inputs → REQ; "never from prose or a hand-maintained pointer" →
+      REQ, widened to name the predefined-track exclusion SN-025 also states.
+      From SR-153's acceptance, verbatim into SR-148 ACC: two resumes select the
+      same eligible set in the same order · exclusion with a stated reason while
+      disjoint classified work stays eligible · no prose surface participates in
+      the derivation · ordering and exclusion reasons exposed for replay. From
+      SR-059's requirement: no hand-curated next-work/run-phase pointer surface
+      → REQ; status surface generated and freshness-gated, never hand-copied →
+      REQ. From SR-059's acceptance, verbatim into ACC: fresh scaffold ships no
+      pointer and is parallel-by-default · no live instruction or executable
+      surface reads, writes, validates, generates or links one · a build-out
+      lane's phase resolves from its branch name with no pointer file · the
+      status snapshot regenerates mechanically and its freshness is gated.
+    - **Re-pointed in the same act**: 8 LLRs (058/059/060/089/123/131/149/152;
+      LLR-060 keeps SR-156 as a second parent — the trunk-only regeneration rule
+      is SR-156's), 7 TCs (058/059/060/091/097/143/146) with four `expected`
+      cells rewritten, **6 interface rows** (IF-053/054/071/085/088/089), and 8
+      WI specs — seven of them under `complete/`, the folder whose closed specs
+      carry `sr_refs` and which act 3 of the campaign missed, leaving 111
+      dangling back-refs for the adversarial round to find.
+  - **H5 — ONE HOME. The tomllib-vs-sh observable is `SR-031`'s alone.** Both
+    rows claimed it and the texts had ALREADY diverged: only SR-031's names the
+    trailing-comment decoy that once made the privacy gate fail OPEN, which is
+    the whole reason the adversarial table exists. SR-137 sheds the duplicate
+    clause and keeps what is its own — the dial's home, its checked shape, and
+    the shape check's own fail-safe direction (a shape only one reader
+    understands is refused AND still reads ON in both). Token-checked: nothing
+    in SR-137's wording was unique. `IF-032` and `IF-037` already cite SR-031
+    and still point correctly — **no interface moved for H5**, against the plan's
+    predicted 2, because the prediction assumed the observable would move rather
+    than the duplicate being struck. Found while reading: **SR-031's rationale
+    described SR-137's crossings as B-01/B-02**, stale since act 7 revised them
+    to B-01/B-04 — the registry was carrying a partition note that contradicted
+    the partition. Corrected.
+  - **M1 — DEMOTE, four rows, on the campaign's own criterion** (a row naming a
+    script and a mechanism is design-tier machinery; a row stating a crossing
+    observable holds). **Zero new LLR rows needed**, the same result the
+    campaign's own 73 demotions produced.
+    **ORPHAN SAFETY VERIFIED BEFORE ANY DELETION**, with all four applied
+    simultaneously so no ordering could hide a gap: SN-003 keeps 4 citers,
+    SN-008 keeps 6, SN-001 keeps 8, SN-006 keeps 8, SN-027 keeps 3. No need lost
+    its last carrier; none of the four had to be held.
+    - `SR-008` → `LLR-008`, under **SR-007 AND SR-006**. Reading a declaration
+      and refusing a broken one are one obligation — a reader that proceeds on a
+      malformed profile has not read it. `trace.py` had already been warning
+      that LLR-008 "mostly re-words" SR-008, the shape a row takes when it is a
+      design detail wearing an SR id. Two parents deliberately: the
+      missing-declared-binary clause is already SR-006's own words, and
+      splitting the refs is what stops that clause being re-stated at SR level
+      merely to give the child one parent.
+    - `SR-021` → **SPLIT**, because it spanned two audiences in one row. The
+      hook half is machinery under SR-019/SR-020 (`LLR-021`); the launcher half
+      is an observable of **SR-160**, whose rationale had literally said this
+      robustness *"remains SR-021's, cross-referenced rather than restated"* — a
+      cross-reference to a row that no longer exists is not a home, so what was
+      pointed at is now stated.
+    - `SR-030` → `LLR-029`/`LLR-030`, under **SR-027**. A second coordinator in
+      the same checkout is a FOURTH broken footing, not a separate obligation:
+      same direction, same moment, same typed nonzero refusal. SR-027 now names
+      it.
+    - `SR-133` → `LLR-141`, under **SR-006 AND SR-156**. Its own rationale read
+      *"Decomposed from SR-006"* — the demotion criterion stated by the row
+      about itself. SR-156 is the second parent so SN-027 keeps a carrier for
+      the trunk-only rule the skip exists to serve.
+    - **TWO OF THESE OVERRIDE A HISTORICAL ATTESTATION, AND ARE NAMED LOUDLY
+      RATHER THAN RIDDEN IN QUIETLY: `SR-008` and `SR-133` both read
+      `Verified`.** The owner ruled 2026-08-15 that overriding an attest is fine
+      where it improves the design — *"that is the entire purpose of this
+      exercise: to rebuild the breakdown and reassign the work to verify the
+      design"* — so `Verified` stopped being a reason to leave a row mis-tiered.
+      Each receiving row's rationale states the override in its own text, so it
+      is discoverable from the registry and not only from here. **Two further
+      `Verified` rows moved as a consequence and are named for the same reason:
+      `SR-007` and `SR-020` flip `Verified` → `Modified`**, the sanctioned
+      amend-and-flip — each now carries an obligation it did not carry before,
+      and leaving them `Verified` would put a `Modified` child under an
+      unflipped parent, the exact state trace.py's chain-consistency advisory
+      exists to name. **Four attested rows moved in total.**
+    - Re-pointed: **3 interface rows** (IF-013, IF-022 via SR-008; IF-015 via
+      SR-030 — exactly the three predicted), 5 TCs with their `expected` cells
+      rewritten, 6 LLRs, 5 WI specs, the two runtime flows in
+      `docs/architecture.md`, and five prose comments in kit scripts and the
+      meta-suite. `WI-456` carries a note: two rows in its title are gone, so
+      for those two it adjudicates the demotion, not the boundary-ref edit.
+  - **M3 — COVER, three needs with ZERO textual occurrence in the SR layer while
+    `orphans=0` still read clean.** That gap is exactly what an orphan count
+    cannot see: it proves a need has a citing row, never that the row carries
+    the whole need. All three were closed by EXTENDING the existing citing row
+    rather than minting, because in each case the citing row's obligation did
+    admit the clause; no existing clause was weakened.
+    - SN-026's consent surface → **SR-154**: `docs/agents.toml`'s (family x
+      model x tier) rows are the only candidate source and `docs/agents-enabled`
+      is the surface whose PRESENCE turns managed selection on. Declaring
+      families is a capability; dropping the surface is consent.
+    - SN-037's discrete/variable signal typing → **SR-162**, with the endpoint
+      pair and the incompatible-join advisory. **NAMED RESIDUAL, stated rather
+      than quietly dropped:** the need's last clause — that a reviewed change
+      altering one side of the requirement/interface relationship carries or
+      justifies the corresponding change on the other — is a REVIEW obligation
+      no row mechanizes, and SR-162 says so instead of claiming it.
+    - SN-029's delegated-approval record → **SR-140**, WITHOUT adding a fourth
+      `shall` (its 13v one-shall waiver is unchanged at three). Row and commit
+      were already its cells; the transition and the acting reviewer were the
+      missing half. It lands here rather than on SR-139 because this row says
+      what an acceptance record CONTAINS while SR-139 says which tiers are held.
+      The query-distinguishability is the load-bearing part: a record that
+      cannot separate a machine approval from a human one makes a released tier
+      unauditable, which is the failure SN-029 exists to prevent.
+  - **X1 — `SR-137` `["B-01","B-04"]`: CONFIRMED.** Read against
+    `external.toml`: B-02 carries exactly three things — rulings, attestations
+    and Status flips — and this row's shall contains none of them. Its subject
+    is the dial file's HOME and SHAPE, so its observables are the config edit
+    arriving as a governed write through the hook floor (B-01) and the refusal
+    going back out naming the key and both files (B-04). The contrary reading —
+    that declaring a policy dial is itself an authority act — was weighed and
+    rejected on the partition it destroys: the dial's MEANING is SR-139's and
+    that row keeps B-02, so B-02 here would give one authority observable two
+    homes. **One honest strain recorded rather than hidden:** B-04's `carries`
+    enumerates the hook floor and `subagent_gate` specifically, while this row's
+    refusals also fire at the dispatcher preflight, intake's adjudication arm
+    and the integrator's verdict gate — the same class of session-facing
+    guardrail verdict, but not the two the crossing names. If that enumeration
+    is meant as exhaustive, B-04's own text needs widening, not this row's
+    attribution. Recorded in the row.
+  - **X2 — `SR-139` `["B-02","B-05"]`: CONFIRMED.** B-02 is unarguable — the
+    ratification level IS the authority input, and every fail-safe clause
+    describes how that input is read when broken. B-05 earns its place on a test
+    rather than on the fact that everything here is delivered content: the
+    acceptance clause *"Level N holds exactly the tiers the SHIPPED TEMPLATE
+    documents"* is a claim about the package's contents agreeing with its
+    behaviour, falsifiable against the package alone with no authority act
+    performed — the same package-wide property class SR-031 occupies. The
+    objection it had to survive is the measured one from C1: B-05 already
+    carries about four fifths of the layer's references, so adding a row needs
+    an observable genuinely AT the package, not a default. This row has one.
+    Whether the imbalance itself is right is a question about the FRAME, not
+    about this row, and it stays where it belongs, as `OI-29`/`WI-459`.
+    Recorded in the row.
+  - **`SR-165`'s owed chain minted: `LLR-172` + `TC-166`, both Draft.** The
+    check extends `trace.py`'s existing `component_findings` — the one home that
+    already reads `docs/requirements/components.toml` — rather than adding a
+    second reader of the same registry. Beyond element presence it carries the
+    two derived rules SR-165 actually states: the recorded ranking must RECOMPUTE
+    from the record's own objective, constraints and scores, and a selection the
+    scores do not rank first is a finding unless the record carries a human
+    override naming that choice. Presence alone is satisfiable by a record whose
+    scores contradict its own conclusion, which is the failure SN-040 exists to
+    catch. **The record cells do not exist on the CMP schema yet, so both rows
+    are Draft describing the intended mechanism** — no checker code was written
+    here. This is the debt act 7's deliberate Inspection → Test flip incurred,
+    now recorded rather than silently owed. Watermark `LLR=172 TC=166`.
+  - **MEASURED CONSEQUENCE, recorded rather than suppressed: `llr-status`
+    advisories 2 → 9.** All seven new ones are real and all have one cause — the
+    merged parent `SR-148` is `Planned`, and `Planned` neither drops the derived
+    gate nor reaches the `--ratify modified` brief (verified by running it), so
+    seven LLR amendments now ride NO surface to the re-attest sitting. The
+    registry was NOT distorted to hide this: flipping SR-148 out of `Planned` is
+    sitting-3 decision 6's call over all 16 `Planned` rows, not this row's. The
+    signal is evidence FOR that decision — `Planned` is an attestation blind
+    spot — and it belongs on sitting 3's table.
+
 - **2026-08-15a — the interface model's four open questions RULED (owner, in
   session), and the schema inversion is left both blocked and unmotivated.**
   Ruled against

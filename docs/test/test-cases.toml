@@ -1649,3 +1649,14 @@ automated = "Yes"
 evidence = "tests/test_bootstrap.py (to be extended at implementation)"
 status = "Draft"
 phase = 1
+
+[test.TC-166]
+verifies = ["SR-165", "LLR-172"]
+level = "Integration"
+method = """Run trace.py's component pass over fixture component registries: (a) a complete derivation record passes silently; (b) a record omitting each element in turn — candidate partitions, objective, constraints, any candidate's score, the selected partition, the human ruling — is reported once per omission, naming the row and the missing element; (c) a record whose recorded ranking does not recompute from its own objective, constraints and scores is reported; (d) a selected partition the recorded scores do not rank first is reported, and the SAME record with a recorded human override naming that choice is silent; (e) a project declaring no components, and the shipped example -000 rows, are vacuous."""
+tier = "Full"
+expected = "Satisfies SR-165 AcceptanceCriteria via the LLR-172 detail contract"
+automated = "Yes"
+evidence = "tests/test_components_registry.py (to be extended at implementation)"
+status = "Draft"
+phase = 5

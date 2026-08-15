@@ -159,3 +159,4 @@ resource: "generated"
 | [TC-163](TC-163.md) | Plant a retired tag in a live authored file and one in each declared carve-out class (arc… |
 | [TC-164](TC-164.md) | Construct a needs registry whose need cell plants one token of each declared class (an in… |
 | [TC-165](TC-165.md) | Scaffold with a non-Python bootstrap profile into a temp dir and run trace.py --strict-in… |
+| [TC-166](TC-166.md) | Run trace.py's component pass over fixture component registries: (a) a complete derivatio… |
