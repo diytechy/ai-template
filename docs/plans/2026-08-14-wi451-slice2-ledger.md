@@ -294,6 +294,35 @@ with named ids. The two fixed:
   bypassable by the session, discharging its claim only as a PAIR with the
   hosted re-run.
 
+**CLOSED in act 7 — the mechanical half (19 cells across 12 rows):**
+
+| # | Finding | What was done |
+|---|---|---|
+| M2 | "declared" a floating referent in SR-157/158/159 | Each acceptance now NAMES its declaration sites, found by reading the code rather than asserted: `trace.py`'s `ID_PATTERNS`/`REQUIRED_FIELDS`/`ENUM_FIELDS` + the four flag families, `trace_text.py`'s gating-vs-advisory split, `check_trajectory.py`'s R-A/R-D/R-E/R-F and `TOP_VIEW_MAX`, the `[checks]` opt-out pair, `check.py`'s `doc-navigability` step and `stack.ini`'s `[step:doc-refs]`/`[step:figures]`. **Not narrowed:** each cell keeps its original general clause verbatim and labels the sites "the current set", closing with "a rule added at one of those sites is in scope by default". |
+| M5 | SR-165 a placeholder | Rewritten onto SR-161's proven form with a CONCRETE home (`components.toml`, where `trace.py` already runs `component_findings`); the unfalsifiable "a reviewer reproduces the scores" becomes "the recorded ranking recomputes from the record's own objective, constraints and scores" plus a reported selection the scores do not rank first absent a recorded human override. `Verification` Inspection → **Test**, since that check is genuinely mechanical — which OWES an LLR+TC before the row leaves `Draft` (recorded below, not silently incurred). |
+| M5 | dead acceptance clauses | SR-154 dropped *"review substance scoring never rewards length"* — it verified no clause of its own shall, and LLR-046/TC-083 already carry it. SR-164 dropped *"when the field lands"*, which conditioned acceptance on the row's own implementation and so could never fail; measured dead (the SN schema carries `acceptance/kind/need/priority/why` and **zero** rows carry `scope`). Now fails honestly. |
+| M5 | `sn_refs` inflation | SR-153 sheds SN-024 (it only READS a plan-mode classification), SR-155 sheds SN-023 (comparing plans ON interface coverage consumes those declarations, it does not deliver the dashboard). **Orphan safety verified twice, independently** — by the drafting agent and by the author — before either removal: SN-024 keeps 5 citers, SN-023 keeps 5. Both rationales updated so the trimmed cites are not re-added. |
+| L1 | SR-035 title/requirement mismatch | The TITLE was the wrong cell: it claimed an OS-portability obligation that is SR-114's, while the requirement/rationale/acceptance are all about language-specific tokens. Retitled rather than rewriting the requirement — which would have duplicated SR-114. |
+| L1 | `external.toml`'s B-05 note listed FIVE buckets | Extended to six with the ruled `package-wide property` (owner ruling `2026-08-14c`), naming SR-031/034/035/114 as its members. The registry had been carrying a ruling the frame's own note contradicted. |
+| — | SR-154's rationale made a FALSE claim | It called itself SN-026's *"only surviving SR-level carrier"* while SR-155 cites SN-026 too. Corrected to state what is true and what is actually distinct about each row. |
+
+**TWO REVISED CROSSING ATTRIBUTIONS — applied, and flagged for the owner to overrule.**
+These change `boundary_refs` away from the census's working attribution, so
+they are called out rather than buried. `trace.py` checks that a crossing
+RESOLVES, never that it is the right one, so nothing mechanical would have
+caught either reading:
+
+- **SR-137 `["B-01","B-02"]` → `["B-01","B-04"]`.** B-02 carries *"rulings,
+  attestations and Status flips"* and this row contains none: its shall is
+  about the dial file's HOME and SHAPE, so its observables are the config edit
+  arriving through the hook floor (B-01) and the refusal naming the key and
+  both files going back out (B-04). The contrary reading — that declaring a
+  policy dial is itself an authority act — is coherent, which is why this is
+  flagged.
+- **SR-139 `["B-02"]` → `["B-02","B-05"]`.** B-02 stays; B-05 joins because
+  half the observable ("a declared, auditable level-to-gate mapping") is
+  delivered package content.
+
 **Still OPEN, ranked (each needs a decision or an act, none is mechanical):**
 
 | # | Finding | Why it matters |
@@ -302,11 +331,7 @@ with named ids. The two fixed:
 | H4 | **SR-148 / SR-153 / SR-059 all state (SN-025, loop work-selection)** — ordering twice, "no hand-maintained pointer" three times. Textually the same class as the SR-141 merge this campaign already performed. | 13p invariant |
 | H5 | **SR-031 and SR-137 both claim the tomllib-vs-sh adversarial-table observable**, and the texts have already DIVERGED — only SR-031 names the fail-OPEN decoy. The act-2 partition note was written into SR-031's rationale but the observable itself was not moved. | two homes, already drifting |
 | M1 | **Four rows escaped demotion against the campaign's own criterion** — SR-008, SR-021, SR-030, SR-133 (SR-133's rationale literally reads *"Decomposed from SR-006"*). | the census's own test |
-| M2 | **"declared" is a floating referent in SR-157/158/159** ("the declared spine rules", "declared severity") — their acceptance cannot be enumerated without naming where the declaration lives. | unfalsifiable acceptance |
 | M3 | **Three needs have ZERO occurrences in the SR layer's text**: SN-026's `agents.toml`/`agents-enabled` consent surface, SN-037's discrete/variable signal typing, SN-029's delegated-approval record. `orphans=0` only proves each SN has ≥1 citing row, never that the row carries the whole need. | thin coverage the detector cannot see |
-| M4 | **`boundary_refs` disagree with the shall** on SR-137, SR-139, SR-165. | resolution is hard, correctness is not |
-| M5 | **SR-165 reads as a placeholder** (Inspection, subject "a decomposition run", unfalsifiable acceptance); dead acceptance clauses in SR-154/SR-164; `sn_refs` inflation on SR-153/SR-155. | the fast-authored mints |
-| L1 | SR-035 title/requirement mismatch; the B-05 hook-floor bucket is thin; `external.toml`'s B-05 note lists FIVE capability buckets where practice now uses six (the ruled `package-wide property` is missing from the note). | small, mechanical |
 
 These are the campaign working as designed: a layer that did not exist an act
 ago can now be read as one, and reading it produced a ranked list instead of a
@@ -358,6 +383,13 @@ caught before the owner's sitting.
    **Failure direction checked:** `derive_gate` reads a draft child's phase, so
    a draft under a differently-phased parent drops THAT phase's gate — toward
    more scrutiny, never less. Full suite green at 2490.
-5. **What slice 2 does NOT do:** the D-9/D12 vocabulary migration
+5. **SR-165 owes an LLR + TC** before it leaves `Draft` — incurred deliberately
+   in act 7 when its `Verification` flipped Inspection → Test on the finding
+   that its check IS mechanical (`components.toml` + `trace.py`'s existing
+   `component_findings` path). `Draft` rows are decomposition-exempt, so the
+   flip breaks nothing today; the chain is owed at ratification, exactly as
+   SR-035's was and was paid (LLR-171 + TC-165). Recorded rather than
+   discovered later.
+6. **What slice 2 does NOT do:** the D-9/D12 vocabulary migration
    (`2026-08-14e` — one atomic act after these drafts land) and any
    ratification (every status movement above is into in-process states).

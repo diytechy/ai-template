@@ -265,7 +265,7 @@ phase = 1
 aspect = "portability"
 
 [requirement.SR-035]
-title = "Stack-agnostic across OSes"
+title = "No language-specific token in the shipped scheme"
 sn_refs = ["SN-003", "SN-011"]
 boundary_refs = ["B-05"]
 requirement = "The delivered process and ID scheme shall carry no language-specific token in the shipped registries and ID vocabulary, such that a non-Python adopter's scaffold passes trace.py unmodified."
@@ -488,7 +488,7 @@ phase = 4
 [requirement.SR-137]
 title = "One policy home, with a checked shape"
 sn_refs = ["SN-028"]
-boundary_refs = ["B-01", "B-02"]
+boundary_refs = ["B-01", "B-04"]
 requirement = "The kit shall read every process policy dial from a single docs/process.toml whose line shape is a checked contract (one key = value per line under a bare [section] header; no dotted keys, inline tables or multi-line strings), refusing — never resolving by precedence — a repo in which any dial is declared both there and in its legacy one-word file."
 rationale = """Two grammars read this file — `tomllib` in Python and the three git hooks in pure sh, so a Python-less box still fails closed on a declared privacy gate (M-42). TOML is far more expressive than a `grep -E` can follow, so every shape only one reader understands is a silent flip of a security gate; the first cut shipped five such shapes, three of them fail-OPEN. Narrowing the shape and CHECKING the narrowing is what makes one file safe for two readers."""
 acceptance_criteria = """A dial declared in both homes produces a refusal naming the key and both files, at every guarded entry point (the dispatcher's pre-claim preflight, intake's adjudication arm, the integrator's verdict gate); a dotted key, inline table, multi-line string or hook-read key under the wrong section is refused by the shape check AND still reads ON in both readers; the hooks' sh and `tomllib` return the same answer over the adversarial file table; a wrong-typed or out-of-range dial is refused rather than defaulted."""
@@ -514,7 +514,7 @@ aspect = "process"
 [requirement.SR-139]
 title = "Ratification as an ordinal over a derived spine stage"
 sn_refs = ["SN-029"]
-boundary_refs = ["B-02"]
+boundary_refs = ["B-02", "B-05"]
 requirement = "The kit shall express human ratification authority as a cumulative integer 0-4 naming the highest spine tier a human still ratifies, compared against a separately derived SPINE STAGE (0=SN..4=nothing in process) with a declared, auditable mapping to the harness gate — every unreadable or out-of-range input resolving toward MORE human involvement."
 rationale = """The retired three-value enum could not express "TCs are human-held but LLRs are not", and four tables each re-interpreted the same word with its own fail-safe direction. The failure that matters is a machine ratifying something a human meant to hold, so every degrade has to point the same way — including the ones that look like kindness: clamping an out-of-range level toward 0 reads as "nothing is human-held" and disarms every hold in the repo."""
 acceptance_criteria = """Level N holds exactly the tiers the shipped template documents (cumulative, strictly-less-than the stage); stage 4 is held by no level, the end-of-run hold being its own dial; an unreadable stage, an absent dial, and a wrong-typed dial all read as human-held; an out-of-range level falls back to the conservative end AND is refused loudly; a legacy gate-policy word reads as all three dials it meant."""
@@ -645,10 +645,10 @@ phase = 5
 
 [requirement.SR-153]
 title = "Ready work derives from tracked state"
-sn_refs = ["SN-025", "SN-027", "SN-006", "SN-008", "SN-024"]
+sn_refs = ["SN-025", "SN-027", "SN-006", "SN-008"]
 boundary_refs = ["B-05"]
 requirement = """The delivered loop content shall derive the work it dispatches next from the repository's tracked registries and git history alone — the eligible set and its order deterministic, and an item whose declared safety, policy or plan-mode inputs are missing, undeclared or contradictory failing closed for that item only — never from prose or a hand-maintained pointer."""
-rationale = """Realizes SN-025 (self-direction from tracked state — its acceptance names exactly this contract), SN-027 (the DAG encodes what may proceed), SN-006 and SN-008 (a dishonest declaration cannot buy scheduling), with SN-024 via the plan-mode classification input. The census demoted every prior carrier of this contract as internal scheduler machinery; this row is the SR-level home their obligations decompose from."""
+rationale = "Realizes SN-025 (self-direction from tracked state — its acceptance names exactly this contract), SN-027 (the DAG encodes what may proceed), SN-006 and SN-008 (a dishonest declaration cannot buy scheduling). The census demoted every prior carrier of this contract as internal scheduler machinery; this row is the SR-level home their obligations decompose from. Plan-mode classification is an INPUT this row fails closed on, not a need it delivers, so SN-024 stays with the rows that run the critique."
 acceptance_criteria = """Two resumes over the same tracked state select the same eligible set in the same order; an item with missing or contradictory declared inputs is excluded with a stated reason while disjoint classified work stays eligible; no prose surface participates in the derivation; the ordering and exclusion reasons are exposed for replay."""
 priority = "M"
 verification = "Test"
@@ -660,8 +660,8 @@ title = "Independent review routed across families"
 sn_refs = ["SN-026", "SN-024", "SN-006"]
 boundary_refs = ["B-05"]
 requirement = """Before unattended work integrates, the delivered loop content shall obtain each review or critique verdict the declared policy requires from a session that did not author the work — drawn from a different model family wherever one is configured, degrading only to the documented same-family mode — with every selection logged before launch and a non-converging rework loop escalated through the declared ratification level."""
-rationale = """Realizes SN-026 (cross-family second opinions — this row is SN-026's only surviving SR-level carrier, so the sn_refs join forces the mint), SN-024 (an author cannot judge its own output) and SN-006. One row because routing, scheduling, scoring and escalation are one delivered contract — that the second opinion happens, independently, or its absence is documented — whose mechanics are the component details below it."""
-acceptance_criteria = """A declared review policy of N schedules N independent reviewer sessions; a configured cross-family draw is preferred and its unavailability degrades to the documented mode, never a silent skip; every selection is logged before launch; rework iterates within the declared budget and pages per the declared ratification level on exhaustion; review substance scoring never rewards length."""
+rationale = """Realizes SN-026 (cross-family second opinions — every prior carrier of this contract demoted as routing machinery, so the sn_refs join forced the mint; SR-155 cites SN-026 too, for the planner pair, but only this row states the second opinion itself), SN-024 (an author cannot judge its own output) and SN-006. One row because routing, scheduling, scoring and escalation are one delivered contract — that the second opinion happens, independently, or its absence is documented — whose mechanics are the component details below it."""
+acceptance_criteria = "A declared review policy of N schedules N independent reviewer sessions; a configured cross-family draw is preferred and its unavailability degrades to the documented mode, never a silent skip; every selection is logged before launch; rework iterates within the declared budget and pages per the declared ratification level on exhaustion."
 priority = "S"
 verification = "Test"
 status = "Draft"
@@ -670,10 +670,10 @@ aspect = "unattended-loop"
 
 [requirement.SR-155]
 title = "Contested planning rounds for marked work"
-sn_refs = ["SN-024", "SN-006", "SN-026", "SN-023", "SN-002"]
+sn_refs = ["SN-024", "SN-006", "SN-026", "SN-002"]
 boundary_refs = ["B-05"]
 requirement = """For work declared as contested planning, the delivered loop content shall produce the selected decomposition through a bounded round of two independently authored rival plans — cross-critiqued, mechanically coverage-compared and arbitrated by fresh sessions — committing the selected outcome atomically as registry-valid queued rows and surfacing a non-converging round through the declared ratification level, never falling back to a single uncontested plan silently."""
-rationale = """Realizes SN-024 (a decomposition judged by a competing plan and an independent arbiter rather than its author), with SN-026 (the planner pair prefers distinct families), SN-023/SN-002 (plans are compared on clause, requirement and interface coverage) and SN-006. One row because the dual-plan round is one delivered capability with one observable outcome class (SELECT or PAGE); its state machine, briefs, adapters and isolation rules are the component tier's."""
+rationale = "Realizes SN-024 (a decomposition judged by a competing plan and an independent arbiter rather than its author), with SN-026 (the planner pair prefers distinct families), SN-002 (the selected outcome lands as registry-valid rows, not prose) and SN-006. One row because the dual-plan round is one delivered capability with one observable outcome class (SELECT or PAGE); its state machine, briefs, adapters and isolation rules are the component tier's."
 acceptance_criteria = """A row marked for contested planning is refused on the direct build path; the round runs planner pair, cross-critique, mechanical coverage comparison and position-swapped arbitration as fresh sessions within declared budgets; SELECT files children that pass the registry validator atomically; PAGE preserves the round's evidence and maps through the declared ratification level."""
 priority = "S"
 verification = "Test"
@@ -698,7 +698,7 @@ sn_refs = ["SN-002", "SN-012", "SN-025"]
 boundary_refs = ["B-05"]
 requirement = """The delivered harness shall report every declared spine and work-registry rule violation — broken joins, integrity and schema faults, leftover placeholders, requirement-form findings and work-item coherence contradictions — naming the at-fault row and cell, gating the declared failure set at the declared gate while advisory classes never change the exit code."""
 rationale = """Realizes SN-002 (the chain is mechanically verified, not asserted — this row is the boundary-level home of the verdict SN-002's acceptance asks for), SN-012 (optional registries and opt-outs cost a non-user nothing) and SN-025 (queue-overlap visibility). One row because the adopter-observable contract is one: registry rules produce named findings at a declared severity; which rules, at which severities, is the component detail the rows below it decompose. Deliberate pair (census F6): the PB-format invariant itself is SR-015's; this row's decomposition carries the checker."""
-acceptance_criteria = """Each declared registry rule violation is reported with row-level attribution; the declared strict set exits nonzero at its gate and advisory classes never join the exit code; absent or placeholder-only optional registries and declared opt-outs are vacuous; the declared verification vocabulary (including Critique) is accepted and an unknown value fails."""
+acceptance_criteria = "Each declared registry rule violation is reported with row-level attribution; the declared strict set exits nonzero at its gate and advisory classes never join the exit code; absent or placeholder-only optional registries and declared opt-outs are vacuous; the declared verification vocabulary (including Critique) is accepted and an unknown value fails. The declaration this is read against is, as the current set: trace.py's `ID_PATTERNS`, `REQUIRED_FIELDS` and `ENUM_FIELDS` (the id shapes, the required cells, and the closed vocabularies -- SR `Verification`, TC `Tier` -- with the IF/CMP entries advisory by their own recorded ruling), the `--strict` / `--strict-integrity` / `--strict-schema` / `--no-placeholders` flag families and the exit contract stated in that module's docstring; trace_text.py's `form_findings` and `provenance_findings` (gating) beside `paraphrase_advisories` and `ac_advisories` (advisory, never the exit code); and check_trajectory.py's work-item rules R-A, R-D, R-E and R-F with `docs/process.toml [checks] trajectory_check` as the declared opt-out. A rule added at one of those sites is in this row's scope by default: an unreported one is a finding against this row, not an amendment to it."
 priority = "M"
 verification = "Test"
 status = "Draft"
@@ -710,7 +710,7 @@ sn_refs = ["SN-010", "SN-008"]
 boundary_refs = ["B-05"]
 requirement = """The delivered harness shall report a documentation surface that has drifted from what it claims — a broken intra-repo link, a missing vision declaration, a reference to an absent path or symbol, a stale generated doc, or a declared figure without its provenance — at the declared warn-or-gate severity for each class."""
 rationale = """Realizes SN-010 (navigable, honest documentation) and SN-008 (a green never hides a stale claim). One row because the delivered contract is one honesty verdict over the documentation surfaces; the individual checkers and their carve-outs are component details."""
-acceptance_criteria = """A dead intra-repo link, an absent PROJECT-VISION tag, a stale generated doc under --stale, a dangling backticked path or sym: reference, and a declared fig: marker missing cmd/rev each produce a finding at their declared tier; the declared carve-outs (generated blocks, path-ok and fig-ok lines, unmarked figures, URLs and placeholders) stay silent."""
+acceptance_criteria = "A dead intra-repo link, an absent PROJECT-VISION tag, a stale generated doc under --stale, a dangling backticked path or sym: reference, and a declared fig: marker missing cmd/rev each produce a finding at their declared tier; the declared carve-outs (generated blocks, path-ok and fig-ok lines, unmarked figures, URLs and placeholders) stay silent. The tier for each class is read off its declaration site, as the current set: check.py's built-in `doc-navigability` step, which runs check_docs.py from DevBar-Reqs on -- a broken intra-repo link and a missing or repeated PROJECT-VISION tag exit nonzero, orphans warn unless --strict-orphans, and --stale is warn-only; docs/stack.ini's `[step:doc-refs]` and `[step:figures]` rows, which declare `gates = DevBar-Release` for check_doc_refs.py --strict (gating on dangling alone, with untraced counted and never gating) and check_figures.py --strict; and the carve-out surfaces those checkers read -- `docs/orphans-allow`, `docs/declared-absences`, and the path-ok / fig-ok line markers. A class whose severity is stated at none of those sites is undeclared, and this row is unsatisfied until it is declared there."
 priority = "S"
 verification = "Test"
 status = "Draft"
@@ -722,7 +722,7 @@ sn_refs = ["SN-023", "SN-002", "SN-012"]
 boundary_refs = ["B-05"]
 requirement = """The delivered harness shall report declared-architecture connectivity gaps — an unresolvable interface row, an undeclared endpoint or direction, a cross-component import no declared interface covers, an invalid spec interface citation, and a top view past its declared bound — warn-first with --strict gating, vacuous where the optional inventories are absent."""
 rationale = """Realizes SN-023 (the parts' connections are as much of the truth as the requirement tree, checked mechanically warn-first — the need's own words), SN-002 (interface rows stay resolvable) and SN-012 (opt-out and vacuity keep the layer free for non-users). One row: the delivered contract is one connectivity verdict; the checkers below it are its decomposition."""
-acceptance_criteria = """Malformed or unresolvable IF rows are findings; undeclared endpoints, uncovered cross-component edges, invalid spec citations and an oversized top view warn plain and fail --strict; declared opt-outs and small or absent inventories are vacuous; declared seams render without changing the verdict."""
+acceptance_criteria = """Malformed or unresolvable IF rows are findings; undeclared endpoints, uncovered cross-component edges, invalid spec citations and an oversized top view warn plain and fail --strict; declared opt-outs and small or absent inventories are vacuous; declared seams render without changing the verdict. The rules and their opt-outs are read off their declaration sites, as the current set: trace.py for IF/CMP id shape and the off-spine back-link to the spine (`ID_PATTERNS` and the always-on integrity floor, which joins --strict), its `REQUIRED_FIELDS["IF"]` / `["CMP"]` entries and their enums staying advisory by the recorded warn-first sequencing; check_trajectory.py for the connectivity rules -- every arch-map module resolving to at least one IF endpoint (the "connectivity undeclared" warn), a cross-component import no IF row covers, a spec's `## Interfaces` section citing an unresolvable IF-### or neither a seam nor the intra-module escape, and the `TOP_VIEW_MAX` bound of 10 items (warn plain, error under --strict); `docs/process.toml [checks] interfaces_check` and `components_check` as the two declared opt-outs, with a `source`/`sink` token in an IF row's Notes as the per-module honesty valve; and gen_arch_map.py's generated block in docs/architecture.md as the module inventory every one of those rules joins against. A connectivity rule added at one of those sites is in this row's scope by default."""
 priority = "S"
 verification = "Test"
 status = "Draft"
@@ -783,7 +783,7 @@ sn_refs = ["SN-039"]
 boundary_refs = ["B-05"]
 requirement = """Every non-example stakeholder-need row shall carry a scope value from the declared closed vocabulary (template / this repository / both), with a missing or out-of-vocabulary value reported by the harness naming the row."""
 rationale = """Realizes SN-039 — a need whose audience is ambiguous gets enforced against the wrong repositories, and the scope must be a value a check can read, not inferred from prose. SN-039 had no citing SR. The field enters the SN carrier schema in the scheduled schema batch, per the need's own acceptance, rather than as a one-off column."""
-acceptance_criteria = """The SN carrier schema declares the scope field; the checker reports a missing or invalid value naming the row; example -000 rows are exempt; the live registry's rows each carry a valid value when the field lands."""
+acceptance_criteria = "The SN carrier schema declares the scope field; the checker reports a missing or invalid value naming the row; example -000 rows are exempt; every non-example row in the shipped registry and in this repository's filled one carries a valid value."
 priority = "S"
 verification = "Test"
 status = "Draft"
@@ -792,12 +792,12 @@ phase = 5
 [requirement.SR-165]
 title = "The component partition carries a reproducible derivation record"
 sn_refs = ["SN-040"]
-boundary_refs = ["B-05", "B-02"]
-requirement = """A decomposition run that partitions the system shall keep, with the tracked architecture record, a reproducible comparison — the candidate partitions considered, the declared objective and constraints they were scored against, and the selected partition — with the human's naming of the components and ruling of the final choice recorded as the deciding act."""
-rationale = """Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Cites B-02 beside B-05 because the human ruling is the authority input that adopts the partition."""
-acceptance_criteria = """The partition record lives in tracked architecture surfaces, never session prose alone; a reviewer can re-run the stated comparison against the declared objective and reproduce the recorded scores; the record names the candidate partitions, the constraints, the selected partition and the human ruling that adopted it."""
+boundary_refs = ["B-05"]
+requirement = "The delivered planning content shall leave, with every component partition it produces, a machine-readable derivation record in the tracked component registry rather than session prose — the candidate partitions considered, the declared objective and constraints they were scored against, each candidate's score, the selected partition, and the human ruling that named the components and adopted it — such that a live component row whose record omits any of those elements, or a selection the recorded scores do not rank first without a recorded human override, is a reportable finding."
+rationale = "Realizes SN-040 — a free-form partition leaves no record of the alternatives weighed, so the next reviser cannot tell load-bearing boundaries from accidents; the record is what lets the choice be re-examined. SN-040 had no citing SR, even as the P5 partition work performed exactly this record. Reproducibility is stated as a recomputation from the record's own declared inputs, not as a reviewer re-running a model session, because only the former can fail — the SR-161 form applied to the partition instead of the perspective set. B-05 alone: the human ruling is an element the record must carry, not an observable the system states at the authority input, which is SR-139's and SR-140's ground."
+acceptance_criteria = "A partition round writes the derivation record into the tracked component registry, never into session prose or a plan document alone; a live component row with no record, or a record omitting the candidate partitions, the declared objective, the constraints, any candidate's score, the selected partition or the human ruling, is reported naming the missing element; a selected partition the recorded scores do not rank first is reported unless the record carries the human override that chose it; the recorded ranking recomputes from the record's own objective, constraints and scores alone."
 priority = "S"
-verification = "Inspection"
+verification = "Test"
 status = "Draft"
 phase = 5
 aspect = "process"

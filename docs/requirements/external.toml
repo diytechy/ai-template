@@ -129,7 +129,7 @@ direction = "out"
 carries = """THE TEMPLATE - the packaged deliverable. The delivered scripts' contracts (check.py, bootstrap.py + MAPPING, agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py, the hooks, the launchers) are IF definitions tied to this crossing: content of the package, not separate system crossings."""
 approval = "draft"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
-notes = """The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities WI-451 slice 2 breaks it down by are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor."""
+notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities WI-451 slice 2 breaks it down by are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and package-wide property -- the sixth added by owner ruling 2026-08-14c for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
 
 [boundary.B-06]
 entity = "EXT-004"

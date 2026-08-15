@@ -33,7 +33,7 @@ resource: "generated"
 | [SR-032](SR-032.md) | Onboarding and dev-setup scaffold |
 | [SR-033](SR-033.md) | Release checklist generation |
 | [SR-034](SR-034.md) | Kit scripts run on stdlib plus ledger-declared dependencies |
-| [SR-035](SR-035.md) | Stack-agnostic across OSes |
+| [SR-035](SR-035.md) | No language-specific token in the shipped scheme |
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-043](SR-043.md) | Subagent spawn gate |
