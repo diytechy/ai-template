@@ -2,7 +2,7 @@
 id = "WI-456"
 title = "adjudicate: SR-007, SR-008, SR-009, SR-010, SR-011, SR-020, SR-022, SR-024, SR-032, SR-033, SR-034, SR-036, SR-043, SR-111, SR-113, SR-133 - ratified/routed cell(s) amended on merged trunk 1539f07..7674e4a (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
-sr_refs = ["SR-007", "SR-008", "SR-009", "SR-010", "SR-011", "SR-020", "SR-022", "SR-024"]
+sr_refs = ["SR-007", "SR-006", "SR-009", "SR-010", "SR-011", "SR-020", "SR-022", "SR-024"]
 specref = "docs/requirements/system-requirements.toml"
 buildtier = "strong"
 safety_class = "adjudication"
@@ -10,6 +10,17 @@ brief = "amendment"
 +++
 
 ## Context
+
+> **Two of the rows in this row's title no longer exist (2026-08-15).** `SR-008`
+> and `SR-133` were DEMOTED to the design tier and deleted — SR-008's obligation
+> into `LLR-008` under `SR-007` + `SR-006`, SR-133's into `LLR-141` under
+> `SR-006` + `SR-156`. Both were `Verified`, and both demotions deliberately
+> override that attestation under the owner's 2026-08-15 ruling. So their rows
+> in the amendment table below are HISTORY, not an adjudication still owed: what
+> this WI must judge for those two is whether the DEMOTION moved scope, on the
+> receiving rows, not whether the boundary-ref edit did. The title is left
+> unchanged on purpose — editing it renames the file and re-dates the clock.
+> Forwarding and reasoning: `docs/log.md`, entry `2026-08-15b`.
 
 Derived from `staged_spine_amendments` on the merged commit (§A5.2).
 Ratified and ROUTED traced cells only; other traced cells are silent

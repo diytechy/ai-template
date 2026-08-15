@@ -1286,7 +1286,7 @@ def knowledge_packs(root):
 
 # --- WI-399: containment owed where a module is ADDED --------------------------
 # docs/architecture.md is trunk-owned: its freshness gate SKIPs on a claimed work
-# branch (SR-133, concurrency-restructure §5.2), so a module a branch adds enters
+# branch (SR-006, concurrency-restructure §5.2), so a module a branch adds enters
 # the committed arch-map inventory only when the trunk lane's refresh regenerates
 # the map — AFTER the last review round, which made the station the FIRST place
 # the knowledge⇒component red could exist (WI-374/drive.py, WI-387/handback.py:
@@ -1448,7 +1448,7 @@ def added_module_findings(root, view, packs):
         "docs/knowledge/ holds {} pack(s) but {} shipped module(s) not yet in "
         "the committed arch-map are in no CMP-### component ({}); tag them via "
         "LLR `Component` cells in the commit that adds them — the arch-map "
-        "regenerates only on the trunk lane (SR-133), and the station must not "
+        "regenerates only on the trunk lane (SR-006), and the station must not "
         "be the first to see this red — or set docs/process.toml [checks] "
         "components_check = false".format(len(packs), len(missing), ", ".join(missing))
     ]

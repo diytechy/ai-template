@@ -2,36 +2,24 @@
 title = "Gate/tier harness enforces required steps"
 sn_refs = ["SN-004", "SN-008"]
 boundary_refs = ["B-05"]
-requirement = """check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing."""
-rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and the dissolved edge expectation that a missing tool fails, never skips. The work-branch lane skip is SR-133's obligation (one row, one obligation)."""
-acceptance_criteria = """check.py --gate <bar> runs that bar's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset."""
+requirement = """check.py shall run the required steps of the gate that must next be passed (the strictness selector cached in docs/gate) and fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing — and, on a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim), SKIP its generated-artifact freshness steps with a stated trunk-lane reason, generated artifacts being trunk-only, while every non-freshness step still runs."""
+rationale = """Realizes SN-004 (gates enforce their bar), SN-008 (no false green) and the dissolved edge expectation that a missing tool fails, never skips. ABSORBS SR-133, 2026-08-15: that row's own rationale read "Decomposed from SR-006", which is the census's demotion criterion stated by the row about itself — a sanctioned SKIP class of this harness's own step plan is not a second crossing observable, it is the same one qualified. The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk bar. SR-133 was `Verified`; the demotion overrides that attestation deliberately, under the owner's 2026-08-15 ruling, and is named in the log rather than ridden in quietly."""
+acceptance_criteria = """check.py --gate <bar> runs that bar's steps; a required-but-absent tool fails the gate with guidance (never a silent pass), and --lenient degrades it to SKIP; --tier selects the declared step subset; on a claimed work branch the declared freshness steps SKIP with a §5.2 notice and exit code untouched while skills-sync, trajectory and registry-integrity still run; the closing commit and its successors keep the skip (the signal derives from branch history, not the working tree); the trunk lane never skips them."""
 priority = "M"
 verification = "Test"
 status = "Modified"
 phase = 1
 
 [requirement.SR-007]
-title = "Declared stack profile"
+title = "Declared stack profile, refused when it is broken"
 sn_refs = ["SN-003"]
 boundary_refs = ["B-05"]
-requirement = """check.py shall read the toolchain (format/lint/test commands, tiers, coverage, arch-map mode) from docs/stack.ini so a stack swap edits only that file."""
-rationale = """Realizes SN-003 — the kit is stack-agnostic; the harness is re-pointed by declaration, not by editing a kit script."""
-acceptance_criteria = """check.py resolves each step's command from stack.ini; changing the profile changes the commands run, with no script edit."""
+requirement = """check.py shall read the toolchain (format/lint/test commands, tiers, coverage, arch-map mode) from docs/stack.ini so a stack swap edits only that file, failing loudly on a malformed profile or a non-integer coverage threshold rather than proceeding on a bad one."""
+rationale = """Realizes SN-003 — the kit is stack-agnostic; the harness is re-pointed by declaration, not by editing a kit script. ABSORBS SR-008, 2026-08-15: reading a declaration and REFUSING a broken one are one obligation, not two — a reader that proceeds on a malformed profile has not read it. SR-008 named a script and a mechanism, which is the census's demotion criterion, and `trace.py` had already been warning that its only child (LLR-008) "mostly re-words" it, the shape a row takes when it is a design detail wearing an SR id. Its third clause, a MISSING DECLARED BINARY, is not folded here: SR-006 already states it verbatim as its own ("fail that gate when a required tool is missing"), which is why LLR-008 now decomposes from both rows rather than one. SR-008 was `Verified`; the demotion overrides that attestation deliberately, under the owner's 2026-08-15 ruling, and is named in the log rather than ridden in quietly."""
+acceptance_criteria = """check.py resolves each step's command from stack.ini; changing the profile changes the commands run, with no script edit; a malformed profile or a non-integer coverage threshold produces a clear nonzero failure at the relevant step rather than a run on a bad profile (a missing declared binary fails under SR-006, which states that clause)."""
 priority = "M"
 verification = "Test"
-status = "Verified"
-phase = 1
-
-[requirement.SR-008]
-title = "Profile validation fails loudly"
-sn_refs = ["SN-003", "SN-008"]
-boundary_refs = ["B-05"]
-requirement = """check.py shall fail loudly on a malformed stack.ini, a non-integer coverage threshold, or a missing declared binary, rather than proceeding on a bad profile."""
-rationale = """Realizes SN-003 and SN-008 — a broken declaration is a red, never a silent misconfiguration."""
-acceptance_criteria = """A malformed profile, non-integer coverage, or missing binary produces a clear nonzero failure at the relevant step."""
-priority = "M"
-verification = "Test"
-status = "Verified"
+status = "Modified"
 phase = 1
 
 [requirement.SR-009]
@@ -112,7 +100,7 @@ title = "Pre-commit hook floor"
 sn_refs = ["SN-005", "SN-009"]
 boundary_refs = ["B-01", "B-04"]
 requirement = """The pre-commit hook shall run the integrity + secrets floor on every commit, agent-neutrally — a LOCAL floor, bypassable by the session (git commit --no-verify), so it discharges "no unchecked write enters governed state" only as a PAIR with the hosted re-run of the same bar (SR-151/SR-152), never alone."""
-rationale = """Realizes SN-005 and SN-009 — a floor only CI enforces is one the local tree crosses freely, and a secret caught after the commit is already in history. Trusting the agent to run the checks was rejected: a floor exists for the times the agent forgets, so it is git-enforced and agent-neutral."""
+rationale = """Realizes SN-005 and SN-009 — a floor only CI enforces is one the local tree crosses freely, and a secret caught after the commit is already in history. Trusting the agent to run the checks was rejected: a floor exists for the times the agent forgets, so it is git-enforced and agent-neutral. Parents the interpreter probe from 2026-08-15 (retired SR-021): a hook that crashes cryptically because no python3 resolves, or because a Windows Store alias exits nonzero, has not run the floor — so probing by RUNNING a candidate and reporting clearly is machinery serving THIS obligation, and it decomposes to LLR-021 rather than standing as a requirement of its own."""
 acceptance_criteria = """The hook runs trace --strict-integrity and the secrets scan on staged content and blocks a commit that fails either; a --no-verify commit bypasses it and is caught instead by the hosted re-run, which is what makes the pair — not this row — the honest unit of the claim."""
 priority = "M"
 verification = "Test"
@@ -124,20 +112,8 @@ title = "Pre-push hook outgoing scan"
 sn_refs = ["SN-005", "SN-009"]
 boundary_refs = ["B-01", "B-04"]
 requirement = """The pre-push hook shall scan the outgoing commit range and block a push that publishes a secret or (under privacy-check) a private identity."""
-rationale = "Realizes SN-005 and SN-009 — the last gate before content leaves the machine."
+rationale = """Realizes SN-005 and SN-009 — the last gate before content leaves the machine. Parents the interpreter probe from 2026-08-15 (retired SR-021), with SR-019: LLR-021 is declared on this hook's module, and a pre-push hook that cannot start scans nothing. The probe is mechanism, not a second obligation."""
 acceptance_criteria = """The hook scans the push range and blocks when a secret (always) or an identity/PII class (privacy-check on) appears."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 1
-
-[requirement.SR-021]
-title = "Hook python probe"
-sn_refs = ["SN-001"]
-boundary_refs = ["B-05"]
-requirement = """The git hooks and the root launchers (dev-setup / agent-resume, the coordinator's entry) shall locate a working python3 by running a candidate and skip-or-report clearly when none resolves or a Store-alias exits nonzero."""
-rationale = "Realizes the dissolved edge expectation that the interpreter is probed by running a candidate — no cryptic crash when the interpreter is absent or a Windows Store alias. (The launcher half joined the hooks' at the 2026-08-13 SN dissolution.)"
-acceptance_criteria = "With no working python3 the hook and each root launcher report clearly and do not crash cryptically; with one, they run their action."
 priority = "M"
 verification = "Test"
 status = "Modified"
@@ -183,9 +159,9 @@ phase = 1
 title = "Coordinator preflight"
 sn_refs = ["SN-006"]
 boundary_refs = ["B-05"]
-requirement = """agent_loop.py shall refuse a broken footing in preflight — not a git repo, no agent CLI, or a private author under privacy-check — exiting a typed nonzero code rather than hanging."""
-rationale = """Realizes SN-006 and the dissolved edge expectation that a preflight on a non-git working directory reports and exits nonzero rather than hanging — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it."""
-acceptance_criteria = """Outside a git repo, with no agent CLI, or with a private author under privacy-check, preflight exits a typed nonzero code."""
+requirement = """agent_loop.py shall refuse a broken footing in preflight — not a git repo, no agent CLI, a private author under privacy-check, or a second coordinator in the same checkout while another holds its lock — exiting a typed nonzero code rather than hanging."""
+rationale = """Realizes SN-006 and the dissolved edge expectation that a preflight on a non-git working directory reports and exits nonzero rather than hanging — a run that starts on a broken footing fails later and further from the cause, and an unattended loop cannot be asked what went wrong. Continuing with a warning was rejected: each of these conditions makes every subsequent step meaningless, so a typed nonzero exit is what lets the caller act on it. ABSORBS SR-030, 2026-08-15: a second coordinator in the same checkout is a FOURTH broken footing, not a separate obligation — it fails in the same direction, at the same moment, through the same refusal, and SR-030 named a script and a lock mechanism, which is the census's demotion criterion. Two coordinators in one checkout write the same working tree and the loser's commits interleave into the winner's diff where no review will separate them; coordinating by convention was rejected there for the reason that keeps it here — the failure is silent and shows up only as a garbled history. The lock machinery decomposes to LLR-029/LLR-030."""
+acceptance_criteria = """Outside a git repo, with no agent CLI, or with a private author under privacy-check, preflight exits a typed nonzero code; a second coordinator on a held lock is refused so only one writer runs per checkout, preventing a two-writer race."""
 priority = "S"
 verification = "Test"
 status = "Modified"
@@ -198,18 +174,6 @@ boundary_refs = ["B-05"]
 requirement = """agent_loop.py shall end each session in a typed outcome code, guard a zero-commit HEAD, and report an all-ERROR stall as an unavailable agent rather than a work stall."""
 rationale = """Realizes SN-006 and the dissolved edge expectations that a repository with no commits yet (HEAD absent) does not crash the loop and that an all-ERROR run is an unavailable agent rather than a work stall — a coordinator ending in an untyped code forces its caller to parse prose; a session that produced no commit still has a HEAD to report, so without a guard an empty run is indistinguishable from a productive one in the record it leaves; and an all-ERROR run reported as a work stall sends a human looking for a blocked work item that does not exist. Treating an agent error as a stall was rejected for that reason: an unreachable agent and a blocked item need different responses, so they need different outcomes."""
 acceptance_criteria = """A repo with no commits does not crash the loop; an agent-CLI error is logged ERROR; an all-ERROR region is reported as an unavailable agent."""
-priority = "S"
-verification = "Test"
-status = "Modified"
-phase = 1
-
-[requirement.SR-030]
-title = "Second coordinator refused"
-sn_refs = ["SN-006"]
-boundary_refs = ["B-05"]
-requirement = """agent_loop.py shall refuse a second coordinator in the same checkout, preventing a two-writer race."""
-rationale = """Realizes the dissolved edge expectation that a second coordinator launched in the same checkout is refused, and SN-006 — two coordinators in one checkout write the same working tree, and the loser's commits interleave into the winner's diff where no review will separate them. Coordinating by convention was rejected: the failure is silent and shows up only as a garbled history."""
-acceptance_criteria = "A second coordinator on a held lock is refused; only one writer runs per checkout."
 priority = "S"
 verification = "Test"
 status = "Modified"
@@ -461,18 +425,6 @@ status = "Modified"
 phase = 4
 aspect = "trajectory"
 
-[requirement.SR-133]
-title = "Work-branch lane skip for freshness steps"
-sn_refs = ["SN-027", "SN-008"]
-boundary_refs = ["B-05"]
-requirement = """On a claimed work branch (one whose history holds a docs/work/active/<branch>/ claim) check.py's generated-artifact freshness steps shall SKIP with a stated trunk-lane reason - generated artifacts are trunk-only - while every non-freshness step still runs."""
-rationale = """The skip is not a weakening: a work branch cannot commit generated artifacts at all (concurrency-restructure §5.2), so demanding their freshness there would force the very conflict the rule deletes; the skip is reported, never silent, and any signal ambiguity resolves toward the full trunk bar. Decomposed from SR-006 so each row states one obligation."""
-acceptance_criteria = """on a claimed work branch the declared freshness steps SKIP with a §5.2 notice and exit code untouched while skills-sync, trajectory and registry-integrity still run; the closing commit and its successors keep the skip (the signal derives from branch history, not the working tree); the trunk lane never skips them."""
-priority = "M"
-verification = "Test"
-status = "Verified"
-phase = 4
-
 [requirement.SR-137]
 title = "One policy home, with a checked shape"
 sn_refs = ["SN-028"]
@@ -712,9 +664,9 @@ aspect = "connectivity"
 title = "Front-door launchers for the two universal contributor actions"
 sn_refs = ["SN-034"]
 boundary_refs = ["B-05"]
-requirement = """The delivered scaffold shall place both universal contributor actions — preparing the development environment, and resuming the automated development loop — as launchers at the repository root for each supported platform, each starting its action as a single step, or documenting the one platform-required step where a single click is impossible."""
-rationale = """Realizes SN-034, whose row is the declared ONE home for launcher-class obligations (root visibility, one action per platform, both universal actions). SN-034 had no citing SR — the launcher rows realized SN-001 and left the need an orphan the strict trace names. One row per 13p: (SN-034, scaffold capability); the per-launcher robustness and wiring obligations remain SR-021's and SR-113's, cross-referenced rather than restated."""
-acceptance_criteria = """A fresh scaffold and this repository each carry both launcher sets (dev-setup and agent-resume) at the root for Windows, macOS and Linux; each launches its action as a single step on that platform, or documents the single platform-required step (the Linux execute-bit case); the adopter-facing guide names the capability and invites reuse."""
+requirement = """The delivered scaffold shall place both universal contributor actions — preparing the development environment, and resuming the automated development loop — as launchers at the repository root for each supported platform, each starting its action as a single step — locating a working interpreter by RUNNING a candidate and reporting clearly rather than crashing cryptically when none resolves or a Store alias exits nonzero — or documenting the one platform-required step where a single click is impossible."""
+rationale = """Realizes SN-034, whose row is the declared ONE home for launcher-class obligations (root visibility, one action per platform, both universal actions). SN-034 had no citing SR — the launcher rows realized SN-001 and left the need an orphan the strict trace names. One row per 13p: (SN-034, scaffold capability). ABSORBS SR-021's LAUNCHER HALF, 2026-08-15: this rationale previously said that the per-launcher robustness obligation REMAINED SR-021's, cross-referenced rather than restated — and a cross-reference to a row that no longer exists is not a home, so what was pointed at is now stated. SR-021 spanned two audiences at once, the git hooks and the root launchers, which is why it SPLIT rather than moved whole: the hook half is machinery under SR-019/SR-020 (LLR-021), and the launcher half is an observable of THIS row, because a launcher that crashes cryptically has not started its action as a single step. The wiring obligation stays SR-113's, which is a live row."""
+acceptance_criteria = """A fresh scaffold and this repository each carry both launcher sets (dev-setup and agent-resume) at the root for Windows, macOS and Linux; each launches its action as a single step on that platform, or documents the single platform-required step (the Linux execute-bit case); with no working python3 each root launcher reports clearly and does not crash cryptically, and with one it runs its action; the adopter-facing guide names the capability and invites reuse."""
 priority = "S"
 verification = "Test"
 status = "Draft"

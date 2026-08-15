@@ -12,8 +12,7 @@ resource: "generated"
 | id | summary |
 |---|---|
 | [SR-006](SR-006.md) | Gate/tier harness enforces required steps |
-| [SR-007](SR-007.md) | Declared stack profile |
-| [SR-008](SR-008.md) | Profile validation fails loudly |
+| [SR-007](SR-007.md) | Declared stack profile, refused when it is broken |
 | [SR-009](SR-009.md) | Conditional scaffold profiles |
 | [SR-010](SR-010.md) | Scaffold runs green out of the box |
 | [SR-011](SR-011.md) | Idempotent re-runnable scaffold |
@@ -22,13 +21,11 @@ resource: "generated"
 | [SR-018](SR-018.md) | Privacy gate two-axis |
 | [SR-019](SR-019.md) | Pre-commit hook floor |
 | [SR-020](SR-020.md) | Pre-push hook outgoing scan |
-| [SR-021](SR-021.md) | Hook python probe |
 | [SR-022](SR-022.md) | Vendored-doc drift |
 | [SR-024](SR-024.md) | Permutation case generation |
 | [SR-026](SR-026.md) | Coordinator resumes headless |
 | [SR-027](SR-027.md) | Coordinator preflight |
 | [SR-028](SR-028.md) | Coordinator typed outcomes |
-| [SR-030](SR-030.md) | Second coordinator refused |
 | [SR-031](SR-031.md) | Declared-policy readers agree |
 | [SR-032](SR-032.md) | Onboarding and dev-setup scaffold |
 | [SR-033](SR-033.md) | Release checklist generation |
@@ -48,7 +45,6 @@ resource: "generated"
 | [SR-113](SR-113.md) | Dev-setup wires the process floor |
 | [SR-114](SR-114.md) | Kit scripts run across the supported OSes |
 | [SR-129](SR-129.md) | Registry representation migration |
-| [SR-133](SR-133.md) | Work-branch lane skip for freshness steps |
 | [SR-137](SR-137.md) | One policy home, with a checked shape |
 | [SR-138](SR-138.md) | Legacy config converts automatically and totally |
 | [SR-139](SR-139.md) | Ratification as an ordinal over a derived spine stage |

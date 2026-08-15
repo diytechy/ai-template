@@ -1214,7 +1214,7 @@ def test_model_dial_precedence(loop_repo, monkeypatch, env_model, cli_model, exp
     assert (ctl / "models.txt").read_text(encoding="utf-8").split()[0] == expected
 
 
-# --- the per-checkout coordinator lock (SR-029/SR-030) -------------------------
+# --- the per-checkout coordinator lock (SR-027) --------------------------------
 # Ported from the retired tracks suite (WI-210): the lock outlives the track
 # lanes — the dispatcher, every worker, and an --interactive sitting take it.
 

@@ -330,7 +330,7 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
 
 
 def test_hook_skips_clearly_when_no_working_python3(scaffold):
-    # SN-013 / SR-021: python3 may resolve on PATH yet exit nonzero (the Windows
+    # SN-013 / SR-019: python3 may resolve on PATH yet exit nonzero (the Windows
     # Store app-execution alias). The hook probes by *running* a candidate, so it
     # must skip-or-report clearly, never crash. Shadow python3/python with fakes
     # that exit nonzero and confirm the hook exits 0 with a clear message.

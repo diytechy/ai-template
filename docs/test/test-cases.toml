@@ -76,11 +76,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-008]
-verifies = ["SR-008", "LLR-008"]
+verifies = ["SR-007", "SR-006", "LLR-008"]
 level = "Integration"
 method = "Run the stack-profile suite; malformed/non-integer/missing-binary profiles fail loudly."
 tier = "Full"
-expected = "Satisfies SR-008 AcceptanceCriteria"
+expected = "Satisfies the profile-refusal acceptance of SR-007 and SR-006 via the LLR-008 detail contract"
 automated = "Yes"
 evidence = "tests/test_stack_profile.py"
 status = "Verified"
@@ -219,11 +219,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-021]
-verifies = ["SR-021", "LLR-021"]
+verifies = ["SR-019", "SR-020", "LLR-021"]
 level = "Integration"
 method = """Run the hook suites' python-probe cases; a missing/aliased python3 reports clearly without crashing."""
 tier = "Full"
-expected = "Satisfies SR-021 AcceptanceCriteria"
+expected = "Satisfies SR-019 and SR-020 AcceptanceCriteria via the LLR-021 interpreter-probe detail contract"
 automated = "Yes"
 evidence = "tests/test_pre_commit_hook.py;tests/test_pre_push_hook.py"
 status = "Verified"
@@ -307,22 +307,22 @@ status = "Verified"
 phase = 1
 
 [test.TC-029]
-verifies = ["SR-030", "LLR-029"]
+verifies = ["SR-027", "LLR-029"]
 level = "Integration"
 method = """Run the agent-loop suite's lock tests (ported from the retired tracks suite): a hard-exited holder's kernel lock is OS-released and the next run acquires it cleanly."""
 tier = "Full"
-expected = "Satisfies SR-030 AcceptanceCriteria via the LLR-029 detail contract"
+expected = "Satisfies SR-027 AcceptanceCriteria via the LLR-029 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
 status = "Verified"
 phase = 1
 
 [test.TC-030]
-verifies = ["SR-030", "LLR-030"]
+verifies = ["SR-027", "LLR-030"]
 level = "Integration"
 method = """Run the agent-loop suite's lock tests (ported from the retired tracks suite): a second coordinator on a held lock is refused cross-process; a contention errno refuses; an unlockable filesystem degrades warn-only."""
 tier = "Full"
-expected = "Satisfies SR-030 AcceptanceCriteria"
+expected = "Satisfies SR-027 AcceptanceCriteria via the LLR-030 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
 status = "Verified"
@@ -1299,11 +1299,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-134]
-verifies = ["SR-133", "LLR-141"]
+verifies = ["SR-006", "LLR-141"]
 level = "Integration"
 method = """Run the check-harness lane suite: a claimed work branch skips the declared freshness steps with the §5.2 notice and untouched exit code while non-freshness steps still run; the closing commit and its successors keep the skip (history-derived signal); the trunk lane never skips."""
 tier = "Full"
-expected = "Satisfies SR-133 AcceptanceCriteria"
+expected = "Satisfies the work-branch lane-skip acceptance of SR-006 via the LLR-141 detail contract"
 automated = "Yes"
 evidence = "tests/test_check_lane.py"
 status = "Verified"

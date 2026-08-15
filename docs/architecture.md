@@ -17,7 +17,7 @@ adopters. The requirement spine it renders lives in
   set of independently runnable commands, not a linked application.
 - **Enforcement floor** (`project-trajectory/hooks/*`) — the pre-commit /
   pre-push / commit-msg hooks that run the integrity + secrets floor
-  agent-neutrally (SR-019/SR-020/SR-021).
+  agent-neutrally (SR-019/SR-020).
 - **Declared config** (`docs/stack.ini`, the generated `docs/gate`, and
   `docs/process.toml` — the one home for every process dial) — read once by the
   harness and the coordinator so a behavior is declared in text, not baked into
@@ -1491,7 +1491,7 @@ the SR/LLR ids it renders (PROCESS.md §3, required at DevBar-Tests).
 > deleted id in this section is exactly what `check_flows` refuses — and it is
 > right to: a flow must cite rows that exist.
 
-### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, SR-030, LLR-029)
+### Flow 1 — Unattended coordinator session (SR-026, SR-027, SR-028, LLR-029)
 
 ```mermaid
 sequenceDiagram
@@ -1506,7 +1506,7 @@ sequenceDiagram
     alt broken footing
         Loop-->>Launcher: typed nonzero exit (EXIT_PREFLIGHT), never hangs
     else ok
-        Loop->>Lock: _coordinator_lock (SR-030/LLR-030 refuse a 2nd writer)
+        Loop->>Lock: _coordinator_lock (SR-027/LLR-030 refuse a 2nd writer)
         Lock-->>Loop: held for the process lifetime (kernel-released on death — LLR-029)
         Loop->>Disp: _drive_entry — nothing is read from docs/status.md
         Note over Loop,Disp: resume authority is the claimed assignment plus the committed<br/>trailers on its branch (SR-026/LLR-026); the serial<br/>resume-from-status.md loop is retired

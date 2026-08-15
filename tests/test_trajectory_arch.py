@@ -626,7 +626,7 @@ def test_rows_without_declared_packs_stay_silent(tmp_path):
 
 # --- WI-399: containment owed where a module is ADDED --------------------------
 # docs/architecture.md is trunk-owned, so its freshness gate SKIPs on a claimed
-# work branch (SR-133) and a module a branch adds enters the committed arch-map
+# work branch (SR-006) and a module a branch adds enters the committed arch-map
 # inventory only when the trunk lane's refresh regenerates it — AFTER the last
 # review round, which made the station the FIRST place the knowledge⇒component
 # red could exist (WI-374/drive.py, WI-387/handback.py). The same rule now also

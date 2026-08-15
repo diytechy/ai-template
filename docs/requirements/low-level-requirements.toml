@@ -59,7 +59,7 @@ sr_refs = ["SR-006"]
 title = "Gate step plan + missing-tool guard"
 module = "project-trajectory/scripts/check.py"
 code_symbol = "steps/run_step"
-detail = """Builds the required-step plan per gate/tier and reports SKIP(missing) with a nonzero exit when a required tool is absent; the plan listing still names every step. The work-branch lane skip is LLR-141 (SR-133)."""
+detail = """Builds the required-step plan per gate/tier and reports SKIP(missing) with a nonzero exit when a required tool is absent; the plan listing still names every step. The work-branch lane skip is LLR-141, which decomposes from this same row."""
 test_refs = "(see TC-006)"
 status = "Verified"
 component = "CMP-007"
@@ -77,13 +77,13 @@ component = "CMP-007"
 phase = 1
 
 [design.LLR-008]
-sr_refs = ["SR-008"]
+sr_refs = ["SR-007", "SR-006"]
 title = "Profile validation"
 module = "project-trajectory/scripts/check.py"
 code_symbol = "load_profile"
-detail = """Rejects a malformed profile, non-integer coverage threshold, or missing declared binary with a clear loud failure."""
+detail = "Rejects a malformed profile, non-integer coverage threshold, or missing declared binary with a clear loud failure at the relevant step, rather than proceeding on a bad profile. Two parents on purpose (2026-08-15, retired SR-008): the malformed-profile and non-integer-coverage refusals decompose from SR-007, which is the row that reads the declaration; the missing-declared-binary refusal decomposes from SR-006, which already states that clause in its own requirement. Splitting the refs is what stops the obligation being re-stated at SR level to give this row a single parent."
 test_refs = "(see TC-008)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
@@ -220,13 +220,13 @@ component = "CMP-007"
 phase = 1
 
 [design.LLR-021]
-sr_refs = ["SR-021"]
+sr_refs = ["SR-019", "SR-020"]
 title = "Hook python probe"
 module = "project-trajectory/hooks/pre-push"
 code_symbol = "python3 probe"
-detail = """Probes candidate interpreters by running one and skip-or-reports clearly when none works or a Store-alias exits nonzero."""
+detail = "Probes candidate interpreters by RUNNING one — never by testing for the name on PATH, which a Windows Store alias satisfies while exiting nonzero — and skip-or-reports clearly when none works, so neither hook crashes cryptically on a box without a resolvable python3. Shared by pre-commit and pre-push (the module named here is the representative home; both hooks read the same probe). The equivalent obligation on the ROOT LAUNCHERS is stated on SR-160, not here: retired SR-021 spanned both audiences at once, and the launcher half is an observable of the front door rather than machinery of the hook floor."
 test_refs = "(see TC-021)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 
@@ -309,7 +309,7 @@ component = "CMP-008"
 phase = 1
 
 [design.LLR-029]
-sr_refs = ["SR-030"]
+sr_refs = ["SR-027"]
 title = "Kernel advisory lock"
 module = "project-trajectory/scripts/agent_common.py"
 code_symbol = "acquire_lock/_take_os_lock"
@@ -320,13 +320,13 @@ component = "CMP-008"
 phase = 1
 
 [design.LLR-030]
-sr_refs = ["SR-030"]
+sr_refs = ["SR-027"]
 title = "Lock mutual exclusion"
 module = "project-trajectory/scripts/agent_common.py"
 code_symbol = "acquire_lock"
-detail = """Refuses a second coordinator holding the same per-worktree lock, preventing a two-writer race."""
+detail = "Refuses a second coordinator holding the same per-worktree lock, preventing a two-writer race; the refusal is the preflight's typed nonzero exit, not a warning, so only one writer runs per checkout."
 test_refs = "(see TC-030)"
-status = "Verified"
+status = "Modified"
 component = "CMP-008"
 phase = 1
 
@@ -1381,14 +1381,14 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-141]
-sr_refs = ["SR-133"]
+sr_refs = ["SR-006", "SR-156"]
 title = "Work-branch lane signal + freshness skip"
 module = "project-trajectory/scripts/check.py"
 code_symbol = "_claimed_work_branch/steps"
 detail = """On a claimed work branch the _TRUNK_FRESHNESS_STEPS set SKIPs with a §5.2 notice, exit code untouched; the plan listing still names every step. The claim signal answers in two stages - docs/work/active/<branch>/ on disk (the fast path), else the branch's own committed history (git log -1 -- docs/work/active/<branch>) - so the closing commit that archives the claim, and every commit after it, keep the skip. No git, a failing git, or an empty answer all read as the trunk lane: a false work-branch positive would switch the freshness gates off on the one branch that owns regenerating them."""
 rationale = """A false work-branch positive would relax the trunk's freshness bar, so every ambiguity resolves toward the trunk lane."""
 test_refs = "(see TC-134)"
-status = "Verified"
+status = "Modified"
 component = "CMP-007"
 phase = 4
 

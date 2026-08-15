@@ -845,7 +845,7 @@ BASELINE = {
     # +98 (3261 -> 3359), WI-399: the knowledge⇒component containment rule
     # gains its EARLY firing point (`shipped_modules`/`added_module_findings`) —
     # the shipped-module delta a work branch can see without the trunk-owned
-    # arch-map regeneration (SR-133), so a lane that adds a module reds its own
+    # arch-map regeneration (SR-006), so a lane that adds a module reds its own
     # bar, not the station's. The rule belongs beside its siblings in
     # `component_findings` (one containment home, the F5 stance) rather than in
     # a new module that would itself owe registration; the stack.ini reads
