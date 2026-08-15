@@ -50,6 +50,15 @@ its honest remainder, sequenced behind this sitting's census ruling.
 
 ### 0.1 Preconditions scoreboard (§1's table, measured)
 
+> **STALE AS OF 2026-08-15 — read this first.** This table was measured before
+> the re-tier executed. Rows **5, 7 and 8 are now false in substance and true
+> only of trunk**: slice 2 is no longer parked (its layers landed on an unmerged
+> lane), the `Modified` rows have been touched, and `Area` is retired for the
+> closed `Aspect` vocabulary there. They flip the moment that lane merges.
+> Re-measure this table at convening rather than reading it — and see
+> [2026-08-15-resume-brief.md](2026-08-15-resume-brief.md) for what actually
+> changed.
+
 | # | State | Measured fact |
 |---|---|---|
 | 1 | **PARTIAL** | derived view + flows landed on the retirement lane, not yet merged; `check_flows` disposition = **moved**, never lapsed |

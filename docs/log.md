@@ -36,6 +36,46 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15a — the interface model's four open questions RULED (owner, in
+  session), and the schema inversion is left both blocked and unmotivated.**
+  Ruled against
+  [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
+  §6, which carries each ruling verbatim. **Q1 — a requirement AND a module may
+  own an interface**, on the reasoning that *"requirements are just
+  decomposition of needs into measurable objectives, and modules are just
+  physical implementations at a lower level that do the same thing"*; so the
+  owner cell is polymorphic and id-typed (one `SR-###` or design id, one
+  invariant), not two authored fields, and the plan's earlier "derive the
+  provider" recommendation is overturned — `this_project` holds a path string
+  and cannot express requirement ownership. **Q2 — ownership implies
+  orientation but not flow** (*"a 'provide' … implies directionality, but does
+  not mean it is actually directional"*); this is the ruling with the widest
+  reach: it dissolves the bidirectional-seam question, and it solves the
+  physical/mutual case (bolted joint, mated connector, thermal path) with no
+  special rule at all — retiring BOTH the proposal's `custodian` and this
+  plan's own `reify-as-component`, which were each workarounds for the
+  conflation Q2 removes. It also reconciles with the finding that deleting the
+  74 `Consumes` rows takes `cross_component_findings` 0→32 under `--strict`:
+  those rows are COVERAGE declarations, never ownership claims. **Q3 — one row
+  per contract, AND contracts compose**: an IF may name another IF as its
+  destination, so *"6 IFs could have a destination of a larger IF to carry them
+  in a single definable signal"*. New structure, in neither the proposal nor any
+  prior plan version; it answers Core's HARNESS (*"pure interface: its IF rows
+  are its existence"*) directly, is first testable here on `IF-102`
+  (`spine_carrier`, 14 constituents), and creates one new obligation — the
+  carriage graph must be checked acyclic. **Q4 — no separate physical kind; a
+  `views` facet** (Core's ratified four views), ruled for the MODEL with the
+  column deliberately withheld from this repo's schema while nothing would
+  populate it. **Scheduling consequence, and it is the load-bearing one:** the
+  owner cell lands on the IF row, so **no SR row gains a field** — the
+  double-signing risk that argued for holding the ratification wave is gone and
+  brief §4 option (a), merge-and-ratify-now, is viable. **Passed over:**
+  `SR.provides`/`IF.serves` with the endpoint fields dropped — now not merely
+  blocked (32 cross-component ERRORs at `--strict`; 35 non-module-endpoint rows
+  with nowhere to go; Python-only derivation in a stack-agnostic kit; Core's
+  ratified glossary defining an interface as a contract *between Modules*) but
+  **unmotivated**, since Q1+Q2 deliver the legibility it was for without
+  deleting a column.
 - **2026-08-14g — slice 2's EXECUTION METHOD ruled: layer-by-layer, not
   row-by-row (owner, in session).** The owner proposed working the spine
   *"like a real blank-slate breakdown, but reattaching valid work, and then
@@ -28791,3 +28831,509 @@ commit-bar smoke: 1134 passed, 7 skipped in 33.43s
 <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=ceb6d5d0 -->;
 `check_docs --stale` OK (403 docs, 1183 links, 0 broken);
 `check_trajectory --root . --strict` clean after the close (rc=0).
+
+## 2026-08-14 — WI-451 slice 2, act 1: the 26 supersession tombstones DELETED per D-4 — this entry is their forwarding home
+
+Ruling `2026-08-14b` (sitting-3 §0.3 rows 1–2) executed: the 26
+supersession-bookkeeping SR rows are deleted, not marked — *"a registry states
+what IS; git is the history"* — following the SR-039 precedent (2026-08-11).
+**SR 149 → 123 · TC 149 → 147**; the orphan set is unchanged at 9 (SR-148's
+missing LLR/TC + SN-034…SN-040), so the deletion orphaned nothing.
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --strict # Traceability: SN=27 SR=123 LLR=152 TC=147 orphans=9 integrity=0" rev="this commit's tree" -->
+
+**The forwarding map — every spent id and where its obligation lives now**
+(chains through other tombstones are resolved to live rows; the three chained
+cases are marked ⛓):
+
+| Deleted id | Title (was) | Live replacement rows |
+|---|---|---|
+| SR-037 | Work-item registry validation | SR-067, SR-068, SR-069 |
+| SR-038 | Offline project-state view | SR-070, SR-071, SR-072 |
+| SR-044 | Declared-interface connectivity | SR-073…SR-078 |
+| SR-045 | Heterogeneous implementer/reviewer scheduling | SR-079…SR-083 |
+| SR-047 | Subjective-quality critique loop | SR-084, SR-085, SR-086 |
+| SR-048 | How-SW top view bounded and containerized | SR-087, SR-088 |
+| SR-051 | Tiered drill-down views | SR-089…SR-092 |
+| SR-058 ⛓ | Deterministic safety classification | SR-093, SR-094, SR-132 (via SR-095) |
+| SR-061 | Parallel-by-default dispatcher | SR-132 |
+| SR-062 | Change-train continuation | SR-132 |
+| SR-063 ⛓ | Atomic serialized integration | SR-132 (via SR-096/097/098) |
+| SR-064 ⛓ | Crash safety and git-as-authority recovery | SR-132 (via SR-099/100/101) |
+| SR-065 | Parallel-execution telemetry and downstream migration | SR-132 |
+| SR-066 | Dual-plan decomposition round | SR-102…SR-108 |
+| SR-095 | Safety-aware traincar packing | SR-132 |
+| SR-096 | Atomic CAS integration | SR-132 |
+| SR-097 | Serialized blocked disposition | SR-132 |
+| SR-098 | Durable publication intent | SR-132 |
+| SR-099 | Git evidence enumeration | SR-132 |
+| SR-100 | Ownership-state reconstruction | SR-132 |
+| SR-101 | Lifecycle-boundary recovery | SR-132 |
+| SR-117 | Atomic traincar reservation and lane leasing | SR-132 |
+| SR-118 | Traincar build and review shape | SR-132 |
+| SR-119 | Release on early train end | SR-132 |
+| SR-120 | Blocked-constituent disposition | SR-132 |
+| SR-121 | Gated downstream migration to the parallel default | SR-132 |
+
+All 26 ids are SPENT FOREVER (the id watermark's committed mark carries their
+headroom; `docs/id-watermark` untouched, per the precedent).
+
+**The follow-through the ruling named, executed in the same act:**
+
+- **`sn_refs` coverage re-checked:** the eight SNs the tombstones cited
+  (SN-002/006/008/010/012/023/024/025) each retain live citing SRs — the
+  thinnest, SN-025, keeps 10 — and `trace.py`'s orphan set is bit-identical
+  before and after. No need lost its anchor.
+- **Citing IF rows:** IF-053 and IF-054 drop dead `SR-095` from their
+  `sr_refs` (three live refs remain each). **IF-055 is re-pointed to SR-132
+  rather than deleted** — a recorded per-row reason: unlike the SR-039 case,
+  IF-055 declares a live seam (`integrate.py` imports `schedule.py` today),
+  and the tombstone text's own instruction is that implementation links
+  *"shall cite the replacement rows"*; deleting the row would un-declare a
+  real interface. This is the same edit IF-053/054 received, not an exemption.
+- **`trace.py`'s supersession machinery retired by ruling:**
+  `sr_supersession_findings`, `_supersession_targets`,
+  `_supersession_cycle_findings`, `_llr_supersession_findings` (~110 lines)
+  and their integrity-floor call deleted; the SR-tier `superseded_by` carrier
+  key (`spine_carrier.SPINE_TIER_KEYS`) and the `SupersededBy` entry in
+  `check_trajectory.SPINE_RATIFIED_CELLS` retired with it. The CMP registry's
+  own `PartOf`/`SupersededBy` rule is SEPARATE and stays (still-owed item,
+  repo-lock D-4 — that section now records this deletion as DONE). The six
+  pinning tests in `tests/test_trace_rules.py` (the WI-229/WI-364 block,
+  ~207 lines) retired with the machinery.
+- **TC-099 retired by ruling — and TC-133 with it, by the same class:** the
+  ruling named TC-099 (the frozen-migration-map inspection); TC-133 is the
+  same evidence class for the Phase-5 set and ALL FIFTEEN of its `verifies`
+  targets are in the deleted class, so keeping it would leave a test case
+  verifying nothing. Recorded here as the ruling's necessary extension, not a
+  silent one.
+- **Live prose re-pointed to successors:** `score_reviews.py` (SR-096→SR-132),
+  `agent_loop.py` (SR-062→SR-132 ×2, SR-096→SR-132), `schedule.py` header
+  (SR-095 dropped), `check_need_form.py`'s example id + its test
+  (SR-101→SR-102), the OKF panel test (SR-038→SR-070). `docs/enforcement-audit.md`
+  drops the retired enforcer row; `docs/registry-machinery-reference.md`
+  §12.9 and the SR-column tables record the retirement.
+- **Deliberately left:** the 31 `rationale` cells in surviving SR rows that
+  cite their composite ancestors as decomposition provenance ("formerly
+  carried by SR-044") — 30 of the 31 are census DEMOTES whose text is
+  rewritten when they land as LLRs in this same slice, and the ids are spent,
+  so the references are unambiguous history until then. OI-18's evidence
+  prose (`open-items.toml`, `status = "ruled"`) cites SR-064/099/100/101
+  as the record of a ruling already executed — a closed record, not
+  re-worded, per the same doctrine that forbids rewriting history.
+  `migrate_carrier.py` keeps its `SupersededBy` column mapping: it is the
+  one-shot CSV→TOML converter and an adopter's legacy CSV may legitimately
+  carry the column; `test_rule_sync`'s inverse pin holds because
+  `spine_carrier.SPINE_COLUMN` keeps the key for the CMP tier.
+
+## 2026-08-14 — WI-451 slice 2, act 2: the SN→SR layer landed (34 reattached · 14 re-stated · SR-141 merged · 15 minted · Boundary-Refs live)
+
+The layer-by-layer method's first constructive step (`2026-08-14g`): the SR
+layer decided from the 27 needs and the six crossings, the census's surviving
+rows reattached to it, and the gaps minted. The full ledger — per-row
+dispositions, the shed-clause map with owed act-3 destinations, waivers,
+figures — is
+[plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md);
+headlines:
+
+- **SR registry 123 → 137**: 34 HOLDS reattached (mechanical touches only),
+  14 RE-STATES re-worded at their crossing (Verified rows flip `Modified` —
+  the sanctioned amend-and-flip path; nothing self-ratifies at
+  `human_ratification_through = 4`), SR-141 **merged into SR-148** (census
+  F5; id spent, LLR-159 + TC re-grounded — this cures SR-148's two orphans),
+  and **SR-151…SR-165 minted as Draft** (watermark SR 150 → 165): the
+  B-06/B-07 hosted-CI pair (census F1), four loop parents
+  (scheduling/review-routing/dual-plan/integration — the sn_refs join forces
+  exactly four, not one per demotion), three harness parents, and six
+  SN-coverage rows for SN-034/036/037/038/039/040.
+- **Orphans 9 → 1**: all seven uncovered needs gained first coverage (SN-035
+  via SR-046's re-homed `sn_refs` — no mint needed); the one remaining is
+  intended (SR-035's Analysis→Test flip owes its LLR/TC in act 3).
+  `integrity=0`; form findings 18 → 9 (7 dissolve with the act-3 demotions;
+  2 are recorded 13v waivers on SR-140/SR-147).
+- **Boundary-Refs is a populated column for the first time**: 64 rows, every
+  crossing named by ≥1 SR; the 73 unstamped rows are exactly the demote set
+  leaving the tier in act 3 (SN-037's advisory now counts down mechanically).
+- **Riders executed:** SR-035's observable minted as ruled (13u); SR-049
+  gains `area` (F7); the F6 invariant/checker pair kept deliberately with
+  each rationale naming the other; SR-150 (post-census WI-454 row)
+  classified HOLD with its reason recorded rather than silently folded.
+- The act-1 RESYNC_PACK entry landed here with its `[since fd26a966]` anchor
+  (the SR-tier `SupersededBy` retirement, superseding the WI-364 entry).
+
+Deviations from the design doc (recorded): re-stated previously-ratified rows
+land `Modified`, not `Draft` (Draft is for never-ratified mints); SR-162
+re-worded to one shall and its rationale scrubbed of a WI citation (the
+spine stand-alone rule caught it); SR-049's re-word names its actor. The
+Area→aspect conversion is sequenced as its own act inside this window, after
+the layers — recorded as owed in the ledger, not silently dropped.
+
+## 2026-08-14 — WI-451 slice 2, act 3: the 73 demotions land, and the spine closes (orphans=0)
+
+The layer-by-layer method's second constructive step (`2026-08-14g`): with the
+SR layer decided, each demoted row landed under the parent whose obligation it
+decomposes. **SR 137 → 64**; the fan-out matched the design's sn_refs-derived
+map exactly (SR-157×15 · SR-070×15 · SR-155×10 · SR-154×6 · SR-153×5 ·
+SR-156×5 · SR-159×5 · SR-158×4 · SR-006×3 · SR-026/030/112/144/148×1 = 73).
+Per-row dispositions, riders and the shed-clause map:
+[plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md).
+
+**The finding worth recording as a deliverable (13s): ZERO new LLRs were
+needed.** All 73 obligations fit an existing component-level carrier — 83 LLRs
+re-grounded, 68 taking a `detail` addendum folding the tokens the LLR did not
+already state, and not one row left homeless. That is the census's central
+claim — *these rows were always LLRs wearing SR ids* — confirmed mechanically
+rather than asserted. Had the mis-tiering been about substance rather than
+altitude, the demotions would have had nowhere to land.
+
+- **`orphans=0 integrity=0`** — SN=27 · SR=64 · LLR=153 · TC=148. The spine is
+  fully joined in both directions for the first time in the campaign. The
+  bottom-up sweep the method asks for found nothing dangling because the
+  top-down pass closed it; the one orphan act 2 left behind (SR-035's
+  Analysis→Test flip) is discharged by minting **LLR-171 + TC-165** (watermark
+  TC 164 → 165).
+- **78 TCs re-pointed**, and 42 `expected` cells that read *"Satisfies SR-NNN
+  AcceptanceCriteria"* rewritten to name the parent plus the LLR that now
+  carries the acceptance — a dangling "satisfies" pointer is precisely the
+  silent-rot class this campaign exists to remove.
+- **Form findings 9 → 2**: exactly the two recorded 13v waivers (SR-140,
+  SR-147). Every other multi-shall row dissolved on landing at its own tier —
+  the form rule's own prediction, observed.
+- **Boundary-Refs: 0 uncovered of 64** (149 of 149 at slice start), so
+  sitting-3 decision 8's deferral condition — *"until slice 2 populates
+  Boundary-Refs"* — is MET on the SR side.
+- **Riders:** SR-126's carve-out narrowed to the ten declared port scripts
+  (13u); SR-060's dead `next-wi` clause struck (§6 item 7); four MW
+  scrub-or-keep calls made on mechanical evidence, each recorded (SR-067 and
+  SR-042 KEPT — their legacy sentinels are still read by live code; SR-131's
+  pause window CLOSED); D8 dependencies stated rather than silently retired;
+  B03 render rows reframed as REL-002 adopted-toolkit outputs with every
+  obligation kept.
+- **Status movement:** 58 re-parented `Verified` LLRs flip `Modified`
+  (the sanctioned amend-and-flip; `modified` 65 → 102). Nothing self-ratifies
+  — `human_ratification_through = 4`, and the whole layer awaits the owner's
+  sitting.
+- **One test followed the registry:** `test_dogfood_sync`'s planted-defect
+  fixture keyed on `[requirement.SR-001]`, a row that no longer exists —
+  re-pointed to SR-006. That it was the ONLY casualty across 73 deletions is
+  itself evidence the demote set was internal-facing.
+
+Deviation from the design doc, recorded: the design anticipated new LLR mints
+where an obligation fit no existing carrier; none were required. The demotions
+were applied from three cluster manifests (harness 27 · generators 16 · loop
+30), each authored against the WI-444 token bar and machine-checked for
+coverage before application.
+
+## The runtime-flows re-pointing (found at the merge bar, not before it)
+
+`check_flows` refused the merge: `docs/architecture.md`'s Runtime flows section
+cited **eight requirement ids the campaign had demoted** — SR-029, SR-057,
+SR-060, SR-093, SR-115, SR-124, SR-131, SR-132. Nothing earlier in the campaign
+caught it, because the flows are hand-authored prose that only `check_flows`
+reads, and the per-commit smoke tier does not run it. It is the same lesson act
+4 already recorded about the smoke-only bar, reaching a different artifact.
+
+Each citation was re-pointed onto the design row that now carries the
+obligation. The map is the census disposition read onto the surviving carrier's
+title — mechanical re-pointing, not re-statement:
+
+| Demoted | Census disposition | Carrier | Carrier title |
+|---|---|---|---|
+| SR-029 | pins the mechanism (kernel advisory lock) | LLR-029 | Kernel advisory lock |
+| SR-057 | CMP-008 frontier machinery | LLR-058 | WI-DAG frontier + deterministic traincar ordering |
+| SR-060 | worker-protocol mechanics | LLR-061 | Explicit WI/train/worktree worker assignment |
+| SR-093 | classification machinery | LLR-059 | Pure safety classifier |
+| SR-115 | ordering machinery | LLR-123 | Deterministic traincar ordering |
+| SR-124 | PlanMode-class machinery | LLR-131 | Contradiction-safe dual-plan class |
+| SR-131 | pause-drain mechanics | LLR-138 | Tracked pause reader (dual-home) |
+| SR-132 | `integrate.py` = IF-080, ruled internal | LLR-140 | Local integrator (claim + queue + audit) |
+
+**A finding worth keeping:** the section carried a standing note recording
+"inherited drift" — SR-132 still specifying the composed-tree bar, SR-093 and
+SR-124 still describing the five-class ladder, LLR-143 still naming the deleted
+`drive.py`. That drift was scoped to WI-390 as spine work needing an owner
+sitting. **The re-tier discharged it instead**, by deleting the rows that were
+drifting. The note is rewritten to say so.
+
+**Open to overrule.** Eight carrier choices were made mechanically from titles;
+none was ruled. SR-115→LLR-123 and SR-057→LLR-058 are the two worth a second
+look, since LLR-058's own title spans both frontier *and* ordering.
+
+## 2026-08-14 — WI-451 slice 2, act 4: the verdict round returns CHANGES-REQUESTED (5 findings, all real), and a smoke-only bar is named as the cause
+
+The cross-family adversarial round (OPENAI-TERRA via `codex exec`, fresh
+context, rubric `code-review-adversarial.md`) reviewed `ad0d0456..e6cdc8fd`
+and returned **CHANGES-REQUESTED, findings=5**. Every finding was re-verified
+by the author before fixing; **none was refuted**. Full record:
+[reviews/wi451-slice2/round1-terra.md](reviews/wi451-slice2/round1-terra.md).
+
+**The round earned its keep outright — four of five findings were invisible to
+the bar the author actually ran:**
+
+- **The generated code map had been DESTROYED** — 1,413 lines — because the
+  author ran `gen_arch_map.py` with default args, which scans a non-existent
+  `src/` and emits an empty map behind a warning that was not read, instead of
+  the declared `--src project-trajectory/scripts`. Restored; the diff against
+  base is now 21 legitimate lines.
+- **A stale test assertion** still required the retired SR-tier
+  `SupersededBy` ratified-cell entry. Inverted to pin the column's ABSENCE
+  from both halves, so a silent re-classification still reds.
+- **A child/parent phase break** (`LLR-171` phase 5 under phase-1 SR-035) —
+  and chasing it exposed the systemic version the finding did not name: the
+  demotions re-parented long-standing **phase-1** children onto newly minted
+  **phase-5** parents, taking mismatches from **19 (base) to 144**. The mint
+  phase was an unexamined default; these parents govern work that shipped in
+  phase 1. Each now carries the phase its decomposed work actually shipped in.
+  Residual: **38**, carried in the ledger as owed rather than declared clean.
+- **This ledger's own signed counts were FALSE** — the author had reported the
+  demotion manifests' *intent* instead of measuring the applied diff. The
+  corrected set (83 re-grounded · 68 detail addenda · 58 flips · 78 TC
+  re-points · 42 `expected` rewrites) now ships with its reproducing command
+  under a `fig:` marker. This is the repo's most-guarded defect class, and it
+  was caught by a reviewer rather than by the author.
+- **A rider claimed as executed had not been:** SR-060's dead `docs/next-wi`
+  clause still stood in LLR-061. The dead half is struck; the live
+  `status.md` prohibition kept.
+
+**The process failure, named so it is not repeated:** the author ran only the
+**smoke** tier and treated it as sufficient. `CLAUDE.md` and the
+session-protocol both require the **full unfiltered suite** before claiming a
+slice done — and the full suite is precisely what surfaced three of these.
+Smoke was green through all of them. After the fixes: `pytest -q -n auto` →
+**2489 passed, 11 skipped**; `trace.py --strict` → `orphans=0 integrity=0`;
+`check_trajectory --strict` clean.
+
+**Also fixed this act, found by the round's own `check_trajectory` output:**
+100 SR deletions left **111 dangling `sr_refs` across 81 work-item specs** —
+act 3's applier had swept `queued/active/draft/deferred` (which held none) and
+never `complete/`+`cancelled/` (which held all 111). Measured decisive: the
+base tree carried **ZERO** such dangling refs even after the SR-039 deletion
+under this same doctrine, so resolvable back-refs are this repo's standing
+state; and the tombstones' own text ordered it — *"implementation links and
+decomposition evidence shall cite the replacement rows."* Each dead id is
+chased through the forwarding map and then the demote map (several tombstone
+successors were themselves demoted), deduped: **0 dangling, 0 unresolved.**
+Body prose mentioning spent ids is left alone — that is history, and D-4 does
+not rewrite history.
+
+**Round accounting:** these fixes POSTDATE the verdict, so the round is spent
+and **another is owed before this lane merges** — the gate working as designed.
+The lane is deliberately left OPEN at a slice boundary, so that round belongs
+to the session that closes it. One honesty note recorded rather than hidden:
+the author began the dangling-refs fix while the reviewer was still running,
+so the reviewer observed a briefly-dirty tree — perturbing a review's subject
+mid-round is a mistake.
+
+## 2026-08-14 — WI-451 slice 2, act 5: `SR.Area` retires for the closed `Aspect` vocabulary (owner ruling `2026-08-14h`)
+
+**The ruling (owner, in session).** Asked whether the Area→aspect conversion
+should ride this window or wait — since the vocabulary is *provisional* and
+sitting-2 decision 10 says it re-ratifies "on re-derived numbers", and those
+numbers had just moved hard (the registry it was sized against was 148 rows
+and is now 64) — the owner ruled **convert now**. Recorded because the
+alternative was live: waiting would have meant a second full-registry touch
+for a column already being rewritten in this one.
+
+**It is not a rename, and that is the whole point.** Decision 10's own
+measurement: of the 31 `Area` values, **25 were a component by another name**
+(derivable from the decomposition, therefore redundant) and only **6 spanned
+components** — which is what an aspect IS, a cross-cutting concern no
+partition can express. So the conversion **DROPS** the derivable values rather
+than remapping them. Verified against the ruling's own fingerprint before
+executing anything: the six name-matched values carry **exactly 65 of the 147**
+base rows, the figure decision 10 states — which is what made the mapping
+certain rather than inferred from name resemblance.
+<!-- fig: cmd="python - # tomllib over `git show ad0d0456:docs/requirements/system-requirements.toml`; sum the six name-matched Area values -> 65" rev=ad0d0456 -->
+
+**On the re-tiered registry: 21 of 64 rows keep an aspect, 42 drop the cell**
+(`process` 7 · `trajectory` 6 · `portability` 3 · `unattended-loop` 3 ·
+`connectivity` 1 · `perf` 1). That sparseness is the ruled end state, not data
+loss — the ruling says so in its own words: *"Portability's homelessness is not
+a defect."*
+
+**The vocabulary is CLOSED, and now enforced rather than merely declared.**
+`ENUM_FIELDS` gains `Aspect`, so a non-empty out-of-vocabulary value is a schema
+finding naming the row and the allowed set — reported at the schema tier,
+gating under `--strict`, the same severity contract its `Verification`/`Tier`
+siblings carry — while a **blank cell is never a finding**. Both directions are
+driven by new bite tests; a checker that demanded a value on every row would
+push authors straight back to inventing component-shaped ones, which is the
+defect the ruling diagnosed. **This is NOT the D-9/D12 Status vocabulary**,
+which stays held for its own atomic act (`2026-08-14e`).
+
+**Schema touched end to end:** `spine_carrier`'s key→column map and the SR
+tier's declared key set, `migrate_carrier`'s inverse (the `test_rule_sync`
+pin), `check_trajectory`'s traced cells, `gen_okf`'s fact row, `trace.py`'s
+per-aspect report section, and the **shipped template** — which now states the
+closed set, since an author cannot honour a vocabulary the template does not
+name. Adopters get a `RESYNC_PACK` entry (`[since 9861e957]`) that spells out
+the drop-don't-remap rule, because a downstream repo doing a mechanical rename
+would preserve exactly the redundancy this retires. `trace.py` baseline
+re-stamped 3833 → 3853 (reviewed bump, the vocabulary block plus the reasoning
+that makes it readable). Goldens regenerated deliberately: 4 lines, all rename.
+
+**Four tests the smoke tier hid were caught by the full suite** before
+committing — the fixture column, the template pin, the golden report section
+and the staged traced-cells set. That is act 4's lesson applied rather than
+merely recorded.
+
+Bar: `pytest -q -n auto` → **2490 passed, 11 skipped**;
+`trace.py --strict --strict-schema` → `orphans=0 integrity=0
+schema-findings=0`; `check_docs` OK.
+
+## 2026-08-14 — WI-451 slice 2, act 6: the re-iteration pass — two owed calls closed, the Aspect conversion finished in the docs, and the layer read top-down
+
+The method's `re-iterate — top-down again` step (`2026-08-14g`), plus the two
+calls the ledger carried as owed. Full detail:
+[plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md).
+
+**The two owed calls, closed on evidence rather than judgement.**
+
+- **SR-043's migration window: KEEP.** Driven, not assessed —
+  `subagent_gate.py` declares `LEGACY_POLICY = "docs/subagent-gate"` and
+  `read_process_policy` falls through to it, and both `agent_common.PROCESS_KEYS`
+  and `bootstrap.py --migrate-config` still carry the legacy key. Same standard
+  as SR-067's and SR-042's keeps — and SR-131's window was CLOSED on that same
+  standard, which is what makes these keeps a finding rather than a default.
+- **The child/parent phase spread (38 vs a base of 19): RECORDED AS INTENDED**,
+  with the analysis rather than a shrug. All 38 sit under six parents, and
+  **three of those six are already in the base 19** — the campaign concentrated
+  a pre-existing phenomenon rather than inventing it. Aligning them would either
+  falsify when work shipped or split parents per phase, re-fragmenting the layer
+  this campaign consolidated. Failure direction checked: a draft child drops
+  *its own* phase's gate, i.e. toward more scrutiny.
+
+**Act 5's conversion was half-done, and this act finished it.** The registry,
+carrier schema and shipped template had moved to `Aspect` while
+`PROCESS.md`, `PROCESS_OPTIONS.md`, `EXAMPLE.md`, `MULTI_REPO.md` and
+`KICKOFF_PROMPT.md` all still TAUGHT `Area` — an adopter following the worked
+example would have authored a column the carrier no longer declares. **Two
+traps in that sweep, both the opposite of a mechanical rename:**
+
+1. `Lifecycle` was documented as *"mirroring `Area`"* — an **OPEN**
+   project-named vocabulary. Re-pointing that analogy at `Aspect` would teach
+   the exact opposite of the new rule, since `Aspect` is **CLOSED**. Struck,
+   not re-pointed.
+2. `Area` was an **ownership** tag and `Aspect` explicitly is not one. Every
+   domain-hat and module-partition passage re-anchors on the LLR
+   `Module`/component — decision 10's own reasoning (25 of 31 values were a
+   component by another name) applied to the prose.
+
+**Surfaced rather than buried:** retiring `Area` from the shipped template
+removes an adopter capability — a free-text owner/domain tag — that `Aspect`
+does not replace. The dogfood rule forces it (`test_dogfood_sync` pins template
+structure to the live registry), so it follows from the ruling; it is named
+here and in the `RESYNC_PACK` entry because adopters will notice.
+
+**Byte deltas:** `AGENTS.template.md` 9,994 → 9,994 (unchanged; 6 bytes of
+headroom under 10,000). `PROCESS.md` 73,617 → **73,819 (+202)** — §1's
+domain-hat paragraph re-anchors on `Module`/component and NAMES `Aspect` while
+stating what it is not; that distinction is the whole +202, and without it a
+reader finds the old tag gone and reasonably assumes the new one replaces it,
+which is the confusion the ruling's *"REVIEW grouping, not an ownership claim"*
+wording exists to prevent. `PROCESS_OPTIONS.md` 171,916 → **171,869 (−47)**.
+Both baselines re-stamped in all three tracked skill copies, same commit.
+
+**The top-down read (independent, fresh context) produced a RANKED FINDINGS
+LIST — a deliverable per 13s, not a failure.** Two were fixed here:
+
+- **SR-152 carried a FALSE acceptance criterion**, self-inflicted in act 2: it
+  asserted the B-04 pairing was *"cross-referenced from theirs"* when no B-04
+  row cited SR-152 at all — and asserting registry prose is not testable
+  anyway. Removed.
+- **§1R.6's explicit instruction was unexecuted:** the honest limit belongs IN
+  the B-04 crossing's SR, and `--no-verify` appeared only in a B-07 row's
+  rationale. **SR-019 now states it** — a local floor, bypassable by the
+  session, discharging its claim only as a PAIR with the hosted re-run. (The
+  first two wordings tripped the form checker's `can`/`will` rule; the third
+  passes, and `form-findings` is back to the two recorded waivers.)
+
+Nine findings remain OPEN and ranked in the ledger — the frame's own named
+B-05 observable (the package/MAPPING manifest) has no row; three (SN-025,
+loop-selection) duplications of the SR-141 class; SR-031/SR-137 stating one
+observable twice and already diverging; four rows that escaped demotion against
+the campaign's own criterion; three needs with zero textual coverage despite
+`orphans=0`; and the fast-authored mints' placeholder/dead-clause issues. None
+is a regression: each names a state the pre-campaign registry also had, or a
+gap this campaign's own mints introduced and this pass caught **before** the
+owner's sitting rather than after it.
+
+Bar: `pytest -q -n auto -m smoke` → 1134 passed, 7 skipped;
+`trace.py --strict --strict-schema` → `orphans=0 integrity=0 schema-findings=0
+form-findings=2`; `check_docs` OK.
+
+## 2026-08-14 — WI-451 slice 2, act 7: the top-down read's mechanical half CLOSED (19 cells, 12 rows), two crossing attributions revised and flagged
+
+Act 6's re-iteration produced nine ranked findings. This act closes the four
+that carry no decision in them, leaving the owner a clean five-item ruling list
+instead of a mixed bag. Drafted by two independent agents over non-overlapping
+row sets, then adjudicated, applied and re-verified by the author — every
+proposed `old` cell asserted byte-equal against the live tree before any write,
+which caught one stale draft and refused it rather than overwriting.
+
+**Closed (full detail in
+[plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md)):**
+
+- **M2 — "declared" was a floating referent** in the three new harness parents.
+  Each acceptance now NAMES its declaration sites, found by reading the code
+  rather than asserted: `trace.py`'s `ID_PATTERNS`/`REQUIRED_FIELDS`/
+  `ENUM_FIELDS` and its four flag families, `trace_text.py`'s gating-vs-advisory
+  split, `check_trajectory.py`'s R-rules and `TOP_VIEW_MAX`, the `[checks]`
+  opt-out pair, `check.py`'s `doc-navigability` step and `stack.ini`'s
+  `[step:doc-refs]`/`[step:figures]`. **Not narrowed** — each cell keeps its
+  general clause verbatim, labels the sites "the current set", and closes with
+  "a rule added at one of those sites is in scope by default", so naming adds
+  precision instead of shrinking the obligation.
+- **M5 — SR-165 was a placeholder.** Rewritten with a concrete home
+  (`components.toml`, where `trace.py` already runs `component_findings`); the
+  unfalsifiable *"a reviewer reproduces the recorded scores"* becomes *"the
+  recorded ranking recomputes from the record's own objective, constraints and
+  scores"*, plus a reported selection the scores do not rank first absent a
+  recorded human override. `Verification` Inspection → **Test**, because that
+  check is genuinely mechanical — which OWES an LLR+TC before the row leaves
+  `Draft`, recorded in the ledger rather than silently incurred.
+- **M5 — two dead acceptance clauses.** SR-154's *"review substance scoring
+  never rewards length"* verified no clause of its own shall (LLR-046/TC-083
+  already carry it). SR-164's *"when the field lands"* conditioned acceptance on
+  the row's own implementation, so it could never fail — measured dead (the SN
+  schema carries `acceptance/kind/need/priority/why`; **zero** rows carry
+  `scope`). It now fails honestly.
+- **M5 — `sn_refs` inflation.** SR-153 sheds SN-024 (it only READS a plan-mode
+  classification), SR-155 sheds SN-023 (comparing rival plans ON interface
+  coverage consumes those declarations, it does not deliver the dashboard).
+  **Orphan safety was verified twice independently** — by the drafting agent and
+  by the author, before either removal — SN-024 keeps 5 citers, SN-023 keeps 5.
+- **L1 — SR-035's TITLE was the wrong cell**, claiming an OS-portability
+  obligation that is SR-114's while its requirement/rationale/acceptance are all
+  about language-specific tokens. Retitled; rewriting the requirement toward the
+  title would have duplicated SR-114.
+- **L1 — `external.toml`'s B-05 note listed FIVE capability buckets** where
+  ruling `2026-08-14c` declared six. The frame's own note had been contradicting
+  a ruling the registry was already using. Extended, naming SR-031/034/035/114.
+- **A false claim in a rationale the author wrote:** SR-154 called itself
+  SN-026's *"only surviving SR-level carrier"* while SR-155 cites SN-026 too.
+  Corrected to state what is true and what is actually distinct about each row.
+
+**TWO CROSSING ATTRIBUTIONS REVISED — applied, and flagged for the owner to
+overrule.** `trace.py` checks that a `Boundary-Refs` value RESOLVES, never that
+it is the RIGHT crossing, so nothing mechanical would catch either reading:
+
+- **SR-137 `["B-01","B-02"]` → `["B-01","B-04"]`** — B-02 carries *"rulings,
+  attestations and Status flips"* and this row contains none; its shall is about
+  the dial file's HOME and SHAPE, so its observables are the config edit
+  arriving through the hook floor and the refusal going back out. The contrary
+  reading (declaring a policy dial IS an authority act) is coherent, which is
+  exactly why it is flagged rather than buried.
+- **SR-139 `["B-02"]` → `["B-02","B-05"]`** — B-02 stays; B-05 joins because
+  half the observable, a declared auditable level-to-gate mapping, is delivered
+  package content.
+
+**Five findings remain, all needing an owner ruling** (the missing B-05 package
+observable; the SN-025 loop-selection duplication across SR-148/153/059;
+SR-031 vs SR-137 stating one observable twice and already diverging; four rows
+that escaped demotion; three needs with zero textual coverage despite
+`orphans=0`). None is mechanical, and each is the same *kind* of call as
+sitting-3's §0.3 ledger.
+
+Bar: `pytest -q -n auto` → **2491 passed, 11 skipped** (full suite);
+`trace.py --strict --strict-schema` → `orphans=0 integrity=0 schema-findings=0
+form-findings=2` (the two recorded waivers); `check_docs` OK.
