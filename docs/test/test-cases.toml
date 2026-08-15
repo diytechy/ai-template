@@ -1,53 +1,53 @@
 [test.TC-001]
-verifies = ["SR-001", "LLR-001"]
+verifies = ["SR-157", "LLR-001"]
 level = "Integration"
 method = """Run the trace suite; a linked chain is orphan-free and an injected orphan fails --strict."""
 tier = "Full"
-expected = "Satisfies SR-001 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-001 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace.py"
 status = "Verified"
 phase = 1
 
 [test.TC-002]
-verifies = ["SR-002", "LLR-002"]
+verifies = ["SR-157", "LLR-002"]
 level = "Integration"
 method = """Run the registry-checks suite; duplicate/malformed ids and mis-columned rows fail --strict-integrity."""
 tier = "Full"
-expected = "Satisfies SR-002 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-002 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_registry_checks.py"
 status = "Verified"
 phase = 1
 
 [test.TC-003]
-verifies = ["SR-003", "LLR-003"]
+verifies = ["SR-157", "LLR-003"]
 level = "Integration"
 method = """Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once the spine is phased) a ratified row whose Phase is not a full-cell bare integer (blank, prefixed like P1/v2, or unparseable) are flagged."""
 tier = "Full"
-expected = "Satisfies SR-003 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-003 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_registry_checks.py"
 status = "Verified"
 phase = 1
 
 [test.TC-004]
-verifies = ["SR-004", "LLR-004"]
+verifies = ["SR-157", "LLR-004"]
 level = "Unit"
 method = """Run the acceptance-criteria advisory suite; an unpinned comparative warns without changing the exit code."""
 tier = "Full"
-expected = "Satisfies SR-004 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-004 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_ac_advisory.py"
 status = "Verified"
 phase = 1
 
 [test.TC-005]
-verifies = ["SR-005", "LLR-005"]
+verifies = ["SR-157", "LLR-005"]
 level = "Integration"
 method = """Run the off-spine registry suites; PB and current REPO/legacy MOD back-link findings fire and -000 rows are ignored."""
 tier = "Full"
-expected = "Satisfies SR-005 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-005 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_modules_registry.py;tests/test_procurement.py;tests/test_assets.py"
 status = "Verified"
@@ -120,33 +120,33 @@ status = "Verified"
 phase = 1
 
 [test.TC-012]
-verifies = ["SR-012", "LLR-012"]
+verifies = ["SR-158", "LLR-012"]
 level = "Integration"
 method = "Run the check-docs suite; a broken link or missing vision tag fails --stale."
 tier = "Full"
-expected = "Satisfies SR-012 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-012 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_docs.py"
 status = "Verified"
 phase = 1
 
 [test.TC-013]
-verifies = ["SR-013", "LLR-013"]
+verifies = ["SR-158", "LLR-013"]
 level = "Integration"
 method = "Run the check-flows suite; a conformant flow passes and a malformed one fails."
 tier = "Full"
-expected = "Satisfies SR-013 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-013 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_flows.py"
 status = "Verified"
 phase = 1
 
 [test.TC-014]
-verifies = ["SR-014", "LLR-014"]
+verifies = ["SR-006", "LLR-014"]
 level = "Integration"
 method = "Run the check-perf suite; a within-tolerance metric passes and a regression fails."
 tier = "Full"
-expected = "Satisfies SR-014 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-014 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_perf.py"
 status = "Verified"
@@ -164,11 +164,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-016]
-verifies = ["SR-016", "LLR-016"]
+verifies = ["SR-006", "LLR-016"]
 level = "Integration"
 method = "Run the check-stubs suite; a stub at the declared gate fails and clean source passes."
 tier = "Full"
-expected = "Satisfies SR-016 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-016 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_stubs.py"
 status = "Verified"
@@ -241,11 +241,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-023]
-verifies = ["SR-023", "LLR-023"]
+verifies = ["SR-070", "LLR-023"]
 level = "Integration"
 method = """Run the gen-arch-map suite; --check fails on a stale map and regeneration rewrites only the marker block."""
 tier = "Full"
-expected = "Satisfies SR-023 AcceptanceCriteria"
+expected = "A stale map fails --check and a current map passes; regeneration rewrites only the marker block."
 automated = "Yes"
 evidence = "tests/test_gen_arch_map.py"
 status = "Verified"
@@ -263,11 +263,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-025]
-verifies = ["SR-025", "LLR-025"]
+verifies = ["SR-112", "LLR-025"]
 level = "Integration"
 method = "Run the skills-index suite; INDEX.csv regenerates from the SKILL.md frontmatter."
 tier = "Full"
-expected = "Satisfies SR-025 AcceptanceCriteria"
+expected = "The regenerated INDEX.csv matches the current SKILL.md frontmatter and a drifted index is detected."
 automated = "Yes"
 evidence = "tests/test_skills_index.py"
 status = "Verified"
@@ -307,11 +307,11 @@ status = "Verified"
 phase = 1
 
 [test.TC-029]
-verifies = ["SR-029", "LLR-029"]
+verifies = ["SR-030", "LLR-029"]
 level = "Integration"
 method = """Run the agent-loop suite's lock tests (ported from the retired tracks suite): a hard-exited holder's kernel lock is OS-released and the next run acquires it cleanly."""
 tier = "Full"
-expected = "Satisfies SR-029 AcceptanceCriteria"
+expected = "Satisfies SR-030 AcceptanceCriteria via the LLR-029 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop.py"
 status = "Verified"
@@ -395,7 +395,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-037]
-verifies = ["SR-067", "LLR-034"]
+verifies = ["SR-157", "LLR-034"]
 level = "Integration"
 method = """Run WI id, predecessor, cycle, placeholder, absent-registry, and opt-out validation cases."""
 tier = "Full"
@@ -428,22 +428,22 @@ status = "Verified"
 phase = 1
 
 [test.TC-041]
-verifies = ["SR-041", "LLR-038"]
+verifies = ["SR-158", "LLR-038"]
 level = "Integration"
 method = """Run the doc-refs suite; a dangling path warns then gates under --strict, non-path backticks/URLs/globs pass, a path-ok line is exempt, a dangling or unknown-module sym: is flagged, and the symbol tier skips cleanly without an inventory."""
 tier = "Full"
-expected = "Satisfies SR-041 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-038 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_doc_refs.py"
 status = "Verified"
 phase = 1
 
 [test.TC-042]
-verifies = ["SR-042", "LLR-039"]
+verifies = ["SR-070", "LLR-039"]
 level = "Integration"
 method = """Run the gen-okf suite; typed linked concepts generate, Process Guide concepts emit for present docs with derived summaries and unmodified sources (and none on a vacuous scaffold), regeneration is byte-stable, --check trips on registry/doc edits/extras and recovers after regen, extras are pruned, placeholder-only is vacuous, off silences, and the okf step is wired at DevBar-Release."""
 tier = "Full"
-expected = "Satisfies SR-042 AcceptanceCriteria"
+expected = "Typed linked concepts with resolvable graph links and derived Process Guides emit with sources unmodified; regeneration is byte-stable; --check trips on registry/doc edits, missing files and extras and recovers after regen; extras are pruned; placeholder-only is vacuous; off silences."
 automated = "Yes"
 evidence = "tests/test_gen_okf.py"
 status = "Verified"
@@ -461,7 +461,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-044]
-verifies = ["SR-073", "LLR-041"]
+verifies = ["SR-159", "LLR-041"]
 level = "Integration"
 method = "Run IF id, SR back-link, Component membership, and endpoint-advisory trace cases."
 tier = "Full"
@@ -472,7 +472,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-046]
-verifies = ["SR-079", "LLR-044"]
+verifies = ["SR-154", "LLR-044"]
 level = "Integration"
 method = """Run pair-row parsing, resolution, Env, cooldown, family preference/fallback, and tier-selection cases."""
 tier = "Full"
@@ -505,7 +505,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-048]
-verifies = ["SR-084", "LLR-048"]
+verifies = ["SR-154", "LLR-048"]
 level = "Integration"
 method = "Run Critique scope detection and redacted rubric/intent/artifact brief cases."
 tier = "Full"
@@ -516,7 +516,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-049]
-verifies = ["SR-087", "LLR-049"]
+verifies = ["SR-159", "LLR-049"]
 level = "Integration"
 method = "Run TOP_VIEW_MAX, containment, nesting, opt-out, and vacuity cases."
 tier = "Full"
@@ -538,7 +538,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-051]
-verifies = ["SR-050", "LLR-051"]
+verifies = ["SR-070", "LLR-051"]
 level = "Integration"
 method = """Run the dashboard suite; the Process tab renders its three panels from the live registries + docs/gate (the current-gate highlight matches docs/gate and the tier counts match the spine), process-doc link-outs resolve, a bundle-/data-less repo renders byte-identically (no Process data joins), and generation stays byte-deterministic with --check tripping stale output."""
 tier = "Full"
@@ -550,7 +550,7 @@ status = "Verified"
 phase = 2
 
 [test.TC-052]
-verifies = ["SR-089", "LLR-052"]
+verifies = ["SR-070", "LLR-052"]
 level = "Integration"
 method = """Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggregation."""
 tier = "Full"
@@ -563,7 +563,7 @@ phase = 2
 [test.TC-055]
 verifies = ["SR-054", "LLR-055"]
 level = "Critique"
-method = """A fresh, family-heterogeneous CRITIQUE session (SR-084/SR-085 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-usability.md, receiving the rubric + SN/SR intent + the rendered PNG matrix from scripts/dashboard-shots/shoot.mjs (widths x themes x tabs) as the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors."""
+method = """A fresh, family-heterogeneous CRITIQUE session (LLR-048/LLR-082 loop) adjudicates the generated PROJECT_STATE.html against docs/rubrics/dashboard-usability.md, receiving the rubric + SN/SR intent + the rendered PNG matrix from scripts/dashboard-shots/shoot.mjs (widths x themes x tabs) as the artifact recipe and never the implementer's self-assessment; VERDICT machine line cites numbered anchors."""
 tier = "Full"
 expected = """APPROVE citing numbered anchors. The rubric is the single home of the live-vs-retired anchor set (its header states the live set; each retired anchor carries its retirement and binding in place): a verdict cites only anchors the rubric lists live and never a retired one, and a clause a test now holds is verified through the LLR/TC chain the registry records, not by a verdict. (The live/retired enumeration formerly copied here was the third home of that fact and is deliberately not restated.)"""
 automated = "No"
@@ -572,7 +572,7 @@ status = "Verified"
 phase = 3
 
 [test.TC-056]
-verifies = ["SR-055", "LLR-056", "IF-093", "IF-094"]
+verifies = ["SR-070", "LLR-056", "IF-093", "IF-094"]
 level = "Integration"
 method = """Run the dashboard suite; the Process tab renders both working loops (intake loop A + human-decision loop B) as two intersecting hoops drawn in one self-contained SVG, each a directed closed cycle wired by arrow-headed edges and meeting at the single shared LLM_Agent hub, every stage's link resolving to its canonical doc, the gate-ratification stage present in loop B, a data-less repo rendering byte-identically, and generation byte-deterministic with --check tripping stale output."""
 tier = "Full"
@@ -584,7 +584,7 @@ status = "Verified"
 phase = 3
 
 [test.TC-057]
-verifies = ["SR-056", "LLR-057"]
+verifies = ["SR-070", "LLR-057"]
 level = "Integration"
 method = """Run the dashboard suite; the tiered decomposition views render one horizontal parent->child arrow per containment edge, each tier column no wider than the declared bound, and a persistent last-hovered highlight contract keyed to the last-hovered node; byte-deterministic with --check tripping stale output."""
 tier = "Full"
@@ -595,18 +595,18 @@ status = "Verified"
 phase = 3
 
 [test.TC-058]
-verifies = ["SR-057", "LLR-058", "SR-115", "LLR-123"]
+verifies = ["SR-153", "LLR-058", "LLR-123"]
 level = "Integration"
 method = """Run schedule.py against a fixture registry; the ready frontier, the exclusions with reason codes, and the deterministic traincar order match across ready --explain, ready --format json, simulate, and the dispatcher; a soft edge never blocks and Priority outranks downstream-dependent count within a gate class."""
 tier = "Full"
-expected = "Satisfies SR-057 and SR-115 AcceptanceCriteria"
+expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-058 and LLR-123 detail contracts"
 automated = "Yes"
 evidence = "tests/test_schedule.py"
 status = "Verified"
 phase = 4
 
 [test.TC-059]
-verifies = ["SR-093", "LLR-059"]
+verifies = ["SR-153", "LLR-059"]
 level = "Unit"
 method = """Drive the pure classifier over every declared safety and policy input and compare consumer outputs."""
 tier = "Full"
@@ -617,29 +617,29 @@ status = "Verified"
 phase = 4
 
 [test.TC-060]
-verifies = ["SR-059", "LLR-060", "SR-116", "LLR-124"]
+verifies = ["SR-059", "LLR-060", "SR-156", "LLR-124"]
 level = "Integration"
 method = """Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the snapshot regenerates on the trunk, fails fresh when stale, and no next-wi/run-phase surface exists."""
 tier = "Full"
-expected = "Satisfies SR-059 and SR-116 AcceptanceCriteria"
+expected = "Satisfies SR-059 AcceptanceCriteria, and SR-156 AcceptanceCriteria via the LLR-124 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py; tests/test_gen_trajectory.py"
 status = "Verified"
 phase = 4
 
 [test.TC-061]
-verifies = ["SR-060", "LLR-061"]
+verifies = ["SR-026", "LLR-061"]
 level = "Integration"
 method = """Run two concurrent workers from explicit --wi/--train/worktree assignments; assert no lane-local status/next/run-state file, non-colliding logs/review evidence naming the exact reviewed commit, no root-truth mutation, and --track refused as an unknown flag (retired)."""
 tier = "Full"
-expected = "Satisfies SR-060 AcceptanceCriteria"
+expected = "Satisfies SR-026 AcceptanceCriteria via the LLR-061 detail contract"
 automated = "Yes"
 evidence = "tests/test_agent_loop_worker.py"
 status = "Verified"
 phase = 4
 
 [test.TC-067]
-verifies = ["SR-076", "LLR-067"]
+verifies = ["SR-159", "LLR-067"]
 level = "Integration"
 method = "Run the cross-component import coverage matrix."
 tier = "Smoke"
@@ -650,7 +650,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-076]
-verifies = ["SR-106", "LLR-076"]
+verifies = ["SR-155", "LLR-076"]
 level = "Integration"
 method = """Run the full fresh-session dual-plan round including fallback and position-swapped arbitration."""
 tier = "Full"
@@ -661,7 +661,7 @@ status = "Verified"
 phase = 4
 
 [test.TC-075]
-verifies = ["SR-069", "LLR-075"]
+verifies = ["SR-157", "LLR-075"]
 level = "Unit"
 method = "Run the hand-edited/generated status source-of-truth matrix."
 tier = "Smoke"
@@ -672,7 +672,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-074]
-verifies = ["SR-105", "LLR-074"]
+verifies = ["SR-155", "LLR-074"]
 level = "Integration"
 method = """Build a fixture round and verify allocation, stable stage writes, selected-WI filing, dependency mapping, validation, line endings, and log append."""
 tier = "Smoke"
@@ -683,7 +683,7 @@ status = "Verified"
 phase = 4
 
 [test.TC-073]
-verifies = ["SR-104", "LLR-073"]
+verifies = ["SR-155", "LLR-073"]
 level = "Integration"
 method = """Drive the coverage adapter through clean, first-finding repair, repeated finding, malformed, and implicated-plan cases."""
 tier = "Smoke"
@@ -694,7 +694,7 @@ status = "Verified"
 phase = 4
 
 [test.TC-072]
-verifies = ["SR-083", "LLR-072"]
+verifies = ["SR-155", "LLR-072"]
 level = "Unit"
 method = """Drive planner_pair and planner_fallback across diverse, degraded, cooled, nonresponsive, and unavailable pools."""
 tier = "Smoke"
@@ -705,7 +705,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-071]
-verifies = ["SR-103", "LLR-071"]
+verifies = ["SR-155", "LLR-071"]
 level = "Unit"
 method = """Assemble every hat brief with sentinel data outside the allowlist and strict template variants."""
 tier = "Smoke"
@@ -716,7 +716,7 @@ status = "Verified"
 phase = 4
 
 [test.TC-070]
-verifies = ["SR-102", "LLR-070"]
+verifies = ["SR-155", "LLR-070"]
 level = "Unit"
 method = """Drive typed round transitions, budgets, caps, repairs, revisions, swapped arbiters, persistence, and PAGE mapping."""
 tier = "Smoke"
@@ -727,7 +727,7 @@ status = "Verified"
 phase = 4
 
 [test.TC-069]
-verifies = ["SR-078", "LLR-069"]
+verifies = ["SR-155", "LLR-069"]
 level = "Integration"
 method = "Run rival plan coverage, reference, graph, absent-registry, and malformed-input cases."
 tier = "Smoke"
@@ -738,7 +738,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-068]
-verifies = ["SR-077", "LLR-068"]
+verifies = ["SR-159", "LLR-068"]
 level = "Integration"
 method = "Run the armed-spec interface-section matrix."
 tier = "Smoke"
@@ -749,7 +749,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-077]
-verifies = ["SR-068", "LLR-077"]
+verifies = ["SR-157", "LLR-077"]
 level = "Integration"
 method = "Run Deliverable/status coherence and strict open-SpecRef cases."
 tier = "Smoke"
@@ -760,7 +760,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-078]
-verifies = ["SR-071", "LLR-078"]
+verifies = ["SR-070", "LLR-078"]
 level = "Integration"
 method = "Generate with and without module/component and OKF bundles."
 tier = "Full"
@@ -771,18 +771,18 @@ status = "Verified"
 phase = 1
 
 [test.TC-079]
-verifies = ["SR-072", "LLR-079", "SR-122", "LLR-130"]
+verifies = ["SR-070", "LLR-079", "LLR-130"]
 level = "Integration"
 method = "Run deterministic, responsive, stale/missing, Git as-of, and no-Git generation cases."
 tier = "Full"
-expected = "Satisfies SR-072 and SR-122 AcceptanceCriteria"
+expected = "Repeated generation is byte-identical with mobile CSS present; stale or missing output fails --check, and as-of behavior is stable in and outside Git."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory.py::test_mobile_responsive_shell; tests/test_gen_trajectory.py::test_generation_is_deterministic; tests/test_gen_trajectory.py::test_check_passes_fresh_and_trips_stale; tests/test_gen_trajectory.py::test_check_missing_html_is_stale; tests/test_traj_parse.py::test_asof_stamp_from_git_and_excluded_from_check; tests/test_traj_parse.py::test_no_git_means_no_stamp_and_stays_deterministic"""
 status = "Verified"
 phase = 1
 
 [test.TC-080]
-verifies = ["SR-074", "LLR-042"]
+verifies = ["SR-159", "LLR-042"]
 level = "Integration"
 method = """Run endpoint/direction, source-sink, Active-citation, Contracts, opt-out, and strict non-gating coverage cases."""
 tier = "Full"
@@ -793,7 +793,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-081]
-verifies = ["SR-075", "LLR-080"]
+verifies = ["SR-070", "LLR-080"]
 level = "Integration"
 method = "Generate dashboard and architecture views with and without declared seams."
 tier = "Full"
@@ -804,7 +804,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-082]
-verifies = ["SR-080", "LLR-045"]
+verifies = ["SR-154", "LLR-045"]
 level = "Integration"
 method = """Run review-policy 0/1/2, prompt-map, redaction, selection logging, verdict, and unmanaged cases."""
 tier = "Full"
@@ -815,7 +815,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-083]
-verifies = ["SR-081", "LLR-046"]
+verifies = ["SR-154", "LLR-046"]
 level = "Unit"
 method = """Run substance components, corroboration, tripwires, decay, verdict parsing, and CLI cases."""
 tier = "Full"
@@ -826,7 +826,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-084]
-verifies = ["SR-082", "LLR-081"]
+verifies = ["SR-154", "LLR-081"]
 level = "Integration"
 method = """Drive swap, tier-up, shared failure, contradiction, tripwire, and the ratification-level escalation branches (all four human_held x keep_nondependent cells)."""
 tier = "Smoke"
@@ -837,7 +837,7 @@ status = "Modified"
 phase = 1
 
 [test.TC-085]
-verifies = ["SR-085", "LLR-082"]
+verifies = ["SR-154", "LLR-082"]
 level = "Integration"
 method = """Run critique approval, rework, configured-cap exhaustion, and the ratification-level disposition cases."""
 tier = "Full"
@@ -848,18 +848,18 @@ status = "Modified"
 phase = 1
 
 [test.TC-086]
-verifies = ["SR-086", "LLR-083", "SR-123", "LLR-084"]
+verifies = ["SR-157", "LLR-083", "LLR-084"]
 level = "Integration"
 method = "Run Critique vocabulary/LLR-completeness and staged closure-ratchet cases."
 tier = "Smoke"
-expected = "Satisfies SR-086 and SR-123 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-083 and LLR-084 (parent SR-157)"
 automated = "Yes"
 evidence = """tests/test_trace.py::test_critique_verification_value; tests/test_trajectory_staged.py::test_critique_ratchet_warns_and_holds; tests/test_trajectory_staged.py::test_critique_ratchet_silent_when_verdict_approves"""
 status = "Verified"
 phase = 1
 
 [test.TC-087]
-verifies = ["SR-088", "LLR-085"]
+verifies = ["SR-070", "LLR-085"]
 level = "Integration"
 method = "Generate nested/flat How-SW containment and boundary aggregation cases."
 tier = "Full"
@@ -870,7 +870,7 @@ status = "Verified"
 phase = 1
 
 [test.TC-088]
-verifies = ["SR-090", "LLR-086"]
+verifies = ["SR-070", "LLR-086"]
 level = "Integration"
 method = "Run component-to-module How-SW tier and top-width-bound cases."
 tier = "Full"
@@ -881,7 +881,7 @@ status = "Verified"
 phase = 2
 
 [test.TC-089]
-verifies = ["SR-091", "LLR-087"]
+verifies = ["SR-070", "LLR-087"]
 level = "Integration"
 method = "Render seams at hierarchy ports and crossing container boundaries."
 tier = "Full"
@@ -892,7 +892,7 @@ status = "Verified"
 phase = 2
 
 [test.TC-090]
-verifies = ["SR-092", "LLR-088"]
+verifies = ["SR-070", "LLR-088"]
 level = "Integration"
 method = "Exercise pointer/keyboard descent and breadcrumb restoration."
 tier = "Full"
@@ -903,7 +903,7 @@ status = "Verified"
 phase = 2
 
 [test.TC-091]
-verifies = ["SR-094", "LLR-089"]
+verifies = ["SR-153", "LLR-089"]
 level = "Unit"
 method = """Classify missing, unknown, structurally contradictory, critique, checkpoint, and dual-plan WIs beside disjoint valid work."""
 tier = "Full"
@@ -914,29 +914,29 @@ status = "Verified"
 phase = 4
 
 [test.TC-097]
-verifies = ["SR-107", "LLR-095", "SR-124", "LLR-131"]
+verifies = ["SR-155", "LLR-095", "SR-153", "LLR-131"]
 level = "Integration"
 method = "Run direct worker/flag refusal and PlanMode-derived classification/contradiction cases."
 tier = "Full"
-expected = "Satisfies SR-107 and SR-124 AcceptanceCriteria"
+expected = "Satisfies SR-155 and SR-153 AcceptanceCriteria via the LLR-095 and LLR-131 detail contracts"
 automated = "Yes"
 evidence = """tests/test_dual_plan_round.py::test_worker_path_refuses_a_dual_wi; tests/test_dual_plan_round.py::test_flag_on_a_non_dual_wi_is_refused; tests/test_schedule.py"""
 status = "Verified"
 phase = 4
 
 [test.TC-098]
-verifies = ["SR-108", "LLR-096", "SR-125", "LLR-132"]
+verifies = ["SR-155", "LLR-096", "LLR-132"]
 level = "Integration"
 method = """Run dispatcher SELECT, human-held PAGE, loop-held PAGE continuation, regeneration failure, and salvage cases, plus the dual-plan PAGE on a human-held tier, on a loop-held tier, and with keep_nondependent, at both the dispatcher and the --dual-plan single-shot entry."""
 tier = "Full"
-expected = "Satisfies SR-108 and SR-125 AcceptanceCriteria"
+expected = "Satisfies SR-155 AcceptanceCriteria via the LLR-096 and LLR-132 detail contracts"
 automated = "Yes"
 evidence = """tests/test_dual_plan_round.py::test_full_round_unattended_selects_and_files; tests/test_dual_plan_round.py::test_arbiter_disagreement_pages; tests/test_dual_plan_round.py::test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages; tests/test_dual_plan_round.py::test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages"""
 status = "Modified"
 phase = 4
 
 [test.TC-100]
-verifies = ["SR-109", "LLR-097"]
+verifies = ["SR-157", "LLR-097"]
 level = "Unit"
 method = """Run check_trajectory over registries with a done+SpecRef row, an uncited live spec, a deferred-cited shared doc, and scaffold boilerplate."""
 tier = "Smoke"
@@ -947,11 +947,11 @@ status = "Verified"
 phase = 4
 
 [test.TC-101]
-verifies = ["SR-110", "LLR-098"]
+verifies = ["SR-006", "LLR-098"]
 level = "Integration"
 method = """Run the check_coverage suite; a module below its floor exits 1 naming it, a declared module absent from the report exits 1, all floors holding exits 0, an absent report SKIPs, an empty census is a no-op, and a malformed floor line fails loudly."""
 tier = "Full"
-expected = "Satisfies SR-110 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-098 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_coverage.py"
 status = "Verified"
@@ -960,7 +960,7 @@ phase = 1
 [test.TC-102]
 verifies = ["SR-054", "LLR-099"]
 level = "Unit"
-method = """Generate the dashboard against two fixture registries and assert the SR-089 '>3' rule mechanically: a bundle spanning > 3 OKF types yields the start-collapsed type-tiered drill (know_view returns layers; the Knowledge section renders blocks, not a flat concept graph), a <= 3-type bundle yields None and the flat graph, and the How-SW view collapses above the component threshold on the same rule."""
+method = """Generate the dashboard against two fixture registries and assert the LLR-052 '>3' rule mechanically: a bundle spanning > 3 OKF types yields the start-collapsed type-tiered drill (know_view returns layers; the Knowledge section renders blocks, not a flat concept graph), a <= 3-type bundle yields None and the flat graph, and the How-SW view collapses above the component threshold on the same rule."""
 tier = "Full"
 parameters = "tests/test_gen_trajectory.py fixtures (tiered_repo / _flat_bundle)"
 expected = """Above the threshold the view is start-collapsed; at or below it renders flat. Both directions asserted. This widens to the landing What icicle: above 3 SNs it is a start-collapsed SN drill with NO leaf cell in the opening layer; at or below 3 it stays flat and byte-identical."""
@@ -1222,33 +1222,33 @@ status = "Verified"
 phase = 4
 
 [test.TC-126]
-verifies = ["SR-126", "LLR-133"]
+verifies = ["SR-157", "LLR-133"]
 level = "Unit"
 method = """Run the spine stand-alone suite; a WI id or process-doc citation in a normative cell of any spine registry is a finding, and a script name, artifact path, rubric or sibling id is not."""
 tier = "Full"
-expected = "Satisfies SR-126 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-133 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_spine_row_states_the_system_not_its_own_history"
 status = "Verified"
 phase = 1
 
 [test.TC-127]
-verifies = ["SR-127", "LLR-134"]
+verifies = ["SR-157", "LLR-134"]
 level = "Unit"
 method = """Run the requirement-form suite; each of the six rules fires on its own defect shape, and the negative half (Draft, zero-`shall`, `must`, a multi-clause AcceptanceCriteria, a passive with a named actor) does not."""
 tier = "Full"
-expected = "Satisfies SR-127 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-134 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_requirement_states_one_testable_obligation"
 status = "Verified"
 phase = 1
 
 [test.TC-128]
-verifies = ["SR-128", "LLR-135"]
+verifies = ["SR-157", "LLR-135"]
 level = "Unit"
 method = """Run the paraphrase-advisory suite; an echoing child warns while a real decomposition naming module and mechanism does not, and the exit code is unchanged either way."""
 tier = "Full"
-expected = "Satisfies SR-128 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-135 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_child_that_rewords_its_parent_warns_but_never_gates"
 status = "Verified"
@@ -1266,33 +1266,33 @@ status = "Verified"
 phase = 4
 
 [test.TC-130]
-verifies = ["SR-130", "LLR-137"]
+verifies = ["SR-156", "LLR-137"]
 level = "Unit"
 method = """Run the trunk-step suite: committed fragments compile in git order with links rebased and fragments deleted; an uncommitted, heading-less or reserved-heading fragment blocks the whole batch; a fragment-free run is a clean idempotent no-op."""
 tier = "Full"
-expected = "Satisfies SR-130 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-137 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py::test_fragments_compile_in_git_order_and_are_deleted"
 status = "Verified"
 phase = 4
 
 [test.TC-131]
-verifies = ["SR-131", "LLR-138"]
+verifies = ["SR-156", "LLR-138"]
 level = "Unit"
 method = """Run the pause suites: the tracked home pauses via pause_reason with the unchanged return contract; a stray legacy file is inert; malformation pauses fail-closed with the pinned loud placeholder."""
 tier = "Full"
-expected = "Satisfies SR-131 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-138 detail contract"
 automated = "Yes"
 evidence = """tests/test_agent_loop_policy.py::test_pause_reason_reads_the_tracked_home; tests/test_agent_loop_policy.py::test_legacy_pause_file_no_longer_pauses"""
 status = "Verified"
 phase = 4
 
 [test.TC-132]
-verifies = ["SR-132", "LLR-140"]
+verifies = ["SR-156", "LLR-140"]
 level = "Unit"
 method = """Run the integrator suite: each claim refusal fires by name and the green claim moves the spec and cuts the branch; finished-branch detection keys on the tree; the verdict gate refuses absent, CHANGES-REQUESTED and stale-APPROVE verdicts and passes a fresh APPROVE; a missing or empty bar declaration refuses; the window audit flags a non-merge product commit and passes a bookkeeping-only window; one end-to-end claim->work->close->integrate run fast-forwards the trunk to a --no-ff merge commit."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py"
 status = "Verified"
@@ -1310,22 +1310,22 @@ status = "Verified"
 phase = 4
 
 [test.TC-135]
-verifies = ["SR-134", "LLR-142"]
+verifies = ["SR-156", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
 tier = "Full"
-expected = "Satisfies SR-134 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
 evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
 status = "Verified"
 phase = 4
 
 [test.TC-136]
-verifies = ["SR-135", "LLR-139"]
+verifies = ["SR-070", "LLR-139"]
 level = "Unit"
 method = """Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), omits the stamp when since is empty, matches the reader's fail-closed placeholder on malformation, clears on deletion, and is deterministic."""
 tier = "Full"
-expected = "Satisfies SR-135 AcceptanceCriteria"
+expected = "The pending block renders 'Paused since <date> - <reason>' with the declared date verbatim (no clock), omits the stamp when since is empty, renders the pinned fail-closed placeholder on malformation, and clears when the pause file is deleted."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory_pending.py::test_tracked_pause_projects_reason_and_declared_since; tests/test_gen_trajectory_pending.py::test_pause_malformed_text_matches_the_coordinator_reader"""
 status = "Verified"
@@ -1343,33 +1343,33 @@ status = "Verified"
 phase = 4
 
 [test.TC-138]
-verifies = ["SR-132", "LLR-144"]
+verifies = ["SR-156", "LLR-144"]
 level = "Unit"
 method = """Run the handback suite: a partial close moves each claimed spec to the terminal partial/ and writes its immutable per-close report under docs/handbacks/, leaves the branch finished, is CLEAN under the real trajectory check (R-A exempts partial — the spec's definition is deliberately byte-identical), refuses a second close without residue, and is LOUD when a terminal spec has no report; an already-declared blockref and an existing Deliverable survive; a branch trunk holds no claim for is refused. The quarantine arm reverts the product paths and keeps the failing diff as a bar-inert .patch, reverts a RENAME correctly (the --name-status -z stream read as records, not pairs - mutation-proven), leaves the handback bookkeeping alone, refuses when the red is not the lane's own code, and restores rather than reports when a revert step fails."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-144 detail contract"
 automated = "Yes"
 evidence = "tests/test_handback.py"
 status = "Modified"
 phase = 4
 
 [test.TC-139]
-verifies = ["SR-132", "LLR-145"]
+verifies = ["SR-156", "LLR-145"]
 level = "Unit"
 method = """Run the spec_move suite: an archival move redirects inbound links from every depth (text untouched, fragments carried, external URLs and bare anchors left alone), rebases the moved spec's own links one directory deeper, preserves CRLF on both sides, and stages a git mv when the tree is a repo; the REAL check_docs passes over the archived fixture while the MUTATION TWIN - the same move without the rebase - fails it, so the guard reproduces the defect it fixes; a move with rewritten text (the handback shape) still runs the whole ritual; a missing source and an existing destination refuse; the CLI archives to the dated destination and refuses nonzero. The wired call sites are driven in their own suites: integrate.claim runs the ritual inside the one claim commit and a crashed relinked claim still re-cuts while a non-relink .md edit convicts (tests/test_integrate.py); the handback return runs it in reverse (tests/test_handback.py)."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-145 detail contract"
 automated = "Yes"
 evidence = "tests/test_spec_move.py"
 status = "Verified"
 phase = 4
 
 [test.TC-140]
-verifies = ["SR-136", "LLR-146"]
+verifies = ["SR-158", "LLR-146"]
 level = "Integration"
 method = """Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation ledger, the unreproducible link count, the digitless two-false-positives) each flag under a bare fig: marker, warn-first then gating under --strict; a cmd= plus rev= marker and a non-empty derived= marker pass; a half-carrying or empty-valued marker names its missing half; unmarked figure prose stays out of scope with the claim stated; fig-ok lines and GENERATED blocks are exempt; config:-shaped words never match; docs/stack.ini is scanned beside the markdown surfaces; a fresh bootstrap scaffold passes the docstring opt-in end-to-end; placeholder-grammar examples and a docs/reviews/ record quoting defective markers declare nothing; a wordless rev= counts as missing; two half-carrying markers on one line are two findings; a quoted rev= is accepted; a defective marker whose cmd= embeds shell metacharacters still flags its missing rev=; a declaration whose command legitimately redirects is counted and passes; a mixed marker - one real value beside a wholly-placeholder one - is judged as a real marker whose placeholder value counts as missing, flagging the missing half both ways (a real cmd= with a placeholder rev=, a placeholder cmd= with a real rev=)."""
 tier = "Full"
-expected = "Satisfies SR-136 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-146 (parent SR-158)"
 automated = "Yes"
 evidence = "tests/test_check_figures.py"
 status = "Verified"
@@ -1398,66 +1398,66 @@ status = "Verified"
 phase = 4
 
 [test.TC-143]
-verifies = ["SR-093", "LLR-149"]
+verifies = ["SR-153", "LLR-149"]
 level = "Unit"
 method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-ratify keeps non-dependent work and admits the queued ratification batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
 tier = "Full"
-expected = "Satisfies SR-093 AcceptanceCriteria"
+expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-149 admission-table detail contract"
 automated = "Yes"
 evidence = "tests/test_dispatch_admission.py"
 status = "Verified"
 phase = 4
 
 [test.TC-144]
-verifies = ["SR-132", "LLR-150"]
+verifies = ["SR-156", "LLR-150"]
 level = "Integration"
 method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the ratifications banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
 evidence = "tests/test_dispatch.py"
 status = "Verified"
 phase = 4
 
 [test.TC-145]
-verifies = ["SR-132", "LLR-151"]
+verifies = ["SR-156", "LLR-151"]
 level = "Unit"
 method = """Run the integrator claim suite: a spine claim succeeds on an idle station (the deleted safety-class arm, red-then-green); a hand claim while another holder has the dispatch lock refuses naming the lock and leaves the queue untouched, while dispatch_lock_held=True proceeds; a spine batch claims as ONE bookkeeping commit whose subject joins the ids and whose specs all land in active/<branch>/; every pre-existing single-WI claim contract (abandoned-claim re-cut, relink oracle, minted-id rung, RULING-6 audit) holds unchanged."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-151 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py"
 status = "Verified"
 phase = 4
 
 [test.TC-146]
-verifies = ["SR-093", "LLR-152"]
+verifies = ["SR-153", "LLR-152"]
 level = "Unit"
 method = """Run the schedule + integrate suites' adjudication cases: the kind classifies exclusive at rank 1 (the reserved slot, pinned by name); an adjudication-only lane's refresh runs NO bar yet still commits a verified Bar-Green attestation whose summary says no-bar, while a mixed batch bars as usual (fail toward the bar); bar = DevBar-Tests reaches check.py as --gate DevBar-Tests (asserted off the recording stub's own argv), an undeclared bar passes no --gate, and a malformed value refuses the refresh naming it."""
 tier = "Full"
-expected = "Satisfies SR-093 AcceptanceCriteria"
+expected = "Satisfies SR-153 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
 automated = "Yes"
 evidence = "tests/test_schedule.py; tests/test_integrate.py"
 status = "Verified"
 phase = 4
 
 [test.TC-147]
-verifies = ["SR-132", "LLR-153", "IF-091"]
+verifies = ["SR-156", "LLR-153", "IF-091"]
 level = "Integration"
 method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-153 detail contract"
 automated = "Yes"
 evidence = "tests/test_intake.py"
 status = "Modified"
 phase = 4
 
 [test.TC-148]
-verifies = ["SR-132", "LLR-154", "IF-090"]
+verifies = ["SR-156", "LLR-154", "IF-090"]
 level = "Integration"
 method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
-expected = "Satisfies SR-132 AcceptanceCriteria"
+expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py; tests/test_dispatch.py"
 status = "Verified"
@@ -1519,33 +1519,33 @@ status = "Draft"
 phase = 5
 
 [test.TC-154]
-verifies = ["SR-148", "SR-142", "LLR-159"]
+verifies = ["SR-148", "LLR-159"]
 level = "Integration"
 method = """Run the loop-order suite: an adjudication row admits ahead of a ready spine batch while the ruled rank table is unchanged; the partition is stable and cannot move work past a human-held stop; a red TC is named only under a `done` citer, with the three exempt statuses and the mixed-target case driven; the census grammar round-trips and matches nothing else."""
 tier = "Smoke"
-expected = "Satisfies SR-148 and SR-142 AcceptanceCriteria"
+expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-159 detail contract"
 automated = "Yes"
 evidence = "tests/test_loop_order.py"
 status = "Draft"
 phase = 5
 
 [test.TC-155]
-verifies = ["SR-143", "LLR-160"]
+verifies = ["SR-157", "LLR-160"]
 level = "Unit"
 method = """Run the queue-conflict cases: each of the three signals fires with both ids in deterministic order, a closed row never conflicts, unrelated open rows and a shared stopword are silent, and the findings are wired on the warn-only line rather than into the exit code."""
 tier = "Smoke"
-expected = "Satisfies SR-143 AcceptanceCriteria"
+expected = "Satisfies the acceptance folded into LLR-160 (parent SR-157)"
 automated = "Yes"
 evidence = "tests/test_loop_order.py"
 status = "Draft"
 phase = 5
 
 [test.TC-156]
-verifies = ["SR-144", "SR-145", "LLR-161"]
+verifies = ["SR-144", "LLR-161"]
 level = "Integration"
 method = """Run the handback suite over real git worktrees: a partial close is clean under the REAL trajectory check (not a stub), a terminal spec with no report is loud, a second close is refused and leaves no residue, and the disposition is keyed on the report path so a re-sweep mints nothing."""
 tier = "Full"
-expected = "Satisfies SR-144 and SR-145 AcceptanceCriteria"
+expected = "Satisfies SR-144 AcceptanceCriteria via the LLR-161 detail contract"
 automated = "Yes"
 evidence = "tests/test_handback.py;tests/test_intake.py"
 status = "Draft"
@@ -1563,7 +1563,7 @@ status = "Draft"
 phase = 5
 
 [test.TC-158]
-verifies = ["SR-132", "IF-101"]
+verifies = ["SR-156", "IF-101"]
 level = "Unit"
 method = """Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXIT CODE, not just as a function call - the wiring into --strict-integrity is the guarantee, and a suite that only calls watermark_findings() survived deleting it. Covers the mint seam IF-101 declares: next_wi_id counts from the mark, so a deleted id is not re-issued, and the reader's refusal on an absent mark is NOT caught."""
 tier = "Smoke"
@@ -1607,7 +1607,7 @@ status = "Draft"
 phase = 5
 
 [test.TC-162]
-verifies = ["SR-103", "LLR-168"]
+verifies = ["SR-155", "LLR-168"]
 level = "Unit"
 method = """Load well-formed, malformed (falsey table, unknown key, bad grammar) and absent rosters; select against declared and undeclared context fields; compose a brief with and without applicable hats and with multiline roster text."""
 tier = "Smoke"
@@ -1636,5 +1636,16 @@ tier = "Smoke"
 expected = """The dirty cell reports the row id AND each offending phrase, one finding per token (the path's inner filename is not a second finding), exit 0 by default and 1 under --strict; the exception-list entry silences exactly its token while the malformed entry silences nothing; exempt cells, either/or pairs, SN cross-references and example rows report nothing; a one-level dot-free token reports as a path only when it resolves on disk, and a URL's path-shaped tail never reports in either form while its cell-mate genuine path, a delimiter-abutting neighbour token and a single-label www.-prefixed local path all still do; a sentence-final path is named without its trailing full stop — so its reviewed exception matches — and a sentence-final either/or pair stays exempt; a registry that is present but yields zero scannable need cells reports as vacuous (strict exit 1) while an absent registry is a clean skip and a -000-only registry stays clean; and the live registry is clean at zero findings, so the assertions cannot pass against fixtures while the tier dirties."""
 automated = "Yes"
 evidence = "tests/test_check_need_form.py"
+status = "Draft"
+phase = 5
+
+[test.TC-165]
+verifies = ["SR-035", "LLR-171"]
+level = "Integration"
+method = """Scaffold with a non-Python bootstrap profile into a temp dir and run trace.py --strict-integrity --strict-schema over it unmodified; scan the shipped registry templates and the ID scheme vocabulary for language-specific tokens and assert none."""
+tier = "Full"
+expected = "Satisfies SR-035 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_bootstrap.py (to be extended at implementation)"
 status = "Draft"
 phase = 5

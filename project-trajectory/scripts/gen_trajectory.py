@@ -33,7 +33,7 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
      current derived gate highlighted from `docs/gate`), the agent-resume loop,
-     the slice -> phase -> gate-bar cadence, and (WI-142/SR-055) the two circular working loops —
+     the slice -> phase -> gate-bar cadence, and (WI-142/LLR-056) the two circular working loops —
      intake and human-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
      working surfaces. Omitted when there is no `docs/gate`, so a gate-less repo
@@ -816,7 +816,7 @@ def build_html(root, wis):
     know = know_graph(root)  # the OKF bundle's first real consumer (WI-070)
     if know:
         # WI-159: _know_panel starts collapsed (the type-tiered drill) above the
-        # SR-089 `>3` type threshold, else renders the flat concept graph.
+        # LLR-052 `>3` type threshold, else renders the flat concept graph.
         tab, panel = _know_panel(root, *know)
         extra_tabs.append(tab)
         extra_panels.append(panel)

@@ -57,7 +57,7 @@ def _spine_rows(root, rel, id_col):
     return _carrier.load(root / rel, id_col)
 
 
-# WI-306: the What-tab icicle drill ids (start-collapsed above the SR-089
+# WI-306: the What-tab icicle drill ids (start-collapsed above the LLR-052
 # `>3` SN threshold - the T2 density fix, same idiom as the sibling views).
 ARCH_DRILL_ID = "archdrill"
 ARCH_ROOT_LAYER = "arch-root"
@@ -281,7 +281,7 @@ def arch_icicle(root):
     # be a coarser TIER - one block per SN, descend on click - which is what the
     # anchor's bad case ("a wall of nodes on open") and the row both ask for.
     #
-    # Earned by scale exactly like its siblings (SR-089's `>3` rule): at or below
+    # Earned by scale exactly like its siblings (LLR-052's `>3` rule): at or below
     # 3 SNs the flat icicle renders BYTE-IDENTICALLY, so a small project never
     # pays for tiering it cannot need.
     if len(roots) <= 3:
@@ -625,7 +625,7 @@ def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
 
 
 def sw_containment(root, mods):
-    """The containerized How-SW top view as a Simulink-style drill (SR-090..SR-092,
+    """The containerized How-SW top view as a Simulink-style drill (LLR-086..LLR-088,
     rev, WI-141), or None when no `CMP-###` component contains an arch-map module
     (the caller then keeps today's flat panel, byte-identical). Returns
     `(tab, panel)`.
@@ -972,13 +972,13 @@ def _wi_block(w, phase_of, key=None):
         "status": status,
         # OI-10 fix: surface the delivery Phase in the leaf block's hover title
         # too, so it stays visible when the phase tier is flat (≤3 phases) but a
-        # workstream tier drills in (SR-089 "expose delivery phase").
+        # workstream tier drills in (LLR-052 "expose delivery phase").
         "title": "{} — {} ({}) · {}".format(w["id"], t, status, phase_of[w["id"]]),
     }
 
 
 def when_view(root, wis):
-    """The When roadmap as a Simulink-style drill-down (SR-089/SR-091/SR-092,
+    """The When roadmap as a Simulink-style drill-down (LLR-052/LLR-087/LLR-088,
     rev, WI-141): phase ⊃ workstream ⊃ work-item block LAYERS, each tier
     a diagram of blocks whose input/output ports are wired by the aggregated
     cross-tier dependency edges (the deduped union of the child edges). A container

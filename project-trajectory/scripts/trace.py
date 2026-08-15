@@ -384,7 +384,7 @@ IF_CONTRACT_MAX = 500
 
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
-# it names its predicate: identical *in what*, judged *how*. (Gilbert's SR-013
+# it names its predicate: identical *in what*, judged *how*. (Gilbert's LLR-013
 # shipped "cannot distinguish source by schema" through DevBar-Reqs and had to be pinned
 # by hand at DevBar-Tests.) Both lists are heuristics — the advisory WARNS and never joins
 # a failure set; the DevBar-Reqs consistency review (process.md §4) makes the call.
@@ -2613,7 +2613,7 @@ def load_registries(docs):
     # Optional interface-definition registry (IF-###, process.md §8): one row per
     # interface, stating what it concretely IS. Off the joined spine like
     # PART/ASSET, but its SR-Refs back-link and its endpoint join keep it
-    # traceable (WI-056 closed the SR-002-era gap). Absent file -> [].
+    # traceable (WI-056 closed the LLR-002-era gap). Absent file -> [].
     raw_ifs = spine_carrier.load(docs / "requirements" / "interfaces.toml", "IF-ID")
     # Optional depth-0 FRAME registry (WI-442, sitting-2 §1R.5): three tiers in
     # one file — who is outside (EXT-###), what crosses the system boundary

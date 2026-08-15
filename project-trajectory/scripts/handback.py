@@ -1,5 +1,5 @@
 """handback.py — the lane closes that are not a clean merge (concurrency-v2 §A3,
-rewritten onto the SR-144/SR-145 outcome model).
+rewritten onto the SR-144/LLR-161 outcome model).
 
 `integrate.py` owns the ordinary outcome: a lane finishes, its specs land in
 `complete/`, the branch merges. This module owns the others, so that **every**
@@ -96,7 +96,7 @@ REPORTS = "docs/handbacks"
 CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
 
 # The review tier a close SUGGESTS for its disposition — a TYPED field, which is
-# the whole point. Before SR-145 this rode as the magic substring `NEEDS-HUMAN`
+# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-HUMAN`
 # inside a free-prose reason, and `tier_signal` case-folded a search for it: so
 # `NEEDS_HUMAN`, `needs human`, or a typo silently downgraded the judgement, with
 # no constant, no validation and no refusal on a miss. Prose that carries control
@@ -122,7 +122,7 @@ SUGGESTED_TIERS = ("quick", "medium", "strong")
 SPLIT_DECIDERS = ("lane", "adjudicator")
 
 # R3's outcome vocabulary, stated ONCE and imported by intake for the
-# disposition row's title. `re-queue` retired with SR-145: a terminal row is
+# disposition row's title. `re-queue` retired with LLR-161: a terminal row is
 # never put back on the frontier, so continuing means drafting a SUCCESSOR.
 DISPOSITION_OUTCOMES = "cancel / defer / draft a successor / surface an open item"
 

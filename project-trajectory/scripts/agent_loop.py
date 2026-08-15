@@ -78,7 +78,7 @@ no capture) at the mapped tier — the "grind from a single point" entry for a
 human sitting down. The template comes from --interactive-cmd / the
 AGENT_CMD_INTERACTIVE env var, falling back to AGENT_CMD.
 
---wi runs one WORKER ASSIGNMENT (WI-181, SR-060) on a CLAIMED branch (the
+--wi runs one WORKER ASSIGNMENT (WI-181, LLR-061) on a CLAIMED branch (the
 §2.3 model: `integrate.py claim` moves the spec queued/ -> active/<branch>/ on
 the trunk and cuts the branch; the ordered `--wi "WI-###[;WI-###…]"` list is
 built in the worktree named by --worktree, default --root, from the
@@ -93,7 +93,7 @@ a `WI:` trailer (a blocker commits `Blocked-WI:` + `BlockRef:` instead and
 the worker exits 3). Session logs are collision-safe
 (docs/iteration/<tag>-NNN-*.log) and managed review verdicts land under
 docs/reviews/<tag>/ naming the exact reviewed commit, so parallel branches
-never collide. An assignment is ONE review scope (WI-183, SR-132): under
+never collide. An assignment is ONE review scope (WI-183, LLR-140): under
 managed routing + review-policy >= 1 the round is scheduled once, after the
 LAST assigned WI commits, over the combined base..HEAD diff. A multi-WI list is
 no longer something the loop packs for itself: session grouping was REMOVED
@@ -357,7 +357,7 @@ NON_BUILD_PHASES = frozenset(REVIEW_PHASES) | {
 
 
 def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
-    """The per-session worker prompt (SR-060): the WI row + SpecRef +
+    """The per-session worker prompt (LLR-061): the WI row + SpecRef +
     predecessor context + the current branch diff + any rework finding, slotted
     into WORKER_PROMPT (`train` is the session tag = the claim branch name).
     Reads NOTHING from docs/status.md or docs/next-wi — the explicit
@@ -1616,7 +1616,7 @@ def build_worker_assignment(args, root):
     branch name — the §2.3 claim branch. Returns (None, None) when this is not
     a worker process, (worker, None) on success, or (None, EXIT_PREFLIGHT)
     after printing its own error."""
-    # --- worker assignment mode (WI-181, SR-060) -----------------------------
+    # --- worker assignment mode (WI-181, LLR-061) -----------------------------
     # worker != None switches the loop from "resume from the lane" to "build
     # the explicit assignment": no lane status/next-wi reads or writes, no
     # generated-artifact regeneration, tag-scoped collision-safe logs + review
@@ -1954,7 +1954,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         if not is_review and (phase == "BUILD" or phase == ""):
             st.note_build_tier(tier)
         # A worker's verdict filename names the exact reviewed code HEAD
-        # (SR-060) — the review belongs to (train scope, reviewed commit),
+        # (LLR-061) — the review belongs to (train scope, reviewed commit),
         # never to a mutable branch tip.
         reviewed_sha = ""
         if worker:
@@ -2172,7 +2172,7 @@ def session_bookkeeping(
                 # rework round must not read them as "the implementer touched
                 # a review path" (the false-fire this excludes). A gamed
                 # verdict is still caught upstream: the integrator verifies
-                # verdicts on the exact reviewed head (SR-132).
+                # verdicts on the exact reviewed head (LLR-140).
                 own = "docs/reviews/{}/".format(worker["train"])
                 changed = [
                     ln
@@ -2216,7 +2216,7 @@ def session_bookkeeping(
             decision = st.escalation()
             print("escalate: {} — {}".format(decision["action"], decision["reason"]))
             # A worker's rework scope is assignment-scoped in-process state
-            # (SR-060) — never the lane's tracked docs/rework-wi pointer,
+            # (LLR-061) — never the lane's tracked docs/rework-wi pointer,
             # which a train branch must not carry. The verdict text itself
             # is embedded in the next build session's prompt.
             if merged == "CHANGES-REQUESTED":
@@ -2349,7 +2349,7 @@ def session_bookkeeping(
         elif outcome == "COMMITTED" and phase not in NON_BUILD_PHASES:
             st.on_committed_build(route_family, wi_label, commits)
             # The review round follows the reviewer dial (S8). A traincar
-            # is ONE review scope (WI-183, SR-132): a worker schedules the
+            # is ONE review scope (WI-183, LLR-140): a worker schedules the
             # round only once EVERY assigned WI is built, and the round
             # covers the combined train diff base..HEAD — never a per-WI
             # slice of it. An intermediate constituent commit is
@@ -3062,7 +3062,7 @@ def main():
     except ValueError:
         cooldown_seconds = DEFAULT_COOLDOWN_SECONDS
     route_constants = agent_route.load_constants()
-    # Worker review evidence is train-scoped and collision-safe (SR-060): two
+    # Worker review evidence is train-scoped and collision-safe (LLR-061): two
     # parallel workers' committed verdicts/scoreboards must never collide at
     # integration, so each train gets its own reviews/<train>/ directory.
     reviews_dir = docs / "reviews" / worker["train"]

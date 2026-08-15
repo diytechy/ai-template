@@ -112,20 +112,84 @@ can overrule at ratification.
 - **F6 pair kept deliberately**: SR-015 (data invariant) ↔ the checker
   decomposing under SR-157; each rationale names the other.
 
+## Act 3 — the 73 demotions landed (SR→LLR), and the spine closed
+
+**SR 137 → 64.** Every demoted row left the tier under the parent the design
+named; the fan-out held exactly as derived: SR-157×15 · SR-158×4 · SR-159×5 ·
+SR-006×3 · SR-070×15 · SR-112×1 · SR-153×5 · SR-154×6 · SR-155×10 ·
+SR-156×5 · SR-026×1 · SR-030×1 · SR-148×1 · SR-144×1 = 73.
+
+**The finding that matters, recorded as a deliverable (13s): ZERO new LLRs
+were needed.** All 73 obligations fit an *existing* component-level carrier —
+83 LLRs re-grounded on their new parent, 69 of them taking a `detail`
+addendum that folds the obligation tokens the LLR did not already state. That
+is the census's "these rows were always LLRs" reading confirmed mechanically
+rather than asserted: had the demotion been a re-tier of substance rather than
+of altitude, rows would have had no home to land in.
+
+- **TC re-points:** 68 test cases moved from the demoted SR to its parent
+  (LLR refs kept); 32 `expected` cells that read *"Satisfies SR-NNN
+  AcceptanceCriteria"* were rewritten to name the parent and the LLR that now
+  carries the acceptance — a dangling "satisfies" pointer is exactly the
+  silent-rot class this campaign exists to remove.
+- **Status movement:** the 69 addendum-bearing LLRs that were `Verified` flip
+  `Modified` (the sanctioned amend-and-flip; `modified` 65 → 102). Nothing
+  self-ratifies.
+- **SR-035's chain minted** (its Analysis→Test flip's debt): **LLR-171 +
+  TC-165**, both `Draft`; watermark TC 164 → 165.
+- **`orphans=0 integrity=0`** — SN=27 · SR=64 · LLR=153 · TC=148. The spine
+  is fully joined, both directions, for the first time in the campaign; the
+  bottom-up sweep the method asks for found nothing dangling because the
+  top-down pass closed it.
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict # SN=27 SR=64 LLR=153 TC=148 orphans=0 integrity=0 form-findings=2" rev="act-3 commit tree" -->
+- **Form findings 9 → 2** — exactly the two recorded 13v waivers (SR-140,
+  SR-147). Every other multi-shall row dissolved on landing at the tier where
+  its detail belongs, which is the form rule's own prediction.
+- **Boundary-Refs coverage advisory: 0 uncovered of 64** (was 149 of 149 at
+  slice start). Sitting-3 decision 8's deferral condition — *"until slice 2
+  populates Boundary-Refs"* — is now MET on the SR side.
+
+### Riders executed in act 3
+
+- **SR-126's script-name carve-out NARROWED** (13u rider): from any `.py` to
+  exactly the ten declared external-port scripts (check, bootstrap,
+  agent_loop, check_vendored, gen_cases, gen_release_checklist,
+  subagent_gate, run_menu, integrate, trunk_step) — the sitting-2
+  port/internal discriminator applied. TC-126's fixture set narrows with it
+  (noted for the implementation touch).
+- **SR-060's dead `docs/next-wi` clause STRUCK** (sitting-2 §6 item 7); its
+  live obligations (claim-cut binding, root-truth no-writes, trailer evidence
+  channel) fold into LLR-061.
+- **MW scrub-or-keep calls, each on mechanical evidence, none silent:**
+  SR-067's window KEPT (`check_trajectory.py` still reads legacy
+  `docs/trajectory-check`), SR-042's KEPT (`gen_okf.py` still reads the legacy
+  `docs/okf-export` sentinel), SR-131's pause window CLOSED and scrubbed,
+  LLR-140's `docs/review-policy` read KEPT.
+- **D8 dependencies recorded, not silently retired:** LLR-023/LLR-080 (arch-map
+  halves) and LLR-013 (Runtime-flows input) each state that their target
+  surface is ruled to retire and the obligation moves with the flows/dashboard
+  rendering.
+- **B03 reframing** on the dashboard/status render rows: the generated views
+  are adopted-toolkit outputs (REL-002), not system outputs — framing fixed,
+  every render obligation kept.
+- **F6 pair closed as designed:** LLR-005 now names itself the checker half
+  paired with SR-015's data invariant.
+- **Live-surface re-points** (mechanical, successor-named): 15 kit scripts'
+  prose comments, 4 IF `sr_refs` arrays, and the `check_need_form`/`gen_cases`
+  example ids moved to surviving rows. One test fixture followed the registry:
+  `test_dogfood_sync`'s planted-defect header (SR-001 → SR-006).
+
 ### Still OWED inside this slice (the open lane's remainder)
 
-1. **Act 3 — SR→LLR:** 73 demotions per the design's parent map (SR-157×15,
-   SR-158×4, SR-159×5, SR-006×3, SR-070×15, SR-112×1, SR-153×5, SR-154×6,
-   SR-155×10, SR-156×5, SR-026×1, SR-030×1, SR-148×1, SR-144×1), LLR ids
-   minted, `sn_refs` re-homed, the shed-clause map's "act 3" rows discharged,
-   SR-126's carve-out narrowed and SR-060's dead `next-wi` clause struck in
-   the re-words; SR-035's LLR+TC minted.
-2. **Act 4 — LLR→TC re-point + the two-directional iteration** against
-   `trace.py` until the orphan set is the intended one.
-3. **The Area→aspect conversion** (rides this window; a carrier-schema act
-   sequenced after the layers, before slice close).
-4. The MW clauses on SR-042/043/067 (demote/hold rows not yet re-worded):
-   scrub-or-keep call lands with their act-3/act-4 touch.
-5. **What slice 2 does NOT do:** the D-9/D12 vocabulary migration
+1. **The Area→aspect conversion** (rides this window; a carrier-schema act
+   sequenced after the layers, before slice close) — 63 rows convert, SR-049's
+   was minted in act 2.
+2. **SR-043's MW clause** (a HOLD row not re-worded in act 2): scrub-or-keep
+   call still owed.
+3. **The re-iteration pass the method names** has run once in each direction
+   and closed the orphan set; a *second* top-down read of the 64-row layer
+   against the six crossings — now that the layer exists to read — is the
+   honest remaining check before the owner's sitting.
+4. **What slice 2 does NOT do:** the D-9/D12 vocabulary migration
    (`2026-08-14e` — one atomic act after these drafts land) and any
    ratification (every status movement above is into in-process states).

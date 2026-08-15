@@ -378,7 +378,7 @@ def merge_verdict(verdicts):
 
 def latest_phase_verdicts(entries):
     """The deterministic latest-file-per-phase rule the integrator gate reads —
-    extending merge_verdict's any-dissent-blocks discipline (SR-132) from one
+    extending merge_verdict's any-dissent-blocks discipline (LLR-140) from one
     parallel round to the reroll dimension. `entries` is [(phase, ordinal,
     verdict), ...] parsed from the verdict files at ONE reviewed head; the
     highest ordinal is a phase's LATEST word, so "latest" is well-defined even

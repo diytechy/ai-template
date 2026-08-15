@@ -3,7 +3,7 @@
 
 Stack-agnostic, standard-library only (Python 3.11+, Windows/POSIX). This is the
 scheduler contract of the parallel-WI-dispatch work (Slice A;
-docs/specs/parallel-wi-dispatch.md SR-057/SR-093/SR-094). It is a **pure, side-effect-free
+docs/specs/parallel-wi-dispatch.md LLR-058/LLR-059/LLR-089). It is a **pure, side-effect-free
 library + CLI** shared by validation, the dashboard, the dispatcher, and tests —
 it never mutates the registry, spawns a worker, or touches git. Readiness is
 DERIVED from the tracked WI registry plus any reservations the caller passes
@@ -14,17 +14,17 @@ concurrency-restructure Phase 5, RULING-4). Everything past that one function
 
 Two contracts live here:
 
-  * **Frontier + deterministic order (SR-057).** A queued WI is *ready* when every
+  * **Frontier + deterministic order (LLR-058).** A queued WI is *ready* when every
     hard predecessor is integrated `done` (soft `~` edges never block). The ready
     set excludes `blocked`/`deferred`/`draft`/`cancelled`/reserved WIs and any WI
     the safety classifier deems ineligible, then orders the survivors by
     `(rank, Priority desc, transitive downstream-dependent count desc,
     remaining hard-path length desc, WI id)`.
 
-  * **Deterministic safety classification on TWO axes (SR-093/SR-094;
+  * **Deterministic safety classification on TWO axes (LLR-059/LLR-089;
     docs/concurrency-v2.md §A1).** One pure classifier maps a WI's declared
     `SafetyClass` (`ordinary|spine|gate|attestation|protected|high-risk`), its
-    critique flag and the registry `PlanMode=dual` signal (SR-107 — derived from
+    critique flag and the registry `PlanMode=dual` signal (LLR-095 — derived from
     the signal itself, never a second hand-set cell) to **two independent
     answers**, because the two questions are independent:
 
@@ -71,7 +71,7 @@ from pathlib import Path
 WI_ID_RE = re.compile(r"^WI-\d+$")
 REGISTRY = "docs/requirements/work-items.csv"
 
-# --- safety classification vocabulary (SR-093/SR-094; spec §4 "Deterministic safety
+# --- safety classification vocabulary (LLR-059/LLR-089; spec §4 "Deterministic safety
 # classification"). The DECLARED values a WI may carry in its SafetyClass cell.
 # `adjudication` (WI-388, docs/concurrency-v2.md §A5.2) is the mechanical
 # scope-judgement kind minted trunk-side at intake: exclusive, rank 1, and its
@@ -214,7 +214,7 @@ WI_COLUMNS = (
     "SafetyClass",
     "PlanMode",
     "Bar",
-    # SR-145 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
+    # LLR-161 LINEAGE. Partial work continues by MINTING A SUCCESSOR, never by
     # reviving the closed row — so the successor must be able to say which row
     # it continues, or the thread is lost at the id change. A real column, not
     # a frontmatter-only key, because `intake`'s drafts-not-mints arm writes
@@ -509,7 +509,7 @@ def load_wis(rows):
     return wis
 
 
-# --- deterministic safety classification (SR-093/SR-094) ----------------------
+# --- deterministic safety classification (LLR-059/LLR-089) ----------------------
 def kind_of(wi, *, structural=None):
     """The declared KIND both §A1 axis tables are keyed by — `classify`'s
     step-1 resolution on its own, because the dispatcher's §A8 admission
@@ -547,7 +547,7 @@ def classify(wi, *, structural=None):
     own table.
 
       1. PlanMode=dual is the `high-risk` kind, DERIVED from the signal itself
-         (SR-107/WI-201: never a second hand-set cell; a declared SafetyClass
+         (LLR-095/WI-201: never a second hand-set cell; a declared SafetyClass
          other than empty or `high-risk` contradicts and quarantines).
       2. A declared SafetyClass that is missing or not in the vocabulary
          quarantines as `unclassified`.
@@ -600,7 +600,7 @@ def is_schedulable(concurrency):
     return concurrency != CONCURRENCY_UNCLASSIFIED
 
 
-# --- graph derivations (SR-057) ----------------------------------------------
+# --- graph derivations (LLR-058) ----------------------------------------------
 def _status(wis):
     return {w["id"]: w["status"] for w in wis}
 
@@ -792,7 +792,7 @@ def _exclusive_conflicts(wis, status, reserved):
 _TERMINAL_DISPOSITION = {
     _DONE: ("done", "done:integrated"),
     _CANCELLED: ("cancelled", "cancelled:terminal-wont-build"),
-    # SR-145: `partial` is as final as the other two — a lane stopped early and
+    # LLR-161: `partial` is as final as the other two — a lane stopped early and
     # said so, and the disposition row it mints decides what happens next by
     # MINTING A SUCCESSOR, never by putting this row back on the frontier.
     # Read FIRST in `_disposition`, ahead of the queued+blockref arm, which is

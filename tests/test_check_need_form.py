@@ -15,7 +15,7 @@ from conftest import ROOT, SCRIPTS, run_py
 # A need cell carrying one token of each of the three classes SN-033 names.
 DIRTY_NEED = (
     "A user can resume work from docs/status.md by setting "
-    "human_ratification_through, as SR-102 and process.md §4 describe."
+    "human_ratification_through, as SR-137 and process.md §4 describe."
 )
 
 
@@ -46,11 +46,11 @@ def test_dirty_need_cell_names_the_row_and_each_offending_phrase(tmp_path):
     assert proc.returncode == 0, "warn-first: findings must not gate by default"
     # SN-033's acceptance requires BOTH the row and the phrase in the report.
     assert "SN-050" in proc.stdout
-    for phrase in ("docs/status.md", "human_ratification_through", "SR-102"):
+    for phrase in ("docs/status.md", "human_ratification_through", "SR-137"):
         assert phrase in proc.stdout, "offending phrase not named: " + phrase
     # One finding per token, once: docs/status.md (path — its inner status.md
     # is NOT a second finding), human_ratification_through, process.md, §4,
-    # SR-102.
+    # SR-137.
     assert "5 finding(s)" in proc.stdout
 
 
