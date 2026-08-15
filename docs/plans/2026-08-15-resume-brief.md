@@ -259,7 +259,27 @@ owner has ruled none of it.
 
 - Run the §3 audit and produce the 74-row table.
 - Read Core's whiteboard for the four §2 questions.
-- **Write** the rework plan — a sized manifest with migration steps.
+- **Write** the rework plan — a sized manifest with migration steps — **and put
+  it through an ADVERSARIAL OPUS REVIEW before it is presented for ruling**
+  (owner instruction, 2026-08-15). The plan is reviewed as a plan; that review
+  is a precondition of presenting it, not an optional extra.
+
+  **Why the plan and not just the diff:** every adversarial round this campaign
+  ran reviewed an *executed* change, and round 1 still returned
+  CHANGES-REQUESTED with 5 MAJOR findings. Reviewing the plan catches a design
+  error before 115 interface rows and 64 requirement rows move, which is the
+  cheapest point at which it can be caught.
+
+  **Brief it against the open questions, not the happy path** — §7's four
+  unresolved items (owner-is-a-requirement-or-a-module, bidirectional seams,
+  signal granularity, whether physical gets its own kind), plus the honest
+  limit in §2: a green suite proves nothing about hardware fit here.
+
+  **This is IN ADDITION TO, not instead of, the cross-family round** on the
+  executed change. It is deliberately same-family (Opus reviewing a
+  Claude-authored plan) because the owner asked for it that way — recorded so a
+  later session does not "correct" it to a cross-family draw thinking it is
+  following the routing policy.
 
 **NOT authorised without an explicit ruling:**
 
@@ -290,7 +310,9 @@ green suite is not evidence on the open question.
 3. **Read Core's whiteboard** for the four physical-interface questions in §2 —
    cheap, and it is the only primary evidence on the new question.
 4. **Ship the audit warn-first** (§3) — read-only, touches no lane.
-5. **Then** the schema inversion, folded into D-3, after the re-tier lane merges.
+5. **Adversarial Opus review OF THE PLAN** (§6b) — before the plan is presented
+   for ruling, not after.
+6. **Then** the schema inversion, folded into D-3, after the re-tier lane merges.
 
 Round 2 of the adversarial review goes **last**, on the settled state — a round
 is spent by the next commit, so taking it early wastes it.
