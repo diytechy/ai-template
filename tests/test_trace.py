@@ -675,6 +675,12 @@ def _ifs_toml(body):
             if value:
                 out.append('{} = """{}"""'.format(key, value))
         refs = [t for t in (r.get("Req-Refs") or "").split(";") if t.strip()]
+        # `owner` is REQUIRED since the 2026-08-15 rework and every body below
+        # names one requirement, so it seeds from the first ref — the same
+        # mechanical rule the live registry's 94 single-ref rows were seeded
+        # by. A test that wants a bad owner writes TOML directly.
+        if refs:
+            out.append('owner = "%s"' % refs[0].strip())
         if refs:
             out.append("req_refs = [{}]".format(", ".join('"%s"' % t for t in refs)))
         out.append("")

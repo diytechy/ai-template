@@ -241,10 +241,11 @@ def write_if(root, component):
         "[interface.IF-001]\n"
         'direction = "Provides"\n'
         'this_project = "src/demo"\n'
-        'counterpart = "downstream"\n'
+        'counterpart = "external:downstream"\n'
         'contract = "call"\n'
         'signal = "discrete"\n'
-        'sr_refs = ["SR-001"]\n'
+        'req_refs = ["SR-001"]\n'
+        'owner = "SR-001"\n'
         'version = "v1"\n'
         'approval = "approved"\n'
         'component = "{}"\n'.format(component),

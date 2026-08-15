@@ -79,13 +79,19 @@ detail_doc = "docs/cmp/adder.md"
 notes = "demo component"
 """
 
+# `direction` READS `Provides` here and read `out` until 2026-08-15, when the IF
+# tier's `Direction` vocabulary was finally closed and caught it: `in|out|inout`
+# is the depth-0 BOUNDARY tier's vocabulary, and it had leaked into an interface
+# fixture where nothing could see it. `counterpart` is a cross-repo endpoint, so
+# it carries the external marker rather than reading as a dangling path.
 RICH_IFS = """[interface.IF-001]
-direction = "out"
+direction = "Provides"
 this_project = "src/demo"
-counterpart = "acme/widget"
+counterpart = "external:acme/widget"
 contract = "call"
 signal = "discrete"
-sr_refs = ["SR-001"]
+req_refs = ["SR-001"]
+owner = "SR-001"
 version = "1"
 approval = "approved"
 component = "CMP-001"

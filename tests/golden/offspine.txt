@@ -152,12 +152,11 @@ _The ruled cross-cutting review grouping. Counts only — never a gate; a row ca
 
 ## Interface seams (process.md §8 back-links)
 
-1 interface-seam row(s); every SR-Refs resolves to a real SR.
+1 interface-seam row(s); every Req-Refs resolves to a real SR.
 
 ### Interface endpoint advisories (warn-only)
 
-- IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 0 read as external actors, 1 resolve to nothing
-- IF IF-001 Counterpart='acme/widget' is path-shaped and resolves to no module, file or directory — name a real endpoint, or spell it as the external actor it is
+- IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 1 are marked `external:`, 0 resolve to nothing
 
 ## Status findings (--require-verified)
 
@@ -165,8 +164,7 @@ None. Every in-scope ratified SR is Verified (any method).
 
 ===STDOUT===
 WARNING (advisory): SR SR-002 AcceptanceCriteria uses 'identical' without a named predicate — say identical/equivalent *in what*, judged *how* (process.md §4 consistency review; heuristic, warn-only)
-WARNING (advisory): IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 0 read as external actors, 1 resolve to nothing
-WARNING (advisory): IF IF-001 Counterpart='acme/widget' is path-shaped and resolves to no module, file or directory — name a real endpoint, or spell it as the external actor it is
+WARNING (advisory): IF endpoint coverage: 1 of 1 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 0 resolve to a file or directory in the tree, 1 are marked `external:`, 0 resolve to nothing
 WARNING (advisory): CMP CMP-001 Knowledge ref 'docs/knowledge/missing-pack' names no pack (docs/knowledge/missing-pack.md)
 WARNING (advisory): LLR LLR-001 reads 'Implemented' but every citing TC is Verified — lift to Verified (the evidence already exists)
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran
