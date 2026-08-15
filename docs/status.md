@@ -19,33 +19,31 @@ narrated is in those homes.
   signed no spine. The rulings live in
   [plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)
   (§1R the frame · §3R the form rule · §4.0 the closed-decision ledger). The
-  schema row is **LANDED** (2026-08-14: `external.toml` minted,
-  `interfaces.toml` slimmed to the approval schema, both sharp hazards held
-  in-commit) and the re-tier's slice-1 **census is COMPLETE on its open lane**
-  (all 148 SRs classified against the 6 crossings, demotion sized; the census
-  doc also sits on trunk at
-  [plans/2026-08-14-wi451-slice1-sr-census.md](plans/2026-08-14-wi451-slice1-sr-census.md)).
-  **The census is RATIFIED** (log `2026-08-14b`/`c`) and **slice 2's three
-  layers are LANDED on the open lane** (`2026-08-14g`'s layer-by-layer
-  method): the 26 tombstones deleted per D-4 with the forwarding log entry,
-  the SR layer decided from the needs and the six crossings (34 reattached ·
-  14 re-stated · SR-141 merged · **15 minted** for the B-06/B-07 pair, four
-  loop parents, three harness parents and the six uncovered needs), and the
-  **73 demotions landed** under those parents. **The spine now closes:
-  `orphans=0 integrity=0`, SN=27 · SR=64 · LLR=153 · TC=148**, and
-  `Boundary-Refs` is populated on all 64 rows (0 uncovered), which MEETS the
-  condition crossing-ownership was deferred against (`14d`). The layer's
-  ledger — per-row dispositions, the shed-clause map, the recorded
-  one-shall waivers — is
-  [plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md).
-  **The campaign's own finding, and a deliverable of it (13s):** the
-  demotions needed **zero new LLRs** — all 73 obligations fit an existing
-  component-level carrier, confirming mechanically that the mis-tiering was
-  altitude, not substance. What remains **on that lane before it can close**:
-  the **Area→aspect conversion** (63 rows + the carrier-schema touch), the
-  one outstanding migration-window call, and a second top-down read of the
-  now-existing 64-row layer. Nothing there self-ratifies —
-  `human_ratification_through = 4` holds every tier for the owner's sitting.
+  schema row is **LANDED** (2026-08-14) and **THE RE-TIER IS MERGED TO TRUNK**
+  (2026-08-15, `WI-451 = partial` on the owner's ruling that a partially
+  completed re-tier is within the design expectation). Trunk now reads **SN=27
+  · SR=64 · LLR=153 · TC=148, `orphans=0 integrity=0 component-findings=0
+  interface-findings=0`**, `Boundary-Refs` populated on all 64 rows — which
+  MEETS the condition crossing-ownership was deferred against (`14d`). The
+  campaign's own finding, a deliverable of it (13s): the 73 demotions needed
+  **zero new LLRs**, so the mis-tiering was altitude, not substance. Record:
+  the census
+  [plans/2026-08-14-wi451-slice1-sr-census.md](plans/2026-08-14-wi451-slice1-sr-census.md),
+  the ledger
+  [plans/2026-08-14-wi451-slice2-ledger.md](plans/2026-08-14-wi451-slice2-ledger.md),
+  and the close report
+  [handbacks/WI-451-wi451-sr-retier-campaign.md](handbacks/WI-451-wi451-sr-retier-campaign.md),
+  whose **`## Not delivered` is the authoritative list of what the campaign
+  still owes** — five unruled findings (H1/H4/H5/M1/M3), two crossing
+  attributions flagged for overrule, SR-165's missing design row and test
+  case, a second top-down read, and adversarial round 2 on the settled state.
+  **Two adjudications are already queued against it:** `WI-457` disposes the
+  close, and `WI-456` judges **16 ratified/routed SR cells the merge amended**
+  — the owner ruled 2026-08-15 that overriding a historical attest is fine
+  where it improves the design, so that row is a judgement, not a blocker.
+  **Sequencing a successor must not get wrong:** rule the five findings BEFORE
+  any interface-registry work — the re-tier moves IF rows (11 more), the ruled
+  interface model moves no SR ids at all.
 - **The amendment window closes at SITTING 3, not before.** Gate
   `DevBar-Reqs`, stage `DevStg-Boundary` (1/8) — the live counts are the
   generated snapshot below, and the re-tier lane's own basis (`drafts=44
@@ -61,10 +59,12 @@ narrated is in those homes.
   wave** right after slice 2's drafts land, carrying `Planned`'s fate and the
   off-spine flip authority with it (checklist archived at
   [archive/plans/2026-08-11-status-ladder-migration.md](archive/plans/2026-08-11-status-ladder-migration.md);
-  figures stale — re-derive). One item still re-lands as execution reaches
-  it: `check_flows`'s Runtime-flows obligation (moved with the flows to
-  `docs/runtime-flows.md` on the retirement lane — never lapsed; re-check at
-  that lane's merge). Crossing ownership is **deferred by name** to after
+  figures stale — re-derive). `check_flows`'s Runtime-flows obligation is
+  **DISCHARGED** — the re-tier's merge bar caught the flows citing eight
+  demoted ids and each was re-pointed onto its design-tier carrier; the map is
+  in the WI-451 demotions log fragment and is open to overrule. It re-lands
+  once more when the flows move to `docs/runtime-flows.md` on the retirement
+  lane. Crossing ownership is **deferred by name** to after
   slice 2 populates the boundary refs (`14d`), and the human-agent entity
   call is **confirmed** — five entities, the human inside EXT-001 (`14d`).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
@@ -75,11 +75,10 @@ narrated is in those homes.
   ruling superseded it) — delete only after deciding the draft is not wanted.
 - **RESUME HERE if you are starting cold** —
   [plans/2026-08-15-resume-brief.md](plans/2026-08-15-resume-brief.md) carries
-  the state this file cannot: the re-tier's landed work sits on an **unmerged
-  lane** (its registry reads 64 SR rows where trunk still reads 149), its five
-  open owner rulings, the seven process traps that bit, and the hardware
-  crosscheck's already-recorded conclusions. **The forward view in the bullets
-  above describes TRUNK**, which the lane has not yet reached. The interface
+  the process traps that bit and the hardware crosscheck's recorded
+  conclusions. **Its §0 and §4 are now STALE and must not be trusted** — the
+  lane it describes as unmerged is merged, and trunk reads 64 SR rows, not
+  149; the still-owed list moved to the close report named above. The interface
   question is now carried by
   [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
   — reviewed adversarially, rewritten, and its **four open questions RULED**

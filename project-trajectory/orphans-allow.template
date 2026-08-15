@@ -30,3 +30,10 @@ docs/work/*
 # the trunk. Transient by construction and never a navigation node — the entry
 # becomes reachable the moment it lands in `log.md`, and the fragment is deleted.
 docs/log.d/*
+
+# Per-close reports (docs/handbacks/README.md). A report is IMMUTABLE evidence
+# whose PATH is the close event's identity — never edited, never deleted, and
+# never linked from a navigation node, because the thing that makes it reachable
+# as work is the disposition row intake mints against it, not a doc link.
+# Retained-evidence class, same as docs/archive/specs/*.
+docs/handbacks/*

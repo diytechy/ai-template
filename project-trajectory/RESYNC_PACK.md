@@ -1191,6 +1191,30 @@ and that is the intended end state, not data loss.
 - Nothing else moves: `Aspect` stays REPORT-ONLY for counts, and no gate reads
   the distribution.
 
+### `docs/handbacks/*` in `orphans-allow` [since bd0e739a]
+
+**Applies to every adoption that scaffolded `docs/orphans-allow` before this
+commit — which is all of them.** The partial-close contract shipped without its
+navigability entry, and the defect is invisible until the first lane closes
+early: `handback.close_partial` writes an immutable per-close report under
+`docs/handbacks/`, nothing links to it *by design* (its path is the close
+event's identity, and the disposition row intake mints is what makes it
+reachable as work), so `check_docs` reports `orphan doc (no path from an entry
+root)` and the full suite goes red on a repo that did nothing wrong.
+
+Found by dogfooding: the kit's own first partial close, 2026-08-15.
+
+Migration is one line appended to `docs/orphans-allow`:
+
+```
+docs/handbacks/*
+```
+
+Do it **before** your first early close, not after — the failure arrives
+attached to an unrelated merge, which is the worst moment to diagnose it. If
+your `orphans-allow` is unmodified from the template you can simply overwrite it
+with the kit's copy.
+
 ---
 
 ## 4. Translation helper — concept renames

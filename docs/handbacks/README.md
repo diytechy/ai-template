@@ -26,8 +26,17 @@ commit range, the keep/discard split (or an explicit deferral to the
 adjudicator — silence about it is what merged rejected code onto trunk on
 2026-08-03), and the review tier the close suggests for its own judgement.
 
-This directory is empty in the kit's own repo, which is the honest state: no
-lane here has closed early since the contract shipped.
+**First exercised 2026-08-15**, by the WI-451 re-tier campaign closing `partial`
+on an owner ruling that a partially completed re-tier is within the design
+expectation. That first run found a real gap and it is recorded rather than
+quietly patched: the contract shipped with **no `docs/orphans-allow` entry**, so
+the very first report written made `check_docs` fail the full suite with "orphan
+doc (no path from an entry root)". A report is deliberately linked from nowhere
+— its path is the event's identity, and the disposition row is what makes it
+reachable as work — so the allow entry, not a navigation link, was always the
+right home. Both this repo's `docs/orphans-allow` and the shipped
+`orphans-allow.template` now carry it; adopters upgrading past this point get it
+via `RESYNC_PACK.md`.
 
 ---
 
