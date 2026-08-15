@@ -22,9 +22,11 @@ narrated is in those homes.
   schema row is **LANDED** (2026-08-14) and **THE RE-TIER IS MERGED TO TRUNK**
   (2026-08-15, `WI-451 = partial` on the owner's ruling that a partially
   completed re-tier is within the design expectation). Trunk now reads **SN=27
-  · SR=64 · LLR=153 · TC=148, `orphans=0 integrity=0 component-findings=0
-  interface-findings=0`**, `Boundary-Refs` populated on all 64 rows — which
-  MEETS the condition crossing-ownership was deferred against (`14d`). The
+  · SR=59 · LLR=154 · TC=149, `orphans=0 integrity=0 component-findings=0
+  interface-findings=0`** (re-measured 2026-08-15 after the authoring calls;
+  the merge-day figure was `SR=64 LLR=153 TC=148`), `Boundary-Refs` populated
+  on every row, 0 uncovered — which MEETS the condition crossing-ownership was
+  deferred against (`14d`). The
   campaign's own finding, a deliverable of it (13s): the 73 demotions needed
   **zero new LLRs**, so the mis-tiering was altitude, not substance. Record:
   the census
@@ -42,20 +44,28 @@ narrated is in those homes.
   CONFIRMED, and SR-165's design row and test case minted `Draft`. **Nothing is
   signed — every call is provisional and overturnable at the review sitting**,
   which is the next thing owed and is the owner's.
-  **WHAT REMAINS is measured and minted:**
+  **WHAT REMAINS is now ONE row plus the sitting:**
   [plans/2026-08-15-retier-completion.md](plans/2026-08-15-retier-completion.md)
-  — **`WI-459`** crossing ownership **pulled forward out of sitting 3**, then
-  **`WI-460`** the second top-down read and adversarial round 2 on the settled
-  state. Also queued: `WI-457` disposes the close, `WI-456` judges **16
-  ratified/routed SR cells the merge amended** — two rows in its own title were
-  demoted out of existence, so for those it judges the demotion instead.
-  **The constraint-fit half of the re-tier's purpose has an answer and it is a
-  FINDING** (completion §4): **B-05 carries the large majority of the layer's
-  boundary references, B-06 and B-07 carry one each, and four of six crossings
-  are realized by no interface row.** Whether B-05 is under-decomposed or the
-  imbalance is real is **`OI-29`**, unruled, and it is `WI-459`'s. The 11 IF
-  rows the authoring calls moved are moved, so the one-directional churn rule is
-  discharged and interface-registry work is unblocked.
+  — **`WI-460`**, the campaign's closing verification: a SECOND top-down read
+  of the re-tiered layer against the six crossings, and **adversarial round 2**
+  on the settled state (round 1 is spent — its fixes postdate its verdict). The
+  merge's amended cells and the close itself are **adjudicated** (log
+  `2026-08-15f`); nothing else is queued behind them.
+  **The constraint-fit half of the re-tier's purpose has an answer, it is a
+  FINDING, and it is now measured rather than estimated** (completion §4; log
+  `2026-08-15f`): **B-05 carries 50 of the layer's 65 boundary references
+  (77%), B-06 and B-07 carry one each, and four of six crossings are realized
+  by no interface row.** Whether B-05 is under-decomposed is **RULED —
+  `OI-29` option (b), the imbalance is REAL** because the template package IS
+  the product, and the ruling's two owner riders travel with it. Each
+  unrealized crossing now carries a named owner — B-01 → `SR-019`/`SR-020`,
+  B-06 → `SR-151`, B-07 → `SR-152` — or a recorded statement that none should
+  realize it (B-02, conditional on `SR-140` shipping). **Executing that re-key
+  is the `wi455-architecture-retirement` lane's**, which also inherits five
+  `external:`-marked IF rows with no tie-back and the finding that B-04 is only
+  half realized. The 11 IF rows the authoring calls moved are moved, so the
+  one-directional churn rule is discharged and interface-registry work is
+  unblocked.
 - **The amendment window closes at SITTING 3, not before.** Gate
   `DevBar-Reqs`, stage `DevStg-Boundary` (1/8) — the live counts are the
   generated snapshot below, and the re-tier lane's own basis (`drafts=44
@@ -76,10 +86,11 @@ narrated is in those homes.
   demoted ids and each was re-pointed onto its design-tier carrier; the map is
   in the WI-451 demotions log fragment and is open to overrule. It re-lands
   once more when the flows move to `docs/runtime-flows.md` on the retirement
-  lane. Crossing ownership (decision 8) is **PULLED FORWARD to `WI-459`** —
-  its deferral condition (`Boundary-Refs` populated) is now met, and it is a
-  tiering question, not a vocabulary one, so it leaves this sitting rather
-  than joining it. The human-agent entity
+  lane. Crossing ownership (decision 8) has **LEFT this sitting — pulled
+  forward, answered and CLOSED in its own §0.3 ledger row** (log
+  `2026-08-15f`): its deferral condition was met, it is a tiering question
+  rather than a vocabulary one, and it did not dissolve in the re-tier the way
+  the deferral allowed for. The human-agent entity
   call is **confirmed** — five entities, the human inside EXT-001 (`14d`).
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
@@ -91,7 +102,7 @@ narrated is in those homes.
   [plans/2026-08-15-resume-brief.md](plans/2026-08-15-resume-brief.md) carries
   the process traps that bit and the hardware crosscheck's recorded
   conclusions. **Its §0 and §4 are now STALE and must not be trusted** — the
-  lane it describes as unmerged is merged, and trunk reads 64 SR rows, not
+  lane it describes as unmerged is merged, and trunk reads 59 SR rows, not
   149; the still-owed list moved to the close report named above. The interface
   question is now carried by
   [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
@@ -138,10 +149,8 @@ _Derived facts — regenerated by `python project-trajectory/scripts/gen_traject
   - **WI-448** `P3` — OI-16 execution (inversion confirmed by the owner 2026-08-13): the common-module program
   - **WI-455** `P3` — The docs/architecture.md RETIREMENT program (owner-ruled 2026-08-13u, sitting-2 decision…
   - **WI-390** — PROGRAM CLOSE for concurrency-v2 (docs/concurrency-v2.md §A9 deletion ledger). NOT a swee…
-  - **WI-459** `P2` — Crossing ownership, pulled forward out of sitting 3 (decision 8): answer for each of B-01…
-  - **WI-456** — adjudicate: SR-007, SR-008, SR-009, SR-010, SR-011, SR-020, SR-022, SR-024, SR-032, SR-03…
-  - **WI-457** — dispose: the close recorded at docs/handbacks/WI-451-wi451-sr-retier-campaign.md
   - **WI-452** `P3` — Resurface LLR-165's carrier converter as the downstream-resync helper it now is (owner-ru…
+  - **WI-460** `P3` — The re-tier's closing verification, on the settled state: a SECOND top-down read of the 6…
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` +

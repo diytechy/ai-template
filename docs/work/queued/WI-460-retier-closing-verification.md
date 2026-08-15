@@ -5,6 +5,7 @@ specref = "docs/plans/2026-08-15-retier-completion.md#3-blocker-class-b--the-ver
 workstream = "process"
 sr_refs = []
 needs = ["WI-458", "WI-459"]
+supersedes = "WI-451"
 buildtier = "strong"
 safety_class = "ordinary"
 priority = 3

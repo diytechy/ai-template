@@ -36,6 +36,129 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15f — the three adjudication rows CLOSED: crossing ownership
+  answered, 16 amended SR cells judged, the WI-451 close confirmed.**
+  *Executed provisionally under the owner's 2026-08-15 charge-through and
+  overturnable at the review sitting.* **No Status, `approval` or attestation
+  cell moved in any direction** — the whole entry is judgement, and every
+  judgement it records happens to be that nothing needed flipping.
+  - **The crossing table, REGENERATED (`WI-459`).** Re-derived on the current
+    tree from `boundary_refs` and the IF tie-backs, never from the recorded
+    figures: **65 boundary references across 59 SR rows, 0 uncovered** —
+    B-01 5 (8%, **0 IFs**) · B-02 2 (3%, **0**) · B-04 6 (9%, 1) · **B-05 50
+    (77%, 7)** · B-06 1 (2%, **0**) · B-07 1 (2%, **0**). The figures carried
+    in the WI spec and in `OI-29` (`SR=64`, 70 refs, B-05 = 55/79%) were
+    **stale AND off by one row** — measured at the commit they were taken
+    against, the truth was 65 rows / 71 refs / B-05 = 56. "Do not trust these
+    figures — re-derive" earned its place in the Done-when.
+  - **The delta is the finding.** Between that commit and now, `WI-458` removed
+    6 SR rows and 6 boundary references and **all six came out of B-05**;
+    B-01/B-02/B-04/B-06/B-07 are byte-identical before and after. This is the
+    mechanical test `OI-29` itself proposed, run in the opposite direction, and
+    it supports the owner's ruling: B-05 absorbs and sheds while the thin
+    crossings are inert, which is what "the imbalance is real" predicts.
+  - **`OI-29` stands as ruled — option (b), the imbalance is REAL** because the
+    template package IS the product (owner, in session, 2026-08-15). Recorded,
+    not re-opened, with the owner's own two riders intact: later churn may
+    re-balance it, and the premise weakens if SR definition ever stops flowing
+    out to the package.
+  - **B-01 — an interface SHOULD realize it; owner `SR-019` (commit) +
+    `SR-020` (push).** The port already exists three times over — `IF-040`,
+    `IF-042`, `IF-043` — but every one models the hook's INTERNAL call
+    (hook → script) and none models the contract git holds it to. The gap is a
+    missing FACING, not a missing surface. Corroboration that this is the right
+    attribution: those three rows already carry `owner = SR-019/SR-019/SR-020`,
+    and both SRs name B-01. Recommended shape: `interface_from_external =
+    "B-01"` **plus** `interface_to_external = "B-04"` on all three, because the
+    floor admits the write and emits the verdict in one act — which is exactly
+    what `external.toml` records by putting "the verdict halves" in B-04.
+  - **B-02 — NO interface should realize it today; conditional owner
+    `SR-140`.** Authority has no port: rulings, attestations and Status flips
+    enter as CONTENT on B-01's write path. A crossing the frame declares to
+    carry *meaning* rather than *mechanism* is unrealized without that being a
+    gap, and minting a row would manufacture a surface that does not exist. The
+    stated condition that would change the answer: when `SR-140`'s attestation
+    anchor (commit + digest + transition + reviewer) ships, its validator can
+    REFUSE an attestation, and that contract is an admission surface. `SR-139`
+    and `SR-140` are both `Planned`, which is why the row cannot be authored
+    now — there is nothing to state a contract about.
+  - **B-06 / B-07 — an interface SHOULD realize each; owners `SR-151` and
+    `SR-152`.** No IF row has a CI workflow at either endpoint — not
+    `.github/workflows/test.yml`, not `canary.yml`, not the shipped
+    `project-trajectory/ci/check.yml`. B-07 is the load-bearing one: `SR-019`'s
+    own text says the bypassable local floor discharges "no unchecked write
+    enters governed state" **only as a PAIR** with the hosted re-run, so the
+    backstop half of B-01's validity argument is currently realized by nothing.
+    Both SRs are `Draft`. One strain surfaced rather than smoothed over:
+    `SR-151` is written about *"the shipped reference CI workflow"* —
+    delivered content, B-05's description — while its `boundary_refs` names
+    only B-06. Cell untouched; flagged for the sitting.
+  - **A fifth finding the sweep produced: B-04 is only HALF realized, and no
+    advisory says so.** `trace.py` asks whether a crossing has *any* realizing
+    row, never one per thing it carries. `B-04.carries` names two — hook-floor
+    accept/reject **and** subagent_gate allow/deny — and only the second has a
+    row (`IF-020`). The B-01 recommendation closes both at once.
+  - **Direction only; D-3 executes.** The IF-side re-key stays the
+    `wi455-architecture-retirement` lane's. It inherits: the tie-backs above,
+    two new rows for B-06/B-07, B-02 deliberately left empty with its reason
+    recorded, and the five `external:`-marked rows that carry no tie-back
+    (`IF-032`, `IF-036`, `IF-041`, `IF-080`, `IF-081`) adjudicated — IF-080 and
+    IF-081 look like plain B-05 omissions; the other three ask whether
+    consuming an external tool crosses this system's boundary at all.
+  - **Sitting-3 §0.3 decision 8 is CLOSED in the ledger.** It did not dissolve
+    in the re-tier, which is why the owner recorded it to re-land either way.
+    The sitting no longer carries it.
+  - **The 16 amended SR cells, judged (`WI-456`) — 14 scope-did-not-move (12
+    clean, 2 with a later separately-ruled and already-flipped movement) · 2
+    deleted-by-demotion · 0 scope-change/re-scope/cancellation rows drafted.**
+    The adjudication rests on a measurement, not on the campaign's word: every
+    one of the 16 rows was diffed cell by cell across the adjudicated range
+    `1539f07..7674e4a`, and **not one changed any cell beyond `Boundary-Refs`
+    and `area`** — title, shall, acceptance criteria, rationale, priority,
+    verification, status, `sn_refs` and phase are byte-identical across the
+    merge. Neither amended cell is an obligation cell: `Boundary-Refs` is a NEW
+    classification field, and `area` was retired by owner ruling `2026-08-14h`.
+    An attestation accepts an obligation and its evidence; nothing accepted is
+    now false. **No flip was owed in either direction** — the 12 clean rows are
+    still `Verified` and never left it, so §A5.2's "flip back to `Verified`" is
+    vacuous for them. `SR-007` and `SR-020` are `Modified` today, but the diff
+    proves the amendment did not do it: both were still `Verified` at the merge
+    tip, and `WI-458`'s later ruled pass moved them (SR-007 absorbing SR-008's
+    obligation, SR-020 parenting retired SR-021's probe). `SR-008` and `SR-133`
+    were deleted by ruled demotion (`2026-08-15b`); judged on their receiving
+    rows, both obligations landed — `LLR-008` under SR-007 + SR-006, `LLR-141`
+    under SR-006 + SR-156, every carrier `Modified` or `Draft`, so nothing rides
+    in on a stale attest. Scope moved DOWN a tier, not out.
+  - **The `WI-451` close CONFIRMED (`WI-457`) — no override, no cancellation,
+    no deferral, no new open item.** The `partial` claim was tested against the
+    three ways it could have been wrong and fails all three: not an under-claim
+    (the `## Not delivered` list was genuinely outstanding), not an over-claim
+    (149 → 64 rows, 26 tombstones deleted, 73 demotions needing **zero** new
+    design rows, `Area` retired, 62 of 115 IF rows re-pointed — all verifiable
+    and verified), and not silent on the keep/discard split (11 keeps named, 0
+    discards, decided by the lane; all 11 are on trunk and everything since
+    builds on them). Successors: **`WI-458`** carries the five findings + both
+    flagged crossings + SR-165's chain (complete), **`WI-459`** carries crossing
+    ownership (complete), **`WI-460`** carries the second top-down read and
+    adversarial round 2 (open). `WI-460` gains `supersedes = "WI-451"` as the
+    only successor still open; the two closed ones carry the lineage in prose
+    rather than being back-stamped. **The report's sharpest instruction —
+    "rule the five findings BEFORE any interface-registry work", on pain of
+    re-pointing 11 IF rows twice — was HONORED and checked, not assumed:**
+    `WI-458` (`2026-08-15b`) landed before the interface rework
+    (`2026-08-15e`), and the 11 rows moved once. Nothing is owed by the closed
+    row; `WI-451` stays in `docs/work/partial/`, terminal, byte-identical.
+  - **A defect surfaced, not patched inline (working agreement).**
+    `intake.parse_dispositions` partitions on the literal `\n## Dispositions`
+    and REFUSES the entire mint when that section carries no fenced TOML
+    draft block. So an adjudication whose honest verdict is *"no follow-up is owed"*
+    cannot say so under the heading the R1/R3 contract names — the correct
+    outcome arms a refusal. `WI-456` and `WI-457` therefore record their
+    verdicts under a SINGULAR `## Disposition`, each carrying a note saying why
+    so a later reader does not "fix" it back. The fix belongs in `intake.py`
+    (an empty section is a valid statement, not a malformed one) and is not
+    made here.
+
 - **2026-08-15e — the interface rework EXECUTED, all eight steps
   ([plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)
   §4).** *Executed provisionally under the owner's 2026-08-15 charge-through;
