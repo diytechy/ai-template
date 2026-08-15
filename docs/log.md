@@ -36,6 +36,119 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15j — ADVERSARIAL ROUND 2 returned CHANGES-REQUESTED, and the
+  finding that mattered most is that a requirement had outlived its own
+  mechanism.** *Executed provisionally under the owner's 2026-08-15
+  charge-through and overturnable at the review sitting; no Status, `approval`
+  or attestation cell moved in any direction. `WI-460` is CLOSED by this entry —
+  the re-tier's VERIFICATION is complete; what stands between here and done is
+  the sitting itself.* Cross-family per the routing policy: GPT-5.6 Sol via
+  `codex`, read-only sandbox, on the settled tree after `WI-458`, `WI-459` and
+  the second top-down read (`2026-08-15i`). **Seven MAJOR findings; the
+  orchestrator re-verified each before accepting it.** Five confirmed and fixed,
+  one confirmed in half and fixed in that half, one dispositioned. The verdict
+  is on the record verbatim at
+  [reviews/wi451-retier/ROUND-2-SOL.md](reviews/wi451-retier/ROUND-2-SOL.md),
+  like the earlier rounds.
+  - **F1 (fixed) — `SR-140` required the exact design the snapshot mechanism
+    abolished.** It still mandated an on-row digest of the row's normative
+    cells, "never in a second registry", and an anchor written in the same
+    commit as its text an ERROR — all superseded by the owner's ruling
+    `2026-08-15d`, which replaced the anchor with whole-file copies into
+    `docs/archive/last_approved/` riding the approval commit. `LLR-173` claimed
+    to implement it while doing the opposite. **A requirement its own design row
+    contradicts is worse than no requirement, because it reports green.**
+    Re-based: the surviving obligations survive (transition and acting reviewer
+    distinguishable BY QUERY on a released tier; drift reported regardless of
+    Status movement), the mechanism becomes the ruled one (the approval commit
+    supplies the commit/date/author no cell now has to carry), and the
+    same-commit clause **inverts honestly** — the copy MUST ride the approval,
+    with the anti-laundering property carried instead by the mirror invariant
+    (§F3) and the seed rules (§A3). Held at three shalls, its recorded 13v
+    waiver, not four. `LLR-173`'s opening clause and its record-fields sentence
+    followed.
+  - **F2 (fixed, one half; the other half BY DESIGN) — `unanchored_findings`
+    was defined and called by NOTHING**, so an approval could bypass the record
+    with no live check to say so. It is now wired into `trace.py` as an
+    always-on ADVISORY pipe. **The ERROR promotion stays deferred to migration
+    step 7 by the design's own reasoning** (§B4/§B6: against a pre-seed or
+    pre-rename snapshot it reds every row, and a check that reds everything is a
+    check that gets switched off) — warn-first is what lets it run in the
+    meantime. **Wiring it immediately earned its keep by finding a defect the
+    round did not see:** `bootstrap.py` scaffolds the snapshot directory holding
+    only its README, deliberately, so a vacuum keyed on the DIRECTORY reported
+    all eight tiers missing in *every fresh adopter repo on day one* — the exact
+    reds-everything failure, shipped downstream. The vacuum is keyed on "holds
+    no registry" now, with a test pinning the scaffolded state. The round's
+    deletion observation was also confirmed: `staged_snapshot_findings` exited
+    silently on a snapshot file removed in the commit, which made *erasing* the
+    evidence cheaper than forging it. It now fires when a registry is deleted
+    while the rest of the record stands, and stays silent when the whole record
+    goes (retirement and §A1's wholesale replacement are both legitimate).
+  - **F3 (fixed, one half; the SN half BY DESIGN) — `_claims_approval` read
+    `Status` alone**, so interfaces, the depth-0 frame and components — the four
+    tiers `SNAPSHOTTED` copies *precisely because* their maturity cells are
+    human-only — could never claim approval and were never drift-compared, which
+    defeats the stated reason they are copied at all. It is tier-aware now
+    (`Status` / `Approval` / `State`), and the claimed sets are **DERIVED from
+    `derive_gate`'s one ruled ladder table** rather than restated as a second
+    literal that would agree until someone edited one of them. **SN stays out by
+    DECISION, not omission** (design §B7): needs carry no maturity cell at all,
+    so there is nothing for the predicate to read; the tier is still COPIED, so
+    the record stays complete. The docstring says so rather than leaving it to
+    be inferred.
+  - **F5 (fixed) — `SR-059`'s migrated-repository deletion obligation was
+    dropped in the `WI-458` merge.** The retired row required `docs/next-wi` and
+    `docs/run-phase` gone for "fresh scaffold AND migrated repo"; `SR-148`
+    carried the fresh-scaffold half only, so an adopter upgrade could retain the
+    retired authority files while the merged row still passed. **The lost half is
+    the one that matters — a fresh scaffold never had the files to keep.**
+    Restored into `SR-148`'s acceptance with the restoration recorded in its
+    rationale; `LLR-060` now names where each half discharges (`bootstrap.py`'s
+    MAPPING for the fresh side, `RESYNC_PACK.md`'s upgrade recipe for the
+    migrated one).
+  - **F6 (fixed) — `IF-004`/`IF-031` owners → `LLR-014`.** Both pointed at SRs
+    that do not own the perf-verdict contract (`SR-006` is harness step
+    execution, `SR-015` is PB back-link resolution); the comparator obligation
+    is `LLR-014`'s. The `Owner` cell is ruled POLYMORPHIC (`2026-08-15a` Q1) and
+    these are its **first LLR owners** — the step-5 validator accepted them
+    without change, which is the schema working as designed. `req_refs`
+    unchanged (`LLR-014`'s parent `SR-006` is already there). **The deeper gap
+    is NOT closed and is RECORDED for you:** no SR states a perf-regression
+    verdict obligation at all (review package §3, L2). No row was minted.
+  - **F7 (fixed; convergent with the second read's H1) — `SR-163` and `SR-166`
+    prescribed conflicting outcomes for one observable.** `SR-163` reports
+    missing shipped files and stale manifest entries under a configurable
+    warn-versus-gate policy; `SR-166`, minted days later, said the same two
+    classes FAIL. An implementer could conform to one only by violating the
+    other. `SR-166` sheds both, each **token-checked into `SR-163`'s requirement
+    and acceptance before deletion** so no obligation vanished — only its
+    second, conflicting statement — and keeps what `SR-163` does not ask:
+    destination materialization in a fresh scaffold, and dogfood parity. Its
+    title follows the narrowing.
+  - **F4 (NOT fixed — ACCEPTED AS A RECORDED DECISION).** The round is right
+    that this sitting has no per-row before/after evidence, and wrong that it
+    needs one. **The wave is a FULL RE-READ by ruling `2026-08-14e` /
+    sitting-3 §2.1, not a diff review** — and the git-walk baselines it asks to
+    restore are *meaningless* for rows the re-tier restructured, which is most of
+    them: a row merged out of three, demoted a tier, or re-keyed onto a new
+    crossing has no honest predecessor to diff against. The raw before/after for
+    this sitting is `git diff bb4ac776..HEAD -- docs/requirements docs/test`, and
+    **per-row before/after resumes from the first seed onward** — which is step 5
+    of the sitting itself. Seeding current text as its own baseline was NOT done
+    and remains the owner's act (`2026-08-15d`, repo-lock D-10's sequencing).
+  - **Two amend-without-flip warns are LEFT STANDING deliberately** (`SR-140`,
+    `SR-148`): both rows are amended without a Status flip, and the guard says
+    so. Flipping them would be inventing a marker the wave does not read — it
+    re-reads the whole layer — and the amended text is in the regenerated
+    ratification brief either way, which is the property that actually matters.
+  - **The module-size ratchet took two reviewed bumps**, reasons in the baseline
+    entries: `trace.py` +27 (the advisory pipe and why the arming is deferred),
+    `check_trajectory.py` +36 (the deletion arm and why the whole-record case is
+    silent). Neither is decomposable — each is one producer or one arm joining
+    the loop that owns it — and the honest reading remains that both files owe a
+    decomposition for their SIZE (`WI-280`), not for this round.
+
 - **2026-08-15i — the SECOND top-down read of the SR layer, on the settled
   state, and the SILENT-SKIP GUARD built at last.** *Executed provisionally
   under the owner's 2026-08-15 charge-through and overturnable at the review

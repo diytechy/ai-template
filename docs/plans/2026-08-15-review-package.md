@@ -23,6 +23,7 @@ signing acts are all still yours.
 | D-9 migration steps 1–4b: Status enum closed at live truth `{Draft, Planned, Modified, Verified}` on the integrity floor · `is_planned` repairs the Planned blind spot · the `last_approved` snapshot mechanism built reader-first (module, mirror invariant, intake writer + `snapshot` subcommand, seed pinned out of every loop path) · the drift overlay · ~160 lines of git-walk baseline machinery deleted · the amendment adjudicator routed | `2026-08-15g` | done; boundaries held |
 | LLR-158/TC-153 re-pointed onto the surviving mechanism; LLR-173/TC-167/IF-123–129 mint the snapshot module's spine coverage; dead `_rows_at`/`_toml_rows_text` deleted | `2026-08-15h` | done |
 | The second top-down read (6 findings: 2 fixed, 4 recorded — §3) + the SKIP guard (built; the stronger refusal shape is yours to accept or decline — §3) | `2026-08-15i` | done |
+| Adversarial round 2 — CHANGES-REQUESTED, 7 MAJOR (5 confirmed+fixed, 1 half-confirmed+fixed, 1 dispositioned — §4); `WI-460` CLOSED, the re-tier's verification COMPLETE | `2026-08-15j` | done, fixes overturnable |
 
 **Measured state:** `SN=27 SR=59 LLR=155 TC=150 orphans=0 integrity=0
 component-findings=0 interfaces=122 interface-findings=0 form-findings=2` (the
@@ -86,7 +87,24 @@ carry the reasoning.
 
 ## 4. Adversarial round 2 (cross-family, GPT-5.6 Sol via codex, read-only)
 
-<!-- ROUND2-VERDICT -->
+**Verdict: CHANGES-REQUESTED — 7 MAJOR.** Run on the settled tree after
+`WI-458`, `WI-459` and the second read, so its findings do not postdate their
+own fixes the way round 1's did. Every finding was re-verified by the author
+before acceptance. Full text on the record:
+[reviews/wi451-retier/ROUND-2-SOL.md](../reviews/wi451-retier/ROUND-2-SOL.md).
+Detail and reasoning: log `2026-08-15j`.
+
+| # | finding | disposition |
+|---|---|---|
+| F1 | `SR-140` still required the on-row digest anchor your `2026-08-15d` directive abolished — "never in a second registry", and same-commit anchoring an ERROR — while `LLR-173` claimed to implement it by copying whole files into a second tree in the approval commit | **FIXED.** Re-based onto the ruled contract; surviving obligations kept, the same-commit clause inverts (the copy MUST ride the approval), anti-laundering carried by the mirror invariant + seed rules. Held at 3 shalls |
+| F2 | `unanchored_findings` was defined and **called by nothing** — an approval could bypass the record with no live check to say so; the mirror invariant also exited silently on a snapshot file *deleted* in the commit | **FIXED (both).** Wired into `trace.py` as an always-on advisory; deletion arm added. The ERROR promotion stays at migration step 7 **by design** (§B4/§B6). Wiring it found a further defect: the vacuum was keyed on the scaffolded directory, so it reported all eight tiers missing in every fresh adopter repo |
+| F3 | `_claims_approval` read `Status` alone, so the four off-spine tiers snapshotted *because* their maturity cells are human-only were never drift-compared | **FIXED in the confirmed half** (tier-aware now, claimed sets derived from `derive_gate`'s ruled table). The SN half is **by design** — §B7, needs carry no maturity cell |
+| F4 | No per-row before/after evidence for this sitting | **RECORDED DECISION, not fixed.** The wave is a full re-read (`2026-08-14e` / sitting-3 §2.1), and git-walk baselines are meaningless for rows the re-tier restructured. Raw diff: `git diff bb4ac776..HEAD -- docs/requirements docs/test`. Per-row before/after resumes from your first seed (step 5 below) |
+| F5 | `SR-059`'s **migrated-repo** deletion obligation was dropped in the `WI-458` merge — only the fresh-scaffold half survived, so an adopter upgrade could keep the retired authority files and still pass | **FIXED.** Restored into `SR-148`'s acceptance; `LLR-060` names where each half discharges |
+| F6 | `IF-004`/`IF-031` owners pointed at SRs that do not own the perf-verdict contract | **FIXED** — both → `LLR-014`, the polymorphic cell's first LLR owners. **The deeper gap stays open for you:** no SR states a perf-regression obligation at all (§3, L2). No row minted |
+| F7 | `SR-163` and `SR-166` prescribed **conflicting outcomes** for the same manifest defects — an implementer could satisfy one only by violating the other | **FIXED.** `SR-166` sheds the two presence clauses (token-checked into `SR-163` first, so nothing vanished) and keeps destination materialization + dogfood parity |
+
+**Nothing in this round moved a `Status`, an `approval` or an attestation cell.**
 
 ---
 
