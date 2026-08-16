@@ -36,6 +36,63 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16a — the three v2 preconditions CLEARED, and the suite is
+  honestly green on this box for the first time the record can show.**
+  Executed as three worker agents (one opus, two sonnet) with the
+  coordinator integrating; one scoped commit each (`01018dcc` WI-461,
+  `525357f8` WI-462, `b5c4d22d` WI-463); two intermediate mis-staged
+  commits were rebuilt into those three before anything was recorded —
+  content byte-identical, unpushed throughout.
+  - **WI-461 — the oracle was RIGHT; git's clean filter was blind, and the
+    2026-08-15n caveat sharpens.** Git for Windows writes
+    `core.autocrlf=true` into the SYSTEM gitconfig; the `git_repo` fixture
+    pinned `user.*`/`commit.gpgsign` but not `autocrlf`, so `git add` folded
+    the forged CRLF relay to LF on the way INTO the object database — the
+    committed blob genuinely was relink-identical and the byte-exact chain
+    judged it correctly. `integrate.py`/`spec_move.py` UNCHANGED; the fix is
+    one repo-local pin, mechanism in the fixture docstring; the sibling
+    excuse test had been passing VACUOUSLY (its "CRLF checkout" was silently
+    LF) and both directions now test real bytes. NOT interpreter-dependent —
+    green on POSIX, red on any stock Windows install since WI-403 — so,
+    with the intake TypeError (3.13-only signature) and the census's own
+    fig line carrying a `/Users/...` interpreter path, the earlier
+    full-suite greens now have one coherent location: a POSIX box, where
+    all four floor defects are invisible. Latent gap filed as `WI-465`
+    (~20 more fixtures init repos without the pin).
+  - **WI-462 — the slug cap was one character under the wall, and it is
+    production's, not the tests'.** `dispatch._branch_for` derives branch
+    names from spec filenames built by `wi_convert.slugify` under
+    `SLUG_CHARS`; the gap-row titles that trip it are minted by production
+    too (`intake._census_drafts` over trace's orphan census). The failing
+    worktree path measured 259/260 characters at the old cap of 40 — every
+    long-titled WI in every downstream repo on default Windows walks this
+    cliff, which is why the fixture-only `core.longpaths` remedy was
+    rejected as greening the suite while leaving adopters exposed.
+    `SLUG_CHARS` 40→30 (~30 spare at observed depth, WI-id prefix intact,
+    nothing pins the length); the constant's comment carries the path
+    arithmetic and the one-machine humility. Proven serial, `-n auto`, and
+    `-n 2` with a deep basetemp.
+  - **WI-463 — `IF-130` declares the real seam and the one strict ERROR
+    clears.** `traj_status._stage_line` calls `derive_gate.bar_label(gate)`
+    — the ONE rendering home for the OI-30 D2 release-ceiling note — so the
+    status snapshot renders the withheld top bar identically to every other
+    surface; both component tags are correct, so retagging was ruled out
+    from the code. `Consumes` (Q2 coverage), `signal = discrete`,
+    `owner = SR-049` (no LLR names `bar_label` — LLR-050 pins `compute`,
+    LLR-139 pins `_pause_pending` — so the R4 fallback lands on the SR),
+    `req_refs = [SR-049, SR-159]` mirroring IF-084. Watermark IF 129→130.
+    `check_trajectory --strict`: ZERO errors on this tree.
+  - **Gates (measured on `b5c4d22d`; working tree carried only this record
+    commit's own surfaces):** full suite **2541 passed / 13 skipped / 0
+    failed** in 0:06:49
+    <!-- fig: cmd="python -m pytest -q -n auto" rev=b5c4d22d -->
+    — the four pre-existing reds of `2026-08-15n` are all cleared, on the
+    repo's own `.venv` 3.11.9; smoke tier 1179 passed / 5 skipped
+    <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b5c4d22d -->;
+    check_docs OK (417 docs, 1234 links, 0 broken); spine unchanged
+    (`SR=60 LLR=155 TC=150 orphans=0 integrity=0 interfaces=123`); gate
+    unchanged `DevBar-Reqs`. The adversarial opus round over this whole
+    series is the next act and gets its own entry.
 - **2026-08-15p — RE-TIER V2 RULED (owner, in session): the one-decision
   tiering model, its two advisories, the IF end-state direction, and the
   sequencing — v2 before the sign/seed.** Grown from the 2.7(a) grounding

@@ -128,10 +128,13 @@ post-`2026-08-15o`).
 
 ## 5. Preconditions (clear before S3 opens)
 
-1. **WI-463** — strict-clean `check_trajectory` (quick).
-2. **WI-462** — the MAX_PATH xdist deaths (quick).
-3. **WI-461** — the CRLF-relay conviction red (P2, medium). The full suite
-   must be honestly green on the repo's own venv before v2's slice closes
-   start quoting it.
+1. **WI-463** — strict-clean `check_trajectory` (quick). **CLEARED
+   2026-08-16 (`b5c4d22d`, log `2026-08-16a`).**
+2. **WI-462** — the MAX_PATH xdist deaths (quick). **CLEARED 2026-08-16
+   (`525357f8`).**
+3. **WI-461** — the CRLF-relay conviction red (P2, medium). **CLEARED
+   2026-08-16 (`01018dcc`): the oracle was right, the fixture was blind
+   (system `core.autocrlf`), and the full suite is honestly green on this
+   box — 2541/13/0, log `2026-08-16a`.**
 4. S1+S2 land before S3 so the rewording sessions run WITH the advisories
-   that police them.
+   that police them. **OPEN — this is now v2's first act.**
