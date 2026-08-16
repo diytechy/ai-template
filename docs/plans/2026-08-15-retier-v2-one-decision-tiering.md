@@ -8,6 +8,23 @@ own review.
 
 ---
 
+## 0. Execution state (the cursor — update at every slice close)
+
+| slice | state |
+|---|---|
+| Preconditions (WI-461/462/463) | **CLEARED** 2026-08-16, adversarially reviewed (log `2026-08-16a`/`b`) |
+| S1 — rules land in prose | **NEXT OPEN** — nothing executed |
+| S2 — the two advisories | not started (may ride the same session as S1) |
+| S3 — HOLDS-bundle reword | BLOCKED on S1+S2 by ruling |
+| S4 — offender splits | not started |
+| S5 — folded sitting-desk items + owner re-point (incl. IF-130) | not started |
+| S6 — settle, second read, cross-family round, ONE sitting | LAST, exactly once |
+
+A resuming session: read this plan whole, then execute the NEXT OPEN slice
+(and the following one if it fits) to the commit bar, update this table and
+`docs/status.md`'s pointer, and log the slice. Never start S3 without S1+S2
+landed; never take the adversarial round before the settle; never sign.
+
 ## 1. The rulings (owner, in session, 2026-08-15)
 
 1. **R1 — one decision per row, one home per method (the owner's wording).**
