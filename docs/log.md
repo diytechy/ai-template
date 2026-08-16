@@ -36,6 +36,71 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16b — the ADVERSARIAL ROUND over the precondition series: fixes
+  sound, records corrected, one blind half closed.** Opus, adversarial by
+  instruction, over `93dc4c66..1104f797`; every finding re-verified before an
+  edit. **Verdict: the three fixes are technically sound, every pytest figure
+  reproduces, and the commit rebuild is byte-identical and unpushed — the 11
+  CONFIRMED findings are record- and coverage-level.** Dispositions, all in
+  this commit:
+  - **F1 (MAJOR)** — the series CREATED a WARN and blamed it on the wrong
+    lane: `traj_status.py`'s `Contracts:` line now declares IF-130 (the
+    in-tree precedent is baseline_snapshot's line gaining IF-128/129 at
+    `2026-08-15h`), and WI-463's close is corrected — the wi455 class is
+    modules with NO `Contracts:` line, which traj_status never was.
+  - **F2 (MAJOR)** — IF-130's notes cited a nonexistent "R4 fallback"; R4
+    rules the OPPOSITE direction (owners point at design tier). Re-cited to
+    the actual governing rule (`2026-08-15e` step 5: the SR answering for
+    the seam's contract) and the row is named on v2 S5's re-point worklist.
+    With it: **F8** (the LLR survey now names all four derive_gate rows and
+    drops the human-surfaces overstatement of SR-049), **F9** (`req_refs`
+    gains SR-070, the consuming side IF-084 leads with), **F10** (the mint
+    citation re-points `2026-08-15n`→`2026-08-16a`).
+  - **F3 (MAJOR)** — WI-462's cap governs only the MINTED filename path;
+    `dispatch._branch_for` uses the on-disk stem verbatim, so a hand-filed
+    spec could re-open the cliff unwatched. Shipped:
+    `check_trajectory.branch_length_findings` — warn-only, pre-branch states
+    only (queued/draft/deferred), ceiling id+`-`+`SLUG_CHARS` — with
+    `_SLUG_CHARS_MIRROR` deliberately duplicated (an import for one number
+    would mint a new cross-component seam) and pinned equal by
+    `test_rule_sync`; behavior test beside the other trajectory rules. The
+    warn fired immediately on TWO of our own queued specs, each one
+    character over (WI-448, WI-452 — filenames shortened, the two archive
+    links repaired; a pure rename does not re-date the row clock by the
+    WI-362 measurement, so no staleness side effects).
+  - **F4/F5 (minor)** — WI-465 rescoped on measurement: the e2e scaffold is
+    ALREADY IMMUNE (bootstrap ships `.gitattributes` with
+    `* text=auto eol=lf`, which overrides `core.autocrlf` outright — so
+    scaffolded adopter repos are covered, narrowing WI-461's exposure claim
+    to non-scaffolded fixtures); the sweep is 28 sites, not ~20, including
+    FIVE near-verbatim `git_repo` clones of which only one got the pin; the
+    shipped `.gitattributes` mechanism is to be evaluated as the remedy
+    before 28 config pins.
+  - **F6 (minor)** — `2026-08-16a`'s check_docs figure (417/1234) came from
+    this coordinator's own `--ignore`-flagged invocation, unmarked, and does
+    not reproduce under the canonical `check.py` invocation. The log is
+    append-only, so the correction lives here: the canonical figure on that
+    tree is **415 doc(s), 1232 intra-repo link(s), 0 broken**
+    <!-- fig: cmd="python project-trajectory/scripts/check_docs.py --root ." rev=b5c4d22d -->,
+    and "0 broken" — the load-bearing half — held in both invocations.
+  - **F7 (minor)** — the dashboard's "state as of" stamp lags one commit by
+    construction (`traj_parse._asof` reads the last watched-path commit at
+    regeneration time); noted as inherent, self-heals at every regen.
+  - **F11 (minor)** — the claim oracle's docstring gains the SCOPE OF
+    "CONTENT" paragraph the WI-461 lesson owed it: the compare is over
+    COMMITTED BLOBS, so the repo's own clean filters define what content is.
+  - **THE ATTACKS THAT FAILED, on the record:** production is NOT fooled the
+    way the test was (reproduced in scratch, both directions — an EOL edit
+    erased by the victim's own clean filter never enters the commit, and a
+    commit-scoped oracle is on the correct side of the filter); no false
+    convictions on CRLF-in-ODB repos (git does not renormalize an
+    already-CRLF blob); slug collisions are impossible (the unique id
+    prefixes the filename); nothing pins 40; 53-char legacy filenames
+    round-trip `--verify` untouched; IF-130's shape trips no schema rule.
+  - Ratchet re-stamps with reasons in place: check_trajectory.py 4165→4208,
+    integrate.py 2525→2532. Registries after the round: `SR=60 LLR=155
+    TC=150 orphans=0 integrity=0 interfaces=123`; `check_trajectory
+    --strict` clean; gate unchanged `DevBar-Reqs`.
 - **2026-08-16a — the three v2 preconditions CLEARED, and the suite is
   honestly green on this box for the first time the record can show.**
   Executed as three worker agents (one opus, two sonnet) with the

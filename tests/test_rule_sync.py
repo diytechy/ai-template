@@ -1083,3 +1083,15 @@ def test_is_drifted_has_exactly_ONE_home():
             if isinstance(node, ast.FunctionDef) and node.name == "is_drifted":
                 homes.append(path.name)
     assert homes == ["baseline_snapshot.py"], homes
+
+
+def test_branch_length_ceiling_mirrors_wi_convert_slug_chars():
+    """check_trajectory._SLUG_CHARS_MIRROR is a DELIBERATE copy of
+    wi_convert.SLUG_CHARS (2026-08-16b adversarial round, F3): the checker is
+    stdlib-pure and importing wi_convert just to read a number would mint a new
+    cross-component seam. This pin is what makes the duplication drift-DETECTABLE
+    rather than drift-representable — if SLUG_CHARS moves, this fails and both
+    homes move together."""
+    ct = load_script("check_trajectory")
+    wc = load_script("wi_convert")
+    assert ct._SLUG_CHARS_MIRROR == wc.SLUG_CHARS

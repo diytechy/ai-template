@@ -782,6 +782,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `dead_dependency_findings(wis)` | Surface a live WI that hard-depends on a `cancelled` predecessor (WI-267). |  |
 | `knowledge_pack_findings(root, wis)` | The WI-388 pack-citation warn (consumer 3 of the intake context block) |  |
 | `backlog_staleness_findings(root, wis)` | WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance). |  |
+| `branch_length_findings(root)` | Warn-only (2026-08-16b adversarial round, F3): a PRE-BRANCH spec whose |  |
 | `staged_findings(root)` | The no-validation-delta warn (S0 ruling #2 corollary; warn-first). |  |
 | `spine_cell_class(csv_path, column)` | `"traced"` for a column §A5.1 rules traceability, else `"ratified"`. |  |
 | `split_changed_cells(csv_path, id_col, head, row)` | One row's changed cells, split into the §A5.1 halves with their |  |
@@ -1437,7 +1438,7 @@ Imports (internal): `traj_graph`
 ### `scripts/traj_status`
 _The --status snapshot + pending projection (WI-280 split of gen_trajectory.py)._
 Imports (internal): `baseline_snapshot`, `check_trajectory`, `derive_gate`, `traj_parse`
-Contracts (interfaces): IF-084, IF-125
+Contracts (interfaces): IF-084, IF-125, IF-130
 
 | Public item | Summary | Implements |
 |---|---|---|

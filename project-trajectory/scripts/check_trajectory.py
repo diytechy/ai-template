@@ -2940,6 +2940,48 @@ def backlog_staleness_findings(root, wis):
     return out
 
 
+# Mirror of wi_convert.SLUG_CHARS, duplicated here DELIBERATELY: this module is
+# stdlib-pure with no wi_convert import, and adding one would mint a new
+# cross-component seam just to read a number. tests/test_rule_sync.py pins the
+# two equal, so drift is detectable rather than representable (the WI-462
+# adversarial round's F3: the cap governs only the MINTED filename path, and a
+# hand-filed spec could re-open the Windows MAX_PATH cliff unwatched).
+_SLUG_CHARS_MIRROR = 30
+
+
+def branch_length_findings(root):
+    """Warn-only (2026-08-16b adversarial round, F3): a PRE-BRANCH spec whose
+    filename stem exceeds what the minted path guarantees. dispatch derives the
+    git branch from the on-disk stem VERBATIM (never re-slugified), so
+    wi_convert.SLUG_CHARS caps only specs that were minted — a hand-filed
+    queued/draft/deferred spec with a longer slug walks the same Windows
+    MAX_PATH cliff WI-462 closed (measured there at 259/260 characters).
+    Terminal and active states are exempt: their branch either exists already
+    or never will. Never joins the exit code, even under --strict — the same
+    warn-tier contract as every advisory in this module (WI-129/132)."""
+    out = []
+    for state in ("queued", "draft", "deferred"):
+        d = Path(root) / "docs" / "work" / state
+        if not d.is_dir():
+            continue
+        for p in sorted(d.glob("WI-*.md")):
+            m = re.match(r"(WI-\d+)-", p.stem)
+            if not m:
+                continue  # the filename-carries-its-id rule reports that shape
+            ceiling = len(m.group(1)) + 1 + _SLUG_CHARS_MIRROR
+            if len(p.stem) > ceiling:
+                out.append(
+                    "{}: filename stem is {} chars (ceiling {}) — dispatch "
+                    "derives the git branch from this stem verbatim, and past "
+                    "the minted cap (wi_convert.SLUG_CHARS) a hand-filed name "
+                    "re-opens the Windows MAX_PATH cliff WI-462 closed; "
+                    "shorten the slug, keep the id prefix".format(
+                        m.group(1), len(p.stem), ceiling
+                    )
+                )
+    return out
+
+
 def _tests_dir(root):
     """The declared tests root (docs/stack.ini [paths] tests), default `tests` —
     the surface a real validation-logic change would touch."""
@@ -4085,6 +4127,7 @@ def main():
         backlog_staleness_findings(root, wis)
         + knowledge_pack_findings(root, wis)
         + queue_conflict_findings(wis)
+        + branch_length_findings(root)
     ):
         print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
     # The SSOT coherence layer: R-A is always an error; R-E, the

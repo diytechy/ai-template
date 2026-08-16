@@ -1035,3 +1035,26 @@ def test_a_spec_that_names_no_specref_still_parses(tmp_path):
 # home. The folder form has no header to carry a stale column, and an unknown
 # frontmatter KEY is simply not read into the 17-key row — `parse_spec_row`'s own
 # contract, pinned in test_wi_folder_loaders.)
+
+
+def test_branch_length_warns_on_prebranch_specs_only(tmp_path):
+    """The hand-filed-spec half of the MAX_PATH cliff (2026-08-16b, F3):
+    dispatch derives the branch from the on-disk filename stem verbatim, so a
+    queued/draft/deferred spec past the minted ceiling warns — while terminal
+    and active states are exempt (their branch exists or never will), and the
+    ceiling itself sits exactly at id + '-' + SLUG_CHARS."""
+    ct = load_script("check_trajectory")
+    long_slug = "x" * (ct._SLUG_CHARS_MIRROR + 1)
+    at_cap = "y" * ct._SLUG_CHARS_MIRROR
+    for state, name in [
+        ("queued", f"WI-901-{long_slug}.md"),
+        ("queued", f"WI-902-{at_cap}.md"),
+        ("complete", f"WI-903-{long_slug}.md"),
+        ("active", f"WI-904-{long_slug}.md"),
+    ]:
+        d = tmp_path / "docs" / "work" / state
+        d.mkdir(parents=True, exist_ok=True)
+        (d / name).write_text('+++\nid = "WI-90x"\n+++\n', encoding="utf-8")
+    out = ct.branch_length_findings(tmp_path)
+    assert len(out) == 1, out
+    assert "WI-901" in out[0] and "MAX_PATH" in out[0]

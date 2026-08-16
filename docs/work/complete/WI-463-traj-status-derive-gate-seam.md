@@ -18,14 +18,18 @@ surface render the withheld top bar identically. Both component tags are
 correct (`components.toml`: CMP-006 lists derive_gate, CMP-009 lists the
 traj_* modules), so retagging was ruled out from the code. Row minted
 `Consumes` (a Q2 coverage declaration), `signal = discrete` (closed-set bar
-name in, name or name+fixed-suffix out), `owner = SR-049` — derive_gate's
-own SR; no LLR names `bar_label` (LLR-050 pins `compute`, LLR-139 pins
-`_pause_pending`), so ownership falls to the SR per the R4 fallback —
-`req_refs = [SR-049, SR-159]`, mirroring sibling IF-084's shape.
-`check_trajectory --strict`'s one clean-tree ERROR is GONE; the expected
-follow-on WARN (no `Contracts:` docstring line declares IF-130) is the
-standing class the wi455 lane owns. Watermark IF 129→130. PROVISIONAL,
-overturnable at the sitting like every drafted row.
+name in, name or name+fixed-suffix out), `owner = SR-049` under the
+2026-08-15e step-5 rule — the SR answering for the seam's contract; none of
+derive_gate's FOUR LLRs names `bar_label` (LLR-050/147/148/157), so the row
+joins v2 S5's design-tier re-point worklist — `req_refs = [SR-049, SR-070,
+SR-159]`, SR-070 being the consuming side IF-084 leads with.
+`check_trajectory --strict`'s one clean-tree ERROR is GONE, and
+`traj_status.py`'s `Contracts:` line declares IF-130. Watermark IF 129→130.
+PROVISIONAL, overturnable at the sitting like every drafted row.
+(CORRECTED at the adversarial round, log `2026-08-16b`: the close first
+shipped without the `Contracts:` declaration and misattributed the
+resulting WARN to the wi455 class; the ownership note cited a nonexistent
+"R4 fallback" — R4 rules the opposite direction — and the wrong log entry.)
 
 ## Context
 

@@ -4,12 +4,15 @@ The docs/status.md GENERATED STATUS splice (WI-202), the pending-owner-
 actions derivation gen_open_items renders (WI-234), and the generated
 Ready-frontier lines. The facade re-exports, so consumers are unchanged.
 
-Contracts: IF-084, IF-125 — the seams this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml): IF-084 is IF-056's
+Contracts: IF-084, IF-125, IF-130 — the seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml): IF-084 is IF-056's
 derivation-loader read of check_trajectory, as held by the sibling that now
 carries the import; IF-125 is the READ-ONLY consumption of the `last_approved`
 baseline (IF-123), so the generated surface reports pending amendments against
-what was blessed rather than against HEAD, and never refreshes the snapshot.
+what was blessed rather than against HEAD, and never refreshes the snapshot;
+IF-130 is `_stage_line`'s call to derive_gate.bar_label, the ONE rendering
+home for the release-ceiling note, so this surface can never word the
+withheld top bar differently from the others.
 """
 
 import re

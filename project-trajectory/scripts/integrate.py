@@ -396,6 +396,13 @@ def _abandoned_claim(root, wi_ids, branch):
     because the regeneration this claim folds in lands on undeclared paths. It
     never deletes something it should not; it declines to re-cut something it
     could have. Same declaration `audit` reads.
+
+    SCOPE OF "CONTENT" (the WI-461 lesson): every compare below runs over
+    COMMITTED BLOBS (`_blob_bytes`), so the repo's own clean filters define
+    what content is — an EOL-only working-tree edit that `core.autocrlf`
+    normalizes away never enters the commit and is rightly invisible to a
+    commit-scoped oracle (scaffolded repos pin this via the shipped
+    .gitattributes' `* text=auto eol=lf`).
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     tip = _rev(root, "refs/heads/" + branch)

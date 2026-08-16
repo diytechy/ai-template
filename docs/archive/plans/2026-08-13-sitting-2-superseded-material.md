@@ -718,7 +718,7 @@ declaration" lands as the **SESSION entity row** in `external.toml` (decision
 
 ### 5.3 WI-448 — common-module inversion program (OI-16 / D-8)
 
-[`../work/queued/WI-448-common-module-inversion-program.md`](../../work/queued/WI-448-common-module-inversion-program.md)
+[`../work/queued/WI-448-common-module-inversion.md`](../../work/queued/WI-448-common-module-inversion.md)
 · priority 3 · `buildtier = strong` · spine · `needs = ["WI-441", "~WI-447"]`
 (both complete).
 
@@ -777,7 +777,7 @@ sitting unblocks — and its central numbers are superseded.**
 
 ### 5.5 WI-452 — LLR-165 resync-helper resurface
 
-[`../work/queued/WI-452-llr-165-resync-helper-resurface.md`](../../work/queued/WI-452-llr-165-resync-helper-resurface.md)
+[`../work/queued/WI-452-llr-165-resync-helper.md`](../../work/queued/WI-452-llr-165-resync-helper.md)
 · priority 3 · medium · `safety_class = ordinary` · workstream `docs` ·
 `sr_refs = ["SR-147"]` — the only queued row carrying an SR ref.
 

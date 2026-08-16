@@ -104,7 +104,8 @@ post-`2026-08-15o`).
   owner rules which at the sitting if not before), TC-123's retired-vocabulary
   method cell, LLR-014.sr_refs + TC-014.verifies gaining SR-167, and the
   IF owner re-point pass toward design-tier rows (R4's precondition; the
-  `this_project` disagreement advisory lands with it).
+  `this_project` disagreement advisory lands with it; `IF-130`'s SR-049
+  owner is on this worklist by its own note).
 - **S6 — settle and hand to the sitting.** Regenerate everything (brief, OKF,
   dashboards, gate), run the second top-down read on the settled layer, take
   the cross-family adversarial round AFTER the settle (the WI-451 lesson: a
