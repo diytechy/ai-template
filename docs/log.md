@@ -36,6 +36,25 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15o — SR-167 re-worded to the harness-verdict level, on the
+  owner's 2.7(a) grounding question.** The owner asked why some SRs name
+  scripts ("check.py shall run…") while others stay behavior-level; the ruled
+  answer is sitting-1 **2.7(a)** (log `2026-08-13d`: *an SR may name an
+  artifact only where it is a DECLARED BOUNDARY CROSSING*) + the §1R.2 B-05
+  row's declared artifact list (check.py, bootstrap.py + MAPPING,
+  agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py,
+  the hooks, the launchers — their CLI contracts ARE the crossing's IF
+  definitions, the adopter-typed verdict observable) + the census's HOLDS
+  class applying exactly that license (SR-006/SR-007/SR-033 all HOLDS on it),
+  while internal modules demoted. Nothing was lost or overruled — but
+  re-reading the sweep's own mint against the discriminator found it
+  NONCONFORMING: `check_perf.py` is NOT on the declared list (it is the
+  harness's internal perf step, IF-004 `check_perf -> check`). SR-167's
+  requirement cell now states the observable the adopter sees — the delivered
+  harness fails its bar on an in-tier hard-gated breach — and the comparator
+  is named only in acceptance as the current carrier, the SR-157/SR-158
+  pattern. Text-only on a `Drafted` row minted the same day; no Status,
+  `approval` or attestation cell moved.
 - **2026-08-15n — the §3 JUDGEMENT SWEEP: five owner rulings executed, one
   finding INVERTED before it could be fixed, and the suite run on the declared
   floor for the first time the record can show.** *Executed under the owner's

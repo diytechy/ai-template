@@ -117,7 +117,10 @@ rulings (log `2026-08-15n`); what each became:**
   `Drafted`** (both breach arms — one delivered exit contract, the SR-157
   one-verdict shape); IF-004/IF-031 `req_refs` gained it. **LLR-014.sr_refs
   and TC-014.verifies re-points are the sitting's** — both rows are `Approved`
-  and amending an attested cell rides no sweep.
+  and amending an attested cell rides no sweep. (Re-worded same day to the
+  harness-verdict level under ruling 2.7(a) — the mint had named
+  check_perf.py, which is not on the §1R.2 declared-artifact list; log
+  `2026-08-15o`.)
 
 Carried from earlier in the session: **B-04's `carries` may need widening**
 (X1's honest strain, `2026-08-15b`); **B-04 is only half realized** and no
