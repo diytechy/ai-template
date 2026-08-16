@@ -1,5 +1,15 @@
 # Resume brief — the SR re-tier, the interface model, and the hardware crosscheck
 
+> **ARCHIVED 2026-08-16 — DO NOT RESUME FROM THIS FILE.** §0's worktree table
+> and §4's still-open list are both wrong now: the lane it calls unmerged is
+> merged, its five findings are ruled, and its sequencing question is answered.
+> The live path is
+> [`../../plans/2026-08-15-review-package.md`](../../plans/2026-08-15-review-package.md)
+> → [sitting-3 §0.4](../../plans/2026-08-13-sitting-3-spine-verification.md).
+> Kept for §2 (the hardware crosscheck's recorded conclusions and its honest
+> limit) and §5 (the process traps, each of which actually bit) — the
+> disposition is in [`README.md`](README.md).
+
 **Written 2026-08-15 to be resumed from a cold session.** Everything needed to
 pick up is here or pointed at precisely. Read this before touching anything.
 

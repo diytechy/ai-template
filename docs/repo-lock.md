@@ -928,8 +928,20 @@ required.
    scaffolded and self-applied) — in `scripts/`, not at root — so item 2 is a
    **placement** change, clearly SR-tier by the sitting's own demotion test.
    Linux double-click has no defined desktop contract on any profile.
-4. **Item 5 changes machinery:** the "hat" roster needs a declared home and
-   `trace.py --ratify` must inject it — a WI, not a prose edit.
+4. ~~**Item 5 changes machinery:** the "hat" roster needs a declared home and
+   `trace.py --ratify` must inject it — a WI, not a prose edit.~~
+   **DISCHARGED.** The roster has its declared home
+   (`docs/requirements/hats.toml`, shipped template alongside) and its
+   injection — at the plan-brief/prompt layer (`plan_briefs.py`, `prompts.py`),
+   not `trace.py --ratify`, which is the correct seam because the decomposer
+   prose is what wears the hat. **The half that was still broken closed
+   2026-08-16:** hat `applies_when` evaluated work-item tags while SN rows
+   carried none, so a governing hat was structurally blind to its own need
+   (finding R-2 — log `2026-08-16k`); SN rows gained `tags` and 17 needs are
+   tagged (`2026-08-16l`), and `hats.py audit` is now the standing SN×hat sweep
+   (`2026-08-16m`). **Left open for the sitting, deliberately:** the three
+   provisional charters and the always-on ACCESSIBILITY/PERFORMANCE ruling
+   (`2026-08-16n`) — sitting-3 §0.4, not this file.
 5. **Item 6 is the big one** and lands on the **unruled components model**
    (§0). It reorders the process spine (SRs at DevBar-Reqs, architecture at DevBar-Tests today).
    It cannot be adopted as a sentence; rule it with components.
@@ -962,10 +974,19 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    actions and job names, never a `run:` line. The cheap half — one definition
    of passing — is a stdlib string search. Proving CI≡local on all inputs, and
    anything about an adopter's copy, is not worth mechanizing.
-2. **SR-126 (`Verified`) already PERMITS script names in spine normative
-   text** — its acceptance carves out "a script name, artifact path, rubric or
-   sibling spine id does not [open a window]". §8.3 item 1 as a mechanical rule
-   contradicts a live enforced requirement. Rule them together.
+2. ~~**SR-126 (`Verified`) already PERMITS script names in spine normative
+   text**~~ — **DISCHARGED 2026-08-16.** The "rule them together" call was
+   RULED as **R2** (log `2026-08-16c`; the rule's one home is PROCESS.md §3) and
+   EXECUTED across the HOLDS bundle (`2026-08-16e`): a requirement cell never
+   names a concrete artifact — capability/artifact-class voice at SR tier,
+   concrete filenames only in `AcceptanceCriteria` as rewritable current-carrier
+   evidence, or at the LLR tier. The contradiction is gone in both directions:
+   SR-126's id itself retired with the re-tier, and `sr_artifact_advisories`
+   (`2026-08-16d`) now polices the rule warn-first. **One residue, and it is the
+   sitting's rather than this file's:** the standards memo (`2026-08-16j`) finds
+   R2's absolute form stricter than every surveyed body, so whether the
+   acceptance cells' current-carrier filenames move down to the trace tier is a
+   live question on the sitting desk (sitting-3 §0.4).
 3. **`gate_policy` names two different things** — the retired config enum *and*
    a live runtime label (`human-held`/`loop-held`). It generated two false
    stale-text defects inside one analysis pass. Recommend renaming the runtime

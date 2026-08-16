@@ -17,18 +17,20 @@ list to put to a row **before** it lands.
 
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one
-`shall`; a requirement cell never names a concrete artifact; a rationale carries
-its own reason) and §4 (gates, verification methods). Read the rule there; use
+`shall`; a requirement cell names a concrete artifact only where its rationale
+records why that artifact must be constrained; a rationale carries its own
+reason) and §4 (gates, verification methods). Read the rule there; use
 this file to decide whether your row obeys it.
 
 ## The frame: solution-freedom is tier-relative
 
-The rule that stops most arguments: **which artifact carries a capability is
-trace data, categorically** — not requirement text and not acceptance criteria.
-Its homes already exist: the LLR `Module` cell, the TC `Evidence` cell, the
-`Implements:` back-links in code, and registry ids (an interface row, a
-component row). A registry **id** is a safe anchor where a filename is not: the
-id is stable while its contents are rewritable.
+The rule that stops most arguments: **keep the SR independent of filenames.**
+Record where a capability currently lives in the trace fields that already
+exist for it — the LLR `Module` cell, the TC `Evidence` cell, the `Implements:`
+back-links in code, or a registry id (an interface row, a component row) — not
+in requirement text and not in acceptance criteria. A registry **id** is a safe
+anchor where a filename is not: the id is stable while its contents are
+rewritable.
 
 And no published body *bans* concrete names — every one gates them on **recorded
 justification** (INCOSE R31 "unless there is rationale for constraining the
@@ -37,8 +39,9 @@ states a method of implementation, the rationale should state why"). DO-178C put
 low-level requirements in the Design Description beside the architecture and
 defines them as directly implementable — **naming design elements at LLR tier is
 the expected shape, not an exception**. So: SR = delivered-capability voice,
-LLR = solution-specific by design, artifact identity = trace tier. Route and
-justify leakage; a rule that forbids it just gets bent silently.
+LLR = solution-specific by design, and the artifact's identity belongs in the
+trace fields listed above. Route and justify leakage; a rule that forbids it
+just gets bent silently.
 
 ## 1. At SN intake — answer these before the need is approved
 

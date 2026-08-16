@@ -36,6 +36,43 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16o — the CROSS-FAMILY ROUND (GPT-5.6 Sol via codex, medium,
+  read-only) — CHANGES-REQUESTED, 22 findings dispositioned; the sitting
+  surfaces refreshed; two plans archived.** The round the v2 close still
+  owed (its own `2026-08-16i` recorded the same-family limitation) ran on
+  the owner's instruction with a dual charter: adversarial correctness +
+  first-time-reader clarity. Verdict verbatim + full disposition table:
+  [reviews/retier-v2/ROUND-SOL.md](reviews/retier-v2/ROUND-SOL.md).
+  **APPLIED (14):** SN-006's need text rewritten plain with all four
+  obligations preserved and its acceptance gaining the bound clause (the
+  fail-open-vs-bounded tension with SR-043 recorded in that row's
+  rationale as the sitting's, behavior untouched); machine-readable
+  amendment markers (`attestation = "pending"` + `amended`) on the 17
+  amended SN rows, the header block cut to two sentences — the SN-tier
+  marker gap finding now has a working answer for the sitting to bless;
+  the silence taxonomy rewritten as three verified-true cases (two of
+  Sol's three were stale against the live audit and corrected from
+  evidence); PERFORMANCE's ask made conditional in both rosters; four
+  hat-derived labels de-overclaimed (SR-015 to its SN-002 basis, SR-033
+  narrowed, SR-024's coverage-vs-bite honesty fix, SR-111/112 re-grounded
+  after Sol's core claim was REFUTED — C-MNT-7 exists verbatim);
+  SR-028's acceptance gains the typed-outcome assertion; SR-169 rewritten
+  cold-readable; PROCESS.md §3's R2 bullet opens rationale-gated (+93,
+  re-stamped — aligning the master with the standards research);
+  the skill's jargon plained; both rosters' stale counts fixed.
+  **QUEUED for the sitting (6):** the SR-040/SR-046/SR-170 split
+  proposals, SR-026's acceptance-minted obligations, SR-129/SR-147 voice
+  depth — each a live-row re-tier no round applies unilaterally. SR-053's
+  circularity: Sol independently confirmed the already-open call from a
+  cold read. **OVERRULED (1):** the SR-148 split re-litigates the standing
+  S4 re-stamp ruling. In the same window: sitting-3 gained its §0.4 desk
+  (8 open calls, 4 countersign items, the ledger reconciled 9-of-9);
+  status.md rewritten forward-only (249 → 176 lines, history by log id
+  only); repo-lock §8.4-f2 and §8.3-c4 struck with their discharging ids;
+  resume-brief and interface-model-proposal ARCHIVED with dispositions.
+  Full unfiltered suite (posix-shell gate satisfied): 2560 passed /
+  13 skipped / 0 failed, 553s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=0435f996 -->.
 - **2026-08-16n — ACCESSIBILITY and PERFORMANCE ruled `always` (owner: "in
   general those should always be considered; the cleanest option") — the
   switched-off-hat residue dissolves.** Both rosters flip identically (no

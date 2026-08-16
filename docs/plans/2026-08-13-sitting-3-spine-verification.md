@@ -1,5 +1,19 @@
 # Sitting 3 — verify the adapted spine
 
+> **RE-STAMPED 2026-08-16 — READ THIS BANNER, THEN §0.4.** Everything in §0.1,
+> §0.2 and §2.1 was measured on **2026-08-14**, before the re-tier merged and
+> before re-tier v2 ran; **none of those figures survived the day** — re-derive
+> at convening from [`../gate`](../gate)'s basis line and the regenerated brief,
+> never from a table here. What changed structurally: **the decision ledger
+> (§0.3) is 9 of 9 RULED**, so this sitting is owed no ledger ruling at all.
+> What it is owed is the **ATTESTATION** — the LLR/TC draft ratifications, the
+> re-attest window, and the status-vocabulary sequence's remainder (§3, whose
+> steps 1–5b are executed) — plus the calls that arrived *after* this ledger was
+> written. **[§0.4](#04-what-the-2026-08-16-work-adds-to-this-desk) is the desk:
+> what today's work put on it, which calls are genuinely open, and which the
+> sitting only countersigns.** The procedure that runs the sitting is
+> [`2026-08-15-review-package.md`](2026-08-15-review-package.md) §5.
+
 **Status: PARTIALLY MET — §0 is the measured scoreboard (2026-08-14).** The
 build half of sitting 2's rulings is executed; **slice 2 of the re-tier is
 deliberately parked on this sitting's census ratification**, so the sitting
@@ -55,9 +69,10 @@ its honest remainder, sequenced behind this sitting's census ruling.
 > only of trunk**: slice 2 is no longer parked (its layers landed on an unmerged
 > lane), the `Modified` rows have been touched, and `Area` is retired for the
 > closed `Aspect` vocabulary there. They flip the moment that lane merges.
-> Re-measure this table at convening rather than reading it — and see
-> [2026-08-15-resume-brief.md](2026-08-15-resume-brief.md) for what actually
-> changed.
+> Re-measure this table at convening rather than reading it — and see the log's
+> `2026-08-15*`/`2026-08-16*` Decisions for what actually changed. (The resume
+> brief this note used to point at was archived 2026-08-16 as superseded:
+> [`../archive/plans/2026-08-15-resume-brief.md`](../archive/plans/2026-08-15-resume-brief.md).)
 
 | # | State | Measured fact |
 |---|---|---|
@@ -72,6 +87,13 @@ its honest remainder, sequenced behind this sitting's census ruling.
 | 9 | **MET** | SN-007's `need` reads *"it stays traceable and tested through every change"* — verified verbatim 2026-08-14 |
 
 ### 0.2 The census — what this sitting ratifies FIRST
+
+> **SUPERSEDED BY EXECUTION 2026-08-15/16 — this sitting no longer ratifies the
+> census; it reads the result.** Both "census calls only this sitting can make"
+> below were **RULED 2026-08-14b/c** (ledger rows 1–3); slice 2 executed and
+> **merged to trunk** (`2026-08-15b`…`f`), and re-tier v2 then re-tiered the
+> surviving layer again under R1/R2 (`2026-08-16c`…`i`). Kept whole for the
+> reasoning and the per-row ledger it points at — **not for its arithmetic**.
 
 Full per-row ledger: [`2026-08-14-wi451-slice1-sr-census.md`](2026-08-14-wi451-slice1-sr-census.md)
 (all 148 rows: crossing · classification · reason class · B-05 capability ·
@@ -138,13 +160,24 @@ vocabulary/verification program; 8–9 are sitting-2 re-lands whose conditions
 are now met. Signing the §2.1 window is an ATTESTATION, not a decision, and
 comes only after slice 2's ledger exists.)*
 
+> **RECONCILED 2026-08-16 — ALL NINE ARE RULED; each row carries its closing
+> id.** Rows 1–4 and 9 closed at the 2026-08-14 sitting-adjacent rulings, rows
+> 6–7 at the OI-30 rulings (`2026-08-15k`/`l`, executed `2026-08-15m`), row 8
+> re-landed and **left this sitting entirely** (`2026-08-15f`), and row 5's
+> program is executed through its step 5b (`2026-08-15g`/`m`) with only the
+> signing half outstanding. **Nothing is deleted from this table** — a ruled row
+> is the record of what was ruled and by which entry. **The consequence for the
+> sitting: it owes no ledger ruling.** What it owes is the attestation (§2.1's
+> window, re-derived) plus the calls in **§0.4**, which arrived after this
+> ledger was written and therefore appear nowhere in it.
+
 | # | Decision | Recommendation on record | Depth |
 |---|---|---|---|
 | 1 | **Ratify the census** — the 148-row classification (34 / 15 / 73 / 26) as the shape slice 2 executes | **RULED 2026-08-14b — RATIFIED** (owner: iteration expected at this scope; overhead direction approved) | §0.2 · [the ledger](2026-08-14-wi451-slice1-sr-census.md) |
 | 2 | **The 26 tombstones** | **RULED 2026-08-14b — DELETE per D-4**; follow-through named in §0.2, executed by slice 2 | §0.2 call 1 |
 | 3 | **The four package-wide B-05 properties** — SR-031 (policy readers agree) · SR-034 (stdlib + ledger) · SR-035 (stack-agnostic) · SR-114 (cross-OS): each is a property of EVERY delivered capability at once, so none fits a single one of B-05's five ruled buckets | **RULED 2026-08-14c — option A**: the decomposition axis gains the declared sixth bucket *package-wide property*; each stays ONE SR (the 13p invariant's own "crossing-or-**delivered-property**" wording admits it). Re-statement across the five groups passed over | §0.2 call 2 |
 | 4 | **TC-159** — lift to `Planned` beside the rows it verifies, or re-point LLR-165's `test_refs` | **RULED 2026-08-14f — LIFTED, both halves**: the §2.3 lift had CROSSED the subject pairs (converter TC-159↔LLR-165, reader TC-160↔LLR-166); re-pointing would have forged a converter-requirement→reader-test edge. TC-159 and LLR-166 both `Draft`→`Planned`; drafts 29→27 | §2.2 |
-| 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | **RULED 2026-08-14e — ONE SEQUENCE with the ratification wave**, right after slice 2's drafts land: the signing acts ARE the transition (first commit closes the enum; §3.3 gap recorded owner-visibly; rung-predicate work in the same sequence per §3.4) | §3 |
+| 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | **RULED 2026-08-14e — ONE SEQUENCE with the ratification wave**, right after slice 2's drafts land: the signing acts ARE the transition (first commit closes the enum; §3.3 gap recorded owner-visibly; rung-predicate work in the same sequence per §3.4). **STEPS 1–5b EXECUTED** (`2026-08-15g`, `2026-08-15m`): the enum closed at live truth, the `last_approved` snapshot mechanism built reader-first, then the rename narrowed it to `{Drafted, Approved, Modified}` with `Planned` folded out — **and the gate did not move**. What is left of this row IS the sitting: sign → seed → **step 7** (retire `Modified`, narrow the enum to two, resolve `intake`'s `!= "Modified"` guard into a refusal, arm UNANCHORED as an ERROR) = review-package §5 steps 3–4 | §3 |
 | 6 | **`Planned`'s fate** under the three-word ladder (16 live rows) | **RULED 2026-08-15 (OI-30 D1, log `2026-08-15k`) — FOLDED OUT into `Approved`, and EXECUTED at the rename (`2026-08-15m`)**: functionally the same rung, "approved" clearer; the fourth-rung option died with its `CMP_MATURITY` collision | §3.5 |
 | 7 | **Authority over the off-spine approval elements**, and the dial's form | **RULED 2026-08-15 (OI-30 D3, log `2026-08-15k`) — the dial's form does NOT change**: authority follows the dev-stage ladder directly (`APPROVAL_RUNGS` + `human_approves` beside `DIAL_HOLDS`, unmapped = held), EXECUTED `2026-08-15m` | §3.6 |
 | 8 | **Crossing ownership — restated in the locked frame's terms** (sitting-2 D6's own text still says "31 BIF rows"; that is the superseded v1 frame — the live question is over the SIX crossings): for each of B-01/02/04/05/06/07, which SRs and IFs realize it, and who owns closing each gap. The lists are mechanical but EMPTY today — SR-side `Boundary-Refs` sits at 0 of 149 and `trace.py`'s SN-037 advisory says verbatim *"the re-tier campaign is what moves this number"*; the IF tie-back re-key is the retirement lane's held remainder | **RULED 2026-08-14d — DEFERRED**, re-lands by name after slice 2 populates `Boundary-Refs` + the D-3 re-key (owner expects it may effectively dissolve in the full re-tier — recorded so it re-lands either way); B-06/B-07's missing SR already delegated to slice 2. **RE-LANDED AND CLOSED 2026-08-15 — this sitting no longer carries it.** It did NOT dissolve: the table was regenerated (B-05 = 50 of 65 refs, 77%; B-01/B-02/B-06/B-07 realized by no interface row), the B-05 half was ruled by the owner as `OI-29` option (b) — the concentration is real because the template package IS the product — and each unrealized crossing got a named owner (B-01 → SR-019/SR-020, B-06 → SR-151, B-07 → SR-152) or a recorded statement that none should realize it (B-02, conditional on SR-140 shipping). The IF-side re-key stays D-3's. Record: `WI-459`, log `2026-08-15f` | [sitting-2 Decision 6](2026-08-13-sitting-2-boundary-and-context.md#decision-6--the-15-missing-crossings--6-partial-ones-who-owns-them) |
@@ -155,6 +188,78 @@ a dedicated SR for B-06/B-07, the SR-141/SR-148 overlap, the
 migration-history strikes (sitting-2 §6 items 2/5/7 ride this window), and
 SR-060's dead clause — ride slice 2 under the WI-444 token-verification bar;
 the builder executes them row-by-row against decisions 1–3 above.
+
+### 0.4 What the 2026-08-16 work adds to this desk
+
+*(Added 2026-08-16. **Pointers only — nothing here is restated**, because every
+item has a home that carries it in full and a second copy would be the next
+thing to drift. Everything named below is **provisional and overturnable**; no
+row is signed, no snapshot is seeded, and `docs/archive/last_approved/`
+deliberately does not exist yet.)*
+
+**Four things to have open beside the brief:**
+
+| what | where | what it is |
+|---|---|---|
+| the **regenerated ratify brief** | [`../ratify/2026-08-13-wi444.md`](../ratify/2026-08-13-wi444.md) | the signing surface, regenerated through the day — `SR-148`'s section is in it as of `2026-08-16i`. **The ten ex-`Planned` rows still owe their deliberate read** (`2026-08-15m`): they sit on no surface at all until the seed exists |
+| the **standards memo** | [`2026-08-16-tiering-research-memo.md`](2026-08-16-tiering-research-memo.md) | what published practice says about artifact names across requirement → acceptance → trace. **R2's absolute form is stricter than every body surveyed**; its §1/§3 leave one live question — whether the S3/S5 "current carrier" filenames move down to the trace tier or become registry-id anchors — which the memo recommends riding THIS sitting, because ruling it later re-touches every reworded row once more. Owner-approved `2026-08-16j` |
+| the **alignment map**, including **§4** | [`2026-08-16-derivation-alignment.md`](2026-08-16-derivation-alignment.md) | the blind re-derivation's output (`2026-08-16j`) and its hat-aware extension (`2026-08-16k`): matched / orphaned-in-legacy / orphaned-in-fresh, the ranked top-10, and §4.4's revised ranking after the hat pass. **A validation instrument only — it moved no registry cell**; every orphan is a finding for you |
+| the **v2 cursor** | [`2026-08-15-retier-v2-one-decision-tiering.md`](2026-08-15-retier-v2-one-decision-tiering.md) §0 | the six slices, each with its closing log id, reading **"DONE except the sitting"** |
+
+**STILL OPEN — the calls this sitting actually makes.** Each is recorded where
+its evidence is; none was taken in advance.
+
+1. **The L1 pair** — `SR-151` + `SR-152` `boundary_refs`: the same
+   package-alone acceptance shape, so the attribution flips **for both or for
+   neither**. Untouched by v2 on purpose (`2026-08-15n`, re-confirmed
+   `2026-08-16g`).
+2. **The `SR-144` flip** — its child and TC are `Modified` while the owning SR
+   stays `Approved`, so the M4 correction is invisible to the brief and the
+   gate. Flipping an owning SR is an attestation act v2 excluded from its own
+   scope (`2026-08-16h`, re-stated `2026-08-16i`).
+3. **The `Consumes` owner-side reading** — which reading of "owner" governs
+   decides ~20 more IF rows that today stay SR-owned; the IF-031/F6 precedent
+   read it as the-module-that-holds-the-code (`2026-08-16g`).
+4. **`SR-053` and the CONSISTENCY charter** — cross-view consistency is
+   derivable from **no current input**: no need states it and, before this
+   pass, no roster charter asked it. The provisional CONSISTENCY charter is now
+   its first deriving lens, and **cutting the charter re-opens the row's
+   disposition** — 8 LLRs and 8 TCs rest on it (`2026-08-16k`, `2026-08-16l`).
+5. **The retired-rubric acceptance on `SR-052`/`SR-053`** — both demand a
+   CRITIQUE verdict from rubrics that declare themselves RETIRED: an
+   undischargeable criterion, confirmed and deliberately **not** fixed because
+   it predates v2 (M6, `2026-08-16h`).
+6. **The SN-tier amendment-marker gap** — the needs registry has no `Status`
+   cell, so an amended need cannot mark itself; the 18 amended rows are named
+   in a PENDING RE-ATTEST block in the registry header (the SN-005 precedent).
+   Recorded as a finding, not fixed (`2026-08-16l`).
+7. **The three provisional hat charters** — CONSISTENCY (R-4),
+   INTEGRITY-RECOVERABILITY (R-5), PRODUCT-FITNESS (R-6), added `always` to
+   `hats.toml` **and to the shipped template**, so ruling them is a kit-level
+   act, not a repo-local one (`2026-08-16l`).
+8. **The four hat-exposed obligation candidates** — provider egress of commit
+   authorship, the privacy finding-record's retention bound, SN-027's
+   undeclared throughput budget, and the colour-only signal. Filed as an intake
+   row that **mints nothing**; the disposition of each — new need, amendment,
+   labelled derived requirement, or refused — is yours (alignment map §4.3,
+   `2026-08-16l`).
+
+**CLOSED TODAY — the sitting only countersigns these.** They are owner rulings
+already executed; listed so the sitting knows it is reading a settled state
+rather than an open one, and so an overrule is a deliberate act.
+
+- **Option (b) — hat-derived labels over SN amendment** for the quality family;
+  16 rows labelled, `SR-155` alone left lens-less (`2026-08-16l`).
+- **ACCESSIBILITY and PERFORMANCE ruled `always`** — the switched-off-hat
+  residue dissolves and the four stale "switched-off" labels are reworded to
+  state the dependency CLOSED; the silence taxonomy now names only
+  SAFETY/LEGAL/DATA-PROTECTION as silent-by-design (`2026-08-16n`).
+- **The SN `tags` wiring** — 17 needs tagged by the charter-subject rule, 10
+  left untagged deliberately; this is what makes a governing hat reach its own
+  need at all (R-2, `2026-08-16l`), with `hats.py audit` as its standing sweep
+  (`2026-08-16m`).
+- **`SN-006`'s safety half moved out of `why` into the normative need text**,
+  which makes `SR-043`'s parentage text-derivable (`2026-08-16l`).
 
 ---
 
@@ -193,6 +298,16 @@ still verifies what the row now *says*. It cannot be honestly reproduced in
 markdown, which is why it stays a pointer.
 
 ### 2.1 The window — **re-measured 2026-08-14; regenerate again before the sitting**
+
+> **DO NOT READ THE TABLE BELOW AS STATE — 2026-08-16.** Every figure in it is
+> pre-merge and pre-v2, and its **vocabulary is retired**: `Verified`, `Draft`
+> and `Planned` no longer exist as values (the rename narrowed the enum to
+> `{Drafted, Approved, Modified}` and folded `Planned` into `Approved` —
+> `2026-08-15m`). The window itself is unchanged in KIND: the `Modified` rows
+> re-attest and the `Drafted` rows ratify, as one sequence with the
+> status-vocabulary program (`2026-08-14e`). **Read the live window off
+> [`../gate`](../gate)'s basis line and the regenerated brief**; the table stays
+> as the record of what the window looked like when this sitting was assembled.
 
 Measured 2026-08-14 against the live registries (assembly figures of
 2026-08-13 superseded). **The last column is the census's slated exits** —
@@ -240,6 +355,13 @@ pairs, aligned by the 2026-08-14f ruling) are not in this window.
 
 ### 2.2 The chain-integrity fix this sitting owes — TC-159
 
+> **CLOSED — RULED `2026-08-14f`, ledger row 4: LIFTED, both halves.** The pick
+> below was made deliberately rather than left to a slice, and it turned out to
+> be a third reading neither option named: **the §2.3 lift had CROSSED the
+> subject pairs** (converter TC-159↔LLR-165, reader TC-160↔LLR-166), so
+> re-pointing would have forged a converter-requirement→reader-test edge. Kept
+> for the reasoning; nothing here is owed.
+
 **Pack §2.3 lifted SR-147, LLR-165 and TC-160. It never lifted TC-159 — the TC
 that actually verifies LLR-165.** Measured live:
 
@@ -265,6 +387,20 @@ meant to be the carrier). Do not let it be resolved silently in a slice.
 ---
 
 ## 3. The D-9 status-ladder decision
+
+> **RULED AND LARGELY EXECUTED — re-stamped 2026-08-16.** The decision this
+> section was written to force is **ledger row 5, RULED `2026-08-14e`**: one
+> sequence with the ratification wave. Steps 1–5b then executed (`2026-08-15g`,
+> `2026-08-15m`) — the enum closed at live truth, the `last_approved` snapshot
+> mechanism replaced D-1's hash anchor on your `2026-08-15d` directive, and the
+> rename narrowed the vocabulary to **`{Drafted, Approved, Modified}`** with
+> `Planned` folded out, **without moving the gate**. §3.5 and §3.6 below are
+> **closed** (OI-30 D1 and D3, `2026-08-15k`/`l`). §3.2's hard coupling
+> **dissolved** with the anchor it depended on. What is left of this section is
+> the sitting's own act: **sign → seed → step 7** (review-package §5 steps 3–4).
+> The subsections stay as the argument that produced the sequence; read §3.1 and
+> §3.3 in particular, because the asymmetric-failure row and the recorded
+> coverage gap are what step 7 is arming against.
 
 **The migration is UNEXECUTED.** D-9 renames `Draft` / `Verified` / `Modified` →
 **`Drafted` → `Approved` → `Founded`**, uniform across SN · SR · LLR · TC. The
@@ -398,11 +534,15 @@ Adapted from the sitting pack §5, corrected for the current state.
 
 1. **You sign in [`../open-items.html`](../open-items.html)** — that is where the
    per-cell evidence lives, with the baseline revision printed per section.
-2. **The signed rows' `Status` moves in a reviewed commit**: `Modified` →
-   `Verified`, `Draft` → `Planned`. **[`../gate`](../gate) is DERIVED, never
-   hand-set.**
+2. **The signed rows' `Status` moves in a reviewed commit** — under the renamed
+   vocabulary (`2026-08-15m`) that is `Modified` → **`Approved`** and `Drafted`
+   → **`Approved`**, both rungs landing on the same word; the retired
+   `Verified`/`Planned` targets this step originally named no longer exist.
+   **[`../gate`](../gate) is DERIVED, never hand-set.** **Then seed the snapshot
+   in the same reviewed commit** (`intake.py snapshot --seed`) — the copy must
+   ride the approval, and it is the birth of drift detection.
 3. **`python project-trajectory/scripts/derive_gate.py`** regenerates the bar; the
-   `drafts` / `modified` / `uncovered` counts fall and the bar rises on its own
+   `drafted` / `modified` / `uncovered` counts fall and the bar rises on its own
    arithmetic. Freshness `--check` is a commit-bar step, so a stale `docs/gate`
    is a red.
 4. **Regenerate the dependent surfaces** — `trunk_step.py --regen` covers

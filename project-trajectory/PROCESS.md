@@ -122,17 +122,18 @@ Stable, zero-padded, never reused.
   deliberately not a cap — a hard cap invites merging LLRs to slip under it —
   so a row past the bound either splits by observable class or keeps a per-row
   re-stamp with its reason.
-- **A requirement cell never names a concrete artifact.** The SR tier speaks in
-  delivered-capability or artifact-class voice ("the delivered harness", "the
-  launchers at the repository root"); a concrete filename lives only in
-  `AcceptanceCriteria` as rewritable current-carrier evidence ("read off the
-  current carrier, as the current set: …") or at the LLR tier. Why a file
-  exists is answered at its binding homes — the shipped-file inventory, the
-  LLR `Module` cell, the interface registry — never by minting
+- **A requirement cell names no concrete artifact unless its `Rationale`
+  records why constraining that artifact is necessary.** Absent that reason the
+  SR tier speaks in delivered-capability or artifact-class voice ("the
+  delivered harness", "the launchers at the repository root"), and a concrete
+  filename lives in `AcceptanceCriteria` as rewritable current-carrier evidence
+  ("read off the current carrier, as the current set: …") or at the LLR tier.
+  Why a file exists is answered at its binding homes — the shipped-file
+  inventory, the LLR `Module` cell, the interface registry — never by minting
   artifact-establishing requirements. An *altitude* rule: `trace.py` warns
-  (never gates) on an artifact token in a requirement cell without a recorded
-  per-row waiver; the provenance rule above still reads a named script as
-  subject, not provenance.
+  (never gates) on an artifact token in a requirement cell without that
+  recorded per-row waiver; the provenance rule above still reads a named script
+  as subject, not provenance.
 - **A rationale carries its own reason.** `Rationale` is complete when a reader
   with none of your history knows **what breaks without the requirement** and
   **which alternative lost**. A review, ruling or design-thread reference is

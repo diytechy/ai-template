@@ -3,9 +3,11 @@
 The live planning surface. **Start at
 [`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
 document the pending review sitting runs from; the 2026-08-15 plan set
-(re-tier completion, interface rework, D-9 migration, snapshot design, resume
-brief) records the charge-through it packages, each stamped with its own
-execution state. The two sitting documents remain the ruling record —
+(re-tier completion, interface rework, D-9 migration, snapshot design) records
+the charge-through it packages, and the 2026-08-16 set (re-tier v2's cursor, the
+tiering research memo, the blind-derivation inputs and their alignment map)
+records the work that followed — each stamped with its own execution state. The
+two sitting documents remain the ruling record —
 
 - [`2026-08-13-sitting-2-boundary-and-context.md`](2026-08-13-sitting-2-boundary-and-context.md)
   — rules the depth-0 boundary, the operational context, the port list, the

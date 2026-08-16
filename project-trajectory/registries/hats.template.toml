@@ -1,11 +1,12 @@
 # The HATS ROSTER — the declared expert perspectives every applicable
 # decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The sixteen hats below are the
-# kit's STARTING roster (six drafted 2026-08-13; the UX pair and the five
-# aspect hats added by ruling 2026-08-13q/s; the three cross-cutting lenses at
-# the bottom — CONSISTENCY, INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — drafted
-# 2026-08-16 and marked PROVISIONAL there). YOU ARE EXPECTED TO EDIT
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. THIS ROSTER CONTAINS SIXTEEN HATS:
+# thirteen ratified in the kit, and the three cross-cutting lenses at the
+# bottom — CONSISTENCY, INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — still
+# PROVISIONAL there. (History in one clause: six drafted 2026-08-13, the UX
+# pair and the five aspect hats added by ruling 2026-08-13q/s, the three
+# lenses drafted 2026-08-16.) YOU ARE EXPECTED TO EDIT
 # IT — cut the hats that do not earn their place in your project, add the ones
 # your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
 # That editing is not optional politeness: a roster inherited unread is
@@ -55,24 +56,31 @@
 # produce; the record only proves it happened, and it is a later artifact class.
 # Nothing gates on a hat today.
 #
-# THREE KINDS OF SILENCE, DISTINGUISHED. Several hats below ship SILENT BY
-# DESIGN: each keys on a tag (`render`, `ui`, `safety`, `legal`,
-# `personal-data`) that your project may not use yet, and
-# switches on the moment you tag work with it — opt-in by tagging, no
-# `enabled` field, using the grammar's own rule that an undeclared field
-# satisfies no condition. That is different from a hat silent BY DEFECT — one
-# keyed on a fact your registries will never carry, which can never fire and
-# should be re-pointed or cut (the kit's own FIRST-RUN-ADOPTER once keyed on
-# an undeclared `scope` field; fixed at WI-453). And different again from a
-# hat silent BY DOMAIN: its predicate is sound and its opt-in deliberate, but
-# its FAILURE VOCABULARY has essentially no referent in what you build, so
-# switching it on buys one strained row and a great deal of ceremony. SAFETY
-# is in that position for a developer-tooling product — its harm vocabulary
-# (person, property, environment) reaches almost nothing there, while for a
-# vehicle, a medical device or a machine that moves it is the first hat you
-# should read. Keep such a hat only if its domain is yours. When you edit this
-# roster, make sure every silent hat is silent on purpose, and that you can
-# say WHICH of the three kinds each one is.
+# THREE KINDS OF SILENCE, DISTINGUISHED. A silent hat is one no row in your
+# registries can wake. There are exactly three reasons for that, and you must
+# be able to say which one applies to each silent hat you keep:
+#
+#   1. SILENT BY DESIGN — opt-in by tagging. The hats gated on `render`, `ui`,
+#      `safety`, `legal` or `personal-data` ship OFF and switch on the moment
+#      you tag work with that token — no `enabled` field, using the grammar's
+#      own rule that an undeclared field satisfies no condition. This silence
+#      ends by itself the first time the tag appears; it is a choice, not a
+#      defect.
+#   2. SILENT BY DEFECT — the predicate keys on a fact your registries will
+#      never carry, so no clause can ever fire. Re-point it or cut it. The
+#      kit's own FIRST-RUN-ADOPTER was here once, keyed on an undeclared
+#      `scope` field; fixed at WI-453 by keying it on tags real work carries.
+#   3. SILENT BY DOMAIN — the predicate is sound and the opt-in deliberate, but
+#      the hat's FAILURE VOCABULARY has essentially no referent in what you
+#      build, so switching it on buys one strained row and a great deal of
+#      ceremony. SAFETY is in that position for a developer-tooling product —
+#      its harm vocabulary (person, property, environment) reaches almost
+#      nothing there — while for a vehicle, a medical device or a machine that
+#      moves it is the first hat you should read. Keep such a hat only if its
+#      domain is yours.
+#
+# `scripts/hats.py audit` prints each conditional hat's reach, which is how you
+# tell a hat that is silent from a hat you assumed was firing.
 
 [hat.SECURITY]
 applies_when = "always"
@@ -140,13 +148,16 @@ asks = """Can someone using a keyboard, a screen reader, or a low-vision setting
 listens_for = """A surface whose acceptance names only how it looks to a sighted mouse user."""
 
 # SHIPS `always`, same reason: a budget is declared before you learn you needed
-# one, so "what is the budget here, measured on what" belongs on every
-# decomposition rather than on the ones somebody tagged `perf`. Gate it if your
-# project genuinely has no speed or size obligation anywhere; do not delete it.
+# one, so "does this need a bound, and if so what is it" belongs on every
+# decomposition rather than on the ones somebody tagged `perf`. The QUESTION is
+# conditional even though the hat is not — "no bound needed here" is a one-line
+# answer, which is what stops an always-on budget lens from presupposing a
+# budget for every subject. Gate it if your project genuinely has no speed or
+# size obligation anywhere; do not delete it.
 [hat.PERFORMANCE]
 applies_when = "always"
-asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
-listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""
+asks = """Does this need a measurable performance or size bound? If yes, what is the budget, measured on what, and what happens when it is exceeded?"""
+listens_for = """A material speed or size risk left unassessed, or a declared budget with no measurement behind it."""
 
 # --- PROVISIONAL (drafted 2026-08-16, not yet ruled) --------------------------
 #
