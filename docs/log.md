@@ -36,6 +36,52 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16h — re-tier v2 S6 (first half): the settle and the SECOND
+  TOP-DOWN READ — eight MAJOR claims, seven confirmed and fixed, one
+  recorded for the sitting.** (`WI-464` slice 6; the adversarial round
+  follows this commit, the sitting follows everything.) The fresh-eyes read
+  over the settled SN→SR→LLR→TC+IF layer returned M1–M8 and seven minors;
+  dispositions, all fixes in this commit: **M1 CONFIRMED/FIXED** — the S4
+  split left SR-070's offline/self-contained clause with no child or test;
+  LLR-035 and TC-038 dual-parent back beside SR-168. **M2 CONFIRMED/FIXED**
+  — six TC `expected` cells still named superseded parents (TC-060/130/135/
+  147/148 → SR-170; TC-014 now names SR-167's verdict beside SR-006).
+  **M3 CONFIRMED/FIXED** — the IF registry was pre-split: 18 cells re-keyed
+  (view-content seams → SR-168/169, shared-authority seams → SR-170, incl.
+  IF-101's id-mint pair and IF-081; drift/derivation seams deliberately stay
+  SR-070, each named). **M4 CONFIRMED/FIXED** — S4's widening of SR-156
+  restated SR-144's terminal-close contract; the overreach is RETRACTED in
+  the row's own rationale, and the recorded LLR-144 mis-parent + TC-138
+  resolve to SR-144 with it. **M5 CONFIRMED/FIXED** — SR-170's acceptance
+  restated SR-006's work-branch freshness skip; now a cross-reference.
+  **M7 CONFIRMED/FIXED** — the derivability advisory's message overclaimed
+  on Consumes rows; it now names the compared column, the docstring states
+  the per-direction derivation, and the comparison logic is byte-unchanged
+  pending the owner's reading-of-Owner ruling. **M8 CONFIRMED/FIXED** —
+  SR-169's fallback is scoped to a declared-but-empty seam set; the
+  absent-registry case stays SR-070's omission rule. **M6 CONFIRMED,
+  RECORDED, NOT FIXED** (predates v2; the sitting's): SR-052/SR-053's
+  acceptance demands a CRITIQUE verdict from rubrics that declare
+  themselves RETIRED — an undischargeable criterion. Minors recorded for
+  the sitting/wi455/follow-ups: the "harness"/"delivered harness" and
+  generator-set voice drift, eight redundant current-carrier clauses, the
+  scaffold-side carrier qualifier, SR-168/169's sn_refs asymmetry, LLR-056/
+  LLR-153 obligations their new parents do not state, TC-161's SR-146
+  expected residual, and **one ruling-6 record correction: S4's
+  non-Modified touch list reads 20, not 19 — TC-158 (`Drafted`, verifies
+  re-pointed) went unnamed in `2026-08-16f`.** Zero status flips this
+  half (every touched row already `Modified`/`Drafted`; no attestation
+  overridden). **Flagged for the sitting, deliberately not taken:** SR-144
+  is `Approved` with a now-`Modified` child and TC — flipping the owning SR
+  is an attestation act plan §4 excludes as an act of its own, but while it
+  stays `Approved` the M4 correction is invisible to the brief and gate.
+  Registry state: SN=27 SR=63 LLR=155 TC=150, orphans=0 integrity=0,
+  form-findings=2, llr-status-advisories 7 → 9 (the M4 re-parent's two
+  rows under Approved SR-144 — the flagged question, made visible)
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=055a9210 -->.
+  Full unfiltered suite (posix-shell gate satisfied): 2551 passed /
+  13 skipped / 0 failed, 511s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=055a9210 -->.
 - **2026-08-16g — re-tier v2 S5: the folded sitting-desk items and the IF
   owner re-point — 54 seams gain design-tier owners, and the derivability
   advisory goes live.** (`WI-464` slice 5; every call provisional and

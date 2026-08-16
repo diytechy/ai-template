@@ -662,23 +662,45 @@ def if_this_project_advisories(ifs, llrs):
     """Warn-only: an IF row whose OWNER-SIDE endpoint disagrees with the `Module`
     its owner LLR names (re-tier v2 R4, owner ruling 2026-08-15).
 
-    **`ThisProject` is on its way out.** R4 ruled the end-state schema: `owner`
-    stays id-typed and points at the design tier wherever a design row exists, and
-    once it does, the project's own side of the seam is DERIVABLE — owner → LLR →
-    `module` — so the cell restates a fact that already has a home. One artifact
-    binding, stated once, at the LLR `Module` cell. wi455 owns the removal (the
-    schema's existing HELD note names it); this is the ADVISORY THAT RUNS FIRST,
-    because a cell cannot be dropped as redundant while the two spellings of it
-    still disagree — the disagreement is the one thing a derivation cannot survive,
-    and it has to be visible and settled before the column goes.
+    **One endpoint cell is on its way out — but WHICH ONE depends on the row's
+    direction, and saying otherwise is how this advisory misread itself.** R4 ruled
+    the end-state schema: `owner` stays id-typed and points at the design tier
+    wherever a design row exists, and once it does, the endpoint the owner ANSWERS
+    FOR is DERIVABLE — owner → LLR → `module` — so THAT cell restates a fact which
+    already has a home. One artifact binding, stated once, at the LLR `Module` cell.
 
-    The endpoint compared is the one the owner ANSWERS FOR (`_OWNER_SIDE_COLUMN`),
-    not always `ThisProject`: on a `Consumes` row the owning design row is the
-    provider and its module is written in `Counterpart`. Both sides are normalized
-    (`norm_module`), so the arch-map short form and the full repo path with its
-    extension read as one module rather than as a disagreement, and a `;`-joined
-    cell matches on ANY endpoint — a bundle that names the owner's module among
-    several is not misfiled.
+    Under the providing-side reading this predicate implements (`_OWNER_SIDE_COLUMN`),
+    the derivable cell differs by direction, and only one of the two is
+    `ThisProject`:
+
+    * `Provides` — the owner's module IS `ThisProject`, so **`ThisProject` is the
+      derivable cell** and `Counterpart` stays as the consumer/coverage fact.
+    * `Consumes` — the owning design row is the PROVIDER and its module is written
+      in `Counterpart`, so **`Counterpart` is the derivable cell**; `ThisProject`
+      here names the CONSUMER, which no derivation reaches and which R4's
+      consumers/endpoints list is what carries forward.
+
+    So "drop `ThisProject`" is the whole story only if the owner is read as
+    the-module-that-holds-the-code (the IF-031/F6 reading) on every row. That
+    question is OPEN and the owner's to rule (log 2026-08-16g flags it); this
+    predicate does not presume the answer — it compares whichever endpoint the
+    CURRENT reading makes the owner's, and its finding text names that column
+    rather than asserting a derivation the compared cell does not support.
+    (Corrected 2026-08-16, S6 second top-down read, finding M7: the message
+    previously read `Counterpart` on a Consumes row while claiming `this_project`
+    was thereby derivable. The comparison was right; the sentence about it was not,
+    and it is the sentence a sitting would have signed.)
+
+    Both sides are normalized (`norm_module`), so the arch-map short form and the
+    full repo path with its extension read as one module rather than as a
+    disagreement, and a `;`-joined cell matches on ANY endpoint — a bundle that
+    names the owner's module among several is not misfiled.
+
+    wi455 owns the removal (the schema's existing HELD note names it); this is the
+    ADVISORY THAT RUNS FIRST, because a cell cannot be dropped as redundant while
+    the two spellings of it still disagree — the disagreement is the one thing a
+    derivation cannot survive, and it has to be visible and settled before any
+    column goes.
 
     Warn-only, never the exit code, and permanently so as far as this rule is
     concerned: clearing it means re-pointing owners and correcting endpoints across
@@ -697,12 +719,13 @@ def if_this_project_advisories(ifs, llrs):
             continue
         out.append(
             "IF {} {}={!r} names no module matching owner {}'s LLR Module {!r} — "
-            "this_project is derivable as owner→LLR→module once these agree, and "
-            "the cell is dropped once it is (re-tier v2 R4; wi455 owns the "
-            "removal): re-point Owner at the LLR that implements this endpoint, "
-            "or correct the endpoint — a redundant cell can be deleted, a "
-            "DISAGREEING one cannot (warn-only, never the exit code)".format(
-                iid, col, (r.get(col) or "").strip(), oid, module
+            "{} is the endpoint this owner answers for, so it is the cell that "
+            "becomes derivable as owner→LLR→module once the two agree, and the "
+            "one dropped once it is (re-tier v2 R4; wi455 owns the removal): "
+            "re-point Owner at the LLR that implements this endpoint, or correct "
+            "the endpoint — a redundant cell can be deleted, a DISAGREEING one "
+            "cannot (warn-only, never the exit code)".format(
+                iid, col, (r.get(col) or "").strip(), oid, module, col
             )
         )
     return out

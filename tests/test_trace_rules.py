@@ -812,6 +812,10 @@ def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
     assert "LLR-014" in fires[0] and "check_perf.py" in fires[0]
     assert "derivable as owner→LLR→module" in fires[0]
     assert "wi455" in fires[0] and "warn-only, never the exit code" in fires[0]
+    # THE FINDING NAMES THE CELL IT ACTUALLY COMPARED (S6 second-read M7). On a
+    # `Provides` row that cell IS `ThisProject`, so the derivation claim and the
+    # comparison agree — the case that made the old wording look right everywhere.
+    assert "ThisProject is the endpoint this owner answers for" in fires[0]
 
     # AGREEMENT IS SILENT IN BOTH SPELLINGS — the arch-map short form and the full
     # repo path with its extension are one module, and a rule that read them as two
@@ -904,6 +908,14 @@ def test_a_consumes_row_is_answered_for_on_the_counterpart_side():
     fires = trace.if_this_project_advisories([mismatched], llrs)
     assert len(fires) == 1
     assert "Counterpart='scripts/spine_carrier'" in fires[0]
+    # AND THE FINDING SAYS SO (S6 second-read M7). The message used to compare
+    # `Counterpart` while asserting that `this_project` was thereby derivable —
+    # true only under the OTHER, still-unruled reading of `Owner`, and on 30 live
+    # rows the exact inverse of the truth: there `ThisProject` is the CONSUMER,
+    # which no owner→LLR→module derivation reaches. The comparison was never
+    # wrong; the sentence about it was, and a sitting reads the sentence.
+    assert "Counterpart is the endpoint this owner answers for" in fires[0]
+    assert "this_project is derivable" not in fires[0]
     # A Direction outside the closed vocabulary decides no side: the enum rule owns
     # that row, and guessing a side would report a disagreement nobody declared.
     assert (

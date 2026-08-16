@@ -375,7 +375,7 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-035]
-sr_refs = ["SR-168"]
+sr_refs = ["SR-168", "SR-070"]
 title = "Offline project-state core"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "build_html/spine_stats/arch_icicle/dag_svg"
@@ -1417,7 +1417,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-144]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-144"]
 title = "Terminal lane outcomes (handback + quarantine)"
 module = "project-trajectory/scripts/handback.py"
 code_symbol = "close_partial/quarantine/report_path/render_report/_restore/diff_records"
