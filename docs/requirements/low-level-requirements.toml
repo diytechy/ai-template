@@ -143,13 +143,13 @@ component = "CMP-007"
 phase = 1
 
 [design.LLR-014]
-sr_refs = ["SR-006"]
+sr_refs = ["SR-006", "SR-167"]
 title = "Budget comparator"
 module = "project-trajectory/scripts/check_perf.py"
 code_symbol = "evaluate"
 detail = """Compares measured metrics to declared budgets and fails beyond tolerance at the row's block/warn level."""
 test_refs = "(see TC-014)"
-status = "Approved"
+status = "Modified"
 component = "CMP-007"
 phase = 1
 

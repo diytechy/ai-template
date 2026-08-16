@@ -17,8 +17,8 @@ own review.
 | S2 — the two advisories | **DONE** 2026-08-16 (log `2026-08-16d`): `sr_artifact_advisories` + `sr_fanout_advisories` live in the advisory pipe, tested, goldens regenerated, enforcement-audit rows landed; live corpus reproduces §2 exactly (15+3+7 lines) |
 | S3 — HOLDS-bundle reword | **DONE** 2026-08-16 (log `2026-08-16e`): 22 cells reworded, 13 ex-Approved flips named, detector reads clean, borderlines recorded (SR-006/019/020/129), SR-151 left for S5's L1 call; full suite 2547/13/0 |
 | S4 — offender splits | **DONE** 2026-08-16 (log `2026-08-16f`): 5 re-stamps (SR-157/155/148/054/053), 2 splits (SR-070→+SR-168/169, SR-156→+SR-170); fan-out advisories 0; 19 non-Modified touches named; full suite 2547/13/0 |
-| S5 — folded sitting-desk items + owner re-point (incl. IF-130) | not started |
-| S6 — settle, second read, cross-family round, ONE sitting | LAST, exactly once |
+| S5 — folded sitting-desk items + owner re-point (incl. IF-130) | **DONE** 2026-08-16 (log `2026-08-16g`): SR-151 R2-reworded (L1 attribution untouched, the sitting's), TC-123 re-worded live, LLR-014/TC-014 gain SR-167 (3 attested flips named), 54 IF owners re-pointed / 61 stay with reasons, derivability advisory live (1 fire: IF-128); full suite 2551/13/0 |
+| S6 — settle, second read, cross-family round, ONE sitting | **NEXT OPEN** — the LAST slice, exactly once; the sitting itself is the owner's |
 
 A resuming session: read this plan whole, then execute the NEXT OPEN slice
 (and the following one if it fits) to the commit bar, update this table and

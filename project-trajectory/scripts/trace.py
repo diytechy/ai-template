@@ -98,10 +98,13 @@ try:
     import check_trajectory
     import spine_carrier
     from trace_text import (
+        EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
         form_findings,
+        if_this_project_advisories,
         is_drafted,
         is_example,
+        norm_module,
         paraphrase_advisories,
         provenance_findings,
         refs,
@@ -114,10 +117,13 @@ except ImportError:  # pragma: no cover - in-process fallback
     import check_trajectory
     import spine_carrier
     from trace_text import (
+        EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
         form_findings,
+        if_this_project_advisories,
         is_drafted,
         is_example,
+        norm_module,
         paraphrase_advisories,
         provenance_findings,
         refs,
@@ -1119,28 +1125,11 @@ def triangle_findings(tcs, llrs):
     return out
 
 
-# Source-file extensions stripped when normalizing a module path so the two
-# module-naming conventions in play align: an LLR `Module` cell carries the full
-# repo path with extension (`project-trajectory/scripts/check.py`) while the
-# arch-map / an IF `ThisProject` endpoint may use the shorter map form
-# (`scripts/check`). Normalization strips a leading `project-trajectory/` segment
-# and any one of these tails so both collapse to the same key.
-_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
-
-
-def _norm_module(path):
-    """A module path reduced to a naming-convention-neutral key (see _MODULE_EXTS):
-    strip a leading `project-trajectory/`, any source extension, and `/__init__`."""
-    p = (path or "").strip().replace("\\", "/")
-    if p.startswith("project-trajectory/"):
-        p = p[len("project-trajectory/") :]
-    for ext in _MODULE_EXTS:
-        if p.endswith(ext):
-            p = p[: -len(ext)]
-            break
-    if p.endswith("/__init__"):
-        p = p[: -len("/__init__")]
-    return p
+# The module-path normalizer MOVED TO trace_text.py at re-tier v2 S5 (WI-464),
+# unchanged: `if_this_project_advisories` compares the same two naming conventions
+# and is a pure row predicate, so keeping one home there beat a fourth copy here.
+# Aliased back under the private name so this module's call sites read as before.
+_norm_module = norm_module
 
 
 def interface_findings(ifs, sr_ids, module_ids):
@@ -1607,21 +1596,10 @@ def if_contract_advisories(ifs):
     return out
 
 
-# The ONE declared way an IF row says "this endpoint is deliberately outside this
-# tree" (2026-08-15 interface rework, plan step 2). A controlled PREFIX on the
-# endpoint value, not a new column, and the shape was chosen for three reasons a
-# column does not have: it needs no schema change so it rides the carrier and the
-# CSV fallback unaltered, it reads at the point of use (the cell that is
-# unresolvable is the cell that says why), and it cannot drift out of sync with
-# the endpoint it qualifies the way a parallel `external = true` flag would.
-#
-# Before it existed, an external actor and a rotted path were INDISTINGUISHABLE:
-# the classifier guessed from spelling — anything without a slash or an extension
-# "read as an external actor" — so `docs/subagent-gate` (a real path, dead since
-# the policy moved to docs/process.toml) was a finding while `agent CLI` was
-# silently fine, and a rot that happened to look like a name would have been
-# silently fine too. The marker replaces the guess with a claim someone made.
-EXTERNAL_ENDPOINT_PREFIX = "external:"
+# `EXTERNAL_ENDPOINT_PREFIX` (the declared "deliberately outside this tree" marker
+# and the reasoning for a value-prefix over a column) MOVED TO trace_text.py at
+# re-tier v2 S5 (WI-464), unchanged and imported back above: `_module_shaped` has
+# to skip a marked endpoint too, and the endpoint value GRAMMAR is a text rule.
 
 
 def if_endpoint_class_advisories(ifs, module_ids, root):
@@ -3243,6 +3221,14 @@ def analyze(reg, args):
         + if_ownership_advisories(ifs, sr_ids, llr_ids)
         + if_carriage_advisories(ifs)
     )
+    # Warn-only, always on (re-tier v2 R4, owner ruling 2026-08-15): an IF row
+    # whose owner-side endpoint disagrees with its owner LLR's `Module`. Its OWN
+    # pipe rather than the interface-advisory bundle above, for the reason the S2
+    # pair got theirs: this is the pre-condition for DELETING a column (`ThisProject`
+    # is derivable as owner->LLR->module, wi455 owns the removal), so it is read as
+    # a countdown to a schema change and not as one more seam lint. Never joins a
+    # failure set below.
+    if_this_project_advis = if_this_project_advisories(ifs, llrs)
 
     phases = set(refs(args.phase)) if args.phase else None
     # The foundation (minimum) phase is never phase-deferred — it is in scope for
@@ -3471,6 +3457,7 @@ def analyze(reg, args):
     findings.llr_status_advis = llr_status_advis
     findings.sr_artifact_advis = sr_artifact_advis
     findings.sr_fanout_advis = sr_fanout_advis
+    findings.if_this_project_advis = if_this_project_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
     findings.component_findings = component_findings
@@ -3511,6 +3498,7 @@ def render_report(reg, findings, args, forest):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
+    if_this_project_advis = findings.if_this_project_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
     component_findings = findings.component_findings
@@ -3712,6 +3700,18 @@ def render_report(reg, findings, args, forest):
         if not sr_fanout_advis
         else [f"- {f}" for f in sr_fanout_advis]
     )
+    # Warn-only (re-tier v2 R4): the countdown to dropping `ThisProject` — every
+    # row where the cell and its owner LLR's Module still disagree, so the
+    # derivation that makes the column redundant cannot yet be trusted.
+    lines += ["", "## ThisProject derivability advisories (warn-only)", ""]
+    lines += (
+        [
+            "None. Every LLR-owned row's owner-side endpoint agrees with its "
+            "owner's Module."
+        ]
+        if not if_this_project_advis
+        else [f"- {f}" for f in if_this_project_advis]
+    )
     # Verification-basis surface (process.md §4): make the project's trust
     # footprint auditable — of what is `Approved`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
@@ -3870,6 +3870,7 @@ def render_console(reg, findings, args, out, html_out):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
+    if_this_project_advis = findings.if_this_project_advis
     watermark_advis = findings.watermark_advisories
     snapshot_advis = findings.snapshot_advisories
     mechanized_verified = findings.mechanized_verified
@@ -3899,6 +3900,7 @@ def render_console(reg, findings, args, out, html_out):
         + paraphrase
         + sr_artifact_advis
         + sr_fanout_advis
+        + if_this_project_advis
         + watermark_advis
         + snapshot_advis
     ):

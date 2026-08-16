@@ -1385,12 +1385,14 @@ Contracts (interfaces): IF-076
 | `refs(value)` | Split a multi-ref cell (';', ',' or whitespace separated) into ids. |  |
 | `is_example(rid)` |  |  |
 | `is_drafted(row)` | A row in the pre-approval `Drafted` state (derived-gate model §3): exempt |  |
+| `norm_module(path)` | A module path reduced to a naming-convention-neutral key (see MODULE_EXTS): |  |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
 | `sr_artifact_advisories(srs)` | Warn-only: an SR `Requirement` cell that names a concrete artifact |  |
 | `sr_fanout_advisories(srs, llrs, bound)` | Warn-only: an SR whose DIRECT LLR children outnumber the declared bound |  |
+| `if_this_project_advisories(ifs, llrs)` | Warn-only: an IF row whose OWNER-SIDE endpoint disagrees with the `Module` |  |
 
 ### `scripts/traj_graph`
 _Pure graph layout and wire routing for the project-state dashboard._

@@ -36,6 +36,51 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16g — re-tier v2 S5: the folded sitting-desk items and the IF
+  owner re-point — 54 seams gain design-tier owners, and the derivability
+  advisory goes live.** (`WI-464` slice 5; every call provisional and
+  overturnable at the ONE sitting.) The four folded items: **(1)** SR-151's
+  requirement cell sheds its `docs/stack.ini [ci-tiers]` binding to
+  acceptance as current carrier (R2; `Drafted`, no flip) — **the L1
+  attribution call itself is untouched and stays the sitting's** (SR-151+
+  SR-152 boundary_refs flip together or not at all; SR-152's cell verified
+  R2-clean, no change). **(2)** TC-123's method cell re-worded to the live
+  vocabulary against what tests/test_gen_open_items.py actually asserts —
+  the retired Draft/Verified ladder words, the inverted CHECK-THE-BASELINE
+  clause, and the Phase-5-retired mask/baseline-stamp clauses all corrected;
+  open-items' pending/RULED vocabulary verified live and kept. **(3)**
+  LLR-014.sr_refs and TC-014.verifies gain SR-167 exactly as SR-167's
+  rationale recorded the deferred act. **Touched attested rows, each named
+  per ruling 6 (3, all `Approved`→`Modified`): LLR-014, TC-014, TC-123.**
+  **(4)** The R4 owner re-point pass, conservative: **54 of 115 SR-owned IF
+  rows re-point to the design-tier row that implements their owner-side
+  endpoint** (47 sole-LLR module matches, 7 multi-LLR rows where exactly one
+  detail names the contract; owner cell only, `approval` untouched per the
+  F6 precedent) — **61 stay SR-owned with recorded reason classes**: 30
+  non-module owner-side endpoints (wi455's counterpart-transform), 13
+  whole-CLI contracts spanning sibling LLRs, 7 contracts splitting across
+  exactly two LLRs, 9 module matches where no LLR names the consumed
+  symbol, IF-039's different-concern directory match, IF-130 by its own
+  recorded reasoning. The `this_project` disagreement advisory lands with
+  the pass (`trace_text.if_this_project_advisories`, warn-only, S2 pattern:
+  owner-side endpoint vs owner-LLR module, non-module endpoints skipped by
+  design; enforcement-audit row added; goldens regenerated, diff = the new
+  section only; trace.py ratchet re-stamped 4248 → 4250, net +2 — 22 lines
+  of module-normalization moved INTO trace_text with the predicate). Live
+  census after both halves: **exactly 1 fire, IF-128** (counterpart
+  `scripts/spine_carrier` vs owner LLR-173's baseline_snapshot module — a
+  pre-existing row whose sides need re-reading; wi455's worklist) — the 54
+  re-pointed rows agree by construction
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=ccaf288b -->.
+  **Flagged for the owner at the sitting:** the Consumes owner-side rule
+  leaves ~20 rows unpointed whose `this_project` is a real single-LLR
+  module (the IF-031/F6 precedent itself read the owner as
+  the-module-that-holds-the-code); ruling which reading governs unlocks
+  them. Gate basis now `modified=142`; ratify brief, arch map, status,
+  open-items, OKF and dashboard regenerated. Slice close, full unfiltered
+  suite (posix-shell gate satisfied): 2551 passed / 13 skipped / 0 failed,
+  533s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=ccaf288b -->.
 - **2026-08-16f — re-tier v2 S4: the seven fan-out offenders ruled — five
   re-stamps, two splits, and the detector reads zero.** (`WI-464` slice 4;
   every call provisional and overturnable at the ONE sitting.) Each offender

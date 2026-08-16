@@ -142,14 +142,14 @@ status = "Approved"
 phase = 1
 
 [test.TC-014]
-verifies = ["SR-006", "LLR-014"]
+verifies = ["SR-006", "SR-167", "LLR-014"]
 level = "Integration"
 method = "Run the check-perf suite; a within-tolerance metric passes and a regression fails."
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-014 (parent SR-006)"
 automated = "Yes"
 evidence = "tests/test_check_perf.py"
-status = "Approved"
+status = "Modified"
 phase = 1
 
 [test.TC-015]
@@ -1188,13 +1188,13 @@ phase = 3
 [test.TC-123]
 verifies = ["SR-049", "LLR-118"]
 level = "Unit"
-method = """Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Draft AND Modified spine rows both surface (ratification owed vs re-attest owed) while a Verified row does not; that a section with no changed cells says CHECK THE BASELINE and never nothing-changed; that --check bites on drift, MASKS the machine-local region (and still bites outside it), and re-reads the baseline stamp the file declares; that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction)."""
+method = """Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Drafted AND Modified spine rows both surface (ratification owed vs re-attest owed) while an Approved row does not; that a section with no changed cells says what is true — no cell differs from the approved snapshot, the row's own Status asking for a human — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read (the machine-local mask retired with the dispatcher); that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction)."""
 tier = "Full"
 parameters = "tests/test_gen_open_items.py (temp repos; one git-backed fixture for the baseline paths)"
 expected = """Every assertion holds, each with its negative half. Three defects were caught by these guards during the build and fixed rather than accommodated: a missing UTF-8 console guard, a changed-percent diluted by whitespace tokens, and bootstrap leaving __pycache__ in a fresh scaffold once a generator imported its siblings."""
 automated = "Yes"
 evidence = "tests/test_gen_open_items.py"
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-124]

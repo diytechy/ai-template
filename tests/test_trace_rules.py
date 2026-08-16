@@ -772,3 +772,161 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
         assert trace.exit_code(loud, ns(strict=True)) == 0
         assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
         assert trace.exit_code(loud, ns()) == 0
+
+
+# --- Re-tier v2 R4: ThisProject is derivable, so first prove it agrees --------
+# Owner ruling 2026-08-15 (log `2026-08-15p`), slice S5. `ThisProject` dies once
+# it is derivable as owner -> LLR -> `Module` (wi455 owns the removal); a cell can
+# be deleted as REDUNDANT but not while its two spellings still DISAGREE, so this
+# advisory runs first and makes the disagreements visible.
+
+_LLR = {"LLR-014": "project-trajectory/scripts/check_perf.py"}
+
+
+def _if_row(**over):
+    row = {
+        "IF-ID": "IF-101",
+        "Direction": "Provides",
+        "ThisProject": "scripts/check_perf",
+        "Counterpart": "scripts/check",
+        "Owner": "LLR-014",
+    }
+    row.update(over)
+    return row
+
+
+def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
+
+    # A `Provides` row: the owner answers for THIS side, and this side names a
+    # different module than the owner LLR implements — so the derivation R4 rests
+    # on would silently change the row's meaning.
+    fires = trace.if_this_project_advisories(
+        [_if_row(ThisProject="scripts/derive_gate")], llrs
+    )
+    assert len(fires) == 1
+    assert "IF-101" in fires[0] and "ThisProject='scripts/derive_gate'" in fires[0]
+    assert "LLR-014" in fires[0] and "check_perf.py" in fires[0]
+    assert "derivable as owner→LLR→module" in fires[0]
+    assert "wi455" in fires[0] and "warn-only, never the exit code" in fires[0]
+
+    # AGREEMENT IS SILENT IN BOTH SPELLINGS — the arch-map short form and the full
+    # repo path with its extension are one module, and a rule that read them as two
+    # would report every correctly-filed row in the registry.
+    assert trace.if_this_project_advisories([_if_row()], llrs) == []
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(ThisProject="project-trajectory/scripts/check_perf.py")], llrs
+        )
+        == []
+    )
+    # A `;`-joined cell matches on ANY endpoint: a bundle naming the owner's module
+    # among several is filed correctly, not misfiled.
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(ThisProject="scripts/derive_gate; scripts/check_perf")], llrs
+        )
+        == []
+    )
+
+
+def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
+
+    # An SR owner names no module, so nothing is derivable and nothing disagrees.
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(Owner="SR-014", ThisProject="scripts/derive_gate")], llrs
+        )
+        == []
+    )
+    # A dangling owner is `if_ownership_advisories`' finding ("Owner references
+    # unknown LLR-999"), and reporting it twice under two headings would make one
+    # defect look like two.
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(Owner="LLR-999", ThisProject="scripts/derive_gate")], llrs
+        )
+        == []
+    )
+    # NON-MODULE ENDPOINTS ARE NOT A DISAGREEMENT — they are wi455's
+    # counterpart-transform business (45 of 122 counterparts are non-module facts).
+    for endpoint in (
+        "docs/requirements/performance-budgets.csv",
+        "docs/gate",
+        "external:downstream adopter",
+        "agent CLI",
+        ".github/workflows/check.yml",
+    ):
+        assert (
+            trace.if_this_project_advisories([_if_row(ThisProject=endpoint)], llrs)
+            == []
+        ), endpoint
+    # An owner LLR with no Module cell is the required-field rule's finding.
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(ThisProject="scripts/derive_gate")], [{"LLR-ID": "LLR-014"}]
+        )
+        == []
+    )
+    # A `-000` example row is a blank form, not a seam.
+    assert (
+        trace.if_this_project_advisories(
+            [_if_row(**{"IF-ID": "IF-000", "ThisProject": "scripts/derive_gate"})], llrs
+        )
+        == []
+    )
+
+
+def test_a_consumes_row_is_answered_for_on_the_counterpart_side():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
+
+    # THE SIDE THE OWNER ANSWERS FOR IS THE PROVIDING SIDE (Q2, 2026-08-15): a
+    # `Consumes` row is a coverage declaration written from the consumer's
+    # viewpoint, so its `ThisProject` is the CONSUMER and the owner's module is in
+    # `Counterpart`. Reading `ThisProject` here would invert the whole rule.
+    consuming = _if_row(
+        Direction="Consumes",
+        ThisProject="scripts/derive_gate",
+        Counterpart="scripts/check_perf",
+    )
+    assert trace.if_this_project_advisories([consuming], llrs) == []
+    mismatched = dict(consuming, Counterpart="scripts/spine_carrier")
+    fires = trace.if_this_project_advisories([mismatched], llrs)
+    assert len(fires) == 1
+    assert "Counterpart='scripts/spine_carrier'" in fires[0]
+    # A Direction outside the closed vocabulary decides no side: the enum rule owns
+    # that row, and guessing a side would report a disagreement nobody declared.
+    assert (
+        trace.if_this_project_advisories([dict(mismatched, Direction="")], llrs) == []
+    )
+
+
+def test_the_derivability_advisory_warns_but_never_gates():
+    # The same never-gates half the S2 detectors carry, for the same reason: the
+    # live registry trips it today, and clearing it means re-pointing owners across
+    # the corpus — the campaign's schedule, not the checker's.
+    import argparse
+
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def ns(strict=False, strict_integrity=False):
+        return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
+
+    loud = _findings_stub(
+        trace, if_this_project_advis=["IF-101 disagrees with its owner"]
+    )
+    assert trace.exit_code(loud, ns(strict=True)) == 0
+    assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
+    assert trace.exit_code(loud, ns()) == 0

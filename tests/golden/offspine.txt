@@ -113,6 +113,10 @@ None. No requirement cell names a concrete artifact.
 
 None. No SR's direct-LLR fan-out exceeds the declared bound.
 
+## ThisProject derivability advisories (warn-only)
+
+None. Every LLR-owned row's owner-side endpoint agrees with its owner's Module.
+
 ## Verification basis (mechanized / demonstrated / attested)
 
 _Of the SRs reported `Approved`: `Test` rows rest on a runnable, re-executable check (mechanized); `Demonstration`/`Manual`/`Analysis`/`Inspection`/`Critique` rows rest on a human observing an outcome (demonstrated/observed — repeatable, but not a runnable check); `Attest` rows rest on a named human's recorded judgment (trust-based — the box can be checked without the work having happened, process.md §4). Only the first is a runnable check. A row whose method is blank or unrecognized is counted as demonstrated/observed, never as mechanized (the conservative default — it does not rest on a runnable check unless proven so)._

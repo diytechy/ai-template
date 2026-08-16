@@ -2,16 +2,17 @@
 """Spine-row TEXT rules and the row primitives they share (WI-329).
 
 Split out of `trace.py`, which owns the JOIN — this module owns the question
-"is this one row readable and decidable on its own?", asked four ways:
+"is this one row readable and decidable on its own?", asked seven ways:
 
-| function                  | tier     | what it catches                        |
-|---------------------------|----------|----------------------------------------|
-| `provenance_findings`     | gating   | the row carries its own history        |
-| `form_findings`           | gating   | the row is not one testable obligation |
-| `paraphrase_advisories`   | advisory | the child re-words its parent          |
-| `ac_advisories`           | advisory | a comparative with no named predicate  |
-| `sr_artifact_advisories`  | advisory | a requirement cell names an artifact   |
-| `sr_fanout_advisories`    | advisory | an SR's direct-LLR fan-out is merged   |
+| function                    | tier     | what it catches                        |
+|-----------------------------|----------|----------------------------------------|
+| `provenance_findings`       | gating   | the row carries its own history        |
+| `form_findings`             | gating   | the row is not one testable obligation |
+| `paraphrase_advisories`     | advisory | the child re-words its parent          |
+| `ac_advisories`             | advisory | a comparative with no named predicate  |
+| `sr_artifact_advisories`    | advisory | a requirement cell names an artifact   |
+| `sr_fanout_advisories`      | advisory | an SR's direct-LLR fan-out is merged   |
+| `if_this_project_advisories`| advisory | an endpoint disagrees with its owner   |
 
 They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
@@ -56,6 +57,55 @@ def is_drafted(row):
     honours the retired words, which `tests/test_rule_sync.py` asserts
     negatively over the source of every script."""
     return (row.get("Status") or "").strip().lower() == "drafted"
+
+
+# Source-file extensions stripped when normalizing a module path so the two
+# module-naming conventions in play align: an LLR `Module` cell carries the full
+# repo path with extension (`project-trajectory/scripts/check.py`) while the
+# arch-map / an IF endpoint may use the shorter map form (`scripts/check`).
+# Normalization strips a leading `project-trajectory/` segment and any one of
+# these tails so both collapse to the same key.
+MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+
+# The ONE declared way an IF row says "this endpoint is deliberately outside this
+# tree" (2026-08-15 interface rework, plan step 2). A controlled PREFIX on the
+# endpoint value, not a new column, and the shape was chosen for three reasons a
+# column does not have: it needs no schema change so it rides the carrier and the
+# CSV fallback unaltered, it reads at the point of use (the cell that is
+# unresolvable is the cell that says why), and it cannot drift out of sync with
+# the endpoint it qualifies the way a parallel `external = true` flag would.
+#
+# Before it existed, an external actor and a rotted path were INDISTINGUISHABLE:
+# the classifier guessed from spelling — anything without a slash or an extension
+# "read as an external actor" — so `docs/subagent-gate` (a real path, dead since
+# the policy moved to docs/process.toml) was a finding while `agent CLI` was
+# silently fine, and a rot that happened to look like a name would have been
+# silently fine too. The marker replaces the guess with a claim someone made.
+EXTERNAL_ENDPOINT_PREFIX = "external:"
+
+# MODULE_EXTS, EXTERNAL_ENDPOINT_PREFIX and `norm_module` MOVED HERE FROM trace.py
+# at re-tier v2 S5 (WI-464), unchanged: `if_this_project_advisories` below asks the
+# same endpoint-vs-module question and is a PURE predicate, so the choice was a
+# fourth copy of the normalizer or ONE home in the lower layer. trace.py imports
+# all three back — the same direction it already imports `refs`/`is_example`, so no
+# cycle — and keeps `_norm_module` as a local alias, leaving its call sites
+# untouched. (check_trajectory.py and gen_arch_map.py still carry their own
+# copies; consolidating those is the WI-448 common-module program, not this WI.)
+
+
+def norm_module(path):
+    """A module path reduced to a naming-convention-neutral key (see MODULE_EXTS):
+    strip a leading `project-trajectory/`, any source extension, and `/__init__`."""
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
 
 
 # Comparative/absolute terms that demand a predicate. Matched on word
@@ -536,5 +586,123 @@ def sr_fanout_advisories(srs, llrs, bound=SR_FANOUT_MAX):
             "the row by observable class, or record a per-row 'fan-out "
             "re-stamp: <reason>' in Rationale (process.md §3 'one decision per "
             "row'; warn-only, never the exit code)".format(rid, n, bound)
+        )
+    return out
+
+
+# Which endpoint cell the OWNER answers for, by `Direction`. The owner answers for
+# the PROVIDING side: on a `Provides` row that side is written in `ThisProject`, on
+# a `Consumes` row the providing side is the `Counterpart` (Q2, 2026-08-15 — a
+# Consumes row is a COVERAGE declaration written from the consumer's viewpoint, so
+# the row's own `ThisProject` is the consumer, not the owner's module). Keyed
+# lower-case off the closed `Direction` vocabulary; any other value (blank, or a
+# word the enum does not know) resolves to None and the row is skipped, because
+# the required-field and enum rules already say what is wrong with it.
+_OWNER_SIDE_COLUMN = {"provides": "ThisProject", "consumes": "Counterpart"}
+
+
+def _module_shaped(endpoint):
+    """Is this endpoint a MODULE reference at all — the only class the
+    derivability question ranges over?
+
+    Everything else in the endpoint grammar (module-or-path-or-`external:`) is
+    wi455's counterpart-TRANSFORM business, not a disagreement: 45 of 122
+    counterparts are non-module facts (B2, measured), and reading a data file or a
+    named external actor as "the module the owner should have named" would put a
+    false accusation in the report for every one of them.
+
+    So: an `external:` claim is out (someone declared it outside this tree), a
+    `docs/` path is out (the documentation tree holds no modules), an endpoint
+    carrying WHITESPACE is out (`agent CLI`, `downstream adopter` — prose names an
+    actor, never a path), and a path whose extension is not a source extension is
+    out (`.csv`, `.toml`, `.md`). A path with no extension stays IN, because the
+    short arch-map form (`scripts/check_perf`) is spelled exactly that way.
+
+    KNOWN OVER-DETECT, accepted: a bare DIRECTORY endpoint is indistinguishable
+    from a short-form module path without touching the filesystem, and this
+    predicate is pure. Warn-only, so the cost is one hint to argue with."""
+    e = (endpoint or "").strip().replace("\\", "/")
+    if not e or e.startswith(EXTERNAL_ENDPOINT_PREFIX) or e.startswith("docs/"):
+        return False
+    if any(ch.isspace() for ch in e):
+        return False
+    if "." not in e.rsplit("/", 1)[-1]:
+        return True
+    return e.endswith(MODULE_EXTS)
+
+
+def _module_endpoints(cell):
+    """The MODULE-shaped endpoints of one `;`-joined endpoint cell.
+
+    Split on `;` ONLY — an endpoint may legitimately contain a space or a comma,
+    and reading a multi-endpoint cell as one string is how a real seam gets
+    reported as a disagreement (IF-097 names three modules)."""
+    parts = (p.strip() for p in (cell or "").split(";"))
+    return [p for p in parts if _module_shaped(p)]
+
+
+def _owner_llr_module(row, modules):
+    """``(owner_id, module)`` for a row owned by exactly one LLR, else ``("", "")``.
+
+    Deliberately silent in three cases, each already owned by another rule: an
+    `SR-###` owner (the SR tier names no module, so nothing is derivable and
+    nothing disagrees), a cell naming zero or several owners
+    (`if_ownership_advisories`' "exactly one owner" arm), and an owner id that
+    resolves to NO LLR row or to a row with an empty `Module`
+    (`if_ownership_advisories` reports the dangling owner by name, and the
+    required-field rule reports the empty cell — a second message here would be
+    one defect reported twice under two headings)."""
+    owners = refs(row.get("Owner"))
+    if len(owners) != 1 or not owners[0].startswith("LLR-"):
+        return "", ""
+    return owners[0], modules.get(owners[0], "")
+
+
+def if_this_project_advisories(ifs, llrs):
+    """Warn-only: an IF row whose OWNER-SIDE endpoint disagrees with the `Module`
+    its owner LLR names (re-tier v2 R4, owner ruling 2026-08-15).
+
+    **`ThisProject` is on its way out.** R4 ruled the end-state schema: `owner`
+    stays id-typed and points at the design tier wherever a design row exists, and
+    once it does, the project's own side of the seam is DERIVABLE — owner → LLR →
+    `module` — so the cell restates a fact that already has a home. One artifact
+    binding, stated once, at the LLR `Module` cell. wi455 owns the removal (the
+    schema's existing HELD note names it); this is the ADVISORY THAT RUNS FIRST,
+    because a cell cannot be dropped as redundant while the two spellings of it
+    still disagree — the disagreement is the one thing a derivation cannot survive,
+    and it has to be visible and settled before the column goes.
+
+    The endpoint compared is the one the owner ANSWERS FOR (`_OWNER_SIDE_COLUMN`),
+    not always `ThisProject`: on a `Consumes` row the owning design row is the
+    provider and its module is written in `Counterpart`. Both sides are normalized
+    (`norm_module`), so the arch-map short form and the full repo path with its
+    extension read as one module rather than as a disagreement, and a `;`-joined
+    cell matches on ANY endpoint — a bundle that names the owner's module among
+    several is not misfiled.
+
+    Warn-only, never the exit code, and permanently so as far as this rule is
+    concerned: clearing it means re-pointing owners and correcting endpoints across
+    the registry, which is the re-tier campaign's schedule, not the checker's."""
+    modules = {rid: (r.get("Module") or "").strip() for rid, r in _real(llrs, "LLR-ID")}
+    out = []
+    for r in ifs:
+        iid = (r.get("IF-ID") or "").strip()
+        oid, module = _owner_llr_module(r, modules)
+        col = _OWNER_SIDE_COLUMN.get((r.get("Direction") or "").strip().lower())
+        if not iid or is_example(iid) or not module or not col:
+            continue
+        endpoints = _module_endpoints(r.get(col))
+        want = norm_module(module)
+        if not endpoints or any(norm_module(e) == want for e in endpoints):
+            continue
+        out.append(
+            "IF {} {}={!r} names no module matching owner {}'s LLR Module {!r} — "
+            "this_project is derivable as owner→LLR→module once these agree, and "
+            "the cell is dropped once it is (re-tier v2 R4; wi455 owns the "
+            "removal): re-point Owner at the LLR that implements this endpoint, "
+            "or correct the endpoint — a redundant cell can be deleted, a "
+            "DISAGREEING one cannot (warn-only, never the exit code)".format(
+                iid, col, (r.get(col) or "").strip(), oid, module
+            )
         )
     return out
