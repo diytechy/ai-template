@@ -36,6 +36,156 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15n — the §3 JUDGEMENT SWEEP: five owner rulings executed, one
+  finding INVERTED before it could be fixed, and the suite run on the declared
+  floor for the first time the record can show.** *Executed under the owner's
+  in-session rulings on the review package's §3 (2026-08-15); every authoring
+  act stays `Drafted` and overturnable; no Status, `approval` or attestation
+  cell moved. Commits `1212c58d` (the sweep) + `b6e72875` (the floor/pins).
+  Investigation ran as four read-only agents (two opus, two sonnet), every
+  claim re-verified in-session before an edit.*
+  - **H1 — CONFIRMED, nothing owed.** The owner accepted the recommendation;
+    round 2's F7 had already executed the identical shed convergently
+    (`2026-08-15j`): SR-166's requirement states destination materialization +
+    dogfood parity only, and its acceptance hands manifest presence to SR-163
+    by name.
+  - **M1 — the owner asked "drop one of SR-159/SR-162 unless there is a
+    detail"; the detail is real, so BOTH STAND with the carve-out.** Measured:
+    ONE shared observable of their 6–7 (the IF endpoint-pair/`Signal`
+    declaration site, landed on SR-162 by `2026-08-15b`'s M3 extension), zero
+    shared requirement text (the `2026-08-15i` 3-shingle scan never surfaced
+    the pair), zero shared code symbols (`interface_findings` + the
+    check_trajectory connectivity rules vs `frame_findings`/
+    `sr_boundary_findings`/`tieback_findings` — no LLR cites the latter set),
+    and INDEPENDENT vacuity regimes: at authority dial rung 1 — every
+    adopter's normal state — SR-162 applies while SR-159 is vacuous. A merge
+    either way is one row with two vacuity regimes and three severity regimes
+    across a phase-1/phase-5 conflict, needing a third 13v waiver; dropping
+    SR-159 additionally costs ~19 citation edits (5 LLR, 5 TC, 5 IF
+    `req_refs`, 4 closed WI specs). EXECUTED: the carve-out on SR-159's
+    by-default closer, widened to the TRIPLE claim the analysis found (SR-157
+    also names `REQUIRED_FIELDS`/`ENUM_FIELDS`, and its LLR-003 is the checker
+    that implements them): endpoint-pair/Signal semantics are SR-162's, the
+    generic required-field/closed-vocabulary checker stays SR-157's. SN-037's
+    un-mechanized review residual keeps its home in SR-162's rationale.
+  - **M3 — the finding INVERTED between recording and fix; the fix follows
+    the truth, not the recommendation.** `2026-08-15i` measured the
+    chain-consistency message FALSE under `is_planned`; step 5/5b deleted that
+    predicate and the claim is TRUE again — durably, by construction:
+    `baseline_snapshot.is_drifted` short-circuits unless the live row claims
+    approval, so a `Modified` child under an `Approved` parent is seen by
+    NEITHER the marker arm (keys off the SR) nor the drift arm (skips
+    `Modified` rows). Re-measured on the 9 live advisory rows (LLR-040/SR-043,
+    the seven SR-148 children, TC-034/SR-034): absent from `--ratify
+    modified`, `open-items.html` and `_spine_pending` alike. The recommended
+    wording ("evidence owed") also died with the fold — `_entry_kind` is back
+    to two kinds and no such projection line exists. EXECUTED: the message
+    names the mechanism ("reads Approved — the SR is the attestation unit and
+    a Modified row never counts as drifted, so no brief, projection or gate
+    carries this amendment; flip the owning SR"), and `sr_chain_drifts`'
+    docstring stops claiming the model "can now simply close" the WI-316 hole
+    — it closes the UNMARKED half only.
+  - **M3's deeper cut — the owner's "elsewhere silencing the original
+    warning?" answered YES.** Structural cause: `test_rule_sync` guards
+    predicates and declared vocabularies; NOTHING guards message strings,
+    generated-surface labels or registry prose — every stale item sat in that
+    unguarded layer. Fixed: `gen_open_items`' subtitle offering the retired
+    "evidence" kind; its pointer crediting the chain-consistency warn to
+    `--strict` (it prints on every run; `--strict` never promotes it); THREE
+    dashboard labels presenting `approved` counts as "verified"
+    (`gen_trajectory`'s definition card, `traj_panels`' SR row and its
+    DevBar-Release row — the last an approval cell presented as release-level
+    verification, the exact double claim OI-30 D1 deleted); `check_trajectory`'s
+    amend-without-flip justification ("the sitting never sees the change" —
+    false the moment a seed exists; it now says the change surfaces only as
+    drift, never as the re-attest it owes); `trace`'s `--require-verified`
+    help + module docstring still describing the pre-WI-259 Test-only
+    criterion; and the `Drafted` LLR details 157/158/159 still speaking
+    `Verified`/`Planned`/`Draft`. RECORDED, not changed: **the red-TC census
+    rung is structurally dead** — `_TC_NOT_RED` equals the whole narrowed
+    enum, so the LLR-159 rung can fire in no conformant repo;
+    `dispatch.py`'s comment claimed the vocabulary was "once again wider than
+    the exemption" (false — corrected to state the truth) while
+    `test_adjudicate_brief` already knew and moved its fixtures out-of-enum;
+    retire-or-re-arm is the owner's. Also recorded: TC-123 (`Approved`)
+    `.method` still speaks the retired vocabulary — an attested cell, the
+    sitting's to amend; `intake`'s "re-verify" verbs; `bootstrap`'s scaffolded
+    `**Status:** DRAFT` gate-policy header; the `--require-verified` flag
+    NAME (help corrected; a rename is a downstream migration).
+  - **L1 — the owner's "I don't see any interfaces satisfying B-06"
+    CONFIRMED; not a search gap.** Zero `B-06` references in
+    `interfaces.toml`, zero CI-workflow endpoints under the keyword sweep,
+    and `2026-08-15f`'s crossing table already measured B-06 at 0 IFs — the
+    recorded, owned gap (owner SR-151; the two new B-06/B-07 rows are the
+    wi455 lane's). Orthogonal to the `["B-06","B-05"]` attribution call,
+    which stays the owner's with one sweep addendum: **SR-152/B-07's
+    acceptance is the same package-alone shape** (`test_ci_tier_declaration`
+    exercises no hosted trigger for either row), so the X2 precedent applies
+    to the PAIR or to neither. Cell untouched.
+  - **L2 — the "means of testing, even virtualized" ALREADY EXISTS**:
+    `tests/test_check_perf.py` drives the regression verdict end-to-end
+    against a bootstrapped scaffold
+    (`test_regression_beyond_tolerance_fails_when_gate_fail`: budget 1000,
+    baseline 500, tolerance 10%, measured 600 → exit 1) with unit,
+    passing-arm, absolute-arm, warn-tier, malformed-value, tier-scoping and
+    harness-wiring siblings; `test_perf_budgets.py` separately pins SR-015's
+    back-link rule. The gap was the SR statement alone — built
+    (`check_perf.evaluate`), decomposed (LLR-014), proven (TC-014), owned by
+    no SR (F6: "their contract has no home to point at"). EXECUTED: **SR-167
+    minted `Drafted`, phase 1**, stating BOTH breach arms as one exit
+    contract (the SR-157 one-verdict shape — the regression framing was the
+    symptom, not the boundary); `IF-004`/`IF-031` `req_refs` gain it
+    (off-spine, `approval = drafted`); id watermark 166→167. Deliberately NOT
+    re-pointed: `LLR-014.sr_refs` and `TC-014.verifies` — both `Approved`,
+    and amending an attested cell is the sitting's act (when taken: LLR-014
+    adds SR-167 beside SR-006, TC-014 verifies it beside LLR-014).
+  - **THE FLOOR FINDS — the bar run on the repo's own `.venv` (3.11.9),
+    and it did not survive contact.** Four defects, all of the same era and
+    class (authored against an interpreter above the floor): (1)
+    `intake._rewrite_toml_statuses` read via `Path.read_text(newline="")` — a
+    3.13-only signature, deterministic TypeError on the declared 3.11 floor,
+    the precise trap `test_generated_newlines` itself documents; fixed
+    byte-preserving via `open(newline="")`. (2) `intake` was the ONE kit CLI
+    never calling `_utf8_console`, so its refusal banners reached a Windows
+    pipe as cp1252 and killed any UTF-8 reader (`run_py`'s documented
+    contract); fixed with the `agent_loop` idiom. (3)
+    `test_the_backslash_normalization_is_windows_only` built its `Path` AFTER
+    patching `os.name` to posix — on 3.11 that mints a `PosixPath`, raises
+    `NotImplementedError` on Windows, and the exception detonates inside
+    pytest's own reporting while the patch is live: an xdist worker crash
+    that KILLED THE WHOLE SESSION (both first full-suite attempts died on
+    exactly this item; 3.13 removed the error, which is how it slipped).
+    Fixed: the Path is built before the patch. (4) `docs/test/report.html` —
+    gitignored residue of Aug 1 — still carried retired `G2`/`G3` tags and
+    redded the stage-ladder ERROR test; regenerated. **The honesty
+    consequence, stated rather than smoothed: (1) and (3) are deterministic
+    on 3.11 Windows, so the earlier "2544 passed" full-suite greens
+    (`2026-08-15g`…`m`) were produced by an interpreter the record does not
+    name; this entry's figures are from `.venv` 3.11.9.** Ratchet re-stamps
+    with reasons in place: trace.py 4196→4212, check_trajectory.py
+    4162→4165, intake.py 1796→1806; the gen_open_items LF site pin 876→877.
+    Pre-existing and RECORDED, not chased: the `traj_status`→`derive_gate`
+    undeclared-seam ERROR at `check_trajectory --strict` (fires on the clean
+    tree at HEAD; the wi455 family); the CRLF-relay conviction test
+    (`test_a_whole_file_crlf_relay_in_a_claim_shape_convicts`) failing
+    identically at the pre-session build commit; and the dispatch trio dying
+    on Windows MAX_PATH ("Filename too long" at `worktree add`) only under
+    xdist tmp depths — all three pass or fail independently of this
+    session's content.
+  - **Gates (build commits `1212c58d` + `b6e72875`, clean tree):** smoke tier
+    1179 passed / 5 skipped in 46.5s
+    <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b6e72875 -->,
+    check_docs OK (416 docs, 1231 links, 0 broken); full suite 2537 passed /
+    13 skipped / 4 failed in 0:06:46 — the four being exactly the
+    pre-existing environment findings named above, none of this session's
+    content
+    <!-- fig: cmd="python -m pytest -q -n auto" rev=b6e72875 -->.
+    Measured state: `SN=27 SR=60 LLR=155 TC=150 orphans=0 integrity=0
+    drafts=49 interfaces=122 form-findings=2` (the two recorded 13v waivers)
+    <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict" rev=b6e72875 -->;
+    gate unchanged `DevBar-Reqs` (basis `drafted=49 modified=108`); the
+    ratify brief regenerated in the same act — 38 SR sections, SR-167
+    joining the Draft-ratification set.
 - **2026-08-15m — THE RENAME LANDED, the ceiling with it, and off-spine
   approval authority became derived rather than declared.** *Executed
   provisionally under the owner's 2026-08-15 charge-through and overturnable at

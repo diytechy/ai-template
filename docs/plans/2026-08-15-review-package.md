@@ -29,11 +29,17 @@ all still yours.
 | **D-9 migration step 5/5b — THE RENAME**: the Status enum narrows to `{Drafted, Approved, Modified}` (SR 15/22/22, LLR 17/59/79, TC 16/127/7) · `Planned` FOLDS into `Approved` per your D1 and `is_planned` is deleted in both homes · 136 off-spine `approval` cells `draft`→`drafted` · `drafts=`→`drafted=` and `planned=` gone from the basis line with `check._BASIS_RE` in the same commit · shipped prose + templates + ~185 test literals + 3 goldens. **The gate did not move: DevBar-Reqs, stage DevStg-Boundary.** | `2026-08-15m` | done, overturnable |
 | **The `sr_bar` ceiling + its marker (your D2)** — `DevBar-Release` unreachable-by-cell, regression pin commented as deliberately deleted when the harness driver lands; the derived line renders `DevBar-Tests (Release: pending harness driver)` from one home. **§3 gains a measured finding: the ceiling's "loosens nothing" premise is FALSE for 11 harness steps** — read it before you accept the ceiling as ruled. | `2026-08-15m` | done; **one finding for you** |
 | **Ladder-derived off-spine approval authority (your D3)** — `agent_common.APPROVAL_RUNGS` + `human_approves`, no new key and no new enum; the dispatcher seam + the writer-side contract, with the honest note that no WI kind carries a registry identity today | `2026-08-15m` | done |
+| **The §3 judgement sweep on your rulings** — H1 confirm · M1 carve-out (the merge declined on a measured detail) · M3 inverted + the deeper-cut message sweep · L1 confirmed (no IF realizes B-06) · L2 `SR-167` minted — plus four 3.11-floor fixes forced by running the bar on the repo's own venv, and the honest note that the earlier full-suite greens were produced by an interpreter the record does not name | `2026-08-15n` | done, overturnable |
 
-**Measured state:** `SN=27 SR=59 LLR=155 TC=150 orphans=0 integrity=0
-component-findings=0 interfaces=122 interface-findings=0 form-findings=2` (the
-two recorded 13v waivers). Full suite at last run: **2544 passed, 10 skipped**.
-Gate unchanged at `DevBar-Reqs`.
+**Measured state (post-sweep):** `SN=27 SR=60 LLR=155 TC=150 orphans=0
+integrity=0 component-findings=0 interfaces=122 interface-findings=0
+form-findings=2` (the two recorded 13v waivers). Full suite at last run, **on
+the repo's own `.venv` 3.11.9**: **2537 passed, 13 skipped, 4 failed — all
+four pre-existing environment findings named in log `2026-08-15n`**, none of
+the sweep's content. (The earlier "2544 passed" figure was produced by an
+interpreter the record does not name — two 3.11-deterministic defects fixed at
+the sweep made that run impossible on the declared floor.) Gate unchanged at
+`DevBar-Reqs`.
 
 ---
 
@@ -157,8 +163,14 @@ Detail and reasoning: log `2026-08-15j`.
 > will bless their text. They are the one set the surfaces cannot hand you;
 > the sitting's read must include them deliberately (log `2026-08-15m`).
 
-1. **Sweep §3's judgement items** — each is a one-line confirm/overrule; the
-   log entries carry the detail. (OI-30 is closed — §2.)
+1. **Sweep §3's judgement items** — **DONE 2026-08-15 on your rulings** (log
+   `2026-08-15n`; each disposition is in §3 above, every act overturnable).
+   What §3 still hands you at the sitting: the L1 pair call
+   (`SR-151`+`SR-152` boundary_refs, together or not at all), the dead
+   red-TC-census rung (retire or re-arm), TC-123's retired-vocabulary method
+   cell, the LLR-014/TC-014 re-points onto `SR-167`, and the three small
+   naming calls (intake's "re-verify" verbs, bootstrap's `Status: DRAFT`
+   header, the `--require-verified` flag name). (OI-30 is closed — §2.)
 2. **Review the ratification brief** —
    [docs/ratify/2026-08-13-wi444.md](../ratify/2026-08-13-wi444.md)
    (regenerate first: `trace.py --ratify modified --out …`) and
@@ -183,7 +195,9 @@ the brief went from 47 SR sections to **37**, because the 10 SRs that read
 `Planned` now read `Approved` and an approved row owes no re-attest. Those ten
 are named in the log entry — **they are the rows the fold moved past you**, and
 they are unanchored until the seed, so step 4 blesses their text whether or not
-you read it here. Read them from the log's list, or overrule the fold.
+you read it here. Read them from the log's list, or overrule the fold. (The
+sweep regenerated the brief once more — **38 sections now**, `SR-167` joining
+the Draft-ratification set; log `2026-08-15n`.)
 
 ---
 

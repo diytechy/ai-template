@@ -56,9 +56,11 @@ narrated is in those homes.
   close itself are **adjudicated** (log `2026-08-15f`); nothing is queued behind
   any of it. **Your sequence is
   [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md) §5** —
-  sweep the judgement items, review the regenerated brief, sign, and seed —
-  `OI-30` is CLOSED (all three ruled, `2026-08-15k`/`l`) and the rename is
-  EXECUTED (`2026-08-15m`; the gate did not move).
+  **the §3 sweep is DONE on your rulings** (log `2026-08-15n`: M1's merge
+  declined on a measured detail, M3 inverted and swept deeper, `SR-167`
+  minted, four 3.11-floor fixes) — what remains is the brief review, sign,
+  and seed — `OI-30` is CLOSED (all three ruled, `2026-08-15k`/`l`) and the
+  rename is EXECUTED (`2026-08-15m`; the gate did not move).
   **The constraint-fit half of the re-tier's purpose has an answer, it is a
   FINDING, and it is now measured rather than estimated** (completion §4; log
   `2026-08-15f`): **B-05 carries 50 of the layer's 65 boundary references
@@ -108,12 +110,12 @@ narrated is in those homes.
   ruling superseded it) — delete only after deciding the draft is not wanted.
 - **THE SITTING RUNS FROM ONE DOCUMENT** —
   [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md):
-  the charge-through's full ledger (log `2026-08-15b`…`m`, every act
-  provisional and overturnable), OI-30 closed and executed, the recorded
-  judgement items, the adversarial round-2 verdict, and the sitting procedure
-  in order (sweep the judgement items → review the ratify brief → sign via
-  `intake` → **seed the snapshot in the same reviewed commit** → the
-  follow-on arming). Its §5 preamble carries the one warning no surface can
+  the charge-through's full ledger (log `2026-08-15b`…`n`, every act
+  provisional and overturnable), OI-30 closed and executed, the judgement
+  items **swept on the owner's rulings** (`2026-08-15n`), the adversarial
+  round-2 verdict, and the sitting procedure in order (review the ratify
+  brief — 38 sections now — → sign via `intake` → **seed the snapshot in the
+  same reviewed commit** → the follow-on arming). Its §5 preamble carries the one warning no surface can
   hand you: the ten ex-`Planned` rows left every brief when D1's fold
   executed. Nothing was signed or seeded in advance;
   `docs/archive/last_approved/` deliberately does not exist yet.
