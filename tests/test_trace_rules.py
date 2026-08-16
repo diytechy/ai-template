@@ -411,7 +411,7 @@ def test_modified_chain_advisory_is_warn_only(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "LLR LLR-001 is Modified" in proc.stdout
-    assert "flip the attestation unit" in proc.stdout
+    assert "flip the owning SR" in proc.stdout
 
 
 def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
@@ -455,7 +455,10 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "reads 'Drafted'" not in proc3.stdout
     assert "llr-status-advisories" not in proc3.stdout
     report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "None. No unlifted LLRs, no orphaned Modified chain rows." in report3
+    assert (
+        "None. No unlifted LLRs, no Modified chain rows riding an unflagged "
+        "or unresolvable owning SR." in report3
+    )
 
 
 # --- WI-146(a): the --ratify batch-scoped ratification hierarchy view ---------

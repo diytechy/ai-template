@@ -3269,13 +3269,21 @@ def test_the_backslash_normalization_is_windows_only(monkeypatch):
 
     reported = (0, "x\\__pycache__\\evil.pyc\0sub/cache.pyc\0")
     monkeypatch.setattr(integ.ac, "git", lambda *a: reported)
+    # The Path is built BEFORE os.name is patched: on the 3.11 floor Path()
+    # dispatches on os.name at instantiation, so constructing it under the
+    # posix patch mints a PosixPath and raises NotImplementedError on Windows
+    # — and the exception detonates inside pytest's own reporting while the
+    # patch is live, killing the whole session as an INTERNALERROR (xdist
+    # worker crash). Python 3.13 removed that error, which is how this
+    # slipped the floor (found 2026-08-15, sitting sweep).
+    unused = Path("unused")
     monkeypatch.setattr(os, "name", "posix")
-    assert integ.ignored_files(Path("unused")) == {
+    assert integ.ignored_files(unused) == {
         "x\\__pycache__\\evil.pyc",
         "sub/cache.pyc",
     }
     monkeypatch.setattr(os, "name", "nt")
-    assert integ.ignored_files(Path("unused")) == {
+    assert integ.ignored_files(unused) == {
         "x/__pycache__/evil.pyc",
         "sub/cache.pyc",
     }

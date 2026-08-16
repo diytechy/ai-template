@@ -193,7 +193,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
-    assert "2 SR · 1 verified" in text
+    assert "2 SR · 1 approved" in text
     assert "3 LLR" in text and "4 TC" in text
     assert "1 of 2 SR approved" in text
     # the pre-station picture is gone: the serial resume-loop chips and their
