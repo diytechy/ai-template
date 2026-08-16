@@ -195,8 +195,20 @@ HANDBACK_PREFIX = "\n## Handback\n"
 # that never had one.
 CONTEXT_PREFIX = "\n## Context\n"
 # Slug source width: enough of a title to be recognizable in a directory
-# listing, short enough to keep paths sane.
-SLUG_CHARS = 40
+# listing, short enough to keep paths sane. This slug becomes a git branch
+# name (dispatch._branch_for) that a lane worktree checks out INSIDE the
+# worktree's own path, then repeats inside `docs/work/active/<branch>/` and
+# again in the spec's own filename — three copies of it stack into one path.
+# Measured 2026-08-15 (WI-462, one Windows dev box, `C:\Projects\...`-depth
+# temp roots): a 40-char slug left a census-minted branch at 259/260 chars
+# under pytest-xdist's extra `popen-gwN/` nesting, and `git worktree add`
+# failed with "Filename too long". Trimmed to 30 for real margin (~30+ chars
+# spare at that same depth) — this is one machine's default-Windows-config
+# arithmetic, not a universal MAX_PATH proof; a repo with `core.longpaths`
+# or a shallower temp root may never feel this, and one nested deeper still
+# could. If it recurs, the fix is either a shorter cap still or documenting
+# long-path support as a precondition — not disabling the tests it trips.
+SLUG_CHARS = 30
 
 
 class ConvertError(Exception):
@@ -262,10 +274,11 @@ def render_frontmatter(pairs):
 
 # --- CSV row <-> spec file ---------------------------------------------------
 def slugify(title):
-    """The filename slug: lowercase kebab of the title's first ~40 characters,
-    `[a-z0-9-]` only, no leading/trailing hyphen. Purely cosmetic — the id in
-    front of it is what identifies the file — so a title that slugs to nothing
-    falls back to `wi`, rather than producing `WI-360-.md`."""
+    """The filename slug: lowercase kebab of the title's first SLUG_CHARS
+    characters, `[a-z0-9-]` only, no leading/trailing hyphen. Purely
+    cosmetic — the id in front of it is what identifies the file — so a
+    title that slugs to nothing falls back to `wi`, rather than producing
+    `WI-360-.md`."""
     slug = re.sub(r"[^a-z0-9]+", "-", (title or "").lower()[:SLUG_CHARS]).strip("-")
     return slug or "wi"
 
