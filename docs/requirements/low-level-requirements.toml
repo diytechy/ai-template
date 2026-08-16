@@ -375,13 +375,13 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-035]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Offline project-state core"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "build_html/spine_stats/arch_icicle/dag_svg"
 detail = """Renders one self-contained root HTML file with completeness tiles, the spine hierarchy, and the WI roadmap DAG."""
 test_refs = "(see TC-038)"
-status = "Approved"
+status = "Modified"
 component = "CMP-009"
 phase = 1
 
@@ -541,7 +541,7 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-051]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Process reference tab"
 module = "project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "process_panel/build_html"
@@ -552,7 +552,7 @@ component = "CMP-009"
 phase = 2
 
 [design.LLR-052]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Tiered When roadmap"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "when_view/_wi_phases"
@@ -575,7 +575,7 @@ component = "CMP-009"
 phase = 3
 
 [design.LLR-056]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Process tab intake + human-decision loop panels"
 module = "project-trajectory/scripts/traj_panels.py"
 code_symbol = "process_panel/_station_panel"
@@ -586,7 +586,7 @@ component = "CMP-009"
 phase = 3
 
 [design.LLR-057]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Decomposition render polish (columns, arrows, persistent hover)"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "when_view/_tier_column/_svg_node"
@@ -619,7 +619,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-060]
-sr_refs = ["SR-148", "SR-156"]
+sr_refs = ["SR-148", "SR-170"]
 title = "next-wi/run-phase retirement + generated status/run-state"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "REGEN_STEPS/regen"
@@ -784,7 +784,7 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-080]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-169"]
 title = "Declared-interface graph rendering"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/gen_arch_map.py;project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_graph/build_html;build_module_map"
@@ -839,7 +839,7 @@ component = "CMP-006"
 phase = 1
 
 [design.LLR-085]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-169"]
 title = "Containerized How-SW rendering"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_containment/sw_graph"
@@ -850,7 +850,7 @@ component = "CMP-009"
 phase = 1
 
 [design.LLR-086]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-169"]
 title = "Tiered How-SW hierarchy"
 module = "project-trajectory/scripts/traj_views.py"
 code_symbol = "sw_containment/_descend"
@@ -861,7 +861,7 @@ component = "CMP-009"
 phase = 2
 
 [design.LLR-087]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-169"]
 title = "Hierarchy seam ports"
 module = "project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "_drill_svg/_drill_edges"
@@ -872,7 +872,7 @@ component = "CMP-009"
 phase = 2
 
 [design.LLR-088]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-169"]
 title = "One-layer hierarchy navigation"
 module = "project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "_descend/_breadcrumb"
@@ -1237,7 +1237,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-124]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-170"]
 title = "Generated status + run-state"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "REGEN_STEPS/regen"
@@ -1333,7 +1333,7 @@ component = "CMP-006"
 phase = 4
 
 [design.LLR-137]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-170"]
 title = "Serial trunk step (log compile + regen)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "compile_log/ordered_fragments/rebase_links"
@@ -1357,7 +1357,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-139]
-sr_refs = ["SR-070"]
+sr_refs = ["SR-168"]
 title = "Pause surfaced in the pending block"
 module = "project-trajectory/scripts/traj_status.py"
 code_symbol = "_pause_pending/pending_block"
@@ -1381,7 +1381,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-141]
-sr_refs = ["SR-006", "SR-156"]
+sr_refs = ["SR-006", "SR-170"]
 title = "Work-branch lane signal + freshness skip"
 module = "project-trajectory/scripts/check.py"
 code_symbol = "_claimed_work_branch/steps"
@@ -1393,14 +1393,14 @@ component = "CMP-007"
 phase = 4
 
 [design.LLR-142]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-170"]
 title = "Trunk-step artifact regen (dependency order)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "regen"
 detail = """Regenerates arch-map, okf, derived-gate, dashboard, status block and open-items as subprocesses in dependency order (derived-gate before its two consumers), skipping absent artifact families with a notice and stopping loudly at the first failure. Never commits; the caller owns the commit."""
 rationale = """derive_gate runs before the dashboard/status regens because docs/gate is their input, not their output."""
 test_refs = "(see TC-135)"
-status = "Approved"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 
@@ -1525,7 +1525,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-153]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-170"]
 title = "The unified trunk-side intake mint + the context block + the ratification-level arms"
 module = "project-trajectory/scripts/intake.py"
 code_symbol = """intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block/flip_verified"""
@@ -1537,14 +1537,14 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-154]
-sr_refs = ["SR-156"]
+sr_refs = ["SR-170"]
 title = "The merge slot's post-merge intake arm"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "integrate_one/_lane_bar_directives/_refresh_bar"
 detail = """integrate_one's post-merge arm is the intake's one honest hook point: the merge has landed, the slot is still held, trunk is serial - intake.intake_after_merge(root, pre-merge head, head, outcomes, branch) mints there as one bookkeeping commit (RULING-6: docs/work/ + the declared generated set), and a mint refusal stops the run loudly while the merge stands (recovery: fix trunk-side, then python intake.py sweep). The refresh's bar directives (_lane_bar_directives, read off the same trunk claim the slot reads) carry the adjudication no-bar arm and the bar strictness pin to _run_bar's --gate."""
 rationale = """Minting anywhere else re-opens the two-lanes-one-id collision the trunk-only ruling ended; the slot is the only place trunk moves under a held lock."""
 test_refs = "(see TC-148)"
-status = "Approved"
+status = "Modified"
 component = "CMP-008"
 phase = 4
 

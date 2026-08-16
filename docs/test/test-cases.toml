@@ -406,14 +406,14 @@ status = "Approved"
 phase = 1
 
 [test.TC-038]
-verifies = ["SR-070", "LLR-035"]
+verifies = ["SR-168", "LLR-035"]
 level = "Integration"
 method = """Generate the core offline dashboard and inspect completeness, spine hierarchy, and roadmap output."""
 tier = "Full"
 expected = "One self-contained root HTML file contains all core views and no external fetches."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory.py::test_generates_self_contained_dashboard; tests/test_traj_graph.py::test_dag_layers_by_dependency_rank"""
-status = "Approved"
+status = "Modified"
 phase = 1
 
 [test.TC-040]
@@ -538,7 +538,7 @@ status = "Approved"
 phase = 1
 
 [test.TC-051]
-verifies = ["SR-070", "LLR-051"]
+verifies = ["SR-168", "LLR-051"]
 level = "Integration"
 method = """Run the dashboard suite; the Process tab renders its three panels from the live registries + docs/gate (the current-gate highlight matches docs/gate and the tier counts match the spine), process-doc link-outs resolve, a bundle-/data-less repo renders byte-identically (no Process data joins), and generation stays byte-deterministic with --check tripping stale output."""
 tier = "Full"
@@ -546,18 +546,18 @@ parameters = "tests/test_gen_trajectory.py (the process-tab cases)"
 expected = """Process tab present with data-derived joins correct; links resolve; data-less render byte-identical; deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_process_tab_renders_three_panels_from_live_data tests/test_traj_panels.py::test_process_current_gate_highlight_follows_docs_gate tests/test_traj_panels.py::test_process_link_outs_prefer_the_scaffolded_docs tests/test_traj_panels.py::test_process_wi_counts_join_work_items tests/test_traj_panels.py::test_process_tab_omitted_and_byte_identical_without_gate tests/test_traj_panels.py::test_process_tab_is_byte_deterministic_and_check_stable tests/test_traj_panels.py::test_meta_process_tab_smoke"""
-status = "Approved"
+status = "Modified"
 phase = 2
 
 [test.TC-052]
-verifies = ["SR-070", "LLR-052"]
+verifies = ["SR-168", "LLR-052"]
 level = "Integration"
 method = """Run When-view phase/workstream thresholds, delivery-phase labels, and parent-edge aggregation."""
 tier = "Full"
 expected = """Tier thresholds, phase display, and deduplicated parent edges match the declared hierarchy."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_tiers_by_phase_above_threshold; tests/test_traj_views.py::test_when_view_parent_edge_is_deduped_union_of_child_edges; tests/test_traj_views.py::test_when_view_nests_workstream_tier_inside_a_phase; tests/test_traj_views.py::test_leaf_wi_block_surfaces_delivery_phase"""
-status = "Approved"
+status = "Modified"
 phase = 2
 
 [test.TC-055]
@@ -572,7 +572,7 @@ status = "Approved"
 phase = 3
 
 [test.TC-056]
-verifies = ["SR-070", "LLR-056", "IF-093", "IF-094"]
+verifies = ["SR-168", "LLR-056", "IF-093", "IF-094"]
 level = "Integration"
 method = """Run the dashboard suite; the Process tab renders both working loops (intake loop A + human-decision loop B) as two intersecting hoops drawn in one self-contained SVG, each a directed closed cycle wired by arrow-headed edges and meeting at the single shared LLM_Agent hub, every stage's link resolving to its canonical doc, the gate-ratification stage present in loop B, a data-less repo rendering byte-identically, and generation byte-deterministic with --check tripping stale output."""
 tier = "Full"
@@ -580,18 +580,18 @@ parameters = "tests/test_gen_trajectory.py (the process-loop cases)"
 expected = """Both loops are explicit closed cycles (data-cycle=closed on each hoop disc); the LLM_Agent hub renders exactly once as the shared central junction of both hoops; every loop edge is directional (one floparrow marker each), 6 for the 5-stage intake loop + 5 for the 4-stage decision loop = 11; loop A stages = [intake -> triage-to-WI -> scheduler-derived ready frontier -> build/review -> merge]; loop B stages = [open-items population incl. gate-ratification -> human review/ruling -> log Decisions -> merge], each card keyed to its loop (data-node a-*/b-*); all stage links resolve; data-less render byte-identical; deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_panels.py::test_process_tab_renders_the_station_cycle tests/test_traj_panels.py::test_station_outcomes_derive_from_the_integrator tests/test_traj_panels.py::test_station_slot_is_the_serial_waist tests/test_traj_panels.py::test_station_refresh_pins_the_bar_attestation tests/test_traj_panels.py::test_station_barrier_and_admission_arms_pin_to_the_dispatcher tests/test_traj_panels.py::test_station_intake_arm_pins_to_the_intake_mint tests/test_traj_panels.py::test_station_links_resolve tests/test_traj_panels.py::test_station_byte_identical_without_data"""
-status = "Approved"
+status = "Modified"
 phase = 3
 
 [test.TC-057]
-verifies = ["SR-070", "LLR-057"]
+verifies = ["SR-168", "LLR-057"]
 level = "Integration"
 method = """Run the dashboard suite; the tiered decomposition views render one horizontal parent->child arrow per containment edge, each tier column no wider than the declared bound, and a persistent last-hovered highlight contract keyed to the last-hovered node; byte-deterministic with --check tripping stale output."""
 tier = "Full"
 expected = """Exactly one parent->child arrow per containment edge; each tier column width <= the declared bound MAX_TIER_COL (a named constant = the widest member label + a fixed padding - a declared value, not an adjective); the persistent-highlight attribute is present and keyed to the last-hovered node id (no flash-on-exit); deterministic; --check trips."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_decomposition_one_arrow_per_containment_edge tests/test_traj_views.py::test_tier_column_honors_declared_width_bound tests/test_traj_views.py::test_persistent_hover_highlight_keyed_to_last_node"""
-status = "Approved"
+status = "Modified"
 phase = 3
 
 [test.TC-058]
@@ -617,14 +617,14 @@ status = "Approved"
 phase = 4
 
 [test.TC-060]
-verifies = ["SR-148", "LLR-060", "SR-156", "LLR-124"]
+verifies = ["SR-148", "LLR-060", "SR-170", "LLR-124"]
 level = "Integration"
 method = """Drive trunk_step --regen and the status-map freshness gate on fixture repos; assert the snapshot regenerates on the trunk, fails fresh when stale, and no next-wi/run-phase surface exists."""
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria, and SR-156 AcceptanceCriteria via the LLR-124 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py; tests/test_gen_trajectory.py"
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-061]
@@ -793,14 +793,14 @@ status = "Approved"
 phase = 1
 
 [test.TC-081]
-verifies = ["SR-070", "LLR-080"]
+verifies = ["SR-169", "LLR-080"]
 level = "Integration"
 method = "Generate dashboard and architecture views with and without declared seams."
 tier = "Full"
 expected = """Seams render as labeled edges in both views; absent seams retain fallback; output is deterministic."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_graph_renders_seams; tests/test_traj_views.py::test_how_sw_stays_a_table_without_seams; tests/test_gen_arch_map.py::test_contracts_and_if_edges"""
-status = "Approved"
+status = "Modified"
 phase = 1
 
 [test.TC-082]
@@ -859,47 +859,47 @@ status = "Approved"
 phase = 1
 
 [test.TC-087]
-verifies = ["SR-070", "LLR-085"]
+verifies = ["SR-169", "LLR-085"]
 level = "Integration"
 method = "Generate nested/flat How-SW containment and boundary aggregation cases."
 tier = "Full"
 expected = """Contained views nest and deduplicate crossing seams; no containment stays byte-identical and deterministic."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_containerizes_when_components_contain_modules; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical; tests/test_traj_views.py::test_nested_components_render_inside_their_parent"""
-status = "Approved"
+status = "Modified"
 phase = 1
 
 [test.TC-088]
-verifies = ["SR-070", "LLR-086"]
+verifies = ["SR-169", "LLR-086"]
 level = "Integration"
 method = "Run component-to-module How-SW tier and top-width-bound cases."
 tier = "Full"
 expected = """Containment creates bounded component tiers that descend to modules; uncontained input remains flat."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_how_sw_collapses_above_component_threshold; tests/test_traj_views.py::test_tier_column_honors_declared_width_bound; tests/test_traj_views.py::test_no_cmp_renders_flat_view_byte_identical"""
-status = "Approved"
+status = "Modified"
 phase = 2
 
 [test.TC-089]
-verifies = ["SR-070", "LLR-087"]
+verifies = ["SR-169", "LLR-087"]
 level = "Integration"
 method = "Render seams at hierarchy ports and crossing container boundaries."
 tier = "Full"
 expected = """Visible endpoints use input/output ports and crossing seams aggregate without duplicates."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_seams_wire_to_block_ports; tests/test_traj_views.py::test_boundary_aggregation_dedupes_cross_component_edges"""
-status = "Approved"
+status = "Modified"
 phase = 2
 
 [test.TC-090]
-verifies = ["SR-070", "LLR-088"]
+verifies = ["SR-169", "LLR-088"]
 level = "Integration"
 method = "Exercise pointer/keyboard descent and breadcrumb restoration."
 tier = "Full"
 expected = """Each input descends one layer and breadcrumb restores the parent in the self-contained render."""
 automated = "Yes"
 evidence = """tests/test_traj_views.py::test_when_view_double_click_descends_a_layer; tests/test_traj_views.py::test_when_view_breadcrumb_restores_parent; tests/test_traj_render.py::test_a1_drill_leaf_blocks_are_keyboard_focusable"""
-status = "Approved"
+status = "Modified"
 phase = 2
 
 [test.TC-091]
@@ -1266,14 +1266,14 @@ status = "Approved"
 phase = 4
 
 [test.TC-130]
-verifies = ["SR-156", "LLR-137"]
+verifies = ["SR-170", "LLR-137"]
 level = "Unit"
 method = """Run the trunk-step suite: committed fragments compile in git order with links rebased and fragments deleted; an uncommitted, heading-less or reserved-heading fragment blocks the whole batch; a fragment-free run is a clean idempotent no-op."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-137 detail contract"
 automated = "Yes"
 evidence = "tests/test_trunk_step.py::test_fragments_compile_in_git_order_and_are_deleted"
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-131]
@@ -1310,25 +1310,25 @@ status = "Approved"
 phase = 4
 
 [test.TC-135]
-verifies = ["SR-156", "LLR-142"]
+verifies = ["SR-170", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
 evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-136]
-verifies = ["SR-070", "LLR-139"]
+verifies = ["SR-168", "LLR-139"]
 level = "Unit"
 method = """Run the pending-surface pause suite: the block renders since/reason verbatim (no clock), omits the stamp when since is empty, matches the reader's fail-closed placeholder on malformation, clears on deletion, and is deterministic."""
 tier = "Full"
 expected = "The pending block renders 'Paused since <date> - <reason>' with the declared date verbatim (no clock), omits the stamp when since is empty, renders the pinned fail-closed placeholder on malformation, and clears when the pause file is deleted."
 automated = "Yes"
 evidence = """tests/test_gen_trajectory_pending.py::test_tracked_pause_projects_reason_and_declared_since; tests/test_gen_trajectory_pending.py::test_pause_malformed_text_matches_the_coordinator_reader"""
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-137]
@@ -1442,7 +1442,7 @@ status = "Approved"
 phase = 4
 
 [test.TC-147]
-verifies = ["SR-156", "LLR-153", "IF-091"]
+verifies = ["SR-170", "LLR-153", "IF-091"]
 level = "Integration"
 method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
 tier = "Full"
@@ -1453,14 +1453,14 @@ status = "Modified"
 phase = 4
 
 [test.TC-148]
-verifies = ["SR-156", "LLR-154", "IF-090"]
+verifies = ["SR-170", "LLR-154", "IF-090"]
 level = "Integration"
 method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py; tests/test_dispatch.py"
-status = "Approved"
+status = "Modified"
 phase = 4
 
 [test.TC-149]
@@ -1563,7 +1563,7 @@ status = "Drafted"
 phase = 5
 
 [test.TC-158]
-verifies = ["SR-156", "IF-101"]
+verifies = ["SR-170", "IF-101"]
 level = "Unit"
 method = """Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXIT CODE, not just as a function call - the wiring into --strict-integrity is the guarantee, and a suite that only calls watermark_findings() survived deleting it. Covers the mint seam IF-101 declares: next_wi_id counts from the mark, so a deleted id is not re-issued, and the reader's refusal on an absent mark is NOT caught."""
 tier = "Smoke"

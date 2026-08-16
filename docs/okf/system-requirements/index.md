@@ -39,7 +39,7 @@ resource: "generated"
 | [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
 | [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
 | [SR-054](SR-054.md) | Dashboard usability (rubric-adjudicated) |
-| [SR-070](SR-070.md) | Offline project-state core |
+| [SR-070](SR-070.md) | Generated views are offline, deterministic and drift-checkable |
 | [SR-111](SR-111.md) | Kit-version stamp |
 | [SR-112](SR-112.md) | Checked per-agent skill fan-out |
 | [SR-113](SR-113.md) | Dev-setup wires the process floor |
@@ -59,7 +59,7 @@ resource: "generated"
 | [SR-152](SR-152.md) | Hosted CI verdict is the harness's own |
 | [SR-154](SR-154.md) | Independent review routed across families |
 | [SR-155](SR-155.md) | Contested planning rounds for marked work |
-| [SR-156](SR-156.md) | Serialized, gated integration of parallel lanes |
+| [SR-156](SR-156.md) | Bounded lanes narrowing to one gated landing |
 | [SR-157](SR-157.md) | Spine and work-registry rules red the harness verdict |
 | [SR-158](SR-158.md) | Documentation drift reds or warns per its declared tier |
 | [SR-159](SR-159.md) | Declared-architecture connectivity gaps are reported |
@@ -71,3 +71,6 @@ resource: "generated"
 | [SR-165](SR-165.md) | The component partition carries a reproducible derivation record |
 | [SR-166](SR-166.md) | The delivered package materializes where its manifest declares it will |
 | [SR-167](SR-167.md) | Performance-budget breaches red their hard-gated rows |
+| [SR-168](SR-168.md) | The state view shows current progress and next work |
+| [SR-169](SR-169.md) | The state view shows how the parts connect |
+| [SR-170](SR-170.md) | Shared authority surfaces are the serial actor's alone |

@@ -36,6 +36,48 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16f — re-tier v2 S4: the seven fan-out offenders ruled — five
+  re-stamps, two splits, and the detector reads zero.** (`WI-464` slice 4;
+  every call provisional and overturnable at the ONE sitting.) Each offender
+  re-read under R1 with a drafted recommendation ruled on before execution.
+  **RE-STAMPED (5, `Fan-out re-stamp:` reason appended to rationale, no
+  other cell moved):** SR-157 (one attributed-finding contract over a rule
+  inventory its own acceptance declares open — the count tracks rules, not
+  decisions), SR-155 (eleven children are the phases of one dual-plan round
+  with one outcome class), SR-148 (the width IS the 2026-08-15 ruled
+  anti-duplication merge; re-splitting would restore the triplication it
+  removed), SR-054 and SR-053 (the child count is the usability/uniformity
+  rubric's anchor census — it rises as anchors mechanize, and would fall
+  only by un-mechanizing them). **SPLIT (2, by observable class):**
+  SR-070's integrity-vs-content merge partitioned on SN-023's own conjuncts
+  — SR-070 survives as the offline/deterministic/drift-checkable artifact
+  contract (5 children), **SR-168** minted "The state view shows current
+  progress and next work" (6), **SR-169** minted "The state view shows how
+  the parts connect" (5); SR-156's seam contract split from the
+  shared-authority-surface contract — SR-156 survives widened to the lane
+  lifecycle, deliberately closing SN-027's previously SR-uncarried
+  bounded-fan-out half (6), **SR-170** minted "Shared authority surfaces
+  are the serial actor's alone" (7, at the bound), carrying the trunk-only
+  regeneration + id-mint invariant. All three mints `Drafted`. Fan-out
+  advisories 7 → 0; the S2 gates bit their own author twice during
+  execution (a passive-voice form finding and a WI-id provenance finding in
+  the SR-070 draft, both caught by the harness and fixed before landing) —
+  the detectors policing the very slice that built them. **Touched
+  non-`Modified` rows, each named per ruling 6 (19):** SR-156 (`Drafted`,
+  survivor rewrite); `Approved`→`Modified` flips from the re-parent/re-point
+  edits — LLR-035, LLR-142, LLR-154; TC-038, TC-051, TC-052, TC-056,
+  TC-057, TC-060, TC-081, TC-087, TC-088, TC-089, TC-090, TC-130, TC-135,
+  TC-136, TC-148. (LLR-151 stays `Approved`, untouched under SR-156.)
+  Recorded for S5/the sitting rather than fixed inline: LLR-144 cites
+  SR-156 while SR-144 states its contract (probable mis-parent); LLR-168's
+  roster-reading half likely belongs to SR-161. Spine now SN=27 SR=63
+  LLR=155 TC=150, orphans=0 integrity=0, uncovered=0; watermark SR
+  167 → 170; gate basis `modified=139`, bar unchanged DevBar-Reqs; ratify
+  brief + status + open-items + OKF + dashboard regenerated
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=86e6142b -->.
+  Slice close, full unfiltered suite (posix-shell gate satisfied):
+  2547 passed / 13 skipped / 0 failed, 518s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=86e6142b -->.
 - **2026-08-16e — re-tier v2 S3: the HOLDS-bundle reword — 22 requirement
   cells to capability/artifact-class voice, and the R2 detector reads
   clean.** (`WI-464` slice 3.) The census's HOLDS set re-read row by row
