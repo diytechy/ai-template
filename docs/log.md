@@ -36,6 +36,43 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16j — WI-467: the blind re-derivation validation ran — 83%
+  convergence, zero contradictions, and the orphan buckets are on the
+  sitting desk.** (Owner-approved same day; protocol per
+  [plans/2026-08-16-tiering-research-memo.md](plans/2026-08-16-tiering-research-memo.md)
+  §2/§3.) Two independent teams derived capability breakdowns BLIND — reads
+  capped to README vision + stakeholder-needs.toml + external.toml, axes
+  deliberately different (A actor/crossing, 21+57 rows; B lifecycle, 24+47
+  rows), both covering 27/27 SNs —
+  [plans/2026-08-16-blind-derivation-a.md](plans/2026-08-16-blind-derivation-a.md)
+  /
+  [-b.md](plans/2026-08-16-blind-derivation-b.md); the alignment pass
+  joined both against the settled legacy layer:
+  [plans/2026-08-16-derivation-alignment.md](plans/2026-08-16-derivation-alignment.md).
+  Headline: 71 obligation clusters, **59 convergent (83%), 0 flat
+  contradictions**; 7 tensions hit by both teams independently (likely real
+  frame/needs defects). Legacy fit: **47 of 63 SRs MATCHED (75%)**;
+  **16 ORPHANED-IN-LEGACY** — 8 implementation-born (the DO-178C
+  derived-requirement class the kit lacks), 7 needs-understatement (a NEEDS
+  defect, not an SR defect), only 1 plausible true accretion; **11
+  ORPHANED-IN-FRESH** — 7 real or partial coverage holes. Top findings for
+  the sitting: the no-stub detector is stated by NO requirement (both teams
+  demanded it; SN-008's acceptance names it; LLR-016/TC-016 exist
+  parentless-in-substance under SR-006); the SR-052/053/054 dashboard-
+  quality family (22 LLRs/22 TCs) rests on a need neither blind team could
+  reach — the perceptual bar is not written in any SN; SN-037's two-sided-
+  change clause is demanded fresh and already self-diagnosed missing by
+  SR-162's rationale; SN-012's right-sizing has 9 citing SRs and no home
+  whose SUBJECT is the property; SN-007's self-application bar survives
+  only inside SR-010's acceptance. Shape finding: every real fresh-side
+  hole is a PACKAGE-WIDE property (right-sizing, one-guide,
+  self-application, one-definition-of-passing) — the SR layer is strong
+  per-capability and systematically thin on cross-package properties. Also:
+  the 8 cleanest-matched SRs carry zero TC coverage (SR-160…166,
+  SR-151/152 — the Drafted phase-5 frontier), and SN-006's safety half
+  lives only in its `why` cell, making SR-043 read need-less (a
+  cell-placement accident). **A validation instrument only — no registry
+  cell moved; every orphan is the owner's finding to rule at the sitting.**
 - **2026-08-16i — re-tier v2 S6 (second half): the ADVERSARIAL ROUND over
   the whole series — CHANGES-REQUESTED on one finding, corrected here; the
   layer is now the sitting's.** Opus, adversarial by instruction, over
