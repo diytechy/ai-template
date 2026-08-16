@@ -36,6 +36,53 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16e — re-tier v2 S3: the HOLDS-bundle reword — 22 requirement
+  cells to capability/artifact-class voice, and the R2 detector reads
+  clean.** (`WI-464` slice 3.) The census's HOLDS set re-read row by row
+  under R2; every concrete artifact name left its requirement cell for the
+  acceptance cell's current-carrier clause (the SR-157/SR-167 pattern), the
+  established voices held one-per-artifact across the corpus: check.py "the
+  delivered harness", bootstrap.py "the delivered scaffold generator",
+  agent_loop.py "the delivered coordinator", run.*+run_menu.py "the
+  launchers at the repository root", docs/process.toml "the single policy
+  declaration home", docs/stack.ini "the declared stack profile". Reworded
+  (22): SR-006, SR-007, SR-009, SR-010, SR-011, SR-022, SR-024, SR-026,
+  SR-027, SR-028, SR-033, SR-034, SR-035, SR-036, SR-043, SR-046, SR-111,
+  SR-112, SR-113, SR-129, SR-137, SR-138. **Touched non-`Modified` rows,
+  each named per ruling 6 (13, all ex-`Approved`, flipped `Modified` as the
+  mechanical amend consequence): SR-009, SR-010, SR-011, SR-022, SR-024,
+  SR-033, SR-034, SR-036, SR-043, SR-111, SR-113, SR-137, SR-138.** No
+  obligation split, merged, added or dropped — every qualifier carried
+  (SR-011's overwrite escape, SR-006's work-branch SKIP, SR-138's
+  never-delete-unwritten-value); one method-contract shed (SR-113's
+  `core.hooksPath`, already verbatim in LLR-122 and now also in acceptance).
+  Confirmed-clean (6): SR-032, SR-114, SR-139, SR-140, SR-147, SR-148 (the
+  two 13v rows' waivers cover their shall structure only — their cells were
+  re-read and carry no artifact). Borderlines, recorded for the sitting
+  rather than forced: SR-006's `docs/gate` + claim path and SR-129's claim
+  path (the named path IS the observable), SR-019/SR-020's hook-point names
+  (a git event name, not a carrier binding; the file binding sits at
+  LLR-019/LLR-020's module cells). The one remaining un-triaged R2 offender
+  in the layer is SR-151's `docs/stack.ini` — deliberately left for S5's L1
+  pair call (SR-151+SR-152 together or not at all, the owner's ruling to
+  make). Detector deltas: the 15 per-row artifact advisories, the 3
+  shared-identity lines and one paraphrase advisory (LLR-011's) are GONE and
+  nothing new appeared; form-findings stay 2 (SR-140/SR-147); llr-status
+  advisories 9 → 7 (the SR-043/SR-034 flips discharged two)
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=856719bc -->.
+  Mechanical consequences, all landed: docs/gate regenerated (basis
+  `modified=121`, bar unchanged DevBar-Reqs), id watermark WI 465 → 466 for
+  the newly filed **WI-466** — trace.py's summary hides the whole
+  verified-mechanized/demonstrated/attested triple when the demonstrated
+  and attested legs are both zero (driven live by this slice's flips of the
+  only two demonstrated rows, SR-034/SR-036: a nonzero mechanized count
+  stopped printing; display defect, filed `quick`/P3 rather than fixed
+  inline). Slice close, full unfiltered suite with the posix-shell gate
+  satisfied: 2547 passed / 13 skipped / 0 failed, 514s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=856719bc -->;
+  check_docs 0 broken. The reword ran WITH its policing advisories, as the
+  ruling sequenced; every call above is provisional and overturnable at the
+  ONE sitting.
 - **2026-08-16d — re-tier v2 S2: the two tiering advisories land, warn-first,
   and the enforcement audit gains their rows.** (`WI-464` slice 2, same
   session as S1.) `trace_text.py` gains two PURE advisory predicates —

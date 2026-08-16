@@ -15,8 +15,8 @@ own review.
 | Preconditions (WI-461/462/463) | **CLEARED** 2026-08-16, adversarially reviewed (log `2026-08-16a`/`b`) |
 | S1 — rules land in prose | **DONE** 2026-08-16 (log `2026-08-16c`): PROCESS.md §3 gains R1+R2, +1,597 flagged and re-stamped; 2.7(a) supersession recorded at both sitting-2 sites |
 | S2 — the two advisories | **DONE** 2026-08-16 (log `2026-08-16d`): `sr_artifact_advisories` + `sr_fanout_advisories` live in the advisory pipe, tested, goldens regenerated, enforcement-audit rows landed; live corpus reproduces §2 exactly (15+3+7 lines) |
-| S3 — HOLDS-bundle reword | **NEXT OPEN** — S1+S2 landed, the ruling's precondition is met |
-| S4 — offender splits | not started |
+| S3 — HOLDS-bundle reword | **DONE** 2026-08-16 (log `2026-08-16e`): 22 cells reworded, 13 ex-Approved flips named, detector reads clean, borderlines recorded (SR-006/019/020/129), SR-151 left for S5's L1 call; full suite 2547/13/0 |
+| S4 — offender splits | **NEXT OPEN** |
 | S5 — folded sitting-desk items + owner re-point (incl. IF-130) | not started |
 | S6 — settle, second read, cross-family round, ONE sitting | LAST, exactly once |
 
