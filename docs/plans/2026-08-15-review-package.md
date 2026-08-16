@@ -4,9 +4,11 @@
 Written at the end of the 2026-08-15 charge-through (owner instruction: *"charge
 through as much as possible until the updates to the spine are ready for me to
 review and approve, with all related changes like vocabulary, wording, and
-interfaces completed"*). Everything below is **provisional and overturnable**;
-nothing was flipped toward `Verified`/`Approved`; no snapshot was seeded; the
-signing acts are all still yours.
+interfaces completed"*). Everything below is **provisional and overturnable**.
+**No claim was ever strengthened**: the vocabulary rename moved words
+value-for-value under your OI-30 rulings (`Planned`/`Verified` → `Approved` is
+D1's fold, not a signing), no snapshot was seeded, and the signing acts are
+all still yours.
 
 ---
 
@@ -30,17 +32,15 @@ signing acts are all still yours.
 
 **Measured state:** `SN=27 SR=59 LLR=155 TC=150 orphans=0 integrity=0
 component-findings=0 interfaces=122 interface-findings=0 form-findings=2` (the
-two recorded 13v waivers). Full suite at last run: **2533 passed, 10 skipped**.
+two recorded 13v waivers). Full suite at last run: **2544 passed, 10 skipped**.
 Gate unchanged at `DevBar-Reqs`.
 
 ---
 
-## 2. The three rulings the sitting must make first — **OI-30**
+## 2. OI-30 — **CLOSED, all three ruled** (owner, in session — log `2026-08-15k`/`l`) **and executed** (`2026-08-15m`)
 
-All three are surfaced on [open-items.html](../open-items.html) /
-`docs/requirements/open-items.toml` OI-30, with the full analysis in
-[2026-08-15-d9-migration-plan.md](2026-08-15-d9-migration-plan.md).
-**Two of three are RULED (owner, in session, 2026-08-15 — log `2026-08-15k`):**
+The record, with the full analysis in
+[2026-08-15-d9-migration-plan.md](2026-08-15-d9-migration-plan.md):
 
 1. **`Planned`'s fate — RULED: fold out into `Approved`** at the rename.
    Your words: functionally equivalent — both fire the breakdown into expected
@@ -122,20 +122,26 @@ Detail and reasoning: log `2026-08-15j`.
 
 ## 5. The sitting procedure, in order
 
-1. **Rule OI-30** (§2, three calls). Everything after step 2 is shaped by them.
-2. **Sweep §3's judgement items** — each is a one-line confirm/overrule; the
-   log entries carry the detail.
-3. **Review the ratification brief** —
+> **⚠ Read the 10 ex-`Planned` rows even though no brief lists them.**
+> D1's fold moved SR-137/138/139/140/144/146/147/148/149/150 to `Approved`, so
+> they left the re-attest brief — and until your seed exists, the unanchored
+> advisory is vacuous, so they sit on **no surface at all** while the seed
+> will bless their text. They are the one set the surfaces cannot hand you;
+> the sitting's read must include them deliberately (log `2026-08-15m`).
+
+1. **Sweep §3's judgement items** — each is a one-line confirm/overrule; the
+   log entries carry the detail. (OI-30 is closed — §2.)
+2. **Review the ratification brief** —
    [docs/ratify/2026-08-13-wi444.md](../ratify/2026-08-13-wi444.md)
    (regenerate first: `trace.py --ratify modified --out …`) and
    [open-items.html](../open-items.html) §2. The wave signs the `Modified`
    rows and ratifies the Draft ones — this is sitting-3's §2.1 window, and the
    status-vocabulary program rides it as one sequence (ruling `2026-08-14e`).
-4. **Sign** — `intake.py`'s flip writer records your rulings; then **seed the
+3. **Sign** — `intake.py`'s flip writer records your rulings; then **seed the
    snapshot**: `python project-trajectory/scripts/intake.py snapshot --seed`
    in the same reviewed commit. This is the first copy to
    `docs/archive/last_approved/` and the birth of drift detection.
-5. **Step 7 executes** (mechanical follow-on, same reviewed act): retire
+4. **Step 7 executes** (mechanical follow-on, same reviewed act): retire
    `Modified` + the transitional predicate, narrow the enum to two, resolve
    `intake`'s `!= "Modified"` guard into a refusal, and arm the UNANCHORED rule
    as an ERROR on the integrity floor. (The `sr_bar` ceiling of your D2 is
