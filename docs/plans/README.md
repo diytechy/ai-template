@@ -1,7 +1,11 @@
 # docs/plans/ — live plan documents
 
-The live planning surface. **Current contents (2026-08-13): the two sitting
-documents** that consolidated everything this directory previously held —
+The live planning surface. **Start at
+[`2026-08-15-review-package.md`](2026-08-15-review-package.md)** — the one
+document the pending review sitting runs from; the 2026-08-15 plan set
+(re-tier completion, interface rework, D-9 migration, snapshot design, resume
+brief) records the charge-through it packages, each stamped with its own
+execution state. The two sitting documents remain the ruling record —
 
 - [`2026-08-13-sitting-2-boundary-and-context.md`](2026-08-13-sitting-2-boundary-and-context.md)
   — rules the depth-0 boundary, the operational context, the port list, the

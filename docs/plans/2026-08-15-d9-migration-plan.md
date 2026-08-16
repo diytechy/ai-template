@@ -3,9 +3,9 @@
 **Provenance:** produced 2026-08-15 by a read-only Opus analysis pass over the
 archived checklist
 ([archive/plans/2026-08-11-status-ladder-migration.md](../archive/plans/2026-08-11-status-ladder-migration.md),
-figures stale by its own header) and the current tree. **Nothing here is
-executed.** Counts marked *(transient)* were measured while WI-458 was landing
-and must be re-derived at execution.
+figures stale by its own header) and the current tree. Counts marked
+*(transient)* were measured while WI-458 was landing. **Execution state is
+stamped at §A** — steps 0–5b are done; 6–7 are the sitting's.
 
 **⚠ §D IS SUPERSEDED (owner directive, 2026-08-15):** the anchor half
 (TextHash/HashedOn columns, the on-row writer, the co-mutation guard) is ruled
@@ -13,8 +13,8 @@ and must be re-derived at execution.
 to `archive/last_approved/`, and every comparison — the adjudicator or human
 re-attest read, and the HTML generators — diffs the live registries against
 that snapshot. A dedicated analysis of that design is in
-[2026-08-15-baseline-snapshot-design.md](2026-08-15-baseline-snapshot-design.md)
-(in flight at the time of this writing). §D is retained below as the record of
+[2026-08-15-baseline-snapshot-design.md](2026-08-15-baseline-snapshot-design.md).
+§D is retained below as the record of
 what was considered and superseded; its *problem statement* (§3.2's hard
 coupling, Option B′'s proof that the git walk dies under D-9) still governs —
 only the mechanism changed.
@@ -57,6 +57,12 @@ rewrite … when it lands only the spine rows of this table move."*
 ---
 
 ## A. The re-derived step sequence
+
+> **EXECUTION STATE (2026-08-15, end of the charge-through): steps 0–5b are
+> DONE** (log `2026-08-15g` for 1–4b, `2026-08-15m` for 5/5b + the step-8
+> ceiling ruled at OI-30 D2). **Steps 6 (the signing + the seed) and 7 (retire
+> `Modified`, arm UNANCHORED) remain the owner's sitting** — the procedure is
+> [2026-08-15-review-package.md](2026-08-15-review-package.md) §5.
 
 **The enum-close-first rule, restated executably:**
 

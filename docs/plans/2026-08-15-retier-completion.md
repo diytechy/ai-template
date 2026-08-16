@@ -1,5 +1,11 @@
 # What is preventing the re-tier from completing
 
+> **RESOLVED (2026-08-15, same day): every blocker below was executed or ruled
+> during the charge-through — WI-456/457/458/459/460 are all complete, OI-29
+> and OI-30 are ruled, and the verification (second read + cross-family round
+> 2) ran.** This document remains as the analysis of record; the live surface
+> is [2026-08-15-review-package.md](2026-08-15-review-package.md).
+
 **Written 2026-08-15, immediately after `WI-451` merged to trunk as `partial`.**
 Asked for by the owner in session: *precisely* what stands between the merged
 state and a finished re-tier — stated so it does not conflict with the sitting-3
