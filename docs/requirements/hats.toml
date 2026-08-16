@@ -56,7 +56,9 @@
 # produce; the record only proves it happened, and it is a later artifact class.
 # Nothing gates on a hat today.
 #
-# TWO KINDS OF SILENCE, DISTINGUISHED (ruled 2026-08-13s, executed at WI-453).
+# THREE KINDS OF SILENCE, DISTINGUISHED (the first two ruled 2026-08-13s and
+# executed at WI-453; the third added PROVISIONALLY on 2026-08-16 under the
+# WI-467 blind-re-derivation's finding R-3 — OWNER TO RULE).
 # The five ASPECT hats at the bottom (SAFETY, LEGAL, DATA-PROTECTION,
 # ACCESSIBILITY, PERFORMANCE) are silent BY DESIGN: each keys on its own tag,
 # ships OFF, and switches on the moment this project tags work with it —
@@ -65,8 +67,18 @@
 # FIRST-RUN-ADOPTER's ORIGINAL predicate was silent BY DEFECT: it keyed on the
 # `scope` field SN rows do not carry (above), so its clauses could never fire
 # on a real row. Fixed at WI-453 — it now keys on the deliverable tags real
-# work actually carries. A reader must never have to guess which kind of
-# silence a silent hat is.
+# work actually carries.
+# SAFETY is silent BY DOMAIN, a third kind neither of those names: its
+# predicate is sound and its opt-in deliberate, but its failure vocabulary —
+# harm to a person, property or the environment — has essentially ONE
+# reachable referent in a developer-process kit (identity exposure), and that
+# one is already SECURITY's and DATA-PROTECTION's declared subject. Switching
+# on the `safety` tag here buys one derivable row and a great deal of
+# ceremony, which is exactly what SN-036 was admitted to prevent. It is
+# RECORDED rather than cut, because the charter is real product for an adopter
+# whose system can hurt someone; the owner rules whether SAFETY stays in THIS
+# repo's roster or ships only in the template.
+# A reader must never have to guess which kind of silence a silent hat is.
 #
 # VALUES-DIVERGE NOTE (the kit's dogfood rule): in THIS repo the two UX hats
 # are `always`, because PROJECT_STATE.html / open-items.html are real,
@@ -137,3 +149,58 @@ listens_for = """A surface whose acceptance names only how it looks to a sighted
 applies_when = 'tags contains "perf"'
 asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
 listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""
+
+# --- PROVISIONAL FOR THE 2026-08-16 SITTING — NOT OWNER TEXT ------------------
+#
+# The three charters below were drafted by an agent on 2026-08-16 under the
+# owner's option-(b) sanction, from the WI-467 blind-re-derivation's roster
+# findings R-4, R-5 and R-6 (`docs/plans/2026-08-16-derivation-alignment.md`
+# §4.3; team C's report §2.5). They are DRAFTS to be ruled at the sitting —
+# kept, rewritten or cut — and until then they carry the same warning the
+# thirteen above do, only louder: a charter an owner has not read is a
+# question the owner did not ask.
+#
+# Each is `always` deliberately, and that is the half most worth arguing with:
+# the finding in every case was that the lens is UNREACHABLE, so a tag-gated
+# draft would reproduce the defect it was drafted to answer. If a charter is
+# kept but is too broad here, the cheap fix is a predicate, not a deletion.
+#
+# NOT YET DONE, stated so its absence is not read as coverage: adding three
+# `always` hats changes what EVERY brief carries, and `tests/test_hats.py`
+# pins this roster's name list (`LIVE_NAMES`) and its unconditional set
+# (`LIVE_ALWAYS`). Both pins are stale until the sitting rules, and the test
+# tree was out of this pass's edit scope.
+
+# R-4 — the roster carried no coherence charter. Three independent derivations
+# (needs-only, frame-only, hat-aware) failed to produce SR-053's cross-view
+# uniformity obligation, and §4.1 called it the one row UNDERIVABLE rather than
+# merely underived. UX-DESIGNER asks about one surface's priority and
+# UX-ENGINEER about one surface's conditions; neither asks whether two surfaces
+# agree. This repo has at least three status-bearing surfaces (the dashboard,
+# the open-items view, console reports) plus the template/instance dogfood
+# obligation, so the drift this catches is the drift a reader experiences as
+# untrustworthiness.
+[hat.CONSISTENCY]
+applies_when = "always"
+asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
+listens_for = """One meaning given two treatments: a status word that differs between the console and the dashboard, one concept with two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not, a rule the template states one way and the instance another."""
+
+# R-5 — atomic writes, bounded claims and crash recovery reach a decomposition
+# ONLY through UNATTENDED-OPS, which is tag-gated. An attended session that
+# half-writes a registry gets no lens at all, though the corruption is
+# identical and the next reader is the same reader.
+[hat.INTEGRITY-RECOVERABILITY]
+applies_when = "always"
+asks = """If this is interrupted mid-write — a kill, a crash, a lane that dies holding it — what does the next reader find, and what gets the system back to a state it can name?"""
+listens_for = """A durable artifact updated in place with no all-or-nothing guarantee; a claim or reservation nothing can reclaim once its holder is gone; a recovery path written only for the unattended run when the same corruption is reachable attended."""
+
+# R-6 — all thirteen prior charters are engineering-side. None asks whether the
+# thing being hardened is still the right thing, which is why SN-033 (the one
+# need explicitly about a stakeholder's own comprehension) landed text-only:
+# no hat professionally owned it. A roster excellent at hardening a
+# decomposition and blind to a decomposition hardening the wrong thing is a
+# roster that will be thorough about the wrong work.
+[hat.PRODUCT-FITNESS]
+applies_when = "always"
+asks = """Who asked for this, which stated need does it still serve, and would the person who asked recognise this as the outcome they wanted?"""
+listens_for = """A decomposition faithfully hardening the wrong thing: an obligation no stakeholder can be named for, a need whose subject has moved while its text stayed, work justified by the machinery it continues rather than by an outcome anyone wants."""

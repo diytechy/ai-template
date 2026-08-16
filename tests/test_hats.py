@@ -191,12 +191,31 @@ LIVE_NAMES = [
     "DATA-PROTECTION",
     "ACCESSIBILITY",
     "PERFORMANCE",
+    # The three 2026-08-16 charters, PROVISIONAL-FOR-THE-SITTING (hats.toml's
+    # own comment block carries the findings that motivated them — R-4/R-5/R-6
+    # of the WI-467 hat-aware blind derivation). If the sitting cuts a charter,
+    # its name leaves this pin in the same commit.
+    "CONSISTENCY",
+    "INTEGRITY-RECOVERABILITY",
+    "PRODUCT-FITNESS",
 ]
 
 # The floor every decomposition in THIS repo faces: the three original `always`
 # hats plus the UX pair, unconditional here because PROJECT_STATE.html /
-# open-items.html are real owner-facing surfaces (WI-453, ruling 2026-08-13q).
-LIVE_ALWAYS = ["SECURITY", "MAINTAINER", "TEST-ENGINEER", "UX-DESIGNER", "UX-ENGINEER"]
+# open-items.html are real owner-facing surfaces (WI-453, ruling 2026-08-13q) —
+# plus the three provisional 2026-08-16 charters, `always` deliberately: the
+# finding each answers was UNREACHABILITY, so gating them on a tag nobody sets
+# would reproduce the defect they exist to close.
+LIVE_ALWAYS = [
+    "SECURITY",
+    "MAINTAINER",
+    "TEST-ENGINEER",
+    "UX-DESIGNER",
+    "UX-ENGINEER",
+    "CONSISTENCY",
+    "INTEGRITY-RECOVERABILITY",
+    "PRODUCT-FITNESS",
+]
 
 
 def test_the_shipped_roster_selects_the_always_on_hats_at_minimum():

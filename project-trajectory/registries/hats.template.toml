@@ -1,9 +1,11 @@
 # The HATS ROSTER — the declared expert perspectives every applicable
 # decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The thirteen hats below are the
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The sixteen hats below are the
 # kit's STARTING roster (six drafted 2026-08-13; the UX pair and the five
-# aspect hats added by ruling 2026-08-13q/s). YOU ARE EXPECTED TO EDIT
+# aspect hats added by ruling 2026-08-13q/s; the three cross-cutting lenses at
+# the bottom — CONSISTENCY, INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — drafted
+# 2026-08-16 and marked PROVISIONAL there). YOU ARE EXPECTED TO EDIT
 # IT — cut the hats that do not earn their place in your project, add the ones
 # your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
 # That editing is not optional politeness: a roster inherited unread is
@@ -53,7 +55,7 @@
 # produce; the record only proves it happened, and it is a later artifact class.
 # Nothing gates on a hat today.
 #
-# TWO KINDS OF SILENCE, DISTINGUISHED. Several hats below ship SILENT BY
+# THREE KINDS OF SILENCE, DISTINGUISHED. Several hats below ship SILENT BY
 # DESIGN: each keys on a tag (`render`, `ui`, `safety`, `legal`,
 # `personal-data`, `a11y`, `perf`) that your project may not use yet, and
 # switches on the moment you tag work with it — opt-in by tagging, no
@@ -61,8 +63,16 @@
 # satisfies no condition. That is different from a hat silent BY DEFECT — one
 # keyed on a fact your registries will never carry, which can never fire and
 # should be re-pointed or cut (the kit's own FIRST-RUN-ADOPTER once keyed on
-# an undeclared `scope` field; fixed at WI-453). When you edit this roster,
-# make sure every silent hat is silent on purpose.
+# an undeclared `scope` field; fixed at WI-453). And different again from a
+# hat silent BY DOMAIN: its predicate is sound and its opt-in deliberate, but
+# its FAILURE VOCABULARY has essentially no referent in what you build, so
+# switching it on buys one strained row and a great deal of ceremony. SAFETY
+# is in that position for a developer-tooling product — its harm vocabulary
+# (person, property, environment) reaches almost nothing there, while for a
+# vehicle, a medical device or a machine that moves it is the first hat you
+# should read. Keep such a hat only if its domain is yours. When you edit this
+# roster, make sure every silent hat is silent on purpose, and that you can
+# say WHICH of the three kinds each one is.
 
 [hat.SECURITY]
 applies_when = "always"
@@ -128,3 +138,40 @@ listens_for = """A surface whose acceptance names only how it looks to a sighted
 applies_when = 'tags contains "perf"'
 asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
 listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""
+
+# --- PROVISIONAL (drafted 2026-08-16, not yet ruled) --------------------------
+#
+# Three CROSS-CUTTING lenses, added after a blind re-derivation exercise found
+# the roster above had no charter for any of them. They are `always` on purpose
+# and that is the half to argue with first: in each case the finding was that
+# the lens was UNREACHABLE, so gating one on a tag would reproduce the defect it
+# was drafted to answer. If a charter is right for your project but fires too
+# widely, the cheap fix is a predicate, not a deletion. Read all three before
+# you keep any: an unread hat is the ceremony this roster exists to prevent.
+
+# Nothing else here asks whether two surfaces agree. The UX pair asks about ONE
+# surface's priority and ONE surface's conditions; MAINTAINER reaches
+# one-definition-per-term, which is about definitions, not presentation. Any
+# product with more than one status-bearing surface has this gap.
+[hat.CONSISTENCY]
+applies_when = "always"
+asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
+listens_for = """One meaning given two treatments: a status word that differs between two surfaces, one concept carrying two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not."""
+
+# Atomic writes, bounded claims and crash recovery normally arrive only through
+# UNATTENDED-OPS, which is tag-gated — so an ATTENDED session that half-writes a
+# durable record gets no lens at all, though the corruption is identical and the
+# next reader is the same reader.
+[hat.INTEGRITY-RECOVERABILITY]
+applies_when = "always"
+asks = """If this is interrupted mid-write — a kill, a crash, a process that dies holding it — what does the next reader find, and what gets the system back to a state it can name?"""
+listens_for = """A durable artifact updated in place with no all-or-nothing guarantee; a claim or reservation nothing can reclaim once its holder is gone; a recovery path written only for the unattended run when the same corruption is reachable attended."""
+
+# Every other charter here is engineering-side: they harden a decomposition and
+# none of them asks whether the thing being hardened is still the right thing. A
+# roster without this lens will be thorough about the wrong work, and the needs
+# most about a stakeholder's own understanding are the ones it leaves unowned.
+[hat.PRODUCT-FITNESS]
+applies_when = "always"
+asks = """Who asked for this, which stated need does it still serve, and would the person who asked recognise this as the outcome they wanted?"""
+listens_for = """A decomposition faithfully hardening the wrong thing: an obligation no stakeholder can be named for, a need whose subject has moved while its text stayed, work justified by the machinery it continues rather than by an outcome anyone wants."""

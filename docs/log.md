@@ -36,6 +36,51 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16l — option (b) RULED AND EXECUTED; the spine-authoring skill
+  is born; R-2's wiring is closed at the SN tier.** Owner rulings this
+  sitting-adjacent exchange: (b) hat-derived labels over SN amendment for
+  the quality family; the WI-467 recommendations sanctioned for application
+  (everything provisional, the sitting reviews); a spine-authoring
+  reference for adjudicators created and maintained with these findings.
+  Executed, all provisional/unsigned: **(1) the `spine-authoring` skill**
+  (kit scope, shipped + materialized, INDEX at 28) — the adjudicator's
+  question list per tier: SN intake (tags-reach-the-governing-hat, the
+  why-cell trap, the written quality bar, blind-reader recovery), SR
+  derivation (one-decision, tier-relative voice, the hat-derived label
+  discipline, detector re-stamps), LLR/TC (fit-criterion acceptance,
+  identity at trace homes), the validation instruments, and the eight
+  known failure modes. **(2) R-2 closed:** SN rows gain `tags`
+  (schema-safe; `hats.context_from_need` always read them, no row carried
+  them) — 17 SNs tagged by the charter-subject rule, 10 left untagged
+  deliberately; DATA-PROTECTION↛SN-009, ACCESSIBILITY↛SN-023,
+  PERFORMANCE↛SN-027 all verified UNLOCKED; `safety` deliberately nowhere;
+  `legal` on SN-011 the one call beyond the brief. **(3) SN-006's safety
+  half moved from `why` into the normative need text** — SR-043's
+  parentage is now text-derivable; the SN tier's missing amendment marker
+  is RECORDED AS A FINDING (no Status cell exists there; a PENDING
+  RE-ATTEST block in the registry header names all 18 amended rows, the
+  SN-005 precedent). **(4) Hat-derived labels on 16 rows** (the §4.2
+  SR-040/SR-167 arithmetic discrepancy found and resolved in-cell), four
+  through switched-OFF hats with the dependency stated verbatim; SR-155
+  alone stays lens-less. **Touched attested rows, named per ruling 6 (4,
+  all rationale-only, `Approved`→`Modified`): SR-144, SR-146, SR-147,
+  SR-149.** **(5) hats.toml + the SHIPPED TEMPLATE both gain the three
+  provisional charters** — CONSISTENCY (R-4; SR-053 gains its first
+  deriving lens, with the label stating that cutting the charter re-opens
+  the row's disposition), INTEGRITY-RECOVERABILITY (R-5),
+  PRODUCT-FITNESS (R-6), `always` because the finding was unreachability;
+  the silence taxonomy admits silent-by-domain (R-3, SAFETY the worked
+  example); rosters at 16, name-set-identical, structure synced, test pins
+  updated with the provisional note. **(6) WI-468 filed** — the four
+  hat-exposed obligation candidates (provider egress of authorship, the
+  finding-record's PII retention, SN-027's throughput budget, the
+  colour-only signal) as intake proposals, minting nothing. The executing
+  pass's own guards bit twice more (provenance findings on WI tokens in
+  rationales — stripped; R-A on a prefilled Deliverable — fixed). Gate
+  basis `modified=147`, value unchanged; ratify brief + all surfaces
+  regenerated. Full unfiltered suite (posix-shell gate satisfied):
+  2551 passed / 13 skipped / 0 failed, 531s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=cda29c42 -->.
 - **2026-08-16k — WI-467 extension: the HAT-AWARE blind derivation (team C)
   — 14 of 16 legacy orphans gain a deriving hat, SR-053 is the one row
   underivable from ANY input, and the roster's tag wiring is the new #2
