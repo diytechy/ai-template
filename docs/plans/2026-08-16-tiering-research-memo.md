@@ -14,10 +14,13 @@ through secondaries and are marked as such in the underlying reports.
   the **statement** (solution-free, contractual) → **attributes** (rationale,
   verification method/level/owner — INCOSE's A01–A49, NASA Table 4.2-2) →
   **trace/verification records** (which artifact, which test, which result —
-  DO-178C §11.21 "Trace Data" as a standalone controlled item; MIL-STD-961E
-  Section 3 vs Section 4; NASA Table D-1's verification matrix). The
-  "which file implements this" fact is **trace data, categorically** — not
-  requirement text and not acceptance criteria.
+  DO-178C §11.21 "Trace Data" as a standalone controlled item; NASA
+  Table D-1's verification matrix). The "which file implements this" fact is
+  **trace data, categorically** — not requirement text and not acceptance
+  criteria. *(MIL-STD-961E's Section-3/Section-4 requirements-vs-verification
+  split is widely referenced and almost certainly real, but its primary text
+  could not be fetched — every mirror 403'd — so it is a LEAD here, not a
+  citation; no 961E quote in this memo is verified.)*
 - **No source bans concrete names.** All use a *justified-exception* form:
   INCOSE R31 "unless there is rationale for constraining the design"; 29148
   "avoids **unnecessary** constraints"; NASA "if the requirement states a
@@ -60,6 +63,33 @@ than a filename. That would leave acceptance cells holding observable
 conditions and thresholds only. (Deliberately NOT executed — a sitting
 ruling; it would touch every S3-reworded row once more.)
 
+## 1b. Late-arriving primary-adjacent evidence (the DO-178C deep pass)
+
+- **The split is deliberate, not incidental:** the FAA's DO-178B→C
+  Differences Tool records that DO-178C **deleted** the traceability bullet
+  points from the requirements/design/code content sections and consolidated
+  them into dedicated homes (§5.5 process, §6.5 verification trace, §11.21
+  Trace Data as a new life-cycle data item, bi-directional). The standard's
+  authors refactored "which artifact carries this" OUT of requirement
+  content on purpose.
+- **The trace medium is explicitly open** (CAST-15 App. A / DO-248B FAQ
+  #71): a matrix is not required, and *"embedded features such as code
+  comments"* are sanctioned for fine-grained correlation — which
+  incidentally blesses the kit's `Implements:` docstring back-links as a
+  legitimate trace carrier.
+- **Solution-freedom is level-relative, structurally:** LLRs are outputs of
+  the *design* process, live in the Design Description (§11.10) **beside**
+  the architecture and component descriptions, and are defined as
+  "directly implementable without further information" — naming concrete
+  design elements at LLR tier is the standard's expected shape, not an
+  exception. (Careful cite: this follows from §11.10's contents and the
+  glossary, not from CAST-15, which never enumerates artifacts; and no
+  numbered DO-178C objective says "HLRs shall be implementation-
+  independent" — that lives in guidance, not the Annex A tables.)
+- **Derived requirements** are defined by *content* (behavior beyond the
+  parent), carry a mandatory rationale, and are passed upward to the system
+  process — the complete published shape for the class the kit lacks.
+
 ## 2. From-scratch breakdown, then reconcile — is it a thing?
 
 - **Not one named practice, but a well-supported composite**: DO-178C's
@@ -93,6 +123,29 @@ ruling; it would touch every S3-reworded row once more.)
   replacement: the diff tells the sitting which rows the accreted set
   distorted, which it carries that no need demands, and which needs have no
   carrier.
+
+## 2b. The sharpest late findings on the naming rule itself
+
+- **Zave & Jackson 1997 ("Four Dark Corners of RE")** formalize the
+  testability/solution-freedom paradox and dissolve it: a requirement R is
+  stated in environment vocabulary; a specification S is stated at the
+  *shared, observable phenomena*; domain knowledge K relates them
+  (S, K ⊨ R). **Naming the observation point fixes subject matter, not
+  solution** — it legitimately narrows design space while creating the
+  basis for verification. That is the principled answer to "testable but
+  not implementation-naming".
+- **Volere §3a names our failure mode: "false constraints — solutions
+  masquerading as constraints."** Its defence is that every constraint must
+  carry a rationale AND a fit criterion, both challengeable. Volere's own
+  examples DO name technology, legitimated exactly that way.
+- **R2's absolute form ("never name a concrete artifact") is stricter than
+  every standard surveyed.** INCOSE R31, 29148, NASA all gate on recorded
+  rationale ("unless there is rationale for constraining the design") and
+  INCOSE concedes that at the lowest level statements are *"entirely
+  specific to the selected solution."* The published resolution is:
+  (a) declare the tier the rule bites at (SR = HLR voice, LLR =
+  solution-specific by design), (b) rationale-gate the exceptions (the 13v
+  shape), (c) move volatile artifact identity to trace data.
 
 ## 3. Recommendation (provisional, the owner's call)
 
