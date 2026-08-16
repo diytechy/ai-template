@@ -36,6 +36,36 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16k — WI-467 extension: the HAT-AWARE blind derivation (team C)
+  — 14 of 16 legacy orphans gain a deriving hat, SR-053 is the one row
+  underivable from ANY input, and the roster's tag wiring is the new #2
+  finding.** (Owner-approved: "might expose some other items anyways".)
+  Team C re-derived blind with docs/requirements/hats.toml ADDED to the
+  input set (80 rows across 13 hats;
+  [plans/2026-08-16-blind-derivation-c-hats.md](plans/2026-08-16-blind-derivation-c-hats.md));
+  the alignment map gained §4
+  ([plans/2026-08-16-derivation-alignment.md](plans/2026-08-16-derivation-alignment.md)).
+  The dashboard-quality question SPLITS three ways: SR-054's findability
+  derivable via UX-DESIGNER, SR-052/054's legibility-as-robustness via
+  UX-ENGINEER, SR-052's measurable thresholds only via the switched-OFF
+  ACCESSIBILITY hat — and **SR-053's cross-view consistency is derivable
+  from NO current input** (three independent derivations failed; no roster
+  charter asks it; 8 LLRs/8 TCs rest on it). The derived-requirement label
+  (per the standards memo) is now AVAILABLE for 14 of the 16
+  orphaned-in-legacy rows with a named deriving hat — sharpest: SR-043 ←
+  SECURITY, an exact charter match, so the real defect is SN-006's
+  `why`-cell-only safety half. Only SR-053 and SR-155 remain both
+  need-less and lens-less. New findings neither prior team nor the legacy
+  layer carries: **R-2, the new #2** — hat `applies_when` evaluates
+  work-item tags and SN rows carry none, so the governing hat is
+  structurally blind to its own need (DATA-PROTECTION↛SN-009,
+  ACCESSIBILITY↛SN-023, PERFORMANCE↛SN-027; explains several orphans at
+  once, fixable); no consistency/integrity/product-fitness charters (R-4/
+  R-5/R-6); provider-egress of commit authorship and the privacy finding
+  record's unbounded PII retention (C-DPR-3/2); SN-027's undeclared
+  throughput budget under a switched-OFF PERFORMANCE hat (C-PRF-1); SN-008's
+  colour-only signal (C-ACC-2). Validation instrument only — no registry
+  cell moved; the sitting desk's top-10 re-ranked in the map's §4.
 - **2026-08-16j — WI-467: the blind re-derivation validation ran — 83%
   convergence, zero contradictions, and the orphan buckets are on the
   sitting desk.** (Owner-approved same day; protocol per

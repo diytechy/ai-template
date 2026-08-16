@@ -327,3 +327,76 @@ Real or partial holes: **7**. Over-read or covered: **4**.
   refusal-legibility. The SR layer is strong at per-capability obligations and
   thin at properties that hold across the package. That is a shape, not a list of
   mistakes.
+
+---
+
+## 4. Hat-aware delta (team C)
+
+Team C re-ran the derivation with `docs/requirements/hats.toml` in the blind input set (13 hats, 8 reachable, 5 aspect hats shipped OFF): 80 rows, 64 reachable + 16 conditional. A hat is a *lens*, so its yield is the DO-178C **derived requirement** class — legitimate only when the deriving lens is named. That is precisely the label §2.2 could not apply.
+
+### 4.1 Re-test of finding #2 — the SR-052/053/054 quality family
+
+A and B derived the critique *mechanism* and no quality bar. C splits the family three ways, and the split is the finding:
+
+| SR | Obligation | Deriving lens | Status |
+|---|---|---|---|
+| SR-054 usability | findability — declared reader, decision answered in the first viewport | **UX-DESIGNER** (C-UXD-1/6), `always` | **now derivable** |
+| SR-054 / SR-052 | legibility **as robustness** — verified as rendered, no clipping, malformed ≠ empty | **UX-ENGINEER** (C-UXE-1/2/3), `always` | **now derivable** |
+| SR-052 accessibility | keyboard + assistive-tech operability; **measurable** contrast/size/zoom thresholds | **ACCESSIBILITY** (C-ACC-1/3), tag-gated, **shipped OFF** | derivable only from a lens nobody can switch on |
+| **SR-053 uniformity** | cross-view **consistency** — one vocabulary, one treatment per meaning | **no charter in the roster** | **underivable from any current input** |
+
+**Plainly, for SR-053:** three independent derivations — needs-only (A), frame-only (B), hat-aware (C) — have now failed to produce it. The blind teams did not miss it; **no declared input of this repository demands cross-view coherence.** SR-053 carries 8 LLRs and 8 TCs. Either a need or a hat charter is missing (C's R-4), or the row is genuine accretion. It is the one §2.2 row the exercise can now call *underivable* rather than merely underived.
+
+Net on legibility: the roster's answer to "is it readable" today is **"it doesn't overflow."** Everything past that sits behind a tag nobody sets.
+
+### 4.2 §2.2 orphans that gain a deriving hat
+
+14 of 16 gain a named lens, so the derived-requirement label becomes available for them. **4 gain it only through a switched-OFF hat** — a roster finding, not a licence.
+
+| SR | Deriving hat | Row |
+|---|---|---|
+| SR-015 perf back-links · SR-033 release checklist | PERFORMANCE **(OFF)** | C-PRF-2 |
+| SR-024 permutation cases · SR-129 carrier migration · SR-147 one carrier | TEST-ENGINEER | C-TST-1 (a check must be shown to bite; round-trip proof) |
+| SR-040† resume-surface tripwire | UX-ENGINEER / UNATTENDED-OPS | C-UXE-2, C-UNA-8 |
+| **SR-043 subagent gate** | **SECURITY** | C-SEC-2 — *enumerate the irreversible actions an unattended run can take, each naming its authorising dial.* A direct, exact hit. |
+| SR-052 dashboard a11y | ACCESSIBILITY **(OFF)** | C-ACC-1/3 |
+| SR-054 usability | UX-DESIGNER + UX-ENGINEER | C-UXD-1, C-UXE-2 |
+| SR-111 kit-version stamp · SR-112 skill fan-out | MAINTAINER | C-MNT-7 (a generated surface names its inputs) |
+| SR-144 lane terminal close | UNATTENDED-OPS | C-UNA-3/5 (bounded claim, durable record) |
+| SR-146 reviewable prompts | SECURITY | C-SEC-5 (brief egress inclusion rule declared, not implicit) |
+| SR-149 retired vocabulary | MAINTAINER | C-MNT-3 (one normative definition per enum value) |
+| **SR-053 uniformity · SR-155 contested planning** | **none** | the two that stay lens-less as well as need-less |
+
+**Reading:** every class-(i) orphan acquired a lens. That does not make the rows wanted — it makes them *labellable*, and a derived requirement with a named lens is reviewable, which "implementation-born" alone is not.
+
+### 4.3 NEW items C exposed — carried by neither A/B nor the legacy layer
+
+| Item | One line | Class |
+|---|---|---|
+| **R-2** gating level | Hats evaluate *work-item* tags; SN rows carry none — DATA-PROTECTION cannot read SN-009, ACCESSIBILITY cannot read SN-023, PERFORMANCE cannot read SN-027. The hat that most obviously governs a need is the one guaranteed not to see it. | **roster defect** (the largest) |
+| **R-4** no coherence charter | Nothing asks "is this rendered the same way as the same thing elsewhere", across ≥3 status-bearing surfaces plus the dogfood obligation. | **roster defect** → makes SR-053 underivable |
+| **R-5** integrity lens is tag-gated | Atomic writes, bounded claims and crash recovery arrive only via UNATTENDED-OPS; an *attended* session that half-writes a registry gets no lens, though the corruption is identical. | **roster defect** |
+| **R-6** no product-fitness hat | All 13 charters are engineering-side; none asks "is this still the need" or "who asked for this". The roster hardens a decomposition and is blind to hardening the wrong one. | **roster defect** (explains SN-033 landing text-only) |
+| **C-DPR-3** provider egress | Commit authorship — names, emails — is personal data, and repo content is briefed to external providers with no declared basis, boundary or exclusion in any need. | **needs defect** |
+| **C-DPR-2** finding-record retention | The privacy *finding record* is the one artifact guaranteed to contain the personal data it reports, and nothing bounds its retention or access. | **new derived-obligation candidate** |
+| **C-PRF-1** throughput budget | SN-027's whole justification is speed, it commissions the system's most complex machinery, and declares no measurement of the improvement — unfalsifiable as written. | **needs defect** |
+| **C-ACC-2** colour-only signal | SN-008's "a reader can believe a green" names the system's most important signal by its **colour**; if colour is the only channel the signal does not exist for a substantial class of readers. | **new derived-obligation candidate** |
+
+### 4.4 Revised top-10 for the sitting desk
+
+Six entries move. `NEW` = C-only; the last column is the §3.2 rank.
+
+| # | Finding | Was |
+|---|---|---|
+| 1 | The no-stub detector is built, designed, tested and stated by no requirement (`stub` 0x in 63 SRs) | 1 |
+| 2 | **`NEW` R-2: the roster's gating level makes the governing lens unreachable for SN-009, SN-023 and SN-027** — it explains several §2.2 orphans at once, and is fixable | — |
+| 3 | (down) **SR-053 alone** is underivable from any current input after three independent derivations (8 LLRs / 8 TCs); SR-052 and SR-054 now have named lenses | 2 |
+| 4 | SN-037's two-sided-change clause: demanded by A **and** B, admitted missing by SR-162's own rationale | 3 |
+| 5 | SN-012's right-sizing has 9 citing SRs and no home | 4 |
+| 6 | **`NEW` C-DPR-3: repository authorship metadata crosses to external model providers with no declared basis** — a needs defect at a crossing the frame already draws | — |
+| 7 | (down) SN-007's self-application bar survives only as a clause in SR-010's acceptance | 5 |
+| 8 | (up) **SR-043 is not accretion** — SECURITY's C-SEC-2 derives it exactly; SN-006's safety half being `why`-only is the real defect | 7 |
+| 9 | (down) SR-155 (11 LLRs / 10 TCs) is the largest structure with neither a need nor a lens behind its subject | 6 |
+| 10 | (up) **`NEW` C-PRF-1: SN-027 justifies itself entirely in speed and declares no measurement** — this and the perf orphans (SR-015/033/167) share one cause: a shipped layer with no need | 8 |
+
+Dropped from the top ten, unchanged in substance: the SN-005 two-readings finding (§3.2 #9) and the eight zero-TC matched SRs (§3.2 #10) — the latter still holds and is the cleanest good news in the exercise.
