@@ -70,3 +70,4 @@ resource: "generated"
 | [SR-164](SR-164.md) | Stakeholder-need scope is a declared, checked value |
 | [SR-165](SR-165.md) | The component partition carries a reproducible derivation record |
 | [SR-166](SR-166.md) | The delivered package materializes where its manifest declares it will |
+| [SR-167](SR-167.md) | Performance-budget breaches red their hard-gated rows |

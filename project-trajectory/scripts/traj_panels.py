@@ -895,14 +895,14 @@ def process_panel(root, wis, stats):
         (
             "SR",
             "DevBar-Reqs→DevBar-Tests",
-            "{} SR · {} verified".format(stats["sr_total"], stats["sr_verified"]),
+            "{} SR · {} approved".format(stats["sr_total"], stats["sr_verified"]),
         ),
         ("LLR + architecture", "DevBar-Tests", "{} LLR".format(stats["llr_total"])),
         ("TC", "DevBar-Tests→DevBar-Release", "{} TC".format(stats["tc_total"])),
         (
             "code + tests",
             "DevBar-Release",
-            "{} of {} SR verified".format(stats["sr_verified"], stats["sr_total"]),
+            "{} of {} SR approved".format(stats["sr_verified"], stats["sr_total"]),
         ),
     ]
     stage_lis = []

@@ -861,9 +861,14 @@ RED_TC_PREFIX = "red TC "
 # census firing only on a row with no Status at all — a state the schema tier
 # refuses and `adjudicate_brief.TC_CELLS` will not brief, so census -> mint ->
 # brief would have been unreachable end to end (a deleted feature, LLR-159, not
-# a narrowed rung). OI-30 D1 then folded `Planned` into `Approved`, so the
-# judgement had nothing left to be about: the set is the SAME three states under
-# the renamed words, and the vocabulary is once again wider than the exemption.
+# a narrowed rung). OI-30 D1 then folded `Planned` into `Approved`, and the
+# arithmetic now cuts the OTHER way: the enum narrowed to exactly these three
+# states, so the exemption covers the WHOLE vocabulary and the census is
+# structurally dead in any conformant repo (tests/test_adjudicate_brief.py
+# records the same fact and moved its fixtures out-of-enum to stay meaningful).
+# Deliberately kept rather than deleted: whether the rung RETIRES or re-arms on
+# a narrower exempt set is the owner's call, recorded as a judgement item at
+# the 2026-08-15 sitting sweep.
 _TC_NOT_RED = frozenset({"approved", "drafted", "modified"})
 
 

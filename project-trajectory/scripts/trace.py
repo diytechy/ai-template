@@ -56,8 +56,8 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       and the closed vocabularies --strict-schema enforces (SR Verification, TC
       Tier): process.md §4.
 
-Flags in brief: --require-verified adds the DevBar-Release criterion "a Verification=Test SR
-is Status=Approved" (Drafted SRs exempt); --no-placeholders flags leftover "-000"
+Flags in brief: --require-verified adds the DevBar-Release criterion "an SR is
+Status=Approved" — any Verification method (Drafted SRs exempt); --no-placeholders flags leftover "-000"
 example rows (wire in from DevBar-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
@@ -533,15 +533,21 @@ def llr_status_advisories(llrs, tcs):
 
 def modified_chain_advisories(srs, llrs, tcs):
     """Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither
-    `Modified` nor `Drafted`. The SR is the ATTESTATION UNIT (process.md §7) — the
-    re-attest sitting, the pending-owner-actions projection, and the
-    `--ratify modified` brief all key off the SR row — so a chain amendment
-    marked only on a child is INVISIBLE to every surface the marker exists to
-    feed. Flip the owning SR (the amendment's real scope) or the child's flag is
-    dead weight. Warn only, same tier as llr_status_advisories: never joins the
-    exit code, even under --strict — a warn-tier checker feature mints no SR and
-    gates nothing (WI-129/132). A TC's owning SRs resolve through both its
-    direct `Verifies` SR cites and the SR-Refs of every LLR it cites."""
+    `Modified` nor `Drafted` — under the closed enum, a parent reading `Approved`.
+    The SR is the ATTESTATION UNIT (process.md §7) — the re-attest sitting, the
+    pending-owner-actions projection, and the `--ratify modified` brief all key
+    off the SR row — and the snapshot drift arm cannot stand in: `is_drifted`
+    fires only for a row whose live Status claims approval, so a `Modified`
+    child never counts as drifted while the `Approved` parent's own text has
+    not moved. Neither arm surfaces the amendment (re-measured at the
+    2026-08-15 sitting sweep: the `is_planned` repair briefly discharged this,
+    then D-9's fold deleted that predicate and re-opened the seam — durably,
+    by construction). Flip the owning SR (the amendment's real scope) or the
+    child's flag is dead weight. Warn only, same tier as llr_status_advisories:
+    never joins the exit code, even under --strict — a warn-tier checker
+    feature mints no SR and gates nothing (WI-129/132). A TC's owning SRs
+    resolve through both its direct `Verifies` SR cites and the SR-Refs of
+    every LLR it cites."""
     sr_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
     llr_srs = {}  # LLR id -> [owning SR ids]
     for r in llrs:
@@ -574,9 +580,10 @@ def modified_chain_advisories(srs, llrs, tcs):
             )
         elif not _flagged(owners):
             out.append(
-                "LLR {} is Modified but its owning SR ({}) is not Modified/Drafted "
-                "— flip the attestation unit (the SR) or the amendment is "
-                "invisible to the re-attest sitting".format(lid, ";".join(owners))
+                "LLR {} is Modified but its owning SR ({}) reads Approved — the "
+                "SR is the attestation unit and a Modified row never counts as "
+                "drifted, so no brief, projection or gate carries this "
+                "amendment; flip the owning SR".format(lid, ";".join(owners))
             )
     for r in tcs:
         tid = r.get("TC-ID")
@@ -597,9 +604,10 @@ def modified_chain_advisories(srs, llrs, tcs):
             )
         elif not _flagged(owners):
             out.append(
-                "TC {} is Modified but its owning SR ({}) is not Modified/Drafted "
-                "— flip the attestation unit (the SR) or the amendment is "
-                "invisible to the re-attest sitting".format(
+                "TC {} is Modified but its owning SR ({}) reads Approved — the "
+                "SR is the attestation unit and a Modified row never counts as "
+                "drifted, so no brief, projection or gate carries this "
+                "amendment; flip the owning SR".format(
                     tid, ";".join(sorted(set(owners)))
                 )
             )
@@ -2267,9 +2275,12 @@ def sr_chain_drifts(sid, chain, snapshot):
     """True when ANY row in this SR's chain has drifted from the snapshot.
 
     The attestation unit is the SR, so a drifted LLR or TC pulls its owning SR
-    into the brief — otherwise an amendment that lands entirely in a child row
-    is invisible to the sitting, which is the WI-316 hole the chain-consistency
-    warn was written to shout about and the model can now simply close."""
+    into the brief. This closes only the UNMARKED half of the WI-316 hole — a
+    child amended while still claiming approval. The marked half stays open by
+    construction: `is_drifted` fires only for a row whose live Status claims
+    approval, so a `Modified` child never counts as drifted and its amendment
+    rides no surface — which is exactly what the chain-consistency warn still
+    shouts about."""
     return any(
         baseline_snapshot.is_drifted(
             rel, id_col, row, baseline_snapshot.rows_for(snapshot, rel, id_col)
@@ -3658,10 +3669,14 @@ def render_report(reg, findings, args, forest):
     # below Approved whose citing TCs are all Approved (lift the Status cell by
     # hand — registries are hand-owned SSOT, no generator writes them back), and
     # Modified LLR/TC rows whose owning SR is not flagged (flip the attestation
-    # unit or the amendment is invisible to the re-attest sitting).
+    # unit — no brief, projection or gate carries a Modified child under an
+    # Approved SR).
     lines += ["", "## Status-coherence advisories (warn-only)", ""]
     lines += (
-        ["None. No unlifted LLRs, no orphaned Modified chain rows."]
+        [
+            "None. No unlifted LLRs, no Modified chain rows riding an unflagged "
+            "or unresolvable owning SR."
+        ]
         if not llr_status_advis
         else [f"- {f}" for f in llr_status_advis]
     )
@@ -3994,7 +4009,8 @@ def main():
     ap.add_argument(
         "--require-verified",
         action="store_true",
-        help="DevBar-Release criterion: flag Verification=Test SRs not Status=Approved",
+        help="DevBar-Release criterion: flag non-Drafted SRs not Status=Approved "
+        "(any Verification method)",
     )
     ap.add_argument(
         "--phase",

@@ -65,21 +65,49 @@ The record, with the full analysis in
 
 ## 3. The judgement items recorded for you (none blocks the wave)
 
-From the second top-down read (`2026-08-15i`):
+From the second top-down read (`2026-08-15i`) — **SWEPT 2026-08-15 on your
+rulings (log `2026-08-15n`); what each became:**
 
-- **H1 — SR-166 vs SR-163 severity conflict:** both report the
-  manifest-completeness observables, one warns where the other fails.
-  Recommendation: SR-166 sheds the two shared clauses, cross-references SR-163.
-- **M1 — SR-159 vs SR-162** both claim the IF endpoint/Signal declaration
-  site. Recommendation: SR-162 keeps (SN-037's words), SR-159 gains the
-  carve-out.
-- **M3 — the llr-status advisory message** is now false seven times over
-  (the Planned repair discharged what it warns about). Recommendation: correct
-  the message ("evidence owed", not "invisible to the sitting"), keep the warn.
-- **L1 — SR-151 `["B-06"]`** should probably read `["B-06","B-05"]` (the X2
-  precedent decides it).
-- **L2 — no SR states that a perf-budget regression fails** (vacuous here, the
-  template ships the layer).
+- **H1 — SR-166 vs SR-163 severity conflict: CONFIRMED, no act owed.** You
+  accepted the recommendation; adversarial F7 had already executed the same
+  shed convergently, so SR-166 states destination materialization + dogfood
+  parity only and presence is SR-163's.
+- **M1 — SR-159 vs SR-162: you asked to MERGE unless a detail was missing;
+  the detail is real and measured** (log `2026-08-15n`): one shared observable
+  of 6–7, zero shared requirement text, zero shared code symbols, independent
+  vacuity regimes (at authority dial rung 1 — every adopter's normal state —
+  SR-162 applies while SR-159 is vacuous); a merge either way is a mega-row
+  (two vacuity regimes, three severity regimes, a phase-1/phase-5 conflict,
+  a third 13v waiver), and dropping SR-159 costs ~19 citation edits besides.
+  Executed instead: the carve-out on SR-159's by-default closer, widened to
+  the TRIPLE claim the analysis found — endpoint-pair/Signal semantics are
+  SR-162's, the generic required-field checker stays SR-157's (LLR-003).
+  Overturnable like every authoring call.
+- **M3 — INVERTED, then executed deeper than recommended.** The recorded
+  recommendation ("evidence owed", not "invisible") died with the rename: the
+  fold deleted `is_planned` and the advisory's claim is TRUE again — durably,
+  by construction (`is_drifted` fires only on a row claiming approval, so a
+  `Modified` child under an `Approved` parent is seen by NEITHER the marker
+  arm nor the drift arm). The message now names that mechanism; your "deeper
+  cut" question was answered YES and swept — six stale message/label fixes
+  (the worst: three dashboard labels presenting `approved` counts as
+  "verified", the exact double claim your D1 deleted) plus three `Drafted`
+  LLR details. Full list: log `2026-08-15n`.
+- **L1 — your "no interfaces satisfying B-06" is CORRECT, not a search gap:**
+  zero IF rows realize B-06 — the recorded, owned gap from `2026-08-15f`
+  (owner SR-151, execution the wi455 lane's). That fact is orthogonal to the
+  `["B-06","B-05"]` attribution call, which stays open with the sweep's
+  addendum: **SR-152/B-07's acceptance is the same package-alone shape, so X2
+  applies to the pair or to neither** — flip both cells or leave both. Cells
+  untouched.
+- **L2 — the virtualized testing you asked about ALREADY EXISTS**
+  (tests/test_check_perf.py: the regression arm end-to-end against a
+  bootstrapped scaffold, plus unit, warn-tier, malformed, tier-scoping and
+  harness-wiring arms); the gap was the SR statement alone. **`SR-167` minted
+  `Drafted`** (both breach arms — one delivered exit contract, the SR-157
+  one-verdict shape); IF-004/IF-031 `req_refs` gained it. **LLR-014.sr_refs
+  and TC-014.verifies re-points are the sitting's** — both rows are `Approved`
+  and amending an attested cell rides no sweep.
 
 Carried from earlier in the session: **B-04's `carries` may need widening**
 (X1's honest strain, `2026-08-15b`); **B-04 is only half realized** and no

@@ -226,12 +226,14 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # 836 -> 865 when D-9 step 2 gave the attestation cards a third kind,
     # 865 -> 874 when step 4 hoisted the baseline and dropped the stamp, and
     # 874 -> 877 when the module's Contracts: docstring line gained IF-126 (log
-    # 2026-08-15h), and 877 -> 876 when D-9 step 5's rename retired the third
-    # attestation-card kind that step 2 had added (log 2026-08-15m).
+    # 2026-08-15h), 877 -> 876 when D-9 step 5's rename retired the third
+    # attestation-card kind that step 2 had added (log 2026-08-15m), and
+    # 876 -> 877 when the sitting sweep's M3 fix made the chain-consistency
+    # pointer name the warn's real tier (2026-08-15, sweep log entry).
     # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 876)], sites
+    assert sites == [("gen_open_items.py", 877)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

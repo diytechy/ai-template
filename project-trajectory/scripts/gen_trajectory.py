@@ -509,7 +509,7 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
         <div class="card">
           <div class="label">Definition completeness</div>
           <div class="big">$def_pct%</div>
-          <div class="sub">$sr_verified of $sr_total system requirements verified</div>
+          <div class="sub">$sr_verified of $sr_total system requirements approved</div>
           <div class="meter def"><span style="width:$def_pct%"></span></div>
         </div>
         <div class="card">

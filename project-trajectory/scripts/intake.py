@@ -1578,7 +1578,12 @@ def _rewrite_toml_statuses(live, rel, ids):
     reads. `newline=""` keeps the bytes; the split is on the detected
     terminator."""
     table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
-    raw = live.read_text(encoding="utf-8-sig", newline="")
+    # open() rather than Path.read_text: read_text only grew a `newline`
+    # parameter at Python 3.13, and the kit's floor is 3.11 — on the floor the
+    # keyword is a TypeError, found 2026-08-15 when the suite first ran on the
+    # repo's own 3.11.9 venv (the sitting-sweep log entry carries the account).
+    with open(live, "r", encoding="utf-8-sig", newline="") as fh:
+        raw = fh.read()
     eol = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.split(eol)
     for rid in ids:
@@ -1741,6 +1746,11 @@ def _cmd_snapshot(args):
 
 
 def main(argv=None):
+    # UTF-8 stdio whatever the console codepage (run_py's documented contract:
+    # "the kit scripts emit UTF-8 via _utf8_console") — this was the one CLI
+    # that never called it, so its refusal banners reached a Windows pipe as
+    # cp1252 and broke any UTF-8 reader (found 2026-08-15, sitting sweep).
+    ac._utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )

@@ -3479,8 +3479,11 @@ def staged_spine_findings(root):
         "{}: ratified cell(s) {} amended while Status stays put "
         "and no owning SR is flagged — a post-attestation amendment "
         "owes the Modified re-attest marker (process.md §7); flip "
-        "the owning SR in this commit, or the sitting never sees "
-        "the change".format(a["id"], ", ".join(sorted(a["ratified"])))
+        "the owning SR in this commit, or the change rides unmarked "
+        "and surfaces only as snapshot drift once a seed exists, "
+        "never as the re-attest it owes".format(
+            a["id"], ", ".join(sorted(a["ratified"]))
+        )
         for a in staged_spine_amendments(root)
         if a["ratified"]
     ]

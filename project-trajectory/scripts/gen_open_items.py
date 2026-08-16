@@ -600,7 +600,8 @@ def _attestation_cards(model, srs_by_id=None):
             "SR is itself <code>Drafted</code>/"
             "<code>Modified</code>; a chain row "
             "amended under an <code>Approved</code> SR is reported by "
-            "<code>trace.py --strict</code>'s chain-consistency warn, not here. "
+            "<code>trace.py</code>'s chain-consistency warn (warn-tier on "
+            "every run, never gating), not here. "
             "The earlier wording said <em>spine row</em>, which denied a state "
             "this view cannot see (122-REVIEW-A).</p>"
         )
@@ -746,7 +747,7 @@ def render(root):
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — owner decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} spine row(s) owing a '
-        "ratification, evidence or a re-attest, across {rows} chain row change(s); "
+        "ratification or a re-attest, across {rows} chain row change(s); "
         "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
         "in <code>{registry}</code>; the attestation depth is "
         "computed by <code>trace.reattest_model</code>, the same code behind "
