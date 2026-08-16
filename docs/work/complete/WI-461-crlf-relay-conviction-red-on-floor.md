@@ -1,7 +1,6 @@
 +++
 id = "WI-461"
 title = "The CRLF-relay conviction is red on the declared floor: tests/test_integrate.py::test_a_whole_file_crlf_relay_in_a_claim_shape_convicts fails on Windows + Python 3.11 (the repo's own .venv) — integ._abandoned_claim returns True, the claim reads as excusable, where the WI-403 contract requires a whole-file CRLF relay to CONVICT as a real content change. Measured at the pre-sweep build commit as well as after it (log 2026-08-15n), so the 2026-08-15 sweep did not cause it; the earlier full-suite greens that included this test were produced by an interpreter the record does not name. Scope: diagnose which side is wrong on the floor interpreter — the oracle's byte-compare chain (integrate._relinked_exactly / _blob_bytes / spec_move.expected_relink) or the fixture's forged relay write — fix that side only, and record the 3.11-vs-3.13 mechanism in the fix's comment. The conviction contract itself is ruled (WI-393 REVIEW-A finding 1, WI-400, WI-403: the bytes are load-bearing at the EOL margin) and must not be weakened to green the test."
-specref = "docs/log.md"
 workstream = "process"
 sr_refs = ["SR-156"]
 needs = []
@@ -9,6 +8,29 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+**The oracle was RIGHT; the fixture was blind — and the blindness was git's,
+not Python's.** Git for Windows writes `core.autocrlf=true` into the SYSTEM
+gitconfig, `tests/test_integrate.py::git_repo` pinned `user.*` and
+`commit.gpgsign` but not `core.autocrlf`, so `git add` folded the forged
+`\r\n` to `\n` on the way INTO the object database — the committed blob
+genuinely was relink-identical, and the byte-exact chain
+(`_blob_bytes` → `_relinked_exactly` → `spec_move.expected_relink`) judged
+it correctly. No interpreter dependence at all (unlike the two same-day
+intake defects): POSIX defaults `autocrlf` to false, so the test was green
+on POSIX and red on any stock Windows install since WI-403 landed the
+byte-exact compare. The same mechanism made the sibling
+`test_a_crashed_claim_that_relinked_a_crlf_doc_is_still_excused` pass
+VACUOUSLY here (its "CRLF checkout" was silently LF).
+
+Shipped: the `git_repo` fixture pins `core.autocrlf false` repo-locally,
+mechanism recorded in its docstring; `integrate.py`/`spec_move.py`
+UNCHANGED — the conviction contract was never weakened, and both directions
+now test real bytes (convict on a blob carrying `\r\n`, excuse on a genuine
+CRLF-checkout relink). Latent gap filed as `WI-465` (~20 more modules init
+fixtures without the pin). Evidence and totals: log `2026-08-16a`.
 
 ## Context
 

@@ -161,12 +161,28 @@ def git_repo(root, branch="main"):
     `git init -b` is 2.28+, so the branch is set with a symbolic-ref instead.
     The identity is repo-local because integrate.py commits through
     `agent_common.git`, which passes no `-c user.*`; signing is off so a
-    developer's global `commit.gpgsign` cannot wedge the fixture."""
+    developer's global `commit.gpgsign` cannot wedge the fixture.
+
+    `core.autocrlf` is pinned OFF for the same reason, and it is load-bearing,
+    not hygiene (WI-461): the Git for Windows installer writes
+    `core.autocrlf=true` into the SYSTEM gitconfig, and a `git init` in tmp
+    inherits it, so `git add` runs the clean filter and folds a working-tree
+    `\\r\\n` to `\\n` on its way into the object database. The EOL fixtures below
+    forge line endings and assert on the BYTES `git cat-file` gives back
+    (WI-403), so on a default Windows box the forged CRLF never reached git at
+    all: `_relinked_exactly` compared two LF blobs, excused the claim, and
+    `test_a_whole_file_crlf_relay_in_a_claim_shape_convicts` went red while
+    `test_a_crashed_claim_that_relinked_a_crlf_doc_is_still_excused` passed
+    vacuously. Platform-and-git-config, not interpreter: nothing here turns on
+    3.11 vs 3.13, and POSIX boxes (autocrlf defaults to false) never saw it.
+    A fixture that takes the platform's translation cannot test the platform's
+    bytes (WI-337)."""
     skip_without_env_gates("git")
     _git(root, "init", "-q")
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")
+    _git(root, "config", "core.autocrlf", "false")
     _git(root, "symbolic-ref", "HEAD", "refs/heads/" + branch)
     (root / "seed.txt").write_text("seed\n", encoding="utf-8", newline="\n")
     # Repo furniture, seeded BEFORE any claim: `trace._read_marks` refuses an
