@@ -36,7 +36,11 @@ integrity=0 component-findings=0 interfaces=122 interface-findings=0
 form-findings=2` (the two recorded 13v waivers). Full suite at last run, **on
 the repo's own `.venv` 3.11.9**: **2537 passed, 13 skipped, 4 failed — all
 four pre-existing environment findings named in log `2026-08-15n`**, none of
-the sweep's content. (The earlier "2544 passed" figure was produced by an
+the sweep's content, and each now FILED so it cannot get lost: `WI-461` (the
+CRLF-relay conviction red on the floor, P2), `WI-462` (the dispatch trio's
+Windows MAX_PATH deaths under xdist), `WI-463` (the `traj_status`→
+`derive_gate` seam, the one ERROR between a clean tree and
+`check_trajectory --strict` reading clean). (The earlier "2544 passed" figure was produced by an
 interpreter the record does not name — two 3.11-deterministic defects fixed at
 the sweep made that run impossible on the declared floor.) Gate unchanged at
 `DevBar-Reqs`.
