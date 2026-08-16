@@ -507,6 +507,188 @@ def test_falsey_hat_table_refuses_rather_than_reading_empty(tmp_path):
             hats.load(tmp_path)
 
 
+# --- the SN x hat audit (the adjudicator's worksheet) -------------------------
+# ~27 needs x ~8 tag-gated hats is ~200 applicability permutations, which is
+# exactly the arithmetic nobody does by hand and therefore answers by assumption.
+# What is checked here is the SPLIT the subcommand rests on: the unknown tag
+# token is a MECHANICAL finding (a silent typo makes a need invisible to the
+# lens that governs it, and `--strict` bites on it), while a need waking no
+# conditional hat and a hat reaching no need are PROMPTS the adjudicator answers
+# per row — never an exit code, or the answer becomes "tag rows until it stops".
+
+AUDIT_ROSTER = """
+[hat.MAINTAINER]
+applies_when = "always"
+asks = "Can a reader two years from now tell why this exists?"
+listens_for = "A reason that lives only in the session that wrote it."
+
+[hat.CROSS-PLATFORM]
+applies_when = 'tags contains "scripts"'
+asks = "Which of Windows, macOS and Linux breaks this?"
+listens_for = "A rule true only on the author's platform."
+
+[hat.SAFETY]
+applies_when = 'tags contains "safety"'
+asks = "How can this harm a person?"
+listens_for = "A hazardous outcome with no requirement bounding it."
+"""
+
+AUDIT_NEEDS = """
+[need.SN-001]
+kind = "core"
+tags = ["scripts"]
+need = "An adopting team can run every check on a clean interpreter."
+why = "Portability."
+priority = "M"
+acceptance = "The CI matrix is green on Linux, Windows and macOS."
+
+[need.SN-002]
+kind = "core"
+need = "A reviewer can trust the chain from need to requirement to test."
+why = "A hand-maintained trace rots."
+priority = "M"
+acceptance = "trace.py --strict reports zero orphans."
+"""
+
+# The typo class, driven: `scirpts` reaches nothing, and the need that carries
+# it is invisible to the hat that plainly governs it.
+TYPO_NEED = """
+[need.SN-003]
+kind = "core"
+tags = ["scirpts"]
+need = "A launcher starts the loop on every platform."
+why = "A remembered command rots."
+priority = "S"
+acceptance = "One action per platform."
+"""
+
+
+def _write_needs(tmp_path, text):
+    (tmp_path / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "requirements" / "stakeholder-needs.toml").write_text(
+        text, encoding="utf-8"
+    )
+    return tmp_path
+
+
+def _audit(tmp_path, capsys, *flags):
+    """`(exit code, stdout)` for the audit over a tmp scaffold."""
+    code = hats.main(["--root", str(tmp_path), "audit", *flags])
+    return code, capsys.readouterr().out
+
+
+def test_audit_names_an_unknown_tag_token_and_its_nearest_known_neighbour(
+    tmp_path, capsys
+):
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, AUDIT_NEEDS + TYPO_NEED)
+    code, out = _audit(tmp_path, capsys)
+    assert code == 0, "the audit is informational without --strict"
+    assert "UNKNOWN TAG TOKENS" in out
+    finding = [ln for ln in out.splitlines() if "scirpts" in ln]
+    assert len(finding) == 1, out
+    assert "SN-003" in finding[0]
+    assert "nearest known: scripts" in finding[0]
+
+
+def test_audit_is_silent_when_every_declared_tag_reaches_a_clause(tmp_path, capsys):
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, AUDIT_NEEDS)
+    code, out = _audit(tmp_path, capsys)
+    assert code == 0
+    assert "UNKNOWN TAG TOKENS — a tag no hat's `applies_when` can evaluate (0)" in out
+    assert "nearest known" not in out
+
+
+def test_audit_matrix_shows_reach_and_lists_the_needs_that_wake_nothing(
+    tmp_path, capsys
+):
+    """The worksheet itself: the tagged need reaches its hat, the untagged one
+    reaches no conditional hat at all and is surfaced as a question."""
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, AUDIT_NEEDS)
+    _, out = _audit(tmp_path, capsys)
+    # The columns and their triggers are DERIVED from the roster, not listed.
+    assert "CROSS-PLATFORM" in out and "SAFETY" in out
+    assert "MAINTAINER" in out.split("CONDITIONAL HATS")[0], (
+        "an `always` hat belongs in the one summary line, never as a column"
+    )
+    row = [ln for ln in out.splitlines() if ln.startswith("SN-001")][0]
+    assert "x" in row and "run every check" in row
+    assert row.endswith("…"), "a long need is CLIPPED — the worksheet is one line/row"
+    blank = [ln for ln in out.splitlines() if ln.startswith("SN-002")][0]
+    assert "x" not in blank.split("  ")[1], blank
+    silent = out.split("NEEDS WAKING ZERO CONDITIONAL HATS")[1]
+    assert "(1)" in silent.splitlines()[0]
+    assert "SN-002" in silent and "deliberate? the adjudicator answers per row" in out
+
+
+def test_audit_flags_a_hat_that_reaches_no_need(tmp_path, capsys):
+    """The R-2 shape from the other side: a lens no row in the registry can
+    wake. A prompt, deliberately — SAFETY ships silent BY DOMAIN here — so it
+    is reported and never failed on."""
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, AUDIT_NEEDS)
+    code, out = _audit(tmp_path, capsys, "--strict")
+    reach = out.split("REACH PER CONDITIONAL HAT")[1]
+    safety = [ln for ln in reach.splitlines() if "SAFETY" in ln][0]
+    assert "reaches NO need" in safety
+    assert (
+        "reaches NO need"
+        not in [ln for ln in reach.splitlines() if "CROSS-PLATFORM" in ln][0]
+    )
+    assert code == 0, "a judgement prompt must never fail a --strict run"
+
+
+def test_audit_strict_exits_nonzero_only_on_the_mechanical_class(tmp_path, capsys):
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, AUDIT_NEEDS + TYPO_NEED)
+    assert _audit(tmp_path, capsys, "--strict")[0] == 1
+    assert _audit(tmp_path, capsys)[0] == 0, "warn-first is the default"
+    # Delete the typo and the same tree passes strict, though the prompts stay.
+    _write_needs(tmp_path, AUDIT_NEEDS)
+    code, out = _audit(tmp_path, capsys, "--strict")
+    assert code == 0
+    assert "reaches NO need" in out and "ZERO CONDITIONAL HATS" in out
+
+
+def test_audit_over_a_scaffold_with_no_needs_registry_says_so_and_passes(
+    tmp_path, capsys
+):
+    """A fresh scaffold has a roster before it has needs. The audit must say the
+    result is VACUOUS rather than print an empty clean report — an audit of
+    nothing that reads as "nothing wrong" is the false green this repo refuses."""
+    _write(tmp_path, AUDIT_ROSTER)
+    code, out = _audit(tmp_path, capsys, "--strict")
+    assert code == 0
+    assert "VACUOUS" in out
+    assert "MATRIX" not in out
+
+
+def test_audit_over_a_repo_that_opted_out_of_hats_says_so(tmp_path, capsys):
+    _write_needs(tmp_path, AUDIT_NEEDS)
+    code, out = _audit(tmp_path, capsys, "--strict")
+    assert code == 0
+    assert "opted out" in out
+
+
+def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
+    """The kit's own registries, read from disk — the run the `spine-authoring`
+    skill tells an adjudicator to make. Pinned loosely on purpose: the counts
+    move as needs are tagged, but ZERO unknown tokens is a standing bar (a typo
+    here is a need no lens can see) and the matrix must actually carry rows."""
+    code = hats.main(["--root", str(ROOT), "audit", "--strict"])
+    out = capsys.readouterr().out
+    assert code == 0, out
+    assert "can evaluate (0)" in out, "an unknown tag token on a live need row"
+    assert "MATRIX" in out and "SN-011" in out
+    legal = [ln for ln in out.splitlines() if ln.strip().startswith("LEGAL")]
+    assert legal and "reaches NO need" not in legal[-1], (
+        "LEGAL reaches SN-011 (the dependency-licence need) — if it no longer "
+        "does, the tag or the charter moved and the adjudicator should know"
+    )
+
+
 def test_multiline_roster_text_cannot_mint_a_markdown_heading(tmp_path):
     """A question spanning lines must not put `## ...` at column 0 in the
     composed block (review finding: brief-structure injection)."""

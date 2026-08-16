@@ -50,8 +50,14 @@ Four questions:
   declared fields — and *an undeclared field satisfies no condition*. A need with
   no tags is invisible to the hat that most obviously governs it. Ask: **which
   hats should derive from this need, and do its declared tags reach them?** Check
-  it, don't assume it: `python scripts/hats.py applicable --tag <tag> ...` prints
-  the hats a decomposition must face. If the governing hat is not in that list,
+  it, don't assume it — `python scripts/hats.py audit` is the intake sweep: it
+  prints the whole SN × conditional-hat matrix in one pass, plus the needs waking
+  no conditional hat, each hat's reach count, and the one mechanical finding (a
+  tag token no predicate anywhere can evaluate — `--strict` fails on that class
+  alone). The matrix is your **worksheet**, not a verdict: every blank row and
+  zero-reach hat is a question you answer per row. For a single row in isolation,
+  `python scripts/hats.py applicable --tag <tag> ...` prints
+  the hats that decomposition must face. If the governing hat is not in that list,
   fix the tags (or the hat's predicate) *now* — a lens that cannot see the need
   will never produce the obligations that need implies.
 - **(b) Is every load-bearing clause in the NORMATIVE text?** A safety or bound

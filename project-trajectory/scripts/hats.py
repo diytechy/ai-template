@@ -63,20 +63,61 @@ registry none of them read. Forty lines of `tomllib` here is the smaller change.
 
 Usage (the CLI is a documentation aid; the module is library-first):
 
-    python scripts/hats.py list [--root .]
-    python scripts/hats.py applicable [--root .] [--scope S] [--kind K] [--tag T]...
+    python scripts/hats.py [--root .] list
+    python scripts/hats.py [--root .] applicable [--scope S] [--kind K] [--tag T]...
+    python scripts/hats.py [--root .] audit [--strict]
+
+(`--root` is the shared option and precedes the subcommand — it was written the
+other way round here until the `audit` command was added and the usage line was
+run.)
 """
 
 from __future__ import annotations
 
 import argparse
+import difflib
 import re
 import sys
 import tomllib
 from pathlib import Path
 
+# Sibling: the spine's registry CARRIER (the check_need_form.py idiom). The
+# `audit` subcommand reads the STAKEHOLDER-NEED tier, and that tier's vocabulary
+# — which carrier is live, TOML vs the CSV-era markdown, what an unreadable
+# registry means — has one home and it is not this file. (The docstring's "why
+# tomllib directly" argument is about the ROSTER, which the carrier does not
+# know: it is not a tier anything traces through. A need row is.) Run as a
+# subprocess this script's own dir is sys.path[0] so a plain import resolves;
+# the guard covers an in-process import (a test) whose sys.path does not yet
+# carry scripts/.
+try:
+    import spine_carrier
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import spine_carrier
+
 # The roster's home, relative to the repo root.
 ROSTER_REL = "docs/requirements/hats.toml"
+
+# The stakeholder-need registry, named under EITHER carrier: `spine_carrier`
+# strips the suffix and resolves whichever of `.toml` / `.md` is live (and
+# refuses both at once). Written WITH the suffix, the way `baseline_snapshot`
+# names it — the carrier's `stem()` cuts at the last dot in the whole path, so a
+# suffix-less constant joined onto an absolute root that contains a dot in any
+# directory component resolves to nonsense.
+NEEDS_REL = "docs/requirements/stakeholder-needs.toml"
+
+# Rosters BEYOND the live one whose tag tokens still count as KNOWN to the
+# audit's typo check. A repo may legitimately carry more than one roster: this
+# kit keeps the SHIPPED TEMPLATE beside its own instance, and the dogfood rule
+# expects their VALUES to diverge (the template gates the UX pair on
+# `render`/`ui`; here that pair is `always`), so a need deliberately tagged to
+# read correctly under BOTH carries a token the instance roster never names.
+# Reporting that as a typo would be a false alarm on a documented divergence —
+# so the tokens join the KNOWN universe, and the audit says which of them reach
+# nothing here. Absent paths contribute nothing (`load` returns `[]` for a file
+# that is not there), so a scaffold carrying only its own roster is unaffected.
+COMPANION_ROSTER_RELS = ("project-trajectory/registries/hats.template.toml",)
 
 # The one top-level table; a roster declaring anything else is malformed.
 TABLE = "hat"
@@ -373,6 +414,285 @@ def questions(hats):
     return [h["asks"] for h in hats]
 
 
+# --- the SN x hat audit -------------------------------------------------------
+# WHY THIS EXISTS (owner framing, 2026-08-16). ~27 stakeholder needs against ~8
+# tag-gated hats is ~200 applicability permutations, and nobody wades through
+# 200 permutations by hand — so the question the `spine-authoring` skill puts at
+# SN intake ("which hats should derive from this need, and do its declared tags
+# reach them?") gets answered by assumption instead of by looking. The
+# arithmetic under that question is mechanical; the answer per row is not. This
+# subcommand does the arithmetic and hands the judgement back: it prints the
+# reachability matrix as a WORKSHEET, and it reports separately the one class
+# that is a DEFECT rather than a question — a tag token no hat's `applies_when`
+# anywhere can evaluate, which is the silent typo that makes a need invisible to
+# the lens that governs it (the R-2 shape, WI-467).
+#
+# WARN-FIRST, and the split is deliberate: `--strict` exits nonzero on the
+# MECHANICAL findings only. A need waking no conditional hat and a hat reaching
+# no need are both PROMPTS — often the right answer is "deliberate" — and a
+# check that failed a build over them would be answered by tagging rows to
+# silence it, which is the opposite of what the roster is for.
+#
+# Everything below is private: this module's PUBLIC surface is the contract a
+# brief composer calls (`load` / `applicable` / `brief_block` / `questions` /
+# the two `context_from_*`), and the audit is a CLI-side reader built on top of
+# it, like `_cmd_list`.
+
+# How much of a need's own text the matrix carries. A worksheet needs enough to
+# recognise the row, not the row itself.
+_NEED_TEXT_WIDTH = 58
+
+# Cell/column stride in the matrix — wide enough for a two-digit column number.
+_CELL = "%-3s"
+
+
+def _clip(text, width):
+    """One line of at most `width` characters, whitespace collapsed."""
+    text = " ".join(str(text or "").split())
+    return text if len(text) <= width else text[: width - 1] + "…"
+
+
+def _needs_path(root, rel=NEEDS_REL):
+    """The LIVE needs registry, or the suffix-less stem with its candidate
+    carriers spelled out when none is present — so an absent registry names
+    both files a reader could create."""
+    live = spine_carrier.resolve(Path(root) / rel, spine_carrier.NEED_CARRIERS)
+    return live or "{} ({})".format(
+        spine_carrier.stem(Path(root) / rel), "/".join(spine_carrier.NEED_CARRIERS)
+    )
+
+
+def _audit_needs(root, rel=NEEDS_REL):
+    """Every non-example stakeholder need, through whichever carrier is live.
+    `[]` when the registry is absent — a bootstrapped scaffold has a roster
+    before it has needs, and an audit with nothing to audit is vacuous, not
+    wrong."""
+    rows = spine_carrier.load_needs(Path(root) / rel)
+    return [r for r in rows if not str(r.get("id") or "").endswith("-000")]
+
+
+def _need_id(need):
+    return str((need or {}).get("id") or "(unnamed)")
+
+
+def _tag_tokens(roster):
+    """Every tag token any hat in `roster` can evaluate — the clause-token
+    universe, derived from the roster and never listed by hand."""
+    return {
+        value
+        for hat in roster
+        for field, _op, value in hat["condition"][1]
+        if field in LIST_FIELDS
+    }
+
+
+def _triggers(hat):
+    """The tag tokens that wake ONE hat, sorted. Empty for a hat keyed only on
+    scalar fields — which the caller renders as its raw condition instead."""
+    return sorted({v for f, _op, v in hat["condition"][1] if f in LIST_FIELDS})
+
+
+def _split_roster(roster):
+    """`(always, conditional)` — the hats every decomposition faces, and the
+    ones a need's tags have to reach."""
+    always = [h for h in roster if h["condition"][0] == ALWAYS]
+    return always, [h for h in roster if h["condition"][0] != ALWAYS]
+
+
+def _unknown_tag_findings(needs, known):
+    """`[(need id, token, nearest known token)]` for every SN tag no clause in
+    the known universe can evaluate.
+
+    Scoped to SN tags against the roster's clause tokens, ONE WAY ONLY. The
+    mirror scan — roster tokens no need supplies — is deliberately not a finding
+    here: work items carry tags too (`context_from_work_item`), so a clause with
+    no need behind it is still reachable, and reporting it would be wrong more
+    often than right. What the roster's own silence costs is reported instead as
+    the per-hat reach count, where it reads as the prompt it is."""
+    pool = sorted(known)
+    out = []
+    for need in needs:
+        for token in context_from_need(need).get("tags", []):
+            if token in known:
+                continue
+            near = difflib.get_close_matches(token, pool, n=1, cutoff=0.5)
+            out.append((_need_id(need), token, near[0] if near else ""))
+    return out
+
+
+def _audit_columns(always, conditional):
+    lines = [
+        "ALWAYS — put to every decomposition regardless of tags ({}):".format(
+            len(always)
+        ),
+        "  " + (", ".join(h["name"] for h in always) or "(none)"),
+        "",
+        "CONDITIONAL HATS — the matrix columns, and the tags that wake each:",
+    ]
+    for i, hat in enumerate(conditional, 1):
+        woken_by = ", ".join(_triggers(hat)) or "(no tag clause) " + hat["applies_when"]
+        lines.append("  %2d  %-26s %s" % (i, hat["name"], woken_by))
+    return lines
+
+
+def _audit_matrix(needs, conditional):
+    """The worksheet itself: one row per need, one column per conditional hat,
+    each cell the REAL evaluation of that hat's condition against that need's
+    declared context (never a token intersection — `and`/`or` and the
+    scalar-field clauses have to answer as the composer would)."""
+    idw = max([len(_need_id(n)) for n in needs] + [6])
+    lines = [
+        "",
+        'MATRIX — "x" = this need\'s declared tags wake that hat; "." = they do not',
+        " " * idw
+        + "  "
+        + "".join(_CELL % i for i in range(1, len(conditional) + 1))
+        + " need",
+    ]
+    for need in needs:
+        context = context_from_need(need)
+        cells = "".join(
+            _CELL % ("x" if evaluate(h["condition"], context) else ".")
+            for h in conditional
+        )
+        lines.append(
+            "%-*s  %s %s"
+            % (
+                idw,
+                _need_id(need),
+                cells,
+                _clip(spine_carrier.folded(need).get("need"), _NEED_TEXT_WIDTH),
+            )
+        )
+    return lines
+
+
+def _audit_prompts(needs, conditional):
+    """The two judgement sections — a need no conditional hat can see, and a hat
+    no need can wake. Neither is a finding; both are questions with a name on
+    them."""
+    silent = [
+        n
+        for n in needs
+        if not any(evaluate(h["condition"], context_from_need(n)) for h in conditional)
+    ]
+    lines = [
+        "",
+        "NEEDS WAKING ZERO CONDITIONAL HATS ({}) — deliberate? the adjudicator "
+        "answers per row:".format(len(silent)),
+    ]
+    if not silent:
+        lines.append("  (none)")
+    for need in silent:
+        lines.append(
+            "  %-8s %s"
+            % (_need_id(need), _clip(spine_carrier.folded(need).get("need"), 66))
+        )
+
+    lines += ["", "REACH PER CONDITIONAL HAT (of {} needs):".format(len(needs))]
+    for hat in conditional:
+        reach = sum(
+            1 for n in needs if evaluate(hat["condition"], context_from_need(n))
+        )
+        flag = (
+            "   <- reaches NO need: the R-2 shape — either this repo files no "
+            "work in its subject, or the needs it governs are untagged"
+            if not reach
+            else ""
+        )
+        lines.append("  %-26s %3d%s" % (hat["name"], reach, flag))
+    return lines
+
+
+def _audit_lines(root):
+    """`(lines, hard_findings)` — the whole report, and the count that `--strict`
+    keys on."""
+    roster = load(root)
+    always, conditional = _split_roster(roster)
+    needs = _audit_needs(root)
+
+    title = "SN x HAT AUDIT — {} x {}".format(roster_path(root), _needs_path(root))
+    if not roster:
+        return (
+            [
+                title,
+                "No roster at {}: hats are opted out here (absence IS the "
+                "opt-out), so there is nothing to audit.".format(roster_path(root)),
+            ],
+            0,
+        )
+    if not needs:
+        return (
+            [
+                title,
+                "No stakeholder-need rows: the audit is VACUOUS, not clean — {} "
+                "hat(s) are declared and no need row exists to face them.".format(
+                    len(roster)
+                ),
+            ],
+            0,
+        )
+
+    known = _tag_tokens(roster)
+    companions = {
+        rel: load(root, rel=rel)
+        for rel in COMPANION_ROSTER_RELS
+        if roster_path(root, rel).exists()
+    }
+    elsewhere = set()
+    for other in companions.values():
+        elsewhere |= _tag_tokens(other)
+    findings = _unknown_tag_findings(needs, known | elsewhere)
+
+    lines = [
+        title,
+        "{} need(s); {} hat(s): {} always, {} conditional.".format(
+            len(needs), len(roster), len(always), len(conditional)
+        ),
+        "",
+        "UNKNOWN TAG TOKENS — a tag no hat's `applies_when` can evaluate ({}):".format(
+            len(findings)
+        ),
+    ]
+    if not findings:
+        lines.append("  (none — every declared need tag reaches a declared clause)")
+    for nid, token, near in findings:
+        lines.append(
+            "  %-8s %-18s %s"
+            % (nid, token, "nearest known: " + near if near else "no near match")
+        )
+    # Tokens the LIVE roster cannot evaluate but a companion roster can. Not a
+    # finding (see COMPANION_ROSTER_RELS) — but silence about it would hide a
+    # tag that is inert HERE, which the adjudicator is entitled to know.
+    inert = sorted(
+        {
+            t
+            for n in needs
+            for t in context_from_need(n).get("tags", [])
+            if t not in known and t in elsewhere
+        }
+    )
+    if inert:
+        lines.append(
+            "  note: {} declared on need rows but INERT in this roster — "
+            "evaluable only in {}.".format(
+                ", ".join(inert), ", ".join(sorted(companions))
+            )
+        )
+    lines.append("")
+
+    lines += _audit_columns(always, conditional)
+    lines += _audit_matrix(needs, conditional)
+    lines += _audit_prompts(needs, conditional)
+    lines += [
+        "",
+        "The matrix is arithmetic; the tiering is not. A blank row and a "
+        "zero-reach hat are QUESTIONS for the adjudicator (spine-authoring "
+        "§1(a)), never findings — only the unknown tokens above are.",
+    ]
+    return lines, len(findings)
+
+
 # --- CLI (documentation aid; the module is library-first) ---------------------
 def _utf8_console():
     """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
@@ -414,6 +734,14 @@ def _cmd_applicable(args):
     return 0
 
 
+def _cmd_audit(args):
+    lines, hard = _audit_lines(args.root)
+    print("\n".join(lines))
+    # WARN-FIRST: the report is informational unless the caller asked for the
+    # mechanical class to bite, and even then ONLY that class does.
+    return 1 if (args.strict and hard) else 0
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -432,6 +760,20 @@ def main(argv=None):
         "--tag", action="append", default=[], help="a declared tag (repeatable)"
     )
     app.set_defaults(func=_cmd_applicable)
+
+    aud = sub.add_parser(
+        "audit",
+        help="the SN x hat worksheet: which needs reach which conditional hats",
+    )
+    aud.add_argument(
+        "--strict",
+        action="store_true",
+        help=(
+            "exit nonzero on the MECHANICAL findings only (a need tag no clause "
+            "can evaluate); the judgement prompts never fail"
+        ),
+    )
+    aud.set_defaults(func=_cmd_audit)
 
     args = ap.parse_args(argv)
     if not getattr(args, "cmd", None):

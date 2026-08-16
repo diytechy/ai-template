@@ -160,6 +160,7 @@ graph LR
     m_scripts_handback --> m_scripts_agent_common
     m_scripts_handback --> m_scripts_integrate
     m_scripts_handback --> m_scripts_spec_move
+    m_scripts_hats --> m_scripts_spine_carrier
     m_scripts_intake --> m_scripts_agent_common
     m_scripts_intake --> m_scripts_baseline_snapshot
     m_scripts_intake --> m_scripts_check_trajectory
@@ -1008,6 +1009,7 @@ Contracts (interfaces): IF-080
 
 ### `scripts/hats`
 _hats.py — the HATS ROSTER reader: which declared expert perspectives apply to_
+Imports (internal): `spine_carrier`
 
 | Public item | Summary | Implements |
 |---|---|---|

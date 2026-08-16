@@ -36,6 +36,33 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16m — the SN×hat AUDIT lands: the ~200-permutation cross-check
+  the adjudicator was being asked to do by hand is now one command.**
+  (Owner's framing verbatim: "27 SNs × 8 tag-gated hats … very few people
+  are going to wade through — a perfect fit for spine-authoring.")
+  `hats.py audit` (warn-first; `--strict` reds only the mechanical class):
+  **(1)** unknown-token findings — an SN tag no roster clause can evaluate,
+  with a nearest-known suggestion (the silent-typo class; the documented
+  `ui`-on-SN-023 dogfood divergence is reported as an inert-token NOTE via
+  the companion-roster join, never a false alarm); **(2)** the coverage
+  MATRIX — every SN × every conditional hat, cells computed by the REAL
+  `evaluate()` against `context_from_need`, columns derived from the
+  roster, nothing hard-coded; **(3)** the judgment prompts — SNs waking
+  zero conditional hats ("deliberate? the adjudicator answers per row")
+  and each hat's reach count, with a zero-reach hat flagged as the R-2
+  shape. Live first run: 0 unknown tokens; the 10 untagged SNs listed;
+  SAFETY reaches 0 needs (flagged — consistent with its recorded
+  silent-by-domain classification, now VISIBLE instead of implicit);
+  LEGAL 1 (SN-011), DATA-PROTECTION 2, ACCESSIBILITY 1, PERFORMANCE 1.
+  The spine-authoring skill's SN-intake step now names the audit as the
+  sweep (copies re-synced, index green). Eight new tests; smoke-budget
+  `max-tests` re-stamped 1190 → 1200 with the reason on the dial (eight
+  in-process tests accrued by design; measured 1193/51.3s); arch map
+  regenerated for the sanctioned `hats → spine_carrier` edge. Full suite
+  2551+8-1 → targeted re-verification of the 11 affected modules
+  218 passed / 1 skipped after the re-stamp; hats+ratchet modules
+  44 passed
+  <!-- fig: cmd="python -m pytest tests/test_hats.py tests/test_module_size_ratchet.py -q" rev=22a915d3 -->.
 - **2026-08-16l — option (b) RULED AND EXECUTED; the spine-authoring skill
   is born; R-2's wiring is closed at the SN tier.** Owner rulings this
   sitting-adjacent exchange: (b) hat-derived labels over SN amendment for
