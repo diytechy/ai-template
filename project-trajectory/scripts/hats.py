@@ -119,6 +119,30 @@ NEEDS_REL = "docs/requirements/stakeholder-needs.toml"
 # that is not there), so a scaffold carrying only its own roster is unaffected.
 COMPANION_ROSTER_RELS = ("project-trajectory/registries/hats.template.toml",)
 
+# Tag tokens that DELIBERATELY route to nothing, with the reason each does.
+#
+# When a charter is ruled UNCONDITIONAL, the tag it used to key on stops being
+# evaluable anywhere: `applies_when = "always"` carries no clause, so the token
+# leaves the known universe entirely — it is not in this roster and not in a
+# companion one either. The need row keeps the tag, because the tag was always
+# two things at once (routing AND subject metadata) and only the routing half
+# went away. Left alone, the audit's typo check would report exactly the rows
+# whose lens is now MOST reachable, which is the opposite of what that finding
+# means; and the roster cannot say so itself, because a hat has three keys and
+# none of them is "the tag I used to answer to".
+#
+# So the retirements are named here, each with the ruling behind it. They stay
+# out of the MECHANICAL class and are reported as their own note instead — the
+# adjudicator still learns the token routes nothing, which is the fact worth
+# knowing. Both entries below track the SHIPPED roster, not just this repo's
+# copy: hats.template.toml carries the same two charters as `always`, so an
+# adopter who keeps the shipped roster and tags a need `a11y` gets the same
+# correct reading. Retire a tag of your own here when you rule its hat `always`.
+NON_ROUTING_TOKENS = {
+    "a11y": "hat.ACCESSIBILITY is `always` (owner ruling 2026-08-16)",
+    "perf": "hat.PERFORMANCE is `always` (owner ruling 2026-08-16)",
+}
+
 # The one top-level table; a roster declaring anything else is malformed.
 TABLE = "hat"
 
@@ -501,7 +525,9 @@ def _split_roster(roster):
 
 def _unknown_tag_findings(needs, known):
     """`[(need id, token, nearest known token)]` for every SN tag no clause in
-    the known universe can evaluate.
+    the known universe can evaluate. The caller passes the roster's clause
+    tokens PLUS `NON_ROUTING_TOKENS` as that universe, so a tag retired by an
+    `always` ruling is not reported as the typo it is not.
 
     Scoped to SN tags against the roster's clause tokens, ONE WAY ONLY. The
     mirror scan — roster tokens no need supplies — is deliberately not a finding
@@ -642,7 +668,7 @@ def _audit_lines(root):
     elsewhere = set()
     for other in companions.values():
         elsewhere |= _tag_tokens(other)
-    findings = _unknown_tag_findings(needs, known | elsewhere)
+    findings = _unknown_tag_findings(needs, known | elsewhere | set(NON_ROUTING_TOKENS))
 
     lines = [
         title,
@@ -655,7 +681,10 @@ def _audit_lines(root):
         ),
     ]
     if not findings:
-        lines.append("  (none — every declared need tag reaches a declared clause)")
+        # Not "every tag reaches a clause": a retired routing token reaches none
+        # and is still not a finding. What the zero means is that no tag is
+        # UNACCOUNTED for — the notes below say which ones route nothing.
+        lines.append("  (none — every declared need tag is accounted for)")
     for nid, token, near in findings:
         lines.append(
             "  %-8s %-18s %s"
@@ -679,6 +708,21 @@ def _audit_lines(root):
                 ", ".join(inert), ", ".join(sorted(companions))
             )
         )
+    # The other inert class (see NON_ROUTING_TOKENS): a tag whose hat was ruled
+    # `always`, so it routes nothing ANYWHERE and is subject metadata only. Said
+    # out loud for the same reason as the note above — a token doing nothing is
+    # the adjudicator's business even when it is not a finding.
+    for token, why in sorted(NON_ROUTING_TOKENS.items()):
+        rows = [
+            _need_id(n) for n in needs if token in context_from_need(n).get("tags", [])
+        ]
+        if rows and token not in known:
+            lines.append(
+                "  note: `{}` on {} ROUTES NOTHING — {}; the lens reaches every "
+                "need unconditionally and the tag is subject metadata.".format(
+                    token, ", ".join(rows), why
+                )
+            )
     lines.append("")
 
     lines += _audit_columns(always, conditional)

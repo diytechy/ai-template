@@ -200,18 +200,27 @@ LIVE_NAMES = [
     "PRODUCT-FITNESS",
 ]
 
-# The floor every decomposition in THIS repo faces: the three original `always`
-# hats plus the UX pair, unconditional here because PROJECT_STATE.html /
-# open-items.html are real owner-facing surfaces (WI-453, ruling 2026-08-13q) —
-# plus the three provisional 2026-08-16 charters, `always` deliberately: the
-# finding each answers was UNREACHABILITY, so gating them on a tag nobody sets
-# would reproduce the defect they exist to close.
+# The floor every decomposition in THIS repo faces, IN DECLARED ORDER: the three
+# original `always` hats plus the UX pair, unconditional here because
+# PROJECT_STATE.html / open-items.html are real owner-facing surfaces (WI-453,
+# ruling 2026-08-13q) — plus the three provisional 2026-08-16 charters, `always`
+# deliberately: the finding each answers was UNREACHABILITY, so gating them on a
+# tag nobody sets would reproduce the defect they exist to close.
 LIVE_ALWAYS = [
     "SECURITY",
     "MAINTAINER",
     "TEST-ENGINEER",
     "UX-DESIGNER",
     "UX-ENGINEER",
+    # Owner ruling 2026-08-16: ACCESSIBILITY and PERFORMANCE leave the tag-gated
+    # aspect set and become unconditional — "in general those should always be
+    # considered". They keep their declared position inside the aspect block, so
+    # they land here between the UX pair and the cross-cutting three. The SAME
+    # flip lands in the SHIPPED template (hats.template.toml), so this is not a
+    # values divergence: the pin below that gates the template's UX pair is the
+    # only template-side always-set assertion, and it is untouched by this.
+    "ACCESSIBILITY",
+    "PERFORMANCE",
     "CONSISTENCY",
     "INTEGRITY-RECOVERABILITY",
     "PRODUCT-FITNESS",
@@ -221,8 +230,9 @@ LIVE_ALWAYS = [
 def test_the_shipped_roster_selects_the_always_on_hats_at_minimum():
     """The kit's own roster, read from disk. The `always` hats are the floor
     every decomposition faces; the rest are conditional, which is the whole
-    point of `applies_when` — and the five aspect hats are silent BY DESIGN
-    until this repo tags work with their tags (WI-453, ruling 2026-08-13s)."""
+    point of `applies_when` — and three of the five aspect hats are silent BY
+    DESIGN until this repo tags work with their tags (WI-453, ruling
+    2026-08-13s), the other two having been ruled `always` on 2026-08-16."""
     roster = hats.load(ROOT)
     assert [h["name"] for h in roster] == LIVE_NAMES
     minimum = [h["name"] for h in hats.applicable(roster, {})]
@@ -454,14 +464,18 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
     hats.py refuses unknown keys — but each aspect hat keys on its OWN tag, so
     it is silent on every real row today (BY DESIGN, unlike the old
     FIRST-RUN-ADOPTER's silence BY DEFECT) and fires the moment a project tags
-    work with it."""
+    work with it.
+
+    THREE of the original five, since 2026-08-16. The owner ruled ACCESSIBILITY
+    and PERFORMANCE `always` — "in general those should always be considered" —
+    so they are no longer examples of design silence at all, and asserting they
+    stay silent would now be asserting the ruling did not happen. Their
+    unconditional half is pinned below, in both roster copies."""
     roster = {h["name"]: h for h in hats.load(ROOT)}
     aspects = {
         "SAFETY": "safety",
         "LEGAL": "legal",
         "DATA-PROTECTION": "personal-data",
-        "ACCESSIBILITY": "a11y",
-        "PERFORMANCE": "perf",
     }
     contexts = _real_work_item_contexts()
     for name, tag in aspects.items():
@@ -472,6 +486,25 @@ def test_aspect_hats_ship_silent_by_design_and_switch_on_by_tag():
         assert silent_on == [], "%s must ship silent, fired on %s" % (name, silent_on)
         assert hats.evaluate(condition, {"tags": [tag]}), (
             "%s must switch on when work is tagged %r" % (name, tag)
+        )
+
+
+def test_the_two_ruled_always_aspect_hats_are_unconditional_in_both_rosters():
+    """Owner ruling 2026-08-16, pinned on BOTH copies deliberately: unlike the
+    UX pair (whose divergence is the worked example of the dogfood VALUES rule),
+    this flip lands identically in the kit's instance and in the shipped
+    template, so an adopter who keeps the roster gets the same floor. The
+    retired routing tags stay on their need rows as subject metadata — see
+    `hats.NON_ROUTING_TOKENS`, which keeps the audit's typo class honest."""
+    live = {h["name"]: h for h in hats.load(ROOT)}
+    kit = {h["name"]: h for h in hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))}
+    for name, retired in (("ACCESSIBILITY", "a11y"), ("PERFORMANCE", "perf")):
+        for where, roster in (("live", live), ("template", kit)):
+            assert roster[name]["applies_when"] == "always", where
+            assert hats.evaluate(roster[name]["condition"], {}), where
+        assert retired in hats.NON_ROUTING_TOKENS, (
+            "%r routes nothing now; naming it keeps the audit's MECHANICAL "
+            "finding the typo class it claims to be" % retired
         )
 
 
@@ -687,6 +720,11 @@ def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
         "LEGAL reaches SN-011 (the dependency-licence need) — if it no longer "
         "does, the tag or the charter moved and the adjudicator should know"
     )
+    # The retired routing tags are SAID, not silently swallowed: the zero above
+    # is only honest if the reader is still told the tokens do nothing.
+    for token, need in (("a11y", "SN-023"), ("perf", "SN-027")):
+        note = [ln for ln in out.splitlines() if "`%s`" % token in ln]
+        assert note and "ROUTES NOTHING" in note[0] and need in note[0], out
 
 
 def test_multiline_roster_text_cannot_mint_a_markdown_heading(tmp_path):

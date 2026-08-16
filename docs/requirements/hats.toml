@@ -59,11 +59,16 @@
 # THREE KINDS OF SILENCE, DISTINGUISHED (the first two ruled 2026-08-13s and
 # executed at WI-453; the third added PROVISIONALLY on 2026-08-16 under the
 # WI-467 blind-re-derivation's finding R-3 — OWNER TO RULE).
-# The five ASPECT hats at the bottom (SAFETY, LEGAL, DATA-PROTECTION,
-# ACCESSIBILITY, PERFORMANCE) are silent BY DESIGN: each keys on its own tag,
-# ships OFF, and switches on the moment this project tags work with it —
-# opt-in by tagging, no `enabled` field, using the grammar's own rule that an
-# undeclared field satisfies no condition. That silence is a choice.
+# THREE of the five ASPECT hats (SAFETY, LEGAL, DATA-PROTECTION) are silent BY
+# DESIGN: each keys on its own tag, ships OFF, and switches on the moment this
+# project tags work with it — opt-in by tagging, no `enabled` field, using the
+# grammar's own rule that an undeclared field satisfies no condition. That
+# silence is a choice. The other two, ACCESSIBILITY and PERFORMANCE, are NO
+# LONGER SILENT AT ALL: the owner ruled them `always` on 2026-08-16 — "in
+# general those should always be considered; the cleanest option" — so neither
+# is opt-in by tagging any more, and neither is an example of the design
+# silence described here. They still sit in the aspect block below (declared
+# order is stable on purpose) with the ruling noted on each row.
 # FIRST-RUN-ADOPTER's ORIGINAL predicate was silent BY DEFECT: it keyed on the
 # `scope` field SN rows do not carry (above), so its clauses could never fire
 # on a real row. Fixed at WI-453 — it now keys on the deliverable tags real
@@ -140,13 +145,23 @@ applies_when = 'tags contains "personal-data"'
 asks = """What personal data does this touch, on what basis, for how long, and who can reach it?"""
 listens_for = """Personal data crossing a boundary with no stated basis, retention limit or access rule."""
 
+# RULED `always` 2026-08-16 (owner, in session), out of the tag-gated aspect
+# set above it: accessibility should always be considered, so gating it on an
+# `a11y` tag only bought the chance to forget the tag. The `a11y` tag on SN-023
+# is kept as SUBJECT metadata — it no longer ROUTES this hat to that need,
+# because nothing needs routing when the charter is unconditional.
 [hat.ACCESSIBILITY]
-applies_when = 'tags contains "a11y"'
+applies_when = "always"
 asks = """Can someone using a keyboard, a screen reader, or a low-vision setting complete this — and is that stated as a requirement rather than hoped for?"""
 listens_for = """A surface whose acceptance names only how it looks to a sighted mouse user."""
 
+# RULED `always` 2026-08-16, same ruling and same reason as ACCESSIBILITY: a
+# budget is a thing you declare BEFORE you find out you needed one, so the
+# question belongs on every decomposition rather than on the ones somebody
+# remembered to tag. The `perf` tag on SN-027 is kept as SUBJECT metadata; it
+# routes nothing now.
 [hat.PERFORMANCE]
-applies_when = 'tags contains "perf"'
+applies_when = "always"
 asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
 listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""
 

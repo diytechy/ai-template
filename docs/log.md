@@ -36,6 +36,21 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16n — ACCESSIBILITY and PERFORMANCE ruled `always` (owner: "in
+  general those should always be considered; the cleanest option") — the
+  switched-off-hat residue dissolves.** Both rosters flip identically (no
+  new VALUES divergence; the UX pair stays the only one); the silence
+  taxonomy now names only SAFETY/LEGAL/DATA-PROTECTION as silent-by-design;
+  the four stale "switched-off" hat-derived labels (SR-015, SR-033, SR-052,
+  SR-167) reworded to state the dependency CLOSED — no status flips, all
+  four already Modified/Drafted. The `a11y`/`perf` tags stay on
+  SN-023/SN-027 as subject metadata with routing-inert comments; the audit
+  gained `NON_ROUTING_TOKENS` (declared, reported as its own note — the
+  typo check must not accuse the two rows whose lens is now most reachable)
+  and reads 10 always / 6 conditional, 0 unknown tokens, SAFETY the one
+  zero-reach conditional. Test pins updated with the ruling; hats suites
+  134 passed / 1 skipped, adjacent modules 88 passed
+  <!-- fig: cmd="python -m pytest tests/test_hats.py tests/test_dogfood_sync.py tests/test_bootstrap.py -q" rev=22a915d3 -->.
 - **2026-08-16m — the SN×hat AUDIT lands: the ~200-permutation cross-check
   the adjudicator was being asked to do by hand is now one command.**
   (Owner's framing verbatim: "27 SNs × 8 tag-gated hats … very few people

@@ -196,9 +196,12 @@ acceptance = """Opt-in layers (perf, guardrails, unattended, parallel tracks, OK
 
 [need.SN-023]
 kind = "core"
-# `ui` is INERT in this repo's roster — the UX pair is `always` here — and is
-# carried because the SHIPPED template gates them on `render`/`ui` (the
+# Both tags are INERT AS ROUTING and kept as SUBJECT metadata. `ui`: the UX
+# pair is `always` here and gated on `render`/`ui` in the SHIPPED template (the
 # VALUES-DIVERGE NOTE in hats.toml), so the row reads correctly under both.
+# `a11y`: hat.ACCESSIBILITY was ruled `always` on 2026-08-16 in BOTH rosters, so
+# nothing routes on the token any more — the lens reaches this need regardless
+# (hats.py NON_ROUTING_TOKENS keeps the audit from reading that as a typo).
 tags = ["a11y", "ui"]
 need ="""A reviewer can see the project's progress **and how its parts connect** from one dashboard-like file."""
 why = """*Readable and correct over the long run*; the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift."""
@@ -230,6 +233,9 @@ acceptance = """`docs/agents.toml` declares (family × model × tier) pair-rows 
 
 [need.SN-027]
 kind = "core"
+# `perf` is INERT AS ROUTING since the 2026-08-16 ruling made hat.PERFORMANCE
+# `always` in both rosters; kept as SUBJECT metadata (the same reading as
+# SN-023's `a11y`). `unattended` and `scripts` still route.
 tags = ["perf", "unattended", "scripts"]
 need ="""A team gets more than one piece of ready work moving at once: ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."""
 why = """Throughput: the WI DAG already encodes what may proceed, so a frontier that advances one item at a time idles for no reason. But parallel *integration* is precisely how a reviewed process ships an unreviewed tree — so the fan-out must narrow back to a single serialized, gated seam before anything lands."""

@@ -57,7 +57,7 @@
 #
 # THREE KINDS OF SILENCE, DISTINGUISHED. Several hats below ship SILENT BY
 # DESIGN: each keys on a tag (`render`, `ui`, `safety`, `legal`,
-# `personal-data`, `a11y`, `perf`) that your project may not use yet, and
+# `personal-data`) that your project may not use yet, and
 # switches on the moment you tag work with it — opt-in by tagging, no
 # `enabled` field, using the grammar's own rule that an undeclared field
 # satisfies no condition. That is different from a hat silent BY DEFECT — one
@@ -129,13 +129,22 @@ applies_when = 'tags contains "personal-data"'
 asks = """What personal data does this touch, on what basis, for how long, and who can reach it?"""
 listens_for = """Personal data crossing a boundary with no stated basis, retention limit or access rule."""
 
+# SHIPS `always`, unlike the three tag-gated aspect hats above it: accessibility
+# should always be considered, and a hat gated on an `a11y` tag is only as good
+# as somebody remembering to type `a11y`. If your product has no human-facing
+# surface at all, gate it (`tags contains "a11y"`) rather than deleting it — the
+# question is cheap to answer "no surface here" and expensive to never ask.
 [hat.ACCESSIBILITY]
-applies_when = 'tags contains "a11y"'
+applies_when = "always"
 asks = """Can someone using a keyboard, a screen reader, or a low-vision setting complete this — and is that stated as a requirement rather than hoped for?"""
 listens_for = """A surface whose acceptance names only how it looks to a sighted mouse user."""
 
+# SHIPS `always`, same reason: a budget is declared before you learn you needed
+# one, so "what is the budget here, measured on what" belongs on every
+# decomposition rather than on the ones somebody tagged `perf`. Gate it if your
+# project genuinely has no speed or size obligation anywhere; do not delete it.
 [hat.PERFORMANCE]
-applies_when = 'tags contains "perf"'
+applies_when = "always"
 asks = """What is the declared budget here, measured on what, and what happens when it is exceeded?"""
 listens_for = """A speed or size claim with no declared budget, or a budget with no measurement behind it."""
 
