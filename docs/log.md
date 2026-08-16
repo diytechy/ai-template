@@ -36,6 +36,41 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16d — re-tier v2 S2: the two tiering advisories land, warn-first,
+  and the enforcement audit gains their rows.** (`WI-464` slice 2, same
+  session as S1.) `trace_text.py` gains two PURE advisory predicates —
+  `sr_artifact_advisories` (R2: a `*.py` token in an SR `Requirement` cell
+  warns unless the `Rationale` carries a stated `13v` reason; separately,
+  >1 SR naming one artifact warns naming the rows, waived rows deliberately
+  included — a waiver excuses a row's naming, never a shared identity) and
+  `sr_fanout_advisories` (R3: direct-LLR children over the declared
+  `SR_FANOUT_MAX = 7`, per-row escape `fan-out re-stamp: <reason>` in
+  `Rationale`) — wired into `trace.py`'s advisory pipe (console + report.md
+  sections), with `exit_code` byte-untouched: the tier physically cannot
+  gate. Four new tests in `test_trace_rules.py` (fire / suppress /
+  never-gates for both); the three trace goldens regenerated (diff = the two
+  new "None." sections only). On the live registries the detectors reproduce
+  the plan's §2 measured basis exactly: 25 advisory lines — 15 per-row
+  artifact namings, 3 shared-identity groups (SR-026/027/028 →
+  `agent_loop.py`; SR-009/010/011/111/138 → `bootstrap.py`; SR-006/007 →
+  `check.py`, the pair that seeded the program), 7 fan-out offenders
+  (SR-070 16, SR-157 15, SR-156 13, SR-155 11, SR-148 10, SR-054 9,
+  SR-053 8)
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --strict-integrity" rev=1c7e4102 -->.
+  This closes the recorded "2.7(a) has no executable form" gap — R2/R1 now
+  have one. Two recorded design notes: the `13v` reader is the FIRST
+  executable reader of that waiver token (`form_findings` never suppressed
+  on it — the standing SR-140/SR-147 findings still fire, knowingly); the
+  shared-artifact census keys on the token as written (`trace.py` ≠
+  `scripts/trace.py`), an accepted under-detect over a false accusation.
+  `trace.py` module-size ratchet re-stamped 4212 → 4248 (+36, wiring only —
+  the predicates live in the WI-329 sibling; reason on the baseline line).
+  Enforcement audit: the two R1/R2 rows land in the Process-disciplines
+  table naming these functions. Bar: smoke 1156 passed / 29 skipped, 35.72s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=1c7e4102 -->;
+  `test_trace_rules.py` + `test_trace.py` full: 95 passed; goldens 5 passed;
+  check_docs 0 broken. No registry cell moved; S3's rewording now runs WITH
+  its policing advisories, as the plan sequenced.
 - **2026-08-16c — re-tier v2 S1: the tiering rules land in the process
   master, once; 2.7(a)'s supersession recorded at its ruling sites.**
   (`WI-464` slice 1; plan

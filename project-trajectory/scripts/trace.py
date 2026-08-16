@@ -105,6 +105,8 @@ try:
         paraphrase_advisories,
         provenance_findings,
         refs,
+        sr_artifact_advisories,
+        sr_fanout_advisories,
     )
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -119,6 +121,8 @@ except ImportError:  # pragma: no cover - in-process fallback
         paraphrase_advisories,
         provenance_findings,
         refs,
+        sr_artifact_advisories,
+        sr_fanout_advisories,
     )
 
 
@@ -3420,6 +3424,14 @@ def analyze(reg, args):
     # key off the SR row. Same never-gating tier as the status-coherence lint;
     # rendered through the same channel (one advisory pipe, two lints).
     llr_status_advis = llr_status_advis + modified_chain_advisories(srs, llrs, tcs)
+    # Warn-only, always on (re-tier v2 R2/R3, owner ruling 2026-08-15): an SR
+    # `Requirement` naming a concrete artifact, and an SR whose direct-LLR fan-out
+    # is over the declared bound. Their own pipes — they are TIERING detectors,
+    # not prose lints, and folding them into the AC/paraphrase counters would
+    # report a tiering defect under a wording heading. Never joins a failure set
+    # below: warn-first by ruling, cleared by the re-tier campaign, not by a gate.
+    sr_artifact_advis = sr_artifact_advisories(srs)
+    sr_fanout_advis = sr_fanout_advisories(srs, llrs)
 
     # Drafted artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
@@ -3457,6 +3469,8 @@ def analyze(reg, args):
     findings.form = form
     findings.paraphrase = paraphrase
     findings.llr_status_advis = llr_status_advis
+    findings.sr_artifact_advis = sr_artifact_advis
+    findings.sr_fanout_advis = sr_fanout_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
     findings.component_findings = component_findings
@@ -3495,6 +3509,8 @@ def render_report(reg, findings, args, forest):
     form = findings.form
     paraphrase = findings.paraphrase
     llr_status_advis = findings.llr_status_advis
+    sr_artifact_advis = findings.sr_artifact_advis
+    sr_fanout_advis = findings.sr_fanout_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
     component_findings = findings.component_findings
@@ -3680,6 +3696,22 @@ def render_report(reg, findings, args, forest):
         if not llr_status_advis
         else [f"- {f}" for f in llr_status_advis]
     )
+    # Warn-only sections (re-tier v2 R2/R3): the two tiering detectors. Never a
+    # failure under any flag — a merged row and a mis-tiered artifact name are
+    # cleared by re-writing requirements, which is the campaign's schedule, not
+    # the checker's.
+    lines += ["", "## Artifact-naming advisories (warn-only)", ""]
+    lines += (
+        ["None. No requirement cell names a concrete artifact."]
+        if not sr_artifact_advis
+        else [f"- {f}" for f in sr_artifact_advis]
+    )
+    lines += ["", "## Fan-out advisories (warn-only)", ""]
+    lines += (
+        ["None. No SR's direct-LLR fan-out exceeds the declared bound."]
+        if not sr_fanout_advis
+        else [f"- {f}" for f in sr_fanout_advis]
+    )
     # Verification-basis surface (process.md §4): make the project's trust
     # footprint auditable — of what is `Approved`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
@@ -3836,6 +3868,8 @@ def render_console(reg, findings, args, out, html_out):
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
+    sr_artifact_advis = findings.sr_artifact_advis
+    sr_fanout_advis = findings.sr_fanout_advis
     watermark_advis = findings.watermark_advisories
     snapshot_advis = findings.snapshot_advisories
     mechanized_verified = findings.mechanized_verified
@@ -3863,6 +3897,8 @@ def render_console(reg, findings, args, out, html_out):
         + knowledge_advisories
         + llr_status_advis
         + paraphrase
+        + sr_artifact_advis
+        + sr_fanout_advis
         + watermark_advis
         + snapshot_advis
     ):

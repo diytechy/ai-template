@@ -1389,6 +1389,8 @@ Contracts (interfaces): IF-076
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
+| `sr_artifact_advisories(srs)` | Warn-only: an SR `Requirement` cell that names a concrete artifact |  |
+| `sr_fanout_advisories(srs, llrs, bound)` | Warn-only: an SR whose DIRECT LLR children outnumber the declared bound |  |
 
 ### `scripts/traj_graph`
 _Pure graph layout and wire routing for the project-state dashboard._

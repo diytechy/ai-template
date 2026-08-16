@@ -4,12 +4,14 @@
 Split out of `trace.py`, which owns the JOIN — this module owns the question
 "is this one row readable and decidable on its own?", asked four ways:
 
-| function                | tier     | what it catches                          |
-|-------------------------|----------|------------------------------------------|
-| `provenance_findings`   | gating   | the row carries its own history          |
-| `form_findings`         | gating   | the row is not one testable obligation   |
-| `paraphrase_advisories` | advisory | the child re-words its parent            |
-| `ac_advisories`         | advisory | a comparative with no named predicate    |
+| function                  | tier     | what it catches                        |
+|---------------------------|----------|----------------------------------------|
+| `provenance_findings`     | gating   | the row carries its own history        |
+| `form_findings`           | gating   | the row is not one testable obligation |
+| `paraphrase_advisories`   | advisory | the child re-words its parent          |
+| `ac_advisories`           | advisory | a comparative with no named predicate  |
+| `sr_artifact_advisories`  | advisory | a requirement cell names an artifact   |
+| `sr_fanout_advisories`    | advisory | an SR's direct-LLR fan-out is merged   |
 
 They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
@@ -385,4 +387,154 @@ def paraphrase_advisories(srs, llrs):
                         "if it would repeat the parent, link instead".format(rid, p)
                     )
                     break
+    return out
+
+
+# --- Re-tier v2 R2/R3: the two warn-first tiering detectors -------------------
+# Both are ADVISORY and stay advisory. They report a TIERING smell — a row that
+# decided which artifact carries a capability, or a row that merged several
+# decisions and grew a fan of children to cover them — and a smell is exactly
+# what a human decides. Neither ever joins the exit code under any flag.
+
+# A concrete Python artifact named in a cell: a bare script (`trace.py`) or a
+# path-qualified one (`scripts/trace.py`). Anchored on the literal `.py`
+# extension with a word boundary each side, so "numpy", "happy" and "occupy" —
+# words that merely END in "py" — cannot match: the dot is the whole signal.
+_PY_ARTIFACT_RE = re.compile(r"\b[A-Za-z_][\w./-]*\.py\b")
+
+# The recorded per-row waiver marker. The corpus writes it as
+# "One-shall waiver (13v): <reason>" (log decision 2026-08-13v — the one-decision
+# form rule is a GUIDELINE with recorded per-row waivers), and this reads the
+# same token rather than minting a second waiver grammar for authors to learn.
+# NOTE: `form_findings` does not itself suppress on this marker — the two
+# standing waivers (SR-140, SR-147) are recorded and their findings still fire,
+# accepted knowingly. This is the first executable reader of the token.
+_WAIVER_RE = re.compile(r"\b13v\b", re.IGNORECASE)
+
+# The declared SR->direct-LLR fan-out bound (re-tier v2 R3). A DIAL of the
+# `TOP_VIEW_MAX` family — a declared number the project may re-stamp per row with
+# a stated reason — and deliberately NOT a hard cap: a cap on children invites
+# merging two LLRs into one to slip under it, which hides the very defect the
+# number exists to surface. Measured basis: 48 of 60 SRs have children and 39 of
+# those carry <= 5, so 7 sits above the honest population and flags the merged
+# rows rather than scheduling a cleanup.
+SR_FANOUT_MAX = 7
+
+# The per-row fan-out escape, written in `Rationale` as
+# "fan-out re-stamp: <reason>". Matched as a case-insensitive SUBSTRING (not a
+# word-boundary token) because the phrase is multi-word and authors punctuate it
+# freely.
+_FANOUT_RESTAMP = "fan-out re-stamp"
+
+
+def sr_artifact_advisories(srs):
+    """Warn-only: an SR `Requirement` cell that names a concrete artifact
+    (re-tier v2 R2, which SUPERSEDES sitting-1 ruling 2.7(a)'s license).
+
+    **The SR tier says what is delivered, not which file delivers it.** A
+    requirement that names `trace.py` has decided two things in one row — that
+    the capability exists, and that *this artifact* carries it — so the row
+    cannot be re-carried without re-writing an obligation, and the binding is
+    stated in a tier that has no business holding it. The concrete name has three
+    better homes: `AcceptanceCriteria` as rewritable current-carrier evidence
+    ("read off the current carrier, as the current set: ..."), the LLR `Module`
+    cell (who implements), and the shipped-file inventory (why it ships).
+
+    Two independent censuses, deliberately not folded together:
+
+      * PER ROW — a `*.py` token in `Requirement`, unless the row's `Rationale`
+        carries the recorded waiver token (13v). The waiver is the same valve the
+        one-`shall` rule declares, not a second grammar.
+
+      * PER ARTIFACT — more than one SR naming the same artifact token, WAIVED
+        ROWS INCLUDED. A waiver excuses one row from stating a binding; it says
+        nothing about two rows sharing one artifact identity, which is the
+        tiering defect R1 names ("one home per method") and a strictly different
+        finding. Counting waived rows here is what keeps the second census
+        honest.
+
+    PRESENCE ONLY. Whether the surviving wording is genuine capability or
+    artifact-CLASS voice is judgement, and stays the consistency review's — this
+    reports a token, never a voice. Known and accepted under-detect: identity is
+    the token AS WRITTEN, so `trace.py` and `scripts/trace.py` read as two
+    artifacts. Warn-only, so an under-detect costs a missed hint, while guessing
+    that two spellings mean one file would put a false accusation in the report.
+    """
+    out = []
+    by_artifact = {}
+    for rid, r in _real(srs, "SR-ID"):
+        req = (r.get("Requirement") or "").strip()
+        if not req:
+            continue
+        named = sorted(set(_PY_ARTIFACT_RE.findall(req)))
+        if not named:
+            continue
+        for token in named:
+            by_artifact.setdefault(token, []).append(rid)
+        if _WAIVER_RE.search(r.get("Rationale") or ""):
+            continue
+        out.append(
+            "SR {} Requirement names concrete artifact {} — an SR states the "
+            "delivered capability or the artifact CLASS ('the delivered "
+            "harness', 'the launchers at the repository root'); move the "
+            "concrete name to AcceptanceCriteria as current-carrier evidence, "
+            "or to the LLR Module cell (process.md §3 'a requirement cell never "
+            "names a concrete artifact'; warn-only, never the exit code)".format(
+                rid, ", ".join(repr(t) for t in named)
+            )
+        )
+    for token in sorted(by_artifact):
+        owners = by_artifact[token]
+        if len(owners) > 1:
+            out.append(
+                "SRs {} all name {!r} in Requirement — two rows sharing one "
+                "artifact identity is a tiering defect (one decision per row, "
+                "one home per method), not a naming style: decide which row "
+                "owns the capability and decompose the rest, or re-carry the "
+                "binding at the LLR Module cell (process.md §3; a recorded "
+                "waiver excuses a row's own naming, never a shared identity; "
+                "warn-only, never the exit code)".format(", ".join(owners), token)
+            )
+    return out
+
+
+def sr_fanout_advisories(srs, llrs, bound=SR_FANOUT_MAX):
+    """Warn-only: an SR whose DIRECT LLR children outnumber the declared bound
+    (re-tier v2 R3, `SR_FANOUT_MAX`).
+
+    A DETECTOR, NOT A CAP. The number does not say "an SR may have at most seven
+    children"; it says "a row this many children deep is usually a row that
+    merged several decisions", which is R1's defect ("one decision per row, one
+    home per method") seen from the child side. Treating it as a cap would be
+    actively harmful — the cheapest way under a cap is to merge two LLRs into
+    one, which destroys the evidence and leaves the merged SR untouched.
+
+    So the escape is per row and it is a re-stamp, not a suppression list: an
+    author who has read the row and judged the fan legitimate writes
+    "fan-out re-stamp: <reason>" in `Rationale`, and the reason is the artifact a
+    later reader argues with. Bound is a parameter so a downstream project can
+    declare its own without editing the rule.
+
+    Counted over the JOIN this module otherwise leaves to `trace.py`, but only
+    the trivial half — an LLR's `SR-Refs` naming this SR. No resolution, no
+    transitive walk, no filesystem: still a pure row predicate."""
+    out = []
+    counts = {}
+    for _, lr in _real(llrs, "LLR-ID"):
+        for parent in refs(lr.get("SR-Refs")):
+            counts[parent] = counts.get(parent, 0) + 1
+    for rid, r in _real(srs, "SR-ID"):
+        n = counts.get(rid, 0)
+        if n <= bound:
+            continue
+        if _FANOUT_RESTAMP in (r.get("Rationale") or "").lower():
+            continue
+        out.append(
+            "SR {} has {} direct LLR children, over the declared bound of {} — "
+            "a DETECTOR for a row that merged several decisions, not a cap "
+            "(capping children invites merging LLRs to slip under it): split "
+            "the row by observable class, or record a per-row 'fan-out "
+            "re-stamp: <reason>' in Rationale (process.md §3 'one decision per "
+            "row'; warn-only, never the exit code)".format(rid, n, bound)
+        )
     return out

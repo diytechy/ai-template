@@ -27,3 +27,7 @@ rewording runs WITH its policing advisories); the adversarial round comes
 AFTER the settle (a round is spent by the next commit); the sitting is the
 LAST act and there is exactly one (owner ruling at mint — the amendment
 window stays open until it).
+
+Execution is IN PROGRESS since 2026-08-16; the live cursor is the plan's §0
+table (one home — this spec deliberately does not duplicate slice states).
+Re-affirmed against the amended plan at each slice close.

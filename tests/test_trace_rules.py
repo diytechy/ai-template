@@ -573,6 +573,9 @@ def _findings_stub(trace, **overrides):
         "module_findings",
         "component_findings",
         "interface_backlink_findings",
+        "frame_backlink_findings",
+        "provenance",
+        "form",
     ):
         setattr(f, attr, [])
     for attr, value in overrides.items():
@@ -603,3 +606,169 @@ def test_exit_code_gate_policy():
     # No gating flag -> always 0, even with findings present.
     loud = _findings_stub(trace, orphans=["x"], integrity=["y"], status_findings=["z"])
     assert trace.exit_code(loud, ns()) == 0
+
+
+# --- Re-tier v2 R2/R3: the two warn-first tiering detectors -------------------
+# Owner ruling 2026-08-15 (log `2026-08-15p`). Both report a TIERING smell — a
+# requirement that decided which artifact carries a capability, and a row whose
+# fan of children says it merged several decisions — and both stay advisory
+# forever, because clearing them means re-writing requirements, which is the
+# campaign's schedule and not the checker's.
+
+
+def test_a_requirement_that_names_a_concrete_artifact_warns():
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    # A bare script name and a path-qualified one both read as one artifact
+    # binding stated in the tier that has no business holding it.
+    bare = {
+        "SR-ID": "SR-101",
+        "Requirement": "trace.py shall exit nonzero when an orphan exists.",
+    }
+    pathed = {
+        "SR-ID": "SR-102",
+        "Requirement": "The harness shall run scripts/check.py at every commit.",
+    }
+    assert len(trace.sr_artifact_advisories([bare])) == 1
+    assert len(trace.sr_artifact_advisories([pathed])) == 1
+    assert "'trace.py'" in trace.sr_artifact_advisories([bare])[0]
+    assert "'scripts/check.py'" in trace.sr_artifact_advisories([pathed])[0]
+
+    # The NEGATIVE half, and the reason the rule can be this cheap: the signal is
+    # the literal `.py` EXTENSION, never the letters. A word that merely ends in
+    # "py" is not an artifact, and a rule that said otherwise would fire on
+    # ordinary English and get scrolled past (the check_doc_refs lesson).
+    for word in ("numpy", "happy", "occupy", "copy"):
+        clean = {
+            "SR-ID": "SR-103",
+            "Requirement": "The delivered harness shall be {} to run.".format(word),
+        }
+        assert trace.sr_artifact_advisories([clean]) == []
+    # Capability voice — the wording R2 asks for — is silent.
+    assert (
+        trace.sr_artifact_advisories(
+            [
+                {
+                    "SR-ID": "SR-104",
+                    "Requirement": "The delivered harness shall refuse a commit "
+                    "whose registries carry an orphan.",
+                }
+            ]
+        )
+        == []
+    )
+    # A `-000` example row is a blank form, not a requirement.
+    assert trace.sr_artifact_advisories([dict(bare, **{"SR-ID": "SR-000"})]) == []
+
+
+def test_a_recorded_waiver_silences_the_row_but_not_a_shared_artifact():
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    waived = {
+        "SR-ID": "SR-101",
+        "Requirement": "trace.py shall exit nonzero when an orphan exists.",
+        "Rationale": "One-shall waiver (13v): the carrier and the name it "
+        "verifies are one contract, and splitting them separates a claim from "
+        "the proof that makes it checkable.",
+    }
+    # The recorded per-row valve — the SAME token the one-`shall` waivers use,
+    # not a second grammar an author has to learn.
+    assert trace.sr_artifact_advisories([waived]) == []
+    # An unwaived row with the same text is not silenced, so the suppression is
+    # the Rationale's doing and not an accident of the token regex.
+    assert trace.sr_artifact_advisories(
+        [{k: v for k, v in waived.items() if k != "Rationale"}]
+    )
+
+    # The SECOND census, deliberately not folded into the first: two rows sharing
+    # one artifact identity is a different defect (R1's "one home per method"),
+    # and a waiver excusing one row's naming says nothing about it — so WAIVED
+    # ROWS STILL COUNT here.
+    other = {
+        "SR-ID": "SR-102",
+        "Requirement": "The launcher shall invoke trace.py before every push.",
+    }
+    shared = [
+        a for a in trace.sr_artifact_advisories([waived, other]) if "all name" in a
+    ]
+    assert len(shared) == 1
+    assert "SR-101" in shared[0] and "SR-102" in shared[0] and "'trace.py'" in shared[0]
+    # One row naming one artifact is not a shared identity.
+    assert [a for a in trace.sr_artifact_advisories([other]) if "all name" in a] == []
+
+
+def test_the_fanout_detector_fires_past_the_declared_bound_only():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    # The bound is DECLARED on the rule's own module (trace.py re-exports the
+    # predicates, never the dial — a second name for one number is how two
+    # bounds start disagreeing).
+    trace_text = load_script("trace_text")
+
+    # A DECLARED DIAL of the TOP_VIEW_MAX family, not a hard cap.
+    assert trace_text.SR_FANOUT_MAX == 7
+
+    sr = {"SR-ID": "SR-101", "Requirement": "The harness shall report coverage."}
+
+    def children(n):
+        return [
+            {"LLR-ID": "LLR-{:03d}".format(i), "SR-Refs": "SR-101"}
+            for i in range(1, n + 1)
+        ]
+
+    # AT the bound is silent; one past it warns. The boundary is the whole
+    # contract of a declared number, so it is asserted from both sides.
+    assert trace.sr_fanout_advisories([sr], children(trace_text.SR_FANOUT_MAX)) == []
+    over = trace.sr_fanout_advisories([sr], children(trace_text.SR_FANOUT_MAX + 1))
+    assert len(over) == 1
+    assert "SR-101" in over[0] and "8 direct LLR children" in over[0]
+    assert "declared bound of 7" in over[0] and "not a cap" in over[0]
+    # A downstream project declares its own bound without editing the rule.
+    assert trace.sr_fanout_advisories([sr], children(9), bound=20) == []
+
+    # The per-row escape is a RE-STAMP with a stated reason, matched
+    # case-insensitively as the multi-word phrase authors actually write.
+    stamped = dict(
+        sr,
+        Rationale="Fan-out re-stamp: the eight children are one observable "
+        "class each, and merging any two would hide a distinct failure mode.",
+    )
+    assert trace.sr_fanout_advisories([stamped], children(8)) == []
+    # An unrelated Rationale does not silence it.
+    assert trace.sr_fanout_advisories(
+        [dict(sr, Rationale="Coverage is the only honest readout.")], children(8)
+    )
+    # Children are counted per DIRECT parent ref: an LLR under another SR is not
+    # this row's fan-out.
+    elsewhere = [
+        {"LLR-ID": "LLR-{:03d}".format(i), "SR-Refs": "SR-999"} for i in range(9)
+    ]
+    assert trace.sr_fanout_advisories([sr], elsewhere) == []
+
+
+def test_the_two_tiering_detectors_warn_but_never_gate():
+    # Mirrors the paraphrase advisory's never-gates half. Warn-first is the
+    # RULING, not an implementation convenience: the live registries trip both
+    # today (seven fan-out offenders, several rows naming a script), and a gate
+    # that is red on the day it ships is a gate someone turns off.
+    import argparse
+
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def ns(strict=False, strict_integrity=False):
+        return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
+
+    for attr in ("sr_artifact_advis", "sr_fanout_advis"):
+        loud = _findings_stub(trace, **{attr: ["SR-101 tripped the detector"]})
+        # Under the LOUDEST flag the kit has, and under the always-on integrity
+        # floor, and with no flag at all: still 0.
+        assert trace.exit_code(loud, ns(strict=True)) == 0
+        assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
+        assert trace.exit_code(loud, ns()) == 0
