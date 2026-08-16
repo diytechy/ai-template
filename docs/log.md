@@ -36,6 +36,50 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16i — re-tier v2 S6 (second half): the ADVERSARIAL ROUND over
+  the whole series — CHANGES-REQUESTED on one finding, corrected here; the
+  layer is now the sitting's.** Opus, adversarial by instruction, over
+  `1c7e4102..b79648a1` (S1–S6a) — a same-family round: no external
+  provider was reachable from this loop, recorded honestly rather than
+  implied as cross-family. Every load-bearing figure was independently
+  re-derived and all but one reproduced EXACTLY (the 15+3+7 detector
+  census, plan §2's fan-out basis, S3's 22/13, S5's 54/61-of-115 with zero
+  approval-cell changes, the obligation-preservation audit of all 22
+  reworded cells — no drop, weakening or widening; shall/never/only/unless
+  token counts flat). Dispositions: **M-A1 CONFIRMED, corrected in this
+  commit** — S4's ruling-6 list was short by three: it amended SR-148
+  (`Approved`, rationale gained the fan-out re-stamp), SR-155 and SR-157
+  (both `Drafted`, rationale) without naming them; **the true S4
+  non-Modified touch count is 23**, and the S6a correction to 20 was
+  itself short. The bite: an un-flipped `Approved` SR-148 kept its
+  re-stamp OUT of the ratify brief the sitting signs. Corrected as the
+  mechanical amend consequence, not a new act: **SR-148 `Approved` →
+  `Modified`**, the brief regenerated and now carrying its section, gate
+  basis `modified=143`. (The SR-144 flip question from `2026-08-16h`
+  remains the sitting's — that row's own cells were never amended;
+  SR-148's were.) **M-A2 CONFIRMED as a record overclaim, record
+  corrected**: `2026-08-16d`'s "2.7(a)/R2 now has an executable form"
+  holds only for the declared `*.py` census — the detector is
+  spec-conformant but Python-only and did not see SR-151's
+  `docs/stack.ini` binding (found by human read, fixed in S5); R2's
+  non-Python surface stays Reviewer-tier, and the stack-specificity of a
+  `.py`-keyed rule in a stack-agnostic kit is on the sitting desk as a
+  follow-up candidate. Minors recorded, not fixed: the module normalizer
+  collides `.py`/`.sh`/`.ps1` siblings (latent, 0 live rows); the 13v
+  valve doubles as an R2 waiver though R1 scoped it (only SR-140/147
+  carry it, neither names an artifact); the fan-out re-stamp substring is
+  negation-blind; "18 cells re-keyed" reads as 12 rows / 17 cell-slots /
+  18 id tokens; plan §2's 122-row fig and S5's 115-SR-owned figure are
+  both true at their own revs (IF-130 landed between); SR-113's shed
+  clause differs from LLR-122 by the word "process". **The verdict's
+  demanded correction is landed; a correction the verdict demanded costs
+  the round, which is the gate working. WI-464's S6 is now complete except
+  the ONE sitting — read the regenerated brief (SR-148's section now in
+  it, the ex-`Planned` rows' deliberate read still owed per
+  `2026-08-15m`), rule the recorded open calls (L1 pair, SR-144 flip,
+  M6's retired rubrics, the Consumes owner-side reading), sign, seed,
+  step 7 arms. Nothing is signed; nothing is seeded;
+  `docs/archive/last_approved/` deliberately does not exist yet.**
 - **2026-08-16h — re-tier v2 S6 (first half): the settle and the SECOND
   TOP-DOWN READ — eight MAJOR claims, seven confirmed and fixed, one
   recorded for the sitting.** (`WI-464` slice 6; the adversarial round

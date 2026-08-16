@@ -54,13 +54,22 @@ narrated is in those homes.
   and the silent-SKIP class that hid four defects in this campaign is now
   guarded rather than recorded a fourth time. The merge's amended cells and the
   close itself are **adjudicated** (log `2026-08-15f`); nothing is queued behind
-  any of it. **Your sequence RE-ORDERED by your `2026-08-15p` ruling: re-tier v2 runs
-  FIRST** —
+  any of it. **Re-tier v2 is EXECUTED through its six slices** (logs `2026-08-16c`…`i`;
+  the cursor is
   [plans/2026-08-15-retier-v2-one-decision-tiering.md](plans/2026-08-15-retier-v2-one-decision-tiering.md)
-  (`WI-464`, its three preconditions CLEARED — log `2026-08-16a`) executes
-  the one-decision tiering model through its six slices, and THEN
+  §0): the rules are in PROCESS.md §3, the three detectors are live and read
+  clean, the HOLDS bundle is reworded, the seven fan-out offenders are ruled
+  (5 re-stamps, 2 splits minting SR-168/169/170), the sitting-desk items are
+  folded, 54 IF owners point at design tier, the second top-down read's
+  seven confirmed MAJORs are fixed, and the adversarial round's demanded
+  SR-148 flip is landed. **Every call is provisional; NOTHING is signed or
+  seeded. What remains is the ONE sitting, and it is yours:**
   [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md) §5
-  runs once on the settled layer: brief review, sign, seed. The §3 sweep is
+  on the settled layer — read the regenerated brief (SR-148's re-stamp now
+  in it; the ex-`Planned` rows' deliberate read still owed per
+  `2026-08-15m`), rule the recorded open calls (the L1 SR-151+SR-152 pair,
+  the SR-144 flip, the retired-rubric acceptance on SR-052/053, the
+  Consumes owner-side reading that unlocks ~20 more re-points), sign, seed. The §3 sweep is
   DONE (`2026-08-15n`), `OI-30` is CLOSED (`2026-08-15k`/`l`), the rename is
   EXECUTED (`2026-08-15m`; the gate did not move); the seed deliberately
   waits for v2.

@@ -31,4 +31,5 @@ window stays open until it).
 Execution is IN PROGRESS since 2026-08-16; the live cursor is the plan's §0
 table (one home — this spec deliberately does not duplicate slice states).
 Re-affirmed against the amended plan at each slice close; last re-affirmed at
-the S5 close (log `2026-08-16g`).
+the S6 close (log `2026-08-16i`) — all six slices executed except the ONE
+sitting, which is the owner's.
