@@ -13,8 +13,8 @@ own review.
 | slice | state |
 |---|---|
 | Preconditions (WI-461/462/463) | **CLEARED** 2026-08-16, adversarially reviewed (log `2026-08-16a`/`b`) |
-| S1 — rules land in prose | **NEXT OPEN** — nothing executed |
-| S2 — the two advisories | not started (may ride the same session as S1) |
+| S1 — rules land in prose | **DONE** 2026-08-16 (log `2026-08-16c`): PROCESS.md §3 gains R1+R2, +1,597 flagged and re-stamped; 2.7(a) supersession recorded at both sitting-2 sites |
+| S2 — the two advisories | **NEXT OPEN** — riding the same session as S1 |
 | S3 — HOLDS-bundle reword | BLOCKED on S1+S2 by ruling |
 | S4 — offender splits | not started |
 | S5 — folded sitting-desk items + owner re-point (incl. IF-130) | not started |

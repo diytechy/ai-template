@@ -36,6 +36,37 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16c — re-tier v2 S1: the tiering rules land in the process
+  master, once; 2.7(a)'s supersession recorded at its ruling sites.**
+  (`WI-464` slice 1; plan
+  [plans/2026-08-15-retier-v2-one-decision-tiering.md](plans/2026-08-15-retier-v2-one-decision-tiering.md).)
+  PROCESS.md §3 gains the two one-decision tiering bullets — **R1** one
+  decision per row / one home per method, with the fan-out warn stated as a
+  DETECTOR for merged rows (declared bound, default 7, per-row re-stamp,
+  deliberately not a cap) and the one-`shall` valve as the exception path;
+  **R2** a requirement cell never names a concrete artifact — capability /
+  artifact-class voice at SR tier, concrete filenames only in
+  `AcceptanceCriteria` as rewritable current-carrier evidence or at the LLR
+  tier, the allocation question answered at the binding homes. Stated once,
+  kit-generic, and cross-linked to the §3 provenance rule so
+  "subject-not-provenance" (a strict gate about *history*) and the new
+  altitude rule (an advisory about *tier*) read as different rules rather
+  than a contradiction. The sitting-2 record's two 2.7(a) sites
+  ([plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)
+  §0.1 pack row + Decision 2) carry the supersession banner: the port-naming
+  license is withdrawn by R2 (log `2026-08-15p`); the boundary frame, port
+  list and BIF/IF tie-back machinery are NOT superseded. Byte deltas:
+  PROCESS.md 74,536 → 76,133 (+1,597, flagged — the master must state the
+  model the registries are about to carry; baseline re-stamped in
+  `byte-budget-guard`, all three tracked copies); PROCESS_OPTIONS.md 171,974
+  unchanged; AGENTS.template.md 9,994 unchanged. Commit bar: smoke
+  1156 passed / 29 skipped, 40.85s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=1001537d -->;
+  check_docs 417 docs, 0 broken
+  <!-- fig: cmd="python project-trajectory/scripts/check_docs.py --root . --ignore docs/test/report.md --ignore \"docs/work/*\" --stale" rev=1001537d -->.
+  Deviation from the slice spec: none of substance — the enforcement-audit
+  rows the S1 text names ride S2's commit, landing WITH the advisory
+  functions they cite rather than ahead of them. No registry cell moved.
 - **2026-08-16b — the ADVERSARIAL ROUND over the precondition series: fixes
   sound, records corrected, one blind half closed.** Opus, adversarial by
   instruction, over `93dc4c66..1104f797`; every finding re-verified before an

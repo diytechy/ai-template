@@ -111,6 +111,28 @@ Stable, zero-padded, never reused.
   `AcceptanceCriteria` is fine — it enumerates how *one* obligation is checked.
   `trace.py` gates these under `--strict`; what needs judgement (necessary,
   correct, feasible) stays the consistency review's.
+- **One decision per row; one home per method.** A single interface or method is
+  fully defined by exactly one requirement, and a requirement calls out at most
+  one method/action. Two rows sharing one interface identity — or one row
+  deciding both *which artifact* carries a capability and *what its methods
+  do* — is a tiering defect, not a style choice. Exceptions are extraordinarily
+  rare and ride the one-`shall` valve: a recorded per-row waiver, reason stated
+  in `Rationale`. `trace.py` warns (never gates) when an SR's direct-LLR fan-out
+  exceeds the declared bound (default 7): a *detector* for merged rows,
+  deliberately not a cap — a hard cap invites merging LLRs to slip under it —
+  so a row past the bound either splits by observable class or keeps a per-row
+  re-stamp with its reason.
+- **A requirement cell never names a concrete artifact.** The SR tier speaks in
+  delivered-capability or artifact-class voice ("the delivered harness", "the
+  launchers at the repository root"); a concrete filename lives only in
+  `AcceptanceCriteria` as rewritable current-carrier evidence ("read off the
+  current carrier, as the current set: …") or at the LLR tier. Why a file
+  exists is answered at its binding homes — the shipped-file inventory, the
+  LLR `Module` cell, the interface registry — never by minting
+  artifact-establishing requirements. An *altitude* rule: `trace.py` warns
+  (never gates) on an artifact token in a requirement cell without a recorded
+  per-row waiver; the provenance rule above still reads a named script as
+  subject, not provenance.
 - **A rationale carries its own reason.** `Rationale` is complete when a reader
   with none of your history knows **what breaks without the requirement** and
   **which alternative lost**. A review, ruling or design-thread reference is

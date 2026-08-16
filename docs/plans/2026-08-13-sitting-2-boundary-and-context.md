@@ -50,7 +50,7 @@ file is the brief you rule from.
 | **§2.4** rationale-citation keep-or-sweep | **SWEEP**, overriding the pack's *keep* recommendation — the 29 SR rationale cells shed the retired SN-013…SN-022 tokens, each parenthetical's content kept as "the dissolved edge expectation that …"; the SR-021/SR-026 in-cell fold annotations stay verbatim. Swept rows flip/stay `Modified` — **a deliberately re-opened window, this sitting's to close** | `../log.md` 2026-08-13d |
 | **§2.5** WI-419 chain-flip scoping | **CONFIRMED** — narrow scoping stands, the wide precedent is not extended | `../log.md` 2026-08-13d |
 | **§2.6** four `gate policy` stale-text verdicts | **YES** — four cells re-worded onto the declared ratification level + `session_hold`; SR-085 and SR-108 flip `Modified`, SR-125 re-titled only | `../log.md` 2026-08-13d |
-| **§2.7** SR-implementation-naming discriminator | **(a) RULED** — an SR may name an artifact only where it is a DECLARED BOUNDARY CROSSING. **Its EXECUTION is gated on this sitting**: the boundary must be agreed before the pass runs, so WI-451 slice 2 stays held | `../log.md` 2026-08-13d |
+| **§2.7** SR-implementation-naming discriminator | **(a) RULED** — an SR may name an artifact only where it is a DECLARED BOUNDARY CROSSING. **Its EXECUTION is gated on this sitting**: the boundary must be agreed before the pass runs, so WI-451 slice 2 stays held. **SUPERSEDED 2026-08-15 by re-tier v2 ruling R2** (`../log.md` 2026-08-15p): a requirement cell never names a concrete artifact — the port license is withdrawn | `../log.md` 2026-08-13d; superseded 2026-08-15p |
 | **§3** P5 partition acceptance · **§4** hats roster | **NOT ruled** — explicitly deferred to this sitting, "which the owner expects to carry significant SR churn and possible retiering" | `../log.md` 2026-08-13d; carried below as **decisions 10 and 11** |
 
 ### 0.2 The two boundary rulings
@@ -656,6 +656,15 @@ block and the original decision text:
 [the archive](../archive/plans/2026-08-13-sitting-2-superseded-material.md).
 
 ### Decision 2 — Adopt or amend the port list and its discriminator (self-contained)
+
+> **SUPERSEDED 2026-08-15 — re-tier v2 ruling R2** (log `2026-08-15p`; plan
+> [2026-08-15-retier-v2-one-decision-tiering.md](2026-08-15-retier-v2-one-decision-tiering.md)).
+> The 2.7(a) license this decision executes — *an SR may name a port* — is
+> withdrawn: a requirement cell never names a concrete artifact; the SR tier
+> speaks in capability/artifact-class voice and concrete filenames live only in
+> acceptance as rewritable current-carrier evidence. The boundary frame, the
+> port list, and the BIF/IF tie-back machinery below are NOT superseded — they
+> remain the record of what the crossings are; only the naming license dies.
 
 **What this decision is.** Sitting 1 ruled 2.7(a): *an SR may name an artifact
 only where that artifact is a declared boundary crossing.* For that rule to be
