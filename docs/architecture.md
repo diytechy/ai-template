@@ -240,6 +240,7 @@ graph LR
     m_scripts_check_trajectory -. IF-084 .-> m_scripts_traj_status
     m_scripts_check_trajectory -. IF-083 .-> m_scripts_traj_views
     m_scripts_derive_gate -. IF-050 .-> m_scripts_check
+    m_scripts_derive_gate -. IF-130 .-> m_scripts_traj_status
     m_scripts_gen_arch_map -. IF-010 .-> m_scripts_check
     m_scripts_gen_arch_map -. IF-117 .-> m_scripts_check_doc_refs
     m_scripts_gen_okf -. IF-012 .-> m_scripts_check
@@ -1486,7 +1487,7 @@ Contracts (interfaces): IF-079
 | `toml_string(value)` | `value` as a TOML basic string, escaped so tomllib reads it back exactly. |  |
 | `toml_value(value)` | `value` as TOML: int, array of basic strings, or basic string. |  |
 | `render_frontmatter(pairs)` | `key = value` lines for an ordered `(key, value)` sequence. |  |
-| `slugify(title)` | The filename slug: lowercase kebab of the title's first ~40 characters, |  |
+| `slugify(title)` | The filename slug: lowercase kebab of the title's first SLUG_CHARS |  |
 | `spec_filename(row)` |  |  |
 | `status_dir(row)` | The directory a row's Status maps to — or a refusal naming the row. |  |
 | `frontmatter_pairs(row, order)` | The ordered frontmatter of one registry row. Empty cells are OMITTED — |  |

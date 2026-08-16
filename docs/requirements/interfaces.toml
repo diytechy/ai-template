@@ -1606,3 +1606,16 @@ owner = "LLR-158"
 version = "v1"
 approval = "drafted"
 notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is ratified. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it. Minted 2026-08-15 (log 2026-08-15h)."""
+
+[interface.IF-130]
+direction = "Consumes"
+this_project = "scripts/traj_status"
+counterpart = "scripts/derive_gate"
+contract = """consumes derive_gate.bar_label(name) -> str: appends the release-ceiling note when the value is the ceilinged bar, else returns the bar name unchanged, so the status snapshot's stage line renders the same wording for the derived gate as every other surface calling bar_label."""
+signal = "discrete"
+req_refs = ["SR-049", "SR-159"]
+owner = "SR-049"
+version = "v1"
+approval = "drafted"
+component = "CMP-009"
+notes = """MINTED 2026-08-16 (WI-463, log 2026-08-15n) for the one ERROR check_trajectory --strict reported on a clean tree: traj_status (CMP-009, W4 human/adopter surfaces) genuinely imports derive_gate (CMP-006, W1 registry & conformance) to call bar_label(gate) in _stage_line, the ONE home for the OI-30 D2 release-ceiling note (`derive_gate.py`'s own docstring: "the ONE rendering home"). Component membership per docs/requirements/components.toml is correct on both sides, so this is a real seam, not a mistagging. Owner is SR-049 (derive_gate's own SR, the row that states the derived gate is cached and read by human-facing surfaces), not SR-159: SR-159's family owns the connectivity-gap-reporting rule that surfaces this finding, never the contract the finding is naming. No LLR names `bar_label` specifically (LLR-050's `code_symbol` is `compute` only, and traj_status's one LLR, LLR-139, covers `_pause_pending` only), so ownership falls to the SR per the R4 fallback. PROVISIONAL, for the review sitting to overturn."""
