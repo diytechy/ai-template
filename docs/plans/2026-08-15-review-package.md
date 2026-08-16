@@ -163,6 +163,15 @@ Detail and reasoning: log `2026-08-15j`.
 
 ## 5. The sitting procedure, in order
 
+> **⚠ RE-SEQUENCED 2026-08-15 (owner ruling, log `2026-08-15p`): re-tier v2
+> runs FIRST.** The one-decision tiering program
+> ([2026-08-15-retier-v2-one-decision-tiering.md](2026-08-15-retier-v2-one-decision-tiering.md),
+> `WI-464`) amends spine rows before any signing, so the brief this section
+> reads from will be REGENERATED after v2 settles — do not sign from the
+> brief as it stands today. Steps 2–4 below are unchanged in shape and run
+> once, after v2's S6. The ten ex-`Planned` rows warning below still applies
+> to any of those rows v2 does not touch.
+
 > **⚠ Read the 10 ex-`Planned` rows even though no brief lists them.**
 > D1's fold moved SR-137/138/139/140/144/146/147/148/149/150 to `Approved`, so
 > they left the re-attest brief — and until your seed exists, the unanchored

@@ -36,6 +36,43 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-15p — RE-TIER V2 RULED (owner, in session): the one-decision
+  tiering model, its two advisories, the IF end-state direction, and the
+  sequencing — v2 before the sign/seed.** Grown from the 2.7(a) grounding
+  question (`2026-08-15o`) into four rulings, recorded here and planned in
+  [plans/2026-08-15-retier-v2-one-decision-tiering.md](plans/2026-08-15-retier-v2-one-decision-tiering.md)
+  (program row `WI-464`, `strong`/`spine`, preconditions WI-461/462/463):
+  **R1** one decision per row / one home per method, in the owner's words —
+  "a single interface/method fully defined once per requirement; a
+  requirement shouldn't call out more than one method/action" — exceptions
+  extraordinarily rare, riding the 13v valve (SR-140/SR-147 the expected
+  census). **R2** requirement cells never name a concrete artifact —
+  SUPERSEDES 2.7(a): capability or artifact-CLASS voice at SR tier, concrete
+  filenames only in acceptance as rewritable current-carrier evidence; the
+  allocation question ("why does this file exist") stays mechanized at its
+  three existing homes (SR-163's shipped-file inventory, the LLR `module`
+  cell, the IF registry) — no artifact-establishing rows, no mass of
+  artifact SRs. **R3** a warn-first fan-out advisory (declared bound,
+  default 7 direct LLR children, per-row re-stamp with reason) — measured
+  first: 39 of 48 parented SRs carry ≤5, and the seven offenders (SR-070 16,
+  SR-157 15, SR-156 13, SR-155 11, SR-148 10, SR-054 9, SR-053 8) are
+  precisely the merged one-delivered-contract rows, so the warn detects R1
+  violations rather than policing style. **R4** the IF end-state: `owner`
+  id-typed and re-pointed toward design tier (today SR on 114 of 122, LLR on
+  8 — the derivability case needs the re-point first), a consumers/endpoints
+  list absorbing the 80 Consumes coverage rows, then `direction` dies
+  derived, `this_project` dies derived (advisory on disagreement first,
+  removal at wi455 per the schema's standing HELD note), and `counterpart`
+  TRANSFORMS rather than dies — 45 of 122 are non-module facts (31 paths,
+  13 `external:`, 1 other), blocker B2 quantified. **Sequencing ruled: v2
+  runs BEFORE the sitting signs and seeds** — the amendment window stays
+  open, touched rows re-enter the regenerated brief, ONE sitting blesses
+  everything (the `2026-08-14e` one-sequence precedent); the seed
+  deliberately waits. **Attestation sanction restated by the owner at the
+  mint:** v2 may amend non-`Modified` rows, each touch named in its slice's
+  log entry. Nothing executed this entry — the plan and the row are the
+  deliverable; the sitting surfaces re-pointed to say the brief now waits
+  behind v2.
 - **2026-08-15o — SR-167 re-worded to the harness-verdict level, on the
   owner's 2.7(a) grounding question.** The owner asked why some SRs name
   scripts ("check.py shall run…") while others stay behavior-level; the ruled
