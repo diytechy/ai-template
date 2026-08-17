@@ -36,6 +36,39 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17f — adversarial round 2 (Sol + Terra) over the three 2026-08-17
+  spine commits: 9 distinct findings — 6 CONFIRMED, 2 CONFIRMED-IN-PART,
+  1 REFUTED; nothing applied, the confirmed set queues for the owner.**
+  Owner directed the round over `47234903`/`82b91b8b`/`d7975c96` and the
+  `2026-08-17c/d/e` claims; both external reviewers (GPT-5.6 Sol + Terra via
+  `codex exec`, medium effort, read-only sandbox, one hostile brief carrying
+  the full range diff) returned CHANGES-REQUESTED, and every finding was
+  author-re-verified against the live repo before its verdict — the round doc
+  with the verbatim verdicts, per-finding evidence and the owner queue is
+  [reviews/retier-v2/ROUND-2-SOL-TERRA.md](reviews/retier-v2/ROUND-2-SOL-TERRA.md).
+  The load-bearing confirmations: **four of the 19 item-3 re-points are
+  contested as picks** — `IF-127`/`IF-130` were re-pointed against their own
+  still-standing `notes` rationale (IF-130's even names the chosen LLR-050 as
+  not fitting), `IF-043`'s LLR-017 answers for only the secrets half of a
+  secrets+identity contract (LLR-018 owns the other half), and `IF-117`'s
+  LLR-023 owns the rendered-map artifact the seam's contract explicitly
+  disclaims — all four one owner ruling (does the item-3 rule admit per-row
+  exceptions?), the other 13 re-points re-verified clean and the log's
+  population arithmetic REFUTED-as-defect (the live 30 = 49 − 19, row-exact).
+  The rest: TC-168/169/170 bind clauses their cited tests do not yet execute
+  (the `min(fallback, ceiling)` cap inert at fallback 1 under ceiling 30, the
+  parsed-reset retry branch and both declared defaults unpinned, no
+  failure-path git assertion) — Draft-tier debt, recommended to the maturing
+  sessions; `LLR-153`'s refusal sentence overstates (a watermark file missing
+  its `WI` line mints from the sweep via `.get("WI", 0)`; the integrity floor,
+  not the mint, catches it); and `SR-173`'s requirement reads stronger than
+  the acceptance its (faithful) decomposition tracks — both wording rulings.
+  Round hygiene: all 14 cited tests pass targeted; the new bundle-module test
+  FAILS against `d7975c96^`'s `trace_text.py` (real red-check); `trace.py
+  --strict` reproduces every 17c/d/e count (113 advisories, `IF-128` the one
+  owner-mismatch, `SR-140` the one gating red); smoke **1189 passed /
+  7 skipped**, 31s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d7975c96 -->.
 - **2026-08-17e — the three flagged-not-fixed defects of `2026-08-17c`/`d`
   swept; two fixed as briefed, the third's second half did not reproduce.**
   Owner directed the sweep; each defect was re-verified against source before
