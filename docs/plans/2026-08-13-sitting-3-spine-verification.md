@@ -341,35 +341,66 @@ taken in advance.
    - `owner` = **SR** → nothing to walk to, so the IF cell is the **single
      home** for that endpoint and **must stay**. That is correct, not a gap.
 
-   **MEASURED `2026-08-17` — the split nobody had counted.** Of the **49**
-   SR-owned `Consumes` rows:
+   **MEASURED `2026-08-17`.** Of the **49** SR-owned `Consumes` rows, **19**
+   have an owner-side endpoint that resolves to an LLR `module` and convert
+   directly. The other **30** name a data file or an external actor.
 
-   | | count | what they are |
+   **"PERMANENT RESIDUE" WAS THE WRONG NAME FOR THOSE 30 — owner correction,
+   `2026-08-17`, and it is the more important finding on this item.** In the
+   owner's words: *"if the output is just a 'file', that file is being
+   provided to someone or something for some reason, that is what the
+   interface should show. The LLR and SRs exist to provide something to
+   someone, they don't exist to just create a file… The file itself is the
+   actual interface."* Checked, and it holds: **0 of the 30 are terminal.**
+   Every one of those endpoints is a file something reads. So the cell is not
+   underivable — it is **under-specified**: it names the MEDIUM where it should
+   name whoever the medium serves.
+
+   | shape | count | what to do |
    |---|---|---|
-   | **convertible** | **19** | owner-side endpoint resolves to an LLR `module` — these convert and their cell becomes droppable |
-   | **permanent residue** | **30** | endpoint is a **data file or an external actor**, not code: `docs/stack.ini`, `docs/work`, `docs/gate`, `docs/architecture.md`, `coverage.json`, `external:git`, `external:agent CLI`… **No design row exists to point at and none ever will** |
+   | already names an actor | **3** | `external:git`, `external:upstream docs`, `external:agent CLI` — correctly shaped, leave them |
+   | names a file | **27** | re-author to name the consumer, or the adopter with a boundary tie-back |
 
-   <!-- fig: cmd="python3 - <<EOF tomllib over interfaces.toml + low-level-requirements.toml; Consumes rows with SR owner, counterpart normalised against every LLR module EOF" rev=72d155d4 -->
+   **The pattern to re-author toward ALREADY EXISTS and is already used** —
+   `IF-013`…`IF-018` and `IF-048` carry
+   `counterpart = "external:downstream adopter"` **plus**
+   `interface_to_external = "B-05"`. That is exactly the owner's *"most of them
+   just point to B-05 since they are outputs to satisfy the boundary tied to
+   the template"*: the endpoint names who is served, the tie-back names the
+   crossing. No new machinery.
 
-   This matches the standing endpoint-coverage advisory from the other side:
-   *"47 of 123 rows carry an endpoint that is not an arch-map module — 34
-   resolve to a file or directory in the tree, 13 are marked `external:`"*.
-   The owner's caveat — *"there may be times it can't be defined and it must
-   be inferred from other SR text"* — is not an edge case. **It is 30 of 49.**
+   **Two sub-shapes inside the 27, and they do not take the same fix** —
+   measured by exact-path reader counts:
+   - **Low fan-out** — `coverage.json` is read by `check` and `check_coverage`
+     only; `docs/declared-absences` by five checkers. Naming the consumer is
+     honest and the endpoint becomes derivable.
+   - **Published contract, high fan-out** — `docs/stack.ini` is read by **17**
+     modules, `docs/architecture.md` by **12**. Naming one consumer would be
+     false. Here the owner's *"the file itself is the actual interface"* is the
+     literal answer: the row publishes a contract to a CLASS of consumer, and
+     where that class includes the adopter it ties back to `B-05` the way
+     `IF-013`…`IF-018` already do.
 
-   **CONSEQUENCE FOR `wi455`, and it is a scope change:** `counterpart` cannot
-   be removed as a COLUMN. It can only be blanked on the derivable subset;
-   30 `Consumes` rows (plus whatever the `Provides` side adds) keep it as
-   their only home. Anything planning a wholesale column drop should be
-   re-scoped before it starts.
-   **Impact:** ~19 `owner` cells re-pointed. No requirement text, no status
-   flips — `owner` is not an attested claim, and every row is `drafted`.
-   **Recommendation: rule the READING — `owner` points at the design tier
-   wherever a design row exists — and let the 19/30 split fall out of it
-   rather than approving a row list.** The 30 stay SR-owned by the same rule,
-   not as an exception to it, and their endpoint cells are permanent. Then
-   `wi455` drops what is genuinely derivable and reports the rest as the
-   single-home set it cannot touch.
+   **Stated so it is not mistaken for measurement:** WHICH consumer each of
+   the 27 should name is per-row judgement and was **not** done here. A first
+   attempt at attributing them mechanically was unsound — it stem-matched
+   `docs`/`work` and reported six plausible readers for nearly every row — and
+   is discarded rather than reported.
+   **Impact:** ~19 `owner` cells re-pointed mechanically; **27 rows want a
+   re-authoring pass** that is real work, not a cell edit. No requirement text
+   and no status flips either way — every row is `drafted` and `owner` is not
+   an attested claim.
+   **CONSEQUENCE FOR `wi455`:** `counterpart` still cannot be dropped as a
+   COLUMN — but the reason is now different and better. It is not that 30 rows
+   are structurally underivable; it is that **27 of them are mis-authored**,
+   and a column drop would delete the only record that the seam exists before
+   anyone writes down who it serves. Re-author first, then drop what has
+   become derivable.
+   **Recommendation:** rule the READING (`owner` points at the design tier
+   wherever a design row exists) — that settles the 19 immediately. Then file
+   the 27-row re-authoring as its own work item against the
+   `IF-013`…`IF-018` pattern, rather than accepting a file-as-endpoint as the
+   end state. The three `external:` rows are already right and need nothing.
 
 6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
    earlier framing ("no `Status` cell") understated it. The tier encodes
