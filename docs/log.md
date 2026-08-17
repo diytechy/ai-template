@@ -36,6 +36,32 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17i — shipped-docs staleness audit run and its missing work item
+  filed as `WI-471`; no shipped surface prematurely adopts an unruled
+  state.** The owner asked whether `PROCESS.md` and the associated shipped
+  files had kept up with the 2026-08 rulings and whether a work item owned
+  updating them. Two read-only subagent audits (core pair + satellite
+  surfaces) answered both halves against the Decisions record, the live
+  registry headers and `test_dogfood_sync`'s pins: the heavyweight doctrine
+  (D-9 vocabulary, tiering R1/R2/R3, interface model, derived gate, WI
+  spec-folder carrier) HAS landed; the debt is 31 class-A findings
+  concentrated in `EXAMPLE.md` (retired carriers, four illegal
+  `Status=Implemented` cells, owner-less IF rows), ~9 README ruling
+  contradictions (including `human_ratification_through` documented `0`
+  against the live `4`), ~20 retired-carrier/vocabulary tokens in the core
+  pair, three landed-but-undocumented mechanisms (hats registry,
+  `external.toml` frame, `last_approved` snapshot) and the missing
+  RESYNC_PACK hats entry. Evidence:
+  [`plans/2026-08-17-shipped-docs-staleness-audit.md`](plans/2026-08-17-shipped-docs-staleness-audit.md)
+  (class-A tables, class-B holds, covered-elsewhere boundaries vs
+  WI-390/452/455). Scope filed as `WI-471` (queued, docs, ordinary), holds
+  stated in the row so they are not ridden in quietly. One NEW ruling
+  surfaced for the owner: whether the shipped SN template's `kind = "edge"`
+  follows this repo's OI-18 edge-tier dissolution — the audit's blocked
+  sites move only on that call. Alternatives passed over: editing the docs
+  inline this session (rejected — load-bearing budget-watched surfaces, and
+  the class-B boundary wants a scoped session, not a sweep ridden on an
+  audit).
 - **2026-08-17h — sitting-3 §0.4 item 8 RULED AND APPLIED ahead of the
   sitting: all four WI-468 recommendations adopted as proposed — three
   labelled derived SRs minted, two needs amended on the open window, one
