@@ -314,56 +314,62 @@ taken in advance.
    re-minting a cut crossing id at a different thing. That is the exact
    vacuous-space class the `IF-121/122` mint hit. See item 17.
 
-3. **The `Consumes` owner-side reading.** **RE-WRITTEN `2026-08-16r`** — the
-   entry was too compressed to decide from, and the owner's read at the desk
-   was *"the owner is either another IF if it's a higher layer connecting to a
-   lower layer, or it's just connecting to the SR that's serving that
-   interface."* **That model is correct, and both halves are already fields**
-   — which is exactly why the remaining question is narrower than it looks.
+3. **The `Consumes` owner-side reading.** **RE-MEASURED `2026-08-17`, and the
+   earlier framing was wrong in a way worth stating**: it read as though
+   SR-owned rows were deficient. They are not. **The endpoint is defined in
+   the interface layer either way** — `this_project`/`counterpart` are literal
+   cells with literal values, and nothing about this call changes what a row
+   SAYS. The only question is whether that value is **duplicated** and
+   therefore droppable.
 
-   **Three cells on an IF row all sound like "the other side". They are not
-   the same thing:**
+   **The owner's read at the desk is the ruling shape**, and both halves of it
+   already exist as fields, which is why this looked bigger than it is:
+   *"another IF, if it's a higher layer connecting to a lower layer"* is
+   **`carried_by`** (ruling Q3; 18 rows, all → `IF-102`); *"connecting to the
+   SR that's serving that interface"* is `owner` taking its `SR-###` value.
 
-   | cell | what it holds | how many |
+   | cell | holds | rows |
    |---|---|---|
-   | `owner` | the ONE row **answerable** for the seam. Polymorphic — an `SR-###` **or** an `LLR-###`, resolved against whichever registry the prefix names (ruling Q1). Exactly one | 123 (all rows) |
-   | `carried_by` | **interface composition** — a constituent naming the BUNDLE that carries it. This IS "another IF", the higher-layer-to-lower-layer link (ruling Q3) | 18 rows, all → `IF-102` |
-   | `req_refs` | every requirement the seam realizes or relies on. **Not** answerability — 21 rows list more than one and none was thereby answerable | 123 |
+   | `owner` | the ONE row **answerable** — `SR-###` **or** `LLR-###` (Q1) | 123 |
+   | `carried_by` | interface composition — the bundle a constituent rides | 18 |
+   | `req_refs` | every requirement the seam realizes; **not** answerability | 123 |
 
-   So *"the owner is another IF"* already exists as **`carried_by`**, and
-   *"connecting to the SR that serves it"* is `owner` taking its `SR-###`
-   value. Neither needs inventing.
+   **The mechanism, stated plainly.** R4's point is one-home, not definition:
+   - `owner` = **LLR** → the owner-side endpoint is **derivable**
+     (`owner` → LLR → `module`), so the IF cell restates a fact that already
+     has a home, and `wi455` can drop it.
+   - `owner` = **SR** → nothing to walk to, so the IF cell is the **single
+     home** for that endpoint and **must stay**. That is correct, not a gap.
 
-   **What is actually undecided:** `owner` may be an SR **or** an LLR, and for
-   `Consumes` rows the corpus answers it **both ways**. Measured
-   `2026-08-16r`:
+   **MEASURED `2026-08-17` — the split nobody had counted.** Of the **49**
+   SR-owned `Consumes` rows:
 
-   | | `Provides` | `Consumes` |
+   | | count | what they are |
    |---|---|---|
-   | **SR-owned** | 12 | **49** |
-   | **LLR-owned** | 30 | 32 |
+   | **convertible** | **19** | owner-side endpoint resolves to an LLR `module` — these convert and their cell becomes droppable |
+   | **permanent residue** | **30** | endpoint is a **data file or an external actor**, not code: `docs/stack.ini`, `docs/work`, `docs/gate`, `docs/architecture.md`, `coverage.json`, `external:git`, `external:agent CLI`… **No design row exists to point at and none ever will** |
 
-   The `IF-031`/F6 precedent read it as **the-module-that-holds-the-code** →
-   the LLR. If that governs, ~49 rows move SR → LLR.
+   <!-- fig: cmd="python3 - <<EOF tomllib over interfaces.toml + low-level-requirements.toml; Consumes rows with SR owner, counterpart normalised against every LLR module EOF" rev=72d155d4 -->
 
-   **Why it is not cosmetic — this cell is load-bearing for a deletion.** R4
-   ruled that once `owner` points at the design tier, the endpoint the owner
-   answers for becomes **derivable** (`owner` → LLR → `module`), and the
-   derivable cell is then dropped — that is `wi455`'s job. The derivation
-   needs an LLR to walk to, so **an SR-owned row cannot participate**: it has
-   no module, the advisory stays silent on it, and its endpoint cell can never
-   be dropped. `Provides` and `Consumes` even drop *different* cells
-   (`this_project` vs `counterpart`), which is why the reading has to be ruled
-   rather than left to settle row by row.
-   **Impact:** up to ~49 `owner` cells, no requirement text, no status flips —
-   `owner` is not an attested claim. The rows are already `drafted`. It
-   unblocks `wi455`'s `counterpart` removal for whatever it converts.
-   **Recommendation: rule the-module-that-holds-the-code (the LLR), following
-   the `IF-031`/F6 precedent**, and let the count fall out of the reading
-   rather than approving a list. Keep `owner = SR-###` only where genuinely no
-   design row exists — those are the honest residue, and naming them is more
-   useful than forcing a pick. Then `wi455` converts what it can and reports
-   what it cannot.
+   This matches the standing endpoint-coverage advisory from the other side:
+   *"47 of 123 rows carry an endpoint that is not an arch-map module — 34
+   resolve to a file or directory in the tree, 13 are marked `external:`"*.
+   The owner's caveat — *"there may be times it can't be defined and it must
+   be inferred from other SR text"* — is not an edge case. **It is 30 of 49.**
+
+   **CONSEQUENCE FOR `wi455`, and it is a scope change:** `counterpart` cannot
+   be removed as a COLUMN. It can only be blanked on the derivable subset;
+   30 `Consumes` rows (plus whatever the `Provides` side adds) keep it as
+   their only home. Anything planning a wholesale column drop should be
+   re-scoped before it starts.
+   **Impact:** ~19 `owner` cells re-pointed. No requirement text, no status
+   flips — `owner` is not an attested claim, and every row is `drafted`.
+   **Recommendation: rule the READING — `owner` points at the design tier
+   wherever a design row exists — and let the 19/30 split fall out of it
+   rather than approving a row list.** The 30 stay SR-owned by the same rule,
+   not as an exception to it, and their endpoint cells are permanent. Then
+   `wi455` drops what is genuinely derivable and reports the rest as the
+   single-home set it cannot touch.
 
 6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
    earlier framing ("no `Status` cell") understated it. The tier encodes
