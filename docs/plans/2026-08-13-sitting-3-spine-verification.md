@@ -177,7 +177,7 @@ comes only after slice 2's ledger exists.)*
 | 2 | **The 26 tombstones** | **RULED 2026-08-14b — DELETE per D-4**; follow-through named in §0.2, executed by slice 2 | §0.2 call 1 |
 | 3 | **The four package-wide B-05 properties** — SR-031 (policy readers agree) · SR-034 (stdlib + ledger) · SR-035 (stack-agnostic) · SR-114 (cross-OS): each is a property of EVERY delivered capability at once, so none fits a single one of B-05's five ruled buckets | **RULED 2026-08-14c — option A**: the decomposition axis gains the declared sixth bucket *package-wide property*; each stays ONE SR (the 13p invariant's own "crossing-or-**delivered-property**" wording admits it). Re-statement across the five groups passed over | §0.2 call 2 |
 | 4 | **TC-159** — lift to `Planned` beside the rows it verifies, or re-point LLR-165's `test_refs` | **RULED 2026-08-14f — LIFTED, both halves**: the §2.3 lift had CROSSED the subject pairs (converter TC-159↔LLR-165, reader TC-160↔LLR-166); re-pointing would have forged a converter-requirement→reader-test edge. TC-159 and LLR-166 both `Draft`→`Planned`; drafts 29→27 | §2.2 |
-| 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | **RULED 2026-08-14e — ONE SEQUENCE with the ratification wave**, right after slice 2's drafts land: the signing acts ARE the transition (first commit closes the enum; §3.3 gap recorded owner-visibly; rung-predicate work in the same sequence per §3.4). **STEPS 1–5b EXECUTED** (`2026-08-15g`, `2026-08-15m`): the enum closed at live truth, the `last_approved` snapshot mechanism built reader-first, then the rename narrowed it to `{Drafted, Approved, Modified}` with `Planned` folded out — **and the gate did not move**. What is left of this row IS the sitting: sign → seed → **step 7** (retire `Modified`, narrow the enum to two, resolve `intake`'s `!= "Modified"` guard into a refusal, arm UNANCHORED as an ERROR) = review-package §5 steps 3–4 | §3 |
+| 5 | **The D-9 + D12 vocabulary program** — execute, sequence, or defer | **RULED 2026-08-14e — ONE SEQUENCE with the ratification wave**, right after slice 2's drafts land: the signing acts ARE the transition (first commit closes the enum; §3.3 gap recorded owner-visibly; rung-predicate work in the same sequence per §3.4). **STEPS 1–5b EXECUTED** (`2026-08-15g`, `2026-08-15m`): the enum closed at live truth, the `last_approved` snapshot mechanism built reader-first, then the rename narrowed it to `{Drafted, Approved, Modified}` with `Planned` folded out — **and the gate did not move**. What is left of this row IS the sitting: sign → seed → **step 7** (retire the transitional `Modified` — the enum lands at `{Drafted, Approved, Founded}`, drift = snapshot comparison — resolve `intake`'s `!= "Modified"` guard into a refusal, arm UNANCHORED as an ERROR) = review-package §5 steps 3–4 | §3 |
 | 6 | **`Planned`'s fate** under the three-word ladder (16 live rows) | **RULED 2026-08-15 (OI-30 D1, log `2026-08-15k`) — FOLDED OUT into `Approved`, and EXECUTED at the rename (`2026-08-15m`)**: functionally the same rung, "approved" clearer; the fourth-rung option died with its `CMP_MATURITY` collision | §3.5 |
 | 7 | **Authority over the off-spine approval elements**, and the dial's form | **RULED 2026-08-15 (OI-30 D3, log `2026-08-15k`) — the dial's form does NOT change**: authority follows the dev-stage ladder directly (`APPROVAL_RUNGS` + `human_approves` beside `DIAL_HOLDS`, unmapped = held), EXECUTED `2026-08-15m` | §3.6 |
 | 8 | **Crossing ownership — restated in the locked frame's terms** (sitting-2 D6's own text still says "31 BIF rows"; that is the superseded v1 frame — the live question is over the SIX crossings): for each of B-01/02/04/05/06/07, which SRs and IFs realize it, and who owns closing each gap. The lists are mechanical but EMPTY today — SR-side `Boundary-Refs` sits at 0 of 149 and `trace.py`'s SN-037 advisory says verbatim *"the re-tier campaign is what moves this number"*; the IF tie-back re-key is the retirement lane's held remainder | **RULED 2026-08-14d — DEFERRED**, re-lands by name after slice 2 populates `Boundary-Refs` + the D-3 re-key (owner expects it may effectively dissolve in the full re-tier — recorded so it re-lands either way); B-06/B-07's missing SR already delegated to slice 2. **RE-LANDED AND CLOSED 2026-08-15 — this sitting no longer carries it.** It did NOT dissolve: the table was regenerated (B-05 = 50 of 65 refs, 77%; B-01/B-02/B-06/B-07 realized by no interface row), the B-05 half was ruled by the owner as `OI-29` option (b) — the concentration is real because the template package IS the product — and each unrealized crossing got a named owner (B-01 → SR-019/SR-020, B-06 → SR-151, B-07 → SR-152) or a recorded statement that none should realize it (B-02, conditional on SR-140 shipping). The IF-side re-key stays D-3's. Record: `WI-459`, log `2026-08-15f` | [sitting-2 Decision 6](2026-08-13-sitting-2-boundary-and-context.md#decision-6--the-15-missing-crossings--6-partial-ones-who-owns-them) |
@@ -522,26 +522,45 @@ then audited this decomposition and confirmed pin debt on the new draft TCs —
 item 18's RECOMMENDED half — without contesting the decomposition itself.)*
 
 **TWO VOCABULARY CALLS RAISED `2026-08-16p`** — both spine-wide, neither
-SN-specific, and both cheap now and expensive after signing.
+SN-specific, and both cheap now and expensive after signing. **Both closed
+`2026-08-17m` — see the items.**
 
-15. **Does a chain change flip its attestation unit?** `docs/process.md` §4
-    rules that it does — *"the SR is the attestation unit — flip it whenever
-    its chain changes"* — and `trace_text.modified_chain_advisories` enforces
-    it warn-tier, telling an author to flip the parent or the child's marker is
-    dead weight. The owner challenged the rule at this sitting: if the parent's
-    own text has not moved, its attestation arguably still holds, and the flip
-    asserts SCOPE rather than CONTENT. Both readings are coherent — attest a
-    chain, or attest a cell — and the current rule is the chain reading. **This
-    is a change to the load-bearing core, not a row-level call**: it governs
-    every tier, the re-attest brief, the pending-owner projection and one
-    advisory. Recorded, not taken.
-16. **The third status word.** The closed vocabulary is `Drafted` \| `Approved`
-    \| `Modified`. The owner floated *"drafted, approved, and **founded** (or
-    decomposed to its dependencies)"* — a state meaning *this row's children
-    exist and answer it*, which `Modified` does not say. Note the enum was
-    closed deliberately on 2026-08-15 (OI-30 D1 folded `Planned` out on the
-    argument that a near-synonym gets applied inconsistently), so adding a
-    fourth value re-opens exactly that question. Recorded, not taken.
+15. ~~**Does a chain change flip its attestation unit?**~~ — **RULED
+    `2026-08-17m` — THE CELL READING.** Owner verbatim: *"No a child flipping
+    does not impact the parent, please update both this item, process.md, and
+    any other documentation."* A row's attestation covers its OWN cells: a
+    `Status` flips only when the row's own text changes, and a child (LLR/TC)
+    amendment never flips the parent SR — child changes surface through the
+    snapshot-drift arm and the gate, never by invalidating the parent's
+    signature. APPLIED same-day: `docs/process.md` §4 rewritten;
+    `modified_chain_advisories` (the warn-tier enforcer this item named)
+    RETIRED with its tests and ratchet entries; the staged amend-without-flip
+    guard's owning-SR exemption removed (the amended row itself must flip);
+    the skills, the machinery reference and the SR-keyed surfaces reworded —
+    grouping by SR is presentation, never attestation scope. The `SR-144`
+    history reads consistently under the ruling: it flipped at `2026-08-16l`
+    on its own rationale change, not on its children (item 20). The
+    chain-completeness claim moves to the `Founded` state per item 16's
+    correction — the two rulings are one design: attest cells, derive
+    chain-completeness.
+16. ~~**The third status word.**~~ — **CLOSED `2026-08-17m` — NEVER OPEN: a
+    relitigation artifact.** Owner verbatim: *"the plan was always the three
+    units: drafted, approved, and founded — modified means nothing because it
+    is caught by comparing to the snapshot. I don't understand why things are
+    being relitigated."* The record proves it: the LIVE
+    [d9-migration-plan](2026-08-15-d9-migration-plan.md) step 7 states
+    verbatim *"Retire the transitional word: delete `is_modified`; enum →
+    `{Drafted, Approved, Founded}`"*, and its C4 note records that all four
+    `Founded` discharge tests already exist — `Founded` was the standing
+    target all along, never a floated fourth word. The corruption mechanism:
+    later re-stamp banners paraphrased step 7 as *"narrow the enum to two"*
+    (silently dropping `Founded`), and this document's §3 pointer aimed at the
+    ARCHIVED 2026-08-11 checklist (header: "nothing is executed") instead of
+    the live plan — this item then recast `Founded` as a new proposal and
+    invoked OI-30 D1 against it. OI-30 D1 folded `Planned` out and never
+    touched `Founded`; that ruling is UNTOUCHED by this closure. `Modified` is
+    TRANSITIONAL and retires at step 7; post-seed, drift is caught by
+    comparison against `docs/archive/last_approved/`.
 
 17. **Should `B` and `EXT` become watermark spaces?** Raised by the
     `2026-08-16q` cut, which spent three ids the watermark does not protect.
@@ -806,14 +825,19 @@ meant to be the carrier). Do not let it be resolved silently in a slice.
 > §3.3 in particular, because the asymmetric-failure row and the recorded
 > coverage gap are what step 7 is arming against.
 
-**The migration is UNEXECUTED.** D-9 renames `Draft` / `Verified` / `Modified` →
-**`Drafted` → `Approved` → `Founded`**, uniform across SN · SR · LLR · TC. The
-three target words exist today only as unused constants in `derive_gate.py`. Its
-**only** checklist is archived at
-[`../archive/plans/2026-08-11-status-ladder-migration.md`](../archive/plans/2026-08-11-status-ladder-migration.md),
-whose own header sentence — *"Nothing here is executed"* — is still true.
+**The migration is PART-EXECUTED** (steps 1–5b landed 2026-08-15,
+`2026-08-15g`/`2026-08-15m`; the sitting owes sign → seed → step 7). D-9
+renames `Draft` / `Verified` / `Modified` → **`Drafted` → `Approved` →
+`Founded`**, uniform across SN · SR · LLR · TC. The **checklist of record is
+the LIVE** [`2026-08-15-d9-migration-plan.md`](2026-08-15-d9-migration-plan.md)
+(step 7 verbatim: retire the transitional word; enum →
+`{Drafted, Approved, Founded}`; drift = snapshot comparison). The earlier
+checklist survives as history at
+[`../archive/plans/2026-08-11-status-ladder-migration.md`](../archive/plans/2026-08-11-status-ladder-migration.md)
+— its header's *"Nothing here is executed"* was true when written, false since
+2026-08-15; this §'s old pointer at it is the mis-aim item 16 records.
 
-**⚠ Stale-figures warning.** Every number in that document was measured
+**⚠ Stale-figures warning.** Every number in that archived document was measured
 **2026-08-11 at `bc6315d9`**, which is *before* the OI-18 edge dissolution, the
 prose batch, and sitting 1. Its **470-row per-tier migration table** is
 therefore wrong on counts while right on **shape**. Re-derive every figure before

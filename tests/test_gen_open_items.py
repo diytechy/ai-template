@@ -172,7 +172,7 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "SR-003" not in page
-    assert "nothing owes an approval or a re-attest" in page
+    assert "no SR owes an approval or a re-attest" in page
 
 
 def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_path):
@@ -393,7 +393,7 @@ def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
     assert "<strong>SR</strong>" in page
-    assert "chain-consistency warn" in page  # where the reader is sent instead
+    assert "snapshot-drift" in page  # where the reader is sent instead
     assert "spine row — nothing owes" not in page  # the refuted claim is gone
 
 

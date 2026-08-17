@@ -229,14 +229,14 @@ One line each, each one seen in a real spine:
   as wiring it, and a marker with no consumer is the original gap with a better
   name. Ask, at the moment you add it: which checker, gate or brief changes
   behaviour because of this cell? If the answer is none, say so in the row.
-- **A chain amended without its attestation unit** — the SR is the attestation
-  unit (`docs/process.md` §4: *flip it whenever its chain changes*), so a
-  `Modified` LLR or TC under an `Approved` SR leaves the amendment invisible to
-  the re-attest brief, the pending-owner-actions projection and the gate — all
-  three key off the SR row. `trace.py`'s chain advisory names it. Note what the
-  rule costs, because a reader will feel it and should know it is deliberate:
-  the parent's own text has NOT changed, so the flip asserts scope rather than
-  content. Amend and flip in the same commit.
+- **A row amended without its own flip** — a row's `Status` answers for its
+  OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): flip the row whose
+  text changed, and only that row — a child LLR/TC amendment never flips its
+  parent SR, and a `Modified` child under an `Approved` SR is a legitimate
+  state. The chain-completeness claim belongs to the derived `Founded` state
+  (D-9), and an UNMARKED amendment is the snapshot-drift arm's find
+  (`docs/archive/last_approved/`), never the parent signature's. Amend and
+  flip in the same commit.
 
 ## 6. Cell hygiene — a registry holds living truth
 

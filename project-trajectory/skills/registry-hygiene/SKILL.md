@@ -69,12 +69,6 @@ call `trace.py` directly to iterate on a specific finding.
   not a coverage hole. A `Modified` LLR is exempt — that below-Approved status
   is the deliberate re-attest marker (process.md §4), not a drift; do NOT lift
   it to silence a warn.
-- **Modified chain advisory** (`WARNING (advisory)`, warn-only, WI-316) — a
-  `Modified` LLR/TC whose owning SR is neither `Modified` nor `Draft`. The SR
-  is the attestation unit (the projection, the gate pull, and the
-  `--ratify modified` brief all key off the SR row), so a child-only flag is
-  invisible to the sitting. Fix: flip the owning SR to `Modified` — never
-  un-flag the child to silence the warn.
 
 ## Verify the fix
 

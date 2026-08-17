@@ -182,8 +182,8 @@ def is_modified(row):
     SURFACING, not gate arithmetic: a Modified SR is simply not Approved, so
     `derive_gate.sr_gate` already reads it as decomposed-unapproved DevBar-Tests
     with no code of its own — this predicate exists for the `modified=N` basis
-    count, the pending-owner-actions projection, the chain-consistency warns, and
-    the `--ratify modified` brief.
+    count, the pending-owner-actions projection, and the `--ratify modified`
+    brief.
 
     TRANSITIONAL, AND STILL LIVE. It survives step 5's rename deliberately: its
     successor (`baseline_snapshot`-backed drift) has to run alongside it through
@@ -538,89 +538,6 @@ def llr_status_advisories(llrs, tcs):
                 "LLR {} reads '{}' but every citing TC is Approved — lift to "
                 "Approved (the evidence already exists)".format(
                     lid, (r.get("Status") or "").strip()
-                )
-            )
-    return out
-
-
-def modified_chain_advisories(srs, llrs, tcs):
-    """Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither
-    `Modified` nor `Drafted` — under the closed enum, a parent reading `Approved`.
-    The SR is the ATTESTATION UNIT (process.md §7) — the re-attest sitting, the
-    pending-owner-actions projection, and the `--ratify modified` brief all key
-    off the SR row — and the snapshot drift arm cannot stand in: `is_drifted`
-    fires only for a row whose live Status claims approval, so a `Modified`
-    child never counts as drifted while the `Approved` parent's own text has
-    not moved. Neither arm surfaces the amendment (re-measured at the
-    2026-08-15 sitting sweep: the `is_planned` repair briefly discharged this,
-    then D-9's fold deleted that predicate and re-opened the seam — durably,
-    by construction). Flip the owning SR (the amendment's real scope) or the
-    child's flag is dead weight. Warn only, same tier as llr_status_advisories:
-    never joins the exit code, even under --strict — a warn-tier checker
-    feature mints no SR and gates nothing (WI-129/132). A TC's owning SRs
-    resolve through both its direct `Verifies` SR cites and the SR-Refs of
-    every LLR it cites."""
-    sr_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
-    llr_srs = {}  # LLR id -> [owning SR ids]
-    for r in llrs:
-        lid = r.get("LLR-ID")
-        if lid:
-            llr_srs[lid] = [x for x in refs(r.get("SR-Refs")) if x in sr_by_id]
-
-    def _flagged(sr_ids):
-        return any(
-            is_modified(sr_by_id[s]) or is_drafted(sr_by_id[s])
-            for s in sr_ids
-            if s in sr_by_id
-        )
-
-    out = []
-    for r in llrs:
-        lid = r.get("LLR-ID")
-        if not lid or not is_modified(r):
-            continue
-        owners = llr_srs.get(lid, [])
-        if not owners:
-            # Adversarial-review F8: a Modified child with NO resolvable owning
-            # SR is the maximally-invisible case — no SR line to ride, no gate
-            # pull, no brief section. The dangling ref itself is the orphan
-            # rules' finding; THIS warn is about the marker having no surface.
-            out.append(
-                "LLR {} is Modified but resolves NO owning SR — the marker "
-                "rides no surface (no projection line, no gate pull, no brief "
-                "section); fix the SR-Refs and flip the owning SR".format(lid)
-            )
-        elif not _flagged(owners):
-            out.append(
-                "LLR {} is Modified but its owning SR ({}) reads Approved — the "
-                "SR is the attestation unit and a Modified row never counts as "
-                "drifted, so no brief, projection or gate carries this "
-                "amendment; flip the owning SR".format(lid, ";".join(owners))
-            )
-    for r in tcs:
-        tid = r.get("TC-ID")
-        if not tid or not is_modified(r):
-            continue
-        owners = []
-        for x in refs(r.get("Verifies")):
-            if x in sr_by_id:
-                owners.append(x)
-            elif x in llr_srs:
-                owners.extend(llr_srs[x])
-        if not owners:
-            out.append(
-                "TC {} is Modified but resolves NO owning SR — the marker "
-                "rides no surface (no projection line, no gate pull, no brief "
-                "section); fix the Verifies chain and flip the owning "
-                "SR".format(tid)
-            )
-        elif not _flagged(owners):
-            out.append(
-                "TC {} is Modified but its owning SR ({}) reads Approved — the "
-                "SR is the attestation unit and a Modified row never counts as "
-                "drifted, so no brief, projection or gate carries this "
-                "amendment; flip the owning SR".format(
-                    tid, ";".join(sorted(set(owners)))
                 )
             )
     return out
@@ -2258,13 +2175,15 @@ _UNSET = object()
 def sr_chain_drifts(sid, chain, snapshot):
     """True when ANY row in this SR's chain has drifted from the snapshot.
 
-    The attestation unit is the SR, so a drifted LLR or TC pulls its owning SR
-    into the brief. This closes only the UNMARKED half of the WI-316 hole — a
-    child amended while still claiming approval. The marked half stays open by
-    construction: `is_drifted` fires only for a row whose live Status claims
-    approval, so a `Modified` child never counts as drifted and its amendment
-    rides no surface — which is exactly what the chain-consistency warn still
-    shouts about."""
+    The brief GROUPS by owning SR for reading — a drifted LLR or TC surfaces
+    under its owning SR's section — but the grouping is presentation, never
+    attestation scope: a row's Status answers for its OWN cells, and a child
+    amendment never flips the parent SR (owner ruling 2026-08-17m; the
+    chain-completeness claim belongs to the derived `Founded` state, D-9 step
+    8). This drift arm catches the UNMARKED case — a child amended while still
+    claiming approval. A `Modified` child under an unflagged SR is the MARKED
+    case, a legitimate cell-level state; it rides no brief section until it is
+    signed or step 7 retires the word and leaves drift as the one detector."""
     return any(
         baseline_snapshot.is_drifted(
             rel, id_col, row, baseline_snapshot.rows_for(snapshot, rel, id_col)
@@ -2540,7 +2459,7 @@ def ratify_check(root, srs, llrs, tcs, out_path):
 
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--ratify modified`, WI-316): one
-    section per SR owing a human act — the attestation unit — with per-cell
+    section per SR owing a human act (grouped by SR for reading) with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
     differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
     or REMOVED from the chain.
@@ -2565,7 +2484,7 @@ def reattest_lines(root, srs, llrs, tcs):
         "# Re-attestation brief — spine rows owing a human act",
         "",
         "_Generated by `trace.py --ratify modified` (WI-316). One section per SR"
-        " (the attestation unit) that is `Drafted` or `Modified`, or whose"
+        " that is `Drafted` or `Modified`, or whose"
         " chain has DRIFTED from the approved snapshot; each chain row"
         " shows only its CHANGED cells, before (the snapshot) vs after (the"
         " working tree), ratified cells first. `Status` itself is never listed —"
@@ -3407,11 +3326,6 @@ def analyze(reg, args):
     # citing TC is Approved — a readout drift, never a failure (LLR status is
     # non-gating under the derived-gate model). Never joins a failure set below.
     llr_status_advis = llr_status_advisories(llrs, tcs)
-    # Warn-only, always on (WI-316): a Modified LLR/TC whose owning SR is not
-    # flagged — the amendment is invisible to the re-attest surfaces, which all
-    # key off the SR row. Same never-gating tier as the status-coherence lint;
-    # rendered through the same channel (one advisory pipe, two lints).
-    llr_status_advis = llr_status_advis + modified_chain_advisories(srs, llrs, tcs)
     # Warn-only, always on (re-tier v2 R2/R3, owner ruling 2026-08-15): an SR
     # `Requirement` naming a concrete artifact, and an SR whose direct-LLR fan-out
     # is over the declared bound. Their own pipes — they are TIERING detectors,
@@ -3679,18 +3593,14 @@ def render_report(reg, findings, args, forest):
         if not paraphrase
         else [f"- {f}" for f in paraphrase]
     )
-    # Warn-only advisory section (never a failure, WI-129 + WI-316): LLRs reading
-    # below Approved whose citing TCs are all Approved (lift the Status cell by
-    # hand — registries are hand-owned SSOT, no generator writes them back), and
-    # Modified LLR/TC rows whose owning SR is not flagged (flip the attestation
-    # unit — no brief, projection or gate carries a Modified child under an
-    # Approved SR).
+    # Warn-only advisory section (never a failure, WI-129): LLRs reading
+    # below Approved whose citing TCs are all Approved — lift the Status cell by
+    # hand (registries are hand-owned SSOT, no generator writes them back). The
+    # WI-316 chain arm RETIRED 2026-08-17m (the cell reading): a Modified child
+    # under an Approved SR is a legitimate state, the snapshot-drift arm's find.
     lines += ["", "## Status-coherence advisories (warn-only)", ""]
     lines += (
-        [
-            "None. No unlifted LLRs, no Modified chain rows riding an unflagged "
-            "or unresolvable owning SR."
-        ]
+        ["None. No unlifted LLRs."]
         if not llr_status_advis
         else [f"- {f}" for f in llr_status_advis]
     )

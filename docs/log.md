@@ -36,6 +36,81 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17m — two owner rulings executed in session: attestation is a
+  CELL claim (sitting-3 item 15 RULED), and item 16 was NEVER OPEN — the
+  standing D-9 target is `{Drafted, Approved, Founded}`.** Ruling A, owner
+  verbatim: *"No a child flipping does not impact the parent, please update
+  both this item, process.md, and any other documentation."* A row's
+  attestation covers its OWN cells — a `Status` flips only when the row's own
+  text changes; a child (LLR/TC) amendment never flips the parent SR; child
+  changes surface through the snapshot-drift arm and the gate, and the
+  chain-completeness claim belongs to the derived `Founded` state, never the
+  signature. Ruling B, owner verbatim: *"the plan was always the three units:
+  drafted, approved, and founded — modified means nothing because it is
+  caught by comparing to the snapshot. I don't understand why things are
+  being relitigated."* **The corruption diagnosis:** the LIVE
+  [plans/2026-08-15-d9-migration-plan.md](plans/2026-08-15-d9-migration-plan.md)
+  step 7 states verbatim *"Retire the transitional word: delete
+  `is_modified`; enum → `{Drafted, Approved, Founded}`"*, its C4 note
+  recording that all four `Founded` discharge tests already exist — but later
+  re-stamp banners paraphrased step 7 as "narrow the enum to two" (silently
+  dropping `Founded`), and sitting-3 §3's pointer aimed at the ARCHIVED
+  2026-08-11 checklist (header: "nothing is executed" — false since
+  2026-08-15) instead of the live plan; item 16 then recast `Founded` as a
+  newly floated fourth word and invoked OI-30 D1 against it, though D1 folded
+  `Planned` out and never touched `Founded`. D1 stands untouched. **Ruling A
+  applied:** `process.md` §4's chain sentence ("the SR is the attestation
+  unit — flip it whenever its chain changes") rewritten to the cell reading;
+  `trace.modified_chain_advisories` RETIRED WHOLE — function, call site,
+  report fallback, its two `test_trace_rules.py` tests, its
+  complexity-ratchet row (entries retire with their function). Measured: the
+  class emitted 0 findings on today's tree both before and after (every
+  currently-`Modified` child rides an already-flagged SR), so the console
+  summary is byte-identical pre/post — SN=27 SR=70 LLR=159 TC=155 orphans=0
+  integrity=0 form-findings=1 (`SR-140`, pre-existing)
+  paraphrase-advisories=5, the `IF-128` advisory pre-existing
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=db9ca307 -->.
+  `llr_status_advisories` MEASURED AND KEPT: it nags a below-`Approved` LLR
+  to lift ITS OWN status when every citing TC is `Approved` — the row's own
+  cell, never the parent — so it does not assert the chain reading (the
+  `2026-08-16h` "llr-status-advisories 7 → 9" mention was the chain class
+  riding the SHARED summary counter, not this lint). The staged
+  amend-without-flip guard's owning-SR exemption
+  (`check_trajectory.staged_spine_amendments` — a parent flip used to
+  sanction a silent child amendment) REMOVED: the amended row itself must
+  flip, the status-moved exemption already covers that sanctioned path —
+  stricter in exactly the ruling's direction. Other sites: sitting-3 items 15
+  (RULED — the `SR-144` history reads consistently under the cell reading: it
+  flipped at `2026-08-16l` on its own rationale change, not its children) and
+  16 (CLOSED, never open) + ledger row 5 + §3 re-pointed at the LIVE
+  checklist of record; `status.md` (the step-7 statement + the live-calls
+  list pruned to items 6 · 17 · 18 · 19); `review-package.md` §5 step 4; the
+  staleness-audit Class-B rows; the
+  `spine-authoring`/`gate-advance`/`registry-hygiene` skills (+ `.claude`/
+  `.agents` copies; the registry-hygiene chain-advisory bullet deleted);
+  `registry-machinery-reference.md` §3 header + the chain-warn section (now
+  records the retirement); `traj_status.py`/`gen_open_items.py` SR-keyed
+  surface wording (grouping by SR is presentation, never attestation scope);
+  the `architecture.md` map regenerated; the goldens +
+  `test_trajectory_staged.py` reworked (the child flips itself; a parent flip
+  no longer silences); module-size ratchet re-stamped DOWN `trace.py`
+  4268 → 4178 (ruff format folded 4 more lines than the first stamp),
+  `check_trajectory.py` 4208 → 4169. **Append-only carve-out:**
+  the 2026-08-15-era log entries carrying the "narrow the enum to two"
+  paraphrase stand as history; this entry corrects forward. Residual,
+  deliberate: until step 7 lands, a `Modified` child under an `Approved` SR
+  rides no brief/projection surface — a legitimate state, visible in the
+  registry and the trace report; step 7's drift arm closes it by
+  construction. Byte deltas: `PROCESS.md` 77,826 → 78,103 (+277, flagged —
+  the load-bearing core taught the opposite of the ruling; baseline
+  re-stamped in byte-budget-guard, all copies); `PROCESS_OPTIONS.md` 172,026
+  unchanged; `AGENTS.template.md` 9,994 unchanged. In passing, one
+  PRE-EXISTING commit-bar red cleared (fails on clean HEAD too): the WI-396
+  close's link to `backlog-plan-2026-08-01.md` re-pointed at its
+  `docs/archive/history/` home (moved by the post-sitting cleanup,
+  `659f9b84`). Commit-bar smoke: 1192
+  passed / 7 skipped, 33s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=db9ca307 -->.
 - **2026-08-17j — WI-471 executed: the shipped-docs resync sweep — all 31
   class-A findings closed, and the kit-level edge-SN question RULED at
   dispatch: "edge is dropped."** The owner ruling (2026-08-17, in the WI-471

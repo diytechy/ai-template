@@ -130,9 +130,11 @@ prose enforcement; the DevBar-Reqs consistency review is the human backstop.
 
 ## 3. SR — System Requirements
 
-**12 columns.** The **attestation unit** of the whole method: the re-attest
-sitting, the pending-owner-actions projection and the `--ratify modified` brief
-all key off the SR row.
+**12 columns.** The **grouping row** of the re-attest surfaces: the sitting,
+the pending-owner-actions projection and the `--ratify modified` brief all key
+off the SR row — presentation, never attestation scope (a row's `Status`
+answers for its own cells; a child amendment never flips the parent SR — owner
+ruling 2026-08-17).
 
 | Column | Required¹ | Vocabulary / default | Effect on the machinery |
 |---|---|---|---|
@@ -694,11 +696,12 @@ brief and four review rounds — for a change that altered no requirement.
 **ratified**, so a newly-added column can only ever be too loud, never silently
 un-ratified. `tests/test_trajectory_staged.py` pins both halves.
 
-**Chain-consistency warns** (`modified_chain_advisories`): a `Modified` LLR/TC
-whose owning SR is neither `Modified` nor `Drafted` is flagged — the SR is the
-attestation unit, so a marker only on a child is invisible to every surface it
-exists to feed. A `Modified` child resolving **no** owning SR gets its own,
-louder warn.
+**Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
+reading): `modified_chain_advisories` told an author to flip the owning SR
+whenever a child read `Modified`, asserting the retired chain reading. A
+`Modified` LLR/TC under an `Approved` SR is a legitimate state — a row's
+`Status` answers for its own cells — and an UNMARKED child amendment is the
+snapshot-drift arm's find once `docs/archive/last_approved/` is seeded.
 
 ---
 

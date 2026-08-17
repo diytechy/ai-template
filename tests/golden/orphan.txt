@@ -79,7 +79,7 @@ None flagged by the overlap heuristic.
 
 ## Status-coherence advisories (warn-only)
 
-None. No unlifted LLRs, no Modified chain rows riding an unflagged or unresolvable owning SR.
+None. No unlifted LLRs.
 
 ## Artifact-naming advisories (warn-only)
 

@@ -353,67 +353,6 @@ def test_modified_llr_is_exempt_from_the_status_advisory():
     assert len(trace.llr_status_advisories([impl], [ver_tc])) == 1
 
 
-def test_modified_chain_advisory_flags_the_orphaned_child():
-    # WI-316: a Modified LLR/TC whose owning SR is not flagged is invisible to
-    # every re-attest surface (they key off the SR row), so it warns; flipping
-    # the owning SR to Modified (or Drafted) silences it. The TC path resolves
-    # owners through both direct SR cites and cited-LLR SR-Refs.
-    from conftest import load_script
-
-    trace = load_script("trace")
-    sr_ok = {"SR-ID": "SR-010", "Status": "Approved"}
-    sr_mod = {"SR-ID": "SR-010", "Status": "Modified"}
-    llr = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Modified"}
-    tc = {"TC-ID": "TC-010", "Verifies": "LLR-010", "Status": "Modified"}
-
-    found = trace.modified_chain_advisories([sr_ok], [llr], [tc])
-    assert len(found) == 2, found
-    assert any("LLR LLR-010 is Modified" in f and "SR-010" in f for f in found)
-    assert any("TC TC-010 is Modified" in f and "SR-010" in f for f in found)
-
-    # Flipping the attestation unit silences both; Drafted counts as flagged too.
-    assert trace.modified_chain_advisories([sr_mod], [llr], [tc]) == []
-    sr_draft = {"SR-ID": "SR-010", "Status": "Drafted"}
-    assert trace.modified_chain_advisories([sr_draft], [llr], [tc]) == []
-
-    # A Approved child never warns — the lint watches Modified children only.
-    ok_llr = {**llr, "Status": "Approved"}
-    ok_tc = {**tc, "Status": "Approved"}
-    assert trace.modified_chain_advisories([sr_ok], [ok_llr], [ok_tc]) == []
-
-    # A TC citing its SR directly resolves the owner without an LLR hop.
-    tc_direct = {"TC-ID": "TC-011", "Verifies": "SR-010", "Status": "Modified"}
-    assert len(trace.modified_chain_advisories([sr_ok], [], [tc_direct])) == 1
-    assert trace.modified_chain_advisories([sr_mod], [], [tc_direct]) == []
-
-    # Adversarial-review F8: the OWNERLESS Modified child is the
-    # maximally-invisible case (no SR line to ride, no gate pull, no brief
-    # section) — it must warn, not fall through the owners-exist guard.
-    orphan_llr = {"LLR-ID": "LLR-020", "SR-Refs": "", "Status": "Modified"}
-    ghost_llr = {"LLR-ID": "LLR-021", "SR-Refs": "SR-999", "Status": "Modified"}
-    ghost_tc = {"TC-ID": "TC-020", "Verifies": "LLR-999", "Status": "Modified"}
-    found_orphans = trace.modified_chain_advisories(
-        [sr_ok], [orphan_llr, ghost_llr], [ghost_tc]
-    )
-    assert len(found_orphans) == 3, found_orphans
-    assert all("NO owning SR" in f for f in found_orphans)
-
-
-def test_modified_chain_advisory_is_warn_only(scaffold):
-    # The chain warn joins the shared advisory pipe: loud on stdout, in the
-    # report, never an exit-code change even under --strict.
-    make_minimal_project(scaffold)
-    llr_csv = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
-    llr_csv.write_text(
-        llr_csv.read_text(encoding="utf-8").replace(",Approved", ",Modified"),
-        encoding="utf-8",
-    )
-    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "LLR LLR-001 is Modified" in proc.stdout
-    assert "flip the owning SR" in proc.stdout
-
-
 def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     # Done-when 1+4: a below-`Approved` LLR-001 under an `Approved` TC-001 makes
     # trace emit the warn on stdout and in the report — but it never changes the
@@ -455,10 +394,7 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "reads 'Drafted'" not in proc3.stdout
     assert "llr-status-advisories" not in proc3.stdout
     report3 = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert (
-        "None. No unlifted LLRs, no Modified chain rows riding an unflagged "
-        "or unresolvable owning SR." in report3
-    )
+    assert "None. No unlifted LLRs." in report3
 
 
 # --- WI-146(a): the --ratify batch-scoped ratification hierarchy view ---------

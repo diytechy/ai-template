@@ -89,11 +89,11 @@ both directions and came back clean.
 
 ## Class B — open/provisional; deliberately NOT in WI-471's scope
 
-- **`Modified` retirement / two-word enum / UNANCHORED-as-ERROR / intake
+- **`Modified` retirement / enum → `{Drafted, Approved, Founded}` / UNANCHORED-as-ERROR / intake
   refusal** (D-9 step 7) — post-sign/seed; the docs correctly still teach the
   three-word enum.
-- **SR-as-attestation-unit chain rule** (PROCESS.md:363-365) — current rule;
-  item 15's challenge is recorded, unruled.
+- **SR-as-attestation-unit chain rule** — RULED `2026-08-17m`, the CELL
+  reading: PROCESS.md §4 rewritten, the chain advisory retired.
 - **`Direction`/`ThisProject`/`Counterpart` IF columns** — the R4 shed is
   ruled but held (dashboard dependency + the 27 WI-469 rows); removal is
   wi455's.

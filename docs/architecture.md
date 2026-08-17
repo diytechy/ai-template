@@ -1329,7 +1329,6 @@ Contracts (interfaces): IF-001, IF-021, IF-042
 | `phase_num(row)` | The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2); |  |
 | `structure_findings(path, display)` | Column-count structural check over one registry CSV: every data row must |  |
 | `llr_status_advisories(llrs, tcs)` | Warn-only findings (WI-129): an LLR whose Status reads below `Approved` |  |
-| `modified_chain_advisories(srs, llrs, tcs)` | Warn-only findings (WI-316): a `Modified` LLR/TC whose owning SR is neither |  |
 | `id_key(label)` |  |  |
 | `id_sort_key(rid)` | Numeric-then-lexical sort key for a registry id, so SR-9 orders before | SR-10, SR-9 |
 | `integrity_findings(label, raw_rows)` | Duplicated or malformed ids in one registry (example '-000' rows skipped — |  |

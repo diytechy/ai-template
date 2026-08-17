@@ -148,29 +148,6 @@ BASELINE = {
     # `tier_completion_findings` rather than being written as two more branches
     # here — the simplification the ratchet prefers, applied as far as it goes.
     ("check_trajectory.py", "main"): 22,
-    # WI-316 (2026-07-26): the amend-without-flip warn — HEAD-vs-index row
-    # compare across three registries with owning-SR suppression (the
-    # attestation unit sanctions same-commit amend+flip). New guard, reason in
-    # the log; a WI-280 decomposition candidate.
-    # WI-380 (2026-08-01): RE-KEYED, not bumped. The scan moved to
-    # `staged_spine_amendments` (which returns the structured §A5.1 split) and
-    # `staged_spine_findings` became a thin formatter over it — under the limit,
-    # so its entry is DELETED. The §A5.1 classification loop that would have
-    # taken this to 23 was extracted as `split_changed_cells` instead, holding
-    # the scan at its old 20: decomposition, which is the escape this ratchet
-    # prefers over a bump.
-    # SN-029 (2026-08-08): 20 -> 19. The "git could not answer" and "nothing
-    # relevant changed" degrades are one `return None` inside `_spine_revs` now
-    # (its `touches=` argument), because writing that pair twice — once here and
-    # once in the new `staged_attestation_rewrite_findings` — is the intra-file
-    # duplication WI-347 rules a defect. One branch left this scan with it.
-    # D-5 step 1 (2026-08-10): 19 -> 18, RE-STAMPED DOWN. The carrier-aware read
-    # replaced three hand-rolled `git show` + BOM-strip + csv.DictReader blocks
-    # inside this scan with one `_spine_rows_at` call, so the branch that chose
-    # between "text is None" and "text parsed" left with them. Recorded because
-    # this ratchet is symmetric on purpose: an improvement that is not
-    # re-stamped becomes headroom for the next regression to hide in.
-    ("check_trajectory.py", "staged_spine_amendments"): 18,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     ("gen_arch_map.py", "main"): 17,
     ("gen_cases.py", "all_pairs"): 13,
@@ -241,14 +218,6 @@ BASELINE = {
     # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
     ("trace.py", "ratify_lines"): 27,
-    # WI-316 (2026-07-26): the two new spine-status surfaces — the
-    # orphaned-Modified-child warn (SR/LLR/TC owner resolution) and the
-    # re-attestation brief emitter (per-SR baseline walk + chain diff +
-    # ADDED/REMOVED sections + off-git degrade). New capability, reasons in
-    # the log; the brief emitter is a named WI-280 extraction candidate.
-    # +2 each (fix pass, 2026-07-26): F8 ownerless-child branches and the F1
-    # --since fail-fast guard — both adversarial-review closures.
-    ("trace.py", "modified_chain_advisories"): 15,
     # WI-322 split the git archaeology out of the renderer: reattest_lines went
     # prose-only (25 -> 14) and the extracted model carries the branching (21) —
     # one computation, two renderers. WI-347 then took it UNDER the limit

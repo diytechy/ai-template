@@ -248,18 +248,23 @@ def test_staged_spine_amend_with_flip_is_silent(tmp_path):
     assert "re-attest marker" not in proc.stderr
 
 
-def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
-    # Amending an LLR while flipping its OWNING SR in the same commit is the
-    # sanctioned path (the SR is the attestation unit) — no child warn. The
-    # identical LLR amendment with the SR left Approved warns on the child.
+def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
+    # A row's Status answers for its OWN cells (owner ruling 2026-08-17m):
+    # amending an LLR and flipping the LLR ITSELF in the same commit is the
+    # sanctioned path — no warn. Flipping the OWNING SR instead (the retired
+    # chain reading's sanction) no longer silences the child: its text changed
+    # while its own Status still claims approval, so it warns whatever the
+    # parent does.
     run_git = _init_spine_repo(tmp_path)
     llr_h = "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status\n"
     llr_csv = tmp_path / "docs" / "requirements" / "low-level-requirements.csv"
 
-    def write_llr(detail):
+    def write_llr(detail, status="Approved"):
         llr_csv.write_text(
             llr_h
-            + 'LLR-001,SR-001,Core,src/d.py,f,"{}",(see TC),Approved\n'.format(detail),
+            + 'LLR-001,SR-001,Core,src/d.py,f,"{}",(see TC),{}\n'.format(
+                detail, status
+            ),
             encoding="utf-8",
         )
 
@@ -267,21 +272,23 @@ def test_staged_child_amend_with_sr_flip_is_silent_without_it_warns(tmp_path):
     run_git("add", "-A")
     run_git("commit", "-m", "attested chain")
 
-    # (1) amend the LLR + flip the owning SR together -> silent.
-    write_llr("the AMENDED detail")
-    _amend_sr(tmp_path, "the original attested text", "Modified")
+    # (1) amend the LLR + flip the LLR itself -> silent (its status moved).
+    write_llr("the AMENDED detail", "Modified")
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "re-attest marker" not in proc.stderr
 
-    # (2) the same LLR amendment with the SR left Approved -> the child warns.
-    _amend_sr(tmp_path, "the original attested text", "Approved")
+    # (2) the same LLR amendment left Approved -> the child warns, even with
+    # the owning SR flipped in the same commit (the exemption the retired
+    # chain reading used to grant).
+    write_llr("the AMENDED detail")
+    _amend_sr(tmp_path, "the original attested text", "Modified")
     run_git("add", "-A")
     proc2 = run_traj(tmp_path, "--staged")
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     assert "LLR-001" in proc2.stderr
-    assert "no owning SR is flagged" in proc2.stderr
+    assert "flip the amended row" in proc2.stderr
 
 
 def test_staged_spine_warn_survives_a_bom(tmp_path):

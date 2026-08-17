@@ -97,8 +97,8 @@ the bar derives from it:
   the evidence, that is the harness's problem to report and not a second Status
   value. Record the ruling in the log's Decisions, like any ratification.
   Amend-and-flip land in the **same commit** (the `--staged` warn enforces it);
-  the SR is the attestation unit — a chain change (child LLR/TC amended or
-  added) flips the owning SR.
+  a row's `Status` answers for its OWN cells (owner ruling 2026-08-17) — a
+  child LLR/TC amendment flips the child, never the owning SR.
 
   > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,
   > `Modified` — matched case-insensitively, and a value outside it is an

@@ -198,9 +198,10 @@ Detail and reasoning: log `2026-08-15j`.
    in the same reviewed commit. This is the first copy to
    `docs/archive/last_approved/` and the birth of drift detection.
 4. **Step 7 executes** (mechanical follow-on, same reviewed act): retire
-   `Modified` + the transitional predicate, narrow the enum to two, resolve
-   `intake`'s `!= "Modified"` guard into a refusal, and arm the UNANCHORED rule
-   as an ERROR on the integrity floor. (The `sr_bar` ceiling of your D2 is
+   `Modified` + the transitional predicate — the enum lands at
+   `{Drafted, Approved, Founded}` (the standing D-9 step-7 target; drift =
+   snapshot comparison) — resolve `intake`'s `!= "Modified"` guard into a
+   refusal, and arm the UNANCHORED rule as an ERROR on the integrity floor. (The `sr_bar` ceiling of your D2 is
    already landed — see §1 and its finding in §3.)
 6. **`push = "human"` remains yours**, as does the merge-to-main call.
 

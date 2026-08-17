@@ -25,16 +25,17 @@ narrated is in those homes.
   ([ratify/2026-08-13-wi444.md](ratify/2026-08-13-wi444.md)) **plus the ten
   ex-`Planned` rows no brief lists** (`2026-08-15m`), rule the open calls,
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
-- **The calls the sitting still makes — reconciled `2026-08-17l`; the live
-  list is sitting-3 §0.4 items 6 · 15 · 16 · 17 · 18 · 19, each stated there
-  with its evidence:** the **one shared status vocabulary + the SN schema
-  census** (item 6; step 7 added `2026-08-17k`), the **attestation-unit
-  reading** (item 15 — it defines what the 147 `Modified` flips MEAN, so it
-  precedes signing), the **five contested `owner` cells + draft-TC pins**
-  (item 18, `2026-08-17f`), the **acceptance-cell question** (item 19 —
-  current-carrier filenames down to the trace tier or registry-id anchors;
-  ruling it later re-touches every reworded row), and the optional pair
-  **`founded` / B+EXT watermark spaces** (items 16/17). Three work items owed
+- **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
+  `2026-08-17m`; the live list is sitting-3 §0.4 items 6 · 17 · 18 · 19, each
+  stated there with its evidence:** the **one shared status vocabulary + the SN
+  schema census** (item 6; step 7 added `2026-08-17k`), the **five contested
+  `owner` cells + draft-TC pins** (item 18, `2026-08-17f`), the
+  **acceptance-cell question** (item 19 — current-carrier filenames down to
+  the trace tier or registry-id anchors; ruling it later re-touches every
+  reworded row), and the optional **B+EXT watermark spaces** (item 17). Items
+  15/16 are RULED `2026-08-17m` (the cell attestation reading; the
+  `{Drafted, Approved, Founded}` step-7 target restated — item 16 was never
+  open). Three work items owed
   BEFORE the brief regenerates are listed just above §0.4's open calls:
   the `SR-140` split, the `TC-168`/`169`/`170` pins, the `SR-173` wording.
   The **LLR/TC draft ratifications** ride the same sequence (`2026-08-14e`).
@@ -66,8 +67,10 @@ narrated is in those homes.
   the **attestation** — the re-attest window, the LLR/TC draft ratifications,
   and the status-vocabulary sequence whose steps 1–5b are already executed
   (`2026-08-15g`/`m`, the gate unmoved) and whose remainder is review-package §5
-  step 7: retire `Modified`, narrow the enum to two, turn `intake`'s
-  `!= "Modified"` guard into a refusal, arm the UNANCHORED rule as an ERROR.
+  step 7: retire the transitional `Modified` — the enum lands at
+  `{Drafted, Approved, Founded}` (the standing D-9 target; drift = snapshot
+  comparison) — turn `intake`'s `!= "Modified"` guard into a refusal, arm
+  the UNANCHORED rule as an ERROR.
 - **The `wi455-architecture-retirement` lane owns what the sitting does not:**
   the crossing-ownership re-key onto each named owner (`2026-08-15f`), the five
   `external:`-marked IF rows with no tie-back, B-04's half realization, the D-3

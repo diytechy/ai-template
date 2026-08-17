@@ -3422,49 +3422,13 @@ def staged_spine_amendments(root, base="HEAD", head=None):
         return []
     staged_names, old_rev, new_rev = revs
 
-    def _index_rows(csv_path, id_col):
-        """{id: row} of the NEW-side version (the index by default, equal to
-        HEAD when the file is not staged; the head commit under a rev range),
-        through whichever carrier that side uses."""
-        return _spine_rows_at(root, new_rev, csv_path, id_col)
-
-    # The attestation unit is the SR: an amended child whose OWNING SR flips in
-    # this same commit is the sanctioned amend+flip path, so only rows whose
-    # unit stays unflagged warn. Owner resolution uses the NEW-side state — the
-    # index for the hook, the head commit for a rev range.
-    idx_srs = _index_rows(*SPINE_CSVS[0])
-    idx_llrs = _index_rows(*SPINE_CSVS[1])
-
-    def _flagged_sr(sid):
-        # This set is an EXEMPTION — "the attestation unit is itself flagged in
-        # this commit, so a human will read the chain anyway" — which is why it
-        # is the two states that ROUTE a chain to a human read and nothing else.
-        # `Approved` is deliberately absent for the same reason `planned` was
-        # before the fold: an approved SR routes its chain nowhere, so exempting
-        # it would make the guard QUIETER on exactly the rows it exists to
-        # surface, the silently-less-safe direction the migration's §F3 names.
-        status = ((idx_srs.get(sid) or {}).get("Status") or "").strip().lower()
-        return status in ("modified", "drafted")
-
-    def _owners(csv_path, row):
-        if csv_path == SPINE_CSVS[0][0]:
-            return [row.get("SR-ID")]
-        if csv_path == SPINE_CSVS[1][0]:
-            return [
-                x.strip() for x in (row.get("SR-Refs") or "").split(";") if x.strip()
-            ]
-        owners = []
-        for x in (row.get("Verifies") or "").split(";"):
-            x = x.strip()
-            if x.startswith("SR-"):
-                owners.append(x)
-            elif x.startswith("LLR-") and x in idx_llrs:
-                owners.extend(
-                    y.strip()
-                    for y in (idx_llrs[x].get("SR-Refs") or "").split(";")
-                    if y.strip()
-                )
-        return owners
+    # Each row answers for its OWN cells (owner ruling 2026-08-17m): the
+    # sanctioned amend path is flipping the AMENDED row itself in the same
+    # commit — a Status that moved is exempted below. The retired chain
+    # reading's owning-SR exemption (a parent flip sanctioning a silent
+    # child amendment) is gone with the doctrine: a child whose ratified
+    # cells change while its own Status still claims approval warns,
+    # whatever its parent does.
 
     out = []
     for csv_path, id_col in SPINE_CSVS:
@@ -3495,8 +3459,6 @@ def staged_spine_amendments(root, base="HEAD", head=None):
             # unchanged: that is a deliberate call this does not second-guess.
             if head_status != cur_status or head_status not in _RATIFIED_TEXT:
                 continue
-            if any(_flagged_sr(s) for s in _owners(csv_path, row) if s):
-                continue  # the attestation unit flips in this commit — sanctioned
             changed = split_changed_cells(csv_path, id_col, head, row)
             if changed["ratified"] or changed["traced"]:
                 out.append(dict(changed, registry=registry, id=rid))
@@ -3518,12 +3480,11 @@ def staged_spine_findings(root):
     Index-vs-HEAD by construction — this is the hook's question, so it takes no
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
-        "{}: ratified cell(s) {} amended while Status stays put "
-        "and no owning SR is flagged — a post-attestation amendment "
-        "owes the Modified re-attest marker (process.md §7); flip "
-        "the owning SR in this commit, or the change rides unmarked "
-        "and surfaces only as snapshot drift once a seed exists, "
-        "never as the re-attest it owes".format(
+        "{}: ratified cell(s) {} amended while Status stays put — a "
+        "post-attestation amendment owes the Modified re-attest marker "
+        "(process.md §7); flip the amended row in this commit, or the "
+        "change rides unmarked and surfaces only as snapshot drift once "
+        "a seed exists, never as the re-attest it owes".format(
             a["id"], ", ".join(sorted(a["ratified"]))
         )
         for a in staged_spine_amendments(root)

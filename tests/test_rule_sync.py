@@ -101,7 +101,7 @@ def test_is_approved_agrees():
 
 def test_is_modified_agrees():
     # Both files recognize the post-attestation Modified state (WI-316): trace.py
-    # for the chain-consistency warns + the --ratify modified brief, derive_gate.py
+    # for the --ratify modified brief, derive_gate.py
     # for the modified=N basis count. Divergence would let a pending re-attest hide
     # from one surface while the other reports it — the same false-green class the
     # is_drafted/is_approved pins exist for. Same casing/whitespace/None battery,

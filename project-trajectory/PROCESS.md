@@ -374,8 +374,11 @@ amendment. The baseline those before/after diffs run against is a
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
 file must always equal its live counterpart) and replaced wholesale at each
 approval. Amend and flip in the **same commit** (a `--staged` warn
-enforces it); the SR is the attestation unit — flip it whenever its chain
-changes. **Sequence requirement-text work *into* an open window, not after it:**
+enforces it); a row's `Status` answers for its **own cells** — flip the row
+whose text changed, and only that row: a child (LLR/TC) amendment never flips
+its parent SR (owner ruling 2026-08-17). A child change surfaces through the
+snapshot-drift arm and the derived gate; chain-completeness is the derived
+`Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
 is still owed, so its rows join the batch a human is already reading. Landing it
 after a re-attest flips freshly-blessed rows straight back to `Modified` and buys

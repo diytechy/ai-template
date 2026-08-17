@@ -206,9 +206,10 @@ _SR_REL = "docs/requirements/system-requirements.toml"
 def _spine_pending(root):
     """Source (e), WI-316: one pointer line per `Drafted` SR (approval owed) and
     per `Modified` SR (re-attest owed — a post-approval amendment,
-    process.md §7). The SR is the attestation unit, so only SR rows project —
-    a Modified LLR/TC rides its owning SR's line (trace.py's chain-consistency
-    warn flags the orphaned-child case). Durable committed-tree state, so these
+    process.md §7). Only SR rows project — deliberate surface economy, never
+    attestation scope (a row's Status answers for its own cells, owner ruling
+    2026-08-17m): a flagged LLR/TC under an unflagged SR shows in the registry
+    and the trace report, not here. Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
     names, `trace.py --ratify modified`, never here. Sorted by id, no clocks.
@@ -229,8 +230,8 @@ def _spine_pending(root):
     alone goes quiet exactly when it matters. Vacuous while no snapshot
     exists."""
     # `skip_example=True`: a copied template's `-000` example row owes no
-    # ratification. Only the SR arm projects (the attestation unit), so the
-    # LLR/TC arms of the loader go unused here.
+    # ratification. Only the SR arm projects (the docstring's surface-economy
+    # note), so the LLR/TC arms of the loader go unused here.
     srs = _spine(root, skip_example=True)[0]
     snapshot = baseline_snapshot.load_all(root)
     snap_srs = baseline_snapshot.rows_for(snapshot, _SR_REL, "SR-ID")
