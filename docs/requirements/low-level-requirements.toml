@@ -1393,7 +1393,7 @@ component = "CMP-007"
 phase = 4
 
 [design.LLR-142]
-sr_refs = ["SR-170"]
+sr_refs = ["SR-173"]
 title = "Trunk-step artifact regen (dependency order)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "regen"
@@ -1525,7 +1525,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-153]
-sr_refs = ["SR-170"]
+sr_refs = ["SR-174"]
 title = "The unified trunk-side intake mint + the context block + the ratification-level arms"
 module = "project-trajectory/scripts/intake.py"
 code_symbol = """intake_after_merge/mint_gap_rows/parse_dispositions/next_wi_id/context_block/flip_verified"""
@@ -1537,7 +1537,7 @@ component = "CMP-008"
 phase = 4
 
 [design.LLR-154]
-sr_refs = ["SR-170"]
+sr_refs = ["SR-174"]
 title = "The merge slot's post-merge intake arm"
 module = "project-trajectory/scripts/integrate.py"
 code_symbol = "integrate_one/_lane_bar_directives/_refresh_bar"

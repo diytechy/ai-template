@@ -34,7 +34,7 @@ resource: "generated"
 | [SR-036](SR-036.md) | Deliberate re-sync integration |
 | [SR-040](SR-040.md) | Per-phase routing and review dial |
 | [SR-043](SR-043.md) | Subagent spawn gate |
-| [SR-046](SR-046.md) | Run capability menu |
+| [SR-046](SR-046.md) | Declared runnable capabilities reachable from the repository root |
 | [SR-049](SR-049.md) | Derived gate from artifact states |
 | [SR-052](SR-052.md) | Dashboard accessibility (rubric-adjudicated) |
 | [SR-053](SR-053.md) | Dashboard UI uniformity (rubric-adjudicated) |
@@ -74,3 +74,7 @@ resource: "generated"
 | [SR-168](SR-168.md) | The state view shows current progress and next work |
 | [SR-169](SR-169.md) | The state view shows how the parts connect |
 | [SR-170](SR-170.md) | Shared authority surfaces are the serial actor's alone |
+| [SR-171](SR-171.md) | Bounded retry on a declared transient model limit |
+| [SR-172](SR-172.md) | A stalled session ends at its declared limit |
+| [SR-173](SR-173.md) | Shared regeneration is ordered and leaves no partial result |
+| [SR-174](SR-174.md) | Work-item identity is allocated once and never re-issued |

@@ -36,6 +36,50 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17b — five of Sol's six queued row-calls APPLIED; F11 declined.**
+  Owner: *"apply all of SOL's queued recommendations except for F11, adapting
+  any as you need."*
+  **F16 (`SR-147`) cleared a GATING finding** — the shall carried the
+  migration history plus a second obligation; re-voiced to one, so
+  `form-findings` drops **2 → 1** and `SR-140` is now the only row holding the
+  `traceability` step red. The 13v waiver it carried covered the one-`shall`
+  finding only and is now SPENT; the row says so.
+  **F12 (`SR-026`) adapted: MINTED rather than deleted.** Its acceptance
+  carried backoff and stall-abort, which the shall never stated — an
+  acceptance cell minting a requirement. Sol offered delete-or-mint; both
+  describe live behaviour, so `SR-171` (bounded retry on a declared transient
+  provider limit) and `SR-172` (a stalled session ends at its declared limit)
+  were minted, deliberately as TWO rows: they fail for opposite reasons — an
+  unbounded backoff is what SR-172 catches, and a stall limit firing on a
+  legitimately slow provider is what SR-171's bound prevents.
+  **F14 (`SR-046`)** was a menu specification — numbered menu, direct launch,
+  machine listing, empty-declaration text, exit passthrough, declaration
+  grammar — a decomposition wearing a requirement's clothes. Now one
+  capability-level decision. **F15 (`SR-129`)** shed the spec-folder layout,
+  the retired CSV and the drained-stop mechanics from its shall.
+  **F18 (`SR-170`) split three ways**: it keeps the exclusive-writer contract,
+  `SR-173` takes ordered-and-no-partial-result, `SR-174` takes identity
+  allocation. Children moved with the obligations — `LLR-142`→`SR-173`,
+  `LLR-153`/`154`→`SR-174`, `TC-135`→`SR-173`, `TC-147`/`148`/`158`→`SR-174`,
+  `IF-090`/`091`/`101` re-pointed and `IF-101`'s owner with them. Note what
+  the split surfaced: the non-reuse clause lived ONLY in `SR-170`'s
+  acceptance, the same defect as F12, and now has a shall of its own.
+  **F11 (`SR-040`) DECLINED**, and the record should say why rather than
+  leaving it as an owner preference: its support had already evaporated — the
+  2026-08-16 option-(b) pass gave the tripwire clause two independent lenses,
+  fan-out is 1 against a bound of 7, and the row carries one `shall`, so
+  neither an orphan nor any detector stood behind the split.
+  **Two corrections made mid-application, recorded because both were mine:**
+  the first `SR-129` rewrite used *"would"* in normative text and tripped the
+  modal rule — reworded; and an earlier edit pass broke the TOML by putting
+  double quotes inside a single-quoted `rationale`, caught by the parser,
+  reset and redone with delimiter-aware anchors. Nothing partial was written.
+  Spine `SN=27 SR=67 LLR=155 TC=150`, `orphans=0 integrity=0`, drafted 52 →
+  **56**; gate unmoved at `DevBar-Reqs`; id watermark `SR 170 → 174`. The four
+  mints are `Drafted` and **undecomposed** — no LLR or TC yet, legal for a
+  draft and work someone owes. Full unfiltered suite **2564 passed / 10
+  skipped**, 476s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=6cf13bb8 -->.
 - **2026-08-17a — the hat roster CLOSES at sixteen: `INTEGRITY-RECOVERABILITY`
   and `PRODUCT-FITNESS` ruled `always`.** Owner, in session: *"keep both, as
   long as they can be opted out of downstream users I tend to think default

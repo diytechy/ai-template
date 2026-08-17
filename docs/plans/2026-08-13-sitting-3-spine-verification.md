@@ -470,25 +470,30 @@ taken in advance.
    that most needs your judgement, since declaring a throughput measure
    commits the repo to measuring it.
 
-**THE SIX SOL ROW-CALLS — folded onto this desk `2026-08-16p`.** They were
-queued at `2026-08-16o` but lived only in the review file and one log
-paragraph, so the document the sitting runs from did not name six of its own
-calls. Verdicts, evidence and Sol's proposed wordings are in the disposition
-table: [`../reviews/retier-v2/ROUND-SOL.md`](../reviews/retier-v2/ROUND-SOL.md).
-Each is a **live-row re-tier no review round applies unilaterally** — that is
-why they are yours and not the round's.
+**THE SIX SOL ROW-CALLS — FIVE APPLIED `2026-08-17b`, F11 DECLINED.** Owner:
+*"apply all of SOL's queued recommendations except for F11, adapting any as
+you need."* Verdicts and Sol's original wordings remain in
+[`../reviews/retier-v2/ROUND-SOL.md`](../reviews/retier-v2/ROUND-SOL.md).
 
-| # | id | the call |
+| # | id | disposition |
 |---|---|---|
-| 9 | **F11** | **`SR-040` three-way split** — routing / dial banner / resume-size tripwire. **RE-CHECKED `2026-08-17`: this call has WEAKENED and its stated support is stale.** The entry said *"the row's own rationale already concedes the orphaned third clause"* — it no longer does: the 2026-08-16 option-(b) pass gave the tripwire clause **two** independent lenses (`C-UXE-2` a view stays usable as volume grows, `C-UNA-8` the 3am reader of a resume surface is another automated step). **No mechanical detector supports the split either**: fan-out is **1** LLR against a bound of 7, and the requirement carries **one** `shall`. So F11 now rests on the R1 one-decision-per-row READING alone — three conjoined behaviours in one shall — with no orphan and no detector behind it. *(Separately: the rationale is now self-contradictory — "only the tripwire clause is orphaned, **and** two lenses reach it independently" — a wording defect worth fixing whichever way this is ruled.)* |
-| 10 | **F12** | **`SR-026` acceptance-minted obligations** — backoff and stall-abort appear ONLY in acceptance. **RE-CHECKED `2026-08-17`: the finding is UNCHANGED and still exact** — the shall says neither word, the AC says *"a model rate limit backs off rather than failing the run, and a stall aborts to protect the budget"*. Fan-out 3, one `shall`, so again no detector fires; this is a reading call. The fix is either deleting live obligations or minting two SRs. **Scope GREW by one question:** this row's AC also ends *"Read off the current carrier, as the current set: `agent_loop.py`"* — the carrier-filename question (29 of 63 ACs). Rule both on this row at once rather than touching it twice |
-| 11 | **F14** | **`SR-046` menu specification** — a capability-level rewrite plus an LLR fan-out, over a shipped launcher contract |
-| 12 | **F15** | **`SR-129` implementation/history voice** — rewrite proposed; no artifact-altitude waiver is recorded on the row today, which is itself the thing to rule |
-| 13 | **F16** | **`SR-147` history in normative text** — the recorded 13v waiver covers the one-`shall` finding ONLY. Re-word, or widen the waiver? **Note: this row is one of the two holding the `traceability` step red**, so ruling it clears a queued item and a gating step together |
-| 14 | **F18** | **`SR-170` three-way split** — a structural split of a freshly minted S4 row; the sitting that ruled the split rules its follow-on |
+| 9 | **F11** | **DECLINED** — `SR-040` split not taken. Its support had already evaporated (the tripwire clause gained two lenses at option (b); fan-out 1 of a bound of 7; one `shall`), so no orphan and no detector stood behind it |
+| 10 | **F12** | **APPLIED, adapted** — `SR-026`'s acceptance carried backoff and stall-abort, which its shall never stated. Sol offered *delete or mint*; **minted**, because both describe live behaviour: **`SR-171`** (bounded retry on a declared transient limit) and **`SR-172`** (a stalled session ends at its declared limit), split in two because they fail for opposite reasons |
+| 11 | **F14** | **APPLIED** — `SR-046` was a menu specification (numbered menu, direct launch, machine listing, empty-declaration text, exit passthrough, declaration grammar). Now one capability-level decision: every declared capability reachable, the same way, from one declaration, by three kinds of caller |
+| 12 | **F15** | **APPLIED** — `SR-129` shed the spec-folder layout, the retired CSV and the drained-stop mechanics from its shall; they sit at `LLR-136` and in acceptance |
+| 13 | **F16** | **APPLIED — and it cleared a gating finding.** `SR-147`'s shall carried the migration history and a second obligation; re-voiced to one. **`trace.py`'s `form-findings` drops 2 → 1**, so `SR-140` is now the only row holding the `traceability` step red. The recorded 13v waiver is SPENT and says so |
+| 14 | **F18** | **APPLIED** — `SR-170` split three ways. It keeps the EXCLUSIVE-WRITER contract; **`SR-173`** takes ordered-and-no-partial-result, **`SR-174`** takes identity allocation. `LLR-142` → `SR-173`; `LLR-153`/`154` → `SR-174`; `TC-135` → `SR-173`; `TC-147`/`148`/`158` → `SR-174`; `IF-090`/`091`/`101` re-pointed and `IF-101`'s owner with them. The jargon (*shared authority surface*, *mint*, *composed tree*, *serial integration seam*) is gone |
 
-*(F6 — `SR-053`'s circularity — was the seventh; settled at `2026-08-16p`, see
-CLOSED below. F17 was OVERRULED as re-litigating the standing S4 re-stamp.)*
+**Spine after:** `SN=27 SR=67 LLR=155 TC=150`, `orphans=0 integrity=0`,
+`drafted` 52 → **56** (the four mints land `Drafted`, so they are exempt from
+the decomposition rules and the gate is unmoved at `DevBar-Reqs`). Id
+watermark bumped `SR 170 → 174`.
+
+**Two things to know before signing these:** the four new rows are **`Drafted`
+and undecomposed** — they own no LLR or TC yet, which is legal for a draft and
+is work someone owes; and `SR-174` now states the non-reuse clause that used
+to live only in `SR-170`'s acceptance, which was the same
+acceptance-mints-a-requirement defect Sol raised at F12.
 
 **TWO VOCABULARY CALLS RAISED `2026-08-16p`** — both spine-wide, neither
 SN-specific, and both cheap now and expensive after signing.

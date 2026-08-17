@@ -1310,7 +1310,7 @@ status = "Approved"
 phase = 4
 
 [test.TC-135]
-verifies = ["SR-170", "LLR-142"]
+verifies = ["SR-173", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
 tier = "Full"
@@ -1442,7 +1442,7 @@ status = "Approved"
 phase = 4
 
 [test.TC-147]
-verifies = ["SR-170", "LLR-153", "IF-091"]
+verifies = ["SR-174", "LLR-153", "IF-091"]
 level = "Integration"
 method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
 tier = "Full"
@@ -1453,7 +1453,7 @@ status = "Modified"
 phase = 4
 
 [test.TC-148]
-verifies = ["SR-170", "LLR-154", "IF-090"]
+verifies = ["SR-174", "LLR-154", "IF-090"]
 level = "Integration"
 method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
@@ -1563,7 +1563,7 @@ status = "Drafted"
 phase = 5
 
 [test.TC-158]
-verifies = ["SR-170", "IF-101"]
+verifies = ["SR-174", "IF-101"]
 level = "Unit"
 method = """Run the id-watermark suite. It drives trace.py's CLI so the rules are asserted on the EXIT CODE, not just as a function call - the wiring into --strict-integrity is the guarantee, and a suite that only calls watermark_findings() survived deleting it. Covers the mint seam IF-101 declares: next_wi_id counts from the mark, so a deleted id is not re-issued, and the reader's refusal on an absent mark is NOT caught."""
 tier = "Smoke"
