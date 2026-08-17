@@ -164,3 +164,5 @@ resource: "generated"
 | [TC-168](TC-168.md) | Run the agent-loop rate-limit cases against the fake-agent CLI: a throttled session exits… |
 | [TC-169](TC-169.md) | Run the agent-loop stall cases against the fake-agent CLI: consecutive no-commit sessions… |
 | [TC-170](TC-170.md) | Run the trunk-step regen order/commit cases: the executed step sequence follows the decla… |
+| [TC-171](TC-171.md) | Two arms, the push channel only (the pull channel is consent-scoped by design and has no … |
+| [TC-172](TC-172.md) | Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcrip… |

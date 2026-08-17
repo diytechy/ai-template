@@ -252,6 +252,7 @@ reader does not have to reconstruct it from the log:
 | the four Sol-mint SRs **DECOMPOSED** | `SR-171`/`172` gain `LLR-174`/`175` + `TC-168`/`169`; `SR-173` gains `TC-170`; `SR-174` measured already-carried — see the re-written signing note below the Sol table | `2026-08-17d` |
 | three flagged defects **FIXED** | `LLR-153`'s mint detail states the watermark floor; `TC-135` tier `Full`→`Smoke`; `trace_text` `;`-split asymmetry fixed (advisories 114→113, `IF-088` cleared — `IF-128`'s survivor is a REAL owner-vs-endpoint disagreement, now item 18) | `2026-08-17e` |
 | **adversarial round 2 ran** (Sol + Terra via codex, hostile brief, author re-verified) | 6 CONFIRMED · 2 in-part · 1 refuted over `47234903^..HEAD`; nothing applied — the surviving calls are **item 18** | `2026-08-17f` |
+| item 8 **RULED AND APPLIED** | all four WI-468 recommendations adopted: `SR-175`/`176`/`177` minted as labelled derived rows under SN-026/009/027 (+ `LLR-176`/`177`, `TC-171`/`172`); `SN-008`'s hue metonym + `SN-027`'s `why` amended on the open window; C-ACC-2 matched-to-`SR-052`, remainder filed `WI-470` — contrast at the option doc §6 | `2026-08-17h` |
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
@@ -409,7 +410,8 @@ taken in advance.
    `applies_when` grammar would give "off, but keep the text"; see the config
    discussion at `2026-08-16p`. Unfiled and unruled.
 
-8. **The four hat-exposed obligation candidates** — provider egress of commit
+8. ~~**The four hat-exposed obligation candidates**~~ — **RULED AND APPLIED
+   `2026-08-17h`** (the closing block below) — provider egress of commit
    authorship, the privacy finding-record's retention bound, SN-027's
    undeclared throughput budget, and the colour-only signal. Filed as an intake
    row that **mints nothing**; the disposition of each — new need, amendment,
@@ -430,8 +432,8 @@ taken in advance.
    cheapest (a wording amendment to SN-008, no new row); C-PRF-1 is the one
    that most needs your judgement, since declaring a throughput measure
    commits the repo to measuring it.
-   **The intake proposals now EXIST** (`WI-468` closed complete `2026-08-17g`;
-   the ruling is still yours — this item stays OPEN): one section per
+   **The intake proposals now EXIST** (`WI-468` closed complete
+   `2026-08-17g`): one section per
    candidate, grounding measured in the code, all four options costed, the
    refusal case stated honestly, in
    [`2026-08-17-wi468-obligation-intake-options.md`](2026-08-17-wi468-obligation-intake-options.md).
@@ -448,6 +450,25 @@ taken in advance.
    text already states no-colour-alone with the mechanized A3 chain behind
    it (the §4.3 "carried by neither" premise is measurably overstated for
    this one candidate).
+
+   **RULED AND APPLIED `2026-08-17h` — all four recommendations adopted as
+   proposed.** Owner: *"You can break down the spine as you recommend… I
+   want to see how it contrasts with what is available."* Applied: `SR-175`
+   (under `SN-026`), `SR-176` (under `SN-009`, narrowed to
+   value-never-persists) and `SR-177` (under `SN-027`,
+   Drafted-**undecomposed**, no numeric target) minted as labelled derived
+   rows, each `Rationale` naming its deriving charter(s) per the 2026-08-16l
+   form; `LLR-176`/`TC-171` and `LLR-177`/`TC-172` pin what exists (plus a
+   new standing authorship-egress sweep,
+   `tests/test_brief_egress_conventions.py`); `SN-008`'s hue metonym and
+   `SN-027`'s `why` amended as deliberate rides on the open window (both rows
+   `attestation = "pending"`); C-ACC-2 recorded **matched-to-`SR-052`** at
+   the alignment map (§4.3) and the remainder filed as `WI-470`. **The
+   contrast the owner asked for is the option doc's §6** — each new row
+   against what already existed, row-cited. What this sitting still owes
+   here: the countersign — the three Drafted rows ride the LLR/TC
+   draft-ratification sweep, and the two amended needs join the re-attest
+   window.
 
 **THE SIX SOL ROW-CALLS — FIVE APPLIED `2026-08-17b`, F11 DECLINED.** Owner:
 *"apply all of SOL's queued recommendations except for F11, adapting any as

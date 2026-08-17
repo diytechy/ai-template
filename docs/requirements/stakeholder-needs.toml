@@ -161,8 +161,10 @@ acceptance = """The suite bootstraps a temp scaffold and runs every script; `pyt
 
 [need.SN-008]
 kind = "core"
-need = """A reader can believe a green: gates are **honest**, and a green never hides a skipped check, a stub, or an unmet criterion."""
-why = "*Trust what ships*; a false green is worse than a red."
+attestation = "pending"
+amended = "2026-08-17"
+need = """A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet criterion."""
+why = """*Trust what ships*; a false pass is worse than a failure. AMENDED 2026-08-17 (C-ACC-2, hat.ACCESSIBILITY; sitting-3 §0.4 item 8 ruling): the need named its own signal by hue — "believe a green" — and a colour word as the only name for the system's most important signal does not exist for a substantial class of readers. The channel is the verdict, not the hue; the honesty clause is unchanged and no obligation moved. In delivered fact the signal was already the word PASS (console output carries zero ANSI colour), so this amendment makes the need say what the kit does."""
 priority = "M"
 acceptance = """`check.py` **fails** (not skips) on a missing required tool — the explicitly-requested `--lenient` local mode is the one sanctioned degrade to SKIP (SR-006), never a CI/gate default; the no-stub detector and the privacy/secrets floor run at their declared gate."""
 
@@ -249,13 +251,13 @@ acceptance = """`docs/agents.toml` declares (family × model × tier) pair-rows 
 [need.SN-027]
 kind = "core"
 attestation = "pending"
-amended = "2026-08-16"
+amended = "2026-08-17"
 # `perf` is INERT AS ROUTING since the 2026-08-16 ruling made hat.PERFORMANCE
 # `always` in both rosters; kept as SUBJECT metadata (the same reading as
 # SN-023's `a11y`). `unattended` and `scripts` still route.
 tags = ["perf", "unattended", "scripts"]
 need ="""A team gets more than one piece of ready work moving at once: ready work **fans out across bounded parallel lanes**, while mutation of the integration branch stays **serialized and gated**."""
-why = """Throughput: the WI DAG already encodes what may proceed, so a frontier that advances one item at a time idles for no reason. But parallel *integration* is precisely how a reviewed process ships an unreviewed tree — so the fan-out must narrow back to a single serialized, gated seam before anything lands."""
+why = """Admitted concurrency, structurally justified: the WI DAG already encodes what may proceed, so a frontier bounded to one lane idles ready work for no reason; and parallel *integration* is precisely how a reviewed process ships an unreviewed tree — so fan-out is admitted only because it narrows back to a single serialized, gated seam before anything lands. REWORDED 2026-08-17 (C-PRF-1, hat.PERFORMANCE; sitting-3 §0.4 item 8 ruling): the cell led with "Throughput:" — a quantified-speedup claim no instrument here measures, flagged unfalsifiable as written by three independent derivations. The structural claim is the honest justification; the observability the speed claim lacked is SR-177's utilisation report, minted the same day."""
 priority = "S"
 acceptance = """A launch with independent ready WIs runs up to the configured worker ceiling (default 2) concurrently in isolated worktrees; every finished branch lands through one serial, fail-closed integrator that runs the declared bar on the composed tree; `--jobs 1` preserves the serial semantic; a declared pause stops claiming and drains what is already in flight; a crash at any lifecycle boundary recovers from Git history alone, without double-assignment or half-integrated authoritative state. Spec of record: `docs/archive/specs/parallel-wi-dispatch.2026-07-20.md` + `docs/concurrency-restructure.md`."""
 

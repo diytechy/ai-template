@@ -1797,3 +1797,26 @@ test_refs = "(see TC-169)"
 status = "Drafted"
 component = "CMP-008"
 phase = 4
+
+[design.LLR-176]
+sr_refs = ["SR-175"]
+title = "The push-channel inclusion conventions, pinned as they exist"
+module = "project-trajectory/scripts/plan_briefs.py"
+code_symbol = "build_surface + agent_loop.worker_prompt/critique_brief + adjudicate_brief.compose + intake.context_block"
+detail = """The brief composers' inclusion rule as it exists today, pinned so the convention is falsifiable while SR-175's declared-set surface is unbuilt: plan_briefs.build_surface reads ONLY the SR and IF registries (the two-file read IS the redaction boundary - status.md, log.md and every self-assessment are unreachable because the function never names them); adjudicate_brief.compose embeds oneline/name-status logs only, never commit bodies, and excludes docs/log.md by name, as do plan_briefs and intake.context_block; agent_loop.worker_prompt clips predecessor Deliverables, an --oneline --no-decorate log and a --name-status diff at declared caps; agent_loop.critique_brief embeds SR intent, TC Parameters and the rubric files. Across the whole composing path no authorship field is formatted into any prompt: a source sweep of the composing modules and the shipped prompt templates for the authorship tokens (%an, %ae, %ad, --author, git blame, git show) finds zero hits, and that sweep is a standing test rather than a one-time measurement. NOT BUILT YET, the same debt-stating pattern as LLR-172: the declared-set surface SR-175 requires (a per-row inclusion/exclusion field on docs/agents.toml, or a process.toml dial) and the planted-credential dispatch block do not exist - this row pins the conventions that declaration will state."""
+rationale = """Pinning the conventions BEFORE the declaration surface exists is what stops the discipline regressing while the row is Drafted: the 2026-08-17 intake measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §1) found the rule real but held in place by nothing, the same shape as the no-stub detector's history - a real property nobody could falsify. The sweep asserts the absence class (no authorship egress) rather than any particular formatting, so a new composer joins the bar by default."""
+test_refs = "(see TC-171)"
+status = "Drafted"
+component = "CMP-008"
+phase = 5
+
+[design.LLR-177]
+sr_refs = ["SR-176"]
+title = "Transcript redaction: matched values never land in tracked history"
+module = "project-trajectory/scripts/agent_common.py"
+code_symbol = "redact_secrets/write_session_log/_SECRET_RES"
+detail = """write_session_log passes every transcript through redact_secrets before the tracked per-session log (docs/iteration/NNN-<stamp>.log) is written: each declared credential shape in _SECRET_RES (API keys, GitHub tokens and PATs, AWS key ids, Bearer tokens, Slack tokens) is substituted with [REDACTED], and the header reports the finding as class plus count ("# redacted: N credential-shaped token(s)") - the matched value has no path into the committed file. Deliberately imperfect by its own docstring: an unknown token shape passes through, and the raw unredacted stream stays in gitignored out/run-logs/ for debugging - the untracked half SR-176's acceptance names. THE GAP, stated as LLR-172 states its own: the set covers the always-on secrets classes only; the PII/identity classes check_privacy adds under the privacy gate are not in _SECRET_RES, so the planted-value observable holds today for credential shapes and not yet for the gate's added classes - extending the set on this same seam is the row's build debt."""
+test_refs = "(see TC-172)"
+status = "Drafted"
+component = "CMP-008"
+phase = 4

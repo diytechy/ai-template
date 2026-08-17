@@ -1704,3 +1704,25 @@ automated = "Yes"
 evidence = """tests/test_trunk_step.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit"""
 status = "Drafted"
 phase = 4
+
+[test.TC-171]
+verifies = ["SR-175", "LLR-176"]
+level = "Integration"
+method = """Two arms, the push channel only (the pull channel is consent-scoped by design and has no filter to test): (a) LEAK BY CONSTRUCTION — a sentinel planted in status.md and log.md never reaches the planning surface, because build_surface's two-registry allowlist read cannot see it; (b) THE AUTHORSHIP SWEEP — a source scan of the prompt-composing modules (agent_loop, plan_briefs, adjudicate_brief, intake, prompts) and the shipped prompt templates finds zero authorship tokens (%an, %ae, %ad, --author, git blame, git show), so no composer formats commit authorship into a brief and a new composer joins the bar by default. The declared-set surface and the planted-credential dispatch block are SR-175's stated build gap and are deliberately NOT tested until built."""
+tier = "Smoke"
+expected = "Satisfies SR-175's declared-inclusion observable to the extent built, via the LLR-176 pinned conventions"
+automated = "Yes"
+evidence = """tests/test_plan_briefs.py::test_build_surface_reads_only_the_two_registries; tests/test_brief_egress_conventions.py::test_no_authorship_token_in_the_prompt_composing_path"""
+status = "Drafted"
+phase = 5
+
+[test.TC-172]
+verifies = ["SR-176", "LLR-177"]
+level = "Integration"
+method = """Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcript and write the session log: each planted value appears 0 times in the written tracked file, [REDACTED] stands in its place, ordinary lines survive intact, and the header names the finding by class and count ("# redacted: 3 credential-shaped token(s)"), never by value. The PII/identity classes are SR-176's stated gap and are deliberately NOT tested until the redaction set carries them."""
+tier = "Full"
+expected = "Satisfies SR-176's planted-value observable for the mechanized classes via the LLR-177 detail contract"
+automated = "Yes"
+evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes"
+status = "Drafted"
+phase = 4

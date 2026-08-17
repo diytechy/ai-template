@@ -382,6 +382,21 @@ Net on legibility: the roster's answer to "is it readable" today is **"it doesn'
 | **C-PRF-1** throughput budget | SN-027's whole justification is speed, it commissions the system's most complex machinery, and declares no measurement of the improvement — unfalsifiable as written. | **needs defect** |
 | **C-ACC-2** colour-only signal | SN-008's "a reader can believe a green" names the system's most important signal by its **colour**; if colour is the only channel the signal does not exist for a substantial class of readers. | **new derived-obligation candidate** |
 
+> **DISPOSITIONED 2026-08-17 (owner ruling, sitting-3 §0.4 item 8; log
+> `2026-08-17h`; option set + contrast:
+> [`2026-08-17-wi468-obligation-intake-options.md`](2026-08-17-wi468-obligation-intake-options.md)
+> §6).** C-DPR-3 → labelled derived **SR-175** under SN-026; C-DPR-2 →
+> labelled derived **SR-176** under SN-009 (narrowed to value-never-persists,
+> the narrowing recorded in the row); C-PRF-1 → labelled derived **SR-177**
+> under SN-027 (the modest utilisation-report form, no numeric target;
+> SN-027's `why` re-worded off the speed claim in the same act); C-ACC-2 →
+> **matched to legacy `SR-052`** — the "carried by neither A/B nor the legacy
+> layer" claim above did not survive contact with SR-052's Approved text
+> (`LLR-113`/`TC-118` mechanize no-colour-alone) — with SN-008's hue metonym
+> amended at need tier and the real remainder filed as coverage `WI-470`.
+> This is the DO-178C feedback half closing: the need owners saw what the
+> lens produced and where it already lives.
+
 ### 4.4 Revised top-10 for the sitting desk
 
 Six entries move. `NEW` = C-only; the last column is the §3.2 rank.

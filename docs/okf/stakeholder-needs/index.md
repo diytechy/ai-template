@@ -18,7 +18,7 @@ resource: "generated"
 | [SN-005](SN-005.md) | AI agents and humans work from the same playbook, and the process is enforced agent-neutr… |
 | [SN-006](SN-006.md) | An agent can run unattended and resume from repository text alone. Such a run never waits… |
 | [SN-007](SN-007.md) | The people maintaining this kit hold it to its own standard: it stays traceable and teste… |
-| [SN-008](SN-008.md) | A reader can believe a green: gates are honest, and a green never hides a skipped check, … |
+| [SN-008](SN-008.md) | A reader can believe a pass verdict: gates are honest, and a pass verdict never hides a s… |
 | [SN-009](SN-009.md) | A team is protected from publishing a secret or private identity: it is caught before it … |
 | [SN-010](SN-010.md) | A reader can navigate the documentation and trust it: navigable and honest — links resolv… |
 | [SN-011](SN-011.md) | An adopting team can run every check on a clean Python 3.11+ with minimal, argued depende… |

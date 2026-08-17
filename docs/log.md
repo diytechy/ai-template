@@ -36,6 +36,70 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17h — sitting-3 §0.4 item 8 RULED AND APPLIED ahead of the
+  sitting: all four WI-468 recommendations adopted as proposed — three
+  labelled derived SRs minted, two needs amended on the open window, one
+  coverage WI filed; nothing weakened, no status flip on any existing row.**
+  Owner: *"You can break down the spine as you recommend… I want to see how
+  it contrasts with what is available."* **The contrast the owner asked for
+  is §6 of the option set**
+  ([plans/2026-08-17-wi468-obligation-intake-options.md](plans/2026-08-17-wi468-obligation-intake-options.md))
+  — each new row against its nearest pre-existing rows, what is newly
+  stated, what turned out already covered, row-cited; the alignment record
+  ([plans/2026-08-16-derivation-alignment.md](plans/2026-08-16-derivation-alignment.md)
+  §4.3) carries the four dispositions. The acts: **C-DPR-3 → `SR-175`**
+  under `SN-026` (hat.DATA-PROTECTION with C-SEC-5 + C-LEG-3 converging —
+  the `2026-08-16l` labelled-derived form, deriving charters named in the
+  row): the brief-inclusion rule declared rather than implicit, the
+  per-provider basis/exclusion as the SCOPE of the consent
+  `docs/agents-enabled` grants, the pull-channel design-control limit on the
+  row; decomposed to what exists — `LLR-176` pins the push-channel
+  conventions (the allowlist planning surface, the by-name log exclusions,
+  zero authorship formatting) and `TC-171` binds the existing sentinel test
+  plus a NEW standing sweep (`tests/test_brief_egress_conventions.py`) that
+  turns the intake measurement into a bar; the declared-set surface and the
+  planted-credential dispatch block are the row's stated build gap.
+  **C-DPR-2 → `SR-176`** under `SN-009` (hat.DATA-PROTECTION): any durable
+  finding record identifies by class + location, NEVER the matched value —
+  the deliberate narrowing from the charter's retention/access ask recorded
+  in the rationale (a kit cannot promise retention or access over an
+  adopter's git history; value-never-persists moots both); decomposed onto
+  the existing seam — `LLR-177` (`redact_secrets`/`write_session_log`) +
+  `TC-172` (the planted-value-0-occurrences observable, held by the existing
+  `test_session_log_redacts_credential_shapes`); the PII classes' absence
+  from the redaction set is the stated debt. **C-PRF-1 → `SR-177`** under
+  `SN-027` (hat.PERFORMANCE): report fan-out utilisation (lanes configured /
+  lanes occupied / WIs per wall-hour) from the run's own telemetry, reported
+  never gated, NO numeric improvement target — Drafted-UNDECOMPOSED with the
+  gap stated, because nothing aggregates the telemetry today and an
+  aspirational TC would be a false pass. **C-ACC-2 → NO new row**: recorded
+  matched-to-`SR-052` at the alignment map (its §4.3 "carried by neither"
+  premise measurably overstated — `LLR-113`/`TC-118` mechanize
+  no-colour-alone), and the real remainder — `gen_open_items.py` outside the
+  A3 closure, the process-flow "you are here" marker, the hero-meter
+  identities — filed as coverage `WI-470` under `SR-052` (queued,
+  `workstream = "dashboard"`). **Two deliberate window rides, each an
+  amendment to ratified need text while nothing is signed and no snapshot
+  exists** (the SN-006 precedent, `2026-08-16l`): `SN-008`'s need cell now
+  reads *"a reader can believe a **pass verdict**"* (the channel, not the
+  hue — C-ACC-2 fixed at its source; this amendment is what RE-OPENS the
+  row: `attestation = "pending"`, its first), and `SN-027`'s `why` sheds the
+  bare "Throughput:" claim for the structural admitted-concurrency
+  justification (`amended` moves to 2026-08-17; the row was already
+  pending). Watermark bumped SR 174→177, LLR 175→177, TC 170→172, WI
+  469→470. Counts moved exactly by the mints: SR 67→70, LLR 157→159, TC
+  153→155, drafts 61→68 (+7 = the seven new Drafted rows), orphans=0
+  integrity=0 unchanged, form-findings=1 the pre-existing SR-140 three-shall
+  finding
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=bd67a108 -->.
+  Pre-existing and untouched: the `check_trajectory --strict`
+  hats→spine_carrier undeclared-seam ERROR (verified present at HEAD in a
+  clean worktree; the wi455 lane owns the interface registry). Sitting-3
+  §0.4 item 8 struck to RULED AND APPLIED; the status calls-list entry now
+  reads left-this-list with the sitting owing the countersign (the three
+  Drafted rows ride the LLR/TC draft ratifications; the two amended needs
+  join the re-attest window). Smoke: 1190 passed / 7 skipped, 37s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=bd67a108 -->.
 - **2026-08-17g — WI-468 executed: one intake proposal per hat-exposed
   obligation candidate, grounded in measurement; NOTHING MINTED; every
   disposition rides the sitting.** The option set is

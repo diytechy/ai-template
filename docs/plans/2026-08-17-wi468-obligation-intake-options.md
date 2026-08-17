@@ -455,3 +455,29 @@ and one WI, and mints nothing that duplicates an Approved row.
 
 Every recommendation is a starting position for the sitting; the session
 minted nothing.
+
+---
+
+## 6. The contrast — the ruling applied (2026-08-17, log `2026-08-17h`)
+
+The owner ruled ahead of the sitting: **all four recommendations adopted as
+proposed** (*"You can break down the spine as you recommend… I want to see
+how it contrasts with what is available"*). This section is that contrast:
+each new row against the nearest rows that already existed, what is NEWLY
+stated that no row said before, and what turned out already covered. Every
+claim is row-cited; the sitting countersigns or overturns.
+
+| Ruled item | New row (its one-sentence obligation) | Nearest pre-existing rows | NEWLY stated — no row said this before | Already covered — and by what |
+|---|---|---|---|---|
+| **C-DPR-3** | **SR-175** (Drafted, under SN-026; DATA-PROTECTION + C-SEC-5 + C-LEG-3): briefs dispatched to a model runner are composed under a *declared* inclusion rule, with the per-provider basis/exclusion stated as the scope of the consent `docs/agents-enabled` grants | SN-026's acceptance (the provider registry + consent surface + "logs every selection"); SR-154 (consent gates *selection*); SR-146 (prompts are reviewable files with digests — already C-SEC-5-labelled); SR-017/018/020 (the *write/push*-side secrets floor) | The **content** of a dispatch is governed at all: an inclusion rule readable as a declared set rather than a convention in five functions; the basis on which repository content crosses per provider; consent's *scope* (agents-enabled consented to which-model, never to what-it-is-shown); the pull-channel design-control limit stated on the row | Prompt *reviewability* (SR-146); which-model consent + selection logging (SN-026/SR-154); the write-side scanning path (SR-017/018 — a different boundary: nothing scanned *egress*). The push-channel discipline itself existed in code (allowlist surface, by-name log exclusions, zero authorship formatting) — real but stated by no row; now pinned by LLR-176/TC-171 + a standing sweep test |
+| **C-DPR-2** | **SR-176** (Drafted, under SN-009; DATA-PROTECTION): any durable record of a secrets/privacy finding identifies it by class and location, **never by the matched value** (deliberate narrowing from the charter's retention/access ask, recorded in the row) | SN-009 ("caught before it publishes"); SR-017/018 (the catch itself); the `redact_secrets` seam + `test_session_log_redacts_credential_shapes` — behaviour that existed with **no spine row above it** | The control's **own output** is in scope: a scanner that echoes the matched value into a committed transcript is SN-009 defeating itself, and no row constrained the finding record; the value-never-persists observable (planted value, 0 occurrences in tracked artifacts); the stated gap — PII classes are not yet in the redaction set, live for adopters with the gate on | Catching before publication (SR-017/018/019/020, all four untouched); the credential-class redaction existed as code + one test — now traced as LLR-177/TC-172 under SR-176 instead of hanging requirement-less |
+| **C-PRF-1** | **SR-177** (Drafted-**undecomposed**, under SN-027; PERFORMANCE): the loop reports the utilisation of the fan-out it commissions (lanes configured / lanes occupied / WIs per wall-hour) from its own telemetry — reported never gated, **no numeric improvement target** | SN-027 (whose acceptance is wholly structural); SR-156 (lanes + the serial seam); SR-148 (selection order); the WI-124 telemetry columns; `[smoke-budget]` (the house's declared-figure idiom); SR-167/`check_perf.py` (budget machinery — *product* perf, a different subject, and unwired here) | **Any measurement obligation at all** on SN-027's machinery — three derivations found its throughput claim unfalsifiable as written; the configured-vs-occupied gap made always-visible (would have printed the `lanes=1` fact this program had to find by reading dial code); the explicit no-target narrowing, argued in the row. SN-027's `why` re-worded off the bare "Throughput:" claim in the same act | Nothing. This is the one candidate where the answer is genuinely empty: telemetry seams exist (session-log headers, iteration index) but nothing aggregates them — hence the row lands undecomposed with the gap stated, no aspirational TCs |
+| **C-ACC-2** | **No new row** — SN-008's metonym amended ("believe a **pass verdict**", the channel not the hue); candidate recorded **matched to SR-052** in the alignment record | **SR-052** (`Approved`): *"no information is encoded by color alone"* — verbatim on subject — mechanized as LLR-113 → TC-118 + three drift guards; console output measured word-only (zero ANSI colour); `docs/gate` plain text | Only the need-tier naming: SN-008 said "green" where it meant the verdict — a wording fix, no obligation change. A second SR would have given one meaning two treatments (the CONSISTENCY charter's own failure class) | **Everything but two thin spots and one sweep gap**: the obligation, the mechanization, and the wider surfaces are already conformant. The remainder — `gen_open_items.py` outside the A3 closure, the process-flow "you are here" marker, the hero-meter identities — is filed as coverage **WI-470** under SR-052, not a spine row |
+
+What did NOT survive contact with the registry, stated for the record: the
+alignment map's §4.3 claim that C-ACC-2 was "carried by neither A/B nor the
+legacy layer" (SR-052 carries its core verbatim — annotated at the map); and
+the C-DPR-2/C-PRF-1 charter asks in full (retention/access; a measured
+improvement target) — both deliberately narrowed, with the narrowing argued
+on the rows rather than silently dropped. Everything else landed in the
+proposal's exact shape.

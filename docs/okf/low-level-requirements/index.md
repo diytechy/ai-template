@@ -168,3 +168,5 @@ resource: "generated"
 | [LLR-173](LLR-173.md) | The last_approved snapshot: the record of what was blessed |
 | [LLR-174](LLR-174.md) | Rate-limit recognition + bounded, surfaced wait |
 | [LLR-175](LLR-175.md) | Consecutive no-progress stall guard |
+| [LLR-176](LLR-176.md) | The push-channel inclusion conventions, pinned as they exist |
+| [LLR-177](LLR-177.md) | Transcript redaction: matched values never land in tracked history |

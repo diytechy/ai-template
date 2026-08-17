@@ -78,3 +78,6 @@ resource: "generated"
 | [SR-172](SR-172.md) | A stalled session ends at its declared limit |
 | [SR-173](SR-173.md) | Shared regeneration is ordered and leaves no partial result |
 | [SR-174](SR-174.md) | Work-item identity is allocated once and never re-issued |
+| [SR-175](SR-175.md) | Declared inclusion rule for content dispatched to a model provider |
+| [SR-176](SR-176.md) | A privacy finding persists by class and location, never by value |
+| [SR-177](SR-177.md) | Fan-out utilisation reported from the run's own telemetry |
