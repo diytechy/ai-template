@@ -376,7 +376,10 @@ taken in advance.
    `docs/archive/` hold better. **Owner direction (`2026-08-16p`): SN gains
    `status` on the closed spine vocabulary; `attestation`, `amended` AND
    `kind` all die.** Scope + blast radius:
-   [`2026-08-16-registry-status-unification.md`](2026-08-16-registry-status-unification.md).
+   [`2026-08-16-registry-status-unification.md`](2026-08-16-registry-status-unification.md)
+   — whose §5 gained step 7 by owner ruling `2026-08-17k`: the execution also
+   closes the SN schema census (`spine_carrier.SPINE_TIER_KEYS` gains
+   `"SN-ID"`, wiring SN into the dogfood drift check it alone sits outside).
    The call the sitting makes is whether to run it BEFORE signing — no
    snapshot exists, so today it costs zero re-attestation and afterwards it
    costs a re-attest of every touched row. **The survey it triggered found the

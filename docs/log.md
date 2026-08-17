@@ -120,6 +120,19 @@ why (one bullet each; cite ids)._
   plan doc's `WI-471` link broke when the spec moved to `complete/` — fixed
   by re-pointing it; full unfiltered suite **2571 passed / 10 skipped**, 433s
   <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=166b406d -->.
+- **2026-08-17k — the SN schema census RULED INTO item 6's execution as its
+  step 7.** Owner ("Yes add in"), closing the no-single-home flag from the
+  WI-471 sweep (`2026-08-17j`): `spine_carrier.SPINE_TIER_KEYS` has no
+  `"SN-ID"` entry, so SN is the one spine tier outside `test_dogfood_sync`'s
+  three-leg template ↔ live ↔ schema drift check — the guard gap that let the
+  template ship without `tags`. The census entry lands WITH the status
+  unification (post-unification key set), not before it — adding it now would
+  pin the dying `kind`/`attestation`/`amended` fields and force a second
+  edit. Homes updated: the unification plan's §4/§5 (the full statement) and
+  sitting-3 §0.4 item 6 (one-line pointer). Alternatives passed over: fixing
+  the census immediately (rejected on the two-edit cost), filing a separate
+  WI (rejected — item 6's session rewrites the SN schema anyway; one home,
+  one landing).
 - **2026-08-17i — shipped-docs staleness audit run and its missing work item
   filed as `WI-471`; no shipped surface prematurely adopts an unruled
   state.** The owner asked whether `PROCESS.md` and the associated shipped

@@ -170,7 +170,9 @@ failure mode this whole change exists to prevent.
 "MATURITY IS A FIELD, NOT A SECTION" header block is rewritten),
 `RESYNC_PACK.md` (a migration entry — this is a **downstream-visible schema
 change**, so adopters need the note), this repo's own
-`stakeholder-needs.toml` (27 rows).
+`stakeholder-needs.toml` (27 rows), and **`spine_carrier.SPINE_TIER_KEYS`
+gains its missing `"SN-ID"` entry** (owner ruling 2026-08-17, deliverable
+added below as step 7).
 
 **Tests:** 23 SN-specific `kind` assertions across 5 files —
 `test_check_docs.py`, `test_check_need_form.py`, `test_migrate_carrier.py`,
@@ -197,6 +199,19 @@ shape:
 5. **Delete `kind`** from the 27 rows and the template; rewrite the template
    header.
 6. **`RESYNC_PACK.md` entry** + the tests + the goldens.
+7. **Close the SN schema census** (owner ruling 2026-08-17, log
+   `2026-08-17k`; the guard gap behind the template's missing `tags`, found
+   at the shipped-docs audit — log `2026-08-17j`). Add the `"SN-ID"` entry to
+   `spine_carrier.SPINE_TIER_KEYS` with the POST-unification key set
+   (`status · tags · need · why · priority · acceptance`), and wire the SN
+   tier into `test_dogfood_sync`'s three-leg template ↔ live ↔ schema
+   comparison — SN is today the ONE spine tier outside it, which is exactly
+   how the template shipped without `tags` while the live registry gained it.
+   The need table's `[need.SN-###]` shape differs from the row tiers, so the
+   test side may need a small reader addition — that wiring is part of this
+   step, not a follow-on. Sequenced HERE deliberately: adding the census
+   before the unification would pin the dying `kind`/`attestation`/`amended`
+   set and force the census to be edited twice.
 
 ## 6. The timing argument
 
