@@ -241,54 +241,49 @@ made from this page; the linked homes hold the full evidence for the ones you
 want to go deeper on. A recommendation is a starting position, never a ruling
 taken in advance.
 
-1. **The L1 pair** — `SR-151` + `SR-152` `boundary_refs`.
-   **RE-WORDED `2026-08-16p`: an earlier version of this entry read as though
-   the rows themselves were the question. They are not.** Nothing here deletes
-   a row. The call is **one cell on each row**, and it is an ADD, not a swap:
+1. **The L1 pair — `SR-151` RULED AND APPLIED `2026-08-16p`; `SR-152` is the
+   remaining half.** The owner ruled on **design control**, which is a better
+   criterion than the package-alone acceptance shape this entry previously
+   argued from — the acceptance shape was evidence, design control is the
+   reason. In the owner's words: *"151 just goes to 05, it's just a shipped
+   method… the kit is providing a method for the CI runner to activate, but
+   this template has no design control over an external CI respecting
+   configurations… all it can do is provide a method within the pack for CI to
+   run."*
 
-   | row | today | under the X2 reading |
+   **`SR-151`: `["B-06"]` → `["B-05"]`, applied**, its rationale now carrying
+   the reason. **The frame already reasons this way twice**, which is what
+   makes the ruling a consistency fix rather than a new doctrine:
+   - `REL-002` — the generators ship as **B-05 content** while the workflow
+     running them is *adopted*; those outputs are "NOT system outputs (13u)".
+   - `REL-003` — the model-provider surface lands its obligation on
+     *"delivered loop content (B-05), exercised session-side"* and mints **no
+     crossing** for `EXT-005`. An external runner the kit cannot control was
+     already handled by keeping the obligation on the package.
+
+   **`EXT-004` is now the outlier**: it is the only external entity the kit has
+   no design authority over that still holds crossings. `EXT-003` (Adopter) and
+   `EXT-005` (Model provider) hold none.
+
+   **STILL OPEN — `SR-152` only, and it is not the same call.** Its own
+   rationale names work `SR-151`'s does not: *"the second half of the honest-limit
+   pair the frame's B-04 row states — a local floor is bypassable
+   (`git commit --no-verify`), so no-unchecked-write-enters-governed-state is
+   validatable only as B-04's verdict at the moment of the act PLUS this hosted
+   re-run."* The verdict **comes back**, which is the owner's own alternative
+   reading (*"152 just goes from some CI location to the development
+   environment"*). Three defensible cells:
+
+   | | cell | reading |
    |---|---|---|
-   | `SR-151` | `["B-06"]` | `["B-06","B-05"]` |
-   | `SR-152` | `["B-07"]` | `["B-07","B-05"]` |
+   | **(a)** | `["B-05"]` | symmetric with `SR-151` — the kit ships a method, nothing more. Simplest; drops the honest-limit pair's second half from the frame |
+   | **(b)** | `["B-05","B-04"]` | the method ships in the package AND the verdict returning to the development session is the `B-04` crossing its own rationale already invokes. **Recommended** — it keeps what the row does that `SR-151` does not, without claiming authority over the runner |
+   | **(c)** | `["B-07"]` unchanged | CI is genuinely a separate external actor. The owner's *"CI is part of the user's development kit anyways"* argues against this |
 
-   **Why.** Both rows' acceptance is falsifiable **against the shipped package
-   alone** — `tests/test_ci_tier_declaration.py` pins the shipped workflow's
-   trigger set against the declared `[ci-tiers]` table and **exercises no
-   hosted trigger for either row**. So what is actually verified is a property
-   of the delivered template (`B-05`), not of a crossing act. `SR-139` was
-   ruled exactly this way at **X2** (`["B-02","B-05"]`, on an acceptance
-   falsifiable against the package with no crossing performed). The two rows
-   share one acceptance shape, so the reading applies **to the pair or to
-   neither** — that, and only that, is what "flips for both or for neither"
-   meant.
-   **What the rows are for** (so the call is not made blind): `SR-151` obliges
-   the shipped reference CI workflow to invoke the same documented harness
-   entry point per declared trigger across the declared OS × Python matrix;
-   `SR-152` obliges the CI job verdict to carry the harness's own exit — job
-   fails when the harness exits nonzero, step log names each outcome, no
-   silently skipped required step. Together they are what stops an adopter's CI
-   drifting from the bar their local hook floor runs. Deleting them would
-   delete that obligation.
-   **Impact:** 2 cells. Both rows are `Drafted` and already in this batch, so
-   the edit costs no extra re-attest. No child, test or interface reads either
-   `boundary_refs` cell.
-   **Recommendation: apply the X2 reading to both.** It is the consistent cell
-   under a precedent this repo already set, the acceptance text is the evidence,
-   and the alternative is two rows whose declared crossing nothing in their own
-   acceptance touches.
-   **ORTHOGONAL — do not decide it here (`2026-08-15n` says so explicitly).**
-   That **no interface row realizes `B-06`** is a *different* finding, on the
-   IF side, and it is **not two crossings but four**: the integrity sweep
-   reports `B-01, B-02, B-06, B-07` all realized by no IF row, and it is
-   already deferred as **decision 6**. See item 1a.
-2. ~~**The `SR-144` flip**~~ — **MOOT ON THE FACTS, no action needed**
-   (`2026-08-16p`). SR-144 is already `Modified`: it flipped at `22a915d3`
-   because its **own rationale** gained the hat-derived label, which is an
-   amendment on any reading. The `Modified`-child-under-`Approved`-parent
-   advisory has cleared. *(An earlier draft of this entry also argued the
-   parent should not flip for a child's sake — that argument is **withdrawn**;
-   it contradicts `docs/process.md` §4, which rules the opposite. The live
-   question it raises is now item 15.)*
+   **Impact:** one cell, `Drafted`, in this batch, no re-attest cost. Note the
+   consequence for item 1a: `B-06` now has **zero** citing SRs; under (a) or
+   (b), `B-07` joins it at zero.
+
 1a. **Can `B-06`/`B-07` simply be cut?** — raised by the owner `2026-08-16p`
    ("if the 2 boundary interface could be killed that would be cleaner"), and
    worth a straight answer rather than a deferral.
