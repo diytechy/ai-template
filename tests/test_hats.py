@@ -191,11 +191,15 @@ LIVE_NAMES = [
     "DATA-PROTECTION",
     "ACCESSIBILITY",
     "PERFORMANCE",
-    # The three 2026-08-16 charters, PROVISIONAL-FOR-THE-SITTING (hats.toml's
-    # own comment block carries the findings that motivated them — R-4/R-5/R-6
-    # of the WI-467 hat-aware blind derivation). If the sitting cuts a charter,
-    # its name leaves this pin in the same commit.
+    # CONSISTENCY was drafted 2026-08-16 with the two below it and RULED IN the
+    # same day (owner, in session): the R-4 finding — three blind derivations
+    # failing to produce SR-053's cross-view obligation — accepted as stated. It
+    # holds its drafted position, so this pin's ORDER is unchanged by the ruling.
     "CONSISTENCY",
+    # The remaining two 2026-08-16 charters, PROVISIONAL-FOR-THE-SITTING
+    # (hats.toml's own comment block carries the findings that motivated them —
+    # R-5/R-6 of the WI-467 hat-aware blind derivation). If the sitting cuts a
+    # charter, its name leaves this pin in the same commit.
     "INTEGRITY-RECOVERABILITY",
     "PRODUCT-FITNESS",
 ]
@@ -221,6 +225,11 @@ LIVE_ALWAYS = [
     # only template-side always-set assertion, and it is untouched by this.
     "ACCESSIBILITY",
     "PERFORMANCE",
+    # Owner ruling 2026-08-16, same session: CONSISTENCY ruled in `always`. It
+    # was already pinned here as a provisional draft, so the ruling moves no
+    # name and changes no assertion — what it changes is that a cut would now
+    # be an amendment rather than a decision never taken. The same flip lands
+    # in the SHIPPED template, so this stays a shared value, not a divergence.
     "CONSISTENCY",
     "INTEGRITY-RECOVERABILITY",
     "PRODUCT-FITNESS",

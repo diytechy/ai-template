@@ -110,6 +110,7 @@ try:
         refs,
         sr_artifact_advisories,
         sr_fanout_advisories,
+        verification_coherence_advisories,
     )
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -129,6 +130,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         refs,
         sr_artifact_advisories,
         sr_fanout_advisories,
+        verification_coherence_advisories,
     )
 
 
@@ -3418,6 +3420,12 @@ def analyze(reg, args):
     # below: warn-first by ruling, cleared by the re-tier campaign, not by a gate.
     sr_artifact_advis = sr_artifact_advisories(srs)
     sr_fanout_advis = sr_fanout_advisories(srs, llrs)
+    # Warn-only, always on: a row whose prose names a critique instrument while
+    # its Verification says otherwise. Its own pipe for the same reason the two
+    # above have theirs — this is a METHOD-coherence finding, not a wording one,
+    # and reporting it under the acceptance-criteria counter would mis-name it
+    # (it scans Requirement and Rationale too). Never joins a failure set.
+    verif_coherence_advis = verification_coherence_advisories(srs)
 
     # Drafted artifacts (derived-gate model §3): the rows exempted from the
     # child-completeness orphan rules + the --require-verified criterion. Listed
@@ -3457,6 +3465,7 @@ def analyze(reg, args):
     findings.llr_status_advis = llr_status_advis
     findings.sr_artifact_advis = sr_artifact_advis
     findings.sr_fanout_advis = sr_fanout_advis
+    findings.verif_coherence_advis = verif_coherence_advis
     findings.if_this_project_advis = if_this_project_advis
     findings.budget_findings = budget_findings
     findings.module_findings = module_findings
@@ -3498,6 +3507,7 @@ def render_report(reg, findings, args, forest):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
+    verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
@@ -3694,6 +3704,12 @@ def render_report(reg, findings, args, forest):
         if not sr_artifact_advis
         else [f"- {f}" for f in sr_artifact_advis]
     )
+    lines += ["", "## Verification-coherence advisories (warn-only)", ""]
+    lines += (
+        ["None. No requirement states two verification methods."]
+        if not verif_coherence_advis
+        else [f"- {f}" for f in verif_coherence_advis]
+    )
     lines += ["", "## Fan-out advisories (warn-only)", ""]
     lines += (
         ["None. No SR's direct-LLR fan-out exceeds the declared bound."]
@@ -3870,6 +3886,7 @@ def render_console(reg, findings, args, out, html_out):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
+    verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
     watermark_advis = findings.watermark_advisories
     snapshot_advis = findings.snapshot_advisories
@@ -3900,6 +3917,7 @@ def render_console(reg, findings, args, out, html_out):
         + paraphrase
         + sr_artifact_advis
         + sr_fanout_advis
+        + verif_coherence_advis
         + if_this_project_advis
         + watermark_advis
         + snapshot_advis

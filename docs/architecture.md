@@ -1388,6 +1388,7 @@ Contracts (interfaces): IF-076
 | `is_example(rid)` |  |  |
 | `is_drafted(row)` | A row in the pre-approval `Drafted` state (derived-gate model §3): exempt |  |
 | `norm_module(path)` | A module path reduced to a naming-convention-neutral key (see MODULE_EXTS): |  |
+| `verification_coherence_advisories(srs)` | Warn-only: a real SR row whose PROSE names a critique instrument while its | SR-040, SR-052 |
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |

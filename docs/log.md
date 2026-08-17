@@ -36,6 +36,100 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16p — the retired-rubric acceptance rot corrected on
+  SR-052/053/054, and CONSISTENCY RULED `always` — SR-053 RETAINED.** Two
+  calls in one thread, both owner-ruled in session.
+  **(1) M6 discharged early, against its own deferral.** All three rows have
+  been `Verification=Test` since 2026-07-26 (WI-300, WI-313), yet their
+  `AcceptanceCriteria` still demanded an APPROVE verdict from rubrics whose
+  own headers read RETIRED — a criterion nothing can discharge, which
+  sitting-3 §0.4 item 5 had recorded as deliberately-unfixed-because-pre-v2.
+  Deferring it was the *more* expensive option once measured: all three rows
+  were ALREADY `Modified` and already in the re-attest set, so the amendment
+  cost nothing, while the alternative was an owner attesting text that states
+  an undischargeable criterion. Rewritten to state acceptance as the
+  DECOMPOSED CHAIN — each clause of the shall bound to a child whose TC names
+  the automated test holding it, that binding set CLOSED over the clauses —
+  and with NO artifact named, on the owner's rule that an artifact a TC
+  already lists has no second home in an AC. SR-054 worded narrowly: it keeps
+  one non-automated child (`LLR-055`/`TC-055`), so its closure is over the
+  mechanized clauses only and the residue clause is stated as that child's.
+  No status flips; gate unchanged at `DevBar-Reqs`. Scope of the rot,
+  measured four ways across all 63 SRs: instrument-vs-`Verification`
+  mismatch = these 3 and no others; dangling AC paths = 6, all false
+  positives (downstream-scaffold artifacts this meta-repo does not carry,
+  plus SR-129 naming the retired CSV in terms); AC-named CLI flags absent
+  from their script = 0.
+  **(2) §0.4 item 4 RULED — the charter stays and SR-053 with it.** The
+  owner's opening frame was "SR-053 can be retired unless a mechanical method
+  can be implemented to test", and the condition was found ALREADY MET: the
+  row carries 8 LLRs → 8 TCs, all `Automated=Yes`/`Approved`, 11 test
+  functions that all resolve and pass. Its only dependence on a retired
+  rubric was the AC cell corrected in (1), so the conditional resolved to
+  KEEP on its own terms. What is actually open on this row is PROVENANCE, not
+  verification. Retiring measured concretely: no `Retired` status exists for
+  a spine row (`STATUS_VALUES` = Drafted/Approved/Modified), so retire means
+  delete — 1 SR + 8 LLRs + 8 TCs, no child holding a second parent and no TC
+  verifying a second SR, leaving 11 tests with no anchor. Those tests are not
+  speculative: WI-292 (a 117-CRITIQUE BLOCKER — one hue carrying both status
+  `done` and the EXECUTION meter across 473 fills), WI-294 (the hover ring
+  amber in one emitter, indigo in every other), WI-309 (18 raw font-size
+  literals against 5 declared tokens), WI-311 (7 cross-vocabulary pairs under
+  the ΔE floor). **Passed over:** minting the SN instead — more faithful to
+  the finding, which names a missing NEED rather than a missing lens, but it
+  adds a need row and an attestation to a sitting already carrying 18 amended
+  needs with no `Status` cell to mark them, and the charter draft was already
+  on the desk; and retiring the row WITH its tests, rejected on that defect
+  history. **Executed:** `hat.CONSISTENCY` leaves the provisional block in
+  BOTH rosters identically (no new VALUES divergence, the 0435f996
+  precedent); it holds its drafted position, so `LIVE_NAMES`/`LIVE_ALWAYS`
+  move no name and the ruling changes no assertion — what it changes is that
+  a future cut is now an amendment rather than a decision never taken. R-5
+  (INTEGRITY-RECOVERABILITY) and R-6 (PRODUCT-FITNESS) did NOT move and this
+  ruling is stated in both rosters as no evidence about them. The narrower
+  finding SURVIVES and is recorded in SR-053's rationale so a future cut
+  re-opens the right question: no stakeholder need states cross-view
+  coherence, so the LENS, not a need, is what reaches this row.
+  **(3) The residue closed in the same session, on the owner's ruling.**
+  *The `Rationale` cells:* all three asserted the retired method one cell over
+  from the AC — SR-052's said outright that "a row claiming a mechanized
+  verification would assert a green that nothing actually checks" while the
+  row carried 20 passing tests. Reworded to state why the bar exists and that
+  its clauses were pinned one at a time; the history claim is simply gone,
+  which the stand-alone rule wanted anyway. *The missing enforcer:* the gap
+  was real — `trace.py` had an AC lint (`ac_advisories`) but NO rule
+  comparing a row's prose against its `Verification` field, which is why
+  every strict gate passed at rc=0 for three weeks. Now
+  `verification_coherence_advisories` (`trace_text.py`, warn-only, its own
+  pipe, ships downstream free). Two design calls, both MEASURED against the
+  live corpus rather than assumed: `Requirement` is NOT scanned — it fired on
+  SR-040, whose shall enumerates the session phases a coordinator routes
+  (`…/DESIGN-CHECK/CRITIQUE`), where the word names a phase and claims no
+  verdict; and the rubric token is the BARE word, not a path — the
+  path-anchored form missed all three rationales, whose rot had shed the path
+  and kept the claim, while the bare word hits exactly those three across all
+  63 rows and nothing else. `adjudicat\w*` was measured and REJECTED (adds
+  SR-137/SR-148, both naming the loop's adjudication arm — two false
+  accusations, no extra catch). Demonstrated live in both directions: it
+  named the three rows, and cleared to zero when they were fixed.
+  **(4) The advisory critique NOT re-armed — owner ruling.** RULING-5 retired
+  SR-054's perceptual gate and called the residue "the periodic advisory
+  critique", but `perceptual-stale` selects on `Verification=Critique` SRs
+  and that set went empty with the flip, so nothing has re-fired it: TC-055's
+  evidence is `074-CRITIQUE.md` (2026-07-15) and the render surface has taken
+  **80 commits** since. Re-arming it on TC `level="Critique"` was the obvious
+  one-line fix and is REFUSED: the critic is an LLM, the trigger is *any*
+  render-surface change, so it would re-fire on essentially every spine
+  change — and it "was not working well before". ACCEPTED INSTEAD, as a
+  stated Prose gap rather than a pending action: SR-054's reader-experience
+  clause rests on a one-time recorded judgement, not a standing
+  re-judgement. Said plainly in the row and at the child so it is never
+  implied as live coverage; `perceptual-stale` itself is untouched and stays
+  correct for a downstream repo that declares a Critique SR.
+  Audit unchanged by the ruling (10 always / 6
+  conditional, 0 unknown tokens) — correctly, since the charter was already
+  `always` as a draft. Full unfiltered suite 2563 passed / 10 skipped, 426s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=aef0ed9b -->.
 - **2026-08-16o — the CROSS-FAMILY ROUND (GPT-5.6 Sol via codex, medium,
   read-only) — CHANGES-REQUESTED, 22 findings dispositioned; the sitting
   surfaces refreshed; two plans archived.** The round the v2 close still

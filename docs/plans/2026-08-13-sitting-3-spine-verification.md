@@ -213,30 +213,50 @@ its evidence is; none was taken in advance.
    package-alone acceptance shape, so the attribution flips **for both or for
    neither**. Untouched by v2 on purpose (`2026-08-15n`, re-confirmed
    `2026-08-16g`).
-2. **The `SR-144` flip** — its child and TC are `Modified` while the owning SR
-   stays `Approved`, so the M4 correction is invisible to the brief and the
-   gate. Flipping an owning SR is an attestation act v2 excluded from its own
-   scope (`2026-08-16h`, re-stated `2026-08-16i`).
+2. ~~**The `SR-144` flip**~~ — **MOOT ON THE FACTS, no action needed**
+   (`2026-08-16p`). SR-144 is already `Modified`: it flipped at `22a915d3`
+   because its **own rationale** gained the hat-derived label, which is an
+   amendment on any reading. The `Modified`-child-under-`Approved`-parent
+   advisory has cleared. *(An earlier draft of this entry also argued the
+   parent should not flip for a child's sake — that argument is **withdrawn**;
+   it contradicts `docs/process.md` §4, which rules the opposite. The live
+   question it raises is now item 15.)*
 3. **The `Consumes` owner-side reading** — which reading of "owner" governs
    decides ~20 more IF rows that today stay SR-owned; the IF-031/F6 precedent
    read it as the-module-that-holds-the-code (`2026-08-16g`).
-4. **`SR-053` and the CONSISTENCY charter** — cross-view consistency is
-   derivable from **no current input**: no need states it and, before this
-   pass, no roster charter asked it. The provisional CONSISTENCY charter is now
-   its first deriving lens, and **cutting the charter re-opens the row's
-   disposition** — 8 LLRs and 8 TCs rest on it (`2026-08-16k`, `2026-08-16l`).
-5. **The retired-rubric acceptance on `SR-052`/`SR-053`** — both demand a
-   CRITIQUE verdict from rubrics that declare themselves RETIRED: an
-   undischargeable criterion, confirmed and deliberately **not** fixed because
-   it predates v2 (M6, `2026-08-16h`).
-6. **The SN-tier amendment-marker gap** — the needs registry has no `Status`
-   cell, so an amended need cannot mark itself; the 18 amended rows are named
-   in a PENDING RE-ATTEST block in the registry header (the SN-005 precedent).
-   Recorded as a finding, not fixed (`2026-08-16l`).
-7. **The three provisional hat charters** — CONSISTENCY (R-4),
-   INTEGRITY-RECOVERABILITY (R-5), PRODUCT-FITNESS (R-6), added `always` to
+4. ~~**`SR-053` and the CONSISTENCY charter**~~ — **RULED `2026-08-16p`, see
+   CLOSED below.**
+5. ~~**The retired-rubric acceptance on `SR-052`/`SR-053`**~~ — **CORRECTED
+   `2026-08-16p`, see CLOSED below.** M6 is discharged; the residue it leaves
+   (the three `Rationale` cells, and the missing AC-vs-`Verification` lint) is
+   named there and is **not** ruled.
+6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
+   earlier framing ("no `Status` cell") understated it. The tier encodes
+   status across **three** fields: `kind` = `core`\|`draft` (the ratified and
+   drafted halves, mixed into the same field as the `edge` ROW-TYPE value),
+   plus `attestation = "pending"` and `amended = "<date>"` added at Sol's F2.
+   Two defects, both owner-named: the pair invents semantics the agreed
+   vocabulary already had a word for, and `amended` puts **history in a
+   registry whose job is living truth** — the class `provenance_findings`
+   already forbids in prose but cannot see in a field, and which git and
+   `docs/archive/` hold better. **Owner direction (`2026-08-16p`): SN gains
+   `status` on the closed spine vocabulary; `attestation`, `amended` AND
+   `kind` all die.** Scope + blast radius:
+   [`2026-08-16-registry-status-unification.md`](2026-08-16-registry-status-unification.md).
+   The call the sitting makes is whether to run it BEFORE signing — no
+   snapshot exists, so today it costs zero re-attestation and afterwards it
+   costs a re-attest of every touched row. **The survey it triggered found the
+   split is NOT SN-only** (that doc §0): four field names across the registries
+   (`status`, `kind`+`attestation`, `approval`, `state`), and
+   `components.state`'s shipped vocabulary re-uses `planned` and `verified` —
+   two words D-9 retired from the spine — for unrelated meanings, where
+   `check_vocab.py` cannot see them. The off-spine half is a separate step.
+7. **The two remaining provisional hat charters** —
+   INTEGRITY-RECOVERABILITY (R-5) and PRODUCT-FITNESS (R-6), added `always` to
    `hats.toml` **and to the shipped template**, so ruling them is a kit-level
-   act, not a repo-local one (`2026-08-16l`).
+   act, not a repo-local one (`2026-08-16l`). Their sibling CONSISTENCY (R-4)
+   was ruled in at `2026-08-16p`; **that ruling is no evidence about these
+   two** — each was drafted from its own finding and each is ruled on its own.
 8. **The four hat-exposed obligation candidates** — provider egress of commit
    authorship, the privacy finding-record's retention bound, SN-027's
    undeclared throughput budget, and the colour-only signal. Filed as an intake
@@ -244,10 +264,65 @@ its evidence is; none was taken in advance.
    labelled derived requirement, or refused — is yours (alignment map §4.3,
    `2026-08-16l`).
 
+**THE SIX SOL ROW-CALLS — folded onto this desk `2026-08-16p`.** They were
+queued at `2026-08-16o` but lived only in the review file and one log
+paragraph, so the document the sitting runs from did not name six of its own
+calls. Verdicts, evidence and Sol's proposed wordings are in the disposition
+table: [`../reviews/retier-v2/ROUND-SOL.md`](../reviews/retier-v2/ROUND-SOL.md).
+Each is a **live-row re-tier no review round applies unilaterally** — that is
+why they are yours and not the round's.
+
+| # | id | the call |
+|---|---|---|
+| 9 | **F11** | **`SR-040` three-way split** — routing / dial banner / resume-size tripwire. Mints ids and re-tiers children; the row's own rationale already concedes the orphaned third clause |
+| 10 | **F12** | **`SR-026` acceptance-minted obligations** — backoff and stall-abort appear ONLY in acceptance. The fix is either deleting live obligations or minting two SRs, both sitting calls |
+| 11 | **F14** | **`SR-046` menu specification** — a capability-level rewrite plus an LLR fan-out, over a shipped launcher contract |
+| 12 | **F15** | **`SR-129` implementation/history voice** — rewrite proposed; no artifact-altitude waiver is recorded on the row today, which is itself the thing to rule |
+| 13 | **F16** | **`SR-147` history in normative text** — the recorded 13v waiver covers the one-`shall` finding ONLY. Re-word, or widen the waiver? **Note: this row is one of the two holding the `traceability` step red**, so ruling it clears a queued item and a gating step together |
+| 14 | **F18** | **`SR-170` three-way split** — a structural split of a freshly minted S4 row; the sitting that ruled the split rules its follow-on |
+
+*(F6 — `SR-053`'s circularity — was the seventh; settled at `2026-08-16p`, see
+CLOSED below. F17 was OVERRULED as re-litigating the standing S4 re-stamp.)*
+
+**TWO VOCABULARY CALLS RAISED `2026-08-16p`** — both spine-wide, neither
+SN-specific, and both cheap now and expensive after signing.
+
+15. **Does a chain change flip its attestation unit?** `docs/process.md` §4
+    rules that it does — *"the SR is the attestation unit — flip it whenever
+    its chain changes"* — and `trace_text.modified_chain_advisories` enforces
+    it warn-tier, telling an author to flip the parent or the child's marker is
+    dead weight. The owner challenged the rule at this sitting: if the parent's
+    own text has not moved, its attestation arguably still holds, and the flip
+    asserts SCOPE rather than CONTENT. Both readings are coherent — attest a
+    chain, or attest a cell — and the current rule is the chain reading. **This
+    is a change to the load-bearing core, not a row-level call**: it governs
+    every tier, the re-attest brief, the pending-owner projection and one
+    advisory. Recorded, not taken.
+16. **The third status word.** The closed vocabulary is `Drafted` \| `Approved`
+    \| `Modified`. The owner floated *"drafted, approved, and **founded** (or
+    decomposed to its dependencies)"* — a state meaning *this row's children
+    exist and answer it*, which `Modified` does not say. Note the enum was
+    closed deliberately on 2026-08-15 (OI-30 D1 folded `Planned` out on the
+    argument that a near-synonym gets applied inconsistently), so adding a
+    fourth value re-opens exactly that question. Recorded, not taken.
+
 **CLOSED TODAY — the sitting only countersigns these.** They are owner rulings
 already executed; listed so the sitting knows it is reading a settled state
 rather than an open one, and so an overrule is a deliberate act.
 
+- **`SR-053` RETAINED and `hat.CONSISTENCY` ruled `always`** (`2026-08-16p`) —
+  the "retire unless it can be tested mechanically" condition was found
+  **already met** (8 LLRs → 8 TCs, 11 automated tests, all green); the row's
+  only dependence on a retired rubric was its AC cell, corrected in the same
+  ruling. What stays open on the row is **provenance, not verification**, and
+  it is now answered by a lens rather than a need — the narrower finding (no
+  need states cross-view coherence) is recorded in the row's `Rationale`, so
+  cutting the charter later re-opens the right question. R-5/R-6 unmoved.
+- **The retired-rubric acceptance corrected on `SR-052`/`SR-053`/`SR-054`**
+  (`2026-08-16p`) — acceptance restated as the decomposed LLR/TC chain with no
+  artifact named. Two residues named and **not** ruled: the three `Rationale`
+  cells still assert the retired method, and `trace.py` has no
+  AC-vs-`Verification` coherence lint.
 - **Option (b) — hat-derived labels over SN amendment** for the quality family;
   16 rows labelled, `SR-155` alone left lens-less (`2026-08-16l`).
 - **ACCESSIBILITY and PERFORMANCE ruled `always`** — the switched-off-hat

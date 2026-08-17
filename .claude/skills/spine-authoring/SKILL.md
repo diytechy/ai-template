@@ -131,6 +131,16 @@ Four questions:
   identity lives at the trace homes: the LLR `Module` cell, the TC `Evidence`
   cell, `Implements:` back-links, registry ids. Trace media are explicitly open
   — code-comment back-links are a legitimate trace carrier, not a lesser one.
+  **An artifact the TC already lists has no second home in the AC**: the second
+  copy is the one that goes stale, and it goes stale silently because nothing
+  joins the two cells.
+- **State acceptance as the CONDITION, never as the instrument.** "A CRITIQUE
+  session returns APPROVE against `<rubric>`" names a machine; "each clause of
+  the requirement is bound to a child whose TC names the test holding it, and
+  that binding set is closed over the clauses" names a condition. The second
+  survives the instrument being replaced — which it will be, every time a
+  subjective clause is mechanized. For a decomposed row the honest AC is
+  usually *the chain, passing, closed over the clauses*.
 - **Descend only where a mechanized check earns its keep** (`docs/process.md`
   §3, "over-aggressive traceability is a failure mode in its own right"). Where
   the honest floor is a human's judgement, name the verification `Attest` rather
@@ -153,7 +163,18 @@ Four questions:
   understates it (a needs defect, not an SR defect), **(iii)** true accretion.
 - **The three authoring advisories** (§2d) read as a cheap standing sweep over an
   existing registry: run `scripts/trace.py` and read the artifact, shared-artifact
-  and fan-out sections as a worklist of rows to re-adjudicate.
+  and fan-out sections as a worklist of rows to re-adjudicate. The
+  **verification-coherence** section joins the same sweep: it names a row whose
+  prose claims an instrument its `Verification` field contradicts.
+- **The method-flip sweep — do this by hand, no checker covers it whole.** When
+  a row's `Verification` changes, EVERY prose cell it owns is suspect, not just
+  the one you came for. A row mechanized out of `Critique` typically leaves the
+  claim in three places: the AC (the instrument), the rationale (the argument
+  that the instrument was *necessary* — often phrased as "a mechanized
+  verification would assert a green nothing checks", which the row's own passing
+  tests then refute), and the retired instrument's own header. Sweep the row,
+  its children, and anything citing the retired instrument, in the same commit
+  as the flip.
 - **The ratify brief.** `scripts/trace.py --ratify <scope>` renders the batch's
   SN→SR→LLR→TC hierarchy with prose for the acceptor to read, and
   `--ratify modified` renders the per-cell before/after re-attestation brief.
@@ -193,3 +214,58 @@ One line each, each one seen in a real spine:
 - **Package-wide properties with no home** — an obligation cited as a secondary
   clause in many rows and as the subject of none is uncovered, however many
   citations it has.
+- **Acceptance rot after a method flip** — a row states one verification method
+  in its `Verification` field and a different one in its prose. Every strict
+  gate passes at rc=0 while the row instructs a reader to obtain a verdict its
+  own method cannot produce. (Seen: two rows mechanized out of `Critique`, whose
+  acceptance went on demanding an APPROVE verdict from rubrics whose own headers
+  by then read RETIRED — three weeks and several reviews before it surfaced,
+  because nothing compared the two cells.)
+- **A citation that outlives its instrument** — retire-don't-delete is right for
+  the instrument and wrong for the rows citing it. Retiring a rubric without
+  sweeping its citers converts every one of them into an undischargeable
+  criterion.
+- **The unwired marker** — a state field nobody reads. Adding it is not the same
+  as wiring it, and a marker with no consumer is the original gap with a better
+  name. Ask, at the moment you add it: which checker, gate or brief changes
+  behaviour because of this cell? If the answer is none, say so in the row.
+- **A chain amended without its attestation unit** — the SR is the attestation
+  unit (`docs/process.md` §4: *flip it whenever its chain changes*), so a
+  `Modified` LLR or TC under an `Approved` SR leaves the amendment invisible to
+  the re-attest brief, the pending-owner-actions projection and the gate — all
+  three key off the SR row. `trace.py`'s chain advisory names it. Note what the
+  rule costs, because a reader will feel it and should know it is deliberate:
+  the parent's own text has NOT changed, so the flip asserts scope rather than
+  content. Amend and flip in the same commit.
+
+## 6. Cell hygiene — a registry holds living truth
+
+Tiering decides *which row* says a thing. These decide *what a cell may hold at
+all*, and they cut across every tier. Each is cheap to violate and expensive to
+find later, because the mechanized detectors mostly read PROSE and these
+failures hide in FIELDS.
+
+- **A cell states what is true now — never when it changed.** Provenance has
+  homes that cannot drift: git, the log's decisions, the archive. A field
+  recording an amendment date is the same defect the stand-alone rule forbids in
+  prose, and it survives only because the checker reads text, not schema. If you
+  are about to add `amended`, `updated`, `since` or a version stamp to a
+  registry row, the fact already exists somewhere better.
+- **One vocabulary per axis, across every tier.** If three tiers say `Drafted`
+  and the fourth says something else for the same state, a reader must learn a
+  different field per tier and every cross-tier query grows a special case.
+  Reach for the vocabulary that exists before minting a parallel one — a new
+  marker for a state the spine already names is a synonym, not a feature.
+- **Do not declare what the row already derives.** If a field's value is a
+  function of the other cells — a type implied by which fields are present, an
+  owner implied by a link — it is a second source that can disagree with the
+  first. A redundant cell can be deleted; a *disagreeing* one cannot, and you
+  will not know which you have until it disagrees.
+- **One question per field.** A field answering two unrelated questions (a
+  maturity state and a row type in one `kind`) cannot be queried for either
+  without knowing the other, and neither half can change vocabulary
+  independently.
+- **Prefer the smallest closed vocabulary that stays honest.** Enum values are
+  cheap to add and near-impossible to remove once rows carry them; a value whose
+  meaning overlaps an existing one will be applied inconsistently from the day
+  it lands.

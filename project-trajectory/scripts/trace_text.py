@@ -166,6 +166,74 @@ _PREDICATE_RE = re.compile(
 )
 
 
+def verification_coherence_advisories(srs):
+    """Warn-only: a real SR row whose PROSE names a critique instrument while its
+    `Verification` field declares some other method.
+
+    **Two cells describing one thing, compared by nothing.** A row states its
+    verification method twice — once as the `Verification` enum, once in the
+    prose that says how anyone would know the row is satisfied. Nothing checked
+    that the two agreed, and the failure is silent by construction: the enum
+    still validates, the joins still resolve, every strict gate passes at rc=0
+    while the row instructs a reader to obtain a verdict its own method does not
+    produce. Measured occasion (kit meta-repo, log `2026-08-16p`): SR-052/053
+    flipped `Critique`->`Test` on 2026-07-26 when their anchors were bound to
+    tests, and their AcceptanceCriteria went on demanding an APPROVE verdict
+    from rubrics whose headers by then read RETIRED. Three weeks, several
+    reviews and a full re-tier pass read those rows without the mismatch
+    surfacing mechanically.
+
+    Scanned cells: `Rationale` and `AcceptanceCriteria` — the defect is not the
+    AC's alone. A `Rationale` arguing that acceptance *is* adjudicated by an
+    independent eye rots exactly as hard on a row carrying twenty passing tests,
+    and lives one cell over from where anyone looks.
+
+    `Requirement` is NOT scanned, and the exclusion is measured rather than
+    assumed: scanning it fired on SR-040, whose shall enumerates the session
+    phases a coordinator routes (`PLAN/BUILD/REVIEW-A/REVIEW-B/DESIGN-CHECK/
+    CRITIQUE`) — the word there NAMES a phase, it does not claim a verdict. The
+    distinction is not cosmetic: a requirement cell states the obligation, while
+    the METHOD claim this lint hunts lives in the two cells that say how anyone
+    would know the obligation is met. Widening back to `Requirement` would put a
+    standing false accusation on a correct row, which is the fastest way to
+    teach an author to skip this pipe.
+
+    ONE DIRECTION ONLY. A `Verification=Critique` row that names no instrument is
+    NOT reported: the rubric it is judged against is the `docs/rubrics/`
+    convention's business and a row may legitimately leave the naming to its TC,
+    so the reverse check would fire on correct rows. Warn-only, never the exit
+    code — the fix is a re-worded cell, which is an amendment on the author's
+    schedule, not a gate's.
+
+    Known and accepted under-detect, stated so it is never implied as covered:
+    detection is the token AS WRITTEN, so a cell that describes a critique
+    without using the vocabulary ("judged by a fresh independent session")
+    passes. Warn-only makes an under-detect cost a missed hint, while a looser
+    match would put false accusations in the report."""
+    out = []
+    for rid, r in _real(srs, "SR-ID"):
+        method = (r.get("Verification") or "").strip()
+        if not method or method == "Critique":
+            continue
+        hits = [
+            cell
+            for cell in ("Rationale", "AcceptanceCriteria")
+            if _CRITIQUE_INSTRUMENT_RE.search(r.get(cell) or "")
+        ]
+        if hits:
+            out.append(
+                "SR {} {} names a CRITIQUE instrument (a CRITIQUE, an APPROVE, a "
+                "VERDICT or a rubric) while Verification is {!r} — one row must "
+                "not state two verification methods: a reader told to obtain a "
+                "verdict cannot, and the row's real acceptance is invisible. "
+                "Re-word the cell to the method the row actually uses, or flip "
+                "Verification to Critique (warn-only, never the exit code)".format(
+                    rid, "/".join(hits), method
+                )
+            )
+    return out
+
+
 def ac_advisories(srs):
     """Warn-only findings: real SR rows whose AcceptanceCriteria uses a
     comparative term with no pinning marker anywhere in the cell."""
@@ -450,6 +518,26 @@ def paraphrase_advisories(srs, llrs):
 # path-qualified one (`scripts/trace.py`). Anchored on the literal `.py`
 # extension with a word boundary each side, so "numpy", "happy" and "occupy" —
 # words that merely END in "py" — cannot match: the dot is the whole signal.
+# The CRITIQUE-instrument vocabulary, for the verification-coherence lint below.
+# UPPERCASE-only on the three words, deliberately: the corpus writes the
+# instrument and its verdict in caps ("a fresh CRITIQUE session ... returns
+# APPROVE"), while lowercase "approve"/"critique"/"verdict" are ordinary prose an
+# SR may legitimately use — SR-137 and SR-148 both say "the integrator's verdict
+# gate" about a subsystem. Matching those case-insensitively would cry wolf on
+# the common word and train an author to skip the pipe.
+#
+# `rubric` IS case-insensitive and needs no path, and that half was measured
+# rather than guessed. Across all 63 SR rows of the kit's own registry the bare
+# word appears in exactly the three that carried the defect and nowhere else,
+# while the path-anchored form (`rubrics/`) missed all three — the rot had shed
+# the path and kept the claim ("adjudicated ... against a written rubric").
+# `adjudicat\w*` was measured too and REJECTED: it adds SR-137 and SR-148, both
+# naming the loop's work-item adjudication arm, so it buys two false accusations
+# for no additional catch.
+_CRITIQUE_INSTRUMENT_RE = re.compile(
+    r"(?<!\w)(?:CRITIQUE|APPROVE|VERDICT)(?!\w)|(?i:\brubrics?\b)"
+)
+
 _PY_ARTIFACT_RE = re.compile(r"\b[A-Za-z_][\w./-]*\.py\b")
 
 # The recorded per-row waiver marker. The corpus writes it as

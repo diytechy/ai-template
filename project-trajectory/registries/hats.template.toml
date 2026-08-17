@@ -2,11 +2,11 @@
 # decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
 # THIS FILE IS OWNER TEXT, NOT AGENT TEXT. THIS ROSTER CONTAINS SIXTEEN HATS:
-# thirteen ratified in the kit, and the three cross-cutting lenses at the
-# bottom — CONSISTENCY, INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — still
-# PROVISIONAL there. (History in one clause: six drafted 2026-08-13, the UX
-# pair and the five aspect hats added by ruling 2026-08-13q/s, the three
-# lenses drafted 2026-08-16.) YOU ARE EXPECTED TO EDIT
+# fourteen ratified in the kit, and the two cross-cutting lenses at the
+# bottom — INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — still PROVISIONAL
+# there. (History in one clause: six drafted 2026-08-13, the UX pair and the
+# five aspect hats added by ruling 2026-08-13q/s, the three lenses drafted
+# 2026-08-16 and CONSISTENCY ruled in the same day.) YOU ARE EXPECTED TO EDIT
 # IT — cut the hats that do not earn their place in your project, add the ones
 # your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
 # That editing is not optional politeness: a roster inherited unread is
@@ -159,24 +159,30 @@ applies_when = "always"
 asks = """Does this need a measurable performance or size bound? If yes, what is the budget, measured on what, and what happens when it is exceeded?"""
 listens_for = """A material speed or size risk left unassessed, or a declared budget with no measurement behind it."""
 
-# --- PROVISIONAL (drafted 2026-08-16, not yet ruled) --------------------------
-#
-# Three CROSS-CUTTING lenses, added after a blind re-derivation exercise found
-# the roster above had no charter for any of them. They are `always` on purpose
-# and that is the half to argue with first: in each case the finding was that
-# the lens was UNREACHABLE, so gating one on a tag would reproduce the defect it
-# was drafted to answer. If a charter is right for your project but fires too
-# widely, the cheap fix is a predicate, not a deletion. Read all three before
-# you keep any: an unread hat is the ceremony this roster exists to prevent.
-
 # Nothing else here asks whether two surfaces agree. The UX pair asks about ONE
 # surface's priority and ONE surface's conditions; MAINTAINER reaches
 # one-definition-per-term, which is about definitions, not presentation. Any
-# product with more than one status-bearing surface has this gap.
+# product with more than one status-bearing surface has this gap. Ruled in
+# 2026-08-16 in the kit's own roster, and `always` there for the reason the
+# provisional block below gives: the finding WAS unreachability, so a tag would
+# reproduce the defect the charter answers. Ruled for the kit, not for you —
+# the editing instruction at the top of this file governs every charter here.
 [hat.CONSISTENCY]
 applies_when = "always"
 asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
 listens_for = """One meaning given two treatments: a status word that differs between two surfaces, one concept carrying two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not."""
+
+# --- PROVISIONAL (drafted 2026-08-16, not yet ruled) --------------------------
+#
+# Two CROSS-CUTTING lenses, added after a blind re-derivation exercise found the
+# roster above had no charter for either of them. They are `always` on purpose
+# and that is the half to argue with first: in each case the finding was that
+# the lens was UNREACHABLE, so gating one on a tag would reproduce the defect it
+# was drafted to answer. If a charter is right for your project but fires too
+# widely, the cheap fix is a predicate, not a deletion. Read both before you
+# keep either: an unread hat is the ceremony this roster exists to prevent.
+# (Their sibling CONSISTENCY was drafted alongside them and ruled in above on
+# 2026-08-16; that ruling is not evidence about these two.)
 
 # Atomic writes, bounded claims and crash recovery normally arrive only through
 # UNATTENDED-OPS, which is tag-gated — so an ATTENDED session that half-writes a

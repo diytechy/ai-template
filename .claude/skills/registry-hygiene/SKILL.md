@@ -61,13 +61,13 @@ call `trace.py` directly to iterate on a specific finding.
   identical *in what*, judged *how* — or accept the wording knowingly at the DevBar-Reqs
   consistency review (process.md §4).
 - **LLR status-coherence advisory** (`WARNING (advisory)`, warn-only — never
-  fails a run) — an LLR reads below `Verified` while every TC that cites it is
-  `Verified`, so the evidence to lift it already exists. Fix: edit the LLR's
-  `Status` cell to `Verified` (registries are hand-owned — no generator writes
+  fails a run) — an LLR reads below `Approved` while every TC that cites it is
+  `Approved`, so the evidence to lift it already exists. Fix: edit the LLR's
+  `Status` cell to `Approved` (registries are hand-owned — no generator writes
   them back). It never gates: LLR status is non-gating under the derived-gate
-  model (the SR's `Verified` drives DevBar-Tests→DevBar-Release), so a lagging LLR is a readout drift,
-  not a coverage hole. A `Modified` LLR is exempt — that below-Verified status
-  is the deliberate re-attest marker (process.md §7), not a drift; do NOT lift
+  model (the SR's `Approved` drives DevBar-Tests→DevBar-Release), so a lagging LLR is a readout drift,
+  not a coverage hole. A `Modified` LLR is exempt — that below-Approved status
+  is the deliberate re-attest marker (process.md §4), not a drift; do NOT lift
   it to silence a warn.
 - **Modified chain advisory** (`WARNING (advisory)`, warn-only, WI-316) — a
   `Modified` LLR/TC whose owning SR is neither `Modified` nor `Draft`. The SR

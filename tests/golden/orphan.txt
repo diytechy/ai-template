@@ -85,6 +85,10 @@ None. No unlifted LLRs, no Modified chain rows riding an unflagged or unresolvab
 
 None. No requirement cell names a concrete artifact.
 
+## Verification-coherence advisories (warn-only)
+
+None. No requirement states two verification methods.
+
 ## Fan-out advisories (warn-only)
 
 None. No SR's direct-LLR fan-out exceeds the declared bound.

@@ -616,6 +616,77 @@ def test_exit_code_gate_policy():
 # campaign's schedule and not the checker's.
 
 
+def test_a_row_stating_two_verification_methods_warns():
+    """The verification-coherence lint (log `2026-08-16p`). The occasion: two
+    rows flipped `Critique`->`Test` when their anchors were bound to tests, and
+    their prose went on demanding an APPROVE verdict from rubrics that by then
+    declared themselves RETIRED. Every strict gate passed at rc=0 for three
+    weeks, because nothing compared the `Verification` field against the prose
+    that says how anyone would know the row is satisfied."""
+    trace = load_script("trace")
+
+    # The defect, in both cells that can carry it.
+    ac_rot = {
+        "SR-ID": "SR-101",
+        "Verification": "Test",
+        "AcceptanceCriteria": "A fresh CRITIQUE session returns APPROVE citing "
+        "numbered anchors.",
+    }
+    rationale_rot = {
+        "SR-ID": "SR-102",
+        "Verification": "Test",
+        "Rationale": "Acceptance is adjudicated by an independent critical eye "
+        "against a written rubric instead.",
+    }
+    assert len(trace.verification_coherence_advisories([ac_rot])) == 1
+    assert len(trace.verification_coherence_advisories([rationale_rot])) == 1
+    assert "AcceptanceCriteria" in trace.verification_coherence_advisories([ac_rot])[0]
+    assert "Rationale" in trace.verification_coherence_advisories([rationale_rot])[0]
+
+    # A row that DECLARES Critique is naming its own instrument, not contradicting
+    # itself — the lint runs one direction only.
+    assert (
+        trace.verification_coherence_advisories(
+            [dict(ac_rot, **{"Verification": "Critique"})]
+        )
+        == []
+    )
+
+    # The NEGATIVE half, and the reason the vocabulary is case-split: lowercase
+    # "verdict"/"approve" are ordinary prose the corpus really uses (SR-137 and
+    # SR-148 both say "the integrator's verdict gate" about a subsystem), so
+    # matching them case-insensitively would put standing false accusations on
+    # correct rows and teach an author to skip the pipe.
+    for prose in (
+        "Refusals fire at the integrator's verdict gate and intake's adjudication arm.",
+        "The owner approves the split before it lands.",
+    ):
+        clean = {"SR-ID": "SR-103", "Verification": "Test", "Rationale": prose}
+        assert trace.verification_coherence_advisories([clean]) == []
+
+    # `Requirement` is deliberately NOT scanned: SR-040's shall enumerates the
+    # session phases a coordinator routes (PLAN/BUILD/.../CRITIQUE), where the
+    # word NAMES a phase rather than claiming a verdict.
+    phase_list = {
+        "SR-ID": "SR-104",
+        "Verification": "Test",
+        "Requirement": "The coordinator shall route each phase "
+        "(PLAN/BUILD/REVIEW-A/CRITIQUE) through its declared template.",
+    }
+    assert trace.verification_coherence_advisories([phase_list]) == []
+
+    # A row with no declared method cannot contradict one.
+    assert (
+        trace.verification_coherence_advisories([dict(ac_rot, **{"Verification": ""})])
+        == []
+    )
+    # A `-000` example row is a blank form, not a requirement.
+    assert (
+        trace.verification_coherence_advisories([dict(ac_rot, **{"SR-ID": "SR-000"})])
+        == []
+    )
+
+
 def test_a_requirement_that_names_a_concrete_artifact_warns():
     from conftest import load_script
 

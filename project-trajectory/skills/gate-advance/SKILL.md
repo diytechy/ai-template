@@ -80,28 +80,31 @@ Clearing a bar is not a `docs/gate` bump. The acceptor **marks a batch of
 artifacts ratified in a reviewed commit** — that commit *is* the sign-off, and
 the bar derives from it:
 
-- **Into `DevBar-Reqs`** — a draft requirement is ratified: `Status` **`Draft` →
-  `Planned`** on the SR (and an SN leaves its draft state). The ratification date
-  is git-derived (the commit that moved it).
-- **`DevBar-Tests` → `DevBar-Release`** — the SR reaches `Status=Verified` once
-  its tests pass; the derived bar follows.
-- **Re-attest (`Modified` → …)** — a `Verified` row whose content was amended
-  after attestation carries `Status=Modified` (canonical semantics: process.md
-  §7): the derived bar reads `DevBar-Tests` for its phase until the sitting
-  rules, and the pending-owner-actions projection carries one line per Modified
-  SR. Read the before/after first — `python scripts/trace.py --ratify modified
-  [--out docs/ratify/<date>-reattest.md]` (add `--since <rev>` for a streak
-  whose amendments landed while the row still read Verified). **The flip asserts
-  two things**, so there are two honest outcomes:
-  **`Modified` → `Verified`** — the amendment is blessed AND the existing
-  evidence still verifies the amended text (the right call for narrowings and
-  judge-reassignments whose tests are green against the new wording); or
-  **`Modified` → `Planned`** — the amendment invalidated the evidence, so the
-  row re-earns `Verified` through re-verification and the bar correctly stays
-  below `DevBar-Release` until it does. Record the ruling in the log's Decisions,
-  like any ratification. Amend-and-flip land in the **same commit** (the
-  `--staged` warn enforces it); the SR is the attestation unit — a chain change
-  (child LLR/TC amended or added) flips the owning SR.
+- **Into `DevBar-Reqs`** — a draft requirement is ratified: `Status` **`Drafted`
+  → `Approved`** on the SR (and an SN leaves its draft state). The ratification
+  date is git-derived (the commit that moved it).
+- **`DevBar-Tests` → `DevBar-Release`** — the SR is `Approved` and its tests
+  pass; the derived bar follows. Note what `Approved` does and does not say: it
+  blesses the row's **TEXT** and makes no claim that any test passed — whether
+  they pass is the harness's answer, never a cell's.
+- **Re-attest (`Modified` → `Approved`)** — an `Approved` row whose content was
+  amended after attestation carries `Status=Modified` (canonical semantics:
+  process.md §4): the derived bar reads `DevBar-Tests` for its phase until the
+  sitting rules, and the pending-owner-actions projection carries one line per
+  Modified SR. Read the before/after first — `python scripts/trace.py --ratify
+  modified [--out docs/ratify/<date>-reattest.md]`. `Modified` → `Approved` is
+  the one flip, and it blesses the amended TEXT; if the amendment invalidated
+  the evidence, that is the harness's problem to report and not a second Status
+  value. Record the ruling in the log's Decisions, like any ratification.
+  Amend-and-flip land in the **same commit** (the `--staged` warn enforces it);
+  the SR is the attestation unit — a chain change (child LLR/TC amended or
+  added) flips the owning SR.
+
+  > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,
+  > `Modified` — matched case-insensitively, and a value outside it is an
+  > always-on integrity finding. `Draft`, `Verified` and `Planned` are RETIRED
+  > (D-9, 2026-08-15): `Verified`/`Planned` folded into `Approved`, which is why
+  > there is no longer an evidence-invalidated Status. Do not reintroduce them.
 
 **Carry the batch-scoped hierarchy view.** A ratification brief presents the
 batch's `SN → SR → LLR/TC` tree with its prose so the acceptor rules on the whole
@@ -142,7 +145,8 @@ row per boundary.
 - **`DevBar-Release` (Impl certified).** Code implements the LLRs with
   `Implements:` back-links; the full harness passes: `trace.py --strict
   --no-placeholders --strict-schema --require-verified`, coverage ≥ threshold,
-  arch-map fresh, flows current. Every test-verifiable SR is `Verified`.
+  arch-map fresh, flows current. Every test-verifiable SR is `Approved`
+  with its tests green.
 
 Run the bar with `scripts/check.py` (it selects the bar's checks from
 `docs/gate`); paste the real output into the `docs/log.md` audit log.
