@@ -206,13 +206,54 @@ deliberately does not exist yet.)*
 | the **alignment map**, including **§4** | [`2026-08-16-derivation-alignment.md`](2026-08-16-derivation-alignment.md) | the blind re-derivation's output (`2026-08-16j`) and its hat-aware extension (`2026-08-16k`): matched / orphaned-in-legacy / orphaned-in-fresh, the ranked top-10, and §4.4's revised ranking after the hat pass. **A validation instrument only — it moved no registry cell**; every orphan is a finding for you |
 | the **v2 cursor** | [`2026-08-15-retier-v2-one-decision-tiering.md`](2026-08-15-retier-v2-one-decision-tiering.md) §0 | the six slices, each with its closing log id, reading **"DONE except the sitting"** |
 
-**STILL OPEN — the calls this sitting actually makes.** Each is recorded where
-its evidence is; none was taken in advance.
+**STATE AT THE DESK — measured `2026-08-16p`, RE-DERIVE AT CONVENING.** The
+figures below are a snapshot with its command attached, not an authority: this
+document's §0.1/§0.2/§2.1 tables went stale in a day once and the banner at the
+top says so. Re-run the command; if it disagrees, it wins.
+
+| what | measured | note |
+|---|---|---|
+| spine | `SN=27 SR=63 LLR=155 TC=150` · `orphans=0 integrity=0` | the shape you are signing |
+| pending signature | **147 `Modified` + 52 `Drafted`** (SR 40/19 · LLR 83/17 · TC 24/16) | every row awaits a **first** approval |
+| derived bar | `DevBar-Reqs`, stage `DevStg-Boundary` (1 of 8) | unchanged all day |
+| baseline | **`docs/archive/last_approved/` does not exist** | so the brief renders full text, not diffs — you read cold, and signing is what seeds it |
+| gating reds | `traceability`, `trajectory` | see the two rows below — **only one clears by signing** |
+| off-spine | 123 IF · 4 CMP · 14 external, **all `drafted`** | the approval path there has never been exercised |
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=7597cb09 -->
+
+**The two gating reds, and which one signing fixes:**
+
+- **`traceability`** — mostly `--require-verified` firing on the 147 `Modified`
+  rows, which **is** the open window and clears when you sign. But `trace.py
+  --strict` alone still exits 1 on **`SR-140`/`SR-147`**'s multi-`shall`
+  findings: both carry the 13v waiver, and `form_findings` **deliberately does
+  not suppress on it**, so the waiver is recorded and the finding still gates.
+  Signing does **not** green this step — splitting those two rows does, which
+  is item 13.
+- **`trajectory`** — a real ERROR unrelated to the sitting:
+  `scripts/hats → scripts/spine_carrier`, a cross-component import with no
+  declared IF seam, from the 2026-08-16 hats work. Not yours to rule; one
+  interface row or a membership retag clears it.
+
+**STILL OPEN — the calls this sitting actually makes.** Each carries its
+**impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
+made from this page; the linked homes hold the full evidence for the ones you
+want to go deeper on. A recommendation is a starting position, never a ruling
+taken in advance.
 
 1. **The L1 pair** — `SR-151` + `SR-152` `boundary_refs`: the same
    package-alone acceptance shape, so the attribution flips **for both or for
    neither**. Untouched by v2 on purpose (`2026-08-15n`, re-confirmed
    `2026-08-16g`).
+   **Impact:** 2 rows, both `Drafted`, both already in this batch — so the
+   change is free either way and costs no extra re-attest. `SR-151` carries
+   `B-06`, `SR-152` carries `B-07`; both acceptances are satisfiable by reading
+   the shipped workflow file alone, which is the "package-alone" shape in
+   question. Nothing else cites either row's boundary attribution.
+   **Recommendation:** rule it, don't defer — a 2-row call with zero blast
+   radius that gets more expensive the moment the rows are signed, and it is
+   one of the last two `B-06`/`B-07` attributions (the registry-integrity sweep
+   still reports both crossings as realized by NO interface row).
 2. ~~**The `SR-144` flip**~~ — **MOOT ON THE FACTS, no action needed**
    (`2026-08-16p`). SR-144 is already `Modified`: it flipped at `22a915d3`
    because its **own rationale** gained the hat-derived label, which is an
@@ -222,8 +263,19 @@ its evidence is; none was taken in advance.
    it contradicts `docs/process.md` §4, which rules the opposite. The live
    question it raises is now item 15.)*
 3. **The `Consumes` owner-side reading** — which reading of "owner" governs
-   decides ~20 more IF rows that today stay SR-owned; the IF-031/F6 precedent
+   decides how many more IF rows leave SR ownership; the IF-031/F6 precedent
    read it as the-module-that-holds-the-code (`2026-08-16g`).
+   **Impact — RE-DERIVE THIS ONE, the recorded figure does not reproduce.**
+   The entry has said "~20 rows" since `2026-08-16g`; measured `2026-08-16p`
+   the registry holds **123 IF rows, 61 SR-owned / 62 LLR-owned, of which 81
+   are `Consumes` and 49 of those are still SR-owned**. Whether the call
+   touches ~20 or ~49 depends on which subset the earlier figure meant, and
+   that was not written down. Do not rule on the "~20" — re-count at convening.
+   **Recommendation:** rule the READING, and let the row count fall out of it.
+   The precedent already exists (IF-031/F6) and applying it broadly is the
+   cheap, consistent move; what makes this urgent is not the count but that
+   `owner` is the cell `wi455` needs settled before it can drop `counterpart`
+   (the integrity sweep already reports IF-128's owner/endpoint disagreement).
 4. ~~**`SR-053` and the CONSISTENCY charter**~~ — **RULED `2026-08-16p`, see
    CLOSED below.**
 5. ~~**The retired-rubric acceptance on `SR-052`/`SR-053`**~~ — **CORRECTED
@@ -257,12 +309,38 @@ its evidence is; none was taken in advance.
    act, not a repo-local one (`2026-08-16l`). Their sibling CONSISTENCY (R-4)
    was ruled in at `2026-08-16p`; **that ruling is no evidence about these
    two** — each was drafted from its own finding and each is ruled on its own.
+   **Impact:** the roster is **16 hats, 10 `always`** today (both drafts are
+   already `always`, so ruling them IN changes no count and no test pin).
+   Cutting both drops it to **14 hats / 8 `always`** and edits `LIVE_NAMES` +
+   `LIVE_ALWAYS` in `tests/test_hats.py` **and** the shipped
+   `hats.template.toml` — a kit-level act reaching every adopter. Every
+   decomposition faces two more questions either way; no registry row moves.
+   **Recommendation:** rule them on their findings, not as a pair, and note the
+   asymmetry — R-5 (INTEGRITY-RECOVERABILITY) has a live subject in this repo
+   (the loop half-writing a registry under an attended session is reachable
+   today), while R-6 (PRODUCT-FITNESS) is the broader claim and the one whose
+   `always` breadth is most worth arguing with.
 8. **The four hat-exposed obligation candidates** — provider egress of commit
    authorship, the privacy finding-record's retention bound, SN-027's
    undeclared throughput budget, and the colour-only signal. Filed as an intake
    row that **mints nothing**; the disposition of each — new need, amendment,
    labelled derived requirement, or refused — is yours (alignment map §4.3,
-   `2026-08-16l`).
+   `2026-08-16l`). Carried by `WI-468` (`queued`, `safety_class = "spine"`),
+   whose Title states all four candidates in full with their charter clause
+   ids, so the WI row is the one place to read them.
+   **Impact:** up to 4 new SN rows or 4 amendments, each of which then owes an
+   SR decomposition — the largest potential ADDITION to the spine on this desk.
+   Two are data-protection (C-DPR-3 commit-authorship egress to an external
+   model runner, already drawn at `REL-003`; C-DPR-2 the privacy finding
+   record's own retention), one is SN-027's undeclared throughput measure
+   (unfalsifiable as written), one is SN-008's colour-only "believe a green".
+   **Recommendation:** rule the two DATA-PROTECTION ones this sitting and defer
+   the others if time is short — those two describe personal data crossing a
+   boundary the frame already draws, which is the class where "no need states
+   it" is a real exposure rather than a tidiness finding. C-ACC-2 is the
+   cheapest (a wording amendment to SN-008, no new row); C-PRF-1 is the one
+   that most needs your judgement, since declaring a throughput measure
+   commits the repo to measuring it.
 
 **THE SIX SOL ROW-CALLS — folded onto this desk `2026-08-16p`.** They were
 queued at `2026-08-16o` but lived only in the review file and one log
