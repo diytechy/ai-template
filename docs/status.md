@@ -90,7 +90,9 @@ narrated is in those homes.
   [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md) →
   sitting-3 §0.4 → [log.md](log.md)'s `2026-08-15*`/`2026-08-16*` Decisions.
   The standing constraint under all of it: **the depth-0 frame is LOCKED** —
-  5 entities · 6 crossings · 3 relationships, the repository is the system and
+  **4 entities · 4 crossings · 3 relationships** since the `2026-08-16q` cut
+  (`EXT-004`/`B-06`/`B-07` deleted, ids spent, now watermark-held per
+  `2026-08-17n`), the repository is the system and
   the template is the deliverable — ruled and closed at sitting 2
   ([plans/2026-08-13-sitting-2-boundary-and-context.md](plans/2026-08-13-sitting-2-boundary-and-context.md)
   §1R/§3R/§4.0; log `2026-08-13k`/`o`/`u`), which deliberately signed no spine.
