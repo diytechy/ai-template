@@ -206,20 +206,21 @@ deliberately does not exist yet.)*
 | the **alignment map**, including **§4** | [`2026-08-16-derivation-alignment.md`](2026-08-16-derivation-alignment.md) | the blind re-derivation's output (`2026-08-16j`) and its hat-aware extension (`2026-08-16k`): matched / orphaned-in-legacy / orphaned-in-fresh, the ranked top-10, and §4.4's revised ranking after the hat pass. **A validation instrument only — it moved no registry cell**; every orphan is a finding for you |
 | the **v2 cursor** | [`2026-08-15-retier-v2-one-decision-tiering.md`](2026-08-15-retier-v2-one-decision-tiering.md) §0 | the six slices, each with its closing log id, reading **"DONE except the sitting"** |
 
-**STATE AT THE DESK — measured `2026-08-16p`, RE-DERIVE AT CONVENING.** The
-figures below are a snapshot with its command attached, not an authority: this
-document's §0.1/§0.2/§2.1 tables went stale in a day once and the banner at the
-top says so. Re-run the command; if it disagrees, it wins.
+**STATE AT THE DESK — measured `2026-08-16r`, RE-DERIVE AT CONVENING.** A
+snapshot with its command attached, not an authority: this document's
+§0.1/§0.2/§2.1 tables went stale in a day once and the banner at the top says
+so. Re-run the command; if it disagrees, it wins.
 
 | what | measured | note |
 |---|---|---|
 | spine | `SN=27 SR=63 LLR=155 TC=150` · `orphans=0 integrity=0` | the shape you are signing |
 | pending signature | **147 `Modified` + 52 `Drafted`** (SR 40/19 · LLR 83/17 · TC 24/16) | every row awaits a **first** approval |
-| derived bar | `DevBar-Reqs`, stage `DevStg-Boundary` (1 of 8) | unchanged all day |
-| baseline | **`docs/archive/last_approved/` does not exist** | so the brief renders full text, not diffs — you read cold, and signing is what seeds it |
-| gating reds | `traceability`, `trajectory` | see the two rows below — **only one clears by signing** |
-| off-spine | 123 IF · 4 CMP · 14 external, **all `drafted`** | the approval path there has never been exercised |
-<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=7597cb09 -->
+| derived bar | `DevBar-Reqs`, stage `DevStg-Boundary` (1 of 8) | unchanged across the whole program |
+| baseline | **`docs/archive/last_approved/` does not exist** | the brief renders full text, not diffs — you read cold, and signing is what seeds it |
+| **frame** | **4 entities · 4 crossings · 3 relationships** | `EXT-004`/`B-06`/`B-07` **CUT** `2026-08-16q`; ids SPENT |
+| off-spine | 123 IF · 4 CMP · 11 frame rows · 22 OI | IF rows are **all `drafted`** — that approval path has never been exercised |
+| gating reds | `traceability`, `trajectory` | see below — **only one clears by signing** |
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=e2ec44c1 -->
 
 **The two gating reds, and which one signing fixes:**
 
@@ -234,6 +235,19 @@ top says so. Re-run the command; if it disagrees, it wins.
   `scripts/hats → scripts/spine_carrier`, a cross-component import with no
   declared IF seam, from the 2026-08-16 hats work. Not yours to rule; one
   interface row or a membership retag clears it.
+
+**WHAT MOVED SINCE THIS DESK WAS WRITTEN** — the 2026-08-16/17 session, so a
+reader does not have to reconstruct it from the log:
+
+| ruling | what changed | log |
+|---|---|---|
+| `SR-053` **RETAINED**, `hat.CONSISTENCY` ruled `always` | the "retire unless mechanically testable" condition was found ALREADY MET (8 LLRs → 8 TCs, 11 automated tests, green); both rosters flip identically | `2026-08-16p` |
+| retired-rubric acceptance **CORRECTED** on `SR-052`/`053`/`054` | acceptance restated as the decomposed chain, no artifact named; the three `Rationale` cells reworded off the retired method | `2026-08-16p` |
+| the **verification-coherence lint** shipped | `trace_text.verification_coherence_advisories`, warn-only — a row whose prose claims an instrument its `Verification` contradicts. Two narrowings measured, not assumed | `2026-08-16p` |
+| the advisory critique **NOT re-armed** | an LLM critic on an any-change trigger would fire on nearly every spine change; `SR-054`'s residue recorded as a stated Prose gap | `2026-08-16p` |
+| **L1 pair ruled on DESIGN CONTROL** | `SR-151` **and** `SR-152` → `["B-05"]`; a hosted runner is an ADOPTER's boundary | `2026-08-16q` |
+| **frame CUT** | `EXT-004`, `B-06`, `B-07` deleted; the locked-frame test went red and was updated with the ruling | `2026-08-16q` |
+| two kit skills carried **retired vocabulary** | `gate-advance`/`registry-hygiene` taught `Status=Verified` and `Modified → Planned`, both retired at D-9; fixed. `check_vocab` guards only the retired `G*` tags | `2026-08-16p` |
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
@@ -300,26 +314,57 @@ taken in advance.
    re-minting a cut crossing id at a different thing. That is the exact
    vacuous-space class the `IF-121/122` mint hit. See item 17.
 
-3. **The `Consumes` owner-side reading** — which reading of "owner" governs
-   decides how many more IF rows leave SR ownership; the IF-031/F6 precedent
-   read it as the-module-that-holds-the-code (`2026-08-16g`).
-   **Impact — RE-DERIVE THIS ONE, the recorded figure does not reproduce.**
-   The entry has said "~20 rows" since `2026-08-16g`; measured `2026-08-16p`
-   the registry holds **123 IF rows, 61 SR-owned / 62 LLR-owned, of which 81
-   are `Consumes` and 49 of those are still SR-owned**. Whether the call
-   touches ~20 or ~49 depends on which subset the earlier figure meant, and
-   that was not written down. Do not rule on the "~20" — re-count at convening.
-   **Recommendation:** rule the READING, and let the row count fall out of it.
-   The precedent already exists (IF-031/F6) and applying it broadly is the
-   cheap, consistent move; what makes this urgent is not the count but that
-   `owner` is the cell `wi455` needs settled before it can drop `counterpart`
-   (the integrity sweep already reports IF-128's owner/endpoint disagreement).
-4. ~~**`SR-053` and the CONSISTENCY charter**~~ — **RULED `2026-08-16p`, see
-   CLOSED below.**
-5. ~~**The retired-rubric acceptance on `SR-052`/`SR-053`**~~ — **CORRECTED
-   `2026-08-16p`, see CLOSED below.** M6 is discharged; the residue it leaves
-   (the three `Rationale` cells, and the missing AC-vs-`Verification` lint) is
-   named there and is **not** ruled.
+3. **The `Consumes` owner-side reading.** **RE-WRITTEN `2026-08-16r`** — the
+   entry was too compressed to decide from, and the owner's read at the desk
+   was *"the owner is either another IF if it's a higher layer connecting to a
+   lower layer, or it's just connecting to the SR that's serving that
+   interface."* **That model is correct, and both halves are already fields**
+   — which is exactly why the remaining question is narrower than it looks.
+
+   **Three cells on an IF row all sound like "the other side". They are not
+   the same thing:**
+
+   | cell | what it holds | how many |
+   |---|---|---|
+   | `owner` | the ONE row **answerable** for the seam. Polymorphic — an `SR-###` **or** an `LLR-###`, resolved against whichever registry the prefix names (ruling Q1). Exactly one | 123 (all rows) |
+   | `carried_by` | **interface composition** — a constituent naming the BUNDLE that carries it. This IS "another IF", the higher-layer-to-lower-layer link (ruling Q3) | 18 rows, all → `IF-102` |
+   | `req_refs` | every requirement the seam realizes or relies on. **Not** answerability — 21 rows list more than one and none was thereby answerable | 123 |
+
+   So *"the owner is another IF"* already exists as **`carried_by`**, and
+   *"connecting to the SR that serves it"* is `owner` taking its `SR-###`
+   value. Neither needs inventing.
+
+   **What is actually undecided:** `owner` may be an SR **or** an LLR, and for
+   `Consumes` rows the corpus answers it **both ways**. Measured
+   `2026-08-16r`:
+
+   | | `Provides` | `Consumes` |
+   |---|---|---|
+   | **SR-owned** | 12 | **49** |
+   | **LLR-owned** | 30 | 32 |
+
+   The `IF-031`/F6 precedent read it as **the-module-that-holds-the-code** →
+   the LLR. If that governs, ~49 rows move SR → LLR.
+
+   **Why it is not cosmetic — this cell is load-bearing for a deletion.** R4
+   ruled that once `owner` points at the design tier, the endpoint the owner
+   answers for becomes **derivable** (`owner` → LLR → `module`), and the
+   derivable cell is then dropped — that is `wi455`'s job. The derivation
+   needs an LLR to walk to, so **an SR-owned row cannot participate**: it has
+   no module, the advisory stays silent on it, and its endpoint cell can never
+   be dropped. `Provides` and `Consumes` even drop *different* cells
+   (`this_project` vs `counterpart`), which is why the reading has to be ruled
+   rather than left to settle row by row.
+   **Impact:** up to ~49 `owner` cells, no requirement text, no status flips —
+   `owner` is not an attested claim. The rows are already `drafted`. It
+   unblocks `wi455`'s `counterpart` removal for whatever it converts.
+   **Recommendation: rule the-module-that-holds-the-code (the LLR), following
+   the `IF-031`/F6 precedent**, and let the count fall out of the reading
+   rather than approving a list. Keep `owner = SR-###` only where genuinely no
+   design row exists — those are the honest residue, and naming them is more
+   useful than forcing a pick. Then `wi455` converts what it can and reports
+   what it cannot.
+
 6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
    earlier framing ("no `Status` cell") understated it. The tier encodes
    status across **three** fields: `kind` = `core`\|`draft` (the ratified and
@@ -414,6 +459,14 @@ SN-specific, and both cheap now and expensive after signing.
     is a change to the load-bearing core, not a row-level call**: it governs
     every tier, the re-attest brief, the pending-owner projection and one
     advisory. Recorded, not taken.
+16. **The third status word.** The closed vocabulary is `Drafted` \| `Approved`
+    \| `Modified`. The owner floated *"drafted, approved, and **founded** (or
+    decomposed to its dependencies)"* — a state meaning *this row's children
+    exist and answer it*, which `Modified` does not say. Note the enum was
+    closed deliberately on 2026-08-15 (OI-30 D1 folded `Planned` out on the
+    argument that a near-synonym gets applied inconsistently), so adding a
+    fourth value re-opens exactly that question. Recorded, not taken.
+
 17. **Should `B` and `EXT` become watermark spaces?** Raised by the
     `2026-08-16q` cut, which spent three ids the watermark does not protect.
     `WATERMARK_SPACES` is derived from `ID_PATTERNS` plus `SN`/`WI`/`OI`/`DP`;
@@ -427,14 +480,6 @@ SN-specific, and both cheap now and expensive after signing.
     reasoning — *"a mint counts from HERE, never from max(live)"* — and the
     frame tiers are the only id spaces exempt from it today, which reads as an
     oversight rather than a decision.
-16. **The third status word.** The closed vocabulary is `Drafted` \| `Approved`
-    \| `Modified`. The owner floated *"drafted, approved, and **founded** (or
-    decomposed to its dependencies)"* — a state meaning *this row's children
-    exist and answer it*, which `Modified` does not say. Note the enum was
-    closed deliberately on 2026-08-15 (OI-30 D1 folded `Planned` out on the
-    argument that a near-synonym gets applied inconsistently), so adding a
-    fourth value re-opens exactly that question. Recorded, not taken.
-
 **CLOSED TODAY — the sitting only countersigns these.** They are owner rulings
 already executed; listed so the sitting knows it is reading a settled state
 rather than an open one, and so an overrule is a deliberate act.
