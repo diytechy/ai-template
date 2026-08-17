@@ -241,48 +241,32 @@ made from this page; the linked homes hold the full evidence for the ones you
 want to go deeper on. A recommendation is a starting position, never a ruling
 taken in advance.
 
-1. **The L1 pair — `SR-151` RULED AND APPLIED `2026-08-16p`; `SR-152` is the
-   remaining half.** The owner ruled on **design control**, which is a better
-   criterion than the package-alone acceptance shape this entry previously
-   argued from — the acceptance shape was evidence, design control is the
-   reason. In the owner's words: *"151 just goes to 05, it's just a shipped
-   method… the kit is providing a method for the CI runner to activate, but
+1. ~~**The L1 pair**~~ — **RULED AND APPLIED IN FULL `2026-08-16p`.** Both
+   rows now read `boundary_refs = ["B-05"]`.
+
+   The owner ruled on **design control**, which is a better criterion than the
+   package-alone acceptance shape this entry previously argued from — the
+   acceptance shape was evidence, design control is the reason. In the owner's
+   words: *"the kit is providing a method for the CI runner to activate, but
    this template has no design control over an external CI respecting
    configurations… all it can do is provide a method within the pack for CI to
-   run."*
+   run."* `SR-151` first, then `SR-152` on the same argument (option (a),
+   symmetric rather than the `["B-05","B-04"]` variant that was on offer).
 
-   **`SR-151`: `["B-06"]` → `["B-05"]`, applied**, its rationale now carrying
-   the reason. **The frame already reasons this way twice**, which is what
-   makes the ruling a consistency fix rather than a new doctrine:
+   **This is a consistency fix, not new doctrine** — the frame already reasons
+   this way twice:
    - `REL-002` — the generators ship as **B-05 content** while the workflow
      running them is *adopted*; those outputs are "NOT system outputs (13u)".
-   - `REL-003` — the model-provider surface lands its obligation on
-     *"delivered loop content (B-05), exercised session-side"* and mints **no
-     crossing** for `EXT-005`. An external runner the kit cannot control was
-     already handled by keeping the obligation on the package.
+   - `REL-003` — the model-provider surface lands its obligation on *"delivered
+     loop content (B-05), exercised session-side"* and mints **no crossing**
+     for `EXT-005`. An uncontrollable external was already handled by keeping
+     the obligation on the package.
 
-   **`EXT-004` is now the outlier**: it is the only external entity the kit has
-   no design authority over that still holds crossings. `EXT-003` (Adopter) and
-   `EXT-005` (Model provider) hold none.
-
-   **STILL OPEN — `SR-152` only, and it is not the same call.** Its own
-   rationale names work `SR-151`'s does not: *"the second half of the honest-limit
-   pair the frame's B-04 row states — a local floor is bypassable
-   (`git commit --no-verify`), so no-unchecked-write-enters-governed-state is
-   validatable only as B-04's verdict at the moment of the act PLUS this hosted
-   re-run."* The verdict **comes back**, which is the owner's own alternative
-   reading (*"152 just goes from some CI location to the development
-   environment"*). Three defensible cells:
-
-   | | cell | reading |
-   |---|---|---|
-   | **(a)** | `["B-05"]` | symmetric with `SR-151` — the kit ships a method, nothing more. Simplest; drops the honest-limit pair's second half from the frame |
-   | **(b)** | `["B-05","B-04"]` | the method ships in the package AND the verdict returning to the development session is the `B-04` crossing its own rationale already invokes. **Recommended** — it keeps what the row does that `SR-151` does not, without claiming authority over the runner |
-   | **(c)** | `["B-07"]` unchanged | CI is genuinely a separate external actor. The owner's *"CI is part of the user's development kit anyways"* argues against this |
-
-   **Impact:** one cell, `Drafted`, in this batch, no re-attest cost. Note the
-   consequence for item 1a: `B-06` now has **zero** citing SRs; under (a) or
-   (b), `B-07` joins it at zero.
+   **Recorded consequence, so it is never read as an oversight:** the hosted
+   re-run — the second half of the honest-limit pair `SR-019` states from the
+   local side — now has **no crossing of its own** in this frame. Both rows'
+   rationales say so in their own words rather than leaving the frame to imply
+   it.
 
 1a. **Can `B-06`/`B-07` simply be cut?** — raised by the owner `2026-08-16p`
    ("if the 2 boundary interface could be killed that would be cleaner"), and
@@ -298,14 +282,26 @@ taken in advance.
    **The honest case AGAINST:** the crossing is real whether or not this repo
    realizes it, and "no IF row realizes it" is **not** grounds — `B-01` and
    `B-02` are in exactly the same state and nobody proposes cutting those.
-   **Impact:** 6 boundaries today; `B-06`/`B-07` are the two least-cited (**1
-   SR each**, versus `B-05`'s 54). Cutting takes both crossings, the two
-   `boundary_refs` cells from item 1 (which the cut would decide by removing
-   the question), and `EXT-004` if nothing else cites it.
-   **Recommendation: rule item 1 FIRST, then this.** They point the same way
-   and item 1 is the cheaper, better-evidenced half — but note the ordering
-   trap: **applying X2 makes cutting easier to justify** (the rows then read
-   `B-05`-primary), so taking them in the other order would let a cell edit
+   **Measured `2026-08-16p`, AFTER item 1 was applied:** 6 boundaries, and
+   `B-06`/`B-07` now carry **ZERO** citing SRs (`B-05` 56 · `B-04` 6 · `B-01`
+   5 · `B-02` 2). `trace.py` says it in its own words — *"boundary crossing(s)
+   named by NO requirement: B-06, B-07 — a crossing with no SR is a frame
+   nobody has stated an observable at"* — a finding that **did not exist before
+   the ruling**. Cutting now takes the two crossings and `EXT-004`; the
+   `boundary_refs` cells are already settled.
+   **The question has changed shape.** It is no longer "should these two thin
+   rows go" but **"should the frame keep two crossings that no requirement
+   speaks to and no interface realizes"**. The existing OI ruling already named
+   this exit: the unrealized crossings are `WI-459`'s scope to *"name an owner
+   for each missing realization **or record that no interface should realize
+   it**"* — and design control is exactly that second branch, now with the SR
+   side agreeing.
+   **Recommendation: cut `B-06`/`B-07` and `EXT-004`, as decision 6.** The
+   ordering trap this entry previously warned about is spent — item 1 is ruled
+   on its own evidence, so the cut is no longer pre-decided by a cell edit. The
+   one thing to preserve is the statement the rows now carry: the hosted re-run
+   has no crossing because a hosted runner is an ADOPTER's boundary, which is a
+   fact about this frame worth keeping written down even after the crossings
    pre-decide a frame question. If you do cut, do it as decision 6 over all
    four unrealized crossings, not as a two-crossing special case.
 3. **The `Consumes` owner-side reading** — which reading of "owner" governs
