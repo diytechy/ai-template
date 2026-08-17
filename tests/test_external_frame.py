@@ -85,18 +85,33 @@ def test_the_three_tiers_load_off_one_path_without_a_new_loader():
 
 
 def test_the_live_frame_is_the_LOCKED_one():
-    """5 entities, 6 crossings, 3 relationships — sitting-2 §1R.7, ruled
-    2026-08-13o and amended at 13u when B-03 was removed. A count is a weak
-    assertion about most registries and a strong one here, because this frame was
-    closed by a ruling: a row appearing or vanishing without a sitting is the
-    defect, not a growth curve."""
+    """4 entities, 4 crossings, 3 relationships — sitting-2 §1R.7, ruled
+    2026-08-13o, amended at 13u when B-03 was removed, and again at
+    2026-08-16q when the hosted-CI frame was cut. A count is a weak assertion
+    about most registries and a strong one here, because this frame was closed
+    by a ruling: a row appearing or vanishing without a sitting is the defect,
+    not a growth curve. THIS TEST IS EXPECTED TO BE EDITED BY A SITTING and by
+    nothing else — it red-flagged the 2026-08-16q cut before that ruling had
+    been written down anywhere, which is the behaviour to keep."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
-    assert len(tables["entity"]) == 5
-    assert len(tables["boundary"]) == 6
+    assert len(tables["entity"]) == 4
+    assert len(tables["boundary"]) == 4
     assert len(tables["relationship"]) == 3
     # B-03 is ABSENT on purpose (removed 13u) and the gap is load-bearing: it
     # keeps id and frame name aligned 1:1 rather than renumbering a locked table.
     assert "B-03" not in tables["boundary"]
+    # B-06/B-07 and EXT-004 (Hosted CI) CUT 2026-08-16q on the design-control
+    # ruling: a hosted runner is an ADOPTER's boundary, this system holds no
+    # authority over whether an external runner honours the workflow it is
+    # handed, and what it delivers is a METHOD for one to invoke — so the
+    # obligation lands on B-05 as package content (SR-151, SR-152), exactly as
+    # REL-003 already handles the model provider. Same load-bearing gap rule as
+    # B-03: the ids are SPENT, never re-minted at a different thing. Asserted
+    # rather than left to the count, because a count alone would be satisfied by
+    # any four crossings.
+    for gone in ("B-06", "B-07"):
+        assert gone not in tables["boundary"], gone
+    assert "EXT-004" not in tables["entity"]
 
 
 def test_every_frame_row_carries_the_approval_element():

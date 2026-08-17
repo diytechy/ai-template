@@ -268,42 +268,38 @@ taken in advance.
    rationales say so in their own words rather than leaving the frame to imply
    it.
 
-1a. **Can `B-06`/`B-07` simply be cut?** — raised by the owner `2026-08-16p`
-   ("if the 2 boundary interface could be killed that would be cleaner"), and
-   worth a straight answer rather than a deferral.
-   **The honest case FOR cutting:** the frame names what crosses the boundary
-   of **the system under specification**, and this system is a *package*. A
-   hosted CI trigger crosses the boundary of an **adopter's repository**, not
-   of the kit — the kit ships a reference workflow as CONTENT (`B-05`) and
-   operates no CI service. On that reading `B-06`/`B-07` belong to a different
-   system's frame, and `EXT-004` (Hosted CI) with them. This is the same
-   argument as the item-1 attribution, carried to its conclusion: if what the
-   rows actually verify is package content, the crossing may be someone else's.
-   **The honest case AGAINST:** the crossing is real whether or not this repo
-   realizes it, and "no IF row realizes it" is **not** grounds — `B-01` and
-   `B-02` are in exactly the same state and nobody proposes cutting those.
-   **Measured `2026-08-16p`, AFTER item 1 was applied:** 6 boundaries, and
-   `B-06`/`B-07` now carry **ZERO** citing SRs (`B-05` 56 · `B-04` 6 · `B-01`
-   5 · `B-02` 2). `trace.py` says it in its own words — *"boundary crossing(s)
-   named by NO requirement: B-06, B-07 — a crossing with no SR is a frame
-   nobody has stated an observable at"* — a finding that **did not exist before
-   the ruling**. Cutting now takes the two crossings and `EXT-004`; the
-   `boundary_refs` cells are already settled.
-   **The question has changed shape.** It is no longer "should these two thin
-   rows go" but **"should the frame keep two crossings that no requirement
-   speaks to and no interface realizes"**. The existing OI ruling already named
-   this exit: the unrealized crossings are `WI-459`'s scope to *"name an owner
-   for each missing realization **or record that no interface should realize
-   it**"* — and design control is exactly that second branch, now with the SR
-   side agreeing.
-   **Recommendation: cut `B-06`/`B-07` and `EXT-004`, as decision 6.** The
-   ordering trap this entry previously warned about is spent — item 1 is ruled
-   on its own evidence, so the cut is no longer pre-decided by a cell edit. The
-   one thing to preserve is the statement the rows now carry: the hosted re-run
-   has no crossing because a hosted runner is an ADOPTER's boundary, which is a
-   fact about this frame worth keeping written down even after the crossings
-   pre-decide a frame question. If you do cut, do it as decision 6 over all
-   four unrealized crossings, not as a two-crossing special case.
+1a. ~~**Can `B-06`/`B-07` simply be cut?**~~ — **RULED AND EXECUTED
+   `2026-08-16q`.** Owner: *"Agreed cut B-06/B-07/EXT-004."* Done: the two
+   crossings and the `EXT-004` (Hosted CI) entity are deleted from
+   `external.toml`, on the design-control reading item 1 established — a hosted
+   runner is an **adopter's** boundary, this system holds no authority over
+   whether an external runner honours the workflow it is handed, and what it
+   delivers is a METHOD for one to invoke. The frame already applied that
+   reasoning to the model provider at `REL-003`; `EXT-004` was the
+   inconsistency.
+
+   **The frame answered:** the finding item 1 created —
+   *"boundary crossing(s) named by NO requirement: B-06, B-07"* — is **gone**,
+   and *"realized by NO interface row"* drops from **four crossings to two**
+   (`B-01`, `B-02`). The frame is now **4 entities · 4 crossings · 3
+   relationships**, `orphans=0 integrity=0` unchanged.
+
+   **Preserved, per the recommendation:** the statement the cut would otherwise
+   have destroyed now lives in **`B-04`'s own `notes`** — the honest-limit pair
+   (a local hook floor is bypassable, so the guarantee rests on the verdict at
+   the moment of the act *plus* a re-run away from that bypass), followed by
+   why the re-run is **not a crossing of this system**. Stated as a ruling
+   rather than left as an absence, which is the whole point.
+
+   **Ids are SPENT — never re-mint `B-06`, `B-07` or `EXT-004`** (the D-1/D-4
+   doctrine: a registry states what IS, git is the history, and this entry plus
+   log `2026-08-16q` are the forwarding pointer). **FINDING, not fixed:**
+   `B`/`EXT` are **not watermark spaces** — `WATERMARK_SPACES` covers
+   `ASSET CMP DP IF LLR MOD OI PART PB REPO SN SR TC WI` and nothing else — so
+   unlike an SR or an IF, nothing mechanically stops a future session
+   re-minting a cut crossing id at a different thing. That is the exact
+   vacuous-space class the `IF-121/122` mint hit. See item 17.
+
 3. **The `Consumes` owner-side reading** — which reading of "owner" governs
    decides how many more IF rows leave SR ownership; the IF-031/F6 precedent
    read it as the-module-that-holds-the-code (`2026-08-16g`).
@@ -418,6 +414,19 @@ SN-specific, and both cheap now and expensive after signing.
     is a change to the load-bearing core, not a row-level call**: it governs
     every tier, the re-attest brief, the pending-owner projection and one
     advisory. Recorded, not taken.
+17. **Should `B` and `EXT` become watermark spaces?** Raised by the
+    `2026-08-16q` cut, which spent three ids the watermark does not protect.
+    `WATERMARK_SPACES` is derived from `ID_PATTERNS` plus `SN`/`WI`/`OI`/`DP`;
+    the frame tiers were never added, so deleting a crossing frees its number
+    in the live tree and a later mint can silently re-point every commit
+    message, log entry and archived document that cites it. **Impact:** two
+    marks (`B = 7`, `EXT = 5` — the highs ever allocated, not the highs now
+    live), the space set in `trace.py`, and the pin in
+    `tests/test_id_watermark.py`. Kit-level: it ships to every adopter.
+    **Recommendation: add them.** The watermark's own header states the
+    reasoning — *"a mint counts from HERE, never from max(live)"* — and the
+    frame tiers are the only id spaces exempt from it today, which reads as an
+    oversight rather than a decision.
 16. **The third status word.** The closed vocabulary is `Drafted` \| `Approved`
     \| `Modified`. The owner floated *"drafted, approved, and **founded** (or
     decomposed to its dependencies)"* — a state meaning *this row's children

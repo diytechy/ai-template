@@ -36,6 +36,65 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-16q — the L1 pair ruled on DESIGN CONTROL, and the hosted-CI
+  frame CUT: `EXT-004`, `B-06`, `B-07` deleted.** Owner ruling in session,
+  in two moves. **(1) The attribution.** *"151 just goes to 05, it's just a
+  shipped method… the kit is providing a method for the CI runner to
+  activate, but this template has no design control over an external CI
+  respecting configurations… all it can do is provide a method within the
+  pack for CI to run."* `SR-151` `["B-06"]`→`["B-05"]`, then `SR-152`
+  `["B-07"]`→`["B-05"]` on the same argument (option (a), symmetric — the
+  `["B-05","B-04"]` variant was on offer and declined). Design control is a
+  BETTER criterion than the package-alone acceptance shape the desk had been
+  arguing from: the acceptance shape was evidence, this is the reason. And
+  it is a CONSISTENCY FIX rather than new doctrine — the frame already
+  reasons this way twice, at `REL-002` (the generators ship as B-05 content
+  while the workflow running them is *adopted*; "NOT system outputs", 13u)
+  and at `REL-003` (the model-provider obligation lands on "delivered loop
+  content (B-05), exercised session-side" and mints NO crossing for
+  `EXT-005`). An uncontrollable external was already handled by keeping the
+  obligation on the package; `EXT-004` was the inconsistency.
+  **(2) The cut.** With both rows re-pointed, `B-06`/`B-07` fell to ZERO
+  citing SRs and `trace.py` raised a finding that had not existed that
+  morning — *"boundary crossing(s) named by NO requirement: B-06, B-07 — a
+  crossing with no SR is a frame nobody has stated an observable at"*. Owner:
+  *"Agreed cut B-06/B-07/EXT-004."* Executed. The frame is now **4 entities ·
+  4 crossings · 3 relationships**; the no-requirement finding is gone and
+  "realized by NO interface row" drops from four crossings to two (`B-01`,
+  `B-02`). `orphans=0 integrity=0` throughout. Note the exit was pre-named:
+  `OI-29`'s own ruling said the unrealized crossings were `WI-459`'s scope to
+  *"name an owner for each missing realization OR record that no interface
+  should realize it"* — design control is that second branch, now with the SR
+  side agreeing. `OI-29` is left VERBATIM as the record of what was ruled on
+  2026-08-15 against a six-crossing frame; a ruled item is history, not a
+  live surface.
+  **What was deliberately preserved.** Cutting the crossings would have
+  destroyed the honest-limit statement they carried, so it moved to `B-04`'s
+  own `notes`: the guarantee rests on the verdict at the moment of the act
+  PLUS a re-run away from the bypassable local floor — and the re-run is NOT
+  a crossing of this system, stated as a ruling rather than left as an
+  absence. Both SR rationales carry the same fact, and `SR-152`'s was
+  re-worded off its now-false *"at the B-07 crossing"* claim rather than left
+  to rot — the same defect class `2026-08-16p` spent the day fixing.
+  **IDS ARE SPENT — never re-mint `B-06`, `B-07` or `EXT-004`** (D-1/D-4: a
+  registry states what IS, git is the history, this entry is the forwarding
+  pointer). **FINDING, recorded and NOT fixed:** `B` and `EXT` are not
+  watermark spaces, so unlike an SR or an IF nothing mechanically prevents a
+  later session re-minting a cut crossing id at a different thing — the exact
+  vacuous-space class the `IF-121/122` mint hit. Filed as sitting-3 desk item
+  17 with a recommendation to add both marks (`B = 7`, `EXT = 5`); kit-level,
+  so it ships.
+  **The locked-frame guard worked, and is worth recording as evidence rather
+  than as an obstacle.** `tests/test_external_frame.py::test_the_live_frame_is
+  _the_LOCKED_one` went RED on the cut — its own docstring says *"a row
+  appearing or vanishing without a sitting is the defect, not a growth
+  curve"* — so the frame could not be quietly reshaped even by a session
+  holding the ruling. The pin was then updated the way its own `B-03`
+  precedent shows: counts to 4/4/3, plus explicit `B-06`/`B-07`/`EXT-004`
+  absence assertions carrying the ruling and the spent-id rule, because a
+  count alone would be satisfied by any four crossings. Full unfiltered suite
+  **2564 passed / 10 skipped**, 468s
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=cf0a768d -->.
 - **2026-08-16p — the retired-rubric acceptance rot corrected on
   SR-052/053/054, and CONSISTENCY RULED `always` — SR-053 RETAINED.** Two
   calls in one thread, both owner-ruled in session.

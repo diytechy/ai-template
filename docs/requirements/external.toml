@@ -18,7 +18,7 @@
 #
 # ROW IDS — READ THIS BEFORE CITING ONE. The crossings are `B-##`, the names the
 # locked frame itself uses (§1R.2) and the names every ruled citation writes:
-# the SR form rule (§3R) says an SR's shall names `B-01`…`B-07`, and the owner's
+# the SR form rule (§3R) says an SR's shall names `B-01`…`B-05`, and the owner's
 # tie-back naming (13m) writes `interface_to_external = "B-05"`. §1R.5's schema
 # sketch wrote `[boundary.BIF-###]`; that shorthand predates the B-## naming and
 # is NOT used here, deliberately — v1's `BIF-001`…`BIF-031` are a DIFFERENT set
@@ -91,13 +91,6 @@ description = """The downstream team and their repository. Receives the Template
 approval = "drafted"
 absorbs = "v1 EXT-003"
 
-[entity.EXT-004]
-name = "Hosted CI"
-class = "interoperating"
-description = """Remote validation: triggers and the OS x Python matrix in, job verdicts and step logs out."""
-approval = "drafted"
-absorbs = "v1 EXT-006"
-
 [entity.EXT-005]
 name = "Model provider API(s) / CLI(s)"
 class = "interoperating"
@@ -128,7 +121,7 @@ direction = "out"
 carries = """Guardrail verdicts during a session: hook-floor accept/reject and subagent_gate PreToolUse allow/deny."""
 approval = "drafted"
 absorbs = "v1 BIF-012/X-07, and the verdict halves of BIF-006 and BIF-026"
-notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" is validatable only as a PAIR - this verdict at the moment of the act, plus B-06/B-07's hosted re-run of the same bar as backstop (§1R.6)."""
+notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass (§1R.6). THE RE-RUN IS NOT A CROSSING OF THIS SYSTEM, and that is a ruling rather than an omission: a hosted runner is an ADOPTER's boundary, this system holds no design authority over whether an external runner honours the workflow it is handed, and what the system delivers is a METHOD for one to invoke - so the obligation lands on B-05 as package content, carried by SR-151 and SR-152. The EXT-004/B-06/B-07 rows that used to state it were CUT on that reading (owner ruling 2026-08-16, the same argument REL-003 already applies to the model provider). Their ids are spent: never re-mint B-06, B-07 or EXT-004."""
 
 [boundary.B-05]
 entity = "EXT-002"
@@ -137,20 +130,6 @@ carries = """THE TEMPLATE - the packaged deliverable. The delivered scripts' con
 approval = "drafted"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
 notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities WI-451 slice 2 breaks it down by are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and package-wide property -- the sixth added by owner ruling 2026-08-14c for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
-
-[boundary.B-06]
-entity = "EXT-004"
-direction = "in"
-carries = """Hosted CI trigger: push, pull request or schedule; and the OS x Python matrix the job declares."""
-approval = "drafted"
-absorbs = "v1 BIF-027/M-04"
-
-[boundary.B-07]
-entity = "EXT-004"
-direction = "out"
-carries = """Hosted CI job verdict and step log."""
-approval = "drafted"
-absorbs = "v1 BIF-028/M-05"
 
 # --- relationships: external-to-external, the system not a party (§1R.3) -------
 # No interface vocabulary appears in these rows. That absence is what keeps
