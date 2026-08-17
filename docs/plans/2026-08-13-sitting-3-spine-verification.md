@@ -562,19 +562,25 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     TRANSITIONAL and retires at step 7; post-seed, drift is caught by
     comparison against `docs/archive/last_approved/`.
 
-17. **Should `B` and `EXT` become watermark spaces?** Raised by the
-    `2026-08-16q` cut, which spent three ids the watermark does not protect.
-    `WATERMARK_SPACES` is derived from `ID_PATTERNS` plus `SN`/`WI`/`OI`/`DP`;
-    the frame tiers were never added, so deleting a crossing frees its number
-    in the live tree and a later mint can silently re-point every commit
-    message, log entry and archived document that cites it. **Impact:** two
-    marks (`B = 7`, `EXT = 5` — the highs ever allocated, not the highs now
-    live), the space set in `trace.py`, and the pin in
-    `tests/test_id_watermark.py`. Kit-level: it ships to every adopter.
-    **Recommendation: add them.** The watermark's own header states the
-    reasoning — *"a mint counts from HERE, never from max(live)"* — and the
-    frame tiers are the only id spaces exempt from it today, which reads as an
-    oversight rather than a decision.
+17. ~~**Should `B` and `EXT` become watermark spaces?**~~ — **RULED
+    `2026-08-17n` — YES, AND `REL` WITH THEM.** Owner: *"Yes add them."*
+    Raised by the `2026-08-16q` cut, which spent three ids the watermark did
+    not protect: `WATERMARK_SPACES` was derived from `ID_PATTERNS` plus
+    `SN`/`WI`/`OI`/`DP`, the frame tiers were never added, so deleting a
+    crossing freed its number in the live tree. APPLIED same-day: the three
+    frame spaces joined `WATERMARK_SPACES`, `external.toml` joined the
+    live-id sweep, and the marks stand at the highs EVER allocated —
+    `B = 7` (seeded above the live max of 5, because `B-06`/`B-07` were cut
+    before the space was guarded; a new space's first mark is a seed, and
+    `trace.py` now accepts one above `max(live)` exactly once), `EXT = 5`,
+    `REL = 3` (both equal to their live maxima, verified against the
+    registry's full git history). `REL` was included on this item's own
+    reasoning — the frame tiers were the only id spaces exempt, and `REL`
+    is the same locked-frame class with the same delete-by-ruling exposure;
+    nothing distinguishes it. The pin in `tests/test_id_watermark.py`
+    extends to all three; the shipped `id-watermark.template` gains the
+    rows; the adopter-facing consequence (a resync goes red until one
+    `--bump-ids`) is a `RESYNC_PACK.md` §3 entry.
 
 18. **The adversarial round-2 desk** — what survived author re-verification of
     the Sol + Terra round over the three `2026-08-17` spine commits

@@ -47,6 +47,12 @@ def test_every_id_space_is_covered_by_the_mark_file():
         "WI",
         "OI",
         "DP",
+        # The depth-0 frame tiers (external.toml), added by the sitting-3
+        # item-17 ruling: the 2026-08-16q cut spent B-06/B-07/EXT-004, and an
+        # unguarded space would let a later session re-mint them silently.
+        "B",
+        "EXT",
+        "REL",
     }
     # ...and hold the derivation to it, so a registry added to ID_PATTERNS
     # without a mark row reds HERE rather than going silently unguarded.
@@ -206,6 +212,51 @@ def test_an_OI_above_the_mark_is_a_finding_ON_THE_TOML_CARRIER(tmp_path):
     # ...and the repair path sees it too, or the finding names a fix that fails.
     marks, raised = TRACE.bump_watermark(root)
     assert marks["OI"] == 9 and raised["OI"] == (4, 9)
+
+
+def test_a_frame_id_above_the_mark_is_a_finding_ON_ALL_THREE_TIERS(tmp_path):
+    # THE SAME HOLE, RULED CLOSED AT SITTING-3 ITEM 17. The 2026-08-16q cut
+    # deleted B-06/B-07/EXT-004 and the frame tiers were not watermark spaces,
+    # so nothing mechanical stood between a spent crossing id and its silent
+    # re-mint — the exact vacuous-space class the IF-121/122 mint hit. The
+    # frame is LOCKED and has no minter, so a hand-authored id past the mark
+    # is again the only signal there is.
+    root = tmp_path
+    reg = root / "docs" / "requirements"
+    reg.mkdir(parents=True)
+    (reg / "external.toml").write_text(
+        '[entity.EXT-006]\nname = "x"\n\n'
+        '[boundary.B-08]\nentity = "EXT-006"\n\n'
+        '[relationship.REL-004]\nfrom = "EXT-006"\n',
+        encoding="utf-8",
+    )
+    (root / TRACE.WATERMARK).write_text(
+        TRACE.render_watermark(
+            {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7, "EXT": 5, "REL": 3}
+        ),
+        encoding="utf-8",
+    )
+    findings = TRACE.watermark_findings(root)
+    assert any("B-008" in f and "stands at 7" in f for f in findings), findings
+    assert any("EXT-006" in f and "stands at 5" in f for f in findings), findings
+    assert any("REL-004" in f and "stands at 3" in f for f in findings), findings
+    # ...and the repair path sees all three, or the finding names a fix that fails.
+    marks, _raised = TRACE.bump_watermark(root)
+    assert (marks["B"], marks["EXT"], marks["REL"]) == (8, 6, 4)
+
+
+def test_a_new_spaces_first_mark_may_seed_above_live(tmp_path):
+    # The B = 7 seed: B-06/B-07 were cut BEFORE B became a watermark space, so
+    # the space's FIRST committed mark must be able to stand above max(live) —
+    # `--bump-ids` derives from live rows and cannot know about pre-watermark
+    # deletions. `previous` lacking the space entirely is what "first" means:
+    # rule 4 has no committed baseline to defend there, and refusing the seed
+    # would force the mark down to max(live), handing the cut ids back out.
+    root = _repo(
+        tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 1, "B": 7}
+    )
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES if s != "B"} | {"SR": 1}
+    assert TRACE.watermark_findings(root, previous) == []
 
 
 def test_the_agents_registry_holds_no_watermark_space(tmp_path):

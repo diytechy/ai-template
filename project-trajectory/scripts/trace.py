@@ -644,11 +644,16 @@ def enum_integrity_findings(label, rows):
 # (the §6 F-3 `anchor` class), and it is the SOURCE a mint counts from, rather
 # than `max(live) + 1`.
 WATERMARK = "docs/id-watermark"
-# Every id space in the repo: the ten this module already patterns, plus the four
-# it does not (SN is the prose tier, WI is directory-as-state, OI is the owner
-# queue, DP is a plan-round directory). Keyed off ID_PATTERNS so a space added
-# there cannot be silently exempt here — tests/test_id_watermark.py pins the set.
-WATERMARK_SPACES = tuple(sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP"}))
+# Every id space in the repo: the ten this module already patterns, plus the
+# seven it does not (SN is the prose tier, WI is directory-as-state, OI is the
+# owner queue, DP is a plan-round directory, and B/EXT/REL are the depth-0 frame
+# tiers in external.toml — added by the sitting-3 item-17 ruling after the
+# 2026-08-16q cut spent B-06/B-07/EXT-004 with nothing mechanical to stop a
+# later re-mint). Keyed off ID_PATTERNS so a space added there cannot be
+# silently exempt here — tests/test_id_watermark.py pins the set.
+WATERMARK_SPACES = tuple(
+    sorted(set(ID_PATTERNS) | {"SN", "WI", "OI", "DP", "B", "EXT", "REL"})
+)
 _WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
 
@@ -725,12 +730,19 @@ def _offspine_ids(docs):
     # interfaces + components joined the TOML carrier at WI-443, which un-wired
     # them from `_csv_ids`' glob exactly as batch-2 did to open-items — found
     # the same way again (WI-454 minted IF-121/122 past a mark of 120 and got
-    # no finding). external.toml is deliberately absent: its B/EXT/REL spaces
-    # are not watermark spaces.
+    # no finding). external.toml's three frame tiers (B/EXT/REL) joined at the
+    # sitting-3 item-17 ruling: the 2026-08-16q cut deleted B-06/B-07/EXT-004
+    # and nothing mechanical stopped a later session re-minting a spent id —
+    # the exact vacuous-space class the IF-121/122 mint hit. The frame is
+    # LOCKED (its rows change only by recorded ruling), so a mint past the
+    # mark is again the only signal there is.
     for rel, id_col in (
         ("docs/requirements/open-items.toml", "OI-ID"),
         ("docs/requirements/interfaces.toml", "IF-ID"),
         ("docs/requirements/components.toml", "CMP-ID"),
+        ("docs/requirements/external.toml", "EXT-ID"),
+        ("docs/requirements/external.toml", "B-ID"),
+        ("docs/requirements/external.toml", "REL-ID"),
     ):
         for row in spine_carrier.load(docs.parent / rel, id_col):
             match = _ANY_ID.match(str(row.get(id_col) or "").strip())
@@ -836,7 +848,9 @@ def _mark_covers_live_findings(marks, live):
         if space not in marks:
             out.append(
                 "id watermark declares no mark for {} — every id space must be "
-                "marked, or that space is unguarded".format(space)
+                "marked, or that space is unguarded; add it with "
+                "`trace.py --bump-ids` (existing marks are kept, never "
+                "lowered)".format(space)
             )
         elif live.get(space, 0) > marks[space]:
             out.append(
@@ -862,6 +876,17 @@ def _mark_history_findings(marks, live, previous):
     for space in WATERMARK_SPACES:
         now = marks.get(space)
         if now is None:
+            continue
+        if space not in previous:
+            # A space's FIRST committed mark is a SEED with no baseline to
+            # justify it, and it may legally stand above max(live): the ids it
+            # must cover include rows deleted BEFORE the space was guarded
+            # (B-06/B-07, cut by the 2026-08-16q ruling while B was not yet a
+            # watermark space — seeding B at the live max of 5 would hand
+            # those two numbers back out). The hand-raise rule below defends a
+            # committed mark; from this file's next commit on, this space has
+            # one. Over-seeding is the fail-safe direction — a too-high mark
+            # wastes numbers, it never re-points history.
             continue
         was = previous.get(space, 0)
         if now < was:

@@ -15,14 +15,17 @@
 # whatever ids the templates seed, or an adopter is red on day one
 #
 ASSET = 0
+B = 0
 CMP = 0
 DP = 0
+EXT = 0
 IF = 0
 LLR = 0
 MOD = 0
 OI = 2
 PART = 0
 PB = 0
+REL = 0
 REPO = 0
 SN = 0
 SR = 0

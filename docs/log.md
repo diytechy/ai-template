@@ -36,6 +36,57 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17n — sitting-3 item 17 RULED ("Yes add them"): `B` and `EXT`
+  become watermark spaces, and `REL` joins them on the item's own reasoning.**
+  The `2026-08-16q` cut spent `B-06`/`B-07`/`EXT-004` and nothing mechanical
+  stopped a later session re-minting a spent id — the frame tiers were the
+  only id spaces exempt from the watermark. Executed kit-level:
+  `WATERMARK_SPACES` gains the three spaces, `external.toml`'s three tables
+  join `_offspine_ids`' live sweep, the shipped `id-watermark.template` gains
+  the three zero rows (verified: a fresh scaffold's `--bump-ids` raises
+  nothing), and the `test_id_watermark.py` pin extends to all three plus two
+  new behaviors. **The marks written: `B = 7`, `EXT = 5`, `REL = 3`** — the
+  highs EVER allocated, verified against the registry's full git history, not
+  the column restated: `B-01`…`B-07` minted at `0ff33a95` and `B-06`/`B-07`
+  cut at `e2ec44c1` (so live max 5, ever-high 7); `EXT-001`…`EXT-005` ditto
+  with `EXT-004` cut (live max = ever-high = 5); `REL-001`…`003` all live.
+  The sitting-2 draft's `B-08`/`REL-004` and the `"v1 EXT-006"` absorbs
+  citation were never registry rows — checked per-id with `git log -S` over
+  `external.toml`. `--bump-ids` derives from LIVE rows and duly wrote
+  `B = 5` — the exact bug the mark exists to prevent — so `B` was SEEDED at
+  7, and `_mark_history_findings` gained the first-seed exemption a seed
+  needs: a space's FIRST committed mark has no baseline to defend and must
+  be able to carry pre-guard deletions (over-seeding is fail-safe — it
+  wastes numbers, never re-points history). **The `REL` call: included** —
+  same locked-frame class, same delete-by-ruling exposure (the v1→v2
+  renumbering already showed the recycling hazard), nothing distinguishes
+  it; its mark equals its live max, so only the guard changes. **Protection
+  proven in a throwaway copy:** deleting `B-05` leaves integrity clean, bump
+  raises nothing and the mark HOLDS at 7; hand-lowering the mark to 5 (what
+  a live-derived regeneration would write) is an integrity ERROR *"moved
+  DOWN 7 -> 5"*; minting `B-08` past the mark is an integrity ERROR until
+  `--bump-ids` records it. Honest limit, stated: re-adding a cut id BELOW
+  the mark raises no finding at edit time — the frame has no minter and
+  rule 2 catches only ids past the mark, the same protection a deleted SR
+  below its mark has; the guarantee is that the RECORD never falls, so
+  anything counting from it issues `B-08`, never `B-06`. **Downstream (ships
+  to every adopter):** a resync goes red with `id watermark declares no mark
+  for B`/`EXT`/`REL` (integrity class), and one `trace.py --bump-ids` adds
+  the missing spaces, existing marks kept and never lowered — demonstrated
+  on a scaffold; the missing-space finding now names that fix, and
+  `RESYNC_PACK.md` §3 gained the entry, including the raise-the-seed-by-hand
+  caution for adopters who cut frame rows pre-guard. Ratchets re-stamped
+  with reasons in place: `trace.py` 4178 → 4203, smoke `max-tests`
+  1200 → 1208 (two in-process tests). Baseline otherwise unmoved —
+  `--strict` exits 1 only on the pre-existing `SR-140` form finding (the
+  `IF-128` advisory also pre-existing), `--strict-integrity` exits 0
+  accepting the seed: SN=27 SR=70 LLR=159 TC=155 orphans=0 integrity=0
+  form-findings=1 paraphrase-advisories=5
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=d28e1ccb -->.
+  Smoke tier **1194 passed / 7 skipped**, 34.1 s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=d28e1ccb -->.
+  Item 17 struck in the sitting doc; status.md's live list is now
+  6 · 18 · 19.
 - **2026-08-17m — two owner rulings executed in session: attestation is a
   CELL claim (sitting-3 item 15 RULED), and item 16 was NEVER OPEN — the
   standing D-9 target is `{Drafted, Approved, Founded}`.** Ruling A, owner

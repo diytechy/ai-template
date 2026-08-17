@@ -1419,6 +1419,33 @@ so existing `edge` rows keep parsing — fold them into ordinary needs at your
 own pace. The template's example row also now documents the optional `tags`
 key (the hats entry above).
 
+### The frame tiers join the id watermark: `B`/`EXT`/`REL` [since d28e1ccb]
+
+*(Anchored at the preceding desk commit; the change lands in the commit(s)
+that follow it.)* The three id spaces of `docs/requirements/external.toml` —
+`[boundary.B-##]`, `[entity.EXT-###]`, `[relationship.REL-###]` — become
+watermark spaces: `trace.py` now sweeps the frame for live ids and requires a
+mark per space, so a deleted crossing's number can no longer be silently
+re-minted (the frame is the one tier that had no guard, and this kit's own
+history spent three ids that way). **What you will see on re-sync:** your
+committed `docs/id-watermark` predates the three spaces, so the always-on
+integrity pass goes red with `id watermark declares no mark for B` (and
+`EXT`, `REL`). **The fix is one command** — the same one the file's header
+names:
+
+```
+python scripts/trace.py --bump-ids    # adds the missing spaces; existing marks are kept, never lowered
+```
+
+One caution, and it is the mechanism's whole point: `--bump-ids` derives from
+**live** rows, so if your repo ever deleted a `B`/`EXT`/`REL` row *before*
+this change guarded those spaces, raise the fresh mark by hand to the highest
+id you ever allocated before committing — a space's **first** committed mark
+is a seed and may legally stand above `max(live)`; from the next commit on it
+is held monotone like every other mark. (This kit seeded `B = 7` over a live
+max of 5 for exactly that reason: `B-06`/`B-07` were cut before the guard
+existed.)
+
 ---
 
 ## 4. Translation helper — concept renames
