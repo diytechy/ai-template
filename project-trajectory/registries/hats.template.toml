@@ -1,12 +1,11 @@
 # The HATS ROSTER — the declared expert perspectives every applicable
 # decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. THIS ROSTER CONTAINS SIXTEEN HATS:
-# fourteen ratified in the kit, and the two cross-cutting lenses at the
-# bottom — INTEGRITY-RECOVERABILITY, PRODUCT-FITNESS — still PROVISIONAL
-# there. (History in one clause: six drafted 2026-08-13, the UX pair and the
-# five aspect hats added by ruling 2026-08-13q/s, the three lenses drafted
-# 2026-08-16 and CONSISTENCY ruled in the same day.) YOU ARE EXPECTED TO EDIT
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. THIS ROSTER CONTAINS SIXTEEN HATS,
+# all ratified in the kit. (History in one clause: six drafted 2026-08-13, the
+# UX pair and the five aspect hats added by ruling 2026-08-13q/s, the three
+# cross-cutting lenses drafted 2026-08-16 — CONSISTENCY ruled that day,
+# INTEGRITY-RECOVERABILITY and PRODUCT-FITNESS on 2026-08-17.) YOU ARE EXPECTED TO EDIT
 # IT — cut the hats that do not earn their place in your project, add the ones
 # your domain needs, and rewrite every `applies_when` against YOUR vocabulary.
 # That editing is not optional politeness: a roster inherited unread is
@@ -172,17 +171,19 @@ applies_when = "always"
 asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
 listens_for = """One meaning given two treatments: a status word that differs between two surfaces, one concept carrying two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not."""
 
-# --- PROVISIONAL (drafted 2026-08-16, not yet ruled) --------------------------
+# --- two CROSS-CUTTING lenses, ruled into the kit 2026-08-17 ------------------
 #
-# Two CROSS-CUTTING lenses, added after a blind re-derivation exercise found the
-# roster above had no charter for either of them. They are `always` on purpose
-# and that is the half to argue with first: in each case the finding was that
-# the lens was UNREACHABLE, so gating one on a tag would reproduce the defect it
-# was drafted to answer. If a charter is right for your project but fires too
-# widely, the cheap fix is a predicate, not a deletion. Read both before you
-# keep either: an unread hat is the ceremony this roster exists to prevent.
-# (Their sibling CONSISTENCY was drafted alongside them and ruled in above on
-# 2026-08-16; that ruling is not evidence about these two.)
+# Added after a blind re-derivation exercise found the roster above had no
+# charter for either of them, and ruled in on that finding. They are `always`
+# on purpose and that is the half to argue with first: in each case the finding
+# was that the lens was UNREACHABLE, so gating one on a tag would reproduce the
+# defect it was drafted to answer. RULED FOR THE KIT, NOT FOR YOU — the editing
+# instruction at the top of this file governs every charter here, and this file
+# is seeded into your repo once and preserved thereafter, so narrowing an
+# `applies_when` or deleting a block survives a kit re-sync. If a charter is
+# right for your project but fires too widely, the cheap fix is a predicate,
+# not a deletion. Read both before you keep either: an unread hat is the
+# ceremony this roster exists to prevent.
 
 # Atomic writes, bounded claims and crash recovery normally arrive only through
 # UNATTENDED-OPS, which is tag-gated — so an ATTENDED session that half-writes a

@@ -196,10 +196,13 @@ LIVE_NAMES = [
     # failing to produce SR-053's cross-view obligation — accepted as stated. It
     # holds its drafted position, so this pin's ORDER is unchanged by the ruling.
     "CONSISTENCY",
-    # The remaining two 2026-08-16 charters, PROVISIONAL-FOR-THE-SITTING
-    # (hats.toml's own comment block carries the findings that motivated them —
-    # R-5/R-6 of the WI-467 hat-aware blind derivation). If the sitting cuts a
-    # charter, its name leaves this pin in the same commit.
+    # The other two 2026-08-16 charters (R-5/R-6 of the WI-467 hat-aware blind
+    # derivation), RULED `always` 2026-08-17 — the roster now carries no
+    # provisional block at all. The ruling conditioned on downstream
+    # opt-out-ability, which holds: hats.toml is seeded once and preserved on
+    # re-sync, so an adopter's `applies_when` edit or block deletion survives a
+    # kit upgrade. If a later sitting cuts a charter, its name leaves this pin
+    # in the same commit.
     "INTEGRITY-RECOVERABILITY",
     "PRODUCT-FITNESS",
 ]

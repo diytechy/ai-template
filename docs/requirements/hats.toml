@@ -1,15 +1,15 @@
 # The HATS ROSTER — this repo's declared expert perspectives, the ones every
 # applicable decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
 #
-# THIS ROSTER CURRENTLY CONTAINS SIXTEEN HATS: fourteen ratified owner text,
-# and the two PROVISIONAL drafts at the bottom of the file, pending owner
-# review. (History, in one clause: six shipped 2026-08-13 under OI-19 option
-# (a) — injection first, record second; the UX pair and the five aspect hats
-# came in by Decision 11, rulings 2026-08-13q/s, at WI-453; the three
-# cross-cutting lenses were drafted 2026-08-16 and CONSISTENCY ruled in the
-# same day. The growth record belongs to the log, not to this header.)
+# THIS ROSTER CURRENTLY CONTAINS SIXTEEN HATS, ALL RATIFIED OWNER TEXT — no
+# provisional block remains. (History, in one clause: six shipped 2026-08-13
+# under OI-19 option (a) — injection first, record second; the UX pair and the
+# five aspect hats came in by Decision 11, rulings 2026-08-13q/s, at WI-453;
+# the three cross-cutting lenses were drafted 2026-08-16, CONSISTENCY ruled
+# that day and the other two on 2026-08-17. The growth record belongs to the
+# log, not to this header.)
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The fourteen ratified charters land
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The sixteen ratified charters land
 # as ruled owner text; MARKED FOR THE OWNER'S EDIT AT RETURN: review all
 # sixteen, cut what does not earn its place, add what is missing, and rewrite
 # any `applies_when` that does not match how this repo actually files work. A
@@ -198,22 +198,23 @@ applies_when = "always"
 asks = """Where else does this same fact, state or action already appear — and does this render it in the same words, the same vocabulary and the same idiom as that one?"""
 listens_for = """One meaning given two treatments: a status word that differs between the console and the dashboard, one concept with two colour or shape vocabularies, an interaction idiom that changes where the underlying structure does not, a rule the template states one way and the instance another."""
 
-# --- PROVISIONAL FOR THE 2026-08-16 SITTING — NOT OWNER TEXT ------------------
+# RULED `always` 2026-08-17 (owner, in session), closing the provisional block:
+# *"keep both, as long as they can be opted out of downstream users I tend to
+# think default always is fine. Easy to change later."* Both were drafted on
+# 2026-08-16 from the WI-467 blind-re-derivation's roster findings R-5 and R-6
+# (`docs/plans/2026-08-16-derivation-alignment.md` §4.3; team C's report §2.5),
+# and each is `always` for the reason the finding gave: the lens was
+# UNREACHABLE in both cases, so a tag-gated charter would reproduce the defect
+# it was drafted to answer. Ruled on their own findings, not as a pair and not
+# on R-4's precedent.
 #
-# The two charters below were drafted by an agent on 2026-08-16 under the
-# owner's option-(b) sanction, from the WI-467 blind-re-derivation's roster
-# findings R-5 and R-6 (`docs/plans/2026-08-16-derivation-alignment.md`
-# §4.3; team C's report §2.5). They are DRAFTS to be ruled at the sitting —
-# kept, rewritten or cut — and until then they carry the same warning the
-# fourteen above do, only louder: a charter an owner has not read is a
-# question the owner did not ask. Their sibling R-4 (CONSISTENCY) left this
-# block on 2026-08-16 when the owner ruled it in; these two did not move with
-# it, and the ruling is not evidence about them.
-#
-# Each is `always` deliberately, and that is the half most worth arguing with:
-# the finding in every case was that the lens is UNREACHABLE, so a tag-gated
-# draft would reproduce the defect it was drafted to answer. If a charter is
-# kept but is too broad here, the cheap fix is a predicate, not a deletion.
+# THE OPT-OUT THE RULING CONDITIONS ON, stated so a downstream reader can find
+# it: this file is SEEDED from the shipped template and then PRESERVED — the
+# scaffold writes it once (`bootstrap.copy_if_new`) and re-sync never
+# overwrites it (RESYNC_PACK "Preserve always"), so an adopter's edits survive
+# a kit upgrade. Narrow a charter by rewriting its `applies_when` predicate;
+# remove one entirely by deleting its block. If that ever stops being true,
+# this ruling's premise is gone and both rows are worth re-reading.
 
 # R-5 — atomic writes, bounded claims and crash recovery reach a decomposition
 # ONLY through UNATTENDED-OPS, which is tag-gated. An attended session that

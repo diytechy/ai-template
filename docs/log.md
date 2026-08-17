@@ -36,6 +36,34 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17a — the hat roster CLOSES at sixteen: `INTEGRITY-RECOVERABILITY`
+  and `PRODUCT-FITNESS` ruled `always`.** Owner, in session: *"keep both, as
+  long as they can be opted out of downstream users I tend to think default
+  always is fine. Easy to change later."* Both leave the provisional block in
+  BOTH rosters; no provisional charter remains anywhere. Ruled on their own
+  findings (R-5, R-6 of the WI-467 hat-aware derivation) rather than on R-4's
+  precedent, which the block itself had warned against reading as evidence.
+  Roster: **16 hats, 10 `always` / 6 conditional** — unchanged counts, because
+  both were already `always` as drafts, so the ruling moved no test pin and no
+  assertion. What it changes is that cutting one is now an amendment rather
+  than a decision never taken.
+  **The ruling's CONDITION was verified rather than assumed**, which is the
+  part worth recording: `hats.toml` is seeded from the shipped template ONCE
+  (`bootstrap.copy_if_new` is write-once) and then PRESERVED — `RESYNC_PACK`'s
+  "Preserve always" class covers every registry — so an adopter narrowing an
+  `applies_when` predicate, or deleting a charter block outright, keeps that
+  edit across a kit re-sync. The statement now lives in both rosters so a
+  downstream reader finds it without reading this log.
+  **Zero SR rows cite either charter** (checked): they were drafted as ROSTER
+  findings — the lens was missing — not to justify an existing row, so no
+  rationale changed and no `PROVISIONAL, unsigned` label moved. They are
+  preventive; the first decomposition they touch will be a future one.
+  **Residual, recorded not fixed:** the opt-out is real but blunt — deleting a
+  block destroys the charter text and the reason it was cut, and the
+  `applies_when` grammar still has no `never` token, so there is no "off, but
+  keep the text". Unfiled. Hats + dogfood suites **80 passed / 1 skipped**;
+  `hats.py audit` 10 always / 6 conditional, 0 unknown tokens
+  <!-- fig: cmd="python -m pytest -q tests/test_hats.py tests/test_dogfood_sync.py" rev=9d569383 -->.
 - **2026-08-16q — the L1 pair ruled on DESIGN CONTROL, and the hosted-CI
   frame CUT: `EXT-004`, `B-06`, `B-07` deleted.** Owner ruling in session,
   in two moves. **(1) The attribution.** *"151 just goes to 05, it's just a

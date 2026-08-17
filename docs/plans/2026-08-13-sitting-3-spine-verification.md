@@ -423,23 +423,31 @@ taken in advance.
    `components.state`'s shipped vocabulary re-uses `planned` and `verified` —
    two words D-9 retired from the spine — for unrelated meanings, where
    `check_vocab.py` cannot see them. The off-spine half is a separate step.
-7. **The two remaining provisional hat charters** —
-   INTEGRITY-RECOVERABILITY (R-5) and PRODUCT-FITNESS (R-6), added `always` to
-   `hats.toml` **and to the shipped template**, so ruling them is a kit-level
-   act, not a repo-local one (`2026-08-16l`). Their sibling CONSISTENCY (R-4)
-   was ruled in at `2026-08-16p`; **that ruling is no evidence about these
-   two** — each was drafted from its own finding and each is ruled on its own.
-   **Impact:** the roster is **16 hats, 10 `always`** today (both drafts are
-   already `always`, so ruling them IN changes no count and no test pin).
-   Cutting both drops it to **14 hats / 8 `always`** and edits `LIVE_NAMES` +
-   `LIVE_ALWAYS` in `tests/test_hats.py` **and** the shipped
-   `hats.template.toml` — a kit-level act reaching every adopter. Every
-   decomposition faces two more questions either way; no registry row moves.
-   **Recommendation:** rule them on their findings, not as a pair, and note the
-   asymmetry — R-5 (INTEGRITY-RECOVERABILITY) has a live subject in this repo
-   (the loop half-writing a registry under an attended session is reachable
-   today), while R-6 (PRODUCT-FITNESS) is the broader claim and the one whose
-   `always` breadth is most worth arguing with.
+7. ~~**The two remaining provisional hat charters**~~ — **RULED `2026-08-17`.**
+   Owner: *"keep both, as long as they can be opted out of downstream users I
+   tend to think default always is fine. Easy to change later."*
+   `INTEGRITY-RECOVERABILITY` (R-5) and `PRODUCT-FITNESS` (R-6) are ruled
+   `always` in **both** rosters and the provisional block is closed — the
+   roster is now **sixteen hats, all ratified owner text, 10 `always` / 6
+   conditional**. Ruled on their own findings, not on R-4's precedent.
+
+   **THE CONDITION WAS VERIFIED, not assumed.** `hats.toml` is seeded from the
+   shipped template ONCE (`bootstrap.copy_if_new` is write-once) and then
+   **preserved** — `RESYNC_PACK`'s "Preserve always" class covers every
+   registry — so an adopter's edits survive a kit upgrade. Downstream opt-out
+   today is *narrow the `applies_when` predicate* or *delete the block*; both
+   persist. That statement now lives in both rosters so a downstream reader
+   finds it without this document.
+   **Measured:** ruling them IN moved no count and no test pin (both were
+   already `always` as drafts); no SR rationale changed either, because **zero
+   SR rows cite either charter** — they were drafted as ROSTER findings (the
+   lens was missing), not to justify an existing row. They are preventive, and
+   the first decomposition they touch will be a future one.
+   **Residual, not fixed:** the opt-out is real but blunt — deleting a block
+   destroys the charter text and the reason it was cut. A `never` token in the
+   `applies_when` grammar would give "off, but keep the text"; see the config
+   discussion at `2026-08-16p`. Unfiled and unruled.
+
 8. **The four hat-exposed obligation candidates** — provider egress of commit
    authorship, the privacy finding-record's retention bound, SN-027's
    undeclared throughput budget, and the colour-only signal. Filed as an intake
@@ -534,6 +542,11 @@ rather than an open one, and so an overrule is a deliberate act.
   artifact named. Two residues named and **not** ruled: the three `Rationale`
   cells still assert the retired method, and `trace.py` has no
   AC-vs-`Verification` coherence lint.
+- **The hat roster CLOSED at sixteen, all ratified** (`2026-08-17`) —
+  `INTEGRITY-RECOVERABILITY` and `PRODUCT-FITNESS` ruled `always`, no
+  provisional block remains in either roster. The ruling's condition
+  (downstream opt-out) was verified against `bootstrap.copy_if_new` +
+  `RESYNC_PACK`, not assumed.
 - **Option (b) — hat-derived labels over SN amendment** for the quality family;
   16 rows labelled, `SR-155` alone left lens-less (`2026-08-16l`).
 - **ACCESSIBILITY and PERFORMANCE ruled `always`** — the switched-off-hat
