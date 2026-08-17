@@ -241,19 +241,46 @@ made from this page; the linked homes hold the full evidence for the ones you
 want to go deeper on. A recommendation is a starting position, never a ruling
 taken in advance.
 
-1. **The L1 pair** — `SR-151` + `SR-152` `boundary_refs`: the same
-   package-alone acceptance shape, so the attribution flips **for both or for
-   neither**. Untouched by v2 on purpose (`2026-08-15n`, re-confirmed
-   `2026-08-16g`).
-   **Impact:** 2 rows, both `Drafted`, both already in this batch — so the
-   change is free either way and costs no extra re-attest. `SR-151` carries
-   `B-06`, `SR-152` carries `B-07`; both acceptances are satisfiable by reading
-   the shipped workflow file alone, which is the "package-alone" shape in
-   question. Nothing else cites either row's boundary attribution.
-   **Recommendation:** rule it, don't defer — a 2-row call with zero blast
-   radius that gets more expensive the moment the rows are signed, and it is
-   one of the last two `B-06`/`B-07` attributions (the registry-integrity sweep
-   still reports both crossings as realized by NO interface row).
+1. **The L1 pair** — `SR-151` + `SR-152` `boundary_refs`.
+   **RE-WORDED `2026-08-16p`: an earlier version of this entry read as though
+   the rows themselves were the question. They are not.** Nothing here deletes
+   a row. The call is **one cell on each row**, and it is an ADD, not a swap:
+
+   | row | today | under the X2 reading |
+   |---|---|---|
+   | `SR-151` | `["B-06"]` | `["B-06","B-05"]` |
+   | `SR-152` | `["B-07"]` | `["B-07","B-05"]` |
+
+   **Why.** Both rows' acceptance is falsifiable **against the shipped package
+   alone** — `tests/test_ci_tier_declaration.py` pins the shipped workflow's
+   trigger set against the declared `[ci-tiers]` table and **exercises no
+   hosted trigger for either row**. So what is actually verified is a property
+   of the delivered template (`B-05`), not of a crossing act. `SR-139` was
+   ruled exactly this way at **X2** (`["B-02","B-05"]`, on an acceptance
+   falsifiable against the package with no crossing performed). The two rows
+   share one acceptance shape, so the reading applies **to the pair or to
+   neither** — that, and only that, is what "flips for both or for neither"
+   meant.
+   **What the rows are for** (so the call is not made blind): `SR-151` obliges
+   the shipped reference CI workflow to invoke the same documented harness
+   entry point per declared trigger across the declared OS × Python matrix;
+   `SR-152` obliges the CI job verdict to carry the harness's own exit — job
+   fails when the harness exits nonzero, step log names each outcome, no
+   silently skipped required step. Together they are what stops an adopter's CI
+   drifting from the bar their local hook floor runs. Deleting them would
+   delete that obligation.
+   **Impact:** 2 cells. Both rows are `Drafted` and already in this batch, so
+   the edit costs no extra re-attest. No child, test or interface reads either
+   `boundary_refs` cell.
+   **Recommendation: apply the X2 reading to both.** It is the consistent cell
+   under a precedent this repo already set, the acceptance text is the evidence,
+   and the alternative is two rows whose declared crossing nothing in their own
+   acceptance touches.
+   **ORTHOGONAL — do not decide it here (`2026-08-15n` says so explicitly).**
+   That **no interface row realizes `B-06`** is a *different* finding, on the
+   IF side, and it is **not two crossings but four**: the integrity sweep
+   reports `B-01, B-02, B-06, B-07` all realized by no IF row, and it is
+   already deferred as **decision 6**. See item 1a.
 2. ~~**The `SR-144` flip**~~ — **MOOT ON THE FACTS, no action needed**
    (`2026-08-16p`). SR-144 is already `Modified`: it flipped at `22a915d3`
    because its **own rationale** gained the hat-derived label, which is an
@@ -262,6 +289,30 @@ taken in advance.
    parent should not flip for a child's sake — that argument is **withdrawn**;
    it contradicts `docs/process.md` §4, which rules the opposite. The live
    question it raises is now item 15.)*
+1a. **Can `B-06`/`B-07` simply be cut?** — raised by the owner `2026-08-16p`
+   ("if the 2 boundary interface could be killed that would be cleaner"), and
+   worth a straight answer rather than a deferral.
+   **The honest case FOR cutting:** the frame names what crosses the boundary
+   of **the system under specification**, and this system is a *package*. A
+   hosted CI trigger crosses the boundary of an **adopter's repository**, not
+   of the kit — the kit ships a reference workflow as CONTENT (`B-05`) and
+   operates no CI service. On that reading `B-06`/`B-07` belong to a different
+   system's frame, and `EXT-004` (Hosted CI) with them. This is the same
+   argument as the item-1 attribution, carried to its conclusion: if what the
+   rows actually verify is package content, the crossing may be someone else's.
+   **The honest case AGAINST:** the crossing is real whether or not this repo
+   realizes it, and "no IF row realizes it" is **not** grounds — `B-01` and
+   `B-02` are in exactly the same state and nobody proposes cutting those.
+   **Impact:** 6 boundaries today; `B-06`/`B-07` are the two least-cited (**1
+   SR each**, versus `B-05`'s 54). Cutting takes both crossings, the two
+   `boundary_refs` cells from item 1 (which the cut would decide by removing
+   the question), and `EXT-004` if nothing else cites it.
+   **Recommendation: rule item 1 FIRST, then this.** They point the same way
+   and item 1 is the cheaper, better-evidenced half — but note the ordering
+   trap: **applying X2 makes cutting easier to justify** (the rows then read
+   `B-05`-primary), so taking them in the other order would let a cell edit
+   pre-decide a frame question. If you do cut, do it as decision 6 over all
+   four unrealized crossings, not as a two-crossing special case.
 3. **The `Consumes` owner-side reading** — which reading of "owner" governs
    decides how many more IF rows leave SR ownership; the IF-031/F6 precedent
    read it as the-module-that-holds-the-code (`2026-08-16g`).

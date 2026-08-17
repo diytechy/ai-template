@@ -769,12 +769,27 @@ DevStg-99-Release
 
 DevStg-Needs
 DevStg-Boundary
+DevStg-SystemReqs
 DevStg-Arcitecture
-DevStg-CompReqs
 DevStg-LLReqs
 DevStg-Tests
 DevStg-Impliment
 DevStg-Release
+
+
+DevStg-Needs      vision and stakeholder needs in work
+DevStg-Boundary   the frame: what is outside, what crosses, each 
+DevStg-Reqs       obligations at the current boundaries.  RECURSES.
+DevStg-Arch       partition each scope into sub-boundaries.  RECURSES.
+DevStg-LLReqs     the inside of a leaf, bound to a code symbo
+DevStg-Tests      the test set in work
+DevStg-Impl       implementation in work
+DevStg-Release    nothing in work; release checklist available
+```
+
+One more item, any template files need to tie back to the requirements, even though they are minted primarily through LLMs in a direct session, they are an outcome of this system to provide a reuseable baseline for other repositories.  It does create an intersting item where CLI sessions themselves are an interface into the system, and an LLM agent outside of the mechanization can still contribute to and modify artifacts.  That would be true of basically any downstream adopter.  I think its worth showing / expressing in the spine breakdown and to let it surface in the arcitecture, but I'm not sure of the best way to seed that in, perhaps at the very end.
+
+Note the following open items (open-items.toml) are approved:
 
 OI-14: Approve recommendation
 OI-17: Approve recommendation
@@ -788,3 +803,51 @@ OI-24: RECHECK = What does a "human run"?  The smoke test or the full test?  I w
 OI-25: Approve recommendation, but note this needs to follow the new stage semantics.
 OI-26: Approve recommendation to close.
 OI-27: Approve recommendation.
+OI-28: Approve recommendation.
+
+Spin up opus or sonnet agents as applicable to properly document these and start grinding through whatever work these open up.  Use opus and openai cli to perform adversarial reviews as applicable.  Schedule the work so as much work can be completed as feasable before stakeholder need reapproval, as I will be absent for some time and would like you to charge through as much as possible.  Any questions for me before you begin?
+
+
+*********************
+
+Okay, I think your note about unconnected interfaces is fascinating and it might expose more.  This is something that can be mechanized and audited.  For instance, any script here that is provided as the template is an output itself (B-05) whose provided behavior is also self adopted from the template itself.  So I think like you indicated the first thing to do here is to make sure that all outputs of the system are tied to a system requirement.  That just by itself might realize that some of the mappings are incorrect.
+
+The main outcome here is realizing that the system that is being designed is everything under design control in the repository itself, while recognizing self-adoption means the BEHAVIORs of the self-adopted template is NOT under design control (it could be viewed as such under inheritance but that's just going to make the breakdown more difficult).
+
+Ultimately I think this is just more registry changes.  Perhaps these were already in the pipeline, but I think these need to be done now:
+SRs must serve an output, just something like "Serve: IF-xxx, IF-xxx"
+Interfaces must serve a consumer, something like "Serve: B-05, LLR-003"
+
+Now interfaces don't name their design blocks, design blocks name their interfaces.  Interfaces only define who they serve that information to.  This may not matter too much, but this way the interfaces are focussed on where the information is going because it can tree out (so no SR / LLR can define that without it being managed piece-wise).
+
+Then a mechanical check can be run to ensure that each output interface has precisely one provider, no more no less.
+
+Then iterate on SRs and interfaces in parallel while working on verbage, then decompose again to reconnect LLRs / other elements.
+
+****************************
+
+Related to some of the items still in the backlog, please spin up a subagent as appropriate to breakdown this feedback and consider how it changes the plan.  The spine change detection plan drafted before relied on hashes and commit IDs, but I think that complexity is unecessary the more we have churned.  Instead, I would say approved spine changes just have their respective documents copied to archive/last_approved, and then comparisons (Adjudicator or human, as well as html generator] just use both those differences between the two.
+
+****************************
+
+Kill direction and CarriedBy in the interfaces cell.
+
+arrow directionality can be determined in the graph builder / render by defaulting to owner, if it's tied to a physical component, then the connections inherently can be rendered as bi-directional.
+
+**************
+
+Update SN, other registries, and callers per and all others to use "status" field across all spine registeries with common enum
+
+Approve the spine after this (I have revieded all entries and agree to the current definition).  I give my approval for that after the status related updates since that will not affect the prose of those cells, which is what I am approving of in this message.
+
+Seed the initial snapshot file for the last approved folder.
+
+
+
+---After approval lands -----
+
+Should generated items have a header that emphasizes that they should not be referenced by LLM agents since they are generated artifacts and could be stale?
+
+Should all archive documents have the same header?
+
+I want to make sure LLM agents do not churn on documentation that could be very old.
