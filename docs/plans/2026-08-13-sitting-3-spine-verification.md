@@ -430,6 +430,24 @@ taken in advance.
    cheapest (a wording amendment to SN-008, no new row); C-PRF-1 is the one
    that most needs your judgement, since declaring a throughput measure
    commits the repo to measuring it.
+   **The intake proposals now EXIST** (`WI-468` closed complete `2026-08-17g`;
+   the ruling is still yours — this item stays OPEN): one section per
+   candidate, grounding measured in the code, all four options costed, the
+   refusal case stated honestly, in
+   [`2026-08-17-wi468-obligation-intake-options.md`](2026-08-17-wi468-obligation-intake-options.md).
+   Its recommendations in one line: **C-DPR-3** a hat-derived SR under SN-026
+   (the brief-assembly discipline is real but undeclared; the runner's pull
+   channel is consent-shaped, and no outbound redaction exists anywhere);
+   **C-DPR-2** a hat-derived SR under SN-009 narrowed to
+   value-never-persists (the durable finding copy is the committed session
+   transcript, which redacts credentials but not PII); **C-PRF-1** a modest
+   derived SR under SN-027 reporting fan-out utilisation, no numeric target
+   (nothing measures today — and the repo in fact runs `lanes=1`, with no
+   instrument that would say so); **C-ACC-2** no new row — the SN-008
+   wording amendment plus record-as-matched to `SR-052`, whose `Approved`
+   text already states no-colour-alone with the mechanized A3 chain behind
+   it (the §4.3 "carried by neither" premise is measurably overstated for
+   this one candidate).
 
 **THE SIX SOL ROW-CALLS — FIVE APPLIED `2026-08-17b`, F11 DECLINED.** Owner:
 *"apply all of SOL's queued recommendations except for F11, adapting any as

@@ -1,7 +1,7 @@
 +++
 id = "WI-468"
 title = "Hat-exposed obligation intake — propose SN/SR intake for the four obligation candidates the hat-aware blind re-derivation exposed (WI-467 team C, docs/plans/2026-08-16-derivation-alignment.md §4.3), each carried by NEITHER the A/B breakdowns nor the legacy registries: C-DPR-3 (repository content briefed to an external model runner carries commit authorship — names, addresses, timestamps — and no need states a basis, a boundary or an exclusion for that crossing, though the frame already draws it at REL-003); C-DPR-2 (the privacy FINDING RECORD is the one artifact guaranteed to contain the personal data it reports, and nothing bounds its retention or names who may reach it); C-PRF-1 (SN-027 justifies itself entirely in throughput, commissions the system's most complex machinery, and declares no measurement of the improvement — unfalsifiable as written); C-ACC-2 (SN-008's 'a reader can believe a green' names the system's most important signal by its COLOUR, and if colour is the only channel the signal does not exist for a substantial class of readers, nor in a monochrome terminal or a printed record). THIS ROW PROPOSES INTAKE AND MINTS NOTHING: the disposition of each candidate — a new need, an amendment to an existing one, a labelled derived requirement, or refused — is the owner's ruling at the sitting, and the session's deliverable is the option set with its evidence, not a registry row."
-specref = "docs/plans/2026-08-16-derivation-alignment.md"
+specref = ""
 workstream = "requirements"
 sr_refs = []
 needs = []
@@ -9,6 +9,35 @@ buildtier = "medium"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+**The four intake proposals delivered; nothing minted; every disposition
+rides the sitting.** The option set is
+[plans/2026-08-17-wi468-obligation-intake-options.md](../../plans/2026-08-17-wi468-obligation-intake-options.md)
+— one section per candidate: measured grounding (named files/functions),
+the amendment / hat-derived-SR / new-SN / refuse options each with cost,
+the honest refusal case, and a recommendation. The owner steer (no new
+SNs; hat-derived SRs favored) was verified against the record and holds:
+OI-18 dissolved all ten edge needs (2026-08-13) with edge coverage
+regenerated per-need by the hats mechanism, and `2026-08-16l` chose
+hat-derived labels over SN amendment — both stated up front in the doc.
+Recommendations in one line each: **C-DPR-3** hat-derived SR under SN-026
+(the push-channel brief discipline is real but undeclared; the pull
+channel is consent-shaped by construction); **C-DPR-2** hat-derived SR
+under SN-009 narrowed to value-never-persists (the scanner persists
+nothing itself — the durable copy is the committed session transcript,
+which redacts secrets but not PII); **C-PRF-1** a modest derived SR under
+SN-027 reporting fan-out utilisation plus a `why` reword at its pending
+re-attest, recommending against a numeric target (nothing measures today,
+and the repo in fact runs `lanes=1` with no instrument to notice);
+**C-ACC-2** no new row — SN-008 wording amendment plus
+record-as-matched-to-`SR-052`, whose Approved text already states
+no-colour-alone and mechanizes it (`LLR-113`/`TC-118`), a measured
+overstatement in the candidate's carried-by-neither premise. Deviation
+from spec: none in scope; one alignment-map claim (C-ACC-2
+"carried by neither") is contradicted by measurement and reported rather
+than suppressed.
 
 ## Context
 

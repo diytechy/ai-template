@@ -36,6 +36,47 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17g — WI-468 executed: one intake proposal per hat-exposed
+  obligation candidate, grounded in measurement; NOTHING MINTED; every
+  disposition rides the sitting.** The option set is
+  [plans/2026-08-17-wi468-obligation-intake-options.md](plans/2026-08-17-wi468-obligation-intake-options.md)
+  — per candidate: what the kit measurably does today (named
+  files/functions), the amendment / hat-derived-SR / new-SN / refuse
+  options costed, the honest refusal case, a recommendation. The owner
+  steer (hats mint no new SNs) was VERIFIED against the record and holds
+  twice over: OI-18 dissolved the edge-SN tier (2026-08-13; all 28 SN rows
+  read `kind = "core"` today) and `2026-08-16l` ruled hat-derived labels
+  over SN amendment — so the labelled derived SR is presented as the
+  structurally favored form throughout, and the two needs-defect
+  classifications are argued rather than suppressed. The recommendations:
+  **C-DPR-3** → hat-derived SR under SN-026 (DATA-PROTECTION + C-SEC-5 +
+  C-LEG-3 converging) — measured: no authorship field is formatted into
+  any prompt and `docs/log.md` is excluded by name in three modules, but
+  the discipline is undeclared, the bypass-flagged runners' pull channel
+  is consent-shaped (`docs/agents-enabled`), and no outbound redaction
+  exists anywhere in the kit. **C-DPR-2** → hat-derived SR under SN-009
+  narrowed to value-never-persists — measured: `check_privacy.report()`
+  writes no file, but the finding excerpt IS the matched value and the
+  committed `docs/iteration/` transcript is the durable copy;
+  `redact_secrets` strips credential shapes only, PII classes untouched;
+  dormant here (`privacy_check = false`), live for any adopter. **C-PRF-1**
+  → a modest derived SR under SN-027 (report fan-out utilisation from the
+  existing WI-124 telemetry seams; no numeric target) plus a `why` reword
+  at the row's pending re-attest — measured: nothing measures throughput,
+  `check_perf.py` is unwired, and the repo declares no `[agent-loop] lanes`
+  key so the machinery runs SERIAL (`lanes=1`) with no instrument to say
+  so. **C-ACC-2** → NO new row: the SN-008 wording amendment (channel,
+  not hue) plus record-as-matched to `SR-052`, whose `Approved` text
+  already states no-information-by-colour-alone with the mechanized A3
+  chain behind it (`LLR-113`/`TC-118`; console output measured word-only,
+  zero ANSI colour) — the §4.3 "carried by neither A/B nor legacy" premise
+  is measurably overstated for this one candidate, reported as a finding;
+  the real remainder (`gen_open_items.py` outside the A3 sweep, two thin
+  spots) is coverage work under SR-052, not a spine row. WI-468 closed
+  `complete/` (the deliverable was the option set; the ruling is the
+  sitting's); sitting-3 §0.4 item 8 re-pointed at the doc and stays OPEN;
+  status prose de-staled. Smoke: 1189 passed / 7 skipped, 32s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=8537b205 -->.
 - **2026-08-17f — adversarial round 2 (Sol + Terra) over the three 2026-08-17
   spine commits: 9 distinct findings — 6 CONFIRMED, 2 CONFIRMED-IN-PART,
   1 REFUTED; nothing applied, the confirmed set queues for the owner.**
