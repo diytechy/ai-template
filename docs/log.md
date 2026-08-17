@@ -36,6 +36,54 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17c — sitting-3 §0.4 item 3 RULED: `owner` points at the DESIGN
+  tier wherever a design row exists for the owner-side endpoint; the 27
+  file-endpoint rows are `WI-469`'s re-authoring, not this session's edits.**
+  Owner adopted the desk recommendation verbatim. Population RE-DERIVED
+  rather than restated: partitioning `interfaces.toml`'s 81 `Consumes` rows
+  on owner prefix gives **49** SR-owned; resolving each `counterpart` against
+  the live LLR `Module` set (strip `project-trajectory/` + extension, split
+  `;`) reproduces the desk split exactly — **19 convert / 27 name a file / 3
+  name an external actor**. The 19 re-points (old → new): `IF-039`
+  SR-009→LLR-171, `IF-040` SR-019→LLR-006 (`run_step`), `IF-043`
+  SR-020→LLR-017 (the outgoing-range scan), `IF-055` SR-156→LLR-058,
+  `IF-071`/`085` SR-148→LLR-058 (`frontier`/`evaluate`),
+  `IF-056`/`082`/`083`/`084` SR-070→LLR-049 — ONE owner for the WI-280
+  sibling seam, because the three sibling rows state "Contract: IF-056's"
+  and a seam keeps one answerable row —, `IF-075` SR-049→LLR-001 and
+  `IF-127` SR-140→LLR-001 (**no trace LLR names `reattest_model`**; the
+  registry-model core row answers — a candidate LLR gap, noted), `IF-088`
+  SR-148→LLR-035 (same class of gap: no gen_trajectory LLR names the pending
+  derivation), `IF-089` SR-148→LLR-001 (`load_registries`+`analyze`),
+  `IF-093` SR-168→LLR-154 (the merge slot's `OUTCOME_DIRS`/`BAR_GREEN`),
+  `IF-101` SR-174→LLR-002 and `IF-116` SR-155→LLR-002 (the watermark's
+  "what an id is" home), `IF-117` SR-147→LLR-023, `IF-130` SR-049→LLR-050.
+  No `approval`, `direction` or contract text moved; every touched row stays
+  `drafted` — this ruling flips no status and re-attests nothing.
+  **The 3 `external:` rows stand** (`IF-032` git, `IF-036` upstream docs,
+  `IF-041` agent CLI).
+  **The 27 mis-authored rows: FILED, not edited** —
+  [`WI-469`](work/queued/WI-469-consumes-names-the-medium.md)
+  (queued) carries the owner's correction (*"the file itself is the actual
+  interface"*), the two sub-shapes (low fan-out names the consumer;
+  published-contract/high-fan-out ties back to `B-05` per
+  `IF-013`…`IF-018`/`IF-048`), and the full 27-row population, so the
+  executing session measures readers, not membership. Id watermark
+  `WI 468 → 469` (`bump_watermark`, same commit as the spec).
+  **One NEW advisory, cause understood and reported rather than dodged:**
+  `IF-088`→`LLR-035` trips `if_this_project_advisories` because it splits
+  the IF endpoint cell on `;` (`_module_endpoints`) but passes the LLR
+  `Module` whole through `norm_module`, so a bundle-moduled owner
+  (`gen_trajectory.py;traj_parse.py;traj_views.py`) can never match — the
+  docstring's "a `;`-joined cell matches on ANY endpoint" intent,
+  unimplemented on the LLR side (`IF-128`→`LLR-173` pre-exists in the same
+  advisory class). LLR-035 is semantically the right owner; a single-module
+  UI row would silence the warning by lying. FINDING, not fixed here.
+  Verification: `trace.py --strict` advisories 113 → 114 (the one above; the
+  gating `SR-140` form finding and the exit 1 pre-exist), spine counts
+  unmoved `SN=27 SR=67 LLR=155 TC=150 orphans=0 integrity=0 interfaces=123`.
+  Smoke **1187 passed / 7 skipped**, 38s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=4cf98e4f -->.
 - **2026-08-17b — five of Sol's six queued row-calls APPLIED; F11 declined.**
   Owner: *"apply all of SOL's queued recommendations except for F11, adapting
   any as you need."*

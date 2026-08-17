@@ -314,93 +314,42 @@ taken in advance.
    re-minting a cut crossing id at a different thing. That is the exact
    vacuous-space class the `IF-121/122` mint hit. See item 17.
 
-3. **The `Consumes` owner-side reading.** **RE-MEASURED `2026-08-17`, and the
-   earlier framing was wrong in a way worth stating**: it read as though
-   SR-owned rows were deficient. They are not. **The endpoint is defined in
-   the interface layer either way** — `this_project`/`counterpart` are literal
-   cells with literal values, and nothing about this call changes what a row
-   SAYS. The only question is whether that value is **duplicated** and
-   therefore droppable.
+3. ~~**The `Consumes` owner-side reading**~~ — **RULED AND APPLIED
+   `2026-08-17c`.** The recommendation adopted verbatim: **`owner` points at
+   the DESIGN tier wherever a design row exists for the owner-side
+   endpoint**, and the mechanism stands as re-measured — `owner` = LLR makes
+   the endpoint derivable (`owner` → LLR → `module`); `owner` = SR means the
+   IF cell is the single home for it and stays.
 
-   **The owner's read at the desk is the ruling shape**, and both halves of it
-   already exist as fields, which is why this looked bigger than it is:
-   *"another IF, if it's a higher layer connecting to a lower layer"* is
-   **`carried_by`** (ruling Q3; 18 rows, all → `IF-102`); *"connecting to the
-   SR that's serving that interface"* is `owner` taking its `SR-###` value.
+   **Applied:** the population, re-derived independently at the ruling
+   session, reproduced the desk split exactly — 49 SR-owned `Consumes` rows
+   → **19 converted / 27 file-endpoint / 3 `external:`**. The 19 `owner`
+   cells re-pointed to the design tier: `IF-039`, `IF-040`, `IF-043`,
+   `IF-055`, `IF-056`, `IF-071`, `IF-075`, `IF-082`, `IF-083`, `IF-084`,
+   `IF-085`, `IF-088`, `IF-089`, `IF-093`, `IF-101`, `IF-116`, `IF-117`,
+   `IF-127`, `IF-130` — the per-row picks, the one-owner call on the WI-280
+   sibling seam, and the three candidate-LLR-gap judgment calls are recorded
+   in `2026-08-17c`. No status flipped, no contract text moved. The three
+   `external:` rows (`IF-032` git, `IF-036` upstream docs, `IF-041` agent
+   CLI) stand untouched.
 
-   | cell | holds | rows |
-   |---|---|---|
-   | `owner` | the ONE row **answerable** — `SR-###` **or** `LLR-###` (Q1) | 123 |
-   | `carried_by` | interface composition — the bundle a constituent rides | 18 |
-   | `req_refs` | every requirement the seam realizes; **not** answerability | 123 |
+   **The 27 mis-authored rows are FILED, not edited:**
+   [`WI-469`](../work/queued/WI-469-consumes-names-the-medium.md)
+   (queued) carries the full 27-row population, the owner's correction
+   (*"the file itself is the actual interface"* — they name the MEDIUM where
+   they should name whom the medium serves), and the two sub-shapes, kept
+   here because they are the executing session's fork:
 
-   **The mechanism, stated plainly.** R4's point is one-home, not definition:
-   - `owner` = **LLR** → the owner-side endpoint is **derivable**
-     (`owner` → LLR → `module`), so the IF cell restates a fact that already
-     has a home, and `wi455` can drop it.
-   - `owner` = **SR** → nothing to walk to, so the IF cell is the **single
-     home** for that endpoint and **must stay**. That is correct, not a gap.
+   | shape | fix |
+   |---|---|
+   | low fan-out — e.g. `coverage.json` read by check/check_coverage only; `docs/declared-absences` by five checkers | name the actual consumer; the endpoint becomes derivable |
+   | published contract, high fan-out — `docs/stack.ini` (17 readers), `docs/architecture.md` (12) | the file IS the interface: name the consumer class, tie back to `B-05` per the `IF-013`…`IF-018`/`IF-048` pattern |
 
-   **MEASURED `2026-08-17`.** Of the **49** SR-owned `Consumes` rows, **19**
-   have an owner-side endpoint that resolves to an LLR `module` and convert
-   directly. The other **30** name a data file or an external actor.
-
-   **"PERMANENT RESIDUE" WAS THE WRONG NAME FOR THOSE 30 — owner correction,
-   `2026-08-17`, and it is the more important finding on this item.** In the
-   owner's words: *"if the output is just a 'file', that file is being
-   provided to someone or something for some reason, that is what the
-   interface should show. The LLR and SRs exist to provide something to
-   someone, they don't exist to just create a file… The file itself is the
-   actual interface."* Checked, and it holds: **0 of the 30 are terminal.**
-   Every one of those endpoints is a file something reads. So the cell is not
-   underivable — it is **under-specified**: it names the MEDIUM where it should
-   name whoever the medium serves.
-
-   | shape | count | what to do |
-   |---|---|---|
-   | already names an actor | **3** | `external:git`, `external:upstream docs`, `external:agent CLI` — correctly shaped, leave them |
-   | names a file | **27** | re-author to name the consumer, or the adopter with a boundary tie-back |
-
-   **The pattern to re-author toward ALREADY EXISTS and is already used** —
-   `IF-013`…`IF-018` and `IF-048` carry
-   `counterpart = "external:downstream adopter"` **plus**
-   `interface_to_external = "B-05"`. That is exactly the owner's *"most of them
-   just point to B-05 since they are outputs to satisfy the boundary tied to
-   the template"*: the endpoint names who is served, the tie-back names the
-   crossing. No new machinery.
-
-   **Two sub-shapes inside the 27, and they do not take the same fix** —
-   measured by exact-path reader counts:
-   - **Low fan-out** — `coverage.json` is read by `check` and `check_coverage`
-     only; `docs/declared-absences` by five checkers. Naming the consumer is
-     honest and the endpoint becomes derivable.
-   - **Published contract, high fan-out** — `docs/stack.ini` is read by **17**
-     modules, `docs/architecture.md` by **12**. Naming one consumer would be
-     false. Here the owner's *"the file itself is the actual interface"* is the
-     literal answer: the row publishes a contract to a CLASS of consumer, and
-     where that class includes the adopter it ties back to `B-05` the way
-     `IF-013`…`IF-018` already do.
-
-   **Stated so it is not mistaken for measurement:** WHICH consumer each of
-   the 27 should name is per-row judgement and was **not** done here. A first
-   attempt at attributing them mechanically was unsound — it stem-matched
-   `docs`/`work` and reported six plausible readers for nearly every row — and
-   is discarded rather than reported.
-   **Impact:** ~19 `owner` cells re-pointed mechanically; **27 rows want a
-   re-authoring pass** that is real work, not a cell edit. No requirement text
-   and no status flips either way — every row is `drafted` and `owner` is not
-   an attested claim.
-   **CONSEQUENCE FOR `wi455`:** `counterpart` still cannot be dropped as a
-   COLUMN — but the reason is now different and better. It is not that 30 rows
-   are structurally underivable; it is that **27 of them are mis-authored**,
-   and a column drop would delete the only record that the seam exists before
-   anyone writes down who it serves. Re-author first, then drop what has
-   become derivable.
-   **Recommendation:** rule the READING (`owner` points at the design tier
-   wherever a design row exists) — that settles the 19 immediately. Then file
-   the 27-row re-authoring as its own work item against the
-   `IF-013`…`IF-018` pattern, rather than accepting a file-as-endpoint as the
-   end state. The three `external:` rows are already right and need nothing.
+   WHICH consumer each of the 27 names is per-row judgement, deliberately
+   NOT done at the ruling (the mechanical attribution attempt stem-matched
+   and was discarded as unsound). **CONSEQUENCE FOR `wi455` (unchanged):**
+   `counterpart` cannot be dropped as a COLUMN until `WI-469` re-authors —
+   re-author first, then drop what has become derivable.
 
 6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
    earlier framing ("no `Status` cell") understated it. The tier encodes
