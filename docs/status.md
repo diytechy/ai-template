@@ -35,10 +35,12 @@ narrated is in those homes.
   acceptance on `SR-052`/`SR-053`**, the **SN-tier amendment-marker gap**, the
   **three provisional hat charters** (they ship in the template, so ruling them
   is a kit-level act), the **four hat-exposed obligation candidates** on the
-  queued intake row, and the **acceptance-cell question** the standards memo
+  queued intake row, the **acceptance-cell question** the standards memo
   raises — filenames down to the trace tier, or registry-id anchors — which
   should ride this sitting because ruling it later re-touches every reworded row
-  again. The **LLR/TC draft ratifications** and the **one shared status
+  again, and the **adversarial round-2 desk** (sitting-3 §0.4 item 18,
+  `2026-08-17f`): five contested `owner` cells to rule before signing, plus the
+  recommended draft-TC pins. The **LLR/TC draft ratifications** and the **one shared status
   vocabulary** ride the same sequence (ruling `2026-08-14e`).
 - **How the layer got here — read the entries, not a retelling.** The re-tier
   campaign merged to trunk and its verification is complete (`2026-08-15b`…`n`,

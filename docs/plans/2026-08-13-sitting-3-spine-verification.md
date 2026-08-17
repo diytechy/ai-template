@@ -248,6 +248,10 @@ reader does not have to reconstruct it from the log:
 | **L1 pair ruled on DESIGN CONTROL** | `SR-151` **and** `SR-152` → `["B-05"]`; a hosted runner is an ADOPTER's boundary | `2026-08-16q` |
 | **frame CUT** | `EXT-004`, `B-06`, `B-07` deleted; the locked-frame test went red and was updated with the ruling | `2026-08-16q` |
 | two kit skills carried **retired vocabulary** | `gate-advance`/`registry-hygiene` taught `Status=Verified` and `Modified → Planned`, both retired at D-9; fixed. `check_vocab` guards only the retired `G*` tags | `2026-08-16p` |
+| item 3 **RULED AND APPLIED** | 19 `Consumes` `owner` cells re-pointed SR→LLR; `WI-469` filed for the 27 file-endpoint rows; the three `external:` rows stand | `2026-08-17c` |
+| the four Sol-mint SRs **DECOMPOSED** | `SR-171`/`172` gain `LLR-174`/`175` + `TC-168`/`169`; `SR-173` gains `TC-170`; `SR-174` measured already-carried — see the re-written signing note below the Sol table | `2026-08-17d` |
+| three flagged defects **FIXED** | `LLR-153`'s mint detail states the watermark floor; `TC-135` tier `Full`→`Smoke`; `trace_text` `;`-split asymmetry fixed (advisories 114→113, `IF-088` cleared — `IF-128`'s survivor is a REAL owner-vs-endpoint disagreement, now item 18) | `2026-08-17e` |
+| **adversarial round 2 ran** (Sol + Terra via codex, hostile brief, author re-verified) | 6 CONFIRMED · 2 in-part · 1 refuted over `47234903^..HEAD`; nothing applied — the surviving calls are **item 18** | `2026-08-17f` |
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
@@ -332,6 +336,14 @@ taken in advance.
    in `2026-08-17c`. No status flipped, no contract text moved. The three
    `external:` rows (`IF-032` git, `IF-036` upstream docs, `IF-041` agent
    CLI) stand untouched.
+
+   **The READING stands; four of the 19 picks are CONTESTED.** Adversarial
+   round 2 (`2026-08-17f`) confirmed that on `IF-043`, `IF-117`, `IF-127` and
+   `IF-130` the mechanical module-match diverges from the row's own recorded
+   answerability judgement — the same class as `IF-128`, the one advisory
+   survivor. Those five owner cells are **item 18**; the other 15 re-points
+   were not contested (Sol's all-19-are-name-matches framing was refuted with
+   row evidence).
 
    **The 27 mis-authored rows are FILED, not edited:**
    [`WI-469`](../work/queued/WI-469-consumes-names-the-medium.md)
@@ -451,7 +463,9 @@ dependency order, regen-never-commits); `SR-174` was already fully carried by
 `TC-135`/`147`/`148` `expected` cells, still reading "Satisfies SR-170" after
 the re-point, were corrected in the same act. And `SR-174` states the
 non-reuse clause that used to live only in `SR-170`'s acceptance, which was
-the same acceptance-mints-a-requirement defect Sol raised at F12.
+the same acceptance-mints-a-requirement defect Sol raised at F12. *(Round 2
+then audited this decomposition and confirmed pin debt on the new draft TCs —
+item 18's RECOMMENDED half — without contesting the decomposition itself.)*
 
 **TWO VOCABULARY CALLS RAISED `2026-08-16p`** — both spine-wide, neither
 SN-specific, and both cheap now and expensive after signing.
@@ -488,6 +502,49 @@ SN-specific, and both cheap now and expensive after signing.
     reasoning — *"a mint counts from HERE, never from max(live)"* — and the
     frame tiers are the only id spaces exempt from it today, which reads as an
     oversight rather than a decision.
+
+18. **The adversarial round-2 desk** — what survived author re-verification of
+    the Sol + Terra round over the three `2026-08-17` spine commits
+    (`2026-08-17f`; full findings, evidence and verdicts in
+    [`../reviews/retier-v2/ROUND-2-SOL-TERRA.md`](../reviews/retier-v2/ROUND-2-SOL-TERRA.md)).
+    Nothing is applied; every disposition here is yours.
+
+    **Five contested `owner` cells — the OWNER-CALL half.** On each, the
+    item-3 module-match picked a design row the row's own record argues
+    against; the ruled READING is not in question, the per-row pick is:
+    - `IF-127` — re-pointed to `LLR-001` while its `notes` still argue
+      *"Owner is SR-140, not a design row"* (a recorded `2026-08-15h`
+      judgement, overridden without acknowledgement).
+    - `IF-130` — its `notes` explicitly rule OUT `LLR-050` ("none names
+      `bar_label`"); the commit set `owner = "LLR-050"`.
+    - `IF-043` — `LLR-017` answers for half the contract (secrets scan); the
+      identity/PII half is `LLR-018`'s, same module.
+    - `IF-117` — `LLR-023` owns the rendered arch-map check, which is exactly
+      what the seam's contract disclaims.
+    - `IF-128` — the `2026-08-17e` survivor: endpoint `scripts/spine_carrier`
+      is `LLR-166`'s module while `owner` reads `LLR-173`; re-point, or rule
+      the open owner-reading question from `2026-08-16g`.
+    **Impact:** five cells, all `drafted`/unattested, so a re-ruling costs no
+    re-attestation today; the ratify brief renders these rows.
+    **Recommendation:** rule them before signing. Where the notes and the
+    match disagree, either the owner cell moves or the note is re-written to
+    record the override — never both left standing.
+
+    **The RECOMMENDED half — draft-tier debt, not false greens:** `TC-168`'s
+    `--wait-on-limit` evidence leaves the `min` cap inert (deleting it stays
+    green) and the parsed-reset retry branch + 3600 default unpinned;
+    `TC-169` leaves the `--stall-limit` default of 3 unpinned; `TC-170`'s
+    failure-path sentence is inference, not an executed check. Cheap pins,
+    natural to land before the draft TCs ratify.
+
+    **Two CONFIRMED-IN-PART residues, recorded not urgent:** `LLR-153`'s new
+    refusal wording slightly overstates (`next_wi_id` uses `.get("WI", 0)`,
+    so a watermark file missing its WI line mints from the sweep — mitigated
+    by the always-on integrity floor); and `SR-173`'s shall ("no partial set
+    behind") reads stronger than its acceptance ("not left committed") — a
+    tension that PRE-DATES this stack (minted at `4cf98e4f`) and rides the
+    signing window like any other row-text question.
+
 **CLOSED TODAY — the sitting only countersigns these.** They are owner rulings
 already executed; listed so the sitting knows it is reading a settled state
 rather than an open one, and so an overrule is a deliberate act.
