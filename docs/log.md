@@ -36,6 +36,47 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17d — the four `2026-08-17b` mints DECOMPOSED: `SR-171`/`SR-172`
+  gain their first children; the F18 pair was already carried, measured rather
+  than assumed.** Owner directed the build-out (LLRs where applicable, TCs,
+  real tests) as `Drafted` rows. **The measured before-state contradicted the
+  record**: both the sitting-3 desk note and `2026-08-17b`'s own closing line
+  said the four mints were "undecomposed — no LLR or TC yet", while the live
+  registries said that was never true of the F18 pair — `SR-173` already owned
+  `LLR-142` + `TC-135` and `SR-174` owned `LLR-153`/`154` +
+  `TC-147`/`148`/`158` (the children the same entry re-pointed), so only the
+  F12 pair owned nothing. **Minted (all `Drafted`): `LLR-174` + `TC-168`
+  under `SR-171`** — the rate-limit recognition gate, the two reset clocks and
+  the wait/stop fork in `agent_loop.py` (`limit_reset_hint` /
+  `seconds_until_reset` / `main`), evidence five existing loop tests;
+  **`LLR-175` + `TC-169` under `SR-172`** — the consecutive no-progress
+  counter (`LaneState.note_session` / `main`, `--stall-limit`, `EXIT_STALL`),
+  evidence six existing tests plus a NEW one
+  (`test_commit_resets_the_stall_counter`: the window is consecutive, so
+  interleaved progress is never ended — the one acceptance clause no test
+  held); **`TC-170` under `SR-173`/`LLR-142`** with two NEW trunk-step tests
+  (`test_regen_runs_in_declared_dependency_order`, asserted on the executed
+  step lines, and `test_regen_never_commits_the_caller_owns_the_commit`, the
+  no-partial-set-committed clause). **`SR-174`: nothing minted** — its three
+  acceptance clauses were verified already bound (collision →
+  `TC-147`/`148`, non-reuse + the watermark floor → `TC-158`, all with live
+  passing tests). Scope was kept off `LLR-028` (Approved; it owns the outcome
+  ladder and the `stall_verdict` banner fork under `SR-028`) — both new LLRs
+  name that boundary. **Re-point residue corrected**: `TC-135`/`147`/`148`
+  `expected` cells still read "Satisfies SR-170" after the `2026-08-17b`
+  `verifies` re-point (the acceptance-rot-after-a-flip class); corrected to
+  the live parents, and `LLR-142`'s `test_refs` joins `TC-170`. **Flagged,
+  not fixed** (pre-existing, outside scope): `LLR-153`'s detail states the
+  mint as "max+1 over every spec FILENAME", omitting the watermark floor its
+  own `TC-158`/`IF-101` and `intake.next_wi_id` state (`max(mark, live) + 1`);
+  and `TC-135` carries tier `Full` while `tests/test_trunk_step.py` sits in
+  the smoke tier. No SR text touched, no status flipped; id watermark
+  `LLR 173 → 175`, `TC 167 → 170`. Spine `SN=27 SR=67 LLR=157 TC=153`,
+  `orphans=0 integrity=0`, drafted 56 → **61**; `trace.py --strict`
+  warning+finding sets byte-identical before/after (`SR-140`'s form finding
+  the one gating red, pre-existing). Smoke tier **1189 passed / 7 skipped**,
+  33s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=47234903 -->.
 - **2026-08-17c — sitting-3 §0.4 item 3 RULED: `owner` points at the DESIGN
   tier wherever a design row exists for the owner-side endpoint; the 27
   file-endpoint rows are `WI-469`'s re-authoring, not this session's edits.**

@@ -1399,7 +1399,7 @@ module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "regen"
 detail = """Regenerates arch-map, okf, derived-gate, dashboard, status block and open-items as subprocesses in dependency order (derived-gate before its two consumers), skipping absent artifact families with a notice and stopping loudly at the first failure. Never commits; the caller owns the commit."""
 rationale = """derive_gate runs before the dashboard/status regens because docs/gate is their input, not their output."""
-test_refs = "(see TC-135)"
+test_refs = "(see TC-135, TC-170)"
 status = "Modified"
 component = "CMP-008"
 phase = 4
@@ -1773,3 +1773,27 @@ test_refs = "TC-167"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-174]
+sr_refs = ["SR-171"]
+title = "Rate-limit recognition + bounded, surfaced wait"
+module = "project-trajectory/scripts/agent_loop.py"
+code_symbol = "limit_reset_hint/seconds_until_reset/main"
+detail = """A rate limit is recognized only on an error signal (the JSON result's is_error, or a nonzero exit for a plain-text template) whose message carries a reset wording - a healthy transcript merely mentioning limits never reads as a throttle - and it wins the outcome ladder as WAITING, bypassing the stall guard. With --wait-on-limit set, a parsed reset within that ceiling is slept and the session retried, the sleep printed with its reset time; an unparseable wording sleeps min(--limit-retry-fallback, ceiling), printed, and retries. Past the ceiling, or without the flag, the run stops at EXIT_WAITING (5) with a banner naming the resume time. Both dials are declared flags with declared defaults (0 / 3600), never in-line literals. The outcome ladder itself (WAITING ahead of every other code) is LLR-028's home; this row owns the recognition gate, the two clocks and the wait/stop fork."""
+rationale = """The wait/stop fork keys on the one ceiling the human consented to, so an unbounded silent sleep is unrepresentable - the fallback nap is capped at the same ceiling for the same reason, and every arm prints what it is waiting for so a throttled run is tellable from a wedged one at the console."""
+test_refs = "(see TC-168)"
+status = "Drafted"
+component = "CMP-008"
+phase = 4
+
+[design.LLR-175]
+sr_refs = ["SR-172"]
+title = "Consecutive no-progress stall guard"
+module = "project-trajectory/scripts/agent_loop.py"
+code_symbol = "LaneState.note_session/main"
+detail = """Declared progress is a moved git HEAD: note_session resets the stall counter on a commit and increments it otherwise, so the window is consecutive and interleaved progress is never ended by the limit; a throttled (WAITING) session bypasses the counter entirely, and a timed-out one counts (it produced no commit). At --stall-limit consecutive no-commit sessions (a declared flag, default 3) the loop stops with EXIT_STALL (4) - its own exit code, distinct from success and from the error/config exits - under a STALL banner pointing at the latest iteration log. Which banner (the all-ERROR agent-unavailable wording vs the generic work stall) is stall_verdict's fork and LLR-028's home under SR-028; this row owns the counter, the declared limit and the distinct exit."""
+rationale = """The counter reads committed evidence (HEAD movement), not session prose, so a session cannot talk its way out of the guard - and the reset-on-commit is what keeps the limit a stall detector rather than a slow-progress killer."""
+test_refs = "(see TC-169)"
+status = "Drafted"
+component = "CMP-008"
+phase = 4

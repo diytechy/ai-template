@@ -161,3 +161,6 @@ resource: "generated"
 | [TC-165](TC-165.md) | Scaffold with a non-Python bootstrap profile into a temp dir and run trace.py --strict-in… |
 | [TC-166](TC-166.md) | Run trace.py's component pass over fixture component registries: (a) a complete derivatio… |
 | [TC-167](TC-167.md) | Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153… |
+| [TC-168](TC-168.md) | Run the agent-loop rate-limit cases against the fake-agent CLI: a throttled session exits… |
+| [TC-169](TC-169.md) | Run the agent-loop stall cases against the fake-agent CLI: consecutive no-commit sessions… |
+| [TC-170](TC-170.md) | Run the trunk-step regen order/commit cases: the executed step sequence follows the decla… |

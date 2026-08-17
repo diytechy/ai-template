@@ -166,3 +166,5 @@ resource: "generated"
 | [LLR-171](LLR-171.md) | Language-neutral registry templates + ID scheme |
 | [LLR-172](LLR-172.md) | Component derivation record: element completeness + the ranking recompute |
 | [LLR-173](LLR-173.md) | The last_approved snapshot: the record of what was blessed |
+| [LLR-174](LLR-174.md) | Rate-limit recognition + bounded, surfaced wait |
+| [LLR-175](LLR-175.md) | Consecutive no-progress stall guard |

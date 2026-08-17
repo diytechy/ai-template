@@ -438,11 +438,20 @@ you need."* Verdicts and Sol's original wordings remain in
 the decomposition rules and the gate is unmoved at `DevBar-Reqs`). Id
 watermark bumped `SR 170 → 174`.
 
-**Two things to know before signing these:** the four new rows are **`Drafted`
-and undecomposed** — they own no LLR or TC yet, which is legal for a draft and
-is work someone owes; and `SR-174` now states the non-reuse clause that used
-to live only in `SR-170`'s acceptance, which was the same
-acceptance-mints-a-requirement defect Sol raised at F12.
+**Two things to know before signing these** *(re-measured and re-written
+`2026-08-17d` — this note used to say all four owned no LLR or TC, which was
+never true of the F18 pair: the F18 row above lists the children re-pointed to
+them at the same sitting)*: the four are **`Drafted` and now DECOMPOSED** —
+`SR-171` carries `LLR-174` + `TC-168` and `SR-172` carries `LLR-175` +
+`TC-169` (minted `2026-08-17d` against the live `agent_loop.py` behaviour,
+evidence the existing loop suite plus one new stall-window test); `SR-173`
+keeps `LLR-142` + `TC-135` and gains `TC-170` (two new regen tests: executed
+dependency order, regen-never-commits); `SR-174` was already fully carried by
+`LLR-153`/`154` + `TC-147`/`148`/`158`, so nothing was minted there. The
+`TC-135`/`147`/`148` `expected` cells, still reading "Satisfies SR-170" after
+the re-point, were corrected in the same act. And `SR-174` states the
+non-reuse clause that used to live only in `SR-170`'s acceptance, which was
+the same acceptance-mints-a-requirement defect Sol raised at F12.
 
 **TWO VOCABULARY CALLS RAISED `2026-08-16p`** — both spine-wide, neither
 SN-specific, and both cheap now and expensive after signing.

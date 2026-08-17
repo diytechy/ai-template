@@ -574,6 +574,20 @@ def test_all_error_stall_names_an_agent_error(loop_repo):
     assert _invocations(ctl) == 2, "must stop at the stall limit, not the budget"
 
 
+def test_commit_resets_the_stall_counter(loop_repo):
+    # SR-172: the stall window is CONSECUTIVE no-progress sessions — a session
+    # that commits resets the counter, so interleaved progress is never ended
+    # by the limit. noop commit noop noop at --stall-limit 2: without the reset
+    # the two non-adjacent noops would abort the run at session 3; with it the
+    # stalling pair is sessions 3–4 and the abort lands at session 4.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("noop commit noop noop", encoding="utf-8")
+    proc = _loop(repo, template, "--stall-limit", "2", "--max-iterations", "6")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "STALL" in proc.stdout
+    assert _invocations(ctl) == 4, "the commit must reset the stall counter"
+
+
 def test_mixed_no_commit_and_error_stall_stays_generic(loop_repo):
     # A stall of mixed causes (a healthy idle + an error) is not purely an agent
     # failure, so it keeps the generic work-stall banner — the agent-error

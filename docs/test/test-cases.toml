@@ -1314,7 +1314,7 @@ verifies = ["SR-173", "LLR-142"]
 level = "Unit"
 method = """Run the trunk-step regen suite: --regen skips absent artifact families with a notice and stops loudly at the first failing generator, regenerating in dependency order."""
 tier = "Full"
-expected = "Satisfies SR-170 AcceptanceCriteria via the LLR-142 detail contract"
+expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
 evidence = """tests/test_trunk_step.py::test_regen_skips_absent_artifact_families; tests/test_trunk_step.py::test_regen_fails_loudly_on_a_broken_generator"""
 status = "Modified"
@@ -1446,7 +1446,7 @@ verifies = ["SR-174", "LLR-153", "IF-091"]
 level = "Integration"
 method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
 tier = "Full"
-expected = "Satisfies SR-170 AcceptanceCriteria via the LLR-153 detail contract"
+expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract"
 automated = "Yes"
 evidence = "tests/test_intake.py"
 status = "Modified"
@@ -1457,7 +1457,7 @@ verifies = ["SR-174", "LLR-154", "IF-090"]
 level = "Integration"
 method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
-expected = "Satisfies SR-170 AcceptanceCriteria via the LLR-154 detail contract"
+expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
 evidence = "tests/test_integrate.py; tests/test_dispatch.py"
 status = "Modified"
@@ -1671,3 +1671,36 @@ automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
 status = "Drafted"
 phase = 5
+
+[test.TC-168]
+verifies = ["SR-171", "LLR-174"]
+level = "Integration"
+method = """Run the agent-loop rate-limit cases against the fake-agent CLI: a throttled session exits WAITING (5) with the banner naming the parsed reset time and the WAITING outcome in the iteration log - never a stall abort, even at stall-limit 1; with --wait-on-limit set and an unparseable reset wording, the loop sleeps the declared --limit-retry-fallback (capped at the ceiling), prints the wait, and retries so the run continues and finishes; a healthy transcript that merely mentions limits reads COMMITTED, never WAITING; an error result that is no rate limit reads ERROR rather than being retried as a throttle; the reset-clock parser is unit-covered on both am/pm and 24-hour wordings."""
+tier = "Full"
+expected = "Satisfies SR-171 AcceptanceCriteria via the LLR-174 detail contract"
+automated = "Yes"
+evidence = """tests/test_agent_loop.py::test_limit_hit_backs_off_without_counting_stall; tests/test_agent_loop.py::test_unparseable_reset_falls_back_and_retries; tests/test_agent_loop.py::test_healthy_transcript_mentioning_limits_is_not_a_throttle; tests/test_agent_loop.py::test_error_session_reads_error_not_no_commit; tests/test_agent_loop_policy.py::test_seconds_until_reset_parses_both_clock_formats"""
+status = "Drafted"
+phase = 4
+
+[test.TC-169]
+verifies = ["SR-172", "LLR-175"]
+level = "Integration"
+method = """Run the agent-loop stall cases against the fake-agent CLI: consecutive no-commit sessions abort at the declared --stall-limit with exit 4 and a STALL banner, stopping at the limit rather than the iteration budget; a commit RESETS the counter, so the same limit fires one session later when progress interleaves; a throttled session never counts toward the guard; a timed-out session does; an all-ERROR run keeps exit 4 but names an unavailable agent while a mixed run keeps the generic work-stall wording; a run that commits every session is never ended by the stall limit and reaches its iteration budget instead."""
+tier = "Full"
+expected = "Satisfies SR-172 AcceptanceCriteria via the LLR-175 detail contract"
+automated = "Yes"
+evidence = """tests/test_agent_loop.py::test_stall_guard_aborts_after_no_commit_sessions; tests/test_agent_loop.py::test_commit_resets_the_stall_counter; tests/test_agent_loop.py::test_limit_hit_backs_off_without_counting_stall; tests/test_agent_loop.py::test_session_timeout_cannot_wedge_the_loop; tests/test_agent_loop.py::test_all_error_stall_names_an_agent_error; tests/test_agent_loop.py::test_mixed_no_commit_and_error_stall_stays_generic; tests/test_agent_loop.py::test_budget_ceiling"""
+status = "Drafted"
+phase = 4
+
+[test.TC-170]
+verifies = ["SR-173", "LLR-142"]
+level = "Unit"
+method = """Run the trunk-step regen order/commit cases: the executed step sequence follows the declared dependency table - arch-map before okf, derived-gate before its two consumers (trajectory, status), open-items last - asserted on the printed per-step lines of a real run rather than on the table constant; and a regen run creates NO git commit, a green step's output staying uncommitted in the working tree for the caller's one serial commit, so a later step's failure can never leave a partially regenerated set in history."""
+tier = "Smoke"
+expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
+automated = "Yes"
+evidence = """tests/test_trunk_step.py::test_regen_runs_in_declared_dependency_order; tests/test_trunk_step.py::test_regen_never_commits_the_caller_owns_the_commit"""
+status = "Drafted"
+phase = 4

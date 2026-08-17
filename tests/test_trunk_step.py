@@ -271,3 +271,58 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     err = capsys.readouterr().err
     assert "regen FAILED at arch-map" in err
     assert "trunk lane is RED" in err
+
+
+def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
+    # SR-173: a producer runs before every consumer that reads it — arch-map
+    # before okf (the Knowledge bundle bakes the map), derived-gate before
+    # trajectory and status (both read docs/gate), open-items last (nothing
+    # reads it back). Asserted on the EXECUTED surface (the printed per-step
+    # lines of a real run), not on the REGEN_STEPS table, so a reorder of the
+    # table shows up here even though every family skips.
+    assert ts.regen(tmp_path) == 0
+    out = capsys.readouterr().out
+    pos = [
+        out.index("skipping {}".format(name))
+        for name in (
+            "arch-map",
+            "okf",
+            "derived-gate",
+            "trajectory",
+            "status",
+            "open-items",
+        )
+    ]
+    assert pos == sorted(pos), "regen must execute in declared dependency order"
+
+
+def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
+    # SR-173: no partially regenerated set is ever left COMMITTED, because the
+    # regen itself never commits at all — a green step's output stays in the
+    # working tree for the caller's one serial commit, so a later step's failure
+    # cannot strand half a set in history. Here arch-map runs green (real
+    # markers, valid source) and every other family skips: HEAD must not move,
+    # and the regenerated doc must sit uncommitted in the tree.
+    _git(tmp_path, "init", "-q")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "architecture.md").write_text(
+        "# Arch\n\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        "<!-- END GENERATED MODULE MAP -->\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n", encoding="utf-8"
+    )
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "ok.py").write_text(
+        '"""A fine module."""\n\n\ndef fine():\n    return 1\n', encoding="utf-8"
+    )
+    _commit(tmp_path, "seed")
+    head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    assert ts.regen(tmp_path) == 0
+    assert _git(tmp_path, "rev-parse", "HEAD").strip() == head_before
+    assert _git(tmp_path, "status", "--porcelain").strip(), (
+        "the green step's output must be left in the working tree "
+        "for the caller's serial commit"
+    )
