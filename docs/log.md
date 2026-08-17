@@ -120,6 +120,25 @@ why (one bullet each; cite ids)._
   plan doc's `WI-471` link broke when the spec moved to `complete/` — fixed
   by re-pointing it; full unfiltered suite **2571 passed / 10 skipped**, 433s
   <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=166b406d -->.
+- **2026-08-17l — the sitting desk RECONCILED: the live calls are items
+  6 · 15 · 16 · 17 · 18 · 19; the `SR-144` flip is closed by supersession.**
+  The owner asked what remains before the sitting and suspected the standing
+  lists carried already-ruled items; verified against the log and the live
+  registries, both suspicions held. (1) The **`SR-144` flip** (flagged
+  `2026-08-16h`: `Approved` parent over `Modified` children) died
+  mechanically at `2026-08-16l`, whose rationale-only label touch flipped
+  the row `Modified` — verified all three rows (`SR-144`/`LLR-144`/`TC-138`)
+  read `Modified` today, so the row simply re-attests with the window;
+  recorded as struck item 20 in sitting-3 §0.4. (2) The **acceptance-cell /
+  current-carrier question** was an open call with no numbered home — now
+  item 19, with the memo's ride-this-sitting recommendation. (3) A
+  **work-owed-before-the-brief block** now precedes §0.4's open list
+  (`SR-140` split · `TC-168`/`169`/`170` pins · `SR-173` wording), pointers
+  only. (4) `status.md`'s calls list pruned of four ruled entries (hat
+  charters, `SR-053`, retired-rubric acceptance, the L1 pair's
+  standing mention) down to the six live calls plus the countersign set.
+  No registry cell moved; this is desk hygiene so the sitting opens on a
+  true inventory.
 - **2026-08-17k — the SN schema census RULED INTO item 6's execution as its
   step 7.** Owner ("Yes add in"), closing the no-single-home flag from the
   WI-471 sweep (`2026-08-17j`): `spine_carrier.SPINE_TIER_KEYS` has no

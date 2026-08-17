@@ -25,30 +25,24 @@ narrated is in those homes.
   ([ratify/2026-08-13-wi444.md](ratify/2026-08-13-wi444.md)) **plus the ten
   ex-`Planned` rows no brief lists** (`2026-08-15m`), rule the open calls,
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
-- **The calls the sitting still makes** — each is stated with its evidence in
-  sitting-3 §0.4 and recorded in the log entry named there; none was taken in
-  advance: the **L1 `SR-151`/`SR-152` pair** (flip both or neither), the
-  **`SR-144` flip** (the **`Consumes` owner-side reading** left this list —
-  ruled `2026-08-17c`: 19 `owner` cells re-pointed to the design tier, the 27
-  file-endpoint rows filed as `WI-469`, the 3 `external:` rows stand),
-  the **`SR-053`/CONSISTENCY charter question**, the **retired-rubric
-  acceptance on `SR-052`/`SR-053`**, the **SN-tier amendment-marker gap**, the
-  **three provisional hat charters** (they ship in the template, so ruling them
-  is a kit-level act), the **four hat-exposed obligation candidates** (left this
-  list — ruled `2026-08-17h`, owner in session: all four intake
-  recommendations adopted — `SR-175`/`SR-176`/`SR-177` minted as labelled
-  derived rows, `SN-008` + `SN-027` amended on the open window, the C-ACC-2
-  remainder filed as a queued coverage WI under `SR-052`; the sitting
-  countersigns the Drafted rows and re-attests the two amended needs —
-  contrast at
-  [plans/2026-08-17-wi468-obligation-intake-options.md](plans/2026-08-17-wi468-obligation-intake-options.md)
-  §6), the **acceptance-cell question** the standards memo
-  raises — filenames down to the trace tier, or registry-id anchors — which
-  should ride this sitting because ruling it later re-touches every reworded row
-  again, and the **adversarial round-2 desk** (sitting-3 §0.4 item 18,
-  `2026-08-17f`): five contested `owner` cells to rule before signing, plus the
-  recommended draft-TC pins. The **LLR/TC draft ratifications** and the **one shared status
-  vocabulary** ride the same sequence (ruling `2026-08-14e`).
+- **The calls the sitting still makes — reconciled `2026-08-17l`; the live
+  list is sitting-3 §0.4 items 6 · 15 · 16 · 17 · 18 · 19, each stated there
+  with its evidence:** the **one shared status vocabulary + the SN schema
+  census** (item 6; step 7 added `2026-08-17k`), the **attestation-unit
+  reading** (item 15 — it defines what the 147 `Modified` flips MEAN, so it
+  precedes signing), the **five contested `owner` cells + draft-TC pins**
+  (item 18, `2026-08-17f`), the **acceptance-cell question** (item 19 —
+  current-carrier filenames down to the trace tier or registry-id anchors;
+  ruling it later re-touches every reworded row), and the optional pair
+  **`founded` / B+EXT watermark spaces** (items 16/17). Three work items owed
+  BEFORE the brief regenerates are listed just above §0.4's open calls:
+  the `SR-140` split, the `TC-168`/`169`/`170` pins, the `SR-173` wording.
+  The **LLR/TC draft ratifications** ride the same sequence (`2026-08-14e`).
+  Everything else this list used to carry is **ruled and countersign-only**
+  (L1 pair, Consumes reading, hat charters, the four obligation candidates,
+  `SR-053`, the retired-rubric corrections — sitting-3 items 1/3/7/8 +
+  "CLOSED TODAY"), and the **`SR-144` flip left as MOOT** (`2026-08-16l`
+  flipped the row `Modified`, so it re-attests with the window; item 20).
 - **How the layer got here — read the entries, not a retelling.** The re-tier
   campaign merged to trunk and its verification is complete (`2026-08-15b`…`n`,
   including the cross-family adversarial round at

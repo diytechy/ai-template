@@ -254,11 +254,23 @@ reader does not have to reconstruct it from the log:
 | **adversarial round 2 ran** (Sol + Terra via codex, hostile brief, author re-verified) | 6 CONFIRMED · 2 in-part · 1 refuted over `47234903^..HEAD`; nothing applied — the surviving calls are **item 18** | `2026-08-17f` |
 | item 8 **RULED AND APPLIED** | all four WI-468 recommendations adopted: `SR-175`/`176`/`177` minted as labelled derived rows under SN-026/009/027 (+ `LLR-176`/`177`, `TC-171`/`172`); `SN-008`'s hue metonym + `SN-027`'s `why` amended on the open window; C-ACC-2 matched-to-`SR-052`, remainder filed `WI-470` — contrast at the option doc §6 | `2026-08-17h` |
 
+**WORK OWED BEFORE THE BRIEF REGENERATES — three items, pointers only**
+*(reconciled `2026-08-17l`; each is stated in full elsewhere on this desk).*
+Clearing these first means the brief the sitting reads is the text it signs,
+with no re-touch after: **(1) the `SR-140` split** — the one row still holding
+the `traceability` step red (the gating-reds note above; signing does not
+green it, splitting does); **(2) the three draft-TC pins** — `TC-168`/`169`/
+`170`, item 18's RECOMMENDED half, natural to land before those drafts
+ratify; **(3) the `SR-173` wording decision** — item 18's residue: reword the
+shall toward its acceptance, or attest the stronger reading deliberately.
+
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
 made from this page; the linked homes hold the full evidence for the ones you
 want to go deeper on. A recommendation is a starting position, never a ruling
-taken in advance.
+taken in advance. *(Reconciled `2026-08-17l`: the live calls are items
+**6 · 15 · 16 · 17 · 18 · 19** — everything else below is struck or
+countersign-only, and item 20 records a call that died by supersession.)*
 
 1. ~~**The L1 pair**~~ — **RULED AND APPLIED IN FULL `2026-08-16p`.** Both
    rows now read `boundary_refs = ["B-05"]`.
@@ -586,6 +598,37 @@ SN-specific, and both cheap now and expensive after signing.
     behind") reads stronger than its acceptance ("not left committed") — a
     tension that PRE-DATES this stack (minted at `4cf98e4f`) and rides the
     signing window like any other row-text question.
+
+19. **The acceptance-cell / current-carrier question** — promoted to a
+    numbered item at the `2026-08-17` desk reconciliation (log `2026-08-17l`;
+    until then it lived only in the "Four things to have open" table above
+    and status.md's list, which is how open calls get lost). The standards
+    memo ([`2026-08-16-tiering-research-memo.md`](2026-08-16-tiering-research-memo.md)
+    §1/§3, owner-approved `2026-08-16j`) leaves ONE live question from the
+    R2 rewording: requirement cells no longer name concrete artifacts, but
+    acceptance cells still name **"current carrier" filenames** — the
+    `2026-08-16h` read counted eight redundant current-carrier clauses. Do
+    those filenames move DOWN to the trace tier (LLR/TC name the artifact,
+    acceptance states the fit criterion), or become **registry-id anchors**
+    in place?
+    **Impact:** every reworded row's acceptance cell. This is the "cheap
+    now, expensive after" shape at its purest: ruling it after signing
+    re-touches — and re-attests — every one of those rows a third time.
+    **Recommendation (the memo's, on record):** ride THIS sitting.
+
+20. ~~**The `SR-144` flip**~~ — **CLOSED BY SUPERSESSION; nothing to rule.**
+    Recorded so it stops circulating: the `2026-08-16h` flag was that
+    `SR-144` sat `Approved` while the M4 correction had flipped its child
+    `LLR-144` + `TC-138` `Modified` — flipping the owning SR is an
+    attestation act the plan holds for the human, but while it stayed
+    `Approved` the correction was invisible to the brief and gate. The
+    question died the next day, mechanically: `2026-08-16l`'s hat-derived
+    labels touched `SR-144`'s rationale and flipped it
+    `Approved` → `Modified` as a named, rationale-only amend consequence
+    (one of four: SR-144/146/147/149). Verified at this desk: all three
+    rows read `Modified` today, the M4 correction is in the brief, and
+    `SR-144` re-attests with the window like every other row. No separate
+    flip call exists.
 
 **CLOSED TODAY — the sitting only countersigns these.** They are owner rulings
 already executed; listed so the sitting knows it is reading a settled state
