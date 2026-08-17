@@ -779,10 +779,12 @@ def if_this_project_advisories(ifs, llrs):
     was thereby derivable. The comparison was right; the sentence about it was not,
     and it is the sentence a sitting would have signed.)
 
-    Both sides are normalized (`norm_module`), so the arch-map short form and the
-    full repo path with its extension read as one module rather than as a
-    disagreement, and a `;`-joined cell matches on ANY endpoint — a bundle that
-    names the owner's module among several is not misfiled.
+    Both sides are normalized (`norm_module`) and both sides split on `;`, so the
+    arch-map short form and the full repo path with its extension read as one
+    module rather than as a disagreement, and a `;`-joined cell matches on ANY
+    endpoint — a bundle that names the owner's module among several is not
+    misfiled, whether the bundle is the endpoint cell or the owner LLR's `Module`
+    cell.
 
     wi455 owns the removal (the schema's existing HELD note names it); this is the
     ADVISORY THAT RUNS FIRST, because a cell cannot be dropped as redundant while
@@ -802,8 +804,10 @@ def if_this_project_advisories(ifs, llrs):
         if not iid or is_example(iid) or not module or not col:
             continue
         endpoints = _module_endpoints(r.get(col))
-        want = norm_module(module)
-        if not endpoints or any(norm_module(e) == want for e in endpoints):
+        # The LLR `Module` cell splits on `;` exactly like the endpoint cell —
+        # a bundle-moduled owner (LLR-035 names three) matches on ANY of them.
+        want = {norm_module(m) for m in module.split(";") if m.strip()}
+        if not endpoints or any(norm_module(e) in want for e in endpoints):
             continue
         out.append(
             "IF {} {}={!r} names no module matching owner {}'s LLR Module {!r} — "

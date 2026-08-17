@@ -908,6 +908,39 @@ def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
     )
 
 
+def test_a_bundle_moduled_owner_matches_on_any_of_its_modules():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    # THE OWNER SIDE SPLITS ON `;` TOO (log 2026-08-17e): an LLR whose `Module`
+    # cell bundles several modules (the live LLR-035 names three) matches an
+    # endpoint naming ANY one of them. Before the fix the whole cell went
+    # through `norm_module` unsplit, so a bundle-moduled owner could NEVER
+    # match its endpoint — the docstring promised the split, the code did not.
+    llrs = [
+        {
+            "LLR-ID": "LLR-014",
+            "Module": "project-trajectory/scripts/check_perf.py;"
+            "project-trajectory/scripts/derive_gate.py",
+        }
+    ]
+    # Provides: `ThisProject` names one module of the bundle — silent.
+    assert trace.if_this_project_advisories([_if_row()], llrs) == []
+    # Consumes (the live IF-088 shape): `Counterpart` names one — silent.
+    consuming = _if_row(
+        Direction="Consumes",
+        ThisProject="scripts/trunk_step",
+        Counterpart="scripts/derive_gate",
+    )
+    assert trace.if_this_project_advisories([consuming], llrs) == []
+    # An endpoint naming NONE of the bundle's modules still fires.
+    fires = trace.if_this_project_advisories(
+        [_if_row(ThisProject="scripts/trace")], llrs
+    )
+    assert len(fires) == 1
+    assert "IF-101" in fires[0] and "check_perf.py;" in fires[0]
+
+
 def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only():
     from conftest import load_script
 

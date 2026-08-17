@@ -36,6 +36,45 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17e — the three flagged-not-fixed defects of `2026-08-17c`/`d`
+  swept; two fixed as briefed, the third's second half did not reproduce.**
+  Owner directed the sweep; each defect was re-verified against source before
+  touching. **(1) `LLR-153` detail corrected** — it stated the WI mint as
+  "max+1 over every spec FILENAME", omitting the watermark floor; verified
+  against `intake.next_wi_id` first (`max(top, mark) + 1`, the
+  `trace.read_watermark` refusal deliberately uncaught), the detail now states
+  max(mark, filename sweep) + 1 with the non-reuse consequence and the uncaught
+  refusal, citing `TC-158`/`IF-101`. Already-`Modified`, no status flip, the
+  obligation strengthened not weakened. **(2) `TC-135` tier `Full` → `Smoke`**
+  — its evidence (`tests/test_trunk_step.py::test_regen_*`, both present) sits
+  in the smoke tier (`test_trunk_step` is not in conftest `SLOW_MODULES`);
+  registry vocabulary confirmed two-valued (`Full`/`Smoke`). No status flip.
+  **(3) `trace_text.if_this_project_advisories` asymmetry fixed** — the IF
+  endpoint cell split on `;` while the owner LLR's `Module` cell went through
+  `norm_module` whole, so a bundle-moduled owner could never match,
+  contradicting the docstring's "a `;`-joined cell matches on ANY endpoint";
+  the LLR side now splits/normalizes on `;` too, pinned by a new test beside
+  the rule's existing suite
+  (`test_trace_rules.py::test_a_bundle_moduled_owner_matches_on_any_of_its_modules`;
+  that module sits in conftest `SLOW_MODULES`, so the pin runs at close/CI,
+  not in the commit tier — house placement, not an omission).
+  **The brief expected two advisories to clear; the measured delta is
+  114 → 113**
+  <!-- fig: cmd="project-trajectory/scripts/trace.py --strict" rev=82b91b8b -->:
+  `IF-088`→`LLR-035` cleared (the bundle case — `LLR-035` names three modules,
+  `Counterpart` one of them), but `IF-128`→`LLR-173` was never this defect's —
+  `LLR-173`'s `Module` is the single `baseline_snapshot.py` while the
+  `Consumes` counterpart is `scripts/spine_carrier` (implemented by
+  `LLR-166`), a REAL owner-vs-endpoint disagreement the advisory exists to
+  surface; left standing for the wi455/re-tier schedule rather than force-fixed.
+  `SR-140`'s form finding stays the one gating red; the finding/advisory diff
+  is otherwise empty. **Flagged, not fixed** (pre-existing, outside scope,
+  byte-identical at `HEAD` with and without this session's edits):
+  `check_docs --stale` reds on `docs/work/complete/WI-396-…md:12`, whose href
+  still points at the docs-root `backlog-plan-2026-08-01.md` the `659f9b84`
+  archive sweep moved to `docs/archive/history/` (the link's own display text
+  already names the archive path). Smoke tier **1189 passed / 7 skipped**, 33s
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=82b91b8b -->.
 - **2026-08-17d — the four `2026-08-17b` mints DECOMPOSED: `SR-171`/`SR-172`
   gain their first children; the F18 pair was already carried, measured rather
   than assumed.** Owner directed the build-out (LLRs where applicable, TCs,
