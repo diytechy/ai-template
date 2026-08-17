@@ -1656,8 +1656,8 @@ MAPPING = [
     # The HATS ROSTER (SN-036, ruled at OI-19 2026-08-13): the declared expert
     # perspectives a decomposition must face, injected into the planner brief by
     # `plan_briefs.hat_surface`. It ships with CONTENT rather than as a blank
-    # form — thirteen starting hats — because an empty roster is a form with nothing
-    # behind it, and a roster is only useful if it says something on day one.
+    # form — the roster itself is the census — because an empty roster is a
+    # form with nothing behind it, only useful if it says something on day one.
     # OWNER TEXT: adopters are expected to EDIT it (cut, add, rewrite every
     # `applies_when` against their own vocabulary), which is the only thing that
     # keeps a roster inherited from a template honest. Deleting the file is a

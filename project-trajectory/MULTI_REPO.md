@@ -235,7 +235,7 @@ project never sees them. A coordinator repo adds them by hand (or via the future
   delegation. An `external`/`reused` part referenced only through the interface catalog
   may leave `DelegatedSRs` blank (unlike `PB`, an empty back-link is allowed here,
   because such a part fulfills no delegated *functional* SR). Optional and inert like
-  `interfaces.csv`: absent file, no effect.
+  `interfaces.toml`: absent file, no effect.
 - **`Delegated` marker on a coordinator `SR`.** An optional column recording that an SR
   is delegated to a module repo (value: the `REPO-` id or repo name). It signals, when
   reading the coordinator's SR registry, that this SR's decomposition and verification

@@ -8,7 +8,7 @@ as its own requirement**.
 
 ---
 
-## 1. Stakeholder Need — `requirements/stakeholder-needs.md`
+## 1. Stakeholder Needs — `requirements/stakeholder-needs.toml`
 
 The needs sit under the project's vision — one tagged statement in the README
 (`README.md#vision`, the canonical home every other doc points at) that DevBar-Reqs
@@ -18,52 +18,135 @@ checks each need against. A worked one for this project:
 > this tool: get those records into Excel/Sheets in one click, and never hand
 > them a half-written file.
 
-| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance intent |
-|---|---|---|---|---|
-| SN-001 | Export my records to a file I can open in a spreadsheet. | The data is useless if I can't get it into Excel/Sheets. | M | A new user clicks/exports and the file opens in a spreadsheet with the right columns and all their rows. |
+```toml
+[need.SN-001]
+kind = "core"
+need = "Export my records to a file I can open in a spreadsheet."
+why = "The data is useless if I can't get it into Excel/Sheets."
+priority = "M"
+acceptance = "A new user clicks export and the file opens in a spreadsheet with the right columns and all their rows."
 
-Edge-case table:
-
-| SN-ID | Scenario | Expected behavior |
-|---|---|---|
-| SN-013 | Export interrupted (crash / power loss / cancel) mid-write | I never end up with a half-written file that looks complete; I can just run it again. |
-
-## 2. System Requirements — `requirements/system-requirements.csv`
-
-```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001 so the file opens cleanly in any spreadsheet.","Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Approved,,
-SR-002,Atomic export write,SN-013,"The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write.","Realizes SN-013 so an interrupted run never leaves a complete-looking partial file.","A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally.","interrupt=set{during-write,before-rename}",M,Demonstration,Implemented,,
+[need.SN-013]
+kind = "core"
+need = """If an export is interrupted (crash / power loss / cancel) mid-write, I never end up with a half-written file that looks complete; I can just run it again."""
+why = "A partial file that opens cleanly in a spreadsheet is silent data loss."
+priority = "M"
+acceptance = "An interrupted export leaves no file at the final path; re-running completes normally."
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not "exports correctly"), links its SN, and uses `Permutations` so one row covers many cases. The trailing `Phase` column is blank throughout because this is a single-shot deliverable (no phased roadmap): with nothing phased the ratified-row Phase rule stays unarmed, and blank means in scope for every phase. A phased roadmap instead tags every ratified SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the project's current phase is *derived* as the highest, and only a `Drafted` row may then leave `Phase` blank — see process.md §4 "Phased delivery". `Aspect` (optional, process.md §1) is blank throughout because none of these rows is cross-cutting — it takes a CLOSED value naming a concern no component partition can express, never a domain or owner tag, and trace.py reports per-aspect SR counts when it is filled.
+`SN-013` is a **failure-mode expectation written as an ordinary need** — there
+is no separate edge tier. What keeps such needs from being forgotten is the
+**hats roster** (`hats.toml`, process.md §1): each applicable hat's question is
+put to every decomposition it applies to, so edge coverage is regenerated per
+need rather than maintained as a standing checklist. Maturity is the `kind`
+field (`core`/`draft`), never a section heading, and an absent key IS the
+empty cell.
 
-## 3. Low-Level Requirements — `requirements/low-level-requirements.csv`
+## 2. System Requirements — `requirements/system-requirements.toml`
 
-```csv
-LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,Status,Phase
-LLR-001,SR-001,Pure records->CSV serializer,src/export/csv,to_csv,"Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation.",,(see TC),Implemented,
-LLR-002,SR-002,Atomic file write,src/export/io,write_atomic,"Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core.","Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export.",(see TC),Implemented,
+```toml
+[requirement.SR-001]
+title = "CSV export (RFC-4180)"
+sn_refs = ["SN-001"]
+requirement = "The system shall export records as RFC-4180 CSV with a header row."
+rationale = "Realizes SN-001 so the file opens cleanly in any spreadsheet."
+acceptance_criteria = """Output parses as CSV; row count == records + 1 (header); columns match the documented schema in order; fields containing comma/quote/newline are quoted per RFC-4180."""
+permutations = "field=set{plain,comma,quote,newline}"
+priority = "M"
+verification = "Test"
+status = "Approved"
+
+[requirement.SR-002]
+title = "Atomic export write"
+sn_refs = ["SN-013"]
+requirement = """The system shall write the export to a temporary file and atomically rename it to the final name only after a successful write."""
+rationale = "Realizes SN-013 so an interrupted run never leaves a complete-looking partial file."
+acceptance_criteria = """A run interrupted before completion leaves no file at the final path (only a distinguishable temp); re-running completes normally."""
+permutations = "interrupt=set{during-write,before-rename}"
+priority = "M"
+verification = "Demonstration"
+status = "Approved"
+```
+
+Note: each SR has **measurable** acceptance criteria a test can assert (not
+"exports correctly"), links its SN, and uses `permutations` so one row covers
+many cases. `status` is the **closed** vocabulary — `Drafted`, `Approved`,
+`Modified` (process.md §4): `Approved` blesses the row's *text* and says
+nothing about tests passing (that is the harness's answer), `Modified` marks a
+post-approval amendment owing a re-attest, and an out-of-vocabulary word is an
+always-on integrity finding, not a free label. The `phase` key is omitted
+throughout because this is a single-shot deliverable (no phased roadmap): with
+nothing phased the ratified-row Phase rule stays unarmed, and an absent key
+means in scope for every phase. A phased roadmap instead tags every ratified
+SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full
+cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the
+project's current phase is *derived* as the highest, and only a `Drafted` row
+may then omit `phase` — see process.md §4 "Phased delivery". `aspect`
+(optional, process.md §1) is omitted throughout because none of these rows is
+cross-cutting — it takes a CLOSED value naming a concern no component
+partition can express, never a domain or owner tag, and trace.py reports
+per-aspect SR counts when it is filled.
+
+## 3. Low-Level Requirements — `requirements/low-level-requirements.toml`
+
+```toml
+[design.LLR-001]
+sr_refs = ["SR-001"]
+title = "Pure records->CSV serializer"
+module = "src/export/csv"
+code_symbol = "to_csv"
+detail = """Pure function: records -> String. Header from the schema; values quoted per RFC-4180. No I/O — unit-testable in isolation."""
+test_refs = "(see TC)"
+status = "Approved"
+
+[design.LLR-002]
+sr_refs = ["SR-002"]
+title = "Atomic file write"
+module = "src/export/io"
+code_symbol = "write_atomic"
+detail = """Write bytes to <path>.tmp, then rename to <path>; remove the tmp on any error. Rename is atomic on the same volume. The I/O shell around the pure core."""
+rationale = """Streaming the write in place was ruled out: a crash mid-write leaves a half-file the next run reads as valid. Costs one temp file per export."""
+test_refs = "(see TC)"
+status = "Approved"
 ```
 
 Note the split: **`to_csv` is a pure core** (cheap, exhaustive unit tests);
 **`write_atomic` is the I/O shell** (a smaller number of integration tests).
 Detail *decomposes* the SR — it doesn't restate it.
 
-Note also the **`Rationale`** split, and that `LLR-001` leaves it blank. `Detail`
-says *what this row is*; `Rationale` says *why it is that and not something else*
-— what breaks without it, which alternative lost. It is optional, and blank is
+Note also the **`rationale`** split, and that `LLR-001` omits the key (an
+absent key IS the blank cell). `detail`
+says *what this row is*; `rationale` says *why it is that and not something else*
+— what breaks without it, which alternative lost. It is optional, and absent is
 the right answer for a row like `LLR-001` whose why is simply its parent SR's.
 Reach for it when the decomposition itself was a decision (`LLR-002` chose atomic
-rename over a streaming write). Keeping the two apart is what stops a `Detail`
+rename over a streaming write). Keeping the two apart is what stops a `detail`
 growing into a wall of mechanism, justification and edit history at once.
 
-## 4. Test Cases — `test/test-cases.csv`
+## 4. Test Cases — `test/test-cases.toml`
 
-```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-001,SR-001;LLR-001,Unit,"to_csv over records incl. special-character fields; parse the result back",Smoke,"field=set{plain,comma,quote,newline}","Satisfies SR-001 AcceptanceCriteria",Yes,tests/test_export.py::test_to_csv_roundtrip,Approved,
-TC-002,SR-002;LLR-002,Integration,"Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds",Full,"interrupt=set{during-write,before-rename}","Satisfies SR-002 AcceptanceCriteria",Yes,tests/test_export.py::test_atomic_interrupt,Approved,
+```toml
+[test.TC-001]
+verifies = ["SR-001", "LLR-001"]
+level = "Unit"
+method = "to_csv over records incl. special-character fields; parse the result back"
+tier = "Smoke"
+parameters = "field=set{plain,comma,quote,newline}"
+expected = "Satisfies SR-001 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_export.py::test_to_csv_roundtrip"
+status = "Approved"
+
+[test.TC-002]
+verifies = ["SR-002", "LLR-002"]
+level = "Integration"
+method = """Abort write_atomic mid-write; assert no file at the final path and the tmp is cleaned; then a normal run succeeds"""
+tier = "Full"
+parameters = "interrupt=set{during-write,before-rename}"
+expected = "Satisfies SR-002 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_export.py::test_atomic_interrupt"
+status = "Approved"
 ```
 
 The `Evidence` column names the **concrete test that provides the proof** — a
@@ -130,7 +213,7 @@ fn to_csv_quotes_special_fields_sr001() { /* ...asserts SR-001 AC... */ }
 ```
 
 The test name embeds the verified id, and the item is annotated `Implements:`.
-The CSV columns are authoritative; these annotations keep code and registries
+The registry rows are authoritative; these annotations keep code and registries
 honest and greppable.
 
 ## 6. The traceability result
@@ -159,7 +242,7 @@ store. A reliability need (`SN-020`) becomes an SR verified by demonstration:
 
 ```csv
 SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Lifecycle
-SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Implemented,,Runtime
+SR-101,Database failover under primary loss,SN-020,"The system shall promote the standby database and resume serving within 30 s of losing the primary, with no committed transaction lost.","Realizes SN-020: the service survives a database outage.","With the primary killed, the app serves reads and writes from the standby within 30 s and the last transaction committed before the kill is present after promotion.","failure=set{kill,network-loss,disk-full}",H,Demonstration,Approved,,Runtime
 ```
 
 The domain hat filters and owns its slice through the rows' LLR
@@ -270,10 +353,28 @@ need `SN-030` ("get my export off the box automatically") drives its SR. Tag eac
 module's rows through their LLRs' `Module`/component so a domain hat can own and
 filter its slice:
 
-```csv
-SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase,Aspect
-SR-001,CSV export (RFC-4180),SN-001,"The system shall export records as RFC-4180 CSV with a header row.","Realizes SN-001.","Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180.","field=set{plain,comma,quote,newline}",M,Test,Approved,,
-SR-050,Deliver export to destination,SN-030,"The system shall upload a completed export to the configured destination and confirm receipt.","Realizes SN-030: the file is useless until it reaches the target.","A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped.","dest=set{local,s3,sftp}",M,Test,Implemented,,
+```toml
+[requirement.SR-001]
+title = "CSV export (RFC-4180)"
+sn_refs = ["SN-001"]
+requirement = "The system shall export records as RFC-4180 CSV with a header row."
+rationale = "Realizes SN-001."
+acceptance_criteria = """Output parses as CSV; columns match the schema; special-char fields quoted per RFC-4180."""
+permutations = "field=set{plain,comma,quote,newline}"
+priority = "M"
+verification = "Test"
+status = "Approved"
+
+[requirement.SR-050]
+title = "Deliver export to destination"
+sn_refs = ["SN-030"]
+requirement = """The system shall upload a completed export to the configured destination and confirm receipt."""
+rationale = "Realizes SN-030: the file is useless until it reaches the target."
+acceptance_criteria = """A completed export reaches the destination and receipt is confirmed; a failed upload is retried and surfaced, never silently dropped."""
+permutations = "dest=set{local,s3,sftp}"
+priority = "M"
+verification = "Test"
+status = "Approved"
 ```
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
@@ -290,6 +391,7 @@ contract = "Writes an RFC-4180 CSV at the agreed path with the documented schema
 signal = "variable"
 rationale = "One writer for the export file; delivery must not re-derive its schema."
 req_refs = ["SR-001"]
+owner = "SR-001"
 version = "v1"
 approval = "approved"
 
@@ -300,9 +402,15 @@ counterpart = "export"
 contract = "Reads the export file produced per IF-001 v1 before uploading it."
 signal = "variable"
 req_refs = ["SR-050"]
+owner = "SR-050"
 version = "v1"
 approval = "approved"
 ```
+
+`owner` is the **one** row answerable for each seam — exactly one, and it
+prefers the **design tier**: point it at the `LLR-###` that concretely serves
+the seam wherever a design row exists for the owner-side endpoint (here the
+module LLRs are omitted to keep the seam in focus, so the SRs stand in).
 
 And the seam gets its **own** integration TC — covered by neither module's internal
 unit tests — so the boundary is a tested contract, not a gap between two green
@@ -310,9 +418,17 @@ modules (process.md §10). It verifies the consuming SR (`SR-050`, the side that
 relies on the contract; `IF-002` links the interface to that SR, and the TC covers
 the SR):
 
-```csv
-TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status,Phase
-TC-050,SR-050,Integration,"Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced",Full,"dest=set{local,s3,sftp}","Satisfies SR-050 AcceptanceCriteria",Yes,tests/test_delivery_seam.py,Approved,
+```toml
+[test.TC-050]
+verifies = ["SR-050"]
+level = "Integration"
+method = """Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced"""
+tier = "Full"
+parameters = "dest=set{local,s3,sftp}"
+expected = "Satisfies SR-050 AcceptanceCriteria"
+automated = "Yes"
+evidence = "tests/test_delivery_seam.py"
+status = "Approved"
 ```
 
 Each module's SRs still decompose into their own `Module`-tagged LLRs as usual (§3;

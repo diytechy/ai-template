@@ -56,26 +56,34 @@ hats' shared context.
 
 | Hat | Owns (single source of truth) |
 |---|---|
-| Stakeholder | `requirements/stakeholder-needs.md` (SN-###) + edge-case expectations |
+| Stakeholder | `requirements/stakeholder-needs.toml` (SN-###), failure-mode expectations included |
 | UX / Docs | documentation quality, quick-reference, usability findings |
-| System Engineer | `requirements/system-requirements.csv` (SR-###); **gatekeeper** |
-| Software Engineer | `requirements/low-level-requirements.csv` (LLR-###) + code + `architecture.md` |
-| Test Engineer | `test/test-cases.csv` (TC-###) + the check harness + coverage/trace reports |
+| System Engineer | `requirements/system-requirements.toml` (SR-###); **gatekeeper** |
+| Software Engineer | `requirements/low-level-requirements.toml` (LLR-###) + code + `architecture.md` |
+| Test Engineer | `test/test-cases.toml` (TC-###) + the check harness + coverage/trace reports |
 
 A hat only edits artifacts it owns; to change another, file a finding addressed
 to its owner (§5).
 
-**Domain hats (scope-dependent).** The five above are the spine; add discipline
-hats at setup to match the scope — e.g. **Network**, **Security**, **Data/ML**,
-**Hardware/Mechanical**, **Mechatronics**, **DBA**, **SRE/Ops**, and an
-**Integration/Coordination** hat that allocates cross-module budgets
-(`performance-budgets.csv`, §9). A domain hat owns the `SR`/`LLR` rows in its
-area (identify them by the LLR `Module`, its component id, or an
-`SR-NET-###` prefix) and brings its own edge-case and release-checklist items.
+**Domain hats (scope-dependent).** The five above are the spine; the
+discipline perspectives beyond them — Security, DBA, SRE/Ops,
+Hardware/Mechanical, an **Integration/Coordination** hat that allocates
+cross-module budgets (`performance-budgets.csv`, §9) — are declared in the
+shipped **hats roster** (`requirements/hats.toml`): one `[hat.NAME]` per
+perspective carrying `applies_when` (a closed, evaluable condition), `asks`
+(the question put to the decomposition) and `listens_for` (the failure class
+it catches — a hat naming no failure is ceremony). The roster is **owner
+text**, tailored with the frame at `DevStg-Boundary`; `scripts/hats.py` reads
+it and the planning briefs put each applicable hat's question to the
+decomposition, so edge-case and discipline coverage is regenerated per
+decomposition, never hand-recorded. An obligation only a hat's charter demands enters the spine as
+a **labelled derived SR** naming the deriving hat in its rationale. A domain
+hat owns the `SR`/`LLR` rows in its area (identify them by the LLR `Module`
+or its component id) and brings its own release-checklist items.
 The SR `Aspect` tag is **not** that grouping: it is an optional, closed-vocabulary
 label for a **cross-cutting** concern no component partition can express, and a
-row that is not cross-cutting carries none. Record the **active hats** in
-`status.md`; don't wear a hat the scope doesn't need. Like the others, it is
+row that is not cross-cutting carries none. Don't wear a hat the scope doesn't
+need — cut the rows that don't earn their place. Like the others, it is
 usually the same driver switching context — spawn a separate specialist agent
 only for an independent high-risk review (§6).
 
@@ -144,7 +152,7 @@ Stable, zero-padded, never reused.
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.
 - **Code carries back-links** (`Implements: SR-007, LLR-014`); test names embed
-  the verified ID. CSV columns are authoritative.
+  the verified ID. The registry rows are authoritative.
 - **Architecture is generated** (module/function map) so it cannot drift; keep a
   hand-written one-page overview above it.
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
@@ -180,8 +188,8 @@ can't verify. Where the honest floor is a human's judgment, name it `Attest`
 (§4) rather than inflate a subjective call into a false `Test`.
 
 **Reviewability — review the source, not the render.** The registries (the
-`SN`/`SR`/`LLR`/`TC` CSVs) are the tracked, line-by-line-reviewable source of
-truth; every other view is *generated* from them. Generated output splits by size:
+`SN`/`SR`/`LLR`/`TC` TOML files) are the tracked, line-by-line-reviewable source
+of truth; every other view is *generated* from them. Generated output splits by size:
 
 - **Small, diff-meaningful blocks** live in tracked files behind `GENERATED`
   markers, kept honest by a freshness gate — the code map, dependency diagram,
@@ -293,7 +301,7 @@ the hand-written flow overview.
 **Design-time runtime flows (authored at DevBar-Tests, checked).** Everything above is
 harvested from code, so none of it exists at DevBar-Tests — yet DevBar-Tests is when a human reviews
 the LLRs, and runtime *behavior* (ordering, concurrency, background work, what
-blocks on what) is the thing most easily misread from CSV rows. So the Software
+blocks on what) is the thing most easily misread from registry rows. So the Software
 Engineer hat authors a **"Runtime flows"** section in `architecture.md` **with
 the LLRs, before the DevBar-Tests review**: one Mermaid `sequenceDiagram` per key
 user-visible scenario, and always one for any concurrent / asynchronous /
@@ -322,12 +330,14 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the `[attestation] human_ratification_through` dial in
-`docs/process.toml`, one of three levels: **`attended`** *(default)* — **pause for
-human approval at each gate**; **`single-ratify`** — LLM-gate review through
-DevBar-Reqs+DevBar-Tests with every human call queued, one human ratification sitting at DevBar-Tests
-close, autonomous rules after; **`autonomous`** — every bar except the owner's final read
-closes on an independent fresh-context LLM reviewer's recorded verdict. Full
+declared gate authority** — the `[attestation] human_ratification_through` dial
+in `docs/process.toml`, an ordinal `0`–`4` counting how many spine tiers stay
+**human-held** from the top (`4`, the shipped default: every tier's gate pauses
+for a human; `3` releases the TC tier, … `0` holds nothing). A held tier's gate
+waits for a per-gate human approval; a released tier's closes on an independent
+fresh-context LLM reviewer's recorded verdict. The words `attended` /
+`single-ratify` / `autonomous` are `--gate-policy` **presets** that *translate*
+into the `[attestation]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the owner's final read is the human's; no un-run greens; the
@@ -358,7 +368,12 @@ simply not Approved, deriving DevBar-Tests)
 but is surfaced: the `modified=N` basis count, a pending-owner-actions line, and
 the `trace.py --ratify modified` before/after brief. Re-attest is a reviewed
 Status-change commit like approval: `Modified`→`Approved` blesses the
-amendment. Amend and flip in the **same commit** (a `--staged` warn
+amendment. The baseline those before/after diffs run against is a
+**byte-for-byte copy** of the registries at the last approval —
+`docs/archive/last_approved/`, written only by the approval act itself
+(`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
+file must always equal its live counterpart) and replaced wholesale at each
+approval. Amend and flip in the **same commit** (a `--staged` warn
 enforces it); the SR is the attestation unit — flip it whenever its chain
 changes. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
@@ -404,7 +419,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 - **`DevStg-Release` — Release readiness** *(per release; skip for a one-off
   deliverable)*. The **release** test tier passes (incl. slow/hardware tests);
   the generated **release checklist** (`scripts/gen_release_checklist.py`) is
-  completed and signed; version bumped; changed `Stable` interface versions
+  completed and signed; version bumped; changed `approved` interface versions
   communicated to counterparts; docs/changelog updated. Sign-offs: Test Engineer,
   any active domain hats, Human.
 - **Acceptance — the owner's final read.** Human/stakeholder exercises the real product (incl.
@@ -444,6 +459,13 @@ obligations, so partitioning first means partitioning against nothing but the
 frame. An interface and a requirement say different things — an interface says
 *what crosses* (direction, counterpart, contract, type), a requirement says
 *what must be achieved* — so neither derives from the other.
+
+**The frame is a registry, not prose.** `DevStg-Boundary`'s deliverable is
+`requirements/external.toml`: who is outside (`[entity.EXT-###]`), what
+crosses the boundary (`[boundary.B-##]`), and the external-to-external flows
+the system is *not* a party to (`[relationship.REL-###]`). An SR states an
+observable **at** a crossing and cites it (`boundary_refs`); an IF row that
+realizes a crossing ties back to it directionally (§8).
 
 **The boundary happens once; the recursion lives in the two rungs after it.**
 Only the system's own frame comes from the needs and the context; every boundary
@@ -858,7 +880,7 @@ and naming the split is what keeps the kit portable across stacks:
   agent-neutral `pre-commit` hook (`.githooks/pre-commit`, enabled by
   `scripts/setup.{sh,ps1}`) enforces their **always-valid subset** on every
   commit: map freshness, registry integrity (`trace.py --strict-integrity` —
-  ids + CSV row structure; `check.py` runs the same floor as its DevBar-Reqs
+  ids + registry row structure; `check.py` runs the same floor as its DevBar-Reqs
   `registry-integrity` step), and
   format. Orphan strictness stays gate-scoped in `check.py` — a mid-DevBar-Reqs registry
   legitimately has SRs not yet decomposed, and the floor must never block a
@@ -941,9 +963,9 @@ pip needed to run them):
   small **Mermaid `graph LR`** colored by orphan/draft state), and exits nonzero
   on orphans with `--strict`. `--html` also writes a dependency-free collapsible
   `docs/test/report.html` map that scales to any size (a gitignored composite —
-  §3). It always checks **integrity** (duplicate/malformed ids, and every
-  registry CSV's data rows parsing to the header's column count — an unquoted
-  comma otherwise misaligns every later column silently); `--strict-integrity`
+  §3). It always checks **integrity** (duplicate/malformed ids and row
+  structure — the TOML carrier makes a duplicate id a parse error, and a legacy
+  CSV's data rows must parse to the header's column count); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
   `--require-verified` adds the DevBar-Release status criterion (every `Verification=Test` SR
   must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
@@ -1029,10 +1051,11 @@ police the difference by FORM, since no check reads intent: no work-item id and
 no decision citation in `Contract` (both age — a cancelled id still reads as
 authority), no rationale connective (*because* / *rather than* / *so that* /
 *since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
-`Approval` (`draft` · `approved`) is the row's **one** maturity field, shared
-with the boundary tier. A row ties back to a declared boundary crossing —
-`interface_from_external` / `interface_to_external` — only when it REALIZES one;
-a row with neither is an internal seam.
+`Approval` (`drafted` · `approved`) is the row's **one** maturity field, shared
+with the boundary tier. A row ties back to a declared boundary crossing — a
+`B-##` row in `requirements/external.toml` (§4, "The frame is a registry"),
+via `interface_from_external` / `interface_to_external` — only when it
+REALIZES one; a row with neither is an internal seam.
 
 **An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
 feeds the row's surface — `Contract` included — **verbatim** into the dual-plan

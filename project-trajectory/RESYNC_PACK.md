@@ -1097,6 +1097,29 @@ on, so a repo mid-conversion sees every site without being blocked.
 becomes `[phase]-[reqs|tests]` for NEW titles — your committed anchors keep their
 spelling and still parse forever (a title is a citation).
 
+### The hats layer — a declared-perspectives roster the planner briefs read [since e0112f8f]
+
+A new shipped registry plus its reader: `registries/hats.template.toml`
+scaffolds to `docs/requirements/hats.toml` — one `[hat.NAME]` per expert
+perspective, three required keys (`applies_when`, a closed evaluable
+condition; `asks`, the question that lands in the brief; `listens_for`, the
+failure class it catches), and it ships with **content**, because an empty
+roster is a form with nothing behind it. `scripts/hats.py` reads and audits
+it; `scripts/plan_briefs.py` injects each applicable hat's question into the
+dual-plan **planner** brief, which is what replaced the standing edge-case
+checklist tier (the SN-template entry further down). To adopt: copy
+`hats.template.toml` in, take `scripts/hats.py` + the current
+`plan_briefs.py` as one set, then **edit the roster** — cut the hats that do
+not earn their place and rewrite every `applies_when` against your
+vocabulary; a roster inherited unread is ceremony. The file is seeded once
+and then **preserved** (owner text, the §2.2 "Preserve always" class), so
+your edits survive later re-syncs. Opt-out: delete the file — composers
+proceed without hats; a file that exists and does not parse refuses loudly.
+The SN registry later gains an optional **`tags`** key feeding the same
+`applies_when` grammar (`tags contains "…"`): `hats.context_from_need` reads
+it, so a hat whose charter subject is a need's own subject can see that
+need. Untagged needs stay normal, and nothing gates on a hat.
+
 ### The depth-0 FRAME registry; IF `Stability` → `Approval`; rung 1 re-keys [since 0ff33a95]
 
 Four migrations in one commit, and the third one **changes what your reported
@@ -1380,6 +1403,21 @@ rendered bar says so — `DevBar-Tests (Release: pending harness driver)`. This 
 deliberate and it is what keeps the `Planned`→`Approved` fold from RAISING your
 derived gate for rows that never passed anything. `check.py --gate
 DevBar-Release` stays explicitly invocable at any time.
+
+### SN template: the `edge` row kind retires; `tags` documented [since 166b406d]
+
+*(Anchored at the shipped-docs audit commit; the change lands in the
+commit(s) that follow it.)* The SN template's `kind` vocabulary narrows to
+`core` | `draft`: the `edge` row kind — its `lifecycle`/`scenario`/`expected`
+fields and the standing edge-case checklist — leaves the template,
+`EXAMPLE.md` and `ADOPTING.md`. Edge-case coverage is the hats mechanism's
+job now (the entry above): write a failure-mode expectation as an ordinary
+need, and each applicable hat's question is put to every decomposition —
+regenerated per need rather than maintained as a checklist tier. Nothing
+breaks on the re-sync itself: no reader enforces a closed `kind` vocabulary,
+so existing `edge` rows keep parsing — fold them into ordinary needs at your
+own pace. The template's example row also now documents the optional `tags`
+key (the hats entry above).
 
 ---
 

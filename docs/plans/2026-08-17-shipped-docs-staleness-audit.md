@@ -5,8 +5,8 @@ shipped files kept up with the newer processes, and is there a work item for
 updating them? **The answer:** no general work item existed — WI-390 owns the
 concurrency prose, WI-455 the architecture prose, WI-452 the resync-helper
 surfaces, and nothing owned the rest. This audit is that missing sweep's
-evidence; **[`WI-471`](../work/queued/WI-471-shipped-docs-resync-sweep.md)**
-is the missing work item.
+evidence; **[`WI-471`](../work/complete/WI-471-shipped-docs-resync-sweep.md)**
+is the missing work item (executed 2026-08-17, log `2026-08-17j`).
 
 **Method + provenance.** Two read-only subagent audits ran 2026-08-17 (log
 `2026-08-17i`): one over the load-bearing core (`PROCESS.md`,

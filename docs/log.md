@@ -36,6 +36,90 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17j — WI-471 executed: the shipped-docs resync sweep — all 31
+  class-A findings closed, and the kit-level edge-SN question RULED at
+  dispatch: "edge is dropped."** The owner ruling (2026-08-17, in the WI-471
+  dispatch): the shipped SN template's `kind = "edge"` follows this repo's
+  OI-18 edge-tier dissolution — the `edge` row kind, its
+  `lifecycle`/`scenario`/`expected` fields and the standing edge-case
+  checklist leave the kit surfaces (`stakeholder-needs.template.toml`,
+  `EXAMPLE.md`'s edge table, `ADOPTING.md`), with edge-case coverage stated
+  as the hats mechanism's job — each applicable hat's `asks` put to every
+  decomposition, regenerated per need. BOUNDARY, recorded with the ruling:
+  `kind = core|draft` (maturity) STAYS until sitting-3 item 6's unification
+  executes — only the `edge` row-type value dies. **The governing method was
+  SSOT** (owner, same dispatch: "the key item is to have a SSOT"): before
+  correcting a stale fact in place, name its one home and point at it.
+  The split, so the calls are auditable: POINTED-AT-HOME — both hats counts
+  ("thirteen starting hats" in the shipped README and the `bootstrap.py`
+  comment → the roster is the census), `external.toml`'s header "LOCKED at
+  5·6·3" (→ the rows are the census, the 2026-08-16q cuts named), the live SN
+  header's "five hats that are `always`" (→ `hats.toml` is the census), the
+  root README's "0–5" stage claim (→ §4's eight-rung ladder);
+  CORRECTED-IN-PLACE — README's `human_ratification_through` This-repo cell
+  `0`→`4` (the table declares itself the map of `docs/process.toml`, so the
+  cell is fixed AND the live-dial home named in it), and the audit's
+  retired-token sites, whose home is the registry templates themselves. The
+  surfaces: `EXAMPLE.md` §1–§4 + §9 rewritten onto the TOML carrier with
+  legal `Status` cells everywhere (§7's `SR-101` included), `SN-013`
+  converted to an ordinary need driving `SR-002` unchanged, `owner` on both
+  §9 IF rows with the 2026-08-17c design-tier preference stated;
+  `PROCESS.md`'s gate-authority paragraph rewritten onto the 0–4 dial with
+  `attended`/`single-ratify`/`autonomous` as translate-only presets (SN-029),
+  §1 re-anchored on the hats roster, §4 gaining the frame-is-a-registry
+  paragraph and the `docs/archive/last_approved/` byte-copy re-attest
+  baseline (mechanism only — the first seed and UNANCHORED arming are
+  deliberately NOT described as done), the carrier/`Stable` tokens re-worded;
+  `PROCESS_OPTIONS.md`'s `Status=Proposed`/`Active` seam vocabulary onto
+  `approval = "drafted"`/declared, `SR-Refs`→`req_refs`, the audit's twelve
+  carrier-token sites onto `docs/work/`/`.toml` (the legacy-CSV dual-read
+  paragraph verified correct and untouched); ten README rows; RESYNC_PACK §3
+  gaining the hats-layer entry `[since e0112f8f]` — first placed at the tail,
+  refused by the landing-order test (e0112f8f is 2026-08-13), re-slotted
+  before the 0ff33a95 entry — and the SN-template edge/tags entry
+  `[since 166b406d]`, anchored at the audit commit per the D-9 idiom; the SN
+  template documenting the new `tags` key; the interfaces template's owner
+  paragraph stating the design-tier preference; the
+  `autonomous-gate-operations` skill's `Draft` token; the three sanctioned
+  riders. **Two adjacent defects the audit missed, fixed and reported rather
+  than ridden silently** (both one word, both the sweep's own classes):
+  `EXAMPLE.md` §5's "CSV columns are authoritative", and `PROCESS.md` §8
+  teaching `Approval` as `draft`·`approved` where the enforced vocabulary is
+  `drafted`|`approved` (trace.py `ENUM` sets) — the load-bearing core taught
+  an illegal value. **Test pin TAKEN** (`tests/test_gen_cases.py`, +2 tests):
+  every `Status` cell in EXAMPLE's TOML/CSV snippets must sit in the closed
+  vocabulary, and the spine walkthrough must name the TOML homes and never
+  the retired carriers — the 3771c003 sweep missed EXAMPLE precisely because
+  nothing read its cells. **Filed, not taken:** SN into the dogfood key
+  census — `spine_carrier.SPINE_TIER_KEYS` carries no `"SN-ID"` row, so the
+  take is a schema-of-record edit plus template `attestation`/`amended` keys,
+  not the cheap census row the spec allowed; the underlying gap is a fact
+  with NO single home (the SN tier's key schema is stated nowhere a test
+  reads), flagged here rather than invented. One ratchet contact:
+  `bootstrap.py`'s reworded comment grew the module by one line and the
+  size ratchet refused it — re-compressed rather than bumped. Byte deltas:
+  `AGENTS.template.md` 9,994 → 9,994 (untouched; 6 bytes of headroom);
+  `PROCESS.md` 76,226 → **77,826 (+1,600)** — the dial rewrite, the hats
+  re-anchor, the frame paragraph and the snapshot mechanism, after paying
+  trims (the superseded domain-hats prose, the REL sentence deferred to the
+  external template's own header); +100 past the spec's sized +1.5 KB
+  ceiling, accepted and flagged; `PROCESS_OPTIONS.md` 171,974 → **172,026
+  (+52)** — the drafted-vocabulary and `docs/work/` rewordings read slightly
+  longer. Both baselines re-stamped in both tracked skill copies, same
+  commit. Class-B holds verified untouched (Modified retirement wording, the
+  chain rule, IF direction columns, all architecture/check_flows prose, the
+  SN kind→status wording riding item 6); EXAMPLE's §7/§10 CSV snippets stay
+  CSV by scope. Verification: `trace.py --strict` unmoved — `SN=27 SR=70
+  LLR=159 TC=155 orphans=0 integrity=0 form-findings=1` (the pre-existing
+  SR-140; the IF-128/IF-088 advisories pre-exist)
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=166b406d -->;
+  `check_docs` fails only the pre-existing WI-396 broken link; dogfood suite
+  36 passed / 1 skipped
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_dogfood_sync.py" rev=166b406d -->.
+  The full-suite run then caught one defect of the close itself — the audit
+  plan doc's `WI-471` link broke when the spec moved to `complete/` — fixed
+  by re-pointing it; full unfiltered suite **2571 passed / 10 skipped**, 433s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=166b406d -->.
 - **2026-08-17i — shipped-docs staleness audit run and its missing work item
   filed as `WI-471`; no shipped surface prematurely adopts an unruled
   state.** The owner asked whether `PROCESS.md` and the associated shipped

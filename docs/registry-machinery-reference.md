@@ -23,10 +23,14 @@ is deliberately not covered here.
 
 | Tier | Home | Storage form | Id syntax | Owner hat |
 |---|---|---|---|---|
-| **SN** | `docs/requirements/stakeholder-needs.md` | **Markdown prose + tables** | `SN-<digits>` | Stakeholder |
-| **SR** | `docs/requirements/system-requirements.csv` | CSV, 12 columns | `SR-<digits>` | System Engineer |
-| **LLR** | `docs/requirements/low-level-requirements.csv` | CSV, 11 columns | `LLR-<digits>` | Designer |
-| **TC** | `docs/test/test-cases.csv` | CSV, 11 columns | `TC-<digits>` | Test Engineer |
+| **SN** | `docs/requirements/stakeholder-needs.toml` | TOML, `[need.SN-###]` tables | `SN-<digits>` | Stakeholder |
+| **SR** | `docs/requirements/system-requirements.toml` | TOML, `[requirement.SR-###]` tables | `SR-<digits>` | System Engineer |
+| **LLR** | `docs/requirements/low-level-requirements.toml` | TOML, `[design.LLR-###]` tables | `LLR-<digits>` | Designer |
+| **TC** | `docs/test/test-cases.toml` | TOML, `[test.TC-###]` tables | `TC-<digits>` | Test Engineer |
+
+*(Carrier updated 2026-08-17 — the 2026-08-08 TOML cutover post-dates this
+doc's compilation; an absent key IS the empty cell, and a duplicate id is a
+parse error the carrier itself refuses.)*
 
 Two engines read these rows and must never disagree:
 

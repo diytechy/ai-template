@@ -36,6 +36,67 @@ def test_process_md_specs_parse():
         assert parsed, dim
 
 
+# EXAMPLE.md's registry snippets are the pattern people copy, and nothing else
+# pins their cells: the 3771c003 Status-rename sweep missed EXAMPLE's four
+# `Implemented` cells precisely because no test read them (WI-471). These two
+# pins close that hole.
+LEGAL_STATUS = {"Drafted", "Approved", "Modified"}
+FENCED_BLOCK_RE = re.compile(r"```(toml|csv)\n(.*?)```", re.DOTALL)
+
+
+def _example_status_cells():
+    text = (KIT / "EXAMPLE.md").read_text(encoding="utf-8")
+    cells = []
+    for lang, block in FENCED_BLOCK_RE.findall(text):
+        if lang == "toml":
+            for table in tomllib.loads(block).values():
+                for row_id, row in table.items():
+                    if "status" in row:
+                        cells.append((row_id, row["status"]))
+        else:
+            for row in csv.DictReader(block.strip().splitlines()):
+                value = (row.get("Status") or "").strip()
+                if value:
+                    cells.append((row.get(next(iter(row))), value))
+    return cells
+
+
+def test_example_md_status_cells_stay_in_the_closed_vocabulary():
+    cells = _example_status_cells()
+    assert cells, "EXAMPLE.md should demonstrate Status cells"
+    illegal = [(rid, v) for rid, v in cells if v not in LEGAL_STATUS]
+    assert not illegal, (
+        "EXAMPLE.md teaches out-of-vocabulary Status value(s): %s" % illegal
+    )
+
+
+def test_example_md_spine_walkthrough_teaches_the_toml_carrier():
+    # The spine walkthrough must name the live TOML homes and never the
+    # retired markdown/CSV spine carriers (the off-spine PB/procurement/
+    # assets/repos templates legitimately stay CSV and are not listed here).
+    text = (KIT / "EXAMPLE.md").read_text(encoding="utf-8")
+    for home in (
+        "stakeholder-needs.toml",
+        "system-requirements.toml",
+        "low-level-requirements.toml",
+        "test-cases.toml",
+        "[need.SN-",
+        "[requirement.SR-",
+        "[design.LLR-",
+        "[test.TC-",
+    ):
+        assert home in text, "EXAMPLE.md no longer teaches %s" % home
+    for retired in (
+        "stakeholder-needs.md",
+        "system-requirements.csv",
+        "low-level-requirements.csv",
+        "test-cases.csv",
+    ):
+        assert retired not in text, (
+            "EXAMPLE.md still names the retired carrier %s" % retired
+        )
+
+
 def test_pairwise_covers_all_pairs_with_documented_count():
     # The 4x2x2 example from EXAMPLE.md: 8 cases (the doc's claim), every pair
     # of values across every pair of dimensions covered at least once.

@@ -83,8 +83,8 @@
 # need without that lens leaves a plainly governing question unasked. NOT
 # "some hat once derived a row from it": that test would tag nearly every row
 # `scripts`, and a lens that applies everywhere informs nothing. Ten of the
-# twenty-seven rows are deliberately untagged; the five hats that are `always`
-# need no tag to reach anything.
+# twenty-seven rows are deliberately untagged; a hat that is `always`
+# (`hats.toml` is the census) needs no tag to reach anything.
 #
 # A TAG IS NOT A CLAIM ABOUT PRIORITY OR OWNERSHIP, and it adds no arithmetic:
 # nothing gates on a hat today, and `tags` is absent from every schema rule,

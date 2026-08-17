@@ -19,7 +19,7 @@ defects precisely because the reviewer re-ran everything instead of reading the 
    `$?` explicitly. Never run the test suite concurrently with pipeline jobs sharing output dirs.
 3. Decide-and-log instead of blocking on absent humans: every judgment call gets a rationale in the
    append-only log; ratified decisions are extended or corrected by entry, never silently re-decided.
-4. Keep honest-red visible: failing baselines recorded before fixes; Draft/Blocked items never
+4. Keep honest-red visible: failing baselines recorded before fixes; Drafted/blocked items never
    claimed; disclosures (e.g. judge noise floor) promoted to the surface the human signs.
 5. Root-fix flakes an unattended loop would trip on (ours: Windows `os.replace` sharing violation →
    bounded winerror-scoped retry + two tests), and maintain a per-turn resume note ending with the

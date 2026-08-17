@@ -38,9 +38,11 @@
 #
 # OWNER is the ONE row that is answerable for this interface, id-typed, and it is
 # POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`, resolved against whichever
-# registry the prefix names. Both are legitimate because requirements and design
-# rows are decompositions of the same thing at different levels. Exactly one —
-# naming nobody and naming several are both findings.
+# registry the prefix names. Both resolve, but they are not equally right:
+# point `owner` at the DESIGN tier wherever a design row exists for the
+# owner-side endpoint — the design row is what concretely serves the seam —
+# and fall back to the `SR-###` only while no design row exists yet. Exactly
+# one — naming nobody and naming several are both findings.
 #
 # `owner` is NOT `req_refs`. `req_refs` lists every requirement the seam realizes
 # or relies on, and several is normal; `owner` names the one that ANSWERS for it.

@@ -185,8 +185,10 @@ make-work that produces paraphrase, not traceability. Instead:
   near zero. Claim DevBar-Tests/DevBar-Release only when their criteria genuinely hold for the scope
   the registries actually cover.
 - **Write SNs/SRs for the load-bearing behavior first**: what the project must
-  keep doing (the things a regression would page you for), plus the edge-case
-  table. These are cheap rows with high protective value.
+  keep doing (the things a regression would page you for), plus the
+  failure-mode expectations — ordinary needs the hats roster's questions
+  surface per decomposition (`hats.toml`, process.md §1). These are cheap rows
+  with high protective value.
 - **New work gets the full spine from day one**; existing code earns rows when
   you next touch it (the same change that edits the code adds its SR/LLR/TC).
   Coverage grows along the paths that actually change — which is where the
@@ -290,11 +292,11 @@ honestly deviates, the row says so.
 
 | Kit concept | Standard equivalent | Notes / honest deviation |
 | --- | --- | --- |
-| `SN`→`SR`→`LLR`→`TC` spine | ISO/IEC/IEEE 29148 StRS → SyRS/SRS requirement levels; DO-178C HLR/LLR + trace-to-test | `SN`≈StRS (stakeholder), `SR`≈SyRS/SRS (system/software), `LLR`≈DO-178C low-level requirement/design. The kit collapses the ceremony into four CSV tiers. |
+| `SN`→`SR`→`LLR`→`TC` spine | ISO/IEC/IEEE 29148 StRS → SyRS/SRS requirement levels; DO-178C HLR/LLR + trace-to-test | `SN`≈StRS (stakeholder), `SR`≈SyRS/SRS (system/software), `LLR`≈DO-178C low-level requirement/design. The kit collapses the ceremony into four registry tiers. |
 | `trace.py` output (`report.md` / graph) | Requirements Traceability Matrix (RTM) | Same job — every requirement linked to its verification — generated from the registries, never hand-maintained. |
 | Gates `DevBar-Reqs`–`DevBar-Release` | Technical review gates SRR / PDR / CDR / TRR (IEEE 15288.2) | Rough altitude match, not a 1:1 mapping: `DevBar-Reqs`≈requirements agreed (SRR), `DevBar-Tests`≈design/impl reviewed (PDR/CDR), `DevBar-Release`≈verified (TRR). The kit's gates are lightweight self-reviews, not staffed milestone reviews. |
 | `DevStg-Release` | Functional / Physical Configuration Audit (FCA / PCA, IEEE 15288.2) | Confirms the built product matches its requirements and its declared configuration before release. |
-| `IF-###` interface catalog | Interface Control Document (ICD) | One row per interface of record; the kit's is a CSV catalog, not a standalone controlled document. |
+| `IF-###` interface catalog | Interface Control Document (ICD) | One row per interface of record; the kit's is a registry catalog, not a standalone controlled document. |
 | `PB-###` performance budgets (§9) | Technical Performance Measures (TPMs) / resource budgets | Same intent — track measurable performance/resource targets against thresholds. |
 | `ASSET-###` + manifest/hash | Configuration items + baselines (IEEE 828 / ISO 10007) | A configuration item with a recorded, hashable baseline; the kit tracks provenance/license/hash in text where the asset itself can't be diffed. |
 | `status.md` risks & assumptions | Risk register (ISO 31000 family) | Same purpose — a living record of identified risks and assumptions; the kit keeps it lightweight and inline, not a separate managed register. |

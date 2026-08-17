@@ -5,8 +5,9 @@
 # (`[boundary.B-##]`), and which external-to-external flows exist that the
 # system is NOT a party to (`[relationship.REL-###]`). Ruled at sitting 2
 # (docs/plans/2026-08-13-sitting-2-boundary-and-context.md §1R, decisions 3/4/5;
-# owner 2026-08-13i/l/n/o/u). The frame is LOCKED at 5 entities · 6 crossings ·
-# 3 relationships.
+# owner 2026-08-13i/l/n/o/u). The frame is LOCKED — its rows change only by a
+# recorded ruling (EXT-004, B-06 and B-07 were cut by 2026-08-16q; the rows
+# below are the census, restated nowhere).
 #
 # THE INVERSION THIS FILE CARRIES (decision 3, 13l). The boundary interfaces
 # live HERE, with the entities — not in `interfaces.toml`. System requirements

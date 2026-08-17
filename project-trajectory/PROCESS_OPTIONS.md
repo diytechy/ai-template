@@ -708,8 +708,8 @@ is now in-process runtime state (review/critique queues + the `BUILD` default);
 phase names stay free-form, the named convention below `PLAN`/`BUILD`.
 
 **Plan/build cadence (the bounce).** *Applies when the trajectory /
-work-items layer is **not** enabled* — enabling `work-items.csv` + `SpecRef`
-**supersedes `docs/plan.md`**: a WI row + its spec-of-record carry the same
+work-items layer is **not** enabled* — enabling the `docs/work/` WI registry +
+`SpecRef` **supersedes `docs/plan.md`**: a WI row + its spec-of-record carry the same
 content mechanized (`Predecessors` = the sequencing, `BuildTier` = the tier
 hint, the spec's Done-when = the observable done-when, R-E gates the hand-off
 exists), so running both would keep two "what's next and how" surfaces
@@ -913,8 +913,8 @@ behavior**, so a fresh scaffold pays nothing.
   so an exhausted pool says what to *do*, not just that it paged.
 - **Per-WI build tier (a `BuildTier` column; WI-126).**
   Tier is otherwise per-*phase*, so a docs-only WI and a spine-critical engine WI
-  both ride the BUILD default. An **optional `BuildTier` column** on
-  `work-items.csv` (`strong|medium|quick`, legacy `weak` reads as `quick`;
+  both ride the BUILD default. An **optional `buildtier` key** in the WI
+  spec's frontmatter (`strong|medium|quick`, legacy `weak` reads as `quick`;
   empty/absent = the phase default) names a WI's *starting* build tier, read
   directly from the claimed WI's row; the hand-curated `docs/next-wi` pointer
   that once carried it is **retired** (WI-180,
@@ -1736,7 +1736,7 @@ status-surface lint.** The Needs-\<human> bullets in `status.md` stay
 **one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
 *depth* of each pending decision — blast radius, options with pros/cons, the
 driver's recommendation — lives in **`docs/requirements/open-items.toml`**
-(scaffolded from `registries/open-items.template.csv`), one row per decision,
+(scaffolded from `registries/open-items.template.toml`), one row per decision,
 and renders into **`docs/open-items.html`** — the generated surface the owner
 actually reads, so the review is **one page with all context**.
 
@@ -1748,9 +1748,9 @@ also lets it show what a pointer cannot: which rows ride an SR's line, and the
 baseline revision each diff was computed against.
 
 Lifecycle: a row is `pending` only until it is ruled — the ruling appends to
-`log.md`'s Decisions and the row's `Status` leaves `pending` (`work-items.csv` =
-tracking, the open-items registry = pre-ruling analysis, `log.md` = post-ruling
-record; no third source of truth). `check_docs.py` warns — **structure only,
+`log.md`'s Decisions and the row's `Status` leaves `pending` (the `docs/work/`
+registry = tracking, the open-items registry = pre-ruling analysis, `log.md` =
+post-ruling record; no third source of truth). `check_docs.py` warns — **structure only,
 never the exit code** (content quality is reviewer-class, and gate promotion is
 this layer's un-defer trigger for a spine SR): **S-1** `status.md` over its line
 budget (default 120; `docs/status-lint` overrides with an integer, `off`
@@ -1773,9 +1773,9 @@ R-F (above) mechanizes both close-side halves.
 
 **Specs act on declared interface boundaries (WI-191).** A spec whose WIs act
 across a module boundary carries an **`## Interfaces` section** citing each seam
-as an `IF-###` that resolves in `interfaces.csv` — the one seam home (§8), so a
-spec never sketches its own near-duplicate. A **new** seam is filed as a
-`Status=Proposed` row *at filing*, its citation naming the **nearest existing**
+as an `IF-###` that resolves in `interfaces.toml` — the one seam home (§8), so a
+spec never sketches its own near-duplicate. A **new** seam is filed as an
+`approval = "drafted"` row *at filing*, its citation naming the **nearest existing**
 IF and why it does not suffice: the forced search is the anti-duplication
 mechanism — search before you invent, because a seam defined before a second
 consumer exists tends to be wrong, bypassed, and re-invented, so the rule forces
@@ -1784,16 +1784,16 @@ repos/external actors), never intra-module ceremony — a single-module WI state
 that in the section in one line and cites nothing, and single-module standalone
 projects skip §8 entirely. **Mechanized** (`check_trajectory`, warn-first /
 ERROR under `--strict`, **vacuous-until-armed** — only a spec carrying the
-section is checked): every cited IF resolves, and a cited Proposed seam carries
+section is checked): every cited IF resolves, and a cited drafted seam carries
 a non-empty rationale. **The honest gap is reviewer-tier:** whether a rationale
-truly names the nearest seam, and whether a Proposed contract near-duplicates an
+truly names the nearest seam, and whether a drafted contract near-duplicates an
 existing one, is a judgment call (token-window duplicate detection reads code,
 not contract prose) — recorded in `enforcement-audit.md` with a plan/spec
 critique-rubric anchor (`docs/rubrics/spec-interface-hygiene.md` **B1**, which
 WI-190's plan rubric imports).
 
 **No-validation-delta warn.** A rework WI that addresses a prior failure but
-changes neither the TC prose (`docs/test/test-cases.csv`) nor the test logic
+changes neither the TC prose (`docs/test/test-cases.toml`) nor the test logic
 (files under the declared tests dir) warns (`--staged`, warn-first): the same
 failure can recur because the fix landed in the code, not the validation chain.
 
@@ -1801,7 +1801,7 @@ failure can recur because the fix landed in the code, not the validation chain.
 registry or spec is a `WI-`/`SR-`/`LLR-`/`TC-` id or an in-repo path — **never a
 session-local codename**. Review-finding labels, phase nicknames, and
 "the grind"-style shorthand belong in a `log.md` session entry (ephemeral
-narrative), but not in `work-items.csv`, the SR/LLR/TC registries, or
+narrative), but not in the `docs/work/` registry, the SR/LLR/TC registries, or
 `docs/specs/`: a codename resolves only by spelunking archived docs, while an id
 or path resolves mechanically. This stays a **writing rule + reviewer-B
 checklist item**, not a mechanical lint — a naive `[A-Z]\d+`-shaped matcher
@@ -2135,20 +2135,20 @@ connect** — the seam the AXES ratification sanctioned ("a cross-component edge
 without a declared interface is a finding"). §8 records a shared surface once as
 an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
 module→file, module→external-actor) exactly as it serves a cross-project one — one
-`interfaces.csv`, two uses.
+`interfaces.toml`, two uses.
 
 **The model — one row per directed seam.** `ThisProject` = the module path;
 `Counterpart` = another module, a **file path** (giving module→file→module
 dataflow, so a shared file like `docs/stack.ini` is a hub node many modules
 Consume), or an **external actor** (`downstream adopter`, `git`, `agent CLI`);
 `Direction` = Provides/Consumes; `Contract` = one testable line (CLI flags + exit
-codes, or the file schema); `SR-Refs` links the spine so every seam is
+codes, or the file schema); `req_refs` links the spine so every seam is
 transitively TC-covered. `trace.py` integrity-checks the tier (id shape, the
-SR-Refs back-link under `--strict`, a best-effort `ThisProject`↔`LLR.Module`
+`req_refs` back-link under `--strict`, a best-effort `ThisProject`↔`LLR.Module`
 advisory) — WI-056 closed the SR-002-era gap where trace never read the IF tier.
 
 **Opt-out, default-on (ruled).** By default a contract IF must define how the
-architecture connects, so the **coverage warn runs even when `interfaces.csv` is
+architecture connects, so the **coverage warn runs even when `interfaces.toml` is
 empty or absent**: a multi-module arch-map with no declared seams reads
 **"connectivity undeclared"** instead of passing vacuously, and the How-SW panel
 stays a bare module list — the organized graph is *earned* by declaring seams.
@@ -2157,14 +2157,14 @@ never changes an exit code). A repo with genuinely nothing to declare silences i
 with `[checks] interfaces_check = false` (the `trajectory_check`/`okf_export`
 idiom — the key ships `true`);
 a single-module inventory is vacuous. The warns: every arch-map module is a
-declared IF endpoint; each `Active` seam is cited by ≥1 TC; a `Contracts: IF-###`
+declared IF endpoint; each declared seam is cited by ≥1 TC; a `Contracts: IF-###`
 docstring line (harvested into the arch-map like `Implements:`) matches the
 registry.
 
 **Where a seam citation goes (ruled, WI-065): the TC's own `Verifies` cell**,
 alongside the SR/LLR ids — `Verifies=SR-074;IF-009`. One cell states everything
 a test verifies, so there is no second column to keep in sync. `trace.py` joins
-`IF-###` tokens against `interfaces.csv` exactly as it joins SR/LLR ids: an
+`IF-###` tokens against `interfaces.toml` exactly as it joins SR/LLR ids: an
 unresolvable seam id is an orphan finding like any other. A seam citation
 **supplements** the spine citation and never replaces it — a TC naming only
 `IF-###` ids is a finding, because a test still has to say which requirement it
@@ -2239,7 +2239,7 @@ belong in a knowledge pack; optimizer code remains project product work.
 
 ## Component layer
 
-*Referenced from the registry templates (`components.template.csv`).* **Applies
+*Referenced from the registry templates (`components.template.toml`).* **Applies
 when** a project wants a durable home for **set-grained knowledge and lifecycle**
 — a subsystem, an assembly ("the left arm"), a software package group — that no
 finer tier can hold: an `IF-###` is one seam, a workstream is mutable by design,
@@ -2444,7 +2444,7 @@ root `status.md`/`log.md`, `AGENTS.md`, and every generated artifact. The
 spine is **deliberately singular** (§10): `trace.py --strict` still demands
 **0 orphans across the whole repo, seams included**. Workers **propose**; the
 **integrator lands**. Cross-module contracts are `IF-###` rows in the one
-`interfaces.csv` with an integration TC backing the seam.
+`interfaces.toml` with an integration TC backing the seam.
 
 **Claims (the §2.3 protocol).** Work is claimed on the serial trunk:
 `integrate.py claim` moves the spec `docs/work/queued/ →

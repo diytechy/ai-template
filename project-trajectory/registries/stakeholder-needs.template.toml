@@ -13,7 +13,8 @@
 #
 # Owned by the Stakeholder hat — whoever the system serves: an end user, an
 # operator, or ANOTHER SYSTEM (represented by its owner/integrator).
-# Plain-language needs + edge-case expectations. Engineering translations live
+# Plain-language needs — a failure-mode expectation ("never hand me a
+# half-written file") is a need like any other. Engineering translations live
 # in system-requirements.toml (referenced by its `sn_refs`); do not restate
 # them here. Priority: M=Must · S=Should · C=Could.
 #
@@ -25,8 +26,6 @@
 #          decomposition exists. RATIFY it by changing `kind` to "core" in a
 #          reviewed commit; that commit is the sign-off and its date is the
 #          ratification date. Do not leave real needs parked at draft.
-#   edge   an edge-case expectation, which carries its OWN fields
-#          (`lifecycle` / `scenario` / `expected`) instead of the core four.
 #
 # This retires the older carrier's "section-as-state", where draft-ness was
 # "appears under a heading containing the word draft" — a rule a prose MENTION
@@ -50,49 +49,24 @@ need = """_EXAMPLE — replace this row; number real needs sequentially (the `-0
 why = "Why it matters — the consequence of NOT meeting it, in the stakeholder's terms."
 priority = "M"
 acceptance = "Acceptance intent: how we would know it is met."
+tags = ["EXAMPLE-domain"]
+# `tags` (OPTIONAL — omit the key on an untagged need) names the DOMAINS a
+# need's OWN SUBJECT sits in, in the vocabulary the hats roster's
+# `applies_when` clauses evaluate (`hats.toml`, `tags contains "…"`). Tag a
+# need when a hat's charter subject IS the need's subject — reading it without
+# that lens would leave a plainly governing question unasked — never merely
+# because some hat once derived a row from it. Untagged is normal, not
+# incomplete: an `always` hat needs no tag to reach anything, and `tags` adds
+# no arithmetic.
 
-# --- EDGE-CASE EXPECTATIONS ---------------------------------------------------
+# --- EDGE-CASE COVERAGE -------------------------------------------------------
 #
-# How the system should behave when things go wrong — the highest-value part of
-# this registry. Be specific; the System Engineer turns each into measurable
-# SRs. COVER EVERY LIFECYCLE PHASE — which phase gets neglected depends on the
-# product. Tool authors under-write Provision/Startup rows (first-run, missing
-# dependency); authors of products that operate in a live environment — a robot,
-# a server, anything with bystanders or concurrent actors — under-write Runtime
-# rows, because those failures live in the OPERATING ENVIRONMENT, not the
-# codebase.
-#
-# An edge need looks like this — copy it, give it a real id, and fill
-# `expected`:
-#
-#   [need.SN-0nn]
-#   kind = "edge"
-#   lifecycle = "Provision"
-#   scenario = "Missing dependency / wrong version"
-#   expected = ""
-#
-# WORK THE CHECKLIST BELOW: write a need for each line, or record an explicit
-# n/a. Delete only the lines that genuinely cannot apply.
-#
-#   Provision        Missing dependency / wrong version
-#   Provision        First-run setup & discoverable docs / quick-reference
-#   Startup          Invalid / corrupt / missing config at launch
-#   Startup→Runtime  Unattended/automated run (never blocks on a prompt at
-#                    launch OR mid-run; clear failure)
-#   Runtime          Interruption / power loss / killed mid-operation
-#   Runtime          Invalid / corrupt / unsupported input
-#   Runtime          Resource exhaustion (disk / memory full)
-#   Runtime          Output target removed / locked / unwritable
-#   Runtime          Environment changed under the product mid-operation (file
-#                    edited mid-run; object moved mid-action)
-#   Runtime          A third party interferes during operation (another process
-#                    takes the lock; a person or pet enters the workspace)
-#   Runtime          An intended action is irreversible and its target is
-#                    ambiguous (delete / overwrite / discard / physical change)
-#   Runtime          Input degraded but not absent (truncated stream, noisy or
-#                    dirty sensor, partial data)
-#   Runtime          Task must be abandoned safely partway (user stop, shutdown
-#                    mid-task)
+# How the system behaves when things go wrong is the highest-value content
+# here — but it is NOT a separate row kind. Write a failure-mode expectation
+# as an ordinary need (kind = "core"/"draft"), and let the HATS ROSTER carry
+# the coverage question: each hat's `asks` is put to every decomposition its
+# `applies_when` matches (`hats.toml`; process.md §1), so edge coverage is
+# regenerated per need rather than maintained as a standing checklist tier.
 #
 # --- DRAFT NEEDS --------------------------------------------------------------
 #

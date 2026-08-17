@@ -116,20 +116,21 @@ chasing it.
   process. It scaffolds to `AGENTS.md` (the cross-tool standard), with thin
   `CLAUDE.md`/`GEMINI.md` stubs pointing back at it.
 - **Ratified at the 2026-08-13 sitting, commissioned rather than shipped** —
-  seven needs the owner attested whose machinery is scheduled, not built. They
+  seven needs the owner attested whose machinery was scheduled, not built. They
   are listed here because a ratified promise should be visible before its code
-  is, not after: a stakeholder need readable without repo-internal vocabulary
-  (SN-033); one front-door action per platform for **each** of the two universal
-  contributor actions — preparing the dev environment and resuming the loop —
-  where today only `agent-resume.*` exists (SN-034); a machine-readable record of
-  which expert and downstream-user perspectives a decomposition was examined
-  from (SN-036); every system-requirement input and output resolving to a
-  declared interface, with unresolved references and uncovered boundary
-  crossings as mechanical findings (SN-037); every file the kit ships traceable
-  to the stakeholder outcome it serves (SN-038); a declared scope value on each
-  need saying whether it binds the template, this repo, or both (SN-039); and a
-  reproducible, reviewable record of *why* the system was divided into the
-  components it has (SN-040).
+  is, not after. Two have since shipped: the machine-readable record of which
+  expert and downstream-user perspectives a decomposition was examined from
+  (SN-036 — the hats roster, `hats.template.toml` + `scripts/hats.py`), and
+  system-requirement boundary references resolving to declared crossings with
+  unresolved references as mechanical findings (SN-037 — `boundary_refs`
+  resolution). Still owed: a stakeholder need readable without repo-internal
+  vocabulary (SN-033); one front-door action per platform for **each** of the
+  two universal contributor actions — preparing the dev environment and
+  resuming the loop — where today only `agent-resume.*` exists (SN-034); every
+  file the kit ships traceable to the stakeholder outcome it serves (SN-038); a
+  declared scope value on each need saying whether it binds the template, this
+  repo, or both (SN-039); and a reproducible, reviewable record of *why* the
+  system was divided into the components it has (SN-040).
 
 ## The registries & trace artifacts — one map
 
@@ -160,7 +161,7 @@ graph LR
     REPO["REPO-### delegated repo"]
   end
   WI -- "SR-Refs" --> SR
-  IF -- "SR-Refs" --> SR
+  IF -- "req_refs" --> SR
   PB -- "Refs" --> SR
   REPO -- "DelegatedSRs" --> SR
   PART -- "IF-Ref" --> IF
@@ -193,12 +194,12 @@ integrity-check the ids the moment real rows exist.
 | Registry | Ids | What it does — and why it exists |
 |---|---|---|
 | [`external`](project-trajectory/registries/external.template.toml) | `EXT-###` `B-##` `REL-###` | The **depth-0 frame**, in three row kinds: who is outside the system, what **crosses its boundary**, and which external-to-external flows the system is *not* a party to. This is the tier **system requirements form around** — an SR states an observable AT a crossing. A relationship carries no interface vocabulary, deliberately: it is not a crossing and must never grow a realizing IF. |
-| [`interfaces`](project-trajectory/registries/interfaces.template.toml) | `IF-###` | One **interface definition** per row — what the interface concretely *is*, in one testable line, versioned. It does **not** say who provides or consumes it: that is implied by the requirements that cite it. A row ties back to a boundary crossing (`interface_from_external` / `interface_to_external`) only when it **realizes** one; a row with neither is an internal seam. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
+| [`interfaces`](project-trajectory/registries/interfaces.template.toml) | `IF-###` | One **interface definition** per row — what the interface concretely *is*, in one testable line, versioned. The **`owner`** cell names the one row answerable for the seam (a design-tier id wherever one exists, else an `SR-###`); `req_refs` lists every requirement it realizes or relies on. A row ties back to a boundary crossing (`interface_from_external` / `interface_to_external`) only when it **realizes** one; a row with neither is an internal seam. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
 | [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
 | [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
 | [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
 | [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `State`/`SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Ratified design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
-| [`work-items`](project-trajectory/registries/work-items.template.csv) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
+| [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
 | [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Deleting it is a supported opt-out; a broken one refuses loudly. |
 
@@ -298,7 +299,7 @@ same artifacts and run the gates with you.
 > ([`PROCESS.md`](project-trajectory/PROCESS.md) §7).
 
 > **Project scale.** One module in one repo is the default. A larger repo can
-> host several modules on the same spine (grouped by `Module`/`Area`,
+> host several modules on the same spine (grouped by `Module`/component,
 > module-scoped review, an integration TC at each seam); a multi-repo split
 > under a coordinator is a rarer, heavier step, taken only when modules need
 > independent versioning/release
@@ -351,7 +352,7 @@ set:
 |---|---|---|---|
 | `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevBar-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevBar-Reqs` (derived; re-opened for the 2026-08 re-tier program after DevBar-Release) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `0` |
+| `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `4` — every spine tier human-held (owner directive 2026-08-14; the live dial is the key in [`docs/process.toml`](docs/process.toml)) |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
@@ -376,8 +377,8 @@ specified in [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md).
 
 What each approval gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4, which also carries the ruled
-**stage/gate** model: a repo is *in* a stage (the tier of the decomposition
-being worked, 0–5), and *passes* a gate. The gate value in `docs/gate` is
+**stage/gate** model: a repo is *in* a stage (one of the eight rungs of §4's
+`DevStg-*` ladder), and *passes* a gate. The gate value in `docs/gate` is
 *derived*, not declared — `derive_gate.py` computes it from the artifact states
 and caches it (generated, never hand-edited) as **the gate that must next be
 passed**, which is also the strictness the harness runs at. It advances when a
