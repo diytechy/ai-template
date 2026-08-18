@@ -840,6 +840,7 @@ Now kick of an opus agent to update docs/plans/2026-08-16-registry-status-unific
 
 |||||||||||||||
 
+Is status now the same definitoin in all spine registries?
 
 Make sure all the skill / process / agent related documentation is succinct.  What does research say about llm usage of these files and how length can affect quality?  I'm afraid quality is getting dropped by bloated prose.
 
