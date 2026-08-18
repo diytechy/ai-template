@@ -636,23 +636,28 @@ BIF_MATURITY = {
 }
 
 # CMP rows — the partition (rung 3).
+# CMP now speaks the ONE enum (registry status unification, 2026-08-17), and
+# that collapses this table to the identity over it. What it used to hold was
+# two axes at once: `planned`/`built`/`verified` were maturity spelled in
+# regenerated retired spine words, while `has-gap`/`deprecated` were LIFECYCLE
+# facts folded onto maturity — exactly the conflation SN's `kind` was. The
+# lifecycle half moved to its own `standing` field, which nothing maps here
+# because it is not a maturity.
+#
+# CMP KEEPS ITS OWN TABLE rather than sharing `SPINE_MATURITY`, and deliberately:
+# the two differ TODAY (CMP reaches `founded`, the spine does not; the spine
+# carries transitional `modified`, CMP never did) and they differ again at D-9
+# step 7 in the other direction. One table serving both would have to be read as
+# a union that is wrong for each.
+#
+# `founded` is REACHABLE HERE and nowhere else off-spine: a demonstrated
+# partition is a claim something computes, which is the whole test for whether a
+# tier may carry the word.
 CMP_MATURITY = {
-    # A planned component is a partition proposed and not yet realized: the
-    # architecture rung's own work-in-flight state. (Keys lower-cased — see
-    # `_maturity`.)
-    "planned": DRAFTED,
-    # Built means the partition exists in the tree — settled as a partition, which
-    # is all rung 3 asks. Whether it WORKS is rungs 5-6's question.
-    "built": APPROVED,
-    # Verified adds the demonstration, so this is the one CMP state that earns
-    # FOUNDED.
-    "verified": FOUNDED,
-    # `has-gap` is an explicit statement that the partition does NOT yet hold —
-    # the strongest possible DRAFTED signal, and the one place a lenient mapping
-    # would let a known-broken partition report a finished architecture rung.
-    "has-gap": DRAFTED,
-    # Deprecated, as for IF: a decided state, not work in flight.
-    "deprecated": APPROVED,
+    # (Keys lower-cased — see `_maturity`.)
+    "drafted": DRAFTED,
+    "approved": APPROVED,
+    "founded": FOUNDED,
 }
 
 

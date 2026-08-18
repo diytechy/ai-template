@@ -755,7 +755,7 @@ def test_if_endpoint_advisory_is_warn_only(scaffold):
 
 CLEAN_IF = (
     'IF-001,Provides,src/demo,external:git,"reads the ref state",'
-    "SR-001,v1,approved,Active,,\n"
+    "SR-001,v1,Approved,Active,,\n"
 )
 
 
@@ -800,7 +800,7 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
         'signal = "analog"\n'
         'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "approved"\n',
+        'approval = "Approved"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -818,9 +818,9 @@ def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
     # the check has to bite on the SUCCESSOR column or the lesson was migrated
     # away rather than kept.
     make_minimal_project(scaffold)
-    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,approved,", ",v1,Provisional,"))
+    out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Approved,", ",v1,Provisional,"))
     assert "IF IF-001 has Approval='Provisional'" in out
-    assert "approved, draft" in out
+    assert "Approved, Drafted" in out
 
 
 def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -847,7 +847,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'contract = "reads the ref state"\n'
         'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "approved"\n',  # no `signal`
+        'approval = "Approved"\n',  # no `signal`
         encoding="utf-8",
     )
     record_ids(scaffold)

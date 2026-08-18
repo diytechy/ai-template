@@ -458,22 +458,22 @@ ENUM_FIELDS = {
     "IF": {
         "Direction": {"Provides", "Consumes"},
         "Signal": {"discrete", "variable"},
-        "Approval": {"drafted", "approved"},
+        "Approval": {"Drafted", "Approved"},
     },
-    "CMP": {"State": {"planned", "built", "verified", "has-gap", "deprecated"}},
+    "CMP": {"State": {"Drafted", "Approved", "Founded"}},
     # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
     # confirmed (`deliverable` was the ruled addition); `Direction` is read from
     # the SYSTEM's point of view, which is why it is in|out|inout and not the
     # IF tier's retired Provides/Consumes.
     "EXT": {
         "Class": {"operational", "enabling", "interoperating", "deliverable"},
-        "Approval": {"drafted", "approved"},
+        "Approval": {"Drafted", "Approved"},
     },
     "B": {
         "Direction": {"in", "out", "inout"},
-        "Approval": {"drafted", "approved"},
+        "Approval": {"Drafted", "Approved"},
     },
-    "REL": {"Approval": {"drafted", "approved"}},
+    "REL": {"Approval": {"Drafted", "Approved"}},
 }
 
 # --- the IF `Contract` negative rules (WI-443, warn-first) --------------------

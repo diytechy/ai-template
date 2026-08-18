@@ -2,7 +2,7 @@
 name = "EXAMPLE - delete on first real entry"
 category = "software"
 knowledge = "skill-name;docs/knowledge/label"
-state = "planned"
+state = "Drafted"
 superseded_by = ["CMP-000"]
 part_of = ["CMP-000"]
 detail_doc = "docs/cmp/example.md"

@@ -391,7 +391,7 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
 
 # WI-442: rung 1 reads the FRAME's `[boundary.B-##]` rows, not the IF registry.
 BIF_APPROVED = {"B-ID": "B-01", "Approval": "approved"}
-CMP_BUILT = {"CMP-ID": "CMP-001", "State": "built"}
+CMP_BUILT = {"CMP-ID": "CMP-001", "State": "Approved"}
 
 
 def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry():
@@ -457,14 +457,24 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
     rests on. Identifying a new sub-component means minting a `planned` CMP row,
     and that alone DROPS the reported stage back to DevStg-Arch with nobody
     deciding to. No ladder machinery, no depth in the identifier."""
-    planned = dict(CMP_BUILT, State="planned")
+    planned = dict(CMP_BUILT, State="Drafted")
     assert _stage(cmps=[planned], have_cmps=True) == dg.STAGE_ARCH
     assert _stage(cmps=[CMP_BUILT], have_cmps=True) == dg.STAGE_RELEASE
-    # `has-gap` is the explicit statement that the partition does not hold — the
-    # one state a lenient mapping would let report a finished architecture rung.
-    assert _stage(cmps=[dict(CMP_BUILT, State="has-gap")], have_cmps=True) == (
-        dg.STAGE_ARCH
+    # A DEMONSTRATED partition is the one CMP value that reaches FOUNDED, and it
+    # must not hold the rung open either.
+    assert _stage(cmps=[dict(CMP_BUILT, State="Founded")], have_cmps=True) == (
+        dg.STAGE_RELEASE
     )
+    # The RETIRED words hold the rung OPEN rather than resolving. `planned` and
+    # `verified` left this vocabulary at the status unification (they were the
+    # retired spine words regenerated in another registry), so a stale cell
+    # still carrying one is unreadable — and an unreadable partition reports
+    # unfinished, never finished. `has-gap` is the same shape: it is a
+    # `standing` fact now, not a maturity, so it says nothing here.
+    for retired in ("planned", "built", "verified", "has-gap", "deprecated"):
+        assert _stage(cmps=[dict(CMP_BUILT, State=retired)], have_cmps=True) == (
+            dg.STAGE_ARCH
+        ), retired
 
 
 def test_BOUNDARY_outranks_ARCH_because_the_fold_takes_the_LOWEST_rung():
@@ -490,10 +500,32 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     """The mapping table is one home, and this is what keeps it honest against
     the schema: every value trace.py's ENUM_FIELDS accepts must appear here, or a
     legal registry value would silently take the unrecognized-reads-DRAFTED path
-    and hold its rung open forever."""
+    and hold its rung open forever.
+
+    COMPARED CASE-NORMALIZED, and that is not a loosening. The registries speak
+    the spine's Title-case words; these tables are keyed lowercase because
+    `_maturity` lowercases before the lookup. A raw set comparison would have
+    been red the moment the vocabulary re-cased — the two sides never disagreed
+    about WHICH values map, only about how the lookup spells them, and this
+    normalization is exactly the transform `_maturity` itself applies.
+
+    What must NOT be done to make this green is lower-casing the registries: the
+    Title-case word IS the unification (2026-08-17), and a check that pulled the
+    cells back down to keep itself simple would have undone the change it is
+    supposed to be guarding."""
     trace = load_script("trace")
-    assert set(dg.BIF_MATURITY) == trace.ENUM_FIELDS["B"]["Approval"]
-    assert set(dg.CMP_MATURITY) == trace.ENUM_FIELDS["CMP"]["State"]
+
+    def _lower(values):
+        return {v.lower() for v in values}
+
+    assert set(dg.BIF_MATURITY) == _lower(trace.ENUM_FIELDS["B"]["Approval"])
+    assert set(dg.CMP_MATURITY) == _lower(trace.ENUM_FIELDS["CMP"]["State"])
+    # The tables are keyed lowercase; the schema is not. Pin the asymmetry so a
+    # future edit cannot "tidy" one side into the other and make the comparison
+    # above vacuous in the direction it was designed to catch.
+    assert all(v == v.lower() for v in dg.CMP_MATURITY)
+    assert trace.ENUM_FIELDS["CMP"]["State"] == {"Drafted", "Approved", "Founded"}
+    assert trace.ENUM_FIELDS["B"]["Approval"] == {"Drafted", "Approved"}
     # The IF tier shares the frame's approval vocabulary (decision 12: ONE status
     # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
     # while each stays internally consistent.

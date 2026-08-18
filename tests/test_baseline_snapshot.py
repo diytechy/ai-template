@@ -279,10 +279,10 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
     """A seeded tree in which the FIRST row of `rel` reads approved-or-above on
     its own maturity cell, on BOTH sides of the comparison.
 
-    The flip happens BEFORE the seed deliberately: every shipped IF row reads
-    `draft` and every CMP row `planned` today, so a fixture that approved
-    nothing would assert against a predicate that is False for the honest
-    reason, and pass while proving nothing."""
+    The flip happens BEFORE the seed deliberately: every shipped IF and CMP row
+    reads `Drafted` today, so a fixture that approved nothing would assert
+    against a predicate that is False for the honest reason, and pass while
+    proving nothing."""
     root = _tree(tmp_path)
     _rewrite(
         root,
@@ -300,7 +300,7 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
 def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     # IF (and the depth-0 frame) carry `Approval`, never `Status`.
     root, row, unclaimed = _approved_offspine(
-        tmp_path, IF_REL, "IF-ID", "Approval", ("drafted", "approved")
+        tmp_path, IF_REL, "IF-ID", "Approval", ("Drafted", "Approved")
     )
     before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
     assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # green first
@@ -316,10 +316,10 @@ def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
 
 def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
     # CMP carries `State`, whose ladder semantics are derive_gate's, not a
-    # second set written here — `built`/`verified`/`deprecated` are the values
-    # that table maps to Approved-or-above.
+    # second set written here — `Approved` and `Founded` are the values that
+    # table maps to Approved-or-above.
     root, row, _unclaimed = _approved_offspine(
-        tmp_path, CMP_REL, "CMP-ID", "State", ("planned", "verified")
+        tmp_path, CMP_REL, "CMP-ID", "State", ("Drafted", "Founded")
     )
     before = SNAP.rows_for(SNAP.load_all(root), CMP_REL, "CMP-ID")
     assert not SNAP.is_drifted(CMP_REL, "CMP-ID", row, before)  # green first
@@ -340,18 +340,30 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
         k for k, v in dg.CMP_MATURITY.items() if v in claimed
     )
     # The values Sol's round-2 repro asked about, stated outright so a table
-    # edit that silently drops one has to come through this line.
-    assert SNAP._claims_approval({"Approval": "approved"})
-    assert SNAP._claims_approval({"State": "verified"})
-    assert not SNAP._claims_approval({"Approval": "drafted"})
-    assert not SNAP._claims_approval({"State": "planned"})
+    # edit that silently drops one has to come through this line. Title-case
+    # since the registries speak the one enum; the predicate lower-cases before
+    # the lookup, which is what lets the tables stay lowercase-keyed.
+    assert SNAP._claims_approval({"Approval": "Approved"})
+    assert SNAP._claims_approval({"State": "Founded"})
+    assert not SNAP._claims_approval({"Approval": "Drafted"})
+    assert not SNAP._claims_approval({"State": "Drafted"})
+    # The RETIRED CMP words claim nothing — `planned`/`verified` left the
+    # vocabulary rather than being renamed, and a stray cell still carrying one
+    # must read as unsettled rather than resolving through a stale table row.
+    assert not SNAP._claims_approval({"State": "verified"})
+    assert not SNAP._claims_approval({"State": "built"})
 
 
 def test_the_SN_tier_is_COPIED_but_claims_nothing_BY_DECISION():
     """Design §B7, restated as a test so the omission cannot be mistaken for an
-    oversight: needs carry no maturity key at all, so there is no cell for the
-    claim predicate to read. The tier is still COPIED — the record of what was
-    blessed is complete — it is only the CLAIM that has nothing to stand on."""
+    oversight.
+
+    The REASON changed on 2026-08-17 and the test is worth more for it: needs
+    used to carry no maturity key, so the claim predicate had nothing to read
+    and the omission proved itself. They now carry `status`, so the omission is
+    a live choice — and what holds it is `SNAPSHOT_TIERS`, pinned below. Wiring
+    SN drift to that cell is deliberately a separate pass; until then this is
+    the line that would go red if someone wired it by accident."""
     assert SNAP.NEEDS_REL in SNAP.SNAPSHOTTED
     assert not any(rel == SNAP.NEEDS_REL for rel, _col in SNAP.SNAPSHOT_TIERS)
 

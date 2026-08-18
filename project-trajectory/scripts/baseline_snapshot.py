@@ -267,12 +267,18 @@ def _claims_approval(row):
     this reads through `derive_gate` rather than restating, so the re-spelling
     needed no edit here at all.
 
-    **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7): needs carry no
-    maturity key at all today, so there is no cell for this predicate to read and
-    SN drift cannot be status-gated until D-9 gives SN a Status. The tier is
-    still COPIED — `stakeholder-needs.toml` is in `SNAPSHOTTED`, so the record of
-    what was blessed is complete — it is only the approval CLAIM that has nothing
-    to read. `SNAPSHOT_TIERS` omits SN for the same reason."""
+    **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7). The reason
+    CHANGED on 2026-08-17 and the distinction now matters: needs used to carry no
+    maturity key at all, so there was literally no cell to read. They now carry
+    `status`, in the same words as the spine (the registry status unification).
+    The omission is therefore a LIVE CHOICE rather than a vacuum — SN drift is
+    still not status-gated, and wiring it is deliberately parked as its own pass
+    (that plan's §7: a `status` nobody checks is the same defect with a better
+    name, and sizing the wiring is separate work). What holds the omission in
+    place mechanically is `SNAPSHOT_TIERS`, which does not list SN, so no SN row
+    reaches this predicate at all. The tier is still COPIED —
+    `stakeholder-needs.toml` is in `SNAPSHOTTED`, so the record of what was
+    blessed is complete."""
     return (
         (row.get("Status") or "").strip().lower() in _APPROVAL_CLAIMED
         or (row.get("Approval") or "").strip().lower() in _APPROVAL_CELL_CLAIMED
