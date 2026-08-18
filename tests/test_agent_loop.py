@@ -146,10 +146,10 @@ STATUS_MD = """# Project Status
 
 ## Current State
 
-- **Active gate:** DevBar-Reqs
+- **Active gate:** DevStg-Reqs
 - **Open items:**
   - **Needs <human>**:
-    - OI-1 — decide: approve the demo gate (blocks: DevBar-Reqs)
+    - OI-1 — decide: approve the demo gate (blocks: DevStg-Reqs)
 
 ## Scope
 

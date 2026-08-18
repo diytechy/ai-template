@@ -311,28 +311,28 @@ def test_range_mode_catches_history_and_messages(scaffold):
 
 def test_check_py_wires_privacy_as_process_step(scaffold):
     # The sweep is a [process] step at every gate; on the privacy-off scaffold the
-    # whole DevBar-Reqs plan still passes — the secrets floor runs but a fresh scaffold
+    # whole DevStg-Reqs plan still passes — the secrets floor runs but a fresh scaffold
     # ships no credential shapes, so wiring it unconditionally never taxes an
     # unconcerned repo.
-    proc = run_py(["scripts/check.py", "--gate", "DevBar-Reqs", "--list"], cwd=scaffold)
+    proc = run_py(["scripts/check.py", "--gate", "DevStg-Reqs", "--list"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert any("privacy" in ln and "[process]" in ln for ln in proc.stdout.splitlines())
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Reqs", "--lenient"], cwd=scaffold
+        ["scripts/check.py", "--gate", "DevStg-Reqs", "--lenient"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
 
 
 def test_check_py_gate_red_on_seeded_leak(scaffold):
-    # Under a declared policy the same DevBar-Reqs gate goes red on a tracked leak —
+    # Under a declared policy the same DevStg-Reqs gate goes red on a tracked leak —
     # the CI-side net for what slipped past --no-verify or predates the policy.
     set_privacy(scaffold)
     (scaffold / "docs" / "notes.md").write_text(
         "worked from C:\\Users\\bobsmith\\checkout\n", encoding="utf-8"
     )
     proc = subprocess.run(
-        [sys.executable, "scripts/check.py", "--gate", "DevBar-Reqs", "--lenient"],
+        [sys.executable, "scripts/check.py", "--gate", "DevStg-Reqs", "--lenient"],
         cwd=str(scaffold),
         capture_output=True,
         text=True,

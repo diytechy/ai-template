@@ -492,9 +492,9 @@ def test_the_bar_cell_round_trips_and_a_context_body_is_read_past(tmp_path):
     scalar, and the advisory `## Context` body section a minted spec carries is
     read PAST exactly like `## Handback` — `--to-csv` on a minted folder must
     not refuse, and the section maps to no CSV column."""
-    rows = [_row("WI-001", Status="queued", Bar="DevBar-Tests")]
+    rows = [_row("WI-001", Status="queued", Bar="DevStg-Tests")]
     back = _round_trip(tmp_path, rows)
-    assert back[0]["Bar"] == "DevBar-Tests"
+    assert back[0]["Bar"] == "DevStg-Tests"
     assert _cell_mismatches(rows, back) == []
     # A minted, context-only body parses with an empty Deliverable...
     assert wi_convert.parse_deliverable("\n## Context\n\n- advisory joins\n", "w") == ""

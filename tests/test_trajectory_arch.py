@@ -340,7 +340,7 @@ def test_interface_warns_never_fail_strict(tmp_path):
 # --- WI-073/FB5: the How-SW top-view right-sizing rule -------------------------
 # The software-architecture top view is bounded at 10 items (top-level CMP
 # components that contain a module + uncontained modules); over the bound is a
-# finding — WARN plain, ERROR under --strict (DevBar-Tests+). Opt-out docs/components-check;
+# finding — WARN plain, ERROR under --strict (DevStg-Tests+). Opt-out docs/components-check;
 # vacuous below the bound or with no arch-map inventory (the bound is the rule).
 
 CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
@@ -1232,7 +1232,7 @@ def test_phase_anchor_g2_without_g1_predecessor_warns():
     assert any("does not list its [v3]-[reqs]" in w for w in warns)
 
 
-def _write_gate(root, per_phase, value="DevBar-Reqs"):
+def _write_gate(root, per_phase, value="DevStg-Reqs"):
     (root / "docs").mkdir(parents=True, exist_ok=True)
     (root / "docs" / "gate").write_text(
         "# header\n# basis: SN=1 SR=3 LLR=3 TC=3 drafts=0 computed={} "
@@ -1245,7 +1245,7 @@ def _write_gate(root, per_phase, value="DevBar-Reqs"):
 
 def test_read_derived_phases_parses_basis(tmp_path):
     ct = load_script("check_trajectory")
-    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Below")
+    _write_gate(tmp_path, "v1=DevStg-Impl;v2=DevStg-Below")
     assert ct.read_derived_phases(tmp_path) == {"v1": 3, "v2": 0}
     # A legacy hand-set gate with no basis line yields no phase data (vacuous).
     (tmp_path / "docs" / "gate").write_text("# legacy\nG3\n", encoding="utf-8")
@@ -1254,8 +1254,8 @@ def test_read_derived_phases_parses_basis(tmp_path):
 
 def test_phase_drop_detector_warns(tmp_path):
     ct = load_script("check_trajectory")
-    # v2 closed at [g2] (done) but the derived level for v2 is now DevBar-Below (a reopen).
-    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Below")
+    # v2 closed at [g2] (done) but the derived level for v2 is now DevStg-Below (a reopen).
+    _write_gate(tmp_path, "v1=DevStg-Impl;v2=DevStg-Below")
     wis = _wis(
         ct,
         [
@@ -1270,18 +1270,18 @@ def test_phase_drop_detector_warns(tmp_path):
     )
     warns = ct.phase_findings(tmp_path, wis)
     assert any(
-        "phase 'v2' dropped to DevBar-Below" in w and "[v2]-[tests]" in w for w in warns
+        "phase 'v2' dropped to DevStg-Below" in w and "[v2]-[tests]" in w for w in warns
     )
-    # Back at DevBar-Tests: no drop warn (the phase re-cleared its anchor level).
-    _write_gate(tmp_path, "v1=DevBar-Release;v2=DevBar-Tests", value="DevBar-Tests")
+    # Back at DevStg-Tests: no drop warn (the phase re-cleared its anchor level).
+    _write_gate(tmp_path, "v1=DevStg-Impl;v2=DevStg-Tests", value="DevStg-Tests")
     assert ct.phase_findings(tmp_path, wis) == []
 
 
 def test_phase_findings_vacuous_without_anchors(tmp_path):
     ct = load_script("check_trajectory")
     _write_gate(
-        tmp_path, "v1=DevBar-Below"
-    )  # a phase at DevBar-Below but NO anchor records a close
+        tmp_path, "v1=DevStg-Below"
+    )  # a phase at DevStg-Below but NO anchor records a close
     wis = _wis(ct, [{"WI-ID": "WI-220", "Title": "ordinary", "Status": "queued"}])
     assert ct.phase_findings(tmp_path, wis) == []
 

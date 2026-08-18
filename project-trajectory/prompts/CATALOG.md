@@ -22,8 +22,8 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-CONFLICT` | [adjudicate-conflict.template.md](adjudicate-conflict.template.md) | `sha256:19eb35c3acd3` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{spine}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:78fbd44f9078` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
-| `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:3baf23d4f73b` | `{brief}`, `{verdict}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:62a945811cd8` | `{verdict}` |
+| `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:ae826fef3e73` | `{brief}`, `{verdict}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:decf7f439f3a` | `{verdict}` |
 | `WORKER` | [worker.template.md](worker.template.md) | `sha256:56d04331b3be` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an

@@ -228,7 +228,7 @@ def test_open_row_whose_spec_reports_finished_warns(tmp_path):
 
 def test_open_row_whose_spec_reports_finished_errors_under_strict(tmp_path):
     """Gate tier: a contradiction between two homes for one fact cannot reach a
-    green DevBar-Tests/DevBar-Release, matching R-E/R-F."""
+    green DevStg-Tests/DevStg-Impl, matching R-E/R-F."""
     _write_spec(tmp_path, "WI-001.md", DONE_WHEN_ALL_TICKED)
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
     proc = run_traj(tmp_path, "--strict")
@@ -376,7 +376,7 @@ def test_the_trailer_signal_never_joins_the_exit_code(tmp_path):
     row asks for ERROR under --strict; its own argument forbids it. A trailer
     means "a commit CLAIMS this WI", not "the work is right" — WI-336's code
     landed while its row CORRECTLY stayed queued, a review having refuted three
-    of its claims. Erroring here would block the DevBar-Release gate for the length of that
+    of its claims. Erroring here would block the DevStg-Impl gate for the length of that
     rework, with no honest way out but a false close."""
     skip_without_env_gates("git")
     git = shutil.which("git")

@@ -1874,7 +1874,7 @@ print("FAILED tests/test_widget.py::test_value - AssertionError: VALUE")
 print("1 failed, 3 passed in 0.2s")
 print("  FAIL  tests+coverage   exit 1 (0.2s)")
 print("=" * 56)
-print("Check summary (gate DevBar-Release, tier smoke):")
+print("Check summary (gate DevStg-Impl, tier smoke):")
 print("  PASS  format           0.1s")
 print("  FAIL  tests+coverage   exit 1 (0.2s)")
 print("=" * 56)
@@ -2146,17 +2146,17 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
 
 
 def test_the_bar_key_reaches_check_gate(tmp_path):
-    # WI-388 (5): an optional frontmatter `bar = DevBar-Reqs|DevBar-Tests|DevBar-Release` pins the lane's
+    # WI-388 (5): an optional frontmatter `bar = DevStg-Reqs|DevStg-Tests|DevStg-Impl` pins the lane's
     # verification strictness — the refresh passes it to check.py as --gate, so
     # a row claimed to deliver evidence at a level still bars at that level if
     # docs/gate moves mid-flight. Asserted off the recording stub's OWN argv.
-    root = station_repo(tmp_path, bar="DevBar-Tests")
+    root = station_repo(tmp_path, bar="DevStg-Tests")
     wt = _lane(root, "wi-401")
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     order = _order(wt)
-    assert "--gate" in order and "DevBar-Tests" in order, order
-    assert order.index("--gate") + 1 == order.index("DevBar-Tests")
+    assert "--gate" in order and "DevStg-Tests" in order, order
+    assert order.index("--gate") + 1 == order.index("DevStg-Tests")
 
 
 def test_without_a_bar_key_the_refresh_passes_no_gate(tmp_path):
@@ -2766,7 +2766,7 @@ def scaffolded_closed_branch(tmp_path):
 
     The bar this sets up for is REAL. `make_minimal_project` gives the scaffold a
     fully traced SN->SR->LLR->TC chain, so `check.py --trunk-lane` at the derived
-    gate (DevBar-Release) and the smoke tier genuinely passes on the refreshed branch —
+    gate (DevStg-Impl) and the smoke tier genuinely passes on the refreshed branch —
     measured 17 PASS steps, zero SKIP. `_run_bar` is deliberately NOT stubbed by
     any caller: a monkeypatched bar would make every downstream assertion true of
     a queue that merges anything.
@@ -3208,7 +3208,7 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     for rel in MEASURED_RESIDUE:
         assert integ._is_declared_residue(rel), rel
     # Widened on measurement, the WI-400 scope guard working as designed:
-    # check.py passes --html to its trace step at DevBar-Tests/DevBar-Release, so the DECLARED bar
+    # check.py passes --html to its trace step at DevStg-Tests/DevStg-Impl, so the DECLARED bar
     # writes docs/test/report.html in whatever lane it runs in, and on
     # 2026-08-02 the wi-402 lane was measured holding exactly that file at
     # unload. Same class as report.md — rebuilt by the next bar run, sole-copy

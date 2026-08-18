@@ -8,7 +8,7 @@ on:
     # EVERY branch, not just `main` (WI-278 / OI-8 ruled 2026-07-25). The
     # development branch had run ~845 commits with NO hosted CI, because a
     # branch push only triggered a run while someone kept a PR open — and the
-    # 2026-07-25 DevBar-Release sitting proved what that costs: an entire test layer
+    # 2026-07-25 DevStg-Impl sitting proved what that costs: an entire test layer
     # (`agent_loop_*`) could not execute on the owner's machine at all, so the
     # local gate was green over a blind spot only an independent environment
     # sees. A push trigger is repo state that travels with the branch and

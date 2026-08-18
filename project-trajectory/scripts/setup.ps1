@@ -88,7 +88,7 @@ try {
     }
 
     Write-Host ""
-    Write-Host "Setup complete. Run the harness with: .\scripts\check.ps1 --gate DevBar-Release"
+    Write-Host "Setup complete. Run the harness with: .\scripts\check.ps1 --gate DevStg-Impl"
     Write-Host "(check.ps1 uses the venv python directly; no activation needed.)"
 }
 finally {

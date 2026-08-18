@@ -1425,25 +1425,34 @@ def _run_trunk_step(wt, root):
 # OI-21): bar declares verification strictness for this row's lane; it never
 # affects scheduling. Ordered weakest to strictest so a batch takes the
 # STRICTEST — by LADDER POSITION, never by `max()` on the string. The retired
-# tags alphabetized, so `max()` was accidentally right; `DevBar-Tests` sorts
-# above `DevBar-Release`, so it is now accidentally WRONG in the permissive
+# tags alphabetized, so `max()` was accidentally right; `DevStg-Tests` sorts
+# above `DevStg-Impl`, so it is now accidentally WRONG in the permissive
 # direction, which is exactly the class of bug the label carrier makes loud.
-_BAR_GATES = ("DevBar-Reqs", "DevBar-Tests", "DevBar-Release")
+_BAR_GATES = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 
 # A WI `bar:` is AUTHOR-WRITTEN, so the retired tags translate on read (OI-21
 # contract break 3) — silently, because check_vocab.py sees the spec file and can
 # name the line. Duplicated from intake.normalize_bar per the F5 rule.
 _RETIRED_BARS = {
-    "g1": "DevBar-Reqs",
-    "g2": "DevBar-Tests",
-    "g3": "DevBar-Release",
+    "g1": "DevStg-Reqs",
+    "g2": "DevStg-Tests",
+    "g3": "DevStg-Impl",
+    # The `DevBar-*` prefix, retired 2026-08-18 (one vocabulary; the verb
+    # carries the axis). Keyed lower-case like the rows above, since this
+    # table is looked up case-insensitively. The Release row translates to
+    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar closed the Impl rung
+    # and `DevStg-Release` is not clearable at all, so the alias carries the
+    # correction rather than a bare prefix swap.
+    "devbar-reqs": "DevStg-Reqs",  # check_vocab: allow
+    "devbar-tests": "DevStg-Tests",  # check_vocab: allow
+    "devbar-release": "DevStg-Impl",  # check_vocab: allow
 }
 
 
 def _normalize_bar(value):
-    """A `bar:` cell as a canonical `DevBar-*` name ("" when blank), retired tags
+    """A `bar:` cell as a canonical `DevStg-*` name ("" when blank), retired tags
     translated. Matched case-insensitively — the retired reader did `.upper()`,
-    which would turn a correctly-authored `DevBar-Reqs` into `DEVBAR-REQS` and
+    which would turn a correctly-authored `DevStg-Reqs` into `DEVBAR-REQS` and
     refuse it."""
     raw = str(value or "").strip()
     if not raw:
@@ -1541,7 +1550,7 @@ def _lane_bar_directives(root, branch):
       work registry, nothing a product bar can speak to; that is why the kind
       needs its own no-bar arm rather than a tier). Fails TOWARD the bar: an
       unreadable frontmatter or a mixed batch runs it.
-    * `gate` — the strictest `bar` key among the claimed rows (DevBar-Reqs < DevBar-Tests < DevBar-Release),
+    * `gate` — the strictest `bar` key among the claimed rows (DevStg-Reqs < DevStg-Tests < DevStg-Impl),
       handed to check.py --gate. None when no row declares one.
     * `refusal` — a malformed bar value. Refused loudly rather than silently
       barred at whatever the derived gate happens to read (the drift the key
@@ -1633,7 +1642,7 @@ def _worktree_dirt(wt):
 # next trace.py run. A short enumerated list on purpose - not a glob
 # configuration surface and not a dial; everything outside it stays evidence.
 # Widened on measurement, once (WI-407): check.py passes --html to its trace
-# step at DevBar-Tests/DevBar-Release, so the declared bar writes docs/test/report.html in whatever
+# step at DevStg-Tests/DevStg-Impl, so the declared bar writes docs/test/report.html in whatever
 # lane it runs in, and on 2026-08-02 the wi-402 lane was measured holding
 # exactly that file at unload - same class as report.md, rebuilt by the next
 # bar run, sole-copy evidence never.

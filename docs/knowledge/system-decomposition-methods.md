@@ -31,7 +31,7 @@ is advisory input to that ruling, not the ruling itself.
 > below reads as though the method *requires* a requirements×signals incidence
 > — it does not. It requires *elements* plus a *coupling relation*; shared
 > signals from a functional decomposition are an equally valid source, and a
-> greenfield adopter at DevBar-Reqs has no SRs at all. Also note what this encoding
+> greenfield adopter at DevStg-Reqs has no SRs at all. Also note what this encoding
 > cannot do: clustering the coupling of **what already exists** ratifies the
 > duplication already in it, which is the one thing the architecture is for.
 > The architecture is **formative** — derived from the system's intended

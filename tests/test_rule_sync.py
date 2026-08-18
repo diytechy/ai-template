@@ -74,7 +74,7 @@ def test_is_drafted_agrees():
 
 
 def test_is_approved_agrees():
-    # Both files decide the `Approved` state (the DevBar-Release --require-verified
+    # Both files decide the `Approved` state (the DevStg-Impl --require-verified
     # criterion in trace.py, the gate derivation in derive_gate.py). Matched
     # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
     # two equivalent across the same casing/whitespace/None battery as is_drafted.
@@ -217,7 +217,7 @@ def test_status_enum_is_declared_for_every_spine_tier():
 
 def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     # Correction C1 of the migration plan, mechanized. `--strict-schema` runs
-    # only at DevBar-Release (check.py), so a Status closure routed through
+    # only at DevStg-Impl (check.py), so a Status closure routed through
     # `schema_findings` would be INERT for every repo below the top bar — which
     # is every repo the closure exists for. Assert BOTH directions: the
     # integrity producer sees a retired word, and the schema producer does not
@@ -266,12 +266,12 @@ def test_llr_exempt_agrees():
 
 
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
-    # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevBar-Release bar and
-    # derive_gate.sr_bar must agree about which SRs must be Approved before DevBar-Release.
+    # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
+    # derive_gate.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
     # sr_bar has always demanded is_approved for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for Verification=Test, so
     # a decomposed Demonstration/Analysis/Inspection SR left Approved could never
-    # derive DevBar-Release yet passed trace's check — two scripts disagreeing about the gate.
+    # derive DevStg-Impl yet passed trace's check — two scripts disagreeing about the gate.
     # Option A widened trace's bar: its loop now gates only on is_drafted (skip) then
     # is_approved (pass) and NEVER reads Verification, so it is method-blind exactly
     # like sr_bar. Pin the equivalence on the predicates each side actually uses,
@@ -300,14 +300,14 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         assert TRACE.is_approved(verified) is True, m  # Approved -> passes
         assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
         # sr_bar for a decomposed SR is method-blind too — every method, same
-        # answer. Since OI-30 D2 that answer is DevBar-Tests for BOTH sides (the
+        # answer. Since OI-30 D2 that answer is DevStg-Tests for BOTH sides (the
         # ceiling), so the equivalence this test pins now lives entirely on the
         # trace side above; the assertion below keeps sr_bar method-blind, which
         # is the half the ceiling does not touch.
         assert GATE.sr_bar(verified, True, True) == GATE.BAR_TESTS, m
         assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
     # A Drafted SR is pre-ratification and exempt from BOTH: trace's bar stands down
-    # (is_drafted True, so the loop `continue`s) and sr_bar returns DevBar-Below (below DevBar-Reqs).
+    # (is_drafted True, so the loop `continue`s) and sr_bar returns DevStg-Below (below DevStg-Reqs).
     draft = {"Verification": "Test", "Status": "Drafted"}
     assert TRACE.is_drafted(draft) is True
     assert GATE.sr_bar(draft, True, True) == GATE.BAR_BELOW
@@ -370,7 +370,7 @@ def test_sn_all_ids_agrees():
         assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
     # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
     # universe exactly like a table row (the §2.1 sharp edge: ratified + uncited
-    # means the coverage rung caps the gate at DevBar-Below). Drafted-section ids are
+    # means the coverage rung caps the gate at DevStg-Below). Drafted-section ids are
     # included (the draft/coverage split happens later, on sn_draft_ids); only
     # -000 placeholders are excluded.
     assert GATE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {

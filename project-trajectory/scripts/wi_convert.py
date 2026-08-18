@@ -155,7 +155,7 @@ SCALAR_FIELDS = (
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
     # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (DevBar-Reqs|DevBar-Tests|DevBar-Release — integrate.refresh passes it to
+    # never affects scheduling. (DevStg-Reqs|DevStg-Tests|DevStg-Impl — integrate.refresh passes it to
     # check.py --gate; the scheduler deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),

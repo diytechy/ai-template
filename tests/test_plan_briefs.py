@@ -127,7 +127,7 @@ def _fixture_repo(root):
 # --- the goal/coverage/plan/rubric strings a real caller passes in (all sourced
 # from allowlisted material; none carry the sentinel) --------------------------
 GOAL = "C1: assemble redacted briefs; the surface must expose SR-061 and IF-059."
-RUBRIC = "DevBar-Reqs: solvability. DevBar-Tests: completeness."
+RUBRIC = "DevStg-Reqs: solvability. DevStg-Tests: completeness."
 COVERAGE = "coverage: SR-061 covered by P2; IF-059 resolves; neither: (none)."
 PLAN_A = "| Plan-WI | Title |\n|---|---|\n| P2 | brief assembler (SR-061) |"
 PLAN_B = "| Plan-WI | Title |\n|---|---|\n| P2 | assembler covering SR-061 |"

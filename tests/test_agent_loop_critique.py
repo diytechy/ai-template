@@ -124,9 +124,9 @@ def _wi_row(budget="", exhaustion=""):
     ]
 
 
-RUBRIC = "# render rubric\n\n- DevBar-Reqs contact shadows are consistent\n- B1 RUBRIC-MARKER seam artifacts\n"
+RUBRIC = "# render rubric\n\n- DevStg-Reqs contact shadows are consistent\n- B1 RUBRIC-MARKER seam artifacts\n"
 
-APPROVE = "- [MINOR] art.txt -> DevBar-Reqs mostly holds -> tidy -> @owner\nVERDICT: APPROVE findings=1\n"
+APPROVE = "- [MINOR] art.txt -> DevStg-Reqs mostly holds -> tidy -> @owner\nVERDICT: APPROVE findings=1\n"
 CHANGES = (
     "- [MAJOR] art.txt -> B1 seam artifact at the join -> reseat the mesh -> @owner\n"
     "VERDICT: CHANGES-REQUESTED findings=1\n"

@@ -423,7 +423,7 @@ def test_the_rules_are_actually_WIRED_INTO_the_integrity_floor(tmp_path):
     # directly, so deleting the one line in `main()` that appends it to
     # `findings.integrity` left all of them green — and the whole argument for
     # this design is that the rules run in trace.py's always-on
-    # `--strict-integrity` floor rather than behind a toggle or a DevBar-Release gate.
+    # `--strict-integrity` floor rather than behind a toggle or a DevStg-Impl gate.
     # So drive the CLI and assert the finding reaches the EXIT CODE.
     from conftest import SCRIPTS, run_py
 

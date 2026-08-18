@@ -6,7 +6,7 @@ through their gates without a human g2-close sitting. **Reversible / temporary:*
 the owner may restore a lower level at any time. Keep in version control.
 
 _Prior level:_ **`single-ratify`** — RATIFIED 2026-07-13 (OI-2; owner review of
-the WI-107 enablement commit, [log.md](log.md) "GATE: DevBar-Release re-attestation" +
+the WI-107 enablement commit, [log.md](log.md) "GATE: DevStg-Impl re-attestation" +
 Decisions). That level and its ratification stand as history and may be restored
 by raising `human_ratification_through` in [process.toml](process.toml) + this
 register.
@@ -46,9 +46,9 @@ in-chat directive + this register update, 2026-07-15.)_
 
 | process.md clause | Standard behavior | This repo (`autonomous`) |
 |---|---|---|
-| §4 acceptor, DevBar-Reqs+DevBar-Tests | a human approves each gate | an **independent fresh-context LLM reviewer's recorded verdict** ratifies the gate; no human sitting |
+| §4 acceptor, DevStg-Reqs+DevStg-Tests | a human approves each gate | an **independent fresh-context LLM reviewer's recorded verdict** ratifies the gate; no human sitting |
 | §4 ratification point | per-gate approval | each gate closes on its recorded reviewer verdict (LLM-gate); a human call is queued as a `Needs <human>` Open item only when a **fixed point** below forces it |
-| §4 acceptor, DevBar-Release→DevStg-Release | a human approves each gate | autonomous (LLM-gate verdicts) |
+| §4 acceptor, DevStg-Impl→DevStg-Release | a human approves each gate | autonomous (LLM-gate verdicts) |
 | §4 consistency review 'pause and ask' | solicit the human | route by revert-cost: LOW → decide + record (log.md Decisions log); MEDIUM/HIGH → the Blocked register; never a mid-run pause |
 
 ## Fixed points (nothing in this file overrides these)

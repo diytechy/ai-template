@@ -314,7 +314,7 @@ def test_a_ratified_but_UNCITED_need_is_the_NEEDS_rung():
     # WI-401's coverage rung, which the stage axis did not apply: a need with
     # no requirement answering it is unfinished work AT THE NEEDS RUNG. Without
     # this such a spine read the top rung ("nothing in work") while the bar
-    # arithmetic put the same repo at DevBar-Below — the two axes contradicting
+    # arithmetic put the same repo at DevStg-Below — the two axes contradicting
     # each other, in the one function whose job is to reconcile them.
     assert _stage(sn_ids=("SN-001", "SN-002")) == dg.STAGE_NEEDS
 
@@ -634,14 +634,14 @@ def test_the_two_ruled_label_typos_never_shipped():
 
 
 UNIFORM_STAGE_TO_BAR = {
-    dg.STAGE_NEEDS: "DevBar-Reqs",
-    dg.STAGE_BOUNDARY: "DevBar-Reqs",
-    dg.STAGE_REQS: "DevBar-Reqs",
-    dg.STAGE_ARCH: "DevBar-Tests",
-    dg.STAGE_LLREQS: "DevBar-Tests",
-    dg.STAGE_TESTS: "DevBar-Tests",
-    dg.STAGE_IMPL: "DevBar-Release",
-    dg.STAGE_RELEASE: "DevBar-Release",
+    dg.STAGE_NEEDS: "DevStg-Reqs",
+    dg.STAGE_BOUNDARY: "DevStg-Reqs",
+    dg.STAGE_REQS: "DevStg-Reqs",
+    dg.STAGE_ARCH: "DevStg-Tests",
+    dg.STAGE_LLREQS: "DevStg-Tests",
+    dg.STAGE_TESTS: "DevStg-Tests",
+    dg.STAGE_IMPL: "DevStg-Impl",
+    dg.STAGE_RELEASE: "DevStg-Impl",
 }
 
 
@@ -651,7 +651,7 @@ def test_stage_to_bar_is_THE_NEXT_BAR_YOU_MUST_CLEAR(stage, bar):
 
     Each bar is named for the TOP RUNG IT CERTIFIES, so the reconciliation is a
     partition of the ladder rather than an arithmetic coincidence: rungs 0-2 sit
-    under DevBar-Reqs, 3-5 under DevBar-Tests, 6-7 under DevBar-Release.
+    under DevStg-Reqs, 3-5 under DevStg-Tests, 6-7 under DevStg-Impl.
     `DevStg-Release` has already cleared the top bar and no rung above it is
     mechanized, so it stays held to that bar rather than reporting one the harness
     does not know."""

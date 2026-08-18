@@ -327,7 +327,7 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     (tmp_path / "src" / "ok.py").write_text(
         '"""A fine module."""\n\n\ndef fine():\n    return 1\n', encoding="utf-8"
     )
-    (tmp_path / "docs" / "gate").write_text("DevBar-Reqs\n", encoding="utf-8")
+    (tmp_path / "docs" / "gate").write_text("DevStg-Reqs\n", encoding="utf-8")
     (tmp_path / "docs" / "requirements").mkdir()
     # The mid-list failure: `derive_gate.py` cannot parse its own spine.
     (tmp_path / "docs" / "requirements" / "system-requirements.toml").write_text(

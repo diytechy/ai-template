@@ -29,8 +29,8 @@ Design choices that keep it honest and CI-friendly:
     - **One interpreter.** Tools run as `python -m ruff` / `python -m pytest` with
       the same interpreter running this script, so the launchers' venv python is
       enough — no activated venv or PATH entry required.
-    - **Gate-scoped.** `--gate DevBar-Tests` runs only what that gate needs (e.g. DevBar-Tests needs
-      traceability + a runnable harness; DevBar-Release needs the full suite). Default runs all.
+    - **Gate-scoped.** `--gate DevStg-Tests` runs only what that gate needs (e.g. DevStg-Tests needs
+      traceability + a runnable harness; DevStg-Impl needs the full suite). Default runs all.
     - **Tiered tests.** `--tier smoke` runs only the fast subset so you can check
       every iteration; `release` runs everything including slow/hardware tests.
       Tiers map to pytest markers (`-m`); the `Tier` column in test-cases.csv is
@@ -51,17 +51,17 @@ Design choices that keep it honest and CI-friendly:
     - **Non-interactive.** No prompts; deterministic exit codes for automation.
 
 Usage:
-    python scripts/check.py [--gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all] [--tier smoke|full|release|all]
+    python scripts/check.py [--gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
                             [--jobs N] [--run-step NAME] [--run-steps A,B,...]
 
     --gate      Which gate's checks to run. Default: the repo's **derived gate**
                 from `docs/gate` — the gate it must next PASS (a fresh scaffold
-                derives DevBar-Reqs), computed by derive_gate.py, never hand-set;
+                derives DevStg-Reqs), computed by derive_gate.py, never hand-set;
                 closing a gate = ratifying artifacts in a reviewed commit +
                 regenerating. Else `all` when no gate file exists. This keeps a young
                 project's CI green-and-honest: it enforces the bar the project
-                is working toward, not the end-state bar. DevBar-Release (and all) also
+                is working toward, not the end-state bar. DevStg-Impl (and all) also
                 requires every Verification=Test SR to be Status=Approved
                 (trace.py --require-verified).
     --tier      Which test tier to run (default: all). Mark fast critical-path
@@ -316,7 +316,7 @@ def extra_steps(profile, subs):
 
         [step:capability-integrity]
         command = {py} scripts/check_capabilities.py {src}   # required
-        gates   = DevBar-Tests DevBar-Release                                # optional, default DevBar-Release
+        gates   = DevStg-Tests DevStg-Impl                                # optional, default DevStg-Impl
         layer   = product                             # optional, default product
         lane    = tests+coverage                       # optional (see below)
 
@@ -460,9 +460,9 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         marker = TIERS.get(tier)
         if marker:
             test_cmd += ["-m", marker]
-    # The traceability step only runs at DevBar-Tests/DevBar-Release, where placeholder rows must be
+    # The traceability step only runs at DevStg-Tests/DevStg-Impl, where placeholder rows must be
     # gone, so --no-placeholders is always on here (a fresh scaffold is exempt
-    # only because nothing past DevBar-Reqs runs against it). --html also regenerates the
+    # only because nothing past DevStg-Reqs runs against it). --html also regenerates the
     # scalable full-graph view (a gitignored composite artifact) every run.
     trace_cmd = [
         sys.executable,
@@ -474,14 +474,14 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     if gate in (
         BAR_RELEASE,
         "all",
-    ):  # DevBar-Release criterion: test-verifiable SRs are Approved
+    ):  # DevStg-Impl criterion: test-verifiable SRs are Approved
         trace_cmd.append("--require-verified")
         trace_cmd.append(
             "--strict-schema"
-        )  # DevBar-Release: required fields + valid enums
+        )  # DevStg-Impl: required fields + valid enums
         if (
             phase
-        ):  # phased delivery: close DevBar-Release for this phase only (process.md §4)
+        ):  # phased delivery: close DevStg-Impl for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     # Arch-map mode from the profile ([arch-map] mode = symbols|files): a
     # non-Python stack declares `files` for the stack-neutral fallback instead
@@ -493,7 +493,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "check: docs/stack.ini [arch-map] mode is {!r}; expected "
             "symbols|files".format(arch_mode)
         )
-    # The trajectory validator gains --strict at DevBar-Tests/DevBar-Release — the gates promote the
+    # The trajectory validator gains --strict at DevStg-Tests/DevStg-Impl — the gates promote the
     # status↔registry coherence rules R-B…R-E from WARN to ERROR (R-A always
     # fails). "all" is deliberately EXCLUDED so the pre-commit floor, which runs
     # this step with NO --gate (so _step_gate resolves it to "all"), stays
@@ -584,7 +584,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # (see extra_steps above). They slot in here with the other product steps.
         *extra_steps(profile, subs),
         # Optional PRODUCT-layer detector, not wired into the required floor:
-        # `scripts/check_stubs.py` is the Python-reference tripwire for the DevBar-Release
+        # `scripts/check_stubs.py` is the Python-reference tripwire for the DevStg-Impl
         # no-stub / substance criterion (process.md §4). It is warn-first and
         # language-specific (a stub's shape differs per stack), so — like the perf
         # *meters* — a project opts in. Prefer a docs/stack.ini `[step:no-stubs]`
@@ -594,11 +594,11 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # (drop --strict to warn instead of fail). A non-Python stack swaps or
         # drops it. Left out of the default plan to keep the floor honest.
         # --- process checks: kit-owned, stdlib-only, identical everywhere -----
-        # Registry integrity floor at DevBar-Reqs: the traceability step below already
-        # fails on integrity findings via --strict, but it only runs from DevBar-Tests —
+        # Registry integrity floor at DevStg-Reqs: the traceability step below already
+        # fails on integrity findings via --strict, but it only runs from DevStg-Tests —
         # so a structurally broken registry CSV (unquoted commas misaligning
-        # every later column) or a duplicated/malformed id would pass the DevBar-Reqs
-        # gate and hide until DevBar-Tests/DevBar-Release. This runs trace.py's always-valid subset
+        # every later column) or a duplicated/malformed id would pass the DevStg-Reqs
+        # gate and hide until DevStg-Tests/DevStg-Impl. This runs trace.py's always-valid subset
         # (duplicate/malformed ids + CSV column structure) at the first gate;
         # the pre-commit hook runs the same command on every commit. Listed
         # before traceability so at --gate all the fuller report.md wins.
@@ -628,7 +628,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # Retired-vocabulary enforcer (OI-21). AT EVERY BAR, deliberately: the
         # whole point is that the retired tags cannot grow back, and the surface
         # they grow back into (registries, briefs, status prose) is authored
-        # hardest at the LOWEST bar — a DevBar-Release-only step would not run in
+        # hardest at the LOWEST bar — a DevStg-Impl-only step would not run in
         # this kit's own CI for the whole of its requirements phase, which is
         # exactly the window the drift it guards against happened in. The
         # severity, not the wiring, is what stays warn-first.
@@ -678,7 +678,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ),
         # Doc navigability (process.md §3 "Reviewability"): broken intra-repo
         # links fail; orphans warn; the README vision tag + SN inventory are
-        # checked. Runs from DevBar-Reqs on (docs exist early). --stale adds the
+        # checked. Runs from DevStg-Reqs on (docs exist early). --stale adds the
         # git-gated, warn-only "lying map" heuristic (degrades to a clean skip
         # off-git). The generated, gitignored trace report is dropped.
         (
@@ -719,7 +719,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "process",
         ),
         # Authored runtime-flow diagrams (process.md §3 "Design-time runtime
-        # flows"): required from DevBar-Tests on, so reviewers verify behavior from the
+        # flows"): required from DevStg-Tests on, so reviewers verify behavior from the
         # diagrams, not from registry rows.
         (
             "design-flows",
@@ -733,11 +733,11 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # — id integrity, resolvable predecessors, an acyclic graph (SR refs warn)
         # — plus the status.md↔registry SSOT rules (R-A Deliverable-iff-done, a
         # hard error always; R-B…R-E status coherence + SpecRef resolution, warn
-        # here and ERROR under --strict, added at DevBar-Tests/DevBar-Release via traj_cmd above).
+        # here and ERROR under --strict, added at DevStg-Tests/DevStg-Impl via traj_cmd above).
         # An OPT-OUT layer: an absent or placeholder-only registry passes
         # vacuously and [checks] trajectory_check = false silences it, so a repo that
         # never adopts it pays nothing (the docs/secrets-scan floor's posture).
-        # From DevBar-Tests on, where execution planning has begun.
+        # From DevStg-Tests on, where execution planning has begun.
         (
             "trajectory",
             (),
@@ -759,7 +759,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # Trajectory dashboard freshness (process-options.md "Trajectory /
         # work-items layer"): the generated-artifact freshness gate for
         # the root PROJECT_STATE.html — gen_trajectory.py --check regenerates in memory
-        # and byte-compares, exactly like arch-map. DevBar-Release only (like arch-map — the
+        # and byte-compares, exactly like arch-map. DevStg-Impl only (like arch-map — the
         # generated view churns while the plan is still forming). Vacuous on an
         # absent/placeholder-only registry and silent under
         # [checks] trajectory_check = false, so a repo without work items pays nothing.
@@ -778,7 +778,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # freshness successor to the WI-200 forward-only token guard, which stands
         # its rule down once the marker is present (check_trajectory). Vacuous when
         # status.md is absent or carries no marker pair (the opt-in posture), so a
-        # repo that never adopts the block pays nothing. DevBar-Release only, like the sibling
+        # repo that never adopts the block pays nothing. DevStg-Impl only, like the sibling
         # generated-artifact gates.
         (
             "status-map",
@@ -860,7 +860,7 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # okf. A drifted copy fails with a one-command fix (bootstrap.py --sync).
         # Vacuous when a repo has no neutral source or no per-agent dir (a
         # scaffold: the generator isn't beside check.py, so skills_sync_cmd is a
-        # no-op). DevBar-Release only, like the other generated-artifact freshness gates.
+        # no-op). DevStg-Impl only, like the other generated-artifact freshness gates.
         (
             "skills-sync",
             (),
@@ -877,8 +877,8 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # UNIVERSAL over generated artifacts, and a universal is false at one
         # instance.
         #
-        # AT EVERY GATE, not {DevBar-Release} like the siblings above. That family
-        # (arch-map / trajectory-map / status-map / open-items / okf) is DevBar-Release-only
+        # AT EVERY GATE, not {DevStg-Impl} like the siblings above. That family
+        # (arch-map / trajectory-map / status-map / open-items / okf) is DevStg-Impl-only
         # for a stated reason — those are views of the project's own evolving
         # spine and "churn while the plan is still forming", so gating them early
         # reds a repo for drift in an artifact whose inputs are still being
@@ -891,8 +891,8 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         # template that produced it, i.e. while debugging a session that already
         # behaved oddly. That is `derived-gate`'s shape (an artifact the
         # machinery's own honesty rests on), not the dashboards'. Concretely:
-        # this kit's own docs/gate reads DevBar-Reqs while its ratification window is
-        # open, so a {DevBar-Release} step would not run in the kit's own CI for the whole
+        # this kit's own docs/gate reads DevStg-Reqs while its ratification window is
+        # open, so a {DevStg-Impl} step would not run in the kit's own CI for the whole
         # duration of that window — the gap, re-created.
         (
             "skills-index",
@@ -912,15 +912,17 @@ def steps(coverage, tier, gate, phase=None, profile=None):
 
 
 # --- THE BAR VOCABULARY (OI-21) -------------------------------------------------
-# The three runnable bars, lowest first — each named for the TOP RUNG of the
-# eight-rung stage ladder it certifies. Duplicated from derive_gate.py per the F5
+# The three CLEARABLE stages, lowest first — a strict subset of the eight-rung
+# ladder, each named for the rung it CLOSES OUT (owner ruling 2026-08-18: one
+# vocabulary, the VERB carries the axis — a repo is IN a stage and CLEARS a
+# stage, never a second `DevBar-` spelling). Duplicated from derive_gate.py per the F5
 # independently-copyable-script rule and pinned equal by tests/test_rule_sync.py:
 # check.py must stay a wholesale drop-in that never imports a sibling.
 #
-#     DevBar-Reqs     certifies Needs, Boundary, Reqs
-#     DevBar-Tests    certifies Arch, LLReqs, Tests
-#     DevBar-Release  certifies Impl, Release
-BAR_REQS, BAR_TESTS, BAR_RELEASE = "DevBar-Reqs", "DevBar-Tests", "DevBar-Release"
+#     clearing DevStg-Reqs   closes Needs, Boundary, Reqs
+#     clearing DevStg-Tests  closes Arch, LLReqs, Tests
+#     clearing DevStg-Impl   closes Impl  (DevStg-Release is OUTSIDE this range)
+BAR_REQS, BAR_TESTS, BAR_RELEASE = "DevStg-Reqs", "DevStg-Tests", "DevStg-Impl"
 BAR_ORDER = [BAR_REQS, BAR_TESTS, BAR_RELEASE]
 GATES = BAR_ORDER + ["all"]
 
@@ -945,6 +947,12 @@ RETIRED_BAR_ALIASES = {  # check_vocab: allow
     "G1": BAR_REQS,  # check_vocab: allow
     "G2": BAR_TESTS,  # check_vocab: allow
     "G3": BAR_RELEASE,  # check_vocab: allow
+    # The `DevBar-*` prefix, retired 2026-08-18. `DevBar-Release` resolves to
+    # `DevStg-Impl`, NOT to `DevStg-Release`: that bar never certified the
+    # Release rung, and the alias carries the correction.
+    "DevBar-Reqs": BAR_REQS,  # check_vocab: allow
+    "DevBar-Tests": BAR_TESTS,  # check_vocab: allow
+    "DevBar-Release": BAR_RELEASE,  # check_vocab: allow
 }
 
 
@@ -955,8 +963,8 @@ def bar_ord(name):
     this module compare gate names as raw strings, which was correct only because
     `G1 < G2 < G3` happens to alphabetize (check_vocab: allow) — a form that looks
     ordered while being
-    ordered by accident. The new names are NOT alphabetical (`DevBar-Release`
-    sorts before `DevBar-Reqs` before `DevBar-Tests`), so the accident is gone and
+    ordered by accident. The new names are NOT alphabetical (`DevStg-Impl`
+    sorts before `DevStg-Reqs` before `DevStg-Tests`), so the accident is gone and
     a lexical comparison is now obviously, loudly wrong instead of quietly right.
     tests/test_stage_ladder.py greps the kit's scripts to keep it that way."""
     try:
@@ -985,7 +993,7 @@ def _resolve_bar_alias(value, what):
     return v
 
 
-# The machine-readable derived bar (process.md §4/§7). One line, e.g. "DevBar-Reqs".
+# The machine-readable derived bar (process.md §4/§7). One line, e.g. "DevStg-Reqs".
 GATE_FILE = Path("docs/gate")
 
 # `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
@@ -999,26 +1007,26 @@ GATE_FILE = Path("docs/gate")
 # the next such edit fail loudly.
 _BASIS_RE = re.compile(r"#\s*basis:.*\bdrafted=(\d+)\b.*\bmodified=(\d+)\b")
 # The other two fields the window test needs: the raw computed level (may be
-# `DevBar-Below`, unlike the runnable value on the line below it) and the
+# `DevStg-Below`, unlike the runnable value on the line below it) and the
 # per-phase breakdown, which is what distinguishes "drafts are holding a MATURE
 # spine down" from "this project is simply early".
-_COMPUTED_RE = re.compile(r"\bcomputed=(DevBar-\w+)\b")
+_COMPUTED_RE = re.compile(r"\bcomputed=(DevStg-\w+)\b")
 _PER_PHASE_RE = re.compile(r"\bper-phase=(\S+)")
 # The level the spine would compute with the DRAFT rows removed (WI-341). This
 # is the direct answer to "are the drafts the only thing holding this bar
 # down?", and unlike the per-phase breakdown a draft cannot erase it: the rows
 # it did not touch are still there. Absent from gate files written before
 # WI-341 — the per-phase fallback below covers those until they regenerate.
-_EX_DRAFT_RE = re.compile(r"\bex-draft=(DevBar-\w+)\b")
+_EX_DRAFT_RE = re.compile(r"\bex-draft=(DevStg-\w+)\b")
 
 
 def _window_ord(name):
-    """A basis-line level as a comparable ordinal, with `DevBar-Below` sitting
+    """A basis-line level as a comparable ordinal, with `DevStg-Below` sitting
     UNDER every runnable bar. Separate from `bar_ord` because the basis line
     legitimately carries the below-the-floor sentinel that `--gate` never can, and
     an unreadable value reads as the floor so a malformed cache never manufactures
     a window."""
-    if name == "DevBar-Below":
+    if name == "DevStg-Below":
         return -1
     try:
         return BAR_ORDER.index(name)
@@ -1035,7 +1043,7 @@ def _window_ord(name):
 # would re-run the whole suite plus coverage on EVERY gate run for the life of a
 # window — measured 55.8 s at the smoke tier and ~11 min unfiltered on a
 # 24-thread box — which buys no signal and would train people to skip the gate.
-# The steps that ARE included (lint, the freshness gates, the DevBar-Release traceability
+# The steps that ARE included (lint, the freshness gates, the DevStg-Impl traceability
 # criterion) are cheap, read-only, and genuinely stop running.
 #
 # `module-coverage` follows its PRODUCER out (127-REVIEW-A MAJOR 6). It grades
@@ -1062,33 +1070,33 @@ def window_open(gate_file=None):
     census's, and the census itself was torn down later, D-7/WI-426; the ruling
     is about the blind spot, not about which step fell into it).
 
-    Deliberately NOT "any gate below DevBar-Release": a project genuinely at DevBar-Reqs has not
+    Deliberately NOT "any gate below DevStg-Impl": a project genuinely at DevStg-Reqs has not
     earned those steps and should not be told about them on every run. The
     signal is specifically that the gate was *suppressed*.
 
     The two counts are not equally good evidence of that, which the first cut
-    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafted>0`, ordinary DevBar-Below/DevBar-Reqs
+    got wrong (127-REVIEW-A MAJOR 5 — it fired on `drafted>0`, ordinary DevStg-Below/DevStg-Reqs
     state, contradicting the very claim above):
 
       * `modified>0` IS conclusive on its own. `Modified` is *defined* as a
         post-approval amendment (derive_gate's model, WI-316), so the row can
         only exist in a spine that has already been ratified. Something that was
         `Approved` is pending again — that is a window by construction.
-      * `drafted>0` is ambiguous. A `Drafted` row reads DevBar-Below, so drafts drop the gate in a
+      * `drafted>0` is ambiguous. A `Drafted` row reads DevStg-Below, so drafts drop the gate in a
         mature repo starting a new phase AND in a project that has never
         ratified anything. The counts cannot tell those apart — `ex-draft` can,
         by answering the question directly: it is the level the same arithmetic
-        computes with the draft rows REMOVED. If that clears DevBar-Tests and sits above
+        computes with the draft rows REMOVED. If that clears DevStg-Tests and sits above
         the level the drafts produced, then the spine has demonstrably climbed
         and the drafts are the only thing holding it down. A window.
 
     `ex-draft` replaced a per-phase heuristic that read the phase breakdown for
     the same evidence (WI-341). The heuristic could not see a SINGLE-phase
-    repo's maturity at all: a `Drafted` row added there drops that phase to DevBar-Below, so no
+    repo's maturity at all: a `Drafted` row added there drops that phase to DevStg-Below, so no
     phase remains above `computed` and the mature repo reads exactly like a new
     one — the very blind spot this tier exists to close, reopened by one row
     (128-REVIEW-A MAJOR 3). It is kept below ONLY as the fallback for a gate
-    file written before `ex-draft` existed, and it keeps its own DevBar-Tests floor,
+    file written before `ex-draft` existed, and it keeps its own DevStg-Tests floor,
     which fixed the mirror-image false positive on an early multi-phase repo.
 
     Both routes are conservative when the evidence is missing (no `ex-draft`
@@ -1114,17 +1122,17 @@ def window_open(gate_file=None):
     ex_draft = _EX_DRAFT_RE.search(text)
     if ex_draft:
         # Two conditions, not one: the drafts-removed level must clear the bar
-        # the advisory tier reports on (DevBar-Tests+), and it must actually be ABOVE what
+        # the advisory tier reports on (DevStg-Tests+), and it must actually be ABOVE what
         # the drafts produced — otherwise the drafts are not what is holding the
         # gate down and there is nothing being suppressed.
         return _window_ord(ex_draft.group(1)) >= _window_ord(BAR_TESTS) and (
             _window_ord(ex_draft.group(1)) > _window_ord(computed.group(1))
         )
-    # Fallback for a pre-WI-341 gate file (no `ex-draft`), with its own DevBar-Tests floor.
+    # Fallback for a pre-WI-341 gate file (no `ex-draft`), with its own DevStg-Tests floor.
     per_phase = _PER_PHASE_RE.search(text)
     if not per_phase or per_phase.group(1) == "(none)":
         return False
-    levels = re.findall(r"=(DevBar-\w+)", per_phase.group(1))
+    levels = re.findall(r"=(DevStg-\w+)", per_phase.group(1))
     if not levels:
         return False
     top = max(_window_ord(v) for v in levels)
@@ -1160,12 +1168,12 @@ def advisory_plan(gate, plan, steps_at):
     Built by ASKING `steps()` for each higher gate's own plan (`steps_at`), not
     by filtering this gate's. That distinction is the whole of 127-REVIEW-A
     BLOCKER 4: the step table is *specialized to the gate it was built for*, so
-    `traceability` built at DevBar-Tests carries no `--require-verified`, and no filter
+    `traceability` built at DevStg-Tests carries no `--require-verified`, and no filter
     over it could ever produce the stronger variant — which the owner explicitly
     ruled IN (an unapproved-but-decomposed row "also fails it, and that is real
     signal" — the owner's words named `Planned`, which folded into `Approved` at
     D-9 step 5; the point survives the word). The
-    first cut filtered, so it silently ran neither the DevBar-Release command nor anything
+    first cut filtered, so it silently ran neither the DevStg-Impl command nor anything
     in its place, while a test asserted traceability was *not* advisory and
     entrenched it.
 
@@ -1187,8 +1195,8 @@ def advisory_plan(gate, plan, steps_at):
         gating.setdefault(name, []).append(list(cmd))
     out, seen = [], set()
     # HIGHEST gate first, and one entry per step name: a step required at both
-    # DevBar-Tests and DevBar-Release gets its DevBar-Release form, which is the stronger one. Ascending order ran
-    # `traceability` twice at DevBar-Reqs — once without `--require-verified` and once
+    # DevStg-Tests and DevStg-Impl gets its DevStg-Impl form, which is the stronger one. Ascending order ran
+    # `traceability` twice at DevStg-Reqs — once without `--require-verified` and once
     # with — which is pure duplication, since the stronger form subsumes it.
     higher_bars = [g for g in BAR_ORDER if bar_ord(g) > bar_ord(gate)]
     for higher in sorted(higher_bars, key=bar_ord, reverse=True):
@@ -1212,7 +1220,7 @@ def _print_steps(plan):
     copy the moment it appeared; that census was torn down in D-7/WI-426, so the
     extraction now stands on its own reason rather than on a tool's verdict.)"""
     for name, _requires, cmd, gates, layer in plan:
-        # Sorted by LADDER POSITION, not lexically: `DevBar-Release` alphabetizes
+        # Sorted by LADDER POSITION, not lexically: `DevStg-Impl` alphabetizes
         # FIRST, so an unkeyed sort here printed the step's bars in nonsense order
         # the moment the vocabulary changed. Caught by tests/test_stage_ladder.py's
         # grep, which is exactly the class of accidentally-right code OI-21 banned.
@@ -1256,7 +1264,7 @@ def resolve_gate(explicit):
 
 def _step_gate(explicit):
     """The gate that BUILDS a --run-step/--run-steps command: an explicit --gate
-    is honoured (so `--gate DevBar-Release --run-steps trajectory` really gates), but a
+    is honoured (so `--gate DevStg-Impl --run-steps trajectory` really gates), but a
     DEFAULTED one resolves to "all", never docs/gate — the pre-commit hook passes
     no --gate and its floor must stay warn-first (see the trajectory step's
     comment). Name lookup stays unfiltered, so `format` is findable at any gate."""
@@ -1677,13 +1685,24 @@ def main():
     # error naming no migration. Listing them lets `_resolve_bar_alias` translate
     # and explain instead. The `metavar` keeps `--help` teaching only the canonical
     # form, so the aliases are reachable without being advertised.
+    # `--stage-cleared` is the canonical spelling (owner ruling 2026-08-18): the
+    # VALUE is a stage token on the one vocabulary, so the FLAG has to say which
+    # reading of that token it means — the stage being CLEARED, not the stage the
+    # repo is in. `--gate` stays accepted, unadvertised and silent: it is a flag
+    # name an adopter's hooks, CI and launchers pass literally, the word "gate"
+    # was never retired where it means a check that can fail, and `docs/gate` /
+    # `derive_gate.py` keep their names by the same ruling.
     ap.add_argument(
+        "--stage-cleared",
         "--gate",
+        dest="gate",
         choices=GATES + list(RETIRED_BAR_ALIASES),
         metavar="{" + ",".join(GATES) + "}",
         default=None,
-        help="bar to run (default: the derived bar in docs/gate, else all). "
-        "The retired DevBar-Reqs/DevBar-Tests/DevBar-Release tags are accepted as aliases and warn.",
+        help="the stage whose bar to run — the stage being CLEARED, not the one "
+        "in work (default: the derived value in docs/gate, else all). The "
+        "retired G1/G2/G3 and DevBar-* spellings are accepted as aliases and "  # check_vocab: allow
+        "warn; `--gate` is accepted silently as the prior flag name.",
     )
     ap.add_argument("--tier", choices=list(TIERS), default="all")
     ap.add_argument(
@@ -1696,7 +1715,7 @@ def main():
     ap.add_argument(
         "--phase",
         default=None,
-        help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevBar-Release "
+        help="delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes the DevStg-Impl "
         "approval criterion to that phase (process.md §4 'Phased delivery')",
     )
     ap.add_argument(
@@ -1763,7 +1782,9 @@ def main():
         )
     # Translate a retired `--gate G2` (warning once) before anything consumes it,  check_vocab: allow
     # so `resolve_gate` and `_step_gate` both see only canonical bar names.
-    args.gate = _resolve_bar_alias(args.gate, "--gate") if args.gate else args.gate
+    args.gate = (
+        _resolve_bar_alias(args.gate, "--stage-cleared") if args.gate else args.gate
+    )
     gate = resolve_gate(args.gate)
     profile = load_profile()
 
@@ -1785,7 +1806,7 @@ def main():
     lane_map = _resolve_lane_map(profile, coverage, args.tier, args.phase)
 
     # Run one named step and exit (the hook's format delegation). Search the
-    # unfiltered plan so a gate-scoped step (format is DevBar-Release-only) is still found,
+    # unfiltered plan so a gate-scoped step (format is DevStg-Impl-only) is still found,
     # and be lenient about a missing tool so a not-yet-set-up repo can commit —
     # a real failure still exits nonzero.
     step_gate = _step_gate(args.gate)  # explicit --gate gates; defaulted = "all"
@@ -1839,7 +1860,7 @@ def main():
         _print_steps(plan)
         # The advisory tier is part of what this invocation WILL run, so --list
         # must show it or the option lies (128-REVIEW-A MINOR 5: a real window
-        # listed only the weaker DevBar-Tests traceability while the run executed the DevBar-Release
+        # listed only the weaker DevStg-Tests traceability while the run executed the DevStg-Impl
         # one). Marked, and separated, so it cannot be read as the bar.
         if advisory:
             print(

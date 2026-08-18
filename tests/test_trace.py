@@ -1,4 +1,4 @@
-"""trace.py: orphan detection and the --require-verified DevBar-Release criterion.
+"""trace.py: orphan detection and the --require-verified DevStg-Impl criterion.
 
 WI-277 split this module by behavior boundary. What stays here is the
 scaffold-driven half: the strict/schema gates, the verification-category
@@ -50,8 +50,8 @@ SR-001,Addition,,"The system shall add two numbers.","Rootless.","add(1,2) == 3"
 
 
 def test_sr_with_no_sn_link_is_an_orphan(scaffold):
-    # DevBar-Reqs's "every SR links >=1 SN" is machine-checked from the orphan sweep (not
-    # only at DevBar-Release --strict-schema): an SR with an empty SN-Refs fails --strict
+    # DevStg-Reqs's "every SR links >=1 SN" is machine-checked from the orphan sweep (not
+    # only at DevStg-Impl --strict-schema): an SR with an empty SN-Refs fails --strict
     # whenever the needs registry provides real SN ids.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
@@ -111,7 +111,7 @@ def make_phased_project(scaffold):
 
 
 def test_phase_scopes_require_verified(scaffold):
-    # A v2 SR that is not yet Approved fails an unscoped DevBar-Release check, but a
+    # A v2 SR that is not yet Approved fails an unscoped DevStg-Impl check, but a
     # --phase v1 closure defers it explicitly (and the deferral is reported).
     make_phased_project(scaffold)
     record_ids(scaffold)
@@ -164,15 +164,13 @@ def test_check_py_passes_phase_to_trace():
     check = load_script("check")
     trace_cmd = next(
         s[2]
-        for s in check.steps(80, "full", "DevBar-Release", "v1")
+        for s in check.steps(80, "full", "DevStg-Impl", "v1")
         if s[0] == "traceability"
     )
     assert "--phase" in trace_cmd and "v1" in trace_cmd
-    # No phase given -> no --phase flag; DevBar-Tests never carries --require-verified.
+    # No phase given -> no --phase flag; DevStg-Tests never carries --require-verified.
     trace_cmd = next(
-        s[2]
-        for s in check.steps(80, "full", "DevBar-Release")
-        if s[0] == "traceability"
+        s[2] for s in check.steps(80, "full", "DevStg-Impl") if s[0] == "traceability"
     )
     assert "--phase" not in trace_cmd
 
@@ -227,7 +225,7 @@ def test_attest_sr_is_llr_exempt_but_needs_tc(scaffold):
 
 
 def test_attest_verified_accepted_and_surfaced_distinctly(scaffold):
-    # Under --require-verified (DevBar-Release), an Attest SR marked Approved passes, and the
+    # Under --require-verified (DevStg-Impl), an Attest SR marked Approved passes, and the
     # report surfaces it in the three-way verification-basis split (WI-259) so the
     # trust footprint is auditable: SR-001 is mechanized (Test), SR-002 attested.
     make_attest_project(scaffold)
@@ -303,7 +301,7 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     assert "Demonstrated/observed" in report and "SR-002" in report
 
     # The headline widening (M-5): regress SR-002 to Modified. sr_bar already
-    # caps it at DevBar-Tests, but the OLD --require-verified (Verification=Test only)
+    # caps it at DevStg-Tests, but the OLD --require-verified (Verification=Test only)
     # silently PASSED it. The widened bar now flags it, naming the real method.
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
@@ -315,7 +313,7 @@ def test_demonstrated_sr_is_its_own_category_and_gate_required(scaffold):
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "status-findings=1" in proc.stdout
     assert "Verification=Analysis but Status=Modified" in proc.stdout
-    assert "DevBar-Release requires Approved" in proc.stdout
+    assert "DevStg-Impl requires Approved" in proc.stdout
 
 
 # --- WI-068: the Critique verification value ----------------------------------
@@ -619,7 +617,7 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
         ),
         encoding="utf-8",
     )
-    # Without the flag: still a clean trace (status is a DevBar-Release concern).
+    # Without the flag: still a clean trace (status is a DevStg-Impl concern).
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # With the flag: the unverified Test SR fails the gate.
@@ -627,7 +625,7 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
-    assert "DevBar-Release requires Approved" in report
+    assert "DevStg-Impl requires Approved" in report
 
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
@@ -1419,7 +1417,7 @@ def test_draft_sr_still_needs_sn_and_stays_integral(scaffold):
 
 
 # --- WI-090: SN maturity via section-as-state ---------------------------------
-# An SN under a heading whose text contains "draft" is unratified (DevBar-Below) and exempt
+# An SN under a heading whose text contains "draft" is unratified (DevStg-Below) and exempt
 # from the "every SN needs an SR" rule; SNs under any other heading are ratified.
 
 DRAFT_SN_MD = """# Stakeholder Needs (SN-###)
@@ -1626,7 +1624,7 @@ def test_require_verified_strips_padded_verification_cell(scaffold):
     )
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
-    assert "DevBar-Release requires Approved" in proc.stdout
+    assert "DevStg-Impl requires Approved" in proc.stdout
 
 
 def test_strict_failure_prints_findings_to_console(scaffold):

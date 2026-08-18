@@ -29,7 +29,7 @@ reviewer should push back on a premature jump:
    need *independent* versioning, ownership, access, or release cadence at a scale one
    repo can't sustain.
 
-**Decide the rung at project creation** (KICKOFF / `bootstrap` / DevBar-Reqs) and **bias low.**
+**Decide the rung at project creation** (KICKOFF / `bootstrap` / DevStg-Reqs) and **bias low.**
 A project starts single-repo unless its scope *demonstrably* demands more. The choice
 is **revisitable**: start single and **promote a module to its own repo later**, once
 it proves it needs the independence — far cheaper than a speculative split. If you are
@@ -76,7 +76,7 @@ module's `SN` **back-links** the coordinator's `SR` id (`ParentRef`).
 The cut is at the **SR tier, not LLR.** LLR is code-local (a symbol in a module); the
 delegated unit is a **sub-system**, which is SR-shaped — a capability with its own
 needs, requirements, code, and tests. So "delegate this SR" reads as "this whole SR is
-another repo's job," and that repo re-enters the spine at its own DevBar-Reqs with the delegated
+another repo's job," and that repo re-enters the spine at its own DevStg-Reqs with the delegated
 SR as its founding need.
 
 ### 3.2 Coordinator = the Integration/Coordination hat, elevated to a repo

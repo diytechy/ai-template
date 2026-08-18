@@ -135,7 +135,7 @@ _Of the SRs reported `Approved`: `Test` rows rest on a runnable, re-executable c
 
 ## Drafted artifacts (decomposition-exempt)
 
-_`Drafted` rows are exempt from the child-completeness orphan rules and the DevBar-Release approval criterion (derived-gate model §3): a requirement lives in the live spine while it is drafted. Listed so the exemption is auditable._
+_`Drafted` rows are exempt from the child-completeness orphan rules and the DevStg-Impl approval criterion (derived-gate model §3): a requirement lives in the live spine while it is drafted. Listed so the exemption is auditable._
 
 - SN-003 (SN, unratified section)
 - SR-003 — Future

@@ -68,5 +68,5 @@ if [ -f docs/privacy-check ] && git rev-parse --is-inside-work-tree >/dev/null 2
 fi
 
 echo
-echo "Setup complete. Run the harness with: ./scripts/check.sh --gate DevBar-Release"
+echo "Setup complete. Run the harness with: ./scripts/check.sh --gate DevStg-Impl"
 echo "(check.sh uses the venv python directly; activating is optional.)"

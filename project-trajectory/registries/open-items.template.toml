@@ -77,8 +77,8 @@ ruling_ref = """where the ruling is recorded — the docs/log.md Decisions ancho
 [open_item.OI-1]
 title = "Decide: keep or drop the legacy export flag"
 status = "pending"
-one_line = "rule the legacy export flag (blocks: DevBar-Reqs) - rec: drop it unless a consumer is named"
-decision = "Whether the legacy export flag stays in scope for v1 (blocks: DevBar-Reqs)."
+one_line = "rule the legacy export flag (blocks: DevStg-Reqs) - rec: drop it unless a consumer is named"
+decision = "Whether the legacy export flag stays in scope for v1 (blocks: DevStg-Reqs)."
 blast_radius = "Every consumer of the legacy format, and the SR that would carry it."
 options = "keep and specify it · drop it · defer behind a flag until a consumer asks"
 recommendation = """drop it unless a real consumer is named - an unspecified flag is a support cost with no owner."""

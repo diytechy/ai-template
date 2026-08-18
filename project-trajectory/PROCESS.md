@@ -24,10 +24,10 @@ notes — are summarized here with an **applies-when** and expanded in
 
 **Minimum profile — a standalone one-module project needs exactly:** the five
 spine hats (§1), the id scheme (§2), the §3 traceability/anti-duplication
-discipline, the bars **DevBar-Reqs→DevBar-Tests→DevBar-Release** + the owner's final read (§4), the verdict protocol (§5),
+discipline, the bars **DevStg-Reqs→DevStg-Tests→DevStg-Impl** + the owner's final read (§4), the verdict protocol (§5),
 review triage (§6), and the harness (§7). Everything else is opt-in: skip §8,
 §9, §10, the `Phase`/`Lifecycle` tags, and every "optional" tripwire until the
-scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip DevBar-Reqs's per-phase
+scope forces it. (Skipping the `Lifecycle` *tag* doesn't skip DevStg-Reqs's per-phase
 edge-case sweep — an explicit n/a per phase is all the bookkeeping this rung
 owes.) That default is rung 1 of the §10 ladder.
 
@@ -281,7 +281,7 @@ root `*.md`, an optional `docs/index.md` Map-of-Content, or a configured entry)
 and, with `--stale` (git-gated), on a doc left frozen beside a non-doc file it
 links that has changed. Broken links are a hard finding; orphans/staleness are
 warnings (a young project legitimately has standalone docs). Run by `check.py`
-from DevBar-Reqs on.
+from DevStg-Reqs on.
 
 **Interface contracts live at the code, referenced — not restated.** Every public
 module/function documents its contract once, where it is implemented, as a
@@ -338,19 +338,19 @@ summary) into a `GENERATED FLOW` marker block — a drift-proof rendering of the
 file) and add `--flow` to the harness's map step. It complements, not replaces,
 the hand-written flow overview.
 
-**Design-time runtime flows (authored at DevBar-Tests, checked).** Everything above is
-harvested from code, so none of it exists at DevBar-Tests — yet DevBar-Tests is when a human reviews
+**Design-time runtime flows (authored at DevStg-Tests, checked).** Everything above is
+harvested from code, so none of it exists at DevStg-Tests — yet DevStg-Tests is when a human reviews
 the LLRs, and runtime *behavior* (ordering, concurrency, background work, what
 blocks on what) is the thing most easily misread from registry rows. So the Software
 Engineer hat authors a **"Runtime flows"** section in `architecture.md` **with
-the LLRs, before the DevBar-Tests review**: one Mermaid `sequenceDiagram` per key
+the LLRs, before the DevStg-Tests review**: one Mermaid `sequenceDiagram` per key
 user-visible scenario, and always one for any concurrent / asynchronous /
 non-blocking behavior. Participants are the planned modules (the LLR `Module`
 column); each diagram cites the SR/LLR ids it renders. `scripts/check_flows.py`
-(DevBar-Tests/DevBar-Release) fails when the section is missing, has no diagrams, a diagram cites no
-SR/LLR id, or a cited id doesn't exist. The human's DevBar-Tests review starts from these
+(DevStg-Tests/DevStg-Impl) fails when the section is missing, has no diagrams, a diagram cites no
+SR/LLR id, or a cited id doesn't exist. The human's DevStg-Tests review starts from these
 diagrams — verify the flow there, then spot-check the rows. Update a flow in the
-same change that alters its LLRs; from DevBar-Release on the generated map/flow corroborates
+same change that alters its LLRs; from DevStg-Impl on the generated map/flow corroborates
 these authored diagrams rather than replacing them.
 
 **Diagrams are text (Mermaid); the dependency graph is generated.** Diagrams live
@@ -404,7 +404,7 @@ and a word no predicate read announced nothing. Two bear gate arithmetic.
 whether they pass is the harness's answer, never a cell's. The third,
 `Modified`, marks a **post-approval amendment** — content changed after the row
 was attested, so a re-attest is owed. It adds no arithmetic (a Modified SR is
-simply not Approved, deriving DevBar-Tests)
+simply not Approved, deriving DevStg-Tests)
 but is surfaced: the `modified=N` basis count, a pending-owner-actions line, and
 the `trace.py --ratify modified` before/after brief. Re-attest is a reviewed
 Status-change commit like approval: `Modified`→`Approved` blesses the
@@ -426,7 +426,7 @@ a second sitting for the same reading. There is no other value: an adopter
 carrying a wider LLR/TC vocabulary migrates it (`RESYNC_PACK.md`).
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
-- **DevBar-Reqs — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
+- **DevStg-Reqs — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
   `README.md#vision` (the purpose fact's canonical home; other docs point at
   it, never restate it) and the consistency review reads each need against it —
   human-judged, like the rest of that review. SN complete (priority + measurable
@@ -435,7 +435,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   or recording an explicit n/a per phase; see "Lifecycle phase" below); every
   SR links ≥1 SN with measurable acceptance criteria; usability/doc needs +
   constraints + non-goals captured. Sign-offs: Stakeholder, UX, System Engineer.
-- **DevBar-Tests — Decomposition & test coverage.** Every SR → ≥1 LLR (or
+- **DevStg-Tests — Decomposition & test coverage.** Every SR → ≥1 LLR (or
   Analysis/Inspection/Attest); every SR and LLR → ≥1 TC; traceability **0 orphans** and
   ids unique/well-formed; **no `-000` placeholder rows or flow citations remain**
   (`trace.py`/`check_flows.py --no-placeholders`); **every SR with variable
@@ -444,9 +444,9 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   **key runtime flows are diagrammed and pass `check_flows.py`** (see §3
   "Design-time runtime flows"); harness runs locally + CI. Sign-offs: System
   Engineer, Test Engineer.
-- **DevBar-Release — Implementation (test-first).** Code is written **test-first**: each DevBar-Tests
+- **DevStg-Impl — Implementation (test-first).** Code is written **test-first**: each DevStg-Tests
   TC becomes a *failing* test before the code that satisfies it, then the minimal
-  code to pass, then refactor (red → green → refactor). TDD is *how* DevBar-Release code gets
+  code to pass, then refactor (red → green → refactor). TDD is *how* DevStg-Impl code gets
   written; the SN→SR→LLR→TC spine is *what* it must satisfy — it operates within
   the traceability discipline, not instead of it. The exit criteria below
   (coverage, every in-scope SR Approved) are what that loop drives toward.
@@ -469,14 +469,19 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   Demonstration/Manual items) and approves. For shipped software this is the
   human half of DevStg-Release; for a bespoke deliverable it stands alone.
 
-**The stage ladder — state vs. certified boundary.** **Stages are the rungs of
-the decomposition: a repo is *in* one. Bars are the subset of rung boundaries a
-human must certify: you *clear* one.** Keeping them one axis is what made "the
-repo is at G1" unable to say whether G1 was ahead or behind — and the retired  <!-- check_vocab: allow -->
-`G*` tags carried a *second* ambiguity inside their own axis, since `docs/gate`
-said "the gate to pass next" while the sign-off table said "the gate already
-met". Both readings were correct and a reader could not tell which was meant, so
-the tags retired entirely. **Eight rungs, and the three bars across them:**
+**The stage ladder — one vocabulary, two readings.** **A repo is *in* a stage
+and it *clears* a stage. The same `DevStg-` token names both; the VERB is what
+distinguishes them, never a second spelling.** Clearing is an *event*: it says
+what was just closed out, and what the project is in now that it is closed. So a
+bar is never a separate thing with a separate name — it is a rung that a named
+human signs off, and the **three clearable rungs are a strict subset of the
+eight**. (Owner ruling 2026-08-18. The retired `G*` tags failed because one axis  <!-- check_vocab: allow -->
+had to say both "already met" and "to pass next" and could say neither; the
+`DevBar-` prefix that first replaced them failed differently — two spellings for  <!-- check_vocab: allow -->
+one ladder meant `DevBar-Release` and `DevStg-Release` sat three letters apart  <!-- check_vocab: allow -->
+while meaning a strictness level and a per-release milestone. One vocabulary plus
+an explicit verb carries both readings without either trap.) **Eight rungs; the
+three a human clears are marked:**
 
 ```
 DevStg-Needs      vision and stakeholder needs in work
@@ -484,17 +489,27 @@ DevStg-Boundary   the system's frame: what is outside, what crosses,
                   each crossing typed.  HAPPENS ONCE.
 DevStg-Reqs       the obligations at the current level's boundaries,
                   system and component alike.  RECURSES.
-   ══ DevBar-Reqs ══  Stakeholder, UX, System Engineer
+   ══ DevStg-Reqs CLEARED ══   Stakeholder, UX, System Engineer
+                               → the project enters DevStg-Arch
 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES;
                   exits when no child needs partitioning.
 DevStg-LLReqs     the inside of a leaf, bound to a realization artifact
                   (a code symbol, or a part source).  TERMINAL.
 DevStg-Tests      the test set for those obligations in work
-   ══ DevBar-Tests ══  System Engineer, Test Engineer
+   ══ DevStg-Tests CLEARED ══  System Engineer, Test Engineer
+                               → the project enters DevStg-Impl
 DevStg-Impl       implementation in work
-   ══ DevBar-Release ══  System Engineer, Test Engineer
+   ══ DevStg-Impl CLEARED ══   System Engineer, Test Engineer
+                               → the project enters DevStg-Release
 DevStg-Release    nothing in work; release checklist available
 ```
+
+**Read the marked rungs as events, in the tense that fits.** `docs/gate` caches
+the stage that must be cleared **next** and `check.py --stage-cleared <stage>`
+runs that stage's bar; the sign-off record names the stage **already** cleared.
+Same token, and the sentence around it says which. **`DevStg-Release` is not
+clearable** — nothing in work, nothing to certify — which is why the last bar is
+`DevStg-Impl`.
 
 **Requirements come before architecture**, because architecture is a *response*
 to requirements: a scope is partitioned in whatever way best satisfies its
@@ -541,13 +556,13 @@ self-corrects every ordinal with no citation moved. **Every comparison routes
 through a `STAGE_ORDER` lookup that raises on an unknown label**; ordering
 operators on the raw value are banned, and are now obviously wrong rather than
 accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
-**There is no `DevBar-Below` you sit at** — it is the internal sentinel below the
-lowest runnable bar; say "stage Needs", never "at DevBar-Below".
+**There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
+lowest runnable bar; say "stage Needs", never "at DevStg-Below".
 
 **The rule is uniform: `stage → bar` is the next bar you must clear** — each bar
 named for the **top rung it certifies**, so the mapping is a partition of the
-ladder rather than arithmetic: Needs/Boundary/Reqs → `DevBar-Reqs` ·
-Arch/LLReqs/Tests → `DevBar-Tests` · Impl/Release → `DevBar-Release`. That is
+ladder rather than arithmetic: Needs/Boundary/Reqs → `DevStg-Reqs` ·
+Arch/LLReqs/Tests → `DevStg-Tests` · Impl/Release → `DevStg-Impl`. That is
 also the strictness the harness holds you to, for a good reason: you are held to
 the bar you are trying to clear. The stage is the axis
 `[attestation] human_ratification_through` is compared against — through a
@@ -558,8 +573,8 @@ inserted rungs each ride the rung below them: `DevStg-Boundary` is held whenever
 errs toward *more* human involvement.
 
 **But a bar is not a pure function of stage** — the mapping is a reader's
-reconciliation, not a second source of truth. `DevBar-Reqs`'s bar includes
-non-goals captured and a UX sign-off; `DevBar-Tests`'s includes key runtime flows
+reconciliation, not a second source of truth. `DevStg-Reqs`'s bar includes
+non-goals captured and a UX sign-off; `DevStg-Tests`'s includes key runtime flows
 diagrammed. None of that is derivable from which rung is in work, so never derive
 the bar from the stage: that silently drops the human half.
 
@@ -581,7 +596,7 @@ scaffold displays. The value answers *what must still be passed*, never *what
 has been achieved*; `stage=` and `ex-draft=` on the basis line are what tell the
 two apart.
 
-**Consistency review (DevBar-Reqs; re-checked at DevBar-Tests).** Separate from the *structural*
+**Consistency review (DevStg-Reqs; re-checked at DevStg-Tests).** Separate from the *structural*
 checks `trace.py` runs — orphans, duplicate ids, schema — the **System Engineer**
 hat reads the needs and requirements **against each other** for the conflicts a
 script can't see: contradictory acceptance criteria or limits, mutually exclusive
@@ -594,7 +609,7 @@ distinguish source by schema" → "identical field names and dtypes, per the
 IF-### row"). `trace.py` flags unpinned comparatives as **warn-only advisories**
 (a heuristic lint, never a gate failure); the reviewer pins the predicate or
 accepts the wording knowingly. This is the **consistency**
-complement to DevBar-Reqs's *completeness* criteria, not a restatement of them, and it is
+complement to DevStg-Reqs's *completeness* criteria, not a restatement of them, and it is
 **human/LLM judgment, not a machine check** — classify it as a Manual/Analysis
 activity and never imply `trace.py` performs it. (An independent LLM reviewer
 (§6) is well-suited to a first-pass contradiction sweep, but the **human makes the
@@ -603,13 +618,13 @@ its owner; where it needs a human decision, **pause and ask — don't guess**. T
 is the reachable-human flip side of *Assumptions* logging: record an assumption
 only when **unattended**; when a human is available, **solicit clarification**.
 Track unresolved ambiguities in `status.md` *Open items*, and re-run the review at
-DevBar-Tests when SRs decompose into LLRs.
+DevStg-Tests when SRs decompose into LLRs.
 
-**No-stub / substance review (DevBar-Release).** Traceability, coverage, and a green suite
+**No-stub / substance review (DevStg-Impl).** Traceability, coverage, and a green suite
 confirm an implementation *exists* and *passes*; none confirms it has
 **substance**. A body that is `pass` / `...` / `raise NotImplementedError` / a
 bare `return None` / a placeholder return satisfies its trace links and can even
-hold a coverage line, yet does nothing. So the DevBar-Release criterion adds: **every in-scope
+hold a coverage line, yet does nothing. So the DevStg-Impl criterion adds: **every in-scope
 SR's implementing symbol does real work, not a stub.** TDD mitigates this (a
 red-first test should fail against a stub), but coverage can be met by exercising
 a stub's trivial path, and Demonstration/Manual/Analysis SRs have **no** automated
@@ -633,8 +648,8 @@ ratified phase, mirroring the derived gate (`derive_gate.py --next-phase` prints
 the next number); a phase increments only when re-opened scope is **confirmed**
 — an adjudication verdict that scope moved, or a ratified draft-SN batch —
 never on the raw derived-gate drop.
-Traceability stays phase-blind while the DevBar-Release approval criterion and DevStg-Release
-scope by phase (`check.py --gate DevBar-Release --phase 1`; the foundation phase is always in
+Traceability stays phase-blind while the DevStg-Impl approval criterion and DevStg-Release
+scope by phase (`check.py --gate DevStg-Impl --phase 1`; the foundation phase is always in
 scope), reporting out-of-phase SRs as **phase-deferred**.
 Full semantics in
 [`process-options.md`](process-options.md#phased-delivery); standalone single-shot
@@ -789,7 +804,7 @@ registry row it contradicts** — that classification, not the fix, is step 1:
 flowchart TD
   P["problem identified"] --> C{"which row does it contradict?"}
   C -->|"an existing SR/LLR is violated"| TG["coverage gap:\nno TC caught it"]
-  C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk DevBar-Reqs/DevBar-Tests for that slice)"]
+  C -->|"no row speaks to it"| RG["requirement gap:\nnew/changed SN -> SR -> LLR\n(walk DevStg-Reqs/DevStg-Tests for that slice)"]
   TG --> T1["write the failing TC first"]
   RG --> S{"scope the solution"}
   S -->|"new seam"| I2["IF-### row\n+ a TC per contract"]
@@ -805,7 +820,7 @@ flowchart TD
 
 - **Coverage gap** — the requirement was right and untested: the fix *starts*
   as a failing TC against the existing SR/LLR, never code-first.
-- **Requirement gap** — no row speaks to it: walk the DevBar-Reqs/DevBar-Tests bar for that slice
+- **Requirement gap** — no row speaks to it: walk the DevStg-Reqs/DevStg-Tests bar for that slice
   only; the new rows then scope the solution (each new interface, component, or
   purchased part lands as its own registry row, so the next reader finds the
   decision where the ids live).
@@ -894,13 +909,13 @@ pass lives on the first non-comment line of `docs/gate` — now **generated** by
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
 `--gate` to it and the reference CI passes no explicit gate, so **CI enforces the
-bar the project is actually working toward** — a fresh scaffold deriving DevBar-Reqs is
+bar the project is actually working toward** — a fresh scaffold deriving DevStg-Reqs is
 green, and the bar rises when a batch of artifacts is **ratified in a reviewed
 commit** and `docs/gate` is regenerated. The `derived-gate` step
 (`derive_gate.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag
 runs the full bar regardless.
-Without a derived gate, CI would apply the end-state DevBar-Release bar from day one and
+Without a derived gate, CI would apply the end-state DevStg-Impl bar from day one and
 stay red for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not
@@ -923,9 +938,9 @@ and naming the split is what keeps the kit portable across stacks:
   agent-neutral `pre-commit` hook (`.githooks/pre-commit`, enabled by
   `scripts/setup.{sh,ps1}`) enforces their **always-valid subset** on every
   commit: map freshness, registry integrity (`trace.py --strict-integrity` —
-  ids + registry row structure; `check.py` runs the same floor as its DevBar-Reqs
+  ids + registry row structure; `check.py` runs the same floor as its DevStg-Reqs
   `registry-integrity` step), and
-  format. Orphan strictness stays gate-scoped in `check.py` — a mid-DevBar-Reqs registry
+  format. Orphan strictness stays gate-scoped in `check.py` — a mid-DevStg-Reqs registry
   legitimately has SRs not yet decomposed, and the floor must never block a
   legitimate early-stage commit.
 - **Product checks are project-owned and language-specific** (`requires` names a
@@ -994,7 +1009,7 @@ durable research findings use optional knowledge packs (`process-options.md`,
 Ready reference scripts ship with the template (Python 3.11+, stdlib only — no
 pip needed to run them):
 
-- `scripts/check.py` — the harness itself. Gate-scoped (`--gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all`,
+- `scripts/check.py` — the harness itself. Gate-scoped (`--gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all`,
   defaulting to the derived gate in `docs/gate`), runs
   format · lint · tests · coverage · traceability · arch-map freshness, and exits
   nonzero on any failure. Wire it to your stack by editing `docs/stack.ini` (the
@@ -1010,39 +1025,39 @@ pip needed to run them):
   structure — the TOML carrier makes a duplicate id a parse error, and a legacy
   CSV's data rows must parse to the header's column count); `--strict-integrity`
   fails on *only* that class (the always-valid pre-commit floor).
-  `--require-verified` adds the DevBar-Release status criterion (every `Verification=Test` SR
+  `--require-verified` adds the DevStg-Impl status criterion (every `Verification=Test` SR
   must be `Approved`); `--phase v1` scopes it for phased delivery (§4).
   `--no-placeholders` rejects leftover `-000` rows; `--strict-schema` requires the
   non-empty fields and the two closed vocabularies (`Verification`, `Tier`) —
-  `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevBar-Reqs as
-  the `registry-integrity` floor (`--strict-integrity`), then at DevBar-Tests/DevBar-Release (DevBar-Tests+ adds
-  `--no-placeholders`; DevBar-Release adds `--require-verified` and `--strict-schema`, plus
+  `Priority`/`Status` stay open. Called by `check.py` at every gate — at DevStg-Reqs as
+  the `registry-integrity` floor (`--strict-integrity`), then at DevStg-Tests/DevStg-Impl (DevStg-Tests+ adds
+  `--no-placeholders`; DevStg-Impl adds `--require-verified` and `--strict-schema`, plus
   `--phase` when given).
 - `scripts/check_flows.py` — verifies the authored **"Runtime flows"** section
   (§3 "Design-time runtime flows"): present, ≥1 Mermaid diagram, every cited
-  SR/LLR id real. Run by `check.py` at DevBar-Tests/DevBar-Release.
+  SR/LLR id real. Run by `check.py` at DevStg-Tests/DevStg-Impl.
 - `scripts/check_docs.py` — **doc navigability** (§3 "The doc set must stay
   navigable"): parses the docs' link graph and fails on broken intra-repo links
   (missing file or `#anchor`), warns on orphan docs (and, with `--stale`,
-  git-gated freshness). Stdlib-only; run by `check.py` from DevBar-Reqs on.
+  git-gated freshness). Stdlib-only; run by `check.py` from DevStg-Reqs on.
 - `scripts/check_perf.py` — the **perf-budget comparator** (§9): compares the
   product-emitted `perf-metrics.json` against `performance-budgets.csv` and the
   committed `perf-baseline.json` — absolute breach (vs `Budget`) and regression
   (vs baseline ± `Tolerance`), warn-vs-fail per the row's `Gate`, tier-scoped —
   and writes the gitignored `perf-report.md`. `--update-baseline` accepts a move.
-  Stdlib-only, metric-agnostic; run by `check.py` at DevBar-Release (absent metrics skip).
-- `scripts/check_stubs.py` — the **no-stub / substance** tripwire (§4 DevBar-Release): lists
+  Stdlib-only, metric-agnostic; run by `check.py` at DevStg-Impl (absent metrics skip).
+- `scripts/check_stubs.py` — the **no-stub / substance** tripwire (§4 DevStg-Impl): lists
   public symbols whose body is a stub (`pass` / `...` / `raise NotImplementedError`
   / bare `return None` / docstring-only), writing the gitignored `stub-report.md`.
   Stdlib, but **product-layer, not process** — a stub's shape is language-specific,
   so it ships like the perf *meters*: **opt-in and warn-first** (exit 0 unless
   `--strict`), **not** wired into `check.py`'s required floor. A Python project runs
-  it to inform the DevBar-Release Inspection; a non-Python stack swaps or drops it.
+  it to inform the DevStg-Impl Inspection; a non-Python stack swaps or drops it.
 - `scripts/gen_arch_map.py` — regenerates the module/function map in
   `architecture.md` from the source tree (and surfaces `Implements:` back-links),
   plus the Mermaid **dependency diagram** between its markers; `--check` fails
   when the doc is stale, so neither can drift. `--strict-parse` additionally
-  fails on any module that won't parse (the DevBar-Release run passes it).
+  fails on any module that won't parse (the DevStg-Impl run passes it).
 - `scripts/gen_release_checklist.py` — generates the human **release checklist**
   for `DevStg-Release` from the registries: every Demonstration/Manual/Inspection SR,
   every Release-tier/manual TC, the SN acceptance intents, and provided
@@ -1051,7 +1066,7 @@ pip needed to run them):
 - `scripts/gen_cases.py` — expands an SR's `Permutations` (input dimensions) into
   boundary-aware test combinations by strategy (full / pairwise / boundaries),
   and reports the reduction vs. the full product (see "Dimensional coverage" in
-  §4). Use it at DevBar-Tests to design test cases that exercise the input space.
+  §4). Use it at DevStg-Tests to design test cases that exercise the input space.
 
 **Cross-platform launchers** (so a fresh clone is trivial to run on any OS):
 `scripts/setup.{sh,ps1}` create a venv and install the toolchain;
@@ -1134,7 +1149,7 @@ The `SN→SR→LLR→TC` spine verifies **behavior**, never on its own the **cos
 that behavior. NFRs are expressible as ordinary SRs, but nothing makes you
 *consider* them, and quantitative budgets often aren't the author's to invent (a
 module is *handed* a slice of a system-level budget by an integrator; most metrics
-should be **minimized within reason**, not guessed at). At DevBar-Reqs, run the
+should be **minimized within reason**, not guessed at). At DevStg-Reqs, run the
 **consideration checklist** — a prompt, not a mandate, anchored on **ISO/IEC
 25010** plus cost/economics — and **route each NFR to one of three homes:**
 

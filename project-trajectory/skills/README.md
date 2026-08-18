@@ -83,7 +83,7 @@ reason the kit keeps separate hook configs). To stop them rotting:
   `<agent>/skills/<name>/` subtree from source — "edit source → re-materialize".
 - **Drift is gated.** `gen_skills_index.py --check-agents` byte-compares every
   per-agent copy to source and **fails** on a divergence (with the `--sync` fix),
-  wired into the pre-commit floor + DevBar-Release like the arch-map/OKF freshness gates.
+  wired into the pre-commit floor + DevStg-Impl like the arch-map/OKF freshness gates.
   Vacuous for a repo with no neutral source or no per-agent dir; only skills a
   per-agent dir already carries are compared, so a scope-matched subset is fine.
 - **Tracked + gated.** The copies are committed (a fresh clone has working skills
@@ -165,7 +165,7 @@ posture — lives in [`EXTERNAL_SKILLS.md`](../EXTERNAL_SKILLS.md).
 | `session-protocol` | this-repo | Run a WI/thread session by this repo's conventions: read plan → execute → gates → session log → commit style. |
 | `registry-hygiene` | kit | Run `trace.py`/`check.py` with the right flags; read orphan/schema findings and fix them. |
 | `downstream-resync` | kit | Walk `ADOPTING.md` §6 to upgrade an adopted repo to kit HEAD. |
-| `gate-advance` | kit | Move DevBar-Reqs→DevBar-Tests→DevBar-Release honestly — including `Attest` usage and attested-vs-mechanized reporting. |
+| `gate-advance` | kit | Move DevStg-Reqs→DevStg-Tests→DevStg-Impl honestly — including `Attest` usage and attested-vs-mechanized reporting. |
 
 The curated domain library adds web/rendering/model-inference skills for `web`,
 robotics/perception/simulation skills for `hardware`, and cross-domain skills

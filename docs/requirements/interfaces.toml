@@ -27,7 +27,7 @@
 #      ways, and that set is what silences `cross_component_findings` ("an
 #      internal import edge whose endpoints belong to different CMP components
 #      must be covered by a declared IF-### row"), which is an ERROR under
-#      `--strict` at DevBar-Tests and above. The import edge is the OBLIGATION
+#      `--strict` at DevStg-Tests and above. The import edge is the OBLIGATION
 #      and the row is the DISCHARGE — the relationship is the opposite of the
 #      one the shed assumed. 35 of those 74 rows also carry an endpoint that is
 #      not a module at all (a file, a tool, an upstream), so no import graph
@@ -107,7 +107,7 @@
 direction = "Provides"
 this_project = "scripts/trace"
 counterpart = "scripts/check"
-contract = """trace.py CLI: --strict-integrity exits 1 on a duplicate/malformed id or mis-columned row; --strict adds orphan + IF/PB back-link findings; --require-verified adds the DevBar-Release status check; writes docs/test/report.md"""
+contract = """trace.py CLI: --strict-integrity exits 1 on a duplicate/malformed id or mis-columned row; --strict adds orphan + IF/PB back-link findings; --require-verified adds the DevStg-Impl status check; writes docs/test/report.md"""
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 req_refs = ["SR-157"]
@@ -234,7 +234,7 @@ status = "Drafted"
 direction = "Provides"
 this_project = "scripts/check"
 counterpart = "external:downstream adopter"
-contract = """check.py CLI: --gate DevBar-Reqs|DevBar-Tests|DevBar-Release|all with --tier/--coverage/--lenient runs the active gate's steps as subprocesses and exits nonzero on any required failure (never a silent pass)"""
+contract = """check.py CLI: --gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all with --tier/--coverage/--lenient runs the active gate's steps as subprocesses and exits nonzero on any required failure (never a silent pass)"""
 signal = "discrete"
 req_refs = ["SR-006", "SR-007"]
 owner = "SR-006"
@@ -1057,7 +1057,7 @@ notes = """WI-280 slice 11: the guarded import moved to traj_parse (its one home
 direction = "Provides"
 this_project = "scripts/check_figures"
 counterpart = "scripts/check"
-contract = """check_figures.py CLI: flags a declared fig: figure marker that carries neither a non-empty cmd= plus rev= pair nor a non-empty derived= derivation, over root+docs markdown and docs/stack.ini; presence only, warn-first (exit 0), --strict exits 1 - wired as the opt-in [step:figures] DevBar-Release product step"""
+contract = """check_figures.py CLI: flags a declared fig: figure marker that carries neither a non-empty cmd= plus rev= pair nor a non-empty derived= derivation, over root+docs markdown and docs/stack.ini; presence only, warn-first (exit 0), --strict exits 1 - wired as the opt-in [step:figures] DevStg-Impl product step"""
 signal = "variable"
 signal_note = """derived at the WI-443 conversion: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 req_refs = ["SR-158"]

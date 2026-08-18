@@ -94,7 +94,7 @@ def test_acceptance_and_why_cells_are_exempt_by_sn033s_own_text(tmp_path):
             'priority = "M"\n'
             'need = """A team sees each check pass or fail."""\n'
             'why = """check.py and trace.py enforce it via --strict."""\n'
-            'acceptance = """docs/gate reads DevBar-Reqs; SR-001 has a TC."""\n'
+            'acceptance = """docs/gate reads DevStg-Reqs; SR-001 has a TC."""\n'
         ),
     )
     proc = form(tmp_path)
@@ -228,7 +228,7 @@ def test_a_url_span_stops_at_prose_delimiters(tmp_path):
 
 def test_a_present_but_vacuous_registry_is_reported_not_clean(tmp_path):
     # The round-1 review's driven find: an emptied registry scanned as a clean
-    # tier, and at DevBar-Reqs nothing else in the harness hard-fails on it —
+    # tier, and at DevStg-Reqs nothing else in the harness hard-fails on it —
     # the false green SN-008 forbids, on exactly the registry this check
     # guards. Absent stays a clean skip; present-but-empty reports.
     reg = tmp_path / "docs" / "requirements"

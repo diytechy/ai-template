@@ -18,9 +18,9 @@ test case, so a lax TC is caught here instead of inherited.
 
 ## Good anchors (what "good enough" looks like)
 
-- **DevBar-Reqs** — <a definite, citable thing that must be true; e.g. surfaces meet the
+- **DevStg-Reqs** — <a definite, citable thing that must be true; e.g. surfaces meet the
   ground plane with contact shadows consistent with one light source>.
-- **DevBar-Tests** — <another; e.g. materials read as their intended substance (metal vs
+- **DevStg-Tests** — <another; e.g. materials read as their intended substance (metal vs
   matte) under the scene's lighting>.
 
 ## Bad anchors (known failure modes — accumulate at rework)
@@ -32,4 +32,4 @@ test case, so a lax TC is caught here instead of inherited.
 
 _When a critique round names a **new** failure mode, add it here as the next `B#`
 at rework, so later rounds judge against the accumulated reference (the accumulation
-rule — see [`README.md`](README.md)). A verdict cites anchor ids (`B1`, `DevBar-Tests`, …)._
+rule — see [`README.md`](README.md)). A verdict cites anchor ids (`B1`, `DevStg-Tests`, …)._

@@ -419,7 +419,7 @@ def declared_policy(docs, legacy_name, default):
 # became "level 2" and so silently acquired a per-tier hold it never had.
 #
 #   attended       every tier is the human's; lanes drain at a ratification
-#   single-ratify  LLM review through DevBar-Reqs+DevBar-Tests, ONE human sitting
+#   single-ratify  LLM review through DevStg-Reqs+DevStg-Tests, ONE human sitting
 #                  at the close — so NO per-tier hold (level 0), a final read,
 #                  and the non-dependent work kept running that distinguished it
 #   autonomous     every bar but the owner's final read closes on a recorded
@@ -1380,7 +1380,7 @@ SPEC_SCALARS = (
     ("SafetyClass", "safety_class"),
     ("PlanMode", "planmode"),
     # WI-388: bar declares verification strictness for this row's lane; it
-    # never affects scheduling. (a DevBar-* value — integrate.refresh passes it to
+    # never affects scheduling. (a DevStg-* value — integrate.refresh passes it to
     # check.py --gate; load_wis deliberately does not parse it.)
     ("Bar", "bar"),
     ("Supersedes", "supersedes"),

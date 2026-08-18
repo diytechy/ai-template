@@ -195,7 +195,7 @@ def main():
         help="S7 drift gate: exit nonzero if any per-agent skill copy "
         "(.claude/.gemini/.agents) has drifted from the neutral source. Vacuous "
         "when there is no source or no per-agent dir; fix drift with "
-        "`bootstrap.py --sync`. Wired into the pre-commit floor + DevBar-Release like "
+        "`bootstrap.py --sync`. Wired into the pre-commit floor + DevStg-Impl like "
         "gen_arch_map --check.",
     )
     ap.add_argument(

@@ -27,7 +27,7 @@ PRESENT but yields zero scannable need cells — an empty file, or real rows
 none of which carries a `need` field — is reported as VACUOUS, never clean:
 zero need cells reading as a clean tier on exactly the registry this check
 guards is the false green SN-008 forbids (the round-1 adversarial review drove
-this: at DevBar-Reqs an emptied registry hard-fails nothing else in the
+this: at DevStg-Reqs an emptied registry hard-fails nothing else in the
 harness). A scaffold's `-000`-only registry stays clean — example rows are a
 form, not a vacuous tier.
 
@@ -70,7 +70,7 @@ lock that state in: the FIRST row to dirty the tier is the one that reports.
 
 SEVERITY IS WARN-FIRST, ALWAYS, in the shipped wiring. check.py runs this step
 with no `--strict` at every bar — deliberately unlike check_vocab, which
-promotes from DevBar-Tests on. Promoting this check to a gate is an owner
+promotes from DevStg-Tests on. Promoting this check to a gate is an owner
 ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
 exists for a repo that makes that ruling for itself.

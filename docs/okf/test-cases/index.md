@@ -103,7 +103,7 @@ resource: "generated"
 | [TC-104](TC-104.md) | Three complementary checks. (1) Unit: _svg_role classifies a native <a href> body, and ta… |
 | [TC-105](TC-105.md) | Assert the U5 palette-decollision invariants directly against the declared Python constan… |
 | [TC-106](TC-106.md) | Generate the dashboard from a tiered fixture registry and a flat OKF bundle and assert: (… |
-| [TC-107](TC-107.md) | Generate the dashboard with the Process tab enabled (DevBar-Tests gate) and assert --nhea… |
+| [TC-107](TC-107.md) | Generate the dashboard with the Process tab enabled (DevStg-Tests gate) and assert --nhea… |
 | [TC-108](TC-108.md) | Two halves, one floor. (a) Compute _ring_ink for every fill declared in STATUS_FILL/TIER_… |
 | [TC-109](TC-109.md) | Collect every #rrggbb literal declared in gen_trajectory's module-level palette collectio… |
 | [TC-110](TC-110.md) | Render every emitter, walk each node group, and assert per node kind: it carries tabindex… |
@@ -134,7 +134,7 @@ resource: "generated"
 | [TC-138](TC-138.md) | Run the handback suite: a partial close moves each claimed spec to the terminal partial/ … |
 | [TC-139](TC-139.md) | Run the spec_move suite: an archival move redirects inbound links from every depth (text … |
 | [TC-140](TC-140.md) | Run the figure-provenance suite: the three 2026-08-01 false figures (the stale mutation l… |
-| [TC-141](TC-141.md) | Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevBar-Below (th… |
+| [TC-141](TC-141.md) | Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (th… |
 | [TC-142](TC-142.md) | Fixture-drive --next-phase: on a spine whose non-draft max phase is 3 with a Draft row at… |
 | [TC-143](TC-143.md) | Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a pa… |
 | [TC-144](TC-144.md) | Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as … |

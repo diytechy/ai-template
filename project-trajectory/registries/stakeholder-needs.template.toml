@@ -5,7 +5,7 @@
 # setting it to "". A duplicate id is a parse error, which is the carrier
 # doing what a check used to (the reader is scripts/spine_carrier.py).
 #
-# Every need below serves the [PROJECT-VISION](../../README.md#vision) — the DevBar-Reqs
+# Every need below serves the [PROJECT-VISION](../../README.md#vision) — the DevStg-Reqs
 # consistency review checks each against it: a need serving no part of the
 # vision is scope creep (or a missing vision clause); a need contradicting it
 # is a finding. (The link is kept in markdown form so the pointer stays
@@ -23,7 +23,7 @@
 # so "what is un-approved right now?" is one question with one answer, not a
 # per-registry special case:
 #
-#   Drafted   still being drafted — DevBar-Below. trace.py exempts it from the
+#   Drafted   still being drafted — DevStg-Below. trace.py exempts it from the
 #             "every SN needs an SR" rule, so it can sit in the live registry
 #             before its SR decomposition exists. Do not park real needs here.
 #   Approved  a ratified need (the steady state). RATIFY by changing `status`

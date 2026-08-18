@@ -1,6 +1,6 @@
 """check_docs.py: the hand-written doc set stays navigable — broken intra-repo
 links fail, orphan docs warn (fail only with --strict-orphans), the root README
-must state the `PROJECT-VISION:` tag exactly once (process.md §4 DevBar-Reqs's
+must state the `PROJECT-VISION:` tag exactly once (process.md §4 DevStg-Reqs's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
 (process.md §3 "The doc set must stay navigable")."""
 
@@ -253,7 +253,7 @@ def test_ignore_glob_spans_directories(scaffold):
     assert passes.returncode == 0, passes.stdout + passes.stderr
 
 
-# --- the PROJECT-VISION tag (process.md §4 DevBar-Reqs's mechanizable half) ------------
+# --- the PROJECT-VISION tag (process.md §4 DevStg-Reqs's mechanizable half) ------------
 
 
 def test_missing_vision_tag_fails(scaffold):
@@ -354,7 +354,7 @@ def test_staleness_skips_without_git(tmp_path):
     assert "staleness check skipped" in proc.stdout
 
 
-# --- README need coverage (opt-out, marker-free; process.md §4 DevBar-Reqs) ------------
+# --- README need coverage (opt-out, marker-free; process.md §4 DevStg-Reqs) ------------
 
 
 def test_inventory_clean_scaffold_passes(scaffold):
@@ -495,11 +495,11 @@ def test_harness_wires_stale_into_doc_navigability():
 
 
 def test_harness_runs_doc_navigability_at_g1(scaffold):
-    # DevBar-Reqs's only step is doc-navigability; a broken link must fail that gate.
+    # DevStg-Reqs's only step is doc-navigability; a broken link must fail that gate.
     (scaffold / "docs" / "guide.md").write_text(
         "# Guide\n\n[missing](nope.md)\n", encoding="utf-8"
     )
-    proc = run_py(["scripts/check.py", "--gate", "DevBar-Reqs"], cwd=scaffold)
+    proc = run_py(["scripts/check.py", "--gate", "DevStg-Reqs"], cwd=scaffold)
     assert proc.returncode != 0
     assert "doc-navigability" in proc.stdout
     assert "RESULT: FAIL" in proc.stdout

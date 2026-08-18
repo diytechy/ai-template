@@ -345,7 +345,7 @@ def tiered_repo(root, wis_body, header=TIER_HDR, srs=TIER_SRS):
     return root
 
 
-def with_gate(root, gate="DevBar-Tests", wis_body=GOOD_WIS, header=WI_HEADER):
+def with_gate(root, gate="DevStg-Tests", wis_body=GOOD_WIS, header=WI_HEADER):
     """make_repo + a derived-format docs/gate (comment header, then the runnable
     gate value) — the Process tab's render condition."""
     make_repo(root, wis_body, header=header)
@@ -509,7 +509,7 @@ def _every_emitter_document(tmp_path):
         ("tiered-drill", lambda p: tiered_repo(p, TIER_UNION_WIS)),
         ("how-sw-drill", lambda p: containerize(p)),
         ("how-sw-flat", _how_sw_flat),
-        ("process", lambda p: with_gate(p, "DevBar-Tests")),
+        ("process", lambda p: with_gate(p, "DevStg-Tests")),
     ):
         root = tmp_path / label
         root.mkdir(parents=True, exist_ok=True)

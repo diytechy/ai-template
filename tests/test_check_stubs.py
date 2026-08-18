@@ -1,4 +1,4 @@
-"""check_stubs.py: the optional, warn-first, product-layer tripwire for the DevBar-Release
+"""check_stubs.py: the optional, warn-first, product-layer tripwire for the DevStg-Impl
 no-stub / substance criterion (process.md §4). It lists public symbols whose body
 does nothing (`pass`/`...`/`raise NotImplementedError`/bare `return None`/
 docstring-only), warns by default (exit 0) and gates only with `--strict`, and

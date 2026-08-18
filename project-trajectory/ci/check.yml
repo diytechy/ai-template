@@ -69,7 +69,7 @@ jobs:
       # raise or lower CI scope, edit the declaration — not these lines.
       #   The GATE is orthogonal and comes from the repo's committed `docs/gate`
       # file (check.py reads it), so CI enforces the bar the project is actually
-      # at — a freshly-scaffolded DevBar-Reqs repo is green, and the bar rises when
+      # at — a freshly-scaffolded DevStg-Reqs repo is green, and the bar rises when
       # artifacts are ratified in a reviewed commit and docs/gate is regenerated
       # (it is DERIVED from the artifact states by derive_gate.py, not hand-set;
       # the derived-gate step guards its freshness). In CI we do NOT pass

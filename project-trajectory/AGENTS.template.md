@@ -41,7 +41,7 @@ the ladder, and the ID scheme. The short version needed every session:
   test before the code that satisfies it: red → green → refactor — within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
-  Tests · Impl · Release. You are IN a stage and CLEAR a bar (`DevBar-Reqs` →
+  Tests · Impl · Release. You are IN a stage and CLEAR a bar (`DevStg-Reqs` →
   `-Tests` → `-Release`) per `docs/process.toml`. Never self-advance; log it.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
   lint, tests, coverage, traceability, flow checks and map freshness at the

@@ -85,25 +85,33 @@ WORK = "docs/work"
 
 # --- the WI `bar:` vocabulary (OI-21 contract break 3) -------------------------
 # The bar a work item is held to, in the stage-ladder vocabulary. A WI's `bar:`
-# frontmatter is a value the AUTHOR writes, so the retired `DevBar-Reqs|DevBar-Tests|DevBar-Release` tags
+# frontmatter is a value the AUTHOR writes, so the retired `DevStg-Reqs|DevStg-Tests|DevStg-Impl` tags
 # translate on read — silently, like `docs/stack.ini`'s `gates=` and for the same
 # reason: check_vocab.py sees the authored spec file and can name the line, which
 # is a better message than a loader could produce. New rows author the new form.
 #
 # The retired matching was `.upper()` + an uppercase tuple, which is why this is a
-# named helper now rather than an inline expression: `"DevBar-Reqs".upper()` is
+# named helper now rather than an inline expression: `"DevStg-Reqs".upper()` is
 # `"DEVBAR-REQS"`, so a case-folding comparison would have silently rejected every
 # correctly-authored new value.
-WI_BARS = ("DevBar-Reqs", "DevBar-Tests", "DevBar-Release")
+WI_BARS = ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl")
 _RETIRED_WI_BARS = {
-    "g1": "DevBar-Reqs",
-    "g2": "DevBar-Tests",
-    "g3": "DevBar-Release",
+    "g1": "DevStg-Reqs",
+    "g2": "DevStg-Tests",
+    "g3": "DevStg-Impl",
+    # The `DevBar-*` prefix, retired 2026-08-18 (one vocabulary; the verb carries
+    # the axis). Keyed lower-case like the rows above, since this table is looked
+    # up case-insensitively. The Release row translates to `DevStg-Impl`, NOT to
+    # `DevStg-Release`: that bar closed the Impl rung and `DevStg-Release` is not
+    # clearable at all, so the alias carries the correction, not a prefix swap.
+    "devbar-reqs": "DevStg-Reqs",  # check_vocab: allow
+    "devbar-tests": "DevStg-Tests",  # check_vocab: allow
+    "devbar-release": "DevStg-Impl",  # check_vocab: allow
 }
 
 
 def normalize_bar(value):
-    """A `bar:` cell as a canonical `DevBar-*` name ("" when blank).
+    """A `bar:` cell as a canonical `DevStg-*` name ("" when blank).
 
     Retired tags translate case-insensitively; a canonical value is matched
     case-insensitively too and returned in its declared casing, so `devbar-reqs`

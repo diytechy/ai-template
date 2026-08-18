@@ -30,7 +30,7 @@ chasing it.
 ## The kit's headline pieces
 
 - **A gated process** ([`PROCESS.md`](project-trajectory/PROCESS.md)) — roles as
-  "hats", approval bars (DevBar-Reqs→DevBar-Tests→DevBar-Release, then DevStg-Release and the owner's final read; DevStg-Release only for
+  "hats", approval bars (DevStg-Reqs→DevStg-Tests→DevStg-Impl, then DevStg-Release and the owner's final read; DevStg-Release only for
   versioned releases), and a verdict protocol; each gate's bar **fails, never
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
@@ -67,7 +67,7 @@ chasing it.
     each scoped by its WI row, spec, and train context, never a `status.md`
     resume — and the stop banner + exit codes carry the run's
     outcome.
-  - **Parallel-by-default execution** *(delivered — phase `v4` at DevBar-Release;
+  - **Parallel-by-default execution** *(delivered — phase `v4` at DevStg-Impl;
     [`parallel-wi-dispatch.md`](docs/archive/specs/parallel-wi-dispatch.2026-07-20.md))*: a plain
     launch **is** the dispatcher: it fans out every dependency-ready work item
     across bounded worker lanes, while mutation of the integration branch
@@ -179,7 +179,7 @@ graph LR
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
 | [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row — written in simple technical English on an **EARS** pattern, against the eight quality characteristics ([`PROCESS.md`](project-trajectory/PROCESS.md) §3) — with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
-| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevBar-Tests. |
+| [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevStg-Tests. |
 
 [`trace.py`](project-trajectory/scripts/trace.py) joins the four tiers into the
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
@@ -264,7 +264,7 @@ Then:
 2. Install the harness tooling for your stack (Python reference: `ruff pytest
    pytest-cov`). Commands are declared once in `docs/stack.ini` — a
    non-Python stack edits that one file.
-3. Start **gate DevBar-Reqs** — see the new repo's `docs/process.md`.
+3. Start **gate DevStg-Reqs** — see the new repo's `docs/process.md`.
 
 ### Or kick off with an agent
 
@@ -283,7 +283,7 @@ same artifacts and run the gates with you.
   condition that makes a requirement apply is read before what it obliges. The
   decidable half is checked; necessary/complete/feasible stay the review's, and
   the kit says so rather than offering a proxy metric.
-- **Test-driven** — the DevBar-Tests test case for each requirement is written as a
+- **Test-driven** — the DevStg-Tests test case for each requirement is written as a
   *failing* test before the code that satisfies it (red → green → refactor), so
   implementation is pulled by the spec, not retrofitted to it.
 - **Single source of truth** — facts live once and are referenced by id, so docs
@@ -338,7 +338,7 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - The meta-repo's needs, requirements, and tests live under
   [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
   distinct from the blank templates the kit *ships*.
-- Its own derived bar is honest rather than flattering: [`docs/gate`](docs/gate) currently reads **DevBar-Reqs**, stage **DevStg-Boundary** (1 of 8) — the spine re-opened deliberately for the 2026-08 boundary/re-tier program after passing **DevBar-Release** (gate-walk record:
+- Its own derived bar is honest rather than flattering: [`docs/gate`](docs/gate) currently reads **DevStg-Reqs**, stage **DevStg-Boundary** (1 of 8) — the spine re-opened deliberately for the 2026-08 boundary/re-tier program after passing **DevStg-Impl** (gate-walk record:
   [`docs/log.md`](docs/log.md)).
 
 ### Configuration at a glance (defaults vs. this repo)
@@ -356,7 +356,7 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevBar-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevBar-Reqs` (derived; re-opened for the 2026-08 re-tier program after DevBar-Release) |
+| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevStg-Reqs` (derived; re-opened for the 2026-08 re-tier program after DevStg-Impl) |
 | `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
 | `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `4` — every spine tier human-held (owner directive 2026-08-14; the live dial is the key in [`docs/process.toml`](docs/process.toml)) |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
@@ -390,17 +390,17 @@ and caches it (generated, never hand-edited) as **the gate that must next be
 passed**, which is also the strictness the harness runs at. It advances when a
 batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
 *pulls back* when attested content is amended — a `Status=Modified` row owes a
-re-attest and derives DevBar-Tests until the sitting blesses it (`trace.py --ratify
+re-attest and derives DevStg-Tests until the sitting blesses it (`trace.py --ratify
 modified` emits the before/after brief; semantics: PROCESS.md §7)
 (process-options.md "Derived gate model").
 
-- **DevBar-Reqs — Requirements/UX/Constraints.** Needs + requirements are complete,
+- **DevStg-Reqs — Requirements/UX/Constraints.** Needs + requirements are complete,
   measurable, and consistent with the vision; every requirement links a need;
   usability/doc needs, constraints, and non-goals are captured.
-- **DevBar-Tests — Decomposition & test coverage.** Every requirement decomposes to design
+- **DevStg-Tests — Decomposition & test coverage.** Every requirement decomposes to design
   (LLR) and a test (TC), each TC written **failing-first**; zero trace orphans;
   no placeholder rows; key runtime flows diagrammed.
-- **DevBar-Release — Implementation.** Code is written **test-first** and passes the full
+- **DevStg-Impl — Implementation.** Code is written **test-first** and passes the full
   harness: format/lint, full test tier, coverage ≥ threshold, schema, every
   in-scope requirement `Approved`, no stubs.
 - **DevStg-Release — Release readiness** *(per release)*. The release test tier

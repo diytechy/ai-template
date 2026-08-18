@@ -17,6 +17,6 @@ You are an INDEPENDENT critic launched by the unattended coordinator (scripts/ag
 {brief}
 --- END ---
 
-Write your verdict to {verdict} in the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <rubric-anchor> -> where/why it fails -> the concrete change -> @owner` line per finding, each CITING a rubric anchor id (B1/DevBar-Tests/…) and locating the region/aspect of the artifact it fails on. A finding that names a NEW failure mode must propose it as a new `B#` anchor for the rubric (the accumulation rule). You MAY add `- [TC-HARDEN] ...` lines proposing measurable sub-criteria — these route through change-intake (process.md §5); you NEVER edit the spine or the artifact yourself. Then exactly one machine line:
+Write your verdict to {verdict} in the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <rubric-anchor> -> where/why it fails -> the concrete change -> @owner` line per finding, each CITING a rubric anchor id (B1/DevStg-Tests/…) and locating the region/aspect of the artifact it fails on. A finding that names a NEW failure mode must propose it as a new `B#` anchor for the rubric (the accumulation rule). You MAY add `- [TC-HARDEN] ...` lines proposing measurable sub-criteria — these route through change-intake (process.md §5); you NEVER edit the spine or the artifact yourself. Then exactly one machine line:
     VERDICT: APPROVE|CHANGES-REQUESTED findings=N
 Commit that verdict file (a critique is a recorded verdict — its one home) and stop.

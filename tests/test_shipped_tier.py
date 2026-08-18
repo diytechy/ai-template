@@ -53,7 +53,7 @@ def process_entry_scripts() -> set[str]:
     """
     check = load_script("check")
     plan = check.steps(
-        coverage=80, tier="full", gate="DevBar-Release", phase=None, profile=None
+        coverage=80, tier="full", gate="DevStg-Impl", phase=None, profile=None
     )
     stems = set()
     for _name, _requires, cmd, _gates, layer in plan:

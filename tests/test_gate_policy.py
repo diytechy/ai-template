@@ -94,7 +94,7 @@ def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "single-ratify")
     assert _level(dest) == "single-ratify"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "DevBar-Tests close" in register  # the fixed ratification point (Q5)
+    assert "DevStg-Tests close" in register  # the fixed ratification point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
     assert "the owner's final read is the human's" in register
 

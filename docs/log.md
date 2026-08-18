@@ -21,6 +21,14 @@ applying that design to the kit itself.
 > attestation makes the record claim something was signed that was not. Read them
 > through the translation: `G1` → the `DevStg-Needs`…`DevStg-Reqs` range,
 > `G2` → `DevStg-Arch`…`DevStg-Tests`, `G3` → `DevStg-Impl`. The same carve-out
+> **Second layer, same carve-out (2026-08-18):** entries below also carry the
+> retired `DevBar-*` prefix, which the one-vocabulary ruling replaced with the
+> single `DevStg-*` token plus an explicit verb. Translate on read:
+> `DevBar-Reqs`→`DevStg-Reqs`, `DevBar-Tests`→`DevStg-Tests`,
+> `DevBar-Below`→`DevStg-Below`, and — the one that is **not** a prefix swap —
+> `DevBar-Release`→**`DevStg-Impl`**, that bar having always certified the Impl
+> rung. History is not rewritten here for the same reason the `G*` rows were not.
+> The same carve-out
 > covers this file's dated sign-off and ratification entries throughout, and the
 > quoted registry cells in `docs/ratify/`.
 
@@ -32951,4 +32959,86 @@ destroy the record it exists to be. The sitting reads the regenerated brief and
 
 Bar: `pytest -q -n auto -m smoke` → **1,201 passed, 5 skipped**;
 `check_trajectory` → clean (468 work items, graph acyclic);
+`check_docs` → OK, 0 broken links.
+
+---
+
+## 2026-08-18d — ONE VOCABULARY: the `DevBar-*` prefix retires, the verb carries the axis (owner ruling)
+
+**The ruling (owner, 2026-08-18, verbatim):** *"You clear a stage just like you
+clear a bar, the difference is that stage indicates your current active zone. So
+at points where a 'bar' or 'threshold' or 'event' needs to be referenced we can
+just say DevStg-\* is cleared and now the project enters DevStg-\* (the next tier
+up)… the event of clearing it is always emphasizing what was just closed out /
+finished, and what is next / active now that the stage is cleared."*
+
+**Why the two-prefix model lost.** It was itself a fix — the `G*` tags had one
+axis trying to say both "already met" and "to pass next" and saying neither. The
+split cured that and introduced its own defect: two spellings for one ladder,
+which put the retired Release bar and the live `DevStg-Release` rung three
+letters apart while meaning *a harness strictness level* and *a per-release
+milestone the harness has never heard of*. The ruled model keeps one token and
+makes the **sentence** carry the reading, which both earlier models needed
+anyway.
+
+**THE MAPPING IS NOT A PREFIX SWAP — one row in four is a correction.**
+
+| retired | now | why |
+|---|---|---|
+| `DevStg-Reqs` bar | `DevStg-Reqs` | 1:1 |
+| `DevStg-Tests` bar | `DevStg-Tests` | 1:1 |
+| the **Release** bar | **`DevStg-Impl`** | it never certified the Release rung. Three sources already said so — the §4 ladder draws it *between* Impl and Release, RESYNC's translation table said "certifying `DevStg-Impl`", and the registry-machinery reference says `DevStg-Release` is "not known to the harness at all". Only `derive_gate.py`'s own comment claimed "rungs 6-7", and **that comment was wrong**; the rename exposed it and this change corrects it. |
+| the Below sentinel | `DevStg-Below` | 1:1, still not a stage anyone is in |
+
+The owner's sentence form is what settles it independently: *"DevStg-Impl is
+cleared, the project enters DevStg-Release"* completes; *"DevStg-Release is
+cleared, the project enters …"* has no completion, Release being terminal.
+
+**The flag renamed with it: `--gate` → `--stage-cleared`** (owner's call in the
+same ruling — *"perhaps it does not matter all that much but the main point is
+using the same enum but describing it in a way that differentiates events from
+active stage development"*). The value is now a stage token, so the flag is
+where the reading gets stated. **`--gate` stays accepted, silently and
+indefinitely**: it is a string adopters' hooks, CI and launchers pass literally,
+and the word "gate" was never retired where it means a check that can fail —
+`docs/gate` and `derive_gate.py` keep their names under the same standing rule.
+
+**Scope, and what was deliberately NOT converted.** 1,494 tokens across **142
+live authored files**, taken from `check_vocab.py --list-scope` rather than from
+a `git grep` — so the conversion boundary and the enforcement boundary are the
+same set by construction. Left verbatim, under the carve-outs the `G*` sweep
+ruled and this one inherits: `docs/log.md` and `docs/archive/**` (a record of
+what happened is not rewritten), the dated sign-off and ratification entries
+(rewriting a signed record makes it claim something that was not signed), and
+every generated artifact (regenerated instead — `docs/gate`, the dashboard, OKF,
+open-items, the ratify brief, the prompt catalogue, the skills index). The log's
+existing retired-vocabulary banner gained a second layer stating the new
+translation, including the Release correction.
+
+**The enforcer landed WITH the sweep, not after it** — the condition the OI-21
+ruling attached to this exact class of change ("the sweep lands with its enforcer
+or attention becomes the only thing holding the edits in place"). `check_vocab.py`
+now refuses any `DevBar-*` token on the same regex as the `G*` tags — one finding
+per mistake, not two — with the per-token suggestion naming the Release
+correction so the message carries the fix. Proved to bite on a planted file
+before landing, then re-run clean.
+
+**Nothing breaks downstream.** All four retired spellings are read-side aliases
+in the three places a value can arrive — `check.py`'s flag, `intake.normalize_bar`,
+`integrate._normalize_bar` — pinned equal by `test_stage_ladder.py`. An
+un-migrated hook passing the old Release value resolves to `DevStg-Impl` and
+selects exactly the steps it always did. `RESYNC_PACK.md` carries the adopter
+entry with the mapping table and the not-1:1 row called out twice.
+
+**Byte deltas:** `PROCESS.md` 80,766 → **81,763** (+997 — §4's ladder rewritten
+onto the one vocabulary, the three clearable rungs marked as events naming what
+closed and what is entered next, and both prior failures recorded so neither is
+re-proposed); `PROCESS_OPTIONS.md` 172,091 → **172,037** (−54, the re-spelling
+reads shorter); `AGENTS.template.md` **9,994 unchanged**. Three reviewed ratchet
+re-stamps, all alias rows plus their reasoning and zero behaviour change:
+`check.py` 1,885 → **1,906**, `intake.py` 1,806 → **1,814**, `integrate.py`
+2,532 → **2,541**.
+
+Bar: `pytest -q -n auto -m smoke` → **1,201 passed, 5 skipped**;
+`check_vocab --strict` → clean, 403 live authored files;
 `check_docs` → OK, 0 broken links.

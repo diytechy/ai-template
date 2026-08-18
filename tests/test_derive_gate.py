@@ -2,7 +2,7 @@
 
 The derivation is the trust root of the whole model, so every per-artifact rule,
 the min-aggregation, the draft drop, and the --check rot guard get a red->green
-test here. The meta-repo smoke test proves the dogfood: the derived gate reads DevBar-Release,
+test here. The meta-repo smoke test proves the dogfood: the derived gate reads DevStg-Impl,
 byte-for-byte with today's declared docs/gate (docs/archive/specs/derived-gate-model.2026-07-20.md
 §11 done-when).
 """
@@ -56,11 +56,11 @@ def _independent_meta_expectations():
     so the dogfood test can catch sr_bar breaking (the adversarial review's F3:
     compare-a-subprocess-to-the-same-function is tautological). Simplified on
     facts the meta's own harness enforces elsewhere (orphans=0 => every
-    non-exempt SR is decomposed): a phase expects DevBar-Below if any of its SRs — OR
+    non-exempt SR is decomposed): a phase expects DevStg-Below if any of its SRs — OR
     any of its LLR/TC rows, the documented new-phase signal (derive_gate's
-    "LLR/TC — Drafted => DevBar-Below"; first exercised by Phase 5's TC-133, a Drafted TC
-    under no Drafted SR) — is Drafted, else DevBar-Tests if any SR is below Approved
-    (Modified included), else DevBar-Release."""
+    "LLR/TC — Drafted => DevStg-Below"; first exercised by Phase 5's TC-133, a Drafted TC
+    under no Drafted SR) — is Drafted, else DevStg-Tests if any SR is below Approved
+    (Modified included), else DevStg-Impl."""
     # Read with STDLIB `tomllib` straight off the file, not through
     # spine_carrier: the independence this re-derivation buys is the point (F3),
     # and it now covers the carrier as well as the gate arithmetic — if the
@@ -99,13 +99,13 @@ def _independent_meta_expectations():
     expect = {}
     for phase, statuses in phases.items():
         if any(s == "drafted" for s in statuses) or phase in draft_child_phases:
-            expect[phase] = "DevBar-Below"
+            expect[phase] = "DevStg-Below"
         elif any(s != "approved" for s in statuses):
-            expect[phase] = "DevBar-Tests"
+            expect[phase] = "DevStg-Tests"
         else:
             # OI-30 D2's ceiling, mirrored in the INDEPENDENT re-derivation
             # so this side is not simply agreeing with the code it checks.
-            expect[phase] = "DevBar-Tests"
+            expect[phase] = "DevStg-Tests"
     modified = sum(1 for sts in phases.values() for s in sts if s == "modified")
     return expect, modified
 
@@ -115,8 +115,8 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     # by WI-316 and re-anchored by the adversarial review's F3: the per-phase
     # values are checked against an INDEPENDENT re-derivation from the raw CSVs
     # (not against compute() — that comparison could never fail), so a Modified
-    # re-attest window legitimately reads DevBar-Tests while a broken sr_bar rung (e.g.
-    # Modified deriving DevBar-Reqs) still reds the dogfood. Plus: the SR-level modified
+    # re-attest window legitimately reads DevStg-Tests while a broken sr_bar rung (e.g.
+    # Modified deriving DevStg-Reqs) still reds the dogfood. Plus: the SR-level modified
     # count is a floor for the basis count, and the committed docs/gate cache
     # matches the recomputed state (--check green).
     expect, sr_modified = _independent_meta_expectations()
@@ -156,9 +156,9 @@ def test_sr_gate_rules():
     assert (
         GATE.sr_bar(modified, True, True) == GATE.BAR_TESTS
     )  # decomposed, re-attest owed
-    # OI-30 D2's ceiling: decomposed tops out at DevBar-Tests, whatever the cell
+    # OI-30 D2's ceiling: decomposed tops out at DevStg-Tests, whatever the cell
     # says. The dedicated pin is
-    # `test_sr_bar_CEILINGS_at_DevBar_Tests_and_release_is_unreachable_by_cell`.
+    # `test_sr_bar_CEILINGS_at_DevStg_Tests_and_impl_is_unreachable_by_cell`.
     approved = {"Status": "Approved", "Verification": "Test"}
     assert GATE.sr_bar(approved, True, True) == GATE.BAR_TESTS
     # An LLR-exempt method needs only a TC to be decomposed (no LLR).
@@ -169,7 +169,7 @@ def test_sr_gate_rules():
 
 def test_maturity_and_sn_gate_rules():
     # A present LLR/TC caps only when Drafted; its own Status does not gate (the
-    # SR's does), so `Approved` and `Modified` both contribute DevBar-Release —
+    # SR's does), so `Approved` and `Modified` both contribute DevStg-Impl —
     # and so does an UNRECOGNIZED value, which is `SPINE_MATURITY`'s deliberate
     # spine-only default (the closed enum names it on the integrity floor
     # instead; see maturity_bar).
@@ -178,24 +178,24 @@ def test_maturity_and_sn_gate_rules():
     assert GATE.maturity_bar({"Status": "Modified"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Implemented"}) == GATE.BAR_RELEASE
     assert GATE.sn_bar("SN-009", {"SN-009"}, set()) == GATE.BAR_BELOW  # draft section
-    # WI-401: a ratified SN must be cited by >=1 SR SN-Refs to contribute DevBar-Release;
-    # ratified-and-uncovered caps at DevBar-Below (an unanswered need has not earned DevBar-Reqs).
+    # WI-401: a ratified SN must be cited by >=1 SR SN-Refs to contribute DevStg-Impl;
+    # ratified-and-uncovered caps at DevStg-Below (an unanswered need has not earned DevStg-Reqs).
     assert GATE.sn_bar("SN-001", {"SN-009"}, {"SN-001"}) == GATE.BAR_RELEASE  # covered
     assert GATE.sn_bar("SN-001", {"SN-009"}, set()) == GATE.BAR_BELOW  # uncovered
 
 
 # --- aggregation over a real scaffold -----------------------------------------
 def test_minimal_project_derives_the_ceilinged_top(scaffold):
-    # WAS DevBar-Release. Under the OI-30 D2 ceiling a fully decomposed, fully
-    # approved spine reads DevBar-Tests: the release bar is the harness's answer,
+    # WAS DevStg-Impl. Under the OI-30 D2 ceiling a fully decomposed, fully
+    # approved spine reads DevStg-Tests: the release bar is the harness's answer,
     # not a Status cell's.
     make_minimal_project(scaffold)
-    assert _derive(scaffold)["gate"] == "DevBar-Tests"
+    assert _derive(scaffold)["gate"] == "DevStg-Tests"
 
 
 def test_draft_sr_drops_the_gate(scaffold):
-    # A Drafted SR sits at DevBar-Below, dropping the min; the runnable value floors to DevBar-Reqs and
-    # the raw DevBar-Below is recorded in the basis (the new-phase-pending signal).
+    # A Drafted SR sits at DevStg-Below, dropping the min; the runnable value floors to DevStg-Reqs and
+    # the raw DevStg-Below is recorded in the basis (the new-phase-pending signal).
     make_minimal_project(scaffold)
     _write(
         scaffold,
@@ -203,12 +203,12 @@ def test_draft_sr_drops_the_gate(scaffold):
     )
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_BELOW
-    assert result["gate"] == "DevBar-Reqs"
+    assert result["gate"] == "DevStg-Reqs"
     assert result["drafted"] == 1
 
 
 def test_undecomposed_sr_is_g1(scaffold):
-    # A ratified (Approved) SR with no LLR/TC is at DevBar-Reqs (requirement not decomposed).
+    # A ratified (Approved) SR with no LLR/TC is at DevStg-Reqs (requirement not decomposed).
     make_minimal_project(scaffold)
     _write(scaffold, srs=_sr("SR-001", status="Approved"))
     # Empty (header-only) LLR/TC registries: SR-001 has no decomposition.
@@ -216,11 +216,11 @@ def test_undecomposed_sr_is_g1(scaffold):
         LLRS_H, encoding="utf-8"
     )
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(TCS_H, encoding="utf-8")
-    assert _derive(scaffold)["gate"] == "DevBar-Reqs"
+    assert _derive(scaffold)["gate"] == "DevStg-Reqs"
 
 
 def test_decomposed_unverified_is_g2(scaffold):
-    # SR + LLR + TC all present but the SR not Approved -> DevBar-Tests
+    # SR + LLR + TC all present but the SR not Approved -> DevStg-Tests
     # (decomposed, re-attest owed). RE-POINTED AT D-9 STEP 5: the fixture was
     # `Planned`, which folded into `Approved`; `Modified` is the one remaining
     # ratified-but-unblessed value.
@@ -231,34 +231,34 @@ def test_decomposed_unverified_is_g2(scaffold):
         llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Approved\n',
         tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Approved\n',
     )
-    assert _derive(scaffold)["gate"] == "DevBar-Tests"
+    assert _derive(scaffold)["gate"] == "DevStg-Tests"
 
 
 def test_no_real_srs_is_g1(scaffold):
-    # A fresh scaffold (only -000 placeholders) is at DevBar-Reqs, never a vacuous DevBar-Release.
-    assert _derive(scaffold)["gate"] == "DevBar-Reqs"
+    # A fresh scaffold (only -000 placeholders) is at DevStg-Reqs, never a vacuous DevStg-Impl.
+    assert _derive(scaffold)["gate"] == "DevStg-Reqs"
 
 
 def test_modified_sr_reads_g2_and_is_counted(scaffold):
     # WI-316: a Modified SR (post-attestation amendment, re-attest owed) pulls its
-    # gate to DevBar-Tests through the EXISTING decomposed-unverified rung — no rule of its
+    # gate to DevStg-Tests through the EXISTING decomposed-unverified rung — no rule of its
     # own — and the basis carries modified=N so the pending state never hides.
     # Children stay Approved: their status never independently gates (maturity),
-    # so the pull is exactly one rung, not a DevBar-Below draft-drop.
+    # so the pull is exactly one rung, not a DevStg-Below draft-drop.
     make_minimal_project(scaffold)
     # SR-001 keeps the minimal project's LLR/TC children (decomposed), so the
-    # Modified status pulls exactly one rung — not the undecomposed DevBar-Reqs.
+    # Modified status pulls exactly one rung — not the undecomposed DevStg-Reqs.
     _write(scaffold, srs=_sr("SR-001", status="Modified"))
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_TESTS
-    assert result["gate"] == "DevBar-Tests"
+    assert result["gate"] == "DevStg-Tests"
     assert result["modified"] == 1
     assert result["drafted"] == 0
     # The emitted basis line surfaces the count between drafts and computed.
     assert (
         # `planned=` is GONE at step 5 (deleted with the word) and `drafts=`
         # is spelled `drafted=`; `check._BASIS_RE` moved in the same commit.
-        "drafted=0 modified=1 uncovered=0 computed=DevBar-Tests"
+        "drafted=0 modified=1 uncovered=0 computed=DevStg-Tests"
         in GATE.basis_line(result)
     )
 
@@ -277,7 +277,7 @@ def test_modified_children_are_counted_but_never_gate(scaffold):
     )
     result = _derive(scaffold)
     assert (
-        result["gate"] == "DevBar-Tests"  # OI-30 D2 ceiling
+        result["gate"] == "DevStg-Tests"  # OI-30 D2 ceiling
     )  # SR Approved; children's status never caps
     assert result["modified"] == 2
     assert GATE.maturity_bar({"Status": "Modified"}) == GATE.BAR_RELEASE
@@ -291,7 +291,7 @@ def test_write_then_check_roundtrips(scaffold):
     gate_text = (scaffold / "docs" / "gate").read_text(encoding="utf-8")
     assert "# basis:" in gate_text
     assert (
-        gate_text.strip().splitlines()[-1] == "DevBar-Tests"  # OI-30 D2 ceiling
+        gate_text.strip().splitlines()[-1] == "DevStg-Tests"  # OI-30 D2 ceiling
     )  # the runnable value last
     # A fresh compute matches the cache.
     check = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
@@ -303,7 +303,7 @@ def test_check_detects_state_drift(scaffold):
     make_minimal_project(scaffold)
     run_py(["scripts/derive_gate.py"], cwd=scaffold)
     # Un-bless an SR: the derived gate drops but the cache still says
-    # DevBar-Release -> STALE.
+    # DevStg-Impl -> STALE.
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
         srs.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Modified"),
@@ -321,14 +321,14 @@ def test_check_legacy_gate_compares_value_only(scaffold):
     # what a cache still carrying the retired one does.
     make_minimal_project(scaffold)
     gate = scaffold / "docs" / "gate"
-    gate.write_text("# legacy hand-set\nDevBar-Tests\n", encoding="utf-8")
+    gate.write_text("# legacy hand-set\nDevStg-Tests\n", encoding="utf-8")
     ok = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "not yet in derived form" in ok.stdout + ok.stderr
     # The mismatching half: a value the derivation does NOT produce. It reads
-    # DevBar-Release deliberately — under the OI-30 D2 ceiling that is exactly a
+    # DevStg-Impl deliberately — under the OI-30 D2 ceiling that is exactly a
     # value no cell can derive, which is the cleanest possible mismatch.
-    gate.write_text("# legacy hand-set\nDevBar-Release\n", encoding="utf-8")
+    gate.write_text("# legacy hand-set\nDevStg-Impl\n", encoding="utf-8")
     bad = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
     assert bad.returncode == 1
     assert "STALE" in bad.stdout + bad.stderr
@@ -356,7 +356,7 @@ def test_a_cache_carrying_the_RETIRED_vocabulary_reports_STALE(scaffold):
     stale = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
     assert stale.returncode == 1
     out = stale.stdout + stale.stderr
-    assert "STALE" in out and "DevBar-Tests" in out
+    assert "STALE" in out and "DevStg-Tests" in out
     # ...and ONE regenerate fixes it, which is the whole migration for an adopter.
     assert run_py(["scripts/derive_gate.py"], cwd=scaffold).returncode == 0
     assert run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold).returncode == 0
@@ -375,7 +375,7 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     tcs = scaffold / "docs" / "test" / "test-cases.csv"
 
     # 1) Requirement-first: a Drafted SR-002 with no LLR/TC. trace stays clean (the
-    #    draft is exempt), and the derived gate drops to DevBar-Reqs (raw DevBar-Below in the basis).
+    #    draft is exempt), and the derived gate drops to DevStg-Reqs (raw DevStg-Below in the basis).
     srs.write_text(
         SRS_H + _sr("SR-001") + _sr("SR-002", status="Drafted"), encoding="utf-8"
     )
@@ -383,10 +383,10 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
     trace = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert trace.returncode == 0, trace.stdout + trace.stderr
     r = _derive(scaffold)
-    assert r["raw"] == GATE.BAR_BELOW and r["gate"] == "DevBar-Reqs"
+    assert r["raw"] == GATE.BAR_BELOW and r["gate"] == "DevStg-Reqs"
 
     # 2) Decompose while the SR still owes a human act: add LLR-002 + TC-002.
-    #    The derived gate rises to DevBar-Tests. RE-POINTED AT D-9 STEP 5 — this
+    #    The derived gate rises to DevStg-Tests. RE-POINTED AT D-9 STEP 5 — this
     #    rung's fixture was `Planned` (ratified text, evidence pending), which
     #    folded into `Approved`; `Modified` is what still reads below approval.
     srs.write_text(
@@ -404,10 +404,10 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
         + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Approved\n',
         encoding="utf-8",
     )
-    assert _derive(scaffold)["gate"] == "DevBar-Tests"
+    assert _derive(scaffold)["gate"] == "DevStg-Tests"
 
     # 3) Approve: SR-002 + its TC reach `Approved`. The derived gate returns to
-    #    its ceiling, DevBar-Tests (OI-30 D2) — never to DevBar-Release by cell.
+    #    its ceiling, DevStg-Tests (OI-30 D2) — never to DevStg-Impl by cell.
     srs.write_text(
         SRS_H + _sr("SR-001") + _sr("SR-002", status="Approved"), encoding="utf-8"
     )
@@ -417,11 +417,11 @@ def test_requirement_first_lifecycle_end_to_end(scaffold):
         + 'TC-002,SR-002;LLR-002,Unit,m,Full,,"e",Yes,tests/test_demo.py::t2,Approved\n',
         encoding="utf-8",
     )
-    assert _derive(scaffold)["gate"] == "DevBar-Tests"
+    assert _derive(scaffold)["gate"] == "DevStg-Tests"
 
 
 def test_draft_sn_drops_the_gate(scaffold):
-    # A Drafted SN (section-as-state) sits at DevBar-Below and drops the derived gate too.
+    # A Drafted SN (section-as-state) sits at DevStg-Below and drops the derived gate too.
     make_minimal_project(scaffold)
     sn = scaffold / "docs" / "requirements" / "stakeholder-needs.md"
     sn.write_text(
@@ -449,19 +449,19 @@ def _append_ratified_sn(scaffold, row):
 
 def test_uncovered_ratified_sn_caps_the_gate(scaffold):
     # WI-401 (owner ruling 2026-08-01): a ratified SN cited by zero SR SN-Refs is
-    # an unanswered need — DevBar-Reqs is not earned. The raw level caps at DevBar-Below, the
-    # runnable value floors to DevBar-Reqs, and the basis carries uncovered=N so the cause
-    # never hides (drafted=0 here: before this rung, computed=DevBar-Below implied a draft).
+    # an unanswered need — DevStg-Reqs is not earned. The raw level caps at DevStg-Below, the
+    # runnable value floors to DevStg-Reqs, and the basis carries uncovered=N so the cause
+    # never hides (drafted=0 here: before this rung, computed=DevStg-Below implied a draft).
     make_minimal_project(scaffold)
     _append_ratified_sn(
         scaffold, "| SN-002 | Subtract two numbers. | Demo. | M | sub(3,2) is 1. |\n"
     )
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_BELOW
-    assert result["gate"] == "DevBar-Reqs"
+    assert result["gate"] == "DevStg-Reqs"
     assert result["drafted"] == 0
     assert result["uncovered"] == 1
-    assert "uncovered=1 computed=DevBar-Below" in GATE.basis_line(result)
+    assert "uncovered=1 computed=DevStg-Below" in GATE.basis_line(result)
 
 
 def test_covering_the_sn_restores_the_prior_level(scaffold):
@@ -474,9 +474,9 @@ def test_covering_the_sn_restores_the_prior_level(scaffold):
     _write(scaffold, srs=_sr("SR-001", sn="SN-001;SN-002"))
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_TESTS  # OI-30 D2 ceiling
-    assert result["gate"] == "DevBar-Tests"
+    assert result["gate"] == "DevStg-Tests"
     assert result["uncovered"] == 0
-    assert "uncovered=0 computed=DevBar-Tests" in GATE.basis_line(result)
+    assert "uncovered=0 computed=DevStg-Tests" in GATE.basis_line(result)
 
 
 def test_example_rows_are_ignored_by_the_coverage_rung(scaffold):
@@ -487,7 +487,7 @@ def test_example_rows_are_ignored_by_the_coverage_rung(scaffold):
     _append_ratified_sn(scaffold, "| SN-000 | Example placeholder. | M | n/a |\n")
     result = _derive(scaffold)
     assert result["uncovered"] == 0
-    assert result["gate"] == "DevBar-Tests"
+    assert result["gate"] == "DevStg-Tests"
     # A real ratified need answered ONLY by an example SR row stays uncovered.
     _append_ratified_sn(scaffold, "| SN-002 | Real need. | M | tbd |\n")
     _write(scaffold, srs=_sr("SR-001") + _sr("SR-000", sn="SN-002"))
@@ -500,9 +500,9 @@ def test_ex_draft_treats_the_coverage_rung_consistently(scaffold):
     # A ratified SN answered ONLY by a Drafted SR. In the RAW view the citation
     # stands — trace.py's orphan rule reads the same cited set, so neither
     # surface calls the need uncovered (the Drafted SR itself is what drops raw to
-    # DevBar-Below, one fact one finding). In the ex-draft counterfactual the SAME
+    # DevStg-Below, one fact one finding). In the ex-draft counterfactual the SAME
     # arithmetic runs over the non-draft subset: the citation leaves with its
-    # row, the need reads unanswered, and ex-draft stays DevBar-Below — removing a draft
+    # row, the need reads unanswered, and ex-draft stays DevStg-Below — removing a draft
     # answer must not fabricate coverage or a level the spine never earned.
     make_minimal_project(scaffold)
     _append_ratified_sn(
@@ -606,8 +606,8 @@ def test_per_phase_resolves_tc_citing_only_its_llr(scaffold):
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_BELOW
     assert (
-        result["per_phase"]["(default)"] == "DevBar-Below"
-    )  # was DevBar-Reqs/DevBar-Tests before the fix
+        result["per_phase"]["(default)"] == "DevStg-Below"
+    )  # was DevStg-Reqs/DevStg-Tests before the fix
 
 
 # --- ex-draft: the level the drafts are hiding (WI-341) -----------------------
@@ -615,7 +615,7 @@ def _mature_single_phase_reopened(scaffold):
     """A single-phase spine at its ceiling, then ONE Drafted SR added.
 
     This is the shape 128-REVIEW-A (MAJOR 3) showed the old per-phase heuristic
-    could not see: the Drafted drops the only phase to DevBar-Below, so the breakdown that
+    could not see: the Drafted drops the only phase to DevStg-Below, so the breakdown that
     was the evidence of maturity is erased by the very row it is meant to
     qualify.
     """
@@ -633,11 +633,11 @@ def test_ex_draft_reports_the_level_the_drafts_are_hiding(scaffold):
     result = _mature_single_phase_reopened(scaffold)
     # What the drafts produce...
     assert result["raw"] == GATE.BAR_BELOW
-    assert result["per_phase"]["(default)"] == "DevBar-Below"
+    assert result["per_phase"]["(default)"] == "DevStg-Below"
     # ...and what the rows they did not touch still say. THIS is the evidence a
     # draft cannot erase, and it is why the field exists.
     assert result["ex_draft"] == GATE.BAR_TESTS  # OI-30 D2 ceiling
-    assert "ex-draft=DevBar-Tests" in GATE.basis_line(result)
+    assert "ex-draft=DevStg-Tests" in GATE.basis_line(result)
 
 
 def test_ex_draft_stays_low_when_the_spine_never_climbed(scaffold):
@@ -711,7 +711,7 @@ def test_the_basis_line_still_parses_under_checks_window_regexes(scaffold):
 
 
 # --- OI-30 D2: the sr_bar ceiling and its one rendering home ------------------
-def test_sr_bar_CEILINGS_at_DevBar_Tests_and_release_is_unreachable_by_cell():
+def test_sr_bar_CEILINGS_at_DevStg_Tests_and_impl_is_unreachable_by_cell():
     """THE REGRESSION PIN FOR THE CEILING (owner ruling OI-30 D2, 2026-08-15).
 
     DELETE THIS TEST DELIBERATELY, IN THE COMMIT THAT LANDS THE HARNESS DRIVER,
@@ -723,7 +723,7 @@ def test_sr_bar_CEILINGS_at_DevBar_Tests_and_release_is_unreachable_by_cell():
     (`Verified` and `Planned` both folded into `Approved`, OI-30 D1). Without the
     ceiling, a decomposed row that was `Planned` — ratified text, evidence never
     established — would satisfy the old `decomposed and verified` rule and RAISE
-    the derived gate to DevBar-Release, having passed nothing. That is the
+    the derived gate to DevStg-Impl, having passed nothing. That is the
     migration plan's §F5 risk arriving in production.
     """
     approved = {"Status": "Approved", "Verification": "Test"}
@@ -743,9 +743,9 @@ def test_sr_bar_CEILINGS_at_DevBar_Tests_and_release_is_unreachable_by_cell():
                     has_llr,
                     has_tc,
                 )
-    # The bar itself is NOT deleted — `--gate DevBar-Release` stays invocable, so
+    # The bar itself is NOT deleted — `--gate DevStg-Impl` stays invocable, so
     # the ceiling withholds escalation rather than removing a plan.
-    assert GATE.BAR_NAMES[GATE.BAR_RELEASE] == "DevBar-Release"
+    assert GATE.BAR_NAMES[GATE.BAR_RELEASE] == "DevStg-Impl"
     assert GATE.BAR_NAMES[GATE.BAR_RELEASE] in GATE.BAR_ORDER
 
 
@@ -753,15 +753,15 @@ def test_the_ceiling_note_has_exactly_ONE_rendering_home():
     """The mitigation the ruling rides on: while the ceiling holds, the derived
     bar's HUMAN rendering says so, from one home, so no surface can quietly omit
     it and read as a regression."""
-    assert GATE.bar_label("DevBar-Tests") == (
-        "DevBar-Tests (Release: pending harness driver)"
+    assert GATE.bar_label("DevStg-Tests") == (
+        "DevStg-Tests (Release: pending harness driver)"
     )
     # Every other value passes through UNTOUCHED — including an unrecognized one
     # off an older cache, which a surface should report as found, not decorate.
     # (the retired-tag entry quotes the old vocabulary on purpose — an older
     # cache is exactly what "pass through untouched" has to cover)
     retired_tag = "G2"  # check_vocab: allow
-    for other in ("DevBar-Reqs", "DevBar-Release", "DevBar-Below", retired_tag, ""):
+    for other in ("DevStg-Reqs", "DevStg-Impl", "DevStg-Below", retired_tag, ""):
         assert GATE.bar_label(other) == other, other
     # THE ONE HOME, asserted structurally: the note's text appears in exactly one
     # shipped script, and every other surface reaches it through `bar_label`. A

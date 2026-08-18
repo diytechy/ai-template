@@ -2,8 +2,11 @@
 """Retired-vocabulary check: keep the retired `G*` gate tags from growing back.
 
 OI-21 (ruled 2026-08-13) retired the `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final`
-TAGS for the eight-rung stage ladder — `DevStg-<Label>` for the rung a repo is
-IN, `DevBar-<Label>` for the bar it must next CLEAR. The ruling made this check a
+TAGS for the eight-rung stage ladder. A second ruling (2026-08-18) retired the
+`DevBar-<Label>` half of what replaced them: there is now ONE vocabulary,
+`DevStg-<Label>`, and the VERB carries the axis — a repo is IN a stage and
+CLEARS a stage. The three clearable stages are a strict subset of the eight
+rungs, and `DevBar-Release` resolved to `DevStg-Impl`, not `DevStg-Release`. The ruling made this check a
 CONDITION of the conversion, not a follow-up: "the sweep lands WITH its enforcer
 or attention becomes the only thing holding 2,538 edits in place." The evidence
 for that condition is on the record — the retired `at G1` construct regenerated
@@ -14,7 +17,8 @@ Stdlib only, like trace.py / check_docs.py:
     python scripts/check_vocab.py [--root .] [--strict] [--list-scope]
 
 WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
-`G-Release`, `G-Final`. Nothing else.
+`G-Release`, `G-Final` — and, since the 2026-08-18 one-vocabulary ruling, any
+`DevBar-*` token. Nothing else.
 
 WHAT IT DOES NOT TOUCH — and this is the load-bearing half. **The word "gate"
 survives wherever it means a check that can fail.** `test_env_gates`,
@@ -58,7 +62,7 @@ heuristic that can be satisfied by accident is how the vocabulary grows back
 through the enforcer meant to stop it.
 
 SEVERITY IS WARN-FIRST, promoted by `--strict` (the harness wires `--strict` from
-the `DevBar-Tests` bar on, exactly like `check_trajectory`). A repo mid-conversion
+the `DevStg-Tests` bar on, exactly like `check_trajectory`). A repo mid-conversion
 should see every site without being blocked; a repo past its requirements bar has
 no excuse. `--list-scope` prints the scope decision for every file it considered,
 so an argument about whether a surface is live or historical is settled by running
@@ -76,16 +80,33 @@ from pathlib import Path
 
 # The retired TAGS, as whole words. `G-Release`/`G-Final` are matched before the
 # bare digits by putting them first in the alternation.
-RETIRED_TAG_RE = re.compile(r"\bG(?:-Release|-Final|0|1|2|3)\b")
+#
+# THE `DevBar-*` PREFIX JOINED THIS SET 2026-08-18 (owner ruling: one vocabulary).
+# It rides the SAME regex rather than a second checker for the reason the `G*`
+# tags ride one: a reader who trips either has made ONE mistake — a retired
+# spelling for a live concept — and two findings for one mistake is how a checker
+# gets scrolled past. The ruling that created this file made the enforcer a
+# CONDITION of the sweep rather than a follow-up ("the sweep lands WITH its
+# enforcer or attention becomes the only thing holding the edits in place"); that
+# condition binds this sweep identically, which is why the prefix is refused in
+# the same commit that converts it.
+RETIRED_TAG_RE = re.compile(r"\bG(?:-Release|-Final|0|1|2|3)\b|\bDevBar-\w+")
 
 # The canonical replacements, printed in the finding so the fix is in the message.
 SUGGEST = {
-    "G0": "DevBar-Below (the internal sentinel) / DevStg-Needs (the rung)",
-    "G1": "DevBar-Reqs (the bar) / DevStg-Reqs (the rung)",
-    "G2": "DevBar-Tests (the bar) / DevStg-Tests (the rung)",
-    "G3": "DevBar-Release (the bar) / DevStg-Impl or DevStg-Release (the rung)",
-    "G-Release": "DevBar-Release / DevStg-Release",
+    "G0": "DevStg-Below (the internal sentinel) / DevStg-Needs (the rung)",
+    "G1": "DevStg-Reqs (cleared) / DevStg-Reqs (the rung in work)",
+    "G2": "DevStg-Tests (cleared) / DevStg-Tests (the rung in work)",
+    "G3": "DevStg-Impl (cleared) / DevStg-Impl or DevStg-Release (the rung)",
+    "G-Release": "DevStg-Impl (cleared) / DevStg-Release (the rung)",
     "G-Final": "the owner's final read (final_review), which is its own dial",
+    # The prefix swap is 1:1 EXCEPT for Release, and that exception is the whole
+    # reason these are spelled out rather than described as "drop the Bar".
+    "DevBar-Reqs": "DevStg-Reqs",
+    "DevBar-Tests": "DevStg-Tests",
+    "DevBar-Below": "DevStg-Below",
+    "DevBar-Release": "DevStg-Impl - NOT DevStg-Release: that bar closes the Impl "
+    "rung, and DevStg-Release sits outside the derived range entirely",
 }
 
 # In-file markers. Kept as plain strings so a file can carry one in whatever
@@ -261,7 +282,7 @@ def main():
         "--strict",
         action="store_true",
         help="promote findings from WARN to ERROR (exit 1). The harness wires "
-        "this from the DevBar-Tests bar on, like check_trajectory.",
+        "this from the DevStg-Tests bar on, like check_trajectory.",
     )
     ap.add_argument(
         "--list-scope",

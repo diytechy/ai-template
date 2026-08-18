@@ -88,7 +88,7 @@ from conftest import ROOT, SCRIPTS, run_py, skip_without_env_gates
 #   3. ITS GREEN IS NOT VACUOUS. Measured while choosing: re-syncing forward from
 #      this commit leaves a harness that runs four real steps and passes. Reaching
 #      further back (e.g. `main`'s tip, 2026-06-28) produces a scaffold whose
-#      surviving old `check.py` prints "No checks defined for gate DevBar-Reqs" and exits
+#      surviving old `check.py` prints "No checks defined for gate DevStg-Reqs" and exits
 #      0 — a green that means nothing. A test whose bar can be met vacuously is
 #      worse than no test, so the pin stops on the near side of that line and
 #      `test_old_kit_scaffold_syncs_forward_to_a_green_harness` asserts against
@@ -246,7 +246,7 @@ def test_old_kit_scaffold_syncs_forward_to_a_green_harness(resync):
     # The bar is passed in the RETIRED vocabulary, deliberately. The re-synced
     # repo still carries its OLD check.py — that is this module's whole premise,
     # stated in the docstring above — and that binary knows only the retired
-    # tags. Passing the canonical `DevBar-Reqs` here would test the CURRENT kit's
+    # tags. Passing the canonical `DevStg-Reqs` here would test the CURRENT kit's
     # argparse against a scaffold that does not have it, and would hide the thing
     # worth pinning: OI-21's conversion did not break a re-synced adopter whose
     # harness predates it. When re-sync becomes overwrite-capable for check.py,

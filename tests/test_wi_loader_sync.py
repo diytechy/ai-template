@@ -208,7 +208,7 @@ CONVERTIBLE_ROWS = [
         # The WI-388 strictness key, carried where the cells most likely to be
         # lost in translation live: bar declares verification strictness for
         # this row's lane; it never affects scheduling.
-        "Bar": "DevBar-Tests",
+        "Bar": "DevStg-Tests",
         "Supersedes": "WI-000",
         # SN-032 brief routing, carried on the same "most likely to be lost
         # in translation" row as `Bar`: it selects which adjudicator brief
@@ -351,7 +351,7 @@ def test_the_bar_key_is_carried_by_every_reader(both_homes):
         mod.read_spec_rows(work_dir) for _name, mod in SPEC_READERS
     ):
         by_id = {r["WI-ID"]: r for r in rows}
-        assert by_id["WI-002"]["Bar"] == "DevBar-Tests"
+        assert by_id["WI-002"]["Bar"] == "DevStg-Tests"
         assert by_id["WI-001"]["Bar"] == ""
     # Never a scheduling input: the WI dicts the frontier is computed from
     # carry no bar key at all — structurally, not by convention.

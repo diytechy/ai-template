@@ -682,10 +682,10 @@ def _declare_level(root, level):
         fh.write(
             "# DERIVED GATE\n"
             "# basis: SN=1 SR=2 LLR=1 TC=0 drafted=0 modified=2 uncovered=0 "
-            "computed=DevBar-Tests ex-draft=DevBar-Tests phase=1 "
-            "per-phase=1=DevBar-Tests stage=DevStg-Tests stage-ord=5 "
+            "computed=DevStg-Tests ex-draft=DevStg-Tests phase=1 "
+            "per-phase=1=DevStg-Tests stage=DevStg-Tests stage-ord=5 "
             "stage-of=8\n"
-            "DevBar-Tests\n"
+            "DevStg-Tests\n"
         )
 
 

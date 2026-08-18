@@ -14,7 +14,7 @@ resource: "generated"
 | [SN-001](SN-001.md) | An adopting team can add this process to a new or existing repository and get a working g… |
 | [SN-002](SN-002.md) | A reviewer can trust the chain from need to requirement to design to test because it is m… |
 | [SN-003](SN-003.md) | A team in any language can use this process: it is stack-agnostic, and a non-Python proje… |
-| [SN-004](SN-004.md) | A team advances only through explicit approval gates (DevBar-Reqs→DevBar-Tests→DevBar-Rel… |
+| [SN-004](SN-004.md) | A team advances only through explicit approval gates (DevStg-Reqs→DevStg-Tests→DevStg-Imp… |
 | [SN-005](SN-005.md) | AI agents and humans work from the same playbook, and the process is enforced agent-neutr… |
 | [SN-006](SN-006.md) | An agent can run unattended and resume from repository text alone. Such a run never waits… |
 | [SN-007](SN-007.md) | The people maintaining this kit hold it to its own standard: it stays traceable and teste… |

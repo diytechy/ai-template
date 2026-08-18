@@ -701,7 +701,7 @@ def test_a4_every_css_fill_token_is_classified_and_floor_checked(tmp_path):
     2.98:1 in dark), and `container-fill` roles keep the page's own `--text`
     readable on them in both themes."""
     with_gate(
-        tmp_path, "DevBar-Tests"
+        tmp_path, "DevStg-Tests"
     )  # the Process tab renders --slot, the widest set
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)

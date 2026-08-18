@@ -35,7 +35,7 @@ vocab = load_script("check_vocab")
 
 # --- condition 1: no lexical comparison of a ladder value ----------------------
 
-# A comparison operator with a `DevStg-`/`DevBar-` literal or a known
+# A comparison operator with a `DevStg-`/`DevStg-` literal or a known
 # ladder-valued expression on either side. Deliberately a GREP and not an AST
 # walk: the rule is about what a reader can see in the source, the false-positive
 # cost is one `# noqa`-style exemption, and an AST rule would silently stop
@@ -89,7 +89,7 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
     exact shapes the ruling names, including the one that USED to be correct."""
     must_catch = [
         'if stage > "DevStg-Reqs":',
-        'return bar >= "DevBar-Tests"',
+        'return bar >= "DevStg-Tests"',
         "top = max(bars)",
         "for g in sorted(gates, reverse=True):",
     ]
@@ -97,7 +97,7 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
         assert _LEXICAL.search(line), line
     must_not_catch = [
         "assert stage_ord(a) > stage_ord(b)",
-        'STAGE_BAR[STAGE_REQS] = "DevBar-Reqs"',
+        'STAGE_BAR[STAGE_REQS] = "DevStg-Reqs"',
         "max(bars, key=_BAR_GATES.index)",
         "sorted(higher_bars, key=bar_ord, reverse=True)",
     ]
@@ -186,7 +186,7 @@ def test_a_retired_tag_in_a_live_surface_is_reported(planted):
 def test_severity_is_WARN_FIRST_and_promotes_under_strict(planted):
     """The ruled posture. A repo mid-conversion must SEE every remaining site
     without being blocked by it; a repo past its requirements bar has no excuse.
-    The harness wires `--strict` from DevBar-Tests on, exactly like
+    The harness wires `--strict` from DevStg-Tests on, exactly like
     check_trajectory."""
     (planted / "docs" / "status.md").write_text("at G2\n", encoding="utf-8")
     warn = _run_vocab(planted)

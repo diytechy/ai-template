@@ -278,7 +278,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     """The coverage hole the status unification found, closed.
 
     `draft_need_ids` / `is_draft_need` own the SN tier's maturity — the derived
-    gate drops to DevBar-Below while any need is drafted, so this predicate is
+    gate drops to DevStg-Below while any need is drafted, so this predicate is
     the whole rung — and this module had ZERO direct tests of it. It was proved
     only sideways, through `test_check_docs` and `test_rule_sync`, which is how
     the field managed to be spelled three different ways

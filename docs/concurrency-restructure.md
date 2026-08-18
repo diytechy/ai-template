@@ -626,7 +626,7 @@ never a forgotten one (the stale-reason lesson).
      (gen_arch_map scans empty under any dot-prefixed absolute path —
      pre-existing, isolated at conversion).
   **Spine amendment (window closed at the 2026-07-29 sitting — all 26 rows
-  + TC-133 blessed, DevBar-Release re-derived):** 15 dispatcher SRs superseded →
+  + TC-133 blessed, DevStg-Impl re-derived):** 15 dispatcher SRs superseded →
   SR-132 (the TC-099 pattern: `Superseded:` titles, Inspection, no LLRs,
   the new TC-133 + `test_phase5_supersession_rows_...` pin the map); 11
   SRs re-grounded (SR-026/057/059/060/107/108/115/116/124/125/131); 15

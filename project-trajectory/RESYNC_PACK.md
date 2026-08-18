@@ -231,7 +231,7 @@ range. Entries are ordered **oldest first** — apply them in that order.
 
 Adoptions created `docs/test/test-cases.csv` before the `Tier` column existed.
 `trace.py --strict-schema` requires `Tier` as a non-empty field (it validates the
-full TC schema at DevBar-Release). Migration is mechanical: add a `Tier` column and set a
+full TC schema at DevStg-Impl). Migration is mechanical: add a `Tier` column and set a
 default of `Full`; mark hardware/network/interactive cases `Release` so they
 don't run on unattended CI. Once the column is present, `--strict-schema` also
 validates that values are in `{Smoke, Full, Release}`, so tighten any free-text
@@ -399,12 +399,12 @@ out of the kit's scope; decide that deliberately before publishing.
 The test-case registry gains an **`Evidence`** field (between `Automated` and
 `Status`) naming the concrete test — a pytest node, a script path, or a
 procedure-doc link (inspection-only text, never mechanically resolved). Optional
-in general, but from DevBar-Release `--strict-schema` **requires it non-empty on
+in general, but from DevStg-Impl `--strict-schema` **requires it non-empty on
 `Automated=Yes` rows** — a claimed-automated test with no cited location is a soft
 false-green; a legacy registry without the column reads as empty and is flagged
 the same way. Migration: add the field, then move any test pointers you had
 squeezed into `Parameters` (the old `node=…` workaround) into `Evidence`,
-restoring `Parameters` to dimensional inputs only. Below DevBar-Release a legacy file keeps
+restoring `Parameters` to dimensional inputs only. Below DevStg-Impl a legacy file keeps
 passing untouched.
 
 ### The component / workstream schema bundle [since 73313e69]
@@ -428,7 +428,7 @@ legacy file + ids are still read, and both may coexist mid-migration.
 ### The OKF knowledge bundle [since 27ebc29d]
 
 Newer kits export the spine registries as a generated `docs/okf/` bundle, **on by
-default** with a pre-commit + DevBar-Release freshness gate. After a re-sync, either run
+default** with a pre-commit + DevStg-Impl freshness gate. After a re-sync, either run
 `python scripts/gen_okf.py` once and commit the bundle (it stays fresh via the
 hook from then on), or opt out with `okf_export = false` under `[checks]` in
 `docs/process.toml` — a repo with placeholder-only registries needs neither
@@ -455,7 +455,7 @@ the SR-002-era gap), the interfaces template gains a `Notes` column (legacy rows
 read it empty), and `check_trajectory.py` runs a warn-first **connectivity
 coverage** over the arch-map inventory. It is **opt-out, default-on**, so after a
 re-sync a **multi-module** repo with no declared seams starts warning
-"connectivity undeclared" at the hook and DevBar-Release. That never fails a gate — the warns
+"connectivity undeclared" at the hook and DevStg-Impl. That never fails a gate — the warns
 only nudge. To act on them, declare `IF-###` rows (process.md §8; use a
 `source`/`sink` first-word `Notes` marker for a deliberate pure source/sink) and
 regenerate the arch-map + `PROJECT_STATE.html`; to silence the whole layer, set
@@ -522,10 +522,10 @@ vocabulary rule).
 
 ### `--require-verified` widened to method-blind [since a686bcc8]
 
-The DevBar-Release traceability floor `trace.py --require-verified` now demands
+The DevStg-Impl traceability floor `trace.py --require-verified` now demands
 `Status=Verified` for **every** ratified, in-phase SR regardless of its
 `Verification` method (was `Verification=Test` only), matching
-`derive_gate.sr_gate` — which already blocked DevBar-Release for any unverified decomposed SR.
+`derive_gate.sr_gate` — which already blocked DevStg-Impl for any unverified decomposed SR.
 **Downstream impact:** a repo passing `--require-verified` today with a non-Test SR
 (Demonstration / Manual / Analysis / Inspection / Attest / Critique) still below
 `Verified` will now fail — it was never actually at the derived gate, only
@@ -630,7 +630,7 @@ who never used the surface pays nothing.
 
 Spine `Status` gains a third recognized value, **`Modified`** — a
 post-attestation amendment owing a re-attest (canonical semantics: process.md
-§7): the derived gate reads DevBar-Tests for its phase until the sitting flips it back
+§7): the derived gate reads DevStg-Tests for its phase until the sitting flips it back
 (`Modified`→`Verified`, or →`Planned` when the amendment invalidated the
 evidence), the pending-owner-actions projection carries one line per
 Draft/Modified SR, a warn-first `--staged` check flags an amendment without the
@@ -1035,9 +1035,9 @@ place:
   `LLReqs` · `Tests` · `Impl` · `Release`. A repo is **IN** a stage. The label is
   the identifier; the position is DERIVED (`stage-ord=`/`stage-of=` on the basis
   line), so an inserted rung re-numbers everything and moves no citation.
-- **Three bars** — `DevBar-Reqs` · `DevBar-Tests` · `DevBar-Release`, each named
+- **Three bars** — `DevStg-Reqs` · `DevStg-Tests` · `DevStg-Impl`, each named
   for the top rung it certifies (Needs…Reqs, Arch…Tests, Impl…Release). You
-  **CLEAR** a bar. `DevBar-Below` is an internal sentinel, not a bar.
+  **CLEAR** a bar. `DevStg-Below` is an internal sentinel, not a bar.
 
 **The word "gate" survives** wherever it means a check that can fail — the
 `docs/gate` path, `derive_gate.py`, `check.py --gate`, "the freshness gate". Only
@@ -1046,7 +1046,7 @@ conversion is tag-scoped, and `scripts/check_vocab.py` (new, shipped) tells you
 which of your own lines still carry a tag.
 
 **Nothing breaks on day one.** Every reader that could receive a retired tag
-translates it: `check.py --gate G2` runs `DevBar-Tests` and warns once;
+translates it: `check.py --gate G2` runs `DevStg-Tests` and warns once;
 `docs/stack.ini` `gates = G2 G3` translates silently; a WI's `bar: G3`
 translates silently. So your pipeline stays green through the re-sync and you
 convert at your own pace.
@@ -1090,7 +1090,7 @@ convert at your own pace.
    passes. `python scripts/bootstrap.py --dest . --sync`.
 
 **Then run `python scripts/check_vocab.py --root .`** and work the list. It is
-**warn-first** at the requirements bar and promotes to ERROR from `DevBar-Tests`
+**warn-first** at the requirements bar and promotes to ERROR from `DevStg-Tests`
 on, so a repo mid-conversion sees every site without being blocked.
 
 **Also converted, for reference:** the `[phase]-[g1|g2]` WI-title archetype
@@ -1300,7 +1300,7 @@ still reads them, unchanged.
 
 *(Anchored at the first commit of the D-9 mechanical prefix; the mechanism lands across the three commits that follow it. Take them as one set.)*
 
-**`Status` is now a CLOSED vocabulary on the spine — `{Draft, Planned, Modified, Verified}` for SR, LLR and TC — and an out-of-vocabulary value is an INTEGRITY finding**, which means it reds `trace.py --strict-integrity` and the pre-commit hook at every gate, not just at DevBar-Release. This is the one entry here that can break a repo on the re-sync itself. If your LLR or TC rows carry maturity words of your own (`Implemented`, `In-Review`, …) — which the kit's own prose invited until now — map them onto the four before you take this. `Planned` is the closest fit for "ratified, not yet Verified"; the derived gate reads LLR/TC status only for `Draft`, so the mapping does not move your bar. Why the closure: the `Status` ladder D-9 is heading for renames these values, and a retired word that no predicate recognizes vanishes SILENTLY from the re-attest brief — an open vocabulary has no way to say "this row was left behind".
+**`Status` is now a CLOSED vocabulary on the spine — `{Draft, Planned, Modified, Verified}` for SR, LLR and TC — and an out-of-vocabulary value is an INTEGRITY finding**, which means it reds `trace.py --strict-integrity` and the pre-commit hook at every gate, not just at DevStg-Impl. This is the one entry here that can break a repo on the re-sync itself. If your LLR or TC rows carry maturity words of your own (`Implemented`, `In-Review`, …) — which the kit's own prose invited until now — map them onto the four before you take this. `Planned` is the closest fit for "ratified, not yet Verified"; the derived gate reads LLR/TC status only for `Draft`, so the mapping does not move your bar. Why the closure: the `Status` ladder D-9 is heading for renames these values, and a retired word that no predicate recognizes vanishes SILENTLY from the re-attest brief — an open vocabulary has no way to say "this row was left behind".
 
 **What an approval records changed, and one CLI surface was deleted.** Until
 now, "has this attested row changed since a human blessed it?" was answered by
@@ -1398,11 +1398,11 @@ your extra values onto the three before re-syncing — anything below approval i
 integrity finding.
 
 **A behaviour change to expect on the derived gate.** `sr_bar` now ceilings at
-`DevBar-Tests`: `DevBar-Release` is unreachable from a Status cell, and the
-rendered bar says so — `DevBar-Tests (Release: pending harness driver)`. This is
+`DevStg-Tests`: `DevStg-Impl` is unreachable from a Status cell, and the
+rendered bar says so — `DevStg-Tests (Release: pending harness driver)`. This is
 deliberate and it is what keeps the `Planned`→`Approved` fold from RAISING your
 derived gate for rows that never passed anything. `check.py --gate
-DevBar-Release` stays explicitly invocable at any time.
+DevStg-Impl` stays explicitly invocable at any time.
 
 ### SN template: the `edge` row kind retires; `tags` documented [since 166b406d]
 
@@ -1604,10 +1604,10 @@ as the word "gate"**, which survives wherever it means a check that can fail
 
 | retired tag | now | what it names |
 |---|---|---|
-| `G1` | `DevBar-Reqs` | the bar certifying `DevStg-Needs` … `DevStg-Reqs` |
-| `G2` | `DevBar-Tests` | the bar certifying `DevStg-Arch` … `DevStg-Tests` |
-| `G3` | `DevBar-Release` | the bar certifying `DevStg-Impl` |
-| `G0` | `DevBar-Below` | the internal below-the-floor sentinel — never a bar |
+| `G1` | `DevStg-Reqs` | the bar certifying `DevStg-Needs` … `DevStg-Reqs` |
+| `G2` | `DevStg-Tests` | the bar certifying `DevStg-Arch` … `DevStg-Tests` |
+| `G3` | `DevStg-Impl` | the bar certifying `DevStg-Impl` |
+| `G0` | `DevStg-Below` | the internal below-the-floor sentinel — never a bar |
 | `G-Release` | `DevStg-Release` | the release-readiness **rung** (never a mechanized bar) |
 | `G-Final` | the owner's final read | the `final_review` dial, which is its own axis |
 | `[phase]-[g1]` / `-[g2]` | `[phase]-[reqs]` / `-[tests]` | the phase-anchor archetype for NEW titles only |
@@ -1637,6 +1637,45 @@ If you keep a customized `registries/system-requirements.template.toml`, its
 `-000` example row's `requirement` value is now the EARS grammar itself — a
 kit-owned teaching cell worth taking, but a no-op if you deleted the example row
 on your first real entry, as intended.
+
+### Reserved: `DevBar-*` retires — ONE vocabulary, the verb carries the axis
+
+**The `DevBar-` prefix is gone.** A repo is **IN** a stage and **CLEARS** a
+stage, and the same `DevStg-` token names both readings — what tells them apart
+is the sentence around the token, never a second spelling. The three clearable
+rungs are a strict subset of the eight.
+
+**The mapping is NOT a prefix swap. Read the third row twice:**
+
+| retired | now | why |
+|---|---|---|
+| `DevBar-Reqs` | `DevStg-Reqs` | 1:1 |
+| `DevBar-Tests` | `DevStg-Tests` | 1:1 |
+| `DevBar-Release` | **`DevStg-Impl`** | **not 1:1.** That bar always certified the **Impl** rung — `DevStg-Release` sits outside the derived range entirely (no value runs it). The old pair sat three letters apart meaning a strictness level and a per-release milestone; that trap is what the rename removes. |
+| `DevBar-Below` | `DevStg-Below` | 1:1 (still the internal sentinel, still not a stage anyone is in) |
+
+**Nothing breaks at the re-sync.** All four retired spellings are accepted as
+read-side aliases wherever a value arrives — `check.py`'s flag, `docs/stack.ini`
+`gates=`, a WI's `bar:` frontmatter — exactly as the `G1`/`G2`/`G3` tags have
+been. `DevBar-Release` resolves to `DevStg-Impl` through that table, so an
+un-migrated hook keeps selecting the same steps it always did.
+
+**The flag renamed too: `--gate` → `--stage-cleared`.** The value is now a stage
+token, so the flag has to say which reading it means — the stage being *cleared*,
+not the stage in work. **`--gate` is still accepted, silently and indefinitely**:
+it is a string your hooks, CI and launchers pass literally, and the word "gate"
+was never retired where it means a check that can fail. `docs/gate` and
+`derive_gate.py` **keep their names** for the same reason.
+
+**What to do:** take the kit-owned scripts wholesale, then `grep -rn 'DevBar-'`
+your own prose, `docs/stack.ini` and CI. Convert at your pace — and if you keep
+a hand-written `docs/gate`, note that it regenerates: `python
+scripts/derive_gate.py`. `scripts/check_vocab.py` now refuses the prefix in
+authored files (warn-first, `--strict` gates), with your history, archives and
+attestation quotes carved out as always — a record of what happened is not
+rewritten.
+
+*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
 
 ---
 

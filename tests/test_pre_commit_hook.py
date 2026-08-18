@@ -165,7 +165,7 @@ def test_hook_trajectory_step_is_the_ra_floor(scaffold):
     # S1: the hook runs `check.py --run-step trajectory` (the SSOT floor). It is
     # WARN-FIRST (gate=all): only R-A (Deliverable non-empty iff done) is a hard
     # error at commit — an incoherent WI handoff must block; the softer status.md
-    # / SpecRef rules (R-B..R-E) warn here and gate only at DevBar-Tests+ (--strict).
+    # / SpecRef rules (R-B..R-E) warn here and gate only at DevStg-Tests+ (--strict).
     make_minimal_project(scaffold)
 
     def _wi_001(deliverable, specref):
@@ -218,29 +218,29 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
     # No --gate (what the pre-commit hook passes): the floor stays warn-first even
     # though the scaffold's own docs/gate declares a real bar — a defaulted --gate
     # must not be resolved through docs/gate, or every commit would be held to the
-    # gate bar. The declared value is DevBar-Tests since OI-30 D2 ceilinged
+    # gate bar. The declared value is DevStg-Tests since OI-30 D2 ceilinged
     # `sr_bar`; what matters here is only that it is ABOVE the warn-first floor.
     gate_lines = (scaffold / "docs" / "gate").read_text(encoding="utf-8").splitlines()
     declared = [ln.strip() for ln in gate_lines if ln.strip()[:1] not in ("", "#")]
-    assert declared == ["DevBar-Tests"], declared
+    assert declared == ["DevStg-Tests"], declared
     warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
-    # Explicitly asking for the DevBar-Release bar really gates it (the WI-354 session read
-    # 18/18 PASS from this command while two real DevBar-Release errors were live).
+    # Explicitly asking for the DevStg-Impl bar really gates it (the WI-354 session read
+    # 18/18 PASS from this command while two real DevStg-Impl errors were live).
     gated = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Release", "--run-steps", "trajectory"],
+        ["scripts/check.py", "--gate", "DevStg-Impl", "--run-steps", "trajectory"],
         cwd=scaffold,
     )
     assert gated.returncode != 0, (
-        "--gate DevBar-Release --run-steps must run the --strict command"
+        "--gate DevStg-Impl --run-steps must run the --strict command"
     )
     assert "R-E" in (gated.stdout + gated.stderr)
-    # Not a blanket "--gate DevBar-Release always fails": repair the SpecRef and it goes green.
+    # Not a blanket "--gate DevStg-Impl always fails": repair the SpecRef and it goes green.
     (scaffold / "docs" / "specs").mkdir(parents=True, exist_ok=True)
     (scaffold / "docs" / "specs" / "WI-001.md").write_text("# spec\n", "utf-8")
     _wi_001("docs/specs/WI-001.md")
     ok = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Release", "--run-steps", "trajectory"],
+        ["scripts/check.py", "--gate", "DevStg-Impl", "--run-steps", "trajectory"],
         cwd=scaffold,
     )
     assert ok.returncode == 0, ok.stdout + ok.stderr
@@ -248,16 +248,16 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
 
 def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
     # The hook's traceability command is --strict-integrity: a duplicated id is
-    # wrong at any stage and must block, but an orphan is a DevBar-Tests+ *gate* criterion
-    # (a mid-DevBar-Reqs registry legitimately has SRs with no LLR/TC) and must NOT block
-    # a commit — the regression that made the hook wedge every DevBar-Reqs-stage commit.
+    # wrong at any stage and must block, but an orphan is a DevStg-Tests+ *gate* criterion
+    # (a mid-DevStg-Reqs registry legitimately has SRs with no LLR/TC) and must NOT block
+    # a commit — the regression that made the hook wedge every DevStg-Reqs-stage commit.
     make_minimal_project(scaffold)
     llr = scaffold / "docs" / "requirements" / "low-level-requirements.csv"
     llr.write_text(LLRS + LLRS.splitlines()[1] + "\n", encoding="utf-8")
     trace = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert trace.returncode != 0, "duplicate LLR id must fail --strict-integrity"
 
-    # Restore, then simulate end-of-DevBar-Reqs: an SR exists, its LLR/TC don't yet.
+    # Restore, then simulate end-of-DevStg-Reqs: an SR exists, its LLR/TC don't yet.
     llr.write_text(LLRS.splitlines()[0] + "\n", encoding="utf-8")
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Status\n",
@@ -267,7 +267,7 @@ def test_hook_blocks_duplicate_id_but_not_orphan(scaffold):
     assert strict.returncode != 0, "orphans still fail the gate-scoped --strict"
     floor = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
     assert floor.returncode == 0, (
-        "a DevBar-Reqs-stage registry must stay committable: "
+        "a DevStg-Reqs-stage registry must stay committable: "
         + floor.stdout
         + floor.stderr
     )

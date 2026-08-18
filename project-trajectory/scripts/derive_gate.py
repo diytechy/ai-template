@@ -2,7 +2,7 @@
 """Derive the harness BAR from artifact states — the hybrid, cached selector.
 
 RETIRED-VOCABULARY DECLARATION SITE (check_vocab: allow-file) — this module is
-the ONE home of the `G0`/`G1`/`G2`/`G3` -> `DevBar-*` translation table, so the
+the ONE home of the `G0`/`G1`/`G2`/`G3` -> `DevStg-*` translation table, so the
 retired tags appear here by design and the vocabulary enforcer exempts the file.
 Nowhere else in the kit may name them outside a read-side alias lookup.
 
@@ -30,47 +30,47 @@ freshness discipline the kit already runs for the arch-map / OKF / dashboard.
 `docs/gate` — the value is simply derived now, not declared.
 
 Per-artifact bar (docs/archive/specs/derived-gate-model.2026-07-20.md §3), on the
-internal ladder DevBar-Below < DevBar-Reqs < DevBar-Tests < DevBar-Release.
-**`DevBar-Below` is NOT a bar** — nothing clears it. It survives only as the
+internal ladder DevStg-Below < DevStg-Reqs < DevStg-Tests < DevStg-Impl.
+**`DevStg-Below` is NOT a bar** — nothing clears it. It survives only as the
 arithmetic sentinel for *below the lowest runnable bar*, because the min-fold
-needs a value under `DevBar-Reqs`. Say "stage Needs / Boundary" of the repo; say
-`DevBar-Below` only of this internal fold:
-  - **SN** — Drafted => `DevBar-Below`; ratified AND cited by >=1 SR `SN-Refs` => it
-    has no obligation past `DevBar-Reqs`, so it never caps the repo (contributes
-    `DevBar-Release` to the min); ratified but cited by NO SR (WI-401) =>
-    `DevBar-Below` — a ratified-but-unanswered need means `DevBar-Reqs` is not
+needs a value under `DevStg-Reqs`. Say "stage Needs / Boundary" of the repo; say
+`DevStg-Below` only of this internal fold:
+  - **SN** — Drafted => `DevStg-Below`; ratified AND cited by >=1 SR `SN-Refs` => it
+    has no obligation past `DevStg-Reqs`, so it never caps the repo (contributes
+    `DevStg-Impl` to the min); ratified but cited by NO SR (WI-401) =>
+    `DevStg-Below` — a ratified-but-unanswered need means `DevStg-Reqs` is not
     earned. The `uncovered=N` basis count surfaces the cause beside
     `drafted=N`/`modified=N` (a Drafted SN is exempt from the coverage rung — it
-    already reads `DevBar-Below` via the draft rung, one fact one rung; the
+    already reads `DevStg-Below` via the draft rung, one fact one rung; the
     itemized "SN has no SR" listing stays trace.py's orphan finding at
-    `DevBar-Tests` strictness, this rung being the bar-input half of that split).
-  - **SR** — Drafted (Status) => `DevBar-Below`; ratified but not decomposed =>
-    `DevBar-Reqs`; decomposed (has its required LLR — unless the Verification is
-    LLR-exempt Analysis/Inspection/Attest — AND a TC) => `DevBar-Tests`, WHICH IS
-    THE CEILING (OI-30 D2: `DevBar-Release` is unreachable-by-cell until the
+    `DevStg-Tests` strictness, this rung being the bar-input half of that split).
+  - **SR** — Drafted (Status) => `DevStg-Below`; ratified but not decomposed =>
+    `DevStg-Reqs`; decomposed (has its required LLR — unless the Verification is
+    LLR-exempt Analysis/Inspection/Attest — AND a TC) => `DevStg-Tests`, WHICH IS
+    THE CEILING (OI-30 D2: `DevStg-Impl` is unreachable-by-cell until the
     harness driver computes it from test evidence — see `sr_bar`). A `Modified`
     SR (post-approval amendment, WI-316) needs no rule of its own: it is
-    decomposed-but-not-approved, so it reads `DevBar-Tests` — the deliberate pull
+    decomposed-but-not-approved, so it reads `DevStg-Tests` — the deliberate pull
     that makes a pending re-attest visible. The `modified=N` basis count surfaces
     it beside `drafted=N`.
-  - **LLR / TC** — Drafted => `DevBar-Below` (the new-phase signal). Once present,
+  - **LLR / TC** — Drafted => `DevStg-Below` (the new-phase signal). Once present,
     its Status does not independently gate: the SR's `Approved` status drives
-    `DevBar-Tests` -> `DevBar-Release` (matching trace.py's --require-verified,
+    `DevStg-Tests` -> `DevStg-Impl` (matching trace.py's --require-verified,
     which checks SRs, not LLR/TC status), so a present LLR/TC never caps below
-    `DevBar-Release`.
+    `DevStg-Impl`.
 
 Aggregation: the derived value = **min over all in-scope artifacts** (a phase's
 value is the min over that phase's artifacts; the repo's is the min over phases,
 which is the same set — also reported per-phase). A repo with **no** real SRs yet
-(a fresh scaffold) derives **`DevBar-Reqs`** (the requirements-drafting start),
-never a vacuous `DevBar-Release`. A draft artifact reads `DevBar-Below`, so
+(a fresh scaffold) derives **`DevStg-Reqs`** (the requirements-drafting start),
+never a vacuous `DevStg-Impl`. A draft artifact reads `DevStg-Below`, so
 introducing draft/reopened content **drops** the derived value — the signal that a
 new phase is due (the phase-anchor detector lives in check_trajectory). The cached
-runnable value is floored at `DevBar-Reqs` (check.py's bar vocabulary is the three
-runnable bars); the raw computed level, including a `DevBar-Below` drop, is
+runnable value is floored at `DevStg-Reqs` (check.py's bar vocabulary is the three
+runnable bars); the raw computed level, including a `DevStg-Below` drop, is
 recorded in the `# basis:` comment so nothing hides. Because it is a min and a
 floor, the value answers **"what must still be cleared"**, never "what has been
-achieved": a mature spine with one reopened draft derives `DevBar-Reqs` exactly as
+achieved": a mature spine with one reopened draft derives `DevStg-Reqs` exactly as
 a fresh scaffold does, and it is `ex-draft=`/`stage=` on the basis line that tell
 the two apart.
 
@@ -84,7 +84,7 @@ the recursion argument and the applies-when on the two inserted rungs.
 This script reads STATES and picks the LEVEL; `trace.py` (run by check.py at that
 level) ENFORCES the structure — orphans/decomposition/verified — at the derived
 bar. The two compose: a draft is exempt from trace's orphan rule (so it can live
-in the live spine) yet sits at `DevBar-Below` here (so it drops the bar). Auditing
+in the live spine) yet sits at `DevStg-Below` here (so it drops the bar). Auditing
 correctness is the whole point, so every rule is fixture-tested.
 
 Note: the derived range is the three runnable bars (the SN/SR/LLR/TC-derivable
@@ -122,29 +122,38 @@ except ImportError:  # pragma: no cover - in-process fallback
     import spine_carrier
 
 # --- THE BAR LADDER (the strictness axis) --------------------------------------
-# The derived bar. `DevBar-Reqs` / `DevBar-Tests` / `DevBar-Release` are the three
-# runnable bars check.py knows; `DevBar-Below` is the INTERNAL sentinel for "below
+# The derived bar. `DevStg-Reqs` / `DevStg-Tests` / `DevStg-Impl` are the three
+# runnable bars check.py knows; `DevStg-Below` is the INTERNAL sentinel for "below
 # the lowest runnable bar" (pre-ratification / drafted), not a bar anyone clears
 # or sits at — see the module docstring. BAR_NAMES maps the internal int back to
 # the marker string.
 #
-# THESE REPLACE THE RETIRED `G0`/`G1`/`G2`/`G3` TAGS (OI-21, ruled 2026-08-13).
-# Each bar is named for the TOP RUNG OF THE LADDER IT CERTIFIES, so the name says
-# what was cleared instead of a number a reader must decode:
+# ONE VOCABULARY, TWO READINGS (owner ruling 2026-08-18). The `DevBar-*` prefix
+# is retired: a repo is IN a stage and CLEARS a stage, and the SAME token names
+# both — what differentiates them is the VERB, never a second spelling. So the
+# clearable set is a strict SUBSET of the eight rungs, and a bar is named for the
+# rung it CLOSES OUT, which is what the event is about:
 #
-#     DevBar-Reqs     certifies rungs 0-2  (Needs, Boundary, Reqs)      was G1
-#     DevBar-Tests    certifies rungs 3-5  (Arch, LLReqs, Tests)        was G2
-#     DevBar-Release  certifies rungs 6-7  (Impl, Release)              was G3
+#     clearing DevStg-Reqs   closes Needs, Boundary, Reqs  -> enters DevStg-Arch
+#     clearing DevStg-Tests  closes Arch, LLReqs, Tests    -> enters DevStg-Impl
+#     clearing DevStg-Impl   closes Impl                   -> enters DevStg-Release
 #
-# The retired tags survive ONLY as read-side aliases (check.py's `--gate`, this
-# repo's `docs/stack.ini` `gates=`, a WI's `bar:` frontmatter) so an adopter's
-# hooks and CI keep working across the re-sync; nothing authored anew uses them.
+# `DevStg-Impl` (was `DevBar-Release`) is the rename that is NOT a copy/replace,
+# and the correction is deliberate: this bar never certified the Release rung —
+# `DevStg-Release` sits OUTSIDE the derived range entirely (no `--stage-cleared`
+# value runs it; see the registry-machinery reference). The old name and the live
+# `DevStg-Release` rung differed by three letters while meaning a strictness
+# level and a per-release milestone; collapsing removes that trap.
+#
+# The retired spellings survive ONLY as read-side aliases so an adopter's hooks,
+# CI and `docs/stack.ini` keep working across the re-sync; nothing authored anew
+# uses them.
 BAR_BELOW, BAR_REQS, BAR_TESTS, BAR_RELEASE = 0, 1, 2, 3
 BAR_NAMES = {
-    BAR_BELOW: "DevBar-Below",
-    BAR_REQS: "DevBar-Reqs",
-    BAR_TESTS: "DevBar-Tests",
-    BAR_RELEASE: "DevBar-Release",
+    BAR_BELOW: "DevStg-Below",
+    BAR_REQS: "DevStg-Reqs",
+    BAR_TESTS: "DevStg-Tests",
+    BAR_RELEASE: "DevStg-Impl",
 }
 # The runnable bars, lowest first — the vocabulary check.py selects steps from.
 BAR_ORDER = [BAR_NAMES[BAR_REQS], BAR_NAMES[BAR_TESTS], BAR_NAMES[BAR_RELEASE]]
@@ -156,6 +165,15 @@ RETIRED_BAR_ALIASES = {
     "G1": BAR_NAMES[BAR_REQS],
     "G2": BAR_NAMES[BAR_TESTS],
     "G3": BAR_NAMES[BAR_RELEASE],
+    # The `DevBar-*` prefix, retired 2026-08-18 for the one-vocabulary ruling.
+    # Same contract as the `G*` row above it: a value an adopter's hook or CI
+    # passes LITERALLY keeps working, and nothing authored anew emits one.
+    # NOTE `DevBar-Release` resolves to `DevStg-Impl`, not to `DevStg-Release` —
+    # the alias carries the correction, which is the whole reason it is a table
+    # rather than a prefix swap.
+    "DevBar-Reqs": BAR_NAMES[BAR_REQS],  # check_vocab: allow
+    "DevBar-Tests": BAR_NAMES[BAR_TESTS],  # check_vocab: allow
+    "DevBar-Release": BAR_NAMES[BAR_RELEASE],  # check_vocab: allow
 }
 
 
@@ -165,7 +183,7 @@ def bar_ord(name):
 
     This is the rule the retired vocabulary broke: `check.py` used to compare gate
     NAMES as strings, which was correct only because `G1 < G2 < G3` happens to
-    alphabetize. `DevBar-Release < DevBar-Reqs < DevBar-Tests` lexically, so a
+    alphabetize. `DevStg-Impl < DevStg-Reqs < DevStg-Tests` lexically, so a
     lexical comparison on the new vocabulary is WRONG — and obviously wrong, which
     is the point. Route every comparison through here."""
     try:
@@ -271,7 +289,7 @@ def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     — a whole-text scrape, so a prose mention counts exactly like a table row
     (registry-machinery-reference §2.1 records the sharp edge: a ratified,
-    uncited prose mention caps the bar at DevBar-Below via the coverage rung). `-000`
+    uncited prose mention caps the bar at DevStg-Below via the coverage rung). `-000`
     excluded. Duplicated from trace.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408) — a divergence here would let the gate and trace's
     itemized listing disagree about which ids the rules run over."""
@@ -313,24 +331,24 @@ def sn_cited_ids(srs):
 
 # --- per-artifact bar rules (docs/archive/specs/derived-gate-model.2026-07-20.md §3) -------------
 # THE CEILING (owner ruling OI-30 D2, 2026-08-15). `sr_bar` stops at
-# `BAR_TESTS`: `DevBar-Release` is UNREACHABLE FROM A STATUS CELL until a harness
+# `BAR_TESTS`: `DevStg-Impl` is UNREACHABLE FROM A STATUS CELL until a harness
 # driver computes the release bar from test evidence.
 #
 # WHY IT IS A GUARD RAIL AND NOT A DOWNGRADE. `Verified` used to make two claims
 # at once — the text is ratified AND the evidence passed — and `sr_bar` read the
-# pair as decomposed+Verified -> DevBar-Release. D-9 step 5 deleted the pass claim
+# pair as decomposed+Verified -> DevStg-Impl. D-9 step 5 deleted the pass claim
 # from the vocabulary (OI-30 D1 folded `Planned` in beside `Verified`), so
 # WITHOUT this ceiling a formerly-`Planned` row with children would satisfy the
-# old rule and the derived gate would RISE to DevBar-Release for rows that never
+# old rule and the derived gate would RISE to DevStg-Impl for rows that never
 # passed anything. That is the migration plan's §F5 risk, and this is its named
 # mitigation.
 #
-# WHY IT LOOSENS NOTHING. Every consumer of `DevBar-Release` was enumerated before
+# WHY IT LOOSENS NOTHING. Every consumer of `DevStg-Impl` was enumerated before
 # the ruling — harness strictness selection, the rung-6/7 stage record, the
 # release checklist; explicitly NOT scheduling — and every one is
 # monotone-stricter in the bar. Withholding the top bar therefore withholds
 # ESCALATION and relaxes no check that was running. `check.py --gate
-# DevBar-Release` stays explicitly invocable at any time, so the strict plan is
+# DevStg-Impl` stays explicitly invocable at any time, so the strict plan is
 # never unreachable, only never AUTO-SELECTED from a hand-set cell.
 #
 # THE OWNER'S FRAMING, recorded as the design intent: the derived gate can only
@@ -382,13 +400,13 @@ def sr_bar(sr, has_llr, has_tc):
 
 
 def maturity_bar(row):
-    """An LLR/TC caps the bar only when its own maturity is DRAFTED (`DevBar-Below`
+    """An LLR/TC caps the bar only when its own maturity is DRAFTED (`DevStg-Below`
     — the new-phase signal). Once present, its own Status does NOT independently
-    gate the top bar: the SR's `Approved` status drives DevBar-Tests ->
-    DevBar-Release (matching trace.py's --require-verified bar, which checks SRs,
+    gate the top bar: the SR's `Approved` status drives DevStg-Tests ->
+    DevStg-Impl (matching trace.py's --require-verified bar, which checks SRs,
     not LLR/TC status), and the LLR/TC's *existence* is what makes its SR
-    decomposed (DevBar-Tests, decided in sr_bar). So a present, non-Drafted LLR/TC
-    contributes DevBar-Release and never caps.
+    decomposed (DevStg-Tests, decided in sr_bar). So a present, non-Drafted LLR/TC
+    contributes DevStg-Impl and never caps.
 
     THIS IS THE ONE SPINE RULE THAT ASKS THE LADDER'S OWN QUESTION ("does this row
     cap its rung?"), so at D-9 step 5 it was re-keyed onto `SPINE_MATURITY`
@@ -417,7 +435,7 @@ def maturity_bar(row):
 def is_modified(row):
     """The post-approval `Modified` state (WI-316, process.md §7): content changed
     after the last approval, re-attest owed. NO gate arithmetic of its own — a
-    Modified SR is simply not Approved, so sr_bar already derives DevBar-Tests
+    Modified SR is simply not Approved, so sr_bar already derives DevStg-Tests
     (decomposed-unapproved); recognized here only for the `modified=N` basis
     count, so the pending state never hides. TRANSITIONAL: it survives step 5's
     rename and retires at step 7, once the snapshot-backed drift rule has run
@@ -434,17 +452,17 @@ def is_modified(row):
 
 
 def sn_bar(sn_id, draft_ids, cited_ids):
-    """A Drafted SN is `DevBar-Below` — and that is the ONLY rung that fires on a
+    """A Drafted SN is `DevStg-Below` — and that is the ONLY rung that fires on a
     draft: it is exempt from the coverage rung below exactly as it is exempt from
     trace.py's orphan rule, so one fact never fires two findings at once. A
     RATIFIED SN must be cited by >=1 SR's `SN-Refs` (WI-401, owner ruling
-    2026-08-01): ratified-but-uncovered caps the raw level at `DevBar-Below`,
-    because a ratified need no SR answers has not earned `DevBar-Reqs`. This rung
+    2026-08-01): ratified-but-uncovered caps the raw level at `DevStg-Below`,
+    because a ratified need no SR answers has not earned `DevStg-Reqs`. This rung
     is the BAR INPUT; the itemized "SN {id} has no SR" listing stays trace.py's
-    orphan finding at DevBar-Tests strictness — the same states-here /
+    orphan finding at DevStg-Tests strictness — the same states-here /
     structure-there split the module docstring describes. A covered ratified SN
-    has no obligation past `DevBar-Reqs` and never caps the repo (contributes
-    `DevBar-Release` to the min)."""
+    has no obligation past `DevStg-Reqs` and never caps the repo (contributes
+    `DevStg-Impl` to the min)."""
     if sn_id in draft_ids:
         return BAR_BELOW
     return BAR_RELEASE if sn_id in cited_ids else BAR_BELOW
@@ -452,7 +470,7 @@ def sn_bar(sn_id, draft_ids, cited_ids):
 
 # --- SN-029 / OI-21: the SECOND derived axis — the EIGHT-RUNG STAGE LADDER ------
 # WHY TWO AXES. The bar answers "how strict is the harness right now" — its
-# vocabulary is `DevBar-Reqs|DevBar-Tests|DevBar-Release` and `check.py` selects
+# vocabulary is `DevStg-Reqs|DevStg-Tests|DevStg-Impl` and `check.py` selects
 # steps from it. The human ratification level answers a different question: "how
 # far up the ladder is a HUMAN still the acceptor". Those are not the same ladder,
 # and the retired G-numbering could express neither cleanly: `G2` conflated "LLRs
@@ -478,7 +496,7 @@ def sn_bar(sn_id, draft_ids, cited_ids):
 #   0 DevStg-Needs      vision and stakeholder needs in work
 #   1 DevStg-Boundary   the system's frame: what is outside, what crosses,
 #                       each crossing typed.  HAPPENS ONCE.
-#      ══ DevBar-Reqs ══  Stakeholder · UX · System Engineer     (was G1)
+#      ══ DevStg-Reqs ══  Stakeholder · UX · System Engineer     (was G1)
 #   2 DevStg-Reqs       the obligations at the current level's boundaries,
 #                       system and component alike.  RECURSES.
 #   3 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES;
@@ -486,9 +504,9 @@ def sn_bar(sn_id, draft_ids, cited_ids):
 #   4 DevStg-LLReqs     the inside of a leaf, bound to a realization artifact
 #                       (a code symbol, or a part source).  TERMINAL.
 #   5 DevStg-Tests      the test set for those obligations in work
-#      ══ DevBar-Tests ══  System Engineer · Test Engineer       (was G2)
+#      ══ DevStg-Tests ══  System Engineer · Test Engineer       (was G2)
 #   6 DevStg-Impl       IMPLEMENTATION in work
-#      ══ DevBar-Release ══  System Engineer · Test Engineer     (was G3)
+#      ══ DevStg-Impl ══  System Engineer · Test Engineer     (was G3)
 #   7 DevStg-Release    all complete; release checklist and version tagging
 #
 # THE LABEL IS THE IDENTIFIER; POSITION IS DERIVED. A stage is `DevStg-<Label>`
@@ -925,8 +943,8 @@ def spine_stage(
 
 # THE DECLARED STAGE -> BAR MAPPING (OI-21). Each bar is named for the top rung it
 # certifies, so the reconciliation is a partition of the ladder rather than an
-# arithmetic coincidence: rungs 0-2 sit under DevBar-Reqs, 3-5 under
-# DevBar-Tests, 6-7 under DevBar-Release.
+# arithmetic coincidence: rungs 0-2 sit under DevStg-Reqs, 3-5 under
+# DevStg-Tests, 6-7 under DevStg-Impl.
 STAGE_BAR = {
     STAGE_NEEDS: BAR_NAMES[BAR_REQS],
     STAGE_BOUNDARY: BAR_NAMES[BAR_REQS],
@@ -945,7 +963,7 @@ def stage_to_bar(stage):
 
     THE RULE IS UNIFORM: `stage_to_bar(s)` is **the next bar you must clear**,
     and under the eight-rung ladder it needs no exception. `DevStg-Release` has
-    already cleared `DevBar-Release` and no rung past it is mechanized, so it
+    already cleared `DevStg-Impl` and no rung past it is mechanized, so it
     stays held to that bar rather than reporting one the harness does not know.
     The strictness selector and the approaching bar are the same value for a good
     reason: you are held to the bar you are trying to clear.
@@ -958,8 +976,8 @@ def stage_to_bar(stage):
     Nothing derives the bar FROM the stage in production — `compute` still
     computes the bar from the artifact states exactly as it always did — so this
     is a reader's reconciliation, not a second source of truth. Keep that reading:
-    a bar is NOT a pure function of stage (DevBar-Reqs's bar includes non-goals
-    and a UX sign-off; DevBar-Tests's includes diagrammed runtime flows), and
+    a bar is NOT a pure function of stage (DevStg-Reqs's bar includes non-goals
+    and a UX sign-off; DevStg-Tests's includes diagrammed runtime flows), and
     deriving one from the other would silently drop the human half."""
     try:
         return STAGE_BAR[stage]
@@ -975,8 +993,8 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
 
     The raw level is the min over every in-scope artifact's bar (SN drafts, SR
     maturity, LLR/TC maturity — including WI-401's SN-coverage rung, whose cited
-    set is built from THIS call's `srs`); a set with no real SRs is `DevBar-Reqs`
-    (requirements-drafting), never a vacuous `DevBar-Release` from
+    set is built from THIS call's `srs`); a set with no real SRs is `DevStg-Reqs`
+    (requirements-drafting), never a vacuous `DevStg-Impl` from
     ratified-SN-only. Taken as a function of its rows rather than of `docs` so
     `compute` can ask it the counterfactual question too — the same arithmetic,
     over the non-draft subset (`ex-draft`), which is what tells a mature spine
@@ -1004,9 +1022,9 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
 
 def compute(docs):
     """Derive the gate from the spine registries under `docs`. Returns a result
-    dict: counts, the raw computed level (may be DevBar-Below), the same level recomputed
+    dict: counts, the raw computed level (may be DevStg-Below), the same level recomputed
     with the drafts removed (`ex_draft`), the per-phase breakdown, and the
-    runnable bar name (raw floored to DevBar-Reqs)."""
+    runnable bar name (raw floored to DevStg-Reqs)."""
     # The three spine tiers read through the CARRIER, which
     # resolves TOML or CSV and hands back rows under today's column names — so
     # the gate derivation below is untouched by the migration. `load_csv` stays
@@ -1082,7 +1100,7 @@ def compute(docs):
     # Counted across the three registries exactly like drafts (SNs have no Status
     # cell — a changed ratified SN rides its SR chain's Modified) and surfaced on
     # the basis line so the pending state never hides. No gate arithmetic here:
-    # a Modified SR already computes DevBar-Tests via sr_bar's decomposed rung.
+    # a Modified SR already computes DevStg-Tests via sr_bar's decomposed rung.
     n_modified = (
         sum(1 for r in srs if is_modified(r))
         + sum(1 for r in llrs if is_modified(r))
@@ -1095,7 +1113,7 @@ def compute(docs):
     # which is not a pending state and does not belong on a pending-state line.
     # `check._BASIS_RE` moved in the SAME commit — see `basis_line`.
     # Ratified SNs no SR answers (WI-401): normally the count behind the coverage
-    # rung's DevBar-Below cap, surfaced on the basis line so a computed=DevBar-Below
+    # rung's DevStg-Below cap, surfaced on the basis line so a computed=DevStg-Below
     # with drafted=0 names its cause. Not always a cap: with zero real SRs the
     # vacuous-lowest-bar branch
     # in _raw_level returns before the rung runs, so the count can be nonzero
@@ -1108,14 +1126,14 @@ def compute(docs):
     n_uncovered = sum(1 for u in sn_ids if u not in sn_draft and u not in cited)
 
     # The same arithmetic with the DRAFT rows taken out — "what would the gate be
-    # if nothing were pending?" (WI-341). A Drafted row reads DevBar-Below, so it drops the repo's
+    # if nothing were pending?" (WI-341). A Drafted row reads DevStg-Below, so it drops the repo's
     # min AND its own phase's, which erases the only evidence a consumer had that
     # this spine had ever climbed: in a single-phase repo the whole per-phase
-    # breakdown goes to DevBar-Below and a mature repo reopening is indistinguishable
+    # breakdown goes to DevStg-Below and a mature repo reopening is indistinguishable
     # from a project that has never ratified anything (128-REVIEW-A MAJOR 3).
     # Excluding the drafts recovers it WITHOUT history or a stored high-water:
     # the rows the draft did not touch are still standing right here, and if they
-    # all read DevBar-Tests/DevBar-Release then the drafts are the only thing holding it.
+    # all read DevStg-Tests/DevStg-Impl then the drafts are the only thing holding it.
     ex_draft, _ = _raw_level(
         [r for r in srs if not is_drafted(r)],
         [r for r in llrs if not is_drafted(r)],
@@ -1166,8 +1184,8 @@ def compute(docs):
 def _per_phase(srs, sr_g, llrs, tcs):
     """`{phase-label: bar-name}` — the SRs grouped by their optional `Phase` column
     (blank => "(default)"), each phase's bar the **raw** min over its SRs and the
-    LLR/TC that decompose/verify them (NOT floored to `DevBar-Reqs`, unlike the
-    runnable repo value): a phase carrying a draft reads `DevBar-Below`, so
+    LLR/TC that decompose/verify them (NOT floored to `DevStg-Reqs`, unlike the
+    runnable repo value): a phase carrying a draft reads `DevStg-Below`, so
     check_trajectory's phase-drop detector (WI-093) can see a phase fall below the
     level its own closed phase anchor recorded. The phase archetype + the drop
     warning live in check_trajectory."""
@@ -1233,7 +1251,7 @@ def basis_line(result):
     THE OI-21 LADDER CONVERSION IS FIELD-COMPATIBLE, not value-compatible — the
     same precedent the 2026-08-12 rung insert set, applied deliberately this time.
     Every field keeps its name and position; the VALUES move to the new closed
-    vocabularies (`computed=`/`ex-draft=`/`per-phase=` now carry `DevBar-*`,
+    vocabularies (`computed=`/`ex-draft=`/`per-phase=` now carry `DevStg-*`,
     `stage=` now carries `DevStg-<Label>`), and two DERIVED companions join it:
     `stage-ord=` and `stage-of=`, so a raw-file reader gets the position without
     the identifier carrying it. `--check` reports the line as stale on the first
@@ -1289,7 +1307,7 @@ HEADER = [
     "# docs/archive/specs/derived-gate-model.2026-07-20.md). The value on the last",
     "# line is the bar that must next be CLEARED — and therefore the STRICTNESS",
     "# SELECTOR check.py runs at. It is COMPUTED, not declared: the MIN over every",
-    "# in-scope SN/SR/LLR/TC's own bar, floored to DevBar-Reqs. So the least-mature",
+    "# in-scope SN/SR/LLR/TC's own bar, floored to DevStg-Reqs. So the least-mature",
     "# row picks it, and a Drafted or Modified row DROPS it (the signal that a new",
     "# phase is due) — which means a mature spine held down by one draft displays",
     "# exactly what a fresh scaffold displays. The `# basis:` line below is what",
@@ -1297,7 +1315,7 @@ HEADER = [
     "# ladder (Needs, Boundary, Reqs, Arch, LLReqs, Tests, Impl, Release — with",
     "# `stage-ord=`/`stage-of=` carrying its DERIVED position), `ex-draft=` is the",
     "# value the same arithmetic gives with the pending rows removed, and",
-    "# `computed=` is the raw level before the DevBar-Reqs floor (`DevBar-Below`",
+    "# `computed=` is the raw level before the DevStg-Reqs floor (`DevStg-Below`",
     "# there is the internal below-the-lowest-bar sentinel, not a bar).",
     "#",
     "# HOW IT MOVES. By APPROVING artifacts in a reviewed commit",

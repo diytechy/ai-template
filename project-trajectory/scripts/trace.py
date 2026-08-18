@@ -36,7 +36,7 @@ Writes:
 Exit: 0 normally; --strict -> 1 on any orphan / status / off-spine finding;
 --strict-integrity -> 1 on an integrity finding ONLY (the always-valid floor the
 pre-commit hook runs on every commit — a duplicate/malformed id is wrong at any
-stage, while orphans are a DevBar-Tests+ gate criterion).
+stage, while orphans are a DevStg-Tests+ gate criterion).
 
 The method rules this script mechanizes are stated ONCE elsewhere — they are NOT
 restated here (the kit's decompose-don't-paraphrase rule applied to itself):
@@ -56,9 +56,9 @@ restated here (the kit's decompose-don't-paraphrase rule applied to itself):
       and the closed vocabularies --strict-schema enforces (SR Verification, TC
       Tier): process.md §4.
 
-Flags in brief: --require-verified adds the DevBar-Release criterion "an SR is
+Flags in brief: --require-verified adds the DevStg-Impl criterion "an SR is
 Status=Approved" — any Verification method (Drafted SRs exempt); --no-placeholders flags leftover "-000"
-example rows (wire in from DevBar-Tests on); --strict-schema adds required-field,
+example rows (wire in from DevStg-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 --ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
@@ -169,7 +169,7 @@ def is_approved(row):
     (ratified text, evidence pending) folded into this same value at the same
     act under OI-30 D1 — the two named one rung and one of them named it more
     clearly. The consequence the fold created (a decomposed ex-`Planned` row
-    would have read DevBar-Release under the old `sr_bar`) is closed by the
+    would have read DevStg-Impl under the old `sr_bar`) is closed by the
     `sr_bar` ceiling ruled at OI-30 D2.
 
     Duplicated in derive_gate.py per the F5 rule; pinned equal by
@@ -182,7 +182,7 @@ def is_modified(row):
     `Approved` but its content changed after the last approval, so a re-attest is
     owed — `Modified`→`Approved` blesses the amendment. Recognized for
     SURFACING, not gate arithmetic: a Modified SR is simply not Approved, so
-    `derive_gate.sr_gate` already reads it as decomposed-unapproved DevBar-Tests
+    `derive_gate.sr_gate` already reads it as decomposed-unapproved DevStg-Tests
     with no code of its own — this predicate exists for the `modified=N` basis
     count, the pending-owner-actions projection, and the `--ratify modified`
     brief.
@@ -381,7 +381,7 @@ STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
 # schema-class (D-9 migration correction C1). `schema_findings` only runs under
-# `--strict-schema`, which `check.py` appends at DevBar-Release alone — so a
+# `--strict-schema`, which `check.py` appends at DevStg-Impl alone — so a
 # Status vocabulary declared there would be INERT for every repo below the top
 # bar, which is every repo the migration is being run for. A retired Status word
 # is wrong at ANY stage, exactly like a duplicated id, so it joins the always-on
@@ -502,9 +502,9 @@ IF_CONTRACT_MAX = 500
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
 # it names its predicate: identical *in what*, judged *how*. (Gilbert's LLR-013
-# shipped "cannot distinguish source by schema" through DevBar-Reqs and had to be pinned
-# by hand at DevBar-Tests.) Both lists are heuristics — the advisory WARNS and never joins
-# a failure set; the DevBar-Reqs consistency review (process.md §4) makes the call.
+# shipped "cannot distinguish source by schema" through DevStg-Reqs and had to be pinned
+# by hand at DevStg-Tests.) Both lists are heuristics — the advisory WARNS and never joins
+# a failure set; the DevStg-Reqs consistency review (process.md §4) makes the call.
 
 
 def llr_status_advisories(llrs, tcs):
@@ -512,7 +512,7 @@ def llr_status_advisories(llrs, tcs):
     while *every* TC that cites it is already `Approved`. The evidence to lift it
     exists, so the gap is a readout drift, not a coverage hole — mechanically
     harmless (the derived gate ignores LLR/TC Status past `Drafted`; only the SR's
-    `Approved` drives DevBar-Tests->DevBar-Release, derive_gate.maturity_gate), but confusing at a
+    `Approved` drives DevStg-Tests->DevStg-Impl, derive_gate.maturity_gate), but confusing at a
     ratification review, where a below-`Approved` LLR under an `Approved` SR reads
     like an unfinished decomposition. Warn only: never promoted to an error (not
     under --strict or --strict-integrity), because making LLR status gate would
@@ -607,7 +607,7 @@ def enum_integrity_findings(label, rows):
     vocabulary has ONE home whatever pipe enforces it, so this is a change to
     *which list a value's finding is appended to*, never a second copy of the
     allowed set that can drift from the first. The split exists because the two
-    pipes run at different gates — schema at DevBar-Release only, integrity
+    pipes run at different gates — schema at DevStg-Impl only, integrity
     always — and a retired Status word is wrong at every stage (D-9 correction
     C1).
 
@@ -1176,8 +1176,8 @@ def scan_sn_placeholders(sn_md):
 
 # SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
 # needs.md heading whose text contains "draft" (case-insensitive, e.g. `## Draft
-# needs (unratified)`) marks the SNs under it as Draft (unratified, DevBar-Below); SNs under
-# any other heading are ratified (DevBar-Reqs). No new column — the state IS the section,
+# needs (unratified)`) marks the SNs under it as Draft (unratified, DevStg-Below); SNs under
+# any other heading are ratified (DevStg-Reqs). No new column — the state IS the section,
 # and the ratification date is git-derived (the commit that moved the row out of
 # the draft section). This is the SN analogue of the `Status=Draft` bit on
 # SR/LLR/TC rows.
@@ -1188,7 +1188,7 @@ def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     `text`, whole-text — a prose mention counts exactly like a table row, which
     is the sharp edge registry-machinery-reference §2.1 records (ratified +
-    uncited caps the derived gate at DevBar-Below since WI-401). `-000` placeholders
+    uncited caps the derived gate at DevStg-Below since WI-401). `-000` placeholders
     excluded. Duplicated in derive_gate.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408), because this scrape decides which ids BOTH
     surfaces run their rules over."""
@@ -1222,7 +1222,7 @@ def sn_cited_ids(srs):
     """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
     "SN has no SR" orphan rule reads (and, since WI-401, the gate input behind
     derive_gate.py's SN-coverage rung: that rung caps the raw level, this
-    listing itemizes the ids at DevBar-Tests strictness). No filtering here: -000 rows
+    listing itemizes the ids at DevStg-Tests strictness). No filtering here: -000 rows
     are excluded by the caller's row filter, and a Draft SR's citation is
     deliberately in the set. Duplicated in derive_gate.py per the F5 rule;
     pinned equal by test_rule_sync."""
@@ -1826,8 +1826,8 @@ def phase_ratified_findings(real):
     derived max while this rule migrates the live cells. The rule is **vacuous
     until >=1 artifact is phased** — the arming idiom the component checks use —
     so a fully-blank downstream registry stays green (a `Drafted` row may always
-    leave `Phase` blank). SN is covered transitively: at DevBar-Reqs+ every ratified SN
-    has >=1 SR (the orphan rule) and SRs are phased; pre-DevBar-Reqs it is vacuously
+    leave `Phase` blank). SN is covered transitively: at DevStg-Reqs+ every ratified SN
+    has >=1 SR (the orphan rule) and SRs are phased; pre-DevStg-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
     it."""
     all_rows = [r for label in real for r in real[label]]
@@ -1994,7 +1994,7 @@ def outline_lines(roots):
 # --- ratification hierarchy view (WI-146) --------------------------------------
 # A batch-scoped SN->SR->LLR->TC tree that, unlike the whole-spine outline above,
 # carries the *prose* a ratifier needs (SR Requirement/AC, LLR Detail, TC
-# Method/Expected, and any rubric it cites) so a DevBar-Reqs/DevBar-Tests ratification brief can
+# Method/Expected, and any rubric it cites) so a DevStg-Reqs/DevStg-Tests ratification brief can
 # *link* the generated view instead of hand-copying registry rows. Generated, so
 # it never drifts from the CSVs — review the CSVs, not this render (process.md §3).
 
@@ -2955,7 +2955,7 @@ def load_registries(docs):
         sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(sn_text)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
-        # are unratified (DevBar-Below) and exempt from the "SN with no SR" child rule below.
+        # are unratified (DevStg-Below) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
         sn_integrity = sn_integrity_findings(sn_text)
@@ -3018,7 +3018,7 @@ def analyze(reg, args):
             orphans.append(f"SR {sid} has no test (TC)")
             orphan_ids.add(sid)
         sn_parents = refs(r.get("SN-Refs"))
-        # DevBar-Reqs's "every SR links >=1 SN", machine-checked — but only when the SN
+        # DevStg-Reqs's "every SR links >=1 SN", machine-checked — but only when the SN
         # registry actually provides real ids (a project without a needs file,
         # or one holding only -000 placeholders, has no SN tier to link yet).
         if sn_ids and not sn_parents:
@@ -3242,14 +3242,14 @@ def analyze(reg, args):
             demonstrated_verified.append(r["SR-ID"])
     if args.require_verified:
         for r in srs:
-            # The DevBar-Release status bar applies to every ratified SR regardless of
+            # The DevStg-Impl status bar applies to every ratified SR regardless of
             # Verification method — matching derive_gate.sr_gate, which already
-            # demands is_approved for any decomposed SR before DevBar-Release with no
+            # demands is_approved for any decomposed SR before DevStg-Impl with no
             # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
-            # Analysis/Inspection SR left Implemented can never derive DevBar-Release yet used
+            # Analysis/Inspection SR left Implemented can never derive DevStg-Impl yet used
             # to pass this Test-only check — the two scripts disagreeing about the
             # gate is the false-green the kit exists to prevent). A Drafted SR is
-            # pre-approval (below DevBar-Reqs, derived-gate §3): it makes no approval
+            # pre-approval (below DevStg-Reqs, derived-gate §3): it makes no approval
             # claim yet, so the bar stands down — surfaced in the draft count so
             # the exemption stays auditable. Pinned equivalent to sr_gate's
             # is_approved-for-decomposed rule by test_rule_sync.
@@ -3266,7 +3266,7 @@ def analyze(reg, args):
                 method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification={method} but Status="
-                    f"{val or '(blank)'} (DevBar-Release requires Approved for every ratified "
+                    f"{val or '(blank)'} (DevStg-Impl requires Approved for every ratified "
                     "SR regardless of method — the magic Status values are matched "
                     "case-insensitively, so this is a real mismatch, not a casing "
                     "near-miss)"
@@ -3288,7 +3288,7 @@ def analyze(reg, args):
     ]
     integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
     # The closed `Status` vocabulary (D-9 step 1). INTEGRITY-class rather than
-    # schema-class on purpose: `--strict-schema` runs at DevBar-Release only, so
+    # schema-class on purpose: `--strict-schema` runs at DevStg-Impl only, so
     # a Status closure routed there would never execute in the repos this rule
     # exists for. A row carrying a word no predicate recognizes is invisible to
     # every surface — the re-attest brief, the pending projection, the basis
@@ -3613,7 +3613,7 @@ def render_report(reg, findings, args, forest):
         else [f"- {f}" for f in integrity]
     )
     # Warn-only advisory section (never a failure): comparative acceptance-
-    # criteria wording that names no predicate. The DevBar-Reqs consistency review
+    # criteria wording that names no predicate. The DevStg-Reqs consistency review
     # (process.md §4) decides — pin the predicate or accept it knowingly.
     lines += ["", "## Acceptance-criteria advisories (warn-only)", ""]
     lines += (
@@ -3726,7 +3726,7 @@ def render_report(reg, findings, args, forest):
         lines += ["", "## Drafted artifacts (decomposition-exempt)", ""]
         lines += [
             "_`Drafted` rows are exempt from the child-completeness orphan rules and "
-            "the DevBar-Release approval criterion (derived-gate model §3): a requirement lives "
+            "the DevStg-Impl approval criterion (derived-gate model §3): a requirement lives "
             "in the live spine while it is drafted. Listed so the exemption is "
             "auditable._",
             "",
@@ -4036,7 +4036,7 @@ def main():
     ap.add_argument(
         "--require-verified",
         action="store_true",
-        help="DevBar-Release criterion: flag non-Drafted SRs not Status=Approved "
+        help="DevStg-Impl criterion: flag non-Drafted SRs not Status=Approved "
         "(any Verification method)",
     )
     ap.add_argument(
@@ -4048,7 +4048,7 @@ def main():
     ap.add_argument(
         "--no-placeholders",
         action="store_true",
-        help="flag any leftover '-000' template example row (use from DevBar-Tests on)",
+        help="flag any leftover '-000' template example row (use from DevStg-Tests on)",
     )
     ap.add_argument(
         "--strict-schema",
@@ -4068,7 +4068,7 @@ def main():
         default=None,
         help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
-        "(e.g. 'SR-052,SR-053'); a DevBar-Reqs/DevBar-Tests brief links this instead of hand-copying "
+        "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
         "RE-ATTESTATION brief instead: per-cell before/after for every row owing "
         "a human act, against its copy in docs/archive/last_approved/. A scope "

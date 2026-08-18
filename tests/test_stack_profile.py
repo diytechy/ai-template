@@ -52,7 +52,7 @@ def test_reference_profile_matches_builtin_plan_every_tier():
     # every gate/tier — the "profile-absent behavior is byte-identical" contract.
     reference = _profile((KIT / "stack.ini.template").read_text(encoding="utf-8"))
     for tier in ("smoke", "full", "release", "all"):
-        for gate in ("DevBar-Reqs", "DevBar-Release", "all"):
+        for gate in ("DevStg-Reqs", "DevStg-Impl", "all"):
             builtin = check.steps(80, tier, gate)
             profiled = check.steps(80, tier, gate, None, reference)
             assert _plan_sig(builtin) == _plan_sig(profiled), (tier, gate)
@@ -123,7 +123,7 @@ def test_tier_expression_threads_through_to_the_test_step(scaffold):
         encoding="utf-8",
     )
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full", "--list"],
+        ["scripts/check.py", "--gate", "DevStg-Impl", "--tier", "full", "--list"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -138,7 +138,7 @@ def test_coverage_threshold_comes_from_the_profile(scaffold):
         encoding="utf-8",
     )
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full", "--list"],
+        ["scripts/check.py", "--gate", "DevStg-Impl", "--tier", "full", "--list"],
         cwd=scaffold,
     )
     assert "--cov-fail-under=55" in proc.stdout
@@ -147,7 +147,7 @@ def test_coverage_threshold_comes_from_the_profile(scaffold):
         [
             "scripts/check.py",
             "--gate",
-            "DevBar-Release",
+            "DevStg-Impl",
             "--tier",
             "full",
             "--coverage",
@@ -179,7 +179,7 @@ def test_non_integer_coverage_threshold_fails_loudly(scaffold):
         "[coverage]\nthreshold = eighty\n", encoding="utf-8"
     )
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Release", "--tier", "full", "--list"],
+        ["scripts/check.py", "--gate", "DevStg-Impl", "--tier", "full", "--list"],
         cwd=scaffold,
     )
     assert proc.returncode != 0
@@ -208,21 +208,21 @@ def test_extra_step_joins_the_plan_with_derived_requires():
     # step; its required-import set is auto-derived from the argv (a `{py} -m
     # <mod>` step declares <mod>; a bare executable declares nothing).
     prof = _profile(
-        "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = DevBar-Tests DevBar-Release\n"
+        "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = DevStg-Tests DevStg-Impl\n"
         "[step:license-lint]\ncommand = npx license-checker\n"
     )
     plan = check.steps(80, "all", "all", None, prof)
     dup = next(s for s in plan if s[0] == "dup-code")
     assert dup[1] == ("duplo",)  # `{py} -m duplo` declares the module
     assert dup[2][-1] == "src"  # {src} expanded
-    # Sorted by LADDER POSITION, never lexically: `DevBar-Release` alphabetizes
-    # BEFORE `DevBar-Tests`, which is exactly why OI-21 banned ordering operators
+    # Sorted by LADDER POSITION, never lexically: `DevStg-Impl` alphabetizes
+    # BEFORE `DevStg-Tests`, which is exactly why OI-21 banned ordering operators
     # on the raw value and routed every comparison through `bar_ord`.
-    assert sorted(dup[3], key=check.bar_ord) == ["DevBar-Tests", "DevBar-Release"]
+    assert sorted(dup[3], key=check.bar_ord) == ["DevStg-Tests", "DevStg-Impl"]
     assert dup[4] == "product"
     lic = next(s for s in plan if s[0] == "license-lint")
     assert lic[1] == ()  # non-`-m` command declares no import (PATH guard covers it)
-    assert sorted(lic[3]) == ["DevBar-Release"]  # default bar
+    assert sorted(lic[3]) == ["DevStg-Impl"]  # default bar
 
 
 def test_a_retired_gates_value_in_stack_ini_TRANSLATES():
@@ -233,27 +233,27 @@ def test_a_retired_gates_value_in_stack_ini_TRANSLATES():
     form; an adopter's existing stack.ini keeps working until their re-sync."""
     prof = _profile(
         "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = G2 G3\n"  # check_vocab: allow
-        "[step:legacy-mixed]\ncommand = npx thing\ngates = G1, DevBar-Release\n"  # check_vocab: allow
+        "[step:legacy-mixed]\ncommand = npx thing\ngates = G1, DevStg-Impl\n"  # check_vocab: allow
     )
     plan = check.steps(80, "all", "all", None, prof)
     dup = next(s for s in plan if s[0] == "dup-code")
-    assert dup[3] == {"DevBar-Tests", "DevBar-Release"}
+    assert dup[3] == {"DevStg-Tests", "DevStg-Impl"}
     mixed = next(s for s in plan if s[0] == "legacy-mixed")
-    assert mixed[3] == {"DevBar-Reqs", "DevBar-Release"}
+    assert mixed[3] == {"DevStg-Reqs", "DevStg-Impl"}
 
 
 def test_extra_step_is_gate_scoped(scaffold):
-    # A [step:] declared for DevBar-Tests/DevBar-Release must not run at DevBar-Reqs, and must show at its gates.
+    # A [step:] declared for DevStg-Tests/DevStg-Impl must not run at DevStg-Reqs, and must show at its gates.
     (scaffold / "docs" / "stack.ini").write_text(
-        "[step:cap-integrity]\ncommand = {py} scripts/check_caps.py\ngates = DevBar-Tests,DevBar-Release\n",
+        "[step:cap-integrity]\ncommand = {py} scripts/check_caps.py\ngates = DevStg-Tests,DevStg-Impl\n",
         encoding="utf-8",
     )
     at_g1 = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Reqs", "--list"], cwd=scaffold
+        ["scripts/check.py", "--gate", "DevStg-Reqs", "--list"], cwd=scaffold
     )
     assert "cap-integrity" not in at_g1.stdout, at_g1.stdout
     at_g2 = run_py(
-        ["scripts/check.py", "--gate", "DevBar-Tests", "--list"], cwd=scaffold
+        ["scripts/check.py", "--gate", "DevStg-Tests", "--list"], cwd=scaffold
     )
     assert at_g2.returncode == 0, at_g2.stdout + at_g2.stderr
     line = next(ln for ln in at_g2.stdout.splitlines() if "cap-integrity" in ln)
@@ -309,7 +309,7 @@ def test_stack_ini_command_preserves_windows_backslash_path(scaffold):
 
 def test_extra_step_without_command_fails_loudly(scaffold):
     (scaffold / "docs" / "stack.ini").write_text(
-        "[step:foo]\ngates = DevBar-Release\n", encoding="utf-8"
+        "[step:foo]\ngates = DevStg-Impl\n", encoding="utf-8"
     )
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode != 0

@@ -41,7 +41,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Intra-repo interfaces & the architecture graph | more than one module, and you want the arch view to show how they connect | an `IF-###` seam registry + the `architecture.md` graph |
 | Research track & knowledge packs | findings must outlive their research session, or a spec rests on a load-bearing unknown | `WI` research rows + `docs/knowledge/` packs |
 | Component layer | you want a durable home for set-grained knowledge & lifecycle (a subsystem, an assembly) | a `CMP` component registry |
-| §9 NFR checklist | deciding which non-functional concerns a project must consider at DevBar-Reqs | an NFR checklist |
+| §9 NFR checklist | deciding which non-functional concerns a project must consider at DevStg-Reqs | an NFR checklist |
 | §9 perf comparator | you have captured `PB-###` budgets you want tracked over time | a perf comparator over `PB` rows |
 | §10 several modules, one repo | a repo grows distinct sub-systems that still build and release as one (scale rung 2) | a module map |
 | Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
@@ -142,7 +142,7 @@ into a straitjacket. Four points, one voice:
 ## Derived gate model
 
 *Referenced from PROCESS.md §4/§7.* **Not opt-in:** the model is core. Stages
-vs. gates, the next-gate-to-pass rule and the retirement of `DevBar-Below` are ruled in
+vs. gates, the next-gate-to-pass rule and the retirement of `DevStg-Below` are ruled in
 [`process.md`](process.md) §4 **"Stages and gates"**, which governs; this section
 expands only the **mechanics** an adopter can defer until they hit them.
 (Original design + rationale: the kit meta-repo's archived
@@ -162,23 +162,23 @@ adopter upgrades without a red day). The basis line also carries §4's `stage=N`
 and `ex-draft=`.
 
 **Artifact states (no new column).** Maturity is read from existing structure,
-gated by one `Drafted` bit. Each row contributes its own bar to the min; `DevBar-Below` below
-is `derive_gate.py`'s internal **below-DevBar-Reqs sentinel** for a row that has not
-earned DevBar-Reqs yet — a fold value, never a gate a repo sits at (§4):
+gated by one `Drafted` bit. Each row contributes its own bar to the min; `DevStg-Below` below
+is `derive_gate.py`'s internal **below-DevStg-Reqs sentinel** for a row that has not
+earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
 
 - **SR / LLR / TC** — the CLOSED `Status` vocabulary is
   `Drafted` → `Approved`, with `Modified` marking an approved row whose text
-  moved. Per-artifact bar: an SR is **DevBar-Below** while
-  `Drafted`, **DevBar-Reqs** once ratified (Status past `Drafted`), **DevBar-Tests** once decomposed (its
+  moved. Per-artifact bar: an SR is **DevStg-Below** while
+  `Drafted`, **DevStg-Reqs** once ratified (Status past `Drafted`), **DevStg-Tests** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
-  TC). **DevBar-Release is not reachable from a cell** (2026-08-15 ruling): the
+  TC). **DevStg-Impl is not reachable from a cell** (2026-08-15 ruling): the
   release bar is what the harness computes from test evidence, and until that
-  driver lands `sr_bar` ceilings at DevBar-Tests and the derived line says so —
-  `DevBar-Tests (Release: pending harness driver)`. An LLR/TC caps only when
+  driver lands `sr_bar` ceilings at DevStg-Tests and the derived line says so —
+  `DevStg-Tests (Release: pending harness driver)`. An LLR/TC caps only when
   `Drafted`; once present its own Status doesn't gate — the SR's does.
 - **SN** — maturity is **section-as-state**: an SN under a stakeholder-needs.md
   heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Drafted
-  (DevBar-Below); SNs under any other heading are ratified (DevBar-Reqs). No new column — the section
+  (DevStg-Below); SNs under any other heading are ratified (DevStg-Reqs). No new column — the section
   *is* the state.
 
 The **ratification date is git-derived** — the commit that moved the `Status` (or
@@ -200,7 +200,7 @@ Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'
 child-completeness orphan rules), so a requirement is drafted in the live
 registry before it is decomposed. Parent-linkage + integrity
 still apply (a Drafted SR still links an SN; ids stay unique/well-formed), and a
-Drafted SR is skipped by the DevBar-Release approval criterion (pre-approval).
+Drafted SR is skipped by the DevStg-Impl approval criterion (pre-approval).
 
 **Ratification = a reviewed Status-change commit** (§4). That commit *is* the
 sign-off (`gate-advance` skill), and it composes with
@@ -222,16 +222,16 @@ the decomposition + TC batch; its predecessor is the prior phase's close.
 **Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
 in parallel** — draft + ratify all the new/reopened SN/SR together, which is
 exactly where "this also modifies SR-12" and other conflicts surface in one review
-— then each work item runs **DevBar-Tests → DevBar-Release in series** (the per-WI vertical slice):
+— then each work item runs **DevStg-Tests → DevStg-Impl in series** (the per-WI vertical slice):
 
 ```
 Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch review)
               │
           [phase-N-g2]  decompose to LLR/TC, all Approved     (parallel, batch review)
               │
-          WI-a ─ DevBar-Tests→DevBar-Release ─┐
-          WI-b ─ DevBar-Tests→DevBar-Release ─┤  (series, per-WI vertical slices)
-          WI-c ─ DevBar-Tests→DevBar-Release ─┘
+          WI-a ─ DevStg-Tests→DevStg-Impl ─┐
+          WI-b ─ DevStg-Tests→DevStg-Impl ─┤  (series, per-WI vertical slices)
+          WI-c ─ DevStg-Tests→DevStg-Impl ─┘
 ```
 
 A reopen during a later phase's g1 revs the phase: the affected verified artifact
@@ -279,10 +279,10 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
   the component checks use), so a fully-blank downstream registry stays green: the
   rule is unarmed and the `--phase` filter treats blank as always-in-scope — exactly
   what "blank = every phase" bought before the phase model.
-- **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from DevBar-Tests on,
+- **Traceability is phase-blind.** Every SR keeps its LLR + TC rows from DevStg-Tests on,
   whatever its phase — decomposition is cheap and pins the design. An LLR's Phase is
   its parent SR's; a TC's is the max over what it verifies.
-- **The DevBar-Release approval criterion is phase-scoped.** `check.py --gate DevBar-Release --phase 1`
+- **The DevStg-Impl approval criterion is phase-scoped.** `check.py --gate DevStg-Impl --phase 1`
   (cumulative for later closures: `--phase 1,2`) requires `Approved` only for
   in-scope SRs; out-of-scope SRs are listed in the trace report as
   **phase-deferred** — an explicit, recorded exemption, never a silent skip. **The
@@ -291,21 +291,21 @@ filter and derive while `--strict-schema` migrates the live cells. Semantics:
 - **DevStg-Release is phase-scoped the same way:** `gen_release_checklist.py --phase 1`
   includes only in-scope human items and the release-tier/manual TCs verifying
   them, plus the always-in-scope foundation.
-- Later phases re-enter at DevBar-Reqs/DevBar-Tests as requirement increments and close their own
-  DevBar-Release/DevStg-Release with the grown phase list.
-- **A project already at DevBar-Release that takes on new scope: the derived gate handles it.**
+- Later phases re-enter at DevStg-Reqs/DevStg-Tests as requirement increments and close their own
+  DevStg-Impl/DevStg-Release with the grown phase list.
+- **A project already at DevStg-Impl that takes on new scope: the derived gate handles it.**
   New scope enters as **`Drafted` SN/SR in the live spine** — the `-000` / off-spine
   placeholder workaround is **retired** by the derived gate model above. The new
-  drafts sit at DevBar-Below, so the derived **per-phase** gate for the new phase drops (the
+  drafts sit at DevStg-Below, so the derived **per-phase** gate for the new phase drops (the
   `[phase]-[g*]` signal) while the shipped phase stays at its level; the shipped
-  set still closes at DevBar-Release with `check.py --gate DevBar-Release --phase <shipped>` (per-phase
+  set still closes at DevStg-Impl with `check.py --gate DevStg-Impl --phase <shipped>` (per-phase
   scoping, not a marker rewind — rewinding would discard the closed phase's
   attestation). Traceability is phase-blind, so a new-phase SR still reaches
-  **DevBar-Tests-completeness (LLR + TC)** before it is *Approved* — but it no longer waits
+  **DevStg-Tests-completeness (LLR + TC)** before it is *Approved* — but it no longer waits
   off-spine to be *drafted*: it is a live `Drafted` row from the start (its Phase may
   stay blank while `Drafted` and takes its number at approval). Only *Approved*
   and *DevStg-Release* defer by phase; the new phase's SRs read phase-deferred until
-  their own DevBar-Release.
+  their own DevStg-Impl.
 
 ## Lifecycle phase
 
@@ -388,16 +388,16 @@ The three words are `--gate-policy` **presets**: each *translates* into the
 `[attestation]` dials (`human_ratification_through`, `keep_nondependent`,
 `final_review`) and is never stored. The dials are what the machinery reads.
 
-- **`attended`** *(default)* — a human approves each gate (DevBar-Reqs/DevBar-Tests/DevBar-Release/DevStg-Release)
+- **`attended`** *(default)* — a human approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
   and the owner's final read. The standard §4/§5 flow; nothing else here applies.
-- **`single-ratify`** — the driver advances through DevBar-Reqs+DevBar-Tests with LLM-gate review
+- **`single-ratify`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
   (below), **queuing every human call** instead of pausing: each becomes a
   `Needs <human>` Open-items bullet in `status.md` plus, where the driver had
   to proceed, a provisional decision. At the **ratification point — fixed at
-  DevBar-Tests close** — the human reviews the accumulated list + gate evidence in one
+  DevStg-Tests close** — the human reviews the accumulated list + gate evidence in one
   sitting and ratifies or amends (ratified decisions move to `log.md`'s
-  Decisions log, §5); DevBar-Release→DevStg-Release then run under `autonomous` rules. The owner's final read
-  stays human. *Why DevBar-Tests close:* every requirement/design ambiguity is resolved
+  Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The owner's final read
+  stays human. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
   exactly once, over cheap artifacts (registries and docs, not code), before
   the expensive autonomous implementation stretch. An adopting repo *may*
   relocate the ratification point by amending its own register — the kit does
@@ -1600,7 +1600,7 @@ contract lives in the kit's `skills/README.md`; the shape:
   each `<agent>/skills/<name>/` subtree from source (edit source → re-materialize
   in one command). `gen_skills_index.py --check-agents` is the **drift gate** —
   every per-agent copy byte-identical to source — wired into the pre-commit floor
-  + DevBar-Release like the arch-map/OKF freshness steps: a drifted copy **fails** with a
+  + DevStg-Impl like the arch-map/OKF freshness steps: a drifted copy **fails** with a
   one-command fix, and it is vacuous for a repo with no neutral source or no
   per-agent dir. Only skills that a per-agent dir already carries are compared, so
   a scope-matched subset is fine. The copies are **tracked + gated** (the kit's
@@ -1682,7 +1682,7 @@ from `done`, never scheduled, its reason in the body. An unknown status
 refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
-DevBar-Tests. Every `Predecessors` id (hard or soft) resolves to a real work item and the
+DevStg-Tests. Every `Predecessors` id (hard or soft) resolves to a real work item and the
 graph is **acyclic over its hard edges** — both **errors** (a trajectory that
 depends on itself can never start); a cycle that closes only through soft
 edges is a **warning** (conflicting ordering hints, not a blocker); every `SR-Refs` id exists in the SR registry — a **warning**, since a
@@ -1694,7 +1694,7 @@ used to compete — both carried work descriptions, and they drifted. The model
 makes the registry authoritative: **the WI `Deliverable` is backward-only** (what
 shipped) and the forward bridge is a per-WI **`SpecRef`** that lives while the WI
 is open and clears at close. `check_trajectory.py` mechanizes three rules over the
-registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevBar-Tests+):
+registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tests+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is **terminal**
   (`done` or `cancelled`); an open WI (draft/queued/active/deferred/blocked) has
@@ -1728,7 +1728,7 @@ former **R-B/R-C** rules — every open WI repeated as a token in `status.md` �
 are **retired** (WI-180): a generated snapshot needs no registry copy to
 cross-check (`gen_trajectory.py --status` + its freshness `--check`). **R-D's done-id half is restored,
 forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
-again — warn at commit, ERROR under `--strict` at DevBar-Tests+ — except inside a
+again — warn at commit, ERROR under `--strict` at DevStg-Tests+ — except inside a
 generated snapshot block, which cannot accrete prose.
 
 **The owner decision surface (a registry + a generated view) + the
@@ -1805,7 +1805,7 @@ narrative), but not in the `docs/work/` registry, the SR/LLR/TC registries, or
 `docs/specs/`: a codename resolves only by spelunking archived docs, while an id
 or path resolves mechanically. This stays a **writing rule + reviewer-B
 checklist item**, not a mechanical lint — a naive `[A-Z]\d+`-shaped matcher
-would false-positive on `DevBar-Release`, `SR-###`, and the like, so a narrow lint waits
+would false-positive on `DevStg-Impl`, `SR-###`, and the like, so a narrow lint waits
 until a real recurring pattern earns it.
 
 **Phase cadence.** Any batch of spine-touching work headed for the same
@@ -1854,7 +1854,7 @@ no cloud tooling, no JS layout library): a project-vision header, definition- an
 execution-completeness meters, an **SVG icicle** of the `SN→SR→LLR→TC` spine, and
 a **layered SVG DAG** of the work items (ranked by dependency depth,
 done/active/queued shaded), both computed in Python. Its `--check` is the
-`trajectory-map` freshness gate at DevBar-Release — regenerate-in-memory and byte-compare,
+`trajectory-map` freshness gate at DevStg-Impl — regenerate-in-memory and byte-compare,
 exactly like the code map — so the committed dashboard can never silently drift
 from the registry; the shipped pre-commit hook runs the same step at every
 **trunk-lane** commit (vacuous for a non-adopter), so a registry edit that
@@ -2280,7 +2280,7 @@ enforceability rule, mechanized for software). `check_trajectory.py` joins the
 committed arch-map's `Imports (internal):` lines with the `Component`-tag
 membership and `interfaces.csv`: an import edge between two *different*
 components with no IF row covering the module pair (either endpoint direction)
-is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevBar-Tests+)**
+is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevStg-Tests+)**
 — sharing the `[checks] components_check` opt-out. Vacuous when any input is absent
 (no imports lines, no real CMP rows, an untagged endpoint), so a non-adopting
 or small repo pays nothing. A *physical* repo's cross-CMP discipline stays
@@ -2296,7 +2296,7 @@ of `PROJECT_STATE.html` shows at most **ten** first-view items — the **top-lev
 components (a CMP with no `PartOf` that contains an arch-map module) plus any
 **uncontained** module (one with no `Component`-tagged LLR). Exceeding the bound
 is a `check_trajectory.py` finding — **WARN** at the plain/hook run, **ERROR
-under `--strict` (DevBar-Tests+)** — so an unreadable module map drives *right-sizing of the
+under `--strict` (DevStg-Tests+)** — so an unreadable module map drives *right-sizing of the
 component designations* instead of being tolerated. In the render, software items
 are **containerized** into the component they belong to; expanding a component
 reveals its members (and nested components) and the seams internal to it, while
@@ -2316,10 +2316,10 @@ top view, other categories the How-physical table.)
 
 <!-- profile: nfr -->
 *Referenced from PROCESS.md §9.* **Applies when** deciding which non-functional
-concerns a project must consider at DevBar-Reqs.
+concerns a project must consider at DevStg-Reqs.
 
 **Consideration checklist (a prompt, not a mandate — don't wear a hat the scope
-doesn't need).** At DevBar-Reqs, consider which categories apply and route each to a home
+doesn't need).** At DevStg-Reqs, consider which categories apply and route each to a home
 (anchor: the **ISO/IEC 25010** product-quality model):
 
 - performance efficiency (time, throughput) and resource use (RAM/VRAM, disk);

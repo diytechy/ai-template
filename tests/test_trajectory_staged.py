@@ -335,7 +335,7 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
 #
 # Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is RATIFIED
 # arms the re-attest warn. Traceability is TRACED, and a traced-only edit must
-# stay silent — WI-280 paid four review rounds and a DevBar-Release->DevBar-Tests gate drop for 19
+# stay silent — WI-280 paid four review rounds and a DevStg-Impl->DevStg-Tests gate drop for 19
 # `Module` pointers that followed moved code and altered no requirement.
 
 _SPINE_LLR_HEADER = (
@@ -1035,7 +1035,7 @@ def test_critique_staleness_vacuous_without_a_critique_sr(tmp_path):
 
 
 def test_critique_staleness_fails_closed_under_strict(tmp_path):
-    # FAIL-CLOSED (WI-243, owner 2026-07-20): under --strict (the DevBar-Release gate) a stale
+    # FAIL-CLOSED (WI-243, owner 2026-07-20): under --strict (the DevStg-Impl gate) a stale
     # render surface is an ERROR (exit 1), not just a warn — it cannot reach green.
     _init_critique_staleness_repo(tmp_path)
     proc = run_traj(tmp_path, "--strict")

@@ -50,5 +50,5 @@ Open item in [status.md](status.md), not a log entry._
 
 <!-- Append verdict blocks here per process.md §5. Newest at the bottom. -->
 
-### DRIVER — DevBar-Reqs — Round 1 — <YYYY-MM-DD>
-Scaffolding created. Starting DevBar-Reqs.
+### DRIVER — DevStg-Reqs — Round 1 — <YYYY-MM-DD>
+Scaffolding created. Starting DevStg-Reqs.

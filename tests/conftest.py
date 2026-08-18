@@ -952,7 +952,7 @@ def make_minimal_project(root):
     (req / "system-requirements.csv").write_text(SRS, encoding="utf-8")
     (req / "low-level-requirements.csv").write_text(LLRS, encoding="utf-8")
     (root / "docs" / "test" / "test-cases.csv").write_text(TCS, encoding="utf-8")
-    # A DevBar-Tests-complete project replaces the template's placeholder Runtime-flows
+    # A DevStg-Tests-complete project replaces the template's placeholder Runtime-flows
     # citations (SR-000/LLR-000) with its real ids, so the harness's
     # check_flows --no-placeholders step is satisfied.
     arch = root / "docs" / "architecture.md"
@@ -962,7 +962,7 @@ def make_minimal_project(root):
         .replace("LLR-000", "LLR-001"),
         encoding="utf-8",
     )
-    # A DevBar-Reqs-complete project's README cites its real need (the opt-out
+    # A DevStg-Reqs-complete project's README cites its real need (the opt-out
     # need-coverage gate: every Must/Should SN is cited), replacing the -000 stub.
     readme = root / "README.md"
     readme.write_text(
@@ -976,12 +976,12 @@ def make_minimal_project(root):
     proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # Same "start from truth" for the OKF bundle: with real registry rows the
-    # on-by-default export exists and is fresh (its hook/DevBar-Release --check passes).
+    # on-by-default export exists and is fresh (its hook/DevStg-Impl --check passes).
     proc = run_py(["scripts/gen_okf.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # The derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md): this is a full DevBar-Release chain,
+    # The derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md): this is a full DevStg-Impl chain,
     # so docs/gate is regenerated from the artifact states — the scaffold shipped
-    # the fresh-repo DevBar-Reqs, and ratifying artifacts up to a DevBar-Release-complete spine is what
+    # the fresh-repo DevStg-Reqs, and ratifying artifacts up to a DevStg-Impl-complete spine is what
     # advances the derived gate. Keeps the derived-gate freshness step green.
     proc = run_py(["scripts/derive_gate.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
