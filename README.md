@@ -367,7 +367,7 @@ set:
 | `process.toml` `blackout` | `"12:00-12:00"` — **disabled**, shipped in window shape so the format is visible (UTC, Mon–Fri when populated) | fill in your own `HH:MM-HH:MM`; empty value (or start == end) disables | `"12:00-19:00"` (the owner's own hours; the kit no longer ships them) |
 | `process.toml` `guardrails` | `"off"` | **opt-in** model-substring allowlist / `"all except …"` | `"off"` (no vendored core — reason in the key's comment) |
 | `process.toml` `trajectory_check` | `true` — the WI registry validator + its dashboard | **opt-out** `false` (vacuous anyway on a placeholder-only registry) | `true` |
-| `process.toml` `okf_export` | `true` | **opt-out** `false` | `true` (`docs/okf/` committed) |
+| `process.toml` `okf_export` | `true` | **opt-out** `false` | `false` since 2026-08-18 — the layer still ships; this repo stopped exporting its own bundle (551 files) and deleted it ([declared absent](docs/declared-absences)) |
 | `process.toml` `interfaces_check` | `true`, warn-first | **opt-out** `false` | `true` — declared seams checked |
 | `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — 5 components |
 | `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |

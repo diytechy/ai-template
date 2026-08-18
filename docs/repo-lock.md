@@ -702,7 +702,7 @@ else.
   | **live kit tests** | **5** | `test_trajectory_arch` · `test_trace` · `test_derive_gate` · `test_check_harness` · `conftest` |
   | **live shipped doc** | **1** | `PROCESS_OPTIONS.md` — the one an adopter reads, pointing at a path absent even from the kit |
   | live docs | 7 | `log.md` (2) · `spine-restructure` · `reviews/003-REVIEW-A` · `repo-review-2026-07-21` · this file · the stage/gate proposal |
-  | generated | 1 | `okf/system-requirements/SR-049.md` |
+  | generated | 1 | `okf/system-requirements/SR-049` (the bundle itself is gone since 2026-08-18 — `okf_export` off, docs/declared-absences) |
   | history — keeps it | 1 | `work/complete/WI-088-…` |
 
   **Repoint the 14 live ones** at the archived spec, whose **§3 / §4a / §5 /

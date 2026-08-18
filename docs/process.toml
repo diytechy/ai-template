@@ -141,7 +141,13 @@ blackout = "12:00-19:00"
 trajectory_check = true
 interfaces_check = true
 components_check = true
-okf_export = true
+# Opt-out, OFF since 2026-08-18 (owner directive): the kit still SHIPS the OKF
+# layer — gen_okf.py, its check step, the dashboard's Knowledge tab — but this
+# repo stopped exporting its own bundle and deleted docs/okf/ (551 files, 27% of
+# the tracked tree, and every grep over the spine hit each fact twice). Nothing
+# downstream changes; flipping this back to `true` and running gen_okf.py
+# restores the bundle and the tab. See docs/log.d/2026-08-18-okf-off.md.
+okf_export = false
 # Opt-in, off: this repo's coordinator console keeps the append-only scroll.
 live_status = false
 # Opt-in, off: "ask" / "deny" arm the subagent-spawn gate. This repo runs

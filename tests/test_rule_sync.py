@@ -881,10 +881,21 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "live_status": False,
         "subagent_gate": "off",
     }
-    # And this repo's own instance says the same thing, since it declared none
-    # of the six files and therefore ran exactly these values.
+    # And this repo's own instance declares the same six KEYS — the structure
+    # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").
     live = tomllib.loads((ROOT / "docs" / "process.toml").read_text(encoding="utf-8"))
-    assert live["checks"] == checks
+    assert set(live["checks"]) == set(checks)
+    # Every value matches the shipped default except the owner dials listed here,
+    # each with its reason. A divergence NOT listed is the finding: it means a
+    # dial moved in this repo without anyone recording why.
+    OWNER_DIALS = {
+        # 2026-08-18 owner directive: the LAYER still ships at `true` (asserted
+        # above) — this repo stopped exporting its OWN bundle and deleted
+        # docs/okf/ (551 files, 27% of the tracked tree). docs/declared-absences
+        # carries the absence; docs/log.d/2026-08-18-okf-off.md the decision.
+        "okf_export": False,
+    }
+    assert live["checks"] == {**checks, **OWNER_DIALS}
 
 
 def test_the_migration_table_and_the_converter_name_the_same_six():

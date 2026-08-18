@@ -768,12 +768,21 @@ def test_meta_containerized_sw_wires_avoid_unrelated_boxes():
     assert _wire_through_box_violations(panel) == []
 
 
-def test_meta_knowledge_and_when_wires_avoid_unrelated_boxes():
+def test_meta_knowledge_and_when_wires_avoid_unrelated_boxes(tmp_path):
     # The Knowledge concept graph and the tiered When roadmap over the real meta
-    # repo: every wired diagram obeys the T8 through-box invariant.
+    # repo: every wired diagram obeys the T8 through-box invariant. This repo
+    # turned OKF off for itself on 2026-08-18 (see the twin note in
+    # test_traj_panels), so the bundle is materialized from the LIVE registries
+    # into tmp_path — same spine, same scale, no committed bundle.
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
-    kg = gt.know_graph(ROOT)
+    assert gt.know_graph(ROOT) is None, "no bundle here — the tab must self-omit"
+    bundle = load_script("gen_okf").emit(ROOT)
+    for rel, content in bundle.items():
+        dest = tmp_path / "docs" / "okf" / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="utf-8")
+    kg = gt.know_graph(tmp_path)
     assert kg is not None
     svg, _details = kg
     assert _wire_through_box_violations(svg) == []

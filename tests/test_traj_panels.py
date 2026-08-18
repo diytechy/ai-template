@@ -113,18 +113,37 @@ def test_malformed_okf_concept_is_skipped_with_warn(tmp_path):
     assert 'data-node="SR-002"' in text  # the surviving concept is still a node
 
 
-def test_meta_okf_bundle_renders_the_knowledge_graph():
-    # Smoke test over the real meta-repo bundle (~219 concepts): the graph builds,
-    # is typed, and every sampled link-out resolves to a committed file.
+def test_meta_spine_renders_the_knowledge_graph_at_real_scale(tmp_path):
+    # Smoke test at REAL scale (~219 concepts, not a 4-row fixture): the graph
+    # builds, is typed, and every sampled link-out resolves to a file the bundle
+    # actually emitted.
+    #
+    # It used to read this repo's own committed bundle. On 2026-08-18 this repo
+    # turned the layer off for ITSELF (`docs/process.toml` `[checks] okf_export
+    # = false`; `docs/okf/` is now a declared absence) while the kit keeps
+    # shipping it — so the subject moved, not the property. `gen_okf.emit()` is
+    # not dial-gated, so the bundle is materialized from the LIVE registries into
+    # tmp_path and the graph is built over that: the same spine, the same scale,
+    # no 551 committed files. Both halves are pinned — this repo renders NO
+    # Knowledge tab (the dial), and the real spine still renders one (the layer).
     gt = load_script("gen_trajectory")
-    kg = gt.know_graph(ROOT)
+    assert gt.know_graph(ROOT) is None, "no bundle here — the tab must self-omit"
+
+    bundle = load_script("gen_okf").emit(ROOT)
+    assert bundle, "the live registries emitted no bundle"
+    for rel, content in bundle.items():
+        dest = tmp_path / "docs" / "okf" / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content, encoding="utf-8")
+
+    kg = gt.know_graph(tmp_path)
     assert kg is not None
     svg, details = kg
     assert len(details) > 200
     assert details["SR-070"]["type"] == "System Requirement"
     assert "knowarrow" in svg
     for cid in ("SN-001", "SR-070", "TC-038"):
-        assert (ROOT / details[cid]["href"]).exists()
+        assert (tmp_path / details[cid]["href"]).exists()
 
 
 # --- WI-159: the Knowledge graph obeys the SR-089 `>3` start-collapsed rule ------
