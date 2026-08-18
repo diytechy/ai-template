@@ -265,12 +265,26 @@ ratify; **(3) the `SR-173` wording decision** — item 18's residue: reword the
 shall toward its acceptance, or attest the stronger reading deliberately.
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
-**impact** and a **recommendation** inline as of `2026-08-16p`, so a call can be
-made from this page; the linked homes hold the full evidence for the ones you
-want to go deeper on. A recommendation is a starting position, never a ruling
-taken in advance. *(Reconciled `2026-08-17l`: the live calls are items
-**6 · 15 · 16 · 17 · 18 · 19** — everything else below is struck or
-countersign-only, and item 20 records a call that died by supersession.)*
+**impact** and a **recommendation** inline, so a call can be made from this
+page; the linked homes hold the full evidence for the ones you want to go
+deeper on. A recommendation is a starting position, never a ruling taken in
+advance.
+
+> **SCOREBOARD — re-stamped `2026-08-17q`, the current truth of this list.**
+> OPEN: **item 6** (two sub-calls: run the SN migration before signing?
+> and the off-spine vocabulary half) · **item 18's pins half**
+> (`TC-168`/`169`/`170`) · **item 19** (acceptance-cell artifacts — the
+> 39-row population is measured inline). Plus the three **work items in the
+> block above** (`SR-140` split · the same TC pins · `SR-173` wording).
+> Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
+> 7 · 8 · 15 · 16 · 17 · 20 and the Sol rows 9–14; item 18's owner-cell
+> half executed on investigation `2026-08-17p`.
+> **On the numbering:** item numbers are STABLE IDS — log entries cite
+> them — so closed items keep their numbers and are struck, never removed
+> or renumbered. Gaps (no 2, 4, 5) are items closed and removed in desk
+> revisions that predate this list's freeze; rows 9–14 live in the Sol
+> table above rather than in this list. Do not count visible entries;
+> read the ids.
 
 1. ~~**The L1 pair**~~ — **RULED AND APPLIED IN FULL `2026-08-16p`.** Both
    rows now read `boundary_refs = ["B-05"]`.
@@ -392,14 +406,23 @@ countersign-only, and item 20 records a call that died by supersession.)*
    — whose §5 gained step 7 by owner ruling `2026-08-17k`: the execution also
    closes the SN schema census (`spine_carrier.SPINE_TIER_KEYS` gains
    `"SN-ID"`, wiring SN into the dogfood drift check it alone sits outside).
-   The call the sitting makes is whether to run it BEFORE signing — no
-   snapshot exists, so today it costs zero re-attestation and afterwards it
-   costs a re-attest of every touched row. **The survey it triggered found the
-   split is NOT SN-only** (that doc §0): four field names across the registries
-   (`status`, `kind`+`attestation`, `approval`, `state`), and
-   `components.state`'s shipped vocabulary re-uses `planned` and `verified` —
-   two words D-9 retired from the spine — for unrelated meanings, where
-   `check_vocab.py` cannot see them. The off-spine half is a separate step.
+
+   **WHAT IS ACTUALLY OPEN HERE — restated `2026-08-17q` after the owner
+   could not tell from this item's text (the direction above is RULED;
+   these two sub-calls are not):**
+   - **(a) TIMING — run the SN migration BEFORE signing?** No snapshot
+     exists, so today it costs **zero re-attestation**; after signing, the
+     same edit re-opens every touched SN row. Everything to execute is
+     already specified (the unification plan §5 steps 1–7, census
+     included). **Recommendation: yes, run it before the sitting.**
+   - **(b) THE OFF-SPINE HALF — genuinely undecided.** The survey found
+     the split is NOT SN-only (that doc §0): four field names across the
+     registries (`status`, `kind`+`attestation`, `approval`, `state`), and
+     `components.state`'s shipped vocabulary re-uses `planned` and
+     `verified` — two words D-9 retired from the spine — for unrelated
+     meanings, where `check_vocab.py` cannot see them. Unify (and to what
+     vocabulary), or leave — a separable step, deferrable past the
+     sitting.
 7. ~~**The two remaining provisional hat charters**~~ — **RULED `2026-08-17`.**
    Owner: *"keep both, as long as they can be opted out of downstream users I
    tend to think default always is fine. Easy to change later."*

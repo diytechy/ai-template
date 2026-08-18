@@ -304,6 +304,22 @@ why (one bullet each; cite ids)._
   plan doc's `WI-471` link broke when the spec moved to `complete/` — fixed
   by re-pointing it; full unfiltered suite **2571 passed / 10 skipped**, 433s
   <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto" rev=166b406d -->.
+- **2026-08-17q — §0.4's open list gains a SCOREBOARD and item 6 states its
+  two open sub-calls; the numbering confusion is answered in place.** The
+  owner read "item 6" as possibly "the fourth item" — correctly diagnosing
+  that the list's numbering gaps (no 2/4/5; 9–14 in the Sol table) invite
+  miscounting — and asked which items are open and whether §0.4 is current.
+  Fixed: a scoreboard block at the head of the list re-stamps the truth
+  (OPEN: item 6's two sub-calls · item 18's pins · item 19 · the pre-brief
+  work triple; all else struck/countersigned), states the numbering rule
+  (item numbers are stable ids cited by log entries — struck, never
+  renumbered; read ids, not positions), and item 6 now leads with what is
+  actually open — (a) the run-before-signing timing call (recommendation:
+  yes) and (b) the genuinely undecided off-spine vocabulary half — instead
+  of burying both under the ruled direction. The `2026-08-17o` id is
+  retroactively anchored by this entry to the item-19 population
+  measurement committed at `1635ace4` (39 of 70 SRs name an artifact in
+  acceptance; 34 current-carrier cells).
 - **2026-08-17l — the sitting desk RECONCILED: the live calls are items
   6 · 15 · 16 · 17 · 18 · 19; the `SR-144` flip is closed by supersession.**
   The owner asked what remains before the sitting and suspected the standing
