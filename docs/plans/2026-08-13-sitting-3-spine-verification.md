@@ -254,15 +254,17 @@ reader does not have to reconstruct it from the log:
 | **adversarial round 2 ran** (Sol + Terra via codex, hostile brief, author re-verified) | 6 CONFIRMED · 2 in-part · 1 refuted over `47234903^..HEAD`; nothing applied — the surviving calls are **item 18** | `2026-08-17f` |
 | item 8 **RULED AND APPLIED** | all four WI-468 recommendations adopted: `SR-175`/`176`/`177` minted as labelled derived rows under SN-026/009/027 (+ `LLR-176`/`177`, `TC-171`/`172`); `SN-008`'s hue metonym + `SN-027`'s `why` amended on the open window; C-ACC-2 matched-to-`SR-052`, remainder filed `WI-470` — contrast at the option doc §6 | `2026-08-17h` |
 
-**WORK OWED BEFORE THE BRIEF REGENERATES — three items, pointers only**
-*(reconciled `2026-08-17l`; each is stated in full elsewhere on this desk).*
+**WORK OWED BEFORE THE BRIEF REGENERATES — two items, pointers only**
+*(reconciled `2026-08-17l`; re-reduced `2026-08-17r` — the draft-TC pins are
+EXECUTED; each survivor is stated in full elsewhere on this desk).*
 Clearing these first means the brief the sitting reads is the text it signs,
 with no re-touch after: **(1) the `SR-140` split** — the one row still holding
 the `traceability` step red (the gating-reds note above; signing does not
-green it, splitting does); **(2) the three draft-TC pins** — `TC-168`/`169`/
-`170`, item 18's RECOMMENDED half, natural to land before those drafts
-ratify; **(3) the `SR-173` wording decision** — item 18's residue: reword the
-shall toward its acceptance, or attest the stronger reading deliberately.
+green it, splitting does); **(2) the `SR-173` wording decision** — item 18's
+residue: reword the shall toward its acceptance, or attest the stronger
+reading deliberately. *(The former item (2), the three draft-TC pins on
+`TC-168`/`169`/`170`, was executed `2026-08-17r` — five new mutation-proved
+tests, evidence cells updated, rows still `Drafted` for the sitting.)*
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline, so a call can be made from this
@@ -270,15 +272,15 @@ page; the linked homes hold the full evidence for the ones you want to go
 deeper on. A recommendation is a starting position, never a ruling taken in
 advance.
 
-> **SCOREBOARD — re-stamped `2026-08-17q`, the current truth of this list.**
+> **SCOREBOARD — re-stamped `2026-08-17r`, the current truth of this list.**
 > OPEN: **item 6** (two sub-calls: run the SN migration before signing?
-> and the off-spine vocabulary half) · **item 18's pins half**
-> (`TC-168`/`169`/`170`) · **item 19** (acceptance-cell artifacts — the
-> 39-row population is measured inline). Plus the three **work items in the
-> block above** (`SR-140` split · the same TC pins · `SR-173` wording).
+> and the off-spine vocabulary half) · **item 19** (acceptance-cell
+> artifacts — the 39-row population is measured inline). Plus the two
+> **work items in the block above** (`SR-140` split · `SR-173` wording).
 > Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
 > 7 · 8 · 15 · 16 · 17 · 20 and the Sol rows 9–14; item 18's owner-cell
-> half executed on investigation `2026-08-17p`.
+> half executed on investigation `2026-08-17p`, its pins half executed
+> `2026-08-17r` (five mutation-proved tests on `TC-168`/`169`/`170`).
 > **On the numbering:** item numbers are STABLE IDS — log entries cite
 > them — so closed items keep their numbers and are struck, never removed
 > or renumbered. Gaps (no 2, 4, 5) are items closed and removed in desk
@@ -646,12 +648,19 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     no re-attestation; the ratify brief renders the corrected rows, and the
     sitting countersigns or overturns them like any other provisional act.
 
-    **The RECOMMENDED half — draft-tier debt, not false greens:** `TC-168`'s
-    `--wait-on-limit` evidence leaves the `min` cap inert (deleting it stays
-    green) and the parsed-reset retry branch + 3600 default unpinned;
-    `TC-169` leaves the `--stall-limit` default of 3 unpinned; `TC-170`'s
-    failure-path sentence is inference, not an executed check. Cheap pins,
-    natural to land before the draft TCs ratify.
+    **The RECOMMENDED half — EXECUTED `2026-08-17r` (owner directive
+    2026-08-17): five new tests, every one mutation-proved, evidence cells
+    updated, rows still `Drafted` for the sitting.** `TC-168`: the `min` cap
+    is now load-bearing (a fallback-above-ceiling case; deleting the cap
+    fails it while the old evidence stayed green under the same mutation,
+    confirming F5), the parsed-reset retry branch and the 3600 default are
+    pinned via a `time.sleep`-recording driver (the wall-clock waits are
+    observed, never served); `TC-169`: the default of 3 pinned — no flag
+    passed, the third no-commit session exits `EXIT_STALL`, the second does
+    not; `TC-170`: the failure-path sentence is now an executed check — a
+    later step's failure after green steps leaves HEAD unmoved and the green
+    output uncommitted. No claim-vs-code divergence surfaced: the code does
+    exactly what the rows state.
 
     **Two CONFIRMED-IN-PART residues, recorded not urgent:** `LLR-153`'s new
     refusal wording slightly overstates (`next_wi_id` uses `.get("WI", 0)`,

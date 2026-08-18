@@ -296,6 +296,49 @@ def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
     assert pos == sorted(pos), "regen must execute in declared dependency order"
 
 
+def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
+    # Round-2 F9 pin — the failure half of the SR-173 no-partial-set claim,
+    # EXECUTED rather than inferred from the green path: earlier steps run
+    # green and dirty the tree (arch-map and derived-gate both regenerate),
+    # then a LATER step fails (a malformed open-items registry) — the run
+    # exits nonzero, HEAD has not moved, and the green steps' output is still
+    # sitting uncommitted in the working tree. A partially regenerated set can
+    # therefore not land in history even on the failure path; a future edit
+    # that committed on failure would move HEAD and fail here.
+    _git(tmp_path, "init", "-q")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "architecture.md").write_text(
+        "# Arch\n\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        "<!-- END GENERATED MODULE MAP -->\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n", encoding="utf-8"
+    )
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "ok.py").write_text(
+        '"""A fine module."""\n\n\ndef fine():\n    return 1\n', encoding="utf-8"
+    )
+    (tmp_path / "docs" / "gate").write_text("DevBar-Reqs\n", encoding="utf-8")
+    (tmp_path / "docs" / "requirements").mkdir()
+    (tmp_path / "docs" / "requirements" / "open-items.toml").write_text(
+        "this = is not [ valid toml\n", encoding="utf-8"
+    )
+    _commit(tmp_path, "seed")
+    head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
+
+    assert ts.regen(tmp_path) == 1
+    captured = capsys.readouterr()
+    assert "regen — arch-map ok" in captured.out, "a green step must precede"
+    assert "regen FAILED at open-items" in captured.err
+    assert _git(tmp_path, "rev-parse", "HEAD").strip() == head_before, (
+        "a mid-run failure must never leave a partially regenerated set in history"
+    )
+    assert _git(tmp_path, "status", "--porcelain").strip(), (
+        "the green steps' output must still be uncommitted in the tree"
+    )
+
+
 def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
     # SR-173: no partially regenerated set is ever left COMMITTED, because the
     # regen itself never commits at all — a green step's output stays in the

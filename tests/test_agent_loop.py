@@ -612,6 +612,113 @@ def test_unparseable_reset_falls_back_and_retries(loop_repo):
     assert _invocations(ctl) == 2, "the throttled session must be retried"
 
 
+def _nosleep_loop(tmp_path, repo, template, *extra):
+    """Run the loop through a driver that replaces time.sleep with a recorder.
+
+    The parsed-reset wait is wall-clock sized (seconds until "3:45pm" — up to a
+    day) and the fallback default is a full hour, so those sleeps must be
+    OBSERVED, never served: the driver records each requested duration to a
+    file and returns immediately. Returns (proc, recorded-waits)."""
+    sleep_log = tmp_path / "sleeps.txt"
+    driver = tmp_path / "nosleep_driver.py"
+    driver.write_text(
+        "import pathlib, runpy, sys, time\n"
+        "log = pathlib.Path(sys.argv[1])\n"
+        "script = sys.argv[2]\n"
+        "def record(secs):\n"
+        "    with log.open('a') as fh:\n"
+        "        fh.write('{}\\n'.format(secs))\n"
+        "time.sleep = record\n"
+        "sys.argv = [script] + sys.argv[3:]\n"
+        "runpy.run_path(script, run_name='__main__')\n",
+        encoding="utf-8",
+    )
+    proc = run_py(
+        [
+            driver,
+            sleep_log,
+            SCRIPTS / "agent_loop.py",
+            "--root",
+            repo,
+            "--agent-cmd",
+            template,
+            "--pause",
+            "0",
+            "--model",
+            "default-tier",
+            "--wi",
+            "WI-201",
+            "--train",
+            "t1",
+            *extra,
+        ],
+        cwd=repo,
+    )
+    waits = []
+    if sleep_log.exists():
+        waits = [float(x) for x in sleep_log.read_text(encoding="utf-8").split()]
+    return proc, waits
+
+
+def test_fallback_nap_is_capped_at_the_wait_ceiling(loop_repo):
+    # Round-2 F5 pin (a): with the declared fallback ABOVE the ceiling (5 > 1),
+    # the nap must be the ceiling — min(fallback, ceiling) is load-bearing.
+    # Deleting the cap naps (and prints) the raw 5s fallback and this fails;
+    # the pre-existing fallback test (fallback 1 under ceiling 30) stayed green
+    # under that mutation, which is why this case exists.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("limit-odd done", encoding="utf-8")
+    proc = _loop(repo, template, "--wait-on-limit", "1", "--limit-retry-fallback", "5")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "sleeping 1s (--limit-retry-fallback)" in proc.stdout, proc.stdout
+    assert _invocations(ctl) == 2, "the throttled session must be retried"
+
+
+def test_parsed_reset_within_ceiling_sleeps_and_retries(loop_repo, tmp_path):
+    # Round-2 F5 pin (b): a PARSEABLE reset wording ("resets 3:45pm") within
+    # the ceiling drives the wait through seconds_until_reset — the loop prints
+    # the parsed wait with its reset time, sleeps it, and RETRIES the session,
+    # never exiting WAITING and never taking the unparseable-fallback nap.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("limit done", encoding="utf-8")
+    # Ceiling 90000 > 86400: any time of day parses to a wait under the
+    # ceiling, whatever the wall clock says when this runs.
+    proc, waits = _nosleep_loop(tmp_path, repo, template, "--wait-on-limit", "90000")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    m = re.search(r"sleeping (\d+)s until the reset \(3:45pm\)", proc.stdout)
+    assert m, "the parsed-reset branch must print its wait: " + proc.stdout
+    assert 0 < int(m.group(1)) <= 86400
+    assert float(m.group(1)) in waits, "the printed wait must be the slept wait"
+    assert "(--limit-retry-fallback)" not in proc.stdout, "fallback must not fire"
+    assert _invocations(ctl) == 2, "the throttled session must be retried"
+
+
+def test_limit_retry_fallback_defaults_to_3600(loop_repo, tmp_path):
+    # Round-2 F5 pin (c): LLR-174 declares the fallback dial's default 3600 —
+    # with --wait-on-limit above it and NO --limit-retry-fallback flag, the
+    # unparseable-reset nap must be exactly 3600s (the declared default, not an
+    # in-line literal), printed and slept (observed via the recording driver).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("limit-odd done", encoding="utf-8")
+    proc, waits = _nosleep_loop(tmp_path, repo, template, "--wait-on-limit", "90000")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "sleeping 3600s (--limit-retry-fallback)" in proc.stdout, proc.stdout
+    assert 3600.0 in waits, "the declared default must be the slept wait"
+    assert _invocations(ctl) == 2, "the throttled session must be retried"
+
+
+def test_stall_limit_defaults_to_three_no_commit_sessions(loop_repo):
+    # Round-2 F6 pin: LLR-175 declares --stall-limit's default 3. No flag
+    # passed, every session noops: the SECOND no-commit session must not end
+    # the run (a third invocation happens) and the THIRD must — EXIT_STALL (4)
+    # at exactly three invocations, not two, not the 6-session budget.
+    repo, ctl, template = loop_repo  # no actions file -> every session noops
+    proc = _loop(repo, template, "--max-iterations", "6")
+    assert proc.returncode == 4, proc.stdout + proc.stderr
+    assert "STALL" in proc.stdout
+    assert _invocations(ctl) == 3, "the declared default (3) must stop the run"
+
+
 def test_healthy_transcript_mentioning_limits_is_not_a_throttle(loop_repo):
     # The limit regex is gated on an error signal (is_error / nonzero exit):
     # the fake's commit action succeeds (exit 0) while its transcript says

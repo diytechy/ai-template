@@ -36,6 +36,56 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17r — sitting-3 §0.4 item 18's PINS half EXECUTED (owner
+  directive 2026-08-17): five new tests make the three draft TCs' claimed
+  behaviors falsifiable, every pin mutation-proved before it was claimed; no
+  claim-vs-code divergence found — the code does exactly what the rows
+  state.** Round-2 F5/F6/F9 (ROUND-2-SOL-TERRA.md) named the debts; per TC:
+  **`TC-168`** (SR-171/LLR-174) gains three pins —
+  `test_fallback_nap_is_capped_at_the_wait_ceiling` runs the unparseable-
+  reset nap with the fallback ABOVE the ceiling (5 > 1, naps 1s), so the
+  `min()` cap is load-bearing: deleting the cap fails it, while the
+  pre-existing fallback test (1 under 30) stayed green under the SAME
+  mutation — F5's inertness claim re-confirmed, then closed;
+  `test_parsed_reset_within_ceiling_sleeps_and_retries` pins the
+  parsed-reset branch ("resets 3:45pm" under a 90000s ceiling: the printed
+  wait names the reset time, the printed seconds ARE the slept seconds, the
+  session retries, the fallback wording never fires) and
+  `test_limit_retry_fallback_defaults_to_3600` pins the dial's declared
+  default with no flag passed — both drive the loop through a new
+  `_nosleep_loop` driver that swaps `time.sleep` for a recorder, because
+  those waits are wall-clock sized (up to a day / a full hour): observed,
+  never served. Mutations: branch condition forced dead → the parsed test
+  fails at exit 5; `default=3600`→`1800` → the default test fails.
+  **`TC-169`** (SR-172/LLR-175):
+  `test_stall_limit_defaults_to_three_no_commit_sessions` — no flag passed,
+  every session noops at budget 6: the run exits `EXIT_STALL` (4) at
+  exactly three invocations, so the second no-commit session provably does
+  not end the run and the third does. Mutation: `default=3`→`2` → fails at
+  two invocations. **`TC-170`** (SR-173/LLR-142):
+  `test_regen_failure_after_green_steps_commits_nothing` EXECUTES the
+  Method's failure-path sentence F9 called inference — arch-map and
+  derived-gate run green and dirty the tree, then a malformed
+  `open-items.toml` fails the later step: exit 1, HEAD unmoved, the green
+  output still uncommitted. The sentence was KEPT, not reworded — it is now
+  an executed check — and the Method says so. Mutation: a commit-on-failure
+  planted in `regen`'s failure branch → fails on the HEAD assertion. All
+  five mutations reverted; production scripts untouched in the final diff.
+  The three TC rows' `method`/`evidence` cells updated to name the new
+  tests; statuses untouched (`Drafted` — the drafts still ride the signing
+  window). Desk surfaces reduced in the same act: sitting-3's WORK OWED
+  block three→two (`SR-140` split · `SR-173` wording), its SCOREBOARD
+  re-stamped `2026-08-17r`, and status.md's live list is items 6 · 19 with
+  item 18 countersign-only in both halves. Verification (run on this
+  entry's own tree, parent `dda5cc0c`): `trace.py --strict` unmoved —
+  `SN=27 SR=70 LLR=159 TC=155 orphans=0 integrity=0 form-findings=1` (the
+  pre-existing SR-140)
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=dda5cc0c -->;
+  smoke tier **1195 passed / 7 skipped**, 37s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=dda5cc0c -->;
+  the slow loop module directly **62 passed / 1 skipped**
+  <!-- fig: cmd=".venv/bin/python -m pytest -q tests/test_agent_loop.py" rev=dda5cc0c -->;
+  `check_docs` OK, 0 broken links.
 - **2026-08-17p — sitting-3 §0.4 item 18's OWNER-CALL half EXECUTED on
   investigation: the five contested `owner` cells read against the CODE at
   both endpoints, four cells moved, one kept with the split recorded; the

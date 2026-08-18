@@ -26,21 +26,22 @@ narrated is in those homes.
   ex-`Planned` rows no brief lists** (`2026-08-15m`), rule the open calls,
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
 - **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
-  `2026-08-17n`; the live list is sitting-3 §0.4 items 6 · 18 · 19, each
-  stated there with its evidence:** the **one shared status vocabulary + the SN
-  schema census** (item 6; step 7 added `2026-08-17k`), the **draft-TC pins**
-  (item 18's remaining half — the five contested `owner` cells are EXECUTED
-  on investigation `2026-08-17p`, countersign-only, with one flagged residue:
-  no SR states the CodeSymbol-anchor obligation IF-117 serves), and the
-  **acceptance-cell question** (item 19 — current-carrier filenames down to
-  the trace tier or registry-id anchors; ruling it later re-touches every
-  reworded row). Items
+  `2026-08-17n` and `2026-08-17r`; the live list is sitting-3 §0.4 items
+  6 · 19, each stated there with its evidence:** the **one shared status
+  vocabulary + the SN schema census** (item 6; step 7 added `2026-08-17k`)
+  and the **acceptance-cell question** (item 19 — current-carrier filenames
+  down to the trace tier or registry-id anchors; ruling it later re-touches
+  every reworded row). Item 18 is now countersign-only in BOTH halves: the
+  five contested `owner` cells EXECUTED on investigation `2026-08-17p` (one
+  flagged residue: no SR states the CodeSymbol-anchor obligation IF-117
+  serves), the `TC-168`/`169`/`170` pins EXECUTED `2026-08-17r` (five
+  mutation-proved tests; rows stay `Drafted`). Items
   15/16 are RULED `2026-08-17m` (the cell attestation reading; the
   `{Drafted, Approved, Founded}` step-7 target restated — item 16 was never
   open) and item 17 is RULED `2026-08-17n` (`B`/`EXT`/`REL` are watermark
-  spaces; marks at the ever-allocated highs). Three work items owed
+  spaces; marks at the ever-allocated highs). Two work items owed
   BEFORE the brief regenerates are listed just above §0.4's open calls:
-  the `SR-140` split, the `TC-168`/`169`/`170` pins, the `SR-173` wording.
+  the `SR-140` split, the `SR-173` wording.
   The **LLR/TC draft ratifications** ride the same sequence (`2026-08-14e`).
   Everything else this list used to carry is **ruled and countersign-only**
   (L1 pair, Consumes reading, hat charters, the four obligation candidates,
