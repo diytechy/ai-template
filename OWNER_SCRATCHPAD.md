@@ -840,7 +840,22 @@ Now kick of an opus agent to update docs/plans/2026-08-16-registry-status-unific
 
 |||||||||||||||
 
-Update SN, other registries, and callers per and all others to use "status" field across all spine registeries with common enum (docs/plans/2026-08-13-sitting-3-spine-verification.md item 0.4-6)
+
+Make sure all the skill / process / agent related documentation is succinct.  What does research say about llm usage of these files and how length can affect quality?  I'm afraid quality is getting dropped by bloated prose.
+
+Should architecture.md die?  I thought this was previous discussed but I still see it in this repo.
+
+Should okf be removed?  Is it just adding bloat and creating confusing with older / previously generated artifacts?  But they all seem to be pointers, so that shouldn't be an issue.
+
+The readme still appears to reference csv registries?  Were there some that were not yet converted to toml?
+
+Shouldn't complete work items go into archive/work/{cancelled/complete/active} so that it is clear their scope is finished?  Related I thought there was another location where long term / living specs were kept (not work items - which represent a spec of work implimented in time, as opposed to implimentation level details around a living component.)
+
+Should the paths be deleted or arcived?  I see them in this repo, I'm not sure if they are in the template: docs\iteration, docs\ratify, others?  Anything that represents historical decisions should be in the archive.  Are there any process documents that need to be adjusted to emphasize that?
+
+>>>>>>>>>>>
+
+Update SN, other registries, and callers per and all others to use "status" field across all spine registeries with common enum (docs/plans/2026-08-13-sitting-3-spine-verification.md item 0.4-6)  <<<CONFIRM>>>
 
 Approve the spine after this (I have revieded all entries and agree to the current definition).  I give my approval for that after the status related updates since that will not affect the prose of those cells, which is what I am approving of in this message.
 
@@ -857,3 +872,6 @@ Should generated items have a header that emphasizes that they should not be ref
 Should all archive documents have the same header?
 
 I want to make sure LLM agents do not churn on documentation that could be very old.
+
+
+***********************************
