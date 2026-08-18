@@ -1618,7 +1618,7 @@ convert-at-your-pace rename — with two exceptions that are **not** aliased:
 `docs/gate`'s own contents (regenerate it) and a stage value in a basis line
 (same regenerate). Full recipe: the §3 entry above.
 
-### Reserved: requirement quality — the eight characteristics + the EARS pattern
+### Requirement quality: the eight characteristics + the EARS pattern [since ed1d4863]
 
 `docs/process.md` §3 now states the quality bar it previously only gated: the
 eight characteristics (necessary, singular, unambiguous, complete, verifiable,
@@ -1637,10 +1637,6 @@ If you keep a customized `registries/system-requirements.template.toml`, its
 `-000` example row's `requirement` value is now the EARS grammar itself — a
 kit-owned teaching cell worth taking, but a no-op if you deleted the example row
 on your first real entry, as intended.
-
-*(Reserved, awaiting its `[since <sha>]`: the anchor is stamped from the commit
-that lands this change — inventing one before it exists is what the reserved
-shape exists to prevent.)*
 
 ---
 
