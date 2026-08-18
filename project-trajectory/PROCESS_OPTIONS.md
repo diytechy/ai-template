@@ -161,7 +161,7 @@ is accepted **value-only** until a one-time `derive_gate.py` migration (so an
 adopter upgrades without a red day). The basis line also carries §4's `stage=N`
 and `ex-draft=`.
 
-**Artifact states (no new column).** Maturity is read from existing structure,
+**Artifact states (one field, every tier).** Maturity is the row's own `Status`,
 gated by one `Drafted` bit. Each row contributes its own bar to the min; `DevStg-Below` below
 is `derive_gate.py`'s internal **below-DevStg-Reqs sentinel** for a row that has not
 earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
@@ -176,13 +176,18 @@ earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
   driver lands `sr_bar` ceilings at DevStg-Tests and the derived line says so —
   `DevStg-Tests (Release: pending harness driver)`. An LLR/TC caps only when
   `Drafted`; once present its own Status doesn't gate — the SR's does.
-- **SN** — maturity is **section-as-state**: an SN under a stakeholder-needs.md
-  heading whose text contains **"draft"** (`## Draft needs (unratified)`) is Drafted
-  (DevStg-Below); SNs under any other heading are ratified (DevStg-Reqs). No new column — the section
-  *is* the state.
+- **SN** — maturity is the **same field**: `status = "Drafted"` on a
+  `[need.SN-###]` table in `stakeholder-needs.toml` is DevStg-Below, anything
+  else reads ratified (DevStg-Reqs). A ratified need must also be cited by ≥1
+  SR (`sn_refs`) or it caps the level at DevStg-Below — the WI-401 coverage
+  rung. **Section-as-state is retired** (it was "appears under a heading
+  containing the word draft", which a prose *mention* of an id could trip); the
+  heading scan survives only as the legacy `stakeholder-needs.md` reader, and
+  the carrier is **sniffed rather than assumed** because a heading scan over
+  TOML finds no headings, reports zero drafts, and floats the gate upward.
 
-The **ratification date is git-derived** — the commit that moved the `Status` (or
-the SN section). No new field.
+The **ratification date is git-derived** — the commit that moved the `status`.
+No new field, at any tier.
 
 **A window lowers the bar; it must not create a blind spot.** While `Drafted`/
 `Modified` rows hold the gate down, the steps the *higher* gate requires would
@@ -263,7 +268,7 @@ A roadmap that ships phase 1 before 2/3 needs gates that close *per phase* witho
 dishonesty. **Every ratified SR/LLR/TC carries the `Phase` it was ratified in** — a
 **bare integer** (`1`, `2`, `3`…), digits only, full cell; an SN's phase is
 *derived* as the minimum phase of its
-referencing SRs (no `stakeholder-needs.md` schema change). Numeric-only is a
+referencing SRs (no `stakeholder-needs.toml` schema change). Numeric-only is a
 correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--ratify`
 scope filters and the phase-drop detector's `per-phase=`-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
@@ -794,7 +799,7 @@ asserts rather than trusting them (believe nothing unobserved), and
 fixes directly only what lies within the WI's own declared scope — anything
 else is *filed as a finding* for the integrator. Reviewer B's process/trace
 charter includes one codename check: a **session-local codename in a durable
-cell** — a `work-items.csv`/SR/LLR/TC row or a `docs/specs/` file, as opposed to
+cell** — a `docs/work/` spec or SR/LLR/TC row, or a `docs/specs/` file, as opposed to
 a `log.md` entry — is filed as a finding (the codename-discipline rule stated
 under "Trajectory / work-items"). The charter also files a knowledge pack that
 restates a registry fact instead of linking its id. Related: every session inherits
@@ -1643,7 +1648,8 @@ independent tracks meet, which task is in flight, how far along the whole is. A
 - it moves through a **lifecycle**: `draft → queued → active → done`; `draft`
   holds thinking-in-progress (written down, not claimable), `deferred` parks
   intentionally postponed work, `blocked` parks work on a named `BlockRef`, and
-  `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`).
+  `cancelled` is a **terminal** won't-build row (its reason in `Deliverable`),
+  as is `partial` — could not finish; scope ends here.
 
 A WI is the machine-readable *how* beneath an SR's *what*. Plans and discussion
 retain the *why*; the registry complements rather than replaces that narrative.
@@ -1654,7 +1660,10 @@ Enabling this layer **supersedes the plan/build cadence's `docs/plan.md`**
 **Registry.** The **`docs/work/` spec folder**: one Markdown file per work
 item, **status encoded as its directory, and the directory is the whole
 statement** (`draft/`, `queued/`, `active/<branch>/`, `deferred/`, `complete/`
-for `done`, `cancelled/` for the won't-build terminal — WI-384 gave the second
+for `done`, `cancelled/` for the won't-build terminal, and `partial/` for the
+third — work that could not finish and whose scope ends there, the remainder
+carried forward by a newly minted WI rather than by re-claiming this one
+(SR-144) — WI-384 gave the second
 terminal its own folder and with it deleted the `disposition` frontmatter key,
 its validator and both raise paths: an inconsistent state stopped being
 checked-for and became unrepresentable), TOML `+++` frontmatter carrying the metadata
@@ -1667,7 +1676,7 @@ once it holds a real spec, both-present is an integrity error, and
 `scripts/wi_convert.py` migrates a CSV with a round-trip proof. Off-spine and
 optional like `procurement.csv` / `assets.csv`: `trace.py` does not read
 `WI-` ids — the trajectory tooling owns them. `Status ∈
-{draft,queued,active,done,deferred,blocked,cancelled}`; `draft` is the ABSENCE
+{draft,queued,active,done,deferred,blocked,cancelled,partial}`; `draft` is the ABSENCE
 of a decision (still being figured out) where `deferred` is one (not now) —
 both never-ready, differing only in what they say, and `draft/` is a DECLARED
 directory because specs in an undeclared one are skipped by every reader and so
@@ -1678,7 +1687,9 @@ way, so the declaration makes the reservation checked, not merely possible);
 `queued/` plus a `blockref` naming what must clear (no directory — readiness is
 derived, one home per fact); and `cancelled` (WI-267, spelled `retired` until
 WI-384) is terminal — a deliberate won't-build, counted separately
-from `done`, never scheduled, its reason in the body. An unknown status
+from `done`, never scheduled, its reason in the body. `partial` (SR-144) is the
+**third terminal**: the work could not finish and its scope ends there, so
+nothing re-claims it and the remainder is carried by a new WI. An unknown status
 refuses rather than buckets.
 
 **Validation** — `check_trajectory.py`, wired as the `trajectory` gate step from
@@ -1697,9 +1708,13 @@ is open and clears at close. `check_trajectory.py` mechanizes three rules over t
 registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tests+):
 
 - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is **terminal**
-  (`done` or `cancelled`); an open WI (draft/queued/active/deferred/blocked) has
-  an **empty** Deliverable (`done` records what shipped, `cancelled` why it never
-  will).
+  (`done`, `cancelled` or `partial`); an open WI
+  (draft/queued/active/deferred/blocked) has an **empty** Deliverable (`done`
+  records what shipped, `cancelled` why it never will). `partial` is exempt from
+  the non-empty half — its permanent backward record is the immutable per-close
+  report under `docs/handbacks/`, and demanding the cell as well would be a
+  weaker second copy of it that no honest close can write (SR-144 leaves the
+  spec's definition byte-identical).
   A **hard error at every run** (no flag): a commit is the agent handoff point, so
   an incoherent WI state launches the next session into the wrong item. This is
   the pre-commit floor.
@@ -1708,7 +1723,10 @@ registry (warn-first at the commit floor; `--strict` gates R-E/R-F at DevStg-Tes
   exist). Deeper anchor/path validation rides `check_doc_refs.py`'s path tier.
 - **R-F** (WI-251; WI-267) — the close side R-E leaves unstated: a **terminal**
   (`done`/`cancelled`) WI's `SpecRef` is **empty**, and every live `docs/specs/`
-  file (scaffold README/`-000` exemplars excluded) is cited by ≥1 **open** WI —
+  file (scaffold README/`-000` exemplars excluded) is cited by ≥1 **open** WI
+  (a `partial` row's `SpecRef` **stays** and counts as a live citation: only the
+  delivery question closed, and the successor's `supersedes` lineage is worth
+  nothing if the thread it continues has been cut) —
   otherwise it belongs in `docs/archive/specs/`. Prose-only close ritual is skipped by
   autonomous agents; whether durable spec content was absorbed *before*
   archiving stays a reviewer-tier judgment (the honest gap).
@@ -2049,12 +2067,12 @@ row is the owner-of-record** for such a part (MULTI_REPO.md §3.3). The
 **acquisition** facts the interface row doesn't carry: `PART-ID, Name, IF-Ref,
 Vendor, Cost, Status, Quantity, Notes`, where `IF-Ref` back-links the owning
 `IF-###` and `Status ∈ {needed, ordered, on-hand, backordered, obsolete}`. Off
-the `SN→SR→LLR→TC` spine and optional like `interfaces.csv`/`PB-###`: a project
+the `SN→SR→LLR→TC` spine and optional like `interfaces.toml`/`PB-###`: a project
 that buys nothing ignores the file; a leftover `PART-000` never blocks a gate.
 
 - **What `trace.py` checks (integrity only).** It flags a malformed/duplicate
   `PART-` id, the always-on floor. It does **not** resolve `IF-Ref` against
-  `interfaces.csv`, because trace.py never reads the `IF-###` tier (it is off the
+  `interfaces.toml`, because trace.py never reads the `IF-###` tier (it is off the
   joined spine, §8); keeping PART integrity-only holds the "no more than PB"
   minimal line and avoids teaching trace.py the interface registry. Cross-checking
   `IF-Ref` against a real interface row is a natural first extension if it earns
@@ -2278,7 +2296,7 @@ all four registries `trace.py` reads: LLR/IF/PART/ASSET).
 **A cross-component edge needs a declared seam** (WI-064 — the AXES
 enforceability rule, mechanized for software). `check_trajectory.py` joins the
 committed arch-map's `Imports (internal):` lines with the `Component`-tag
-membership and `interfaces.csv`: an import edge between two *different*
+membership and `interfaces.toml`: an import edge between two *different*
 components with no IF row covering the module pair (either endpoint direction)
 is a finding — **WARN** at the plain/hook run, **ERROR under `--strict` (DevStg-Tests+)**
 — sharing the `[checks] components_check` opt-out. Vacuous when any input is absent

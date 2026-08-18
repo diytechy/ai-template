@@ -23,6 +23,6 @@ phase = """Delivery phase = the parent SR's Phase (a bare integer; blank only on
 
 component = "CMP-000"
 # `component` — the CMP id this design row belongs to, when the project runs
-# the optional component layer (process-options.md). Once components.csv holds
+# the optional component layer (process-options.md). Once components.toml holds
 # real rows every Component tag must resolve to one; omit the key on a project
 # that declares no components.

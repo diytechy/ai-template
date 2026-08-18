@@ -391,7 +391,7 @@ hand-set: `scripts/derive_gate.py` generates it as the **min over every in-scope
 artifact's own bar**, so it names the gate the repo must next *pass* and thereby
 selects the strictness the harness runs at ("Stages and gates" below). Closing a
 gate = **approving a batch of artifacts in a reviewed commit** (`Status`
-`Drafted`→`Approved`, or an SN out of its draft section), never a manual bump (§7
+`Drafted`→`Approved`, at every tier including SN), never a manual bump (§7
 "The derived gate"; the model + parallel/series workflow:
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Drafted` artifact lives in the live spine (exempt from the decomposition rules),
@@ -578,16 +578,11 @@ non-goals captured and a UX sign-off; `DevStg-Tests`'s includes key runtime flow
 diagrammed. None of that is derivable from which rung is in work, so never derive
 the bar from the stage: that silently drops the human half.
 
-**The retired vocabulary.** `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final` retired  <!-- check_vocab: allow -->
-with this ladder. They survive **only** as read-side aliases so an adopter's
-hooks, `stack.ini` `gates=` and WI `bar:` values keep working across a re-sync
-(`check.py --gate G2` is accepted and warns); `check_vocab.py` refuses them in  <!-- check_vocab: allow -->
-authored surfaces. Translate historical records rather than rewriting them —
-`G1` → the Needs…Reqs range, `G2` → Arch…Tests, `G3` → Impl, `G-Release` → the  <!-- check_vocab: allow -->
-`DevStg-Release` rung, `G-Final` → the owner's final read (`final_review`, its  <!-- check_vocab: allow -->
-own dial). **Attestations are never re-worded**: a sign-off that recorded a named
-human certifying `G1` recorded exactly that, and rewriting it would make the  <!-- check_vocab: allow -->
-record claim something was signed that was not.
+**The retired vocabulary** — the tags this ladder replaced survive only as
+read-side aliases, which is `check.py`'s and `check_vocab.py`'s behaviour, not a
+rule prose has to carry; the retirement record, the translation table and the
+never-reword rule for attestations are archived in the kit repo at
+`docs/archive/retired-vocabulary.md`.
 
 **And the derived value floors — it does not achieve.** Being a min, one
 `Drafted`/`Modified` row pulls it down (deliberately: that is the new-phase
@@ -765,6 +760,10 @@ never normative). Act from status.md; append evidence to log.md — directly on
 the serial trunk lane, or as a `docs/log.d/<WI-id>-<slug>.md` fragment on a
 work branch, compiled into `log.md` in merge order by `trunk_step.py` (the
 sign-off table and Decisions log are trunk-serial edits, never fragments).
+There is a **third** tier behind those two — `docs/archive/`, where a document
+that records a historical decision and is no longer read by a script goes to
+stop competing with the live surfaces; its README states the boundary rule and
+the counter-rule (a generated or script-read surface is machinery, not history).
 
 Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
 verdict file under the review layer (work-item-scoped names; serial counters

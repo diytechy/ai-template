@@ -19,7 +19,7 @@ decisions, session notes — appends to the log this header points at, never her
   line.)_ The trajectory/work-items layer is **opt-out**, not opt-in (on by
   default, costing nothing until a work item exists); once you use it
   (process-options.md "Trajectory / work-items layer") the **Next action** below
-  names the next `WI-###`(s) from `docs/requirements/work-items.csv`, and
+  names the next `WI-###`(s) from the `docs/work/` spec folder, and
   the root `PROJECT_STATE.html` renders the DAG (+ the What/How views). Keep this
   surface forward-only: a **`done`** WI id must not linger here (its record is the
   log's) — `check_trajectory` flags one as a finding (warn / ERROR `--strict`),

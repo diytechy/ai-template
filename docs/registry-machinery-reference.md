@@ -55,7 +55,9 @@ them is precisely the false-green the kit exists to prevent.
 - **`Status` is a CLOSED vocabulary of exactly three values**, all matched
   case-insensitively: `Drafted`, `Approved`, `Modified`. Anything else is an
   **integrity finding on the always-on `--strict-integrity` floor** — not a
-  legal-but-inert label. THE OPEN-VOCABULARY PROMISE IS RETIRED, in two acts:
+  legal-but-inert label. *(SR/LLR/TC only: the SN tier declares the same
+  vocabulary and no live pipe reads it — §2.3.)* THE OPEN-VOCABULARY PROMISE IS
+  RETIRED, in two acts:
   the closure landed 2026-08-15 (D-9 step 1) precisely because a word no
   predicate read — `Planned` was one, and `Bananas` would have read identically
   — sat in the registry announcing nothing; the rename to the ladder landed the
@@ -744,7 +746,7 @@ non-empty, enum-checked against `{Smoke, Full, Release}`, and emitted into the
 OKF bundle.
 
 What it does **not** do is select tests. `check.py`'s docstring says "the `Tier`
-column in test-cases.csv is the registry source of truth" for tiering, but what
+field in test-cases.toml is the registry source of truth" for tiering, but what
 actually runs a test is the **pytest marker** on the test function, and nothing
 compares the two. They are independent declarations of the same fact.
 
