@@ -187,7 +187,7 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     text = html_of(tmp_path)
     assert 'data-tab="process"' in text and 'id="process"' in text
     # the three panels are present and titled
-    assert "Artifact lifecycle × gates" in text
+    assert "Artifact lifecycle × the stages a human clears" in text
     assert "The station cycle" in text
     assert "Slices → phase → gates" in text
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
@@ -216,7 +216,7 @@ def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
     with_gate(tmp_path, "DevStg-Reqs")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Next gate to pass: <b>DevStg-Reqs</b>" in text
+    assert "Next stage to clear: <b>DevStg-Reqs</b>" in text
     assert 'class="stg now" data-gates="DevStg-Reqs"' in text  # SN
     assert 'class="stg now" data-gates="DevStg-Reqs→DevStg-Tests"' in text  # SR
     assert 'class="stg" data-gates="DevStg-Tests"' in text  # LLR not yet
@@ -225,7 +225,7 @@ def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
     (tmp_path / "docs" / "gate").write_text("DevStg-Impl\n", encoding="utf-8")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Next gate to pass: <b>DevStg-Impl</b>" in text
+    assert "Next stage to clear: <b>DevStg-Impl</b>" in text
     assert 'class="stg" data-gates="DevStg-Reqs"' in text  # SN no longer highlighted
     assert 'class="stg now" data-gates="DevStg-Tests→DevStg-Impl"' in text  # TC
     assert 'class="stg now" data-gates="DevStg-Impl"' in text  # code+tests
@@ -303,7 +303,7 @@ def test_meta_process_tab_smoke():
     tab, panel = out
     assert 'data-tab="process"' in tab
     gate = gt._gate_value(ROOT)
-    assert gate and "Next gate to pass: <b>{}</b>".format(gate) in panel
+    assert gate and "Next stage to clear: <b>{}</b>".format(gate) in panel
     hrefs = set(re.findall(r'href="([^"]+)"', panel))
     assert "project-trajectory/PROCESS.md" in hrefs
     for href in hrefs:

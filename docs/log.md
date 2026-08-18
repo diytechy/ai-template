@@ -33042,3 +33042,53 @@ re-stamps, all alias rows plus their reasoning and zero behaviour change:
 Bar: `pytest -q -n auto -m smoke` → **1,201 passed, 5 skipped**;
 `check_vocab --strict` → clean, 403 live authored files;
 `check_docs` → OK, 0 broken links.
+
+---
+
+## 2026-08-18e — The two reader surfaces reworded onto the verb, and a CRLF defect the rename introduced
+
+**The rename made the rendering rule mandatory rather than optional.** With one
+token naming both readings, a surface that shows the token without the verb says
+nothing at all — so the two surfaces that were still on the pre-rename wording
+were converted rather than left:
+
+- **`status.md`** read *"Stage: X · next bar: Y — a repo is IN a stage and
+  CLEARS a bar"*. Now *"**In stage:** X · **next to clear:** Y — one vocabulary,
+  and the VERB says which reading: a repo is IN a stage and CLEARS a stage."*
+  Both labels are verbs now, so the two Y-shaped tokens can never be read as the
+  same claim.
+- **The dashboard's Process tab** — the one surface identified as genuinely
+  reading badly before any of this started. It used **three words for one thing
+  in three consecutive sentences** ("PASSES a gate" · "the gate it spans" · "the
+  gate bars"), and "PASSES a gate" contradicted the ruled sentence outright. Now:
+  *"Next stage to clear: X"*, *"a repo is IN a stage and CLEARS a stage"*, and
+  the ladder caption names the relation the span column was rendering without a
+  word for it — *"beside it is the stage whose CLEARING ratifies that tier"*.
+  Panel heading follows: *"Artifact lifecycle × the stages a human clears"*.
+
+Three `test_traj_panels` assertions re-pointed onto the new labels — they pinned
+the literal strings, which is why they caught it.
+
+**A REAL DEFECT THIS SESSION INTRODUCED, found and fixed.** The rename script
+preserved each file's working-tree line endings — correct for the working copy,
+**wrong for the object store**. `check.ps1`, `setup.ps1` and
+`dev-setup.template.ps1` carry `text eol=crlf`, so their blobs are LF and the
+CRLF exists only on checkout; writing CRLF through `git add` stored 26/175/96
+carriage returns into blobs that had none. This is the CRLF-conviction class
+`WI-461` diagnosed, arriving from the opposite direction, and it is exactly what
+`status.md`'s standing rule warns about ("measure on a tree whose line endings
+match the index").
+
+How it surfaced is worth recording: three `test_integrate` end-to-end tests
+failed with *"the lane worktree is dirty — the refresh resets to the last work
+commit, so it refuses rather than discard uncommitted work"*. The refusal was
+**correct and the tests were right**: git saw three files permanently modified
+because the blob and the checkout could not agree, so a scaffolded lane could
+never be clean. Diagnosed by bisecting against the pre-rename commit (passed
+there), then per file: `git diff --ignore-cr-at-eol` empty (content identical),
+blob CR count 0 → 26/175/96 (the actual change). Fixed by rewriting the three to
+LF and re-committing; verified each blob back at CR=0 with `git ls-files --eol`
+reading `i/lf w/lf` under an unchanged `eol=crlf` attribute.
+
+Bar: `pytest -q -n auto` → **2,580 passed, 13 skipped** (full suite, clean tree);
+`check_vocab --strict` → clean across 403 live authored files.

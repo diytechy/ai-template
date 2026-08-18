@@ -404,9 +404,10 @@ def _stage_line(gate, basis, gate_detail):
             else "stage"
         )
         return (
-            "- **Stage:** **{s}** ({where}, {label}) · next bar: **{g}**{detail} "
-            "— a repo is IN a stage and CLEARS a bar; the harness at that bar is "
-            "the bar. {link} derives both, cached to [`docs/gate`](gate).".format(
+            "- **In stage:** **{s}** ({where}, {label}) · **next to clear: {g}**"
+            "{detail} — one vocabulary, and the VERB says which reading: a repo "
+            "is IN a stage and CLEARS a stage. {link} derives both, cached to "
+            "[`docs/gate`](gate).".format(
                 s=stage,
                 where=where,
                 label=_STAGE_LABELS[stage],
