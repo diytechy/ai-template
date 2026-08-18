@@ -63,7 +63,16 @@ import tomllib
 # The tier each registry's rows live under, keyed by the registry's ID COLUMN
 # rather than by its path. A path carries a carrier suffix and therefore moves;
 # the tier is the thing that does not.
-SPINE_TABLE = {"SR-ID": "requirement", "LLR-ID": "design", "TC-ID": "test"}
+# `SN-ID` JOINED 2026-08-17 (owner ruling 2026-08-17k, "Yes add in"). The need
+# tier had no declared schema at all, which is the guard gap that let the
+# shipped template ship without `tags` and let three fields accumulate for one
+# axis — the census is what makes a fourth impossible to add quietly.
+SPINE_TABLE = {
+    "SN-ID": "need",
+    "SR-ID": "requirement",
+    "LLR-ID": "design",
+    "TC-ID": "test",
+}
 
 # BATCH-2 (repo-lock.md §8.1): the OFF-SPINE registries the same OI-12 ruling
 # covers, keyed the same way. `interfaces` and `components` JOINED at WI-443 —
@@ -130,6 +139,11 @@ SPINE_COLUMN = {
     "priority": "Priority",
     "verification": "Verification",
     "status": "Status",
+    # the SN tier's own four, plus the `tags` cell the hats roster reads
+    "need": "Need",
+    "why": "Why",
+    "acceptance": "Acceptance",
+    "tags": "Tags",
     "phase": "Phase",
     "aspect": "Aspect",
     "superseded_by": "SupersededBy",
@@ -265,6 +279,20 @@ REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 # here first — which is the same discipline SPINE_COLUMN already carries, for
 # the same reason.
 SPINE_TIER_KEYS = {
+    # THE NEED TIER, post-unification. `status` is the ONE maturity field (the
+    # `kind`/`attestation`/`amended` trio it replaced is deleted, not renamed).
+    # `tags` is OPTIONAL — ten of twenty-seven live rows carry none, and an
+    # `always` hat reaches a need without one — but it is DECLARED, which is
+    # the whole point: the template shipped without it precisely because no
+    # schema named the tier.
+    "SN-ID": (
+        "status",
+        "tags",
+        "need",
+        "why",
+        "priority",
+        "acceptance",
+    ),
     "SR-ID": (
         "title",
         "sn_refs",

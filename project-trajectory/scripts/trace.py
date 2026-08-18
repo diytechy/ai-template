@@ -372,9 +372,9 @@ REQUIRED_FIELDS = {
 # executably: *at every commit, the declared Status enum equals exactly the set
 # of values at least one live predicate recognizes, narrowing monotonically*.
 #
-# `Draft`→`Drafted`, `Verified`→`Approved`, `Planned`→`Approved` (OI-30 D1: the
-# two ratified-text rungs are ONE once the pass claim leaves the vocabulary).
-# `Modified` is the TRANSITIONAL third value; it retires at step 7.
+# `Draft`→`Drafted`, `Verified`/`Planned`→`Approved` (OI-30 D1: the two
+# ratified-text rungs are ONE once the pass claim leaves the vocabulary).
+# `Modified` is TRANSITIONAL and retires at step 7.
 STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
@@ -383,12 +383,12 @@ STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
 # Status vocabulary declared there would be INERT for every repo below the top
 # bar, which is every repo the migration is being run for. A retired Status word
 # is wrong at ANY stage, exactly like a duplicated id, so it joins the always-on
-# `--strict-integrity` floor (and therefore the pre-commit hook) instead. The
-# vocabulary still has ONE home — `ENUM_FIELDS` below — and this names only
-# which pipe reads it.
+# `--strict-integrity` floor instead. The vocabulary still has ONE home —
+# `ENUM_FIELDS` below — and this names only which pipe reads it.
 INTEGRITY_ENUM_COLS = frozenset({"Status"})
 
 ENUM_FIELDS = {
+    "SN": {"Status": STATUS_VALUES},  # home for the need tier (2026-08-17k)
     "SR": {
         "Status": STATUS_VALUES,
         # The ruled aspect vocabulary (sitting-2 decision 10, executed by the

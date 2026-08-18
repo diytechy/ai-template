@@ -251,6 +251,15 @@ def test_dev_setup_carries_no_engine_line_to_pin():
 # so this is the map agreeing with the schema of record rather than a second
 # convention.
 TOML_REGISTRIES = {
+    # The NEED tier joined the census on 2026-08-17 (owner ruling 2026-08-17k).
+    # It was the one spine tier with no schema of record, which is exactly how
+    # it accumulated three fields for one axis and shipped a template missing
+    # the `tags` cell its own live rows use.
+    "SN-ID": (
+        "docs/requirements/stakeholder-needs.toml",
+        "registries/stakeholder-needs.template.toml",
+        "need",
+    ),
     "SR-ID": (
         "docs/requirements/system-requirements.toml",
         "registries/system-requirements.template.toml",
@@ -406,6 +415,7 @@ def test_the_live_registries_carry_more_than_the_template_example(tmp_path):
     than the example row" is the property that matters, and a registry that
     shrank to its example would still red here."""
     floors = {
+        "SN-ID": 10,
         "SR-ID": 10,
         "LLR-ID": 10,
         "TC-ID": 10,
