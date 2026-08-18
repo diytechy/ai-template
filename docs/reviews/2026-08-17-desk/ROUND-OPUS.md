@@ -21,6 +21,20 @@ recorded under CLEAN. Per the standing pattern **nothing is applied**: every
 finding is recorded for the owner's ruling. This round's only writes are this
 document and the log entry.
 
+> **DISPOSITIONED 2026-08-17w — the sentence above is true OF THE ROUND, not of
+> this file today.** The owner ruled *"Yes please do"* and a disposition pass
+> applied the confirmed findings; the round's own text is left byte-unchanged
+> above each `**Outcome:**` line, which is appended per finding. Summary:
+> **13 fixed** (F1, F2, F4, F5, F6, F7, F11, F13, F14, F15, F17, F19, and F12's
+> related MINOR), **4 proven by the round's own mutations** (F1, F13, F14, F15),
+> **1 refuted in effect** (F12 — the orphan rules already cover the class, and
+> gate where the retired arm only warned), **3 recorded or filed rather than
+> fixed** (F3, F8, F16), **1 flagged for the owner** (F18), and **2 CONFIRMED
+> but BLOCKED** (F9/F10 — the re-seed is refused by the kit's own integrity
+> rule; an interim protection is in place and a ruling is owed). The three
+> RELAYED findings (F15, F16, F19) were author-verified first and all three
+> stood. Full disposition entry: `docs/log.md` `2026-08-17w`.
+
 The day's headline claims mostly hold, and several hold impressively — the
 18/9 SN split, the 138-cell off-spine census, the SN schema census
 non-vacuity, and the trap-(i) no-writer guard all reproduced exactly under
@@ -89,6 +103,8 @@ that is the combination with no reader. Owner rules: map `standing` into the
 rung predicate, or record why a known-broken partition may report a finished
 rung.
 
+**Outcome — FIXED** (2026-08-17w). `derive_gate.CMP_STANDING_CLEARS` + `_standing_holds_rung` restore the protection on the `standing` axis, and `arch_incomplete` reads both axes. Measured, same shape as the round's table: `status=Founded + standing=has-gap` -> **True** (was False), `deprecated` -> False, absent cell -> False, unreadable standing -> True (fail-honest, as `_maturity`). Pinned by `tests/test_ratification_level.py::test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads`; removing the new arm reds it (`assert 'DevStg-Release' == 'DevStg-Arch'`). The deleted comment is restored verbatim inside the new table's rationale, with its provenance cited.
+
 ### F2 — MINOR · CONFIRMED · `arch_incomplete`'s docstring still teaches the retired vocabulary
 
 `project-trajectory/scripts/derive_gate.py:754-772` still reads *"any component
@@ -99,6 +115,8 @@ project-trajectory/scripts/derive_gate.py` shows those docstring lines as
 unchanged context — the commit re-keyed the predicate's *field* (`State` →
 `Status`) two lines below and left the prose. Refutes `2026-08-17u` step 9's
 *"swept the prose surfaces"* for the very function the split re-keyed.
+
+**Outcome — FIXED** (2026-08-17w). `arch_incomplete`'s docstring re-worded off `planned`/`has-gap`-as-maturity and now states the two-axis read it actually performs.
 
 ### F3 — MAJOR · CONFIRMED-IN-PART · "no row's maturity moved, measured not asserted" is unmeasured for the CMP tier
 
@@ -131,6 +149,8 @@ rather than renamed, i.e. the highest-risk quarter. The second evidence leg
 gap either: `tests/golden/offspine.txt` is a 1-row synthetic scaffold fixture
 and renders no CMP maturity.
 
+**Outcome — RECORDED, not fixed** (2026-08-17w). No cheap visibility fix was taken: the basis line's blindness follows from `spine_stage` reporting the LOWEST unfinished rung, so exposing CMP maturity there means changing the gate arithmetic's output format — which is the surface sitting 3 attests, and not something a disposition pass should move unasked. The caveat is corrected forward in the log instead: the byte-identity is evidence for 134 of 138 off-spine cells and for none of the 4 CMP cells. (F1's fix does make the CMP tier's `standing` reachable by the rung predicate, which narrows the blind spot without touching the line.)
+
 ### F4 — MINOR · CONFIRMED · the shipped hats template still teaches a field the same day deleted
 
 `2026-08-17u` disclosed **one** `kind` survivor — `hats.py`'s `SCALAR_FIELDS` —
@@ -146,6 +166,8 @@ downstream: `RESYNC_PACK.md`'s new entry instructs adopters to map
 `kind = "core"` → `status = "Approved"` **and drop the key**, while the hats
 template they scaffold alongside it documents `kind == "core"` as how you write
 a condition. Refutes step 9's *"swept the prose surfaces"*.
+
+**Outcome — FIXED** (2026-08-17w). Both prose surfaces (`hats.template.toml`, `docs/requirements/hats.toml`) stop using `kind == "core"` as the worked example and state that `kind` remains grammar-evaluable but is declared by no registry since the unification — so an adopter reading it alongside the `RESYNC_PACK.md` drop-the-key instruction is no longer given a dead field as the model.
 
 ### F5 — MAJOR · CONFIRMED · SR-159's re-home is claimed against rows that do not carry the obligation
 
@@ -174,6 +196,8 @@ re-homed. (Sub-reviewer additionally found the second half — the `[checks]
 components_check` opt-out — has no design-tier home either, LLR-042 carrying
 only `interfaces_check`; recorded but the `10` is the decisive half.)
 
+**Outcome — FIXED** (2026-08-17w). The value is re-homed at the design tier the round names: LLR-049's `detail` now reads `TOP_VIEW_MAX — 10 uncontained top-level modules`. The sub-reviewer's second leg went with it — the same cell now names the opt-out dial (`[checks] components_check = false`) rather than saying "opt-out" abstractly.
+
 ### F6 — MAJOR · CONFIRMED · the SR-040 phantom symbol is live on a shipped adopter-facing surface
 
 **Claim** (`2026-08-17s`): the removed `AGENT_STATUS_WARN_BYTES` occurs nowhere
@@ -197,6 +221,8 @@ the obligation in artifact-free prose, and the re-voicing's stated trace home
 `LLR-037` names a retired function (`agent_loop.py:499` — *"status_size_warning
 retired with the serial driver, WI-210"*).
 
+**Outcome — FIXED** (2026-08-17w). `PROCESS_OPTIONS.md` no longer documents `AGENT_STATUS_WARN_BYTES`; the sentence states the pruning obligation (unchanged) and records that the coordinator's size tripwire retired with the serial driver (WI-210). `grep -rn AGENT_STATUS_WARN_BYTES project-trajectory/` is now empty. **The tripwire-obligation question is deliberately NOT resolved here** and stays on the sitting's desk. Byte delta -15 (172,106 -> 172,091), re-stamped in all three `byte-budget-guard` skill copies.
+
 ### F7 — MINOR · CONFIRMED · SR-167's DevBar-Release wiring observable is now stated at no spine row
 
 Old SR-167 acceptance named *"the harness wiring at DevBar-Release via
@@ -209,6 +235,8 @@ bar the step runs at, and the ledger's SR-167 disposition does not acknowledge
 the drop. Capped at MINOR: SR-006 generically covers *"the harness runs that
 bar's declared steps"* and `docs/stack.ini` declares the step's `gates`, so the
 obligation is reachable by composition — but it is no longer asserted.
+
+**Outcome — FIXED** (2026-08-17w). The dropped observable is re-stated on the spine: LLR-014's `detail` names the bar the step is wired at (DevBar-Release, per its declared `gates` in `docs/stack.ini`), and TC-014's `evidence` names `test_harness_runs_perf_at_g3` rather than only its file.
 
 ### F8 — MAJOR · CONFIRMED · the acceptance-form pass's "byte-identical advisories" evidence is vacuous
 
@@ -244,6 +272,8 @@ the owner: the pass replaced backticked paths/symbols with *"the declared X"*
 throughout, and `check_doc_refs.py` can only fire on a path-shaped backticked
 token — so for the ~31 rows disposed as "already homed elsewhere, verified",
 the SR acceptance cell is now inert to the kit's own reference checker too.
+
+**Outcome — FILED, deliberately not fixed** (2026-08-17w). No lint was built: a checker that reads acceptance prose is new machinery and a design call the owner has not made. Filed as a **WI-candidate for the owner** — *"the kit's checkers cannot see `acceptance_criteria` prose at all, so any byte-identical-advisories evidence across an acceptance rewrite is vacuous by construction."* The sub-reviewer's companion leg is filed with it: the de-backticking of paths/symbols also puts those cells beyond `check_doc_refs.py`, so ~31 rows disposed "already homed elsewhere" are now inert to the reference checker too.
 
 ### F9 — MAJOR · CONFIRMED · the watermark's "ever allocated" verification used a structurally blind probe; `B` is under-seeded
 
@@ -286,12 +316,16 @@ watermark header's own text claims to prevent. The entry's own tie-break argues
 the fix direction: *"over-seeding is fail-safe — it wastes numbers, never
 re-points history."*
 
+**Outcome — CONFIRMED and BLOCKED; interim protection taken, ruling owed** (2026-08-17w). The directed re-seed was attempted and **the kit's own guard refuses it**: with `B = 8` / `REL = 4`, `trace.py --root . --strict-integrity` reports `integrity=2` — *"id watermark for B stands at 8 but nothing justifies more than 7 … a mark rises by allocating an id, never by hand"* (and the same for REL). The first-seed exemption at `_mark_history_findings` no longer applies now that both spaces carry a committed mark, so correcting a MIS-COMPUTED seed needs a mechanism the kit does not have. Building one is new policy, so it was not built; the marks are unchanged. **Interim protection taken instead, at the site where a crossing is actually hand-minted**: `docs/requirements/external.toml`'s header now carries a SPENT IDS block naming `B-08` and `REL-004`, why they are spent, why the mark does not protect them, and that the mechanism is an open ruling. **NEW RULING OWED BY THE OWNER.**
+
 ### F10 — MAJOR · CONFIRMED · `REL` is under-seeded, same class, same root cause
 
 `docs/log.md:3472` (ruling 13o, commit `e32fd9a0`): *"**REL-004 folds into
 REL-003.**"* REL-004 was allocated in the v2 relationship space and folded by
 ruling; `docs/id-watermark` reads `REL = 3`, so the next mint is `REL-004`.
 Same blind probe, same consequence. Verified by the commands under F9.
+
+**Outcome — CONFIRMED and BLOCKED, with F9** (2026-08-17w). Same root cause, same refusal, same interim protection — `REL-004` is named in the `external.toml` SPENT IDS block. See F9's outcome.
 
 ### F11 — MINOR · CONFIRMED · the `EXT` mark is v2-scoped while the file header promises an unscoped guarantee
 
@@ -309,6 +343,8 @@ archived document that cites that id"*) and the v1→v2 recycling has already
 happened once (v1 EXT-005 = git; v2 EXT-005 = model services). The scoping
 sentence belongs in the header. Note `_mark_history_findings`' new first-seed
 exemption means nothing mechanical will ever raise this.
+
+**Outcome — FIXED** (2026-08-17w). `render_watermark`'s generated header gains a SCOPE paragraph: a mark covers the id space **as currently numbered**, ids from a superseded numbering are not covered, and those belong at the registry. Regenerated into `docs/id-watermark` via `--bump-ids` (0 raised) and synced into the shipped `id-watermark.template`. Ratchet re-stamped `trace.py` 4203 -> 4207.
 
 ### F12 — MAJOR · CONFIRMED · "stricter-never-quieter" is false as a blanket claim: the Modified-chain advisory class went silent
 
@@ -346,6 +382,8 @@ still describes the deleted suppression in the present tense as current
 behaviour (*"suppressed when the owning SR flips in the same commit (the
 attestation unit)"*), and the same commit re-stamped `check_trajectory.py`
 4208 → 4169 in that file without correcting the adjacent clause.
+
+**Outcome — REFUTED IN EFFECT; no successor is owed** (2026-08-17w). Measured on a planted tree rather than reasoned about: every sub-case of the retired "no resolvable owning SR" arm is already reported by the **orphan** rules, and reported HARDER than the retired advisory — `LLR-049 references unknown SR-899` (unknown parent), `LLR-049 has no SR parent` (absent refs), the same pair on a TC's `Verifies`, and an explicitly EMPTY ref cell refused outright by the carrier. Those are orphan findings, so they GATE under `--strict`; the retired arm only warned. No detector was built. `sr_chain_drifts`' docstring — the text this finding quotes as conceding the gap — now records the measurement, so the next reader does not rebuild what the repo has. **The related MINOR is FIXED**: `tests/test_module_size_ratchet.py`'s clause describing the deleted suppression moved to the past tense with the reason it is kept.
 
 ### F13 — MAJOR · CONFIRMED · the `min()` cap pin observes the PRINTED message, not the served sleep
 
@@ -387,6 +425,8 @@ recorder — the instrument the log cites as *"observed, never served"* — is n
 used by this test; the one pin whose whole subject is a wait duration never
 measures a wait.
 
+**Outcome — FIXED and PROVEN** (2026-08-17w). The pin is re-planted on the SERVED sleep: the test now runs through `_nosleep_loop` and asserts `1.0 in waits` and `5.0 not in waits`, not only the printed string. Proven with the round's exact mutation (`time.sleep(args.limit_retry_fallback)`, the `min()` and the print untouched, syntax-checked): UNMUTATED 1 passed; MUTATED **FAILED — `AssertionError: assert 1.0 in [5.0]`**. Tree restored and re-verified green.
+
 ### F14 — MAJOR · CONFIRMED · TC-170's failure is planted in the LAST regen step, so `regen`'s stop-at-first-failure is unpinned
 
 **Claim refuted** (`43bf51a7`): *"TC-170: the failure-path sentence executed,
@@ -426,6 +466,8 @@ that run "failed" 4 tests on a `NameError`, which is a crash, not a result, and
 was discarded. The run above is the corrected mutation, syntax-checked before
 execution.)* Tree restored and re-verified green afterwards.
 
+**Outcome — FIXED and PROVEN** (2026-08-17w). The failure is re-planted at `derived-gate` — step 3 of 6 — with `open-items` (step 6) applicable and green, so a later step genuinely exists to be skipped; the new assertion is that `open-items` appears NOWHERE in the output. Proven with the round's carry-on mutation (`_rc = 1; continue`, `_rc` seeded, `return _rc`, syntax-checked): UNMUTATED 15 passed; MUTATED **FAILED** — `open-items` ran on the RED upstream and produced exactly the derived second failure the docstring warns about. Tree restored, 15 passed.
+
 ### F15 — MINOR · RELAYED · the ceiling boundary (`<=`) is unpinned in either direction
 
 Sub-reviewer mutation (author did not independently re-run): `agent_loop.py`
@@ -437,6 +479,8 @@ wait `< 86400`, so it is structurally incapable of touching the boundary, while
 LLR-174 states the fork explicitly (*"a parsed reset **within that ceiling** is
 slept … **Past the ceiling** … stops at `EXIT_WAITING`"*).
 
+**Outcome — AUTHOR-VERIFIED CONFIRMED, then FIXED and PROVEN** (2026-08-17w). The relayed evidence reproduced: the site is `agent_loop.py:2669`, and no test anywhere reaches the boundary (the parsed-reset pin uses ceiling 90000 against a wait structurally under 86400 — a 3600s gap). Fixed by making the boundary CONSTRUCTIBLE: `_nosleep_loop` gained an optional `freeze_now`, so at a frozen 2026-01-01 12:00:00 a `3:45pm` hint parses to exactly 13500s and the ceiling can be set to precisely that. Two new tests pin both arms (equal -> slept and retried; one second past -> `EXIT_WAITING`). Proven with the round's `<= -> <` mutation: **1 failed, 89 passed, 1 skipped** (it was 88 passed / 1 skipped clean before). Restored: 90 passed, 1 skipped.
+
 ### F16 — MINOR · RELAYED · TC-170's "HEAD unmoved" proof is unfalsifiable by construction
 
 Sub-reviewer's reading (author confirmed only that `regen()` contains no git
@@ -445,6 +489,8 @@ bites"* — inserts a git call that does not exist in `regen()` and that no
 plausible edit would add, and `test_regen_never_commits_the_caller_owns_the_
 commit` already asserts the property. "Mutation-proved" here means an arbitrary
 insertion was detected, which is not evidence of a pin.
+
+**Outcome — AUTHOR-VERIFIED CONFIRMED; recorded, and the adjacent defect fixed** (2026-08-17w). Verified independently: `regen()` contains no git invocation at all (its only `subprocess.run` runs Python generators), so the log's "a mutation planting a commit-on-failure bites" inserts a call no plausible edit would add; and `test_regen_never_commits_the_caller_owns_the_commit` (landed at `82b91b8b`, BEFORE TC-170's test at `43bf51a7`) already asserts the property in its general form. The HEAD assertion is kept — it is cheap and true — but it is no longer offered as a mutation-proved pin; the log records the correction forward. The same test's OTHER weak proof was the substance of F14 and is fixed there.
 
 ### F17 — MINOR · CONFIRMED · the desk's "the shape you are signing" table is false at HEAD
 
@@ -466,6 +512,8 @@ stamped snapshot, not a currency claim. Hence MINOR. But the note column reads
 *"the shape you are signing,"* which is the one place a stale number is
 load-bearing.
 
+**Outcome — FIXED** (2026-08-17w). The measured-state table is re-derived at HEAD by two independent routes that agree: `trace.py --root .` and a direct `Status` census over the three registries. `SN=27 SR=63 LLR=155 TC=150` -> `SN=27 SR=70 LLR=159 TC=155`; `147 Modified + 52 Drafted (SR 40/19 · LLR 83/17 · TC 24/16)` -> `147 Modified + 68 Drafted (SR 40/26 · LLR 83/21 · TC 24/21)`. Stamp moved to `2026-08-17w` and the `fig:` rev re-anchored.
+
 ### F18 — MINOR · CONFIRMED-IN-PART · `ba23fe3d`'s frame-count correction has no Decisions entry
 
 `grep -c 'ba23fe3d' docs/log.md` → **0**. The commit moved `docs/status.md`
@@ -476,6 +524,8 @@ explicitly scoped *"Ratified or executed decisions only"*, and a catch-up of
 numbers to an already-ruled cut is arguably bookkeeping rather than a decision,
 so its absence may be correct by the section's own rule. Recorded for the owner
 to place, not asserted as a defect.
+
+**Outcome — FLAGGED for the owner, not fixed** (2026-08-17w). Left as the round filed it. The Decisions section is explicitly scoped *"Ratified or executed decisions only"*, and whether a catch-up of counts to an already-ruled cut is a decision or bookkeeping is the owner's call to place — writing the entry would be this pass deciding it. Recorded in the log's disposition entry so the question is not lost.
 
 ### F19 — MINOR · RELAYED · an unpinned `HEAD` in a frozen review package
 
@@ -639,3 +689,6 @@ Stated so its absence is not read as coverage.
   half but relayed a companion half (F5's `components_check` leg, F6's
   LLR-037-is-stale leg, F12's `test_module_size_ratchet` leg). Those legs carry
   the sub-reviewer's evidence, not a second author derivation.
+
+**Outcome — AUTHOR-VERIFIED CONFIRMED, then FIXED** (2026-08-17w). Verified: the file's last touch is `d28e1ccb` with **17** commits landed since, and three of the four spine counts in its measured-state paragraph have drifted. Both ends are now pinned — `bb4ac776..3d91e8d2` — with a note stating why `3d91e8d2` is the right end (it is the commit that WROTE §1's table and whose act is its last row, `2026-08-15n`; the four later touches of the file amend other sections and add no row here) and warning that §0's counts are of that revision too.
+

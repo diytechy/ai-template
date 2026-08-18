@@ -469,12 +469,60 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
     # `verified` left this vocabulary at the status unification (they were the
     # retired spine words regenerated in another registry), so a stale cell
     # still carrying one is unreadable — and an unreadable partition reports
-    # unfinished, never finished. `has-gap` is the same shape: it is a
-    # `standing` fact now, not a maturity, so it says nothing here.
+    # unfinished, never finished. `has-gap`/`deprecated` are the same shape ON
+    # THIS FIELD: they are `standing` values now, so as a `Status` they are just
+    # unreadable. What `standing = "has-gap"` means on its OWN field is pinned
+    # by the next test.
     for retired in ("planned", "built", "verified", "has-gap", "deprecated"):
         assert _stage(cmps=[dict(CMP_BUILT, Status=retired)], have_cmps=True) == (
             dg.STAGE_ARCH
         ), retired
+
+
+def test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads():
+    """The F1 scenario, pinned exactly (2026-08-17 desk round).
+
+    The status/standing split moved `has-gap` off the maturity axis, and for one
+    day nothing read it: a component could carry `Status = "Founded"` — the top
+    of CMP's ladder, a demonstrated partition — alongside an explicitly recorded
+    `standing = "has-gap"`, and rung 3 reported FINISHED. That combination is
+    not a corner case; it is the reason the second axis was created, so it is
+    the one this test pins.
+
+    The pre-split code said so in a comment `6f39b2ed` deleted: `has-gap` is
+    "the one place a lenient mapping would let a known-broken partition report a
+    finished architecture rung"."""
+    gapped = dict(CMP_BUILT, Status="Founded", Standing="has-gap")
+    assert _stage(cmps=[gapped], have_cmps=True) == dg.STAGE_ARCH
+    # ...and it holds under every maturity, not only the top one — the fact is
+    # about the partition, not about how far the row's status has climbed.
+    for status in ("Drafted", "Approved", "Founded"):
+        assert (
+            _stage(
+                cmps=[dict(CMP_BUILT, Status=status, Standing="has-gap")],
+                have_cmps=True,
+            )
+            == dg.STAGE_ARCH
+        ), status
+    # THE OTHER DIRECTION, so this is a mapping and not a blanket veto on the
+    # field: `deprecated` is a decided state (the pre-split table read it
+    # APPROVED), `active` says nothing, and an ABSENT cell is the declared
+    # `omit = active` shorthand. None of the three may hold the rung.
+    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == dg.STAGE_RELEASE
+    for clears in ("active", "deprecated", "", None):
+        assert (
+            _stage(cmps=[dict(CMP_BUILT, Standing=clears)], have_cmps=True)
+            == dg.STAGE_RELEASE
+        ), clears
+    # Case-folded like every other cell read here, and fail-honest on a typo:
+    # the tier's schema is ADVISORY, so an unreadable standing really can arrive
+    # and it must hold the rung rather than clear it.
+    assert _stage(cmps=[dict(CMP_BUILT, Standing="HAS-GAP")], have_cmps=True) == (
+        dg.STAGE_ARCH
+    )
+    assert _stage(cmps=[dict(CMP_BUILT, Standing="has_gap")], have_cmps=True) == (
+        dg.STAGE_ARCH
+    )
 
 
 def test_BOUNDARY_outranks_ARCH_because_the_fold_takes_the_LOWEST_rung():

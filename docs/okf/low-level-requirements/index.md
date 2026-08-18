@@ -46,7 +46,7 @@ resource: "generated"
 | [LLR-033](LLR-033.md) | Release checklist generator |
 | [LLR-034](LLR-034.md) | WI dependency-DAG validation |
 | [LLR-035](LLR-035.md) | Offline project-state core |
-| [LLR-037](LLR-037.md) | Per-phase cmd map + size tripwire |
+| [LLR-037](LLR-037.md) | Per-phase cmd map and the reviewer dial |
 | [LLR-038](LLR-038.md) | Path + sym: reference checker |
 | [LLR-039](LLR-039.md) | OKF bundle emitter |
 | [LLR-040](LLR-040.md) | Subagent spawn gate |
@@ -170,4 +170,5 @@ resource: "generated"
 | [LLR-175](LLR-175.md) | Consecutive no-progress stall guard |
 | [LLR-176](LLR-176.md) | The push-channel inclusion conventions, pinned as they exist |
 | [LLR-177](LLR-177.md) | Transcript redaction: matched values never land in tracked history |
-| [LLR-178](LLR-178.md) | EARS statement-pattern advisory |
+| [LLR-178](LLR-178.md) | The mirror invariant: the record is only ever written by copying live |
+| [LLR-179](LLR-179.md) | EARS statement-pattern advisory |

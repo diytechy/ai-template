@@ -8,6 +8,10 @@
 # A mark only ever RISES. Lowering one is refused by trace.py's integrity
 # pass, which also refuses a live id above its mark and a missing space.
 #
+# SCOPE: a mark covers the id space AS CURRENTLY NUMBERED. If a space was
+# ever renumbered, ids from the superseded numbering are NOT covered and
+# may be re-pointed by a mint — record those at the registry instead.
+#
 # basis: a FRESH SCAFFOLD. The only allocated ids are the example rows the
 # templates seed (OI=2) — NOT all-zeros, which is why this file is generated
 # from a real scaffold rather than written by hand: scaffold into an empty

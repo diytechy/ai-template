@@ -166,4 +166,5 @@ resource: "generated"
 | [TC-170](TC-170.md) | Run the trunk-step regen order/commit cases: the executed step sequence follows the decla… |
 | [TC-171](TC-171.md) | Two arms, the push channel only (the pull channel is consent-scoped by design and has no … |
 | [TC-172](TC-172.md) | Plant credential-shaped values (an API key, a Bearer token, an AWS key id) in a transcrip… |
-| [TC-173](TC-173.md) | Run the EARS statement-pattern suite; each of the four condition keywords and each ubiqui… |
+| [TC-173](TC-173.md) | Run the mirror-invariant half of the baseline-snapshot suite over real temp repos - the h… |
+| [TC-174](TC-174.md) | Run the EARS statement-pattern suite; each of the four condition keywords and each ubiqui… |

@@ -298,13 +298,21 @@ def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
 
 def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     # Round-2 F9 pin — the failure half of the SR-173 no-partial-set claim,
-    # EXECUTED rather than inferred from the green path: earlier steps run
-    # green and dirty the tree (arch-map and derived-gate both regenerate),
-    # then a LATER step fails (a malformed open-items registry) — the run
-    # exits nonzero, HEAD has not moved, and the green steps' output is still
-    # sitting uncommitted in the working tree. A partially regenerated set can
-    # therefore not land in history even on the failure path; a future edit
-    # that committed on failure would move HEAD and fail here.
+    # EXECUTED rather than inferred from the green path: an earlier step runs
+    # green and dirties the tree, then a MID-RUN step fails — the run exits
+    # nonzero, HEAD has not moved, the green step's output is still sitting
+    # uncommitted in the working tree, and the steps AFTER the failure never
+    # ran at all.
+    #
+    # THE FAILURE IS PLANTED MID-LIST, DELIBERATELY (2026-08-17 desk round,
+    # F14). The first version planted it in `open-items`, which is the LAST
+    # entry of REGEN_STEPS — so "a later step fails" was vacuous and the early
+    # `return 1` skipped nothing observable. A mutation making regen carry on
+    # past a failure (`_rc = 1; continue`) left this test green, i.e. the
+    # documented invariant that protects downstream generators from a RED
+    # upstream was pinned nowhere. Here `derived-gate` (step 3 of 6) fails
+    # while `open-items` (step 6) is APPLICABLE and would run green if reached,
+    # so the stop-at-first-failure contract is what the assertions turn on.
     _git(tmp_path, "init", "-q")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "architecture.md").write_text(
@@ -321,8 +329,14 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     )
     (tmp_path / "docs" / "gate").write_text("DevBar-Reqs\n", encoding="utf-8")
     (tmp_path / "docs" / "requirements").mkdir()
-    (tmp_path / "docs" / "requirements" / "open-items.toml").write_text(
+    # The mid-list failure: `derive_gate.py` cannot parse its own spine.
+    (tmp_path / "docs" / "requirements" / "system-requirements.toml").write_text(
         "this = is not [ valid toml\n", encoding="utf-8"
+    )
+    # ...and a LATER step that is applicable and would succeed, so "it never
+    # ran" is a real observation rather than a step that was skipped anyway.
+    (tmp_path / "docs" / "requirements" / "open-items.toml").write_text(
+        '[open_item.OI-001]\ntitle = "t"\n', encoding="utf-8"
     )
     _commit(tmp_path, "seed")
     head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
@@ -330,7 +344,12 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     assert ts.regen(tmp_path) == 1
     captured = capsys.readouterr()
     assert "regen — arch-map ok" in captured.out, "a green step must precede"
-    assert "regen FAILED at open-items" in captured.err
+    assert "regen FAILED at derived-gate" in captured.err
+    # THE CONTINUATION ASSERTION — the one the last-step placement could not
+    # make. `open-items` applies, so had regen carried on it would have printed
+    # either an `ok` or a `FAILED at open-items`; neither may appear, and it
+    # must not even have been announced as skipped.
+    assert "open-items" not in captured.out + captured.err, captured.out + captured.err
     assert _git(tmp_path, "rev-parse", "HEAD").strip() == head_before, (
         "a mid-run failure must never leave a partially regenerated set in history"
     )

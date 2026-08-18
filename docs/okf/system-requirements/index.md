@@ -76,8 +76,10 @@ resource: "generated"
 | [SR-170](SR-170.md) | Shared authority surfaces are the serial actor's alone |
 | [SR-171](SR-171.md) | Bounded retry on a declared transient model limit |
 | [SR-172](SR-172.md) | A stalled session ends at its declared limit |
-| [SR-173](SR-173.md) | Shared regeneration is ordered and leaves no partial result |
+| [SR-173](SR-173.md) | Shared regeneration is ordered and commits no partial result |
 | [SR-174](SR-174.md) | Work-item identity is allocated once and never re-issued |
 | [SR-175](SR-175.md) | Declared inclusion rule for content dispatched to a model provider |
 | [SR-176](SR-176.md) | A privacy finding persists by class and location, never by value |
 | [SR-177](SR-177.md) | Fan-out utilisation reported from the run's own telemetry |
+| [SR-178](SR-178.md) | Text that has moved away from its acceptance record is reported |
+| [SR-179](SR-179.md) | The acceptance record can only be written by copying live text |

@@ -612,18 +612,42 @@ def test_unparseable_reset_falls_back_and_retries(loop_repo):
     assert _invocations(ctl) == 2, "the throttled session must be retried"
 
 
-def _nosleep_loop(tmp_path, repo, template, *extra):
+def _nosleep_loop(tmp_path, repo, template, *extra, freeze_now=None):
     """Run the loop through a driver that replaces time.sleep with a recorder.
 
     The parsed-reset wait is wall-clock sized (seconds until "3:45pm" — up to a
     day) and the fallback default is a full hour, so those sleeps must be
     OBSERVED, never served: the driver records each requested duration to a
-    file and returns immediately. Returns (proc, recorded-waits)."""
+    file and returns immediately. Returns (proc, recorded-waits).
+
+    `freeze_now` (a `datetime`) additionally pins the loop's clock. Without it
+    the parsed wait depends on the wall clock, so a test CANNOT choose a ceiling
+    equal to it — which is why the `<=` boundary went unpinned. `seconds_until_reset`
+    reads `datetime.datetime.now()` through the module attribute, so replacing
+    that attribute in the driver makes the parsed wait exactly computable."""
     sleep_log = tmp_path / "sleeps.txt"
     driver = tmp_path / "nosleep_driver.py"
+    freeze_src = ""
+    if freeze_now is not None:
+        freeze_src = (
+            "import datetime as _dt\n"
+            "class _Frozen(_dt.datetime):\n"
+            "    @classmethod\n"
+            "    def now(cls, tz=None):\n"
+            "        return cls({}, {}, {}, {}, {}, {})\n"
+            "_dt.datetime = _Frozen\n"
+        ).format(
+            freeze_now.year,
+            freeze_now.month,
+            freeze_now.day,
+            freeze_now.hour,
+            freeze_now.minute,
+            freeze_now.second,
+        )
     driver.write_text(
         "import pathlib, runpy, sys, time\n"
-        "log = pathlib.Path(sys.argv[1])\n"
+        + freeze_src
+        + "log = pathlib.Path(sys.argv[1])\n"
         "script = sys.argv[2]\n"
         "def record(secs):\n"
         "    with log.open('a') as fh:\n"
@@ -660,17 +684,30 @@ def _nosleep_loop(tmp_path, repo, template, *extra):
     return proc, waits
 
 
-def test_fallback_nap_is_capped_at_the_wait_ceiling(loop_repo):
-    # Round-2 F5 pin (a): with the declared fallback ABOVE the ceiling (5 > 1),
-    # the nap must be the ceiling — min(fallback, ceiling) is load-bearing.
-    # Deleting the cap naps (and prints) the raw 5s fallback and this fails;
-    # the pre-existing fallback test (fallback 1 under ceiling 30) stayed green
-    # under that mutation, which is why this case exists.
+def test_fallback_nap_is_capped_at_the_wait_ceiling(loop_repo, tmp_path):
+    # Round-2 F5 pin (a), RE-PINNED ON THE SERVED SLEEP (2026-08-17 desk round,
+    # F13). With the declared fallback ABOVE the ceiling (5 > 1) the nap must be
+    # the ceiling — min(fallback, ceiling) is load-bearing.
+    #
+    # WHY THE PRINT IS NOT THE PIN. The loop computes `wait = min(fallback,
+    # ceiling)`, PRINTS it, then sleeps it, so a string assertion on the message
+    # only catches mutations that move both. Napping the raw dial while leaving
+    # the print untouched (`time.sleep(args.limit_retry_fallback)`) demonstrably
+    # slept 5s past a 1s ceiling and this test PASSED — the runtime was the only
+    # tell (1.53s -> 5.57s). The subject of this pin is a wait duration, so it
+    # is measured with the instrument that can see one: the recording driver.
     repo, ctl, template = loop_repo
     (ctl / "actions.txt").write_text("limit-odd done", encoding="utf-8")
-    proc = _loop(repo, template, "--wait-on-limit", "1", "--limit-retry-fallback", "5")
+    proc, waits = _nosleep_loop(
+        tmp_path, repo, template, "--wait-on-limit", "1", "--limit-retry-fallback", "5"
+    )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "sleeping 1s (--limit-retry-fallback)" in proc.stdout, proc.stdout
+    # THE ASSERTIONS THAT BITE — what was SERVED, not what was said. Both
+    # directions, because "the ceiling was slept" and "the raw dial was never
+    # slept" fail under different mutations.
+    assert 1.0 in waits, waits
+    assert 5.0 not in waits, "the raw fallback must never be served past the ceiling"
     assert _invocations(ctl) == 2, "the throttled session must be retried"
 
 
@@ -691,6 +728,63 @@ def test_parsed_reset_within_ceiling_sleeps_and_retries(loop_repo, tmp_path):
     assert float(m.group(1)) in waits, "the printed wait must be the slept wait"
     assert "(--limit-retry-fallback)" not in proc.stdout, "fallback must not fire"
     assert _invocations(ctl) == 2, "the throttled session must be retried"
+
+
+def test_a_reset_landing_EXACTLY_on_the_ceiling_is_slept_not_abandoned(
+    loop_repo, tmp_path
+):
+    """The `<=` boundary, pinned in BOTH directions (2026-08-17 desk round, F15).
+
+    LLR-174 states the fork explicitly — a parsed reset *within* the ceiling is
+    slept and retried, *past* it the run stops at EXIT_WAITING — so the equal
+    case belongs to the sleeping arm. Nothing pinned it: mutating
+    `wait <= args.wait_on_limit` to `wait <` left the whole agent-loop suite
+    green (88 passed, 1 skipped), because the one parsed-reset test uses a
+    ceiling of 90000 against a wait structurally under 86400, a 3600-second gap
+    the boundary can never be reached through.
+
+    Freezing the clock is what makes the equal case constructible: at
+    2026-01-01 12:00:00 a "3:45pm" hint parses to exactly 13500s, so the ceiling
+    can be set to precisely that."""
+    repo, ctl, template = loop_repo
+    frozen = datetime.datetime(2026, 1, 1, 12, 0, 0)
+    exact = 3 * 3600 + 45 * 60  # 12:00:00 -> 15:45:00
+    al = load_script("agent_loop")
+    assert al.seconds_until_reset("resets 3:45pm", now=frozen) == exact
+
+    (ctl / "actions.txt").write_text("limit done", encoding="utf-8")
+    proc, waits = _nosleep_loop(
+        tmp_path,
+        repo,
+        template,
+        "--wait-on-limit",
+        str(exact),
+        freeze_now=frozen,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert float(exact) in waits, waits
+    assert _invocations(ctl) == 2, "a reset AT the ceiling must be waited out"
+
+
+def test_a_reset_ONE_SECOND_past_the_ceiling_abandons_the_run(loop_repo, tmp_path):
+    """The other arm of the same fork, so the boundary pin above cannot be
+    satisfied by a predicate that simply always sleeps. Same frozen clock, same
+    13500s parsed wait, ceiling one second lower: the run must stop at
+    EXIT_WAITING (5) rather than sleep past what the human consented to."""
+    repo, ctl, template = loop_repo
+    frozen = datetime.datetime(2026, 1, 1, 12, 0, 0)
+    exact = 3 * 3600 + 45 * 60
+    (ctl / "actions.txt").write_text("limit done", encoding="utf-8")
+    proc, waits = _nosleep_loop(
+        tmp_path,
+        repo,
+        template,
+        "--wait-on-limit",
+        str(exact - 1),
+        freeze_now=frozen,
+    )
+    assert proc.returncode == 5, proc.stdout + proc.stderr
+    assert float(exact) not in waits, waits
 
 
 def test_limit_retry_fallback_defaults_to_3600(loop_repo, tmp_path):

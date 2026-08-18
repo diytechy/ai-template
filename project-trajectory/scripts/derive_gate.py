@@ -641,8 +641,9 @@ BIF_MATURITY = {
 # two axes at once: `planned`/`built`/`verified` were maturity spelled in
 # regenerated retired spine words, while `has-gap`/`deprecated` were LIFECYCLE
 # facts folded onto maturity — exactly the conflation SN's `kind` was. The
-# lifecycle half moved to its own `standing` field, which nothing maps here
-# because it is not a maturity.
+# lifecycle half moved to its own `standing` field, which this table does not
+# map because it is not a maturity — but ONE of its values still answers a
+# rung-3 question, and `CMP_STANDING_CLEARS` below is where it answers it.
 #
 # CMP KEEPS ITS OWN TABLE rather than sharing `SPINE_MATURITY`, and deliberately:
 # the two differ TODAY (CMP reaches `founded`, the spine does not; the spine
@@ -659,6 +660,41 @@ CMP_MATURITY = {
     "approved": APPROVED,
     "founded": FOUNDED,
 }
+
+# CMP `standing` — the LIFECYCLE axis, and the one value on it that rung 3 must
+# still read. Restores, on its new home, the protection the pre-split
+# `CMP_MATURITY` entry stated verbatim and `6f39b2ed` deleted without citing:
+#
+#   `has-gap` is an explicit statement that the partition does NOT yet hold —
+#   the strongest possible DRAFTED signal, and the one place a lenient mapping
+#   would let a known-broken partition report a finished architecture rung.
+#
+# The split was right — `has-gap` is not a maturity — but it is a direct
+# statement ABOUT the partition, which is exactly what rung 3 asks, so it has to
+# be read SOMEWHERE. Without this, `Status = "Founded"` + `standing = "has-gap"`
+# (a demonstrated partition that also records a gap: precisely the combination
+# the new axis was created to make expressible) closes rung 3 (2026-08-17 desk
+# round, F1). `deprecated` does NOT hold the rung — a decided state, not work in
+# flight, which is the reading the pre-split table also gave it (APPROVED).
+#
+# Stated as what CLEARS rather than what holds, so the fail-honest direction is
+# the default: an unreadable standing holds the rung open, the same choice
+# `_maturity` makes and for the same reason (the tier's schema is ADVISORY, so a
+# typo really can arrive here). An ABSENT cell is not unreadable — `omit =
+# active` is the declared shorthand — so it clears.
+CMP_STANDING_CLEARS = frozenset({"active", "deprecated"})
+
+
+def _standing_holds_rung(value):
+    """Does this CMP `standing` cell hold the architecture rung open?
+
+    Not a maturity lookup: `standing` answers a lifecycle question, and only its
+    `has-gap` value (plus anything unreadable) bears on whether the partition
+    holds. See `CMP_STANDING_CLEARS` for why the polarity is inverted."""
+    text = str(value or "").strip().lower()
+    if not text:
+        return False
+    return text not in CMP_STANDING_CLEARS
 
 
 def _maturity(value, table, default=DRAFTED):
@@ -756,20 +792,32 @@ def arch_incomplete(cmps, have_registry):
     """Rung 3's predicate — is the PARTITION still in work?
 
     Same applies-when shape as `boundary_incomplete`: no components registry, no
-    rung. With one, a partition of nothing is incomplete, and any component at
-    DRAFTED maturity (`planned` or `has-gap`) is a scope proposed and not yet
+    rung. With one, a partition of nothing is incomplete, and a component at
+    DRAFTED maturity (`Status = "Drafted"`) is a scope proposed and not yet
     realized.
+
+    TWO AXES ARE READ, not one. The registry status unification (2026-08-17)
+    split CMP's single field into `Status` (maturity) and `standing`
+    (lifecycle), and `standing = "has-gap"` is a direct statement that the
+    partition does not hold — a rung-3 fact wherever it is spelled. It is read
+    through `_standing_holds_rung`, whose comment carries the restored
+    rationale; without it a `Founded` row could record a known gap and still
+    report a finished rung.
 
     THIS IS THE RUNG THAT MAKES THE RECURSION SELF-REPORTING. Rungs 2 and 3
     oscillate as the decomposition descends, and the mechanism is exactly this
-    predicate reading a newly minted `planned` CMP row: identifying a
+    predicate reading a newly minted `Drafted` CMP row: identifying a
     sub-component DROPS the reported stage back to Arch with nobody deciding to,
     which is the honest report."""
     if not have_registry:
         return False
     if not cmps:
         return True
-    return any(_caps(_maturity(r.get("Status"), CMP_MATURITY)) for r in cmps)
+    return any(
+        _caps(_maturity(r.get("Status"), CMP_MATURITY))
+        or _standing_holds_rung(r.get("Standing"))
+        for r in cmps
+    )
 
 
 def spine_stage(

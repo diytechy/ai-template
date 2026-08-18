@@ -31,8 +31,11 @@
 #
 #                      always
 #                      scope == "template"        (also !=)
-#                      kind == "core"             (also !=)
 #                      tags contains "unattended"
+#
+#                  (`kind` is the other scalar field the grammar admits. It is
+#                  declared by NO registry since the status unification, so a
+#                  hat keyed on it matches nothing — do not copy it as a model.)
 #
 #                  Clauses join with `or` OR with `and`, not both in one
 #                  expression (no precedence to guess at). A field the composer

@@ -206,31 +206,42 @@ deliberately does not exist yet.)*
 | the **alignment map**, including **§4** | [`2026-08-16-derivation-alignment.md`](2026-08-16-derivation-alignment.md) | the blind re-derivation's output (`2026-08-16j`) and its hat-aware extension (`2026-08-16k`): matched / orphaned-in-legacy / orphaned-in-fresh, the ranked top-10, and §4.4's revised ranking after the hat pass. **A validation instrument only — it moved no registry cell**; every orphan is a finding for you |
 | the **v2 cursor** | [`2026-08-15-retier-v2-one-decision-tiering.md`](2026-08-15-retier-v2-one-decision-tiering.md) §0 | the six slices, each with its closing log id, reading **"DONE except the sitting"** |
 
-**STATE AT THE DESK — measured `2026-08-16r`, RE-DERIVE AT CONVENING.** A
+**STATE AT THE DESK — re-measured `2026-08-18a`, RE-DERIVE AT CONVENING.** A
 snapshot with its command attached, not an authority: this document's
 §0.1/§0.2/§2.1 tables went stale in a day once and the banner at the top says
 so. Re-run the command; if it disagrees, it wins.
 
 | what | measured | note |
 |---|---|---|
-| spine | `SN=27 SR=63 LLR=155 TC=150` · `orphans=0 integrity=0` | the shape you are signing |
-| pending signature | **147 `Modified` + 52 `Drafted`** (SR 40/19 · LLR 83/17 · TC 24/16) | every row awaits a **first** approval |
+| spine | `SN=27 SR=72 LLR=160 TC=156` · `orphans=0 integrity=0` | the shape you are signing — SR/LLR/TC each +1 or +2 from the `SR-140` split (`SR-178`, `SR-179`, `LLR-178`, `TC-173`) |
+| pending signature | **151 `Modified` + 72 `Drafted`** (SR 42/28 · LLR 84/22 · TC 25/22) | every row awaits a **first** approval. `Modified` +4 = the four deliberate rides (`SR-140` split, `SR-150` re-word, `LLR-037`, `TC-040`); `Drafted` +4 = the four mints |
 | derived bar | `DevBar-Reqs`, stage `DevStg-Boundary` (1 of 8) | unchanged across the whole program |
 | baseline | **`docs/archive/last_approved/` does not exist** | the brief renders full text, not diffs — you read cold, and signing is what seeds it |
 | **frame** | **4 entities · 4 crossings · 3 relationships** | `EXT-004`/`B-06`/`B-07` **CUT** `2026-08-16q`; ids SPENT |
 | off-spine | 123 IF · 4 CMP · 11 frame rows · 22 OI | IF rows are **all `drafted`** — that approval path has never been exercised |
-| gating reds | `traceability`, `trajectory` | see below — **only one clears by signing** |
-<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=e2ec44c1 -->
+| gating reds | **`trajectory` only** | `traceability` no longer has a residue signing cannot clear — see below |
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=28313ecc -->
 
-**The two gating reds, and which one signing fixes:**
+**The gating reds, RE-DERIVED `2026-08-18a` after the split:**
 
-- **`traceability`** — mostly `--require-verified` firing on the 147 `Modified`
-  rows, which **is** the open window and clears when you sign. But `trace.py
-  --strict` alone still exits 1 on **`SR-140`/`SR-147`**'s multi-`shall`
-  findings: both carry the 13v waiver, and `form_findings` **deliberately does
-  not suppress on it**, so the waiver is recorded and the finding still gates.
-  Signing does **not** green this step — splitting those two rows does, which
-  is item 13.
+- **`traceability` — the blocker signing could not clear is GONE.** `trace.py
+  --strict` exits **0**, and so does the step's actual DevBar-Tests form
+  (`--strict --no-placeholders`): **zero findings**. `SR-147` cleared at
+  `2026-08-17b` and `SR-140` cleared today by the split, so no multi-`shall`
+  form finding survives and the 13v waiver is spent. What remains appears only
+  at the DevBar-Release invocation (`--require-verified --strict-schema`) and
+  is **entirely** the `Status=Modified` open-window class — measured, not
+  assumed: every finding in that run is `FINDING (status)`, with no form,
+  provenance or schema residue behind it. **Signing now greens this step.**
+  *(Two provenance findings appeared mid-session when the new prose cited a WI
+  id — spine rows state the system, not their own history; both were re-voiced
+  before the count above.)*
+- **`trajectory` — unchanged, and still not yours to rule.** Re-run at
+  `2026-08-18a`: the same single ERROR, `scripts/hats` (CMP-008) →
+  `scripts/spine_carrier` (CMP-006), a cross-component import with no declared
+  `IF-###` seam. One interface row or a membership retag clears it. Deliberately
+  NOT fixed here: minting an off-spine registry row the desk has already ruled
+  outside this sitting would be a change nobody asked for on the eve of signing.
 - **`trajectory`** — a real ERROR unrelated to the sitting:
   `scripts/hats → scripts/spine_carrier`, a cross-component import with no
   declared IF seam, from the 2026-08-16 hats work. Not yours to rule; one
@@ -254,17 +265,46 @@ reader does not have to reconstruct it from the log:
 | **adversarial round 2 ran** (Sol + Terra via codex, hostile brief, author re-verified) | 6 CONFIRMED · 2 in-part · 1 refuted over `47234903^..HEAD`; nothing applied — the surviving calls are **item 18** | `2026-08-17f` |
 | item 8 **RULED AND APPLIED** | all four WI-468 recommendations adopted: `SR-175`/`176`/`177` minted as labelled derived rows under SN-026/009/027 (+ `LLR-176`/`177`, `TC-171`/`172`); `SN-008`'s hue metonym + `SN-027`'s `why` amended on the open window; C-ACC-2 matched-to-`SR-052`, remainder filed `WI-470` — contrast at the option doc §6 | `2026-08-17h` |
 
-**WORK OWED BEFORE THE BRIEF REGENERATES — two items, pointers only**
-*(reconciled `2026-08-17l`; re-reduced `2026-08-17r` — the draft-TC pins are
-EXECUTED; each survivor is stated in full elsewhere on this desk).*
-Clearing these first means the brief the sitting reads is the text it signs,
-with no re-touch after: **(1) the `SR-140` split** — the one row still holding
-the `traceability` step red (the gating-reds note above; signing does not
-green it, splitting does); **(2) the `SR-173` wording decision** — item 18's
-residue: reword the shall toward its acceptance, or attest the stronger
-reading deliberately. *(The former item (2), the three draft-TC pins on
-`TC-168`/`169`/`170`, was executed `2026-08-17r` — five new mutation-proved
-tests, evidence cells updated, rows still `Drafted` for the sitting.)*
+**WORK OWED BEFORE THE BRIEF REGENERATES — EMPTY. Executed `2026-08-18a`.**
+Both items landed, and the brief has regenerated on top of them, so the text
+the sitting reads IS the text it signs with no re-touch after.
+- **(1) the `SR-140` split — DONE.** Three `shall` clauses became three rows on
+  the one-decision doctrine: `SR-140` keeps the RECORD, **`SR-178`** takes
+  drift reporting, **`SR-179`** takes the mirror invariant. Chains re-pointed
+  per obligation (`LLR-158`/`TC-153` → `SR-178`; `LLR-173`/`TC-167` stay);
+  **`LLR-178`/`TC-173` minted** so the refusal obligation keeps a chain instead
+  of becoming an undecomposed draft. The 13v waiver is spent and the row says
+  so. **`trace.py --strict` exits 0** — see the re-derived gating-reds note.
+- **(2) the `SR-173` wording — DONE, and ruled from CODE TRUTH.** The shall
+  ("no partial set BEHIND") overclaimed against its own acceptance ("not left
+  COMMITTED"), and the code settles it: the regen step touches git not at all,
+  so a first failure exits nonzero with HEAD unmoved and nothing committed —
+  while DELIBERATELY leaving the green steps' output dirty for the caller.
+  `TC-170`'s evidence test asserts `git status --porcelain` is NON-EMPTY after
+  the failure, so an implementation that cleaned up would FAIL the test holding
+  this row. The shall is restated to the proven guarantee; the rollback a
+  reader might expect belongs to the wrapping callers and is theirs, not this
+  row's. *(The former item (2), the three draft-TC pins on `TC-168`/`169`/`170`,
+  was executed `2026-08-17r`.)*
+
+**THE ONE RESIDUE THE SITTING MUST STILL RULE — `SR-040`'s tripwire.** Not
+work owed, a RULING owed, and it is the only one. Its acceptance cited a dial
+(`AGENT_STATUS_WARN_BYTES`) that occurs nowhere in the delivered code or tests,
+and `Approved` `LLR-037` still described the retired symbol behind it. The
+investigation (`2026-08-18a`) found **NO live mechanism serving the
+obligation**, and nothing was invented: `check_docs`' status line-budget warn
+was examined and **REFUSED as a substitute** — different actor (a doc checker,
+not the delivered coordinator the shall names), different moment (the commit
+bar, not run start or mid-run), different surface, already the carrier of
+another requirement, and **inverted threshold semantics** (a declared `0`/`-1`
+makes it warn on EVERY non-empty file; only `off` silences — measured by
+exercising it, not read off source). So the row is restated honestly as an
+**open obligation with no current carrier**, `LLR-037` re-written to the live
+`session_template` half only, and `TC-040` corrected — it was `Approved` while
+claiming a method clause ("a bloated status.md warns without blocking") that
+**no test in its evidence file performs**. Two dispositions, both the owner's:
+rebuild the tripwire in the coordinator against the CURRENT resume surface, or
+strike the clause and answer its two hat lenses elsewhere.
 
 **STILL OPEN — the calls this sitting actually makes.** Each carries its
 **impact** and a **recommendation** inline, so a call can be made from this
@@ -272,16 +312,24 @@ page; the linked homes hold the full evidence for the ones you want to go
 deeper on. A recommendation is a starting position, never a ruling taken in
 advance.
 
-> **SCOREBOARD — re-stamped `2026-08-17u`, the current truth of this list.**
-> OPEN CALLS: **NONE.** Item 6 was the last one, and it is now **RULED AND
-> EXECUTED** — both sub-calls ruled `2026-08-17t`, §5A's nine pre-sign steps
-> landed `2026-08-17u` with the full suite green and the derived-gate basis
-> line byte-identical. **PRE-BRIEF WORK REMAINING: the two work items in the
-> block above — `SR-140` split · `SR-173` wording.** Those are the whole of
-> it. The sitting's other owed acts are unchanged: the read/sign/seed
-> procedure, and the countersigns. (§5B of the unification plan — D-9 steps
-> 7–8, where `Modified` retires and `Founded` arms — is POST-sign AND
-> POST-seed by construction and is deliberately NOT done.)
+> **SCOREBOARD — re-stamped `2026-08-18a`, the current truth of this list.**
+> **PRE-BRIEF WORK REMAINING: NONE.** The two items in the block above —
+> `SR-140` split · `SR-173` wording — are **EXECUTED**, the four acceptance
+> items the owner queued landed with them, and the brief has regenerated
+> (66 → **70** sections). **OPEN CALLS: one, and it is new** — `SR-040`'s
+> resume-surface tripwire, an obligation the investigation found has **no
+> current carrier**, with the nearest live look-alike examined and REFUSED
+> rather than adopted (the block above states the evidence). It is a ruling,
+> not work: rebuild the tripwire or strike the clause. Item 6 was the last
+> of the ORIGINAL calls and is **RULED AND EXECUTED** — both sub-calls ruled
+> `2026-08-17t`, §5A's nine pre-sign steps landed `2026-08-17u` with the full
+> suite green and the derived-gate basis line byte-identical. The sitting's
+> other owed acts are unchanged: the read/sign/seed procedure, and the
+> countersigns. (§5B of the unification plan — D-9 steps 7–8, where `Modified`
+> retires and `Founded` arms — is POST-sign AND POST-seed by construction and
+> is deliberately NOT done.) *(The `B`/`REL` mis-seeded-watermark correction
+> raised at `2026-08-17w` is tracked in its own entry above and is unaffected
+> by today's work.)*
 > Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
 > 7 · 8 · 15 · 16 · 17 · 19 · 20 and the Sol rows 9–14; item 18's owner-cell
 > half executed on investigation `2026-08-17p`, its pins half executed

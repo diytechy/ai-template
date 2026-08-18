@@ -31,6 +31,24 @@
 # outputs, and the gap keeps id and frame name aligned 1:1 rather than
 # renumbering a locked table.
 #
+# SPENT IDS — DO NOT MINT THESE. `B-08` and `REL-004` were ALLOCATED in the v2
+# frame and then cut by owner ruling on 2026-08-13 (B-08 at 13o, sitting-2 plan
+# §1R.2; REL-004 folded into REL-003 at 13o, log 2026-08-13o). They are cited by
+# id in a ruled plan document and in `docs/log.md`, so re-minting either would
+# silently re-point that history onto a different thing.
+#
+# `docs/id-watermark` does NOT protect them: it reads `B = 7` and `REL = 3`, so
+# the next mint from the mark is exactly `B-08`/`REL-004`. The marks were seeded
+# 2026-08-17n against `git log -S` over THIS file, which was created 2026-08-14
+# — four days after the two ids were cut — so the probe could not see them and
+# returned empty (2026-08-17 desk round, F9/F10). Raising the marks by hand is
+# REFUSED by `trace.py`'s own integrity rule ("a mark rises by allocating an id,
+# never by hand"), and the first-seed exemption no longer applies now that both
+# spaces carry a committed mark. Correcting a mis-computed seed therefore needs
+# a mechanism the kit does not have, which is an OPEN RULING for the owner; this
+# note is the interim protection, and it lives here because this file is where a
+# crossing is actually hand-minted.
+#
 # STATUS — THE ONE VOCABULARY (decision 12, 13u; unified 2026-08-17).
 # Every row here carries `status`, from this file's first commit under the
 # name `approval`, because a frame with no approval element is un-ratifiable

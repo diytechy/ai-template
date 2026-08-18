@@ -32,7 +32,7 @@ in docs/requirements/interfaces.csv).
 
 Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
 LLR-134 (form_findings), LLR-135 (paraphrase_advisories),
-LLR-178 (ears_advisories).
+LLR-179 (ears_advisories).
 """
 
 import re

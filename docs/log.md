@@ -36,6 +36,256 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-18a — the pre-brief work owed is EXECUTED: `SR-140` split three
+  ways, `SR-173` truth-matched from code, `SR-150` re-worded, `SR-040`'s
+  tripwire adjudicated. `trace.py --strict` exits 0 — the `traceability`
+  step's un-signable residue is GONE.** Owner, this morning: *"please
+  implement any items that might block / affect the spine's attributes that I
+  am preparing to approve, so I do not have to do it twice."* That sanctions
+  **deliberate rides** on `Approved` rows where the fix is owed anyway; four
+  were taken and each is named below. Per-cell before/after with the pre-edit
+  `sha256:12` at `HEAD` (`4cf98e4f`) is the addendum to
+  [plans/2026-08-17-acceptance-form-ledger.md](plans/2026-08-17-acceptance-form-ledger.md),
+  not restated here.
+  **(1) THE `SR-140` SPLIT — the gating one.** Three `shall` clauses under a
+  waiver that never resolved the finding, because `form_findings` deliberately
+  does not suppress on it. Split on the one-decision doctrine: `SR-140` keeps
+  the RECORD, **`SR-178`** takes drift reporting ("regardless of any Status
+  movement", needs included), **`SR-179`** takes the mirror invariant. Every
+  clause became the normative text of exactly one row — **nothing dropped**.
+  Children moved to the obligation they actually serve: `LLR-158`/`TC-153` →
+  `SR-178` (it IS the comparison basis), `LLR-173`/`TC-167` stay on `SR-140`.
+  **`LLR-178`/`TC-173` were MINTED rather than leaving `SR-179` undecomposed**,
+  because the refusal's real home is `check_trajectory.staged_snapshot_findings`
+  — a different module from `LLR-173`'s — and its six tests already exist; a
+  `Drafted` orphan would have hidden that. `TC-173`'s evidence is
+  **function-granular**, deliberately: item 4 below is what a file-granular
+  evidence cell costs. The 13v waiver is **SPENT** and the row says so.
+  **(2) `SR-173` — RULED FROM CODE TRUTH, and the direction is the honest
+  one.** The shall said "no partially regenerated set BEHIND"; the acceptance
+  said "not left COMMITTED". The code settles it: the regen step touches git
+  **not at all**, so a first failure exits nonzero with HEAD unmoved and
+  nothing committed, while **deliberately** leaving the green steps' output
+  dirty for the caller (`LLR-142`: "never commits; the caller owns the
+  commit"). Decisively, `TC-170`'s own evidence test asserts
+  `git status --porcelain` is **NON-EMPTY** after the failure — an
+  implementation that cleaned up after itself would **FAIL the test that holds
+  this row**. So "behind" claimed something the system does not do and is
+  tested *not* to do; restating it to "committing no partially regenerated
+  set" is **truth-matching, not weakening**. The acceptance was
+  *strengthened* in the same act (adds "runs no later family" and "moves the
+  recorded history not at all"). The rollback a reader might infer from
+  "behind" is real but belongs to the **wrapping callers**, and crediting this
+  row with it would have described a guarantee a bare invocation does not give.
+  **(3) `SR-150`** got the behavioral form the other 50 cells got at
+  `2026-08-17s`; binding already at `LLR-170`/`TC-164`, so a pure
+  carrier-naming drop. Two clauses sharpened, not softened. The form pass is
+  now **51 of 51, no holdout**.
+  **(4) `SR-040`'s TRIPWIRE — investigated, and NOTHING serves it. Nothing was
+  invented.** The dial its acceptance cited occurs nowhere in the delivered
+  code or tests; the coordinator carries a tombstone where the warner stood,
+  whose own words are that the **premise dissolved** — no session inherits the
+  status surface as its resume surface any more. The nearest live mechanism,
+  `check_docs`' status line-budget warn, was examined and **REFUSED as a
+  substitute**: different actor (a doc checker, not the delivered coordinator
+  the shall names), different moment (the commit bar, not run start), different
+  surface, already the carrier of another requirement — and **inverted
+  threshold semantics**. That last was **measured, not read off the source**:
+  exercising it on declared `0`, `-1`, `off` and `200` shows a declared zero or
+  negative budget makes it warn on **every non-empty file**, the exact opposite
+  of the row's "silences the warning". Adopting it would have been carrier
+  substitution across a different requirement, component, actor and moment. So
+  `SR-040` is restated as an **open obligation with no current carrier**,
+  `LLR-037` re-written to its live half, and `TC-040` corrected — it was
+  `Approved` while claiming a method clause **no test in its evidence file
+  performs**, hidden by an evidence cell naming a 63-test file instead of
+  functions. **This is the one residue the sitting must still rule**, and it is
+  a ruling (rebuild it, or strike the clause), not work.
+  **Rides named (4), all `Approved` → `Modified`:** `SR-140` (inherent to the
+  split — the row's own text moved), `SR-150` (the sanctioned one), `LLR-037`
+  (an `Approved` design row publishing a **deleted symbol** into the generated
+  knowledge bundle), `TC-040` (`Approved` while claiming a test that does not
+  exist). Mints are all `Drafted`.
+  **A LATENT TRAP FOUND WHILE VERIFYING THIS WORK, and it is the exact
+  double-work the directive exists to prevent.** `form_findings` **skips
+  `Drafted` rows** (`if is_drafted(r): continue`), so the one-`shall` rule is
+  invisible on all 72 pending rows and fires only on APPROVAL. The first cut of
+  `SR-178` carried two `shall` tokens and passed `--strict` clean — it would
+  have redded the `traceability` step the instant the owner signed it, which is
+  precisely what this session was told to prevent. Swept every SR for the class
+  rather than fixing only my own: **two rows carried it** — `SR-178` (mine,
+  re-voiced) and **`SR-171`** (pre-existing, minted `2026-08-17b`: "shall retry
+  … and shall surface"). Both re-voiced to one `shall` with **no clause
+  dropped** — the surfacing is stated as a property of HOW the retry happens,
+  the honest reading, since an unsurfaced bounded retry and a wedge are
+  indistinguishable from outside. If the sitting judges surfacing to fail
+  independently, `SR-171` is a split rather than a re-voice; **flagged in the
+  row, not decided here**. Zero latent multi-`shall` rows remain, and no LLR
+  `Detail` uses `shall`. The detector's `Drafted` exemption is itself worth a
+  ruling — it means a batch approval can red a step no pre-approval check
+  could have shown — but that is the sitting's call, not this pass's.
+  **Two self-corrections, recorded because both were mine.** The first edit
+  moved `SR-140`'s clauses out of the *rationale* and left the `requirement`
+  cell untouched, so the 3-`shall` finding survived — caught by re-running
+  `--strict` rather than by assuming the edit landed. And the new prose cited a
+  WI id in two cells, tripping the provenance rule (a spine row states the
+  system, not its own history); both re-voiced. Also corrected: the sweep
+  behind item 4 flagged `parse_map` as a second dead symbol — it is **live**,
+  re-exported from `agent_common`, so it stays named in `LLR-037`.
+  **GATE AND BRIEF CONSEQUENCE, re-derived not assumed.** `trace.py --strict`
+  **exits 0**, and so does the step's real DevBar-Tests form
+  (`--strict --no-placeholders`): **zero findings**. At the DevBar-Release
+  invocation every remaining finding is `FINDING (status)` — the open-window
+  class — with no form, provenance or schema residue behind it, so **signing
+  now greens `traceability`**. The one gating red left is `trajectory`, a
+  cross-component import seam (`scripts/hats` → `scripts/spine_carrier`)
+  unrelated to the sitting and deliberately NOT fixed: minting an off-spine row
+  the desk already ruled outside this sitting is not a change to make on the eve
+  of signing. Derived bar **unmoved** at `DevBar-Reqs`, stage
+  `DevStg-Boundary`. Spine `SN=27 SR=72 LLR=160 TC=156`, `orphans=0
+  integrity=0`; `Modified` 147 → **151** (the four rides), `Drafted` 68 → **72**
+  (the four mints). Ratify brief regenerated: **63 → 70 sections**, 4,985 →
+  5,343 lines, 432,115 → 498,237 bytes — `SR-140` and `SR-150` join it by
+  riding, `SR-178`/`SR-179` by existing, and the four re-worded rows re-render.
+  Measured against this session's parent `4cf98e4f` with `git show`, not off
+  the working tree: an on-disk reading taken mid-session gave 66 sections and
+  did not reconcile with the committed file, so the git-derived figures are the
+  ones recorded and the on-disk one is discarded rather than reported. Id watermark `SR 177 → 179`, `LLR 177 → 178`, `TC 172 → 173`.
+  **Dashboard ceiling re-stamped** 2,615,000 → 3,025,000: `PROJECT_STATE.html`
+  measured 2,631,151 AFTER the last edit in this commit, +17,037 on HEAD's
+  2,614,114 for four rendered rows plus the expanded prose cells — ordinary
+  per-row cost, nothing in `gen_trajectory.py` changed. Note what the old
+  number had become: 886 bytes of headroom (0.03%), the exact
+  freeze-not-sensor defect this file's own history already diagnoses twice, so
+  the re-stamp restores the ~15% every earlier stamp kept rather than
+  current-plus-something-small. Full unfiltered suite **2582 passed / 10
+  skipped**, 470s — **unchanged** from `2026-08-17w`'s 2582/10, and that is
+  the expected number: the four minted rows cite tests that already existed,
+  so this pass added no test. The only red on the way was the dashboard
+  ratchet, re-stamped above
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=4cf98e4f -->.
+- **2026-08-17w — the `2026-08-17v` round DISPOSITIONED on the owner's "Yes
+  please do": 13 findings fixed, 4 proven by the round's own mutations, 1
+  refuted in effect, 2 CONFIRMED BUT BLOCKED on a ruling the kit cannot make
+  for itself.** Doc: `docs/reviews/2026-08-17-desk/ROUND-OPUS.md`, now carrying
+  a per-finding `**Outcome:**` line and a disposition banner (the round's own
+  text left byte-unchanged above each). Baseline unmoved and verified both
+  sides: `SN=27 SR=70 LLR=159 TC=155 orphans=0 integrity=0 drafts=68` with
+  `derived gate: DevBar-Reqs`.
+  <!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict-integrity" rev=f5267991 -->
+
+  - **F1 MAJOR FIXED — the rung-gating fact has a reader again.**
+    `derive_gate` gains `CMP_STANDING_CLEARS` + `_standing_holds_rung`, and
+    `arch_incomplete` reads BOTH axes. Stated as what CLEARS rather than what
+    holds, so an unreadable `standing` holds the rung open — the same
+    fail-honest choice `_maturity` makes, for the same reason (the tier's
+    schema is ADVISORY, so a typo really can arrive). An ABSENT cell clears:
+    `omit = active` is the declared shorthand, not an unreadable value.
+    Measured in the round's own shape: `status=Founded + standing=has-gap` ->
+    **True** (was False), `deprecated` -> False, absent -> False. The deleted
+    comment is restored verbatim inside the new table's rationale WITH its
+    provenance, rather than paraphrased. Pinned by
+    `test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads`;
+    deleting the new arm reds it (`assert 'DevStg-Release' == 'DevStg-Arch'`).
+  - **F13/F14/F15 MAJOR FIXED, each proven by the mutation that defeated the
+    old pin.** F13: the `min()` cap is now observed through `_nosleep_loop`
+    (`1.0 in waits`, `5.0 not in waits`), not read off the print — the round's
+    mutation (nap the raw dial, leave `min()` and the message intact) now reds
+    with `assert 1.0 in [5.0]`. F14: TC-170's failure moved from `open-items`
+    (the LAST regen step, so the early return skipped nothing) to
+    `derived-gate` (step 3 of 6) with `open-items` applicable and green, and
+    the new assertion is that `open-items` appears nowhere in the output; the
+    carry-on mutation now reds, with `open-items` visibly running on a RED
+    upstream. F15: the `<=` boundary was unreachable by construction, so
+    `_nosleep_loop` gained `freeze_now` — at a frozen 12:00:00 a `3:45pm` hint
+    parses to exactly 13500s, and both arms are pinned (equal -> slept and
+    retried; one second past -> `EXIT_WAITING`). The `<= -> <` mutation goes
+    from 88 passed clean to **1 failed, 89 passed, 1 skipped**.
+  - **F12 MAJOR REFUTED IN EFFECT — no successor detector is owed.** Measured
+    on a planted tree rather than argued: every sub-case of the retired "no
+    resolvable owning SR" arm is already reported by the ORPHAN rules, and
+    reported harder — `LLR-049 references unknown SR-899`, `LLR-049 has no SR
+    parent`, the same pair on a TC's `Verifies`, and an explicitly EMPTY ref
+    cell refused outright by the carrier. Orphan findings GATE under
+    `--strict`; the retired arm only warned. Nothing built. The measurement is
+    recorded in `sr_chain_drifts`' docstring — the very text the round quoted
+    as conceding the gap — so the next reader does not rebuild it. Related
+    MINOR fixed: the ratchet clause describing the deleted suppression moved to
+    the past tense.
+  - **F9/F10 MAJOR — CONFIRMED, and the directed fix is REFUSED BY THE KIT'S
+    OWN GUARD. A ruling is owed.** The re-seed was attempted: with `B = 8` /
+    `REL = 4`, `trace.py --strict-integrity` reports `integrity=2` — *"id
+    watermark for B stands at 8 but nothing justifies more than 7 … a mark
+    rises by allocating an id, never by hand"*. The first-seed exemption no
+    longer applies now that both spaces carry a committed mark, so correcting a
+    MIS-COMPUTED seed needs a mechanism the kit does not have; building one is
+    new policy and was not built. **Interim protection taken where a crossing
+    is actually hand-minted**: `external.toml`'s header gains a SPENT IDS block
+    naming `B-08`/`REL-004`, why they are spent, why the mark does not protect
+    them, and that the mechanism is open. The marks are UNCHANGED at `B = 7`,
+    `REL = 3`.
+  - **F3 MAJOR — the caveat, corrected forward rather than fixed.** No cheap
+    visibility fix was taken and the reason is deliberate: the basis line is
+    blind to CMP because `spine_stage` reports the LOWEST unfinished rung, so
+    exposing CMP maturity there means changing the gate arithmetic's OUTPUT
+    FORMAT — the surface sitting 3 attests. A disposition pass must not move
+    that unasked. **The correction of record:** `2026-08-17u`'s byte-identical
+    basis line is evidence for **134 of the 138** off-spine cells and for
+    **none of the 4 CMP cells**, which are the only ones whose field was
+    structurally split. F1's fix narrows the blind spot without touching the
+    line.
+  - **F8 MAJOR — FILED as a WI-candidate, deliberately not built.** The kit's
+    checkers cannot see `acceptance_criteria` prose at all, so a byte-identical
+    advisory set across an acceptance rewrite is vacuous BY CONSTRUCTION, not
+    by accident. A checker that reads acceptance prose is new machinery and a
+    design call the owner has not made. Filed with its companion leg: the
+    de-backticking of paths/symbols also puts those cells beyond
+    `check_doc_refs.py`.
+  - **F16 MINOR (RELAYED, author-verified) — recorded.** `regen()` contains no
+    git invocation at all, so the log's "a mutation planting a commit-on-failure
+    bites" inserted a call no plausible edit would add; and
+    `test_regen_never_commits_the_caller_owns_the_commit` (`82b91b8b`) already
+    asserted the property BEFORE TC-170's test (`43bf51a7`). The HEAD assertion
+    is kept — cheap and true — but is no longer offered as a mutation-proved
+    pin.
+  - **F18 MINOR — FLAGGED, left for the owner to place.** Whether `ba23fe3d`'s
+    frame-count catch-up is a decision or bookkeeping is a call the Decisions
+    section's own scope makes, and writing the entry would be this pass
+    deciding it.
+  - **The prose and re-home sweep, all FIXED.** F2 (`arch_incomplete`'s
+    docstring, re-worded onto the two-axis read); F4 (both hats surfaces stop
+    teaching the deleted `kind` as the worked example); F5 (LLR-049's `detail`
+    now states `TOP_VIEW_MAX — 10 uncontained top-level modules` and names the
+    `[checks] components_check` opt-out, closing both legs); F6
+    (`PROCESS_OPTIONS.md` stops documenting the phantom
+    `AGENT_STATUS_WARN_BYTES`; **the tripwire-obligation question is left on the
+    sitting's desk, not resolved here**); F7 (LLR-014 names the bar the perf
+    step is wired at, TC-014 names `test_harness_runs_perf_at_g3`); F11 (the
+    watermark header SCOPES its guarantee to the space as currently numbered);
+    F17 (sitting-3's state table re-derived by two agreeing routes:
+    `SR=63/LLR=155/TC=150` -> `SR=70/LLR=159/TC=155`, `52 Drafted` -> `68`);
+    F19 (`bb4ac776..HEAD` -> `bb4ac776..3d91e8d2`, with the evidence for that
+    end recorded in the doc).
+  - **Byte deltas.** `AGENTS.template.md` 9,994 -> 9,994 (unchanged; 6 bytes of
+    headroom under 10,000). `PROCESS.md` 78,102 -> 78,102 (unchanged).
+    `PROCESS_OPTIONS.md` 172,106 -> **172,091 (-15)**, re-stamped in all three
+    `byte-budget-guard` copies. Module ratchet: `trace.py` 4203 -> **4219**
+    (+16: F11's header scoping +4, F12's measurement recorded in
+    `sr_chain_drifts` +12), reviewed bump, reason here.
+  - **NOT DONE, deliberately.** No lint over acceptance prose (F8). No
+    watermark seed-correction mechanism (F9/F10). No change to the basis line
+    or any gate output format (F3). No Decisions entry for `ba23fe3d` (F18).
+  - **Verification.** Full unfiltered suite **2582 passed, 10 skipped** in
+    455.53s (`pytest -q -n auto`) — +3 on `2026-08-17u`'s 2579, exactly the
+    three tests added here (F1's recorded-gap pin, F15's two boundary arms).
+    `check_docs.py --root . --stale`: OK, 899 docs, 1307 links, 0 broken.
+    `trace.py --strict` and `--strict-integrity` both at `integrity=0`,
+    `orphans=0`; the one `form-findings=1` (SR-140's three `shall`) pre-dates
+    this pass and is unchanged. `docs/gate` regenerated: the basis line is
+    BYTE-IDENTICAL, only the `as-of` revision moved — which is F3's point
+    restated, and is why F3 was recorded rather than "fixed" by that line.
+    <!-- fig: cmd="python -m pytest -q -n auto" rev=f5267991 -->
+
 - **2026-08-17v — ADVERSARIAL ROUND (Opus, owner-directed) over ALL of the
   day's changes: 18 findings, and one failure CLASS behind five of them.**
   Scope: the whole span `47234903^..HEAD` (28 commits) and log entries
@@ -32533,7 +32783,7 @@ version would overrule the author on the one question the author is better
 placed to answer. `Drafted` rows ARE in scope, unlike the gating form rules
 beside it: an opening is finished the moment it is written, and both rows this
 found at landing were Drafted — skipping them would have shipped a guard that
-had never once fired. Decomposed as `LLR-178` + `TC-173` under `SR-157`, whose
+had never once fired. Decomposed as `LLR-179` + `TC-174` under `SR-157`, whose
 acceptance already says a rule added at a declared site is in its scope by
 default; ids watermarked.
 
@@ -32590,3 +32840,57 @@ Bar: `pytest -q -n auto` → **2,577 passed, 13 skipped** (full suite);
 `trace.py --strict --strict-schema` → rc=0, `orphans=0 integrity=0
 schema-findings=0 form-findings=1` (the pre-existing `SR-140` split, above),
 `ears-advisories=0`; `check_docs` OK, 0 broken links.
+
+---
+
+## 2026-08-18b — Merge: the EARS branch meets the pre-brief pass (an id collision, resolved by moving MINE)
+
+`origin/infra/mechanized-loop` had advanced three commits while the EARS work
+was in flight, and the two lanes minted **the same two ids from the same
+watermark**: trunk's `SR-140` split took `LLR-178`/`TC-173` for the mirror
+invariant, and the EARS advisory had taken them for its own decomposition.
+
+**Resolved by moving the LATER-landing rows, not the earlier ones.** Trunk's
+`LLR-178`/`TC-173` keep their numbers — they are already cited in the
+regenerated ratify brief, the OKF bundle, that lane's log entry and its
+`status.md` prose, and a number that has been read is a number that must not
+move. The EARS rows became **`LLR-179`/`TC-174`**, with `TC-174.verifies`,
+`LLR-179.test_refs`, `trace_text.py`'s `Requirements:` back-link and the
+`2026-08-18a` log entry all re-pointed in the same commit. Watermark bumped;
+`trace.py --strict --strict-schema` re-run to confirm the join.
+
+**The other five conflicts, and how each was decided:**
+
+- **`byte-budget-guard` (all three copies)** — both lanes re-stamped the table.
+  Kept **mine** for `PROCESS.md` (80,766; trunk never touched that file, so its
+  line was the stale 78,102) and **theirs** for `PROCESS_OPTIONS.md` (172,091;
+  I never touched that file). Both verified against `wc -c` after merging, not
+  asserted.
+- **`test_module_size_ratchet`** — both re-stamped `trace.py` off the same
+  parent (+20 mine, +16 theirs). Neither number is right for a tree carrying
+  both changes: re-stamped to the **measured 4,239** with both reasons chained,
+  because a stamp that is either branch's number is a stamp nobody measured.
+- **`test_dashboard_size_budget`** — both had independently re-raised the same
+  decayed 2,615,000 ceiling. Kept **theirs** (3,025,000, the higher and later
+  measurement); the merged dashboard measures **2,635,487**, comfortably inside
+  it. Deliberately NOT re-raised again: a ceiling re-raised per merge stops
+  measuring anything.
+- **`status.md`** — **theirs supersedes mine outright**: my note said the
+  `SR-140` split was still owed and was a standing form finding; trunk executed
+  it. One line added for the second brief regeneration this merge forces.
+- **Generated artifacts** (dashboard, gate, OKF, open-items, ratify brief, code
+  map) — resolved by **regenerating**, never by hand-picking a side.
+
+**What the merge confirms about the new rule.** The four rows trunk minted
+while this branch was in flight (`SR-140` re-worded, `SR-173`, `SR-178`,
+`SR-179`) are all ubiquitous-EARS as written, by authors who had not read the
+rule — which is the evidence the rule describes existing practice rather than
+imposing a new one. `ears-advisories=0` across the merged 72-row population.
+The `2026-08-18a` entry's "SR-140 not fixed" note stands as written: it was
+true of that commit, and trunk closing it is the process working, not a
+correction owed.
+
+Bar: `pytest -q -n auto` → **2,580 passed, 13 skipped** (merged tree);
+`trace.py --strict --strict-schema` → rc=0, `SN=27 SR=72 LLR=161 TC=157
+orphans=0 integrity=0 schema-findings=0`, **no form findings** (trunk's split
+cleared the last one) and `ears-advisories=0`.
