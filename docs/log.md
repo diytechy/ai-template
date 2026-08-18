@@ -36,6 +36,89 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17u — sitting-3 §0.4 item 6 EXECUTED: §5A's nine pre-sign steps
+  land, and every attested registry now answers "how approved is this row?" in
+  ONE field with ONE vocabulary.** Execution of the plan ruled at `2026-08-17t`
+  (`docs/plans/2026-08-16-registry-status-unification.md` §5A). §5B — D-9
+  steps 7–8, where `Modified` retires and the spine's `Founded` arms — is
+  POST-sign AND POST-seed by construction and was deliberately NOT run.
+  - **Step 1 (blocking) CONFIRMED, exactly.** The amendment set is **18**, the
+    ids the plan names, with `attestation` and `amended` in perfect agreement
+    (0 pending-without-amended, 0 amended-without-pending). Nothing was amended
+    after the plan was measured. This is the step that exists to stop a
+    genuinely-amended row being written as signed; it passed on the nose, so no
+    row was.
+  - **Steps 2–5, the SN tier.** `status` added dual-read (`kind` as the
+    transitional fallback), then the 27 rows migrated (**18 `Modified` + 9
+    `Approved`**), then the fallback dropped, then `kind` deleted from the rows,
+    the template and both carriers. `attestation`/`amended` are deleted with no
+    successor: nothing ever read them, and a date cell was PROVENANCE in a
+    registry whose job is living truth.
+  - **Steps 6–7, the off-spine tiers.** All **138** rows re-cased into the
+    spine's Title-case words (123 IF · 11 EXT/B/REL · 4 CMP), then `approval`
+    and `state` both renamed to `status`. `components.state` SPLIT into
+    `status` + `standing` (`active|has-gap|deprecated`, omit = active), because
+    it was carrying maturity and lifecycle on one axis — the same conflation
+    SN's `kind` was. `planned`/`verified` LEFT the CMP vocabulary rather than
+    being renamed: they were retired spine words regenerated in another
+    registry, which is the regeneration `SR-149` exists to prevent.
+  - **NO ROW'S MATURITY MOVED, and it is measured, not asserted.** The
+    `derive_gate` basis line is **BYTE-IDENTICAL** to its pre-migration value
+    at every checkpoint, and the off-spine trace golden regenerated to **zero
+    diff**. Both checks are available only because all 138 off-spine rows sat
+    in their vocabulary's first state — the plan's timing argument, confirmed.
+    fig: `.venv/bin/python project-trajectory/scripts/derive_gate.py --root .
+    --print` at `810f1c01` vs `HEAD`, diff empty.
+  - **Both silent-failure traps HANDLED AND PROVED.** (i) The no-writer guard
+    greps for `approval = "approved"`; after the rename that regex would have
+    passed VACUOUSLY forever — the exact failure class this change exists to
+    prevent. Re-keyed to the live spelling and both retired ones, and proved
+    live by three deliberate temporary violations, each of which reds it.
+    (ii) The two maturity-table pins compare raw sets against a vocabulary that
+    just went Title-case; case-normalized (the transform `_maturity` itself
+    applies) and NOT by lower-casing the registries, which would have undone
+    the change the pin guards.
+  - **Two further guards were about to rot quietly, and were caught.** The live
+    edge-row guard keyed on `kind == "edge"` in a registry that no longer has
+    `kind` (re-keyed to refuse the field outright); the arch-rung test passed
+    on `has-gap` through the unrecognized-reads-DRAFTED default rather than
+    through a mapping (re-pointed, plus a sweep proving all five retired CMP
+    words now hold the rung open).
+  - **Step 8 closed the SN schema census** (owner ruling `2026-08-17k`, "Yes
+    add in"). SN was the one spine tier with no schema of record — which is how
+    it accumulated three fields for one axis and shipped a template missing the
+    `tags` its own rows use. Proved non-vacuous: deleting `tags` from the
+    template now reds. `tags` is OPTIONAL but DECLARED, per the plan's default.
+  - **Step 9** added the two `RESYNC_PACK` entries (both downstream-visible:
+    the SN row shape; the off-spine rename/re-case + the components split, with
+    the full value map and the vacuous-guard warning), and swept the prose
+    surfaces.
+  - **DEVIATIONS, three, all recorded in their own commits.** (1) The legacy
+    markdown reader's `status` emit moved from step 5 into step 4, because
+    dropping the `kind` fallback strands it a step early and a draft-heading row
+    would read as RATIFIED — the "derived gate rises" failure the carrier
+    dispatch exists to prevent. (2) "Drop the edge arm" was executed as MOVING
+    the fold into `needs_from_markdown` rather than deleting it — step 5's own
+    stated rollback boundary is "the legacy markdown reader keeps its own
+    derivation", and deleting it outright would turn a wrongly-titled legacy row
+    into four blank cells: the same content loss as the F-6 regression with less
+    evidence. (3) `EXAMPLE.md` carried `kind = "core"` and the plan's §4.3 list
+    omitted it; migrated with the template.
+  - **ONE FINDING LEFT UNEXECUTED, deliberately.** `hats.py`'s `SCALAR_FIELDS`
+    still carries `kind`, so `applies_when` can be written `kind == "core"` —
+    a clause no need can now satisfy, since `kind` is gone from every row. No
+    live hat uses it. The fix (swap `kind` for `status`) would let a hat gate on
+    MATURITY, which is new behaviour, and the plan's §7 explicitly parks
+    "whether the SN `status` should be WIRED beyond drafted-ness" as its own
+    pass. Flagged rather than improvised.
+  - Byte deltas on budgeted files: `PROCESS.md` **-1** (78,102), and
+    `PROCESS_OPTIONS.md` **+80** (172,106) for the second CMP field — both
+    re-stamped in `byte-budget-guard` and its two tracked copies.
+  - Full unfiltered suite at close: **2579 passed, 10 skipped** (one more than
+    before — the new SN census leg). `trace.py` and `agent_common.py` held
+    inside their frozen size baselines by tightening the prose this change
+    added, rather than bumping a monolith's freeze.
+
 - **2026-08-17t — sitting-3 §0.4 item 6 RULED IN BOTH SUB-CALLS and its plan
   re-derived into an execution plan: ONE enum and ONE field name across every
   attested registry, spine and off-spine alike; the migration runs BEFORE

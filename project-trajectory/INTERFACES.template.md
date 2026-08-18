@@ -93,7 +93,7 @@ rationale = "One read model for invoices; the ETL must not re-derive totals."
 req_refs = ["SR-014"]
 owner = "SR-014"
 version = "v1"
-approval = "approved"
+status = "Approved"
 
 [interface.IF-002]
 direction = "Consumes"
@@ -104,7 +104,7 @@ signal = "variable"
 req_refs = ["SR-031"]
 owner = "SR-031"
 version = "v1"
-approval = "approved"
+status = "Approved"
 ```
 
 Read together: `billing-api` publishes `IF-001` (with a contract test on the

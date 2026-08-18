@@ -760,7 +760,7 @@ flowchart TD
   L2 --> W
   T1 --> W
   W --> G["implement test-first; gates re-run"]
-  G --> V["touched CMP State:\nhas-gap -> verified"]
+  G --> V["touched CMP:\nhas-gap -> Founded"]
 ```
 
 - **Coverage gap** — the requirement was right and untested: the fix *starts*
@@ -770,7 +770,7 @@ flowchart TD
   purchased part lands as its own registry row, so the next reader finds the
   decision where the ids live).
 - Off-spine effects ride along: a touched `CMP-###` walks
-  `verified → has-gap → verified` (its `Knowledge` cell keeps what was
+  `Founded → Drafted+has-gap → Founded` (its `Knowledge` cell keeps what was
   learned), and the work schedules as `WI-###` rows — never as prose
   accumulating on the working surface.
 

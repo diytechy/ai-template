@@ -272,15 +272,16 @@ page; the linked homes hold the full evidence for the ones you want to go
 deeper on. A recommendation is a starting position, never a ruling taken in
 advance.
 
-> **SCOREBOARD — re-stamped `2026-08-17t`, the current truth of this list.**
-> OPEN: **nothing.** Item 6 was the last open call and **both its sub-calls
-> are RULED `2026-08-17t`** — the off-spine half is in scope on one enum and
-> one field name, and the migration runs before signing. **Item 6 is now
-> EXECUTING**, not open: the plan is re-derived into nine pre-sign steps and
-> execution is dispatched; until it lands and reds go green, treat item 6 as
-> *in flight*, not *closed*. Still owed alongside it: the two **work items in
-> the block above** (`SR-140` split · `SR-173` wording), which are the only
-> pre-brief work remaining once item 6's execution completes.
+> **SCOREBOARD — re-stamped `2026-08-17u`, the current truth of this list.**
+> OPEN CALLS: **NONE.** Item 6 was the last one, and it is now **RULED AND
+> EXECUTED** — both sub-calls ruled `2026-08-17t`, §5A's nine pre-sign steps
+> landed `2026-08-17u` with the full suite green and the derived-gate basis
+> line byte-identical. **PRE-BRIEF WORK REMAINING: the two work items in the
+> block above — `SR-140` split · `SR-173` wording.** Those are the whole of
+> it. The sitting's other owed acts are unchanged: the read/sign/seed
+> procedure, and the countersigns. (§5B of the unification plan — D-9 steps
+> 7–8, where `Modified` retires and `Founded` arms — is POST-sign AND
+> POST-seed by construction and is deliberately NOT done.)
 > Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
 > 7 · 8 · 15 · 16 · 17 · 19 · 20 and the Sol rows 9–14; item 18's owner-cell
 > half executed on investigation `2026-08-17p`, its pins half executed
@@ -400,7 +401,8 @@ advance.
    `counterpart` cannot be dropped as a COLUMN until `WI-469` re-authors —
    re-author first, then drop what has become derivable.
 
-6. **The SN tier's status vocabulary** — RE-FRAMED `2026-08-16p`, and the
+6. ~~**The SN tier's status vocabulary**~~ — **RULED AND EXECUTED**
+   (`2026-08-17t` ruled, `2026-08-17u` executed). RE-FRAMED `2026-08-16p`, and the
    earlier framing ("no `Status` cell") understated it. The tier encodes
    status across **three** fields: `kind` = `core`\|`draft` (the ratified and
    drafted halves, mixed into the same field as the `edge` ROW-TYPE value),
@@ -419,8 +421,20 @@ advance.
    gains `"SN-ID"`, wiring SN into the dogfood drift check it alone sits
    outside.
 
-   **BOTH SUB-CALLS ANSWERED `2026-08-17t`; the item is EXECUTING, not
-   open.** *(They were the last open pair — restated `2026-08-17q` after the
+   **BOTH SUB-CALLS ANSWERED `2026-08-17t`; §5A EXECUTED IN FULL
+   `2026-08-17u`.** All nine pre-sign steps landed, each its own revertible
+   commit; §5B (D-9 steps 7–8) remains POST-sign and POST-seed and was NOT
+   run. Measured at close: the 27 SN rows read `status` (18 `Modified`,
+   9 `Approved`) with `kind`/`attestation`/`amended` deleted; all 138
+   off-spine rows read `status` in the Title-case enum; `components.state`
+   split into `status` + `standing`. NO ROW'S MATURITY MOVED, and that is
+   measured rather than asserted — the `derive_gate` basis line is
+   BYTE-IDENTICAL to its pre-migration value and the off-spine trace golden
+   is unchanged. Both silent-failure traps the plan named were handled and
+   PROVED: the no-writer guard is re-keyed and reds on three deliberate
+   violations; the two set-equality pins are case-normalized rather than
+   satisfied by lower-casing the registries. Log `2026-08-17u`.
+   *(They were the last open pair — restated `2026-08-17q` after the
    owner could not tell from this item's text, then ruled.)*
    - **(b) THE OFF-SPINE HALF — RULED, owner verbatim:** *"update
      docs/plans/2026-08-16-registry-status-unification.md to ensure all

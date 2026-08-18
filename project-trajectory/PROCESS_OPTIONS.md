@@ -1775,7 +1775,7 @@ R-F (above) mechanizes both close-side halves.
 across a module boundary carries an **`## Interfaces` section** citing each seam
 as an `IF-###` that resolves in `interfaces.toml` — the one seam home (§8), so a
 spec never sketches its own near-duplicate. A **new** seam is filed as an
-`approval = "drafted"` row *at filing*, its citation naming the **nearest existing**
+`status = "Drafted"` row *at filing*, its citation naming the **nearest existing**
 IF and why it does not suffice: the forced search is the anti-duplication
 mechanism — search before you invent, because a seam defined before a second
 consumer exists tends to be wrong, bypassed, and re-invented, so the rule forces
@@ -2248,13 +2248,13 @@ an LLR *is* the WHAT being rewritten. The registry is optional and off-spine
 a repo that never names a component pays nothing.
 
 **The row is deliberately slim** —
-`CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes` — and
-holds **only what a tag can't**: the knowledge refs (`;`-joined skill names,
-`docs/knowledge/` labels, URLs), the lifecycle
-(`State ∈ planned|built|verified|has-gap|deprecated`, with `SupersededBy` naming
-the successor so identity survives a rewrite), nesting (`PartOf`), and an
-optional `DetailDoc`. `Category` is an open value set (`software`, `physical`,
-…).
+`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,DetailDoc,Notes`
+— and holds **only what a tag can't**: the knowledge refs (`;`-joined skill
+names, `docs/knowledge/` labels, URLs), maturity
+(`Status ∈ Drafted|Approved|Founded`, the one spine vocabulary) and lifecycle
+(`Standing ∈ active|has-gap|deprecated`; omit = active), with `SupersededBy`
+naming the successor so identity survives a rewrite, nesting (`PartOf`), and an
+optional `DetailDoc`. `Category` is an open value set (`software`, `physical`).
 
 When findings need to outlive the session that produced them, use the
 "Research track & knowledge packs" layer above; the CMP `Knowledge` cell is the

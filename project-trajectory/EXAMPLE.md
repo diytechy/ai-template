@@ -38,9 +38,9 @@ acceptance = "An interrupted export leaves no file at the final path; re-running
 is no separate edge tier. What keeps such needs from being forgotten is the
 **hats roster** (`hats.toml`, process.md §1): each applicable hat's question is
 put to every decomposition it applies to, so edge coverage is regenerated per
-need rather than maintained as a standing checklist. Maturity is the `kind`
-field (`core`/`draft`), never a section heading, and an absent key IS the
-empty cell.
+need rather than maintained as a standing checklist. Maturity is the `status`
+field (`Drafted`/`Approved`) — the same word at every tier — never a section
+heading, and an absent key IS the empty cell.
 
 ## 2. System Requirements — `requirements/system-requirements.toml`
 
@@ -393,7 +393,7 @@ rationale = "One writer for the export file; delivery must not re-derive its sch
 req_refs = ["SR-001"]
 owner = "SR-001"
 version = "v1"
-approval = "approved"
+status = "Approved"
 
 [interface.IF-002]
 direction = "Consumes"
@@ -404,7 +404,7 @@ signal = "variable"
 req_refs = ["SR-050"]
 owner = "SR-050"
 version = "v1"
-approval = "approved"
+status = "Approved"
 ```
 
 `owner` is the **one** row answerable for each seam — exactly one, and it

@@ -26,17 +26,20 @@ narrated is in those homes.
   ex-`Planned` rows no brief lists** (`2026-08-15m`), rule the open calls,
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
 - **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
-  `2026-08-17n`, `2026-08-17r`, `2026-08-17s` and `2026-08-17t`; the live list
-  is now EMPTY.** Item 6, the last open call, is **RULED IN BOTH SUB-CALLS
-  `2026-08-17t`** and is **EXECUTING**: all attested registries take **one
-  enum** (`Drafted`·`Approved`·`Founded` *when applicable*) and **one field
-  name** (`status`), off-spine included, and the migration runs **before
-  signing**. Nine pre-sign steps (+ the census, `2026-08-17k`) at
+  `2026-08-17n`, `2026-08-17r`, `2026-08-17s`, `2026-08-17t` and
+  `2026-08-17u`; the live list is EMPTY and item 6 has now LANDED.** Item 6,
+  the last open call, was **RULED IN BOTH SUB-CALLS `2026-08-17t`** and is
+  **EXECUTED `2026-08-17u`**: every attested registry now takes **one enum**
+  (`Drafted`·`Approved`·`Founded` *when applicable*) and **one field name**
+  (`status`), off-spine included, and it ran **before signing** — so the
+  sitting signs the unified shape rather than a shape already rejected. All
+  nine pre-sign steps at
   [plans/2026-08-16-registry-status-unification.md](plans/2026-08-16-registry-status-unification.md)
-  §5A; §5B holds what waits for D-9 steps 7–8, POST-sign and POST-seed.
+  §5A landed with the full suite green and the `derive_gate` basis line
+  BYTE-IDENTICAL — no row's maturity moved, only its spelling. §5B (D-9
+  steps 7–8) is POST-sign AND POST-seed and is deliberately NOT done.
   **What remains before the brief regenerates is the pre-brief work pair
-  alone** — the `SR-140` split and the `SR-173` wording — plus item 6's
-  execution landing green.
+  alone** — the `SR-140` split and the `SR-173` wording.
   Item 19 is RULED AND EXECUTED `2026-08-17s` — the owner's behavioral
   fit-criterion form (boundaries, pass/fail, edge cases; neither artifact
   names nor chain-closure in acceptance): 50 SR acceptance cells re-worded

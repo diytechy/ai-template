@@ -1448,6 +1448,101 @@ existed.)
 
 ---
 
+### The SN row: one `status` field replaces `kind` + `attestation` + `amended` [since 810f1c01]
+
+*(Anchored at the ruling commit that dispatched the migration; the change lands
+in the commits that follow it.)* The need tier now encodes maturity in **one**
+field, spelled and valued exactly as the other three spine tiers already spell
+it — `status ∈ Drafted | Approved | Modified`. It encoded the same thing in
+three fields before, one of which carried history.
+
+1. **`kind` is DELETED, not renamed.** It conflated two unrelated questions:
+   `core`/`draft` was maturity, `edge` was a row TYPE. The `edge` half retired
+   separately (the entry above); the maturity half becomes `status`. Map
+   `kind = "core"` → `status = "Approved"` and `kind = "draft"` →
+   `status = "Drafted"` on every row, then drop the key.
+2. **`attestation` and `amended` are DELETED with no successor field.**
+   `attestation = "pending"` meant amended-and-unsigned, which is what the
+   spine's `Modified` already says — so those rows become
+   `status = "Modified"`. `amended = "<date>"` was PROVENANCE in a registry
+   whose job is living truth: git and `docs/archive/` already hold when a row
+   changed, hold it for *every* row rather than the ones somebody remembered to
+   mark, and cannot drift from it. If you added either field by copying the
+   kit's own registry, delete both. **Nothing ever read them**, so nothing
+   breaks when they go.
+3. **The selector, if you patched or imported it.** Drafted-ness is
+   `spine_carrier.is_draft_need` now — one home, reading `status` — where
+   `draft_need_ids` and `check_docs`' Must/Should floor each tested
+   `kind == "draft"` separately. A LEGACY markdown needs registry keeps working:
+   the reader translates section-as-state into `status` at the parse boundary,
+   so a draft-heading row still reads as drafted. **If you have local tooling
+   selecting on `kind`, it goes silently wrong rather than red** — it will find
+   no drafts, and the derived gate RISES. Grep for `kind` before you re-sync.
+4. **The schema census is now enforced on this tier.** `SPINE_TIER_KEYS` gained
+   an `SN-ID` entry (`status · tags · need · why · priority · acceptance`) and
+   `test_dogfood_sync` compares template ↔ live ↔ schema for it. `tags` is
+   OPTIONAL but DECLARED. If your needs template omits a key your live rows use,
+   that now fails — which is the point: the kit's own template shipped without
+   `tags` for exactly as long as nothing was comparing them.
+5. **Overwrite `registries/stakeholder-needs.template.toml`.** Its maturity
+   header block is rewritten around the one enum, and it now says outright not
+   to add a second field for this axis.
+
+### Off-spine registries: `approval`/`state` → `status`, and the components SPLIT [since 810f1c01]
+
+*(Same anchor as the entry above; the two land in sequence.)* The three
+off-spine registries stop spelling one axis three ways. **Field name and value
+casing both move, so an unmigrated cell is a required-field finding AND an
+out-of-vocabulary one.**
+
+1. **`interfaces.toml`, `external.toml`: `approval` → `status`**, and the values
+   go Title-case — `drafted` → `Drafted`, `approved` → `Approved`. Same words as
+   the spine, same field name, so "what is un-approved right now?" stops needing
+   a per-registry special case. `Founded` is **not applicable** to these tiers
+   and never will be: it means settled AND demonstrated, and an approval says
+   the crossing is agreed, not that it was demonstrated.
+2. **`components.toml`: `state` → `status` PLUS a new optional `standing`.**
+   This one is a split, not a rename, because `state` carried two axes:
+
+   | `state` was | `status` | `standing` |
+   |---|---|---|
+   | `planned` | `Drafted` | *(omit)* |
+   | `built` | `Approved` | *(omit)* |
+   | `verified` | `Founded` | *(omit)* |
+   | `has-gap` | `Drafted` | `has-gap` |
+   | `deprecated` | `Approved` | `deprecated` |
+
+   `standing ∈ active | has-gap | deprecated`, and **omitting it means
+   `active`** — so a registry with no lifecycle facts writes no `standing` cells
+   at all. `planned` and `verified` LEAVE the vocabulary rather than being
+   renamed: they were the retired spine words `Planned`/`Verified` regenerated
+   in lowercase, in another field, in another registry, meaning something else.
+   CMP is the one off-spine tier that reaches `Founded`, because a demonstrated
+   partition is a claim something actually computes (`arch_incomplete`, rung 3).
+3. **The predicate and table renames, if you patched or imported them.**
+   `derive_gate.CMP_MATURITY` is now the identity over the one enum
+   (`drafted`/`approved`/`founded`, lower-cased keys — `_maturity` lower-cases
+   before the lookup, so your Title-case cells resolve). `has-gap` and
+   `deprecated` are **gone from it**: they are `standing` values now, and
+   `standing` maps to no maturity because it is not one.
+4. **THE ONE THAT BITES SILENTLY — a guard keyed on the old spelling.** If you
+   copied the kit's `test_no_shipped_loop_module_WRITES_an_approval_cell`, its
+   regex hunts `approval = "approved"`. After this rename that pattern matches
+   nothing any registry writes, so the guard passes VACUOUSLY forever while the
+   thing it forbids becomes possible. Re-key it to the live spelling **and** the
+   retired ones in the same commit. The same applies to any local check keyed on
+   `Approval` or `State` as a column name.
+5. **Overwrite the three templates** (`interfaces`, `external`, `components`):
+   each declares the new field, the Title-case vocabulary, and — for the two
+   that cannot reach it — that `Founded` does not apply.
+
+**What does NOT change: any row's meaning.** Every off-spine row in the kit sat
+in its vocabulary's first state when this ran, so the migration re-spelled cells
+without moving any of them. The kit verified that by asserting its `derive_gate`
+basis line was **byte-identical** before and after. If your registries carry
+approved or verified rows, you do not get that check for free — apply the value
+map above deliberately, and re-run `derive_gate.py` to compare.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which
