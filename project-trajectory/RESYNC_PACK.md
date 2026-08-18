@@ -1638,7 +1638,7 @@ If you keep a customized `registries/system-requirements.template.toml`, its
 kit-owned teaching cell worth taking, but a no-op if you deleted the example row
 on your first real entry, as intended.
 
-### Reserved: `DevBar-*` retires — ONE vocabulary, the verb carries the axis
+### The `DevBar-*` prefix retires — ONE vocabulary, the verb carries the axis [since 7ccbd3a6]
 
 **The `DevBar-` prefix is gone.** A repo is **IN** a stage and **CLEARS** a
 stage, and the same `DevStg-` token names both readings — what tells them apart
@@ -1674,8 +1674,6 @@ scripts/derive_gate.py`. `scripts/check_vocab.py` now refuses the prefix in
 authored files (warn-first, `--strict` gates), with your history, archives and
 attestation quotes carved out as always — a record of what happened is not
 rewritten.
-
-*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
 
 ---
 
