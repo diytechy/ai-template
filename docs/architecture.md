@@ -331,7 +331,7 @@ Contracts (interfaces): IF-037, IF-065
 | `legacy_ratification(word, key)` | One dial's value under a legacy `gate-policy` word, or None when the word |  |
 | `ratification_level(docs)` | `[attestation] human_ratification_through` as an int 0-4. |  |
 | `human_holds(docs, stage)` | Is work at spine `stage` still the HUMAN's to ratify? |  |
-| `human_approves(docs, registry)` | May only a HUMAN move an `approval` cell in this off-spine `registry`? |  |
+| `human_approves(docs, registry)` | May only a HUMAN move the `status` cell of this off-spine `registry`? |  |
 | `final_review(docs)` | Does the run stop for a FINAL human read even when the level let it |  |
 | `complete_review(docs)` | `(mode, rate)` for adjudicating a CLEAN close — `"off" \| "sample" \| |  |
 | `keep_nondependent(docs)` | The orthogonal dial the ordinal cannot carry: may other lanes keep |  |

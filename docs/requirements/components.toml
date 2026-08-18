@@ -2,26 +2,26 @@
 name = "W1 Registry & conformance"
 category = "software"
 knowledge = "registry-hygiene"
-state = "Drafted"
+status = "Drafted"
 notes = """The spine and everything that decides whether it holds: spine_carrier, trace, trace_text, derive_gate, check_trajectory, plan_coverage, migrate_carrier, wi_convert, gen_arch_map. gen_arch_map also carries a CMP-009 tag through LLR-080, the one LLR row whose modules straddle this cut - its single import edge stays POLICED (IF-117 covers it), so no seam is suppressed. provisional 2026-08-13 (P5, owner ratification owed at return)"""
 
 [component.CMP-007]
 name = "W2 Gatekeeper"
 category = "software"
-state = "Drafted"
+status = "Drafted"
 notes = """Every verdict a hook, CI job or gate run consumes: check, check_privacy, subagent_gate, the 8 check_* lints, and the shipped pre-commit/pre-push hooks. provisional 2026-08-13 (P5, owner ratification owed at return)"""
 
 [component.CMP-008]
 name = "W3 Autonomy"
 category = "software"
 knowledge = """docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency"""
-state = "Drafted"
+status = "Drafted"
 notes = """The unattended coordinator end to end: the agent_* family plus adjudicate_brief, the 5 plan_* round modules, dispatch, handback, intake, integrate, lane, prompts, schedule, score_reviews, spec_move, trunk_step. provisional 2026-08-13 (P5, owner ratification owed at return)"""
 
 [component.CMP-009]
 name = "W4 Human & adopter surfaces"
 category = "software"
 knowledge = "downstream-resync"
-state = "Drafted"
+status = "Drafted"
 notes = """Everything a person or an adopting repo reads or runs: bootstrap, run_menu, the 7 remaining gen_*, the 6 traj_* dashboard modules, and the onboard/dev-setup templates. provisional 2026-08-13 (P5, owner ratification owed at return)"""
 

@@ -390,8 +390,8 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
 
 
 # WI-442: rung 1 reads the FRAME's `[boundary.B-##]` rows, not the IF registry.
-BIF_APPROVED = {"B-ID": "B-01", "Approval": "approved"}
-CMP_BUILT = {"CMP-ID": "CMP-001", "State": "Approved"}
+BIF_APPROVED = {"B-ID": "B-01", "Status": "Approved"}
+CMP_BUILT = {"CMP-ID": "CMP-001", "Status": "Approved"}
 
 
 def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry():
@@ -422,7 +422,7 @@ def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
     # ratified. Lower-cased cells against capitalized ladder constants is exactly
     # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
-    assert _stage(bifs=[dict(BIF_APPROVED, Approval="draft")], have_bifs=True) == (
+    assert _stage(bifs=[dict(BIF_APPROVED, Status="Drafted")], have_bifs=True) == (
         dg.STAGE_BOUNDARY
     )
     assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
@@ -457,12 +457,12 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
     rests on. Identifying a new sub-component means minting a `planned` CMP row,
     and that alone DROPS the reported stage back to DevStg-Arch with nobody
     deciding to. No ladder machinery, no depth in the identifier."""
-    planned = dict(CMP_BUILT, State="Drafted")
+    planned = dict(CMP_BUILT, Status="Drafted")
     assert _stage(cmps=[planned], have_cmps=True) == dg.STAGE_ARCH
     assert _stage(cmps=[CMP_BUILT], have_cmps=True) == dg.STAGE_RELEASE
     # A DEMONSTRATED partition is the one CMP value that reaches FOUNDED, and it
     # must not hold the rung open either.
-    assert _stage(cmps=[dict(CMP_BUILT, State="Founded")], have_cmps=True) == (
+    assert _stage(cmps=[dict(CMP_BUILT, Status="Founded")], have_cmps=True) == (
         dg.STAGE_RELEASE
     )
     # The RETIRED words hold the rung OPEN rather than resolving. `planned` and
@@ -472,7 +472,7 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
     # unfinished, never finished. `has-gap` is the same shape: it is a
     # `standing` fact now, not a maturity, so it says nothing here.
     for retired in ("planned", "built", "verified", "has-gap", "deprecated"):
-        assert _stage(cmps=[dict(CMP_BUILT, State=retired)], have_cmps=True) == (
+        assert _stage(cmps=[dict(CMP_BUILT, Status=retired)], have_cmps=True) == (
             dg.STAGE_ARCH
         ), retired
 
@@ -518,20 +518,20 @@ def test_every_declared_registry_enum_value_has_a_maturity_mapping():
     def _lower(values):
         return {v.lower() for v in values}
 
-    assert set(dg.BIF_MATURITY) == _lower(trace.ENUM_FIELDS["B"]["Approval"])
-    assert set(dg.CMP_MATURITY) == _lower(trace.ENUM_FIELDS["CMP"]["State"])
+    assert set(dg.BIF_MATURITY) == _lower(trace.ENUM_FIELDS["B"]["Status"])
+    assert set(dg.CMP_MATURITY) == _lower(trace.ENUM_FIELDS["CMP"]["Status"])
     # The tables are keyed lowercase; the schema is not. Pin the asymmetry so a
     # future edit cannot "tidy" one side into the other and make the comparison
     # above vacuous in the direction it was designed to catch.
     assert all(v == v.lower() for v in dg.CMP_MATURITY)
-    assert trace.ENUM_FIELDS["CMP"]["State"] == {"Drafted", "Approved", "Founded"}
-    assert trace.ENUM_FIELDS["B"]["Approval"] == {"Drafted", "Approved"}
+    assert trace.ENUM_FIELDS["CMP"]["Status"] == {"Drafted", "Approved", "Founded"}
+    assert trace.ENUM_FIELDS["B"]["Status"] == {"Drafted", "Approved"}
     # The IF tier shares the frame's approval vocabulary (decision 12: ONE status
     # vocabulary, per-registry subsets) — pinned so the two cannot drift apart
     # while each stays internally consistent.
-    assert trace.ENUM_FIELDS["IF"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
-    assert trace.ENUM_FIELDS["EXT"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
-    assert trace.ENUM_FIELDS["REL"]["Approval"] == trace.ENUM_FIELDS["B"]["Approval"]
+    assert trace.ENUM_FIELDS["IF"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
+    assert trace.ENUM_FIELDS["EXT"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
+    assert trace.ENUM_FIELDS["REL"]["Status"] == trace.ENUM_FIELDS["B"]["Status"]
 
 
 # --- the label carrier's non-negotiable condition -------------------------------
@@ -758,20 +758,34 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
     No WI kind carries a registry identity, so `dispatch._kind_action`'s
     `approval_held` seam has no live caller — which is stated in its docstring
     rather than dressed up. What CAN be enforced now is the premise that makes
-    that acceptable: the kit ships NO automated writer of an off-spine `approval`
+    that acceptable: the kit ships NO automated writer of an off-spine approval
     cell. The moment one is added this fails, and whoever adds it has to route it
     through `agent_common.human_approves` first.
 
+    RE-KEYED 2026-08-17, and this is the trap the registry status unification was
+    written to walk around. The cell used to be spelled `approval`; it is
+    `status` now. A regex still hunting `approval = "approved"` would have gone
+    on passing FOREVER, green against a spelling no registry uses — the exact
+    silently-disarmed-guard failure this whole change exists to prevent. So the
+    pattern hunts the LIVE spelling, and it hunts the retired one too: a writer
+    added against the old name is still a writer.
+
     Narrow on purpose: an `approval` word in a comment is documentation (these
     modules are full of it). What is forbidden is ASSIGNING the approved value to
-    an approval-shaped key in running code."""
+    a maturity-shaped key in running code."""
     import re as _re
     from pathlib import Path as _Path
 
     scripts = _Path(__file__).resolve().parents[1] / "project-trajectory" / "scripts"
-    # `approval = "approved"`, `approval: "approved"`, `["approval"] = "approved"`
-    # and the TOML line an emitter would write.
-    pat = _re.compile(r"""approval["'\]]*\s*[:=]\s*["']approved["']""", _re.IGNORECASE)
+    # `status = "Approved"`, `status: "Approved"`, `["status"] = "Approved"` and
+    # the TOML line an emitter would write — plus the retired `approval` spelling
+    # and the retired `verified`/`built` CMP words, so a writer cannot be smuggled
+    # in under a name this repo has already stopped using.
+    pat = _re.compile(
+        r"""\b(?:status|approval|state)["'\]]*\s*[:=]\s*"""
+        r"""["'](?:approved|verified|built|founded)["']""",
+        _re.IGNORECASE,
+    )
     offenders = []
     for path in sorted(scripts.glob("*.py")):
         for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):

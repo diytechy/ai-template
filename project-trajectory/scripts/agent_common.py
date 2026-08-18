@@ -556,7 +556,7 @@ DIAL_HOLDS = {
 # THE OFF-SPINE SIBLING OF `DIAL_HOLDS` (owner ruling OI-30 D3, 2026-08-15).
 #
 # `human_ratification_through` governs the SPINE tiers. The off-spine registries
-# that carry an `approval` cell — `interfaces.toml`, `external.toml`,
+# that carry an off-spine `status` cell — `interfaces.toml`, `external.toml`,
 # `components.toml` — were governed by PROSE ONLY: their headers said the cells
 # were the owner's to flip, and at any dial below 4 nothing refused a loop
 # session that wrote `approved`.
@@ -570,7 +570,7 @@ DIAL_HOLDS = {
 # component registry. So the association is existing fact, and a second
 # declaration of it would be a rival answer that agrees until someone edits one.
 #
-# NO NEW KEY AND NO NEW ENUM: authority over an approval cell in registry R is
+# NO NEW KEY AND NO NEW ENUM: authority over a status cell in registry R is
 # whether R's stage rung is human-held under the EXISTING dial. At this repo's
 # dial of 4 the effect is identical to the prose it replaces — derived rather
 # than declared.
@@ -623,7 +623,7 @@ def human_holds(docs, stage):
 
 
 def human_approves(docs, registry):
-    """May only a HUMAN move an `approval` cell in this off-spine `registry`?
+    """May only a HUMAN move the `status` cell of this off-spine `registry`?
 
     True means HELD — the cell is the owner's, in a reviewed Status-change
     commit. The mirror of `human_holds`, and deliberately the same shape: one
@@ -638,14 +638,14 @@ def human_approves(docs, registry):
         -> True (held). This is every registry at this repo's dial of 4.
       * MAPPED and its rung is not held -> False (a loop session may write it,
         because the project has declared that rung machine-ratifiable).
-      * UNMAPPED -> True (held), FAIL-SAFE. An approval-carrying registry nobody
-        has associated with a rung is one nobody has ruled on, and the only safe
+      * UNMAPPED -> True (held), FAIL-SAFE. A status-carrying registry nobody has
+        associated with a rung is one nobody has ruled on, and the only safe
         answer to that is "the human does".
 
     THE WRITER-SIDE CONTRACT, stated here because this predicate is the only
-    home for it. Any code path that would set an `approval` cell to `approved`
-    MUST consult this first and refuse when it answers True. Today the kit ships
-    no such automated writer — off-spine approvals are hand-edited — so the
+    home for it. Any path that would set an off-spine `status` to `Approved` MUST
+    consult this first and refuse when it answers True. Today the kit ships no
+    such automated writer — off-spine approvals are hand-edited — so the
     live consumers are the dispatcher's attestation/gate arm (`dispatch.
     _kind_action`, which surfaces rather than dispatching a WI whose action
     would move a held registry's approvals) and `intake`'s snapshot/flip path,

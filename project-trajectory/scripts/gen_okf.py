@@ -481,7 +481,7 @@ def emit(root):
                 # retired for `Approval` at WI-442 — the tier's one maturity
                 # field. Reading the retired column shipped `tags: []` on all
                 # 113 one-pagers while the live value went nowhere (REVIEW-A).
-                [(r.get("Approval") or "").strip()],
+                [(r.get("Status") or "").strip()],
                 "{} ({})".format(if_src, cid),
                 ["**Contract.** {}".format(desc)],
             )

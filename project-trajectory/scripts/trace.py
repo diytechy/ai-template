@@ -351,33 +351,30 @@ REQUIRED_FIELDS = {
         "Req-Refs",
         "Owner",
         "Version",
-        "Approval",
+        "Status",
     ],
-    "CMP": ["CMP-ID", "Name", "Category", "State"],
+    "CMP": ["CMP-ID", "Name", "Category", "Status"],
     # WI-442 — the depth-0 frame's three tiers (docs/requirements/external.toml).
     # `Absorbs` and `Notes` are optional provenance and are not required.
-    "EXT": ["EXT-ID", "Name", "Class", "Description", "Approval"],
-    "B": ["B-ID", "Entity", "Direction", "Carries", "Approval"],
-    "REL": ["REL-ID", "From", "To", "Kind", "Flow", "Approval"],
+    "EXT": ["EXT-ID", "Name", "Class", "Description", "Status"],
+    "B": ["B-ID", "Entity", "Direction", "Carries", "Status"],
+    "REL": ["REL-ID", "From", "To", "Kind", "Flow", "Status"],
 }
 
 # The only *closed* vocabularies the method defines (process.md §4). `Priority`
 # is intentionally left open, so it is not validated here.
 #
 # `Status` CLOSED AT ITS LIVE TRUTH (D-9 migration step 1, 2026-08-15) and
-# NARROWED TO THE LADDER AT STEP 5 (the rename, 2026-08-15). It was
-# open-vocabulary until step 1, and the cost was measurable: a value no
-# predicate recognizes — `Planned` was exactly that, and `Bananas` would have
-# read identically — sat in the registry announcing nothing. The enum-close-first
-# rule the migration runs under is stated executably: *at every commit, the
-# declared Status enum equals exactly the set of values at least one live
-# predicate recognizes, and that set narrows monotonically*.
+# NARROWED TO THE LADDER AT STEP 5 (the rename). It was open-vocabulary until
+# step 1, and the cost was measurable: a value no predicate recognizes —
+# `Planned` was exactly that, and `Bananas` would have read identically — sat in
+# the registry announcing nothing. The enum-close-first rule is stated
+# executably: *at every commit, the declared Status enum equals exactly the set
+# of values at least one live predicate recognizes, narrowing monotonically*.
 #
-# `Draft`→`Drafted`, `Verified`→`Approved`, and `Planned`→`Approved` (OI-30 D1:
-# ratified-text-awaiting-evidence and ratified-text-with-evidence are ONE rung
-# once the pass claim leaves the vocabulary). `Modified` survives as the
-# TRANSITIONAL third value and retires at step 7, when the last row it marks has
-# been signed and the snapshot-backed drift rule is armed as its successor.
+# `Draft`→`Drafted`, `Verified`→`Approved`, `Planned`→`Approved` (OI-30 D1: the
+# two ratified-text rungs are ONE once the pass claim leaves the vocabulary).
+# `Modified` is the TRANSITIONAL third value; it retires at step 7.
 STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
@@ -458,22 +455,25 @@ ENUM_FIELDS = {
     "IF": {
         "Direction": {"Provides", "Consumes"},
         "Signal": {"discrete", "variable"},
-        "Approval": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Approved"},
     },
-    "CMP": {"State": {"Drafted", "Approved", "Founded"}},
+    "CMP": {
+        "Status": {"Drafted", "Approved", "Founded"},
+        "Standing": {"active", "has-gap", "deprecated"},
+    },
     # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
     # confirmed (`deliverable` was the ruled addition); `Direction` is read from
     # the SYSTEM's point of view, which is why it is in|out|inout and not the
     # IF tier's retired Provides/Consumes.
     "EXT": {
         "Class": {"operational", "enabling", "interoperating", "deliverable"},
-        "Approval": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Approved"},
     },
     "B": {
         "Direction": {"in", "out", "inout"},
-        "Approval": {"Drafted", "Approved"},
+        "Status": {"Drafted", "Approved"},
     },
-    "REL": {"Approval": {"Drafted", "Approved"}},
+    "REL": {"Status": {"Drafted", "Approved"}},
 }
 
 # --- the IF `Contract` negative rules (WI-443, warn-first) --------------------

@@ -298,9 +298,11 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
 
 
 def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
-    # IF (and the depth-0 frame) carry `Approval`, never `Status`.
+    # IF (and the depth-0 frame) carry `Status` — the same cell as the spine
+    # since 2026-08-17; they used to carry `Approval`, which is why this
+    # off-spine drift comparison needed finding at all.
     root, row, unclaimed = _approved_offspine(
-        tmp_path, IF_REL, "IF-ID", "Approval", ("Drafted", "Approved")
+        tmp_path, IF_REL, "IF-ID", "Status", ("Drafted", "Approved")
     )
     before = SNAP.rows_for(SNAP.load_all(root), IF_REL, "IF-ID")
     assert not SNAP.is_drifted(IF_REL, "IF-ID", row, before)  # green first
@@ -315,11 +317,11 @@ def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
 
 
 def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
-    # CMP carries `State`, whose ladder semantics are derive_gate's, not a
+    # CMP carries `Status` too, whose ladder semantics are derive_gate's, not a
     # second set written here — `Approved` and `Founded` are the values that
     # table maps to Approved-or-above.
     root, row, _unclaimed = _approved_offspine(
-        tmp_path, CMP_REL, "CMP-ID", "State", ("Drafted", "Founded")
+        tmp_path, CMP_REL, "CMP-ID", "Status", ("Drafted", "Founded")
     )
     before = SNAP.rows_for(SNAP.load_all(root), CMP_REL, "CMP-ID")
     assert not SNAP.is_drifted(CMP_REL, "CMP-ID", row, before)  # green first
@@ -343,15 +345,14 @@ def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     # edit that silently drops one has to come through this line. Title-case
     # since the registries speak the one enum; the predicate lower-cases before
     # the lookup, which is what lets the tables stay lowercase-keyed.
-    assert SNAP._claims_approval({"Approval": "Approved"})
-    assert SNAP._claims_approval({"State": "Founded"})
-    assert not SNAP._claims_approval({"Approval": "Drafted"})
-    assert not SNAP._claims_approval({"State": "Drafted"})
+    assert SNAP._claims_approval({"Status": "Approved"})
+    assert SNAP._claims_approval({"Status": "Founded"})
+    assert not SNAP._claims_approval({"Status": "Drafted"})
     # The RETIRED CMP words claim nothing — `planned`/`verified` left the
     # vocabulary rather than being renamed, and a stray cell still carrying one
     # must read as unsettled rather than resolving through a stale table row.
-    assert not SNAP._claims_approval({"State": "verified"})
-    assert not SNAP._claims_approval({"State": "built"})
+    assert not SNAP._claims_approval({"Status": "verified"})
+    assert not SNAP._claims_approval({"Status": "built"})
 
 
 def test_the_SN_tier_is_COPIED_but_claims_nothing_BY_DECISION():

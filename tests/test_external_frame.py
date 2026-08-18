@@ -33,20 +33,20 @@ CLEAN_FRAME = """
 name = "Downstream adopter"
 class = "operational"
 description = "The team that adopts the package."
-approval = "Drafted"
+status = "Drafted"
 
 [boundary.B-01]
 entity = "EXT-001"
 direction = "out"
 carries = "the delivered package"
-approval = "Drafted"
+status = "Drafted"
 
 [relationship.REL-001]
 from = "EXT-001"
 to = "EXT-001"
 kind = "hands-off"
 flow = "a flow this system is not a party to"
-approval = "Drafted"
+status = "Drafted"
 """
 
 
@@ -122,13 +122,13 @@ def test_every_frame_row_carries_the_approval_element():
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     for table in ("entity", "boundary", "relationship"):
         for rid, row in tables[table].items():
-            assert row.get("approval") in ("Drafted", "Approved"), (table, rid)
+            assert row.get("status") in ("Drafted", "Approved"), (table, rid)
 
 
 def test_nothing_in_the_live_frame_is_approved_yet():
     """The flip authority, asserted rather than asked for. `process.toml`'s
     `human_ratification_through` covers the SPINE tiers only; until sitting-3
-    §3.6 rules the mechanized extension, an `approval` cell here is the OWNER's
+    §3.6 rules the mechanized extension, a `status` cell here is the OWNER's
     to flip in a reviewed commit. Nothing this program builds may set one.
 
     This test is expected to be EDITED by that ratification — deliberately. It
@@ -136,7 +136,7 @@ def test_nothing_in_the_live_frame_is_approved_yet():
     quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     approvals = {
-        row.get("approval")
+        row.get("status")
         for table in ("entity", "boundary", "relationship")
         for row in tables[table].values()
     }
@@ -189,7 +189,7 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
         'signal = "discrete"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "Drafted"\n'
+        'status = "Drafted"\n'
         'interface_to_external = "B-99"\n',
         encoding="utf-8",
     )
@@ -271,7 +271,7 @@ def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):
         'signal = "discrete"\n'
         'sr_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "Drafted"\n'
+        'status = "Drafted"\n'
         'interface_to_external = "B-99"\n',
         encoding="utf-8",
     )

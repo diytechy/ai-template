@@ -265,7 +265,7 @@ def main():
                 "contract (refs {})".format(
                     r["IF-ID"],
                     r.get("Version", ""),
-                    r.get("Approval", ""),
+                    r.get("Status", ""),
                     r.get("Counterpart", ""),
                     r.get("Req-Refs", ""),
                 )

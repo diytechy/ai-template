@@ -951,7 +951,7 @@ def load_ifs(rows):
                 "direction": (r.get("Direction") or "").strip().lower(),
                 "this": (r.get("ThisProject") or "").strip(),
                 "counterpart": (r.get("Counterpart") or "").strip(),
-                "approval": (r.get("Approval") or "").strip().lower(),
+                "approval": (r.get("Status") or "").strip().lower(),
                 "notes": (r.get("Notes") or "").strip().lower(),
             }
         )

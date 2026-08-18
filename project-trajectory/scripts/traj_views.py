@@ -1143,7 +1143,7 @@ def _cmp_panel(rows):
             "<tr>{}</tr>".format(
                 "".join(
                     "<td>{}</td>".format(html.escape((r.get(k) or "").strip()))
-                    for k in ("CMP-ID", "Name", "Category", "State", "PartOf")
+                    for k in ("CMP-ID", "Name", "Category", "Status", "PartOf")
                 )
             )
         )

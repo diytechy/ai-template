@@ -659,7 +659,7 @@ def _ifs_toml(body):
         ("Counterpart", "counterpart"),
         ("Contract", "contract"),
         ("Version", "version"),
-        ("Stability", "approval"),
+        ("Stability", "status"),
         ("Component", "component"),
         ("Notes", "notes"),
     ]
@@ -800,7 +800,7 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
         'signal = "analog"\n'
         'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "Approved"\n',
+        'status = "Approved"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -819,7 +819,7 @@ def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
     # away rather than kept.
     make_minimal_project(scaffold)
     out = _warn_run(scaffold, CLEAN_IF.replace(",v1,Approved,", ",v1,Provisional,"))
-    assert "IF IF-001 has Approval='Provisional'" in out
+    assert "IF IF-001 has Status='Provisional'" in out
     assert "Approved, Drafted" in out
 
 
@@ -827,13 +827,13 @@ def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "components.toml").write_text(
         '[component.CMP-001]\nname = "Core"\ncategory = "software"\n'
-        'state = "in-flight"\n',
+        'status = "in-flight"\n',
         encoding="utf-8",
     )
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "CMP CMP-001 has State='in-flight'" in proc.stdout
+    assert "CMP CMP-001 has Status='in-flight'" in proc.stdout
     assert "not in the closed vocabulary" in proc.stdout
 
 
@@ -847,7 +847,7 @@ def test_missing_required_if_field_is_a_warn(scaffold):
         'contract = "reads the ref state"\n'
         'req_refs = ["SR-001"]\n'
         'version = "v1"\n'
-        'approval = "Approved"\n',  # no `signal`
+        'status = "Approved"\n',  # no `signal`
         encoding="utf-8",
     )
     record_ids(scaffold)
@@ -1018,7 +1018,7 @@ def _if_row(**kw):
         "req_refs": '["SR-001"]',
         "owner": '"SR-001"',
         "version": '"v1"',
-        "approval": '"draft"',
+        "status": '"Drafted"',
     }
     base.update(kw)
     lines = ["[interface.IF-001]"]
@@ -1095,7 +1095,7 @@ def test_a_carriage_cycle_is_reported_once_per_row_on_it(scaffold):
     make_minimal_project(scaffold)
     text = _if_row(carried_by='"IF-002"') + _if_row().replace(
         "IF-001", "IF-002"
-    ).replace('approval = "draft"\n', 'approval = "draft"\ncarried_by = "IF-001"\n')
+    ).replace('status = "Drafted"\n', 'status = "Drafted"\ncarried_by = "IF-001"\n')
     out = _toml_warn_run(scaffold, text)
     assert out.count("sits on a CarriedBy CYCLE") == 2
 
@@ -1110,8 +1110,8 @@ def test_carriage_deeper_than_the_bound_warns_and_two_is_clean(scaffold):
             row = _if_row().replace("IF-001", "IF-00%d" % i)
             if i < n:
                 row = row.replace(
-                    'approval = "draft"\n',
-                    'approval = "draft"\ncarried_by = "IF-00%d"\n' % (i + 1),
+                    'status = "Drafted"\n',
+                    'status = "Drafted"\ncarried_by = "IF-00%d"\n' % (i + 1),
                 )
             out.append(row)
         return "".join(out)

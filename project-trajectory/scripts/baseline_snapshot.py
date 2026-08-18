@@ -167,12 +167,17 @@ SNAPSHOT_TIERS = (
 # that claim" in a module that owns no predicate copy.
 _APPROVAL_CLAIMED = frozenset({"approved"})
 
-# The OFF-SPINE tiers do not have a `Status` cell at all: `interfaces.toml` and
-# `external.toml` carry `Approval`, `components.toml` carries `State`. Reading
-# only `Status` meant those four snapshotted tiers could never claim approval and
-# so were never drift-compared — which defeats the reason `SNAPSHOTTED` copies
-# them in the first place (the comment above says their human-only cells are the
-# point). Found by adversarial round 2, 2026-08-15.
+# The OFF-SPINE tiers claim on the SAME CELL as the spine since 2026-08-17 —
+# `interfaces.toml`, `external.toml` and `components.toml` spell it `status`,
+# where they used to spell it `approval` and `state`. The three-cell read this
+# replaced was found by adversarial round 2 (2026-08-15): reading only `Status`
+# meant those four snapshotted tiers could never claim approval and so were never
+# drift-compared, defeating the reason `SNAPSHOTTED` copies them at all.
+#
+# THE SETS STAY SEPARATE THOUGH THE CELL IS ONE, because they answer for
+# different tiers and are not the same set: only CMP reaches `founded`. Unioning
+# them into a hand-written literal would re-introduce exactly the rival answer
+# the derivation below exists to prevent.
 #
 # DERIVED FROM `derive_gate`'s ONE RULED LADDER TABLE rather than restated as a
 # literal set here, and that is the whole point of deriving it: derive_gate.py's
@@ -247,17 +252,20 @@ def stamp(root):
 
 
 def _claims_approval(row):
-    """True when this row claims approval or above, ON WHICHEVER CELL ITS TIER
-    USES: `Status` on the four spine tiers, `Approval` on interfaces and the
-    depth-0 frame, `State` on components.
+    """True when this row claims approval or above, on the ONE cell every tier
+    now uses: `Status`, spine and off-spine alike.
 
-    THREE CELLS RATHER THAN ONE, and the alternative is not "simpler" — it is
-    silently vacuous. `SNAPSHOTTED` copies the off-spine registries precisely
-    because their maturity cells move only by human hand, and a predicate that
-    reads `Status` alone answers False for every one of those rows, so their
-    copies are never compared to anything. The rule is an OR rather than a
-    dispatch on tier because a row carries exactly one of the three cells; an
-    explicit tier table would be a second place to keep the mapping right.
+    IT READ THREE CELLS UNTIL 2026-08-17 — `Status`, `Approval`, `State` — not
+    as a design but because three registries spelled one axis three ways, and
+    the cost was concrete: a predicate that read `Status` alone answered False
+    for every off-spine row, so the copies `SNAPSHOTTED` takes precisely because
+    those cells move only by human hand were never compared to anything. The
+    registry status unification collapsed the spellings, so the OR over three
+    cells collapses with them.
+
+    Still an OR over the two VOCABULARY sets rather than a dispatch on tier:
+    they differ (only CMP reaches `founded`), and a tier table here would be a
+    second place to keep that mapping right.
 
     THE SPINE HALF COLLAPSED AT D-9 STEP 5, as this docstring said it would: the
     ladder has ONE word for the claim (`Approved`) and the two pre-rename values
@@ -281,8 +289,8 @@ def _claims_approval(row):
     blessed is complete."""
     return (
         (row.get("Status") or "").strip().lower() in _APPROVAL_CLAIMED
-        or (row.get("Approval") or "").strip().lower() in _APPROVAL_CELL_CLAIMED
-        or (row.get("State") or "").strip().lower() in _STATE_CELL_CLAIMED
+        or (row.get("Status") or "").strip().lower() in _APPROVAL_CELL_CLAIMED
+        or (row.get("Status") or "").strip().lower() in _STATE_CELL_CLAIMED
     )
 
 

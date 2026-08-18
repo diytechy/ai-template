@@ -207,7 +207,6 @@ OFFSPINE_COLUMN = {
     "this_project": "ThisProject",
     "counterpart": "Counterpart",
     "contract": "Contract",
-    "approval": "Approval",
     "interface_from_external": "InterfaceFromExternal",
     "interface_to_external": "InterfaceToExternal",
     "signal": "Signal",
@@ -241,7 +240,7 @@ OFFSPINE_COLUMN = {
     "name": "Name",
     "category": "Category",
     "knowledge": "Knowledge",
-    "state": "State",
+    "standing": "Standing",
     "part_of": "PartOf",
     "detail_doc": "DetailDoc",
 }
@@ -360,7 +359,7 @@ OFFSPINE_KEYS = {
         "owner",
         "carried_by",
         "version",
-        "approval",
+        "status",
         "interface_from_external",
         "interface_to_external",
         "component",
@@ -370,7 +369,8 @@ OFFSPINE_KEYS = {
         "name",
         "category",
         "knowledge",
-        "state",
+        "status",
+        "standing",
         "superseded_by",
         "part_of",
         "detail_doc",
@@ -381,9 +381,9 @@ OFFSPINE_KEYS = {
     # three-leg drift rule (tests/test_dogfood_sync.py) compares template, live
     # registry and THIS map per id column, so a column added to crossings
     # cannot leak into entities.
-    "EXT-ID": ("name", "class", "description", "approval", "absorbs", "notes"),
-    "B-ID": ("entity", "direction", "carries", "approval", "absorbs", "notes"),
-    "REL-ID": ("from", "to", "kind", "flow", "approval", "absorbs", "notes"),
+    "EXT-ID": ("name", "class", "description", "status", "absorbs", "notes"),
+    "B-ID": ("entity", "direction", "carries", "status", "absorbs", "notes"),
+    "REL-ID": ("from", "to", "kind", "flow", "status", "absorbs", "notes"),
 }
 REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
 

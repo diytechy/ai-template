@@ -31,13 +31,18 @@
 # outputs, and the gap keeps id and frame name aligned 1:1 rather than
 # renumbering a locked table.
 #
-# APPROVAL — THE PROVISIONAL VOCABULARY AND ITS MIGRATION (decision 12, 13u).
-# Every row here carries `approval`, from this file's first commit, because a
-# frame with no approval element is un-ratifiable and the rung that reads it
-# (`derive_gate.boundary_incomplete`) would have nothing honest to read. The
-# value set shipped today is PROVISIONAL and deliberately minimal:
+# STATUS — THE ONE VOCABULARY (decision 12, 13u; unified 2026-08-17).
+# Every row here carries `status`, from this file's first commit under the
+# name `approval`, because a frame with no approval element is un-ratifiable
+# and the rung that reads it (`derive_gate.boundary_incomplete`) would have
+# nothing honest to read. The subset this tier takes:
 #
-#     approval = "Drafted" | "approved"
+#     status = "Drafted" | "Approved"
+#
+# `Founded` is NOT APPLICABLE HERE, and never will be: it means settled AND
+# DEMONSTRATED, and an approval says the crossing is AGREED — it says nothing
+# about the crossing having been demonstrated. No predicate computes that for
+# this tier, so the word would be a claim nothing can check.
 #
 # Decision 12 ruled ONE shared status vocabulary across every registry with
 # per-registry subsets allowed, and the D-9 ladder that names its values
@@ -49,14 +54,14 @@
 # was one line there and none anywhere else.
 #
 # FLIP AUTHORITY — MECHANIZED 2026-08-15 (OI-30 D3), AND IT IS DERIVED, NOT
-# DECLARED. Authority over an off-spine approval cell FOLLOWS THE DEV-STAGE
+# DECLARED. Authority over an off-spine `status` cell FOLLOWS THE DEV-STAGE
 # LADDER: a cell in registry R may be machine-flipped only when R's stage rung
 # is not human-held under the EXISTING `[attestation] human_ratification_through`
 # dial — no new key and no new enum, because the registry-to-rung association
 # already exists in `derive_gate` (`boundary_incomplete` gates DevStg-Boundary on
 # THIS file; `arch_incomplete` gates DevStg-Arch on the component registry).
 # `external.toml` -> DevStg-Boundary; `interfaces.toml`/`components.toml` ->
-# DevStg-Arch; an approval-carrying registry with NO mapping is HELD. The
+# DevStg-Arch; a status-carrying off-spine registry with NO mapping is HELD. The
 # predicate is `agent_common.human_approves(docs, registry)`, beside
 # `human_holds`. At this repo's dial of 4 the effect is what the prose below
 # always said: THE APPROVAL VALUES IN THIS FILE AND IN interfaces.toml ARE THE
@@ -73,7 +78,7 @@
 name = "Development session"
 class = "operational"
 description = """Human or LLM in a terminal - attended or the agent-resume loop, indistinguishable by rule - plus the user's local development environment and the working copy in its hands (shell, git client, OS, Python, editors, test runner, LLM runners). The session HOLDS the checkout; the system owns the governed state those edits become once admitted through the hook floor."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 EXT-001; dissolved into it: v1 EXT-005 (git), EXT-007 (OS/filesystem/Python), EXT-008 (test+coverage toolchain)"
 notes = """The human is inside this entity, not beside it (13k). Reversing that is an open follow-on from decision 2 and must be stated deliberately, never drifted into."""
 
@@ -81,7 +86,7 @@ notes = """The human is inside this entity, not beside it (13k). Reversing that 
 name = "Template"
 class = "deliverable"
 description = """The delivered package - every *.template.*, the registries, scripts, hooks, skills and launchers - as a separate package. From an adopter's frame this package is their enabling system."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 EXT-002"
 notes = """`deliverable` was an ADDITION to the class vocabulary (operational/enabling/interoperating did not fit an output package) and is CONFIRMED (§1R.7 item 2). Nothing gates on `class` today; it is read by the generated context view and the advisory schema tier."""
 
@@ -89,14 +94,14 @@ notes = """`deliverable` was an ADDITION to the class vocabulary (operational/en
 name = "Adopter"
 class = "operational"
 description = """The downstream team and their repository. Receives the Template (REL-001); never receives this repository."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 EXT-003"
 
 [entity.EXT-005]
 name = "Model provider API(s) / CLI(s)"
 class = "interoperating"
 description = """The model services and command-line runners behind any LLM in the session - the primary builder AND the adversarial reviewers alike. They touch the SESSION, never the system (REL-003)."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
 notes = """A model CLI is just a model CLI, whether primary or secondary (owner merge, 2026-08-13o)."""
 
@@ -106,21 +111,21 @@ notes = """A model CLI is just a model CLI, whether primary or secondary (owner 
 entity = "EXT-001"
 direction = "in"
 carries = """Governed writes: artifact, registry and config edits admitted ONLY through the git hook floor (privacy, format, gate checks) - the one write path from the session into the system's governed state."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-004/N-01, BIF-006/M-13, BIF-007-in/M-10, BIF-025/X-09, and the write half of BIF-026/M-16"
 
 [boundary.B-02]
 entity = "EXT-001"
 direction = "in"
 carries = """Authority: rulings, attestations and Status flips - the distinguished input the process advances on."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-005/M-11"
 
 [boundary.B-04]
 entity = "EXT-001"
 direction = "out"
 carries = """Guardrail verdicts during a session: hook-floor accept/reject and subagent_gate PreToolUse allow/deny."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-012/X-07, and the verdict halves of BIF-006 and BIF-026"
 notes = """The honest limit belongs in this crossing's SR: a local hook floor is bypassable (git commit --no-verify), so "no unchecked write enters governed state" rests on this verdict at the moment of the act PLUS a re-run of the same bar away from that bypass (§1R.6). THE RE-RUN IS NOT A CROSSING OF THIS SYSTEM, and that is a ruling rather than an omission: a hosted runner is an ADOPTER's boundary, this system holds no design authority over whether an external runner honours the workflow it is handed, and what the system delivers is a METHOD for one to invoke - so the obligation lands on B-05 as package content, carried by SR-151 and SR-152. The EXT-004/B-06/B-07 rows that used to state it were CUT on that reading (owner ruling 2026-08-16, the same argument REL-003 already applies to the model provider). Their ids are spent: never re-mint B-06, B-07 or EXT-004."""
 
@@ -128,7 +133,7 @@ notes = """The honest limit belongs in this crossing's SR: a local hook floor is
 entity = "EXT-002"
 direction = "out"
 carries = """THE TEMPLATE - the packaged deliverable. The delivered scripts' contracts (check.py, bootstrap.py + MAPPING, agent_loop.py, check_vendored.py, gen_cases.py, gen_release_checklist.py, the hooks, the launchers) are IF definitions tied to this crossing: content of the package, not separate system crossings."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
 notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities WI-451 slice 2 breaks it down by are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and package-wide property -- the sixth added by owner ruling 2026-08-14c for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
 
@@ -142,14 +147,14 @@ from = "EXT-002"
 to = "EXT-003"
 kind = "hands-off"
 flow = """Full template content provided and adopted into the adopter's repo - their scaffold, their loop, their hooks."""
-approval = "Drafted"
+status = "Drafted"
 
 [relationship.REL-002]
 from = "EXT-002"
 to = "EXT-001"
 kind = "self-adoption"
 flow = """This repository's own session adopts the same delivered content and activates autonomous builds from it (agent-resume). The session then RUNS that adopted toolkit to produce PROJECT_STATE.html, open-items.html, docs/status.md, docs/gate and the console reports, and surfaces them to the human reading from that session."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-007-out/M-10, BIF-008/M-03, BIF-009/M-19, BIF-010/M-09, BIF-011/M-08 - the former B-03 set, moved here at 13u"
 notes = """Those outputs are NOT system outputs (13u). The system delivered the generators as B-05 content; the workflow that runs them is adopted, exactly as an adopter's would be. Activating the loop from adopted content is an input into this repository's DEVELOPMENT SESSION, not into the system (13n)."""
 
@@ -158,6 +163,6 @@ from = "EXT-001"
 to = "EXT-005"
 kind = "runner-surface"
 flow = """The LLM runner surface, primary and adversarial alike: rate limit, auth expiry and model retirement; hostile-review briefs out and findings in."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "v1 BIF-023/M-15 and BIF-024/M-14, merged 2026-08-13o"
 notes = """The backoff obligation reads as a requirement on delivered loop content (B-05), exercised session-side."""

@@ -195,7 +195,6 @@ KEY = {
     "ThisProject": "this_project",
     "Counterpart": "counterpart",
     "Contract": "contract",
-    "Approval": "approval",
     "InterfaceFromExternal": "interface_from_external",
     "InterfaceToExternal": "interface_to_external",
     "Signal": "signal",
@@ -204,7 +203,7 @@ KEY = {
     "Name": "name",
     "Category": "category",
     "Knowledge": "knowledge",
-    "State": "state",
+    "Standing": "standing",
     "PartOf": "part_of",
     "DetailDoc": "detail_doc",
     # external — the depth-0 frame (WI-442). This registry never had a CSV

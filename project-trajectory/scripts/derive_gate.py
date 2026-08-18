@@ -749,7 +749,7 @@ def boundary_incomplete(bifs, have_registry):
         return False
     if not bifs:
         return True
-    return any(_caps(_maturity(r.get("Approval"), BIF_MATURITY)) for r in bifs)
+    return any(_caps(_maturity(r.get("Status"), BIF_MATURITY)) for r in bifs)
 
 
 def arch_incomplete(cmps, have_registry):
@@ -769,7 +769,7 @@ def arch_incomplete(cmps, have_registry):
         return False
     if not cmps:
         return True
-    return any(_caps(_maturity(r.get("State"), CMP_MATURITY)) for r in cmps)
+    return any(_caps(_maturity(r.get("Status"), CMP_MATURITY)) for r in cmps)
 
 
 def spine_stage(

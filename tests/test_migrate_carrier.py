@@ -208,19 +208,32 @@ def test_the_two_new_tiers_round_trip_cell_for_cell(table, id_col, header, row):
         assert parsed["signal"] == "discrete"
 
 
-def test_the_retired_if_status_column_has_no_carrier_key():
-    """OI-14 part B retired `Status` on the IF tier, and the absence is
-    LOAD-BEARING rather than cosmetic: with no `KEY` entry a stray `Status`
-    cell keys as the literal `Status`, where the schema tier sees it, instead
-    of being silently absorbed under a name a reader would trust."""
+def test_the_if_tier_has_exactly_ONE_declared_maturity_key():
+    """The IF tier's maturity column, and the three names it has worn.
+
+    HISTORY, because the name came BACK and that needs to be on the record.
+    `Status` shipped on this tier UNDECLARED, meaning nothing; OI-14 part B
+    retired it, and the absence was load-bearing — with no `KEY` entry a stray
+    `Status` cell keyed as the literal `Status`, where the schema tier could see
+    it, rather than being absorbed under a name a reader would trust. WI-442
+    replaced `Stability` with `Approval` for the same defect one column later.
+    The 2026-08-17 status unification then renamed `approval` -> `status`.
+
+    So `status` is a DECLARED key on this tier again — and that is not the
+    retired column returning. What made the old one dangerous was being
+    undeclared: a cell no schema knew about, absorbed under a trusted name. This
+    one IS the schema. What must stay true is the property both retirements were
+    protecting: EXACTLY ONE maturity key on the row, never two that mean
+    different things."""
     carrier = load_script("spine_carrier")
-    assert "status" not in carrier.REGISTRY_KEYS["IF-ID"]
-    assert "signal" in carrier.REGISTRY_KEYS["IF-ID"]
-    assert "rationale" in carrier.REGISTRY_KEYS["IF-ID"]
-    # WI-442: `stability` RETIRED in its turn, replaced by `approval` — the
-    # same defect the `Status` retirement above fixed, one column later.
-    assert "stability" not in carrier.REGISTRY_KEYS["IF-ID"]
-    assert "approval" in carrier.REGISTRY_KEYS["IF-ID"]
+    keys = carrier.REGISTRY_KEYS["IF-ID"]
+    assert "status" in keys
+    assert "signal" in keys
+    assert "rationale" in keys
+    # The two retired spellings must not come back BESIDE it — two maturity keys
+    # on one row is the defect, not the name.
+    assert "stability" not in keys
+    assert "approval" not in keys
 
 
 def test_neither_new_registry_survives_under_its_old_carrier():

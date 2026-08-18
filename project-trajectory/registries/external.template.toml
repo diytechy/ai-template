@@ -20,12 +20,16 @@
 # crossing and must never grow a realizing IF row. If you find yourself wanting
 # one, what you have is a boundary crossing.
 #
-# APPROVAL is the one maturity field, and every row carries it from the file's
-# first commit — a frame with no approval element cannot be ratified, and the
-# stage rung that reads it (`derive_gate.boundary_incomplete`, "is the boundary
-# inventory still in work?") would have nothing honest to read. Closed
-# vocabulary: `drafted` | `approved`. Flipping a row to `approved` is a HUMAN act
-# recorded as a reviewed Status-change commit; no loop and no script may do it.
+# STATUS is the one maturity field — the SAME field and the same words the
+# spine uses — and every row carries it from the file's first commit: a frame
+# with no approval element cannot be ratified, and the stage rung that reads it
+# (`derive_gate.boundary_incomplete`, "is the boundary inventory still in
+# work?") would have nothing honest to read. Closed vocabulary:
+# `Drafted` | `Approved`. `Founded` is NOT APPLICABLE to this tier and never
+# will be — it means settled AND DEMONSTRATED, and an approval says the
+# crossing is AGREED, not that it was demonstrated. Flipping a row to
+# `Approved` is a HUMAN act recorded as a reviewed Status-change commit; no
+# loop and no script may do it.
 #
 # APPLIES-WHEN: a project that never declares a boundary simply does not create
 # this file, and the DevStg-Boundary rung is skipped rather than held open
@@ -35,7 +39,7 @@
 name = "EXAMPLE - delete on first real entry"
 class = "operational"
 description = """One party outside your system. `class` is a CLOSED vocabulary: operational (a user or peer system that acts), enabling (something your system depends on to run), interoperating (a service you exchange with) or deliverable (a package your system produces and hands off)."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "optional provenance: the earlier ids this row folded in, so a re-drawn frame loses nothing"
 notes = "optional"
 
@@ -43,7 +47,7 @@ notes = "optional"
 entity = "EXT-000"
 direction = "in"
 carries = """What crosses, in one testable line. `entity` must resolve to a declared entity above; `direction` is a CLOSED vocabulary read from the SYSTEM's point of view: in | out | inout. A crossing may be a BUNDLE of implementation-specific interfaces - that is legitimate provided the decomposition is broken down or clearly stated in the component details."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "optional provenance"
 notes = "optional"
 
@@ -52,6 +56,6 @@ from = "EXT-000"
 to = "EXT-000"
 kind = "hands-off"
 flow = """A flow between two EXTERNAL parties that your system is NOT a party to, recorded because it constrains you even though you do not sit in it. `from` and `to` must resolve to declared entities."""
-approval = "Drafted"
+status = "Drafted"
 absorbs = "optional provenance"
 notes = "optional"
