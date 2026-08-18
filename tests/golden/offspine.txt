@@ -113,6 +113,10 @@ None flagged by the overlap heuristic.
 
 None. No requirement cell names a concrete artifact.
 
+## Need artifact-naming advisories (warn-only)
+
+None. No need's acceptance names a concrete artifact.
+
 ## Verification-coherence advisories (warn-only)
 
 None. No requirement states two verification methods.

@@ -43,6 +43,10 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   ledger is 9-of-9 RULED and §0.4's WORK OWED block is empty, so no pre-work is
   owed. Known-open, unrelated: the `trajectory` gating red, and the brief's
   freshness check (it re-reddens on every spine amendment).
+  **Countersign-only, added 2026-08-18k:** fifteen SN `acceptance` cells reworded
+  from instrument voice to condition voice under the owner's artifact-voice
+  directive — a wording sweep, no `status` cell moved, per-row before/after in
+  [log.d/2026-08-18-sn-artifact-voice.md](log.d/2026-08-18-sn-artifact-voice.md).
 - **The `wi455-architecture-retirement` lane owns what the sitting does not:**
   the crossing-ownership re-key onto each named owner, the five
   `external:`-marked IF rows with no tie-back, B-04's half realization, the D-3

@@ -757,6 +757,136 @@ def test_a_recorded_waiver_silences_the_row_but_not_a_shared_artifact():
     assert [a for a in trace.sr_artifact_advisories([other]) if "all name" in a] == []
 
 
+def test_a_need_whose_acceptance_names_a_concrete_artifact_warns():
+    """The SN arm of the artifact-voice rule (owner directive 2026-08-18).
+
+    Rows arrive in the `spine_carrier.load_needs` shape — lower-case `id` and
+    cells — NOT the `<TIER>-ID`/Title-case shape the SR rules read, so the
+    fixtures here are written that way deliberately.
+    """
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    script = {
+        "id": "SN-101",
+        "acceptance": "`trace.py --strict` reports zero orphans across the spine.",
+    }
+    config = {
+        "id": "SN-102",
+        "acceptance": "The toolchain is declared once in `docs/stack.ini`.",
+    }
+    page = {"id": "SN-103", "acceptance": "The root `PROJECT_STATE.html` renders it."}
+    # The vocabulary is WIDER than the SR arm's `.py` anchor on purpose: the need
+    # tier's instruments are mostly configs and generated pages, not scripts.
+    for row in (script, config, page):
+        assert len(trace.sn_artifact_advisories([row])) == 1
+    assert "'trace.py'" in trace.sn_artifact_advisories([script])[0]
+    assert "'docs/stack.ini'" in trace.sn_artifact_advisories([config])[0]
+    assert "'PROJECT_STATE.html'" in trace.sn_artifact_advisories([page])[0]
+
+    # CONDITION voice — the wording the rule asks for — is silent.
+    assert (
+        trace.sn_artifact_advisories(
+            [
+                {
+                    "id": "SN-104",
+                    "acceptance": "The strict traceability check reports zero "
+                    "orphans across the joined spine.",
+                }
+            ]
+        )
+        == []
+    )
+    # A word that merely ends in a vocabulary suffix is not an artifact: the
+    # signal is the dotted EXTENSION, the same rule the SR arm is built on.
+    for word in ("numpy", "happy", "minimal", "shell", "sh"):
+        assert (
+            trace.sn_artifact_advisories(
+                [{"id": "SN-105", "acceptance": "It stays {} to run.".format(word)}]
+            )
+            == []
+        )
+    # A `-000` example row is a blank form, not a need.
+    assert trace.sn_artifact_advisories([dict(script, id="SN-000")]) == []
+    # An empty or absent acceptance cell reports nothing rather than crashing.
+    assert trace.sn_artifact_advisories([{"id": "SN-106"}]) == []
+    assert trace.sn_artifact_advisories([{"id": "SN-106", "acceptance": "  "}]) == []
+
+
+def test_the_need_arm_scans_acceptance_only_and_excludes_markdown():
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    # `need` belongs to check_need_form.py, which reports internal paths there on
+    # SN-033's commission. Scanning it here too would report one token from two
+    # checks — the anti-duplication rule applied to the detectors themselves.
+    assert (
+        trace.sn_artifact_advisories(
+            [{"id": "SN-101", "need": "A reviewer can trust `trace.py`."}]
+        )
+        == []
+    )
+    # `why` is exempt for the reason `Rationale` is exempt at SR: it is the reason
+    # cell, and it is where this rule's own waiver is recorded.
+    assert (
+        trace.sn_artifact_advisories(
+            [{"id": "SN-101", "why": "Because `trace.py` would otherwise rot."}]
+        )
+        == []
+    )
+    # `.md` is EXCLUDED, and that exclusion was measured rather than assumed: a
+    # markdown document named in a spine cell is overwhelmingly a PROVENANCE
+    # citation, which process.md §3's provenance clause already sanctions.
+    assert (
+        trace.sn_artifact_advisories(
+            [
+                {
+                    "id": "SN-102",
+                    "acceptance": "Spec of record: `docs/concurrency-restructure.md`.",
+                }
+            ]
+        )
+        == []
+    )
+
+
+def test_a_recorded_why_waiver_silences_a_need_and_there_is_no_shared_census():
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    waived = {
+        "id": "SN-101",
+        "acceptance": "`docs/process.toml` holds every process dial.",
+        "why": "One-shall waiver (13v): the single-home promise IS a promise "
+        "about this file, so a class-voice rewrite would delete the need.",
+    }
+    # The waiver home at SN is `why` — the tier's reason cell, since the need
+    # schema (`SPINE_TIER_KEYS['SN-ID']`) carries no `Rationale` — and the token
+    # is the SAME `13v` the SR valve uses, not a second grammar.
+    assert trace.sn_artifact_advisories([waived]) == []
+    # The suppression is the `why` cell's doing, not an accident of the regex.
+    assert trace.sn_artifact_advisories(
+        [{k: v for k, v in waived.items() if k != "why"}]
+    )
+    # A `why` that records something else does not silence it.
+    assert trace.sn_artifact_advisories(
+        [dict(waived, why="One home per dial is cheaper for the owner.")]
+    )
+
+    # NO PER-ARTIFACT CENSUS at SN, unlike the SR arm: two needs may honestly
+    # describe outcomes one file happens to serve without either of them
+    # deciding anything about it. That is a requirement-tier defect only.
+    other = {"id": "SN-102", "acceptance": "`docs/process.toml` is refused twice."}
+    both = trace.sn_artifact_advisories(
+        [{k: v for k, v in waived.items() if k != "why"}, other]
+    )
+    assert len(both) == 2
+    assert not [a for a in both if "all name" in a]
+
+
 def test_the_fanout_detector_fires_past_the_declared_bound_only():
     from conftest import load_script
 

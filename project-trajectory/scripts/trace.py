@@ -111,6 +111,7 @@ try:
         paraphrase_advisories,
         provenance_findings,
         refs,
+        sn_artifact_advisories,
         sr_artifact_advisories,
         sr_fanout_advisories,
         verification_coherence_advisories,
@@ -132,6 +133,7 @@ except ImportError:  # pragma: no cover - in-process fallback
         paraphrase_advisories,
         provenance_findings,
         refs,
+        sn_artifact_advisories,
         sr_artifact_advisories,
         sr_fanout_advisories,
         verification_coherence_advisories,
@@ -2944,6 +2946,7 @@ def load_registries(docs):
     sn_meta = {}
     sn_integrity = []
     sn_rows = []
+    sn_needs = []
     # Resolved through the CARRIER, not by literal suffix: a
     # `.toml`-only existence test reads a markdown needs registry as ABSENT, and
     # an absent needs tier makes every SR orphan-clean, every draft need
@@ -2968,12 +2971,19 @@ def load_registries(docs):
         # fold projects onto `SN_CORE`, which has no `status` key at all, so a
         # Status check reading it would see a blank cell on every row and pass
         # vacuously — the silent-green shape this whole tier keeps re-learning.
+        # Loaded ONCE and kept whole: `sn_rows` is the two-key projection the
+        # enum floor reads, while `sn_needs` keeps every cell for the text rules
+        # (`sn_artifact_advisories` reads `acceptance` and `why`). Same trap, one
+        # level over: a text rule fed the projection above — or `folded_needs`,
+        # which drops `status` — would scan a blank cell on every row and report
+        # a clean tier it never looked at.
+        sn_needs = list(spine_carrier.load_needs(sn_md))
         sn_rows = [
             {
                 "SN-ID": str(n.get("id") or "").strip(),
                 "Status": str(n.get("status") or "").strip(),
             }
-            for n in spine_carrier.load_needs(sn_md)
+            for n in sn_needs
         ]
     reg = Registries()
     reg.raw_srs, reg.raw_llrs, reg.raw_tcs = raw_srs, raw_llrs, raw_tcs
@@ -2988,6 +2998,7 @@ def load_registries(docs):
     reg.sn_ids, reg.sn_draft, reg.sn_meta, reg.sn_md = sn_ids, sn_draft, sn_meta, sn_md
     reg.sn_integrity = sn_integrity
     reg.raw_sns = sn_rows
+    reg.sn_needs = sn_needs
     reg.docs = docs
     return reg
 
@@ -3415,6 +3426,11 @@ def analyze(reg, args):
     # report a tiering defect under a wording heading. Never joins a failure set
     # below: warn-first by ruling, cleared by the re-tier campaign, not by a gate.
     sr_artifact_advis = sr_artifact_advisories(srs)
+    # The same rule one tier up (owner directive 2026-08-18): a need's
+    # `acceptance` naming the instrument rather than the observable condition.
+    # Its own pipe for the same reason — a tiering finding reported under a
+    # wording heading is a mis-named finding — and warn-only on the same terms.
+    sn_artifact_advis = sn_artifact_advisories(reg.sn_needs)
     sr_fanout_advis = sr_fanout_advisories(srs, llrs)
     # Warn-only, always on: a row whose prose names a critique instrument while
     # its Verification says otherwise. Its own pipe for the same reason the two
@@ -3461,6 +3477,7 @@ def analyze(reg, args):
     findings.ears = ears
     findings.llr_status_advis = llr_status_advis
     findings.sr_artifact_advis = sr_artifact_advis
+    findings.sn_artifact_advis = sn_artifact_advis
     findings.sr_fanout_advis = sr_fanout_advis
     findings.verif_coherence_advis = verif_coherence_advis
     findings.if_this_project_advis = if_this_project_advis
@@ -3504,6 +3521,7 @@ def render_report(reg, findings, args, forest):
     ears = findings.ears
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
+    sn_artifact_advis = findings.sn_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
@@ -3705,6 +3723,12 @@ def render_report(reg, findings, args, forest):
         if not sr_artifact_advis
         else [f"- {f}" for f in sr_artifact_advis]
     )
+    lines += ["", "## Need artifact-naming advisories (warn-only)", ""]
+    lines += (
+        ["None. No need's acceptance names a concrete artifact."]
+        if not sn_artifact_advis
+        else [f"- {f}" for f in sn_artifact_advis]
+    )
     lines += ["", "## Verification-coherence advisories (warn-only)", ""]
     lines += (
         ["None. No requirement states two verification methods."]
@@ -3887,6 +3911,7 @@ def render_console(reg, findings, args, out, html_out):
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
+    sn_artifact_advis = findings.sn_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
@@ -3919,6 +3944,7 @@ def render_console(reg, findings, args, out, html_out):
         + paraphrase
         + ears
         + sr_artifact_advis
+        + sn_artifact_advis
         + sr_fanout_advis
         + verif_coherence_advis
         + if_this_project_advis

@@ -2,7 +2,7 @@
 """Spine-row TEXT rules and the row primitives they share (WI-329).
 
 Split out of `trace.py`, which owns the JOIN — this module owns the question
-"is this one row readable and decidable on its own?", asked eight ways:
+"is this one row readable and decidable on its own?", asked nine ways:
 
 | function                    | tier     | what it catches                        |
 |-----------------------------|----------|----------------------------------------|
@@ -11,6 +11,7 @@ Split out of `trace.py`, which owns the JOIN — this module owns the question
 | `paraphrase_advisories`     | advisory | the child re-words its parent          |
 | `ac_advisories`             | advisory | a comparative with no named predicate  |
 | `sr_artifact_advisories`    | advisory | a requirement cell names an artifact   |
+| `sn_artifact_advisories`    | advisory | a need's acceptance names an artifact  |
 | `sr_fanout_advisories`      | advisory | an SR's direct-LLR fan-out is merged   |
 | `ears_advisories`           | advisory | a condition stated outside EARS        |
 | `if_this_project_advisories`| advisory | an endpoint disagrees with its owner   |
@@ -570,11 +571,13 @@ def paraphrase_advisories(srs, llrs):
     return out
 
 
-# --- Re-tier v2 R2/R3: the two warn-first tiering detectors -------------------
-# Both are ADVISORY and stay advisory. They report a TIERING smell — a row that
-# decided which artifact carries a capability, or a row that merged several
+# --- Re-tier v2 R2/R3: the warn-first tiering detectors ------------------------
+# All three are ADVISORY and stay advisory. They report a TIERING smell — a row
+# that decided which artifact carries a capability, or a row that merged several
 # decisions and grew a fan of children to cover them — and a smell is exactly
-# what a human decides. Neither ever joins the exit code under any flag.
+# what a human decides. None ever joins the exit code under any flag. R2's
+# no-concrete-artifact rule reaches the SN tier too (`sn_artifact_advisories`,
+# owner directive 2026-08-18); the fan-out rule is SR-only by construction.
 
 # A concrete Python artifact named in a cell: a bare script (`trace.py`) or a
 # path-qualified one (`scripts/trace.py`). Anchored on the literal `.py`
@@ -695,6 +698,101 @@ def sr_artifact_advisories(srs):
                 "waiver excuses a row's own naming, never a shared identity; "
                 "warn-only, never the exit code)".format(", ".join(owners), token)
             )
+    return out
+
+
+# The SN tier's artifact vocabulary (owner directive 2026-08-18, which extends
+# R2's no-concrete-artifact rule from SR up to SN). Deliberately WIDER than
+# `_PY_ARTIFACT_RE` above, and deliberately narrower than "anything with a dot",
+# both for measured reasons taken over the kit's own 27 live needs:
+#
+#   * WIDER, because the SN tier's instruments are mostly NOT scripts. Anchoring
+#     on `.py` alone catches 9 of the 14 rows that name a carrier and misses
+#     `docs/stack.ini`, `docs/process.toml`, `docs/agents.toml` and
+#     `PROJECT_STATE.html` — which are the acceptance-cell instruments a need
+#     most often reaches for.
+#   * WITHOUT `.md`, which was measured and REJECTED. Adding it buys four tokens
+#     across three rows, and two of those (SN-027's "Spec of record: …") are
+#     PROVENANCE citations that §3's provenance clause explicitly sanctions —
+#     so the extension would charge an author a waiver for doing the right
+#     thing. A markdown document named in a spine cell is overwhelmingly a
+#     citation, not an instrument.
+#
+# Known and accepted under-detects, all in the warn-only direction this module
+# prefers (a missed hint costs less than a false accusation): an extension-less
+# carrier (`docs/agents-enabled`, `docs/next-wi`), a bare directory
+# (`docs/rubrics/`), and a TOOL name that is not a filename (`pytest`,
+# `tomllib`). Those stay the consistency review's to catch — the rule is wider
+# than any regex for it, which is why this reports a token and never a voice.
+_SN_ARTIFACT_RE = re.compile(
+    r"\b[A-Za-z_][\w./-]*\.(?:py|toml|ini|csv|html|ya?ml|sh|cmd|ps1|bat|json)\b"
+)
+
+
+def sn_artifact_advisories(needs):
+    """Warn-only: an SN `acceptance` cell that names a concrete artifact
+    (owner directive 2026-08-18, extending re-tier v2 R2 from SR to SN).
+
+    **A need states the observable condition, never the instrument that observes
+    it.** An acceptance cell reading "`trace.py --strict` reports zero orphans"
+    has fixed a stakeholder outcome to one script, so re-carrying the check means
+    re-writing what the stakeholder asked for — and the stakeholder, who is the
+    only reader this tier exists for, cannot validate a sentence naming a file
+    they have never opened. The condition ("the strict traceability check reports
+    zero orphans") survives every re-carry; the carrier's name belongs at SR
+    `AcceptanceCriteria` as rewritable current-carrier evidence, at the LLR
+    `Module` cell, or in the shipped-file inventory.
+
+    SCANS `acceptance` ONLY, and that is a division of labour rather than an
+    oversight. The `need` cell already has a stronger, more specific enforcer in
+    `check_need_form.py`, which reports internal paths, implementation-only
+    identifiers and process citations there on SN-033's commission; scanning it
+    here too would report one token from two checks, which is the anti-duplication
+    rule this kit states about its own documents applied to its own detectors.
+    `why` is exempt for the reason `Rationale` is exempt at SR: it is the reason
+    cell, and it is where this rule's waiver is recorded.
+
+    THE WAIVER LIVES IN `why` — the same `13v` token the one-`shall` and SR
+    artifact valves use, never a second grammar. `why` is the SN tier's reason
+    cell (the schema carries no `Rationale`: `SPINE_TIER_KEYS["SN-ID"]` is
+    `status | tags | need | why | priority | acceptance`), so it is the field
+    that already answers "why is this row the way it is", which is exactly what
+    a waiver has to say.
+
+    NO PER-ARTIFACT CENSUS, unlike the SR arm. "Two rows sharing one artifact
+    identity" is R1's *one home per method* defect, and a method is a requirement
+    -tier thing: two needs may honestly describe outcomes the same file happens
+    to serve without either of them deciding anything about it. Reporting that as
+    a tiering defect would be inventing a rule the ruling does not contain.
+
+    Rows arrive from `spine_carrier.load_needs`, so the id key is `id` and the
+    cells are lower-case — NOT the `<TIER>-ID`/Title-case shape `_real` reads.
+    """
+    out = []
+    for need in needs:
+        nid = str(need.get("id") or "").strip()
+        if not nid or is_example(nid):
+            continue
+        cell = (need.get("acceptance") or "").strip()
+        if not cell:
+            continue
+        named = sorted(set(_SN_ARTIFACT_RE.findall(cell)))
+        if not named:
+            continue
+        if _WAIVER_RE.search(need.get("why") or ""):
+            continue
+        out.append(
+            "SN {} acceptance names concrete artifact {} — a need states the "
+            "observable CONDITION, not the instrument that observes it ('the "
+            "strict traceability check reports zero orphans', not "
+            "'`trace.py --strict` reports zero orphans'); move the concrete "
+            "name to the SR AcceptanceCriteria as current-carrier evidence, or "
+            "record the reason it is unavoidable as a waiver (13v) in `why` "
+            "(process.md §3 'a requirement cell never names a concrete "
+            "artifact'; warn-only, never the exit code)".format(
+                nid, ", ".join(repr(t) for t in named)
+            )
+        )
     return out
 
 

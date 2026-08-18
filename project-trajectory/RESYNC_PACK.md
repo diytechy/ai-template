@@ -1783,3 +1783,67 @@ DevStg-Tests bar requires — moves to its own doc and the dashboard embeds it.
   (the old committed-map staleness window is gone) and names the uncontained
   modules; `gen_okf`'s process-guide for `docs/architecture.md` is replaced by
   a `runtime-flows` guide, so your `docs/okf/` bundle regenerates once.
+
+---
+
+### Reserved: the artifact-voice rule reaches the NEED tier — and you owe your own rows a sweep
+
+**The rule changed shape, not just scope.** `docs/process.md` §3 used to say a
+*requirement* cell names no concrete artifact without a recorded reason; it now
+says a **need or requirement** cell does. At SN that lands squarely on the
+`acceptance` cell: a need states the observable **condition**, never the
+instrument that observes it. "`trace.py --strict` reports zero orphans" is a
+stakeholder outcome welded to one script — it cannot survive the script being
+re-carried, and the stakeholder the tier exists for cannot validate a claim about
+a file they have never opened. "The strict traceability check reports zero
+orphans" says the same thing and outlives every carrier.
+
+**The detector now warns on both tiers.** `trace.py`'s "Artifact-naming
+advisories" section is joined by "**Need artifact-naming advisories**", fed by
+`trace_text.sn_artifact_advisories`. Both are **warn-only and stay warn-only** —
+neither joins the exit code under any flag, so nothing you have gates today
+starts failing. Three differences from the SR arm, all deliberate:
+
+- It reads a **wider artifact vocabulary** (`.py .toml .ini .csv .html .yml
+  .yaml .sh .cmd .ps1 .bat .json`), because a need's instruments are mostly not
+  scripts — they are config files and generated pages. `.md` is **excluded**: a
+  document named in a spine cell is usually a *citation*, which §3's provenance
+  clause already sanctions, and charging a waiver for that would train authors
+  to ignore the warning.
+- It reads **`acceptance` only**. Your `need` cells belong to
+  `check_need_form.py`, which already reports internal paths and
+  implementation-only identifiers there — one token, one reporting check.
+- There is **no shared-artifact census** at SN. Two needs may honestly describe
+  outcomes one file happens to serve without either of them deciding anything
+  about it; only the SR tier's "one home per method" makes that a defect.
+
+**What YOU do — run the same conformance sweep over your own rows.** Nothing
+migrates this for you, and a repo that adopted the kit before this change almost
+certainly has needs written in instrument voice (the kit's own registry had 13 of
+27 acceptance cells naming a carrier when the rule landed). Take it row by row:
+
+1. Run `python scripts/trace.py` and read the two artifact-naming sections as a
+   worklist — the SN one and the SR one, since the SR arm has been warning since
+   the re-tier campaign and older repos never cleared it.
+2. For each flagged cell ask the one question: **is the artifact the SUBJECT of
+   this row, or the INSTRUMENT that happens to carry it?** An instrument gets
+   rewritten to the condition it produces ("the documentation check fails on a
+   broken link", not "`check_docs.py` fails on a broken link"). A subject stays.
+3. **Where the name stays, record the reason as a waiver** — the same `13v`
+   token the one-`shall` and SR artifact valves already use, written in the
+   tier's **reason cell**: `Rationale` at SR, and **`why` at SN**, because the
+   need schema carries no `Rationale` and `why` is the field that already answers
+   "why is this row the way it is". The reason must be one a later reader can
+   argue with; "accepted" is not a reason.
+4. Two things need **no** waiver and should not get one, or the token stops
+   meaning anything: a **provenance** citation (a spec of record; a retired
+   artifact named as the thing this need abolished) and a **declared vocabulary**
+   token (a dial name, a status word, a `--flag`). Neither is a carrier.
+
+**This is a wording sweep, not a re-decomposition.** Do not change what a row
+means, do not touch `status`, and expect your amendment detectors to fire on
+every cell you rewrite — that is correct, and those rows are what your next
+review sitting reads. If your process holds the need tier for human
+ratification, the sweep is a provisional act your sitting countersigns.
+
+*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*

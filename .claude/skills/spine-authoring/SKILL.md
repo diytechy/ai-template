@@ -18,8 +18,9 @@ list to put to a row **before** it lands.
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one
 `shall`; the eight quality characteristics and the EARS statement pattern; a
-requirement cell names a concrete artifact only where its rationale records why
-that artifact must be constrained; a rationale carries its own reason) and §4
+need or requirement cell names a concrete artifact only where its reason cell
+records why that artifact must be constrained; a rationale carries its own
+reason) and §4
 (gates, verification methods). Read the rule there; use this file to decide
 whether your row obeys it.
 
@@ -78,6 +79,21 @@ Four questions:
 - **(d) Would a blind reader recover the intended obligations from the text
   alone?** The honest test of a need. Where the answer is no, the defect is in
   the need — file it as a needs defect, not as an SR problem.
+- **(e) Does the acceptance intent name an INSTRUMENT?** The no-concrete-artifact
+  rule reaches this tier too (owner directive 2026-08-18, extending it from SR up
+  to SN), and it bites hardest here: the SN `acceptance` cell is where a need
+  quietly becomes a sentence about a file. "`trace.py --strict` reports zero
+  orphans" fixes a *stakeholder outcome* to one script — it cannot survive the
+  script being re-carried, and the stakeholder it exists for cannot validate a
+  claim about a file they have never opened. Write the observable **condition**
+  ("the strict traceability check reports zero orphans") and let the carrier be
+  named where carriers belong. **Where a concrete name is genuinely unavoidable,
+  the waiver goes in `why`** — the SN tier's reason cell, since the need schema
+  carries no `Rationale` — as the same `13v` token the SR valve uses, with a
+  reason a later reader can argue with. Two things are NOT waivable naming and
+  need no token: a **provenance** citation (a spec of record, a retired artifact
+  named as the thing this need abolished) and a **declared vocabulary** token (a
+  dial name, a status word, a flag), because neither is a carrier.
 
 ## 2. At SR derivation — per row
 
@@ -85,8 +101,9 @@ Four questions:
   that decides both *which artifact* carries a capability and *what it does* is a
   tiering defect, not a style choice. Two rows sharing one interface identity is
   the same defect seen from the other side.
-- **(b) Voice.** SR states the delivered capability or the artifact **class**
-  ("the delivered harness", "the launchers at the repository root"). The concrete
+- **(b) Voice.** SN and SR alike state the delivered capability or the artifact
+  **class** ("the delivered harness", "the launchers at the repository root") —
+  one rule, two tiers, since the 2026-08-18 directive. The concrete
   name belongs one tier down — LLR `Module`, TC `Evidence` — or, where acceptance
   genuinely needs an anchor, as **rewritable current-carrier evidence** or a
   registry **id**. Acceptance criteria carry the **observable condition and its
@@ -125,12 +142,19 @@ Four questions:
     licence — the label makes it reviewable; it does not make the row wanted.
 - **(d) The advisories are detectors, not caps.** `scripts/trace.py` warns —
   never gates — on (i) an SR `Requirement` naming a concrete `.py` artifact,
-  (ii) two SRs naming the same artifact token, (iii) a direct-LLR fan-out
-  over the declared bound (`SR_FANOUT_MAX`, default 7), and (iv) an opening
-  that states a condition outside the four EARS keywords. A bound is deliberately
+  (ii) two SRs naming the same artifact token, (iii) an SN `acceptance` naming a
+  concrete artifact (a wider vocabulary than the SR arm's — scripts, configs,
+  generated pages — because the need tier's instruments are mostly not scripts;
+  `.md` is deliberately excluded, since a document named in a cell is usually a
+  citation), (iv) a direct-LLR fan-out over the declared bound (`SR_FANOUT_MAX`,
+  default 7), and (v) an opening that states a condition outside the four EARS
+  keywords. There is no shared-artifact census at SN: two needs may honestly
+  describe outcomes one file happens to serve without either deciding anything
+  about it. A bound is deliberately
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
   hiding the defect the number exists to surface. Clearing one is a **recorded
-  per-row re-stamp** — the waiver token in `Rationale` for a named artifact, the
+  per-row re-stamp** — the waiver token in the tier's reason cell for a named
+  artifact (`Rationale` at SR, `why` at SN), the
   `fan-out re-stamp: <reason>` phrase for fan-out — and the reason must be one a
   later reader can **argue with**. "Accepted" is not a reason.
 - **Also ask:** does this row state a *package-wide property* (right-sizing,
@@ -147,14 +171,18 @@ Four questions:
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.
-- **Acceptance criteria hold the observable condition + threshold.** Artifact
+- **Acceptance criteria hold the observable condition + threshold.** True of
+  every cell that states acceptance, SN `acceptance` included — the tier changes
+  what the condition is *about*, never that it must be a condition. Artifact
   identity lives at the trace homes: the LLR `Module` cell, the TC `Evidence`
   cell, `Implements:` back-links, registry ids. Trace media are explicitly open
   — code-comment back-links are a legitimate trace carrier, not a lesser one.
   **An artifact the TC already lists has no second home in the AC**: the second
   copy is the one that goes stale, and it goes stale silently because nothing
   joins the two cells.
-- **State acceptance as the CONDITION, never as the instrument.** "A CRITIQUE
+- **State acceptance as the CONDITION, never as the instrument** — at SN
+  acceptance-intent as much as here, and at SN it is enforced by an advisory
+  (§2(d) iii). "A CRITIQUE
   session returns APPROVE against `<rubric>`" names a machine; "each clause of
   the requirement is bound to a child whose TC names the test holding it, and
   that binding set is closed over the clauses" names a condition. The second

@@ -107,14 +107,14 @@ tags = ["templates", "scripts"]
 need = """An adopting team can add this process to a new or existing repository and get a working gated, requirement-traced process, without hand-building the tooling."""
 why = "It is the kit's reason to exist — a *reusable starting point*."
 priority = "M"
-acceptance = """`bootstrap.py --dest <repo>` produces a scaffold whose harness runs green out of the box; a re-sync onto an existing repo never clobbers the repo's own files."""
+acceptance = """A single scaffolding action against a destination repository produces a scaffold whose harness runs green out of the box; a re-sync onto an existing repo never clobbers the repo's own files."""
 
 [need.SN-002]
 status = "Approved"
 need = """A reviewer can trust the chain from need to requirement to design to test because it is **mechanically verified**, not manually asserted: every requirement links to a need and a test before a gate."""
 why = "*Requirement-traced … trust what ships*; a hand-maintained trace rots."
 priority = "M"
-acceptance = """`trace.py --strict` reports **zero orphans** across the joined `SN→SR→LLR→TC` spine; a malformed/duplicate id fails at any stage."""
+acceptance = """The strict traceability check reports **zero orphans** across the joined `SN→SR→LLR→TC` spine; a malformed/duplicate id fails at any stage."""
 
 [need.SN-003]
 status = "Modified"
@@ -122,14 +122,14 @@ tags = ["templates", "scripts"]
 need ="""A team in any language can use this process: it is **stack-agnostic**, and a non-Python project adopts it by re-pointing the harness at that stack's tools, with Python only as the reference."""
 why = "*Stack-agnostic with Python-first reference scripts.*"
 priority = "M"
-acceptance = """The toolchain is declared once in `docs/stack.ini`; a stack swap edits that file, not a kit script; a non-Python bootstrap profile omits Python-only artifacts."""
+acceptance = """The toolchain is declared once, in a single declared configuration file; a stack swap edits that declaration, not a kit script; a non-Python bootstrap profile omits Python-only artifacts."""
 
 [need.SN-004]
 status = "Approved"
 need = """A team advances only through **explicit approval gates** (DevStg-Reqs→DevStg-Tests→DevStg-Impl→…), and a gate passes only when its mechanical bar is met."""
 why = "*Explicit approval gates so you can trust what ships.*"
 priority = "M"
-acceptance = """`check.py --gate GN` enforces that gate's required steps; a missing required tool **fails**, never silently skips."""
+acceptance = """A harness run for a named gate enforces that gate's required steps; a missing required tool **fails**, never silently skips."""
 
 [need.SN-005]
 status = "Modified"
@@ -137,7 +137,7 @@ tags = ["shell"]
 need ="""AI agents and humans work from the **same playbook**, and the process is enforced **agent-neutrally** — by git hooks + CI — not by trusting whichever agent showed up."""
 why = """*AI agents and humans working from the same playbook*; enforcement can't depend on which agent showed up."""
 priority = "M"
-acceptance = """The enforcement floor is git + CI running the *same* harness a human runs — where "same" is ONE DEFINITION OF PASSING PER MOMENT: each CI trigger runs the documented entry point at the tier the declared moment-to-tier table (`docs/stack.ini [ci-tiers]`) assigns to that moment (per-commit bar, slice close, release), pinned by test for the SHIPPED reference workflow. An adopter-edited workflow copy is outside this repo's reach, and this need claims nothing about it. Per-agent configs only mirror the floor, never replace it. (Narrowed 2026-08-13 per OI-24: full local-CI equivalence on all inputs is not mechanizable and is not claimed.)"""
+acceptance = """The enforcement floor is git + CI running the *same* harness a human runs — where "same" is ONE DEFINITION OF PASSING PER MOMENT: each CI trigger runs the documented entry point at the tier the declared moment-to-tier table assigns to that moment (per-commit bar, slice close, release), pinned by test for the SHIPPED reference workflow. An adopter-edited workflow copy is outside this repo's reach, and this need claims nothing about it. Per-agent configs only mirror the floor, never replace it. (Narrowed 2026-08-13 per OI-24: full local-CI equivalence on all inputs is not mechanizable and is not claimed.)"""
 
 [need.SN-006]
 status = "Modified"
@@ -145,21 +145,21 @@ tags = ["unattended", "loop", "scripts", "personal-data"]
 need = """An agent can run **unattended** and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays **safe**: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits."""
 why = """Agents develop here, and a walk-away run is only worth having if it can be both left alone and trusted while unwatched. AMENDED 2026-08-16 (WI-467, provisional): the safety half of this need had lived only in THIS cell, so SR-043's subagent-spawn gate read as an SR with no parent — two independent blind re-derivations produced resumability and nothing about bounding what an agent may spawn, because a `why` cell is context, not normative text, and nothing derives from it."""
 priority = "S"
-acceptance = """`agent_loop.py` resumes from `docs/status.md`, exits a **typed code** at each end state, and a preflight refuses a broken footing (no agent CLI, not a git repo, private author under privacy-check) rather than hanging. During unattended operation, configured limits bound every spawned worker and irreversible action; only an explicit human-provided override may exceed those limits; a gate error preserves the configured bound. (That last clause is the OPEN QUESTION for the sitting, stated as this need's ask rather than as a met bar: the delivered spawn gate FAILS OPEN on an internal error — supervision, not security, since a model that can edit files can remove the hook — so a gate error currently drops the bound rather than preserving it. Recorded on SR-043's rationale; the sitting rules fail-closed, a narrower independently-enforced ceiling, or a narrowed need.)"""
+acceptance = """The unattended loop resumes from the repository's tracked status surface, exits a **typed code** at each end state, and a preflight refuses a broken footing (no agent CLI, not a git repo, private author under privacy-check) rather than hanging. During unattended operation, configured limits bound every spawned worker and irreversible action; only an explicit human-provided override may exceed those limits; a gate error preserves the configured bound. (That last clause is the OPEN QUESTION for the sitting, stated as this need's ask rather than as a met bar: the delivered spawn gate FAILS OPEN on an internal error — supervision, not security, since a model that can edit files can remove the hook — so a gate error currently drops the bound rather than preserving it. Recorded on SR-043's rationale; the sitting rules fail-closed, a narrower independently-enforced ceiling, or a narrowed need.)"""
 
 [need.SN-007]
 status = "Approved"
 need = """The people maintaining this kit hold it to its own standard: it stays traceable and tested through every change."""
 why = """The kit is a foundation many repos inherit; a regression here propagates downstream. (This need is what Thread 47 makes first-class.)"""
 priority = "M"
-acceptance = """The suite bootstraps a temp scaffold and runs every script; `pytest -q` green is required before each change lands."""
+acceptance = """The suite bootstraps a temp scaffold and runs every script; a green run of that whole suite is required before each change lands."""
 
 [need.SN-008]
 status = "Modified"
 need = """A reader can believe a **pass verdict**: gates are **honest**, and a pass verdict never hides a skipped check, a stub, or an unmet criterion."""
 why = """*Trust what ships*; a false pass is worse than a failure. AMENDED 2026-08-17 (C-ACC-2, hat.ACCESSIBILITY; sitting-3 §0.4 item 8 ruling): the need named its own signal by hue — "believe a green" — and a colour word as the only name for the system's most important signal does not exist for a substantial class of readers. The channel is the verdict, not the hue; the honesty clause is unchanged and no obligation moved. In delivered fact the signal was already the word PASS (console output carries zero ANSI colour), so this amendment makes the need say what the kit does."""
 priority = "M"
-acceptance = """`check.py` **fails** (not skips) on a missing required tool — the explicitly-requested `--lenient` local mode is the one sanctioned degrade to SKIP (SR-006), never a CI/gate default; the no-stub detector and the privacy/secrets floor run at their declared gate."""
+acceptance = """The harness **fails** (not skips) on a missing required tool — the explicitly-requested `--lenient` local mode is the one sanctioned degrade to SKIP (SR-006), never a CI/gate default; the no-stub detector and the privacy/secrets floor run at their declared gate."""
 
 [need.SN-009]
 status = "Modified"
@@ -167,14 +167,14 @@ tags = ["personal-data", "scripts"]
 need ="""A team is protected from publishing a **secret or private identity**: it is caught before it publishes, in **every** repo, without extra setup."""
 why = "Trust + safety; a leaked key or PII is near-irreversible once pushed."
 priority = "M"
-acceptance = """`check_privacy.py`'s always-on secrets floor scans every commit's staged diff, message, and outgoing range; the privacy gate adds PII/identity classes when the `privacy_check` dial is on."""
+acceptance = """The always-on secrets floor scans every commit's staged diff, message, and outgoing range; the privacy gate adds PII/identity classes when the `privacy_check` dial is on."""
 
 [need.SN-010]
 status = "Approved"
 need = """A reader can navigate the documentation and trust it: **navigable and honest** — links resolve, the vision is declared once, and generated views cannot silently rot."""
 why = "*Readable and correct over the long run.*"
 priority = "S"
-acceptance = """`check_docs.py` fails on a broken intra-repo link or a missing `PROJECT-VISION` tag; every generated artifact carries a `--check` freshness contract."""
+acceptance = """The documentation check fails on a broken intra-repo link or a missing `PROJECT-VISION` tag; every generated artifact carries a `--check` freshness contract."""
 
 [need.SN-011]
 status = "Modified"
@@ -182,7 +182,7 @@ tags = ["scripts", "legal"]
 need ="""An adopting team can run every check on a **clean Python 3.11+ with minimal, argued dependencies** — stdlib by default, a non-stdlib dependency admitted only through a reviewed ledger row — on Windows and POSIX (and macOS)."""
 why = """Portability — the kit must not impose an *unargued* dependency stack on a downstream repo to run its checks. But a blanket "no dependencies" rule is itself a design constraint: it can force a worse hand-rolled alternative than a well-chosen tool, so the bar is **argument, not abstinence** (owner RULING-3, 2026-07-28)."""
 priority = "M"
-acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in `docs/dependencies.md` naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — `tests/test_dependency_ledger.py` fails the suite on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix is green on Linux + Windows + macOS."""
+acceptance = """Every non-stdlib import in the kit's scripts is declared as a row in the dependency ledger naming what it replaces, why hand-rolling is worse, and the ruling that admitted it — the suite fails on an undeclared import; checks an adopter runs (`shipped` tier) stay stdlib-*preferred*, since a dependency there forces every adopter to install it; the CI matrix is green on Linux + Windows + macOS."""
 
 [need.SN-012]
 status = "Modified"
@@ -204,14 +204,14 @@ tags = ["a11y", "ui"]
 need ="""A reviewer can see the project's progress **and how its parts connect** from one dashboard-like file."""
 why = """*Readable and correct over the long run*; the relationships between the parts (which module talks to which, over what contract) are as much of the project's truth as its requirement tree, and scattering them hides architectural drift."""
 priority = "S"
-acceptance = """The root `PROJECT_STATE.html` renders both the roadmap/decomposition **and** the declared interface graph; every module in the arch-map inventory is a declared `IF-###` interface endpoint or an explicit source/sink, checked mechanically (warn-first)."""
+acceptance = """The single root dashboard renders both the roadmap/decomposition **and** the declared interface graph; every module in the arch-map inventory is a declared `IF-###` interface endpoint or an explicit source/sink, checked mechanically (warn-first)."""
 
 [need.SN-024]
 status = "Approved"
 need = """A reviewer can trust subjective/perceptual acceptance — a realistic-looking render, an artifact comparison with no crisp measurable interface — because it is adjudicated by an **independent critical eye against a written rubric**, never by the session that authored the artifact."""
 why = """*Trust what ships*; an implementer session cannot judge its own output, and a lax test case lets awkward work ship because nothing gave it the critical eye — another agent wearing a different hat must say *where and why* it isn't good enough and drive rework."""
 priority = "S"
-acceptance = """A `Verification=Critique` requirement is judged by a fresh, family-heterogeneous critique session against a `docs/rubrics/` rubric derived from the SN/SR intent (not the possibly-lax TC); the verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
+acceptance = """A `Verification=Critique` requirement is judged by a fresh, family-heterogeneous critique session against a written rubric derived from the SN/SR intent (not the possibly-lax TC); the verdict cites numbered rubric anchor ids, bounded iteration drives rework, and the loop escalates to the human on budget exhaustion."""
 
 [need.SN-025]
 status = "Modified"
@@ -227,7 +227,7 @@ tags = ["unattended", "loop"]
 need ="""The repo owner can configure **several LLM families** — selected per job and per capability level — so that work benefiting from an independent second opinion is automatically routed to a *different* family wherever that is configured."""
 why = """One family is a single point of both failure and bias: an outage, a retired model or an expired auth stalls the whole loop, and a reviewer drawn from the implementer's own family shares its blind spots — so a same-family review reads like corroboration while adding little. Declaring the families and levels in a registry, rather than hard-coding one vendor, is also what keeps the kit vendor-neutral as models turn over."""
 priority = "S"
-acceptance = """`docs/agents.toml` declares (family × model × tier) pair-rows and `docs/agents-enabled` is the consent surface whose presence turns managed selection on; the coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
+acceptance = """A declared agent roster carries (family × model × tier) pair-rows and a separate consent surface, whose presence turns managed selection on; the coordinator resolves a row per in-process phase and tier, prefers a cross-family draw for the reviewer, critic and planner-pair sessions, degrades to the *documented* same-family mode when only one family is routable rather than silently skipping the second opinion, and logs every selection before launch — never a silent model swap."""
 
 [need.SN-027]
 status = "Modified"
@@ -246,7 +246,7 @@ tags = ["shell"]
 need ="""The repo owner can find and change every policy dial in **one home** — a **single hand-edited, machine-read file** — and a repo that declares the same dial twice is REFUSED rather than resolved by precedence."""
 why = """The dials had accreted into ~10 one-word files under `docs/`, an idiom that was never ruled: it was held in place by the git hooks' pure-sh parse (a Python-less box must still fail closed on a declared privacy gate) and by a 3.8 floor with no `tomllib`. Both reasons are spent. Scattering costs an owner one file per question and a reader five ad-hoc parsers; worse, two sources for one dial is exactly the state where two readers disagree about the same policy, and a precedence rule makes that disagreement invisible instead of loud."""
 priority = "S"
-acceptance = """`docs/process.toml` holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is checked rather than conventional, because two grammars read the file (`tomllib` and the hooks' sh) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and `bootstrap.py --migrate-config` — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal un-aided. A wrong-typed or out-of-range dial is refused, never defaulted."""
+acceptance = """A single declared process-dial file holds every process dial under **bare `[section]` headers**, one `key = value` per line. The SHAPE is checked rather than conventional, because two grammars read the file (a TOML parser and the hooks' plain-sh parse) and every shape only one of them understands is a silent flip of a security gate; the two readings are pinned equal over a table of adversarial files. A legacy one-word file still present alongside its key is a REFUSAL naming both, and a declared migration action — run by bootstrap and by the documented re-sync — converts and deletes the legacy files so an adopter never meets that refusal un-aided. A wrong-typed or out-of-range dial is refused, never defaulted."""
 
 [need.SN-029]
 status = "Modified"

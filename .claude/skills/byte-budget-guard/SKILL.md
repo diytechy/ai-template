@@ -36,7 +36,7 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 81,385 | 2026-08-18 | −114: the WI-455 merge — architecture.md references repointed to `docs/runtime-flows.md`/the dashboard |
+| `project-trajectory/PROCESS.md` | 81,602 | 2026-08-18 | +217: §3's artifact-voice rule extends from SR up to SN (owner directive) — the need tier's `acceptance` cell and its `why` waiver home, stated in the one bullet that already carried the rule |
 | `project-trajectory/PROCESS_OPTIONS.md` | 173,374 | 2026-08-18 | −1: the WI-455 merge's token reconciliation |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own

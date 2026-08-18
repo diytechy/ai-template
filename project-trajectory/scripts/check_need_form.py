@@ -15,12 +15,12 @@ Stdlib only, like trace.py / check_vocab.py:
 
 WHAT IT SCANS — `need` cells ONLY. SN-033 scopes itself by its own text: "the
 rule applies specifically to each SN `need` cell, not to engineering
-requirements or acceptance evidence". So the `why` and `acceptance` cells are
-EXEMPT — measured at the ruling (2026-08-13), 16 of 27 acceptance cells carry
-such tokens, correctly, because acceptance evidence legitimately names the
-machinery that produces it. Example/placeholder rows (`SN-000`-style ids ending
-in `-000`) are ignored, the same rule trace.py applies. The edge-case tier
-carries no `need` field and so is naturally out of scope.
+requirements or acceptance evidence". `why` and `acceptance` stay EXEMPT HERE —
+but NO LONGER because acceptance evidence may name its machinery freely (what
+the ruling-day 16-of-27 measurement was read as licensing): the owner directive
+of 2026-08-18 extends R2's no-concrete-artifact rule up to SN acceptance, and
+`trace_text.sn_artifact_advisories` owns that cell so one token is never
+reported twice. `-000` rows are ignored; the edge tier carries no `need`.
 
 An ABSENT registry is a clean skip (the pre-scaffold case). A registry that is
 PRESENT but yields zero scannable need cells — an empty file, or real rows
