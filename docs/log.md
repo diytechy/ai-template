@@ -32894,3 +32894,61 @@ Bar: `pytest -q -n auto` → **2,580 passed, 13 skipped** (merged tree);
 `trace.py --strict --strict-schema` → rc=0, `SN=27 SR=72 LLR=161 TC=157
 orphans=0 integrity=0 schema-findings=0`, **no form findings** (trunk's split
 cleared the last one) and `ears-advisories=0`.
+
+---
+
+## 2026-08-18c — The open-WI conflict sweep after the merge: two rows carried claims the registries had already falsified
+
+Every **open** work item (10 queued · 1 active · 1 partial) read against the
+merged tree, on three axes: id citations that no longer resolve, retired
+vocabulary, and pinned figures the recent changes moved. The id axis was
+mechanized — each file's `SN|SR|LLR|TC|IF|CMP|OI`-shaped tokens joined against
+the live registries — because a citation that silently stops resolving is
+exactly the class prose review skims past.
+
+**Finding 1 — `WI-390` cites ten ids, and seven of them are GONE.** The
+concurrency-v2 program-close row's ratified-prose amendment targets —
+`SR-050` `SR-055` `SR-093` `SR-124` `SR-131` `SR-132` `SR-133` — were deleted
+or absorbed by the WI-451 re-tier campaign (the 26-row tombstone class per D-4,
+`2026-08-14b`; `SR-133` folded into `SR-006`, which now states its clause
+verbatim). Its own `2026-08-13w` guard says *"do not quote a Status from this
+file — re-measure at claim"*, and that guard is too weak for what actually
+happened: the question is no longer what those rows' `Status` reads, it is that
+the rows do not exist. Four targets DO survive (`LLR-051` `LLR-056` `TC-051`
+`TC-056`, all `Modified`). **Annotated, not re-scoped** — a `spine`-class row's
+re-scope is the sitting's call, and inventing a deleted-id→re-tiered-parent
+mapping is precisely the silent merge the standing rule forbids. The three
+remaining dangling ids (`SR-039`/`LLR-036`/`TC-039`) are the WI-426 dupes-census
+teardown, which that file already names as deleted.
+
+**Finding 2 — `WI-452` taught a retired word AND a false state.** It read
+*"all four carrier rows (LLR-165/166, TC-159/160) are `Planned`"*. `Planned`
+retired at the D-9 rename (folded into `Approved`, `2026-08-15m`); re-measured,
+all four are `Approved`. The maturity never moved — only its spelling — so the
+correction is factual and the row's actual instruction is untouched.
+`check_vocab.py` did not catch this: it polices retired GATE tags, not retired
+STATUS words, which is an honest coverage edge worth knowing rather than a
+defect in that checker.
+
+**Clean on every other axis.** No open WI cites `SR-043`/`154`/`155`,
+`SR-140`, or any id this branch or the pre-brief pass minted; none pins a
+figure the two ratchet re-stamps moved; none quotes the collapsed one-`shall`
+bullet. `WI-464`'s and its plan's *"the two advisories"* are a **closed record
+of what slice S2 delivered**, not a live inventory claim, so the third advisory
+landing in another lane contradicts nothing. `WI-466` edits the same summary
+line the EARS counter joined — adjacent, not conflicting. `WI-451` is
+`partial/` and therefore terminal: its four dangling ids are historical record,
+and a terminal row is not re-opened to correct prose.
+
+**One pre-existing staleness recorded rather than fixed:**
+[plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md)'s
+*"Measured state (post-sweep): SN=27 SR=60 …"* is a point measurement labelled
+by its moment, per the signed-measurement convention, and the tree now reads
+`SR=72`. It is a live sitting document, so the number a reader meets there is
+twelve rows stale — but re-stamping a labelled historical measurement would
+destroy the record it exists to be. The sitting reads the regenerated brief and
+`docs/gate` for current truth; flagged here so nobody rules from the old line.
+
+Bar: `pytest -q -n auto -m smoke` → **1,201 passed, 5 skipped**;
+`check_trajectory` → clean (468 work items, graph acyclic);
+`check_docs` → OK, 0 broken links.

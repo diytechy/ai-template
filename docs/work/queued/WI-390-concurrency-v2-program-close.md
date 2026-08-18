@@ -53,6 +53,33 @@ This section also re-dates this row against its amended SpecRef
 (`docs/concurrency-v2.md`), which is the re-affirmation the standing
 `check_trajectory` SpecRef-clock warning asks for.
 
+### Post-re-tier correction (2026-08-18b — READ FIRST, before the section below)
+
+**SIX OF THIS ROW'S AMENDMENT TARGETS NO LONGER EXIST.** The 2026-08-13w bullet
+below says "do not quote a Status from this file — re-measure at claim", and
+that guard is now too weak: the question is not what these rows' Status reads,
+it is that the rows are **gone**. Measured against the live registries at
+`2026-08-18b`, this file cites **ten ids that no longer resolve**:
+
+| Cited here | Live? | Where it went |
+|---|---|---|
+| `SR-050` `SR-055` `SR-093` `SR-124` `SR-131` `SR-132` `SR-133` | **gone** | the WI-451 re-tier campaign — the 26-row tombstone class DELETED per D-4 (`2026-08-14b`), plus absorptions (`SR-133` folded into `SR-006`, which now states its clause verbatim) |
+| `SR-039` `LLR-036` `TC-039` | **gone** | already named as deleted in this file's own WI-426 section above — knowingly dangling, no action |
+| `LLR-051` `LLR-056` `TC-051` `TC-056` | live, all `Modified` | the ratified-prose amendment targets that DO survive |
+
+**What this changes for a claiming session:** the "two intersecting hoops"
+ratified-prose amendment now has to be re-derived against the surviving rows and
+whichever re-tiered SR absorbed each deleted one — the parent for that prose may
+now be a different id, or may need minting. **That is a re-scope, and a re-scope
+of a `spine`-class row is not a builder's call**: raise it at the sitting rather
+than inventing a mapping. Nothing here retires this row; the deletion ledger and
+the connectivity scope are untouched.
+
+*(Found by the open-WI id sweep at the `2026-08-18b` merge, which read every
+open work item's citations against the live registries. This note re-validates
+this file's ID CITATIONS only — its `docs/concurrency-v2.md` SpecRef content is
+NOT re-validated here.)*
+
 ### Post-sitting-2 corrections (2026-08-13w — read before claiming)
 
 - **Do not quote a Status from this file — re-measure at claim.** The WI-414

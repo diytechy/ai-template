@@ -19,9 +19,12 @@ a spine window owed to sitting 3 §2.2. **That window ran:** the owner ruled
 (log `2026-08-14f`) that §2.3's lift had CROSSED the subject pairs — TC-159
 drives the converter and verifies LLR-165, TC-160 drives the reader and
 verifies LLR-166 — and both halves were aligned in the same act: TC-159 and
-LLR-166 lifted `Draft` → `Planned`. Live now: all four carrier rows
-(LLR-165/166, TC-159/160) are `Planned`. So part (2) is a straight
-confirmation — **run the converter and check the two TCs still exercise the
+LLR-166 lifted `Draft` → `Planned`. **Re-measured `2026-08-18b`: all four
+carrier rows (LLR-165/166, TC-159/160) are `Approved`** — the sentence here
+read `Planned`, a word the D-9 rename retired by folding it into `Approved`
+(log `2026-08-15m`), so this row was teaching a vocabulary the registry no
+longer admits. The maturity is unchanged; only its spelling is. So part (2)
+is a straight confirmation — **run the converter and check the two TCs still exercise the
 path; there is no chain gap left to record, and this row still flips no
 Status.**
 
