@@ -20,14 +20,14 @@ checks each need against. A worked one for this project:
 
 ```toml
 [need.SN-001]
-kind = "core"
+status = "Approved"
 need = "Export my records to a file I can open in a spreadsheet."
 why = "The data is useless if I can't get it into Excel/Sheets."
 priority = "M"
 acceptance = "A new user clicks export and the file opens in a spreadsheet with the right columns and all their rows."
 
 [need.SN-013]
-kind = "core"
+status = "Approved"
 need = """If an export is interrupted (crash / power loss / cancel) mid-write, I never end up with a half-written file that looks complete; I can just run it again."""
 why = "A partial file that opens cleanly in a spreadsheet is silent data loss."
 priority = "M"

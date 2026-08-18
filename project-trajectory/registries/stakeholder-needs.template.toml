@@ -18,14 +18,25 @@
 # in system-requirements.toml (referenced by its `sn_refs`); do not restate
 # them here. Priority: M=Must · S=Should · C=Could.
 #
-# MATURITY IS A FIELD, NOT A SECTION. `kind` is one of:
+# MATURITY IS A FIELD, NOT A SECTION, AND IT IS THE SAME FIELD AT EVERY TIER.
+# `status` is the ONE vocabulary the whole spine speaks — SN, SR, LLR and TC —
+# so "what is un-approved right now?" is one question with one answer, not a
+# per-registry special case:
 #
-#   core   a ratified need (the steady state)
-#   draft  still being drafted — DevBar-Below. trace.py exempts it from the "every SN
-#          needs an SR" rule, so it can sit in the live registry before its SR
-#          decomposition exists. RATIFY it by changing `kind` to "core" in a
-#          reviewed commit; that commit is the sign-off and its date is the
-#          ratification date. Do not leave real needs parked at draft.
+#   Drafted   still being drafted — DevBar-Below. trace.py exempts it from the
+#             "every SN needs an SR" rule, so it can sit in the live registry
+#             before its SR decomposition exists. Do not park real needs here.
+#   Approved  a ratified need (the steady state). RATIFY by changing `status`
+#             to "Approved" in a reviewed commit; that commit is the sign-off
+#             and its date is the ratification date.
+#   Modified  ratified text that has since been AMENDED and is not re-signed.
+#             Transitional: it exists so an amended row is visibly unsigned
+#             without a second field to say so, and it retires once approved
+#             text is snapshotted and the diff answers the same question.
+#
+# Do NOT add a second field for this axis — no `attestation`, no `amended`
+# date. When a row changed is git's job, and it holds that for every row
+# rather than the ones someone remembered to mark.
 #
 # This retires the older carrier's "section-as-state", where draft-ness was
 # "appears under a heading containing the word draft" — a rule a prose MENTION
@@ -44,7 +55,7 @@
 # each to its home (process.md §9). A prompt, not a mandate.
 
 [need.SN-000]
-kind = "core"
+status = "Approved"
 need = """_EXAMPLE — replace this row; number real needs sequentially (the `-000` id is a placeholder the tooling ignores)._"""
 why = "Why it matters — the consequence of NOT meeting it, in the stakeholder's terms."
 priority = "M"
@@ -63,12 +74,12 @@ tags = ["EXAMPLE-domain"]
 #
 # How the system behaves when things go wrong is the highest-value content
 # here — but it is NOT a separate row kind. Write a failure-mode expectation
-# as an ordinary need (kind = "core"/"draft"), and let the HATS ROSTER carry
+# as an ordinary need (an ordinary `status`), and let the HATS ROSTER carry
 # the coverage question: each hat's `asks` is put to every decomposition its
 # `applies_when` matches (`hats.toml`; process.md §1), so edge coverage is
 # regenerated per need rather than maintained as a standing checklist tier.
 #
 # --- DRAFT NEEDS --------------------------------------------------------------
 #
-# Draft new needs with `kind = "draft"`, then ratify them to "core". Empty is
-# the normal steady state.
+# Draft new needs with `status = "Drafted"`, then ratify them to "Approved".
+# Empty is the normal steady state.

@@ -654,17 +654,27 @@ def test_the_need_reader_agrees_with_both_heading_scrapers():
 
 
 def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
-    # The live regression F-6 records, now pinned on the ONE copy of the fold.
-    # traj_parse._sn_rows and gen_okf.sn_rows each carried their own, pinned by
-    # nothing but a docstring saying "change both together" — they drifted, and
-    # the dashboard rendered a phantom SN-000 root.
-    edge = {
-        "id": "SN-013",
-        "kind": "edge",
-        "lifecycle": "Provision",
-        "scenario": "No Python 3 on PATH",
-        "expected": "Probe and fail with a remedy",
-    }
+    # The live regression F-6 records, still pinned — but on the fold's NEW
+    # home. traj_parse._sn_rows and gen_okf.sn_rows each carried their own copy,
+    # held equal by nothing but a docstring saying "change both together"; they
+    # drifted, and the dashboard rendered a phantom SN-000 root.
+    #
+    # The fold MOVED when the `edge` row type retired (2026-08-17j) and `kind`
+    # was deleted with the status unification: with no field declaring the type,
+    # a downstream projection cannot recognise an edge row, so the shape is
+    # resolved at the one boundary that still meets it — the legacy markdown
+    # READER. Dropping the fold rather than moving it would have turned a
+    # wrongly-titled row into four blank cells, which is the same content loss
+    # with less evidence.
+    edge = SPINE._edge_folded(
+        {
+            "id": "SN-013",
+            "status": "Approved",
+            "lifecycle": "Provision",
+            "scenario": "No Python 3 on PATH",
+            "expected": "Probe and fail with a remedy",
+        }
+    )
     assert SPINE.folded(edge) == {
         "id": "SN-013",
         "need": "No Python 3 on PATH",
@@ -672,10 +682,27 @@ def test_the_edge_case_fold_is_not_titled_by_its_lifecycle_phase():
         "priority": "n/a",
         "acceptance": "Probe and fail with a remedy",
     }
-    # A core need passes through unchanged — the fold is edge-only.
+    # ...and the reader is what applies it, so the pin is not on a helper
+    # nothing calls: an edge TABLE read end-to-end lands on the core four.
+    read = SPINE.needs_from_markdown(
+        "## Edge-case expectations\n"
+        "| SN-ID | Lifecycle | Scenario | Expected behavior |\n"
+        "|---|---|---|---|\n"
+        "| SN-013 | Provision | No Python 3 on PATH | Probe and fail |\n"
+    )
+    assert [SPINE.folded(n) for n in read] == [
+        {
+            "id": "SN-013",
+            "need": "No Python 3 on PATH",
+            "why": "Provision",
+            "priority": "n/a",
+            "acceptance": "Probe and fail",
+        }
+    ]
+    # A core need passes through unchanged.
     core = {
         "id": "SN-001",
-        "kind": "core",
+        "status": "Approved",
         "need": "n",
         "why": "w",
         "priority": "M",

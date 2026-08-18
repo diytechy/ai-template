@@ -281,8 +281,19 @@ def test_sn_edge_rows_keep_their_native_fields(tmp_path):
     edge = next(f for _, kind, f in needs if kind == "edge")
     assert set(edge) == {"lifecycle", "scenario", "expected"}
     parsed = tomllib.loads(mc.sn_to_toml(needs))["need"]
-    assert all("kind" in row for row in parsed.values())
-    assert set(parsed["SN-003"]) == {"kind", "lifecycle", "scenario", "expected"}
+    # `kind` does NOT survive the conversion — it conflated maturity with row
+    # TYPE, and both halves resolved: maturity became the spine's one `status`
+    # word, the `edge` type retired (2026-08-17j). What must survive is the
+    # edge row's CELLS: a converter that dropped them would lose the content
+    # while the loss oracle stayed quiet about a field it no longer expects.
+    assert all("status" in row for row in parsed.values())
+    assert not any("kind" in row for row in parsed.values())
+    assert set(parsed["SN-003"]) == {"status", "lifecycle", "scenario", "expected"}
+    assert {rid: row["status"] for rid, row in parsed.items()} == {
+        "SN-001": "Approved",
+        "SN-002": "Drafted",
+        "SN-003": "Approved",
+    }
 
 
 def test_the_live_need_carrier_holds_no_orphaned_edge_fields():
@@ -298,10 +309,11 @@ def test_the_live_need_carrier_holds_no_orphaned_edge_fields():
     """
     live = ROOT / "docs" / "requirements" / "stakeholder-needs.toml"
     needs = tomllib.loads(live.read_text(encoding="utf-8"))["need"]
-    edges = [nid for nid, n in needs.items() if n.get("kind") == "edge"]
+    edges = [nid for nid, n in needs.items() if "kind" in n]
     assert not edges, (
-        "OI-18 dissolved the edge tier; a resurrected edge row is a "
-        "regression against the ruling: " + str(edges)
+        "OI-18 dissolved the edge tier and the status unification deleted the "
+        "field that declared it; a row carrying `kind` at all is a regression "
+        "against both rulings: " + str(edges)
     )
     strays = {
         nid: sorted({"lifecycle", "scenario", "expected"} & set(n))

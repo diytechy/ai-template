@@ -1094,6 +1094,7 @@ Contracts (interfaces): IF-103
 | `raw_need_findings(rel, raw, text)` | Findings for any need present in the RAW markdown and absent from the |  |
 | `compare(rel, table, expected, text)` | Findings for one converted registry. `expected` is {id: {key: text}} — |  |
 | `read_sn(path)` | [(id, kind, {field: text})] in document order. |  |
+| `sn_status(kind)` | The heading-derived `kind` as the ONE spine maturity word. |  |
 | `sn_to_toml(needs)` |  |  |
 | `convert(root, write)` | Convert every spine registry. Returns (findings, written_paths). |  |
 | `main(argv)` |  |  |

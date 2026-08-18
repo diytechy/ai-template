@@ -589,11 +589,26 @@ def read_sn(path):
     return out
 
 
+def sn_status(kind):
+    """The heading-derived `kind` as the ONE spine maturity word.
+
+    Section-as-state carried exactly two maturities — a row sat under a draft
+    heading or it did not — so this mapping is TOTAL and loses nothing. `kind`
+    itself does not survive the conversion: it conflated maturity with row TYPE,
+    and the type half (`edge`) is retired (owner ruling 2026-08-17j).
+
+    ONE HOME because the LOSS ORACLE compares against it. If the emitter and the
+    oracle each derived the word, a drift between them would make the oracle
+    agree with the bug — an oracle built from the thing under test cannot
+    fail, which is the defect the raw-source oracle beside it exists to avoid."""
+    return "Drafted" if kind == "draft" else "Approved"
+
+
 def sn_to_toml(needs):
     out = io.StringIO()
     for rid, kind, fields in needs:
         out.write("[need.{}]\n".format(rid))
-        out.write('kind = "{}"\n'.format(kind))
+        out.write('status = "{}"\n'.format(sn_status(kind)))
         for name in SN_EDGE if kind == "edge" else SN_CORE:
             text = (fields.get(name) or "").strip()
             if text:
@@ -633,7 +648,8 @@ def convert(root, write):
         text = sn_to_toml(needs)
         expected = {
             rid: dict(
-                {"kind": kind}, **{k: v.strip() for k, v in f.items() if v.strip()}
+                {"status": sn_status(kind)},
+                **{k: v.strip() for k, v in f.items() if v.strip()},
             )
             for rid, kind, f in needs
         }

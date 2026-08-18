@@ -742,6 +742,35 @@ def _names_from_header(cells):
     return names if any(names) else None
 
 
+def _edge_folded(need):
+    """A legacy edge-table row read as an ORDINARY need.
+
+    The `edge` row TYPE is retired (owner ruling 2026-08-17j) — no live carrier
+    emits it and no reader downstream defines it — but legacy markdown files
+    still HAVE edge tables, and their cells are content. So the shape is
+    resolved here, at the one boundary that still meets it, rather than left for
+    a renderer to special-case: the SCENARIO is the need, the LIFECYCLE phase is
+    the why, and the EXPECTED behavior is the acceptance.
+
+    NEVER the lifecycle word as the title — that was the live F-6 regression,
+    which published SN-013 as "Provision" across the dashboard and the OKF
+    bundle for the whole life of both. Dropping the fold instead of moving it
+    would trade that wrong title for four blank cells, which is the same content
+    loss with less evidence that it happened.
+
+    The CONVERTER does not use this: `migrate_carrier` must preserve the raw
+    cells it was handed, because its job is to carry a registry across carriers
+    without deciding anything about it."""
+    return {
+        "id": need["id"],
+        "status": need.get("status", "Approved"),
+        "need": need.get("scenario", ""),
+        "why": need.get("lifecycle", ""),
+        "priority": need.get("priority", "n/a"),
+        "acceptance": need.get("expected", ""),
+    }
+
+
 def needs_from_markdown(text):
     """`[{id, kind, **fields}]` from the legacy prose tables, document order.
 
@@ -792,13 +821,12 @@ def needs_from_markdown(text):
         # one failure shape this carrier exists to prevent.
         need = {
             "id": cells[0],
-            "kind": row_kind,
             "status": "Drafted" if row_kind == "draft" else "Approved",
         }
         for name, value in zip(names, cells[1:]):
             if name:
                 need[name] = value
-        out.append(need)
+        out.append(_edge_folded(need) if row_kind == "edge" else need)
     return out
 
 
@@ -811,7 +839,7 @@ def needs_from_toml(text):
         return None
     out = []
     for rid, cells in (tables.get(NEED_TABLE) or {}).items():
-        need = {"id": rid, "kind": "core"}
+        need = {"id": rid}
         need.update({k: value_to_cell(v) for k, v in cells.items()})
         out.append(need)
     return out
@@ -864,18 +892,14 @@ def folded(need):
     carrier did not previously manage. `traj_parse._sn_rows` and
     `gen_okf.sn_rows` each carried a copy pinned by nothing but a docstring
     saying "change both together"; they drifted, and the dashboard rendered a
-    phantom `SN-000` root (§6 F-6). An edge row reads as: the SCENARIO is the
-    need, the LIFECYCLE phase is the why, and the EXPECTED behavior is the
-    acceptance — never the lifecycle word as the title."""
-    if need.get("kind") != "edge":
-        return {k: need.get(k, "") for k in ("id",) + SN_CORE}
-    return {
-        "id": need["id"],
-        "need": need.get("scenario", ""),
-        "why": need.get("lifecycle", ""),
-        "priority": need.get("priority", "n/a"),
-        "acceptance": need.get("expected", ""),
-    }
+    phantom `SN-000` root (§6 F-6).
+
+    THE EDGE ARM IS GONE (owner ruling 2026-08-17j, "edge is dropped"). It
+    re-titled an edge row — scenario as the need, lifecycle phase as the why —
+    and there is nothing left to re-title: the row TYPE is retired along with
+    the `kind` field that declared it, and edge coverage is the hats
+    mechanism's job now. The fold is one shape because the tier is one shape."""
+    return {k: need.get(k, "") for k in ("id",) + SN_CORE}
 
 
 def draft_ids_from_text(text):
