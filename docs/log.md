@@ -32493,3 +32493,100 @@ sitting-3's §0.3 ledger.
 Bar: `pytest -q -n auto` → **2491 passed, 11 skipped** (full suite);
 `trace.py --strict --strict-schema` → `orphans=0 integrity=0 schema-findings=0
 form-findings=2` (the two recorded waivers); `check_docs` OK.
+
+---
+
+## 2026-08-18a — Requirement quality: the eight characteristics + the EARS statement pattern (owner-directed)
+
+**The brief (owner, 2026-08-18):** state that requirements use simple technical
+English, conform to **EARS**, and aim at eight named quality characteristics
+(necessary · singular · unambiguous · complete · verifiable · feasible ·
+conforming · traceable); cross-check the live spine against those definitions;
+also read `requirements-framework-usage-1.0.0` for anything worth taking. Full
+ledger: [plans/2026-08-18-requirement-quality-and-ears.md](plans/2026-08-18-requirement-quality-and-ears.md).
+
+**What was already true.** Most of the brief was: `form_findings` has gated the
+decidable half of *singular* and *unambiguous* since WI-328, orphan rules gate
+*traceable*, the `Verification` enum gates *verifiable*, and 68 of 70 SRs already
+read on an EARS pattern without anyone having named it. Two things were NOT:
+the **bar was never written down in one place**, and §3 gated a statement
+pattern the file never defined — an adopter was held to a form they could not
+read.
+
+**The one home: `PROCESS.md` §3** (+2,664 bytes, flagged and re-stamped in
+`byte-budget-guard` source + both dogfooded copies). The eight characteristics
+as a table, the five EARS patterns as a grammar table, and a paragraph naming
+what a checker settles versus what the review does — with **necessary, complete
+and feasible stated as the review's, no proxy metric offered**, which promotes
+`form_findings`'s docstring refusal into the master. The old one-`shall` bullet
+collapses to a two-line pointer; its enumeration now lives once. `Feasible`'s
+supplied wording ("within the Cypress architecture and controller resources")
+was genericized to the declared stack — the kit is stack-agnostic.
+
+**The enforcer: `ears_advisories` (warn-only, never the exit code).** Reads the
+OPENING of an SR `requirement` cell and reports a condition dressed in a keyword
+outside `When`/`While`/`If`/`Where`. Advisory by design: whether a row is
+ubiquitous-with-a-qualified-response or event-driven is a judgement about the
+obligation (`SR-006`'s "fail that gate when a required tool is missing" is a
+response qualifier — fronting it would change the requirement), so a gating
+version would overrule the author on the one question the author is better
+placed to answer. `Drafted` rows ARE in scope, unlike the gating form rules
+beside it: an opening is finished the moment it is written, and both rows this
+found at landing were Drafted — skipping them would have shipped a guard that
+had never once fired. Decomposed as `LLR-178` + `TC-173` under `SR-157`, whose
+acceptance already says a rule added at a declared site is in its scope by
+default; ids watermarked.
+
+**The cross-check — measured over all 70 SRs, not sampled.** 68 conforming (66
+ubiquitous, 2 event-driven); **2 non-conforming openings**, both `Drafted`, both
+fixed: `SR-154` *Before…* → `When unattended work reaches integration`,
+`SR-155` *For work declared…* → `Where work is declared as contested planning`.
+One **buried condition** found by hand and fixed: `SR-043`'s "shall, during an
+unattended run, refuse…" → `While an unattended run is in progress, …`, which
+also drops `PreToolUse` from the subject (the binding lives at `LLR-040`,
+`IF-020` and the `external.toml` crossing — §3's artifact altitude). No
+obligation changed; no `status` moved. **The advisory lands zero-to-zero.**
+
+**Found and deliberately NOT fixed:** `SR-140` carries 3 `shall` — a *singular*
+violation `trace.py` already reports as a gating finding, and `status.md` names
+"the `SR-140` split" as owed pre-brief work. The row is `Approved`; splitting it
+mints ids and moves attestation, which is the sitting's act, not this pass's.
+
+**The external framework — a homonym, not a peer.** Its "requirements" are
+hook-enforced workflow preconditions (`req satisfy commit_plan`), not
+engineering requirements: no EARS, no characteristics, no tiers. Three nuggets
+kept, one costing anything: its scope-lifetime vocabulary (`session`/`branch`/
+`permanent`/`single_use`) names an axis this kit already implements four ways —
+**recorded, not minted**, to avoid the unwired-marker failure; its
+everything-fails-open stance confirms by contrast that this kit's fail-closed
+verification layer beside a single fail-open tool gate (`SR-043`) is a position
+rather than an accident; its checklist bar is already exceeded by the
+2026-08-17 acceptance-form ledger. **Auto-satisfaction via skills was
+explicitly rejected** — a gate discharged by running the thing that was to be
+judged is exactly what `status.md` forbids.
+
+**Byte deltas:** `PROCESS.md` 78,102 → **80,766** (+2,664, reason above,
+re-stamped in all three `byte-budget-guard` copies); `AGENTS.template.md`
+**9,994 unchanged** (6 bytes under its 10,000 cap — deliberately untouched);
+`PROCESS_OPTIONS.md` **172,106 unchanged**. Two reviewed ratchet re-stamps, both
+ordinary per-row cost with the reason in place: `trace.py` 4,203 → **4,223**
+(+20, wiring only — the predicate is in `trace_text.py`) and the dashboard
+ceiling 2,615,000 → **3,010,000** (measured 2,615,555 after the last edit; the
+old ceiling had 0.02% headroom, the third time this file records a growth sensor
+decaying into an exact freeze). Trace goldens regenerated — additive only, the
+new report section's "None." line in all three.
+
+**Regenerated as a consequence, not as a decision:** the code map
+(`trace_text.py` gained a symbol), the dashboard + status snapshot (two rows),
+the OKF bundle, and **`docs/ratify/2026-08-13-wi444.md`** — the re-attestation
+brief's freshness check went red the moment the three requirement cells moved,
+and a brief that no longer matches the registry is exactly what that check
+exists to refuse ("an owner blessing a short brief blesses rows they were never
+shown"). Regenerating it signs nothing: `status.md`'s pre-brief work pair (the
+`SR-140` split, the `SR-173` wording) is still owed, and the brief regenerates
+once more when that pair lands.
+
+Bar: `pytest -q -n auto` → **2,577 passed, 13 skipped** (full suite);
+`trace.py --strict --strict-schema` → rc=0, `orphans=0 integrity=0
+schema-findings=0 form-findings=1` (the pre-existing `SR-140` split, above),
+`ears-advisories=0`; `check_docs` OK, 0 broken links.

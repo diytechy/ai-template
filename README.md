@@ -177,7 +177,7 @@ graph LR
 | Registry | Ids | What it does |
 |---|---|---|
 | [`stakeholder-needs`](project-trajectory/registries/stakeholder-needs.template.toml) | `SN-###` | Why the project exists — one need per row, in the stakeholder's words. The root every other row must trace back to. |
-| [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row, with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
+| [`system-requirements`](project-trajectory/registries/system-requirements.template.toml) | `SR-###` | One testable *shall*-statement per row — written in simple technical English on an **EARS** pattern, against the eight quality characteristics ([`PROCESS.md`](project-trajectory/PROCESS.md) §3) — with measurable acceptance criteria and input `Permutations` for test design; cites the `SN` it serves. |
 | [`low-level-requirements`](project-trajectory/registries/low-level-requirements.template.toml) | `LLR-###` | The design decomposition — pins an SR onto real code (`Module` + `CodeSymbol`). Adds detail; never paraphrases its parent. |
 | [`test-cases`](project-trajectory/registries/test-cases.template.toml) | `TC-###` | Verifies SR/LLR ids; states its `Method` (how it runs) and `Tier`. The verification class (Test / Demonstration / Inspection / Attest) rides the SR's `Verification` column. Written failing-first at DevBar-Tests. |
 
@@ -277,6 +277,12 @@ same artifacts and run the gates with you.
 
 - **Traceability** — every line of intent ties back to a stakeholder need and
   forward to a test; orphans are caught mechanically.
+- **Well-formed requirements** — every row aims at eight characteristics
+  (necessary, singular, unambiguous, complete, verifiable, feasible,
+  conforming, traceable) and is written on an **EARS** pattern, so the
+  condition that makes a requirement apply is read before what it obliges. The
+  decidable half is checked; necessary/complete/feasible stay the review's, and
+  the kit says so rather than offering a proxy metric.
 - **Test-driven** — the DevBar-Tests test case for each requirement is written as a
   *failing* test before the code that satisfies it (red → green → refactor), so
   implementation is pulled by the spec, not retrofitted to it.

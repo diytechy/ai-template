@@ -170,3 +170,4 @@ resource: "generated"
 | [LLR-175](LLR-175.md) | Consecutive no-progress stall guard |
 | [LLR-176](LLR-176.md) | The push-channel inclusion conventions, pinned as they exist |
 | [LLR-177](LLR-177.md) | Transcript redaction: matched values never land in tracked history |
+| [LLR-178](LLR-178.md) | EARS statement-pattern advisory |

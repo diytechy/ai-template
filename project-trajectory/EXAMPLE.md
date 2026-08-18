@@ -68,7 +68,15 @@ verification = "Demonstration"
 status = "Approved"
 ```
 
-Note: each SR has **measurable** acceptance criteria a test can assert (not
+Note the **statement pattern**: both rows are EARS *ubiquitous* (`The <system>
+shall <response>`) because both always hold. A row that only applies under a
+condition fronts it on the keyword that fits — `When` a discrete event starts
+it, `While` a state lasts, `If … then` for a fault, `Where` an optional feature
+is present (process.md §3). Here `SR-002`'s interruption is a *response*
+qualifier, not a condition on the row, so it stays after the `shall`; that
+distinction is why `trace.py` warns on a non-EARS opening rather than gating it.
+
+Note also: each SR has **measurable** acceptance criteria a test can assert (not
 "exports correctly"), links its SN, and uses `permutations` so one row covers
 many cases. `status` is the **closed** vocabulary — `Drafted`, `Approved`,
 `Modified` (process.md §4): `Approved` blesses the row's *text* and says

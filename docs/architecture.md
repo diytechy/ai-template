@@ -1393,6 +1393,7 @@ Contracts (interfaces): IF-076
 | `ac_advisories(srs)` | Warn-only findings: real SR rows whose AcceptanceCriteria uses a |  |
 | `provenance_findings(srs, llrs, tcs)` | A spine row whose text carries its own PROVENANCE — a work-item id, or a | LLR-050 |
 | `form_findings(srs, llrs, tcs)` | A spine row whose text is not ONE testable obligation (process.md §3). |  |
+| `ears_advisories(srs)` | Warn-only: an SR whose opening states a condition OUTSIDE the EARS |  |
 | `paraphrase_advisories(srs, llrs)` | Warn-only: a child cell that mostly RE-WORDS its parent (process.md §3 |  |
 | `sr_artifact_advisories(srs)` | Warn-only: an SR `Requirement` cell that names a concrete artifact |  |
 | `sr_fanout_advisories(srs, llrs, bound)` | Warn-only: an SR whose DIRECT LLR children outnumber the declared bound |  |

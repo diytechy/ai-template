@@ -17,10 +17,11 @@ list to put to a row **before** it lands.
 
 **Authority, not restated here:** `docs/process.md` §3 (one fact one home;
 decompose don't paraphrase; one decision per row, one home per method; one
-`shall`; a requirement cell names a concrete artifact only where its rationale
-records why that artifact must be constrained; a rationale carries its own
-reason) and §4 (gates, verification methods). Read the rule there; use
-this file to decide whether your row obeys it.
+`shall`; the eight quality characteristics and the EARS statement pattern; a
+requirement cell names a concrete artifact only where its rationale records why
+that artifact must be constrained; a rationale carries its own reason) and §4
+(gates, verification methods). Read the rule there; use this file to decide
+whether your row obeys it.
 
 ## The frame: solution-freedom is tier-relative
 
@@ -92,6 +93,24 @@ Four questions:
   threshold** (Volere's *fit criterion*: an objective measure of the
   requirement's meaning) — *what would be observed and where the pass/fail line
   falls*, while *where and how* it is observed is the TC's.
+- **(b2) Pick the EARS pattern from the OBLIGATION, then write the row.** The
+  question is not "which keyword sounds right" but *what makes this requirement
+  apply*: always (ubiquitous) · a discrete event starts it (`When`) · it holds
+  for the duration of a state (`While`) · the trigger is a fault or misuse
+  (`If … then`) · it applies only where an optional feature or declaration is
+  present (`Where`). Three traps, all seen here:
+  - **The buried condition.** `shall, during an unattended run, refuse…` states
+    the same condition where no reader and no tool looks for it. Front it.
+  - **A near-miss keyword.** "Before X…", "For work declared…", "During…" are
+    conditions outside the pattern; `trace.py` warns on the opening, and the
+    fix is to name which of the four it actually is (a *Before* is almost
+    always a `When`; a *For <declared kind of work>* is almost always a
+    `Where`).
+  - **A condition that is really a response qualifier.** "fail that gate when a
+    required tool is missing" belongs after the `shall` — it says *what the
+    response is*, not *when the row applies*. Fronting it would change the
+    obligation. This is why the checker warns rather than gates: only you can
+    tell those two apart.
 - **(c) If the obligation arrived through a lens rather than the need's text,
   LABEL it derived.** This is DO-178C's **derived requirement** class: content
   beyond what the parent demands, legitimate *because* it is (i) labelled as
@@ -106,8 +125,9 @@ Four questions:
     licence — the label makes it reviewable; it does not make the row wanted.
 - **(d) The advisories are detectors, not caps.** `scripts/trace.py` warns —
   never gates — on (i) an SR `Requirement` naming a concrete `.py` artifact,
-  (ii) two SRs naming the same artifact token, and (iii) a direct-LLR fan-out
-  over the declared bound (`SR_FANOUT_MAX`, default 7). A bound is deliberately
+  (ii) two SRs naming the same artifact token, (iii) a direct-LLR fan-out
+  over the declared bound (`SR_FANOUT_MAX`, default 7), and (iv) an opening
+  that states a condition outside the four EARS keywords. A bound is deliberately
   not a cap: a hard cap invites merging two LLRs into one to slip under it,
   hiding the defect the number exists to surface. Clearing one is a **recorded
   per-row re-stamp** — the waiver token in `Rationale` for a named artifact, the
@@ -161,9 +181,10 @@ Four questions:
   legacy orphan: **(i)** implementation-born (a derived-requirement candidate —
   label it), **(ii)** a genuine need the blind teams missed because the *need*
   understates it (a needs defect, not an SR defect), **(iii)** true accretion.
-- **The three authoring advisories** (§2d) read as a cheap standing sweep over an
-  existing registry: run `scripts/trace.py` and read the artifact, shared-artifact
-  and fan-out sections as a worklist of rows to re-adjudicate. The
+- **The authoring advisories** (§2d) read as a cheap standing sweep over an
+  existing registry: run `scripts/trace.py` and read the artifact,
+  shared-artifact, fan-out and EARS sections as a worklist of rows to
+  re-adjudicate. The
   **verification-coherence** section joins the same sweep: it names a row whose
   prose claims an instrument its `Verification` field contradicts.
 - **The method-flip sweep — do this by hand, no checker covers it whole.** When
@@ -200,6 +221,12 @@ One line each, each one seen in a real spine:
   the need does not carry, so the hat that most obviously governs it is
   guaranteed not to see it. (Seen: the data-protection, accessibility and
   performance lenses unable to read the very needs they govern.)
+- **The buried condition** — the row's condition sits after the `shall` ("shall,
+  during an unattended run, refuse…") or opens on a near-miss keyword ("Before
+  X…", "For declared…"). Every reader who scans openings to learn *when a row
+  applies* misses it, and so does every tool. Guard: the EARS advisory catches
+  the opening; the buried-in-the-middle case is yours to catch, because a
+  qualifier that describes the RESPONSE legitimately lives there.
 - **Colour-only signals** — an obligation naming the system's most important
   signal by its **colour** ("a reader can believe a green") does not exist for a
   substantial class of readers; state the channel, not the hue.

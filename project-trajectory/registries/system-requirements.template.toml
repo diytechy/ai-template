@@ -16,7 +16,7 @@
 title = "EXAMPLE - delete on first real entry"
 sn_refs = ["SN-000"]
 boundary_refs = ["B-000"]  # the BOUNDARY crossing(s) in docs/requirements/external.toml this requirement states an observable AT (process.md; the frame tier). An SR forms around a crossing, so a row with no Boundary-Refs is either off-boundary on purpose - say so in Rationale - or mis-tiered. An id that does not resolve is a hard finding; a blank cell is a warn-first coverage count.
-requirement = "The system shall <single testable shall-statement>."
+requirement = """One testable shall-statement, on an EARS pattern (docs/process.md; the condition goes IN FRONT of the subject). Ubiquitous: The <system> shall <response>. Event-driven: When <trigger>, the <system> shall <response>. State-driven: While <state>, the <system> shall <response>. Unwanted behavior: If <trigger>, then the <system> shall <response>. Optional feature: Where <feature is included>, the <system> shall <response>. A condition opened any other way ("Before ...", "During ...") warns: same condition, stated where nothing looks for it."""
 rationale = "Why it exists (link the SN by id; do not restate it)."
 acceptance_criteria = "Measurable condition a test/demo asserts (the contract with the Test Engineer)."
 permutations = """Input dimensions for test design (process.md 'Dimensional coverage'); feed to scripts/gen_cases.py. Grammar: name=range[min..max]; name=set{a,b,c}; name=bool; @full|@pairwise|@boundaries. e.g. size=range[0..2GiB]; mode=set{a,b,c}; @pairwise"""

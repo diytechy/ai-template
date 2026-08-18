@@ -1618,6 +1618,30 @@ convert-at-your-pace rename — with two exceptions that are **not** aliased:
 `docs/gate`'s own contents (regenerate it) and a stage value in a basis line
 (same regenerate). Full recipe: the §3 entry above.
 
+### Reserved: requirement quality — the eight characteristics + the EARS pattern
+
+`docs/process.md` §3 now states the quality bar it previously only gated: the
+eight characteristics (necessary, singular, unambiguous, complete, verifiable,
+feasible, conforming, traceable) and the five **EARS** statement patterns, with
+the condition fronted (`When` / `While` / `If … then` / `Where`, or a bare
+subject for the ubiquitous case).
+
+**Nothing in your registry breaks.** The new `trace.py` rule
+(`ears_advisories`) is **warn-only under every flag** and reads only the OPENING
+of an SR `requirement` cell, reporting a condition dressed in some other keyword
+("Before …", "During …", "For …"). Take the file, run `trace.py`, and treat the
+new report section as a worklist rather than a gate. The gating form rules are
+unchanged.
+
+If you keep a customized `registries/system-requirements.template.toml`, its
+`-000` example row's `requirement` value is now the EARS grammar itself — a
+kit-owned teaching cell worth taking, but a no-op if you deleted the example row
+on your first real entry, as intended.
+
+*(Reserved, awaiting its `[since <sha>]`: the anchor is stamped from the commit
+that lands this change — inventing one before it exists is what the reserved
+shape exists to prevent.)*
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

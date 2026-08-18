@@ -76,6 +76,55 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     assert "'WI-210'" in msg and "'process.md'" in msg
 
 
+def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
+    # process.md section 3, "The statement pattern is EARS". Measured over this
+    # repo's 70 SRs before shipping: two rows opened on a non-EARS condition
+    # ("Before ...", "For ..."), both re-worded in the same change, so the rule
+    # guards zero-to-zero rather than handing anyone a cleanup list.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def flags(text, **cells):
+        cells["Requirement"] = text
+        cells.setdefault("SR-ID", "SR-101")
+        return trace.ears_advisories([cells])
+
+    # The four condition keywords open a conforming row, in any case.
+    for opening in (
+        "When a run starts,",
+        "While a run is live,",
+        "If the file is missing, then",
+        "Where the layer is enabled,",
+    ):
+        assert not flags(f"{opening} the system shall exit nonzero.")
+    # So does the ubiquitous pattern -- a bare subject, whatever its determiner.
+    for subject in (
+        "The system",
+        "Every kit script",
+        "A re-sync",
+        "Any durable record",
+    ):
+        assert not flags(f"{subject} shall exit nonzero.")
+
+    # A condition dressed in some OTHER keyword is the finding: the same
+    # condition, in the one place no reader and no tool looks for it.
+    assert flags("Before the run integrates, the system shall exit nonzero.")
+    assert flags("For contested work, the system shall exit nonzero.")
+    assert flags("During an unattended run, the system shall exit nonzero.")
+
+    # A Drafted row IS in scope, unlike the gating form rules beside it: an
+    # opening is finished the moment it is written, and both rows this rule
+    # found at landing were Drafted.
+    assert flags("Before the run integrates, the system shall exit.", Status="Drafted")
+    # An example row and an empty cell are not.
+    assert not flags("Before x, the system shall y.", **{"SR-ID": "SR-000"})
+    assert not flags("")
+
+    # ADVISORY, always: the pipe never joins the exit code.
+    assert isinstance(flags("Before x, the system shall y."), list)
+
+
 def test_a_requirement_states_one_testable_obligation():
     # WI-328. The stand-alone rule says a row must not carry its own HISTORY;
     # this says what is left must be DECIDABLE — 29148's individual-requirement

@@ -1820,3 +1820,15 @@ test_refs = "(see TC-172)"
 status = "Drafted"
 component = "CMP-008"
 phase = 4
+
+[design.LLR-178]
+sr_refs = ["SR-157"]
+title = "EARS statement-pattern advisory"
+module = "project-trajectory/scripts/trace_text.py"
+code_symbol = "ears_advisories"
+detail = "ears_advisories reads the opening of each non-example SR Requirement cell and reports the row when that opening is a condition dressed in a keyword outside the four EARS condition keywords (When / While / If / Where) — a bare subject (the ubiquitous pattern) and an empty cell pass. Reported in its own advisory pipe, which never joins a failure set; the scan covers Drafted rows, unlike the gating form rules in the same module, and the SR tier alone."
+rationale = """EARS puts the condition in front of the subject so a reader learns when a requirement applies before what it obliges, which is also what makes the opening scannable by eye and by tool; a row opening 'Before X, the system shall …' carries the same condition where nothing looks for it. Advisory rather than gating deliberately: which pattern a row IS — ubiquitous with a qualified response, or event-driven with the trigger fronted — is a judgement about the obligation, and the same sentence can be honest in either shape, so a gating version would overrule the author on the one question the author is better placed to answer. Drafted rows are in scope because an opening is finished the moment it is written and a warn costs a drafter nothing, and because both rows this rule found at landing were Drafted — skipping them would have shipped a guard that had never once fired."""
+test_refs = "(see TC)"
+status = "Drafted"
+component = "CMP-006"
+phase = 1

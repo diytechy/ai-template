@@ -2,7 +2,7 @@
 """Spine-row TEXT rules and the row primitives they share (WI-329).
 
 Split out of `trace.py`, which owns the JOIN — this module owns the question
-"is this one row readable and decidable on its own?", asked seven ways:
+"is this one row readable and decidable on its own?", asked eight ways:
 
 | function                    | tier     | what it catches                        |
 |-----------------------------|----------|----------------------------------------|
@@ -12,6 +12,7 @@ Split out of `trace.py`, which owns the JOIN — this module owns the question
 | `ac_advisories`             | advisory | a comparative with no named predicate  |
 | `sr_artifact_advisories`    | advisory | a requirement cell names an artifact   |
 | `sr_fanout_advisories`      | advisory | an SR's direct-LLR fan-out is merged   |
+| `ears_advisories`           | advisory | a condition stated outside EARS        |
 | `if_this_project_advisories`| advisory | an endpoint disagrees with its owner   |
 
 They are PURE predicates — rows in, findings out. No I/O, no git, no
@@ -30,7 +31,8 @@ Contracts: IF-076 — the seam this module declares (process.md §8; row of reco
 in docs/requirements/interfaces.csv).
 
 Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
-LLR-134 (form_findings), LLR-135 (paraphrase_advisories).
+LLR-134 (form_findings), LLR-135 (paraphrase_advisories),
+LLR-178 (ears_advisories).
 """
 
 import re
@@ -469,6 +471,66 @@ def form_findings(srs, llrs, tcs):
                         "either a restatement of the parent or a requirement "
                         "hiding a tier below where it is traced".format(rid)
                     )
+    return out
+
+
+# --- EARS statement pattern (process.md §3, "The statement pattern is EARS") ---
+# The five EARS keywords that may open a requirement's condition clause. A row
+# opening with any of them (or with its bare subject, the ubiquitous pattern) is
+# conforming; only a condition dressed in some OTHER keyword is reported.
+_EARS_OPENING_RE = re.compile(r"^\s*(?:when|while|if|where)\b", re.IGNORECASE)
+# The openings that ARE a condition but are not one of the five. Measured over
+# this repo's 70 SRs before shipping: two rows matched ("Before unattended work
+# integrates…", "For work declared as contested planning…") and both were
+# re-worded onto the pattern in the same change, so the rule guards zero-to-zero
+# rather than handing anyone a cleanup list.
+_NON_EARS_OPENING_RE = re.compile(
+    r"^\s*(?:before|after|during|upon|following|prior to|once|whenever|unless|"
+    r"except|given|throughout|for|on|in|at|with|without)\b",
+    re.IGNORECASE,
+)
+
+
+def ears_advisories(srs):
+    """Warn-only: an SR whose opening states a condition OUTSIDE the EARS
+    patterns (process.md §3).
+
+    EARS puts the condition in front of the subject so a reader learns *when the
+    requirement applies* before *what it obliges* — which is also what makes the
+    opening scannable by eye and by tool. A row that opens "Before X, the system
+    shall…" carries exactly the same condition in a place nothing looks.
+
+    ADVISORY, and it stays advisory. Which pattern a row *is* — ubiquitous with a
+    qualified response, or event-driven with the trigger fronted — is a judgement
+    about the obligation, not a defect a regex settles; the same sentence can be
+    honest in either shape. A gating version would be a script overruling the
+    author on the one question the author is better placed to answer.
+
+    Scope is the SR `Requirement` cell alone. An LLR carries no obligation to
+    pattern (it decomposes one, and `form_findings` already refuses a `shall`
+    there), and a TC states a method rather than a requirement.
+
+    A `Drafted` row is IN scope, unlike the gating form rules beside it. Those
+    skip Draft because an unfinished acceptance criterion is what Draft means;
+    a sentence's opening is finished the moment it is written, and a warn-only
+    reading costs a drafter nothing while the row is still cheap to re-shape.
+    Both rows this rule found at landing were Drafted, so skipping them would
+    have shipped a guard that had never once fired."""
+    out = []
+    for rid, r in _real(srs, "SR-ID"):
+        req = (r.get("Requirement") or "").strip()
+        if not req or _EARS_OPENING_RE.match(req):
+            continue
+        m = _NON_EARS_OPENING_RE.match(req)
+        if m:
+            out.append(
+                "SR {} Requirement opens {!r} — a condition stated outside the "
+                "EARS patterns (When/While/If/Where): re-open it on the keyword "
+                "that fits, or move the qualifier into the response so the row "
+                "reads as ubiquitous (warn-only, never the exit code)".format(
+                    rid, m.group(0).strip()
+                )
+            )
     return out
 
 

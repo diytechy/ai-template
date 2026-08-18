@@ -141,7 +141,7 @@ ruling 2026-08-17).
 | `SR-ID` | ✔ | `SR-<digits>` | Join key. Duplicate → integrity; malformed → integrity; **a row with content but a blank id** → integrity ("a live requirement that just vanished from every join"). |
 | `Title` | ✔ | free text | Node label in the outline / mermaid / HTML views. |
 | `SN-Refs` | ✔ | `;`-joined SN ids | **Upward join.** Empty (when real SNs exist) → orphan; unknown target → orphan. *Traced, not ratified* (§9). |
-| `Requirement` | ✔ | one testable shall-statement | Ratified prose — amending it opens a re-attest window. |
+| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Ratified prose — amending it opens a re-attest window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
 | `Rationale` | ✔ | free text | **Required**, unlike the LLR's. Guards zero-to-zero (every row already carries one). |
 | `AcceptanceCriteria` | ✔ | measurable condition | Ratified. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
@@ -388,7 +388,7 @@ the itemized listing and the cap can never disagree on one registry state.
 | `placeholders` | ✔ | ✘ | leftover `-000` rows (collected only under `--no-placeholders`) |
 | `schema` | ✔ | ✘ | empty required fields, bad enums, `Automated=Yes` without Evidence, ratified-phase misses (only under `--strict-schema`) |
 | `budget` / `module` / `component` / `interface` | ✔ | ✘ | off-spine back-link failures |
-| **advisories** | ✘ | ✘ | LLR-status drift, Modified-chain, AcceptanceCriteria testability, knowledge-pack refs, IF endpoint join |
+| **advisories** | ✘ | ✘ | LLR-status drift, Modified-chain, AcceptanceCriteria testability, EARS statement pattern, paraphrase, artifact-naming, fan-out, verification coherence, knowledge-pack refs, IF endpoint join |
 
 **Advisories never join the exit code, even under `--strict`** — "a warn-tier
 checker feature mints no SR and gates nothing."

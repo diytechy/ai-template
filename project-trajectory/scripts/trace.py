@@ -100,6 +100,7 @@ try:
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
+        ears_advisories,
         form_findings,
         if_this_project_advisories,
         is_drafted,
@@ -120,6 +121,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
+        ears_advisories,
         form_findings,
         if_this_project_advisories,
         is_drafted,
@@ -3343,6 +3345,12 @@ def analyze(reg, args):
     # and decidable on its own", and splitting them across two counters would make
     # a reader check two places for one answer. Joins exit_code.
     form = form_findings(srs, llrs, tcs)
+    # Warn-only, always on: an SR whose opening states a condition outside the
+    # EARS patterns (process.md §3, "The statement pattern is EARS"). Its own
+    # pipe, like the tiering detectors below — this is a STATEMENT-PATTERN
+    # finding, and reporting it under the form counter would say "gating" about
+    # a class that never gates. Never joins a failure set below.
+    ears = ears_advisories(srs)
     # Warn-only, always on (WI-328): a child cell that re-words its parent. A
     # heuristic (lexical overlap), so it warns FOREVER — 38 of 118 LLRs trip it
     # and most are legitimate. Never joins a failure set below.
@@ -3401,6 +3409,7 @@ def analyze(reg, args):
     findings.provenance = provenance
     findings.form = form
     findings.paraphrase = paraphrase
+    findings.ears = ears
     findings.llr_status_advis = llr_status_advis
     findings.sr_artifact_advis = sr_artifact_advis
     findings.sr_fanout_advis = sr_fanout_advis
@@ -3443,6 +3452,7 @@ def render_report(reg, findings, args, forest):
     provenance = findings.provenance
     form = findings.form
     paraphrase = findings.paraphrase
+    ears = findings.ears
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sr_fanout_advis = findings.sr_fanout_advis
@@ -3610,6 +3620,13 @@ def render_report(reg, findings, args, forest):
         ["None. Every requirement states one obligation in decidable terms."]
         if not form
         else [f"- {f}" for f in form]
+    )
+    # Warn-only section: an SR opening on a condition outside the EARS patterns.
+    lines += ["", "## EARS statement-pattern advisories (warn-only)", ""]
+    lines += (
+        ["None. Every requirement opens on its subject or an EARS keyword."]
+        if not ears
+        else [f"- {f}" for f in ears]
     )
     # Warn-only section: a child cell re-wording its parent. Heuristic, never gates.
     lines += ["", "## Paraphrase advisories (warn-only heuristic)", ""]
@@ -3816,6 +3833,7 @@ def render_console(reg, findings, args, out, html_out):
     provenance = findings.provenance
     form = findings.form
     paraphrase = findings.paraphrase
+    ears = findings.ears
     interface_advisories = findings.interface_advisories
     knowledge_advisories = findings.knowledge_advisories
     llr_status_advis = findings.llr_status_advis
@@ -3850,6 +3868,7 @@ def render_console(reg, findings, args, out, html_out):
         + knowledge_advisories
         + llr_status_advis
         + paraphrase
+        + ears
         + sr_artifact_advis
         + sr_fanout_advis
         + verif_coherence_advis
@@ -3931,6 +3950,7 @@ def render_console(reg, findings, args, out, html_out):
         + (f" ac-advisories={len(advisories)}" if advisories else "")
         + (f" provenance-findings={len(provenance)}" if provenance else "")
         + (f" form-findings={len(form)}" if form else "")
+        + (f" ears-advisories={len(ears)}" if ears else "")
         + (f" paraphrase-advisories={len(paraphrase)}" if paraphrase else "")
         + (
             f" llr-status-advisories={len(llr_status_advis)}"

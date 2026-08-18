@@ -70,6 +70,10 @@ None. No spine row cites a work item or a process doc in its text.
 
 None. Every requirement states one obligation in decidable terms.
 
+## EARS statement-pattern advisories (warn-only)
+
+None. Every requirement opens on its subject or an EARS keyword.
+
 ## Paraphrase advisories (warn-only heuristic)
 
 None flagged by the overlap heuristic.

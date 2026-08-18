@@ -1726,3 +1726,14 @@ automated = "Yes"
 evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes"
 status = "Drafted"
 phase = 4
+
+[test.TC-173]
+verifies = ["SR-157", "LLR-178"]
+level = "Unit"
+method = """Run the EARS statement-pattern suite; each of the four condition keywords and each ubiquitous determiner passes, a condition opened on a keyword outside the four warns (Drafted rows included), an example row and an empty cell do not, and the exit code is unchanged either way."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-178 (parent SR-157)"
+automated = "Yes"
+evidence = "tests/test_trace_rules.py::test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates"
+status = "Drafted"
+phase = 1

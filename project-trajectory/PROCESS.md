@@ -112,13 +112,9 @@ Stable, zero-padded, never reused.
   script, an artifact path, the rubric a `Critique` row is judged against — is the
   *subject*, not provenance. `trace.py` gates under `--strict`; pointer columns
   (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are out of scope by design.
-- **One requirement, one `shall`** — in decidable terms: no second `shall`, no
-  `should`/`may`/`will` in normative text, no unfalsifiable adjective ("robust",
-  "minimal"), no open-ended "such as", no actorless passive, and no `shall` in an
-  `LLR` (the SR states the obligation; the child decomposes it). A multi-clause
-  `AcceptanceCriteria` is fine — it enumerates how *one* obligation is checked.
-  `trace.py` gates these under `--strict`; what needs judgement (necessary,
-  correct, feasible) stays the consistency review's.
+- **One requirement, one `shall`** — exactly one obligation, one testable
+  behavior, never a compound "and/or". The full quality bar and the statement
+  pattern that carries it are stated once, just below the bullets.
 - **One decision per row; one home per method.** A single interface or method is
   fully defined by exactly one requirement, and a requirement calls out at most
   one method/action. Two rows sharing one interface identity — or one row
@@ -163,6 +159,50 @@ Stable, zero-padded, never reused.
   generated from the orchestrator (`gen_arch_map.py --flow`, see below), so a
   routine that inlines logic instead of delegating shows up as a short,
   uninformative flow — a built-in tripwire.
+
+**Requirement quality — the eight characteristics.** Write in **simple technical
+English**: short declarative sentences, one clause per idea, defined terms only,
+and one name per thing (never a synonym for a term already chosen). Every
+requirement — hand-authored or generated — aims at all eight, at every tier:
+
+| Characteristic | What it means here |
+|---|---|
+| **Necessary** | Removing it would leave a gap; no filler, no placeholder rows. |
+| **Singular** | Exactly one `shall`; one testable behavior. No compound "and/or" obligation. |
+| **Unambiguous** | One interpretation; defined terms only; no "etc.", no undefined pronoun. |
+| **Complete** | States trigger, response, and — where they apply — timing/threshold **with units**. |
+| **Verifiable** | A test or analysis method can confirm it (§4's four verification classes). |
+| **Feasible** | Achievable within the declared stack, architecture and resource budget (§9). |
+| **Conforming** | Uses the statement pattern below and the §2 id scheme. |
+| **Traceable** | Carries a stable unique id and its parent/child links (§2; the matrix above). |
+
+**The statement pattern is EARS** (Easy Approach to Requirements Syntax): the
+condition goes **in front of** the subject, so a reader learns *when the
+requirement applies* before *what it obliges*. One pattern per row:
+
+| Pattern | Grammar | Use when |
+|---|---|---|
+| Ubiquitous | `The <system> shall <response>.` | It always holds. |
+| Event-driven | `When <trigger>, the <system> shall <response>.` | A discrete event starts it. |
+| State-driven | `While <state>, the <system> shall <response>.` | It holds for the duration of a state. |
+| Unwanted behavior | `If <trigger>, then the <system> shall <response>.` | The trigger is a fault, an error, or misuse. |
+| Optional feature | `Where <feature is included>, the <system> shall <response>.` | It applies only where that feature/option is present. |
+
+A complex row nests them (`While <state>, when <trigger>, the <system> shall
+…`). A condition written any other way — "Before …", "During …", "For … work",
+or buried after the `shall` — is the same condition **outside** the pattern:
+invisible to a reader scanning openings and to every tool that reads them.
+
+**What a checker settles, and what it cannot.** `trace.py --strict` gates the
+decidable half of Singular/Unambiguous/Conforming: no second `shall`, no
+`should`/`may`/`will` in normative text, no unfalsifiable adjective ("robust",
+"minimal"), no open-ended "such as", no actorless passive, and no `shall` in an
+`LLR` (the SR states the obligation; the child decomposes it). A multi-clause
+`AcceptanceCriteria` is fine — it enumerates how *one* obligation is checked. A
+non-EARS opening **warns** rather than gates: the wording is a judgement about
+which pattern the row is, not a defect a script can settle. **Necessary,
+Complete and Feasible stay the consistency review's** (§4/§6), and no proxy
+metric is offered for them.
 
 **Right-sizing has guardrails — and a name for the calibrated shortcut.**
 "Simplest thing that works" (the agent guide's "Right-size the solution") is

@@ -67,7 +67,17 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # deliberately NOT to current+something-small: this file's own history records
 # the same defect twice (0.6% and 0.02% of headroom), where a ceiling meant as
 # a growth SENSOR had quietly become an exact freeze that the next merge trips.
-MAX_BYTES = 2_615_000
+# 2,615,000 -> 3,010,000, the 2026-08-18 requirement-quality + EARS change.
+# Measured 2,615,555 AFTER the last edit in the commit carrying this stamp, per
+# the lesson above. The growth is ORDINARY PER-ROW COST: two rows (LLR-178 and
+# TC-173, the EARS advisory's decomposition), ~555 bytes for the pair, which is
+# the same per-row cost as every stamp before it. Nothing about
+# `gen_trajectory.py` changed. Note what the old number had become: 555 bytes of
+# headroom, 0.02% — the THIRD time this file records a ceiling meant as a growth
+# SENSOR decaying into an exact freeze that the next two rows trip. Restamped to
+# ~15% headroom, matching the 14-21% every earlier stamp kept, and deliberately
+# NOT to current+something-small. Reason in the log, 2026-08-18a.
+MAX_BYTES = 3_010_000
 
 
 def test_dashboard_stays_within_its_size_budget():
