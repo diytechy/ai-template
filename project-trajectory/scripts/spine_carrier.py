@@ -784,7 +784,17 @@ def needs_from_markdown(text):
             names = list(SN_EDGE if row_kind == "edge" else SN_CORE)
         if kind is None and any(n in SN_EDGE for n in names if n):
             row_kind = "edge"
-        need = {"id": cells[0], "kind": row_kind}
+        # Section-as-state, translated into the ONE field at the read boundary:
+        # legacy markdown had exactly two maturities — under the draft heading
+        # or not — so the mapping is total and loses nothing. Emitting it here
+        # is what keeps `is_draft_need` honest over legacy text; without it a
+        # draft-heading row reads as ratified and the derived gate RISES, the
+        # one failure shape this carrier exists to prevent.
+        need = {
+            "id": cells[0],
+            "kind": row_kind,
+            "status": "Drafted" if row_kind == "draft" else "Approved",
+        }
         for name, value in zip(names, cells[1:]):
             if name:
                 need[name] = value
@@ -940,14 +950,16 @@ def is_draft_need(need):
     the other three spine tiers use (`Drafted | Approved | Modified`); the SN
     tier used to spell it `kind = "draft"`, a field that also carried row TYPE.
 
-    DUAL-READ WINDOW. While the registry migrates, a row carrying `status` is
-    read by it and a row carrying only the legacy `kind` still answers — so the
-    selector swap and the row rewrite are separately revertible commits rather
-    than one atomic edit. The fallback is transitional and goes with `kind`."""
-    status = need.get("status")
-    if status:
-        return str(status).strip() == "Drafted"
-    return need.get("kind") == "draft"
+    A NEED WITH NO `status` IS NOT DRAFT, and that default is deliberate rather
+    than incidental: the failure mode this tier can least afford is the one the
+    markdown carrier had — a row silently reading as un-drafted floats the
+    derived gate UPWARD. Here the absent-key case reads as ratified only because
+    an absent `status` is caught upstream, as a SCHEMA finding on a required
+    key, rather than being invented into a maturity by a reader.
+
+    (The transitional `kind = "draft"` fallback that stood here during the
+    registry migration is gone with the field itself.)"""
+    return str(need.get("status", "")).strip() == "Drafted"
 
 
 def draft_need_ids(needs):

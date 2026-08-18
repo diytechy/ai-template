@@ -269,3 +269,71 @@ def test_both_carriers_at_once_is_refused_for_the_new_registries(tmp_path):
     with pytest.raises(SystemExit) as exc:
         sc.resolve(tmp_path / "agents.toml")
     assert "BOTH carriers" in str(exc.value)
+
+
+# --- drafted-ness: the field the whole SN tier's maturity rides on ------------
+
+
+def test_draft_need_ids_reads_STATUS_and_nothing_else():
+    """The coverage hole the status unification found, closed.
+
+    `draft_need_ids` / `is_draft_need` own the SN tier's maturity — the derived
+    gate drops to DevBar-Below while any need is drafted, so this predicate is
+    the whole rung — and this module had ZERO direct tests of it. It was proved
+    only sideways, through `test_check_docs` and `test_rule_sync`, which is how
+    the field managed to be spelled three different ways
+    (`docs/plans/2026-08-16-registry-status-unification.md` §4.4).
+    """
+    needs = [
+        {"id": "SN-001", "status": "Drafted"},
+        {"id": "SN-002", "status": "Approved"},
+        {"id": "SN-003", "status": "Modified"},
+    ]
+    assert sc.draft_need_ids(needs) == {"SN-001"}
+
+    # `Modified` is amended-and-unsigned, NOT drafted: an amended need keeps the
+    # maturity it was signed at until the sitting re-signs it. Reading it as a
+    # draft would drop the derived gate on every amendment.
+    assert sc.is_draft_need({"id": "SN-003", "status": "Modified"}) is False
+
+    # The RETIRED spelling must not answer. This is the mutation the migration
+    # turns on: while the fallback stood, `kind = "draft"` returned True here,
+    # so this line fails against the pre-step-4 selector and against any future
+    # re-introduction of a second field for one axis.
+    assert sc.is_draft_need({"id": "SN-004", "kind": "draft"}) is False
+
+    # An absent cell is not a maturity. A reader must not invent one — the
+    # missing key is a SCHEMA finding upstream, not a draft row here.
+    assert sc.draft_need_ids([{"id": "SN-005"}]) == set()
+
+    # The word is closed and case-sensitive: the lowercase legacy spelling is
+    # not a synonym, it is an unrecognized value.
+    assert sc.is_draft_need({"id": "SN-006", "status": "drafted"}) is False
+
+
+def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
+    """Section-as-state still answers, through `status` now.
+
+    The legacy carrier had no maturity FIELD; it had a heading. The reader
+    translates that at the boundary, and this pins the translation — because the
+    failure mode when it is missing is silent and upward: every drafted need in
+    an un-migrated repo reads as ratified and the derived gate RISES.
+    """
+    text = (
+        "## Core needs\n\n| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
+        "| SN-001 | ratified | M | x |\n\n"
+        "## Draft needs (unratified)\n\n"
+        "| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
+        "| SN-050 | not yet | M | x |\n"
+    )
+    needs = sc.needs_from_markdown(text)
+    assert {n["id"]: n["status"] for n in needs} == {
+        "SN-001": "Approved",
+        "SN-050": "Drafted",
+    }
+    assert sc.draft_need_ids(needs) == {"SN-050"}
+    # ...and the whole-text entry point agrees, over both carriers.
+    assert sc.draft_ids_from_text(text) == {"SN-050"}
+    assert sc.draft_ids_from_text(
+        '[need.SN-050]\nstatus = "Drafted"\nneed = "n"\n'
+    ) == {"SN-050"}

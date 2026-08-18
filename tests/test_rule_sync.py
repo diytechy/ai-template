@@ -697,8 +697,8 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     # The same claim under the new carrier is a field, and a MENTION does not
     # set it: SN-006 is named in SN-005's prose and stays ratified.
     modern = (
-        '[need.SN-005]\nkind = "draft"\nneed = "n"\n\n'
-        '[need.SN-006]\nkind = "core"\nneed = "supersedes SN-005"\n'
+        '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
+        '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
     )
     assert SPINE.draft_ids_from_text(modern) == {"SN-005"}
     assert TRACE.sn_draft_ids(modern) == GATE.sn_draft_ids(modern) == {"SN-005"}

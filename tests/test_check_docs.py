@@ -449,14 +449,14 @@ def test_registry_needs_exempts_draft_section_from_must_floor(tmp_path):
 
 def test_inventory_draft_must_need_not_required_in_readme(scaffold):
     # End-to-end: a Must need still at DRAFT does NOT force a README citation
-    # (it is unratified); the check stays green. Drafted-ness is `kind` now, not a
-    # heading — the carrier cutover retired section-as-state,
+    # (it is unratified); the check stays green. Drafted-ness is `status` now, not
+    # a heading — the carrier cutover retired section-as-state,
     # which is what stopped a prose mention under a heading from re-drafting an
     # attested need.
     reg = scaffold / "docs" / "requirements" / "stakeholder-needs.toml"
     reg.write_text(
         reg.read_text(encoding="utf-8")
-        + '\n[need.SN-050]\nkind = "draft"\nneed = "drafted must"\n'
+        + '\n[need.SN-050]\nstatus = "Drafted"\nneed = "drafted must"\n'
         'why = "matters"\npriority = "M"\nacceptance = "x"\n',
         encoding="utf-8",
     )
@@ -464,10 +464,12 @@ def test_inventory_draft_must_need_not_required_in_readme(scaffold):
         ["scripts/check_docs.py", "--ignore", "docs/test/report.md"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # ...and the same need at `core` DOES force it — otherwise this test would
+    # ...and the same need APPROVED does force it — otherwise this test would
     # pass on a check that had simply stopped looking.
     reg.write_text(
-        reg.read_text(encoding="utf-8").replace('kind = "draft"', 'kind = "core"'),
+        reg.read_text(encoding="utf-8").replace(
+            'status = "Drafted"', 'status = "Approved"'
+        ),
         encoding="utf-8",
     )
     proc = run_py(
