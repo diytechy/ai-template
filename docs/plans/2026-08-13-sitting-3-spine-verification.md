@@ -272,10 +272,15 @@ page; the linked homes hold the full evidence for the ones you want to go
 deeper on. A recommendation is a starting position, never a ruling taken in
 advance.
 
-> **SCOREBOARD — re-stamped `2026-08-17s`, the current truth of this list.**
-> OPEN: **item 6** (two sub-calls: run the SN migration before signing?
-> and the off-spine vocabulary half) — the last open call. Plus the two
-> **work items in the block above** (`SR-140` split · `SR-173` wording).
+> **SCOREBOARD — re-stamped `2026-08-17t`, the current truth of this list.**
+> OPEN: **nothing.** Item 6 was the last open call and **both its sub-calls
+> are RULED `2026-08-17t`** — the off-spine half is in scope on one enum and
+> one field name, and the migration runs before signing. **Item 6 is now
+> EXECUTING**, not open: the plan is re-derived into nine pre-sign steps and
+> execution is dispatched; until it lands and reds go green, treat item 6 as
+> *in flight*, not *closed*. Still owed alongside it: the two **work items in
+> the block above** (`SR-140` split · `SR-173` wording), which are the only
+> pre-brief work remaining once item 6's execution completes.
 > Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
 > 7 · 8 · 15 · 16 · 17 · 19 · 20 and the Sol rows 9–14; item 18's owner-cell
 > half executed on investigation `2026-08-17p`, its pins half executed
@@ -408,26 +413,48 @@ advance.
    `status` on the closed spine vocabulary; `attestation`, `amended` AND
    `kind` all die.** Scope + blast radius:
    [`2026-08-16-registry-status-unification.md`](2026-08-16-registry-status-unification.md)
-   — whose §5 gained step 7 by owner ruling `2026-08-17k`: the execution also
-   closes the SN schema census (`spine_carrier.SPINE_TIER_KEYS` gains
-   `"SN-ID"`, wiring SN into the dogfood drift check it alone sits outside).
+   — whose step list gained the SN schema census by owner ruling
+   `2026-08-17k` (now **§5A step 8**, re-numbered when the off-spine half
+   joined): the execution also closes it — `spine_carrier.SPINE_TIER_KEYS`
+   gains `"SN-ID"`, wiring SN into the dogfood drift check it alone sits
+   outside.
 
-   **WHAT IS ACTUALLY OPEN HERE — restated `2026-08-17q` after the owner
-   could not tell from this item's text (the direction above is RULED;
-   these two sub-calls are not):**
-   - **(a) TIMING — run the SN migration BEFORE signing?** No snapshot
-     exists, so today it costs **zero re-attestation**; after signing, the
-     same edit re-opens every touched SN row. Everything to execute is
-     already specified (the unification plan §5 steps 1–7, census
-     included). **Recommendation: yes, run it before the sitting.**
-   - **(b) THE OFF-SPINE HALF — genuinely undecided.** The survey found
-     the split is NOT SN-only (that doc §0): four field names across the
-     registries (`status`, `kind`+`attestation`, `approval`, `state`), and
-     `components.state`'s shipped vocabulary re-uses `planned` and
-     `verified` — two words D-9 retired from the spine — for unrelated
-     meanings, where `check_vocab.py` cannot see them. Unify (and to what
-     vocabulary), or leave — a separable step, deferrable past the
-     sitting.
+   **BOTH SUB-CALLS ANSWERED `2026-08-17t`; the item is EXECUTING, not
+   open.** *(They were the last open pair — restated `2026-08-17q` after the
+   owner could not tell from this item's text, then ruled.)*
+   - **(b) THE OFF-SPINE HALF — RULED, owner verbatim:** *"update
+     docs/plans/2026-08-16-registry-status-unification.md to ensure all
+     attested / approved registries use the same enum (draft / approved /
+     founded (when applicable)). There may be some out of date information
+     in that md file as well that could use some cleanup."* The off-spine
+     registries are **IN scope**, not a separable step: one field name
+     (`status`) and one Title-case enum across SN · SR · LLR · TC · IF ·
+     EXT/B/REL · CMP. **"When applicable" resolves to standing decision
+     12's "per-registry subsets"** (`repo-lock.md:254`,
+     `trace.py:445-448`), and the test is not a judgement call — `Founded`
+     is available exactly where a DISCHARGE PREDICATE exists: **never** for
+     IF/EXT/B/REL (`derive_gate.py:626-628` already states why an approval
+     is not a demonstration), **today** for CMP (`CMP_MATURITY` maps
+     `verified → FOUNDED` and gates rung 3 on it), **at D-9 step 8** for the
+     four spine tiers. `components.state` is adjudicated **CONFLATED** —
+     both a maturity field and a lifecycle field — and is SPLIT into
+     `status` + `standing` (`active|has-gap|deprecated`), which dissolves
+     the `planned`/`verified` collision by construction rather than renaming
+     around it.
+   - **(a) TIMING — ANSWERED YES** by the same directive: execution is
+     dispatched ahead of the sitting, so the migration runs **before
+     signing**, at zero re-attestation cost. All 138 off-spine rows sit in
+     their vocabulary's first state, so no cell changes meaning — only its
+     spelling.
+
+   **The plan is now an EXECUTION plan** (re-derived `2026-08-17t`: nine
+   pre-sign steps in §5A, each with files · verification · rollback
+   boundary; §5B holds what waits for D-9 steps 7–8, POST-sign and
+   POST-seed). Stale content corrected in the same pass: the amendment set
+   is **18**, not 17 (`SN-008` joined at `2026-08-17h`, and the old
+   "the prose 18 is the error" conclusion is WITHDRAWN); `external` is **11**
+   rows, not 14 (`2026-08-16q`); three blast-radius line numbers were wrong
+   or had drifted; the "23 test assertions" figure does not reproduce.
 7. ~~**The two remaining provisional hat charters**~~ — **RULED `2026-08-17`.**
    Owner: *"keep both, as long as they can be opted out of downstream users I
    tend to think default always is fine. Easy to change later."*

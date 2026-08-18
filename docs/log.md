@@ -36,6 +36,136 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17t — sitting-3 §0.4 item 6 RULED IN BOTH SUB-CALLS and its plan
+  re-derived into an execution plan: ONE enum and ONE field name across every
+  attested registry, spine and off-spine alike; the migration runs BEFORE
+  signing.** The owner's ruling, verbatim: *"update
+  docs/plans/2026-08-16-registry-status-unification.md to ensure all attested /
+  approved registries use the same enum (draft / approved / founded (when
+  applicable)). There may be some out of date information in that md file as
+  well that could use some cleanup."* That answers sub-call **(b)** — the
+  off-spine half is IN scope, not the separable later step the 2026-08-16 doc
+  proposed — and, by dispatching execution ahead of the sitting, sub-call
+  **(a)**: yes, run it pre-sign. **Item 6 was the last open call on the desk;
+  the §0.4 open list is now empty and item 6 is EXECUTING.**
+  **THE DESIGN CALLS MADE, each derived rather than invented.**
+  **(1) The field name unifies onto `status`**, vocabulary Title-case
+  `Drafted`|`Approved`(|`Modified`, transitional). This is not new doctrine:
+  `repo-lock.md:254` records the 2026-08-13 ruling that **D-9 and decision 12
+  are one cross-registry vocabulary program with per-registry subsets** whose
+  *"mapping must be re-derived, not trusted"*, and `trace.py:445-448` already
+  names D12's *"one shared status vocabulary, per-registry subsets… the subset
+  here is the two-value one; it is PROVISIONAL pending D-9's ladder"*. D-9 step
+  5b had already re-spelled the off-spine `draft`→`drafted` *"so ONE word means
+  one thing across every registry"* (`derive_gate.py:629-632`); the field name
+  is the last piece of that move. **The rename is materially cheaper than the
+  2026-08-16 blast radius implied**: `agent_common.human_approves` is keyed on
+  the registry STEM via `APPROVAL_RUNGS`, not on the field name, so its LOGIC
+  is unchanged and only its docstring moves.
+  **(2) "When applicable" = decision 12's per-registry subsets, and the test is
+  mechanical, not a judgement call: `Founded` is available exactly where a
+  DISCHARGE PREDICATE exists.** **Never** for IF/EXT/B/REL — `derive_gate.py:
+  626-628` already writes the reason (*"an approval says the crossing is
+  agreed, it says nothing about the crossing having been demonstrated"*);
+  **today** for CMP, the one registry where `Founded` is live now
+  (`CMP_MATURITY` maps `verified → FOUNDED`, `arch_incomplete` gates rung 3 on
+  it); **at D-9 step 8** for the four spine tiers, where D-9 C4 records all four
+  discharge tests as built but `SPINE_MATURITY` deliberately omits the word.
+  **(3) `components.state` adjudicated CONFLATED — both axes — and SPLIT**, the
+  same shape as SN's `kind`. It IS the rung-3 maturity field (three proofs:
+  `CMP_MATURITY` + `arch_incomplete:750-767`; `agent_common.APPROVAL_RUNGS:
+  582-586` already lists `"components"` beside external/interfaces;
+  `baseline_snapshot._STATE_CELL_CLAIMED:184-187` derives an approval claim
+  from it) — AND it carries a second axis, since `has-gap`/`deprecated` are
+  lifecycle facts folded onto maturity. So: `status` (the one enum) +
+  `standing` (`active|has-gap|deprecated`). **This dissolves finding (a) by
+  construction** — `planned` and `verified` cease to exist as CMP values, so
+  nothing is left to collide with the retired spine words — which is why it was
+  preferred over the 2026-08-16 proposal to rename them to
+  `designed`/`implemented`, a swap that invents two new words to defend and
+  leaves three spellings of one axis standing. Live cost: 4 rows, all
+  `planned` → `Drafted`, zero `standing` cells. **The second axis is named
+  `standing`, NOT the obvious `lifecycle`, and the rejection is this plan's own
+  finding (a) applied to itself**: `lifecycle` is the first field of `SN_EDGE`
+  AND holds an entry in the SHARED carrier header map (`spine_carrier.py:136,
+  :702, :723`; `migrate_carrier.py:144, :545`), which is global across
+  registries — so a CMP `lifecycle` key would route through the same entry as a
+  dying SN edge field. A MECHANICAL collision, not merely a semantic one.
+  `condition`/`disposition` are taken too (`hats.py`; the WI registry);
+  `standing` and `health` measured as the only unused candidates, and
+  `standing` covers `deprecated` where `health` does not.
+  **(4) `open-items` does NOT join** — `pending`|`ruled` is a decision axis, not
+  artifact maturity. The collision the rename leaves (`status` meaning two
+  things across eight registries) is **recorded and accepted in this pass**,
+  with `status`→`disposition` filed as its own owner call; folding it in
+  without a ruling was rejected.
+  **THE STALE CONTENT, re-measured not assumed.** **(i) The amendment set is
+  18, not 17 — and the old conclusion is WITHDRAWN, not refined.** The
+  2026-08-16 text reasoned that prose said 18 while the registry carried 17 and
+  concluded *"the prose 18 appears to be the error"*; `2026-08-17h`'s `SN-008`
+  amendment (the hue metonym → *"a reader can believe a pass verdict"*) set
+  that row's first `attestation = "pending"`. Measured this session:
+  **18 `pending` ≡ 18 `amended`, exact agreement in both directions**, with
+  `SN-008`/`SN-027` the only two dated 2026-08-17; the other **9** rows map to
+  `Approved`. Executing the old conclusion would have written a genuinely
+  amended row as signed — the one failure mode the change exists to prevent.
+  **(ii) `external` is 11 rows, not 14** (`2026-08-16q` deleted `EXT-004` +
+  `B-06`/`B-07`), so the off-spine total is **138**, not 141.
+  **(iii) Three blast-radius sites were wrong or drifted:** `trace.py:1254` is
+  now `return out` in an unrelated legacy-markdown duplicate-id scan — the real
+  site is **`:1192-1212`**, and it is the F5-duplicated twin of
+  `derive_gate.py:285` that `test_rule_sync` PINS EQUAL; `spine_carrier.py:804`
+  named a call site now at `:824`/`:839` (two, not one); `:860` drifted to
+  `:861`. `derive_gate.py:285` holds as a docstring but the table had conflated
+  it with the drafted-SN rung, which is a separate site at **`:436-449`**.
+  `:938` and `check_docs.py:558` hold exactly. **(iv) The "23 SN `kind` test
+  assertions" figure does not reproduce** under any defensible rule and is
+  withdrawn: the five-file set was right, the count is **28** lines mentioning
+  SN `kind` of which only **6** are real `assert`s — the other 22 are TOML
+  fixture strings that break just as hard. **(v)** §3's target-shape comment
+  still taught the pre-`2026-08-17m` enum, §5's list predated the census
+  (`2026-08-17k`) and the off-spine half, and §2/§7 still carried the `edge`
+  sub-question and "the third status word" as open — both ruled since
+  (`2026-08-17j`, `2026-08-17m`) and now folded into the body.
+  **TWO TRAPS FOUND AND WRITTEN INTO THE PLAN, both silent-failure class.**
+  `tests/test_ratification_level.py:725-753` proves no kit script writes an
+  approval cell using the regex `approval["'\]]*\s*[:=]\s*["']approved["']` —
+  **a rename that does not re-key it leaves the guard passing vacuously
+  forever**, the exact failure class this change exists to prevent. And
+  `:495`/`:496` pin the maturity tables EQUAL to `trace.ENUM_FIELDS` by raw set
+  comparison, so the Title-case move **breaks them by construction**; they must
+  be case-normalized, never "fixed" by lower-casing the registries. Also
+  recorded: `tests/test_spine_carrier.py` contains **zero** occurrences of
+  `kind`, so the module owning `draft_need_ids`/`folded`/`SN_CORE` has no
+  direct test of the field — step 4 now owes one.
+  **SEQUENCING, kept in two lists that must not merge.** §5A = **nine pre-sign
+  steps**, each with its files, its verification and its rollback boundary
+  (confirm-18 · add `status` dual-read · migrate 27 rows · drop the `kind`
+  fallback + the missing direct test · delete `kind` · off-spine enum re-case ·
+  off-spine field rename + the CMP split · the SN schema census · RESYNC_PACK +
+  goldens). §5B = what waits for **D-9 steps 7–8, POST-sign AND POST-seed**:
+  `Modified` retires, the UNANCHORED rule arms, the spine's `Founded` is
+  computed. **Nothing in the plan describes step 7 as done or runnable now**,
+  and the 18 rows written `Modified` at §5A step 3 are cleared by the SIGNING,
+  not by step 7 — whose own precondition is *"step 6 clears the last
+  `Modified`"*. Steps 6 and 7 each carry the same verification, available only
+  because §0 finding (c) holds: all 138 off-spine rows sit in their
+  vocabulary's first state, so **the `derive_gate` basis line must be
+  byte-identical before and after** — no cell changes meaning, only its
+  spelling. Alternatives passed over: deferring the off-spine half past the
+  sitting (declined by the ruling); renaming CMP's two colliding words instead
+  of splitting the field (§3.3); folding `open-items` in unruled (§3.4);
+  collapsing `CMP_MATURITY` into `SPINE_MATURITY` (recommended AGAINST — the
+  tables diverge again at D-9 step 7 when `Modified` leaves the spine's).
+  **NO REGISTRY CELL MOVED THIS SESSION** — plan + desk + log + status only.
+  Surfaces: the unification plan re-derived whole; sitting-3 §0.4 item 6 and
+  its SCOREBOARD (open list now empty; item 6 EXECUTING, the pre-brief pair
+  `SR-140` split · `SR-173` wording the only work owed alongside);
+  `status.md`'s live-calls sentence. Commit-bar smoke: **1195 passed / 7
+  skipped**, 34.8 s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=f1d9c57c -->;
+  `check_docs --root . --stale` **OK — 898 docs, 1306 links, 0 broken**
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/check_docs.py --root . --stale" rev=f1d9c57c -->.
 - **2026-08-17s — sitting-3 §0.4 item 19 RULED AND EXECUTED: an SR acceptance
   cell states the behavioral fit criterion, naming neither concrete artifacts
   nor the row's own decomposition chain.** The owner's ruling, verbatim: *"can
