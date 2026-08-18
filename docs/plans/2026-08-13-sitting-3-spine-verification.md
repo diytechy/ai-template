@@ -272,15 +272,18 @@ page; the linked homes hold the full evidence for the ones you want to go
 deeper on. A recommendation is a starting position, never a ruling taken in
 advance.
 
-> **SCOREBOARD — re-stamped `2026-08-17r`, the current truth of this list.**
+> **SCOREBOARD — re-stamped `2026-08-17s`, the current truth of this list.**
 > OPEN: **item 6** (two sub-calls: run the SN migration before signing?
-> and the off-spine vocabulary half) · **item 19** (acceptance-cell
-> artifacts — the 39-row population is measured inline). Plus the two
+> and the off-spine vocabulary half) — the last open call. Plus the two
 > **work items in the block above** (`SR-140` split · `SR-173` wording).
 > Everything else is struck, ruled, or countersign-only: items 1 · 1a · 3 ·
-> 7 · 8 · 15 · 16 · 17 · 20 and the Sol rows 9–14; item 18's owner-cell
+> 7 · 8 · 15 · 16 · 17 · 19 · 20 and the Sol rows 9–14; item 18's owner-cell
 > half executed on investigation `2026-08-17p`, its pins half executed
-> `2026-08-17r` (five mutation-proved tests on `TC-168`/`169`/`170`).
+> `2026-08-17r` (five mutation-proved tests on `TC-168`/`169`/`170`); item
+> 19 ruled and executed `2026-08-17s` (the behavioral fit-criterion form —
+> 50 acceptance cells re-worded, `SR-150` flagged as the one Approved
+> holdout, ledger at
+> [`2026-08-17-acceptance-form-ledger.md`](2026-08-17-acceptance-form-ledger.md)).
 > **On the numbering:** item numbers are STABLE IDS — log entries cite
 > them — so closed items keep their numbers and are struck, never removed
 > or renumbered. Gaps (no 2, 4, 5) are items closed and removed in desk
@@ -670,10 +673,29 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     tension that PRE-DATES this stack (minted at `4cf98e4f`) and rides the
     signing window like any other row-text question.
 
-19. **The acceptance-cell / current-carrier question** — promoted to a
-    numbered item at the `2026-08-17` desk reconciliation (log `2026-08-17l`;
-    until then it lived only in the "Four things to have open" table above
-    and status.md's list, which is how open calls get lost). The standards
+19. ~~**The acceptance-cell / current-carrier question**~~ — **RULED AND
+    EXECUTED `2026-08-17s`, with a THIRD form superseding both options
+    below.** The owner, verbatim: *"can you formulate the acceptance
+    criteria in terms of the exact boundaries, pass/fail conditions, and
+    edge cases for when the work is finished with respect to the behavior
+    the system requirement asks for?"* — and, recalling `SR-052/053/054`:
+    acceptance-as-chain-closure is not the wanted form either. So: an SR
+    acceptance cell states the **behavioral fit criterion**, naming neither
+    concrete artifacts nor the row's own decomposition chain; artifact
+    bindings live at the design/trace tier (LLR `module`/`detail`, TC
+    `evidence`); chain-completeness is the `Founded` state's claim
+    (`2026-08-17m`). Executed under the WI-444 token-verification bar: the
+    population re-derived at **40 of 70** (the +1 over the table below is
+    `SR-112`), 50 cells re-worded, every stripped token's trace-tier home
+    verified first and 8 LLR details + 2 rationale lines re-homed in the
+    same commit; `SR-150` (`Approved`, outside the window) is the one
+    flagged holdout for the sitting's own re-attestation act. Per-row
+    ledger:
+    [`2026-08-17-acceptance-form-ledger.md`](2026-08-17-acceptance-form-ledger.md);
+    log `2026-08-17s`.
+
+    *(The question as it stood, kept for the record — the two options both
+    superseded by the ruling above.)* The standards
     memo ([`2026-08-16-tiering-research-memo.md`](2026-08-16-tiering-research-memo.md)
     §1/§3, owner-approved `2026-08-16j`) leaves ONE live question from the
     R2 rewording: requirement cells no longer name concrete artifacts, but
@@ -687,11 +709,11 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     re-touches — and re-attests — every one of those rows a third time.
     **Recommendation (the memo's, on record):** ride THIS sitting.
 
-    **The population, measured at the desk (`2026-08-17o`; re-run the scan
-    at the sitting — filename/path tokens in SR `acceptance_criteria`
-    cells):** **39 of 70 SRs** name a concrete artifact; **34 cells** use
-    the literal "current carrier" idiom. The rows the ruling re-touches,
-    with what each names:
+    **The population, measured at the desk (`2026-08-17o`; superseded by
+    the executed ledger above — filename/path tokens in SR
+    `acceptance_criteria` cells):** **39 of 70 SRs** name a concrete
+    artifact; **34 cells** use the literal "current carrier" idiom. The
+    rows the ruling re-touches, with what each names:
 
     | SRs | artifacts named in acceptance |
     |---|---|

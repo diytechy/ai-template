@@ -26,12 +26,17 @@ narrated is in those homes.
   ex-`Planned` rows no brief lists** (`2026-08-15m`), rule the open calls,
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
 - **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
-  `2026-08-17n` and `2026-08-17r`; the live list is sitting-3 §0.4 items
-  6 · 19, each stated there with its evidence:** the **one shared status
-  vocabulary + the SN schema census** (item 6; step 7 added `2026-08-17k`)
-  and the **acceptance-cell question** (item 19 — current-carrier filenames
-  down to the trace tier or registry-id anchors; ruling it later re-touches
-  every reworded row). Item 18 is now countersign-only in BOTH halves: the
+  `2026-08-17n`, `2026-08-17r` and `2026-08-17s`; the live list is sitting-3
+  §0.4 item 6 alone, stated there with its evidence:** the **one shared status
+  vocabulary + the SN schema census** (item 6; step 7 added `2026-08-17k`).
+  Item 19 is RULED AND EXECUTED `2026-08-17s` — the owner's behavioral
+  fit-criterion form (boundaries, pass/fail, edge cases; neither artifact
+  names nor chain-closure in acceptance): 50 SR acceptance cells re-worded
+  with every stripped binding verified or re-homed at the design tier,
+  `SR-150` flagged as the one `Approved` holdout for the sitting's own
+  re-attestation act, ledger at
+  [plans/2026-08-17-acceptance-form-ledger.md](plans/2026-08-17-acceptance-form-ledger.md).
+  Item 18 is now countersign-only in BOTH halves: the
   five contested `owner` cells EXECUTED on investigation `2026-08-17p` (one
   flagged residue: no SR states the CodeSymbol-anchor obligation IF-117
   serves), the `TC-168`/`169`/`170` pins EXECUTED `2026-08-17r` (five

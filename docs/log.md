@@ -36,6 +36,43 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17s — sitting-3 §0.4 item 19 RULED AND EXECUTED: an SR acceptance
+  cell states the behavioral fit criterion, naming neither concrete artifacts
+  nor the row's own decomposition chain.** The owner's ruling, verbatim: *"can
+  you formulate the acceptance criteria in terms of the exact boundaries,
+  pass/fail conditions, and edge cases for when the work is finished with
+  respect to the behavior the system requirement asks for?"* — and, recalling
+  `SR-052/053/054`: acceptance-as-chain-closure is also not the wanted form. A
+  THIRD form, superseding both options item 19 had on the table (trace-tier
+  move vs registry-id anchors): artifact bindings live at the design/trace
+  tier (LLR `module`/`detail`, TC `evidence`); chain-completeness is the
+  `Founded` state's claim (`2026-08-17m`), never an acceptance criterion.
+  Executed as the largest text pass since the re-tier, under the WI-444
+  token-verification bar: population re-derived at the desk — **40 of 70 SRs**
+  named a concrete artifact in acceptance (the item-19 table said 39; the +1
+  is `SR-112`, whose `project-trajectory/skills/` trailer path the desk scan
+  missed), 33 cells on the literal "current carrier" idiom, 3 on the
+  chain-closure opener. **50 cells edited**: 39 of the 40 artifact-stripped
+  and re-voiced (boundaries, pass/fail directions and edges kept or
+  strengthened — e.g. `SR-006`'s three named still-running steps widened to
+  "every non-freshness step"), 3 chain-closure cells (`SR-052/053/054`)
+  replaced by full behavioral fit criteria built from their own clause lists,
+  8 re-worded for form with no path token (`SR-018/019/031/113/160/175/176/
+  177`); **1 flagged, not edited** — `SR-150` is `Approved`, outside the open
+  window, so its re-word is the sitting's to take with the re-attestation.
+  Every stripped token's trace-tier home verified per token BEFORE the strip;
+  where the acceptance cell was the only home the binding MOVED in the same
+  commit (re-home first, then drop — the WI-469 lesson): 8 LLR `detail` cells
+  (`LLR-012/014/035/038/044/067/136/156`) + 2 `rationale` lines (`SR-129`'s
+  stale to-acceptance pointer corrected; `SR-151`'s carriers recorded on-row
+  because it has no LLR/TC yet, to retire at decomposition). One divergence
+  surfaced, flagged not ruled: `SR-040`'s old cell named
+  `AGENT_STATUS_WARN_BYTES`, which occurs nowhere in code or tests
+  (`status_size_warning` retired with the serial driver, WI-210) — a phantom
+  carrier the form pass removed, with the tripwire-obligation question left
+  for the sitting. All row `status` values unchanged; the window stays the
+  sitting's to close. Per-row ledger (old hash + new text + disposition):
+  [`plans/2026-08-17-acceptance-form-ledger.md`](plans/2026-08-17-acceptance-form-ledger.md).
 - **2026-08-17r — sitting-3 §0.4 item 18's PINS half EXECUTED (owner
   directive 2026-08-17): five new tests make the three draft TCs' claimed
   behaviors falsifiable, every pin mutation-proved before it was claimed; no
