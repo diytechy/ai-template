@@ -641,6 +641,39 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     re-touches — and re-attests — every one of those rows a third time.
     **Recommendation (the memo's, on record):** ride THIS sitting.
 
+    **The population, measured at the desk (`2026-08-17o`; re-run the scan
+    at the sitting — filename/path tokens in SR `acceptance_criteria`
+    cells):** **39 of 70 SRs** name a concrete artifact; **34 cells** use
+    the literal "current carrier" idiom. The rows the ruling re-touches,
+    with what each names:
+
+    | SRs | artifacts named in acceptance |
+    |---|---|
+    | SR-006/007 | `check.py`; + `docs/stack.ini` |
+    | SR-009/010/011 | `bootstrap.py` |
+    | SR-022 · SR-024 · SR-033 | `check_vendored.py` · `gen_cases.py` · `gen_release_checklist.py` |
+    | SR-026/027/028 | `agent_loop.py` |
+    | SR-034 · SR-035 | `docs/dependencies.md` · `trace.py` |
+    | SR-036 · SR-111 | `ADOPTING.md`, `docs/kit-version`; + `bootstrap.py` |
+    | SR-040 · SR-043 | `docs/process.toml`, `status.md`; + `docs/subagent-gate` |
+    | SR-046 | `docs/stack.ini`, `scripts/run_menu.py` |
+    | SR-049 | `derive_gate.py`, `docs/gate` |
+    | SR-070 | `gen_arch_map.py`, `gen_okf.py`, `gen_trajectory.py` |
+    | SR-129 | `docs/work/` (+ the retired `work-items.csv` as history) |
+    | SR-137/138 | `docs/process.toml`; + `bootstrap.py` |
+    | SR-147 · SR-149 · SR-150 | `migrate_carrier.py` · `check_vocab.py` · `check_need_form.py` |
+    | SR-151 | `docs/stack.ini`, `tests/test_ci_tier_declaration.py` |
+    | SR-154 | `docs/agents-enabled`, `docs/agents.toml` |
+    | SR-156 | `agent_common.py`, `integrate.py`, `lane.py` |
+    | SR-157 | `trace.py`, `trace_text.py`, `check_trajectory.py`, `docs/process.toml` |
+    | SR-158 | `check.py` + four checker modules, `docs/declared-absences`, `docs/orphans-allow`, `docs/stack.ini` |
+    | SR-159 | `check_trajectory.py`, `gen_arch_map.py`, `trace.py`, `docs/architecture.md`, `docs/process.toml` |
+    | SR-166 | `tests/test_bootstrap.py`, `tests/test_dogfood_sync.py` |
+    | SR-167 | `check_perf.py`, `docs/test/perf-baseline.json`/`perf-metrics.json`, `tests/test_check_perf.py` |
+    | SR-168/169 | `PROJECT_STATE.html`, `gen_trajectory.py` |
+    | SR-170 · SR-173 | `trunk_step.py`; + `check.py` |
+    | SR-174 | `intake.py`, `integrate.py` |
+
 20. ~~**The `SR-144` flip**~~ — **CLOSED BY SUPERSESSION; nothing to rule.**
     Recorded so it stops circulating: the `2026-08-16h` flag was that
     `SR-144` sat `Approved` while the M4 correction had flipped its child
