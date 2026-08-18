@@ -146,9 +146,9 @@ verifies = ["SR-006", "SR-167", "LLR-014"]
 level = "Integration"
 method = "Run the check-perf suite; a within-tolerance metric passes and a regression fails."
 tier = "Full"
-expected = "Satisfies the acceptance folded into LLR-014, under both its parents: SR-167's perf-budget breach verdict (the absolute and regression arms this case drives) and SR-006's harness step plan that runs it"
+expected = "Satisfies the acceptance folded into LLR-014, under both its parents: SR-167's perf-budget breach verdict (the absolute and regression arms this case drives) and SR-006's harness step plan that runs it, including the bar the step is wired at"
 automated = "Yes"
-evidence = "tests/test_check_perf.py"
+evidence = "tests/test_check_perf.py; tests/test_check_perf.py::test_harness_runs_perf_at_g3"
 status = "Modified"
 phase = 1
 

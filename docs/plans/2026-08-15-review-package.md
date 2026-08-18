@@ -12,7 +12,15 @@ all still yours.
 
 ---
 
-## 1. What landed (the range `bb4ac776..HEAD` on `infra/mechanized-loop`)
+## 1. What landed (the range `bb4ac776..3d91e8d2` on `infra/mechanized-loop`)
+
+> **BOTH ENDS PINNED** (2026-08-17 desk round, F19). This section read
+> `bb4ac776..HEAD`, which in a frozen package is false by construction the
+> moment anything lands — 17 commits had accumulated past it. `3d91e8d2` is
+> the commit whose act the last row below records (`2026-08-15n`), and it is
+> the one that wrote this table; the four later touches of this file amend
+> other sections and add no row here. The counts in §0 are of that revision
+> too — re-derive before relying on them.
 
 | act | log entry | state |
 |---|---|---|

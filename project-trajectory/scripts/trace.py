@@ -936,6 +936,10 @@ def render_watermark(marks, basis=""):
         "# A mark only ever RISES. Lowering one is refused by trace.py's integrity",
         "# pass, which also refuses a live id above its mark and a missing space.",
         "#",
+        "# SCOPE: a mark covers the id space AS CURRENTLY NUMBERED. If a space was",
+        "# ever renumbered, ids from the superseded numbering are NOT covered and",
+        "# may be re-pointed by a mint — record those at the registry instead.",
+        "#",
     ]
     if basis:
         head.append("# basis: {}".format(basis))
@@ -2208,7 +2212,19 @@ def sr_chain_drifts(sid, chain, snapshot):
     8). This drift arm catches the UNMARKED case — a child amended while still
     claiming approval. A `Modified` child under an unflagged SR is the MARKED
     case, a legitimate cell-level state; it rides no brief section until it is
-    signed or step 7 retires the word and leaves drift as the one detector."""
+    signed or step 7 retires the word and leaves drift as the one detector.
+
+    THE ORPHANED CHILD IS NOT THIS ARM'S GAP, though it reads like one. When
+    `modified_chain_advisories` was retired at that ruling it also took its
+    "no resolvable owning SR" arm, and this docstring's "never counts as
+    drifted" concession made that look like a class left undetected. Measured
+    on a planted tree (2026-08-17 desk round, F12): the ORPHAN rules already
+    report every sub-case, and report it HARDER than the retired advisory did —
+    an unknown parent id is "LLR-### references unknown SR-###", an absent one
+    is "LLR-### has no SR parent", the TC arm is the same pair on `Verifies`,
+    and an explicitly EMPTY ref cell is refused outright by the carrier. Those
+    are orphan findings, so they GATE under `--strict`, where the retired arm
+    only warned. No successor detector is owed here."""
     return any(
         baseline_snapshot.is_drifted(
             rel, id_col, row, baseline_snapshot.rows_for(snapshot, rel, id_col)

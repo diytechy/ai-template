@@ -206,21 +206,21 @@ deliberately does not exist yet.)*
 | the **alignment map**, including **§4** | [`2026-08-16-derivation-alignment.md`](2026-08-16-derivation-alignment.md) | the blind re-derivation's output (`2026-08-16j`) and its hat-aware extension (`2026-08-16k`): matched / orphaned-in-legacy / orphaned-in-fresh, the ranked top-10, and §4.4's revised ranking after the hat pass. **A validation instrument only — it moved no registry cell**; every orphan is a finding for you |
 | the **v2 cursor** | [`2026-08-15-retier-v2-one-decision-tiering.md`](2026-08-15-retier-v2-one-decision-tiering.md) §0 | the six slices, each with its closing log id, reading **"DONE except the sitting"** |
 
-**STATE AT THE DESK — measured `2026-08-16r`, RE-DERIVE AT CONVENING.** A
+**STATE AT THE DESK — re-measured `2026-08-17w`, RE-DERIVE AT CONVENING.** A
 snapshot with its command attached, not an authority: this document's
 §0.1/§0.2/§2.1 tables went stale in a day once and the banner at the top says
 so. Re-run the command; if it disagrees, it wins.
 
 | what | measured | note |
 |---|---|---|
-| spine | `SN=27 SR=63 LLR=155 TC=150` · `orphans=0 integrity=0` | the shape you are signing |
-| pending signature | **147 `Modified` + 52 `Drafted`** (SR 40/19 · LLR 83/17 · TC 24/16) | every row awaits a **first** approval |
+| spine | `SN=27 SR=70 LLR=159 TC=155` · `orphans=0 integrity=0` | the shape you are signing |
+| pending signature | **147 `Modified` + 68 `Drafted`** (SR 40/26 · LLR 83/21 · TC 24/21) | every row awaits a **first** approval |
 | derived bar | `DevBar-Reqs`, stage `DevStg-Boundary` (1 of 8) | unchanged across the whole program |
 | baseline | **`docs/archive/last_approved/` does not exist** | the brief renders full text, not diffs — you read cold, and signing is what seeds it |
 | **frame** | **4 entities · 4 crossings · 3 relationships** | `EXT-004`/`B-06`/`B-07` **CUT** `2026-08-16q`; ids SPENT |
 | off-spine | 123 IF · 4 CMP · 11 frame rows · 22 OI | IF rows are **all `drafted`** — that approval path has never been exercised |
 | gating reds | `traceability`, `trajectory` | see below — **only one clears by signing** |
-<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=e2ec44c1 -->
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . && cat docs/gate" rev=f5267991 -->
 
 **The two gating reds, and which one signing fixes:**
 

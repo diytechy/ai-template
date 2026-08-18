@@ -27,7 +27,8 @@ narrated is in those homes.
   **sign**, **seed the snapshot in the same reviewed commit**, then step 7 arms.
 - **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
   `2026-08-17n`, `2026-08-17r`, `2026-08-17s`, `2026-08-17t` and
-  `2026-08-17u`; the live list is EMPTY and item 6 has now LANDED.** Item 6,
+  `2026-08-17u`; the list was EMPTY after item 6 LANDED, and the
+  `2026-08-17w` disposition pass ADDED EXACTLY ONE back — see below.** Item 6,
   the last open call, was **RULED IN BOTH SUB-CALLS `2026-08-17t`** and is
   **EXECUTED `2026-08-17u`**: every attested registry now takes **one enum**
   (`Drafted`·`Approved`·`Founded` *when applicable*) and **one field name**
@@ -55,7 +56,14 @@ narrated is in those homes.
   15/16 are RULED `2026-08-17m` (the cell attestation reading; the
   `{Drafted, Approved, Founded}` step-7 target restated — item 16 was never
   open) and item 17 is RULED `2026-08-17n` (`B`/`EXT`/`REL` are watermark
-  spaces; marks at the ever-allocated highs). Two work items owed
+  spaces; marks at the ever-allocated highs) — **but those marks were
+  MIS-SEEDED and the correction is an OPEN CALL** (`2026-08-17w`, round
+  F9/F10): `B-08`/`REL-004` were allocated and cut 2026-08-13, the seeding
+  probe could not see them (`git log -S` over a file created 2026-08-14), and
+  raising the marks by hand is REFUSED by `trace.py`'s own integrity rule now
+  that both spaces carry a committed mark. The owner rules the MECHANISM for
+  correcting a mis-computed seed; interim protection is a SPENT IDS block in
+  `external.toml`'s header. Two work items owed
   BEFORE the brief regenerates are listed just above §0.4's open calls:
   the `SR-140` split, the `SR-173` wording.
   The **LLR/TC draft ratifications** ride the same sequence (`2026-08-14e`).

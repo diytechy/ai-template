@@ -797,11 +797,11 @@ charter includes one codename check: a **session-local codename in a durable
 cell** — a `work-items.csv`/SR/LLR/TC row or a `docs/specs/` file, as opposed to
 a `log.md` entry — is filed as a finding (the codename-discipline rule stated
 under "Trajectory / work-items"). The charter also files a knowledge pack that
-restates a registry fact instead of linking its id. Related tripwire: the
-coordinator warns (never blocks) when a lane's `status.md` outgrows one screen
-(`AGENT_STATUS_WARN_BYTES`, default 8192, `0` silences) — every session
-inherits that resume surface, so pruning it is the integrator's charter,
-with evidence living in `log.md` and the iteration logs.
+restates a registry fact instead of linking its id. Related: every session inherits
+the lane's `status.md` as its resume surface, so pruning it is the integrator's
+charter, with evidence living in `log.md` and the iteration logs. (The
+coordinator's size tripwire on that file retired with the serial driver,
+WI-210; no env dial replaces it.)
 
 **Heterogeneous scheduling — model routing, reviewer dispatch, and the
 escalation policy (`docs/agents.toml` + `docs/agents-enabled`; WI-059).** The
