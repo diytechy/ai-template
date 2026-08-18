@@ -30,7 +30,7 @@ lives in [`requirements/`](requirements/) + [`test/`](test/).
   `integrate.py` + `handback.py` + `intake.py`, over `schedule.py`'s frontier)
   — the only subsystem here that is a *running* thing rather than a command:
   one dispatch loop per checkout drives N lanes from the WI frontier to trunk
-  (SR-026/SR-057/SR-132). Flow 4 renders it; it is the piece most often
+  (SR-026/LLR-058/LLR-140). Flow 4 renders it; it is the piece most often
   misread from the rows alone.
 
 ## Runtime flows

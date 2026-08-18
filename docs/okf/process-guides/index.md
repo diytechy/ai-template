@@ -12,5 +12,5 @@ resource: "generated"
 | id | summary |
 |---|---|
 | [agents](agents.md) | AGENTS.md |
-| [architecture](architecture.md) | Architecture — the kit meta-repo (self-adoption) |
+| [runtime-flows](runtime-flows.md) | Runtime flows — the kit meta-repo (self-adoption) |
 | [status](status.md) | Meta-Repo Status — Blackboard |

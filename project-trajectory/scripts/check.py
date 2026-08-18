@@ -1747,7 +1747,7 @@ def main():
     args = ap.parse_args()
     global _FORCE_TRUNK_LANE
     _FORCE_TRUNK_LANE = args.trunk_lane
-    # check.py resolves docs/gate, docs/stack.ini, and docs/architecture.md
+    # check.py resolves docs/gate and docs/stack.ini
     # relative to the CWD (unlike the sibling scripts, which take --root). Run it
     # anywhere but the repo root and it would silently see no profile and no gate
     # — falling back to the built-in commands and gate `all`, i.e. a different,

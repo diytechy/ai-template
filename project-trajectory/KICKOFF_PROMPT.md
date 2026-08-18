@@ -73,8 +73,10 @@ inside it, which lays down everything below; otherwise copy + rename by hand.
 - `docs/requirements/low-level-requirements.toml` — **LLR-###** ↔ code
   (Software Engineer owns).
 - `docs/test/test-cases.toml` — **TC-###** ↔ requirements (Test Engineer owns).
-- `docs/architecture.md` — one-page overview + a **generated** module/function
-  map (derived from the source AST into `PROJECT_STATE.html`'s How-SW tab).
+- `docs/runtime-flows.md` — the **authored** Runtime flows (Mermaid sequence
+  diagrams citing SR/LLR ids). The structural architecture is not authored: the
+  module/function map, import graph and seams derive from the source AST and
+  the registries into `PROJECT_STATE.html`'s How-SW tab.
 - `docs/interfaces.md` + `docs/requirements/interfaces.toml` — **IF-###**
   cross-project contracts (copy `INTERFACES.template.md` + the registry).
   **If this project interlinks with another repo or has module-to-module seams**

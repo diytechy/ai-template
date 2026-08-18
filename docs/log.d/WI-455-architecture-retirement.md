@@ -30,10 +30,11 @@ context view left as the recorded remainder (the lane stays open).
    `[generated]` rows), `[arch-map] mode` re-purposed as the AST-inventory
    dormancy dial, `check_doc_refs --arch` retired, `gen_arch_map --doc` now
    required (opt-in agent-file routing only). `RESYNC_PACK.md` carries the
-   `[since b80a7816]` migration entry. **Verified by driving a real
+   `[since c7adf7dc]` migration entry (anchored at the LANDED sha; `b80a7816` was the pre-rebase one). **Verified by driving a real
    scaffold**: bootstrap → no `docs/architecture.md`, `docs/runtime-flows.md`
-   present, `check_flows` OK, `check.py --gate DevBar-Reqs` PASS, the hook's
-   batched floor PASS.
+   present, `check_flows` OK, `check.py --gate DevStg-Reqs` PASS, the hook's
+   batched floor PASS. (Re-driven at the 2026-08-18 landing on the rebased
+   branch — same result, now under the `DevStg-*` one-vocabulary spelling.)
 4. **The deletion + records**: six referrer links repaired mechanically (the
    `659f9b84` precedent — targets move, record text does not);
    `docs/declared-absences` gains the retired path with its reason (closed-WI
@@ -94,3 +95,66 @@ two pre-existing shared-specref WARNs)
 <!-- fig: cmd="python project-trajectory/scripts/check_trajectory.py --root . --strict" rev=7001818f -->
 `check_docs --stale` 0 broken links; `check_doc_refs` at its 30-dangling
 pre-program baseline; a real scaffold bootstrapped and green end to end.
+
+---
+
+## 2026-08-18 — LANDED: rebased onto the EARS/vocabulary trunk
+
+The five program commits above plus this fragment were authored 2026-08-14 and
+never merged. They are **rebased onto `ff03d323`** (the
+`requirements/ears-and-quality-characteristics` tip) as
+`c7adf7dc` -> `42a40660` -> `f3f60a60` -> `5f4c5274` -> `ad6aeb97` -> tip; the
+pre-rebase shas are dead. ~22 conflicts, resolved on ONE rule: **keep HEAD's
+newer vocabulary and re-tiered spine, apply WI-455's retirement.** The three
+dispositions that were more than a re-spelling:
+
+- **The flows themselves are HEAD's, not the branch's.** The branch's
+  `runtime-flows.md` carried a 2026-08-14 copy citing `SR-029/030/060/057/093/
+  115/131/132` — ids the **WI-451 re-tier deleted**. Keeping it would have
+  shipped a flows doc that `check_flows` refuses. The moved section is
+  therefore taken from HEAD's `docs/architecture.md` at `ff03d323`, whose
+  citations the re-tier had already re-pointed onto the carrying LLRs. The MOVE
+  is the branch's; the TEXT is trunk's.
+- **`IF-123`/`IF-124` renumbered to `IF-131`/`IF-132`.** The branch minted the
+  two `scan_inventory` seams at 123/124; trunk had since minted 123–130 for the
+  baseline-snapshot family. Same crossings, new numbers, ported onto the
+  interface schema trunk now carries (`req_refs`/`owner`/`status`, not
+  `sr_refs`/`approval`). Watermark raised IF 130 -> 132.
+- **`Shape of the product` still cited two deleted ids.** Moving it into the
+  doc `check_flows` scans is what exposed it: the section cited `SR-057`/
+  `SR-132`, deleted by the re-tier, and was never swept because it sat OUTSIDE
+  the scanned section in its old home. Re-pointed onto `LLR-058`/`LLR-140`,
+  matching the re-pointing Flow 4 already carried.
+
+Three HEAD-side tests (`test_trunk_step.py`, SR-173, added 2026-08-17) pinned
+the regen contract THROUGH the `arch-map` step this WI retires. Their intent is
+live, so they are **ported, not deleted**: the dependency-order list drops
+`arch-map`, and the two no-partial-commit pins move onto `okf` as the green
+producer with the failure planted at `derived-gate`'s output path — `okf` is
+step 1 now and reads every registry, so a malformed-registry failure can no
+longer land *after* a green step. Contract asserted is unchanged.
+
+`traj_views.FLOWS_STYLE` (the new How-SW flows panel) shipped literal
+`border-radius:8px`/`font-size:12px`, which trunk's U1/U3 design-token tests
+refuse; re-pointed onto `var(--r-ctl)`/`var(--tiny)` (12px is `--tiny` exactly,
+so the render is byte-equivalent in size). Dead `ARCH_MD` constant deleted with
+the file it named.
+
+**Bars at landing:** full unfiltered suite **2568 passed, 11 skipped**
+<!-- fig: cmd="python -m pytest -q -n auto" rev=PENDING -->
+`check_flows` OK (4 diagrams, 40 ids, all known); `check_vocab --strict` clean;
+a real scaffold bootstrapped green (`check.py --gate DevStg-Reqs` PASS, no
+`docs/architecture.md`, `docs/runtime-flows.md` present).
+
+**Byte deltas at landing** (against the `ff03d323` baselines this branch
+carries): AGENTS.template.md 9,994 -> 9,953 (47 headroom under 10,000);
+PROCESS.md 81,763 -> 81,649 (-114, re-pointing shrank it; baseline re-stamped);
+PROCESS_OPTIONS.md 172,037 -> 172,036 (-1; baseline re-stamped).
+
+**Merge-time reconciliation owed:** `CLAUDE.md` and `PROCESS.md` have
+uncommitted edits in the main working tree (a CLAUDE.md diet and a PROCESS.md
+prose pass) that this branch could not see; the byte baselines above are stamped
+against `ff03d323`, so whichever lands second re-measures. The lane also still
+owes the honest remainder recorded above (the D-3/D-4 `direction`/`counterpart`
+shed and the `external.toml` context view).
+

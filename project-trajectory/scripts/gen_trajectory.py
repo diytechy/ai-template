@@ -17,9 +17,11 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
      (topological rank -> crossing-reduced ordering -> coordinates -> SVG),
      done/active/queued shading, hover/click detail. **No CDN / no JS layout
      library** — the kit's offline-render principle (Thread 52 ruling A).
-  3. **How (SW)** — the module map parsed from `docs/architecture.md`'s
-     generated block (a view of the committed code-map artifact; omitted when
-     there is no symbol inventory, e.g. files-mode).
+  3. **How (SW)** — the module map scanned LIVE from the source tree under
+     `[paths] src` (`gen_arch_map.scan_inventory`; WI-455 retired the committed
+     `docs/architecture.md` way-station), plus the authored Runtime flows
+     embedded from `docs/runtime-flows.md`; omitted when there is no symbol
+     inventory, e.g. files-mode.
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
      per the AXES ratification); omitted otherwise.

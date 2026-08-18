@@ -181,7 +181,6 @@ TC_CSV = "docs/test/test-cases.toml"
 IF_CSV = "docs/requirements/interfaces.toml"
 LLR_CSV = "docs/requirements/low-level-requirements.toml"
 CMP_CSV = "docs/requirements/components.toml"
-ARCH_MD = "docs/architecture.md"
 SPECS_DIR = "docs/specs"
 # Where R-F sends a spec at close ("close date appended, WI ids noted"), so the
 # WI-352 reconciler can still find a terminal WI's spec after its SpecRef clears.

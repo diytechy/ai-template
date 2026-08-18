@@ -1080,8 +1080,8 @@ FLOWS_STYLE = (
     "<style>#sw .flow{margin:.4rem 0;}"
     "#sw .flow>summary{cursor:pointer;font-weight:600;}"
     "#sw .flow pre{overflow-x:auto;background:var(--surface);"
-    "border:1px solid var(--border);border-radius:8px;padding:.6rem;"
-    "font-size:12px;line-height:1.35;}</style>"
+    "border:1px solid var(--border);border-radius:var(--r-ctl);padding:.6rem;"
+    "font-size:var(--tiny);line-height:1.35;}</style>"
 )
 
 
