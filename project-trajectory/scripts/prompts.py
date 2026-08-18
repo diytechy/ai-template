@@ -42,7 +42,7 @@ where `scripts/` sits at the root — it is `<repo>/prompts/`, which
 therefore still resolves the shipped template.
 
 Contracts: IF-097 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.csv).
+of record in docs/requirements/interfaces.toml).
 """
 
 from __future__ import annotations

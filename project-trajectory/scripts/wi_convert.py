@@ -71,7 +71,7 @@ Small CLI/console helpers below are duplicated from the sibling scripts per the
 kit's independently-copyable-script convention (the F5 rule) — this module stays
 a self-contained drop-in, never importing a shared kit module.
 
-Contracts: IF-079 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-079 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse
@@ -614,6 +614,12 @@ def read_specs(work_dir):
         raise ConvertError("{}: no such work directory".format(work_dir))
     parsed = []
     for path in sorted(work_dir.rglob("*.md")):
+        if path.parent == work_dir:
+            # Status is the directory, so a file at the folder root (the
+            # registry's own README) is not a row — same exclusion spec_files()
+            # applies. Inside a status directory, strictness stands: every *.md
+            # there must parse as a spec.
+            continue
         relpath = path.relative_to(work_dir).as_posix()
         row, order = parse_spec(
             path.open(encoding="utf-8", newline="").read(), relpath, where=str(path)

@@ -73,7 +73,7 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 Scan surface = root *.md + docs/**/*.md (the check_docs surface) + the spine
 registries' Evidence-class cells (tier 3). Stdlib only.
 
-Contracts: IF-008, IF-028, IF-072, IF-104, IF-117 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-008, IF-028, IF-072, IF-104, IF-117 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

@@ -66,7 +66,7 @@ ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
 policy picks, nothing auto-optimizes.
 
-Contracts: IF-044, IF-045, IF-119 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-044, IF-045, IF-119 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

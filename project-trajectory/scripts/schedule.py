@@ -57,7 +57,7 @@ independently-copyable-script convention (the F5 rule): schedule.py stays a
 self-contained drop-in, never importing the sibling engines.
 
 Contracts: IF-053, IF-054 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.csv).
+§8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

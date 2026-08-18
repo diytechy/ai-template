@@ -33,7 +33,7 @@ Design choices that keep it honest and CI-friendly:
       traceability + a runnable harness; DevStg-Impl needs the full suite). Default runs all.
     - **Tiered tests.** `--tier smoke` runs only the fast subset so you can check
       every iteration; `release` runs everything including slow/hardware tests.
-      Tiers map to pytest markers (`-m`); the `Tier` column in test-cases.csv is
+      Tiers map to pytest markers (`-m`); the `Tier` field in test-cases.toml is
       the registry source of truth. An **unmarked test runs in `full` and above**,
       so a forgotten marker can never drop a test from the pre-merge suite. The
       coverage threshold applies at `full`/`release` only — the smoke subset alone
@@ -99,7 +99,7 @@ exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
 
-Contracts: IF-013, IF-022, IF-040 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-013, IF-022, IF-040 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

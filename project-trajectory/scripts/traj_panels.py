@@ -11,7 +11,7 @@ derives its stage vocabulary from the modules that ship the flow, instead of
 restating it as literals that drift (the 2026-08-01 diagram review's ruling —
 the dashboard must never be pinned to itself).
 
-Contracts: IF-093, IF-094 — the constants-only Consumes seams on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.csv.
+Contracts: IF-093, IF-094 — the constants-only Consumes seams on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.toml.
 """
 
 import html
@@ -447,7 +447,7 @@ def _know_panel(root, svg, details):
 # The method reference view: the dashboard's other tabs show project *state*;
 # this one shows the *process* the state moves through. Data-derived where a
 # canonical source exists — the current gate from docs/gate, tier counts from
-# the spine registries, work-item counts from work-items.csv — and linking out to
+# the spine registries, work-item counts from the docs/work/ registry — and linking out to
 # the process docs everywhere a canonical home exists. The in-view restatement
 # is limited to the relationships no single doc states as one picture (the
 # lifecycle x gates ordering, the station cycle, the slice -> phase -> gate-bar
@@ -919,7 +919,7 @@ def process_panel(root, wis, stats):
             )
         )
 
-    # Panel 3 — the slice -> phase -> gate cadence (work-items.csv is canonical).
+    # Panel 3 — the slice -> phase -> gate cadence (the docs/work/ registry is canonical).
     wi_done = sum(1 for w in wis if w["status"] == "done")
     bars = [
         ("per-WI slice", "one scoped work item; ends at the commit bar"),
@@ -1012,7 +1012,7 @@ def process_panel(root, wis, stats):
         "<em>state</em>; this one shows the <strong>process</strong> the state "
         "moves through. Data-derived where a canonical source exists "
         "(<code>docs/gate</code>, the spine registries, "
-        "<code>work-items.csv</code>). A view — the process docs are the source "
+        "<code>docs/work/</code>). A view — the process docs are the source "
         "of truth.</p>\n" + style + "\n"
         '<p class="gnow">Next stage to clear: <b>' + esc(gate) + "</b> — derived "
         "as the min over the artifact states and cached to <code>docs/gate</code> "
@@ -1046,7 +1046,7 @@ def process_panel(root, wis, stats):
         + '">'
         + esc(opts_doc)
         + "</a> “Trajectory / work-items layer”. Live from "
-        "<code>work-items.csv</code>: "
+        "<code>docs/work/</code>: "
         + esc(len(wis))
         + " work items · "
         + esc(wi_done)

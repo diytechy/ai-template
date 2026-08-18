@@ -31,7 +31,7 @@ Usage:
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
 
-Contracts: IF-018, IF-034, IF-107 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-018, IF-034, IF-107 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

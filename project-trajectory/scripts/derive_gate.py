@@ -99,7 +99,7 @@ Small CSV/heading loaders below are duplicated from trace.py per the kit's
 independently-copyable-script convention (the F5 rule) — derive_gate.py stays a
 self-contained drop-in, never importing the joined-spine engine.
 
-Contracts: IF-050, IF-051 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-050, IF-051 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse
@@ -300,7 +300,7 @@ def sn_draft_ids(text):
     """The set of Drafted SN ids in a needs registry's `text`, through whichever
     CARRIER wrote it.
 
-    Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
+    Under TOML draft-ness is a FIELD on the need (`status = "Drafted"`); under the
     legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
     heading containing the word "draft". Both are read; the dispatch is
     `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a

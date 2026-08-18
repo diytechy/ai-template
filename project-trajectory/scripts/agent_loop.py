@@ -120,7 +120,7 @@ exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
 Contracts: IF-015, IF-068, IF-099, IF-109 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.csv). IF-068
+(process.md §8; rows of record in docs/requirements/interfaces.toml). IF-068
 (WI-274 part B) is the coordinator-dial read: main() resolves model/model-map
 from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config)
 with precedence CLI flag > AGENT_* env > declared file > built-in default.
@@ -696,7 +696,7 @@ RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
 # neither pays nothing (never-breaking).
 def load_critique_srs(docs):
     """The SR ids whose Verification is `Critique` (docs/requirements/
-    system-requirements.csv). Empty — absent file, or no such row — makes the whole
+    system-requirements.toml). Empty — absent file, or no such row — makes the whole
     critique layer vacuous, exactly like an absent enable-list makes routing off."""
     out = set()
     for r in spine_carrier.load(

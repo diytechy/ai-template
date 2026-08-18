@@ -779,6 +779,7 @@ def test_bite_scaffold_walk_catches_an_undeclared_absence():
 # header-superset treatment above, with the reason recorded here.
 BOILERPLATE_COPIES = {
     "docs/work/queued/WI-000-example.md": "project-trajectory/work/WI-000.template.md",
+    "docs/work/README.md": "project-trajectory/work/README.template.md",
     "docs/specs/README.md": "project-trajectory/specs/README.template.md",
     "docs/specs/WI-000.md": "project-trajectory/specs/WI-000.template.md",
     "docs/rubrics/README.md": "project-trajectory/rubrics/README.template.md",

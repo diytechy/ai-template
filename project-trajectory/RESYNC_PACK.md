@@ -1543,6 +1543,41 @@ basis line was **byte-identical** before and after. If your registries carry
 approved or verified rows, you do not get that check for free — apply the value
 map above deliberately, and re-run `derive_gate.py` to compare.
 
+### Reserved: `docs/work/README.md` — the registry's own location→status contract
+
+**A new scaffolded file, and one corrected table.** `bootstrap.py` now maps
+`work/README.template.md` → `docs/work/README.md`: the seven status directories
+with their status words, and the rule an adopter otherwise has to reconstruct
+from the loaders — **a terminal row STAYS in the registry**. `complete/`,
+`cancelled/` and `partial/` rows are never moved out and never deleted, because
+every reader rglobs the whole of `docs/work/` and a closed row is still a `needs`
+predecessor, a `sr_refs` trace link and a dashboard count. So
+**`docs/work/archive/` must never exist** — the folder retired at the six-state
+flip (see "The six-state work-item model" above) and the README now says so where
+the question gets asked. The archiving lifecycle belongs to the *other* artifact:
+the spec-of-record under `docs/specs/`, which moves to `docs/archive/specs/` at
+close under rule R-F.
+
+**The corrected table.** `work/WI-000.template.md` shipped a six-row status table
+that omitted `partial/` — the third terminal that arrived with SR-144's
+partial-close contract and has been in `SPEC_STATUS_DIRS` and
+`TERMINAL_STATUSES` since. An adopter reading only the shipped docs could not
+learn the state exists. The row is added in both the template and its scaffolded
+copy.
+
+**Migration, for a repo that already scaffolded:** copy
+`work/README.template.md` in as `docs/work/README.md`, and re-copy
+`work/WI-000.template.md` over `docs/work/queued/WI-000-example.md` if yours is
+unmodified. Both are pure documentation — no reader parses either — so there is
+nothing to do beyond the copy, and skipping it costs you only the answer to a
+question you will otherwise ask twice. Also confirm `docs/work/partial/` exists
+(`.gitkeep`, like its sibling terminals); a repo scaffolded before the folder
+joined `GITKEEP_DIRS` may be missing it, and `handback.close_partial` needs it.
+`docs/work/*` is already an expected-live-orphan glob in `docs/orphans-allow`, so
+the README needs no navigation link.
+
+*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

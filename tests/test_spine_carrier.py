@@ -306,9 +306,27 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # missing key is a SCHEMA finding upstream, not a draft row here.
     assert sc.draft_need_ids([{"id": "SN-005"}]) == set()
 
-    # The word is closed and case-sensitive: the lowercase legacy spelling is
-    # not a synonym, it is an unrecognized value.
-    assert sc.is_draft_need({"id": "SN-006", "status": "drafted"}) is False
+    # CASING IS NOT A MATURITY (2026-08-18). This line used to assert the
+    # OPPOSITE — "the word is closed and case-sensitive", so `drafted` was "an
+    # unrecognized value" — and that reading was wrong in the unsafe direction:
+    # an unrecognized value here does not report anything, it returns False, and
+    # False on this predicate means RATIFIED. A mis-cased need silently floated
+    # the derived gate up, which is the one failure `is_draft_need`'s own
+    # docstring says this tier can least afford. The other three spine tiers
+    # already lower the cell before comparing (`trace.is_drafted`/`is_approved`/
+    # `is_modified`, the one Status-casing rule of process.md §4), so this is the
+    # SN tier joining them rather than a new leniency. Closure is still enforced
+    # — by `trace.enum_integrity_findings` over `ENUM_FIELDS["SN"]`, which
+    # REPORTS an out-of-vocabulary word instead of silently reading it as a
+    # maturity — and that is the right instrument for it.
+    assert sc.is_draft_need({"id": "SN-006", "status": "drafted"}) is True
+    assert sc.is_draft_need({"id": "SN-007", "status": "  DRAFTED  "}) is True
+    # Case-insensitive, not substring- or prefix-insensitive: a different word is
+    # still a different word.
+    assert sc.is_draft_need({"id": "SN-008", "status": "draft"}) is False
+    assert sc.draft_need_ids(
+        [{"id": "SN-009", "status": "approved"}, {"id": "SN-010", "status": "drafted"}]
+    ) == {"SN-010"}
 
 
 def test_legacy_markdown_draftness_survives_the_field_it_moved_to():

@@ -27,7 +27,7 @@ Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
 Adapted — stdlib re-implementation — from brefledev/stop-subagent-fanout (MIT).
 
-Contracts: IF-020, IF-038 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-020, IF-038 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import json

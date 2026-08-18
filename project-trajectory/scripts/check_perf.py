@@ -46,7 +46,7 @@ Usage:
 --root/--docs are the path flags shared with trace.py and check_docs.py: the
 four artifact paths default under <root>/docs unless given explicitly.
 
-Contracts: IF-004, IF-031 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-004, IF-031 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

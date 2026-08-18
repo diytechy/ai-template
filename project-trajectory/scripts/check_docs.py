@@ -88,7 +88,7 @@ three stripped before parsing — frontmatter is typed data, so a `title` quotin
 a link is describing one, not making one). Anchors are only validated against
 Markdown targets the script can parse.
 
-Contracts: IF-002, IF-030, IF-112 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-002, IF-030, IF-112 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

@@ -1009,9 +1009,19 @@ def is_draft_need(need):
     an absent `status` is caught upstream, as a SCHEMA finding on a required
     key, rather than being invented into a maturity by a reader.
 
+    MATCHED CASE-INSENSITIVELY, the one Status-casing rule the other three tiers
+    already follow (`trace.is_drafted`/`is_approved`/`is_modified` all lower the
+    cell before comparing; process.md §4). It was an EXACT compare here, and the
+    asymmetry failed in the unsafe direction: a need written `status = "drafted"`
+    read as ratified, floating the derived gate upward — the same silent
+    float this docstring's absent-key paragraph exists to prevent, arriving by
+    casing instead of by an absent key. Casing is not a maturity, so a
+    mis-cased word must not decide one; a word that is not in the vocabulary at
+    all is still a finding, and that is `trace.enum_integrity_findings`' job.
+
     (The transitional `kind = "draft"` fallback that stood here during the
     registry migration is gone with the field itself.)"""
-    return str(need.get("status", "")).strip() == "Drafted"
+    return str(need.get("status", "")).strip().lower() == "drafted"
 
 
 def draft_need_ids(needs):

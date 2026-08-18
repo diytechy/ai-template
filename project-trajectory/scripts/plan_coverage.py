@@ -36,7 +36,7 @@ Uncovered clauses are the report's *payload*, never findings — showing the
 gap to the critics and the arbiter is the tool's purpose. Malformed inputs
 (no clauses in the goal, no plan table) exit 2.
 
-Contracts: IF-057 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-057 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

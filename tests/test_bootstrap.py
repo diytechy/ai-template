@@ -64,6 +64,10 @@ def test_scaffold_contains_expected_files(scaffold):
         # the WI registry scaffolds as docs/work/ below (the CSV template ships
         # unscaffolded, as the legacy-format reference wi_convert migrates).
         "docs/work/queued/WI-000-example.md",
+        # ...and the folder's own contract: the location->status table plus the
+        # rule that keeps getting re-derived wrongly — a terminal row STAYS in
+        # the registry, so docs/work/archive/ must never materialize.
+        "docs/work/README.md",
         "docs/orphans-allow",
         # The six-state vocabulary (WI-384): every state that is not `queued`
         # (which the WI-000 exemplar already tracks) gets an empty directory, so
@@ -73,6 +77,9 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/work/active/.gitkeep",
         "docs/work/deferred/.gitkeep",
         "docs/work/cancelled/.gitkeep",
+        # SR-144's third terminal, scaffolded for the same visibility reason and
+        # pinned here so the shipped folder set cannot quietly lose it again.
+        "docs/work/partial/.gitkeep",
         "docs/work/complete/.gitkeep",
         # The log's fragment drop-box (concurrency-restructure.md §5.1): empty,
         # marker-only — an exemplar here would be compiled into docs/log.md by
@@ -344,6 +351,49 @@ def test_agents_template_stays_within_size_budget():
     assert size <= 10_000, (
         "AGENTS.template.md is {} bytes; budget is 10,000 (>=2k headroom under "
         "the ~12k Gemini cap) — tighten another rule to pay for the growth".format(size)
+    )
+
+
+# The always-loaded docs, capped on the SAME mechanism as AGENTS.template.md
+# above: a hard number and a test that fails past it. The 2026-08-18 doc-size
+# audit is why these are caps rather than watch-only rows — over 60 days the
+# one CAPPED file shrank 14% while the two merely watched ones grew 263%
+# (PROCESS.md) and 1,092% (PROCESS_OPTIONS.md). Each number is ~20-25% headroom
+# over the file's size when the cap landed, so ordinary edits pass and a
+# doubling does not; the owner may retune any of them (the skill's Budgets
+# table is the readable statement of the same values).
+BYTE_CAPS = {
+    # Loaded into every agent session in this repo (project instructions).
+    "CLAUDE.md": 8_500,
+    # The guard against doc growth must not itself grow: it reached 24,336
+    # bytes as a nested changelog before the history moved to docs/log.md.
+    "project-trajectory/skills/byte-budget-guard/SKILL.md": 5_000,
+}
+
+# The neutral source's per-agent copies, pinned byte-identical by
+# gen_skills_index.py --check-agents; a cap on the source must hold for the
+# copy an agent actually loads.
+_SKILL_COPIES = (".claude/skills", ".agents/skills")
+
+
+def test_always_loaded_docs_stay_within_byte_caps():
+    targets = dict(BYTE_CAPS)
+    skill = "project-trajectory/skills/byte-budget-guard/SKILL.md"
+    for agentdir in _SKILL_COPIES:
+        copy = ROOT / agentdir / "byte-budget-guard" / "SKILL.md"
+        if copy.exists():
+            targets["{}/byte-budget-guard/SKILL.md".format(agentdir)] = BYTE_CAPS[skill]
+
+    oversize = []
+    for rel, cap in sorted(targets.items()):
+        size = len((ROOT / rel).read_bytes())
+        if size > cap:
+            oversize.append("{} is {:,} bytes; cap is {:,}".format(rel, size, cap))
+    assert not oversize, (
+        "; ".join(oversize) + " — tighten the file (history belongs in "
+        "docs/log.md, not in a nested parenthetical) or argue the cap up with "
+        "the owner in the same commit; the byte-budget-guard skill's Budgets "
+        "table states the same numbers and must be re-stamped with them"
     )
 
 

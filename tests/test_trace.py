@@ -835,6 +835,55 @@ def test_cmp_state_refuses_an_unknown_value_as_a_warn(scaffold):
     assert "not in the closed vocabulary" in proc.stdout
 
 
+# --- the SN tier's Status vocabulary (the enum floor's fourth tier) -----------
+# `ENUM_FIELDS["SN"]["Status"]` was DECLARED while analyze()'s enum fold ran over
+# `{"SR", "LLR", "TC"}` only, so a need could carry any word at all and no bar
+# said so. These two are the always-on floor's fires-on-a-defect / silent-on-a-
+# clean-row pair, run through the CLI like every other vocabulary case above.
+NEEDS_TOML = """[need.SN-001]
+status = "{status}"
+priority = "M"
+need = "Add two numbers."
+why = "Demo."
+acceptance = "add(1,2) gives 3."
+"""
+
+
+def _needs_on_toml(scaffold, status):
+    """Re-home the scaffold's need tier on the TOML carrier at one status.
+
+    The markdown file is REMOVED, not left beside it: `spine_carrier.resolve`
+    refuses both homes at once (and that refusal is the rule working), which is
+    the same reason `use_legacy_spine_carrier` drops the home it is not using."""
+    req = scaffold / "docs" / "requirements"
+    (req / "stakeholder-needs.md").unlink(missing_ok=True)
+    (req / "stakeholder-needs.toml").write_text(
+        NEEDS_TOML.format(status=status), encoding="utf-8"
+    )
+
+
+def test_sn_status_outside_the_closed_vocabulary_is_an_integrity_finding(scaffold):
+    make_minimal_project(scaffold)
+    _needs_on_toml(scaffold, "Bananas")
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert "SN SN-001 has Status='Bananas'" in proc.stdout
+    assert "not in the closed vocabulary" in proc.stdout
+    # INTEGRITY-class, so it gates at the always-on floor rather than waiting for
+    # --strict-schema at DevStg-Impl (the D-9 correction C1 routing).
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+
+
+def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
+    # The other half: a rule that fired on everything would pass the assertions
+    # above. All three live vocabulary words, each on its own scaffold run.
+    make_minimal_project(scaffold)
+    for status in ("Drafted", "Approved", "Modified"):
+        _needs_on_toml(scaffold, status)
+        proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+        assert "closed vocabulary" not in proc.stdout, status
+        assert proc.returncode == 0, status + proc.stdout + proc.stderr
+
+
 def test_missing_required_if_field_is_a_warn(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(

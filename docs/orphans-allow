@@ -18,9 +18,18 @@
 # undiscoverable new doc no longer hides in 60-odd steady warnings — the same
 # silent-growth mode the C901 ratchet (WI-225) bounds for complexity. (The
 # duplication census bounded the third such mode until D-7/WI-426 deleted it;
-# duplicated plumbing is unbounded by ruling now.) A GENUINE straggler is linked instead
-# of listed: docs/specs/parallel-dispatch-design-notes.md is reached from its
-# companion plan, so it is navigable and absent below.
+# duplicated plumbing is unbounded by ruling now.) A GENUINE straggler is linked
+# instead of listed, which is why a doc reachable from a companion plan never
+# appears below.
+
+# The work-item registry's spec-folder home: each file IS a registry entry, not
+# a page anyone navigates to (its `id` and its DIRECTORY are what tools read).
+# Linking hundreds of them into the doc graph would bury the navigation the
+# graph exists to check. Their links are still validated like any other doc.
+# (Matches the shipped project-trajectory/orphans-allow.template; this repo ran
+# without it from the Phase 2b migration until the 2026-08-18 sweep, so 453 of
+# its 454 orphan warnings were the registry itself.)
+docs/work/*
 
 # review evidence — the per-round Reviewer/Critique/Grounding artifacts and the
 # top-level whole-repo reviews; kept as the audit trail, referenced from log.md.
@@ -42,10 +51,6 @@ docs/ratify/*
 # the log (concurrency-restructure.md §5.1). Transient by construction and never
 # a navigation node: the entry becomes reachable the moment it lands in log.md.
 docs/log.d/*
-
-# work-item specs — the per-WI SpecRef files (open and closed). Registry-
-# referenced (docs/requirements/work-items.csv), not doc-graph navigation nodes.
-docs/specs/WI-*.md
 
 # archived closed-WI specs — the WI-251 sweep's steady state: retained evidence,
 # date-stamped + WI-attributed, reached from log.md entries not navigation.

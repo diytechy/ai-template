@@ -13,15 +13,17 @@ Usage:
                             [--root DIR] [--docs DIR]
 
 Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine —
-    requirements/{system-requirements,low-level-requirements}.csv,
-    test/test-cases.csv, and requirements/stakeholder-needs.md (SN ids scraped;
-    an SN under a heading containing "draft" is unratified, §4a) — plus the
-    OPTIONAL off-spine registries requirements/{performance-budgets,repos,
-    procurement,assets,components,interfaces}.csv (PB/REPO/PART/ASSET/CMP/IF, each
-    documented on its own *.template.csv and in process.md §8/§9 +
-    process-options.md; the legacy modules.csv/MOD- form is still read). Absent
-    optional files and "-000" example rows are ignored, so a fresh scaffold is
-    green.
+    requirements/{stakeholder-needs,system-requirements,low-level-requirements}.toml
+    and test/test-cases.toml — id-keyed TOML read through `spine_carrier`, which
+    still resolves the legacy stakeholder-needs.md / *.csv carriers for a repo
+    that has not migrated (a need is unratified per its `status` field, or, on
+    the markdown carrier, under a heading containing "draft", §4a) — plus the
+    OPTIONAL off-spine registries requirements/{components,interfaces}.toml and
+    requirements/{performance-budgets,repos,procurement,assets}.csv
+    (CMP/IF + PB/REPO/PART/ASSET, each documented on its own *.template.* and in
+    process.md §8/§9 + process-options.md; the legacy modules.csv/MOD- form is
+    still read). Absent optional files and "-000" example rows are ignored, so a
+    fresh scaffold is green.
 
 Writes:
     test/report.md — counts, the SR->LLR->TC matrix, the orphan/integrity/
@@ -30,8 +32,8 @@ Writes:
         DAG colored by orphan/draft state.
     test/report.html (only with --html) — a dependency-free, collapsible <details>
         tree of the full graph (inline CSS, zero JS). A gitignored composite
-        artifact, never the review surface — review the registry CSVs (process.md
-        §3 "Reviewability").
+        artifact, never the review surface — review the registries themselves
+        (process.md §3 "Reviewability").
 
 Exit: 0 normally; --strict -> 1 on any orphan / status / off-spine finding;
 --strict-integrity -> 1 on an integrity finding ONLY (the always-valid floor the
@@ -72,7 +74,7 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse
@@ -1199,7 +1201,7 @@ def sn_draft_ids(text):
     """The set of Draft SN ids in a needs registry's `text`, through whichever
     CARRIER wrote it.
 
-    Under TOML draft-ness is a FIELD on the need (`kind = "draft"`); under the
+    Under TOML draft-ness is a FIELD on the need (`status = "Drafted"`); under the
     legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
     heading containing the word "draft". Both are read; the dispatch is
     `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
@@ -2941,6 +2943,7 @@ def load_registries(docs):
     sn_draft = set()
     sn_meta = {}
     sn_integrity = []
+    sn_rows = []
     # Resolved through the CARRIER, not by literal suffix: a
     # `.toml`-only existence test reads a markdown needs registry as ABSENT, and
     # an absent needs tier makes every SR orphan-clean, every draft need
@@ -2959,6 +2962,19 @@ def load_registries(docs):
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
         sn_integrity = sn_integrity_findings(sn_text)
+        # The need tier's rows in the SAME `<TIER>-ID`/`Status` shape the CSV-era
+        # tiers carry, so the ONE `ENUM_FIELDS` table can be read over SN too
+        # (the enum floor in analyze()). NOT `spine_carrier.folded_needs`: that
+        # fold projects onto `SN_CORE`, which has no `status` key at all, so a
+        # Status check reading it would see a blank cell on every row and pass
+        # vacuously — the silent-green shape this whole tier keeps re-learning.
+        sn_rows = [
+            {
+                "SN-ID": str(n.get("id") or "").strip(),
+                "Status": str(n.get("status") or "").strip(),
+            }
+            for n in spine_carrier.load_needs(sn_md)
+        ]
     reg = Registries()
     reg.raw_srs, reg.raw_llrs, reg.raw_tcs = raw_srs, raw_llrs, raw_tcs
     reg.raw_pbs, reg.raw_repos, reg.raw_mods = raw_pbs, raw_repos, raw_mods
@@ -2971,6 +2987,7 @@ def load_registries(docs):
     reg.cmps, reg.ifs = cmps, ifs
     reg.sn_ids, reg.sn_draft, reg.sn_meta, reg.sn_md = sn_ids, sn_draft, sn_meta, sn_md
     reg.sn_integrity = sn_integrity
+    reg.raw_sns = sn_rows
     reg.docs = docs
     return reg
 
@@ -3096,8 +3113,11 @@ def analyze(reg, args):
     # derives) and SupersededBy (lifecycle identity across a rewrite) must name
     # real CMP ids. And the membership join is checked from the primitive side:
     # a `Component` tag on an LLR/IF/PART/ASSET row must resolve to a real CMP
-    # row (the IF tier joined the sweep at WI-064 — trace.py has read
-    # interfaces.csv since WI-056, so its tags were the one unvalidated cell).
+    # row (the IF tier joined the sweep at WI-064 — trace.py has read the IF
+    # registry since WI-056, so its tags were the one unvalidated cell). Named
+    # by TIER rather than by file: the row of record moved to `interfaces.toml`
+    # at WI-443, and "has read interfaces.csv since WI-056" would have been the
+    # kind of claim that is true only of a carrier nobody runs any more.
     cmp_ids = {r["CMP-ID"] for r in cmps}
     component_findings = []
     for r in cmps:
@@ -3278,7 +3298,11 @@ def analyze(reg, args):
     # misleading): every registry CSV — spine, off-spine, and project-added —
     # must have each data row parse to the header's column count. Swept by
     # location, not by a known-file list, so a registry this script never joins
-    # (interfaces.csv, a project's own additions) is still guarded.
+    # (a project's own additions) is still guarded. `interfaces.csv` USED TO BE
+    # the worked example here and is now wrong twice over — the IF tier moved to
+    # `interfaces.toml` at WI-443, which this glob does not see at all, and the
+    # tier IS joined now (`raw_ifs`) — so the example is dropped rather than
+    # re-spelled: a sweep that guards CSVs cannot illustrate itself with a TOML.
     integrity = [
         f
         for d in (docs / "requirements", docs / "test")
@@ -3296,6 +3320,15 @@ def analyze(reg, args):
     integrity += [
         f for label in raw for f in enum_integrity_findings(label, raw[label])
     ]
+    # SN is folded in SEPARATELY rather than joining `raw` above, because `raw`
+    # also feeds the id-integrity and placeholder sweeps and the need tier owns
+    # those already (`sn_integrity_findings` reads the registry as PROSE, since a
+    # bare `SN-###` token in a paragraph is part of that tier's id universe).
+    # Only the Status vocabulary was owed — and it was MISSING: `ENUM_FIELDS`
+    # declared the SN entry (2026-08-17k) while `raw` named three tiers, so
+    # `status = "Bananas"` on a need produced no finding at any bar. That is the
+    # exact defect the LLR comment above records, one tier up.
+    integrity += enum_integrity_findings("SN", getattr(reg, "raw_sns", []))
     # The SN tier's duplicate protection (prose registry — see
     # sn_integrity_findings): integrity-class like a duplicated CSV id.
     integrity += getattr(reg, "sn_integrity", [])

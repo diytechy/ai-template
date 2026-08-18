@@ -22,7 +22,7 @@ unchanged). The session engine (agent_loop) and the serial integrator
 agent_loop re-exports the names it historically exposed, so its public
 surface is unchanged. Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-037, IF-065 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-037, IF-065 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import csv

@@ -21,7 +21,7 @@ Usage:
               like `gen_arch_map.py --check`. Use in CI / a gate.
     default   (Re)write skills/INDEX.csv from the SKILL.md files.
 
-Contracts: IF-019, IF-035 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-019, IF-035 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

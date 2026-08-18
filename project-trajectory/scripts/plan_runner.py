@@ -19,7 +19,7 @@ agent_loop re-exports `wi_plan_mode`/`PLAN_MODE_DUAL`/`run_dual_plan_round`
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-066 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-066 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import os

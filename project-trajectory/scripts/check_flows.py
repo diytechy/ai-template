@@ -25,7 +25,7 @@ Placeholder ids ending in "-000" (the templates' examples) satisfy the
 --no-placeholders (wire it in from DevStg-Tests on) instead *flags* every cited "-000"
 id, so a real authored flow can't keep citing the template's example ids.
 
-Contracts: IF-003, IF-029, IF-105 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-003, IF-029, IF-105 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

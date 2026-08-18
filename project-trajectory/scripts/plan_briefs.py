@@ -60,7 +60,7 @@ documentation aid; the module is library-first):
     python scripts/plan_briefs.py hats                 # print the hat->template map
 
 Contracts: IF-059, IF-100, IF-108 — the interface seam this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.csv).
+of record in docs/requirements/interfaces.toml).
 """
 
 import argparse
@@ -322,7 +322,7 @@ def assemble(hat, slots, template_text):
 # --- CLI (documentation aid; the module is library-first) ---------------------
 def _cmd_surface(args):
     surface = build_surface(args.root)
-    print("## Requirement surface (system-requirements.csv)\n")
+    print("## Requirement surface (system-requirements.toml)\n")
     print(surface["SR_SURFACE"] or "(no SR rows)")
     print("\n## Declared interface seams (interfaces.toml)\n")
     print(surface["IF_REGISTRY"])

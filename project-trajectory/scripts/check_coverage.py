@@ -54,7 +54,7 @@ AFTER `tests+coverage` produces the JSON (check.py's plan orders extra steps
 after the test step). Opt-in like the dup-code gate: a repo without the step and
 the floors file pays nothing.
 
-Contracts: IF-069, IF-070 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-069, IF-070 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

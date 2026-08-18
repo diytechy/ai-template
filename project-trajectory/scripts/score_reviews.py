@@ -42,7 +42,7 @@ The **scoreboard** is one small decayed-tally text file
 history the escalation policy consumes. It is advisory state, never a source of
 truth.
 
-Contracts: IF-046, IF-047 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-046, IF-047 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

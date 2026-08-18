@@ -64,7 +64,7 @@ the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
 Exit codes: 0 clean/skipped, 1 findings, 2 usage or environment error.
 
-Contracts: IF-005, IF-032, IF-043 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-005, IF-032, IF-043 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

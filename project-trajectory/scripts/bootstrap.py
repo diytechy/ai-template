@@ -46,6 +46,10 @@ What it creates in the destination:
     docs/work/queued/WI-000-example.md         <- work/WI-000.template.md  (the
                                                 registry's spec-folder home; the
                                                 other status dirs get .gitkeep)
+    docs/work/README.md                        <- work/README.template.md  (the
+                                                location->status contract, stated
+                                                inside the registry: a terminal row
+                                                STAYS; docs/work/archive/ never exists)
     docs/orphans-allow                         <- orphans-allow.template  (declares
                                                 docs/work/* an expected-live-orphan
                                                 class: registry entries, not pages)
@@ -106,7 +110,7 @@ What it creates in the destination:
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
-    src/, tests/, docs/work/{draft,active,deferred,cancelled,complete}/
+    src/, tests/, docs/work/{draft,active,deferred,cancelled,partial,complete}/
                                                (empty, with .gitkeep)
 
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
@@ -307,7 +311,7 @@ placeholder between the architecture markers.
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate DevStg-Reqs (see docs/process.md).
 
-Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse
@@ -1674,6 +1678,15 @@ MAPPING = [
     # `-000` example is documentation, exactly like the `-000` row it mirrors.
     # The status directories themselves are created below (GITKEEP_DIRS).
     ("work/WI-000.template.md", "docs/work/queued/WI-000-example.md"),
+    # ...and the location->status contract, stated INSIDE the registry it governs.
+    # The WI-000 exemplar documents the SPEC FORMAT; this README documents the
+    # FOLDER — the seven status directories, and the one rule a reader keeps
+    # re-deriving wrongly: a terminal row (complete/cancelled/partial) STAYS in
+    # the registry, because it is still a DAG predecessor and a trace link, so
+    # `docs/work/archive/` must never materialize. That is the half `docs/specs/`
+    # answers the other way (rule R-F archives a spec-of-record at close), and a
+    # reader with only the specs README in hand generalizes the wrong lifecycle.
+    ("work/README.template.md", "docs/work/README.md"),
     # ...and the declaration that makes it green: a work spec is a REGISTRY
     # ENTRY that happens to be Markdown, not a page anyone navigates to, so
     # `docs/work/*` is a declared expected-live-orphan class rather than a wall

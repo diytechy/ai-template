@@ -53,7 +53,7 @@ convenience layer, not the dispatcher): cmd.exe still expands a `%VAR%` (and a
 caret processing and a single `cmd /c` line cannot suppress it. The recipe lines
 themselves stay trusted shell text.
 
-Contracts: IF-048, IF-049 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-048, IF-049 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

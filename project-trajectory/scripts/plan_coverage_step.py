@@ -38,7 +38,7 @@ Usage (the CLI is a documentation aid; plans map to A/B in argument order):
         [--root .] [--out coverage.md]
 
 Contracts: IF-060 — the interface seam this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.csv).
+of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

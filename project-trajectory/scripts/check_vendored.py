@@ -25,7 +25,7 @@ Usage:
     python scripts/check_vendored.py [--root .] [--manifest docs/guardrails/UPSTREAM]
                                      [--strict] [--timeout 10]
 
-Contracts: IF-016, IF-036 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-016, IF-036 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

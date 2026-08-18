@@ -27,14 +27,14 @@ Checks (integrity, in the spirit of `trace.py`):
     (ERROR if not), but it is excluded from the cycle rule — a cycle that
     exists only through soft edges is a WARN (conflicting hints), never an
     error — and it never constrains readiness.
-  - every `SR-Refs` id exists in `system-requirements.csv` — a WARN, not a
+  - every `SR-Refs` id exists in `system-requirements.toml` — a WARN, not a
     failure (a draft SR referenced ahead of its registry row is legitimate).
 
 **The registry SSOT rules** (S1; process-options.md "Trajectory /
 work-items layer"). The WI `Deliverable` is **backward-only** (what shipped) and
 the per-WI `SpecRef` is the forward bridge that lives while the WI is open and
-clears at close. Cross-reading `work-items.csv` and its SpecRefs mechanizes two
-rules:
+clears at close. Cross-reading the `docs/work/` registry and its SpecRefs
+mechanizes two rules:
   - **R-A** — a WI's `Deliverable` is non-empty **iff** its `Status` is
     **terminal** (`done` or `cancelled`; WI-267). An open (draft/queued/active/deferred)
     WI with a filled Deliverable, or a terminal WI with an empty one, is a hard
@@ -130,7 +130,7 @@ anchors (the meta case) or a legacy `docs/gate` with no basis line.
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-023, IF-077 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv). IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
+Contracts: IF-009, IF-023, IF-077 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml). IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
 """
 
 import argparse
@@ -743,10 +743,14 @@ def _cycles(wis, pred_map):
 
 
 # --- WI-349: physical-line + control-character integrity of the registry rows --
-# `staged_findings` compares `git show HEAD:<work-items.csv>` against the working
-# copy LINE-WISE and documents the assumption in its own docstring — "a WI row is
-# one physical line (no embedded newlines)". Nothing enforced it, which is the
-# enforcement-audit question asked of a rule the code already relies on.
+# WRITTEN FOR THE CSV HOME, and its first premise is retired: `staged_findings`
+# used to compare `git show HEAD:<work-items.csv>` against the working copy
+# LINE-WISE, and this check enforced the assumption that docstring stated. The
+# folder registry is read by NAME LISTING, so nothing reads it line-wise any
+# more (main() records the same retirement where the WI rows are loaded). What
+# survives, and why this stays: the C0-control half below is about a cell being
+# TEXT AT ALL — the `9e2008a` backspace case in `_control_findings` — which no
+# carrier change touches, and the spine CSVs' own callers/tests still read it.
 LINE_BREAK_CHARS = (("\r", "CR"), ("\n", "LF"))
 # TAB is deliberately allowed: it is ordinary whitespace inside a quoted cell and
 # breaks nothing downstream. Every other C0 control is not text — see below.
@@ -758,7 +762,8 @@ def _control_findings(cell):
 
     Two classes, reported distinctly because the reader's next action differs:
 
-      - **CR / LF** break the one-physical-line rule the staged-close scan reads;
+      - **CR / LF** break the one-physical-line rule a CSV-carried registry
+        reads (retired for the WI folder registry — see the block comment above);
       - **any other C0 control** is not text at all. Widened here after
         `9e2008a` wrote a literal `0x08` into this very registry: a shell heredoc
         collapsed the `\\b` of a Windows path, so `Git\\bin` became `Git` +
@@ -898,7 +903,7 @@ def validate(wis, known_srs):
 
 
 def load_known_srs(root):
-    """The set of real SR ids from system-requirements.csv (for the SR-ref warn)."""
+    """The set of real SR ids from system-requirements.toml (for the SR-ref warn)."""
     return {
         (r.get("SR-ID") or "").strip()
         for r in spine_carrier.load(root / SR_CSV, "SR-ID")
@@ -2033,8 +2038,8 @@ def specref_findings(root, w):
 
 
 def ssot_findings(wis, root):
-    """The work-items.csv coherence findings (R-A + R-E) + the unknown-status
-    lint, each as `(rule, hard, message)`.
+    """The work-item registry's coherence findings (R-A + R-E) + the
+    unknown-status lint, each as `(rule, hard, message)`.
 
     `hard=True` (R-A only) is an ERROR at every run — the incoherent-handoff
     rule. R-E is warn-first; the caller promotes it to an error under `--strict`.
@@ -2884,7 +2889,7 @@ def backlog_staleness_findings(root, wis):
     amended requirement. Re-affirming is deliberately cheap — a content edit to
     the spec at the SAME path (frontmatter or body) re-dates the row and clears
     the warn (a *driven look*, not ceremony). Cited sources: each `SR-Refs` id (a
-    row of system-requirements.csv) and the `SpecRef` target file.
+    row of system-requirements.toml) and the `SpecRef` target file.
 
     SAME PATH is a real limitation, not a turn of phrase, and the warn text says
     so. The row clock reads `--follow --diff-filter=AM` (`_path_commit_time`,
@@ -3125,10 +3130,13 @@ def staged_findings(root):
     `SR-Ref`), yet the staged change set touches neither the TC registry nor a
     file under the tests dir, the fix landed in the code but not the validation
     chain — so the same failure can recur. Returns warning strings ([] when not
-    applicable). Compares the staged WI CSV against its HEAD version via git;
-    any missing git context makes it a silent no-op (the hook has git; a gate
-    run does not, and pays nothing). Line-splitting the HEAD CSV is safe here —
-    a WI row is one physical line (no embedded newlines).
+    applicable). Compares the staged WI SPEC REGISTRY — the `docs/work/`
+    directory-as-state tree `_staged_wi_registry` reads — against its HEAD
+    version via git; any missing git context makes it a silent no-op (the hook
+    has git; a gate run does not, and pays nothing). The registry has no CSV
+    home to line-split any more: a status change is a RENAME between status
+    directories, so both maps come from name listings (`--name-status` staged,
+    `ls-tree` at HEAD) and never from parsing a row.
 
     Known false-positive, accepted at the WI-271 retirement (owner ruling
     2026-07-29): a follow-up WI whose chain change landed in its BUILD commit
@@ -3673,7 +3681,7 @@ def ratify_brief_findings(root):
 
 
 def _load_critique_srs(root):
-    """SR ids whose Verification is `Critique` (system-requirements.csv). Empty
+    """SR ids whose Verification is `Critique` (system-requirements.toml). Empty
     makes the critique ratchet vacuous — a repo with no perceptual SR pays
     nothing."""
     out = set()

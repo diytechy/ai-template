@@ -34,7 +34,7 @@ copy-able-script convention (F5). Usage (the CLI is a documentation aid):
     python scripts/plan_round.py walk [--budget N]   # print the happy path
 
 Contracts: IF-058 — the interface seam this module declares (process.md §8;
-rows of record in docs/requirements/interfaces.csv).
+rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

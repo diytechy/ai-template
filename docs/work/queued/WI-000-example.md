@@ -34,6 +34,7 @@ the narrative is the body.
 | `docs/work/deferred/WI-###-<slug>.md` | `deferred` — parked with its reason |
 | `docs/work/complete/WI-###-<slug>.md` | `done` — it shipped |
 | `docs/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
+| `docs/work/partial/WI-###-<slug>.md` | `partial` — a lane stopped early; terminal, and the per-close report under `docs/handbacks/` is the event's identity |
 
 Three consequences worth stating, because they are the reason for the shape:
 

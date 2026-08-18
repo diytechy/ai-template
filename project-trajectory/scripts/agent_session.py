@@ -23,7 +23,7 @@ Stdlib only, Python 3.11+, Windows/POSIX. agent_loop.py (the coordinator) and
 plan_runner.py (the dual-plan round) drive sessions exclusively through this
 module; agent_loop re-exports these names so its public surface is unchanged.
 
-Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import json

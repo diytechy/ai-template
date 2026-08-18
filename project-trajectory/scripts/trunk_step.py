@@ -55,7 +55,7 @@ Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
 
 Contracts: IF-120 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.csv).
+of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

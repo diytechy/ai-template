@@ -43,7 +43,7 @@ Usage:
     python scripts/check_stubs.py [--src src] [--report docs/test/stub-report.md]
                                   [--exclude GLOB ...] [--strict]
 
-Contracts: IF-006, IF-026 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.csv).
+Contracts: IF-006, IF-026 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

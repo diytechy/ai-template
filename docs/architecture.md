@@ -753,7 +753,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `load_wis(rows)` | Parse work-item rows into `(wis, integrity_errors)`. |  |
 | `cell_integrity_errors(rows)` | Hard-error strings for any registry cell that is not one line of plain text. |  |
 | `validate(wis, known_srs)` | Return the hard-error strings for the work-item graph ([] = clean). |  |
-| `load_known_srs(root)` | The set of real SR ids from system-requirements.csv (for the SR-ref warn). |  |
+| `load_known_srs(root)` | The set of real SR ids from system-requirements.toml (for the SR-ref warn). |  |
 | `load_ifs(rows)` | Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns |  |
 | `arch_inventory(root)` | `(module_names, {module: {IF ids}}, {module: {imported stems}})` parsed |  |
 | `interface_findings(root)` | Architecture-connectivity coverage warns (S5/WI-056; process.md §8), all |  |
@@ -773,7 +773,7 @@ Contracts (interfaces): IF-009, IF-023, IF-077
 | `doc_anchors(path)` | The lowercase anchor slugs `path` exposes, or None when they cannot be |  |
 | `nearest_anchor(frag, anchors)` | The closest existing slug to `frag`, or None. A wrong anchor is nearly |  |
 | `specref_findings(root, w)` | R-E's SpecRef rule for ONE open WI, as a list of messages (the caller tags |  |
-| `ssot_findings(wis, root)` | The work-items.csv coherence findings (R-A + R-E) + the unknown-status |  |
+| `ssot_findings(wis, root)` | The work-item registry's coherence findings (R-A + R-E) + the |  |
 | `queue_conflict_findings(wis)` | LLR-160, mechanical half: pairs of OPEN rows that overlap. | LLR-160 |
 | `spec_lifecycle_findings(root, wis)` | The spec-lifecycle close-side rule **R-F** (WI-251) — the mechanical half |  |
 | `completion_reconciliation_findings(root, wis)` | Disagreements between a WI's declared `Status` and its completion evidence, |  |
