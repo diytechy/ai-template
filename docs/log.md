@@ -36,6 +36,123 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17v — ADVERSARIAL ROUND (Opus, owner-directed) over ALL of the
+  day's changes: 18 findings, and one failure CLASS behind five of them.**
+  Scope: the whole span `47234903^..HEAD` (28 commits) and log entries
+  `2026-08-17c`…`u`. Reviewer: Claude Opus 5 in-session, with three hostile
+  sub-reviewers over targets 2–6; **every sub-reviewer finding was
+  author-re-verified against the live repo** before it entered the round doc,
+  with the re-verification evidence recorded per row. Doc:
+  [`docs/reviews/2026-08-17-desk/ROUND-OPUS.md`](reviews/2026-08-17-desk/ROUND-OPUS.md).
+  **Counts: 13 CONFIRMED, 2 CONFIRMED-IN-PART, 3 RELAYED** (sub-reviewer
+  evidence, not independently re-derived), plus **2 staleness hypotheses
+  REFUTED**. Nothing applied — the standing pattern; the registries, scripts,
+  tests, plans and templates are byte-identical to `6fe5e5bb`.
+  - **THE CLASS, and it is the finding: *evidence offered as a measurement,
+    produced by an instrument that cannot see the thing measured.*** Five
+    independent instances in one day. **F3** — the *"basis line BYTE-IDENTICAL"*
+    proof of "no row's maturity moved" is true, and blind to the CMP tier:
+    flipping all four CMP rows `planned`→`verified` (the maximum move
+    available) leaves the line byte-identical, because `spine_stage` reports
+    the lowest unfinished rung (`stage-ord=1`, Boundary) and rung 3 never
+    reaches the output. Sound for the other 134 of 138 cells — flipping IF/EXT
+    *does* move it to `stage-ord=2`. **F8** — the acceptance-form pass's
+    *"advisories 112→112, byte-identical"* is vacuous: blanking SR-001's entire
+    `acceptance_criteria` to `it works.` leaves `trace.py --strict` output
+    byte-identical. No checker reads acceptance prose at all, which is *why*
+    F5/F6/F7 could happen. **F9** — the watermark's *"highs EVER allocated,
+    verified against the registry's full git history"* used `git log -S` over
+    `external.toml`, a file **created 2026-08-14**, to conclude that `B-08` and
+    `REL-004` — cut by ruling **2026-08-13** — were "never registry rows". A
+    blind probe's empty result read as a negative. **F13/F14** — two of the
+    five TC pins do not bite (below).
+  - **F1 MAJOR — what the class costs on a live guard.** The components split
+    moved `has-gap` off maturity onto `standing`, which `derive_gate.py:644`
+    concedes *"nothing maps here"*. The deleted `CMP_MATURITY` comment had said
+    `has-gap` was *"the strongest possible DRAFTED signal, and the one place a
+    lenient mapping would let a known-broken partition report a finished
+    architecture rung"* — deleted without being cited or superseded. Measured:
+    `status=Founded` + `standing=has-gap` → `arch_incomplete` **False** (rung 3
+    closes) where `state=has-gap` → **True**. Latent today (zero rows write
+    `standing`), but that combination is exactly what the new axis was created
+    to express.
+  - **F9/F10 MAJOR — `B` and `REL` are UNDER-SEEDED and the fix is cheap.**
+    `B = 7` mints `B-08` next, re-pointing an id cited in a live ruled plan doc
+    *and* in this log at line 411; `REL = 3` mints `REL-004`, cited at line
+    3472. The entry's own tie-break argues the direction: *"over-seeding is
+    fail-safe — it wastes numbers, never re-points history."* **F11 MINOR** —
+    `EXT = 5` is right for the v2 space but `docs/id-watermark`'s header
+    promises an unscoped guarantee, while `external.toml:82` cites v1
+    EXT-007/008 in the live registry.
+  - **F13/F14 MAJOR — two of the five "mutation-proved" pins do not bite.**
+    F13: the `min()` cap pin asserts on the *printed* string, so napping the
+    raw dial while leaving the print intact passes — **1.53s clean → 5.57s
+    mutated**, the uncapped sleep demonstrably served and unnoticed. F14:
+    TC-170's failure is planted in `open-items`, the **last** `REGEN_STEPS`
+    entry, so *"a later step fails"* is vacuous; making `regen` carry on past a
+    failure leaves `test_trunk_step.py` 15 passed and `test_trajectory_arch.py`
+    76 passed. Both author-re-run. (One author mutation was itself invalid — an
+    unseeded `_rc` crashed 4 tests on a `NameError`; discarded and redone. Two
+    other author checks were caught vacuous the same way — an
+    `acceptance`-vs-`acceptance_criteria` regex that matched nothing, and a
+    pre-migration predicate probed with `Status` when it reads `State`. All
+    three are recorded in the doc rather than quietly re-run.)
+  - **F5/F6/F7 MAJOR/MINOR — the acceptance-form ledger claims re-homes that
+    are not there.** SR-159's `TOP_VIEW_MAX` **bound value 10** is stated at
+    neither cited home and now appears nowhere in the spine (only
+    `check_trajectory.py:179`). SR-040's "phantom" `AGENT_STATUS_WARN_BYTES` is
+    live on a **shipped adopter-facing** surface, `PROCESS_OPTIONS.md:802`,
+    while the residue was scoped to `LLR-037`. SR-167's DevBar-Release wiring
+    observable (`test_harness_runs_perf_at_g3`) is now named at no spine row.
+  - **F12 MAJOR — "stricter-never-quieter" is false as a blanket claim.**
+    `d28e1ccb` retired the `Modified`-chain advisory class; the committed
+    goldens carry the proof (`-"…no Modified chain rows riding an unflagged or
+    unresolvable owning SR."` → `+"None. No unlifted LLRs."`). Four input
+    classes went silent, and the `Modified`-child-with-no-resolvable-SR arm has
+    **no successor detector** — the same commit's `sr_chain_drifts` docstring
+    concedes the drift arm cannot fire on it. **On the record in fairness:**
+    this log's own `2026-08-17m` scopes the stricter claim narrowly (line 491)
+    to the `check_trajectory` exemption removal, which re-verified genuinely
+    never-quieter; the refutation lands on the blanket summary.
+  - **F2/F4 MINOR — the prose sweep missed two surfaces.** `arch_incomplete`'s
+    docstring still teaches retired `planned`/`has-gap`; and
+    `hats.template.toml:34` + `hats.toml:38` still teach `kind == "core"` as
+    the worked `applies_when` example — untouched by the entire span — while
+    `RESYNC_PACK.md` instructs adopters to delete `kind`. `2026-08-17u`
+    disclosed only the `hats.py` `SCALAR_FIELDS` survivor.
+  - **F17/F18/F19 MINOR — desk residue.** The *"shape you are signing"* table
+    reads `SR=63 LLR=155 TC=150` / 52 drafts against a measured
+    `SR=70 LLR=159 TC=155` / 68 (mitigated: the block self-labels
+    re-derive-at-convening); `ba23fe3d`'s frame-count correction has no
+    Decisions entry (in part — the section is scoped to decisions);
+    `2026-08-15-review-package.md:15` pins a range at `..HEAD`.
+  - **REFUTED, and worth stating because the round went looking:** the §0.4
+    scoreboard is **current** at HEAD (re-stamped `2026-08-17u`, "OPEN CALLS:
+    NONE"), and `docs/status.md` is **current** (live list EMPTY). The stale
+    `items 6 · 19` string survives only inside entry `2026-08-17r`, correctly
+    scoped to its moment.
+  - **CLEAN under adversarial re-derivation**, recorded so coverage is legible:
+    the 18 `Modified` + 9 `Approved` SN split and the 123 IF · 11 EXT/B/REL · 4
+    CMP census both reproduce exactly (an unanchored grep gives 12 for EXT by
+    matching the header comment — the claim is right and the naive count
+    wrong); no lowercase status survivors anywhere; §5B genuinely not executed
+    (`is_modified` live, `Modified` in `STATUS_VALUES`); trap (i) proved live —
+    all three planted writer spellings red the guard; the SN schema census
+    proved non-vacuous — deleting `tags` from the template reds the new leg;
+    per-registry `Founded` subsets genuinely enforced at `trace.py:455-476`;
+    the components template and both RESYNC entries complete; IF-043's
+    one-engine claim and IF-128→LLR-166's refusal claim both true in the code;
+    the retired advisory class independently re-derived as 0 findings on
+    today's tree; and ~20 acceptance cells sampled as genuine restatements,
+    several strengthened (SR-006, SR-052/053/054), with the ledger's
+    `sha256(old_cell)[:12]` hashes reproducing exactly for the four spot-checked
+    rows.
+  - **Not reached:** the `3600`/`3` default pins were reasoned about, not
+    mutated; F15/F16/F19 carry sub-reviewer evidence only; the "31 class-A
+    findings" count was checked for internal consistency, not recounted; the
+    full unfiltered suite was not re-run (no finding turns on a suite-wide
+    count).
+
 - **2026-08-17u — sitting-3 §0.4 item 6 EXECUTED: §5A's nine pre-sign steps
   land, and every attested registry now answers "how approved is this row?" in
   ONE field with ONE vocabulary.** Execution of the plan ruled at `2026-08-17t`
