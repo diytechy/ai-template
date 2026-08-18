@@ -836,9 +836,15 @@ arrow directionality can be determined in the graph builder / render by defaulti
 
 **************
 
-Update SN, other registries, and callers per and all others to use "status" field across all spine registeries with common enum
+Now kick of an opus agent to update docs/plans/2026-08-16-registry-status-unification.md to ensure all attested / approved registries use the same enum (draft / approved / founded (when applicable)).  There may be some out of date information in that md file as well that could use some cleanup.  After updating the plan and committing, if confident you may kick off an opus or sonnet agent as appropriate.  After this is complete, kick off an adversarial review with opus to review the various changes made today.
+
+|||||||||||||||
+
+Update SN, other registries, and callers per and all others to use "status" field across all spine registeries with common enum (docs/plans/2026-08-13-sitting-3-spine-verification.md item 0.4-6)
 
 Approve the spine after this (I have revieded all entries and agree to the current definition).  I give my approval for that after the status related updates since that will not affect the prose of those cells, which is what I am approving of in this message.
+
+Then remove the direction and 
 
 Seed the initial snapshot file for the last approved folder.
 
