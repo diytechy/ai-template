@@ -141,7 +141,7 @@ so the render is byte-equivalent in size). Dead `ARCH_MD` constant deleted with
 the file it named.
 
 **Bars at landing:** full unfiltered suite **2568 passed, 11 skipped**
-<!-- fig: cmd="python -m pytest -q -n auto" rev=PENDING -->
+<!-- fig: cmd="python -m pytest -q -n auto" rev=221f768f -->
 `check_flows` OK (4 diagrams, 40 ids, all known); `check_vocab --strict` clean;
 a real scaffold bootstrapped green (`check.py --gate DevStg-Reqs` PASS, no
 `docs/architecture.md`, `docs/runtime-flows.md` present).
