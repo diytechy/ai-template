@@ -67,7 +67,20 @@ DASHBOARD = REPO_ROOT / "PROJECT_STATE.html"
 # deliberately NOT to current+something-small: this file's own history records
 # the same defect twice (0.6% and 0.02% of headroom), where a ceiling meant as
 # a growth SENSOR had quietly become an exact freeze that the next merge trips.
-MAX_BYTES = 2_615_000
+# 2,615,000 -> 3,025,000, the 2026-08-18 pre-brief pass (the SR-140 split).
+# Measured 2,631,151 AFTER the last edit in the commit carrying this stamp, per
+# the 129-REVIEW-A lesson above. The growth is ORDINARY PER-ROW COST plus prose:
+# four new spine rows (SR-178, SR-179, LLR-178, TC-173) render as four nodes,
+# and ten existing cells gained the split/adjudication rationale the sitting has
+# to read — +17,037 on HEAD's 2,614,114. Nothing about `gen_trajectory.py`
+# changed in this pass. Note what the OLD number had become: 2,614,114 against
+# 2,615,000 left 886 bytes of headroom (0.03%) — the ceiling had once again
+# stopped being the generous growth SENSOR this file documents and become an
+# exact freeze that the next row trips, which is the same defect stamped above
+# at 0.6% and 0.02%. Restamped to ~15% headroom, matching the 14-21% every
+# earlier stamp kept, and deliberately NOT to current+something-small. Reason
+# in the log, 2026-08-18a.
+MAX_BYTES = 3_025_000
 
 
 def test_dashboard_stays_within_its_size_budget():

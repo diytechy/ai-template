@@ -36,6 +36,134 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-18a — the pre-brief work owed is EXECUTED: `SR-140` split three
+  ways, `SR-173` truth-matched from code, `SR-150` re-worded, `SR-040`'s
+  tripwire adjudicated. `trace.py --strict` exits 0 — the `traceability`
+  step's un-signable residue is GONE.** Owner, this morning: *"please
+  implement any items that might block / affect the spine's attributes that I
+  am preparing to approve, so I do not have to do it twice."* That sanctions
+  **deliberate rides** on `Approved` rows where the fix is owed anyway; four
+  were taken and each is named below. Per-cell before/after with the pre-edit
+  `sha256:12` at `HEAD` (`4cf98e4f`) is the addendum to
+  [plans/2026-08-17-acceptance-form-ledger.md](plans/2026-08-17-acceptance-form-ledger.md),
+  not restated here.
+  **(1) THE `SR-140` SPLIT — the gating one.** Three `shall` clauses under a
+  waiver that never resolved the finding, because `form_findings` deliberately
+  does not suppress on it. Split on the one-decision doctrine: `SR-140` keeps
+  the RECORD, **`SR-178`** takes drift reporting ("regardless of any Status
+  movement", needs included), **`SR-179`** takes the mirror invariant. Every
+  clause became the normative text of exactly one row — **nothing dropped**.
+  Children moved to the obligation they actually serve: `LLR-158`/`TC-153` →
+  `SR-178` (it IS the comparison basis), `LLR-173`/`TC-167` stay on `SR-140`.
+  **`LLR-178`/`TC-173` were MINTED rather than leaving `SR-179` undecomposed**,
+  because the refusal's real home is `check_trajectory.staged_snapshot_findings`
+  — a different module from `LLR-173`'s — and its six tests already exist; a
+  `Drafted` orphan would have hidden that. `TC-173`'s evidence is
+  **function-granular**, deliberately: item 4 below is what a file-granular
+  evidence cell costs. The 13v waiver is **SPENT** and the row says so.
+  **(2) `SR-173` — RULED FROM CODE TRUTH, and the direction is the honest
+  one.** The shall said "no partially regenerated set BEHIND"; the acceptance
+  said "not left COMMITTED". The code settles it: the regen step touches git
+  **not at all**, so a first failure exits nonzero with HEAD unmoved and
+  nothing committed, while **deliberately** leaving the green steps' output
+  dirty for the caller (`LLR-142`: "never commits; the caller owns the
+  commit"). Decisively, `TC-170`'s own evidence test asserts
+  `git status --porcelain` is **NON-EMPTY** after the failure — an
+  implementation that cleaned up after itself would **FAIL the test that holds
+  this row**. So "behind" claimed something the system does not do and is
+  tested *not* to do; restating it to "committing no partially regenerated
+  set" is **truth-matching, not weakening**. The acceptance was
+  *strengthened* in the same act (adds "runs no later family" and "moves the
+  recorded history not at all"). The rollback a reader might infer from
+  "behind" is real but belongs to the **wrapping callers**, and crediting this
+  row with it would have described a guarantee a bare invocation does not give.
+  **(3) `SR-150`** got the behavioral form the other 50 cells got at
+  `2026-08-17s`; binding already at `LLR-170`/`TC-164`, so a pure
+  carrier-naming drop. Two clauses sharpened, not softened. The form pass is
+  now **51 of 51, no holdout**.
+  **(4) `SR-040`'s TRIPWIRE — investigated, and NOTHING serves it. Nothing was
+  invented.** The dial its acceptance cited occurs nowhere in the delivered
+  code or tests; the coordinator carries a tombstone where the warner stood,
+  whose own words are that the **premise dissolved** — no session inherits the
+  status surface as its resume surface any more. The nearest live mechanism,
+  `check_docs`' status line-budget warn, was examined and **REFUSED as a
+  substitute**: different actor (a doc checker, not the delivered coordinator
+  the shall names), different moment (the commit bar, not run start), different
+  surface, already the carrier of another requirement — and **inverted
+  threshold semantics**. That last was **measured, not read off the source**:
+  exercising it on declared `0`, `-1`, `off` and `200` shows a declared zero or
+  negative budget makes it warn on **every non-empty file**, the exact opposite
+  of the row's "silences the warning". Adopting it would have been carrier
+  substitution across a different requirement, component, actor and moment. So
+  `SR-040` is restated as an **open obligation with no current carrier**,
+  `LLR-037` re-written to its live half, and `TC-040` corrected — it was
+  `Approved` while claiming a method clause **no test in its evidence file
+  performs**, hidden by an evidence cell naming a 63-test file instead of
+  functions. **This is the one residue the sitting must still rule**, and it is
+  a ruling (rebuild it, or strike the clause), not work.
+  **Rides named (4), all `Approved` → `Modified`:** `SR-140` (inherent to the
+  split — the row's own text moved), `SR-150` (the sanctioned one), `LLR-037`
+  (an `Approved` design row publishing a **deleted symbol** into the generated
+  knowledge bundle), `TC-040` (`Approved` while claiming a test that does not
+  exist). Mints are all `Drafted`.
+  **A LATENT TRAP FOUND WHILE VERIFYING THIS WORK, and it is the exact
+  double-work the directive exists to prevent.** `form_findings` **skips
+  `Drafted` rows** (`if is_drafted(r): continue`), so the one-`shall` rule is
+  invisible on all 72 pending rows and fires only on APPROVAL. The first cut of
+  `SR-178` carried two `shall` tokens and passed `--strict` clean — it would
+  have redded the `traceability` step the instant the owner signed it, which is
+  precisely what this session was told to prevent. Swept every SR for the class
+  rather than fixing only my own: **two rows carried it** — `SR-178` (mine,
+  re-voiced) and **`SR-171`** (pre-existing, minted `2026-08-17b`: "shall retry
+  … and shall surface"). Both re-voiced to one `shall` with **no clause
+  dropped** — the surfacing is stated as a property of HOW the retry happens,
+  the honest reading, since an unsurfaced bounded retry and a wedge are
+  indistinguishable from outside. If the sitting judges surfacing to fail
+  independently, `SR-171` is a split rather than a re-voice; **flagged in the
+  row, not decided here**. Zero latent multi-`shall` rows remain, and no LLR
+  `Detail` uses `shall`. The detector's `Drafted` exemption is itself worth a
+  ruling — it means a batch approval can red a step no pre-approval check
+  could have shown — but that is the sitting's call, not this pass's.
+  **Two self-corrections, recorded because both were mine.** The first edit
+  moved `SR-140`'s clauses out of the *rationale* and left the `requirement`
+  cell untouched, so the 3-`shall` finding survived — caught by re-running
+  `--strict` rather than by assuming the edit landed. And the new prose cited a
+  WI id in two cells, tripping the provenance rule (a spine row states the
+  system, not its own history); both re-voiced. Also corrected: the sweep
+  behind item 4 flagged `parse_map` as a second dead symbol — it is **live**,
+  re-exported from `agent_common`, so it stays named in `LLR-037`.
+  **GATE AND BRIEF CONSEQUENCE, re-derived not assumed.** `trace.py --strict`
+  **exits 0**, and so does the step's real DevBar-Tests form
+  (`--strict --no-placeholders`): **zero findings**. At the DevBar-Release
+  invocation every remaining finding is `FINDING (status)` — the open-window
+  class — with no form, provenance or schema residue behind it, so **signing
+  now greens `traceability`**. The one gating red left is `trajectory`, a
+  cross-component import seam (`scripts/hats` → `scripts/spine_carrier`)
+  unrelated to the sitting and deliberately NOT fixed: minting an off-spine row
+  the desk already ruled outside this sitting is not a change to make on the eve
+  of signing. Derived bar **unmoved** at `DevBar-Reqs`, stage
+  `DevStg-Boundary`. Spine `SN=27 SR=72 LLR=160 TC=156`, `orphans=0
+  integrity=0`; `Modified` 147 → **151** (the four rides), `Drafted` 68 → **72**
+  (the four mints). Ratify brief regenerated: **63 → 70 sections**, 4,985 →
+  5,343 lines, 432,115 → 498,237 bytes — `SR-140` and `SR-150` join it by
+  riding, `SR-178`/`SR-179` by existing, and the four re-worded rows re-render.
+  Measured against this session's parent `4cf98e4f` with `git show`, not off
+  the working tree: an on-disk reading taken mid-session gave 66 sections and
+  did not reconcile with the committed file, so the git-derived figures are the
+  ones recorded and the on-disk one is discarded rather than reported. Id watermark `SR 177 → 179`, `LLR 177 → 178`, `TC 172 → 173`.
+  **Dashboard ceiling re-stamped** 2,615,000 → 3,025,000: `PROJECT_STATE.html`
+  measured 2,631,151 AFTER the last edit in this commit, +17,037 on HEAD's
+  2,614,114 for four rendered rows plus the expanded prose cells — ordinary
+  per-row cost, nothing in `gen_trajectory.py` changed. Note what the old
+  number had become: 886 bytes of headroom (0.03%), the exact
+  freeze-not-sensor defect this file's own history already diagnoses twice, so
+  the re-stamp restores the ~15% every earlier stamp kept rather than
+  current-plus-something-small. Full unfiltered suite **2582 passed / 10
+  skipped**, 470s — **unchanged** from `2026-08-17w`'s 2582/10, and that is
+  the expected number: the four minted rows cite tests that already existed,
+  so this pass added no test. The only red on the way was the dashboard
+  ratchet, re-stamped above
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=4cf98e4f -->.
 - **2026-08-17w — the `2026-08-17v` round DISPOSITIONED on the owner's "Yes
   please do": 13 findings fixed, 4 proven by the round's own mutations, 1
   refuted in effect, 2 CONFIRMED BUT BLOCKED on a ruling the kit cannot make

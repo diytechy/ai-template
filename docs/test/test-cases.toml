@@ -419,12 +419,13 @@ phase = 1
 [test.TC-040]
 verifies = ["SR-040", "LLR-037"]
 level = "Integration"
-method = """Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the default, a broken map entry exits preflight naming the phase, the banner carries review-policy, and a bloated status.md warns without blocking."""
+method = """Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the default, a broken map entry exits preflight naming the phase, and the banner carries review-policy.
+CORRECTED 2026-08-18: this method claimed a fourth clause — "a bloated status.md warns without blocking" — that NO test in the evidence file performs, and the row was `Approved` while claiming it. The file-granular evidence cell is what hid it: naming a 63-test file rather than the functions leaves a stated clause and an absent test indistinguishable, so the evidence below is now function-granular and the clause is dropped rather than left as a green nothing checks. The tripwire it referred to has no carrier at all (SR-040's acceptance and LLR-037 record the retirement and the refused substitute); when the sitting rules whether to rebuild it, its test is minted with it."""
 tier = "Full"
-expected = "Satisfies SR-040 AcceptanceCriteria"
+expected = "Satisfies SR-040's routing and dial criteria; the resume-surface tripwire clause is unverified BY CONSTRUCTION because it has no carrier"
 automated = "Yes"
-evidence = "tests/test_agent_loop.py"
-status = "Approved"
+evidence = """tests/test_agent_loop.py::test_cmd_map_broken_entry_fails_preflight; tests/test_agent_loop.py::test_review_policy_surfaced_in_banner; tests/test_agent_loop.py::test_model_map_entry_without_equals_fails_preflight"""
+status = "Modified"
 phase = 1
 
 [test.TC-041]
@@ -1508,11 +1509,11 @@ status = "Drafted"
 phase = 5
 
 [test.TC-153]
-verifies = ["SR-140", "LLR-158"]
+verifies = ["SR-178", "LLR-158"]
 level = "Integration"
 method = """RE-POINTED 2026-08-15 (log 2026-08-15h) off the deleted digest suite onto the tests that verify the surviving basis. Run the drift half of the baseline-snapshot suite: it DRIVES the premise rather than asserting it - test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo, which is why a baseline recorded at acceptance time is owed at all - and then pins exactly what a change is taken over. test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT (a ratified cell MUST move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one) and test_a_row_below_approval_can_never_be_drifted (no claim to fall from) are the four corners of the split. That the guard and the snapshot comparison agree is no longer a test at all but a property of the code: split_changed_cells is the ONE public basis both staged_spine_amendments and baseline_snapshot.is_drifted call, so there is no second answer to disagree with."""
 tier = "Smoke"
-expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-158 detail contract"
+expected = "Satisfies SR-178 AcceptanceCriteria via the LLR-158 detail contract"
 automated = "Yes"
 evidence = "tests/test_baseline_snapshot.py"
 status = "Drafted"
@@ -1664,7 +1665,7 @@ phase = 5
 [test.TC-167]
 verifies = ["SR-140", "LLR-173", "IF-123", "IF-128", "IF-129"]
 level = "Integration"
-method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) THE MIRROR INVARIANT: a clean copy passes; a hand-edited snapshot and a partial copy each fail; the prose README is exempt. (f) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes."""
+method = """Run the record half of the baseline-snapshot suite over real temp repos - the half TC-153 does not cover, which is drift. (a) VACUITY: with no snapshot directory every reader is vacuous by ABSENCE, load_all returns None rather than {}, and the mechanical flip is a no-op before the first signing. (b) THE BOOTSTRAP GUARD: copy_live REFUSES to create the directory without seed=True, and --seed is proven UNREACHABLE from every loop module, hook and check step, so the first snapshot can only ride the owner's signing commit. (c) THE COPY CONTRACT: the copy is byte-for-byte and preserves repo-relative paths, and a stale other-carrier file for the same stem is DELETED in the same act (or the next resolve raises "exists under BOTH carriers"). (d) UNANCHORED, BOTH DIRECTIONS: an approved row absent from the snapshot is reported, an approval whose snapshot copy reads BELOW approval is reported (the case that is only decidable because the copy keeps each row's own Status cell), a registry missing from an EXISTING snapshot is reported, and an unparseable snapshot RAISES rather than reading as empty. (e) The snapshot-directory constant has ONE value in both homes, and the `intake.py snapshot` CLI seeds then refreshes. The MIRROR INVARIANT half moved to TC-173 with the SR-140 split (2026-08-18) rather than being covered twice."""
 tier = "Full"
 expected = "Satisfies SR-140 AcceptanceCriteria via the LLR-173 detail contract, and covers the IF-123 provider seam with the two seams this module itself consumes (IF-128 the carrier, IF-129 the comparison basis). The three CONSUMPTION rows IF-124/125/126 are the consumers' own to cover; IF-124 rides TC-161, and IF-125/126 are uncited today"
 automated = "Yes"
@@ -1726,3 +1727,14 @@ automated = "Yes"
 evidence = "tests/test_agent_loop.py::test_session_log_redacts_credential_shapes"
 status = "Drafted"
 phase = 4
+
+[test.TC-173]
+verifies = ["SR-179", "LLR-178"]
+level = "Integration"
+method = """Run the mirror-invariant half of the baseline-snapshot suite over real temp repos - the half TC-167 no longer covers, which is the record's own contents. (a) A clean copy passes, so the rule is silent on the legitimate act it exists to permit. (b) A HAND-EDITED record file fails, and (c) a PARTIAL copy fails - the two forgeries the single byte-identity comparison catches without a second detector. (d) THE DELETION ASYMMETRY, both arms executed rather than argued: a record file deleted WHILE THE REST OF THE RECORD STANDS fails (the cheap laundering - removing the page the unanchored rule reads), while deleting the WHOLE record is SILENT (retirement and wholesale replacement are legitimate). (e) The prose README inside the record is exempt, because it is not a recorded registry and has no live counterpart to be identical to."""
+tier = "Full"
+expected = "Satisfies SR-179 AcceptanceCriteria via the LLR-178 detail contract"
+automated = "Yes"
+evidence = """tests/test_baseline_snapshot.py::test_a_clean_copy_satisfies_the_mirror_invariant; tests/test_baseline_snapshot.py::test_a_HAND_EDITED_snapshot_fails_the_mirror_invariant; tests/test_baseline_snapshot.py::test_a_PARTIAL_copy_fails_the_mirror_invariant; tests/test_baseline_snapshot.py::test_a_snapshot_file_DELETED_while_the_record_STANDS_fails_the_mirror; tests/test_baseline_snapshot.py::test_deleting_the_WHOLE_record_is_SILENT; tests/test_baseline_snapshot.py::test_the_README_is_prose_and_is_exempt_from_the_mirror"""
+status = "Drafted"
+phase = 5

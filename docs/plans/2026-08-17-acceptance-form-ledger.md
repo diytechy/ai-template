@@ -106,3 +106,135 @@ pass ran; the full old text is the parent commit's registry.
 - **SR-151 only-home residue** — carriers recorded in the row's rationale
   because no LLR/TC exists yet; at decomposition the binding moves to the
   minted design/test rows and the rationale line retires.
+
+---
+
+# Addendum — the 2026-08-18 pre-brief pass (log `2026-08-18a`)
+
+**The directive (owner, 2026-08-18, verbatim):** *"please implement any items
+that might block / affect the spine's attributes that I am preparing to
+approve, so I do not have to do it twice."* This sanctions **deliberate rides**
+on `Approved` rows where the fix is owed anyway; each is named below as a ride.
+
+**Method — unchanged from the pass above:** per-cell before/after with the
+pre-edit cell's `sha256:12` taken at `HEAD` (`4cf98e4f`), so any claim here is
+checkable against the parent commit. No obligation is weakened without a
+code-truth justification stated in the row's own rationale.
+
+**Rides taken (4):** `SR-140`, `SR-150`, `LLR-037`, `TC-040` — all
+`Approved` → `Modified`. **Mints (4, all `Drafted`):** `SR-178`, `SR-179`,
+`LLR-178`, `TC-173`. `SR-040` and `SR-173` were already open and did not ride.
+
+## A. The `SR-140` split (directive item 1)
+
+Three `shall` clauses in one row, under a waiver that never resolved the
+finding. Split on the one-decision doctrine; **no obligation dropped** — each
+clause became the normative text of exactly one row, and every child moved to
+the obligation it actually serves.
+
+| Row | Cell | old `sha256:12` → new | Obligation now carried |
+|---|---|---|---|
+| SR-140 | `requirement` | `1ad8b87fadf5` → `7819502f76fb` | clause 1 only — the RECORD (byte-identical copy riding the approval commit; transition + acting reviewer queryable). Clauses 2 and 3 removed **because they moved**, not because they were dropped |
+| SR-140 | `acceptance_criteria` | `6c3c7ce66f97` → `326ae486506a` | the record's criteria + the SEED rule; the drift clause left for SR-178, the refusal clause for SR-179 |
+| SR-140 | `rationale` | `a9dea99645a8` → `a27608bdd9de` | the 13v waiver paragraph replaced by the split record (waiver **SPENT**, and stated so); the SN-029 delegated-approval argument **kept verbatim in substance** — it is this row's content |
+| SR-140 | `status` | `Approved` → `Modified` | **RIDE 1**, inherent to the split: the row's own text moved, so the row flips |
+| SR-178 | *(mint)* | — | clause 2 — report text moved away from the record **regardless of Status movement**, needs included |
+| SR-179 | *(mint)* | — | clause 3 — refuse a copy not byte-identical to live **in the commit that writes it** |
+
+**Chain re-parenting, per obligation:**
+
+| Child | before | after | why |
+|---|---|---|---|
+| LLR-158 `sr_refs` | `e9a500af65b1` `["SR-140"]` | `37ca9c1e4145` `["SR-178"]` | it IS the comparison basis — the drift rule's mechanism |
+| TC-153 `verifies` | `d1f4e6c057f7` | `0a115acdfd65` | follows LLR-158; its four cases are the drift split's corners |
+| TC-153 `expected` | `9c7e27617155` | `d2cc6eaf8b3c` | re-pointed SR-140 → SR-178 |
+| LLR-173 / TC-167 | — | stay on SR-140 | they are the RECORD's design and test |
+| LLR-173 `detail` | `8ed63a6a39ed` → `79e2e0b35786` | sibling pointers re-aimed at SR-178/SR-179 and LLR-178; no mechanism claim changed |
+| TC-167 `method` | `d3adaf330ec0` → `4f01a12b77bd` | mirror-invariant clause **moved** to TC-173 rather than covered twice; remaining clauses re-lettered |
+| LLR-178 / TC-173 | *(mint)* | → SR-179 | the refusal's real home is `check_trajectory.staged_snapshot_findings`, a different module from LLR-173's. Minted so the obligation keeps a chain instead of becoming an undecomposed draft |
+
+**TC-173's evidence is function-granular** (six named tests, all verified to
+exist), deliberately: the SR-040 finding below is what a file-granular evidence
+cell costs.
+
+**Gating consequence:** `trace.py --strict` **exits 0** — the form finding
+that gated the `traceability` step is gone and signing now greens the step.
+
+## B. `SR-173` — truth-matched from code (directive item 2)
+
+| Cell | old → new | Justification |
+|---|---|---|
+| `title` | `f5141015dcf4` → `3302549a9287` | "leaves no partial result" → "commits no partial result" |
+| `requirement` | `f53da721e68e` → `c729759c3483` | "leaving no partially regenerated set BEHIND" → "committing no partially regenerated set" |
+| `acceptance_criteria` | `3ae098385afa` → `85e924988013` | **strengthened**: adds "runs no later family" and "moves the recorded history not at all", and states the working-tree residue as by-design |
+| `rationale` | `cb7868dde0e6` → `761abd8ca4d5` | carries the adjudication and its evidence |
+
+**This is truth-matching, not weakening, and the evidence is decisive.** The
+regen step touches git **not at all**, so on a first failure it exits nonzero
+having run no later step, with HEAD unmoved and nothing committed — and it
+**deliberately leaves** the already-green steps' output dirty in the working
+tree, because the design assigns the commit to the caller (LLR-142: *"never
+commits; the caller owns the commit"*). `TC-170`'s own evidence test asserts
+`git status --porcelain` is **NON-EMPTY** after the failure, so an
+implementation that cleaned up after itself would **FAIL** the test that holds
+this row. "Behind" therefore claimed something the system does not do and is
+tested *not* to do. The transactional rollback a reader might infer from
+"behind" is real but belongs to the **wrapping callers** (the integrator and
+intake each reset the branch to its last work commit on failure); stating it
+here would have credited this row with a guarantee a bare invocation does not
+provide.
+
+## C. `SR-150` — the acceptance-form holdout (directive item 3)
+
+| Cell | old → new | What changed |
+|---|---|---|
+| `acceptance_criteria` | `ed8efc61bc26` → `866004f68167` | `check_need_form.py` re-voiced behaviorally; `--strict` → "the declared strict mode"; each clause kept and two made sharper ("naming the row **and each offending phrase separately** rather than the row alone"; "that list **ships empty**") |
+| `status` | `Approved` → `Modified` | **RIDE 2**, the sanctioned one this pass was told to take |
+
+Binding already exists at **LLR-170 / TC-164**, so this is a pure
+carrier-naming drop — the same disposition the other 50 cells got. The form
+pass is now **51 of 51 with no holdout**.
+
+## D. `SR-040` — the tripwire, adjudicated (directive item 4)
+
+**Verdict: NOTHING serves the obligation. Nothing was invented.**
+
+| Row | Cell | old → new | What changed |
+|---|---|---|---|
+| SR-040 | `acceptance_criteria` | `2dee722294af` → `197ce689c93e` | the unsatisfiable clause ("a declared zero or negative threshold silences the warning") replaced by a stated **fit criterion explicitly marked as not a discharge** |
+| SR-040 | `rationale` | `de0e9bb87e15` → `27f60ce273ac` | gains the retirement record, the refused substitute and its evidence, and the two dispositions left to the sitting |
+| LLR-037 | `title` | `9f8f3c9feaa8` → `50209b97a89c` | "+ size tripwire" dropped — the module has none |
+| LLR-037 | `code_symbol` | `ff2ab2c944c3` → `ae2a74ff1a43` | `status_size_warning` (**deleted symbol**) → `parse_map/read_declared` (both live) |
+| LLR-037 | `detail` | `3de37567ff1d` → `e455aeae8116` | the phantom mechanism's description removed; the absence stated rather than papered over |
+| LLR-037 | `status` | `Approved` → `Modified` | **RIDE 3** — an `Approved` design row was publishing a deleted symbol into the generated knowledge bundle |
+| TC-040 | `method` | `f0a094b4e405` → `1cd0367c5521` | the clause "a bloated status.md warns without blocking" **struck — no test in its evidence file performs it** |
+| TC-040 | `expected` | `99f18ab0af7f` → `fa9893e20c35` | states the tripwire clause is unverified BY CONSTRUCTION, having no carrier |
+| TC-040 | `evidence` | `34670079c539` → `0ee4169f05b1` | file-granular (`tests/test_agent_loop.py`, 63 tests) → **three named functions**, all verified to exist |
+| TC-040 | `status` | `Approved` → `Modified` | **RIDE 4** — it was `Approved` while claiming a test that does not exist |
+
+**Why the live look-alike was REFUSED rather than adopted.** `check_docs`'
+status line-budget warn is the only live "surface exceeds a declared threshold"
+warner in the tree, and it is a **different obligation**, not a partial serve:
+
+| axis | SR-040 demands | the look-alike delivers |
+|---|---|---|
+| actor | the **delivered coordinator** (the row's own subject) | a documentation checker |
+| moment | run start / mid-run, unattended | the commit and gate bar |
+| surface | the **lane resume surface** a resuming session inherits | `docs/status.md` as lean prose for a human reviewer — the "human noticing" C-UNA-8 calls the wrong mechanism |
+| ownership | this row | already the carrier of **another** requirement |
+| threshold | "a declared zero or negative threshold **silences** the warning" | a declared `0`/`-1` makes it warn on **every non-empty file**; only `off` silences |
+
+The threshold inversion was **measured, not read off the source** — the
+function was exercised on declared values `0`, `-1`, `off` and `200`. Adopting
+it would have been carrier substitution across a different requirement,
+component, actor and moment, with inverted semantics.
+
+**Correction to the sweep that produced this finding, recorded because it was
+mine to check:** the investigation also flagged `parse_map` as undefined in the
+declared module. It is **live** — re-exported at `agent_loop.py:231` from
+`agent_common` — so it stays named in LLR-037. Only `status_size_warning` was
+the phantom.
+
+**This is the one residue the sitting must still rule**, and it is a ruling,
+not work: rebuild the tripwire in the coordinator against the *current* resume
+surface, or strike the clause and answer its two hat lenses elsewhere.
