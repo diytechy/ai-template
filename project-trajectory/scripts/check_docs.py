@@ -555,7 +555,7 @@ def _registry_needs(path):
     must_should = {
         n["id"]
         for n in spine_carrier.needs_from_text(text)
-        if n.get("kind") != "draft"
+        if not spine_carrier.is_draft_need(n)
         and not _is_sn_example(n["id"])
         and (n.get("priority") or "").strip().upper() in ("M", "S", "MUST", "SHOULD")
     }

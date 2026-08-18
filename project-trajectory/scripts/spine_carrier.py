@@ -872,7 +872,8 @@ def draft_ids_from_text(text):
     """Draft need ids for a needs registry given only its TEXT, per carrier.
 
     THE TWO CARRIERS ARE DELIBERATELY NOT UNIFIED HERE, and that is the whole
-    care in this function. Under TOML draft-ness is a FIELD, which is what
+    care in this function. Under TOML draft-ness is a FIELD (`status`, read by
+    `is_draft_need`), which is what
     retires section-as-state and kills the sharp edge the 2026-08-10 sitting
     hit — a prose MENTION of an id under the draft heading silently re-drafted
     an already-attested need, because the id universe is a whole-text scrape
@@ -932,7 +933,24 @@ def need_ids(needs):
     return {n["id"] for n in needs}
 
 
+def is_draft_need(need):
+    """Is this need still at draft — the ONE predicate that answers it.
+
+    Drafted-ness lives in `status`, the same field and the same Title-case word
+    the other three spine tiers use (`Drafted | Approved | Modified`); the SN
+    tier used to spell it `kind = "draft"`, a field that also carried row TYPE.
+
+    DUAL-READ WINDOW. While the registry migrates, a row carrying `status` is
+    read by it and a row carrying only the legacy `kind` still answers — so the
+    selector swap and the row rewrite are separately revertible commits rather
+    than one atomic edit. The fallback is transitional and goes with `kind`."""
+    status = need.get("status")
+    if status:
+        return str(status).strip() == "Drafted"
+    return need.get("kind") == "draft"
+
+
 def draft_need_ids(needs):
     """The needs still at draft. A FIELD now, not a heading a prose mention can
     fall under."""
-    return {n["id"] for n in needs if n.get("kind") == "draft"}
+    return {n["id"] for n in needs if is_draft_need(n)}

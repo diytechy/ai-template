@@ -1300,6 +1300,7 @@ Contracts (interfaces): IF-102
 | `draft_ids_from_text(text)` | Draft need ids for a needs registry given only its TEXT, per carrier. |  |
 | `folded_needs(path)` | Every need as the CORE four, `-000` skipped and id-sorted — the shape | SN-000 |
 | `need_ids(needs)` | Every declared need id — the UNIVERSE the draft set is carved out of. |  |
+| `is_draft_need(need)` | Is this need still at draft — the ONE predicate that answers it. |  |
 | `draft_need_ids(needs)` | The needs still at draft. A FIELD now, not a heading a prose mention can |  |
 
 ### `scripts/subagent_gate`
