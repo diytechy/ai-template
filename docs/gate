@@ -25,5 +25,5 @@
 # read the first non-comment line below, exactly as before.
 #
 # basis: SN=27 SR=72 LLR=161 TC=157 drafted=74 modified=151 uncovered=0 computed=DevStg-Below ex-draft=DevStg-Below phase=5 per-phase=1=DevStg-Below;3=DevStg-Tests;4=DevStg-Below;5=DevStg-Below stage=DevStg-Boundary stage-ord=1 stage-of=8
-# computed 2026-08-18 (as-of 1955d931)
+# computed 2026-08-18 (as-of 36990b36)
 DevStg-Reqs

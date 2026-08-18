@@ -223,8 +223,13 @@ def write_arch(root, text):
     for line in text.splitlines():
         m = re.match(r"^### `([^`]+)`", line)
         if m:
-            current = {"name": m.group(1), "summary": "", "contracts": [],
-                       "imports": [], "funcs": []}
+            current = {
+                "name": m.group(1),
+                "summary": "",
+                "contracts": [],
+                "imports": [],
+                "funcs": [],
+            }
             mods.append(current)
             continue
         if current is None:

@@ -134,7 +134,6 @@ Contracts: IF-009, IF-023, IF-077, IF-131 — the interface seams this module de
 """
 
 import argparse
-import ast
 import configparser
 import csv
 import difflib
@@ -996,7 +995,9 @@ def arch_inventory(root):
         return set(), {}, {}
     src_dir = root / src.strip().replace("\\", "/").rstrip("/")
     names, contracts, imports = [], {}, {}
-    for rel, _summary, imps, cons, _rows in gen_arch_map.scan_inventory([src_dir], strict=False):
+    for rel, _summary, imps, cons, _rows in gen_arch_map.scan_inventory(
+        [src_dir], strict=False
+    ):
         names.append(rel)
         if cons:
             contracts.setdefault(rel, set()).update(cons)

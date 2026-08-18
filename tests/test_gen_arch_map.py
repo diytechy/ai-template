@@ -245,8 +245,15 @@ def test_files_mode_rejects_flow(scaffold):
     from conftest import run_py
 
     proc = run_py(
-        ["scripts/gen_arch_map.py", "--mode", "files", "--flow", "run",
-         "--doc", _map_doc(scaffold)],
+        [
+            "scripts/gen_arch_map.py",
+            "--mode",
+            "files",
+            "--flow",
+            "run",
+            "--doc",
+            _map_doc(scaffold),
+        ],
         cwd=scaffold,
     )
     assert proc.returncode != 0
@@ -276,9 +283,7 @@ def test_zero_source_scan_warns_loudly(scaffold):
 
     doc = _map_doc(scaffold)
     run_py(["scripts/gen_arch_map.py", "--doc", doc], cwd=scaffold)
-    proc = run_py(
-        ["scripts/gen_arch_map.py", "--doc", doc, "--check"], cwd=scaffold
-    )
+    proc = run_py(["scripts/gen_arch_map.py", "--doc", doc, "--check"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "no source scanned" in proc.stderr
     assert "ADOPTING.md" in proc.stderr

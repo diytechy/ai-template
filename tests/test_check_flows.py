@@ -58,7 +58,9 @@ def test_missing_section_fails(scaffold):
 
 def test_diagram_without_ids_fails(scaffold):
     make_minimal_project(scaffold)
-    flows_path(scaffold).write_text("# Runtime flows\n" + FLOWS_NO_IDS, encoding="utf-8")
+    flows_path(scaffold).write_text(
+        "# Runtime flows\n" + FLOWS_NO_IDS, encoding="utf-8"
+    )
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 1
     assert "cites no SR/LLR id" in proc.stdout

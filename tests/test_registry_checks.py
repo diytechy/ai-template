@@ -426,8 +426,13 @@ def test_strict_parse_cli_fails_only_with_flag(scaffold):
     )
     assert ok.returncode == 0, ok.stdout + ok.stderr
     strict = run_py(
-        ["scripts/gen_arch_map.py", "--doc", "docs/code-map.md", "--check",
-         "--strict-parse"],
+        [
+            "scripts/gen_arch_map.py",
+            "--doc",
+            "docs/code-map.md",
+            "--check",
+            "--strict-parse",
+        ],
         cwd=scaffold,
     )
     assert strict.returncode == 1

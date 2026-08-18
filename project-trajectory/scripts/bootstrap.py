@@ -313,7 +313,6 @@ Contracts: IF-014, IF-039 — the interface seams this module declares (process.
 """
 
 import argparse
-import configparser
 import re
 import shutil
 import subprocess

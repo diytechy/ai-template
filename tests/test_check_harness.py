@@ -4,7 +4,6 @@ and the tier/coverage wiring must not silently skip tests."""
 import os
 
 from conftest import (
-    DEMO_SRC,
     SCRIPTS,
     SRS,
     augment_env,

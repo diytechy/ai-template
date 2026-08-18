@@ -263,6 +263,7 @@ def write_cont_src(root):
     ini.parent.mkdir(parents=True, exist_ok=True)
     ini.write_text("[paths]\nsrc = scripts\n", encoding="utf-8")
 
+
 CONT_LLRS = """LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component
 LLR-001,SR-001,A,scripts/mod_a,run,d,(see TC),Approved,CMP-001
 LLR-002,SR-001,B,scripts/mod_b,go,d,(see TC),Approved,CMP-001

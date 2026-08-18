@@ -1291,8 +1291,7 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-gate trajectory-map status-map open-items okf "
-    "ratify-fresh".split()
+    "derived-gate trajectory-map status-map open-items okf ratify-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1757,9 +1756,7 @@ def main():
     if not Path("docs").is_dir():
         sys.exit(
             "check: must run at the repo root — no docs/ directory in {} "
-            "(the gate and stack-profile reads are CWD-relative)".format(
-                Path.cwd()
-            )
+            "(the gate and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     # Translate a retired `--gate G2` (warning once) before anything consumes it,  check_vocab: allow
     # so `resolve_gate` and `_step_gate` both see only canonical bar names.

@@ -1100,9 +1100,7 @@ def flows_block(flows):
         return ""
     items = []
     for title, blocks in flows:
-        pres = "".join(
-            "<pre>{}</pre>".format(html.escape(b)) for b in blocks
-        )
+        pres = "".join("<pre>{}</pre>".format(html.escape(b)) for b in blocks)
         items.append(
             '<details class="flow"><summary>{}</summary>{}</details>'.format(
                 html.escape(title), pres

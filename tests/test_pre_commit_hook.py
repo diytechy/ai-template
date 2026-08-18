@@ -45,7 +45,11 @@ def test_hook_floor_no_longer_runs_the_retired_arch_map_step(scaffold):
     # arch-map step is gone from check.py, so the hook's batched floor must
     # not name it — a named-but-unknown step would fail every commit.
     hook_text = (scaffold / HOOK).read_text(encoding="utf-8")
-    line = next(ln for ln in hook_text.splitlines() if "--run-steps" in ln and ln.strip().startswith('"$PY"'))
+    line = next(
+        ln
+        for ln in hook_text.splitlines()
+        if "--run-steps" in ln and ln.strip().startswith('"$PY"')
+    )
     assert "arch-map" not in line
     assert "okf" in line and "trajectory-map" in line
 
