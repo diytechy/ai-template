@@ -36,6 +36,64 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-17p — sitting-3 §0.4 item 18's OWNER-CALL half EXECUTED on
+  investigation: the five contested `owner` cells read against the CODE at
+  both endpoints, four cells moved, one kept with the split recorded; the
+  draft-TC pins half stays open.** Owner: *"What is the information these
+  interfaces provide (based on their owning LLRs or SRs), and then verify
+  that information is being used in the respective destination, and if not
+  correct."* Every destination-use claim verified true in code; what moved is
+  who answers. Per seam: **`IF-127`** REVERTED `LLR-001` → `SR-140` (round-2
+  F1) — adjudicate_brief imports trace lazily inside the composing function
+  and calls `load_registries` + `reattest_model` exactly as contracted, with
+  the empty-model refusal named to the caller; no trace design row names
+  either symbol (`LLR-001`'s code_symbol is `main`), so the recorded
+  `2026-08-15h` exception stands under `2026-08-17c`'s own no-design-row
+  fallback. **`IF-130`** RESOLVED `LLR-050` → `SR-049` (F2) — `bar_label` is
+  a module-scope derive_gate function `traj_status._stage_line` genuinely
+  calls; none of derive_gate's four LLRs names it, so the SR keeps the cell;
+  plus a notes-truth fix: the note claimed "req_refs carries SR-070", but the
+  live cell has carried `SR-168` since the ref was added and never SR-070
+  (the WI-463 mint held SR-049+SR-159). **`IF-043`** KEPT `LLR-017`, the
+  half-contract objection ANSWERED in notes (F3) — the code shows ONE
+  engine: `check_privacy.Scanner` (LLR-017's own code_symbol) compiles BOTH
+  leak classes for a run and `scan_diff_text` yields the one `--range`
+  verdict both branches of hooks/pre-push read; `LLR-018` (same module)
+  answers for the identity/PII class content behind "gated identity",
+  recorded as a ruled split rather than an oversight. **`IF-117`** REVERTED
+  `LLR-023` → `SR-147`, the req_refs SR (F4) — check_doc_refs parses each
+  module itself and calls `gen_arch_map.module_bindings` (module-scope names
+  + class-level defs; contract verified true), and no gen_arch_map design row
+  names that symbol while `LLR-023`'s artifact is exactly what the contract
+  disclaims; RESIDUE FLAGGED for the sitting rather than forced: no SR
+  states the CodeSymbol-anchor obligation itself — SR-147 (the WI-429 mint's
+  own pick) states the carrier, SR-158's acceptance names only the verdict
+  shape (dangling gates, untraced counted) — a candidate-gap nobody has
+  ruled. **`IF-128`** RE-POINTED `LLR-173` → `LLR-166` (the `2026-08-17e`
+  survivor) — under `2026-08-17c` the owner-side endpoint of a Consumes row
+  is the counterpart, `scripts/spine_carrier`, whose one design row
+  `LLR-166` DEFINES the two refusals the contract names (IF-129's
+  the-definer-answers rule; `LLR-173` keeps answering for the snapshot
+  record through IF-124/IF-129); plus one CONTRACT-truth fix: the
+  consumed-symbol list dropped `OFFSPINE_TABLE`, which baseline_snapshot
+  cites only in a comment — the other seven symbols verified consumed in
+  code. No req_refs, direction, contract semantics or approval moved; all
+  five rows stay `drafted`, so the corrections cost no re-attestation and
+  the ratify brief renders them. No seam is dead: all five destinations
+  consume as contracted. Verification: `trace.py --strict` advisories
+  **113 → 112** — the standing IF-128 owner-vs-endpoint advisory cleared
+  exactly as predicted; the gating `SR-140` form finding and exit 1
+  pre-exist; counts unmoved SN=27 SR=70 LLR=159 TC=155 orphans=0 integrity=0
+  interfaces=123 interface-findings=0
+  <!-- fig: cmd=".venv/bin/python project-trajectory/scripts/trace.py --strict" rev=1635ace4 -->.
+  Smoke **1194 passed / 7 skipped**, 34s
+  <!-- fig: cmd=".venv/bin/python -m pytest -q -n auto -m smoke" rev=1635ace4 -->.
+  Sites: `interfaces.toml` (the five rows), sitting-3 item 18 (owner-call
+  half annotated EXECUTED; the pins half and both CONFIRMED-IN-PART residues
+  intact), `status.md`'s live-calls line (item 18 now pins-only). Minor
+  finding, not fixed here (code comment, off this lane):
+  `gen_arch_map.module_bindings`' docstring cites `tests/test_arch_map.py`;
+  the pinning file is `tests/test_gen_arch_map.py`.
 - **2026-08-17n — sitting-3 item 17 RULED ("Yes add them"): `B` and `EXT`
   become watermark spaces, and `REL` joins them on the item's own reasoning.**
   The `2026-08-16q` cut spent `B-06`/`B-07`/`EXT-004` and nothing mechanical

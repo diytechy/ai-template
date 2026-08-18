@@ -588,26 +588,40 @@ SN-specific, and both cheap now and expensive after signing. **Both closed
     [`../reviews/retier-v2/ROUND-2-SOL-TERRA.md`](../reviews/retier-v2/ROUND-2-SOL-TERRA.md)).
     Nothing is applied; every disposition here is yours.
 
-    **Five contested `owner` cells — the OWNER-CALL half.** On each, the
-    item-3 module-match picked a design row the row's own record argues
-    against; the ruled READING is not in question, the per-row pick is:
-    - `IF-127` — re-pointed to `LLR-001` while its `notes` still argue
-      *"Owner is SR-140, not a design row"* (a recorded `2026-08-15h`
-      judgement, overridden without acknowledgement).
-    - `IF-130` — its `notes` explicitly rule OUT `LLR-050` ("none names
-      `bar_label`"); the commit set `owner = "LLR-050"`.
-    - `IF-043` — `LLR-017` answers for half the contract (secrets scan); the
-      identity/PII half is `LLR-018`'s, same module.
-    - `IF-117` — `LLR-023` owns the rendered arch-map check, which is exactly
-      what the seam's contract disclaims.
-    - `IF-128` — the `2026-08-17e` survivor: endpoint `scripts/spine_carrier`
-      is `LLR-166`'s module while `owner` reads `LLR-173`; re-point, or rule
-      the open owner-reading question from `2026-08-16g`.
-    **Impact:** five cells, all `drafted`/unattested, so a re-ruling costs no
-    re-attestation today; the ratify brief renders these rows.
-    **Recommendation:** rule them before signing. Where the notes and the
-    match disagree, either the owner cell moves or the note is re-written to
-    record the override — never both left standing.
+    **Five contested `owner` cells — the OWNER-CALL half — EXECUTED ON
+    INVESTIGATION `2026-08-17p` (owner directive: verify each seam's
+    information against the code at BOTH endpoints, then correct; the
+    never-both-standing discipline applied to every row). Countersign-only
+    now; per-row evidence in the log entry:**
+    - `IF-127` — **REVERTED `LLR-001` → `SR-140`**: adjudicate_brief lazily
+      imports trace and calls `load_registries` + `reattest_model` exactly as
+      contracted; no trace design row names either symbol (`LLR-001`'s
+      code_symbol is `main`), so the recorded `2026-08-15h` exception stands
+      and the note records the re-affirmation.
+    - `IF-130` — **RESOLVED `LLR-050` → `SR-049`**: `bar_label` is a
+      module-scope derive_gate function `_stage_line` genuinely calls, still
+      named by none of derive_gate's four LLRs; the note's false "req_refs
+      carries SR-070" claim corrected (the live cell carries `SR-168`).
+    - `IF-043` — **KEPT `LLR-017`, the split RECORDED in notes**: the code
+      shows ONE engine — `check_privacy.Scanner` (LLR-017's own code_symbol)
+      compiles BOTH leak classes and produces the one `--range` verdict both
+      branches of the hook read; `LLR-018` answers for the identity/PII class
+      content behind "gated identity".
+    - `IF-117` — **REVERTED `LLR-023` → `SR-147`** (the req_refs SR): no
+      gen_arch_map design row names `module_bindings`, and `LLR-023`'s
+      artifact is exactly what the contract disclaims. RESIDUE FLAGGED for
+      this sitting: no SR states the CodeSymbol-anchor obligation itself
+      (SR-147 states the carrier; SR-158's acceptance names only the verdict
+      shape) — a candidate-gap the owner has not ruled.
+    - `IF-128` — **RE-POINTED `LLR-173` → `LLR-166`** (the counterpart's one
+      design row, which DEFINES both refusals the contract names — IF-129's
+      the-definer-answers rule); the standing owner-vs-endpoint advisory
+      cleared (113 → 112), and the contract dropped `OFFSPINE_TABLE` from its
+      consumed-symbol list (comment-only in baseline_snapshot — a false
+      consumption claim; the other seven symbols verified in code).
+    **Impact:** five cells, all `drafted`/unattested — the corrections cost
+    no re-attestation; the ratify brief renders the corrected rows, and the
+    sitting countersigns or overturns them like any other provisional act.
 
     **The RECOMMENDED half — draft-tier debt, not false greens:** `TC-168`'s
     `--wait-on-limit` evidence leaves the `min` cap inert (deleting it stays

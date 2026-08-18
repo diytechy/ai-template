@@ -28,8 +28,10 @@ narrated is in those homes.
 - **The calls the sitting still makes — reconciled `2026-08-17l`, re-pruned
   `2026-08-17n`; the live list is sitting-3 §0.4 items 6 · 18 · 19, each
   stated there with its evidence:** the **one shared status vocabulary + the SN
-  schema census** (item 6; step 7 added `2026-08-17k`), the **five contested
-  `owner` cells + draft-TC pins** (item 18, `2026-08-17f`), and the
+  schema census** (item 6; step 7 added `2026-08-17k`), the **draft-TC pins**
+  (item 18's remaining half — the five contested `owner` cells are EXECUTED
+  on investigation `2026-08-17p`, countersign-only, with one flagged residue:
+  no SR states the CodeSymbol-anchor obligation IF-117 serves), and the
   **acceptance-cell question** (item 19 — current-carrier filenames down to
   the trace tier or registry-id anchors; ruling it later re-touches every
   reworded row). Items
