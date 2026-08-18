@@ -36,8 +36,8 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 81,499 | 2026-08-18 | −264: §3/§4 bolded lead-ins became `###` headings; the retired-vocabulary block moved to `docs/archive/` |
-| `project-trajectory/PROCESS_OPTIONS.md` | 173,375 | 2026-08-18 | +1,328: the artifact-states bullet restated on the `status` field; `partial/` added to the work-folder layer |
+| `project-trajectory/PROCESS.md` | 81,385 | 2026-08-18 | −114: the WI-455 merge — architecture.md references repointed to `docs/runtime-flows.md`/the dashboard |
+| `project-trajectory/PROCESS_OPTIONS.md` | 173,374 | 2026-08-18 | −1: the WI-455 merge's token reconciliation |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

@@ -17,9 +17,11 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
      (topological rank -> crossing-reduced ordering -> coordinates -> SVG),
      done/active/queued shading, hover/click detail. **No CDN / no JS layout
      library** — the kit's offline-render principle (Thread 52 ruling A).
-  3. **How (SW)** — the module map parsed from `docs/architecture.md`'s
-     generated block (a view of the committed code-map artifact; omitted when
-     there is no symbol inventory, e.g. files-mode).
+  3. **How (SW)** — the module map scanned LIVE from the source tree under
+     `[paths] src` (`gen_arch_map.scan_inventory`; WI-455 retired the committed
+     `docs/architecture.md` way-station), plus the authored Runtime flows
+     embedded from `docs/runtime-flows.md`; omitted when there is no symbol
+     inventory, e.g. files-mode.
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
      per the AXES ratification); omitted otherwise.
@@ -135,6 +137,7 @@ from traj_parse import (  # noqa: F401
     project_name,
     project_vision,
     read_sns,
+    runtime_flows,
     schedule,
     spine_stats,
     sw_modules,
@@ -198,6 +201,7 @@ from traj_views import (  # noqa: F401
     _wi_status,
     arch_icicle,
     dag_svg,
+    flows_block,
     sw_containment,
     sw_graph,
     when_view,
@@ -795,13 +799,30 @@ def build_html(root, wis):
     )
     extra_tabs, extra_panels = [], []
     mods = sw_modules(root)
+    # WI-455 (sitting-2 decision 8): the authored Runtime flows embed in the
+    # How-SW panel, so the dashboard carries the FULL architecture — the
+    # derived structure AND the narrative. "" when none are authored.
+    flows_html = flows_block(runtime_flows(root))
     if mods:
         # WI-073: when a CMP layer contains modules, the How-SW panel becomes the
         # containerized top view (≤ ct.TOP_VIEW_MAX items, expandable); otherwise
         # it keeps today's flat graph/table (byte-identical for a no-CMP repo).
         tab, panel = sw_containment(root, mods) or _sw_panel(mods, sw_graph(root, mods))
+        if flows_html:
+            assert panel.endswith("</section>")
+            panel = panel[: -len("</section>")] + flows_html + "\n</section>"
         extra_tabs.append(tab)
         extra_panels.append(panel)
+    elif flows_html:
+        # A files-mode / pre-code repo with authored flows still gets the How
+        # tab: the narrative is architecture even before a symbol map exists.
+        extra_tabs.append(tab_button("sw", "How (SW architecture)"))
+        extra_panels.append(
+            tab_panel_open("sw")
+            + "\n<h2>Software architecture (How)</h2>\n"
+            + flows_html
+            + "\n</section>"
+        )
     # The How-physical CMP table holds the *non-software* components; software
     # components live in the containerized How-SW view above (WI-073), so a
     # domain-neutral CMP row lands in the tab that matches its Category.

@@ -28,7 +28,7 @@ script's independent copy-ability: it is one module's own core, imported by that
 one module. A re-sync copies two files where it copied one (ADOPTING.md §6).
 
 Contracts: IF-076 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.csv).
+in docs/requirements/interfaces.toml).
 
 Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
 LLR-134 (form_findings), LLR-135 (paraphrase_advisories),

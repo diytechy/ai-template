@@ -1745,3 +1745,41 @@ degrade-gracefully, warn-only, hard-refuse), and none of them consults
 `docs/kit-version` — each infers the repo's actual state from its artifacts, which
 is why version-blind re-syncs have mostly survived. The two mechanisms compose
 rather than compete.
+
+---
+
+### `docs/architecture.md` RETIRES — the architecture derives into the dashboard [since c7adf7dc]
+
+The markdown way-station between the registries and the dashboard is gone:
+the module map, import graph and seams are now read STRAIGHT from your source
+tree and registries, and `PROJECT_STATE.html`'s "How (SW architecture)" tab is
+the one rendered home. The authored narrative — the **Runtime flows** the
+DevStg-Tests bar requires — moves to its own doc and the dashboard embeds it.
+
+- **NEW: `docs/runtime-flows.md`** (scaffolded from `RUNTIME_FLOWS.template.md`).
+  **MOVE your authored "Runtime flows" section there** (heading included) —
+  `check_flows.py`'s default `--doc` now points at it, and the obligation is
+  unchanged: required from DevStg-Tests, every diagram citing real SR/LLR ids.
+  A repo that skips this move fails the `design-flows` step with "doc missing".
+- **`ARCHITECTURE.template.md` RETIRES; `docs/architecture.md` leaves `bootstrap.py`'s
+  MAPPING** — a fresh scaffold no longer receives it. Your existing copy is
+  YOURS: after moving the flows out, keep whatever hand-written overview you
+  value (it is no longer checked) or delete the file.
+- **The `arch-map` harness step RETIRES** (`check.py`, the pre-commit hook's
+  batched floor, `trunk_step.py --regen`): there is no committed block left to
+  drift. Remove the `docs/architecture.md = archmap | ...` row from your
+  `docs/stack.ini` `[generated]` section. `[arch-map] mode` KEEPS its meaning
+  — `files` now tells the AST-inventory readers (check_trajectory's coverage
+  rules, the dashboard, `check_doc_refs`'s `sym:` tier) there is no Python
+  source, keeping those layers dormant rather than vacuously green.
+- **`check_doc_refs.py --arch` RETIRES**: the `sym:` oracle scans the source
+  AST under `[paths] src` directly. If you passed `--arch`, drop the flag.
+- **`gen_arch_map.py` stays shipped** as the AST walk the readers import
+  (`scan_inventory`) and as the opt-in CLI for splicing the map into
+  `AGENTS.md`/`CLAUDE.md` marker blocks (`--doc`); a files-mode committed map,
+  if you relied on one, is yours to keep wiring manually.
+- **Behavior sharpened by the live inventory:** the knowledge⇒component
+  containment finding now fires on a module the moment it exists on disk
+  (the old committed-map staleness window is gone) and names the uncontained
+  modules; `gen_okf`'s process-guide for `docs/architecture.md` is replaced by
+  a `runtime-flows` guide, so your `docs/okf/` bundle regenerates once.

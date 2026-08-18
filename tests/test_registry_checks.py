@@ -404,18 +404,36 @@ def test_harness_wires_new_flags():
     assert "--strict-schema" not in cmd_of(g2, "traceability")
     assert "--strict-schema" in cmd_of(allg, "traceability")
     assert "--no-placeholders" in cmd_of(g2, "design-flows")
-    assert "--strict-parse" in cmd_of(allg, "arch-map")
 
 
 def test_strict_parse_cli_fails_only_with_flag(scaffold):
     # A syntax-broken module: bake the PARSE ERROR text in first so --check alone
     # sees the map as up to date, then show --strict-parse still fails (F5).
+    # The CLI is opt-in since WI-455 (no scaffolded docs/architecture.md), so
+    # the test supplies the routed --doc target itself, as an adopter routing
+    # the map into an agent file would.
+    doc = scaffold / "docs" / "code-map.md"
+    doc.write_text(
+        "# Map\n<!-- BEGIN GENERATED MODULE MAP -->\n"
+        "<!-- END GENERATED MODULE MAP -->\n",
+        encoding="utf-8",
+    )
     (scaffold / "src" / "broken.py").write_text("def x(:\n", encoding="utf-8")
-    run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
-    ok = run_py(["scripts/gen_arch_map.py", "--check"], cwd=scaffold)
+    run_py(["scripts/gen_arch_map.py", "--doc", "docs/code-map.md"], cwd=scaffold)
+    ok = run_py(
+        ["scripts/gen_arch_map.py", "--doc", "docs/code-map.md", "--check"],
+        cwd=scaffold,
+    )
     assert ok.returncode == 0, ok.stdout + ok.stderr
     strict = run_py(
-        ["scripts/gen_arch_map.py", "--check", "--strict-parse"], cwd=scaffold
+        [
+            "scripts/gen_arch_map.py",
+            "--doc",
+            "docs/code-map.md",
+            "--check",
+            "--strict-parse",
+        ],
+        cwd=scaffold,
     )
     assert strict.returncode == 1
     assert "failed to parse" in strict.stderr

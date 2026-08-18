@@ -417,28 +417,9 @@ def test_run_step_executes_the_resolved_path(scaffold):
     assert "PASS" in proc.stdout, proc.stdout
 
 
-# --- [arch-map] mode: the stack-neutral fallback declared in the profile ------
-
-
-def test_arch_map_mode_files_comes_from_the_profile(scaffold):
-    # WI-1.25: a non-Python repo declares the file-level map in stack.ini
-    # instead of hand-editing the take-wholesale check.py (the downstream
-    # MODIFIED-FROM-KIT delta this absorbs).
-    (scaffold / "docs" / "stack.ini").write_text(
-        "[arch-map]\nmode = files\ncomment-prefixes = ;; --\n", encoding="utf-8"
-    )
-    proc = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    arch_line = next(ln for ln in proc.stdout.splitlines() if "arch-map" in ln)
-    assert "--mode files" in arch_line
-    assert "--comment-prefix ;;" in arch_line
-    # The default (or an explicit symbols) keeps the historical symbol-map plan.
-    (scaffold / "docs" / "stack.ini").write_text(
-        "[arch-map]\nmode = symbols\n", encoding="utf-8"
-    )
-    proc = run_py(["scripts/check.py", "--gate", "all", "--list"], cwd=scaffold)
-    arch_line = next(ln for ln in proc.stdout.splitlines() if "arch-map" in ln)
-    assert "--mode" not in arch_line
+# --- [arch-map] mode: the declared inventory mode -----------------------------
+# (The committed-map freshness step retired at WI-455; the mode now gates the
+# AST-inventory readers, and check.py keeps validating it loudly.)
 
 
 def test_arch_map_invalid_mode_fails_loudly(scaffold):
@@ -453,9 +434,9 @@ def test_arch_map_invalid_mode_fails_loudly(scaffold):
 
 def test_non_python_stack_seeds_files_mode_and_starts_fresh(tmp_path):
     # bootstrap --stack node seeds [arch-map] mode = files in the scaffolded
-    # profile AND initializes architecture.md in that same mode, so the fresh
-    # non-Python repo's freshness gate is real (not vacuous) and green on
-    # day one — generator and checker must agree on the mode.
+    # profile, telling the AST-inventory readers (WI-455) there is no Python
+    # source to scan — their layers stay dormant, not vacuously green — and
+    # the fresh repo's harness floor is green on day one.
     dest = tmp_path / "repo"
     proc = run_py(
         [SCRIPTS / "bootstrap.py", "--dest", dest, "--stack", "node"], cwd=tmp_path
@@ -464,8 +445,6 @@ def test_non_python_stack_seeds_files_mode_and_starts_fresh(tmp_path):
     ini = (dest / "docs" / "stack.ini").read_text(encoding="utf-8")
     assert "mode = files" in ini
     assert "mode = symbols" not in ini
-    arch = (dest / "docs" / "architecture.md").read_text(encoding="utf-8")
-    assert "--mode files" in arch  # the generated block's byline names the mode
-    chk = run_py(["scripts/check.py", "--run-step", "arch-map"], cwd=dest)
+    assert not (dest / "docs" / "architecture.md").exists()
+    chk = run_py(["scripts/check.py", "--run-step", "trajectory"], cwd=dest)
     assert chk.returncode == 0, chk.stdout + chk.stderr
-    assert "PASS" in chk.stdout

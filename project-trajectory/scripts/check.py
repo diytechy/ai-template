@@ -4,14 +4,14 @@
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
 coverage · derived-gate freshness · traceability · doc-navigability · perf-budgets
-· architecture-map freshness. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
+· work-item trajectory. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
 the format/lint/test commands + `src`/`tests` paths (the "EDIT FOR YOUR STACK"
 block just under the imports is the identical built-in fallback), and add any
 project-specific gate as a `[step:<name>]` section (see extra_steps) — so this
 file stays take-wholesale across a kit re-sync. The contract is the *gates and
 exit code*, not the specific tools. For a non-Python project, replace the
 format/lint/test commands with your own (or drop the ones you don't have); keep
-the traceability/flows/doc-navigability/perf-budgets/arch-map steps — they're
+the traceability/flows/doc-navigability/perf-budgets steps — they're
 stdlib-only and stack-agnostic.
 
 Design choices that keep it honest and CI-friendly:
@@ -139,7 +139,7 @@ def _utf8_console():
 # templates below are the FALLBACK used when no profile file exists — a
 # profile-less repo runs exactly these. Keep them and the scaffolded stack.ini
 # in step: the reference profile declares these same values. The traceability,
-# design-flows, and arch-map steps are stdlib-only and stack-agnostic (kept
+# design-flows steps are stdlib-only and stack-agnostic (kept
 # as-is either way).
 SRC = "src"  # source root ([paths] src)
 TESTS = "tests"  # test root ([paths] tests)
@@ -208,7 +208,6 @@ BUILTIN_STEP_NAMES = frozenset(
         "perf-budgets",
         "design-flows",
         "trajectory",
-        "arch-map",
         "trajectory-map",
         "status-map",
         "open-items",
@@ -416,7 +415,7 @@ def _resolve_lane_map(profile, coverage, tier, phase):
 # Each step: name, the third-party module(s) it needs (importable by THIS
 # interpreter; () = stdlib-only), the command, the set of gates that require it,
 # and its layer — "process" (kit-owned, stdlib-only, identical in every project:
-# traceability / design-flows / arch-map) or "product" (language-specific, you
+# traceability / design-flows) or "product" (language-specific, you
 # wire it to your stack: format / lint / tests). The empty-vs-nonempty `requires`
 # tuple already implies the split; the layer tag formalizes and surfaces it (see
 # process.md §7 "process vs product checks"). Edit commands to fit your stack;
@@ -484,9 +483,13 @@ def steps(coverage, tier, gate, phase=None, profile=None):
         ):  # phased delivery: close DevStg-Impl for this phase only (process.md §4)
             trace_cmd += ["--phase", phase]
     # Arch-map mode from the profile ([arch-map] mode = symbols|files): a
-    # non-Python stack declares `files` for the stack-neutral fallback instead
-    # of hand-editing this take-wholesale file (the downstream delta WI-1.25
-    # absorbed). Invalid values fail loudly, like every other profile error.
+    # non-Python stack declares `files`, which tells the AST-inventory readers
+    # (check_trajectory / the dashboard / check_doc_refs' sym: tier — WI-455)
+    # there is no Python source to scan, so their layers stay dormant instead
+    # of passing vacuously. Invalid values fail loudly, like every other
+    # profile error, even though no step here consumes the mode directly
+    # anymore (the committed-map freshness step retired with
+    # docs/architecture.md).
     arch_mode = _pget(profile, "arch-map", "mode", "symbols")
     if arch_mode not in ("symbols", "files"):
         sys.exit(
@@ -511,22 +514,6 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     if gate in (BAR_TESTS, BAR_RELEASE):
         traj_cmd.append("--strict")
         vocab_cmd.append("--strict")
-    arch_cmd = [
-        sys.executable,
-        str(_SCRIPTS / "gen_arch_map.py"),
-        "--check",
-        "--strict-parse",
-        "--src",
-        src,
-        "--doc",
-        "docs/architecture.md",
-    ]
-    if arch_mode == "files":
-        arch_cmd += ["--mode", "files"]
-        # Optional: whitespace-separated comment tokens whose first line is a
-        # file's summary (gen_arch_map's default already covers # // --).
-        for tok in _pget(profile, "arch-map", "comment-prefixes", "").split():
-            arch_cmd += ["--comment-prefix", tok]
     # Cross-agent skill-sync drift gate (S7): byte-compare each per-agent skill
     # copy (.claude/.gemini/.agents) to the ONE neutral source. gen_skills_index
     # is a KIT-only script (it needs the neutral skills/ source, which only the
@@ -745,21 +732,15 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             {BAR_TESTS, BAR_RELEASE},
             "process",
         ),
-        # Add `--doc AGENTS.md` / `--doc CLAUDE.md` to route the map there too, and
-        # `--flow <entry>` to also check the generated high-level flow.
-        # The mode (symbols vs the stack-neutral files fallback) comes from
-        # docs/stack.ini [arch-map] — see arch_cmd above.
-        (
-            "arch-map",
-            (),
-            arch_cmd,
-            {BAR_RELEASE},
-            "process",
-        ),
+        # (The `arch-map` committed-map freshness step retired at WI-455:
+        # the module map is DERIVED live from the source AST by its readers,
+        # so there is no committed docs/architecture.md block left to drift.
+        # gen_arch_map stays shipped for the opt-in AGENTS.md/CLAUDE.md map
+        # routing; --strict-parse's parse tripwire rides your lint/test steps.)
         # Trajectory dashboard freshness (process-options.md "Trajectory /
         # work-items layer"): the generated-artifact freshness gate for
         # the root PROJECT_STATE.html — gen_trajectory.py --check regenerates in memory
-        # and byte-compares, exactly like arch-map. DevStg-Impl only (like arch-map — the
+        # and byte-compares. DevStg-Impl only (the
         # generated view churns while the plan is still forming). Vacuous on an
         # absent/placeholder-only registry and silent under
         # [checks] trajectory_check = false, so a repo without work items pays nothing.
@@ -1310,8 +1291,7 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-gate arch-map trajectory-map status-map open-items okf "
-    "ratify-fresh".split()
+    "derived-gate trajectory-map status-map open-items okf ratify-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1747,7 +1727,7 @@ def main():
         "--run-steps",
         metavar="NAMES",
         default=None,
-        help="run the named steps (comma-separated, e.g. 'arch-map,okf') "
+        help="run the named steps (comma-separated, e.g. 'okf,trajectory-map') "
         "concurrently with the same lenient semantics as --run-step, reporting "
         "every step's result — so a commit with several stale artifacts names "
         "them all in one pass (the pre-commit hook's batched floor); exits 1 "
@@ -1766,7 +1746,7 @@ def main():
     args = ap.parse_args()
     global _FORCE_TRUNK_LANE
     _FORCE_TRUNK_LANE = args.trunk_lane
-    # check.py resolves docs/gate, docs/stack.ini, and docs/architecture.md
+    # check.py resolves docs/gate and docs/stack.ini
     # relative to the CWD (unlike the sibling scripts, which take --root). Run it
     # anywhere but the repo root and it would silently see no profile and no gate
     # — falling back to the built-in commands and gate `all`, i.e. a different,
@@ -1776,9 +1756,7 @@ def main():
     if not Path("docs").is_dir():
         sys.exit(
             "check: must run at the repo root — no docs/ directory in {} "
-            "(the gate, stack profile, and arch-map reads are CWD-relative)".format(
-                Path.cwd()
-            )
+            "(the gate and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     # Translate a retired `--gate G2` (warning once) before anything consumes it,  check_vocab: allow
     # so `resolve_gate` and `_step_gate` both see only canonical bar names.

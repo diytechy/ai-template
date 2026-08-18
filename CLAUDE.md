@@ -81,7 +81,9 @@ Entry points only — read the directories for the rest.
   repo (dogfooded into `.claude/skills/`): change a convention here, update its
   skill.
 - **The kit's own, filled spine** — not to be confused with those blank forms:
-  `docs/requirements/`, `docs/test/`, `docs/work/`, `docs/stack.ini`, the
+  `docs/requirements/`, `docs/test/`, `docs/work/`, `docs/stack.ini`,
+  `docs/runtime-flows.md` (the authored Runtime flows; the structural
+  architecture is derived into the dashboard — WI-455), the
   derived `docs/gate` (never hand-set), and the generated root
   [`PROJECT_STATE.html`](PROJECT_STATE.html) (`python
   project-trajectory/scripts/gen_trajectory.py`). The traced "product" is

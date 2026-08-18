@@ -218,7 +218,6 @@ Each is regenerated from the registries or source and freshness-gated
 | Artifact | Generator | Shows |
 |---|---|---|
 | `docs/test/report.md` / `.html` | `trace.py` | The traceability matrix: counts, the `SN→SR→LLR→TC` outline, orphans and draft rows colored. |
-| `docs/architecture.md` code map | `gen_arch_map.py` | Per-module summary, Mermaid dependency diagram, `Implements:` back-links — beneath the hand-written one-page overview and the authored runtime flows `check_flows.py` verifies. |
 | root `PROJECT_STATE.html` | `gen_trajectory.py` | The offline dashboard: spine icicle, WI DAG, module map, an OKF knowledge-graph tab (when `docs/okf/` exists), definition/execution meters, a git-derived as-of stamp. |
 | `docs/okf/` | `gen_okf.py` | The same graph exported as an Open Knowledge Format bundle — consumed by the dashboard's Knowledge tab. |
 | `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for DevStg-Release. |

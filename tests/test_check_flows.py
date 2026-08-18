@@ -27,12 +27,12 @@ sequenceDiagram
 FLOWS_UNKNOWN_ID = FLOWS_OK.replace("SR-001", "SR-099")
 
 
-def arch_path(root):
-    return root / "docs" / "architecture.md"
+def flows_path(root):
+    return root / "docs" / "runtime-flows.md"
 
 
 def test_fresh_scaffold_template_section_passes(scaffold):
-    # The copied ARCHITECTURE template ships a placeholder flow (ids ending
+    # The copied RUNTIME_FLOWS template ships a placeholder flow (ids ending
     # -000) and must start green, like every other template artifact.
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -41,7 +41,7 @@ def test_fresh_scaffold_template_section_passes(scaffold):
 
 def test_real_flow_with_known_ids_passes(scaffold):
     make_minimal_project(scaffold)
-    arch_path(scaffold).write_text("# Architecture\n" + FLOWS_OK, encoding="utf-8")
+    flows_path(scaffold).write_text("# Runtime flows\n" + FLOWS_OK, encoding="utf-8")
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # Counts distinct ids (SR-001 + LLR-001), not id kinds.
@@ -50,7 +50,7 @@ def test_real_flow_with_known_ids_passes(scaffold):
 
 def test_missing_section_fails(scaffold):
     make_minimal_project(scaffold)
-    arch_path(scaffold).write_text("# Architecture\nno flows here\n", encoding="utf-8")
+    flows_path(scaffold).write_text("# Doc\nno flows here\n", encoding="utf-8")
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 1
     assert 'no "Runtime flows" heading' in proc.stdout
@@ -58,7 +58,9 @@ def test_missing_section_fails(scaffold):
 
 def test_diagram_without_ids_fails(scaffold):
     make_minimal_project(scaffold)
-    arch_path(scaffold).write_text("# Architecture\n" + FLOWS_NO_IDS, encoding="utf-8")
+    flows_path(scaffold).write_text(
+        "# Runtime flows\n" + FLOWS_NO_IDS, encoding="utf-8"
+    )
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 1
     assert "cites no SR/LLR id" in proc.stdout
@@ -66,8 +68,8 @@ def test_diagram_without_ids_fails(scaffold):
 
 def test_unknown_id_fails(scaffold):
     make_minimal_project(scaffold)
-    arch_path(scaffold).write_text(
-        "# Architecture\n" + FLOWS_UNKNOWN_ID, encoding="utf-8"
+    flows_path(scaffold).write_text(
+        "# Runtime flows\n" + FLOWS_UNKNOWN_ID, encoding="utf-8"
     )
     proc = run_py(["scripts/check_flows.py"], cwd=scaffold)
     assert proc.returncode == 1
@@ -77,7 +79,7 @@ def test_unknown_id_fails(scaffold):
 def test_harness_runs_design_flows_at_g2(scaffold):
     # check.py --gate DevStg-Tests must include and enforce the design-flows step.
     make_minimal_project(scaffold)
-    arch_path(scaffold).write_text("# Architecture\nno flows\n", encoding="utf-8")
+    flows_path(scaffold).write_text("# Doc\nno flows\n", encoding="utf-8")
     proc = run_py(["scripts/check.py", "--gate", "DevStg-Tests"], cwd=scaffold)
     assert proc.returncode != 0
     assert "design-flows" in proc.stdout

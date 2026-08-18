@@ -5,11 +5,13 @@ The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
-Contracts: IF-082, IF-085, IF-111 — the seams this module declares (process.md §8; rows of
-record in docs/requirements/interfaces.csv). Both are the sibling-held halves of
+Contracts: IF-082, IF-085, IF-111, IF-132 — the seams this module declares (process.md §8; rows of
+record in docs/requirements/interfaces.toml). The first two are the sibling-held halves of
 gen_trajectory's own seams: IF-082 is IF-056's derivation-loader read of
 check_trajectory, IF-085 is IF-071's frontier read of schedule (whose guarded import
-has its ONE home here).
+has its ONE home here). IF-132 (WI-455) is the How-SW module source: sw_modules
+consumes gen_arch_map.scan_inventory over the declared src root, replacing the
+retired parse of docs/architecture.md's committed MODULE MAP block.
 """
 
 import json
@@ -28,6 +30,11 @@ except ImportError:  # pragma: no cover - in-process fallback
 # plain here: the facade's guarded import is the module family's ONE sys.path
 # repair, and it runs before this module is ever imported.
 import check_trajectory as ct
+
+# Sibling: the arch-map AST walk — sw_modules' source since WI-455 retired the
+# committed docs/architecture.md MODULE MAP block it used to parse back
+# (IF-132). Plain import for the same reason as `ct` above.
+import gen_arch_map
 
 # schedule.py — the ready-frontier derivation the generated STATUS block projects
 # (WI-284): the forward-looking WI list is GENERATED, not hand-authored, so a
@@ -221,7 +228,10 @@ def _asof(root):
             # asked of the folder registry.
             root / "docs" / "work",
             root / "docs" / "test" / "test-cases.toml",
-            root / "docs" / "architecture.md",
+            root / "docs" / "runtime-flows.md",
+            # The declared arch-map scan root: since WI-455 the How-SW view
+            # reads the source AST directly, so source commits move the stamp.
+            root / ct._arch_scan_profile(root)[0].strip().rstrip("/"),
             root / "README.md",
         )
         if p.exists()
@@ -254,39 +264,63 @@ def _git(root, *args):
 
 
 def sw_modules(root):
-    """[(module, summary, [public symbols])] parsed from architecture.md's
-    GENERATED MODULE MAP block — the committed arch-map artifact is the
-    How-SW source (a view of a view; no AST re-parse). Empty on a files-mode
-    map or a missing doc, and the panel is then omitted."""
-    md = root / "docs" / "architecture.md"
-    mods, current, inside = [], None, False
-    if not md.exists():
-        return mods
-    for line in md.read_text(encoding="utf-8").splitlines():
-        if "BEGIN GENERATED MODULE MAP" in line:
-            inside = True
+    """[(module, summary, [public symbols])] derived straight from the source
+    AST under the declared arch-map scan root (`[paths] src` + `[arch-map]
+    mode`), via `gen_arch_map.scan_inventory` (IF-132) — the How-SW source.
+    Until WI-455 (sitting-2 decision 8) this parsed the committed MODULE MAP
+    block back out of `docs/architecture.md`; the registries→dashboard
+    re-pointing retired that way-station. Selection is unchanged from the
+    old parse: public FUNCTION symbols only (a class row rendered without a
+    signature never matched), and a module with no symbol is dropped. Empty
+    in files mode (no parser) or under an absent root — the panel is then
+    omitted, exactly as it was pre-arch-map."""
+    src, mode = ct._arch_scan_profile(root)
+    if mode == "files":
+        return []
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    mods = []
+    for rel, summary, _imports, _contracts, rows in gen_arch_map.scan_inventory(
+        [src_dir], strict=False
+    ):
+        symbols = [name for name, sig, _summ, _ids in rows if sig]
+        if symbols:
+            mods.append({"name": rel, "summary": summary, "symbols": symbols})
+    return mods
+
+
+def runtime_flows(root):
+    """`[(title, [mermaid blocks])]` from the authored `docs/runtime-flows.md`
+    (the narrative half of the architecture record, WI-455): every heading
+    inside the check_flows-checked doc that owns >=1 ```mermaid fence, in file
+    order — the dashboard embeds them beside the derived How-SW views so
+    PROJECT_STATE.html carries the FULL architecture (sitting-2 decision 8).
+    Empty when the doc is absent (a repo not yet at DevStg-Tests pays
+    nothing)."""
+    doc = root / "docs" / "runtime-flows.md"
+    if not doc.exists():
+        return []
+    flows, title, buf, in_fence = [], None, [], False
+    fence = []
+    for line in doc.read_text(encoding="utf-8", errors="replace").splitlines():
+        if in_fence:
+            if line.strip() == "```":
+                in_fence = False
+                if title is not None:
+                    buf.append("\n".join(fence))
+            else:
+                fence.append(line)
             continue
-        if "END GENERATED" in line:
-            inside = False
-            current = None
-            continue
-        if not inside:
-            continue
-        m = re.match(r"^### `([^`]+)`", line)
+        m = re.match(r"^(#{1,6})\s+(.*)$", line)
         if m:
-            current = {"name": m.group(1), "summary": "", "symbols": []}
-            mods.append(current)
+            if title is not None and buf:
+                flows.append((title, buf))
+            title, buf = m.group(2).strip(), []
             continue
-        if current is None:
-            continue
-        s = re.match(r"^\| `(\w+)[(`]", line)
-        if s:
-            current["symbols"].append(s.group(1))
-            continue
-        t = re.match(r"^_(.+)_$", line.strip())
-        if t and not current["summary"]:
-            current["summary"] = t.group(1)
-    return [m for m in mods if m["symbols"]]
+        if line.strip().startswith("```mermaid"):
+            in_fence, fence = True, []
+    if title is not None and buf:
+        flows.append((title, buf))
+    return flows
 
 
 def cmp_rows(root):

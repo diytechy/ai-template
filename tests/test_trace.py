@@ -1289,11 +1289,11 @@ def twice(n):
 
 
 def _seam_scaffold(scaffold, verifies):
-    """A two-module project whose single TC cites `verifies`, arch-map refreshed."""
+    """A two-module project whose single TC cites `verifies` (no arch-map
+    refresh since WI-455 — trace joins IF endpoints to LLR Module cells, and
+    the derived inventory reads the source tree directly)."""
     make_minimal_project(scaffold)
     (scaffold / "src" / "helper.py").write_text(HELPER_SRC, encoding="utf-8")
-    proc = run_py(["scripts/gen_arch_map.py"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
     _write_ifs(scaffold, TWO_MODULE_IFS)
     (scaffold / "docs" / "test" / "test-cases.csv").write_text(
         "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"

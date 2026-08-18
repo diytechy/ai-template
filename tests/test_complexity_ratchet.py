@@ -149,7 +149,10 @@ BASELINE = {
     # here — the simplification the ratchet prefers, applied as far as it goes.
     ("check_trajectory.py", "main"): 22,
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
-    ("gen_arch_map.py", "main"): 17,
+    (
+        "gen_arch_map.py",
+        "main",
+    ): 18,  # +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
     ("gen_cases.py", "all_pairs"): 13,
     ("gen_cases.py", "main"): 12,
     ("gen_okf.py", "_doc_title_and_summary"): 13,

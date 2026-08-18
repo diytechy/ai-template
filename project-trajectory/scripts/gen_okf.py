@@ -76,7 +76,10 @@ PROCESS_GUIDE_DOCS = [
     ("AGENTS.md", "agents", "Agent guide"),
     ("docs/process.md", "process", "Process"),
     ("docs/process-options.md", "process-options", "Process options"),
-    ("docs/architecture.md", "architecture", "Architecture"),
+    # The authored-narrative half of the architecture record: replaced the
+    # retired docs/architecture.md at the sitting-2 decision-8 program (the
+    # structural half derives into PROJECT_STATE.html, which is not a guide).
+    ("docs/runtime-flows.md", "runtime-flows", "Runtime flows"),
     ("docs/status.md", "status", "Status blackboard"),
     ("docs/plan.md", "plan", "Plan"),
 ]

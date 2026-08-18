@@ -367,29 +367,6 @@ def _pget(profile, section, option, fallback):
     )
 
 
-def _arch_map_cmd(root):
-    """gen_arch_map's argv, built from `docs/stack.ini` the way check.py builds
-    its `--check` twin ([paths] src, [arch-map] mode/comment-prefixes) — the same
-    declared source, so the write and the freshness gate can't disagree. Kept
-    minimal on purpose; gen_arch_map is the only generator with no `--root`, so
-    every step here runs with `cwd=root`."""
-    profile = _profile(root)
-    cmd = [
-        sys.executable,
-        str(_SCRIPTS / "gen_arch_map.py"),
-        "--strict-parse",
-        "--src",
-        _pget(profile, "paths", "src", "src"),
-        "--doc",
-        "docs/architecture.md",
-    ]
-    if _pget(profile, "arch-map", "mode", "symbols") == "files":
-        cmd += ["--mode", "files"]
-        for tok in _pget(profile, "arch-map", "comment-prefixes", "").split():
-            cmd += ["--comment-prefix", tok]
-    return cmd
-
-
 def _cmd(name, *args):
     return lambda root: [sys.executable, str(_SCRIPTS / name), "--root", ".", *args]
 
@@ -426,23 +403,18 @@ def _open_items(root):
 
 # (name, applies(root) -> bool, argv(root) -> list, why-skipped).
 #
-# DEPENDENCY ORDER, and every edge in it is real:
-#   arch-map     reads source only.
+# DEPENDENCY ORDER, and every edge in it is real (the arch-map step retired
+# at WI-455 — the module map derives live from the source AST, so there is no
+# committed block left to regenerate):
 #   okf          reads the registries; the dashboard's Knowledge tab reads the
 #                BUNDLE, so a stale bundle would bake stale knowledge into the
-#                dashboard (PROCESS_OPTIONS.md "arch-map -> okf -> trajectory").
+#                dashboard (PROCESS_OPTIONS.md "okf -> trajectory").
 #   derived-gate reads artifact STATES only — nothing generated — and both
 #                surfaces below read its `docs/gate` output.
 #   trajectory   the dashboard highlights the current gate from `docs/gate`.
 #   status       the snapshot projects the derived gate + spine counts.
 #   open-items   reads the registry + git; nothing reads it back.
 REGEN_STEPS = (
-    (
-        "arch-map",
-        _has("docs/architecture.md"),
-        _arch_map_cmd,
-        "docs/architecture.md absent",
-    ),
     (
         "okf",
         lambda root: (Path(root) / "docs" / "okf").is_dir(),

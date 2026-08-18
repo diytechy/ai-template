@@ -45,11 +45,12 @@ classes links can't see, with false-positive control as the design center
      the whole point: a suppression list hides findings, a REASON classifies
      them, so an untraced count that jumps is still a signal you can read.
   2. SYMBOL TIER (opt-in convention — no heuristic storm): only references
-     written `sym:<module>.<name>` are checked, against the generated module
-     map in architecture.md (the arch-map inventory is the oracle — reuse the
-     artifact, don't re-parse the AST). You *assert* a symbol exists and the
-     check holds you to it. No module map / no symbols -> the tier skips
-     cleanly (a files-mode or non-Python stack degrades gracefully).
+     written `sym:<module>.<name>` are checked, against the public-symbol
+     inventory scanned from the source AST via gen_arch_map.scan_inventory
+     (WI-455 — the committed architecture.md map this once parsed is
+     retired). You *assert* a symbol exists and the check holds you to it.
+     No scannable source / files mode -> the tier skips cleanly (a
+     non-Python stack degrades gracefully).
   3. REGISTRY TIER (WI-394, owner ruling R2 2026-08-01, option (c)): the
      spine's Evidence-class cells — TC `Evidence`, LLR `Module`/`CodeSymbol`/
      `TestRefs`, the four pointers OUT of the registries into the code and
@@ -78,6 +79,7 @@ Contracts: IF-008, IF-028, IF-072, IF-104, IF-117 — the interface seams this m
 
 import argparse
 import ast
+import configparser
 import re
 import sys
 from pathlib import Path
@@ -174,8 +176,6 @@ DEFAULT_ABSENCES = "docs/declared-absences"
 LINE_SUFFIX = re.compile(r":\d+(?:-\d+)?$")
 BACKTICK = re.compile(r"`([^`\n]+)`")
 SYM = re.compile(r"\bsym:([A-Za-z_][\w.]*)\.(\w+)\b")
-MOD_HEAD = re.compile(r"^### `([^`]+)`")
-SYM_ROW = re.compile(r"^\| `(\w+)[(`]")
 
 
 def _strip_line_suffix(token):
@@ -254,23 +254,53 @@ def doc_files(root):
     return out
 
 
-def load_symbol_oracle(arch_path):
-    """{module-tail: {symbols}} parsed from the generated module map, or {}."""
-    if not arch_path.exists():
+def _scan_profile(root):
+    """`([paths] src, [arch-map] mode)` read leniently from docs/stack.ini —
+    an absent or broken profile degrades to ("src", "symbols"). A small
+    stable loader duplicated per the F5 convention (check_trajectory holds
+    its own private twin)."""
+    ini = root / "docs" / "stack.ini"
+    src, mode = "src", "symbols"
+    if ini.exists():
+        cp = configparser.ConfigParser(interpolation=None)
+        try:
+            cp.read_string(ini.read_text(encoding="utf-8", errors="replace"))
+            if cp.has_option("paths", "src"):
+                src = cp.get("paths", "src").strip() or "src"
+            if cp.has_option("arch-map", "mode"):
+                mode = cp.get("arch-map", "mode").strip() or "symbols"
+        except configparser.Error:
+            pass
+    return src, mode
+
+
+def load_symbol_oracle(root):
+    """{module-tail: {public function symbols}} derived straight from the
+    source AST under the declared arch-map scan root, via
+    `gen_arch_map.scan_inventory` (WI-455 — the committed docs/architecture.md
+    MODULE MAP block this used to parse back is retired; the `--arch` flag
+    went with it). The selection matches what the rendered map's public rows
+    gave the old parse: function rows only, so the `sym:` tier's answers are
+    unchanged. {} when the scan root is absent or the profile declares files
+    mode — the tier then skips exactly where it used to."""
+    src, mode = _scan_profile(root)
+    if mode == "files":
         return {}
-    oracle, current = {}, None
-    for line in arch_path.read_text(
-        encoding="utf-8-sig", errors="replace"
-    ).splitlines():
-        m = MOD_HEAD.match(line)
-        if m:
-            current = m.group(1).replace("\\", "/").split("/")[-1]
-            oracle.setdefault(current, set())
-            continue
-        s = SYM_ROW.match(line)
-        if s and current:
-            oracle[current].add(s.group(1))
-    return {k: v for k, v in oracle.items() if v}
+    try:
+        import gen_arch_map
+    except ImportError:  # pragma: no cover - in-process fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import gen_arch_map
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    oracle = {}
+    for rel, _summary, _imports, _contracts, rows in gen_arch_map.scan_inventory(
+        [src_dir], strict=False
+    ):
+        tail = rel.replace("\\", "/").split("/")[-1]
+        syms = {name for name, sig, _summ, _ids in rows if sig}
+        if syms:
+            oracle.setdefault(tail, set()).update(syms)
+    return oracle
 
 
 def load_declared_absences(path):
@@ -701,11 +731,6 @@ def main():
     )
     ap.add_argument("--root", default=".", help="repo root (default: cwd)")
     ap.add_argument(
-        "--arch",
-        default="docs/architecture.md",
-        help="module-map doc holding the symbol inventory (the sym: oracle)",
-    )
-    ap.add_argument(
         "--strict",
         action="store_true",
         help="exit 1 on DANGLING findings (default: warn-first, exit 0). "
@@ -750,11 +775,11 @@ def main():
     absences = load_declared_absences(
         (root / args.declared_absences) if args.declared_absences else None
     )
-    oracle = load_symbol_oracle(root / args.arch)
+    oracle = load_symbol_oracle(root)
     if not oracle:
         print(
-            "check_doc_refs: no symbol inventory in {} — the sym: tier is "
-            "skipped (path tier still runs).".format(args.arch)
+            "check_doc_refs: no symbol inventory under the declared scan root "
+            "— the sym: tier is skipped (path tier still runs)."
         )
     findings, untraced = [], []
     for doc in doc_files(root):

@@ -15,7 +15,7 @@ import shutil
 
 from conftest import ROOT, load_script
 from traj_fixtures import (
-    ARCH_MD,
+    write_arch_src,
     SMALL_WIS,
     _css_var,
     _flat_bundle,
@@ -821,7 +821,7 @@ def _landing_dashboard(root):
     module map, so all three reading tasks' entry points are present — and return
     (hero, navbar), the two slices of the emitted document a reader lands on."""
     make_repo(root, T1_ALL_QUEUED, header=NW_HEADER)
-    (root / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(root)
     assert gen(root).returncode == 0
     html = html_of(root)
     hero = html.split('class="hero"', 1)[1].split("</section>", 1)[0]

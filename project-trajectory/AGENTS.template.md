@@ -49,16 +49,16 @@ the ladder, and the ID scheme. The short version needed every session:
   result you didn't run — paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   concurrent ones) are authored Mermaid sequence diagrams in
-  [docs/architecture.md](docs/architecture.md) "Runtime flows", kept current
+  [docs/runtime-flows.md](docs/runtime-flows.md), kept current
   with the LLRs (`scripts/check_flows.py` enforces; §3).
 - **Releases (if versioned):** `DevStg-Release` runs the `release` tier plus
   the generated checklist (`scripts/gen_release_checklist.py`).
-- **The code map is generated** (`scripts/gen_arch_map.py`): per-module
-  summary, internal dependencies and public symbols with `Implements:`
-  back-links, in [docs/architecture.md](docs/architecture.md). **Read it to
-  find where a capability lives before searching the tree**; the harness keeps
-  it (and the Mermaid diagram) fresh — never hand-edit between `GENERATED`
-  markers; never commit exported diagrams.
+- **The code map is derived from the source AST**: per-module summary and
+  public symbols with `Implements:` back-links, rendered live in
+  `PROJECT_STATE.html`'s How-SW tab. **Read it to
+  find where a capability lives before searching the tree**;
+  `scripts/gen_arch_map.py --doc` can also splice it here — never hand-edit
+  between `GENERATED` markers; never commit exported diagrams.
 - **Start each session** with *Current State* in
   [docs/status.md](docs/status.md); end each turn by updating it (stage, what
   changed, next action). **Commit early and often** — small and green per

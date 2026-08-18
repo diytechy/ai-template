@@ -5,7 +5,7 @@ How-SW seam graph / containment drill, plus their tab panels. The facade
 re-exports, so consumers are unchanged.
 
 Contracts: IF-083 — the seam this module declares (process.md §8; row of record in
-docs/requirements/interfaces.csv): IF-056's derivation-loader read of
+docs/requirements/interfaces.toml): IF-056's derivation-loader read of
 check_trajectory, as held by the sibling that now carries the import.
 """
 
@@ -1076,6 +1076,49 @@ def when_view(root, wis):
     return DRILL_STYLE + summary + _render_drill("when", root_id, "Roadmap", layers)
 
 
+FLOWS_STYLE = (
+    "<style>#sw .flow{margin:.4rem 0;}"
+    "#sw .flow>summary{cursor:pointer;font-weight:600;}"
+    "#sw .flow pre{overflow-x:auto;background:var(--surface);"
+    "border:1px solid var(--border);border-radius:var(--r-ctl);padding:.6rem;"
+    "font-size:var(--tiny);line-height:1.35;}</style>"
+)
+
+
+def flows_block(flows):
+    """The authored Runtime-flows embed for the How-SW panel (WI-455,
+    sitting-2 decision 8: PROJECT_STATE.html carries the FULL architecture —
+    derived structure plus the authored narrative). Each flow of
+    `docs/runtime-flows.md` renders as a native `<details>` holding its Mermaid
+    source in a `<pre>`: the dashboard is offline/self-contained (no diagram
+    toolchain, per the strict no-external-asset posture), so it embeds the
+    same TEXT GitHub/VS Code render natively in the doc itself — a sequence
+    diagram's source reads top-to-bottom like a script. Returns "" when no
+    flows are authored, keeping a pre-DevStg-Tests repo's panel
+    byte-identical."""
+    if not flows:
+        return ""
+    items = []
+    for title, blocks in flows:
+        pres = "".join("<pre>{}</pre>".format(html.escape(b)) for b in blocks)
+        items.append(
+            '<details class="flow"><summary>{}</summary>{}</details>'.format(
+                html.escape(title), pres
+            )
+        )
+    return (
+        "\n<h2>Runtime flows (authored)</h2>\n"
+        '<p class="cap">The narrative half of the architecture record: '
+        "hand-authored Mermaid sequence diagrams from "
+        "<code>docs/runtime-flows.md</code>, each citing the SR/LLR ids it "
+        "renders (<code>check_flows.py</code> keeps the citations honest). "
+        "Embedded as diagram source — read a flow top-to-bottom like a "
+        "script, or open the doc for native rendering.</p>\n"
+        + FLOWS_STYLE
+        + "".join(items)
+    )
+
+
 def _sw_panel(mods, graph=None):
     tab = tab_button("sw", "How (SW architecture)")
     rows = []
@@ -1121,10 +1164,9 @@ def _sw_panel(mods, graph=None):
         tab_panel_open("sw")
         + "\n<h2>Software architecture (How)</h2>\n"
         + graph_block
-        + '<p class="cap">The module map from <code>docs/architecture.md</code> — a '
-        "view of the generated code map (its <code>--check</code> keeps it honest "
-        "against the AST), unified here so one artifact answers What, How and "
-        "When.</p>\n"
+        + '<p class="cap">The module map, derived straight from the source AST '
+        "under the declared scan root (per-module summary and public symbols), "
+        "unified here so one artifact answers What, How and When.</p>\n"
         + SCROLL_CUE
         + '<div class="tablescroll" '
         + _hscroll("Module map table, horizontally scrollable")

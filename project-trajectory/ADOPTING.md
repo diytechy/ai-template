@@ -120,38 +120,32 @@ only as the fallback when no `docs/stack.ini` exists — prefer the profile.)
 
 Two shipped scripts parse **Python source specifically**:
 
-- **`gen_arch_map.py`** (the code map + dependency diagram + `--check`
-  freshness gate). On a repo with no `.py` under `SRC` it generates an empty
-  map once, and `--check` then passes **vacuously forever** — the
-  "architecture can't drift" guarantee silently lapses while the docs still
-  claim it (the script now warns on stderr when it scans nothing). Pick one,
-  explicitly:
-  1. **Port it** (recommended for a repo you'll live in): any tool that can
-     enumerate modules/symbols in your language (ts-morph, `go doc`, a Gradle
-     task over the AST) writing into the **same marker block**
-     (`<!-- BEGIN/END GENERATED MODULE MAP -->` etc.) — the marker block is
-     the whole contract; `--check`-style freshness is a string comparison.
+- **`gen_arch_map.py`** (the AST walk behind the DERIVED architecture —
+  WI-455: the dashboard's How-SW tab, the connectivity/containment coverage
+  and the `sym:` oracle all scan the source live; there is no committed
+  `docs/architecture.md` anymore). On a repo with no `.py` under `SRC` the
+  scan is empty, and those layers would read **vacuously green** while the
+  docs still claim the guarantee. Pick one, explicitly:
+  1. **Declare `[arch-map] mode = files`** in `docs/stack.ini` (a fresh
+     `bootstrap.py --stack node|go|rust|powershell` seeds it): the honest
+     "no Python source here" declaration — the derived-architecture layers go
+     **dormant** instead of vacuously green, and nothing else changes. This is
+     the default posture until you port.
+  2. **Port the walk** (recommended for a repo you'll live in): any tool that
+     can enumerate modules/symbols in your language (ts-morph, `go doc`, a
+     Gradle task over the AST) writing into a routed **marker block**
+     (`<!-- BEGIN/END GENERATED MODULE MAP -->` in your agent guide or a doc
+     you keep) — the marker block is the whole contract; `--check`-style
+     freshness is a string comparison, wired as your own harness step.
      **PowerShell repos start from the shipped port:** copy
      `scripts/gen_arch_map.reference.ps1` to `scripts/gen_arch_map.ps1`, edit
      its `$ModuleGlob` / `$EntryScripts` / `-Flow` default, and drive it with
-     `-Check`. It fills the same three marker blocks from the PowerShell AST, so
-     the pre-commit hook and CI treat it exactly like the Python one. (The
-     kit's `hooks/pre-commit` carries the `gen_arch_map.py --check` line as an
-     **EDIT marker** naming the `pwsh … gen_arch_map.ps1 -Check` swap.)
-  2. **Run the stack-neutral fallback** (`gen_arch_map.py --mode files`): the
-     same script fills the same marker block with **one row per source file**
-     (path + first comment line) instead of symbol-level rows. No new runtime,
-     works for any language, and `--check` still trips on a file
-     added/removed/renamed or a summary edit — a real freshness gate, just
-     coarser. Wire it by declaring `[arch-map] mode = files` in
-     `docs/stack.ini` (plus `comment-prefixes = <tokens>` if your comment
-     token isn't `#`/`//`/`--`) — the take-wholesale `check.py` reads it, no
-     hand-edit needed; a fresh `bootstrap.py --stack node|go|rust|powershell`
-     seeds it for you. Prefer this over a vacuous pass whenever you haven't
-     ported a symbol-level generator yet.
-  3. **Remove the `arch-map` step** from `check.py` and delete the generated
-     markers from `architecture.md`, keeping the hand-written overview. Honest,
-     just weaker: record the loss in `docs/status.md` constraints.
+     `-Check`.
+  3. **The stack-neutral fallback** (`gen_arch_map.py --mode files --doc
+     <your doc>`): one row per source file (path + first comment line) into
+     the same marker block. No new runtime, works for any language, and
+     `--check` still trips on a file added/removed/renamed or a summary edit
+     — a real freshness gate, just coarser.
 - **`check_stubs.py`** is Python-only and already optional/product-layer: swap
   it for your language's equivalent or ignore it.
 - **`check_flows.py`** (the authored "Runtime flows" section, required from DevStg-Tests)
@@ -168,7 +162,7 @@ Two shipped scripts parse **Python source specifically**:
 
 There is **one** definition of passing, and CI must run it too. On a PowerShell
 repo that is **`scripts/check.ps1`** (the launcher that runs lint + tests +
-`trace.py` + the PowerShell arch-map freshness) — *not* `check.py`, which drives
+`trace.py` + your own arch-map freshness step, if you wired one) — *not* `check.py`, which drives
 the Python toolchain. Wire `.github/workflows/` to invoke the same `check.ps1`
 so local and CI agree (the FileBackup pilot's canonical gate is `check.ps1`; its
 `check.py` is a thin optional shim, not the source of truth). Whatever you pick,
@@ -274,7 +268,7 @@ not which filename plays which role. When re-syncing such a repo:
 - Put the kit's **agent-guide content** (the working agreement, the "how we work"
   rules, the generated code-map routing) wherever your agent guide actually lives
   — for the inverse layout that's `CLAUDE.md`. Route `gen_arch_map`'s `--doc`
-  there (and/or into `architecture.md`), not blindly into `AGENTS.md`.
+  there, not blindly into `AGENTS.md`.
 - Keep the pointer discipline: whichever file is the encyclopedia, the others say
   "defer to it, don't duplicate." State the mapping once at the top of each file
   so an agent isn't guessing which `AGENTS.md` convention this repo follows.

@@ -16,8 +16,8 @@ import shutil
 
 from conftest import ROOT, load_script
 from traj_fixtures import (
-    ARCH_MD,
-    CONT_ARCH,
+    write_arch_src,
+    write_cont_src,
     CONT_CMPS,
     CONT_LLRS,
     cmp_row,
@@ -37,7 +37,7 @@ from traj_fixtures import (
 
 # --- WI-450: an atomic snapshot for the two real-meta-repo-reading tests ------
 # `test_meta_component_top_view_smoke` and the WI-435 when/how drill test below
-# both deliberately read the REAL repo's own docs/architecture.md and live
+# both deliberately read the REAL repo's own source tree and live
 # registries (they exist to check the META repo's own state, not synthetic
 # data) — but they used to read ROOT live, and a concurrent regeneration in
 # another checkout of this same machine (gen_arch_map.py / gen_trajectory.py
@@ -48,7 +48,11 @@ from traj_fixtures import (
 # either test starts parsing, makes the read atomic without changing what it
 # reads — real-repo semantics preserved, just insulated from a torn read.
 _REAL_ROOT_INPUTS = (
-    "docs/architecture.md",
+    # WI-455: the arch inventory reads the SOURCE TREE under the declared
+    # [paths] src root (docs/architecture.md retired as the way-station), so
+    # the snapshot copies the scripts tree + the profile that names it.
+    "project-trajectory/scripts",
+    "docs/stack.ini",
     "docs/requirements/low-level-requirements.toml",
     "docs/requirements/components.toml",
     "docs/requirements/interfaces.toml",
@@ -81,7 +85,7 @@ def test_how_sw_view_renders_from_the_module_map(tmp_path):
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     assert "How (SW architecture)" not in html_of(tmp_path)
-    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert 'data-tab="sw"' in text and "How (SW architecture)" in text
@@ -106,7 +110,7 @@ def test_how_sw_graph_renders_seams(tmp_path):
     # interface graph (module + file + external nodes, IF-labeled edges); the
     # render is byte-deterministic so --check stays stable.
     make_repo(tmp_path)
-    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(tmp_path)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
         if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
         + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),
@@ -126,7 +130,7 @@ def test_how_sw_stays_a_table_without_seams(tmp_path):
     # No IF rows -> the panel keeps the bare module table (graph earned by seams);
     # no graph marker leaks into the render.
     make_repo(tmp_path)
-    (tmp_path / "docs" / "architecture.md").write_text(ARCH_MD, encoding="utf-8")
+    write_arch_src(tmp_path)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert "How (SW architecture)" in text
@@ -183,7 +187,7 @@ def test_no_cmp_renders_flat_view_byte_identical(tmp_path):
     # The vacuity guarantee: render flat (no CMP layer), add the containment
     # (panel changes), remove it, re-render == the original flat bytes exactly.
     make_repo(tmp_path)
-    (tmp_path / "docs" / "architecture.md").write_text(CONT_ARCH, encoding="utf-8")
+    write_cont_src(tmp_path)
     assert gen(tmp_path).returncode == 0
     flat = (tmp_path / "PROJECT_STATE.html").read_bytes()
     assert b'class="cmptree"' not in flat
@@ -241,7 +245,7 @@ def test_meta_component_top_view_smoke(tmp_path):
     # retired CMP-001..005, so the top view holds four roots, not five.)
     # WI-450: read a snapshot of ROOT's own inputs, not ROOT live — see the
     # _real_repo_snapshot note above (a concurrent regeneration elsewhere on
-    # this machine could otherwise torn-read docs/architecture.md mid-test).
+    # this machine could otherwise torn-read the live inputs mid-test).
     root = _real_repo_snapshot(tmp_path)
     ct = load_script("check_trajectory")
     v = ct.component_top_view(root)
@@ -658,7 +662,7 @@ def test_when_and_how_drills_use_bounded_orthogonal_wires_and_explicit_ports(
 
     WI-450: reads a snapshot of ROOT's own inputs, not ROOT live — see the
     _real_repo_snapshot note above (a concurrent regeneration elsewhere on this
-    machine could otherwise torn-read docs/architecture.md / the live
+    machine could otherwise torn-read the live
     registries mid-test, observed twice).
     """
     root = _real_repo_snapshot(tmp_path)

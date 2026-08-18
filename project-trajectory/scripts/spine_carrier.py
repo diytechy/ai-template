@@ -50,7 +50,7 @@ one thing that MUST NOT be duplicated eleven ways is the dual-home refusal.
 Every caller does its own reading, so a script keeps deciding its own I/O.
 
 Contracts: IF-102 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.csv).
+in docs/requirements/interfaces.toml).
 
 Requirements: SR-147 (one machine-parseable carrier for the spine).
 """

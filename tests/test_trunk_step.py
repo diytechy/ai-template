@@ -245,7 +245,6 @@ def test_regen_skips_absent_artifact_families(tmp_path, capsys):
     assert ts.regen(tmp_path) == 0
     out = capsys.readouterr().out
     for name in (
-        "arch-map",
         "okf",
         "derived-gate",
         "trajectory",
@@ -259,33 +258,36 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
     # The §5.5 fail-loud contract on the regen half: a red generator stops the
     # step at that step (a later one may read its output), exits nonzero, and
     # prints the child's own diagnosis rather than summarizing it away.
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "architecture.md").write_text("# Arch\n", encoding="utf-8")
-    (tmp_path / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = src\n", encoding="utf-8"
+    # The okf family arms on docs/okf/ presence; a registry the generator
+    # cannot parse makes the regen fail loudly at that step.
+    (tmp_path / "docs" / "okf").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "requirements" / "system-requirements.toml").write_text(
+        "[system_requirement.SR-001]\nthis is not TOML =\n", encoding="utf-8"
     )
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "broken.py").write_text("def (:\n", encoding="utf-8")
 
     assert ts.regen(tmp_path) == 1
     err = capsys.readouterr().err
-    assert "regen FAILED at arch-map" in err
+    assert "regen FAILED at okf" in err
     assert "trunk lane is RED" in err
 
 
 def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
-    # SR-173: a producer runs before every consumer that reads it — arch-map
-    # before okf (the Knowledge bundle bakes the map), derived-gate before
+    # SR-173: a producer runs before every consumer that reads it — okf first
+    # (the dashboard's Knowledge tab reads the BUNDLE), derived-gate before
     # trajectory and status (both read docs/gate), open-items last (nothing
     # reads it back). Asserted on the EXECUTED surface (the printed per-step
     # lines of a real run), not on the REGEN_STEPS table, so a reorder of the
     # table shows up here even though every family skips.
+    #
+    # `arch-map` LED this list until WI-455 retired it: the module map derives
+    # live from the source AST, so there is no committed block to regenerate
+    # and no producer edge into okf left to assert.
     assert ts.regen(tmp_path) == 0
     out = capsys.readouterr().out
     pos = [
         out.index("skipping {}".format(name))
         for name in (
-            "arch-map",
             "okf",
             "derived-gate",
             "trajectory",
@@ -294,6 +296,37 @@ def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
         )
     ]
     assert pos == sorted(pos), "regen must execute in declared dependency order"
+
+
+def _seed_regen_repo(root):
+    """A git repo where `okf` regenerates green AND EMITS: the `docs/okf/`
+    arming directory plus a minimal but non-vacuous four-tier spine (the
+    bundle's vacuity gate emits nothing for a placeholder-only registry, so a
+    thinner spine would leave the tree clean and the dirtiness assertions
+    below vacuous). `open-items` is armed too, as the later applicable family."""
+    _git(root, "init", "-q")
+    (root / "docs" / "okf").mkdir(parents=True)
+    (root / "docs" / "requirements").mkdir(parents=True)
+    (root / "docs" / "test").mkdir(parents=True)
+    reqs = root / "docs" / "requirements"
+    (reqs / "stakeholder-needs.toml").write_text(
+        '[need.SN-001]\ntitle = "n"\nstatus = "Drafted"\n', encoding="utf-8"
+    )
+    (reqs / "system-requirements.toml").write_text(
+        '[system_requirement.SR-001]\ntitle = "t"\nstatus = "Drafted"\n',
+        encoding="utf-8",
+    )
+    (reqs / "low-level-requirements.toml").write_text(
+        '[design.LLR-001]\ntitle = "l"\nstatus = "Drafted"\nsr_refs = ["SR-001"]\n',
+        encoding="utf-8",
+    )
+    (root / "docs" / "test" / "test-cases.toml").write_text(
+        '[test_case.TC-001]\ntitle = "tc"\nstatus = "Drafted"\nverifies = ["SR-001"]\n',
+        encoding="utf-8",
+    )
+    (reqs / "open-items.toml").write_text(
+        '[open_item.OI-001]\ntitle = "t"\n', encoding="utf-8"
+    )
 
 
 def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
@@ -305,45 +338,29 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     # ran at all.
     #
     # THE FAILURE IS PLANTED MID-LIST, DELIBERATELY (2026-08-17 desk round,
-    # F14). The first version planted it in `open-items`, which is the LAST
-    # entry of REGEN_STEPS — so "a later step fails" was vacuous and the early
-    # `return 1` skipped nothing observable. A mutation making regen carry on
-    # past a failure (`_rc = 1; continue`) left this test green, i.e. the
-    # documented invariant that protects downstream generators from a RED
-    # upstream was pinned nowhere. Here `derived-gate` (step 3 of 6) fails
-    # while `open-items` (step 6) is APPLICABLE and would run green if reached,
-    # so the stop-at-first-failure contract is what the assertions turn on.
-    _git(tmp_path, "init", "-q")
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "architecture.md").write_text(
-        "# Arch\n\n<!-- BEGIN GENERATED MODULE MAP -->\n"
-        "<!-- END GENERATED MODULE MAP -->\n",
-        encoding="utf-8",
-    )
-    (tmp_path / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = src\n", encoding="utf-8"
-    )
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "ok.py").write_text(
-        '"""A fine module."""\n\n\ndef fine():\n    return 1\n', encoding="utf-8"
-    )
-    (tmp_path / "docs" / "gate").write_text("DevStg-Reqs\n", encoding="utf-8")
-    (tmp_path / "docs" / "requirements").mkdir()
-    # The mid-list failure: `derive_gate.py` cannot parse its own spine.
-    (tmp_path / "docs" / "requirements" / "system-requirements.toml").write_text(
-        "this = is not [ valid toml\n", encoding="utf-8"
-    )
-    # ...and a LATER step that is applicable and would succeed, so "it never
-    # ran" is a real observation rather than a step that was skipped anyway.
-    (tmp_path / "docs" / "requirements" / "open-items.toml").write_text(
-        '[open_item.OI-001]\ntitle = "t"\n', encoding="utf-8"
-    )
+    # F14). A failure planted in the LAST entry makes "a later step fails"
+    # vacuous — the early `return 1` would skip nothing observable, and a
+    # mutation making regen carry on (`_rc = 1; continue`) would leave this
+    # test green. Here `derived-gate` (step 2 of 5) fails while `open-items`
+    # (step 5) is APPLICABLE and would run green if reached, so the
+    # stop-at-first-failure contract is what the assertions turn on.
+    #
+    # WHY THE FAILURE IS AN UNWRITABLE OUTPUT (WI-455): the green step used to
+    # be `arch-map` and the mid-list failure a registry `derive_gate` could not
+    # parse. `arch-map` retired, which makes `okf` step 1 — and `okf` reads
+    # every registry, so a malformed-registry failure now lands FIRST, with no
+    # green step before it. Occupying the output path is the remaining way to
+    # fail a generator strictly after a green one; the contract under test is
+    # unchanged.
+    _seed_regen_repo(tmp_path)
     _commit(tmp_path, "seed")
     head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
+    # `docs/gate` EXISTS (so the family arms) but cannot be written.
+    (tmp_path / "docs" / "gate").mkdir()
 
     assert ts.regen(tmp_path) == 1
     captured = capsys.readouterr()
-    assert "regen — arch-map ok" in captured.out, "a green step must precede"
+    assert "regen — okf ok" in captured.out, "a green step must precede"
     assert "regen FAILED at derived-gate" in captured.err
     # THE CONTINUATION ASSERTION — the one the last-step placement could not
     # make. `open-items` applies, so had regen carried on it would have printed
@@ -362,23 +379,10 @@ def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
     # SR-173: no partially regenerated set is ever left COMMITTED, because the
     # regen itself never commits at all — a green step's output stays in the
     # working tree for the caller's one serial commit, so a later step's failure
-    # cannot strand half a set in history. Here arch-map runs green (real
-    # markers, valid source) and every other family skips: HEAD must not move,
-    # and the regenerated doc must sit uncommitted in the tree.
-    _git(tmp_path, "init", "-q")
-    (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "architecture.md").write_text(
-        "# Arch\n\n<!-- BEGIN GENERATED MODULE MAP -->\n"
-        "<!-- END GENERATED MODULE MAP -->\n",
-        encoding="utf-8",
-    )
-    (tmp_path / "docs" / "stack.ini").write_text(
-        "[paths]\nsrc = src\n", encoding="utf-8"
-    )
-    (tmp_path / "src").mkdir()
-    (tmp_path / "src" / "ok.py").write_text(
-        '"""A fine module."""\n\n\ndef fine():\n    return 1\n', encoding="utf-8"
-    )
+    # cannot strand half a set in history. Here the generators run green over a
+    # real spine: HEAD must not move, and their output must sit uncommitted in
+    # the tree.
+    _seed_regen_repo(tmp_path)
     _commit(tmp_path, "seed")
     head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
 

@@ -955,9 +955,9 @@ def make_minimal_project(root):
     # A DevStg-Tests-complete project replaces the template's placeholder Runtime-flows
     # citations (SR-000/LLR-000) with its real ids, so the harness's
     # check_flows --no-placeholders step is satisfied.
-    arch = root / "docs" / "architecture.md"
-    arch.write_text(
-        arch.read_text(encoding="utf-8")
+    flows = root / "docs" / "runtime-flows.md"
+    flows.write_text(
+        flows.read_text(encoding="utf-8")
         .replace("SR-000", "SR-001")
         .replace("LLR-000", "LLR-001"),
         encoding="utf-8",
@@ -973,9 +973,9 @@ def make_minimal_project(root):
         encoding="utf-8",
     )
     record_ids(root)
-    proc = run_py(["scripts/gen_arch_map.py"], cwd=root)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    # Same "start from truth" for the OKF bundle: with real registry rows the
+    # (No gen_arch_map run: the scaffold ships no docs/architecture.md since
+    # WI-455 — the module inventory derives live from src/ where needed.)
+    # "Start from truth" for the OKF bundle: with real registry rows the
     # on-by-default export exists and is fresh (its hook/DevStg-Impl --check passes).
     proc = run_py(["scripts/gen_okf.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr

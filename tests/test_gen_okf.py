@@ -104,16 +104,16 @@ def test_process_guides_emit_with_derived_summaries(scaffold):
     make_minimal_project(scaffold)
     proc = okf(scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    guide = bundle(scaffold) / "process-guides" / "architecture.md"
+    guide = bundle(scaffold) / "process-guides" / "runtime-flows.md"
     assert guide.exists()
     text = guide.read_text(encoding="utf-8")
     assert 'type: "Process Guide"' in text
-    assert 'resource: "docs/architecture.md"' in text
+    assert 'resource: "docs/runtime-flows.md"' in text
     assert (
-        "[docs/architecture.md](../../../docs/architecture.md)" in text
+        "[docs/runtime-flows.md](../../../docs/runtime-flows.md)" in text
     )  # source link
     # The summary is the doc's own first prose line, proving derivation.
-    arch = scaffold / "docs" / "architecture.md"
+    arch = scaffold / "docs" / "runtime-flows.md"
     first_prose = next(
         ln.strip()
         for ln in arch.read_text(encoding="utf-8").splitlines()
@@ -231,8 +231,8 @@ def test_generated_banner_on_every_file_type(scaffold):
     assert "Generated from the spine registries" not in root
 
     # A process guide names the summarized source doc.
-    guide = (b / "process-guides" / "architecture.md").read_text(encoding="utf-8")
-    assert "Derived from docs/architecture.md by scripts/gen_okf.py" in guide
+    guide = (b / "process-guides" / "runtime-flows.md").read_text(encoding="utf-8")
+    assert "Derived from docs/runtime-flows.md by scripts/gen_okf.py" in guide
 
     # UPSTREAM has no frontmatter: the banner is its first line, stated once.
     up = (b / "UPSTREAM.md").read_text(encoding="utf-8")

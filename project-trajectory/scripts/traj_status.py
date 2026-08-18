@@ -33,7 +33,7 @@ from traj_parse import _spine, cmp_rows, spine_stats
 # --- the docs/status.md derived-snapshot block (WI-202) ------------------------
 # `--status` splices a GENERATED block into the OTHERWISE hand-authored status.md
 # carrying ONLY derived facts (the spine + derived gate + the open-items
-# one-liners), the gen_arch_map-into-architecture.md block-splice idiom. Its
+# one-liners), the gen_arch_map --doc block-splice idiom. Its
 # `--check` is the freshness successor to the WI-200 forward-only token guard:
 # with this marker present, check_trajectory.status_forward_only_findings stands
 # its token rule down (the marker is `<!-- BEGIN GENERATED ... -->`, which its
