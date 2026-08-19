@@ -356,10 +356,13 @@ def test_agents_template_stays_within_size_budget():
 
 
 # The always-loaded docs, capped on the SAME mechanism as AGENTS.template.md
-# above: a hard number and a test that fails past it. The 2026-08-18 doc-size
-# audit is why these are caps rather than watch-only rows — over 60 days the
-# one CAPPED file shrank 14% while the two merely watched ones grew 263%
-# (PROCESS.md) and 1,092% (PROCESS_OPTIONS.md). Each number is ~20-25% headroom
+# above: a hard number and a test that fails past it. Caps rather than
+# watch-only rows because the measured growth of a capped file and a watched one
+# differ by orders of magnitude — the derivation, its window, and the earlier
+# figures WITHDRAWN as unreproducible live in
+# docs/knowledge/instruction-file-adherence.md; do not copy the numbers back
+# here, since a second home is what let the withdrawn ones survive. Each cap is
+# ~20-25% headroom
 # over the file's size when the cap landed, so ordinary edits pass and a
 # doubling does not; the owner may retune any of them (the skill's Budgets
 # table is the readable statement of the same values).
