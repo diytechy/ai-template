@@ -1344,6 +1344,15 @@ classified by the **strongest** mechanism that holds it up:
   Only as strong as compliance — so reserved for what genuinely can't be
   mechanized, never a hiding place for a rule that *could* be a check.
 
+Then ask the second half — *how do you know the enforcer works?* A check is
+evidence only once its own error rate has been **measured**: a new or widened
+one has its false-positive rate measured against the live corpus, with negative
+cases pinning the known hazards, before any claim is made about what it found —
+a rate that is reported rather than measured is a guess wearing a number. And a
+detector is a **worklist, not a definition of done**: its vocabulary is always
+narrower than the rule it stands for, so a cleanup that stops when the checker
+goes quiet has proved only that the checker is quiet.
+
 The bar is **honesty**: a rule with no enforcer is either rewritten into one of
 the classes above or flagged plainly as unbacked — **zero unenforceable rules
 without a stated reason**. Recording the result as a short table in `docs/`

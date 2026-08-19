@@ -1659,7 +1659,11 @@ certainly has needs written in instrument voice (the kit's own registry had 13 o
 
 1. Run `python scripts/trace.py` and read the two artifact-naming sections as a
    worklist — the SN one and the SR one, since the SR arm has been warning since
-   the re-tier campaign and older repos never cleared it.
+   the re-tier campaign and older repos never cleared it. It is a worklist and
+   **not a definition of done**: the detector reads a fixed extension list, so a
+   cell that names its instrument in words that list cannot see reads clean —
+   read your cells, and stop when *they* are right, not when the section goes
+   quiet.
 2. For each flagged cell ask the one question: **is the artifact the SUBJECT of
    this row, or the INSTRUMENT that happens to carry it?** An instrument gets
    rewritten to the condition it produces ("the documentation check fails on a
@@ -1719,7 +1723,12 @@ process-doc citation in an `SR`/`LLR`/`TC` normative cell under `--strict` —
 **What YOU do — read the findings as a worklist and rewrite each row.**
 
 1. Run `python scripts/trace.py` and read the **Provenance-citation advisories**
-   section. Every line names the tier, the row, the cell and the tokens.
+   section. Every line names the tier, the row, the cell and the tokens. It is a
+   worklist and **not a definition of done**: the detector matches a fixed token
+   vocabulary, so a citation frame worded outside it reads clean — read your
+   cells, and stop when *they* are right, not when the section goes quiet. (The
+   kit's own sweep stopped at the quiet detector and left 33 framed cells behind;
+   the next review round found them.)
 2. For each one: **drop the citation frame, KEEP the reason.** Where the frame
    wrapped a real argument, restate the durable half as standing prose ("this
    states a structural property, not a throughput claim: no instrument here

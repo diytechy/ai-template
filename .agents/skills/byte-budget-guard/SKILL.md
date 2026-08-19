@@ -15,8 +15,8 @@ truncated by Gemini near ~12k chars, `CLAUDE.md` and this skill load into agent
 context unconditionally, `PROCESS.md` is the load-bearing core we keep lean, and
 `PROCESS_OPTIONS.md` is the expansion home that otherwise moves the bloat next
 door silently. The doc-size evidence (2026-08-18, re-derived over one 48-day
-window with all three files present; the derivation and the withdrawn earlier
-figures are in `docs/knowledge/instruction-file-adherence.md`) is that **hard
+window with all three files present; derivation and withdrawn figures in
+`docs/knowledge/instruction-file-adherence.md`) is that **hard
 caps hold and watch-only does not**: capped `AGENTS.template.md` +2.6% and still
 under cap; watched `PROCESS.md` +91% and `PROCESS_OPTIONS.md` +1,101%. Check
 before you edit and again before you commit.
@@ -30,11 +30,11 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k headroom under Gemini's ~12k cap) | 9,953 | 2026-08-18 | WI-455's architecture retirement — **and see the parked-at-the-cap note below** |
-| `CLAUDE.md` | **8,500** | 6,805 | 2026-08-18 | the WI-455 merge's repo-map edits (1,695 free, 20%) |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,825 | 2026-08-18 | the doc-size evidence re-derived over a window in which all three files exist; the withdrawn figures are recorded in the knowledge pack |
+| `CLAUDE.md` | **8,500** | 6,981 | 2026-08-18 | +176: the mandated-token rule — what the kit writes into an adopter's cell must mean something in their repo |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,882 | 2026-08-18 | +79: the CLAUDE.md + PROCESS_OPTIONS.md re-stamps |
 
 **`AGENTS.template.md` is parked at its cap: 47 bytes free (0.5%).** Every other
-capped file holds 7–20%, so this is the one you will hit first, and it is the DOC
+capped file holds 2–18%, so this is the one you will hit first, and it is the DOC
 that must give — the cap is load-bearing (it reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 there means cutting one there, in the same edit.
@@ -45,7 +45,7 @@ in the session/WI note. Enforced by convention + that report.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 82,511 | 2026-08-18 | +63: the `13v` waiver marker renamed to `recorded waiver: <reason>` — the old token was a decision id, which the provenance rule bans from the very cell it was mandated into, and it named a ruling no adopter can read |
-| `project-trajectory/PROCESS_OPTIONS.md` | 173,374 | 2026-08-18 | −1: the WI-455 merge's token reconciliation |
+| `project-trajectory/PROCESS_OPTIONS.md` | 173,985 | 2026-08-18 | +611: the enforcement audit's second half — a widened check has its false-positive rate MEASURED before any claim, and a detector is a worklist, not a definition of done |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

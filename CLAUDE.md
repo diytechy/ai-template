@@ -47,7 +47,9 @@ that easier to achieve in a real project — or get out of the way.
   as "swap for your stack."
 - **Templates must stay copy-ready.** A `*.template.*` file should produce
   something sensible the moment it's copied and filled — example/placeholder rows
-  end in `-000` so `trace.py` ignores them.
+  end in `-000` so `trace.py` ignores them. A token the kit *mandates* into an
+  adopter's cell must mean something in **their** repo: a marker naming one of
+  this repo's own rulings cites a record they can never read.
 - **Don't let this repo drift from the template it ships.** VALUES may diverge
   between the kit's template and this repo's own instance (owner dials, filled
   registry rows, enabled sets); STRUCTURE must not (schema headers, launcher

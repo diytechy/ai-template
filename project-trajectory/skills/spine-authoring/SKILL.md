@@ -284,6 +284,12 @@ One line each, each one seen in a real spine:
   as wiring it, and a marker with no consumer is the original gap with a better
   name. Ask, at the moment you add it: which checker, gate or brief changes
   behaviour because of this cell? If the answer is none, say so in the row.
+- **A rule that names only some of its tiers** — and the tier quietly left out
+  is usually `SN`, the one a stakeholder actually reads. Seen twice: the
+  artifact-voice rule shipped governing `SR` alone and the provenance rule
+  governing `SR`/`LLR`/`TC`, and each had to be extended to the need tier
+  afterwards. Guard: writing or amending a spine rule, enumerate all four tiers
+  and say why each one is in or out.
 - **A row amended without its own flip** — a row's `Status` answers for its
   OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): flip the row whose
   text changed, and only that row — a child LLR/TC amendment never flips its
