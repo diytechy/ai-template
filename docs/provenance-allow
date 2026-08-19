@@ -1,0 +1,43 @@
+# Reviewed exceptions to the citation-frame advisory (trace.py, warn-only).
+#
+# One entry per line: `<ROW-ID>` or `<ROW-ID> <Cell>`, then ` — <reason>`.
+# A line with no ` — ` separator declares nothing.
+#
+# THIS FILE IS NOT A SECOND HOME FOR PROVENANCE. Every entry below is one shape:
+# the cell's frame is the ONLY record that a question is OPEN — a contradiction
+# between two rows, an obligation whose carrier is gone, a label nothing
+# mechanical signs. Stripping those would delete the repo's only note that the
+# question is unresolved, which is worse than the frame. Each row below owes an
+# open-item row at the sitting; when the ruling lands, the marker and the entry
+# go together.
+
+SR-040 Rationale — the carrier-less obligation residue: the tripwire's carrier was deleted and nothing satisfies the clause, so the row records an obligation with no implementation and two dispositions only the owner may pick. Owes an open-item row at the sitting.
+SR-043 Rationale — the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. Owes an open-item row at the sitting. The licence attribution (stop-subagent-fanout, MIT) is a legal notice and stays regardless.
+LLR-037 Detail — the tripwire pinned with TC-040: the pair records a check whose expected behavior was corrected against a live surface and is not yet re-attested. Owes an open-item row at the sitting.
+TC-040 Method — the other half of the LLR-037 tripwire; same disposition, ruled together or not at all.
+IF-117 Notes — the flagged candidate-gap: the owner's revert names a module-match pick that no design row covers, which is the gap itself. Owes an open-item row at the sitting.
+IF-123 Notes — PROVISIONAL, standing for the review sitting to overturn; the marker is the only signal the seam is unratified.
+IF-127 Notes — PROVISIONAL, standing for the review sitting to overturn; same disposition as IF-123.
+IF-130 Notes — PROVISIONAL, standing for the review sitting to overturn; same disposition as IF-123.
+
+# The derived-requirement label carried as `(Derived-requirement label —
+# PROVISIONAL, unsigned.)`. The label is a DO-178C derived-requirement claim that
+# no human has signed; nothing mechanical carries "unsigned", so deleting the
+# parenthetical would silently promote 17 provisional labels to ratified ones.
+# Each of these owes an open-item row at the sitting that either signs the label
+# or strikes it.
+SR-024 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-033 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-052 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-054 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-111 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-112 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-129 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-144 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-146 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-147 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-149 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-167 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-175 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-176 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-177 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.

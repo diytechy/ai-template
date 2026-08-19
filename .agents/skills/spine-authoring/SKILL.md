@@ -20,7 +20,7 @@ decompose don't paraphrase; one decision per row, one home per method; one
 `shall`; the eight quality characteristics and the EARS statement pattern; a
 need or requirement cell names a concrete artifact only where its reason cell
 records why that artifact must be constrained; a rationale carries its own
-reason) and §4
+reason and no citation frame) and §4
 (gates, verification methods). Read the rule there; use this file to decide
 whether your row obeys it.
 
@@ -90,10 +90,10 @@ Four questions:
   named where carriers belong. **Where a concrete name is genuinely unavoidable,
   the waiver goes in `why`** — the SN tier's reason cell, since the need schema
   carries no `Rationale` — as the same `13v` token the SR valve uses, with a
-  reason a later reader can argue with. Two things are NOT waivable naming and
-  need no token: a **provenance** citation (a spec of record, a retired artifact
-  named as the thing this need abolished) and a **declared vocabulary** token (a
-  dial name, a status word, a flag), because neither is a carrier.
+  reason a later reader can argue with. A **declared vocabulary** token (a dial
+  name, a status word, a flag) is NOT waivable naming and needs no token, because
+  it is not a carrier. A **provenance** citation is not a carrier either — and it
+  does not belong in the cell at all (§6).
 
 ## 2. At SR derivation — per row
 
@@ -306,6 +306,24 @@ failures hide in FIELDS.
   prose, and it survives only because the checker reads text, not schema. If you
   are about to add `amended`, `updated`, `since` or a version stamp to a
   registry row, the fact already exists somewhere better.
+- **The reason cell is not a changelog.** `Rationale` (`why` at `SN`) is the one
+  cell whose whole job is argument, which is why every citation drifts into it —
+  and it is covered by the rule above, on all four spine tiers. It states **what
+  breaks without the row** and **which alternative lost**, and carries no citation
+  frame: no work-item id, no ruling, sitting, review-round or open-item reference,
+  no decision id, no `AMENDED`/`REWORDED`/`MINTED` verb, no date stamp. Those
+  belong in the log, which can hold the full account and cannot rot into the
+  specification.
+- **When you strip a frame, keep the reason.** The failure mode is deleting
+  `AMENDED 2026-03-04 (round 2, finding F7): the cell claimed a speedup nothing
+  measures` in one stroke — frame *and* argument — leaving a bare assertion.
+  Restate the durable half as standing prose ("this states a structural property,
+  not a throughput claim: no instrument here measures speedup") and send the rest
+  to the log. If deleting the frame leaves nothing, the cell was a changelog and
+  the log already holds it; delete the whole block. `scripts/trace.py` reports
+  what is left as a **worklist**, warn-first — a row whose frame is the only
+  record of an unresolved question gets a reviewed entry in the detector's
+  allow file rather than a silent deletion.
 - **One vocabulary per axis, across every tier.** If three tiers say `Drafted`
   and the fourth says something else for the same state, a reader must learn a
   different field per tier and every cross-tier query grows a special case.

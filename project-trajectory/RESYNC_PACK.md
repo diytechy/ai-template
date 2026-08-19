@@ -1847,3 +1847,74 @@ review sitting reads. If your process holds the need tier for human
 ratification, the sweep is a provisional act your sitting countersigns.
 
 *(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
+
+### Reserved: NO provenance citation in a living registry cell — all four spine tiers, reason cells included
+
+**What changed.** `process.md` §3's stand-alone rule used to say a spine row must
+not carry a work-item id or a citation of the process doc, in the normative text
+of `SR`/`LLR`/`TC`. It now covers **all four spine tiers** (`SN` joins) and, on
+every one of them, the **reason cell** as loudly as the normative ones —
+`Rationale`, and `why` at `SN`. The forbidden vocabulary is the whole citation
+frame: work-item id, process-doc citation, ruling, sitting, review-round or
+open-item reference, decision id, edit-history verb, date stamp.
+
+**One permission is REPEALED, and it is the load-bearing half.** The rationale
+bullet used to say a review, ruling or design-thread reference was *optional
+context on top of a sentence that already stands alone*. It is not optional
+context any more; it does not belong in the cell. The substance of the reasoning
+stays — what breaks without the row, which alternative lost — and only the
+citation frame goes. The detailed history belongs in `docs/log.md` and the
+archive, which can hold it in full and cannot rot into the specification.
+
+**Why, measured.** The permission read as a licence. On the kit's own registries
+it produced `Rationale` cells that are mostly changelog — `REWORDED <date>
+(<round code>, <hat>; <sitting> item 8 ruling): …` — ~300 tokens across ~150 live
+rows, with the durable half buried in the middle of a frame no outside reader can
+resolve. Every one of those cells is read by an adopter, an agent and a reviewer
+with none of the history that would make the frame mean anything.
+
+**Two new checks, both WARN-FIRST and never gating.** `trace.py` grows a
+**Provenance-citation advisories** section (`provenance_advisories` over
+`SN`/`SR`/`LLR`/`TC`, plus `if_note_advisories` over the IF tier's
+`Notes`/`SignalNote`). The pre-existing gating rule — a work-item id or a
+process-doc citation in an `SR`/`LLR`/`TC` normative cell under `--strict` —
+**keeps its severity exactly**. Nothing that passed before fails now.
+
+**What YOU do — read the findings as a worklist and rewrite each row.**
+
+1. Run `python scripts/trace.py` and read the **Provenance-citation advisories**
+   section. Every line names the tier, the row, the cell and the tokens.
+2. For each one: **drop the citation frame, KEEP the reason.** Where the frame
+   wrapped a real argument, restate the durable half as standing prose ("this
+   states a structural property, not a throughput claim: no instrument here
+   measures speedup"). Where the block has no forward-looking half at all, it was
+   a changelog — delete it; git and the log already hold it.
+3. **The failure to watch for is deleting the frame and the argument together**,
+   leaving a bare assertion. That is the exact failure the rationale rule exists
+   to prevent, and it gets likelier now that the frame is forbidden.
+4. Move the account to `docs/log.md`. A row that names a *dead* id is worse than
+   one that names none: it reads as authority and resolves to nothing.
+
+**The open-question carve-out, and the allow file.** One class of cell must NOT
+be swept: the frame that is the **only record of an unresolved tension** — a
+contradiction between two rows, an obligation whose carrier is gone, a
+provisional label nothing mechanical signs. Stripping those deletes the repo's
+only note that the question is open. Declare each one in **`docs/provenance-allow`**,
+in the same idiom `docs/need-form-allow` established: one entry per line,
+`<ROW-ID> — <reason>` or `<ROW-ID> <Cell> — <reason>`; `#` comments and blank
+lines ignored; a line with no ` — ` separator declares nothing (fail-soft in the
+loud direction — a malformed entry can only fail to silence a finding). The file
+is **not scaffolded** and an absent file declares nothing, so a clean repo carries
+none. Each entry should say the row **owes an open-item row at your next review
+sitting**; when the ruling lands, the marker and the entry go together. The
+allow list is not a second home for provenance — an entry that is only "we like
+this citation" is the rule being routed around.
+
+**A licence attribution is not provenance** and stays regardless of any of this.
+
+**This is a wording sweep, not a re-decomposition.** Do not change what a row
+means and do not touch `status`. Expect your amendment detectors to fire on every
+cell you rewrite — that is correct, and those rows are what your next sitting
+reads.
+
+*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*

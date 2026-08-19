@@ -104,14 +104,18 @@ Stable, zero-padded, never reused.
 - **Decompose, don't paraphrase.** A child adds detail; if it would merely
   repeat its parent, link instead.
 - **Registries are the machine source of truth; prose is thin** and links by ID.
-- **A requirement states the system, not its own history.** No work-item id and
-  no citation of *this* document inside the normative text of **any spine row**
-  (`SR`, `LLR`, `TC`): provenance belongs to the work-item registry and the log,
-  and a row **obeys** the process rather than citing it, so it reads stand-alone
-  to someone with none of your history. Naming the thing under specification — a
-  script, an artifact path, the rubric a `Critique` row is judged against — is the
-  *subject*, not provenance. `trace.py` gates under `--strict`; pointer columns
-  (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are out of scope by design.
+- **A requirement states the system, not its own history.** No provenance in a
+  living registry cell — on **any spine tier** (`SN`, `SR`, `LLR`, `TC`), in the
+  normative cells **and the reason cell** alike: no work-item id, no citation of
+  *this* document, no ruling, sitting, review-round or open-item reference, no
+  decision id, no edit-history verb, no date stamp. Provenance belongs to the
+  work-item registry and the log, and a row **obeys** the process rather than
+  citing it, so it reads stand-alone to someone with none of your history. Naming
+  the thing under specification — a script, an artifact path, the rubric a
+  `Critique` row is judged against — is the *subject*, not provenance. `trace.py`
+  gates under `--strict` on a work-item id or a process-doc citation and warns on
+  the rest; pointer columns (`Module`, `CodeSymbol`, `TestRefs`, `Evidence`) are
+  out of scope by design.
 - **One requirement, one `shall`** — exactly one obligation, one testable
   behavior, never a compound "and/or". The full quality bar and the statement
   pattern that carries it are stated once, just below the bullets.
@@ -140,11 +144,15 @@ Stable, zero-padded, never reused.
   cell without that recorded per-row waiver (`Rationale` at SR, `why` at SN —
   the tier's reason cell, since the need schema carries no `Rationale`); the
   provenance rule above still reads a named script as subject, not provenance.
-- **A rationale carries its own reason.** `Rationale` is complete when a reader
-  with none of your history knows **what breaks without the requirement** and
-  **which alternative lost**. A review, ruling or design-thread reference is
-  optional context *on top of* a sentence that already stands alone — never a
-  substitute for one. Dropping a citation and leaving the reason with it is the
+- **A rationale carries its own reason, and only that.** `Rationale` (`why` at
+  `SN`) is complete when a reader with none of your history knows **what breaks
+  without the requirement** and **which alternative lost** — stated as standing
+  prose, carrying no citation frame of any kind. A reason cell is not a changelog:
+  the detailed history — which review raised it, which sitting ruled it, when —
+  lives in the log and the archive, which can hold it in full and cannot rot into
+  the specification. **Drop the frame, keep the reason**: where deleting the
+  citation would leave a bare assertion, restate the reasoning as prose that
+  stands on its own. Deleting the citation *and* the reasoning with it is the
   failure this exists to prevent.
 - **The traceability matrix is generated** by a small join over the registries'
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR

@@ -117,6 +117,10 @@ None. No requirement cell names a concrete artifact.
 
 None. No need's acceptance names a concrete artifact.
 
+## Provenance-citation advisories (warn-only)
+
+None. No living spine cell carries a citation frame.
+
 ## Verification-coherence advisories (warn-only)
 
 None. No requirement states two verification methods.

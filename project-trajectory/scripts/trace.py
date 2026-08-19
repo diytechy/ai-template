@@ -109,7 +109,9 @@ try:
         is_example,
         norm_module,
         paraphrase_advisories,
+        provenance_advisories,
         provenance_findings,
+        provenance_tokens,
         refs,
         sn_artifact_advisories,
         sr_artifact_advisories,
@@ -131,7 +133,9 @@ except ImportError:  # pragma: no cover - in-process fallback
         is_example,
         norm_module,
         paraphrase_advisories,
+        provenance_advisories,
         provenance_findings,
+        provenance_tokens,
         refs,
         sn_artifact_advisories,
         sr_artifact_advisories,
@@ -1526,26 +1530,104 @@ def if_contract_advisories(ifs):
             out.append(
                 f"IF {iid} Contract names {token} — a work-item id belongs in the "
                 "log, not in a live contract cell: it ages, and a cancelled id "
-                "still reads as authority. Move it to Rationale or drop it."
+                "still reads as authority. Drop it; the log holds the account."
             )
         for token in dict.fromkeys(_IF_DECISION_RE.findall(cell)):
             out.append(
                 f"IF {iid} Contract cites decision {token} — a contract states "
-                "what crosses, not which ruling shaped it. Move the citation to "
-                "Rationale."
+                "what crosses, not which ruling shaped it. Drop the citation; the "
+                "log's Decisions is its home."
             )
         connective = _IF_CONNECTIVE_RE.search(cell)
         if connective:
             out.append(
                 f"IF {iid} Contract argues ({connective.group(0)!r}) — that "
-                "sentence is a rationale; the Rationale column is its home "
-                "(process.md §8)."
+                "sentence is a rationale; move the ARGUMENT to the Rationale "
+                "column, and any citation inside it to the log (process.md §8)."
             )
         if len(cell) > IF_CONTRACT_MAX:
             out.append(
                 f"IF {iid} Contract is {len(cell)} characters (ceiling "
                 f"{IF_CONTRACT_MAX}) — an interface states what crosses, typed; "
                 "at this length it is carrying something else."
+            )
+    return out
+
+
+# The IF tier's two REASON cells. `Notes` is where a crossing records why it is
+# shaped as it is; `SignalNote` does the same for its discrete/variable call.
+IF_REASON_CELLS = ("Notes", "SignalNote")
+
+# The reviewed exception list for the citation-frame advisory, in the same
+# one-entry-per-line ` — <reason>` idiom `docs/need-form-allow` established. The
+# key is a row id (`SR-043`) or an id + cell (`SR-043 Rationale`).
+PROVENANCE_ALLOW = "docs/provenance-allow"
+PROVENANCE_ALLOW_SEP = " — "
+
+
+def load_provenance_allow(root):
+    """The reviewed exception keys from `docs/provenance-allow`, as a set.
+
+    Absent file: empty set. A line with no separator declares nothing — the
+    declared-absences fail-soft rule in the LOUD direction, so the worst a
+    malformed entry can do is leave a finding reported.
+
+    THE LIST IS NOT A SECOND HOME FOR PROVENANCE. It exists for one measured
+    class: a cell whose citation frame is the only record of an UNRESOLVED
+    tension — an open question the sitting owes a ruling on, a flagged
+    contradiction between two rows, a provisional label nothing mechanical
+    carries. Stripping those would delete the repo's only note that the question
+    is open, which is a worse outcome than the frame. Each entry says so, and
+    says the row owes an open-item row at the sitting; when the ruling lands the
+    entry goes with it."""
+    path = Path(root) / PROVENANCE_ALLOW
+    if not path.is_file():
+        return set()
+    out = set()
+    for line in path.read_text(encoding="utf-8-sig", errors="replace").split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#") or PROVENANCE_ALLOW_SEP not in line:
+            continue
+        key = line.split(PROVENANCE_ALLOW_SEP, 1)[0].strip()
+        if key:
+            out.add(key)
+    return out
+
+
+def if_note_advisories(ifs, allow=()):
+    """Warn-only: an IF `Notes`/`SignalNote` cell carrying a citation frame.
+
+    The same ruling the spine tiers get (`trace_text.provenance_advisories`),
+    applied where the IF tier keeps its reasoning. The Contract arm above was
+    scoped to `Contract` because that is the cell a CONSUMER reads — but the
+    measured population went the other way: 216 provenance tokens over 76 IF
+    rows, 118 of them in `Notes`, on a cell nothing was watching. That is the
+    same "the largest pocket is the layer the rule cannot see" shape the SR-only
+    scoping error already made once, one tier over.
+
+    A SEPARATE FUNCTION rather than another cell in the loop above: the Contract
+    arm's other two rules (the connective and the 500-character ceiling) say
+    "this cell is not the place to argue", and a `Notes` cell arguing is that
+    cell working correctly. Folding the cells together would apply a rule to a
+    cell whose whole job it contradicts."""
+    out = []
+    for r in ifs:
+        iid = str(r.get("IF-ID") or "").strip()
+        if not iid or is_example(iid):
+            continue
+        for col in IF_REASON_CELLS:
+            if iid in allow or f"{iid} {col}" in allow:
+                continue
+            cited = provenance_tokens(r.get(col), reason=True)
+            if not cited:
+                continue
+            shown = ", ".join(dict.fromkeys(f"{k} {t!r}" for k, t in cited))
+            out.append(
+                f"IF {iid} {col} carries a citation frame ({shown}) — a living "
+                "cell states the seam and its standing reason, never its own "
+                "history: drop the frame, KEEP the reason as prose that stands "
+                "alone, and move the account to the log (process.md §3; "
+                "warn-only, never the exit code)."
             )
     return out
 
@@ -2999,6 +3081,10 @@ def load_registries(docs):
     reg.sn_integrity = sn_integrity
     reg.raw_sns = sn_rows
     reg.sn_needs = sn_needs
+    # The citation-frame advisory's reviewed exception list, read HERE rather
+    # than in analyze(): analyze is the pure pass over loaded rows, and an
+    # exception file is an input to load, not a finding.
+    reg.provenance_allow = load_provenance_allow(docs.parent)
     reg.docs = docs
     return reg
 
@@ -3018,6 +3104,7 @@ def analyze(reg, args):
     raw_parts, raw_assets = reg.raw_parts, reg.raw_assets
     raw_cmps, raw_ifs = reg.raw_cmps, reg.raw_ifs
     docs = reg.docs
+    prov_allow = reg.provenance_allow
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
     llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
@@ -3212,6 +3299,7 @@ def analyze(reg, args):
         + schema_advisories("REL", rels)
         + sr_frame_advisories
         + if_contract_advisories(ifs)
+        + if_note_advisories(ifs, prov_allow)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
         + if_ownership_advisories(ifs, sr_ids, llr_ids)
         + if_carriage_advisories(ifs)
@@ -3431,6 +3519,13 @@ def analyze(reg, args):
     # Its own pipe for the same reason — a tiering finding reported under a
     # wording heading is a mis-named finding — and warn-only on the same terms.
     sn_artifact_advis = sn_artifact_advisories(reg.sn_needs)
+    # Warn-first, always on (owner ruling: no provenance citation in a living
+    # registry cell). The same subject as the gating `provenance` pipe above and
+    # deliberately NOT the same counter: that one names two token shapes in three
+    # tiers and joins the exit code, this one names the rest of the citation frame
+    # across four tiers and never can. One counter for two severities would report
+    # "gating" about ~300 findings the harness must not stop for.
+    provenance_advis = provenance_advisories(reg.sn_needs, srs, llrs, tcs, prov_allow)
     sr_fanout_advis = sr_fanout_advisories(srs, llrs)
     # Warn-only, always on: a row whose prose names a critique instrument while
     # its Verification says otherwise. Its own pipe for the same reason the two
@@ -3478,6 +3573,7 @@ def analyze(reg, args):
     findings.llr_status_advis = llr_status_advis
     findings.sr_artifact_advis = sr_artifact_advis
     findings.sn_artifact_advis = sn_artifact_advis
+    findings.provenance_advis = provenance_advis
     findings.sr_fanout_advis = sr_fanout_advis
     findings.verif_coherence_advis = verif_coherence_advis
     findings.if_this_project_advis = if_this_project_advis
@@ -3522,6 +3618,7 @@ def render_report(reg, findings, args, forest):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sn_artifact_advis = findings.sn_artifact_advis
+    provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
@@ -3729,6 +3826,15 @@ def render_report(reg, findings, args, forest):
         if not sn_artifact_advis
         else [f"- {f}" for f in sn_artifact_advis]
     )
+    # Warn-first by ruling and never a gate: this is a prose-rewriting WORKLIST
+    # over the live registries, and the rewrite it asks for is a judgement (drop
+    # the frame, keep or restate the reason) that no checker can make.
+    lines += ["", "## Provenance-citation advisories (warn-only)", ""]
+    lines += (
+        ["None. No living spine cell carries a citation frame."]
+        if not provenance_advis
+        else [f"- {f}" for f in provenance_advis]
+    )
     lines += ["", "## Verification-coherence advisories (warn-only)", ""]
     lines += (
         ["None. No requirement states two verification methods."]
@@ -3912,6 +4018,7 @@ def render_console(reg, findings, args, out, html_out):
     llr_status_advis = findings.llr_status_advis
     sr_artifact_advis = findings.sr_artifact_advis
     sn_artifact_advis = findings.sn_artifact_advis
+    provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
@@ -3945,6 +4052,7 @@ def render_console(reg, findings, args, out, html_out):
         + ears
         + sr_artifact_advis
         + sn_artifact_advis
+        + provenance_advis
         + sr_fanout_advis
         + verif_coherence_advis
         + if_this_project_advis

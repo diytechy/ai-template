@@ -260,6 +260,108 @@ def ac_advisories(srs):
 _WI_TOKEN_RE = re.compile(r"\bWI-\d+")
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
+# --- The wider provenance vocabulary (owner ruling: NO provenance citation in
+# any living registry cell) --------------------------------------------------
+#
+# The two shapes above are the GATING class and keep that severity. These are the
+# rest of the citation frame the ruling names — ruling, sitting, review-round and
+# open-item references, decision ids, edit-history verbs and date stamps — and
+# they are WARN-FIRST, always. Severity is not a taste call here: the population
+# is ~300 tokens over ~150 live rows, so a gate would wedge the harness on work
+# the repo has scheduled rather than skipped, and a rule that stops the build to
+# demand prose rewriting is one a session routes around.
+#
+# EVERY PATTERN IS A STRUCTURED SHAPE, never a bare English word, and that is the
+# whole design. Two false-positive hazards are on record and both are measured:
+#
+#   1. A general `<LETTER>-<n>` id pattern was TRIED AND REVERTED once (see the
+#      `_IF_DECISION_RE` note in trace.py) because it read the data pack's own
+#      `M-10` crossing ids as rulings. So the id shapes here are enumerated
+#      literally — `OI-`, `D-`, `RULING-`, `C-<HAT>-` — and nothing generalises
+#      over them. Re-measured at this widening: `M-10` is matched by none of them.
+#   2. `ruling` / `retired` / `attestation` / `amended` are SUBJECT NOUNS in the
+#      rows that specify the ratification machinery itself — 217 occurrences over
+#      108 live SR/LLR/TC rows, with SR-149, SR-165 and LLR-118 the worked
+#      instances. A verb grep would destroy every one of them. `_EDIT_STAMP_RE`
+#      therefore requires the verb to be followed WITHIN ONE CLAUSE by an ISO
+#      date: a row *about* amendment never carries one, a row *recording its own*
+#      amendment always does. Measured: 0 of those 217 are flagged.
+#
+# A bare ISO date is read as provenance in a REASON cell only. A normative cell
+# may legitimately carry a date as DATA (a fixture, a declared cutover value), so
+# there it reports only behind an edit verb.
+_OI_TOKEN_RE = re.compile(r"\bOI-\d+\b")
+_SITTING_RE = re.compile(r"\bsitting-\d+\b", re.IGNORECASE)
+# `C-<HAT>-<n>` — the hat-derived review-round clause codes (`C-PRF-1`,
+# `C-ACC-2`). The hat segment is 2-5 upper-case letters: narrow enough that no
+# ordinary hyphenated word reaches it, wide enough for the declared roster.
+_REVIEW_CODE_RE = re.compile(r"\bC-[A-Z]{2,5}-\d+\b")
+_DECISION_ID_RE = re.compile(r"\bD-\d+\b")
+_RULING_ID_RE = re.compile(r"\bRULING-\d+\b", re.IGNORECASE)
+_EDIT_VERBS = (
+    r"amended|reworded|minted|renumbered|retired|narrowed|revised|superseded|"
+    r"restated|added|deleted|moved|extended|clarified|ruled|raised|split|landed|"
+    r"reopened|struck|introduced|widened|promoted|demoted|ratified|corrected|"
+    r"absorbs|settled|confirmed|investigated|resolved|reverted|joined|"
+    r"re-?voiced|re-?based|re-?pointed|re-?affirmed|provisional"
+)
+_EDIT_STAMP_RE = re.compile(
+    r"\b(?:" + _EDIT_VERBS + r")\b[^.;]{0,24}?\b\d{4}-\d{2}-\d{2}\b", re.IGNORECASE
+)
+_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+
+# (label, regex, reason-cells-only). Order is report order.
+_PROVENANCE_SHAPES = (
+    ("work-item id", _WI_TOKEN_RE, False),
+    ("process-doc citation", _PROCESS_DOC_RE, False),
+    ("open-item reference", _OI_TOKEN_RE, False),
+    ("sitting reference", _SITTING_RE, False),
+    ("review-round code", _REVIEW_CODE_RE, False),
+    ("decision id", _DECISION_ID_RE, False),
+    ("ruling id", _RULING_ID_RE, False),
+    ("edit-history stamp", _EDIT_STAMP_RE, False),
+    ("date stamp", _ISO_DATE_RE, True),
+)
+
+# The cells whose whole job is argument. A date is provenance in these outright;
+# elsewhere it needs an edit verb in front of it.
+REASON_CELLS = frozenset({"Rationale", "why", "Notes", "SignalNote"})
+
+
+def _in_path_token(cell, start, end):
+    """True when the match sits inside a slash-joined path token.
+
+    `docs/plans/2026-08-16-blind-derivation-c-hats.md` is a POINTER, not a date
+    stamp, and reporting "cites 2026-08-16" about it names the wrong thing. 12 of
+    the 76 measured date matches were this shape."""
+    left = cell.rfind(" ", 0, start) + 1
+    right = cell.find(" ", end)
+    return "/" in cell[left : right if right >= 0 else len(cell)]
+
+
+def provenance_tokens(cell, reason=False):
+    """The citation-frame tokens in one cell, de-overlapped, in report order.
+
+    `reason` selects the reason-cell reading (a bare date counts). Pure: the
+    caller decides which cells are reason cells and what severity the result
+    carries."""
+    text = (cell or "").strip()
+    if not text:
+        return []
+    out, spans = [], []
+    for label, rx, reason_only in _PROVENANCE_SHAPES:
+        if reason_only and not reason:
+            continue
+        for m in rx.finditer(text):
+            if any(m.start() < e and s < m.end() for s, e in spans):
+                continue
+            if rx is _ISO_DATE_RE and _in_path_token(text, m.start(), m.end()):
+                continue
+            spans.append((m.start(), m.end()))
+            out.append((label, m.group(0)))
+    return out
+
+
 # Requirement FORM (process.md §3). The stand-alone rule below says a row must not
 # carry its own history; these say it must be ONE testable obligation. They are
 # 29148's individual-requirement characteristics restricted to the half a checker
@@ -374,6 +476,84 @@ def provenance_findings(srs, llrs, tcs):
                             label, rid, col, ", ".join(repr(c) for c in cited)
                         )
                     )
+    return out
+
+
+# The SN tier's cells, and the widened scope of the SR/LLR/TC ones. The need tier
+# joins by owner ruling: the rule was written naming three tiers and the need tier
+# then accumulated the worked examples of exactly the defect it forbids.
+PROVENANCE_ADVISORY_COLS = (
+    ("SN", "id", ("need", "why", "acceptance")),
+    ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
+    ("LLR", "LLR-ID", ("Title", "Detail", "Rationale")),
+    ("TC", "TC-ID", ("Method", "Expected", "Parameters")),
+)
+
+
+def provenance_advisories(needs, srs, llrs, tcs, allow=()):
+    """Warn-only: a living spine cell carrying a CITATION FRAME (process.md §3).
+
+    The gating rule above forbids two token shapes in three tiers. This is the
+    rest of the same ruling: **no provenance citation in any living registry
+    cell** — no ruling, sitting, review-round or open-item reference, no decision
+    id, no edit-history verb, no date stamp — on all FOUR spine tiers, and in the
+    REASON cell as loudly as in the normative ones.
+
+    The reason cell is the point. It is the one cell whose job is argument, which
+    is why every citation drifts into it, and the repealed reading let a citation
+    ride along as "optional context on top of a sentence that stands alone". What
+    it produced, measured on the live registries, is `Rationale` cells that are
+    mostly changelog: `REWORDED <date> (<round code>, <hat>; <sitting> item 8
+    ruling): …`. A reader with none of this history cannot resolve any of it, and
+    the durable half — what breaks without the row, which alternative lost —
+    is buried in the middle of it.
+
+    THE REWRITE IS NOT A DELETION. Drop the frame, KEEP the reason, restated as
+    standing prose; where the block has no forward-looking half at all, the log
+    already holds it and the block goes. Deleting the citation and the argument
+    together is the failure the rationale rule exists to prevent, and it is the
+    likelier failure now that the frame is forbidden — which is why this reports
+    a worklist and never a gate.
+
+    WARN-FIRST, ALWAYS, and that is a severity ruling rather than a stage. The
+    population is ~300 tokens over ~150 live rows; a gate would stop the harness
+    on a prose-rewriting campaign, and the rows that matter most — the ones whose
+    frame is the only record of an unresolved question — need a reviewed
+    exception, not a red build. `allow` carries those: row ids, or `<ROW-ID>
+    <Cell>` pairs, read from the declared exception file by the caller.
+
+    Rows arrive in two shapes. The SN tier comes from `spine_carrier.load_needs`
+    (lower-case keys, id under `id`); the other three carry `<TIER>-ID` and
+    Title-case cells. One table, keyed by the id field, rather than a second
+    function for the need tier — the scoping error this rule already made once
+    was having a tier the check could not see."""
+    out = []
+    for rows, (label, key, cols) in zip(
+        (needs, srs, llrs, tcs), PROVENANCE_ADVISORY_COLS
+    ):
+        for r in rows or []:
+            rid = str(r.get(key) or "").strip()
+            if not rid or is_example(rid):
+                continue
+            for col in cols:
+                if rid in allow or "{} {}".format(rid, col) in allow:
+                    continue
+                cited = provenance_tokens(r.get(col), reason=col in REASON_CELLS)
+                if not cited:
+                    continue
+                # One entry per distinct token: a citation repeated inside one
+                # cell is one frame to strip, not two findings.
+                seen = dict.fromkeys("{} {!r}".format(k, t) for k, t in cited)
+                shown = ", ".join(seen)
+                out.append(
+                    "{} {} {} carries a citation frame ({}) — a living cell "
+                    "states the system and its standing reason, never its own "
+                    "history: drop the frame, KEEP the reason as prose that "
+                    "stands alone, and move the account to the log "
+                    "(process.md §3; warn-only, never the exit code)".format(
+                        label, rid, col, shown
+                    )
+                )
     return out
 
 

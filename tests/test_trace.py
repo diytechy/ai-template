@@ -943,7 +943,12 @@ def test_rationale_connective_in_contract_warns(scaffold):
             CLEAN_IF.replace("reads the ref state", "reads it " + word + " it must"),
         )
         assert "Contract argues ('{}')".format(word) in out, word
-        assert "the Rationale column is its home" in out
+        assert "move the ARGUMENT to the Rationale column" in out
+        # The CITATION half now points at the log, not at Rationale: the owner
+        # ruling forbids a citation frame in any living registry cell, so the
+        # advice that used to send it next door would send it somewhere it is
+        # equally forbidden.
+        assert "any citation inside it to the log" in out
 
 
 def test_contract_over_the_length_ceiling_warns(scaffold):

@@ -29,14 +29,14 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k headroom under Gemini's ~12k cap) | 9,994 | 2026-08-18 | `DevBar-*` → `DevStg-*` vocabulary rename |
 | `CLAUDE.md` | **8,500** | 6,677 | 2026-08-18 | cap introduced (~27% headroom over the measured size) |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,101 | 2026-08-18 | changelog evicted to `docs/log.md`; caps declared |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,206 | 2026-08-18 | the watched PROCESS.md row re-stamped for the provenance ruling |
 
 **Watched** — growth is allowed but must be flagged with a byte delta + reason
 in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 81,602 | 2026-08-18 | +217: §3's artifact-voice rule extends from SR up to SN (owner directive) — the need tier's `acceptance` cell and its `why` waiver home, stated in the one bullet that already carried the rule |
+| `project-trajectory/PROCESS.md` | 82,190 | 2026-08-18 | +588: §3's provenance rule reaches all four spine tiers AND the reason cell, and the rationale bullet's "a ruling reference is optional context" permission becomes the prohibition (owner ruling) — the citation frame goes, the reasoning stays as standing prose |
 | `project-trajectory/PROCESS_OPTIONS.md` | 173,374 | 2026-08-18 | −1: the WI-455 merge's token reconciliation |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own

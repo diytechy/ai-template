@@ -76,6 +76,124 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     assert "'WI-210'" in msg and "'process.md'" in msg
 
 
+def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
+    # The owner ruling that repealed "a ruling reference is optional context on
+    # top of a sentence that stands alone": NO provenance citation in a living
+    # registry cell, on all FOUR spine tiers, in the reason cell as loudly as in
+    # the normative ones. Warn-first by the same ruling — the population is ~300
+    # tokens over ~150 live rows, and a gate would wedge the harness on a prose
+    # campaign rather than guard a clean state.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def flags(need=None, sr=None, llr=None, tc=None, allow=()):
+        def rows(cells, key, rid):
+            if cells is None:
+                return []
+            cells.setdefault(key, rid)
+            return [cells]
+
+        return trace.provenance_advisories(
+            rows(need, "id", "SN-101"),
+            rows(sr, "SR-ID", "SR-101"),
+            rows(llr, "LLR-ID", "LLR-101"),
+            rows(tc, "TC-ID", "TC-101"),
+            allow,
+        )
+
+    # THE NEED TIER, which the gating rule cannot see and where the owner's own
+    # worked examples lived. Its rows arrive lower-cased off `load_needs`.
+    assert flags(
+        need={"why": "AMENDED 2026-08-17 (C-ACC-2): the hue is not the signal."}
+    )
+    assert flags(need={"acceptance": "The launcher exists. (Ruled 2026-08-13, OI-17.)"})
+    assert flags(
+        need={"need": "Resumes from tracked state (WI-180 retired the pointer)."}
+    )
+    # THE REASON CELL, the whole point of the widening: a bare date is provenance
+    # here, because this is the cell whose job is argument and nothing else.
+    assert flags(sr={"Rationale": "Settled 2026-08-15: one home for the observable."})
+    assert flags(sr={"Rationale": "The split landed on 2026-08-16."})
+    assert flags(llr={"Rationale": "Chosen at sitting-3 over the alternative."})
+    # The rest of the vocabulary, each an ENUMERATED shape.
+    assert flags(sr={"Rationale": "Raised as OI-29 and answered there."})
+    assert flags(sr={"Rationale": "Under repo-lock D-6 the vocabulary has one home."})
+    assert flags(sr={"Rationale": "The bar is argument (owner RULING-3)."})
+    assert flags(sr={"Rationale": "Hat-derived: C-SEC-2 asks for the enumeration."})
+    # A NORMATIVE cell reports an edit stamp, never a bare date: a requirement
+    # may legitimately carry a date as DATA, and a rule that reads a fixture as a
+    # changelog is the cry-wolf failure this whole module is measured against.
+    assert flags(tc={"Method": "MINTED 2026-08-18 out of the SR-140 split."})
+    assert not flags(tc={"Parameters": "cutover = 2026-08-15; before = 2026-08-14"})
+    assert not flags(sr={"Requirement": "The loop shall stamp 2026-08-15 on the row."})
+
+    # --- THE TWO MEASURED FALSE-POSITIVE HAZARDS, pinned SILENT ---------------
+    # (1) A general `<LETTER>-<n>` id pattern was tried and REVERTED once for
+    # reading the data pack's own `M-10` crossing ids as rulings. Nothing here
+    # generalises over id shapes, so the crossing ids stay data.
+    assert not flags(sr={"Rationale": "The M-10 crossing carries the verdict."})
+    assert not flags(llr={"Rationale": "Joined against B-04, M-10 and REL-003."})
+    # (2) `ruling` / `retired` / `amended` / `attestation` are SUBJECT NOUNS in
+    # every row that specifies the ratification machinery itself — 217
+    # occurrences over 108 live rows. The stamp shape needs a DATE behind the
+    # verb, so a row ABOUT amendment is silent and a row RECORDING its own
+    # amendment is not.
+    assert not flags(sr={"Rationale": "An amended requirement drops the stage."})
+    assert not flags(sr={"Requirement": "The gate shall record each attestation."})
+    assert not flags(llr={"Detail": "Names the ruling that retired the id."})
+    assert not flags(tc={"Expected": "A retired row reports as retired, not absent."})
+    # A DATED PATH is a pointer, not a stamp: reporting "cites 2026-08-16" about
+    # a plan filename names the wrong thing (12 of 76 measured date matches).
+    assert not flags(sr={"Rationale": "Design: docs/plans/2026-08-16-derivation.md"})
+    # Placeholder rows never report; a scaffold's example rows are a form.
+    assert not flags(sr={"SR-ID": "SR-000", "Rationale": "Ruled 2026-08-13, OI-17."})
+
+    # The reviewed exception list, keyed by row id or `<ROW-ID> <Cell>`: the
+    # carve-out is for a frame that is the ONLY record of an open question.
+    assert not flags(sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101"})
+    assert not flags(
+        sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101 Rationale"}
+    )
+    assert flags(
+        sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101 Title"}
+    )
+
+    # It reports the tier, row, cell and what it found — and says KEEP the reason.
+    (msg,) = flags(sr={"Rationale": "REWORDED 2026-08-17 (C-PRF-1, sitting-3)."})
+    assert msg.startswith("SR SR-101 Rationale")
+    assert "'C-PRF-1'" in msg and "'sitting-3'" in msg
+    assert "KEEP the reason" in msg
+
+
+def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
+    # The IF tier's `Notes`/`SignalNote`, the pocket the Contract-only rule could
+    # not see: 216 provenance tokens over 76 rows, 118 of them in `Notes`.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def flags(row, allow=()):
+        row.setdefault("IF-ID", "IF-101")
+        return trace.if_note_advisories([row], allow)
+
+    assert flags({"Notes": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
+    assert flags({"Notes": "One home is an owner ruling (2026-08-10, repo-lock D-6)."})
+    assert flags({"SignalNote": "derived at the WI-443 conversion: unbounded."})
+    # The Contract cell is NOT this arm's: one token, one finding, one home.
+    assert not flags({"Contract": "consumes load(path) -> rows (WI-443)."})
+    # A `Notes` cell ARGUING is that cell working correctly — the Contract arm's
+    # connective and length rules must not follow it here.
+    assert not flags({"Notes": "Declared because a copy diverges silently."})
+    assert not flags({"Notes": "x" * 900})
+    # Same hazards, same silence.
+    assert not flags({"Notes": "The M-10 crossing is the counterpart here."})
+    assert not flags({"Notes": "Kept rather than retired; the ruling stands."})
+    # A placeholder row and a reviewed exception both stay quiet.
+    assert not flags({"IF-ID": "IF-000", "Notes": "Minted 2026-08-15."})
+    assert not flags({"Notes": "Minted 2026-08-15."}, allow={"IF-101 Notes"})
+
+
 def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
     # process.md section 3, "The statement pattern is EARS". Measured over this
     # repo's 70 SRs before shipping: two rows opened on a non-EARS condition
