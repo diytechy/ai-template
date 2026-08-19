@@ -124,8 +124,8 @@ Stable, zero-padded, never reused.
   one method/action. Two rows sharing one interface identity — or one row
   deciding both *which artifact* carries a capability and *what its methods
   do* — is a tiering defect, not a style choice. Exceptions are extraordinarily
-  rare and ride the one-`shall` valve: a recorded per-row waiver, reason stated
-  in `Rationale`. `trace.py` warns (never gates) when an SR's direct-LLR fan-out
+  rare and ride the one-`shall` valve: a recorded per-row waiver, written as
+  `recorded waiver: <reason>` in `Rationale`. `trace.py` warns (never gates) when an SR's direct-LLR fan-out
   exceeds the declared bound (default 7): a *detector* for merged rows,
   deliberately not a cap — a hard cap invites merging LLRs to slip under it —
   so a row past the bound either splits by observable class or keeps a per-row
@@ -141,7 +141,8 @@ Stable, zero-padded, never reused.
   binding homes — the shipped-file inventory, the LLR `Module` cell, the
   interface registry — never by minting artifact-establishing requirements. An
   *altitude* rule: `trace.py` warns (never gates) on an artifact token in either
-  cell without that recorded per-row waiver (`Rationale` at SR, `why` at SN —
+  cell without that recorded per-row waiver — `recorded waiver: <reason>`, in
+  `Rationale` at SR and `why` at SN (
   the tier's reason cell, since the need schema carries no `Rationale`); the
   provenance rule above still reads a named script as subject, not provenance.
 - **A rationale carries its own reason, and only that.** `Rationale` (`why` at
@@ -159,8 +160,11 @@ Stable, zero-padded, never reused.
   with no parent). Hand-maintaining the matrix is forbidden.
 - **Code carries back-links** (`Implements: SR-007, LLR-014`); test names embed
   the verified ID. The registry rows are authoritative.
-- **Architecture is generated** (module/function map) so it cannot drift; keep a
-  hand-written one-page overview above it.
+- **Architecture is derived, never committed**: the module/function map, import
+  graph and seams are read live from the source tree and the registries into the
+  dashboard, so there is no markdown copy to drift. The one authored narrative
+  that survives is `docs/runtime-flows.md` (the Runtime flows the DevStg-Tests
+  bar requires).
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
 - **Thin orchestrators**: an entry point / top-level routine should *compose, not
@@ -940,13 +944,13 @@ and naming the split is what keeps the kit portable across stacks:
 - **Process checks are kit-owned and stdlib-only** (`requires=()` in `check.py`):
   traceability (`trace.py`), the derived-gate freshness guard (`derive_gate.py`),
   design-flow validation (`check_flows.py`), doc navigability (`check_docs.py`),
-  perf-budget comparison (`check_perf.py`), and architecture-map freshness
-  (`gen_arch_map.py`). They are identical in every
+  perf-budget comparison (`check_perf.py`), and generated-artifact freshness
+  (`gen_trajectory.py` and its siblings). They are identical in every
   project and every language — **don't rewrite them.** (The perf *comparator* is
   process; the *measurement* that feeds it is product — see §9.) The
   agent-neutral `pre-commit` hook (`.githooks/pre-commit`, enabled by
   `scripts/setup.{sh,ps1}`) enforces their **always-valid subset** on every
-  commit: map freshness, registry integrity (`trace.py --strict-integrity` —
+  commit: generated-artifact freshness, registry integrity (`trace.py --strict-integrity` —
   ids + registry row structure; `check.py` runs the same floor as its DevStg-Reqs
   `registry-integrity` step), and
   format. Orphan strictness stays gate-scoped in `check.py` — a mid-DevStg-Reqs registry
@@ -1020,7 +1024,7 @@ pip needed to run them):
 
 - `scripts/check.py` — the harness itself. Gate-scoped (`--gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all`,
   defaulting to the derived gate in `docs/gate`), runs
-  format · lint · tests · coverage · traceability · arch-map freshness, and exits
+  format · lint · tests · coverage · traceability · generated-artifact freshness, and exits
   nonzero on any failure. Wire it to your stack by editing `docs/stack.ini` (the
   commands/paths/tiers/coverage; its built-in `steps()` fallback is unchanged);
   the contract is the gates + exit code, not the specific tools. CI runs the

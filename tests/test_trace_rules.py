@@ -74,6 +74,11 @@ def test_a_spine_row_states_the_system_not_its_own_history():
     (msg,) = flags(llr={"Detail": "Resumes (WI-210) per process.md."})
     assert msg.startswith("LLR LLR-101 Detail")
     assert "'WI-210'" in msg and "'process.md'" in msg
+    # And it names a home that EXISTS. The message used to send an author to
+    # `work-items.csv`, a carrier whose presence is itself an integrity finding —
+    # a lint telling you to move provenance into a file the checker forbids.
+    assert "work-items.csv" not in msg
+    assert "move provenance to the log" in msg
 
 
 def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
@@ -120,7 +125,14 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert flags(sr={"Rationale": "Raised as OI-29 and answered there."})
     assert flags(sr={"Rationale": "Under repo-lock D-6 the vocabulary has one home."})
     assert flags(sr={"Rationale": "The bar is argument (owner RULING-3)."})
-    assert flags(sr={"Rationale": "Hat-derived: C-SEC-2 asks for the enumeration."})
+    # THE RULING STAMP THIS REPO ACTUALLY WRITES is the date with a serial
+    # letter, and a bare `\d{4}-\d{2}-\d{2}` could not see it: 12 such tokens sat
+    # in the registries reporting nothing while the plain-date form beside them
+    # reported. The suffix must END the token, so a word beginning with the same
+    # letter cannot drag the date into it.
+    assert flags(sr={"Rationale": "The owner ruling 2026-08-13u settled this."})
+    assert flags(llr={"Rationale": "Cut by 2026-08-16q with the frame locked."})
+    assert not flags(sr={"Rationale": "Held 2026-08-13until the sitting ruled."})
     # A NORMATIVE cell reports an edit stamp, never a bare date: a requirement
     # may legitimately carry a date as DATA, and a rule that reads a fixture as a
     # changelog is the cry-wolf failure this whole module is measured against.
@@ -128,7 +140,17 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert not flags(tc={"Parameters": "cutover = 2026-08-15; before = 2026-08-14"})
     assert not flags(sr={"Requirement": "The loop shall stamp 2026-08-15 on the row."})
 
-    # --- THE TWO MEASURED FALSE-POSITIVE HAZARDS, pinned SILENT ---------------
+    # THE STAMP THAT LOST ITS DATE. A sweep that used the dated shape as its
+    # definition of done deleted the DATES and left 33 bare verbs standing on 31
+    # live rows. The corpus writes a stamp as an ALL-CAPS verb opening a clause,
+    # optionally behind a short all-caps subject, and that is what this reads.
+    assert flags(sr={"Rationale": "One home. MINTED out of the SR-170 split."})
+    assert flags(sr={"Rationale": "SPLIT ON THE ONE-DECISION RULE: three shalls."})
+    assert flags(llr={"Detail": "The seam holds. RE-POINTED onto what survived."})
+    assert flags(tc={"Method": "Runs green. CORRECTED: the fourth clause is gone."})
+    assert flags(sr={"Rationale": "OWNER RE-POINTED: the endpoint is the LLR's."})
+
+    # --- THE MEASURED FALSE-POSITIVE HAZARDS, pinned SILENT -------------------
     # (1) A general `<LETTER>-<n>` id pattern was tried and REVERTED once for
     # reading the data pack's own `M-10` crossing ids as rulings. Nothing here
     # generalises over id shapes, so the crossing ids stay data.
@@ -143,27 +165,103 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert not flags(sr={"Requirement": "The gate shall record each attestation."})
     assert not flags(llr={"Detail": "Names the ruling that retired the id."})
     assert not flags(tc={"Expected": "A retired row reports as retired, not absent."})
-    # A DATED PATH is a pointer, not a stamp: reporting "cites 2026-08-16" about
-    # a plan filename names the wrong thing (12 of 76 measured date matches).
+    # (3) THE SAME HAZARD ONE FLOOR UP: the all-caps verbs are also ordinary
+    # PARTICIPLES mid-sentence, and every one of these is a live cell's real
+    # wording. The clause-opening constraint is the whole separation — measured
+    # over every live spine + IF cell at 36 hits, 36 of them genuine stamps.
+    assert not flags(llr={"Detail": "A RATIFIED SN cited by zero SRs caps the bar."})
+    assert not flags(sr={"Rationale": "So an AMENDED requirement drops the stage."})
+    assert not flags(tc={"Method": "A stale file is DELETED in the same act."})
+    assert not flags(tc={"Method": "Assert a RULED row does not render as a brief."})
+    assert not flags(llr={"Detail": "Arm the comparison on the RATIFIED half only."})
+    # (4) THE REVIEW-CODE ARM IS GONE, and this is the case that removed it. A
+    # `C-<HAT>-<n>` "review-round code" pattern shipped and measured 20 hits, 20
+    # of them FALSE — every live occurrence names a hat-charter CLAUSE as the
+    # standing constraint the row answers, which is the row's REASON. The token
+    # carries no signal about which use it is; the FRAME around it does, and the
+    # stamp arms above are what read a frame.
+    assert not flags(
+        sr={"Rationale": "C-MNT-3 gives each value exactly one definition."}
+    )
+    assert not flags(sr={"Rationale": "Hat-derived: C-SEC-2 asks for the list."})
+    assert not flags(sr={"Rationale": "It must stay usable as it grows (C-UXE-2)."})
+    # (5) A DATED PATH is a pointer, not a stamp: reporting "cites 2026-08-16"
+    # about a plan filename names the wrong thing (12 of 76 measured date
+    # matches). It is suppressed under BOTH date-bearing arms — the edit-stamp
+    # arm used to be unguarded, so whether a pure pointer reported was decided by
+    # how long the filename was.
     assert not flags(sr={"Rationale": "Design: docs/plans/2026-08-16-derivation.md"})
+    assert not flags(sr={"Rationale": "Restated in docs/plans/2026-08-16-blind.md"})
+    assert not flags(llr={"Rationale": "Moved to docs/archive/x.2026-07-20.md"})
     # Placeholder rows never report; a scaffold's example rows are a form.
     assert not flags(sr={"SR-ID": "SR-000", "Rationale": "Ruled 2026-08-13, OI-17."})
 
-    # The reviewed exception list, keyed by row id or `<ROW-ID> <Cell>`: the
-    # carve-out is for a frame that is the ONLY record of an open question.
-    assert not flags(sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101"})
-    assert not flags(
-        sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101 Rationale"}
+    # --- THE REVIEWED EXCEPTION LIST IS TOKEN-SCOPED --------------------------
+    # An entry silences the ONE token it names. The cell-scoped key it replaced
+    # was measured hiding 67 unadjudicated tokens over 22 rows behind entries
+    # that each justified a single parenthetical.
+    cell = {"Rationale": "OPEN (2026-08-16 round, F1). MINTED out of SR-140."}
+    both = {
+        trace.allow_key("SR-101", "Rationale", "2026-08-16"),
+        trace.allow_key("SR-101", "Rationale", "MINTED"),
+    }
+    assert not flags(sr=dict(cell), allow=both)
+    # Allowing ONE of the two leaves the other reported — the whole point.
+    (msg,) = flags(
+        sr=dict(cell), allow={trace.allow_key("SR-101", "Rationale", "2026-08-16")}
     )
+    assert "'MINTED'" in msg and "'2026-08-16'" not in msg
+    # A key naming the row, or the row and the cell, declares NOTHING: those are
+    # the two shapes that over-suppressed, and they must not keep working.
+    assert flags(sr=dict(cell), allow={"SR-101"})
+    assert flags(sr=dict(cell), allow={"SR-101 Rationale"})
+    # Wrong cell, wrong row: no match either way.
     assert flags(
-        sr={"Rationale": "OPEN (2026-08-16 round, F1)."}, allow={"SR-101 Title"}
+        sr=dict(cell), allow={trace.allow_key("SR-101", "Title", "2026-08-16")}
     )
 
     # It reports the tier, row, cell and what it found — and says KEEP the reason.
-    (msg,) = flags(sr={"Rationale": "REWORDED 2026-08-17 (C-PRF-1, sitting-3)."})
+    (msg,) = flags(sr={"Rationale": "REWORDED 2026-08-17 at sitting-3."})
     assert msg.startswith("SR SR-101 Rationale")
-    assert "'C-PRF-1'" in msg and "'sitting-3'" in msg
+    assert "'REWORDED 2026-08-17'" in msg and "'sitting-3'" in msg
     assert "KEEP the reason" in msg
+
+
+def test_the_off_spine_living_registries_get_the_same_citation_frame_sweep():
+    # Sol-F2: `components.toml` and `external.toml` were SWEPT in the same pass
+    # that guarded the four spine tiers, and then left unwatched — a clean state
+    # nothing was watching. An adopter reads a component's notes and an entity's
+    # description to learn what the system's neighbourhood IS, with no more
+    # access to this repo's sittings than they have to its requirements.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    def flags(cmp=None, ext=None, allow=()):
+        def rows(cells, key, rid):
+            if cells is None:
+                return []
+            cells.setdefault(key, rid)
+            return [cells]
+
+        return trace.off_spine_advisories(
+            rows(cmp, "CMP-ID", "CMP-101"), rows(ext, "EXT-ID", "EXT-101"), allow
+        )
+
+    assert flags(cmp={"Notes": "Cut at the 2026-08-13o merge, per OI-19."})
+    assert flags(ext={"Notes": "A CLI is a CLI (owner merge, 2026-08-13o)."})
+    assert flags(ext={"Description": "MINTED at sitting-2 out of the v1 frame."})
+    (msg,) = flags(cmp={"Notes": "Ruled at sitting-3."})
+    assert msg.startswith("CMP CMP-101 Notes") and "KEEP the reason" in msg
+    # `Description` is NORMATIVE, so a bare date there is data, not a stamp —
+    # the same split the spine tiers use between `Requirement` and `Rationale`.
+    assert not flags(ext={"Description": "Cuts over on 2026-08-15 for adopters."})
+    assert not flags(ext={"Notes": "They touch the SESSION, never the system."})
+    assert not flags(cmp={"CMP-ID": "CMP-000", "Notes": "Ruled at sitting-3."})
+    assert not flags(
+        cmp={"Notes": "Ruled at sitting-3."},
+        allow={trace.allow_key("CMP-101", "Notes", "sitting-3")},
+    )
 
 
 def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
@@ -189,9 +287,15 @@ def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
     # Same hazards, same silence.
     assert not flags({"Notes": "The M-10 crossing is the counterpart here."})
     assert not flags({"Notes": "Kept rather than retired; the ruling stands."})
-    # A placeholder row and a reviewed exception both stay quiet.
+    # A placeholder row stays quiet, and so does a TOKEN-SCOPED exception — the
+    # IF arm reads the same list under the same rule as the spine tiers, so a
+    # cell-scoped key declares nothing here either.
     assert not flags({"IF-ID": "IF-000", "Notes": "Minted 2026-08-15."})
-    assert not flags({"Notes": "Minted 2026-08-15."}, allow={"IF-101 Notes"})
+    assert not flags(
+        {"Notes": "Minted 2026-08-15."},
+        allow={trace.allow_key("IF-101", "Notes", "Minted 2026-08-15")},
+    )
+    assert flags({"Notes": "Minted 2026-08-15."}, allow={"IF-101 Notes"})
 
 
 def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
@@ -845,13 +949,24 @@ def test_a_recorded_waiver_silences_the_row_but_not_a_shared_artifact():
     waived = {
         "SR-ID": "SR-101",
         "Requirement": "trace.py shall exit nonzero when an orphan exists.",
-        "Rationale": "One-shall waiver (13v): the carrier and the name it "
+        "Rationale": "Recorded waiver: the carrier and the name it "
         "verifies are one contract, and splitting them separates a claim from "
         "the proof that makes it checkable.",
     }
-    # The recorded per-row valve — the SAME token the one-`shall` waivers use,
-    # not a second grammar an author has to learn.
+    # The recorded per-row valve — the SAME declared marker the one-`shall`
+    # waivers use, not a second grammar an author has to learn.
     assert trace.sr_artifact_advisories([waived]) == []
+    # RENAMED FROM `13v`, a DECISION ID, which the citation-frame rule bans from
+    # the very cell this valve is written in — and which named a ruling of THIS
+    # repo that no adopting project can read. The retired token no longer works.
+    assert trace.sr_artifact_advisories(
+        [dict(waived, Rationale="One-shall waiver (13v): one contract.")]
+    )
+    # And the COLON earns its keep: prose ABOUT a waiver is not a claim of one.
+    # `\b13v\b`'s only two live hits were rows saying the waiver was SPENT.
+    assert trace.sr_artifact_advisories(
+        [dict(waived, Rationale="The recorded waiver covered one shall and is SPENT.")]
+    )
     # An unwaived row with the same text is not silenced, so the suppression is
     # the Rationale's doing and not an accident of the token regex.
     assert trace.sr_artifact_advisories(
@@ -955,8 +1070,9 @@ def test_the_need_arm_scans_acceptance_only_and_excludes_markdown():
         == []
     )
     # `.md` is EXCLUDED, and that exclusion was measured rather than assumed: a
-    # markdown document named in a spine cell is overwhelmingly a PROVENANCE
-    # citation, which process.md §3's provenance clause already sanctions.
+    # markdown name is rarely the INSTRUMENT that observes the condition, and a
+    # markdown name that IS a citation is forbidden outright by the provenance
+    # rule rather than waived here — so this arm would only ever double-report.
     assert (
         trace.sn_artifact_advisories(
             [
@@ -978,12 +1094,12 @@ def test_a_recorded_why_waiver_silences_a_need_and_there_is_no_shared_census():
     waived = {
         "id": "SN-101",
         "acceptance": "`docs/process.toml` holds every process dial.",
-        "why": "One-shall waiver (13v): the single-home promise IS a promise "
+        "why": "Recorded waiver: the single-home promise IS a promise "
         "about this file, so a class-voice rewrite would delete the need.",
     }
     # The waiver home at SN is `why` — the tier's reason cell, since the need
-    # schema (`SPINE_TIER_KEYS['SN-ID']`) carries no `Rationale` — and the token
-    # is the SAME `13v` the SR valve uses, not a second grammar.
+    # schema (`SPINE_TIER_KEYS['SN-ID']`) carries no `Rationale` — and the marker
+    # is the SAME `recorded waiver:` the SR valve uses, not a second grammar.
     assert trace.sn_artifact_advisories([waived]) == []
     # The suppression is the `why` cell's doing, not an accident of the regex.
     assert trace.sn_artifact_advisories(

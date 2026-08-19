@@ -40,8 +40,11 @@
 
 .PARAMETER Doc
     Target file(s) to update (each must contain the MODULE MAP marker pair;
-    DIAGRAM/FLOW markers are optional per file). Default: docs/architecture.md
-    and AGENTS.md.
+    DIAGRAM/FLOW markers are optional per file). REQUIRED — there is no default
+    target. The scaffolded docs/architecture.md default retired with the doc
+    itself; gen_arch_map.py made --doc required at the same time, and this port
+    matches it. Point -Doc at whichever file carries the markers — AGENTS.md /
+    CLAUDE.md route the map to where agents read it.
 
 .PARAMETER Flow
     Orchestrator function whose call sequence fills the GENERATED FLOW markers.
@@ -81,8 +84,13 @@ if (Test-Path -LiteralPath $ModuleGlob) {
 $entryPaths = $EntryScripts |
     ForEach-Object { Join-Path $repo $_ } | Where-Object { Test-Path -LiteralPath $_ }
 
+# -Doc is REQUIRED and has no default. The old default pointed at the scaffolded
+# docs/architecture.md, which the kit retired — leaving a PowerShell adopter who
+# ran this port with no arguments meeting `throw "Target doc not found"` from a
+# path they never named. Fail here instead, naming the fix, exactly as
+# gen_arch_map.py's own `--doc` refusal does.
 if (-not $Doc) {
-    $Doc = @((Join-Path $repo 'docs/architecture.md'), (Join-Path $repo 'AGENTS.md'))
+    throw "gen_arch_map: pass -Doc <file carrying the MODULE MAP marker pair>; there is no default target (the scaffolded docs/architecture.md default retired with the doc). Point it at AGENTS.md / CLAUDE.md to route the map where agents read."
 }
 
 # An empty scan is legitimate pre-code, but it makes -Check pass *vacuously* —

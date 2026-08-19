@@ -173,8 +173,9 @@ destination is yours, and no re-sync rule applies to it.
   repo that has not run `migrate_carrier` yet — the `docs/work/` WI spec folder,
   `docs/status.md`, `docs/log.md`, `docs/plan.md` (your work plan — the kit seeds
   the block-list skeleton once), `docs/iteration/` + `docs/iteration_index.md`
-  (session history), `docs/architecture.md`'s hand-written overview (regenerate
-  only the marker blocks), `AGENTS.md` project content, the root launchers' EDIT
+  (session history), `docs/runtime-flows.md`'s authored flows (the architecture
+  itself derives — there is no committed copy to preserve, see the
+  `docs/architecture.md` RETIRES entry), `AGENTS.md` project content, the root launchers' EDIT
   slots, `docs/gate`, and `.gitignore`/`.gitattributes` (merge new kit lines in by
   hand). `bootstrap.py` **skips existing files**, so a plain re-run won't clobber
   these — but don't run it with `--force` against a live repo without a diff pass.
@@ -226,6 +227,12 @@ For each MAPPING destination that the range changed:
 Every entry is anchored: `[since <sha>]` is the kit commit at which the change
 landed, so an entry applies when that SHA falls inside your stamp-to-target
 range. Entries are ordered **oldest first** — apply them in that order.
+
+*(Writing an entry for a change that has not committed yet? You cannot know your
+own commit's SHA, so anchor at the **preceding** commit and say so in a
+parenthetical — the convention several entries below already use. Never leave an
+entry unanchored: an entry with no SHA falls in no range and every re-sync skips
+it silently.)*
 
 ### The TC `Tier` column [since af852db7]
 
@@ -1214,6 +1221,42 @@ and that is the intended end state, not data loss.
 - Nothing else moves: `Aspect` stays REPORT-ONLY for counts, and no gate reads
   the distribution.
 
+### `docs/architecture.md` RETIRES — the architecture derives into the dashboard [since c7adf7dc]
+
+The markdown way-station between the registries and the dashboard is gone:
+the module map, import graph and seams are now read STRAIGHT from your source
+tree and registries, and `PROJECT_STATE.html`'s "How (SW architecture)" tab is
+the one rendered home. The authored narrative — the **Runtime flows** the
+DevStg-Tests bar requires — moves to its own doc and the dashboard embeds it.
+
+- **NEW: `docs/runtime-flows.md`** (scaffolded from `RUNTIME_FLOWS.template.md`).
+  **MOVE your authored "Runtime flows" section there** (heading included) —
+  `check_flows.py`'s default `--doc` now points at it, and the obligation is
+  unchanged: required from DevStg-Tests, every diagram citing real SR/LLR ids.
+  A repo that skips this move fails the `design-flows` step with "doc missing".
+- **`ARCHITECTURE.template.md` RETIRES; `docs/architecture.md` leaves `bootstrap.py`'s
+  MAPPING** — a fresh scaffold no longer receives it. Your existing copy is
+  YOURS: after moving the flows out, keep whatever hand-written overview you
+  value (it is no longer checked) or delete the file.
+- **The `arch-map` harness step RETIRES** (`check.py`, the pre-commit hook's
+  batched floor, `trunk_step.py --regen`): there is no committed block left to
+  drift. Remove the `docs/architecture.md = archmap | ...` row from your
+  `docs/stack.ini` `[generated]` section. `[arch-map] mode` KEEPS its meaning
+  — `files` now tells the AST-inventory readers (check_trajectory's coverage
+  rules, the dashboard, `check_doc_refs`'s `sym:` tier) there is no Python
+  source, keeping those layers dormant rather than vacuously green.
+- **`check_doc_refs.py --arch` RETIRES**: the `sym:` oracle scans the source
+  AST under `[paths] src` directly. If you passed `--arch`, drop the flag.
+- **`gen_arch_map.py` stays shipped** as the AST walk the readers import
+  (`scan_inventory`) and as the opt-in CLI for splicing the map into
+  `AGENTS.md`/`CLAUDE.md` marker blocks (`--doc`); a files-mode committed map,
+  if you relied on one, is yours to keep wiring manually.
+- **Behavior sharpened by the live inventory:** the knowledge⇒component
+  containment finding now fires on a module the moment it exists on disk
+  (the old committed-map staleness window is gone) and names the uncontained
+  modules; `gen_okf`'s process-guide for `docs/architecture.md` is replaced by
+  a `runtime-flows` guide, so your `docs/okf/` bundle regenerates once.
+
 ### `docs/handbacks/*` in `orphans-allow` [since bd0e739a]
 
 **Applies to every adoption that scaffolded `docs/orphans-allow` before this
@@ -1543,7 +1586,7 @@ basis line was **byte-identical** before and after. If your registries carry
 approved or verified rows, you do not get that check for free — apply the value
 map above deliberately, and re-run `derive_gate.py` to compare.
 
-### Reserved: `docs/work/README.md` — the registry's own location→status contract
+### `docs/work/README.md` — the registry's own location→status contract [since 712ff788]
 
 **A new scaffolded file, and one corrected table.** `bootstrap.py` now maps
 `work/README.template.md` → `docs/work/README.md`: the seven status directories
@@ -1576,7 +1619,166 @@ joined `GITKEEP_DIRS` may be missing it, and `handback.close_partial` needs it.
 `docs/work/*` is already an expected-live-orphan glob in `docs/orphans-allow`, so
 the README needs no navigation link.
 
-*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
+### The artifact-voice rule reaches the NEED tier — and you owe your own rows a sweep [since 3dd665fc]
+
+**The rule changed shape, not just scope.** `docs/process.md` §3 used to say a
+*requirement* cell names no concrete artifact without a recorded reason; it now
+says a **need or requirement** cell does. At SN that lands squarely on the
+`acceptance` cell: a need states the observable **condition**, never the
+instrument that observes it. "`trace.py --strict` reports zero orphans" is a
+stakeholder outcome welded to one script — it cannot survive the script being
+re-carried, and the stakeholder the tier exists for cannot validate a claim about
+a file they have never opened. "The strict traceability check reports zero
+orphans" says the same thing and outlives every carrier.
+
+**The detector now warns on both tiers.** `trace.py`'s "Artifact-naming
+advisories" section is joined by "**Need artifact-naming advisories**", fed by
+`trace_text.sn_artifact_advisories`. Both are **warn-only and stay warn-only** —
+neither joins the exit code under any flag, so nothing you have gates today
+starts failing. Three differences from the SR arm, all deliberate:
+
+- It reads a **wider artifact vocabulary** (`.py .toml .ini .csv .html .yml
+  .yaml .sh .cmd .ps1 .bat .json`), because a need's instruments are mostly not
+  scripts — they are config files and generated pages. `.md` is **excluded**: a
+  markdown name in a spine cell is rarely the instrument that observes the
+  condition — it is a document under specification or a pointer to a home — so
+  charging a waiver for it would train authors to ignore the warning. (A
+  markdown name that IS a citation has a different problem: the next entry
+  forbids it outright, waiver or none.)
+- It reads **`acceptance` only**. Your `need` cells belong to
+  `check_need_form.py`, which already reports internal paths and
+  implementation-only identifiers there — one token, one reporting check.
+- There is **no shared-artifact census** at SN. Two needs may honestly describe
+  outcomes one file happens to serve without either of them deciding anything
+  about it; only the SR tier's "one home per method" makes that a defect.
+
+**What YOU do — run the same conformance sweep over your own rows.** Nothing
+migrates this for you, and a repo that adopted the kit before this change almost
+certainly has needs written in instrument voice (the kit's own registry had 13 of
+27 acceptance cells naming a carrier when the rule landed). Take it row by row:
+
+1. Run `python scripts/trace.py` and read the two artifact-naming sections as a
+   worklist — the SN one and the SR one, since the SR arm has been warning since
+   the re-tier campaign and older repos never cleared it.
+2. For each flagged cell ask the one question: **is the artifact the SUBJECT of
+   this row, or the INSTRUMENT that happens to carry it?** An instrument gets
+   rewritten to the condition it produces ("the documentation check fails on a
+   broken link", not "`check_docs.py` fails on a broken link"). A subject stays.
+3. **Where the name stays, record the reason as a waiver** — the same
+   `recorded waiver: <reason>` marker the one-`shall` and SR artifact valves
+   already use, written in the
+   tier's **reason cell**: `Rationale` at SR, and **`why` at SN**, because the
+   need schema carries no `Rationale` and `why` is the field that already answers
+   "why is this row the way it is". The reason must be one a later reader can
+   argue with; "accepted" is not a reason.
+4. One thing needs **no** waiver and should not get one, or the token stops
+   meaning anything: a **declared vocabulary** token (a dial name, a status
+   word, a `--flag`), which is not a carrier. A **provenance** citation is not a
+   carrier either, but do not waive it — **delete it**: the next entry
+   ([since 4e9a5c8a]) bans a citation frame from every living spine cell,
+   including the reason cell you would have written the waiver in.
+
+**This is a wording sweep, not a re-decomposition.** Do not change what a row
+means, do not touch `status`, and expect your amendment detectors to fire on
+every cell you rewrite — that is correct, and those rows are what your next
+review sitting reads. If your process holds the need tier for human
+ratification, the sweep is a provisional act your sitting countersigns.
+
+### NO provenance citation in a living registry cell — all four spine tiers, reason cells included [since 4e9a5c8a]
+
+**What changed.** `process.md` §3's stand-alone rule used to say a spine row must
+not carry a work-item id or a citation of the process doc, in the normative text
+of `SR`/`LLR`/`TC`. It now covers **all four spine tiers** (`SN` joins) and, on
+every one of them, the **reason cell** as loudly as the normative ones —
+`Rationale`, and `why` at `SN`. The forbidden vocabulary is the whole citation
+frame: work-item id, process-doc citation, ruling, sitting, review-round or
+open-item reference, decision id, edit-history verb, date stamp.
+
+**One permission is REPEALED, and it is the load-bearing half.** The rationale
+bullet used to say a review, ruling or design-thread reference was *optional
+context on top of a sentence that already stands alone*. It is not optional
+context any more; it does not belong in the cell. The substance of the reasoning
+stays — what breaks without the row, which alternative lost — and only the
+citation frame goes. The detailed history belongs in `docs/log.md` and the
+archive, which can hold it in full and cannot rot into the specification.
+
+**Why, measured.** The permission read as a licence. On the kit's own registries
+it produced `Rationale` cells that are mostly changelog — `REWORDED <date>
+(<round code>, <hat>; <sitting> item 8 ruling): …` — ~300 tokens across ~150 live
+rows, with the durable half buried in the middle of a frame no outside reader can
+resolve. Every one of those cells is read by an adopter, an agent and a reviewer
+with none of the history that would make the frame mean anything.
+
+**Two new checks, both WARN-FIRST and never gating.** `trace.py` grows a
+**Provenance-citation advisories** section (`provenance_advisories` over
+`SN`/`SR`/`LLR`/`TC`, plus `if_note_advisories` over the IF tier's
+`Notes`/`SignalNote`). The pre-existing gating rule — a work-item id or a
+process-doc citation in an `SR`/`LLR`/`TC` normative cell under `--strict` —
+**keeps its severity exactly**. Nothing that passed before fails now.
+
+**What YOU do — read the findings as a worklist and rewrite each row.**
+
+1. Run `python scripts/trace.py` and read the **Provenance-citation advisories**
+   section. Every line names the tier, the row, the cell and the tokens.
+2. For each one: **drop the citation frame, KEEP the reason.** Where the frame
+   wrapped a real argument, restate the durable half as standing prose ("this
+   states a structural property, not a throughput claim: no instrument here
+   measures speedup"). Where the block has no forward-looking half at all, it was
+   a changelog — delete it; git and the log already hold it.
+3. **The failure to watch for is deleting the frame and the argument together**,
+   leaving a bare assertion. That is the exact failure the rationale rule exists
+   to prevent, and it gets likelier now that the frame is forbidden.
+4. Move the account to `docs/log.md`. A row that names a *dead* id is worse than
+   one that names none: it reads as authority and resolves to nothing.
+
+**The open-question carve-out, and the allow file.** One class of cell must NOT
+be swept: the frame that is the **only record of an unresolved tension** — a
+contradiction between two rows, an obligation whose carrier is gone, a
+provisional label nothing mechanical signs. Stripping those deletes the repo's
+only note that the question is open. Declare each one in **`docs/provenance-allow`**,
+in the same idiom `docs/need-form-allow` established: one entry per line,
+`<ROW-ID> — <reason>` or `<ROW-ID> <Cell> — <reason>`; `#` comments and blank
+lines ignored; a line with no ` — ` separator declares nothing (fail-soft in the
+loud direction — a malformed entry can only fail to silence a finding). The file
+is **not scaffolded** and an absent file declares nothing, so a clean repo carries
+none. Each entry should say the row **owes an open-item row at your next review
+sitting**; when the ruling lands, the marker and the entry go together. The
+allow list is not a second home for provenance — an entry that is only "we like
+this citation" is the rule being routed around.
+
+**A licence attribution is not provenance** and stays regardless of any of this.
+
+**This is a wording sweep, not a re-decomposition.** Do not change what a row
+means and do not touch `status`. Expect your amendment detectors to fire on every
+cell you rewrite — that is correct, and those rows are what your next sitting
+reads.
+
+### The flows gate stops matching your document TITLE [since 4e9a5c8a]
+
+*(Anchored at the preceding commit of the same review round; the change lands in
+the commit that follows it.)* `check_flows.py` used to select the first heading
+whose title *started with* "Runtime flows", at any level. In a doc **named** for
+the section — which is how `RUNTIME_FLOWS.template.md` shipped, and what the
+architecture-retirement entry above told you to build — the H1 title shadowed the
+real section and ran to end-of-file. The gate could not fail: delete your entire
+Runtime-flows section and the step stayed green so long as one id-citing mermaid
+block survived anywhere in the doc.
+
+**The document title no longer counts as the section.** The first heading in
+`docs/runtime-flows.md` is skipped; the section is a matching heading *inside*
+the doc (an exact "Runtime flows" wins over a longer "Runtime flows …").
+
+- **Check your `docs/runtime-flows.md` shape.** If its only "Runtime flows"
+  heading is line 1, the step now fails with `no "Runtime flows" section
+  heading`. Fix: keep line 1 as the document title (name your project in it) and
+  add a `## Runtime flows` heading above your first diagram — the shape
+  `RUNTIME_FLOWS.template.md` now ships. No diagram content changes.
+- **Content outside the section is no longer scanned.** Ids cited in an intro or
+  a neighboring section are neither counted nor validated now (they never should
+  have been). If a diagram relied on the doc-wide sweep to look green, move it
+  under the section, where it belongs.
+- This is a **hard fail at the DevStg-Tests bar** — unchanged severity, only the
+  selection rule moved. A repo below that bar pays nothing.
 
 ## 4. Translation helper — concept renames
 
@@ -1710,6 +1912,28 @@ authored files (warn-first, `--strict` gates), with your history, archives and
 attestation quotes carved out as always — a record of what happened is not
 rewritten.
 
+### The `13v` waiver token → `recorded waiver: <reason>` [since 4e9a5c8a]
+
+**If any of your rows carry `13v`, rewrite them.** The waiver marker that
+clears the one-`shall` valve and the artifact-naming valve used to be the bare
+token `13v`. That token was a **decision id** — it named this kit's own log
+decision `2026-08-13v` — so the marker mandated into your reason cell was
+exactly the kind of citation the provenance rule bans from that cell, and it
+pointed at a ruling no adopter can read.
+
+| retired | now |
+|---|---|
+| `13v` | `recorded waiver: <reason>` |
+
+**This is a breaking change for your rows, not just for the kit's prose.** The
+artifact-naming advisory recognizes only the new marker, so a row still
+carrying `13v` loses its waiver and the advisory returns. Rewrite each one as
+`recorded waiver: <reason>` in the tier's reason cell — `Rationale` at SR,
+`why` at SN — keeping the reason itself, which is the part that was always
+load-bearing. The colon is part of the marker: it is what separates a declared
+valve from prose *about* a waiver, and in this repo two of the only two live
+`13v` hits turned out to be prose saying the waiver was already spent.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose
@@ -1745,176 +1969,3 @@ degrade-gracefully, warn-only, hard-refuse), and none of them consults
 `docs/kit-version` — each infers the repo's actual state from its artifacts, which
 is why version-blind re-syncs have mostly survived. The two mechanisms compose
 rather than compete.
-
----
-
-### `docs/architecture.md` RETIRES — the architecture derives into the dashboard [since c7adf7dc]
-
-The markdown way-station between the registries and the dashboard is gone:
-the module map, import graph and seams are now read STRAIGHT from your source
-tree and registries, and `PROJECT_STATE.html`'s "How (SW architecture)" tab is
-the one rendered home. The authored narrative — the **Runtime flows** the
-DevStg-Tests bar requires — moves to its own doc and the dashboard embeds it.
-
-- **NEW: `docs/runtime-flows.md`** (scaffolded from `RUNTIME_FLOWS.template.md`).
-  **MOVE your authored "Runtime flows" section there** (heading included) —
-  `check_flows.py`'s default `--doc` now points at it, and the obligation is
-  unchanged: required from DevStg-Tests, every diagram citing real SR/LLR ids.
-  A repo that skips this move fails the `design-flows` step with "doc missing".
-- **`ARCHITECTURE.template.md` RETIRES; `docs/architecture.md` leaves `bootstrap.py`'s
-  MAPPING** — a fresh scaffold no longer receives it. Your existing copy is
-  YOURS: after moving the flows out, keep whatever hand-written overview you
-  value (it is no longer checked) or delete the file.
-- **The `arch-map` harness step RETIRES** (`check.py`, the pre-commit hook's
-  batched floor, `trunk_step.py --regen`): there is no committed block left to
-  drift. Remove the `docs/architecture.md = archmap | ...` row from your
-  `docs/stack.ini` `[generated]` section. `[arch-map] mode` KEEPS its meaning
-  — `files` now tells the AST-inventory readers (check_trajectory's coverage
-  rules, the dashboard, `check_doc_refs`'s `sym:` tier) there is no Python
-  source, keeping those layers dormant rather than vacuously green.
-- **`check_doc_refs.py --arch` RETIRES**: the `sym:` oracle scans the source
-  AST under `[paths] src` directly. If you passed `--arch`, drop the flag.
-- **`gen_arch_map.py` stays shipped** as the AST walk the readers import
-  (`scan_inventory`) and as the opt-in CLI for splicing the map into
-  `AGENTS.md`/`CLAUDE.md` marker blocks (`--doc`); a files-mode committed map,
-  if you relied on one, is yours to keep wiring manually.
-- **Behavior sharpened by the live inventory:** the knowledge⇒component
-  containment finding now fires on a module the moment it exists on disk
-  (the old committed-map staleness window is gone) and names the uncontained
-  modules; `gen_okf`'s process-guide for `docs/architecture.md` is replaced by
-  a `runtime-flows` guide, so your `docs/okf/` bundle regenerates once.
-
----
-
-### Reserved: the artifact-voice rule reaches the NEED tier — and you owe your own rows a sweep
-
-**The rule changed shape, not just scope.** `docs/process.md` §3 used to say a
-*requirement* cell names no concrete artifact without a recorded reason; it now
-says a **need or requirement** cell does. At SN that lands squarely on the
-`acceptance` cell: a need states the observable **condition**, never the
-instrument that observes it. "`trace.py --strict` reports zero orphans" is a
-stakeholder outcome welded to one script — it cannot survive the script being
-re-carried, and the stakeholder the tier exists for cannot validate a claim about
-a file they have never opened. "The strict traceability check reports zero
-orphans" says the same thing and outlives every carrier.
-
-**The detector now warns on both tiers.** `trace.py`'s "Artifact-naming
-advisories" section is joined by "**Need artifact-naming advisories**", fed by
-`trace_text.sn_artifact_advisories`. Both are **warn-only and stay warn-only** —
-neither joins the exit code under any flag, so nothing you have gates today
-starts failing. Three differences from the SR arm, all deliberate:
-
-- It reads a **wider artifact vocabulary** (`.py .toml .ini .csv .html .yml
-  .yaml .sh .cmd .ps1 .bat .json`), because a need's instruments are mostly not
-  scripts — they are config files and generated pages. `.md` is **excluded**: a
-  document named in a spine cell is usually a *citation*, which §3's provenance
-  clause already sanctions, and charging a waiver for that would train authors
-  to ignore the warning.
-- It reads **`acceptance` only**. Your `need` cells belong to
-  `check_need_form.py`, which already reports internal paths and
-  implementation-only identifiers there — one token, one reporting check.
-- There is **no shared-artifact census** at SN. Two needs may honestly describe
-  outcomes one file happens to serve without either of them deciding anything
-  about it; only the SR tier's "one home per method" makes that a defect.
-
-**What YOU do — run the same conformance sweep over your own rows.** Nothing
-migrates this for you, and a repo that adopted the kit before this change almost
-certainly has needs written in instrument voice (the kit's own registry had 13 of
-27 acceptance cells naming a carrier when the rule landed). Take it row by row:
-
-1. Run `python scripts/trace.py` and read the two artifact-naming sections as a
-   worklist — the SN one and the SR one, since the SR arm has been warning since
-   the re-tier campaign and older repos never cleared it.
-2. For each flagged cell ask the one question: **is the artifact the SUBJECT of
-   this row, or the INSTRUMENT that happens to carry it?** An instrument gets
-   rewritten to the condition it produces ("the documentation check fails on a
-   broken link", not "`check_docs.py` fails on a broken link"). A subject stays.
-3. **Where the name stays, record the reason as a waiver** — the same `13v`
-   token the one-`shall` and SR artifact valves already use, written in the
-   tier's **reason cell**: `Rationale` at SR, and **`why` at SN**, because the
-   need schema carries no `Rationale` and `why` is the field that already answers
-   "why is this row the way it is". The reason must be one a later reader can
-   argue with; "accepted" is not a reason.
-4. Two things need **no** waiver and should not get one, or the token stops
-   meaning anything: a **provenance** citation (a spec of record; a retired
-   artifact named as the thing this need abolished) and a **declared vocabulary**
-   token (a dial name, a status word, a `--flag`). Neither is a carrier.
-
-**This is a wording sweep, not a re-decomposition.** Do not change what a row
-means, do not touch `status`, and expect your amendment detectors to fire on
-every cell you rewrite — that is correct, and those rows are what your next
-review sitting reads. If your process holds the need tier for human
-ratification, the sweep is a provisional act your sitting countersigns.
-
-*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*
-
-### Reserved: NO provenance citation in a living registry cell — all four spine tiers, reason cells included
-
-**What changed.** `process.md` §3's stand-alone rule used to say a spine row must
-not carry a work-item id or a citation of the process doc, in the normative text
-of `SR`/`LLR`/`TC`. It now covers **all four spine tiers** (`SN` joins) and, on
-every one of them, the **reason cell** as loudly as the normative ones —
-`Rationale`, and `why` at `SN`. The forbidden vocabulary is the whole citation
-frame: work-item id, process-doc citation, ruling, sitting, review-round or
-open-item reference, decision id, edit-history verb, date stamp.
-
-**One permission is REPEALED, and it is the load-bearing half.** The rationale
-bullet used to say a review, ruling or design-thread reference was *optional
-context on top of a sentence that already stands alone*. It is not optional
-context any more; it does not belong in the cell. The substance of the reasoning
-stays — what breaks without the row, which alternative lost — and only the
-citation frame goes. The detailed history belongs in `docs/log.md` and the
-archive, which can hold it in full and cannot rot into the specification.
-
-**Why, measured.** The permission read as a licence. On the kit's own registries
-it produced `Rationale` cells that are mostly changelog — `REWORDED <date>
-(<round code>, <hat>; <sitting> item 8 ruling): …` — ~300 tokens across ~150 live
-rows, with the durable half buried in the middle of a frame no outside reader can
-resolve. Every one of those cells is read by an adopter, an agent and a reviewer
-with none of the history that would make the frame mean anything.
-
-**Two new checks, both WARN-FIRST and never gating.** `trace.py` grows a
-**Provenance-citation advisories** section (`provenance_advisories` over
-`SN`/`SR`/`LLR`/`TC`, plus `if_note_advisories` over the IF tier's
-`Notes`/`SignalNote`). The pre-existing gating rule — a work-item id or a
-process-doc citation in an `SR`/`LLR`/`TC` normative cell under `--strict` —
-**keeps its severity exactly**. Nothing that passed before fails now.
-
-**What YOU do — read the findings as a worklist and rewrite each row.**
-
-1. Run `python scripts/trace.py` and read the **Provenance-citation advisories**
-   section. Every line names the tier, the row, the cell and the tokens.
-2. For each one: **drop the citation frame, KEEP the reason.** Where the frame
-   wrapped a real argument, restate the durable half as standing prose ("this
-   states a structural property, not a throughput claim: no instrument here
-   measures speedup"). Where the block has no forward-looking half at all, it was
-   a changelog — delete it; git and the log already hold it.
-3. **The failure to watch for is deleting the frame and the argument together**,
-   leaving a bare assertion. That is the exact failure the rationale rule exists
-   to prevent, and it gets likelier now that the frame is forbidden.
-4. Move the account to `docs/log.md`. A row that names a *dead* id is worse than
-   one that names none: it reads as authority and resolves to nothing.
-
-**The open-question carve-out, and the allow file.** One class of cell must NOT
-be swept: the frame that is the **only record of an unresolved tension** — a
-contradiction between two rows, an obligation whose carrier is gone, a
-provisional label nothing mechanical signs. Stripping those deletes the repo's
-only note that the question is open. Declare each one in **`docs/provenance-allow`**,
-in the same idiom `docs/need-form-allow` established: one entry per line,
-`<ROW-ID> — <reason>` or `<ROW-ID> <Cell> — <reason>`; `#` comments and blank
-lines ignored; a line with no ` — ` separator declares nothing (fail-soft in the
-loud direction — a malformed entry can only fail to silence a finding). The file
-is **not scaffolded** and an absent file declares nothing, so a clean repo carries
-none. Each entry should say the row **owes an open-item row at your next review
-sitting**; when the ruling lands, the marker and the entry go together. The
-allow list is not a second home for provenance — an entry that is only "we like
-this citation" is the rule being routed around.
-
-**A licence attribution is not provenance** and stays regardless of any of this.
-
-**This is a wording sweep, not a re-decomposition.** Do not change what a row
-means and do not touch `status`. Expect your amendment detectors to fire on every
-cell you rewrite — that is correct, and those rows are what your next sitting
-reads.
-
-*(Reserved, awaiting its `[since <sha>]`: stamped from the commit that lands it.)*

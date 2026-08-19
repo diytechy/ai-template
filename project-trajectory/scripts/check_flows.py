@@ -18,7 +18,9 @@ This checker keeps that section honest (stdlib only, like trace.py):
                                   [--require N] [--no-placeholders]
 
 Failures (exit 1):
-    - the doc has no "Runtime flows" heading;
+    - the doc has no "Runtime flows" section heading *inside* it (the document
+      title does not count, so a doc merely NAMED "Runtime flows" whose section
+      was deleted fails, as it must);
     - the section contains fewer than N (default 1) ```mermaid blocks;
     - a diagram cites no SR/LLR id at all (flows must stay traceable);
     - a cited SR/LLR/SN/TC id does not exist in the registries.
@@ -103,18 +105,39 @@ def load_ids(docs):
     return known
 
 
-def flows_section(text):
-    """Return the 'Runtime flows' section body, or None when the heading is
-    absent. The section runs to the next heading of the same or higher level."""
-    lines = text.splitlines()
-    start = level = None
+def _headings(lines):
+    """`[(line index, level, lowercased title)]` for every ATX heading."""
+    out = []
     for i, line in enumerate(lines):
         m = HEADING_RE.match(line)
-        if m and m.group(2).strip().lower().startswith(SECTION_TITLE):
-            start, level = i + 1, len(m.group(1))
-            break
-    if start is None:
+        if m:
+            out.append((i, len(m.group(1)), m.group(2).strip().lower()))
+    return out
+
+
+def flows_section(text):
+    """Return the 'Runtime flows' section body, or None when the section is
+    absent.
+
+    The document's own TITLE never counts as the section — the first heading in
+    the file is skipped. Otherwise a doc *titled* "Runtime flows" (both this
+    repo's and the shipped template's are) would have its title heading swallow
+    the whole file, and the gate could never fail on a deleted flows section:
+    any stray mermaid block anywhere in the doc would satisfy it. So a doc
+    titled "Runtime flows" must still carry a Runtime-flows *section* inside it.
+
+    Among the remaining candidates an exact "Runtime flows" heading wins over a
+    longer "Runtime flows ..." one; ties go to the first in file order. The
+    section runs to the next heading of the same or higher level."""
+    lines = text.splitlines()
+    # [1:] drops the document title - see the docstring; this one slice is what
+    # makes a deleted section fail on a doc that is *named* for the section.
+    cands = [h for h in _headings(lines)[1:] if h[2].startswith(SECTION_TITLE)]
+    if not cands:
         return None
+    exact = [h for h in cands if h[2] == SECTION_TITLE]
+    head, level = (exact or cands)[0][:2]
+    start = head + 1
     for j in range(start, len(lines)):
         m = HEADING_RE.match(lines[j])
         if m and len(m.group(1)) <= level:
@@ -158,8 +181,10 @@ def main():
     section = flows_section(doc.read_text(encoding="utf-8"))
     if section is None:
         print(
-            f'check_flows: FAIL - no "Runtime flows" heading in {doc} '
-            "(required at DevStg-Tests; see process.md §3 'Design-time runtime flows')"
+            f'check_flows: FAIL - no "Runtime flows" section heading in {doc} '
+            "(the document TITLE does not count - the section must be a heading "
+            "inside the doc; required at DevStg-Tests; see process.md §3 "
+            "'Design-time runtime flows')"
         )
         sys.exit(1)
 

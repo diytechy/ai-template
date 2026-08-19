@@ -1,43 +1,67 @@
 # Reviewed exceptions to the citation-frame advisory (trace.py, warn-only).
 #
-# One entry per line: `<ROW-ID>` or `<ROW-ID> <Cell>`, then ` — <reason>`.
-# A line with no ` — ` separator declares nothing.
+# One entry per line: `<ROW-ID> <Cell> <token>`, then ` — <reason>`.
+# A line with no ` — ` separator, or with fewer than three fields before it,
+# declares NOTHING and is dropped.
+#
+# TOKEN-SCOPED, and that is the whole design. An entry silences the ONE token it
+# names — spelled as the finding reports it, whitespace-collapsed and
+# case-insensitive — never the cell around it. The earlier row/cell key was
+# measured wrong on 2026-08-18: 15 entries here read "unsigned derived-requirement
+# label", which is one parenthetical, while suppressing every frame in the same
+# `Rationale`; re-running detection with the list ignored exposed 67 tokens over
+# 22 rows that nobody had adjudicated, `RE-VOICED 2026-08-17` and
+# `Minted at the owner's 2026-08-15` among them — the banned shape itself, riding
+# a carve-out written for a label. So a frame beside an allowed one still
+# reports, and re-wording an allowed cell re-opens the question rather than
+# laundering a new frame through an old entry.
 #
 # THIS FILE IS NOT A SECOND HOME FOR PROVENANCE. Every entry below is one shape:
-# the cell's frame is the ONLY record that a question is OPEN — a contradiction
-# between two rows, an obligation whose carrier is gone, a label nothing
-# mechanical signs. Stripping those would delete the repo's only note that the
-# question is unresolved, which is worse than the frame. Each row below owes an
-# open-item row at the sitting; when the ruling lands, the marker and the entry
-# go together.
+# the token is the ONLY record that a question is OPEN — a contradiction between
+# two rows, an obligation whose carrier is gone, a label nothing mechanical
+# signs. Stripping those would delete the repo's only note that the question is
+# unresolved, which is worse than the frame. Each row below owes an open-item row
+# at the sitting; when the ruling lands, the marker and the entry go together.
 
-SR-040 Rationale — the carrier-less obligation residue: the tripwire's carrier was deleted and nothing satisfies the clause, so the row records an obligation with no implementation and two dispositions only the owner may pick. Owes an open-item row at the sitting.
-SR-043 Rationale — the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. Owes an open-item row at the sitting. The licence attribution (stop-subagent-fanout, MIT) is a legal notice and stays regardless.
-LLR-037 Detail — the tripwire pinned with TC-040: the pair records a check whose expected behavior was corrected against a live surface and is not yet re-attested. Owes an open-item row at the sitting.
-TC-040 Method — the other half of the LLR-037 tripwire; same disposition, ruled together or not at all.
-IF-117 Notes — the flagged candidate-gap: the owner's revert names a module-match pick that no design row covers, which is the gap itself. Owes an open-item row at the sitting.
-IF-123 Notes — PROVISIONAL, standing for the review sitting to overturn; the marker is the only signal the seam is unratified.
-IF-127 Notes — PROVISIONAL, standing for the review sitting to overturn; same disposition as IF-123.
-IF-130 Notes — PROVISIONAL, standing for the review sitting to overturn; same disposition as IF-123.
+SR-040 Rationale THE TRIPWIRE'S CARRIER IS RETIRED — the carrier-less obligation residue: the tripwire's carrier was deleted and nothing satisfies the clause, so the row records an obligation with no implementation and two dispositions only the owner may pick. Owes an open-item row at the sitting.
+SR-040 Rationale investigated 2026-08-18 — the other half of the same residue: it says the disposition was looked into and deliberately not taken, which is what distinguishes a standing open question from an oversight. Ruled together with the line above or not at all.
+SR-043 Rationale resolved here (2026-08-16 — the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. The token is the marker that the row records the tension rather than settling it. Owes an open-item row at the sitting. (The licence attribution — stop-subagent-fanout, MIT — is a legal notice, carries no citation token, and stays regardless.)
+LLR-037 Detail corrected 2026-08-18 — the tripwire pinned with TC-040: the pair records a check whose expected behavior was corrected against a live surface and is not yet re-attested. Owes an open-item row at the sitting.
+TC-040 Method CORRECTED 2026-08-18 — the other half of the LLR-037 tripwire; same disposition, ruled together or not at all.
+IF-117 Notes REVERTED TO THE SR 2026-08-17 — the flagged candidate-gap: the owner's revert names a module-match pick that no design row covers, which is the gap itself. Owes an open-item row at the sitting. Its other tokens are NOT covered here and stay on the worklist.
 
-# The derived-requirement label carried as `(Derived-requirement label —
-# PROVISIONAL, unsigned.)`. The label is a DO-178C derived-requirement claim that
-# no human has signed; nothing mechanical carries "unsigned", so deleting the
-# parenthetical would silently promote 17 provisional labels to ratified ones.
-# Each of these owes an open-item row at the sitting that either signs the label
-# or strikes it.
-SR-024 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-033 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-052 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-054 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-111 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-112 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-129 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-144 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-146 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-147 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-149 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-167 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-175 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-176 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-177 Rationale — unsigned derived-requirement label; owes an open-item row at the sitting.
+# RETIRED ENTRIES, recorded rather than silently dropped (2026-08-18):
+#
+#   IF-123 / IF-127 / IF-130 Notes — each read "PROVISIONAL, standing for the
+#   review sitting to overturn; the marker is the only signal the seam is
+#   unratified". That marker is not a citation token and the detector never
+#   reported it, so the entries were suppressing OTHER frames — `OI-30`,
+#   `RESOLVED 2026-08-17`, `RE-AFFIRMED 2026-08-17`, two ruling dates — that no
+#   reviewed reason had ever named. They surface now, for the interface lane to
+#   sweep or for the sitting to adjudicate on their own merits.
+
+# The derived-requirement label carried as
+# `(Derived-requirement label, added <date> — PROVISIONAL, unsigned.)`. The label
+# is a DO-178C derived-requirement claim that no human has signed; nothing
+# mechanical carries "unsigned", so deleting the parenthetical would silently
+# promote 17 provisional labels to ratified ones. The `added <date>` token is the
+# whole of what each entry below covers — every other frame in these cells has
+# been swept. Each row owes an open-item row at the sitting that either signs the
+# label or strikes it.
+SR-024 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-033 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-040 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-043 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-052 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-054 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-111 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-112 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-129 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-144 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-146 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-147 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-149 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-167 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-175 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-176 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.
+SR-177 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.

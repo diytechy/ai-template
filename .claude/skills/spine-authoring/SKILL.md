@@ -89,7 +89,7 @@ Four questions:
   ("the strict traceability check reports zero orphans") and let the carrier be
   named where carriers belong. **Where a concrete name is genuinely unavoidable,
   the waiver goes in `why`** — the SN tier's reason cell, since the need schema
-  carries no `Rationale` — as the same `13v` token the SR valve uses, with a
+  carries no `Rationale` — as the same `recorded waiver: <reason>` marker the SR valve uses, with a
   reason a later reader can argue with. A **declared vocabulary** token (a dial
   name, a status word, a flag) is NOT waivable naming and needs no token, because
   it is not a carrier. A **provenance** citation is not a carrier either — and it

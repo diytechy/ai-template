@@ -11,6 +11,12 @@
 # column, so this example row is the only place the vocabulary is written
 # down: it sets EVERY key the tier has, with the guidance for each as its
 # value. Delete it on the first real entry.
+#
+# NEVER PROVENANCE. The TC tier has no reason cell, so its living cells —
+# `method`, `expected`, `parameters` — state the case and nothing else: no
+# work-item id, ruling, sitting, review-round or open-item reference, decision
+# id, edit verb or date stamp. Naming an SR/LLR id is a trace link, not a
+# citation frame; the history belongs in the log (process.md §3).
 [test.TC-000]
 verifies = ["SR-000", "LLR-000"]
 level = "Unit"

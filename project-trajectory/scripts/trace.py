@@ -102,12 +102,15 @@ try:
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
+        allow_key,
         ears_advisories,
         form_findings,
         if_this_project_advisories,
+        is_allowed,
         is_drafted,
         is_example,
         norm_module,
+        off_spine_advisories,
         paraphrase_advisories,
         provenance_advisories,
         provenance_findings,
@@ -126,12 +129,15 @@ except ImportError:  # pragma: no cover - in-process fallback
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
+        allow_key,
         ears_advisories,
         form_findings,
         if_this_project_advisories,
+        is_allowed,
         is_drafted,
         is_example,
         norm_module,
+        off_spine_advisories,
         paraphrase_advisories,
         provenance_advisories,
         provenance_findings,
@@ -1560,17 +1566,32 @@ IF_REASON_CELLS = ("Notes", "SignalNote")
 
 # The reviewed exception list for the citation-frame advisory, in the same
 # one-entry-per-line ` — <reason>` idiom `docs/need-form-allow` established. The
-# key is a row id (`SR-043`) or an id + cell (`SR-043 Rationale`).
+# key is `<ROW-ID> <Cell> <token>` — THREE fields, and the third is what makes
+# the entry mean anything (see `load_provenance_allow`).
 PROVENANCE_ALLOW = "docs/provenance-allow"
 PROVENANCE_ALLOW_SEP = " — "
 
 
 def load_provenance_allow(root):
-    """The reviewed exception keys from `docs/provenance-allow`, as a set.
+    """The reviewed exception keys from `docs/provenance-allow`, normalized.
 
     Absent file: empty set. A line with no separator declares nothing — the
     declared-absences fail-soft rule in the LOUD direction, so the worst a
     malformed entry can do is leave a finding reported.
+
+    TOKEN-SCOPED, NOT CELL-SCOPED, and the change was forced by measurement. The
+    key used to be a row id or an id + cell, which suppressed the WHOLE cell —
+    while every entry in the file justifies exactly one token. On 2026-08-18 the
+    list held 15 `SR-### Rationale` entries all reasoned "unsigned
+    derived-requirement label"; re-running detection with the list ignored
+    exposed 67 tokens over 22 rows, including `RE-VOICED 2026-08-17` and
+    `Minted at the owner's 2026-08-15`. Those are the banned shape itself, riding
+    a carve-out written for a parenthetical label — and `docs/test/report.md` was
+    meanwhile asserting that no living spine cell carried a frame. A key is now
+    `<ROW-ID> <Cell> <token>`, matched against the token the detector reports,
+    whitespace-collapsed and case-folded; a two-field key declares NOTHING and is
+    dropped, which is what makes the migration self-enforcing rather than
+    optional.
 
     THE LIST IS NOT A SECOND HOME FOR PROVENANCE. It exists for one measured
     class: a cell whose citation frame is the only record of an UNRESOLVED
@@ -1588,9 +1609,9 @@ def load_provenance_allow(root):
         line = line.strip()
         if not line or line.startswith("#") or PROVENANCE_ALLOW_SEP not in line:
             continue
-        key = line.split(PROVENANCE_ALLOW_SEP, 1)[0].strip()
-        if key:
-            out.add(key)
+        key = line.split(PROVENANCE_ALLOW_SEP, 1)[0].split()
+        if len(key) >= 3:
+            out.add(allow_key(key[0], key[1], " ".join(key[2:])))
     return out
 
 
@@ -1616,9 +1637,13 @@ def if_note_advisories(ifs, allow=()):
         if not iid or is_example(iid):
             continue
         for col in IF_REASON_CELLS:
-            if iid in allow or f"{iid} {col}" in allow:
-                continue
-            cited = provenance_tokens(r.get(col), reason=True)
+            # TOKEN-SCOPED, like every other reader of this list: an entry
+            # silences the token it names, never the cell around it.
+            cited = [
+                (k, t)
+                for k, t in provenance_tokens(r.get(col), reason=True)
+                if not is_allowed(allow, iid, col, t)
+            ]
             if not cited:
                 continue
             shown = ", ".join(dict.fromkeys(f"{k} {t!r}" for k, t in cited))
@@ -3525,7 +3550,14 @@ def analyze(reg, args):
     # tiers and joins the exit code, this one names the rest of the citation frame
     # across four tiers and never can. One counter for two severities would report
     # "gating" about ~300 findings the harness must not stop for.
-    provenance_advis = provenance_advisories(reg.sn_needs, srs, llrs, tcs, prov_allow)
+    # The off-spine LIVING registries (CMP, EXT) join this SAME list rather than
+    # taking a pipe of their own: it is one ruling, one message shape and one
+    # worklist, and a second counter would invite a reader to clear the spine and
+    # call the ruling discharged. Those two tiers were swept in the same pass and
+    # then left unguarded — a clean state nothing was watching.
+    provenance_advis = provenance_advisories(
+        reg.sn_needs, srs, llrs, tcs, prov_allow
+    ) + off_spine_advisories(cmps, exts, prov_allow)
     sr_fanout_advis = sr_fanout_advisories(srs, llrs)
     # Warn-only, always on: a row whose prose names a critique instrument while
     # its Verification says otherwise. Its own pipe for the same reason the two

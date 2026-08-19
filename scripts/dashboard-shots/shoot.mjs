@@ -35,7 +35,14 @@ const WIDTHS = { narrow: 390, laptop: 1280, wide: 1680 };
 // Themes drive `prefers-color-scheme`; the dashboard is CSS-media-query themed,
 // so emulating colorScheme is the whole toggle (no click needed).
 const THEMES = ["light", "dark"];
-// Every tab in nav.tabs (data-tab attributes), landing tab first.
+// Every tab nav.tabs can carry (data-tab attributes), landing tab first. This
+// is the declared SUPERSET, not a promise: some tabs are DIAL-DEPENDENT (the
+// Knowledge tab renders only while `[checks] okf_export` is on and a docs/okf/
+// bundle exists), so the matrix is intersected with the tabs actually present
+// in the rendered page and an absent one is SKIPPED with a named message.
+// Unconditional clicking was the bug: with the OKF dial off, `page.click` on
+// `know` waited out its 30s default timeout and the run exited 1 four shots in,
+// so the render-critique loop could not be run in this repo at all.
 const TABS = [
   ["arch", "What (SR breakdown)"],
   ["dag", "When (roadmap DAG)"],
@@ -71,6 +78,38 @@ function regenerateDashboard() {
   console.log((r.stdout || "").trim() || "gen_trajectory: (no output)");
 }
 
+async function resolveTabs(page) {
+  // The declared matrix intersected with what this dashboard renders, reported
+  // in BOTH directions so neither surprise is silent: a declared tab that is
+  // absent (a dial switched off) is skipped, and a rendered tab nobody declared
+  // is named as unshot — the second is the case that would otherwise let a new
+  // tab go uncritiqued forever.
+  const present = await page.$$eval("nav.tabs button[data-tab]", (bs) =>
+    bs.map((b) => b.dataset.tab),
+  );
+  const seen = new Set(present);
+  const shoot = TABS.filter(([tab]) => seen.has(tab));
+  const absent = TABS.filter(([tab]) => !seen.has(tab));
+  const declared = new Set(TABS.map(([tab]) => tab));
+  const undeclared = present.filter((tab) => !declared.has(tab));
+  if (absent.length) {
+    const names = absent.map(([tab, label]) => `${tab} (${label})`).join(", ");
+    console.log(`declared tab(s) not in this dashboard, SKIPPED: ${names}`);
+  }
+  if (undeclared.length) {
+    console.log(
+      `dashboard tab(s) not in the declared matrix, NOT shot: ${undeclared.join(", ")} ` +
+        `— add them to TABS in this file`,
+    );
+  }
+  if (!shoot.length) {
+    console.error("no declared tab is present in the dashboard — nothing to shoot");
+    process.exit(1);
+  }
+  console.log(`shooting ${shoot.length} tab(s): ${shoot.map(([t]) => t).join(", ")}`);
+  return shoot.map(([tab]) => tab);
+}
+
 async function main() {
   regenerateDashboard();
   if (!existsSync(DASHBOARD)) {
@@ -89,6 +128,9 @@ async function main() {
   const url = pathToFileURL(DASHBOARD).href;
   const browser = await chromium.launch();
   const written = [];
+  // Resolved from the first loaded page, then reused: the declared TABS that
+  // this dashboard actually renders. `null` until the first goto.
+  let liveTabs = null;
   try {
     for (const theme of THEMES) {
       const context = await browser.newContext({
@@ -100,12 +142,13 @@ async function main() {
       for (const [wname, w] of Object.entries(WIDTHS)) {
         await page.setViewportSize({ width: w, height: 900 });
         await page.goto(url, { waitUntil: "networkidle" });
+        if (liveTabs === null) liveTabs = await resolveTabs(page);
         // Capture the landing fold before any click can scroll a narrow page to
         // bring an off-viewport tab button into view.
         const landingFold = join(OUT, `${w}px-${theme}-${LANDING}-fold.png`);
         await page.screenshot({ path: landingFold, fullPage: false });
         written.push(landingFold);
-        for (const [tab, label] of TABS) {
+        for (const tab of liveTabs) {
           // The button's data-tab matches the panel's id; clicking it moves the
           // `active` class onto <section id="{tab}" class="panel active">.
           await page.click(`nav.tabs button[data-tab="${tab}"]`);

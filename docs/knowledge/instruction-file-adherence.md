@@ -73,8 +73,22 @@ that a long instruction file's rules get ignored.
   seed. Converge wording before deleting placements.
 - Prefer on-demand loading (skills, applies-when indexes, path-scoped rules)
   over always-on prose — the one pattern all vendors and the evidence agree on.
-- Hard caps with a test restrain growth; "watched" baselines do not (this
-  repo, 60 days: hard-capped file −14%; watched files +263% to +1,092%).
+- Hard caps with a test restrain growth; "watched" baselines do not. Measured
+  in this repo over ONE window in which all three files exist at both ends:
+  2026-07-01 (`cdb64dc2`, the commit that split `PROCESS_OPTIONS.md` out, by
+  which the AGENTS cap was already test-enforced) → 2026-08-18 (`4e9a5c8a`),
+  48 days, `git cat-file -s` on each blob — **capped `AGENTS.template.md`
+  9,702 → 9,953 bytes (+2.6%, still under its 10,000 cap); watched
+  `PROCESS.md` 42,932 → 82,190 (+91%); watched `PROCESS_OPTIONS.md`
+  14,434 → 173,374 (+1,101%)**. Sample of one repo and one author, so read it
+  as consistent-with rather than proof-of. *Withdrawn 2026-08-18:* an earlier
+  wording here cited "60 days: hard-capped file −14%; watched files +263% to
+  +1,092%". It is unreproducible — two of the three files did not exist 60 days
+  before 2026-08-18 (`AGENTS.template.md` created 2026-06-28,
+  `PROCESS_OPTIONS.md` 2026-07-01), so there was no common 60-day window; the
+  −14% is a creation-to-now figure dominated by the one-off trim that
+  introduced the cap; and +263% matches no route (nearest-commit-to-60-days
+  gives +281%, creation +1,388%, post-split +91%).
 - Expect silent rule-dropping, not visible refusal: enforce mechanically
   (harness/tests/hooks) anything that must hold, per the enforcement audit.
 

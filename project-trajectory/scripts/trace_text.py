@@ -7,6 +7,8 @@ Split out of `trace.py`, which owns the JOIN — this module owns the question
 | function                    | tier     | what it catches                        |
 |-----------------------------|----------|----------------------------------------|
 | `provenance_findings`       | gating   | the row carries its own history        |
+| `provenance_advisories`     | advisory | a living cell carries a citation frame |
+| `off_spine_advisories`      | advisory | the same, on CMP/EXT living cells      |
 | `form_findings`             | gating   | the row is not one testable obligation |
 | `paraphrase_advisories`     | advisory | the child re-words its parent          |
 | `ac_advisories`             | advisory | a comparative with no named predicate  |
@@ -272,13 +274,14 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 # demand prose rewriting is one a session routes around.
 #
 # EVERY PATTERN IS A STRUCTURED SHAPE, never a bare English word, and that is the
-# whole design. Two false-positive hazards are on record and both are measured:
+# whole design. Four false-positive hazards are on record and every one of them
+# is MEASURED over the live registries rather than argued:
 #
 #   1. A general `<LETTER>-<n>` id pattern was TRIED AND REVERTED once (see the
 #      `_IF_DECISION_RE` note in trace.py) because it read the data pack's own
 #      `M-10` crossing ids as rulings. So the id shapes here are enumerated
-#      literally — `OI-`, `D-`, `RULING-`, `C-<HAT>-` — and nothing generalises
-#      over them. Re-measured at this widening: `M-10` is matched by none of them.
+#      literally — `OI-`, `D-`, `RULING-` — and nothing generalises over them.
+#      Re-measured at each widening: `M-10` is matched by none of them.
 #   2. `ruling` / `retired` / `attestation` / `amended` are SUBJECT NOUNS in the
 #      rows that specify the ratification machinery itself — 217 occurrences over
 #      108 live SR/LLR/TC rows, with SR-149, SR-165 and LLR-118 the worked
@@ -286,16 +289,32 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      therefore requires the verb to be followed WITHIN ONE CLAUSE by an ISO
 #      date: a row *about* amendment never carries one, a row *recording its own*
 #      amendment always does. Measured: 0 of those 217 are flagged.
+#   3. THE SAME SUBJECT-NOUN HAZARD RECURRED, in an arm that was never measured.
+#      A `C-<HAT>-<n>` "review-round code" arm shipped 2026-08-18 and was
+#      MEASURED AT 20 HITS, 20 OF THEM FALSE — a 100% false-positive rate. Every
+#      live occurrence names a hat-charter CLAUSE as the thing the row answers
+#      ("C-MNT-3 gives every declared vocabulary value exactly one normative
+#      definition", "C-PRF-1 wants a declared improvement", "…the MAINTAINER
+#      clause this row answers"), which is a standing constraint cited like a
+#      standard's clause — the row's REASON, not its history. The arm is GONE,
+#      not narrowed: the token carries no signal about which use it is, the
+#      distinguishing signal is the FRAME around it, and a frame is what the two
+#      edit-stamp arms below already detect. Where a clause code genuinely rides
+#      inside a stamp ("REWORDED 2026-08-17 (C-PRF-1, applied)") the stamp is
+#      reported and the whole frame is what gets stripped.
+#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `RATIFIED`,
+#      `RETIRED`, `DELETED`, `RULED` and `AMENDED` are also ordinary
+#      participles mid-sentence — "a RATIFIED SN cited by zero SRs", "an AMENDED
+#      requirement drops the derived stage", "a stale file is DELETED in the same
+#      act" — so `_CAPS_EDIT_STAMP_RE` fires only at the start of the cell or of
+#      a clause. Measured over every live spine + IF cell: 36 hits, 36 of them
+#      genuine stamps, 0 false; the mid-clause participles are all silent.
 #
 # A bare ISO date is read as provenance in a REASON cell only. A normative cell
 # may legitimately carry a date as DATA (a fixture, a declared cutover value), so
 # there it reports only behind an edit verb.
 _OI_TOKEN_RE = re.compile(r"\bOI-\d+\b")
 _SITTING_RE = re.compile(r"\bsitting-\d+\b", re.IGNORECASE)
-# `C-<HAT>-<n>` — the hat-derived review-round clause codes (`C-PRF-1`,
-# `C-ACC-2`). The hat segment is 2-5 upper-case letters: narrow enough that no
-# ordinary hyphenated word reaches it, wide enough for the declared roster.
-_REVIEW_CODE_RE = re.compile(r"\bC-[A-Z]{2,5}-\d+\b")
 _DECISION_ID_RE = re.compile(r"\bD-\d+\b")
 _RULING_ID_RE = re.compile(r"\bRULING-\d+\b", re.IGNORECASE)
 _EDIT_VERBS = (
@@ -305,21 +324,65 @@ _EDIT_VERBS = (
     r"absorbs|settled|confirmed|investigated|resolved|reverted|joined|"
     r"re-?voiced|re-?based|re-?pointed|re-?affirmed|provisional"
 )
+# THE DATE, WITH ITS RULING SUFFIX. This repo — and the kit's own convention —
+# writes a ruling as the date plus a serial letter (`2026-08-13u`, `2026-08-16q`),
+# which is the CANONICAL citation shape and was invisible to a bare `\d{4}-\d{2}-\d{2}`:
+# `provenance_tokens("The owner ruling 2026-08-13u settled this.")` returned []
+# while the plain-date form beside it reported. The optional `[a-z]` closes that,
+# and it cannot over-reach — `\b` after it refuses `2026-08-13until`, because the
+# suffix must end the token.
+_ISO_DATE = r"\d{4}-\d{2}-\d{2}[a-z]?"
 _EDIT_STAMP_RE = re.compile(
-    r"\b(?:" + _EDIT_VERBS + r")\b[^.;]{0,24}?\b\d{4}-\d{2}-\d{2}\b", re.IGNORECASE
+    r"\b(?:" + _EDIT_VERBS + r")\b[^.;]{0,24}?\b(?P<date>" + _ISO_DATE + r")\b",
+    re.IGNORECASE,
 )
-_ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+_ISO_DATE_RE = re.compile(r"\b(?P<date>" + _ISO_DATE + r")\b")
 
-# (label, regex, reason-cells-only). Order is report order.
+# THE STAMP THAT LOST ITS DATE. The 2026-08-18 sweep used `_EDIT_STAMP_RE` as its
+# definition of done and deleted the DATES, which left the verbs standing:
+# "MINTED 2026-08-17 (Sol F18, applied) out of SR-170" became "MINTED out of
+# SR-170" and went silent. 33 such tokens survived on 31 live rows. This arm reads
+# the corpus's own stamp convention — an ALL-CAPS verb opening a clause, optionally
+# behind a short all-caps subject ("OWNER RE-POINTED:", "CROSSING ATTRIBUTION
+# EXAMINED AND CONFIRMED:") — which is what separates a stamp from the mid-sentence
+# participles hazard 4 above names. `provisional` is deliberately NOT in this arm's
+# verb set: it is an adjective, never an edit, and the corpus writes it as a
+# label's status ("PROVISIONAL, unsigned") on 17 rows.
+_CAPS_STAMP_VERBS = (
+    r"AMENDED|REWORDED|MINTED|RENUMBERED|RETIRED|NARROWED|REVISED|SUPERSEDED|"
+    r"RESTATED|DELETED|EXTENDED|CLARIFIED|RULED|SPLIT|LANDED|REOPENED|STRUCK|"
+    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|RATIFIED|CORRECTED|ABSORBS|SETTLED|"
+    r"CONFIRMED|INVESTIGATED|RESOLVED|REVERTED|JOINED|RE-?VOICED|RE-?BASED|"
+    r"RE-?POINTED|RE-?AFFIRMED"
+)
+_CAPS_EDIT_STAMP_RE = re.compile(
+    r"(?:^|(?<=[.;:!?)\]—–\n]))\s*"
+    # The subject prefix is LAZY: with a greedy `{0,4}`, "ABSORBS THE RETIRED
+    # LAUNCHER ROW'S HALF" reported as `'ABSORBS THE RETIRED'` — the longest
+    # prefix wins and the token names the wrong verb. Lazy takes the FIRST verb
+    # in the run, so the reported token is the stamp's own head word.
+    #
+    # A prefix word is TWO letters or more, which is not cosmetic: with `*` the
+    # article in "A RATIFIED SN cited by zero SRs caps the bar" read as an
+    # all-caps subject whenever the sentence opened a cell, turning the
+    # participle hazard this arm exists to avoid back on. The negative test is
+    # what found it.
+    r"(?P<token>(?:[A-Z][A-Z'’-]+\s+){0,4}?(?:" + _CAPS_STAMP_VERBS + r")\b)"
+)
+
+# (label, regex, reason-cells-only). Order is report order, and it is also
+# PRECEDENCE order: an overlapping later shape is dropped, so a dated stamp
+# ("CORRECTED 2026-08-16") is reported once as an edit-history stamp rather than
+# twice with its bare-verb head.
 _PROVENANCE_SHAPES = (
     ("work-item id", _WI_TOKEN_RE, False),
     ("process-doc citation", _PROCESS_DOC_RE, False),
     ("open-item reference", _OI_TOKEN_RE, False),
     ("sitting reference", _SITTING_RE, False),
-    ("review-round code", _REVIEW_CODE_RE, False),
     ("decision id", _DECISION_ID_RE, False),
     ("ruling id", _RULING_ID_RE, False),
     ("edit-history stamp", _EDIT_STAMP_RE, False),
+    ("edit-history stamp", _CAPS_EDIT_STAMP_RE, False),
     ("date stamp", _ISO_DATE_RE, True),
 )
 
@@ -344,7 +407,23 @@ def provenance_tokens(cell, reason=False):
 
     `reason` selects the reason-cell reading (a bare date counts). Pure: the
     caller decides which cells are reason cells and what severity the result
-    carries."""
+    carries.
+
+    TWO NAMED GROUPS CARRY THE SHAPES' CONTRACT with this loop, so a pattern
+    declares its own reading rather than being special-cased by identity:
+
+      * `token` — the text to REPORT and to span-reserve, where that is narrower
+        than the whole match. `_CAPS_EDIT_STAMP_RE` has to match the clause
+        boundary in front of the verb, and reporting that punctuation back to an
+        author would name the wrong thing.
+      * `date` — the ISO date inside the match, for the path-suppression test.
+        It is on BOTH date-bearing arms deliberately. Suppression used to be
+        keyed on `rx is _ISO_DATE_RE`, which left the edit-stamp arm unguarded:
+        "restated in docs/plans/2026-08-16-blind-derivation.md" REPORTED (the
+        verb is inside the 24-character window) while the longer
+        "moved to docs/archive/specs/parallel-wi-dispatch.2026-07-20.md" went
+        silent — hit or miss decided by how long the filename was. A dated path
+        is a pointer under every arm that can see one."""
     text = (cell or "").strip()
     if not text:
         return []
@@ -352,14 +431,42 @@ def provenance_tokens(cell, reason=False):
     for label, rx, reason_only in _PROVENANCE_SHAPES:
         if reason_only and not reason:
             continue
+        groups = rx.groupindex
         for m in rx.finditer(text):
-            if any(m.start() < e and s < m.end() for s, e in spans):
+            start, end = m.span("token") if "token" in groups else m.span()
+            if any(start < e and s < end for s, e in spans):
                 continue
-            if rx is _ISO_DATE_RE and _in_path_token(text, m.start(), m.end()):
+            if "date" in groups and _in_path_token(text, *m.span("date")):
                 continue
-            spans.append((m.start(), m.end()))
-            out.append((label, m.group(0)))
+            spans.append((start, end))
+            out.append((label, text[start:end]))
     return out
+
+
+def allow_key(rid, col, token):
+    """The token-scoped allow key for one reported token, normalized.
+
+    Whitespace-collapsed and case-folded so a cell that wraps mid-token, or an
+    entry typed in a different case, still matches the thing it names."""
+    return " ".join("{} {} {}".format(rid, col, token).split()).casefold()
+
+
+def is_allowed(allow, rid, col, token):
+    """Is this ONE token a reviewed exception (`docs/provenance-allow`)?
+
+    TOKEN-SCOPED, and that is the whole rule. Suppression used to be keyed on the
+    ROW or the ROW+CELL, while every entry in the live file justifies exactly one
+    token — 15 of them read "unsigned derived-requirement label", which is the
+    `(Derived-requirement label, added <date> — PROVISIONAL, unsigned.)`
+    parenthetical and nothing else. Measured on 2026-08-18: re-running detection
+    with the list ignored exposed 67 tokens over 22 rows that no entry had
+    adjudicated, including `RE-VOICED 2026-08-17` and
+    `Minted at the owner's 2026-08-15` — the banned shape itself, riding a
+    carve-out written for a label. An exception now silences what it NAMES and
+    nothing else, so a frame that appears beside an allowed one still reports,
+    and re-wording an allowed cell re-opens the question rather than laundering
+    a new frame through an old entry."""
+    return allow_key(rid, col, token) in allow
 
 
 # Requirement FORM (process.md §3). The stand-alone rule below says a row must not
@@ -422,9 +529,13 @@ def provenance_findings(srs, llrs, tcs):
     **A requirement states the system, not its own history.** A reader — human,
     agent, or a downstream adopter with none of this project's history — must read
     one row and know what the system does and why, without resolving a work item
-    they cannot see. Both facts have better homes: which WI delivered or amended a
-    row lives in `work-items.csv` and the log, why it was decided that way lives in
-    the log's Decisions, and the row OBEYS the process rather than citing it.
+    they cannot see. Both facts have ONE better home: which WI delivered or amended
+    a row, and why it was decided that way, live in the log — and the row OBEYS the
+    process rather than citing it. (The finding text used to send an author to
+    `work-items.csv` as well. That carrier is RETIRED and its presence is itself an
+    integrity finding, so the message was naming a dead file as the place to move
+    provenance TO; the three neighbouring messages were re-pointed at the log in
+    the same-day sweep and this one was missed.)
 
     Applied to every SPINE registry, not just the SR. The rule shipped SR-only and
     that was the wrong scope: measured across the whole spine afterwards, 2 SRs
@@ -470,9 +581,8 @@ def provenance_findings(srs, llrs, tcs):
                 if cited:
                     out.append(
                         "{} {} {} cites {} — a spine row states the system, not "
-                        "its own history: move provenance to work-items.csv / "
-                        "the log's Decisions, and obey the process rather than "
-                        "citing it".format(
+                        "its own history: move provenance to the log, and obey "
+                        "the process rather than citing it".format(
                             label, rid, col, ", ".join(repr(c) for c in cited)
                         )
                     )
@@ -487,6 +597,25 @@ PROVENANCE_ADVISORY_COLS = (
     ("SR", "SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
     ("LLR", "LLR-ID", ("Title", "Detail", "Rationale")),
     ("TC", "TC-ID", ("Method", "Expected", "Parameters")),
+)
+
+# The OFF-SPINE LIVING registries, guarded by the same ruling for the same reason.
+# `components.toml` and `external.toml` were SWEPT in the 2026-08-18 pass and then
+# left unwatched, which is a guard with the shape of an accident: the cells are
+# clean today and nothing would say when they stopped being. The ruling names
+# "any living registry cell" and these rows are living — an adopter reads a
+# component's `notes` and an entity's `description` to learn what the system's
+# neighbourhood IS, with no more access to this repo's sittings than they have to
+# its SRs.
+#
+# `Description` is scanned as a NORMATIVE cell (a bare date there may be data)
+# while `Notes` is the reason cell, the same split the spine tiers use. B-## and
+# REL-### carry no reason cell at all — `Carries` and `Flow` state what crosses,
+# which is content — so they are deliberately absent rather than silently
+# forgotten.
+OFF_SPINE_ADVISORY_COLS = (
+    ("CMP", "CMP-ID", ("Name", "Notes")),
+    ("EXT", "EXT-ID", ("Name", "Description", "Notes")),
 )
 
 
@@ -519,26 +648,56 @@ def provenance_advisories(needs, srs, llrs, tcs, allow=()):
     population is ~300 tokens over ~150 live rows; a gate would stop the harness
     on a prose-rewriting campaign, and the rows that matter most — the ones whose
     frame is the only record of an unresolved question — need a reviewed
-    exception, not a red build. `allow` carries those: row ids, or `<ROW-ID>
-    <Cell>` pairs, read from the declared exception file by the caller.
+    exception, not a red build. `allow` carries those, TOKEN-SCOPED: each key is
+    `<ROW-ID> <Cell> <token>` and silences that token alone (see `is_allowed`).
 
     Rows arrive in two shapes. The SN tier comes from `spine_carrier.load_needs`
     (lower-case keys, id under `id`); the other three carry `<TIER>-ID` and
     Title-case cells. One table, keyed by the id field, rather than a second
     function for the need tier — the scoping error this rule already made once
     was having a tier the check could not see."""
+    return cite_advisories(
+        zip((needs, srs, llrs, tcs), PROVENANCE_ADVISORY_COLS), allow
+    )
+
+
+def off_spine_advisories(cmps, exts, allow=()):
+    """Warn-only: the same citation-frame ruling over the LIVING OFF-SPINE
+    registries — `components.toml` and `external.toml` (`OFF_SPINE_ADVISORY_COLS`).
+
+    A SEPARATE ENTRY POINT rather than four more rows in the spine table, because
+    these tiers are optional: a project may declare no components and no external
+    frame, and folding them in would make the spine rule's signature demand two
+    registries most adopters do not have. The predicate is identical — same
+    shapes, same reason-cell reading, same token-scoped exception list — so the
+    two share `cite_advisories` and there is no second copy of the rule to
+    drift."""
+    return cite_advisories(zip((cmps, exts), OFF_SPINE_ADVISORY_COLS), allow)
+
+
+def cite_advisories(tiers, allow=()):
+    """The citation-frame sweep over `(rows, (label, id-key, cells))` pairs.
+
+    The ONE engine every caller of this ruling shares — the spine tiers, the
+    off-spine registries, and (through trace.py) the IF reason cells. Extracted
+    when the second caller arrived: three copies of "iterate rows, skip
+    placeholders, ask `provenance_tokens`, de-duplicate, format" is three places
+    for the exception semantics to diverge, and the exception semantics are
+    exactly what was found wrong once already."""
     out = []
-    for rows, (label, key, cols) in zip(
-        (needs, srs, llrs, tcs), PROVENANCE_ADVISORY_COLS
-    ):
+    for rows, (label, key, cols) in tiers:
         for r in rows or []:
             rid = str(r.get(key) or "").strip()
             if not rid or is_example(rid):
                 continue
             for col in cols:
-                if rid in allow or "{} {}".format(rid, col) in allow:
-                    continue
-                cited = provenance_tokens(r.get(col), reason=col in REASON_CELLS)
+                cited = [
+                    (k, t)
+                    for k, t in provenance_tokens(
+                        r.get(col), reason=col in REASON_CELLS
+                    )
+                    if not is_allowed(allow, rid, col, t)
+                ]
                 if not cited:
                     continue
                 # One entry per distinct token: a citation repeated inside one
@@ -785,14 +944,35 @@ _CRITIQUE_INSTRUMENT_RE = re.compile(
 
 _PY_ARTIFACT_RE = re.compile(r"\b[A-Za-z_][\w./-]*\.py\b")
 
-# The recorded per-row waiver marker. The corpus writes it as
-# "One-shall waiver (13v): <reason>" (log decision 2026-08-13v — the one-decision
-# form rule is a GUIDELINE with recorded per-row waivers), and this reads the
-# same token rather than minting a second waiver grammar for authors to learn.
-# NOTE: `form_findings` does not itself suppress on this marker — the two
-# standing waivers (SR-140, SR-147) are recorded and their findings still fire,
-# accepted knowingly. This is the first executable reader of the token.
-_WAIVER_RE = re.compile(r"\b13v\b", re.IGNORECASE)
+# THE RECORDED PER-ROW WAIVER MARKER: `recorded waiver: <reason>`, written in the
+# row's reason cell. Case-insensitive SUBSTRING, exactly like `_FANOUT_RESTAMP`
+# below — one declared-marker grammar in this module, not two.
+#
+# RENAMED FROM `13v` (2026-08-18), which was a DECISION ID, and that made the kit
+# contradict itself in four places at once: `provenance_advisories` bans a
+# decision reference from every living reason cell, while `sr_artifact_advisories`
+# and `sn_artifact_advisories` INSTRUCTED an author to write one into that same
+# cell to record a waiver. Three arguments, any one of which is sufficient:
+#
+#   1. IT SHIPS DOWNSTREAM. The token names log decision 2026-08-13v of THIS
+#      repo. An adopting project has no such decision, so the kit was telling
+#      every adopter to cite a ruling they have never been able to read — the
+#      exact defect the provenance rule exists to prevent, shipped as an
+#      instruction.
+#   2. THE MARKER IS MACHINERY, AND MACHINERY SHOULD READ AS ITSELF. A declared
+#      token an author writes to claim an exception is a control word, like
+#      `fan-out re-stamp:`; naming it after the meeting that authorized it makes
+#      a reader resolve a citation to learn what a keyword means.
+#   3. THE COLON EARNS ITS KEEP. `\b13v\b` matched prose ABOUT a waiver as
+#      readily as a claim of one — measured on the live registry, its only two
+#      hits were SR-140 and SR-147, whose rationales say the waiver is SPENT. A
+#      stale sentence was standing as a live valve. `recorded waiver:` demands
+#      the marker be followed by the reason it exists.
+#
+# NOTE: `form_findings` does not itself suppress on this marker — a recorded
+# one-`shall` waiver's finding still fires, accepted knowingly. The artifact
+# advisories are its readers.
+_WAIVER_RE = re.compile(r"recorded waiver:", re.IGNORECASE)
 
 # The declared SR->direct-LLR fan-out bound (re-tier v2 R3). A DIAL of the
 # `TOP_VIEW_MAX` family — a declared number the project may re-stamp per row with
@@ -826,8 +1006,8 @@ def sr_artifact_advisories(srs):
     Two independent censuses, deliberately not folded together:
 
       * PER ROW — a `*.py` token in `Requirement`, unless the row's `Rationale`
-        carries the recorded waiver token (13v). The waiver is the same valve the
-        one-`shall` rule declares, not a second grammar.
+        carries the declared marker `recorded waiver: <reason>`. The waiver is
+        the same valve the one-`shall` rule declares, not a second grammar.
 
       * PER ARTIFACT — more than one SR naming the same artifact token, WAIVED
         ROWS INCLUDED. A waiver excuses one row from stating a binding; it says
@@ -932,8 +1112,8 @@ def sn_artifact_advisories(needs):
     `why` is exempt for the reason `Rationale` is exempt at SR: it is the reason
     cell, and it is where this rule's waiver is recorded.
 
-    THE WAIVER LIVES IN `why` — the same `13v` token the one-`shall` and SR
-    artifact valves use, never a second grammar. `why` is the SN tier's reason
+    THE WAIVER LIVES IN `why` — the same `recorded waiver: <reason>` marker the
+    one-`shall` and SR artifact valves use, never a second grammar. `why` is the SN tier's reason
     cell (the schema carries no `Rationale`: `SPINE_TIER_KEYS["SN-ID"]` is
     `status | tags | need | why | priority | acceptance`), so it is the field
     that already answers "why is this row the way it is", which is exactly what
@@ -967,7 +1147,8 @@ def sn_artifact_advisories(needs):
             "strict traceability check reports zero orphans', not "
             "'`trace.py --strict` reports zero orphans'); move the concrete "
             "name to the SR AcceptanceCriteria as current-carrier evidence, or "
-            "record the reason it is unavoidable as a waiver (13v) in `why` "
+            "record the reason it is unavoidable as `recorded waiver: <reason>` "
+            "in `why` "
             "(process.md §3 'a requirement cell never names a concrete "
             "artifact'; warn-only, never the exit code)".format(
                 nid, ", ".join(repr(t) for t in named)

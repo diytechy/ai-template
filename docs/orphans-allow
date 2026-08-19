@@ -52,6 +52,18 @@ docs/ratify/*
 # a navigation node: the entry becomes reachable the moment it lands in log.md.
 docs/log.d/*
 
+# live work-item specs-of-record — the open WI's `SpecRef` target, resolved BY
+# NAME (`docs/specs/WI-###.md`) by check_trajectory.py, not by a doc link; the
+# same registry-entry-not-navigation-node class as docs/work/* above, and the
+# archived half directly below. Restored 2026-08-18: the sweep that added
+# docs/work/* deleted this glob as an undisclosed side effect. Its old reason
+# cited the retired docs/requirements/work-items.csv, which was genuinely stale
+# — the citation was the stale part, not the declaration. docs/specs/ is live
+# (check_trajectory's SPECS_DIR), and only docs/specs/WI-000.md was reachable at
+# all, by a hand link from the folder README, so the next spec-of-record filed
+# would have raised a fresh orphan warning this glob had been covering.
+docs/specs/WI-*.md
+
 # archived closed-WI specs — the WI-251 sweep's steady state: retained evidence,
 # date-stamped + WI-attributed, reached from log.md entries not navigation.
 docs/archive/specs/*

@@ -57,7 +57,7 @@
 [need.SN-000]
 status = "Approved"
 need = """_EXAMPLE — replace this row; number real needs sequentially (the `-000` id is a placeholder the tooling ignores)._"""
-why = "Why it matters — the consequence of NOT meeting it, in the stakeholder's terms."
+why = """Why it matters — the consequence of NOT meeting it, in the stakeholder's terms. This is the need tier's REASON cell (the schema carries no Rationale), and it takes the ARGUMENT, never the CITATION: no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp — the history belongs in the log (process.md §3)."""
 priority = "M"
 acceptance = "Acceptance intent: how we would know it is met."
 tags = ["EXAMPLE-domain"]

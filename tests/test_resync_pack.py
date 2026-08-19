@@ -35,7 +35,10 @@ PACK = KIT / "RESYNC_PACK.md"
 ENTRY_RE = re.compile(r"^### (?P<title>.+) \[since (?P<sha>(?:pre-)?[0-9a-f]{7,40})\]$")
 # A change that has NOT LANDED has no SHA, and inventing one would defeat the
 # whole discipline — so a reserved placeholder is the one anchor-free heading
-# shape the entry sections admit, and it must stay anchor-free.
+# shape the entry sections admit. It is a DRAFTING state only: the anchor check
+# below skips it (an unanchored reservation is a backlog finding, not a grammar
+# one) and `test_no_reserved_placeholder_survives_a_commit` then holds the
+# backlog at zero, so the exemption cannot become a hiding place.
 RESERVED_PREFIX = "### Reserved:"
 
 
@@ -132,20 +135,31 @@ def test_every_entry_carries_a_sha_anchor():
     assert len(_anchors(renames)) >= 8, "the translation helper lost entries"
 
 
-def test_a_reserved_placeholder_stays_anchor_free():
-    """The one anchor-free heading shape, and its rule runs the other way.
+def test_no_reserved_placeholder_survives_a_commit():
+    """The Reserved backlog is held at ZERO, not merely kept anchor-free.
 
-    A change that has not landed has no commit, so a `Reserved:` heading must NOT
-    carry an anchor — writing a speculative one would put a SHA that does not
-    exist into the very field the selection logic trusts.
+    This test used to say only "a `Reserved:` heading must not carry a SHA" and
+    exempted those headings from the anchor check above — which made the ONE
+    unanchored shape the pack admits also the one shape nothing counted. It ran
+    0 → 3 in a single day before a review caught it, and every one of those three
+    entries was invisible to a re-sync: an entry with no anchor falls in no
+    stamp-to-target range, so an adopter does not skip it loudly, they never see
+    it. A silent backlog is the worst failure this document has, because the
+    document's whole value is being complete for the range you read.
 
-    THERE IS NO RESERVED HEADING TODAY, and that is the correct state rather than
-    a hole: the pack's only reserved slot was the gate → stage vocabulary
-    conversion, and OI-21 landed it (WI-445), so it was replaced by two real
-    anchored entries — the §3 recipe and the §4 translation row. This test
-    therefore asserts the RULE, over however many reserved headings exist
-    (currently zero), instead of requiring one to exist. Requiring one would mean
-    the pack could never finish a reservation."""
+    So the rule is now the strong one: **a Reserved heading may exist while you
+    are drafting, and must not exist in a commit.** The escape hatch that makes
+    that always satisfiable — and the reason a bounded-and-listed backlog was not
+    worth the machinery — is the pack's own long-standing convention, stated in
+    §3's preamble and used by four entries: a change whose landing SHA is not
+    knowable yet anchors at the PRECEDING commit and says so in a parenthetical.
+    That anchor resolves, selects a range one commit wide of correct, and needs no
+    follow-up commit to become true. Deliberately reserving a slot anyway means
+    editing this assertion, which is the point: it becomes an act with a reviewer.
+
+    Both halves are asserted, so the shape rule still bites if the emptiness rule
+    is ever relaxed back to a bound.
+    """
     changed, renames = _entry_sections()
     reserved = [
         h
@@ -158,6 +172,29 @@ def test_a_reserved_placeholder_stays_anchor_free():
             "a reserved (not-yet-landed) heading carries a SHA anchor, which "
             "cannot be a real commit: " + h
         )
+    assert not reserved, (
+        "the pack carries reserved (unanchored) entries, which no re-sync range "
+        "can select — anchor each at the preceding commit with the parenthetical "
+        "§3 describes, or delete it:\n" + "\n".join(reserved)
+    )
+
+
+def test_no_entry_hides_below_the_closing_section():
+    """Entries live in §3/§4; an append past §5 is outside every check AND reader.
+
+    Sibling defect to the reserved backlog, found in the same review and just as
+    silent: three entries had been appended after "## 5. Promotion", where the
+    anchor grammar, the landing-order rule and the §1.3 worklist an operator
+    actually reads all stop looking. They were well-formed and unreachable. §5 is
+    the pack's closing argument, so the check is simply that nothing follows it.
+    """
+    tail = _split(_pack_text(), "\n## 5. Promotion")
+    stragglers = _headings(tail)
+    assert not stragglers, (
+        "entry heading(s) below §5 — an entry there is read by no operator and "
+        "checked by no grammar; move them into §3 in landing order:\n"
+        + "\n".join(stragglers)
+    )
 
 
 def test_bite_the_grammar_rejects_a_planted_unanchored_entry():

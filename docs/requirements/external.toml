@@ -121,7 +121,7 @@ class = "interoperating"
 description = """The model services and command-line runners behind any LLM in the session - the primary builder AND the adversarial reviewers alike. They touch the SESSION, never the system (REL-003)."""
 status = "Drafted"
 absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
-notes = """A model CLI is just a model CLI, whether primary or secondary (owner merge, 2026-08-13o)."""
+notes = """A model CLI is just a model CLI, whether primary or secondary."""
 
 # --- boundary crossings: what enters and leaves the system (§1R.2) -------------
 

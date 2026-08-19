@@ -1746,3 +1746,81 @@ def test_both_component_carriers_at_once_is_refused(scaffold):
     assert proc.returncode != 0
     assert "REFUSED" in (proc.stdout + proc.stderr)
     assert "BOTH carriers" in (proc.stdout + proc.stderr)
+
+
+def test_the_provenance_allow_file_is_read_token_scoped(tmp_path):
+    # `docs/provenance-allow`, the reviewed exception list for the citation-frame
+    # advisory. Its key is `<ROW-ID> <Cell> <token>` — THREE fields — and the
+    # third is what the whole design turns on: the earlier row/cell key
+    # suppressed a whole cell while every entry justified one token, which was
+    # measured hiding 67 unadjudicated tokens over 22 live rows.
+    trace = load_script("trace")
+
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "provenance-allow").write_text(
+        "# a comment line declares nothing\n"
+        "\n"
+        "SR-040 Rationale investigated 2026-08-18 — the carrier-less residue.\n"
+        "TC-040 Method CORRECTED 2026-08-18 — the other half of the tripwire.\n"
+        "SR-101 Rationale   MINTED   out of  SR-140 — whitespace is collapsed.\n"
+        "SR-102 Rationale added 2026-08-16 no separator so this declares nothing\n"
+        "SR-103 Rationale — two fields before the separator declare nothing\n"
+        "SR-104 — one field declares nothing\n",
+        encoding="utf-8",
+    )
+    allow = trace.load_provenance_allow(tmp_path)
+
+    assert trace.is_allowed(allow, "SR-040", "Rationale", "investigated 2026-08-18")
+    assert trace.is_allowed(allow, "TC-040", "Method", "CORRECTED 2026-08-18")
+    # Whitespace is collapsed on BOTH sides, so a cell that wraps mid-token still
+    # matches the entry that names it; case is folded for the same reason.
+    assert trace.is_allowed(allow, "SR-101", "Rationale", "MINTED out of SR-140")
+    assert trace.is_allowed(allow, "SR-101", "Rationale", "minted out of\n  SR-140")
+    # A malformed entry declares NOTHING — fail-soft in the LOUD direction, so
+    # the worst it can do is leave a finding reported.
+    assert not trace.is_allowed(allow, "SR-102", "Rationale", "added 2026-08-16")
+    assert not trace.is_allowed(allow, "SR-103", "Rationale", "added 2026-08-16")
+    assert not trace.is_allowed(allow, "SR-104", "Rationale", "added 2026-08-16")
+    # Right row, right cell, DIFFERENT token: still reported. This is the whole
+    # point of the token scope — an allowed frame never covers its neighbours.
+    assert not trace.is_allowed(allow, "SR-040", "Rationale", "added 2026-08-16")
+    assert not trace.is_allowed(allow, "SR-040", "Title", "investigated 2026-08-18")
+    # An absent file is an empty set, never a crash.
+    assert trace.load_provenance_allow(tmp_path / "nowhere") == set()
+
+
+def test_this_repos_own_provenance_allow_entries_all_still_bite():
+    # A reviewed exception that no longer matches anything is a claim nobody is
+    # checking — and the token-scoped migration makes that failure mode real,
+    # because re-wording an allowed cell now orphans its entry instead of
+    # silently laundering whatever replaced it. Three pre-migration entries were
+    # already dead this way (IF-123/127/130, whose reason named the PROVISIONAL
+    # marker, which is not a citation token) and were retired rather than kept.
+    trace = load_script("trace")
+    text = load_script("trace_text")
+    spine_carrier = load_script("spine_carrier")
+    root = KIT.parent
+    allow = trace.load_provenance_allow(root)
+    assert allow, "the kit's own exception list must not read empty"
+
+    tiers = (
+        ("SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
+        ("LLR-ID", ("Title", "Detail", "Rationale")),
+        ("TC-ID", ("Method", "Expected", "Parameters")),
+        ("IF-ID", ("Notes", "SignalNote")),
+        ("CMP-ID", ("Name", "Notes")),
+        ("EXT-ID", ("Name", "Description", "Notes")),
+    )
+    live = set()
+    for path in sorted((root / "docs").rglob("*.toml")):
+        for key, cols in tiers:
+            for row in spine_carrier.load(path, key):
+                rid = str(row.get(key) or "").strip()
+                if not rid or text.is_example(rid):
+                    continue
+                for col in cols:
+                    reason = col in text.REASON_CELLS or key == "IF-ID"
+                    for _, token in text.provenance_tokens(row.get(col), reason):
+                        live.add(text.allow_key(rid, col, token))
+    dead = sorted(k for k in allow if k not in live)
+    assert not dead, "provenance-allow entries matching no live token: {}".format(dead)

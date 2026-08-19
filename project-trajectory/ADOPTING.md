@@ -140,7 +140,9 @@ Two shipped scripts parse **Python source specifically**:
      **PowerShell repos start from the shipped port:** copy
      `scripts/gen_arch_map.reference.ps1` to `scripts/gen_arch_map.ps1`, edit
      its `$ModuleGlob` / `$EntryScripts` / `-Flow` default, and drive it with
-     `-Check`.
+     `-Doc <your doc>` plus `-Check`. `-Doc` is required and has no default:
+     the kit itself no longer keeps a committed architecture document, so a
+     port that guessed one would write into a file the adopter never declared.
   3. **The stack-neutral fallback** (`gen_arch_map.py --mode files --doc
      <your doc>`): one row per source file (path + first comment line) into
      the same marker block. No new runtime, works for any language, and

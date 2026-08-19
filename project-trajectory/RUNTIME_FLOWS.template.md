@@ -1,4 +1,4 @@
-# Runtime flows (authored at DevStg-Tests)
+# Runtime flows — <project> (authored at DevStg-Tests)
 
 Owned by the **Software Engineer** hat. This doc is the **authored-narrative
 half** of the architecture record: hand-written Mermaid sequence diagrams of
@@ -17,6 +17,13 @@ DevStg-Tests on and checked by `python scripts/check_flows.py` (wired into the
 harness): this doc must exist, hold at least one Mermaid diagram, and every
 cited `SR-`/`LLR-` id must exist in the registries (so the flows stay
 traceable as requirements evolve).
+
+## Runtime flows
+
+The heading above is the **section** `check_flows.py` reads — keep it, and put
+every flow under it (as `###` subheadings). The document title on line 1 does
+*not* count as the section: a doc merely *named* "Runtime flows" whose section
+was deleted must fail this gate, so the check ignores the title heading.
 
 Author one sequence diagram per key user-visible scenario, and **always one
 for anything concurrent / asynchronous / non-blocking** — that's where

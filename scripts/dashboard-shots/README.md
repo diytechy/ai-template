@@ -59,14 +59,22 @@ never improvise per session**. The current matrix:
   breakpoints the layout reacts to).
 - **Themes:** `light` · `dark` — driven by `prefers-color-scheme` (the dashboard
   is CSS-media-query themed, so emulating `colorScheme` is the whole toggle).
-- **Tabs:** all five — `arch` (What) · `dag` (When) · `sw` (How) · `know`
-  (Knowledge) · `process` (Process).
+- **Tabs:** a declared superset of five — `arch` (What) · `dag` (When) · `sw`
+  (How) · `know` (Knowledge) · `process` (Process) — **intersected with the tabs
+  the dashboard actually renders**. Some are dial-dependent: `know` exists only
+  while `[checks] okf_export` is on and a `docs/okf/` bundle is present, and
+  this repo has that dial **off**, so a run here shoots **four** tabs and prints
+  `declared tab(s) not in this dashboard, SKIPPED: know (Knowledge (OKF))`.
+  A rendered tab missing from `TABS` is reported the other way (`NOT shot`), so
+  a new tab cannot go uncritiqued in silence.
 - **Shot type:** full-page for every cell; **above-the-fold** additionally for
   the landing `arch` tab (where "what you see first" is the critique that
   matters most).
 
 Output names are deterministic: `shots/{width}px-{theme}-{tab}-{full|fold}.png`
-(3 × 2 × 5 full = 30, + 6 landing folds = **36** shots). Each run deletes only
+— 3 × 2 × *T* full shots + 6 landing folds, where *T* is the number of tabs
+actually shot. **In this repo today T = 4: 24 full + 6 folds = 30 shots** (it
+was 36 while the Knowledge tab existed). Each run deletes only
 its **own top-level `*.png`** before shooting — subdirectories under `shots/`
 (e.g. a session's `shots/before/` baseline) are preserved (WI-371; the old
 whole-dir clean silently destroyed baselines). Pixel content is *not*
