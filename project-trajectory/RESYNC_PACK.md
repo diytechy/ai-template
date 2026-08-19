@@ -1789,6 +1789,45 @@ the doc (an exact "Runtime flows" wins over a longer "Runtime flows …").
 - This is a **hard fail at the DevStg-Tests bar** — unchanged severity, only the
   selection rule moved. A repo below that bar pays nothing.
 
+### Your pre-commit hook gains a `staged-divergence` step [since 4b8f9ab4]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)* Every freshness step your hook runs — `okf`, `trajectory-map`,
+`status-map`, `open-items`, `derived-gate`, `ratify-fresh`, `skills-sync`,
+`skills-index`, `prompt-catalog` — regenerates in memory and byte-compares
+against the **working tree**. None of them has any concept of the index. So an
+author who regenerates a stale artifact and forgets to `git add` it gets an
+honest green over a commit that still carries the stale bytes. That is not
+hypothetical: it happened in the kit's own history and was found only by an
+adversarial re-measurement.
+
+**The floor batch is one step longer.** `check.py --run-steps …` now ends in
+`,staged-divergence`, and the step reports every declared `[generated]` artifact
+that is modified in the worktree but absent from the index.
+
+- **Take the new hook line.** `project-trajectory/hooks/pre-commit` is a
+  take-wholesale kit file; if you hand-edited your copy's `--run-steps` list,
+  append `staged-divergence` to it. A named-but-unknown step fails every commit,
+  so take `check.py` in the same re-sync — the step is built-in there, never a
+  `docs/stack.ini` `[step:]` section.
+- **It reads YOUR census, so there is nothing to configure.** The artifact list
+  comes from your `docs/stack.ini` `[generated]` section (a prefix row ends in
+  `/`; a marker-pair row matches the file). A repo that declares no `[generated]`
+  artifacts gets a clean SKIP.
+- **It cannot block a commit.** Warn-first by ruling — findings print, the exit
+  code stays 0. `check.py --staged-divergence --strict` is the promotion path if
+  you want the error today; the shipped step does not pass it.
+- **It skips cleanly off git** — no git binary, not a checkout, or a root that
+  is not the checkout's top level each SKIP with the reason named.
+- **What it does NOT catch:** an artifact that was **staged while stale**. The
+  freshness gates read the worktree, so a stale blob added to the index passes
+  them and passes this. Closing that needs the gates themselves to read the
+  staged tree, which is deliberately not this change.
+- **The remediation prose changed with it**: the hook's own "then re-commit"
+  advice now says to **stage** the regenerated files first. If you carry a local
+  variant of that comment, take the correction — it is the half of this gap that
+  no mechanism closes.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

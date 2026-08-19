@@ -243,13 +243,30 @@ fi
 #                        `gen_prompt_catalog.py`. Both steps are no-ops where the
 #                        kit-only generator isn't beside check.py, so a
 #                        non-adopter pays nothing.
+#      - staged-divergence  the one step here that is NOT a freshness check, and
+#                        it exists because every step above reads the WORKING
+#                        TREE: it asks which declared generated artifact is
+#                        modified on disk but absent from the INDEX, i.e. which
+#                        one you regenerated and did not `git add`. Without it a
+#                        regenerate-and-forget commit is honestly green and
+#                        lands stale (measured: 3b8d306d). WARN-ONLY today —
+#                        it never blocks a commit (OI-31 ruled option (b),
+#                        promoted to an error once it has run clean for a
+#                        program) — and it does NOT catch an artifact staged
+#                        while stale, which needs the gates themselves to read
+#                        the staged tree (OI-31 option (a), the destination).
+#                        Skips cleanly with no git and outside a checkout.
 #    When a step reports STALE, regenerate in dependency order — okf ->
 #    trajectory (the dashboard consumes the bundle); the gate marker via
 #    derive_gate.py, then the status snapshot via `gen_trajectory.py --status`
 #    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
-#    — then re-commit. The two kit-only index/catalogue steps stand alone: each
-#    regenerates with its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,skills-index,prompt-catalog,ratify-fresh
+#    — then STAGE THE REGENERATED FILES (`git add`) and re-commit. Staging is
+#    not a formality: these steps compare the tree ON DISK, so regenerating
+#    without staging turns them green over a commit that still carries the
+#    stale bytes — the staged-divergence step above reports exactly that.
+#    The two kit-only index/catalogue steps stand alone: each regenerates with
+#    its own single command and feeds nothing else.
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,skills-sync,skills-index,prompt-catalog,ratify-fresh,staged-divergence
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

@@ -54,6 +54,7 @@ Usage:
     python scripts/check.py [--gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all] [--tier smoke|full|release|all]
                             [--coverage N] [--phase LIST] [--lenient] [--list]
                             [--jobs N] [--run-step NAME] [--run-steps A,B,...]
+                            [--staged-divergence [--strict]]
 
     --gate      Which gate's checks to run. Default: the repo's **derived gate**
                 from `docs/gate` — the gate it must next PASS (a fresh scaffold
@@ -85,6 +86,13 @@ Usage:
                 the pre-commit hook's batched freshness/integrity floor, one
                 interpreter spawn instead of a chain that stops at the first
                 stale artifact.
+    --staged-divergence
+                Run only the OI-31 detector: which declared `[generated]`
+                artifact is modified in the worktree but absent from the index?
+                Every freshness step here reads the tree ON DISK, so a
+                regenerated-but-unstaged artifact passes them all and lands
+                stale. Warn-only (exit 0) unless --strict; skips cleanly off
+                git. It does NOT catch an artifact staged while stale.
     --jobs      Run the plan's steps on N concurrent workers (0 = one per
                 step; default 1 = sequential, streamed output, byte-identical
                 to the historical behavior). Parallel-safe by construction:
@@ -216,6 +224,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "skills-sync",
         "skills-index",
         "prompt-catalog",
+        "staged-divergence",
     }
 )
 
@@ -889,6 +898,30 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
+        # Staged-vs-worktree divergence (OI-31, ruled option (b) 2026-08-18):
+        # every step above asks whether the artifact ON DISK matches its
+        # regeneration; this one asks whether the artifact on disk is the one
+        # about to be COMMITTED — see staged_divergence() for the detector, its
+        # degradation, and the gap it does NOT close. Three WIRING decisions,
+        # which live here because nothing else records them:
+        #   WARN-ONLY TODAY, and the `--strict` promotion is deliberately NOT
+        # passed here — the same posture as need-form's, for a stated reason:
+        # the ruling promotes this to an error "once it has run clean for a
+        # program", and wiring the promotion early would wedge every commit of
+        # the program mid-flight. Promoting it is a one-word edit on this line.
+        #   AT EVERY BAR, like vocabulary/need-form: the question is about the
+        # commit in front of you, which a DevStg-Reqs repo makes exactly as often
+        # as a DevStg-Impl one. Deliberately NOT in _TRUNK_FRESHNESS_STEPS either:
+        # that stand-down exists because a work branch must not COMMIT a
+        # regenerated artifact, and this step never demands one — it reports
+        # what the tree already diverges on, which is as true on a branch.
+        (
+            "staged-divergence",
+            (),
+            [sys.executable, str(_SCRIPTS / "check.py"), "--staged-divergence"],
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
+            "process",
+        ),
     ]
 
 
@@ -1328,6 +1361,168 @@ def _git_out(root, args):
     return proc.stdout if proc.returncode == 0 else None
 
 
+# --- staged-vs-worktree divergence (OI-31, ruled option (b) 2026-08-18) --------
+# The gap this closes, in one sentence: the nine regenerate-and-byte-compare
+# steps all resolve their artifact from the FILESYSTEM under --root, so their
+# honest claim is "the artifact on disk matches its regeneration" while every
+# reader takes it to mean "the artifact about to be committed does". Those
+# diverge exactly when an author regenerates and forgets to `git add`.
+# THE MEASURED INSTANCE: at 3b8d306d, PROJECT_STATE.html was modified in the
+# worktree and absent from the index; the hook was honestly green on the tree on
+# disk and the committed tree failed the very gate that guarded it — undetected
+# until an adversarial review re-measured a log fragment's claim.
+
+
+def _generated_census(root="."):
+    """The `docs/stack.ini` `[generated]` paths — a READ of the §5.2 declaration,
+    never a second copy of it.
+
+    The artifact list this detector needs already exists and is already load-
+    bearing (tests/test_generated_freshness_wiring.py reads this same section to
+    prove every declared artifact has an enforcer), so copying it here would rot
+    the day a tenth artifact is declared — the one real cost the ruling names
+    against option (b), paid off by reading rather than restating.
+
+    Keys are PATHS, so `optionxform = str`: configparser's default lowercasing
+    would make `PROJECT_STATE.html` unmatchable — the same read, for the same
+    reason, as integrate.py's `_generated_paths`. An absent or malformed profile
+    declares nothing: this is a detector, and one that crashed on a file every
+    other step tolerates would be a worse failure than the one it reports."""
+    ini = Path(root) / "docs" / "stack.ini"
+    if not ini.exists():
+        return []
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.optionxform = str
+    try:
+        cp.read_string(ini.read_text(encoding="utf-8-sig", errors="replace"))
+    except (configparser.Error, OSError):
+        return []
+    if not cp.has_section("generated"):
+        return []
+    return [k.strip() for k in cp.options("generated") if k.strip()]
+
+
+def _declared_generated(path, census):
+    """True when `path` IS, or sits under, a declared `[generated]` entry — a
+    trailing "/" marks a prefix row (docs/okf/, docs/ratify/), exactly as §5.2
+    defines it. A marker-pair row (docs/status.md) matches on the FILE: the
+    markers narrow which region is generated, not which file is committed."""
+    return any(
+        path.startswith(entry) if entry.endswith("/") else path == entry
+        for entry in census
+    )
+
+
+def staged_divergence(root=".", strict=False):
+    """Report every DECLARED generated artifact that is modified in the working
+    tree but absent from the index, and return the exit code.
+
+    THE HONEST GAP, stated here rather than discovered later: this does **not**
+    catch an artifact that was STAGED WHILE STALE. The freshness steps read the
+    working tree, so a stale blob added to the index passes them AND passes
+    this. Closing that case needs the gates themselves to read the staged tree —
+    OI-31 option (a), recorded as the destination and deliberately not taken now
+    (it would convert nine scripts whose contract is "a pure function of a
+    directory" into git-object readers, which is what makes the whole freshness
+    tier testable against a temp scaffold). This step covers the shape that
+    actually happened — a forgotten `git add` — and leaves the rarer one open.
+
+    WARN-FIRST: findings are reported and the exit code stays 0 unless `strict`.
+    The promotion exists so the ruling's "error once it has run clean for a
+    program" is a one-word edit, and is deliberately not wired into the step.
+
+    DEGRADES, never crashes and never fails: no git binary, not a checkout, a
+    root that is not the checkout's top level, or a failing git call each SKIP
+    with the reason named. A detector that died in a scaffold would be removed
+    from the floor, which is the same outcome as not having it."""
+    census = _generated_census(root)
+    if not census:
+        print(
+            "  SKIP  staged-divergence  docs/stack.ini declares no [generated] "
+            "artifacts — nothing to compare against the index."
+        )
+        return 0
+    top = _git_out(root, ["rev-parse", "--show-toplevel"])
+    if top is None or not top.strip():
+        print(
+            "  SKIP  staged-divergence  no git, or {} is not a git checkout — "
+            "there is no index to compare the worktree against.".format(
+                Path(root).resolve()
+            )
+        )
+        return 0
+    try:
+        at_top = Path(top.strip()).resolve() == Path(root).resolve()
+    except OSError:  # pragma: no cover - an unresolvable path reads as "not top"
+        at_top = False
+    if not at_top:
+        print(
+            "  SKIP  staged-divergence  {} is not the top level of its git "
+            "checkout ({}), so [generated] paths do not resolve against this "
+            "index.".format(Path(root).resolve(), top.strip())
+        )
+        return 0
+    # -z: NUL-separated and UNQUOTED, so a path with an unusual byte is compared
+    # as itself rather than as git's C-quoted rendering of it (which would match
+    # no census row and under-report silently).
+    diff = _git_out(root, ["diff", "--name-only", "-z"])
+    if diff is None:
+        print(
+            "  SKIP  staged-divergence  `git diff --name-only` failed — the "
+            "worktree/index comparison could not be made."
+        )
+        return 0
+    hits = sorted({p for p in diff.split("\0") if p and _declared_generated(p, census)})
+    if not hits:
+        print(
+            "  ok    staged-divergence  none of the {} declared generated "
+            "artifact paths is modified-but-unstaged.".format(len(census))
+        )
+        return 0
+    print(
+        "  {}  staged-divergence  {} declared generated artifact(s) modified in "
+        "the working tree but NOT staged — the freshness steps just passed on "
+        "bytes this commit will not contain:".format(
+            "FAIL" if strict else "WARN", len(hits)
+        )
+    )
+    for path in hits:
+        print("      {}".format(path))
+    print(
+        "    Fix: `git add` them, then re-commit. (If leaving them out is\n"
+        "    deliberate — a partially-staged commit — nothing is required: this\n"
+        "    step does not block a commit today.)\n"
+        "    GAP, so this is not read as a guarantee: it does NOT catch an\n"
+        "    artifact that was STAGED WHILE STALE. The freshness gates read the\n"
+        "    working tree, so a stale blob in the index passes them and passes\n"
+        "    this. That case needs the staged-tree read (OI-31 option (a))."
+    )
+    return 1 if strict else 0
+
+
+def _divergence_mode(args):
+    """The `--staged-divergence` entry point: EXIT with the detector's code when
+    the flag selects it, else return and let main() build the ordinary plan.
+
+    It runs before any plan is built — the detector reads docs/stack.ini itself
+    (keys are paths, see _generated_census) and needs neither a gate nor a
+    profile. `--strict` alone is REFUSED rather than ignored, so nobody reads a
+    bare `--strict` as "make the whole plan strict" and gets a silently
+    unchanged run.
+
+    A helper rather than two `if`s in main() because main() sits at its
+    complexity baseline and the ratchet's rule is to decompose, not re-stamp
+    (tests/test_complexity_ratchet.py)."""
+    if not args.staged_divergence:
+        if args.strict:
+            sys.exit(
+                "check: --strict applies only to --staged-divergence today (the "
+                "plan's severity comes from --stage-cleared)"
+            )
+        return
+    sys.exit(staged_divergence(".", strict=args.strict))
+
+
 def _claimed_work_branch(root):
     """The uncached answer behind `_work_branch` — see it for the contract."""
     out = _git_out(root, ["symbolic-ref", "--short", "HEAD"])
@@ -1734,6 +1929,22 @@ def main():
         "if any step FAILs",
     )
     ap.add_argument(
+        "--staged-divergence",
+        action="store_true",
+        help="run ONLY the staged-vs-worktree divergence detector and exit "
+        "(OI-31): report every declared [generated] artifact modified in the "
+        "worktree but absent from the index. Warn-only — exit 0 — unless "
+        "--strict. This is the self-invoked body of the 'staged-divergence' "
+        "step, not a separate contract",
+    )
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="with --staged-divergence: exit 1 on a divergent artifact instead "
+        "of warning. The ruled promotion path (OI-31: error 'once it has run "
+        "clean for a program'); the step itself does NOT pass it today",
+    )
+    ap.add_argument(
         "--jobs",
         type=int,
         default=None,
@@ -1758,6 +1969,7 @@ def main():
             "check: must run at the repo root — no docs/ directory in {} "
             "(the gate and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
+    _divergence_mode(args)  # exits when --staged-divergence selects it
     # Translate a retired `--gate G2` (warning once) before anything consumes it,  check_vocab: allow
     # so `resolve_gate` and `_step_gate` both see only canonical bar names.
     args.gate = (

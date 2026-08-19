@@ -527,3 +527,148 @@ def test_list_tags_process_and_product_layers(scaffold):
     lines = proc.stdout.splitlines()
     assert any("traceability" in ln and "[process]" in ln for ln in lines)
     assert any("format" in ln and "[product]" in ln for ln in lines)
+
+
+# --- OI-31: the staged-vs-worktree divergence detector -----------------------
+# The step is not a tenth freshness gate: it reads the SAME docs/stack.ini
+# `[generated]` census the nine gates are wired from (the census's own rules are
+# held in tests/test_generated_freshness_wiring.py) and asks the question none
+# of them can — is the artifact on disk the one about to be COMMITTED?
+#
+# The gap it closes (OI-31, ruled option (b) 2026-08-18): every freshness step
+# resolves its artifact from the filesystem, so an author who regenerates and
+# forgets to `git add` gets an honest green over a stale commit. Measured at
+# 3b8d306d, where PROJECT_STATE.html was modified in the worktree, absent from
+# the index, and the committed tree failed the very gate that guarded it.
+#
+# HERE rather than beside the census, which is the more natural home: these
+# cases build real git repos, and that module is in the SMOKE tier, whose
+# membership budget (docs/stack.ini [smoke-budget]) is a shared dial this lane
+# did not own. They run at slice close and in CI with the rest of this module.
+
+
+def _git(repo, *args):
+    import subprocess
+
+    subprocess.run(
+        ["git", "-C", str(repo), *args], check=True, capture_output=True, text=True
+    )
+
+
+# A census that is deliberately NOT the kit's own: the step must read whatever
+# docs/stack.ini declares (that is the whole point of reading rather than
+# copying the list), so the fixture declares a name no kit script knows, a
+# prefix row, and a marker-pair row — the three shapes §5.2 admits.
+FIXTURE_CENSUS = """[generated]
+HOUSE_DASHBOARD.html = trajectory
+docs/bundle/ = okf
+docs/status.md = status | <!-- BEGIN GENERATED STATUS --> | <!-- END GENERATED STATUS -->
+"""
+
+
+def _divergence_repo(tmp_path):
+    """A tiny git repo whose committed tree matches its declared census."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(FIXTURE_CENSUS, encoding="utf-8")
+    (tmp_path / "HOUSE_DASHBOARD.html").write_text("<p>v1</p>\n", encoding="utf-8")
+    (tmp_path / "docs" / "bundle").mkdir()
+    (tmp_path / "docs" / "bundle" / "sn.md").write_text("v1\n", encoding="utf-8")
+    (tmp_path / "notes.md").write_text("hand-written\n", encoding="utf-8")
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "base")
+    return tmp_path
+
+
+def _divergence(repo, *extra):
+    return run_py([SCRIPTS / "check.py", "--staged-divergence", *extra], cwd=repo)
+
+
+def test_divergence_step_reports_a_regenerated_but_unstaged_artifact(tmp_path):
+    # THE POSITIVE CASE, and the one the whole ruling turns on: regenerate a
+    # declared artifact, do not stage it, and the step must name it. Proved
+    # three ways so a passing assertion cannot be a printed string that happens
+    # to contain the path:
+    #   1. the path is named and the census's OTHER rows are not;
+    #   2. an undeclared dirty file (notes.md) is NOT named — the census filter
+    #      is doing work, so the step is not just echoing `git diff`;
+    #   3. --strict turns the same finding into exit 1, so the detection is a
+    #      decision the code reached, not a message it always prints.
+    repo = _divergence_repo(tmp_path)
+    (repo / "HOUSE_DASHBOARD.html").write_text("<p>v2</p>\n", encoding="utf-8")
+    (repo / "notes.md").write_text("edited too\n", encoding="utf-8")
+    proc = _divergence(repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, "warn-first: the step must never block a commit"
+    assert "WARN" in out and "HOUSE_DASHBOARD.html" in out, out
+    assert "docs/bundle" not in out, "an unmodified declared artifact was named"
+    assert "notes.md" not in out, "an UNDECLARED dirty file was reported: " + out
+    # The census is READ, not copied: this repo declares a name no kit script
+    # knows, so a hardcoded artifact list could not have produced that finding.
+    # And the honest gap is stated in the step's own message, not only in a doc.
+    assert "STAGED WHILE STALE" in out, "the message must state what it misses"
+    assert "option (a)" in out, "the message must name where that case is closed"
+    strict = _divergence(repo, "--strict")
+    assert strict.returncode == 1, (
+        "the ruled promotion path must be reachable: " + strict.stdout + strict.stderr
+    )
+
+
+def test_divergence_step_is_silent_on_a_clean_tree(tmp_path):
+    # The negative that keeps the step from being a warning people learn to
+    # ignore: nothing modified, nothing reported.
+    repo = _divergence_repo(tmp_path)
+    proc = _divergence(repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "WARN" not in out, out
+    assert "HOUSE_DASHBOARD.html" not in out, out
+
+
+def test_divergence_step_is_silent_when_the_artifact_is_staged(tmp_path):
+    # THE CASE THAT DEFINES THE STEP. The same edit as the positive test, staged
+    # — which is the correct workflow — must be silent. A step that fired on
+    # every regenerated artifact regardless of the index would be reporting
+    # "you regenerated something", which is not a finding.
+    repo = _divergence_repo(tmp_path)
+    (repo / "HOUSE_DASHBOARD.html").write_text("<p>v2</p>\n", encoding="utf-8")
+    (repo / "docs" / "bundle" / "sn.md").write_text("v2\n", encoding="utf-8")
+    _git(repo, "add", "HOUSE_DASHBOARD.html", "docs/bundle/sn.md")
+    proc = _divergence(repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "WARN" not in out, "a STAGED regeneration is the correct state: " + out
+
+
+def test_divergence_step_skips_cleanly_outside_a_git_checkout(tmp_path):
+    # The degradation that keeps it on the floor. The scaffold suites bootstrap
+    # temp directories that are not git repos, and a detector that crashed or
+    # failed there would be pulled out of the hook — the same outcome as never
+    # having written it. So: no index to read => SKIP, with the reason named,
+    # exit 0.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(FIXTURE_CENSUS, encoding="utf-8")
+    (tmp_path / "HOUSE_DASHBOARD.html").write_text("<p>v1</p>\n", encoding="utf-8")
+    proc = _divergence(tmp_path)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "SKIP" in out and "not a git checkout" in out, out
+    # And a repo declaring no census skips too, rather than inventing a list.
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n", encoding="utf-8"
+    )
+    bare = _divergence(tmp_path)
+    assert bare.returncode == 0
+    assert "no [generated] artifacts" in (bare.stdout + bare.stderr)
+
+
+def test_strict_is_refused_without_the_detector(tmp_path):
+    # `--strict` is the detector's promotion switch and nothing else's. Refused
+    # loudly rather than ignored, so nobody reads a bare `--strict` as "make the
+    # whole plan strict" and gets a silently unchanged run.
+    repo = _divergence_repo(tmp_path)
+    proc = run_py([SCRIPTS / "check.py", "--strict", "--list"], cwd=repo)
+    assert proc.returncode != 0
+    assert "--strict applies only to --staged-divergence" in (proc.stdout + proc.stderr)

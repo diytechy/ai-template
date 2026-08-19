@@ -306,3 +306,12 @@ def test_skills_sync_cannot_see_index_staleness(tmp_path):
     assert blind.returncode == 0, "--check-agents is not an index-freshness check"
     stale = _run_step(kit, "skills-index", tmp_path)
     assert stale.returncode != 0, "…which is exactly why skills-index is its own step"
+
+
+# --- OI-31's divergence detector: where its tests live ------------------------
+# The `staged-divergence` step reads THIS section's `[generated]` census (see
+# check.py `_generated_census`) and asks what these freshness gates cannot — is
+# the artifact on disk the one about to be committed? Its four cases live in
+# tests/test_check_harness.py, with check.py's other step tests: they build real
+# git repos, and this module is in the SMOKE tier, whose membership budget
+# (docs/stack.ini [smoke-budget]) is a shared dial this lane did not own.
