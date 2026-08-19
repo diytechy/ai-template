@@ -16,6 +16,7 @@ through change intake and keep the spine authoritative.
 | [parallel-scheduling](parallel-scheduling.md) | Traincar packing: DAG scheduling + clustering research (heuristics, no bound claimed) | — | 2026-07-15 |
 | [co-planning](co-planning.md) | Reconciling independent WI decompositions: select-and-port over merge or consensus | `CMP-008` | 2026-07-16 |
 | [instruction-file-adherence](instruction-file-adherence.md) | What degrades agent instruction-file adherence: rule count and conflicts, not bytes | `CMP-008` | 2026-08-18 |
+| [traceability-enforcement](traceability-enforcement.md) | registry→code (assert-and-verify) versus code→registry (an unmaintained annotation convention), with this repo's own adherence measured | `CMP-006` | 2026-08-18 |
 
 The pack contract and optional research-track workflow live in
 [PROCESS_OPTIONS.md](../../project-trajectory/PROCESS_OPTIONS.md#research-track--knowledge-packs).
