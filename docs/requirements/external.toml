@@ -1,96 +1,97 @@
-# docs/requirements/external.toml — THE DEPTH-0 FRAME, as rows.
+# docs/requirements/external.toml — THE DEPTH-0 FRAME, as rows: who is outside
+# this system, what crosses its boundary, and which external-to-external flows
+# the system is not a party to.
 #
-# Three kinds of row in one file, because they are one statement: WHO is outside
-# the system (`[entity.EXT-###]`), WHAT crosses its boundary
-# (`[boundary.B-##]`), and which external-to-external flows exist that the
-# system is NOT a party to (`[relationship.REL-###]`). Ruled at sitting 2
-# (docs/plans/2026-08-13-sitting-2-boundary-and-context.md §1R, decisions 3/4/5;
-# owner 2026-08-13i/l/n/o/u). The frame is LOCKED — its rows change only by a
-# recorded ruling (EXT-004, B-06 and B-07 were cut by 2026-08-16q; the rows
-# below are the census, restated nowhere).
+# THIS IS NOT interfaces.toml. A boundary crossing is a FRAME-LEVEL fact — it is
+# what the system requirements form around, and it exists whether or not any
+# module realizes it yet. A concrete `IF-###` row ties BACK to a crossing here
+# (`interface_from_external` / `interface_to_external`) only when it realizes
+# one. That split is what lets an SR state the boundary obligation while an LLR
+# states which piece provides it, without the two fighting over one row.
 #
-# THE INVERSION THIS FILE CARRIES (decision 3, 13l). The boundary interfaces
-# live HERE, with the entities — not in `interfaces.toml`. System requirements
-# form around THESE rows; a concrete `IF-###` row in `interfaces.toml` ties back
-# to one directionally (`interface_from_external` / `interface_to_external`)
-# only when it REALIZES a crossing. That is what lets an SR state the boundary
-# obligation while an LLR states which piece provides it, without the two
-# fighting over one row.
+# THE FRAME IS LOCKED: its rows change only by a recorded ruling.
 #
-# ROW IDS — READ THIS BEFORE CITING ONE. The crossings are `B-##`, the names the
-# locked frame itself uses (§1R.2) and the names every ruled citation writes:
-# the SR form rule (§3R) says an SR's shall names `B-01`…`B-05`, and the owner's
-# tie-back naming (13m) writes `interface_to_external = "B-05"`. §1R.5's schema
-# sketch wrote `[boundary.BIF-###]`; that shorthand predates the B-## naming and
-# is NOT used here, deliberately — v1's `BIF-001`…`BIF-031` are a DIFFERENT set
-# of 31 crossings (archived at
-# ../archive/plans/2026-08-13-sitting-2-superseded-material.md, cited by id in
-# the `absorbs` cells below), so reusing that prefix would recycle live ids onto
-# new meanings. `B-03` is absent on purpose: it was removed at 13u when the
-# status/validation surfaces were ruled adopted-toolkit outputs, not system
-# outputs, and the gap keeps id and frame name aligned 1:1 rather than
+# THREE ROW KINDS, ONE FILE, because they are one statement:
+#
+#   [entity.EXT-###]        who is outside
+#   [boundary.B-##]         what crosses, from the SYSTEM's point of view
+#   [relationship.REL-###]  external-to-external, the system NOT a party
+#
+# A relationship carries NO interface vocabulary, deliberately: it is not a
+# crossing and must never grow a realizing IF row. Wanting one means what you
+# have is a boundary crossing.
+#
+# ROW IDS — READ THIS BEFORE CITING ONE. Crossings are `B-##`, and that is the
+# name every ruled citation writes: an SR's shall names `B-01`…`B-05`, and a
+# tie-back writes `interface_to_external = "B-05"`. `BIF-###` is NOT used here
+# and must not be — those ids name a DIFFERENT, superseded set of crossings, so
+# reusing the prefix would recycle live ids onto new meanings. `B-03` is absent
+# on purpose; the gap keeps id and frame name aligned 1:1 rather than
 # renumbering a locked table.
 #
-# SPENT IDS — DO NOT MINT THESE. `B-08` and `REL-004` were ALLOCATED in the v2
-# frame and then cut by owner ruling on 2026-08-13 (B-08 at 13o, sitting-2 plan
-# §1R.2; REL-004 folded into REL-003 at 13o, log 2026-08-13o). They are cited by
-# id in a ruled plan document and in `docs/log.md`, so re-minting either would
-# silently re-point that history onto a different thing.
+# SPENT IDS — DO NOT MINT `B-08` OR `REL-004`. Both were allocated and then cut,
+# and both are cited by id in ruled documents, so re-minting either would
+# silently re-point that history onto a different thing. `docs/id-watermark`
+# does NOT protect them — it reads `B = 7` and `REL = 3`, so the next mint from
+# the mark is exactly those two — and raising a mark by hand is refused by
+# `trace.py`'s integrity rule ("a mark rises by allocating an id, never by
+# hand"). This block is the only protection those two ids have, and it lives
+# here because this file is where a crossing is hand-minted. Correcting a
+# mis-computed seed needs a mechanism the kit does not have, which is an open
+# question for the owner.
 #
-# `docs/id-watermark` does NOT protect them: it reads `B = 7` and `REL = 3`, so
-# the next mint from the mark is exactly `B-08`/`REL-004`. The marks were seeded
-# 2026-08-17n against `git log -S` over THIS file, which was created 2026-08-14
-# — four days after the two ids were cut — so the probe could not see them and
-# returned empty (2026-08-17 desk round, F9/F10). Raising the marks by hand is
-# REFUSED by `trace.py`'s own integrity rule ("a mark rises by allocating an id,
-# never by hand"), and the first-seed exemption no longer applies now that both
-# spaces carry a committed mark. Correcting a mis-computed seed therefore needs
-# a mechanism the kit does not have, which is an OPEN RULING for the owner; this
-# note is the interim protection, and it lives here because this file is where a
-# crossing is actually hand-minted.
+# THE FIELDS — what each one is, and how it is used.
 #
-# STATUS — THE ONE VOCABULARY (decision 12, 13u; unified 2026-08-17).
-# Every row here carries `status`, from this file's first commit under the
-# name `approval`, because a frame with no approval element is un-ratifiable
-# and the rung that reads it (`derive_gate.boundary_incomplete`) would have
-# nothing honest to read. The subset this tier takes:
+#   ENTITY ROWS
+#     name         The party, named as its own side would name it.
+#     class        CLOSED vocabulary: `operational` (a user or peer system that
+#                  acts), `enabling` (something the system depends on to run),
+#                  `interoperating` (a service it exchanges with) or
+#                  `deliverable` (a package it produces and hands off).
+#     description  What the party is, in one line.
 #
-#     status = "Drafted" | "Approved"
+#   BOUNDARY ROWS
+#     entity       The `EXT-###` on the far side. Must resolve to a row above.
+#     direction    CLOSED vocabulary, read from the SYSTEM's point of view:
+#                  `in` | `out` | `inout`.
+#     carries      What crosses, in one testable line. A crossing may be a
+#                  BUNDLE of implementation-specific interfaces, which is
+#                  legitimate provided the decomposition is broken down or
+#                  clearly stated.
 #
-# `Founded` is NOT APPLICABLE HERE, and never will be: it means settled AND
-# DEMONSTRATED, and an approval says the crossing is AGREED — it says nothing
-# about the crossing having been demonstrated. No predicate computes that for
-# this tier, so the word would be a claim nothing can check.
+#   RELATIONSHIP ROWS
+#     from / to    The two external parties. Neither may be the system.
+#     kind         What the relationship is.
+#     flow         What moves between them, and in which direction.
 #
-# Decision 12 ruled ONE shared status vocabulary across every registry with
-# per-registry subsets allowed, and the D-9 ladder that names its values
-# (Drafted / Approved / Founded) LANDED AT MIGRATION STEP 5/5b, 2026-08-15. This
-# file's half of it is exactly the rename that block predicted: `draft` ->
-# `drafted`, `approved` keeping its spelling, `founded` still an ADDITION the
-# boundary tier has not taken. No row's meaning changed, and `derive_gate` reads
-# the drafted rung through one table (`BIF_MATURITY`), which is why the re-key
-# was one line there and none anywhere else.
+#   ON EVERY ROW KIND
+#     status       The ONE maturity field — the same field and words the spine
+#                  uses. Closed vocabulary, `Drafted` | `Approved`. `Founded` is
+#                  NOT APPLICABLE to this tier and never will be: it means
+#                  settled AND demonstrated, while an approval says the crossing
+#                  is AGREED. The rung that reads it is
+#                  `derive_gate.boundary_incomplete` ("is the boundary inventory
+#                  still in work?"), through one table, `BIF_MATURITY`.
 #
-# FLIP AUTHORITY — MECHANIZED 2026-08-15 (OI-30 D3), AND IT IS DERIVED, NOT
-# DECLARED. Authority over an off-spine `status` cell FOLLOWS THE DEV-STAGE
-# LADDER: a cell in registry R may be machine-flipped only when R's stage rung
-# is not human-held under the EXISTING `[attestation] human_ratification_through`
-# dial — no new key and no new enum, because the registry-to-rung association
-# already exists in `derive_gate` (`boundary_incomplete` gates DevStg-Boundary on
-# THIS file; `arch_incomplete` gates DevStg-Arch on the component registry).
-# `external.toml` -> DevStg-Boundary; `interfaces.toml`/`components.toml` ->
-# DevStg-Arch; a status-carrying off-spine registry with NO mapping is HELD. The
-# predicate is `agent_common.human_approves(docs, registry)`, beside
-# `human_holds`. At this repo's dial of 4 the effect is what the prose below
-# always said: THE APPROVAL VALUES IN THIS FILE AND IN interfaces.toml ARE THE
-# OWNER'S TO FLIP, in a reviewed Status-change commit. No loop, no LLM verdict
-# and no script may set one to `approved`.
+#                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may
+#                  be machine-flipped only when this registry's stage rung —
+#                  DevStg-Boundary — is not human-held under the `[attestation]
+#                  human_ratification_through` dial, the predicate being
+#                  `agent_common.human_approves(docs, "external")`. At this
+#                  repo's dial of 4 that means every value here is the OWNER'S to
+#                  flip, in a reviewed Status-change commit. No loop, no LLM
+#                  verdict and no script may set one to `Approved`.
 #
-# The example rows (`-000`) that ship in registries/external.template.toml are
-# absent here on purpose: this is the kit's own filled registry, not the blank
-# form.
+#     absorbs      OPTIONAL — the earlier ids this row folded in, so a re-drawn
+#                  frame loses nothing and an old citation still lands.
+#     notes        OPTIONAL free prose about the row.
+#
+# APPLIES-WHEN: a project that never declares a boundary simply does not create
+# this file, and the DevStg-Boundary rung is skipped rather than held open. The
+# `-000` example rows that ship in `registries/external.template.toml` are absent
+# here on purpose: this is the kit's own filled registry, not the blank form.
 
-# --- entities: who is outside the system (§1R.1) -------------------------------
+# --- entities: who is outside the system ---------------------------------------
 
 [entity.EXT-001]
 name = "Development session"
@@ -123,7 +124,7 @@ status = "Drafted"
 absorbs = "v1 EXT-004 merged with the external-reviewer CLI at 13o"
 notes = """A model CLI is just a model CLI, whether primary or secondary."""
 
-# --- boundary crossings: what enters and leaves the system (§1R.2) -------------
+# --- boundary crossings: what enters and leaves the system ---------------------
 
 [boundary.B-01]
 entity = "EXT-001"
@@ -155,7 +156,7 @@ status = "Drafted"
 absorbs = "v1 BIF-014/M-07, BIF-015/M-06, BIF-016..021/X-01..X-06; BIF-001/M-01 and BIF-002/M-02 as CONTENT (their invocation is the session's, 13n); the skills fan-out and docs/knowledge packs (§1R.7 item 5)"
 notes = "The largest bundle in the frame, and legitimate as one under §3R: a single shall against it is permitted BECAUSE the decomposition is stated in the component details. The delivered capabilities it breaks down into are: harness verdict, scaffold + MAPPING, unattended loop, generators, hook floor, and package-wide property -- the sixth being a ruled class for a property of every delivered capability at once, which is why SR-031, SR-034, SR-035 and SR-114 each stay one row in it rather than one per capability."
 
-# --- relationships: external-to-external, the system not a party (§1R.3) -------
+# --- relationships: external-to-external, the system not a party ---------------
 # No interface vocabulary appears in these rows. That absence is what keeps
 # decision 6 satisfied: a relationship is not a crossing and must never grow a
 # realizing IF.

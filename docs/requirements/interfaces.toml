@@ -1,107 +1,107 @@
-# docs/requirements/interfaces.toml — INTERFACE DEFINITIONS.
+# docs/requirements/interfaces.toml — INTERFACE DEFINITIONS, the kit's own.
 #
-# An IF row states what one interface concretely IS. Sitting-2 decision 4
-# (§1R.5) also ruled that it should shed `direction` and `counterpart`, so that
-# provider/consumer roles are IMPLIED BY THE REQUIREMENTS that cite the row — an
-# LLR lists its requirements around PROVIDING an interface, and consumption may
-# stay implied at design.
+# An IF row states what one interface concretely IS — one testable line. A
+# crossing of the SYSTEM boundary is not a row here: those live in
+# `docs/requirements/external.toml`, and a row here ties BACK to one only when
+# it realizes a crossing. Everything else is an internal seam.
 #
-# THAT ONE CLAUSE IS NOT EXECUTED, AND THE HOLD NOW RESTS ON TWO REASONS, ONE OF
-# WHICH IS NEW AND STRONGER (2026-08-15 rework §2, measured).
+# THE FIELDS — what each one is, and how it is used.
 #
-#   1. THE REPLACEMENT VIEW DOES NOT EXIST YET. `direction` + `counterpart` are
-#      the SOLE input to two architecture views the dashboard renders — the flat
-#      How-SW seam graph and the containerized component drill — and the second
-#      is carried by the DESIGN row LLR-087, "Hierarchy seam ports" (module
-#      `gen_trajectory.py`, symbol `_drill_svg/_drill_edges`, verified by
-#      TC-089, under SR-070 "Offline project-state core"). Decision 8 makes
-#      PROJECT_STATE.html the ONE home for architecture in the same sitting
-#      decision 4 deletes the columns it draws from. THIS CITATION WAS RE-BASED:
-#      the hold was written against SR-091, which the WI-451 re-tier DEMOTED —
-#      the obligation lives on, on the carrier named above, and the constraint
-#      is unchanged. Deletion stays bound to WI-455 (the
-#      architecture-from-the-registries program, which owns the replacement).
+#   direction        `Provides` | `Consumes`. FLOW AND COVERAGE, NEVER
+#                    OWNERSHIP. `Provides` says this side authors the contract.
+#                    `Consumes` says a cross-component edge is INTENDED and this
+#                    row discharges it — a coverage declaration, not a claim on
+#                    the seam. A "provide" implies orientation but does not make
+#                    the interface directional; whether anything actually
+#                    travels one way is a separate and often empty property.
+#                    `traj_views` orients the dashboard's seam graph from this
+#                    field, and `check_trajectory._declared_seam_pairs` reads it
+#                    to silence `cross_component_findings` — an internal import
+#                    edge whose endpoints sit in different components must be
+#                    covered by a row here, and that is an error under `--strict`
+#                    at DevStg-Tests and above. Who is ANSWERABLE is `owner`, and
+#                    only `owner`.
 #
-#   2. DELETING THE 74 `Consumes` ROWS TAKES A GATING CHECK 0 -> 32 FINDINGS.
-#      `check_trajectory._declared_seam_pairs` stores each row's endpoints both
-#      ways, and that set is what silences `cross_component_findings` ("an
-#      internal import edge whose endpoints belong to different CMP components
-#      must be covered by a declared IF-### row"), which is an ERROR under
-#      `--strict` at DevStg-Tests and above. The import edge is the OBLIGATION
-#      and the row is the DISCHARGE — the relationship is the opposite of the
-#      one the shed assumed. 35 of those 74 rows also carry an endpoint that is
-#      not a module at all (a file, a tool, an upstream), so no import graph
-#      could derive them.
+#   this_project     This side's endpoint, and
+#   counterpart      the far side's. Both are validated against the tree,
+#                    warn-first: an endpoint that resolves to nothing is named
+#                    individually. A cell may name several endpoints,
+#                    `;`-separated, when one contract genuinely has more than
+#                    one far side. The `external:` prefix says an endpoint is
+#                    deliberately outside this tree (an adopter, `git`, an agent
+#                    CLI) — a value convention rather than a column, so it rides
+#                    the carrier and cannot drift from the endpoint it qualifies.
 #
-# DIRECTION IS FLOW AND COVERAGE. NEVER OWNERSHIP. (Owner ruling Q2,
-# 2026-08-15a, stated here as ruled: *"a 'provide' from one requirement or
-# module implies directionality, but does not mean it is actually
-# directional."*) `Provides` says this side authors the contract. The 74
-# `Consumes` rows are COVERAGE DECLARATIONS — each says a cross-component edge
-# is intended and names the row that discharges it — and never a claim on the
-# seam. Orientation is implied by ownership; whether anything actually travels
-# one way is a separate and often empty property. Who is ANSWERABLE is `owner`,
-# and only `owner`. The column keeps its name and its two values because
-# `traj_views` orients the seam graph from them; what changed is what it claims.
+#   contract         What the seam IS, in one testable line: CLI flags and exit
+#                    codes, or the file schema. Not the argument for it — that
+#                    is `rationale`'s job where a row carries one.
 #
-# OWNER — the one row answerable for the interface, id-typed and POLYMORPHIC: an
-# `SR-###` or a design-tier `LLR-###`, resolved against whichever registry the
-# prefix names (Q1, on the reasoning that requirements and modules "do the same
-# thing" at different levels). Exactly one per row. It is NOT `req_refs`, which
-# lists every requirement the seam realizes or relies on — 21 rows list more
-# than one, and none of them was thereby answerable. EVERY CELL HERE WAS SEEDED
-# 2026-08-15 AND IS PROVISIONAL: 94 mechanically from a single `req_refs` entry,
-# 21 by judgement, each pick recorded in the log (2026-08-15e) for the review
-# sitting to overturn.
+#   signal           CLOSED vocabulary: `discrete` (a finite enumerable alphabet
+#                    — exit code, gate name, status enum, dial) or `variable`
+#                    (unbounded content — prose, file bytes, a count, a
+#                    duration). If both cross, the row is `variable`.
+#   signal_note      OPTIONAL — why a row is `variable` when it looks discrete,
+#                    or what the alphabet is. A reason cell: it takes the
+#                    argument, never the citation.
 #
-# CARRIED_BY — optional interface composition (Q3): a constituent naming the
-# bundle that carries it. The prototype is the ruled first case — `IF-102`,
-# `spine_carrier`'s Provides row and the highest-concentration seam here, with
-# its 14 consumption rows as constituents. The carriage graph must resolve and
-# be acyclic; depth past 2 warns, and that bound is provisional.
+#   req_refs         EVERY requirement the seam realizes or relies on. Several
+#                    is normal — 21 rows list more than one.
 #
-# `req_refs` WAS `sr_refs` UNTIL 2026-08-15. One name carried two relationships:
-# a design row's `sr_refs` names its PARENT, an interface's names the
-# requirements that realize or rely on it. D-3 forbids that, so they are two
-# columns now.
+#   owner            The ONE row ANSWERABLE for the interface, id-typed and
+#                    POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`,
+#                    resolved against whichever registry the prefix names.
+#                    Exactly one per row — naming nobody and naming several are
+#                    both findings. Prefer the DESIGN tier wherever a design row
+#                    exists for the owner-side endpoint; fall back to the SR only
+#                    while none does. This is NOT `req_refs`: `req_refs` lists
+#                    who uses the seam, `owner` names who answers for it.
 #
-# WHAT DID RETIRE AT WI-442: `stability` (Experimental|Stable|Deprecated),
-# replaced by `approval`, renamed `status` on 2026-08-17. Five rows carried
-# `Experimental` at the retirement and
-# are recorded HERE rather than in their own cells, so that no row carries
-# migration history: IF-057, IF-103, IF-118, IF-119, IF-120.
+#   carried_by       OPTIONAL interface composition: a constituent naming the
+#                    bundle that carries it (`carried_by = "IF-###"`). Several
+#                    seams riding one larger seam name the same carrier id, so
+#                    granularity stops being a forced choice. The carriage graph
+#                    must resolve and be acyclic; depth past 2 warns. Most rows
+#                    carry nothing, and an empty cell IS "not a constituent".
 #
-# STATUS — the one maturity field, closed vocabulary `Drafted` | `Approved`,
-# shared with docs/requirements/external.toml (which carries the full statement
-# of the value set, including why `Founded` is not applicable to this tier).
-# `draft` -> `drafted` LANDED AT D-9 MIGRATION STEP 5b (2026-08-15), and the
-# FIELD ITSELF became `status` in the spine's Title-case words on 2026-08-17,
-# so one word in one field means one thing in every registry;
-# `derive_gate.BIF_MATURITY` moved with both. EVERY row reads `Drafted` today,
-# and that is a deliberate non-claim: `Stable` was a MATURITY assertion (this
-# contract has settled) and `Approved` is a RATIFICATION one. Mapping the
-# first onto the second would have manufactured 108 approvals nobody signed.
+#   version          The contract's own version string, this row's to set.
 #
-# FLIP AUTHORITY — MECHANIZED 2026-08-15 (OI-30 D3). It is DERIVED from the
-# dev-stage ladder rather than declared in a new key: this registry's rung is
-# DevStg-Arch (`derive_gate.arch_incomplete` already gates that rung on the
-# architecture tier), so a `status` cell here may be machine-flipped only
-# when DevStg-Arch is not human-held under the EXISTING `[attestation]
-# human_ratification_through` dial. The predicate is
-# `agent_common.human_approves(docs, "interfaces")`. At this repo's dial of 4
-# the effect is unchanged from the prose it replaces: A `status` CELL IN THIS
-# FILE IS THE OWNER'S TO FLIP, in a reviewed Status-change commit — no loop, no
-# LLM verdict, no script.
+#   status           The ONE maturity field, and it is the spine's field and
+#                    words: a CLOSED vocabulary, `Drafted` | `Approved`, shared
+#                    with `external.toml`. `Founded` is NOT APPLICABLE to this
+#                    tier — it means settled AND demonstrated, while an approval
+#                    says the seam is AGREED. `derive_gate.BIF_MATURITY` reads
+#                    the drafted rung.
 #
-# THE TIE-BACK is directional and appears ONLY on a row that REALIZES a boundary
-# crossing declared in external.toml: `interface_from_external = "B-##"` for an
-# IN crossing, `interface_to_external = "B-##"` for an OUT one, both for in/out
-# (owner naming, 13m). A row with neither is an internal seam, which is how the
-# registry says so without a column claiming it. Eight rows carry one today;
-# that four of the six crossings are realized by NO row is a real finding, and
-# it belongs to decision 6 (BIF rows with no realizing IF), deferred BY RULING
-# to post-schema — which is exactly why rung 1's predicate gates on BIF
-# APPROVAL and not on realization coverage.
+#                    FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell
+#                    here may be machine-flipped only when this registry's stage
+#                    rung — DevStg-Arch, the rung `derive_gate.arch_incomplete`
+#                    gates on the architecture tier — is not human-held under the
+#                    `[attestation] human_ratification_through` dial. The
+#                    predicate is `agent_common.human_approves(docs,
+#                    "interfaces")`. At this repo's dial of 4 that means every
+#                    cell here is the OWNER'S to flip, in a reviewed
+#                    Status-change commit: no loop, no LLM verdict, no script.
+#
+#                    Every live row reads `Drafted`, and that is a deliberate
+#                    non-claim rather than a backlog: nothing here has been
+#                    signed.
+#
+#   interface_from_external / interface_to_external
+#                    OPTIONAL and directional — `"B-##"`, naming the boundary
+#                    crossing in `external.toml` this row REALIZES: `_from_` for
+#                    a crossing that comes in, `_to_` for one that goes out, both
+#                    for in/out. A row with neither key is an internal seam, and
+#                    that ABSENCE is the statement — there is no cell to set to
+#                    "internal" and get wrong.
+#
+#   component        OPTIONAL — the `CMP-###` this seam belongs to, the same
+#                    membership tag the primitive tiers carry.
+#
+#   notes            OPTIONAL free prose about the row. A reason cell: argument,
+#                    never citation. Honesty valve — the word `source` (produces
+#                    output, consumes nothing declared) or `sink` (consumes,
+#                    produces nothing) silences the missing-direction coverage
+#                    warning for `this_project`.
 
 [interface.IF-001]
 direction = "Provides"

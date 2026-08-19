@@ -1,25 +1,20 @@
 # The HATS ROSTER — this repo's declared expert perspectives, the ones every
-# applicable decomposition must face (SN-036; ruled at OI-19, 2026-08-13).
+# applicable decomposition must face. Sixteen hats today.
 #
-# THIS ROSTER CURRENTLY CONTAINS SIXTEEN HATS, ALL RATIFIED OWNER TEXT — no
-# provisional block remains. (History, in one clause: six shipped 2026-08-13
-# under OI-19 option (a) — injection first, record second; the UX pair and the
-# five aspect hats came in by Decision 11, rulings 2026-08-13q/s, at WI-453;
-# the three cross-cutting lenses were drafted 2026-08-16, CONSISTENCY ruled
-# that day and the other two on 2026-08-17. The growth record belongs to the
-# log, not to this header.)
+# A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must be
+# put to every decomposition it applies to. A domain expert may have no needs of
+# their own, yet their perspective constrains someone else's need — that
+# constraint is what a hat carries.
 #
-# THIS FILE IS OWNER TEXT, NOT AGENT TEXT. The sixteen ratified charters land
-# as ruled owner text; MARKED FOR THE OWNER'S EDIT AT RETURN: review all
-# sixteen, cut what does not earn its place, add what is missing, and rewrite
-# any `applies_when` that does not match how this repo actually files work. A
-# roster chosen by an agent and left unread is exactly the ceremony SN-036 was
-# admitted to prevent.
-#
-# A HAT IS NOT A PERSON AND NOT A STAKEHOLDER ROW. It is a QUESTION that must
-# be put to every decomposition it applies to. A domain expert may have no
-# needs of their own, yet their perspective constrains someone else's need —
-# that constraint is what a hat carries.
+# THIS FILE IS OWNER TEXT, NOT AGENT TEXT, and it is MARKED FOR THE OWNER'S EDIT
+# AT RETURN: review all sixteen, cut what does not earn its place, add what is
+# missing, and rewrite any `applies_when` that does not match how this repo
+# actually files work. A roster chosen by an agent and left unread is exactly the
+# ceremony this tier was admitted to prevent. One call is explicitly the owner's
+# and still open: whether SAFETY belongs in THIS repo's roster at all, or ships
+# only in the template — its failure vocabulary (harm to a person, property or
+# the environment) has essentially one reachable referent in a developer-process
+# kit, and that one is already SECURITY's and DATA-PROTECTION's declared subject.
 #
 # ONE TABLE PER HAT, keyed by the hat's NAME (upper-case, `-` joined):
 # `[hat.SECURITY]`. The name is the id; there is no numeric id space and
@@ -27,84 +22,48 @@
 # empty roster would be a form with nothing behind it. A duplicate name is a
 # parse error. The reader is `project-trajectory/scripts/hats.py`.
 #
-# THREE KEYS, ALL REQUIRED (`hats.py` refuses a row missing any):
+# THE FIELDS — three, and `hats.py` refuses a row missing any.
 #
-#   applies_when   The condition a composer EVALUATES to decide whether this
-#                  hat is put to a given decomposition. A closed, evaluable
-#                  grammar — never prose:
+#   applies_when  The condition a composer EVALUATES to decide whether this hat
+#                 is put to a given decomposition. A CLOSED, EVALUABLE GRAMMAR —
+#                 never prose:
 #
-#                      always
-#                      scope == "template"        (also !=)
-#                      tags contains "unattended"
+#                     always
+#                     scope == "template"        (also !=)
+#                     tags contains "unattended"
 #
-#                  (`kind` is the other scalar field the grammar admits. It is
-#                  declared by NO registry since the status unification, so a
-#                  hat keyed on it matches nothing — do not copy it as a model.)
+#                 Clauses join with `or` OR with `and`, not both in one
+#                 expression, so there is no precedence to guess at. A field the
+#                 composer did not declare satisfies NO condition — an undeclared
+#                 fact is not a true one — so a hat keyed on a field nothing
+#                 declares reaches nothing. That silence is how a hat OPTS IN by
+#                 tagging rather than by an `enabled` flag; `hats.py audit`
+#                 reports each hat's reach, which is the way to tell a deliberate
+#                 opt-in from a predicate that can never fire. Today the
+#                 dual-plan decomposition composer declares `tags` (a work item's
+#                 Workstream and SafetyClass) plus a need's own `tags`, and does
+#                 NOT declare `scope`.
 #
-#                  Clauses join with `or` OR with `and`, not both in one
-#                  expression (no precedence to guess at). A field the composer
-#                  did not declare satisfies NO condition — an undeclared fact
-#                  is not a true one. Today the dual-plan decomposition composer
-#                  declares `tags` (the work item's Workstream + SafetyClass)
-#                  and does NOT declare `scope`, because stakeholder-need rows
-#                  do not yet carry a scope FIELD — that is SN-039's job, so a
-#                  hat keyed on `scope` stays silent until that field lands.
-#   asks           The question put to the decomposition, in the second person.
-#                  This is the text that lands in the brief.
-#   listens_for    The FAILURE CLASS this hat catches. A hat that names no
-#                  failure is refused as ceremony.
+#   asks          The question put to the decomposition, in the second person.
+#                 This is the text that lands in the brief.
 #
-# ABSENCE IS OPT-OUT, MALFORMED IS A REFUSAL. Delete this file and every
-# composer proceeds without hats; leave it here broken and the composer refuses
-# loudly rather than quietly decomposing with no perspective at all.
+#   listens_for   The FAILURE CLASS this hat catches. A hat that names no failure
+#                 is refused as ceremony.
 #
-# WHAT IS NOT BUILT YET (stated so its absence is not mistaken for coverage):
-# SN-036 also requires a per-decomposition RECORD of which hats were applied and
-# what each produced. Injection is the half that changes what decompositions
-# produce; the record only proves it happened, and it is a later artifact class.
-# Nothing gates on a hat today.
+# ABSENCE IS OPT-OUT, MALFORMED IS A REFUSAL. Delete this file and every composer
+# proceeds without hats; leave it here broken and the composer refuses loudly
+# rather than quietly decomposing with no perspective at all.
 #
-# THREE KINDS OF SILENCE, AND WHICH HAT IS IN EACH TODAY (the first two ruled
-# 2026-08-13s and executed at WI-453; the third added PROVISIONALLY on
-# 2026-08-16 under the WI-467 blind-re-derivation's finding R-3 — OWNER TO
-# RULE). The reach counts below are `hats.py audit` output, not narration.
+# WHAT IS NOT BUILT YET, stated so its absence is not mistaken for coverage: the
+# per-decomposition RECORD of which hats were applied and what each produced.
+# Injection is the half that changes what decompositions produce; the record only
+# proves it happened, and it is a later artifact class. NOTHING GATES ON A HAT
+# TODAY.
 #
-#   1. SILENT BY DESIGN — opt-in by tagging: LEGAL and DATA-PROTECTION. Each
-#      keys on its own tag, ships OFF, and switches on the moment this project
-#      tags work with it — no `enabled` field, using the grammar's own rule
-#      that an undeclared field satisfies no condition. That silence is a
-#      choice, and here it is now SPENT: the 2026-08-16 need tags wake LEGAL on
-#      one need (SN-011) and DATA-PROTECTION on two (SN-006, SN-009). Neither
-#      is silent in this repo any more, which is the opt-in working rather than
-#      a change of kind.
-#   2. SILENT BY DEFECT — FIRST-RUN-ADOPTER, as ORIGINALLY written: it keyed on
-#      the `scope` field SN rows do not carry (above), so no clause of it could
-#      ever fire on a real row. FIXED at WI-453 — it keys on the deliverable
-#      tags real work actually carries, and reaches ten needs. Nothing in this
-#      roster is silent by defect today.
-#   3. SILENT BY DOMAIN — SAFETY, the one hat still silent here (reach zero: no
-#      row carries the `safety` tag). Its predicate is sound and its opt-in
-#      deliberate, but its failure vocabulary — harm to a person, property or
-#      the environment — has essentially ONE reachable referent in a
-#      developer-process kit (identity exposure), and that one is already
-#      SECURITY's and DATA-PROTECTION's declared subject. Switching it on here
-#      buys one strained row and a great deal of ceremony, which is exactly
-#      what SN-036 was admitted to prevent. It is RECORDED rather than cut,
-#      because the charter is real product for an adopter whose system can hurt
-#      someone; the owner rules whether SAFETY stays in THIS repo's roster or
-#      ships only in the template.
-#
-# IN NONE OF THE THREE: ACCESSIBILITY and PERFORMANCE. The owner ruled them
-# `always` on 2026-08-16 — "in general those should always be considered; the
-# cleanest option" — so neither is opt-in by tagging any more and neither is an
-# example of any silence above. They still sit in the aspect block below
-# (declared order is stable on purpose) with the ruling noted on each row.
-# A reader must never have to guess which kind of silence a silent hat is.
-#
-# VALUES-DIVERGE NOTE (the kit's dogfood rule): in THIS repo the two UX hats
-# are `always`, because PROJECT_STATE.html / open-items.html are real,
-# owner-facing surfaces the session reads under REL-002; the SHIPPED template
-# gates them on `render`/`ui` tags, since not every adopter has a UI.
+# VALUES-DIVERGE NOTE (the kit's dogfood rule): in THIS repo the two UX hats are
+# `always`, because the generated owner surfaces are real, owner-facing pages a
+# session reads; the SHIPPED template gates them on `render`/`ui` tags, since not
+# every adopter has a UI.
 
 [hat.SECURITY]
 applies_when = "always"

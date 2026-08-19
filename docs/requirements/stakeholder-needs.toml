@@ -1,105 +1,92 @@
-# THE PROSE BELOW IS THIS REGISTRY'S DOCUMENTATION, carried verbatim from the
-# markdown carrier it replaced (repo-lock D-5). The rows became TOML tables;
-# the surrounding prose — what this file is, the maturity rule, and the
-# NON-GOALS section, which is a DevStg-Reqs deliverable with no other home — is not a
-# row and would otherwise have been dropped by a converter that only reads
-# rows. Section headings are kept as written so every reference still lands.
+# Stakeholder Needs (SN-###) — the kit meta-repo's OWN needs.
 #
-# # Stakeholder Needs (SN-###) — the kit meta-repo
+# The "product" here is the kit under `project-trajectory/`, and the
+# stakeholders are the people and agents who adopt, run and maintain it. These
+# rows are distinct from the blank `stakeholder-needs.template.toml` the kit
+# ships to adopters. Engineering translations live in
+# `system-requirements.toml`, which points back through its `sn_refs`; do not
+# restate them here.
 #
-# Every need below serves the [PROJECT-VISION](../../README.md#vision) — a
-# *reusable starting point for building maintainable, requirement-traced projects
-# with AI agents and humans working from the same playbook*. The DevStg-Reqs consistency
-# review checks each row against it: a need serving no part of the vision is scope
-# creep; a need contradicting it is a finding.
+# Every need serves the [PROJECT-VISION](../../README.md#vision), and the
+# DevStg-Reqs consistency review checks each row against it: a need serving no
+# part of the vision is scope creep, and a need contradicting it is a finding.
+# (The link is kept in markdown form so the pointer stays checkable and a human
+# following it lands in the right place.)
 #
-# **What this file is.** The kit's *self-adoption* Stakeholder Needs (Thread 47):
-# the "product" is the kit under `project-trajectory/`, and its stakeholders are
-# the people and agents who adopt, run, and maintain it. These are the kit's
-# **own** needs — distinct from the `stakeholder-needs.template.md` it ships to
-# adopters. Engineering translations live in `system-requirements.csv` (referenced
-# by `SN-Refs`), authored in Thread 47 phase 3. Priority: **M**=Must · **S**=Should
-# · **C**=Could.
+# ONE TABLE PER NEED, id-keyed with the prefix retained and the key BARE:
+# `[need.SN-006]`. An empty cell is an ABSENT key — omit the key rather than
+# setting it to "". A duplicate id is a parse error, which is the carrier doing
+# what a check used to. The reader is
+# `project-trajectory/scripts/spine_carrier.py`.
 #
-# ## Core needs
+# THE FIELDS — what each one is, and how it is used.
 #
-# ## Draft needs (unratified)
+#   status      Maturity, and the ONE vocabulary the whole spine speaks (SN,
+#               SR, LLR, TC), so "what is un-approved right now?" is one
+#               question with one answer rather than a per-registry special
+#               case. `derive_gate.py` reads it to compute the stage.
 #
-# **Empty as of the 2026-08-13 re-attest sitting**, which ratified every row that
-# stood here: the last unruled need of the 2026-08-08 mechanized-loop program
-# (`docs/archive/history/plan-2026-08-08-mechanized-loop.md`, built against five needs) plus the
-# eight later-minted drafts that had joined it — nine rows, attested by the owner
-# as written and moved into Core needs (then `kind = "core"`, now
-# `status = "Approved"`). That program's other
-# four needs were dispositioned earlier, on 2026-08-10 — one attested into Core
-# needs, three ruled **mis-levelled** and demoted to the requirement tier, their
-# ids retired and never re-minted. Each ruling is recorded in
-# [`log.md`](../log.md)'s Decisions section, **not here**: a prose `SN-###`
-# token anywhere in this file joins the id universe, and one written under
-# this heading reads as a Draft row. The heading stays declared, and empty, for
-# one reason: **ratification is the owner's act**, and the machinery says
-# so rather than trusting the prose — a Draft SN reads DevStg-Below, so the derived
-# gate DROPS while any need is unratified, which is exactly the "a new phase is
-# due" signal `docs/gate` exists to give.
+#                 Drafted   still being drafted — reads DevStg-Below, and
+#                           `trace.py` exempts it from the "every SN needs an
+#                           SR" rule so it can sit here before its
+#                           decomposition exists. Not a park for real needs.
+#                 Approved  a ratified need, the steady state. Ratifying IS
+#                           changing this cell in a reviewed commit; that
+#                           commit is the sign-off and its date is the
+#                           ratification date.
+#                 Modified  ratified text that has since been amended and is
+#                           not re-signed — the owner re-attests it.
+#                           Transitional: it retires once approved text is
+#                           snapshotted and a diff answers the same question.
 #
-# (The Edge-case expectations section that stood here is GONE, not empty by
-# accident: the OI-18 dissolution (2026-08-13) demoted its rows to the
-# requirement tier, and the header prose it left behind was struck by WI-454
-# on sitting-2 §6 item 16's ruling — a declared-empty section heading with no
-# machinery behind it reads as a place to add rows, which is exactly what the
-# dissolution decided against.)
+#               Maturity is a FIELD and never a section heading, so a prose
+#               mention of an id cannot change a row's state.
+#
+#   need        The need itself, in plain language and in the stakeholder's
+#               own terms. A failure-mode expectation ("never hand me a
+#               half-written file") is a need like any other.
+#
+#   why         The need tier's REASON cell — the consequence of NOT meeting
+#               it. It takes the ARGUMENT, never the CITATION: no work-item
+#               id, ruling, sitting, review-round or open-item reference, no
+#               decision id, edit verb or date stamp. A `why` is context and
+#               nothing derives from it, so anything a child must realize
+#               belongs in `need`, not here.
+#
+#   priority    M=Must · S=Should · C=Could.
+#
+#   acceptance  How anyone would know the need is met, written as a condition
+#               the system satisfies rather than as a reading off an
+#               instrument.
+#
+#   tags        OPTIONAL — omit the key on an untagged need. Names the DOMAINS
+#               the need's OWN subject sits in, in the vocabulary the hats
+#               roster's `applies_when` clauses evaluate
+#               (`docs/requirements/hats.toml`), which is how a hat reaches a
+#               need rather than only a work item. Tag a need when a HAT'S
+#               CHARTER SUBJECT IS THE NEED'S OWN SUBJECT — reading the need
+#               without that lens leaves a plainly governing question unasked
+#               — never merely because some hat once derived a row from it.
+#               Untagged is normal rather than incomplete: an `always` hat
+#               needs no tag to reach anything, and `tags` carries no
+#               arithmetic and appears in no schema rule.
 #
 # ## Non-goals
 #
-# Explicit scope boundaries — what the kit deliberately does **not** do, recorded
-# so a later contributor treats them as decisions, not oversights (DevStg-Reqs requires
-# non-goals to be captured; [PROCESS.md](../../project-trajectory/PROCESS.md) §4).
+# Explicit scope boundaries — what the kit deliberately does **not** do,
+# recorded so a later contributor treats them as decisions rather than
+# oversights. DevStg-Reqs requires non-goals to be captured, and this section is
+# their home in this repo.
 #
 # - **NG-1 · Internationalization / localization.** The kit's display strings,
-#   CLI output, policy tokens, status vocabulary, registry headers, and parsers
+#   CLI output, policy tokens, status vocabulary, registry headers and parsers
 #   are English-only by design. The product is a developer-process kit whose
-#   audience and machine vocabulary are English; externalizing strings would add
-#   cost with no stakeholder need behind it (recorded from the
-#   [repo-review-2026-07-22](../archive/history/repo-review-2026-07-22.md) L-4 finding). If
-#   localization ever becomes a requirement, first separate the **display**
-#   strings from the stable **machine** tokens — policy names, status values,
-#   registry column headers — before translating anything: those tokens are
-#   contracts, not prose, and must not move with a locale.
-#
-# ## `tags` — the perspective-applicability field (PROVISIONAL, 2026-08-16)
-#
-# WHAT IT IS. An optional list cell naming the DOMAINS a need's own subject
-# sits in, using the vocabulary the hats roster's `applies_when` clauses
-# already evaluate (`docs/requirements/hats.toml`). `hats.context_from_need`
-# has always read a `tags` field off a need row; until now no need carried
-# one, so the only context a hat ever saw was a WORK ITEM's tags — which is
-# how the hat that most obviously governs a need became the one hat
-# guaranteed not to see it (DATA-PROTECTION could not read SN-009,
-# ACCESSIBILITY could not read SN-023, PERFORMANCE could not read SN-027:
-# the WI-467 re-derivation's largest roster finding, R-2,
-# `docs/plans/2026-08-16-derivation-alignment.md` §4.3).
-#
-# THE RULE APPLIED, so a later reviser tags the same way: a tag goes on a
-# need when the HAT'S CHARTER SUBJECT IS THE NEED'S OWN SUBJECT — reading the
-# need without that lens leaves a plainly governing question unasked. NOT
-# "some hat once derived a row from it": that test would tag nearly every row
-# `scripts`, and a lens that applies everywhere informs nothing. Ten of the
-# twenty-seven rows are deliberately untagged; a hat that is `always`
-# (`hats.toml` is the census) needs no tag to reach anything.
-#
-# A TAG IS NOT A CLAIM ABOUT PRIORITY OR OWNERSHIP, and it adds no arithmetic:
-# nothing gates on a hat today, and `tags` is absent from every schema rule,
-# so an untagged need is normal rather than incomplete.
-#
-# PENDING RE-ATTEST — a row reading `status = "Modified"` was amended and is
-# NOT signed; the owner re-attests it at the sitting. That is the SAME word,
-# in the same field, that the other three spine tiers already use: the
-# `attestation = "pending"` + `amended = "<date>"` pair this file carried from
-# 2026-08-16 was a second vocabulary for a state the spine had a word for, and
-# a date cell was PROVENANCE in a registry whose job is living truth — git and
-# `docs/archive/` hold when a row changed, for every row rather than eighteen,
-# and cannot drift from it. Both fields are deleted; nothing ever read them
-# (`docs/plans/2026-08-16-registry-status-unification.md` §1, §5A step 3).
+#   audience and machine vocabulary are English, so externalizing strings would
+#   add cost with no stakeholder need behind it. If localization ever becomes a
+#   requirement, first separate the **display** strings from the stable
+#   **machine** tokens — policy names, status values, registry column headers —
+#   before translating anything: those tokens are contracts, not prose, and
+#   must not move with a locale.
 
 [need.SN-001]
 status = "Modified"
@@ -142,10 +129,10 @@ acceptance = """The enforcement floor is git + CI running the *same* harness a h
 [need.SN-006]
 status = "Modified"
 tags = ["unattended", "loop", "scripts", "personal-data"]
-need = """An agent can run **unattended** and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays **safe**: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits."""
+need = """An agent can run **unattended** and resume from repository text alone. Such a run never waits for interactive input, and reports its failures clearly. It also stays **safe**: declared limits bound the workers it may set running and the actions it takes that cannot be undone, and only an override a human provides — never one the model can set — may relax those limits. That safety is **supervision rather than an absolute**: the layer's first obligation is to move forward as far as it can, and it surfaces to a human when it cannot proceed — so a fault in the machinery that carries a limit degrades to a recorded condition, not to a stopped run."""
 why = """Agents develop here, and a walk-away run is only worth having if it can be both left alone and trusted while unwatched. The safety half is stated in the need itself rather than only here: a `why` cell is context, not normative text, and nothing derives from it — while the safety half lived only in this cell, the subagent-spawn gate below it read as a requirement with no parent, and independent re-derivations recovered resumability and nothing about bounding what an agent may spawn."""
 priority = "S"
-acceptance = """The unattended loop resumes from the repository's tracked status surface, exits a **typed code** at each end state, and a preflight refuses a broken footing (no agent CLI, not a git repo, private author under privacy-check) rather than hanging. During unattended operation, configured limits bound every spawned worker and irreversible action; only an explicit human-provided override may exceed those limits; a gate error preserves the configured bound. (That last clause is the OPEN QUESTION for the sitting, stated as this need's ask rather than as a met bar: the delivered spawn gate FAILS OPEN on an internal error — supervision, not security, since a model that can edit files can remove the hook — so a gate error currently drops the bound rather than preserving it. Recorded on SR-043's rationale; the sitting rules fail-closed, a narrower independently-enforced ceiling, or a narrowed need.)"""
+acceptance = """The unattended loop resumes from the repository's tracked status surface, exits a **typed code** at each end state, and a preflight refuses a broken footing (no agent CLI, not a git repo, private author under privacy-check) rather than hanging. During unattended operation, configured limits bound every spawned worker and irreversible action, and only an explicit human-provided override may exceed those limits. A fault in a limit's own enforcement is recorded and lets the run continue rather than halting it — the run surfaces to a human when it cannot proceed, never when its own supervision errs."""
 
 [need.SN-007]
 status = "Approved"
