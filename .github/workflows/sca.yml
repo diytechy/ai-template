@@ -1,0 +1,51 @@
+# Scheduled Python software-composition-analysis (repo-review 2026-08-19 M-11).
+# requirements-dev.txt CONSTRAINS the dev toolchain (WI-104) so a tool major
+# can't turn the gate red unannounced, but a compatible-release range can also
+# retain a KNOWN VULNERABILITY indefinitely if the fix landed in the next major
+# (exactly what happened: pytest~=8.3 excluded the 9.0.3 fix for
+# GHSA-6w46-j5rx-g56g). canary.yml catches upcoming *compatibility* breakage;
+# nothing caught a *known-vulnerable* pin sitting still. This job does: it
+# audits the environment requirements-dev.txt actually resolves against the
+# PyPA/OSV advisory data, on the same weekly cadence as the canary, and is
+# NON-gating for the same reason canary is — a merge must not fail because a
+# new advisory was published against an already-merged pin; it fails LOUDLY on
+# its own schedule so the finding is a heads-up, not a surprise red on some
+# contributor's unrelated PR. WI-480 added this workflow; pip-audit is a
+# reviewed row in docs/dependencies.md (Kind=python, Tier=coordinator) per the
+# dependency-ledger rule — it is dev/CI-only, never forced on an adopter.
+name: python-sca
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC — beside canary-latest's own schedule.
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+      # Upgrade pip/setuptools/wheel FIRST: a bare `python -m venv` bootstraps
+      # whatever setuptools ensurepip shipped for that Python release, which is
+      # commonly years stale and floods the audit with findings against a
+      # package requirements-dev.txt never pinned and no one here maintains.
+      # Measured on this box: an unupgraded environment reported 8 findings
+      # across 2 packages (7 of them stale bundled setuptools); upgrading
+      # pip/setuptools/wheel first left exactly the 1 real finding
+      # (PYSEC-2026-1845, the pytest advisory this workflow exists to catch).
+      - name: Install the CONSTRAINED dev toolchain (requirements-dev.txt, WI-104)
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements-dev.txt
+      # Audit the INSTALLED environment (no `-r requirements-dev.txt` mode):
+      # this proves what CI/a contributor's machine actually resolves and runs
+      # is clean, including transitive dependencies pip-audit's `-r` mode
+      # would otherwise need a second ephemeral resolve to see.
+      - name: pip-audit (PyPA Advisory Database + OSV)
+        run: python -m pip install pip-audit && python -m pip_audit

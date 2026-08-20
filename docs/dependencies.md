@@ -26,11 +26,14 @@ Tiers:
 |---|---|---|---|---|---|
 | git | system | shipped | — (substrate) | The process *is* git-shaped: diffable registries, append-only log, reviewed Status-change commits, branch-per-traincar. Named in PROCESS.md intro. | RULING-1, 2026-07-28 |
 | gh | system | coordinator | A bespoke forge client | Forge-mode backend only (dormant until enabled): PR create/checks/review/merge against GitHub. The local integrator needs no forge at all. | RULING-2, 2026-07-28 |
-
-*No Python-package rows yet — every kit script imports stdlib only. The first
-row added here must arrive with its reviewed reason, per the header.*
+| pip-audit | python | coordinator | Ad-hoc/manual advisory lookups against requirements-dev.txt | Cross-checks the installed dev/CI toolchain against the PyPA Advisory Database + OSV automatically, on a schedule, instead of relying on someone remembering to look — the gap that let GHSA-6w46-j5rx-g56g (pytest < 9.0.3) sit unnoticed in a compatible-release range that excluded the fix. Runs only in `.github/workflows/sca.yml`, never forced on an adopter. | WI-480, 2026-08-20 (repo-review-2026-08-19 M-11) |
+| uv | python | coordinator | pip-tools (`pip-compile`) or a hand-resolved lock | A single fast resolver generates the hash-pinned, `--universal` (cross-OS) CI lock deterministically, avoiding a second resolver dependency on top of pip; already the tool `scripts/dev-setup.sh`'s `offer_python` borrows if a contributor has it. Runs only in `.github/workflows/lock-check.yml`, never forced on an adopter. | WI-480, 2026-08-20 (repo-review-2026-08-19 L-04) |
 
 (Dev-tooling this meta-repo's own test suite uses — pytest, pytest-xdist,
 ruff — is outside this ledger's scope: it governs what the **kit scripts**
 import, not what the meta-repo's harness runs; downstream, those tools are the
-adopter's own stack choice, per CLAUDE.md.)
+adopter's own stack choice, per CLAUDE.md. pip-audit and uv above are the
+exception the WI-480 grind explicitly asked for: neither is imported by kit
+scripts either, but both are new tools this repo's OWN CI now installs, so
+they get the same reviewed-row treatment as git/gh above rather than the
+parenthetical carve-out pytest/ruff/pytest-xdist/pytest-cov already have.)

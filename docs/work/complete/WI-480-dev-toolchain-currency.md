@@ -10,6 +10,28 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Qualified pytest 9.0.3+ against the full suite in a THROWAWAY venv — the
+identical pass/fail set as the pinned 8.4.2 (2624 passed / 13 skipped; the
+two failures both runs shared were a pre-existing WI-466 golden gap, fixed
+separately at 74c20704) — then moved `requirements-dev.txt` to
+`pytest>=9.0.3,<10` with the GHSA, the measurement, and the method recorded
+in the constraint's comment, closing GHSA-6w46-j5rx-g56g. Added
+`.github/workflows/sca.yml` (weekly `pip-audit`, non-gating; verified
+locally catching the pytest advisory pre-bump and clean post-bump) and
+`.github/workflows/lock-check.yml` (triggered after canary/SCA, regenerates
+the hash-pinned `uv`-generated locks for both supported Pythons and FAILS
+LOUDLY on staleness rather than auto-committing — the auto-commit reading
+was deliberately refused under `push = "human"` and the staged-divergence
+precedent), with `requirements-dev-lock-{3.11,3.x}.txt` committed as the
+initial reproducible record (deterministic regeneration verified;
+the 3.x lock was resolved on local 3.12 and is expected to flag stale on
+its first CI run — the mechanism working). `pip-audit` and `uv` entered
+`docs/dependencies.md` as reviewed coordinator-tier rows. Post-bump smoke
+settled at 53.6s (first warm-up runs spiked to 69–105s; the ~56s headroom
+finding stands banked).
+
 ## Context
 
 `requirements-dev.txt` pins `pytest~=8.3` (resolved 8.4.2 on this tree,

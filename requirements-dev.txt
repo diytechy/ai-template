@@ -19,7 +19,22 @@
 # above the 3.9 that pytest-cov 7 requires (6.0 dropped Python 3.8), so the old
 # Python-gated split — 5.x on the 3.8 floor, 7.x on 3.9+ — dissolves; conftest.py
 # now targets the single 7.x plumbing (was the dual-major path of WI-105).
+#
+# pytest floors at 9.0.3, not a bare `~=9.0`: GHSA-6w46-j5rx-g56g (insecure
+# predictable /tmp/pytest-of-{user} handling on Unix, CVSS 6.8, dev-only — the
+# shipped runtime is stdlib-only) is fixed only in 9.0.3+, and the OLD `~=8.3`
+# range excluded that fix entirely (repo-review 2026-08-19 M-11). `<10` keeps
+# the same "next major can't drift in unannounced" posture as every other row
+# here. Qualified 2026-08-20 (WI-480): the full suite run against a throwaway
+# venv on pytest 9.1.1 produced the IDENTICAL pass/fail set as the pinned
+# 8.4.2 it replaced (2624 passed, 13 skipped, 2 pre-existing golden-fixture
+# failures in tests/test_trace_golden.py, unrelated to pytest and reproduced
+# against 8.4.2 too — a WI-466 fixture gap) — zero regressions attributable
+# to the version bump. `.github/workflows/sca.yml` now audits
+# this file's resolved environment on the same weekly cadence as canary.yml,
+# so a future advisory against a pin still inside its compatible-release range
+# surfaces on its own schedule instead of sitting silent.
 ruff~=0.15.0
-pytest~=8.3
+pytest>=9.0.3,<10
 pytest-xdist~=3.6
 pytest-cov~=7.0

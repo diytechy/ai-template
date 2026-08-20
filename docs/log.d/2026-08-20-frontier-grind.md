@@ -76,6 +76,25 @@ goldens verified unaffected; ratchet re-stamped 4510→4515 with reason. The
 attested-vs-mechanized split is visible again on the repo's own run
 (69/3/0). test_trace.py 82 passed; smoke 1209/5.
 
+### WI-480 — dev-toolchain currency (sonnet worker) — CLOSED complete
+
+pytest moved to `>=9.0.3,<10` after a throwaway-venv full-suite
+qualification produced the identical pass/fail set as 8.4.2 (the shared
+two failures were WI-466's golden gap — see below); weekly `pip-audit` SCA
+workflow (verified catching then clearing the pytest advisory);
+`uv`-generated hash-pinned locks for both Pythons with a loud staleness
+check instead of auto-commit (refused under push=human, reasoning in the
+workflow); pip-audit + uv ledgered in docs/dependencies.md.
+
+**The golden episode, recorded for the closing review:** WI-466's widened
+guard added the triple line to mechanized-only output; the clean/orphan
+goldens (slow-tiered, invisible to the commit-bar smoke) went red at
+8d7ff553 and stayed red for one commit until WI-480's qualification run
+surfaced them — regenerated deliberately at 74c20704. Two lessons: a
+smoke-invisible module can carry a red across a close, and a worker's
+"goldens verified unaffected" claim was wrong where the orchestrator's
+verification (smoke only) could not catch it.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475
