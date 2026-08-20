@@ -798,6 +798,179 @@ def pending_block_text(root):
     return gt.pending_block(root)
 
 
+# --- The deferral arms (OI-41, ruled 2026-08-20) ------------------------------
+# A generated view can be perfectly FRESH and carry nothing: before 2026-08-18
+# this check reported UP TO DATE — truthfully, the bytes matched — over a
+# registry holding one pending row, the inert `-000` example, while about TEN
+# genuine owner decisions were live in log fragments, allow entries and session
+# reports. Every freshness gate here asks *does the artifact match its
+# regeneration*; none of them asked whether the SOURCE was populated, and the
+# reassuring word is the same in both cases.
+#
+# The two arms below are the count half of the answer (the field half is
+# `trace.provenance_allow_findings`). Both are WARN-FIRST by the ruling: they
+# print, they never move this step's exit code, which stays the freshness verdict.
+
+LOG_D_REL = "docs/log.d"
+
+# ARM 2's grammar. The marker is the KEY `deferred:` — a declaration position,
+# never a vocabulary of defer-PHRASES, which is what OI-41 refused: a phrase
+# matcher's precision is a property of the wording it meets, so its false-positive
+# rate cannot be bounded before it ships. What follows the key on that line is the
+# declaration: `OI-###` ids, or an explicit none-word.
+#
+# Canonical form, and the whole tax on a session close:
+#     Deferred open items: OI-45, OI-46
+#     Deferred open items: none — every question this session raised was ruled.
+# Prose that states it inline satisfies the same key (measured on the live
+# fragment `2026-08-20-owner-rulings-review-ois.md`, whose sentence reads
+# "…declaring what was deferred: **nothing new was deferred by this session**").
+DEFERRED_DECL_RE = re.compile(
+    r"\bdeferred(?:\s+open\s+items?)?\s*:[ \t]*([^\n]*)", re.I
+)
+# The explicit NONE declaration — the ruled answer to the objection that a
+# zero-pending queue is a legitimate state which now needs a way to be SAID, or
+# the vacuity arm becomes a permanent warning that gets silenced.
+NONE_WORDS = frozenset({"none", "nothing", "no", "n/a", "nil"})
+_OI_IN_TEXT_RE = re.compile(r"\bOI-\d+\b")
+
+
+def fragment_declarations(root):
+    """What each `docs/log.d/` fragment DECLARES it deferred: a list of
+    `{file, line, ids, none}`, sorted by file.
+
+    ARM 2, and it is the DECLARED-WEAK arm — ruled with its weakness on the
+    record rather than discovered later. It reaches the class ARM 1 cannot: a
+    deferral that suppresses no mechanized rule at all (the `B-08`/`REL-004`
+    watermark ruling was exactly that shape — announced twice on two surfaces,
+    queued nowhere), because no allow entry would ever exist to carry the field.
+    Its weakness is the opposite of a matcher's: a session that defers silently
+    and says nothing passes clean, and no mechanism here reaches that.
+
+    FAIL-SOFT, so the arm cannot false-positive: a marker line carrying neither
+    an id nor a none-word declares NOTHING and is dropped — the same rule
+    `docs/provenance-allow` applies to a malformed entry, in the same direction
+    (the worst it can do is leave a deferral unrecorded, never invent one)."""
+    out = []
+    for path in sorted(Path(root).joinpath(LOG_D_REL).glob("*.md")):
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        for match in DEFERRED_DECL_RE.finditer(text):
+            payload = match.group(1)
+            ids = _OI_IN_TEXT_RE.findall(payload)
+            first = payload.replace("*", "").replace("_", "").split()
+            none = bool(first) and first[0].strip(":;,.").lower() in NONE_WORDS
+            if not ids and not none:
+                continue
+            out.append(
+                {
+                    "file": "{}/{}".format(LOG_D_REL, path.name),
+                    "line": text.count("\n", 0, match.start()) + 1,
+                    "ids": ids,
+                    "none": none and not ids,
+                }
+            )
+    return out
+
+
+def _entry_groups(entries):
+    """Allow entries grouped by the `OI-###` they name, for a finding that NAMES
+    them without printing one line per entry (16 of this repo's 17 name one row).
+    An entry with no id is grouped under `None` — ARM 1 reports it as an error,
+    and this arm still counts it rather than pretending the surface is empty."""
+    groups = {}
+    for e in entries:
+        groups.setdefault(e["oi"], []).append(e)
+    return groups
+
+
+def deferral_findings(root, states=None):
+    """ARM 2 + ARM 3 of OI-41 as printable lines — warn-first, never the exit code.
+
+    ARM 2: every id a fragment declares deferred must name a PENDING row (an id
+    with no row, or a row already ruled, is a declaration that resolves to
+    nothing).
+
+    ARM 3, the vacuity check RE-AIMED so it names something: a pending count of
+    ZERO while the declared-exception surface still carries entries is a
+    contradiction between two artifacts, and the finding NAMES the entries. Not
+    "0 pending is a finding" — that is the unactionable form the ruling refused,
+    because *something, somewhere, defers* cannot be discharged without doing the
+    search by hand. It compares COUNTS, so it fires for a deferral whose wording
+    no vocabulary knows.
+
+    Vacuous when the repo carries no open-items registry (`states is None`):
+    there is no count to contradict."""
+    if states is None:
+        return []
+    pending = sorted(k for k, v in states.items() if v == "pending")
+    decls = fragment_declarations(root)
+    out = []
+    for d in decls:
+        for oid in d["ids"]:
+            if oid not in states:
+                out.append(
+                    "{}:{} declares {} deferred, which has no row in {} — a "
+                    "declared deferral names the row that carries it".format(
+                        d["file"], d["line"], oid, OPEN_ITEMS_REL
+                    )
+                )
+            elif states[oid] != "pending":
+                out.append(
+                    "{}:{} declares {} deferred, but that row reads `{}` — a "
+                    "deferral names a row the owner has still to rule".format(
+                        d["file"], d["line"], oid, states[oid] or "(no status)"
+                    )
+                )
+    if pending:
+        return out
+    entries = tr.parse_provenance_allow(root)
+    for oid, group in sorted(_entry_groups(entries).items(), key=lambda kv: str(kv[0])):
+        named = ", ".join("{} {}".format(e["rid"], e["cell"]) for e in group[:3])
+        more = "" if len(group) <= 3 else " (+{} more)".format(len(group) - 3)
+        out.append(
+            "VACUITY — 0 pending rows, yet {} carries {} entr{} naming {}: "
+            "{}{}. The queue reports empty while the exception surface still "
+            "defers; retire each entry with its ruling's execution, or the row "
+            "belongs back in `pending`.".format(
+                tr.PROVENANCE_ALLOW,
+                len(group),
+                "y" if len(group) == 1 else "ies",
+                oid or "NO open-items row",
+                named,
+                more,
+            )
+        )
+    return out
+
+
+def report_deferrals(root):
+    """Print the ARM 2 / ARM 3 findings, and — when there are none — say what was
+    CHECKED rather than nothing at all. An empty queue that no surface
+    contradicts is a real state and the reader is entitled to see it asserted;
+    silence here would read exactly like the "up to date" this row was raised
+    over. Returns the finding count (never an exit code)."""
+    states = tr.open_item_states(root)
+    findings = deferral_findings(root, states)
+    for line in findings:
+        print("gen_open_items: {}".format(line))
+    if (
+        not findings
+        and states is not None
+        and not any(v == "pending" for v in states.values())
+    ):
+        declared = [d for d in fragment_declarations(root) if d["none"]]
+        print(
+            "gen_open_items: 0 pending rows — and nothing contradicts it ({}; "
+            "{}).".format(
+                "no allow entry defers",
+                "{} declares none".format(declared[0]["file"])
+                if declared
+                else "no log.d fragment declares a deferral",
+            )
+        )
+    return len(findings)
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -843,6 +1016,10 @@ def main(argv=None):
             "any remaining briefs to rows and delete it (the migration recipe is "
             "in the kit's RESYNC_PACK.md)."
         )
+    # The DEFERRAL arms run on both paths — the check a commit passes and the
+    # regeneration a human runs — because the misreading they exist to stop
+    # ("up to date" read as "the queue is empty") happens on both.
+    report_deferrals(root)
     if args.check:
         if not out.is_file():
             print(

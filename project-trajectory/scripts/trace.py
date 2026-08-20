@@ -1589,6 +1589,11 @@ IF_REASON_CELLS = ("Notes", "SignalNote")
 PROVENANCE_ALLOW = "docs/provenance-allow"
 PROVENANCE_ALLOW_SEP = " — "
 
+# An `OI-###` id, anchored: the allow-file field is a WHOLE token in first
+# position, never a substring somewhere in the prose (see `parse_provenance_allow`).
+OI_ID_RE = re.compile(r"^OI-\d+$")
+OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
+
 
 def load_provenance_allow(root):
     """The reviewed exception keys from `docs/provenance-allow`, normalized.
@@ -1617,19 +1622,123 @@ def load_provenance_allow(root):
     contradiction between two rows, a provisional label nothing mechanical
     carries. Stripping those would delete the repo's only note that the question
     is open, which is a worse outcome than the frame. Each entry says so, and
-    says the row owes an open-item row at the sitting; when the ruling lands the
-    entry goes with it."""
+    NAMES the `OI-###` row that carries the question (`parse_provenance_allow`);
+    when the ruling's execution lands, the marker and the entry go together."""
+    return {
+        allow_key(e["rid"], e["cell"], e["token"]) for e in parse_provenance_allow(root)
+    }
+
+
+def parse_provenance_allow(root):
+    """The ENTRIES of `docs/provenance-allow`, one dict per declaring line:
+    `{line, rid, cell, token, oi, reason}` (`oi` is None when the entry names no
+    row). `load_provenance_allow` is the key-set view of the same parse — ONE
+    parser, so the grammar the finding reports and the grammar the suppression
+    honours can never drift apart.
+
+    THE `OI-###` IS A REQUIRED FIELD (OI-41 ARM 1, ruled 2026-08-20). It is the
+    FIRST token of the reason — a position, not a mention — so an id merely
+    discussed later in the sentence is not mistaken for the entry's row. Before
+    this, 19 entries PROMISED an open-item row in prose ("owes an open-item row
+    at the sitting") and not one of them had one: the promise and the queue were
+    two unconnected artifacts, which is a mechanizable gap rather than a cultural
+    one. As a field it has no false positives — there is no third state between
+    "the detector fires" and "an entry silences it" — which is why it ships hard
+    at birth where the sibling arms ship warn-first (`provenance_allow_findings`).
+
+    Fail-soft in the LOUD direction, unchanged: a line with no separator, or with
+    fewer than three key fields, declares NOTHING and is dropped here, so the
+    worst a malformed entry can do is leave a finding reported."""
     path = Path(root) / PROVENANCE_ALLOW
     if not path.is_file():
-        return set()
-    out = set()
-    for line in path.read_text(encoding="utf-8-sig", errors="replace").split("\n"):
-        line = line.strip()
+        return []
+    out = []
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for lineno, raw in enumerate(text.split("\n"), start=1):
+        line = raw.strip()
         if not line or line.startswith("#") or PROVENANCE_ALLOW_SEP not in line:
             continue
-        key = line.split(PROVENANCE_ALLOW_SEP, 1)[0].split()
-        if len(key) >= 3:
-            out.add(allow_key(key[0], key[1], " ".join(key[2:])))
+        head, reason = line.split(PROVENANCE_ALLOW_SEP, 1)
+        key = head.split()
+        if len(key) < 3:
+            continue
+        first = reason.split()[0].strip(":;,.") if reason.split() else ""
+        out.append(
+            {
+                "line": lineno,
+                "rid": key[0],
+                "cell": key[1],
+                "token": " ".join(key[2:]),
+                "oi": first if OI_ID_RE.match(first) else None,
+                "reason": reason.strip(),
+            }
+        )
+    return out
+
+
+def open_item_states(root):
+    """`{OI-###: status}` from the open-items registry, `-000` example rows
+    dropped, or None when the repo carries no registry at all.
+
+    NONE IS NOT `{}`, and the distinction is the whole reason this returns two
+    kinds of empty: an absent registry means the resolution rules below cannot
+    run (they would demand ids from a file the repo does not have), while an
+    empty one means every named id is genuinely unresolved. The D-5 rule."""
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return None
+    return {
+        (r.get("OI-ID") or "").strip(): (r.get("Status") or "").strip().lower()
+        for r in spine_carrier.load(path, "OI-ID")
+        if (r.get("OI-ID") or "").strip().startswith("OI-")
+        and not (r.get("OI-ID") or "").strip().endswith("-000")
+    }
+
+
+def provenance_allow_findings(entries, states):
+    """ARM 1 of OI-41, HARD AT BIRTH: every allow entry names an `OI-###` that
+    RESOLVES to a row of the open-items registry.
+
+    `docs/provenance-allow` is not merely where deferrals are densest — it is the
+    DECLARED-EXCEPTION SURFACE: every knowingly-unsatisfied mechanized rule has
+    an entry here or the detector fires. So for the whole class "a rule this repo
+    mechanizes is knowingly not satisfied", the question *did the deferral reach
+    open-items?* collapses into *does every entry name a row?* — a field check,
+    integrity-class like a duplicate id, reported on the always-on
+    `--strict-integrity` floor.
+
+    TWO ARMS, BOTH FIELDS: the id is present, and the id exists. The row's
+    STATE is deliberately not an arm here — a row that is ruled but whose
+    execution has not landed is a legal, transient state (the entry retires with
+    the execution, and `tests/test_trace.py` already fails a dead entry), and the
+    count contradiction it can hide — *the queue reports empty while entries
+    still stand* — is ARM 3's, which names the same entries once rather than
+    twice (`gen_open_items.deferral_findings`).
+
+    VACUOUS when the repo carries no open-items registry (`states is None`):
+    demanding a row from a file that does not exist is not a finding, it is a
+    migration, and the always-on layer's own S-3 says so in words
+    (`check_docs.check_status_surface`)."""
+    if states is None:
+        return []
+    out = []
+    for e in entries:
+        where = "{}:{} ({} {})".format(PROVENANCE_ALLOW, e["line"], e["rid"], e["cell"])
+        if not e["oi"]:
+            out.append(
+                "{}: the entry names no OI-### — an exception is a DEFERRED "
+                "decision, so the reason opens with the open-items row that "
+                "carries it (`… {} OI-###: <reason>`)".format(
+                    where, PROVENANCE_ALLOW_SEP.strip()
+                )
+            )
+        elif e["oi"] not in states:
+            out.append(
+                "{}: names {}, which has no row in {} — the field must resolve, "
+                "or it records a queue entry nobody made".format(
+                    where, e["oi"], OPEN_ITEMS_REL
+                )
+            )
     return out
 
 
@@ -4444,6 +4553,13 @@ def main():
     wm_root = docs.parent if args.docs else Path(args.root)
     committed = committed_watermark(wm_root)
     findings.integrity += watermark_findings(wm_root, committed)
+    # ARM 1 of OI-41, for the same reason and on the same floor: the allow file
+    # and the open-items registry are FILES, so the rule cannot live in the pure
+    # pass either. `docs.parent` — the root `load_provenance_allow` already read
+    # the entries from, so the file that is CHECKED is the file that SUPPRESSES.
+    findings.integrity += provenance_allow_findings(
+        parse_provenance_allow(docs.parent), open_item_states(docs.parent)
+    )
     if committed is None:
         # SILENCE IS NOT SUCCESS. "A mark only ever rises" cannot be read from the
         # working tree — a lowered mark looks exactly like a correct one — so with

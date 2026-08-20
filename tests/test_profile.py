@@ -169,6 +169,17 @@ def test_every_profile_permutation_scaffolds_green(tmp_path, omit, stack):
     _zero_findings(dest)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=dest)
     assert proc.returncode == 0, proc.stdout + proc.stderr
+    # THE OWNER DECISION SURFACE IS ALWAYS ON (OI-41, ruled 2026-08-20): the
+    # registry AND its generated view land in every permutation, so `check_docs`
+    # S-3 means the same thing in every adopting repo instead of standing down
+    # wherever the layer was declined. Both halves, because a missing view reads
+    # as STALE to its own freshness gate — asserted right here with the profile
+    # matrix, since "for every profile" is a claim only this test can make.
+    assert (dest / "docs" / "requirements" / "open-items.toml").is_file()
+    assert (dest / "docs" / "open-items.html").is_file()
+    fresh = run_py(["scripts/gen_open_items.py", "--check"], cwd=dest)
+    assert fresh.returncode == 0, fresh.stdout + fresh.stderr
+    assert "VACUITY" not in fresh.stdout
 
 
 # --- Stack-gated artifacts (R7/C3) --------------------------------------------

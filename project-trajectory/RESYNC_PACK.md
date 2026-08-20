@@ -1930,6 +1930,62 @@ rather than a bare "not found" about a python that is plainly there.
   is rejected with its reason and the launcher falls through to a good PATH
   python, instead of pinning you to the broken one.
 
+### `docs/provenance-allow` entries must NAME an `OI-###` [since 45c65263]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)* If you carry a `docs/provenance-allow` — the reviewed exception list for
+`trace.py`'s citation-frame advisory — its entry grammar gains a **required
+field**. An entry now reads `<ROW-ID> <Cell> <token> — OI-###: <reason>`, and the
+id is the **first token of the reason** (a position, not a mention: an id further
+into the sentence is prose).
+
+- **It is HARD from the first commit**, not warn-first, and it is
+  **integrity-class**: an entry with no id, or one naming a row your
+  `docs/requirements/open-items.toml` does not have, fails
+  `trace.py --strict-integrity` — the always-on floor your pre-commit hook runs.
+  A missing field has no false positives, which is the only reason a new rule
+  ships hard here.
+- **Why:** an allow entry is a DEFERRED DECISION — it says a rule you mechanize
+  is knowingly not satisfied. In the kit's own file, 19 entries promised an
+  open-item row **in prose** ("owes an open-item row at the sitting") and not one
+  of them had one, because the announcement and the queue were two unconnected
+  artifacts. The field makes the unrecorded deferral unrepresentable.
+- **Migrate in one pass:** for each entry, add the id of the row that carries its
+  question, right after the ` — `. If the question has no row yet, file one
+  (`Status = "pending"`) — that IS the change.
+- **Vacuous if you have no open-items registry**, and it stays that way until you
+  scaffold one; the always-on entry below is what tells you to.
+
+### The open-items layer is ALWAYS ON [since 45c65263]
+
+*(Same commit as the entry above.)* The owner decision surface moved out of
+`process-options.md` and into always-shipped process (`process.md` §5). Nothing
+about the artifacts changed — what changed is that they are no longer optional.
+
+- **Scaffold the registry if you do not carry one:** copy
+  `registries/open-items.template.toml` to `docs/requirements/open-items.toml`
+  and run `python scripts/gen_open_items.py` once, which writes
+  `docs/open-items.html`. A missing view reads as STALE to its own freshness
+  gate, so generate it in the same commit.
+- **`check_docs.py` S-3 is no longer vacuous without the registry.** Its escape
+  used to read "the surface is optional; omit it to opt out"; an absent registry
+  is now the finding itself. **Warn-only** — it is never `check_docs`'s exit
+  code — so this cannot block you mid-migration.
+- **Your session log fragments gain an optional declaration.** A
+  `docs/log.d/` fragment may state `Deferred open items: OI-45, OI-46` (or
+  `… none — <why>`); `gen_open_items.py --check` verifies each declared id names
+  a **pending** row, and reports a **VACUITY** finding when your queue holds zero
+  pending rows while allow entries still defer, naming the entries. Both are
+  warn-only: the step's exit code stays the freshness verdict.
+- **Take `process.md` §5 and the `process-options.md` trajectory section**
+  together — the layer's *depth* (why registry-plus-view, the lifecycle, the
+  S-1..S-3 lint) stays in the options doc; only the *always-shipped* statement
+  moved.
+- **What it does NOT buy, stated so the change does not overclaim:** always-on is
+  the substrate, never the mechanism. A fresh registry renders "the owner queue
+  is empty" perfectly truthfully — which is the failure the three arms above
+  exist to catch.
+
 
 ## 4. Translation helper — concept renames
 

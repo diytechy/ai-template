@@ -769,7 +769,9 @@ def check_status_surface(root, docs_dir):
     status.md is absent or docs/status-lint says `off`. S-3 stands down under a
     generated snapshot (WI-202): a `<!-- BEGIN GENERATED STATUS -->` block makes
     the open-items list a projection of the registry, so the two cannot disagree
-    and the `status-map` freshness gate owns coherence instead."""
+    and the `status-map` freshness gate owns coherence instead — but an ABSENT
+    registry warns either way (OI-41: the layer is always-shipped, so its absence
+    is the finding, not the opt-out)."""
     status = root / docs_dir / "status.md"
     if not status.exists():
         return []
@@ -803,42 +805,75 @@ def check_status_surface(root, docs_dir):
             "the top, backward/context matter below"
         )
 
-    # S-3 (OI coherence) retires under a generated snapshot (WI-202): when
-    # status.md carries the `<!-- BEGIN GENERATED STATUS -->` block, its open-items
-    # list is PROJECTED from the open-items registry by `gen_trajectory --status`, so the two
-    # surfaces cannot disagree — the `status-map` freshness gate is the invariant.
-    # The check stays live only for a hand-authored (non-generated) status.md,
-    # where the two lists can drift; S-1/S-2 above still guard the region a
-    # generated block does not own.
-    # WI-322 moved briefs from markdown sections to ROWS of the open-items
-    # registry (the owner reads the generated view), so the brief set is the
-    # registry's PENDING ids. Same rule, one source down: a carrier read, no
-    # heading parse. A ruled row is not a brief — its record is the log.
-    open_items = root / docs_dir / "requirements" / "open-items.toml"
-    if spine_carrier.resolve(open_items) and not _STATUS_GENERATED_RE.search(text):
-        briefed = set()
-        try:
-            for row in spine_carrier.load(open_items, "OI-ID"):
-                oid = (row.get("OI-ID") or "").strip()
-                status = (row.get("Status") or "").strip().lower()
-                if oid.startswith("OI-") and not oid.endswith("-000"):
-                    if status == "pending":
-                        briefed.add(oid)
-        except OSError:
-            return warns
-        needs = set(_OI_RE.findall(_needs_human_block(text)))
-        for oid in sorted(needs - briefed):
-            warns.append(
-                "{}: a Needs-<human> item in status.md with no pending `{}` row "
-                "in requirements/open-items.toml (every owner ask carries its "
-                "brief)".format(oid, oid)
-            )
-        for oid in sorted(briefed - set(_OI_RE.findall(text))):
-            warns.append(
-                "{}: briefed in requirements/open-items.toml but never named in "
-                "status.md (an orphan brief — a ruled item moves to the log's "
-                "Decisions and its row leaves `pending`)".format(oid)
-            )
+    return warns + _oi_coherence_warns(root / docs_dir / OPEN_ITEMS_NAME, text)
+
+
+# The registry S-3 reads, docs-relative. Named here rather than inline so the
+# always-on rule below and the coherence rule beneath it cannot drift apart
+# about which file they mean.
+OPEN_ITEMS_NAME = "requirements/open-items.toml"
+
+
+def _oi_coherence_warns(open_items, text):
+    """S-3 alone: the open-items registry against status.md's Needs-<human>
+    block, both directions. Split out of `check_status_surface` when the
+    always-on arm pushed that function over the complexity ratchet —
+    decomposition rather than a baseline bump, which is the escape the ratchet
+    exists to force.
+
+    S-3's COHERENCE half retires under a generated snapshot (WI-202): when
+    status.md carries the `<!-- BEGIN GENERATED STATUS -->` block, its open-items
+    list is PROJECTED from the registry by `gen_trajectory --status`, so the two
+    surfaces cannot disagree — the `status-map` freshness gate is the invariant.
+    The check stays live only for a hand-authored status.md, where the two lists
+    can drift. WI-322 moved briefs from markdown sections to ROWS (the owner
+    reads the generated view), so the brief set is the registry's PENDING ids: a
+    carrier read, no heading parse, and a ruled row is not a brief — its record
+    is the log.
+
+    S-3 IS NO LONGER VACUOUS WITHOUT THE REGISTRY (OI-41's folded-in always-on
+    direction, ruled 2026-08-20). The layer left `process-options.md` for
+    always-shipped process — every scaffold gets `open-items.toml` and renders
+    `open-items.html` — so an ABSENT registry is the finding rather than the
+    opt-out. The reason is precisely that this detector's finding, *you deferred
+    and no `OI` row resolves it*, is only actionable in a repo that HAS the
+    registry; in an opted-out one it either no-ops or tells the reader to adopt a
+    layer they declined, so the rule meant different things in different repos.
+    WARN-ONLY like its siblings here: the migration is the adopter's, and this
+    must never be the exit code."""
+    if spine_carrier.resolve(open_items) is None:
+        return [
+            "the open-items registry is absent — the owner decision surface is "
+            "always-shipped process (process.md §5), not an opt-in layer: "
+            "scaffold {} (kit template registries/open-items.template.toml) and "
+            "render it with gen_open_items.py, or every deferred decision has "
+            "nowhere to land".format(OPEN_ITEMS_NAME)
+        ]
+    if _STATUS_GENERATED_RE.search(text):
+        return []
+    try:
+        rows = spine_carrier.load(open_items, "OI-ID")
+    except OSError:
+        return []
+    briefed = {
+        (r.get("OI-ID") or "").strip()
+        for r in rows
+        if (r.get("OI-ID") or "").strip().startswith("OI-")
+        and not (r.get("OI-ID") or "").strip().endswith("-000")
+        and (r.get("Status") or "").strip().lower() == "pending"
+    }
+    warns = [
+        "{}: a Needs-<human> item in status.md with no pending `{}` row in "
+        "requirements/open-items.toml (every owner ask carries its "
+        "brief)".format(oid, oid)
+        for oid in sorted(set(_OI_RE.findall(_needs_human_block(text))) - briefed)
+    ]
+    warns += [
+        "{}: briefed in requirements/open-items.toml but never named in "
+        "status.md (an orphan brief — a ruled item moves to the log's Decisions "
+        "and its row leaves `pending`)".format(oid)
+        for oid in sorted(briefed - set(_OI_RE.findall(text)))
+    ]
     return warns
 
 

@@ -1,8 +1,20 @@
 # Reviewed exceptions to the citation-frame advisory (trace.py, warn-only).
 #
-# One entry per line: `<ROW-ID> <Cell> <token>`, then ` — <reason>`.
+# One entry per line: `<ROW-ID> <Cell> <token>`, then ` — OI-###: <reason>`.
 # A line with no ` — ` separator, or with fewer than three fields before it,
 # declares NOTHING and is dropped.
+#
+# THE `OI-###` IS REQUIRED, AND IT IS THE FIRST TOKEN OF THE REASON (OI-41 ARM 1,
+# ruled 2026-08-20 — hard at birth). An exception is a DEFERRED DECISION: the
+# entry says a rule this repo mechanizes is knowingly not satisfied, so it must
+# NAME the open-items row that carries the question. An entry with no id, or one
+# naming a row `docs/requirements/open-items.toml` does not have, is an INTEGRITY
+# finding on the always-on `--strict-integrity` floor — a field, so it has no
+# false positives, and the bad state is unrepresentable rather than merely
+# detected. The 19 entries this replaced said the same thing in prose ("owes an
+# open-item row at the sitting"), nineteen times, and produced zero rows: the
+# announcement and the queue were two unconnected artifacts. Position, not
+# mention — an id further into the sentence is prose, not the field.
 #
 # TOKEN-SCOPED, and that is the whole design. An entry silences the ONE token it
 # names — spelled as the finding reports it, whitespace-collapsed and
@@ -20,8 +32,9 @@
 # the token is the ONLY record that a question is OPEN — a contradiction between
 # two rows, an obligation whose carrier is gone, a label nothing mechanical
 # signs. Stripping those would delete the repo's only note that the question is
-# unresolved, which is worse than the frame. Each row below owes an open-item row
-# at the sitting; when the ruling lands, the marker and the entry go together.
+# unresolved, which is worse than the frame. Each row below NAMES the open-item
+# row its question sits in; when that ruling's execution lands, the token leaves
+# the cell and the entry goes with it (a dead entry fails tests/test_trace.py).
 #
 # THE HELD POPULATION THIS FILE CANNOT LIST — the IF `Contract` cells, ruled
 # 2026-08-19 (OI-36, option (b)). 49 findings from a DIFFERENT detector
@@ -44,7 +57,7 @@
 # else. The eight citation FRAMES that were the other half of OI-36 are swept, so
 # the frame detector reports zero and this file's entries are the only exceptions.
 
-SR-043 Rationale resolved here (2026-08-16 — the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. The token is the marker that the row records the tension rather than settling it. Owes an open-item row at the sitting. (The licence attribution — stop-subagent-fanout, MIT — is a legal notice, carries no citation token, and stays regardless.)
+SR-043 Rationale resolved here (2026-08-16 — OI-37: the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. The token is the marker that the row records the tension rather than settling it. OI-37 is ruled (2026-08-18); this entry retires with its execution. (The licence attribution — stop-subagent-fanout, MIT — is a legal notice, carries no citation token, and stays regardless.)
 
 # RETIRED ENTRIES, recorded rather than silently dropped (2026-08-18):
 #
@@ -86,21 +99,22 @@ SR-043 Rationale resolved here (2026-08-16 — the fail-open contradiction: this
 # mechanical carries "unsigned", so deleting the parenthetical would silently
 # promote 17 provisional labels to ratified ones. The `added <date>` token is the
 # whole of what each entry below covers — every other frame in these cells has
-# been swept. Each row owes an open-item row at the sitting that either signs the
-# label or strikes it.
-SR-024 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-033 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-043 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-052 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-054 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-111 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-112 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-129 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-144 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-146 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-147 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-149 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-167 Rationale added 2026-08-16 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-175 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-176 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.
-SR-177 Rationale added 2026-08-17 — unsigned derived-requirement label; owes an open-item row at the sitting.
+# been swept. Each entry NAMES OI-34, the row that carries the question; it was
+# ruled 2026-08-18 (KILL the label), so these entries retire with that execution
+# rather than with a second ruling.
+SR-024 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-033 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-043 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-052 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-054 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-111 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-112 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-129 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-144 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-146 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-147 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-149 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-167 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-175 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-176 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+SR-177 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.

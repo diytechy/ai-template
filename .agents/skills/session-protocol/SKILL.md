@@ -100,7 +100,10 @@ cadence"). New behavior needs new tests
   write it as a fragment `docs/log.d/<WI-id>-<slug>.md` (starting with its
   `## <YYYY-MM-DD> — <title>` heading; links authored relative to
   `docs/log.d/`) — `trunk_step.py` compiles fragments into the log in merge
-  order and deletes them. Never hand-edit `docs/log.md` on a work branch.
+  order and deletes them. Never hand-edit `docs/log.md` on a work branch. A
+  session that ends owing the owner a decision **declares it** in the fragment —
+  `Deferred open items: OI-45` (or `… none — <why>`), checked at the commit bar
+  by `gen_open_items.py --check` (process.md §5, OI-41 ARM 2).
 - **Section order inside the spec file is load-bearing.**
   `check_trajectory.parse_spec_deliverable` clips the body at `## Context`, so
   a `## Deliverable` placed *after* Context parses as EMPTY and the close reds

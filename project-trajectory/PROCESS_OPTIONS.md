@@ -1760,14 +1760,14 @@ forward-only (WI-200):** a `done` WI id lingering in `status.md` is a finding
 again — warn at commit, ERROR under `--strict` at DevStg-Tests+ — except inside a
 generated snapshot block, which cannot accrete prose.
 
-**The owner decision surface (a registry + a generated view) + the
-status-surface lint.** The Needs-\<human> bullets in `status.md` stay
+**The owner decision surface's depth + the status-surface lint.** The surface
+itself is **not a layer here** — registry and generated view are always-shipped
+process ([`process.md`](process.md) §5), scaffolded into every profile; what
+stays here is the depth. The Needs-\<human> bullets in `status.md` stay
 **one-liners** (id + one-line recommendation), or the blackboard re-bloats; the
 *depth* of each pending decision — blast radius, options with pros/cons, the
-driver's recommendation — lives in **`docs/requirements/open-items.toml`**
-(scaffolded from `registries/open-items.template.toml`), one row per decision,
-and renders into **`docs/open-items.html`** — the generated surface the owner
-actually reads, so the review is **one page with all context**.
+driver's recommendation — is what the row carries, so the review is **one page
+with all context**.
 
 Registry-plus-view rather than a markdown file, for a reason worth stating: the
 same surface must also carry the *attestation* depth — every `Drafted` or
@@ -1785,8 +1785,10 @@ this layer's un-defer trigger for a spine SR): **S-1** `status.md` over its line
 budget (default 120; `docs/status-lint` overrides with an integer, `off`
 disables S-1..S-3); **S-2** the Open-items marker must precede `## Scope`;
 **S-3** every Needs-\<human> `OI-N` has a pending row in the registry and every
-pending id appears in `status.md`. S-3 is vacuous without the registry — the
-surface is optional; omit it to opt out.
+pending id appears in `status.md`. S-3 is **no longer vacuous without the
+registry**: the layer is always on, so an absent `open-items.toml` is the finding
+rather than the opt-out (it stands down only under a generated status block,
+where the list is a projection and the two cannot disagree).
 
 **Spec-of-record (`SpecRef` + `docs/specs/`).** A queued WI whose only description
 is its title is not implementable, and nothing used to check that an open WI named

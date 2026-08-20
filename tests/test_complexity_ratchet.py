@@ -109,10 +109,13 @@ BASELINE = {
     # branches to the file walk — decomposition, the escape the ratchet prefers,
     # so the new tier cost this function nothing. Entry deleted per the
     # improvement rule (re-stamp or delete downward in the same commit).
-    # WI-322: S-3's brief source moved from a markdown heading parse to the
-    # open-items registry, which adds one read + one guard branch and crosses the
-    # census threshold. Reviewed entry, log 2026-07-26.
-    ("check_docs.py", "check_status_surface"): 13,
+    # `check_status_surface` dropped under the limit, WI-485 (OI-41): S-3's whole
+    # registry half moved out to `_oi_coherence_warns` rather than taking the one
+    # extra branch the always-on arm needed — decomposition, the escape the
+    # ratchet prefers, so the new arm cost this function nothing and it left the
+    # census. Entry DELETED per the improvement rule (re-stamp or delete downward
+    # in the same commit); it entered at WI-322 when S-3's brief source moved from
+    # a markdown heading parse to the open-items registry.
     ("check_docs.py", "check_links"): 13,
     ("check_docs.py", "git_commit_lookup"): 12,
     ("check_flows.py", "main"): 12,

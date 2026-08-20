@@ -110,6 +110,23 @@ declared-absence line retired with its three readers checked, PB watermark
 the unwired metrics emitter — that emitter is the named residue for a
 future WI.
 
+### WI-485 — OI-41's three arms + always-on (opus worker) — CLOSED complete
+
+All four pieces live: the allow-file OI-### grammar (hard, integrity floor,
+17 entries migrated), the fragment deferral declaration (warn, none-forms
+accepted, weakness pinned), the re-aimed vacuity check (names the entries),
+and the always-on layer move (+987B PROCESS.md flagged; S-3 non-vacuous;
+scaffold-verified across profiles; RESYNC ×2). Full suite 2635/13. **The
+vacuity arm fired truthfully on day one**: 16 OI-34 entries + 1 OI-37 entry
+whose ruled executions never landed — exactly OI-41's founding class —
+now queued as **WI-489** (the OI-34 label migration, minted in this close;
+watermark WI 488→489). ARM 1's state-gating deliberately narrowed to
+present+resolves with the count left to ARM 3 (every live row is `ruled`;
+reasoning in the Deliverable).
+
+Deferred open items: none — WI-489 executes an ALREADY-ruled item; no new
+owner decision was deferred by this session.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475

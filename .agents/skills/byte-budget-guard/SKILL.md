@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k headroom under Gemini's ~12k cap) | 9,953 | 2026-08-18 | WI-455's architecture retirement — **and see the parked-at-the-cap note below** |
 | `CLAUDE.md` | **8,500** | 6,981 | 2026-08-18 | +176: the mandated-token rule — what the kit writes into an adopter's cell must mean something in their repo |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,882 | 2026-08-18 | +79: the CLAUDE.md + PROCESS_OPTIONS.md re-stamps |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,968 | 2026-08-20 | +136: WI-485's two re-stamps (the 4,882 baseline was stale — the file measured 4,832) |
 
 **`AGENTS.template.md` is parked at its cap: 47 bytes free (0.5%).** Every other
 capped file holds 2–18%, so this is the one you will hit first, and it is the DOC
@@ -44,8 +44,8 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 82,499 | 2026-08-20 | **-12**: D-9 steps 7+8 — §4's closed `Status` reaches its end state (`Drafted`/`Approved`/`Founded`); the transitional `Modified` paragraph gives way to the shorter rule that an amendment has no value of its own |
-| `project-trajectory/PROCESS_OPTIONS.md` | 174,161 | 2026-08-20 | +176: D-9 steps 7+8 — the six sites still teaching `Modified` as a live value now name `Founded` and snapshot DRIFT instead |
+| `project-trajectory/PROCESS.md` | 83,486 | 2026-08-20 | **+987**: WI-485 (OI-41) — §5 gains the always-shipped owner-decision-surface clause and its three deferral mechanisms. FLAGGED growth, not a displacement: nothing in §5 became redundant, and what moved came out of `PROCESS_OPTIONS.md` |
+| `project-trajectory/PROCESS_OPTIONS.md` | 174,309 | 2026-08-20 | +148: WI-485 (OI-41) — the owner-decision-surface paragraph loses its *where it lives* half (now `process.md` §5) for the pointer, and S-3's escape is corrected: an absent registry is the finding |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

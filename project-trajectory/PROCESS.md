@@ -779,6 +779,20 @@ that records a historical decision and is no longer read by a script goes to
 stop competing with the live surfaces; its README states the boundary rule and
 the counter-rule (a generated or script-read surface is machinery, not history).
 
+**Open items — the owner decision surface, always shipped.** A decision deferred
+to the owner is a **row** in `docs/requirements/open-items.toml`, rendered by
+`gen_open_items.py` into `docs/open-items.html`; status.md's `Needs <human>`
+bullets stay one-liners pointing at it, and every scaffold gets both whatever its
+profile — *you deferred and no `OI` row resolves it* is a finding only a repo
+that HAS the registry can act on. Three mechanisms keep the announcement and the
+queue from being two artifacts: a `docs/provenance-allow` entry **names** the
+`OI-###` it defers (a required field, integrity-class); a `docs/log.d/` fragment
+**declares** the ids its session deferred (`Deferred open items: OI-45` / `…
+none — <why>`), warn-only at the commit bar; and zero pending rows while entries
+still stand is reported as a contradiction naming them. The surface is the
+substrate, never the mechanism — a fresh registry renders *the owner queue is
+empty* perfectly truthfully.
+
 Reviews use this block — in `log.md`, or as a `docs/reviews/WI-<n>-<PHASE>.md`
 verdict file under the review layer (work-item-scoped names; serial counters
 race under concurrency):

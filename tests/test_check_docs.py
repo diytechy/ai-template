@@ -916,17 +916,24 @@ def test_oi_coherence_both_directions(scaffold):
     assert "OI-2" not in proc.stdout  # in-flight needs no brief
 
 
-def test_oi_coherence_vacuous_without_open_items(scaffold):
-    # S-3 is opt-in: without the registry it is silent (the other status rules
-    # stay live). WI-322: a RULED row is likewise not a brief — it is history —
-    # so a queue of only ruled rows is the same vacuum.
+def test_an_absent_open_items_registry_is_itself_the_s3_finding(scaffold):
+    # S-3 IS NO LONGER VACUOUS WITHOUT THE REGISTRY (OI-41's always-on direction,
+    # ruled 2026-08-20). It used to be silent — the surface was opt-in, so
+    # "omit it to opt out" was the escape. But a detector whose finding is *you
+    # deferred and no OI row resolves it* is only actionable in a repo that HAS
+    # the registry, so the rule meant different things in different repos. Still
+    # WARN-ONLY: the migration is the adopter's, never this check's exit code.
     _write_status(scaffold, _STATUS_SHAPED)
     req = scaffold / "docs" / "requirements"
     for oi in (req / "open-items.toml", req / "open-items.csv"):
         if oi.exists():
             oi.unlink()
     proc = run_py(["scripts/check_docs.py"], cwd=scaffold)
-    assert proc.returncode == 0
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "the open-items registry is absent" in proc.stdout
+    assert "always-shipped process" in proc.stdout
+    # The coherence arms cannot run with no registry to compare against, so the
+    # finding names the absence rather than inventing a per-id verdict.
     assert "OI-9" not in proc.stdout
 
 

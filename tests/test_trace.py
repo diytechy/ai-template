@@ -1901,3 +1901,100 @@ def test_this_repos_own_provenance_allow_entries_all_still_bite():
                         live.add(text.allow_key(rid, col, token))
     dead = sorted(k for k in allow if k not in live)
     assert not dead, "provenance-allow entries matching no live token: {}".format(dead)
+
+
+# --- OI-41 ARM 1: the allow entry NAMES the open item it defers ---------------
+
+
+def _allow_repo(tmp_path, entries, oi_rows='[open_item.OI-5]\nstatus = "pending"\n'):
+    """A repo carrying only the two files ARM 1 reads: the allow file and the
+    open-items registry (omitted entirely when `oi_rows` is None)."""
+    (tmp_path / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "provenance-allow").write_text(entries, encoding="utf-8")
+    if oi_rows is not None:
+        (tmp_path / "docs" / "requirements" / "open-items.toml").write_text(
+            oi_rows, encoding="utf-8"
+        )
+    return tmp_path
+
+
+def test_an_allow_entry_names_the_open_item_it_defers(tmp_path):
+    # ARM 1 (OI-41 ruled (e), 2026-08-20). The 19 entries this replaced PROMISED
+    # an open-item row in prose and produced none: the promise and the queue were
+    # two unconnected artifacts. As a FIELD the bad state is unrepresentable, and
+    # it has no false positives — which is why it is hard at birth.
+    trace = load_script("trace")
+    root = _allow_repo(
+        tmp_path,
+        "# a comment declares nothing\n"
+        "SR-001 Rationale added 2026-08-16 — OI-5: the reviewed reason.\n"
+        "SR-002 Rationale added 2026-08-16 — no row is named here.\n"
+        "SR-003 Rationale added 2026-08-16 — OI-99: a row that does not exist.\n",
+    )
+    entries = trace.parse_provenance_allow(root)
+    assert [e["oi"] for e in entries] == ["OI-5", None, "OI-99"]
+    findings = trace.provenance_allow_findings(entries, trace.open_item_states(root))
+    assert len(findings) == 2, findings
+    assert "SR-002 Rationale): the entry names no OI-###" in findings[0]
+    assert "docs/provenance-allow:3" in findings[0]
+    assert "SR-003" in findings[1] and "names OI-99, which has no row" in findings[1]
+    # The compliant entry is quiet, and the KEY the suppression turns on is
+    # unchanged by the new field — one parser, so the grammar that reports and
+    # the grammar that silences cannot drift apart.
+    assert trace.is_allowed(
+        trace.load_provenance_allow(root), "SR-001", "Rationale", "added 2026-08-16"
+    )
+
+
+def test_the_allow_field_is_a_position_not_a_mention(tmp_path):
+    # A field, not a phrase match: the id is the FIRST token of the reason. An id
+    # discussed later in the sentence is prose — accepting it would re-introduce
+    # exactly the "grabs items that are not applicable" failure the owner refused.
+    trace = load_script("trace")
+    root = _allow_repo(
+        tmp_path,
+        "SR-001 Rationale added 2026-08-16 — see the analysis under OI-5 someday.\n",
+    )
+    entries = trace.parse_provenance_allow(root)
+    assert entries[0]["oi"] is None
+    assert trace.provenance_allow_findings(entries, trace.open_item_states(root))
+
+
+def test_a_ruled_row_still_satisfies_arm_1_and_no_registry_is_vacuous(tmp_path):
+    # The row's STATE is deliberately NOT an arm here. Ruled-but-not-yet-executed
+    # is a legal transient (the entry retires with the execution), and the count
+    # contradiction it can hide is ARM 3's, which names the same entries once
+    # rather than twice.
+    trace = load_script("trace")
+    entry = "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n"
+    ruled = _allow_repo(
+        tmp_path / "ruled", entry, '[open_item.OI-5]\nstatus = "ruled"\n'
+    )
+    assert not trace.provenance_allow_findings(
+        trace.parse_provenance_allow(ruled), trace.open_item_states(ruled)
+    )
+    # No registry at all -> the rule cannot run: demanding a row from a file the
+    # repo does not have is a MIGRATION, and the always-on layer's own S-3 says
+    # so in words (check_docs.check_status_surface). None, never {} — D-5.
+    bare = _allow_repo(tmp_path / "bare", entry, oi_rows=None)
+    assert trace.open_item_states(bare) is None
+    assert not trace.provenance_allow_findings(trace.parse_provenance_allow(bare), None)
+
+
+def test_an_unresolved_allow_entry_reds_the_integrity_floor(scaffold):
+    # HARD AT BIRTH, on the always-on floor the pre-commit hook runs: a field
+    # with no false positives needs no warn-first program. The scaffold's own
+    # registry carries pending OI-1, so the repaired entry is green.
+    (scaffold / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — owes an open-item row at the sitting.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "the entry names no OI-###" in proc.stdout + proc.stderr
+    (scaffold / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — OI-1: the reviewed reason.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr

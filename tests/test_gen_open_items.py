@@ -701,3 +701,100 @@ def test_normalize_survives_the_carrier_change_and_this_is_why(tmp_path):
 
     # (c) the half that keeps the function: a CRLF checkout of the ARTIFACT.
     assert gen_oi.normalize("<p>x</p>\r\n") == gen_oi.normalize("<p>x</p>\n")
+
+
+# --- OI-41 ARM 2 + ARM 3: what a deferral declares, and what an empty queue
+# --- contradicts. Both are WARN-FIRST by the ruling — they print, they never
+# --- move this step's exit code, which stays the freshness verdict.
+
+
+def _log_d(root, name, body):
+    d = root / "docs" / "log.d"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / name).write_text(body, encoding="utf-8")
+    return root
+
+
+def test_a_fragment_declares_the_open_items_it_deferred(tmp_path):
+    # ARM 2's grammar is a KEY (`deferred:`) in a declaration position, never a
+    # vocabulary of defer-PHRASES — a matcher's precision is a property of the
+    # wording it meets, so its error rate cannot be bounded before it ships.
+    gi = load_script("gen_open_items")
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    _log_d(root, "WI-1-ids.md", "## a session\n\nDeferred open items: OI-4, OI-9\n")
+    # The none form — the explicit way to say a zero-pending queue is deliberate,
+    # and the shape the live 2026-08-20 fragment already wrote in prose.
+    _log_d(
+        root,
+        "WI-2-none.md",
+        "## another\n\nthis fragment backs the claim by declaring what was "
+        "deferred: **nothing new was deferred by this session**, all briefs "
+        "closed.\n",
+    )
+    # Fail-soft: a marker carrying neither an id nor a none-word declares
+    # NOTHING, so the arm cannot invent a deferral out of ordinary prose.
+    _log_d(root, "WI-3-quiet.md", "## third\n\nWI-9 was deferred: it waits on X.\n")
+    decls = gi.fragment_declarations(root)
+    assert [(d["ids"], d["none"]) for d in decls] == [
+        (["OI-4", "OI-9"], False),
+        ([], True),
+    ]
+    assert decls[0]["file"] == "docs/log.d/WI-1-ids.md" and decls[0]["line"] == 3
+
+
+def test_a_declared_deferral_must_name_a_row_the_owner_has_still_to_rule(tmp_path):
+    gi = load_script("gen_open_items")
+    root = repo(tmp_path, oi_rows=PENDING_OI + RULED_OI)
+    _log_d(root, "WI-1-x.md", "## s\n\nDeferred open items: OI-4, OI-5, OI-77\n")
+    states = load_script("trace").open_item_states(root)
+    findings = gi.deferral_findings(root, states)
+    assert len(findings) == 2, findings
+    assert "OI-5" in findings[0] and "reads `ruled`" in findings[0]
+    assert "OI-77" in findings[1] and "has no row" in findings[1]
+    # OI-4 is pending: a resolving declaration is quiet.
+    assert "OI-4" not in " ".join(findings)
+
+
+def test_a_session_that_defers_silently_passes_clean(tmp_path):
+    # THE DECLARED WEAKNESS, ON THE RECORD (the ruling's own words): a
+    # declaration cannot catch a session that says nothing. Asserted here so the
+    # gap is a documented property rather than a discovery.
+    gi = load_script("gen_open_items")
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    _log_d(root, "WI-1-silent.md", "## s\n\nA session that mentions OI-4 in passing.\n")
+    assert gi.fragment_declarations(root) == []
+    assert gi.deferral_findings(root, load_script("trace").open_item_states(root)) == []
+
+
+def test_the_vacuity_arm_names_the_contradicting_entry(tmp_path):
+    # ARM 3 RE-AIMED: not "0 pending is a finding" — the unactionable form the
+    # ruling refused — but a COUNT contradicted by a surface that still defers,
+    # with the entry NAMED so a reader can discharge it.
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=RULED_OI)
+    (root / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n",
+        encoding="utf-8",
+    )
+    findings = gi.deferral_findings(root, tr.open_item_states(root))
+    assert len(findings) == 1 and findings[0].startswith("VACUITY")
+    assert "SR-001 Rationale" in findings[0] and "OI-5" in findings[0]
+    # ...and it is a COUNT, so one genuinely pending row settles the question.
+    repo(tmp_path, oi_rows=RULED_OI + PENDING_OI)
+    assert gi.deferral_findings(root, tr.open_item_states(root)) == []
+
+
+def test_the_deferral_arms_print_but_never_move_the_exit_code(tmp_path):
+    # Warn-first by the ruling. The exit code of this step stays the FRESHNESS
+    # verdict; a contradiction that redded the commit bar would be switched off.
+    root = repo(tmp_path, oi_rows=RULED_OI)
+    (root / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n",
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    proc = gen(root, "--check")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "VACUITY" in proc.stdout
+    assert "up to date" in proc.stdout
