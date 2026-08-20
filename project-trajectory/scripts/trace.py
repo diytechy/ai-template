@@ -4192,7 +4192,12 @@ def render_console(reg, findings, args, out, html_out):
             f" verified-mechanized={len(mechanized_verified)}"
             f" verified-demonstrated={len(demonstrated_verified)}"
             f" verified-attested={len(attested_verified)}"
-            if (demonstrated_verified or attested_verified)
+            # WI-466: the guard used to read `(demonstrated_verified or
+            # attested_verified)`, so a nonzero mechanized-only count (the
+            # common case) silently dropped the whole triple the moment the
+            # other two legs drained to zero (re-tier v2 S3, log
+            # 2026-08-16e). Any nonzero leg now prints all three.
+            if (mechanized_verified or demonstrated_verified or attested_verified)
             else ""
         )
         + (f" status-findings={len(status_findings)}" if args.require_verified else "")

@@ -32,6 +32,21 @@ def test_happy_chain_is_orphan_free(scaffold):
     assert "orphans=0" in proc.stdout
 
 
+def test_verified_triple_prints_when_only_mechanized_is_nonzero(scaffold):
+    # WI-466: the summary line's print guard used to read `(demonstrated_verified
+    # or attested_verified)`, so a nonzero mechanized-only count — the common
+    # case, and what a happy-chain minimal project produces (SR-001 is
+    # Test/Approved) — silently hid the whole triple once the other two legs
+    # drained to zero (re-tier v2 S3, log 2026-08-16e: SR-034/SR-036 were the
+    # registry's only demonstrated-verified rows and both flipped Modified).
+    make_minimal_project(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "verified-mechanized=1" in proc.stdout
+    assert "verified-demonstrated=0" in proc.stdout
+    assert "verified-attested=0" in proc.stdout
+
+
 def test_orphan_sr_fails_strict(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(

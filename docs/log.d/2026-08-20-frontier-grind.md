@@ -68,6 +68,14 @@ refreshed byte-identical, `check_doc_refs` clean on all three ids,
 integrity 0, smoke 1209/5. The planned-symbol declared form deferred behind
 WI-472's obligation SR, with reasoning on the row.
 
+### WI-466 — the verified-triple display fix (sonnet worker) — CLOSED complete
+
+The summary guard widened to any-leg-nonzero (was demonstrated-or-attested
+only, hiding the common mechanized-only shape); regression test added;
+goldens verified unaffected; ratchet re-stamped 4510→4515 with reason. The
+attested-vs-mechanized split is visible again on the repo's own run
+(69/3/0). test_trace.py 82 passed; smoke 1209/5.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475

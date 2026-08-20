@@ -10,6 +10,22 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Fixed `trace.py`'s summary-line print guard (`render_console`, ~:4195) so
+the verified-mechanized/demonstrated/attested triple prints whenever ANY
+leg is nonzero — a nonzero mechanized-only count (the common shape) was
+previously hidden the moment the other two legs drained to zero, exactly
+as happened live at re-tier v2 S3. Regression test
+`test_verified_triple_prints_when_only_mechanized_is_nonzero` added; the
+golden fixtures verified unaffected (offspine already printed under both
+guards; clean/orphan have all-zero legs and omit identically under both).
+trace.py's ratchet baseline re-stamped 4510 → 4515 with the reason in
+place. The repo's own run now shows `verified-mechanized=69
+verified-demonstrated=3 verified-attested=0` live — the attested-vs-
+mechanized split the gate-advance skill requires reporting is visible
+again. test_trace.py 82 passed; smoke 1209/5; integrity 0.
+
 ## Context
 
 Found by the re-tier v2 S3 rewording session (2026-08-16): the amend-flip
