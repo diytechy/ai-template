@@ -9,9 +9,10 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: none — declarations accumulate per section as the
-grind runs; this top-matter line is re-derived to the union at the batch
-close (the WI-485 fragment-scope lesson applied from the start).
+Deferred open items: OI-48, OI-49, OI-50 — the running union of the per-section
+declarations below, re-derived as each session closes (the WI-485
+fragment-scope lesson applied from the start). OI-49 and OI-50 joined at the
+WI-455 close.
 
 ### WI-448 — the common-module inversion (opus worker) — SLICE landed, row stays active
 
@@ -176,11 +177,217 @@ and the index is LF throughout.
   (4 modules in no CMP component) and the `LLR-181` row cleared it. The red was
   closed with a real spine row, never by touching `[checks] components_check`.
 
+### WI-455 — the architecture.md retirement program, crossing half (opus worker) — SLICE landed, lane stays active
+
+**Slice 2 of a program row.** `docs/architecture.md` was already retired by
+slice 1; what the lane still owed was the interface/boundary remainder. The
+CROSSING half of that is now done and the SCHEMA half is not — and it is
+BLOCKED, not merely unstarted, so closing here would have been a false
+complete. Spec Context now carries the three owed items with their blockers
+named.
+
+Deferred open items: OI-49, OI-50 — both minted this slice (see below).
+
+**B-01 and B-04's hook half now have a FACING, and the choice between the two
+shapes is the substance.** WI-459 handed this lane two options: tie-backs on
+IF-040/IF-042/IF-043, or new external-facing hook rows. Took the second. Those
+three rows state which SCRIPT the hook runs — an internal call between two
+in-tree endpoints — while the crossing is the contract git holds the hook to,
+and the registry's own rule is that a row ties back only when it REALIZES a
+crossing. A tie-back on them would have claimed a realization their contracts
+do not state; WI-459's own analysis had already named the gap as a missing
+FACING rather than a missing surface, which is exactly the distinction a
+tie-back cannot supply. So `IF-134` (pre-commit) / `IF-135` (pre-push) minted
+Drafted, `owner = LLR-019 / LLR-020`.
+
+**The owner cells went to the DESIGN tier although WI-459 named SRs**, and the
+divergence is deliberate: the schema header prefers the design tier wherever a
+design row exists for the owner-side endpoint, and here that row IS the hook
+module, so the derivability advisory agrees by construction rather than by
+luck. `SR-019`/`SR-020` keep the crossing's ownership through `req_refs`,
+which is the cell that means "the requirements this seam realizes".
+
+**One tie-back deliberately NOT made, recorded on the row rather than
+smoothed.** `IF-135` carries `B-04` only. `SR-020` names both crossings, but
+what pre-push gates is content LEAVING while `B-01` is *"the one write path
+from the session into the system's governed state"*. Claiming it would have
+widened a LOCKED crossing by assertion. The row says so, and says what would
+change the answer: if the frame means B-01 to cover the whole hook floor in
+both directions, the crossing's text is what needs widening, not this row's
+attribution. Same shape SR-137 already uses for its own recorded strain.
+
+**The five untied `external:` rows, adjudicated one at a time — and they did
+not take one answer.** `IF-080`/`IF-081` were plain omissions (integrate.py and
+trunk_step.py are both in `bootstrap.MAPPING`, so they are delivered package
+content) and now tie to `B-05`. The other three keep NO tie-back, each with a
+DIFFERENT reason written into the row, because the absences are not the same
+fact: `git` is dissolved into the entity that holds the checkout, so `IF-032`
+reads this system's own working copy rather than exchanging with a fourth
+party; `IF-041`'s far side is already ruled an external-to-external
+relationship touching the session and not the system — and the contrast that
+makes it precise is `IF-020`, which faces the SAME CLI and DOES tie back,
+because a guardrail verdict this system emits is a system output whoever
+consumes it; `IF-036`'s far side is a party the locked frame names no entity
+for AT ALL, which is a gap in the FRAME and is queued rather than papered over.
+
+**`B-02` stays unrealized on purpose, and the reason MOVED to where a reader
+meets it.** The ruling existed but lived in a closed WI's `## Close`, where
+nobody reading tie-backs would ever find it — so the header now states it with
+the `SR-140` condition that would change the answer. External.toml was NOT
+touched: it is Approved and LOCKED, and the reason belongs on the Drafted
+surface that carries tie-backs, not on the frame.
+
+**The one live derivability fire is CLOSED — by measurement, and the check
+that it is a real clear and not a skip is the whole point.** `IF-128` cleared
+at the 2026-08-17 owner re-point, before this lane ran. Verified rather than
+assumed: the row is `Consumes`, so its owner-side column is `counterpart`
+(`scripts/spine_carrier`), and `LLR-166`'s `module` is that module — they agree
+inside the predicate, not by falling out of one of its skip branches (a row
+whose owner is an SR, or whose owner LLR has no module, would exit early and
+LOOK identical in the totals). `docs/test/report.md`: *"None. Every LLR-owned
+row's owner-side endpoint agrees with its owner's Module."*
+
+**22 notes cells swept of retired CMP ids, and three of them were FALSE rather
+than stale.** `CMP-001..005` retired when the narrow-waist partition minted
+`CMP-006..009`; the WI-441 pass re-pointed the `component` CELLS and left the
+PROSE. These do not merely dangle, they silently re-point — and `IF-099`,
+`IF-100` and `IF-113` each read "the cross-component edge …" about an edge the
+partition had made INTRA-component, since the coordinator and the prompt loader
+landed in one unit. Those three were re-authored, not renumbered. Each row's
+own `component` cell was the mechanical cross-check; `IF-118`'s notes had been
+contradicting its own component cell, which is the cheapest tell. Per-pattern
+count assertions in the sweep script, so a miscount failed loudly rather than
+silently skipping a row.
+
+**Two retired ids deliberately LEFT** (`IF-056`, `IF-077`): both sit inside the
+held `Contract`-cell clause the WI-469 pass deletes whole, and correcting a
+number inside a sentence already scheduled for removal is two passes for one
+fix. Recorded, not forgotten.
+
+**The migrate_carrier framing fixed on all three surfaces** (banked by the
+WI-452 worker): `IF-103`'s Contract said "the ONE-SHOT converter", its notes
+said "migration scaffolding with a defined end … RETIRABLE once", and the kit
+README said the same. The ruling made it a live downstream-resync helper with
+NO terminus. Two of those surfaces also still cited `Provisional` — a
+`Stability` value whose whole column was retired — so the same edit dropped a
+dead vocabulary word from a SHIPPED doc. `RESYNC_PACK.md` got the narrowest
+possible correction: the fallback's expiry claim is still TRUE and was left
+alone; only the trailing clause that made the converter share that expiry moved.
+
+**The 49-citation hold: re-measured, UNCHANGED, and still held.** Exactly 49
+(46 `Contract names WI-###` + 3 `Contract cites decision`). Not swept, because
+the recorded hold is bounded by WI-469 and that WI runs after this one — one
+pass instead of two is the entire argument, and it still holds.
+
+**Two owner rows minted rather than decided here.** `OI-49` — what the sitting
+is actually being asked to ratify from the 2026-08-15 interface rework. The
+finding that made the row worth writing: **it cannot ratify "the 21 judgement
+picks" as a list, because that list no longer describes the registry.** Ten of
+the 21 now hold an `LLR-###` where the log records an `SR-###`, re-picked
+legitimately by a later design-tier pass — so a ratification quoting the
+2026-08-15 entry would be signing a superseded list. Also surfaced: 2 of the 21
+were recorded as BARE PAIRS with no reason (`IF-013`, `IF-044`), and the
+`carried_by` prototype has been generalised to three carriers past its own
+stated precondition (*"prove it on IF-102 before generalising"*) — `IF-102` now
+carries 16 constituents where 14 are recorded, and `IF-131` is a bundle with
+exactly ONE constituent, which is a pointer wearing composition's field.
+`OI-50` — the locked frame names no party for a vendored upstream source.
+
+**`IF-097` and `IF-080` recorded as CLOSED so they are not re-derived.** Both
+were plan-predicted defects that execution refuted; the refutations stand.
+Verified in code rather than inherited: `_declared_seam_pairs` genuinely does
+not split on `;`, so `IF-097` contributes NO coverage pair — and it is the only
+`;`-joined endpoint cell in the registry, a population of one. Harmless today
+ONLY because all three consumers sit in CMP-008 with `scripts/prompts`; the
+safety is co-location, not design, so moving any one of them silently stops a
+seam covering an edge it appears to cover. Stated in OI-49; not fixed, because
+the charge-through forbade touching that function's semantics.
+
+**Line endings.** `pathlib.write_text` on Windows translated LF to CRLF on all
+three scripted edits — caught by running `git ls-files --eol` BEFORE trusting
+any count, exactly as the standing rule says, and normalized back to LF before
+staging. The WI-477 worker's lesson, hit again in the same week: a scripted
+edit on this box introduces CRLF unless it writes bytes.
+
+**Gates.**
+
+- smoke: `1244 passed, 5 skipped in 65.46s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=3bc20bc8-dirty -->
+  Past the 60 s ceiling `docs/stack.ini` declares, consistent with this box's
+  own 2026-08-20 record (54.9 / 64.0 / 55.7, one over). Nothing new; the budget
+  is NOT moved to fit it.
+- full unfiltered suite, on the slice-2 tree: `2685 passed, 14 skipped in
+  587.32s (0:09:47)`
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=6aff590f-dirty -->
+  Same totals as the WI-448 close earlier today, which is the expected
+  reading: this slice added registry rows and prose, no test and no script
+  behaviour. The smoke tier is a SUBSET of this run (it drops the
+  subprocess/scaffold-heavy modules), so this green covers the commit bar for
+  the records commit below without a second smoke run.
+- `check_trajectory.py --root . --strict`: exit 0, clean (490 work items, graph
+  acyclic; the pre-existing shared-specref WARNs).
+- `check_docs.py --root . --stale`: `OK - 960 doc(s), 1325 intra-repo link(s), 0 broken (1 orphan warning(s))`
+- `trace.py --strict-integrity`: exit 0, integrity=0, interface-findings=0,
+  interfaces **126 → 128**, and the unrealized-crossing advisory reads **B-02**
+  where it read **B-01, B-02**. The regenerated status block was diffed line by
+  line: `126 → 128 seams` and nothing else, so no gate or phase moved (the
+  WI-448 lesson applied).
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
 findings accumulate below as list items)_
 
+- (WI-455 worker — a CLASS, not a one-off) **a mechanical re-pointing pass
+  that rewrites CELLS and not PROSE leaves each row contradicting itself, and
+  nothing catches it.** WI-441 retired CMP-001..005 and re-pointed 149 LLR +
+  54 IF `component` cells; the `notes` prose naming those same ids was left,
+  so **22 IF rows** sat with a notes cell naming a dead component while their
+  own `component` cell named the live one — `IF-118` literally disagreed with
+  itself. Worse than dangling: the retired ids SILENTLY RE-POINT (old CMP-002
+  was "Generators"; today CMP-002 is nothing, so a reader assuming a shift
+  lands on the wrong unit), and three rows had become FALSE rather than stale,
+  reading "cross-component edge" about an edge the new partition had made
+  intra-component. This is mechanizable and cheap: a retired id is derivable
+  (at or below the watermark, absent from `components.toml`), so a warn-only
+  "a living cell names a retired CMP id" rule would have caught all 22 at the
+  renumbering. Swept by hand this session; the DETECTOR is not built, and the
+  same gap exists for every other id space a future renumbering touches.
+- (WI-455 worker) **`pathlib.write_text` introduced CRLF into three
+  LF-indexed files, and this is the second time in one week** (the WI-477
+  worker hit it too). On Windows the default newline translation turns every
+  LF into CRLF, so any scripted edit that is not byte-mode plants working-tree
+  CRLF. Caught here only because the standing rule says to run
+  `git ls-files --eol` BEFORE trusting a count. Two workers finding the same
+  trap by discipline rather than by machinery is the argument for a check: the
+  hook floor already reads staged content and could refuse a file whose index
+  is LF and whose working tree is CRLF. Relatedly, this is a third data point
+  for the banked ~47-file CRLF-residue finding — some of that residue is very
+  likely prior sessions' scripted edits rather than autocrlf alone.
+- (WI-455 worker) **`IF-131` is a carrier with exactly ONE constituent.** The
+  `carried_by` field exists so several seams can ride one bundle; a bundle of
+  one is a pointer wearing composition's field, and it is the tell that a
+  concept has been applied past its evidence — step 7 said to prove carriage
+  on `IF-102` BEFORE generalising, and there are now three carriers (16 / 3 /
+  1). Queued inside `OI-49` rather than fixed, because withdrawing or keeping
+  it is the owner's ratification call and not an execution one.
+- (WI-455 worker) **the id watermark's next mint for two spaces lands on SPENT
+  ids, and the only thing preventing it is a prose block.** `docs/id-watermark`
+  reads `B = 7` and `EXT = 5` while `B-06`, `B-07` and `EXT-004` were allocated
+  and then CUT, and are cited by id in ruled documents — so a mint from the
+  mark re-points that history onto different things. `external.toml`'s header
+  says so, and also says that correcting a mis-computed seed needs a mechanism
+  the kit does not have. Pre-existing and known; surfaced again because `OI-50`
+  could require a `B` mint, and if that row is ruled (b) the seed problem must
+  be solved FIRST. A watermark correctable only by hand — which `trace.py`'s
+  integrity rule refuses — is a gap with no current answer.
+- (WI-455 worker — for the orchestrator, not the closing review)
+  `gen_open_items` emits three warnings against OTHER workers' fragments:
+  `docs/log.d/2026-08-20-frontier-grind.md:9` declares `OI-45` and `OI-46`
+  deferred, and `docs/log.d/2026-08-20-owner-rulings-oi45-46.md:3` declares
+  `OI-47` deferred, while all three rows now read `ruled`. Warn-only today,
+  but it is exactly the fragment-scope staleness the deferral field exists to
+  prevent, and it will read as noise at the batch close.
 - **The module-size ratchet measures the wrong axis, and WI-448 is the second
   witness the owner's own correction predicted** (OI-16: "the monolith risk was
   always about FUNCTION size and complexity, not file length"). Concretely:
