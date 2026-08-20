@@ -24,7 +24,14 @@ two-row fixture would exercise none of them honestly.
 import shutil
 import subprocess
 
-from conftest import ROOT, SCRIPTS, load_script, skip_without_env_gates, run_py
+from conftest import (
+    ROOT,
+    SCRIPTS,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    skip_without_env_gates,
+)
 
 SNAP = load_script("baseline_snapshot")
 CT = load_script("check_trajectory")
@@ -455,6 +462,7 @@ def _git_tree(tmp_path):
         )
 
     run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     SNAP.copy_live(root, seed=True)

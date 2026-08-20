@@ -23,6 +23,7 @@ from conftest import (
     SCRIPTS,
     augment_env,
     load_script,
+    pin_autocrlf,
     run_py,
     write_wi_registry,
 )
@@ -208,6 +209,7 @@ def loop_repo(tmp_path):
         ],
     )
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
@@ -928,6 +930,7 @@ def test_zero_commit_repo_is_guarded(tmp_path):
         ["git", "-C", str(repo), "init"], capture_output=True, text=True
     )
     assert _git_ok.returncode == 0
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     subprocess.run(["git", "-C", str(repo), "config", "user.email", "l@e.com"])
     subprocess.run(["git", "-C", str(repo), "config", "user.name", "L"])
     subprocess.run(
@@ -988,6 +991,7 @@ def test_working_tree_dirty_counts_renames_and_untracked(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
     (repo / "a.txt").write_text("hi\n", encoding="utf-8")
@@ -1007,6 +1011,7 @@ def _git_repo(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
     return repo
@@ -1078,6 +1083,7 @@ def test_substantive_dirty_drops_owner_scratchpad(tmp_path):
     repo = tmp_path / "r"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "a@b.com")
     _git(repo, "config", "user.name", "A")
     (repo / "OWNER_SCRATCHPAD.md").write_text("notes\n", encoding="utf-8")

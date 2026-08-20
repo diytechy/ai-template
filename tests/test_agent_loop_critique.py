@@ -10,7 +10,14 @@ import subprocess
 import sys
 
 import pytest
-from conftest import set_process_key, SCRIPTS, load_script, run_py, write_wi_registry
+from conftest import (
+    SCRIPTS,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+    write_wi_registry,
+)
 
 agent_loop = load_script("agent_loop")
 
@@ -163,6 +170,7 @@ def critique_repo(tmp_path):
     (repo / "docs" / "rubrics" / "render.md").write_text(RUBRIC, encoding="utf-8")
 
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")

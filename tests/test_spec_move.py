@@ -20,7 +20,7 @@ silently relaid to LF (the WI-234/WI-337 lesson).
 
 import subprocess
 
-from conftest import SCRIPTS, load_script, run_py, skip_without_env_gates
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, skip_without_env_gates
 
 sm = load_script("spec_move")
 
@@ -378,6 +378,7 @@ def _seeded_repo(repo):
         return proc.stdout
 
     _git("init", "-q")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git("config", "user.email", "t@example.com")
     _git("config", "user.name", "T")
     _git("config", "commit.gpgsign", "false")

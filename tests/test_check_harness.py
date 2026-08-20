@@ -9,6 +9,7 @@ from conftest import (
     augment_env,
     load_script,
     make_minimal_project,
+    pin_autocrlf,
     run_py,
 )
 
@@ -575,6 +576,7 @@ def _divergence_repo(tmp_path):
     (tmp_path / "docs" / "bundle" / "sn.md").write_text("v1\n", encoding="utf-8")
     (tmp_path / "notes.md").write_text("hand-written\n", encoding="utf-8")
     _git(tmp_path, "init", "-q")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(tmp_path, "config", "user.email", "t@example.com")
     _git(tmp_path, "config", "user.name", "T")
     _git(tmp_path, "add", "-A")

@@ -3,7 +3,7 @@ process-options.md "Unattended operation" -> routing/escalation). Unit-level:
 the pure functions are exercised directly; the loop integration lives in
 test_agent_loop.py."""
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
 
 route = load_script("agent_route")
 
@@ -1098,6 +1098,7 @@ def test_phase_draw_ordinal_counts_across_trains_from_primary_aggregate(tmp_path
     (main / "docs").mkdir(parents=True)
     (main / "README.md").write_text("seed\n", encoding="utf-8")
     _git(main, "init", "-q")
+    pin_autocrlf(main)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(main, "config", "user.email", "loop@example.com")
     _git(main, "config", "user.name", "Loop Test")
     _git(main, "add", "-A")

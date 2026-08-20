@@ -10,6 +10,7 @@ from conftest import (
     ROOT,
     SCRIPTS,
     load_script,
+    pin_autocrlf,
     process_key,
     process_toml,
     run_py,
@@ -520,6 +521,7 @@ def test_tarball_kit_inside_a_foreign_repo_does_not_steal_its_anchor(tmp_path):
     foreign.mkdir()
     env_git = ["git", "-C", str(foreign), "-c", "user.name=t", "-c", "user.email=t@t"]
     subprocess.run(env_git[:3] + ["init", "-q"], check=True)
+    pin_autocrlf(foreign)  # WI-461/WI-465; see conftest.pin_autocrlf
     (foreign / "unrelated.txt").write_text("not the kit\n", encoding="utf-8")
     subprocess.run(env_git + ["add", "unrelated.txt"], check=True)
     subprocess.run(env_git + ["commit", "-qm", "foreign history"], check=True)

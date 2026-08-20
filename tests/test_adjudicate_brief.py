@@ -29,7 +29,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import env_gate_skipif, load_script, run_py, SCRIPTS
+from conftest import env_gate_skipif, load_script, pin_autocrlf, run_py, SCRIPTS
 
 ab = load_script("adjudicate_brief")
 baseline_snapshot = load_script("baseline_snapshot")
@@ -55,6 +55,7 @@ def _repo(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     # The scaffold's rule: out/ (locks, raw run logs) is runtime state, never

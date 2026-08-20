@@ -23,7 +23,7 @@ view: the staleness bite and the vacuous-non-adopter posture.
 
 import subprocess
 
-from conftest import load_script
+from conftest import load_script, pin_autocrlf
 
 # Hand-authored briefs + the generated marker block, mirroring the shipped
 # OPEN_ITEMS.template.md tail. The intro + OI-1 above the marker must never be
@@ -78,6 +78,7 @@ def _init(repo, extra_specs=()):
         OPEN_ITEMS, encoding="utf-8"
     )
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "t@example.com")
     _git(repo, "config", "user.name", "T")
     _git(repo, "add", "-A")

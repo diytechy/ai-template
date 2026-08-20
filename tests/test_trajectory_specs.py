@@ -12,7 +12,14 @@ import shutil
 import subprocess
 
 
-from conftest import skip_without_env_gates, ROOT, SCRIPTS, load_script, run_py
+from conftest import (
+    ROOT,
+    SCRIPTS,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    skip_without_env_gates,
+)
 
 wi_convert = load_script("wi_convert")
 
@@ -366,6 +373,8 @@ def test_a_trailer_claiming_an_open_wi_warns(tmp_path):
         ("commit", "-m", "build it\n\nWI: WI-001"),
     ):
         subprocess.run([git, "-C", str(tmp_path), *args], capture_output=True)
+        if args == ("init",):
+            pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "completion WI-001" in proc.stderr and "trailer" in proc.stderr
@@ -390,6 +399,8 @@ def test_the_trailer_signal_never_joins_the_exit_code(tmp_path):
         ("commit", "-m", "build it\n\nWI: WI-001"),
     ):
         subprocess.run([git, "-C", str(tmp_path), *args], capture_output=True)
+        if args == ("init",):
+            pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "WARN - completion WI-001" in proc.stderr
@@ -410,6 +421,7 @@ def _staged_close_repo(tmp_path, spec_body):
     _write_spec(tmp_path, "WI-001.md", spec_body)
     write_wis_sr(tmp_path, "WI-001,A,t,,,queued,,docs/specs/WI-001.md\n")
     run_git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     run_git("add", "-A")

@@ -12,7 +12,7 @@ import sys
 import tomllib
 
 import pytest
-from conftest import ROOT, SCRIPTS, load_script
+from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf
 
 mc = load_script("migrate_carrier")
 
@@ -503,6 +503,7 @@ def test_the_pack_recipe_run_verbatim_leaves_the_registries_TRACKED(tmp_path):
         return subprocess.run(argv, cwd=root, check=True, capture_output=True)
 
     run("git", "init", "-q")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run("git", "add", "-A")
     run("git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "before")
 

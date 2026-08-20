@@ -4,7 +4,7 @@ must state the `PROJECT-VISION:` tag exactly once (process.md §4 DevStg-Reqs's
 mechanizable half), and the git-gated staleness pass degrades to a clean skip
 (process.md §3 "The doc set must stay navigable")."""
 
-from conftest import ROOT, SCRIPTS, load_script, run_py
+from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf, run_py
 
 
 def _add_must_need(scaffold, sid="SN-005"):
@@ -325,6 +325,7 @@ def test_staleness_prints_hint_not_warn(tmp_path):
         )
 
     git("init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     git("config", "user.email", "t@example.com")
     git("config", "user.name", "T")
     (repo / "guide.md").write_text("# Guide\n\nSee [mod](mod.py).\n", encoding="utf-8")
@@ -659,6 +660,7 @@ def test_archive_stale_hint_suppressed_but_live_still_hinted(tmp_path):
         )
 
     git("init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     git("config", "user.email", "t@example.com")
     git("config", "user.name", "T")
     (repo / "docs" / "archive").mkdir(parents=True)
@@ -754,6 +756,7 @@ def test_git_commit_lookup_batches_tracked_paths_and_skips_untracked(tmp_path):
 
     repo = tmp_path
     subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     subprocess.run(
         ["git", "-C", str(repo), "config", "user.email", "t@example.com"],
         check=True,

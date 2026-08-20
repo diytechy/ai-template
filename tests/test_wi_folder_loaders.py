@@ -39,6 +39,7 @@ from conftest import (
     KIT,
     SCRIPTS,
     load_script,
+    pin_autocrlf,
     run_py,
     skip_without_env_gates,
 )
@@ -594,6 +595,7 @@ def git_repo(root):
         return proc.stdout
 
     run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     return run_git

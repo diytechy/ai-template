@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import load_script
+from conftest import load_script, pin_autocrlf
 from traj_fixtures import gen, html_of, make_repo
 
 
@@ -38,6 +38,7 @@ def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
         )
 
     git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     git("config", "user.email", "t@example.com")
     git("config", "user.name", "T")
     git("add", "-A")

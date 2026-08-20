@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py, write_wi_registry
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, write_wi_registry
 
 agent_loop = load_script("agent_loop")
 
@@ -232,6 +232,7 @@ def managed_repo(tmp_path):
     write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")
@@ -782,6 +783,7 @@ def _winstay_repo(tmp_path):
     write_wi_registry(repo, [_wi_201_row("medium")])
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")

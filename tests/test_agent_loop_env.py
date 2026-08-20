@@ -9,7 +9,7 @@ import csv
 import subprocess
 import sys
 
-from conftest import SCRIPTS, run_py, write_wi_registry
+from conftest import SCRIPTS, pin_autocrlf, run_py, write_wi_registry
 
 # The fake agent: record the value of AGENT_TEST_ENV_MARKER it was launched with
 # (or a sentinel when absent), commit one build, then write DONE to terminate.
@@ -72,6 +72,7 @@ def _make_repo(tmp_path, env_cell):
     )
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     _git(repo, "add", "-A")

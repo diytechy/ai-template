@@ -1,7 +1,6 @@
 +++
 id = "WI-465"
 title = "Pin core.autocrlf in every git-initing test fixture (or one shared builder): the CRLF-conviction fix's diagnosis (log 2026-08-16a) found Git for Windows' system gitconfig (core.autocrlf=true) silently folds CRLF at `git add` in any fixture repo that does not pin it — the clean filter erased the forged relay before it reached the object database, turning one conviction test red and its sibling excuse test VACUOUS on this box. test_integrate.py's git_repo fixture is pinned now, but 28 other git-initing fixture sites remain unpinned (measured at the 2026-08-16b adversarial round), including FIVE near-verbatim clones of git_repo itself — tests/test_check_lane.py, test_dispatch.py, test_intake.py, test_integrate.py, test_wi_folder_loaders.py — of which only one got the pin, so the siblings now diverge silently with nothing comparing them. None is red today because only test_integrate forges EOLs into committed blobs, but any future test asserting on committed bytes in those fixtures hits exactly this, and it will read as a mystery. Scope: EVALUATE THE KIT'S OWN SHIPPED MECHANISM FIRST — bootstrap writes .gitattributes with `* text=auto eol=lf`, which overrides core.autocrlf outright (the e2e scaffold repo in test_integrate.py is already immune this way, so it is NOT in this sweep); a fixture that writes the same .gitattributes matches production more honestly than 28 copies of a config pin. Then: one shared helper (or the conftest builders) carrying whichever remedy wins, the 28 sites swept onto it, the mechanism stated once, the five git_repo clones reconciled. Do NOT change what any test asserts."
-specref = "docs/log.md"
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +8,23 @@ buildtier = "quick"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Re-measured the census (28 git-initing files / 43 call sites — the spec's
+count plus two sites it missed and two new since; 5 sites already immune
+via bootstrap's shipped `.gitattributes`). EVALUATED the spec's suggested
+`.gitattributes` remedy and REVERSED it with the reasoning on record:
+`* text=auto eol=lf` normalizes unconditionally, which would relocate the
+exact byte-loss bug into the fixture layer and foreclose any future
+byte-sensitive assertion — the config pin (`core.autocrlf false`, the
+mechanism test_integrate.py::git_repo already proved) is inert on a
+correct box and forecloses nothing. One shared `conftest.pin_autocrlf`
+helper states the mechanism once; all 23 non-immune files swept onto it;
+the five git_repo clones reconciled onto the identical call; no test
+assertion changed. One self-caught bug mid-sweep (a replace_all planted
+the call against the wrong parameter name in two closures — caught by
+RUNNING the file). Full suite 2647 passed / 13 skipped; smoke green.
 
 ## Context
 

@@ -35,6 +35,7 @@ from conftest import (
     env_gate_skipif,
     SCRIPTS,
     load_script,
+    pin_autocrlf,
     run_py,
     wi_registry_header,
     write_wi_registry,
@@ -93,6 +94,7 @@ def _make_train_repo(tmp_path, train="t1", wis=("WI-201",)):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     rows = [
@@ -562,6 +564,7 @@ def _train_repo(tmp_path, train="t1", assigned=("WI-201",)):
     repo = tmp_path / "repo"
     repo.mkdir()
     _git(repo, "init")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "loop@example.com")
     _git(repo, "config", "user.name", "Loop Test")
     (repo / ".gitignore").write_text("out/\n", encoding="utf-8")

@@ -30,6 +30,7 @@ from conftest import (
     SCRIPTS,
     load_script,
     make_minimal_project,
+    pin_autocrlf,
     run_py,
 )
 
@@ -96,6 +97,7 @@ def _reattest_repo(root):
 
     write_spine("Approved", "the ORIGINAL attested text")
     run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     # THE APPROVAL COPIES THE TEXT IT BLESSED — the whole mechanism, in the
@@ -168,6 +170,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
         _REATTEST_TC_H, encoding="utf-8"
     )
     run_git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
@@ -256,6 +259,7 @@ def _ratify_repo(tmp_path):
 
     write("Approved")
     run_git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     load_script("baseline_snapshot").copy_live(tmp_path, seed=True)

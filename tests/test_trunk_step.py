@@ -13,7 +13,7 @@ would test the wrong thing. The real `docs/` is never written.
 
 import subprocess
 
-from conftest import load_script
+from conftest import load_script, pin_autocrlf
 
 ts = load_script("trunk_step")
 
@@ -66,6 +66,7 @@ def repo(tmp_path):
     (tmp_path / "docs" / "log.md").write_text(SEED_LOG, encoding="utf-8")
     (tmp_path / "docs" / "log.d" / ".gitkeep").write_text("", encoding="utf-8")
     _git(tmp_path, "init", "-q")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     _commit(tmp_path, "seed", when=1_000_000)
     return tmp_path
 
@@ -305,6 +306,7 @@ def _seed_regen_repo(root):
     thinner spine would leave the tree clean and the dirtiness assertions
     below vacuous). `open-items` is armed too, as the later applicable family."""
     _git(root, "init", "-q")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     (root / "docs" / "okf").mkdir(parents=True)
     (root / "docs" / "requirements").mkdir(parents=True)
     (root / "docs" / "test").mkdir(parents=True)

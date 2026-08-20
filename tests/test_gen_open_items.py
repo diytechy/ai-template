@@ -22,7 +22,7 @@ Each guard carries its negative half, per the house rule.
 import re
 import subprocess
 
-from conftest import SCRIPTS, load_script, run_py
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Notes,"
@@ -86,6 +86,7 @@ def _git_init(root):
     """A committed git repo. History no longer supplies the baseline (D-9 step
     4) but the snapshot's stamp reads git, so the paths still want a checkout."""
     subprocess.run(["git", "init", "-q", str(root)], check=True)
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git_commit(root, "seed")
 
 

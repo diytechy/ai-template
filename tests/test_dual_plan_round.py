@@ -18,7 +18,14 @@ import os
 import subprocess
 import sys
 
-from conftest import set_process_key, SCRIPTS, augment_env, run_py, load_script
+from conftest import (
+    SCRIPTS,
+    augment_env,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+)
 
 TRACE = load_script("trace")
 
@@ -142,6 +149,7 @@ def make_fixture(tmp_path, plan_mode="dual"):
     subprocess.run(
         ["git", "init", "-q"], cwd=str(root), check=True, capture_output=True
     )
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     git_id = [
         "git",
         "-c",

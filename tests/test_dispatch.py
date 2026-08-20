@@ -44,6 +44,7 @@ from conftest import (
     env_gate_skipif,
     load_script,
     make_minimal_project,
+    pin_autocrlf,
     record_ids,
     run_py,
     set_process_key,
@@ -87,6 +88,7 @@ def _commit(root, message, when=None):
 def git_repo(root, branch="main"):
     skip_without_env_gates("git")
     _git(root, "init", "-q")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")

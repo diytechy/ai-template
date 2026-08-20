@@ -155,7 +155,20 @@ process-flow now-marker gains a worded cue in the proven 6:1 accent-text
 idiom after the badge form MEASURED 2.98:1 dark and was rejected; the hero
 meters carry aria-label identities. Three tests; smoke green.
 
+### WI-465 — autocrlf fixture sweep (sonnet worker) — CLOSED complete
+
+Census re-measured (28 files / 43 sites; 5 bootstrap-immune), the spec's
+`.gitattributes` remedy REVERSED with reasoning (unconditional LF
+normalization relocates the bug), one shared conftest.pin_autocrlf helper,
+23 files swept, five clones reconciled, zero assertions changed. Full
+suite 2647/13.
+
 ### Adjacent findings accumulating for the closing review
+
+- (WI-465 worker) Five test files rely on bootstrap's `.gitattributes` for
+  CRLF-safety with NOTHING pinning that invariant — a change to
+  gitattributes.template or make_minimal_project's write order silently
+  reopens the hole in five files. Worth a defensive assertion.
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475
   runnability-only pattern — same defect class, product-launcher surface,

@@ -28,7 +28,7 @@ import subprocess
 import sys
 
 import pytest
-from conftest import SCRIPTS, load_script, run_py, skip_without_env_gates
+from conftest import SCRIPTS, load_script, pin_autocrlf, run_py, skip_without_env_gates
 
 # The exact notice contract §5.2 asks for, restated once here rather than at each
 # assertion — a test that spelled it out five times would be five places to edit.
@@ -56,7 +56,8 @@ def check():
 def git_repo(root, branch="main"):
     """A committed git repo on `branch`. `git init -b` is 2.28+, so the branch is
     set with a symbolic-ref instead — that works on every git the kit supports and
-    is exactly the ref `_work_branch` reads."""
+    is exactly the ref `_work_branch` reads. `conftest.pin_autocrlf` neutralizes
+    the box's `core.autocrlf` (WI-461/WI-465; see its docstring)."""
     skip_without_env_gates("git")
     git = shutil.which("git")
 
@@ -68,6 +69,7 @@ def git_repo(root, branch="main"):
         return proc.stdout
 
     run_git("init")
+    pin_autocrlf(root)
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     run_git("symbolic-ref", "HEAD", "refs/heads/" + branch)

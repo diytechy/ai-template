@@ -33,7 +33,7 @@ reverted nothing, or a "blocked" assertion that would pass on an unblocked row.
 import shutil
 import subprocess
 
-from conftest import env_gate_skipif, load_script, skip_without_env_gates
+from conftest import env_gate_skipif, load_script, pin_autocrlf, skip_without_env_gates
 
 pytestmark = env_gate_skipif("git")
 
@@ -98,6 +98,7 @@ def claimed_repo(tmp_path, wid="WI-401", branch="wi-401", extra=()):
     root = tmp_path / "repo"
     root.mkdir()
     _git(root.parent, "init", "-q", str(root))
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")

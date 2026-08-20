@@ -16,7 +16,14 @@ import shutil
 import subprocess
 
 
-from conftest import skip_without_env_gates, ROOT, SCRIPTS, load_script, run_py
+from conftest import (
+    ROOT,
+    SCRIPTS,
+    load_script,
+    pin_autocrlf,
+    run_py,
+    skip_without_env_gates,
+)
 
 wi_convert = load_script("wi_convert")
 
@@ -133,6 +140,7 @@ def _init_followup_repo(root):
         )
 
     run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     write_wis_sr(
@@ -209,6 +217,7 @@ def _init_spine_repo(root):
         _SPINE_SR_HEADER + _sr_row(), encoding="utf-8"
     )
     run_git("init")
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     run_git("add", "-A")
@@ -745,6 +754,7 @@ def _init_critique_close_repo(tmp_path, verdict="CHANGES-REQUESTED findings=2"):
         )
 
     run_git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     req = tmp_path / "docs" / "requirements"
@@ -835,6 +845,7 @@ def _staleness_git(tmp_path):
         )
 
     run_git("init")
+    pin_autocrlf(tmp_path)  # WI-461/WI-465; see conftest.pin_autocrlf
     run_git("config", "user.email", "t@example.com")
     run_git("config", "user.name", "T")
     return run_git

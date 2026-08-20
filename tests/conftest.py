@@ -226,6 +226,48 @@ def load_script(name):
     return mod
 
 
+# --- WI-461/WI-465: a fixture repo must not inherit the box's core.autocrlf --
+# Git for Windows writes `core.autocrlf=true` into the SYSTEM gitconfig; a
+# `git init` in any tmp dir inherits it, so `git add` silently folds a
+# working-tree `\r\n` to `\n` on the way into the object database. A fixture
+# asserting on committed BYTES then tests LF-only content on a stock Windows
+# box while reading green everywhere else — `test_integrate.py::git_repo`
+# hit exactly this (docs/log.md 2026-08-16a): the forged CRLF relay never
+# reached the object database, so the byte-exact conviction test went red and
+# its excuse-test sibling passed VACUOUSLY. POSIX boxes default autocrlf to
+# false and never see it, which is exactly the shape of bug that survives
+# until someone runs the suite on a stock Windows install.
+#
+# The kit's shipped remedy for a SCAFFOLDED repo is bootstrap's
+# `.gitattributes` (`* text=auto eol=lf`, gitattributes.template) — already
+# production-faithful, and why a repo built via the `scaffold` fixture (or
+# any other bootstrap.py run) needs no separate pin here. But that mechanism
+# is the wrong default for a BARE fixture repo: it forces every text file to
+# LF, which would silently reintroduce the identical "committed bytes don't
+# match what the test wrote" failure for any fixture that ever needs to
+# assert a non-LF ending — just relocated from `core.autocrlf` to
+# `.gitattributes`. `core.autocrlf false` avoids that: it is inert on a
+# correctly configured box and, everywhere else, makes the object database
+# store exactly the bytes the test wrote — platform- and git-config-
+# independent, and it forecloses nothing a future test might assert.
+#
+# Call this once per fixture repo, right after `git init` and before the
+# first `git add`.
+def pin_autocrlf(root):
+    """Pin `core.autocrlf` OFF, repo-local, in a freshly `git init`-ed fixture
+    repo at `root`. Self-contained (resolves its own `git`) so every fixture
+    builder can call it uniformly regardless of which local git-runner idiom
+    (`_git`, `run_git`, a bare `subprocess.run`) it otherwise uses. See the
+    module comment above for the full mechanism and why this beats writing
+    `.gitattributes` into a bare test fixture."""
+    git = shutil.which("git")
+    subprocess.run(
+        [git, "-C", str(root), "config", "core.autocrlf", "false"],
+        check=True,
+        capture_output=True,
+    )
+
+
 # --- The interpreter-floor preflight -----------------------------------------
 # The kit declares ONE Python floor (`agent_common.MIN_PYTHON`) and dev-setup
 # provisions ./.venv to satisfy it. Run this suite under a BELOW-floor
