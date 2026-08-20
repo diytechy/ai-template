@@ -122,6 +122,17 @@ import sys
 import time
 from pathlib import Path
 
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# WI-448): the best-effort-off-git subprocess pattern this module used to spell
+# out itself. Run as a subprocess this script's own dir is sys.path[0] so a
+# plain import resolves; the guard covers an in-process import (a test) whose
+# sys.path does not yet carry scripts/.
+try:
+    from kitlib import git as _kitgit
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import git as _kitgit
+
 # Resolve sibling scripts relative to *this file*, not the cwd. A repo whose
 # existing directory is named "Scripts/" (NTFS case-preserving, POSIX case-
 # sensitive) would break the old "scripts/trace.py" cwd-relative strings on
@@ -1409,21 +1420,13 @@ _WORK_BRANCH_CACHE = {}
 _FORCE_TRUNK_LANE = False
 
 
-def _git_out(root, args):
-    """stdout of a git command under `root`, or None on ANY failure (no git
-    binary, not a repo, detached HEAD) — the house best-effort-off-git pattern
-    (trace.py `_git_out`, derive_gate.py `_git`)."""
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-    except (OSError, ValueError):
-        return None
-    return proc.stdout if proc.returncode == 0 else None
+# stdout of a git command under `root`, or None on ANY failure (no git binary,
+# not a repo, unknown rev/path, non-zero exit) — the house best-effort-off-git
+# pattern. ONE HOME since WI-448 (`kitlib.git`): it was written out three times,
+# in check.py, trace.py and trunk_step.py, each docstring pointing at the others
+# as though one of them were the original. Kept under its own long-standing
+# private name so no call site below moves.
+_git_out = _kitgit.git_out
 
 
 # --- staged-vs-worktree divergence (OI-31, ruled option (b) 2026-08-18) --------

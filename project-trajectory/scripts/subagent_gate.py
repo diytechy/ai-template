@@ -46,6 +46,21 @@ import sys
 import tomllib
 from pathlib import Path
 
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# WI-448): the declared-policy line reader this module used to spell out
+# itself. Run as a subprocess this script's own dir is sys.path[0] so a plain
+# import resolves; the guard covers an in-process import (a test) whose
+# sys.path does not yet carry scripts/. THIS MODULE IS A FAIL-OPEN GATE BY
+# OWNER RULING (2026-08-11) and the import does not change that: `kitlib` ships
+# in bootstrap's MAPPING like every other sibling, so an adopter's copy has it;
+# were it ever absent the gate would fail LOUDLY at import rather than silently
+# allowing, which is the direction this module already prefers for a defect.
+try:
+    from kitlib import config as _kitconfig
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import config as _kitconfig
+
 # Claude Code's subagent-spawn tools. A tool not in this set is never gated
 # (the hook defers), so the gate touches only fan-out, nothing else.
 SPAWN_TOOLS = {"Task", "Agent"}
@@ -94,35 +109,26 @@ def read_process_policy(root):
     return None if value is None else str(value).strip().lower()
 
 
-def read_declared(path):
-    """First non-comment, non-blank line lowercased, or "" (kept local per the
-    F5 small-loader rule; no sibling import).
-
-    The LINE-SELECTION rule (skip blank/comment lines, take the first
-    survivor) is the one `agent_common.read_declared` and the three
-    `_first_declared_line` copies (bootstrap.py, check_privacy.py,
-    check_trajectory.py) also apply — pinned equal in tests/test_rule_sync.py.
-    This copy diverges from all four in two ways, BOTH deliberate, not just
-    the casing the name implies: the result is LOWERCASED (this module
-    compares the token against a closed, case-folded vocabulary), and the
-    not-declared sentinel is `""` rather than `None` (`decide()` below
-    documents its own `policy` param as `"" = off`, so this reader has to
-    hand back `""` to compose with that contract without a None-check at
-    every call site). Neither is a bug to harmonize away.
-
-    Contract:
-      Inputs:  path: path-like to a declared-policy file (may not exist)
-      Outputs: str — the policy token, lowercased; "" if absent/unreadable/empty
-    """
-    try:
-        text = Path(path).read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return ""
-    for raw in text.splitlines():
-        line = raw.strip()
-        if line and not line.startswith("#"):
-            return line.lower()
-    return ""
+# First non-comment, non-blank line lowercased, or "".
+#
+# WI-448: this was the fifth literal copy of the declared-LINE rule, and the
+# only one whose docstring had to spend a paragraph arguing that its
+# divergences were deliberate. The rule now has ONE home
+# (`kitlib.config.first_declared_line`) and this name is the ADAPTER over it —
+# `read_declared_lower` — so the two divergences survive as a stated contract
+# instead of as a copy that has to be pinned equal:
+#   1. LOWERCASED — this module compares the token against a closed,
+#      case-folded vocabulary ("off"/"ask"/"deny").
+#   2. `""`, not None, for undeclared — `decide()` below documents its own
+#      `policy` param as `"" = off`, so this reader hands back `""` to compose
+#      with that contract without a None-check at every call site.
+# Neither is a bug to harmonize away; both are now expressed once, in the
+# adapter, rather than re-argued in a duplicate body.
+#
+# Contract:
+#   Inputs:  path: path-like to a declared-policy file (may not exist)
+#   Outputs: str — the policy token, lowercased; "" if absent/unreadable/empty
+read_declared = _kitconfig.read_declared_lower
 
 
 def decide(tool_name, policy, override):

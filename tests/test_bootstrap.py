@@ -95,6 +95,17 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/rubrics/README.md",
         "docs/rubrics/rubric-000.md",
         "docs/test/test-cases.toml",
+        # The shared helper package (WI-448) — every module, because a
+        # PARTIAL copy is the failure mode: the scripts import
+        # `kitlib.config` / `kitlib.git` / `kitlib.registry` by name, so a
+        # missing module ImportErrors on the scaffold's first check rather
+        # than degrading. `test_the_common_package_ships_complete` asserts the
+        # set EXACTLY against the kit; these four rows are the spot-check that
+        # keeps the expectation readable beside the other scripts.
+        "scripts/kitlib/__init__.py",
+        "scripts/kitlib/config.py",
+        "scripts/kitlib/git.py",
+        "scripts/kitlib/registry.py",
         "scripts/check.py",
         "scripts/derive_gate.py",
         "scripts/check_doc_refs.py",
@@ -1146,6 +1157,87 @@ def test_scaffolded_scripts_carry_no_archive_review_anchors(scaffold):
     assert kit_hits > 0, "kit source should still carry the provenance citations"
 
 
+def test_the_common_package_ships_complete(scaffold):
+    """Every module of the shared package reaches a real scaffold, and imports.
+
+    WI-448. The sibling-import guard below answers a DIFFERENT question and
+    cannot answer this one: it compares TOP-LEVEL import names, so once any
+    `scripts/kitlib/*.py` row is in MAPPING the name `kitlib` reads as mapped
+    and a MISSING MODULE INSIDE the package is invisible to it. Probed, not
+    assumed — deleting the `config.py` row leaves that guard green.
+
+    Per-file completeness is a MANIFEST question, so it is asked of a real
+    scaffold: the copied package must hold exactly the kit's module set, and
+    must actually import there. That is the standing lesson from the
+    `schedule.py` omission stated for a package — a partial copy would pass
+    every in-repo test, because this repo's `scripts/` holds every file, and
+    would ImportError on an adopter's first check.
+    """
+    kit_modules = sorted(p.name for p in (SCRIPTS / "kitlib").glob("*.py"))
+    assert "__init__.py" in kit_modules, "kitlib is not a package in the kit"
+    shipped = sorted(p.name for p in (scaffold / "scripts" / "kitlib").glob("*.py"))
+    assert shipped == kit_modules, (
+        "the scaffold's copy of kitlib/ is not the kit's module set — "
+        "MAPPING is missing a row (or carries a stale one): "
+        "kit={} scaffold={}".format(kit_modules, shipped)
+    )
+    # ...and the copy is IMPORTABLE from where a shipped script sits, which is
+    # the property the file list is only a proxy for. Run out of `scripts/`,
+    # exactly as a scaffolded check resolves it (sys.path[0] = the script dir).
+    proc = run_py(
+        [
+            "-c",
+            "import kitlib, kitlib.config, kitlib.git, kitlib.registry; "
+            "print(kitlib.registry.spec_work_dir('docs/x.csv'))",
+        ],
+        cwd=scaffold / "scripts",
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+def test_bootstrap_imports_only_the_common_package():
+    """THE RULE THAT REPLACED F5, ASSERTED RATHER THAN COMMENTED.
+
+    Owner ruling D-8 (`OI-16`) inverted its own step 2: shared helpers live in
+    the shipped package and `bootstrap.py` imports FROM it. The replacing rule
+    — *bootstrap imports the common package and nothing else* — had only ever
+    been prose. It is load-bearing in one specific way: `bootstrap.py` is
+    deliberately absent from its own MAPPING, so it must keep working from a
+    bare kit checkout, and every sibling it imports becomes a load-bearing
+    dependency of the installer. `kitlib` is safe to depend on precisely
+    because it ships and is import-clean of the rest of `scripts/`; a second
+    sibling would not be.
+    """
+    kit_modules = {p.stem for p in SCRIPTS.glob("*.py")} - {"bootstrap"}
+    kit_modules |= {p.parent.name for p in SCRIPTS.glob("*/__init__.py")}
+    tree = ast.parse((SCRIPTS / "bootstrap.py").read_text(encoding="utf-8"))
+    imported = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported |= {a.name.split(".")[0] for a in node.names}
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            imported.add(node.module.split(".")[0])
+    assert imported & kit_modules == {"kitlib"}, (
+        "bootstrap.py must import the common package and nothing else "
+        "(D-8/OI-16); it imports: " + ", ".join(sorted(imported & kit_modules))
+    )
+    # And the package must stay clean of the rest of scripts/, or the edge
+    # above smuggles the whole graph into the scaffolder anyway.
+    for module in sorted((SCRIPTS / "kitlib").glob("*.py")):
+        mtree = ast.parse(module.read_text(encoding="utf-8"))
+        for node in ast.walk(mtree):
+            tops = set()
+            if isinstance(node, ast.Import):
+                tops = {a.name.split(".")[0] for a in node.names}
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                tops = {node.module.split(".")[0]}
+            assert not (tops & (kit_modules - {"kitlib"})), (
+                "kitlib/{} imports a non-kitlib sibling: {}".format(
+                    module.name, sorted(tops & kit_modules)
+                )
+            )
+
+
 def test_every_sibling_imported_module_is_shipped_by_mapping():
     """A shipped script's sibling imports must themselves be in MAPPING.
 
@@ -1177,18 +1269,35 @@ def test_every_sibling_imported_module_is_shipped_by_mapping():
         None,
     )
     assert mapping_node is not None, "bootstrap.py no longer defines MAPPING"
-    mapped = {
-        literal.value.rsplit("/", 1)[-1][:-3]
-        for literal in ast.walk(mapping_node)
-        if isinstance(literal, ast.Constant)
-        and isinstance(literal.value, str)
-        and literal.value.endswith(".py")
-    }
+    # PACKAGES COUNT AS MODULES, BOTH SIDES OF THE COMPARISON (WI-448). Before
+    # `kitlib/` this collapsed every MAPPING literal to a bare stem and globbed
+    # only top-level `*.py`, so a package was invisible TWICE: `from kitlib
+    # import config` yields the top-level name `kitlib`, which was in neither
+    # `mapped` nor `kit_modules`, and the guard silently passed the one import
+    # edge with the widest blast radius in the kit. `mapped` therefore also
+    # carries the PACKAGE NAME of any `scripts/<pkg>/*.py` destination, and the
+    # walk recurses so a package module's own sibling imports are checked too.
+    mapped = set()
+    for literal in ast.walk(mapping_node):
+        if not (
+            isinstance(literal, ast.Constant)
+            and isinstance(literal.value, str)
+            and literal.value.endswith(".py")
+        ):
+            continue
+        parts = literal.value.split("/")
+        mapped.add(parts[-1][:-3])
+        if len(parts) > 2:  # scripts/<pkg>/<module>.py — the package ships too
+            mapped.add(parts[-2])
     kit_modules = {p.stem for p in SCRIPTS.glob("*.py")}
+    kit_modules |= {p.parent.name for p in SCRIPTS.glob("*/__init__.py")}
 
     missing = {}
-    for path in sorted(SCRIPTS.glob("*.py")):
-        if path.stem == "bootstrap" or path.stem not in mapped:
+    for path in sorted(SCRIPTS.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        owner = path.parent.name if path.parent != SCRIPTS else path.stem
+        if owner == "bootstrap" or owner not in mapped:
             continue  # the scaffolder itself is not shipped; nor are kit-only tools
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

@@ -1856,3 +1856,15 @@ test_refs = "(see TC-175)"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-181]
+sr_refs = ["SR-166"]
+title = "The shared helper package, and its complete arrival in a scaffold"
+module = "project-trajectory/scripts/kitlib/__init__.py;project-trajectory/scripts/kitlib/config.py;project-trajectory/scripts/kitlib/git.py;project-trajectory/scripts/kitlib/registry.py"
+code_symbol = "first_declared_line/read_spec_rows/git_out"
+detail = "kitlib is the kit's one home for behaviours that were previously copied per script: config.first_declared_line with its two adapters (read_declared substituting a caller default, read_declared_lower lowercasing to a \"\" sentinel), registry's docs/work/ spec-folder reader (the row shape, the frontmatter/status/body parse and the ordered read), and git.git_out, the best-effort-off-git subprocess pattern that answers None on any failure and leaves the fail-direction to its caller. Themed modules, never one generic common file. Every module of the package is a bootstrap.MAPPING row, so a scaffold receives it whole; bootstrap.py imports it and imports no other sibling, and the package imports no sibling at all. The completeness of that manifest is asked of a REAL SCAFFOLD, not of this repo, because this repo's scripts/ holds every file and a partial copy would read green here and ImportError on an adopter's first check."
+rationale = """Owner ruling D-8 (OI-16, inversion confirmed 2026-08-13) replaced the F5 rule, under which a shared module was rejected so each script stayed independently copy-able. F5 bounded nothing: a 2026-08-12 census found the declared-line reader with five homes carrying a false claim of equivalence, is_example with three homes one of which crashed on None, and a 270-line spec-folder reader copied verbatim into three modules — a copy that had itself drifted by the time this row landed. Equality pins could contain that class but never shrink it. The INVERSION is the load-bearing half: D-8's literal step 2 (import from bootstrap.py) is unbuildable because bootstrap.py is deliberately absent from its own MAPPING, so a shipped script importing it would raise ModuleNotFoundError on a fresh scaffold while passing in the kit — the exact failure this repo shipped once when MAPPING omitted schedule.py. So the package ships like any other sibling and the scaffolder imports FROM it. The four-component tag is not a claim that four units own one behaviour: the package is imported from every component, and which unit OWNS a shared kernel is a partition question the locked depth-0 frame does not answer — deferred to the owner as OI-48 rather than settled here by a tag."""
+test_refs = "(see TC-176)"
+status = "Drafted"
+component = "CMP-006;CMP-007;CMP-008;CMP-009"
+phase = 5

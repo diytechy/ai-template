@@ -2046,6 +2046,37 @@ guide states it as a dial rather than an unconditional rule.
   tier pays nothing.
 
 
+### The shared helper package `scripts/kitlib/` [since b94bf58c]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**A new DIRECTORY under `scripts/`, and the first one the kit has ever
+shipped.** Owner ruling D-8 ended the rule that every kit script duplicates its
+small helpers to stay independently copy-able; the shared behaviours now live
+once in `scripts/kitlib/` (`config.py`, `git.py`, `registry.py`, plus
+`__init__.py`), and eleven shipped scripts — `bootstrap.py` among them — import
+from it.
+
+**What you must do: copy the whole directory.** `kitlib/` is kit-owned, like
+every other `scripts/*.py`, so the overwrite rule for kit files applies to it
+unchanged. The one thing that differs from every previous script addition is
+that a PARTIAL copy is silently broken: the scripts import `kitlib.config` /
+`kitlib.git` / `kitlib.registry` by name, so a directory missing one module
+ImportErrors on your first check rather than degrading. Copy it whole, then run
+`scripts/check.py` — the import resolves through `sys.path[0]`, which is the
+script's own directory, so no `PYTHONPATH` or install step is involved.
+
+**If you had edited a kit script's copy of one of these helpers** — a locally
+patched `_first_declared_line`, `_utf8_console`, `_git_out`, or the
+`docs/work/` spec-folder reader — that edit is on a kit-owned file and the
+deviation review in §2 is where it surfaces. Re-apply it to
+`scripts/kitlib/<module>.py` rather than to the consumer: the consumer now
+holds a one-line re-export, so a patch re-applied there is silently overwritten
+at the next re-sync.
+
+**Nothing in your `docs/` changes**, and no registry cell moves. This is a
+scripts-only change.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

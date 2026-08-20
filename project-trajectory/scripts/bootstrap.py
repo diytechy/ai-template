@@ -324,6 +324,28 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+# THE ONE SIBLING THIS MODULE IMPORTS, AND THE RULE IS ASSERTED, NOT PROMISED.
+# Owner ruling D-8 (`OI-16`) directed shared helpers into one shipped home and
+# `bootstrap.py` to import FROM it — the INVERSION of its literal step 2, which
+# was unbuildable: `bootstrap.py` is deliberately absent from its own MAPPING
+# (the scaffolder is not shipped), so a downstream script doing `import
+# bootstrap` would raise ModuleNotFoundError on a fresh scaffold while passing
+# here, where the kit folder holds every file. That is the exact failure this
+# repo has shipped once, when MAPPING omitted `schedule.py`.
+#
+# The replacing rule — **bootstrap imports the common package and nothing
+# else** — used to exist only as a comment. It is now
+# `tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package`.
+# It matters because every sibling bootstrap imports becomes a load-bearing
+# dependency of the installer: the scaffolder must keep working from a bare kit
+# checkout, and `kitlib` is stdlib-only and import-clean of the rest of
+# `scripts/` precisely so that this one edge stays safe.
+try:
+    from kitlib import config as _kitconfig
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import config as _kitconfig
+
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 
 
@@ -1062,17 +1084,13 @@ LEGACY_CONFIG = (
 )
 
 
-def _first_declared_line(path):
-    """The legacy one-word parse (first non-empty non-comment line), or None."""
-    try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError:
-        return None
-    for line in lines:
-        line = line.strip()
-        if line and not line.startswith("#"):
-            return line
-    return None
+# The legacy one-word parse (first non-empty non-comment line), or None — one
+# of the two declared duplicates this module SHED at WI-448. Both now resolve
+# to the shipped package, which is the whole point of D-8's inversion: the
+# scaffolder imports the common package rather than the common package being
+# extracted out of the scaffolder (`bootstrap.py` is deliberately NOT in its
+# own MAPPING, so nothing downstream could ever have imported it).
+_first_declared_line = _kitconfig.first_declared_line
 
 
 def migrate_legacy_config(dest, dry_run=False):
@@ -1501,16 +1519,13 @@ def raise_watermark(dest, space, floor):
     return hit
 
 
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
-    non-ASCII characters in the created-file list / dirty-tree WARNING can't
-    raise UnicodeEncodeError on a legacy Windows cp1252 console. Python 3.7+
-    streams expose `.reconfigure`; guard for the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
+# Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
+# non-ASCII characters in the created-file list / dirty-tree WARNING can't
+# raise UnicodeEncodeError on a legacy Windows cp1252 console. The SECOND of
+# the two duplicates this module shed at WI-448 — this exact body is written
+# out 34 times across the kit, and this is the first of them to resolve to the
+# shipped package (the remaining 33 are the consolidation program's next slice).
+_utf8_console = _kitconfig.utf8_console
 
 
 # (source relative to KIT, destination relative to --dest)
@@ -1717,6 +1732,31 @@ MAPPING = [
     # -000 file, so a fresh scaffold that never uses Critique carries it for free.
     ("rubrics/README.template.md", "docs/rubrics/README.md"),
     ("rubrics/rubric-000.template.md", "docs/rubrics/rubric-000.md"),
+    # THE SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed WI-448) —
+    # AND THIS BLOCK IS THE WHOLE DOWNSTREAM RISK SURFACE OF THAT RULING.
+    #
+    # `kitlib/` holds the behaviours that used to be copied into script after
+    # script: the declared-policy line reader (five homes), the `docs/work/`
+    # spec-folder registry reader (three verbatim 270-line copies) and the
+    # best-effort-off-git subprocess pattern (three homes). Eleven shipped
+    # scripts now import it, INCLUDING `bootstrap.py` itself, so a scaffold
+    # that receives the scripts without the package ImportErrors on its first
+    # check — the `trace_text.py` rule above, with a bigger blast radius.
+    #
+    # COPIED ATOMICALLY, AND THE MANIFEST IS TESTED IN A REAL SCAFFOLD. Every
+    # module of the package is listed here explicitly rather than walked,
+    # because MAPPING is a declaration an adopter can read; the completeness of
+    # the list is held by `tests/test_bootstrap.py` —
+    # `test_the_common_package_ships_complete` bootstraps a scaffold and
+    # asserts the copied package imports and matches the kit's file set. That
+    # test exists because THIS IS THE LINE THE REPO HAS ALREADY GOT WRONG ONCE:
+    # MAPPING omitted `schedule.py`, and every fresh scaffold died on its first
+    # claim while this repo stayed green, invisible to re-sync because an
+    # already-adopted repo carries the file from an older kit.
+    ("scripts/kitlib/__init__.py", "scripts/kitlib/__init__.py"),
+    ("scripts/kitlib/config.py", "scripts/kitlib/config.py"),
+    ("scripts/kitlib/git.py", "scripts/kitlib/git.py"),
+    ("scripts/kitlib/registry.py", "scripts/kitlib/registry.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

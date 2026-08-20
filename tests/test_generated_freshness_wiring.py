@@ -182,7 +182,14 @@ def _kit_copy(tmp_path, *, prompts=False, skills=False):
     CWD), which is what makes an isolated copy a faithful stand-in: the copied
     check.py builds its step commands from the copied scripts dir, so the whole
     step runs against the copy. `docs/` exists because check.py refuses to run
-    anywhere but a repo root (WI-100)."""
+    anywhere but a repo root (WI-100).
+
+    `kitlib/` COMES ALONG UNCONDITIONALLY (WI-448). It is the shipped
+    shared-helper package `check.py` imports for the best-effort-off-git
+    pattern, so a copy without it ImportErrors before the planted defect can be
+    reached — the same dependency-manifest truth bootstrap's MAPPING states for
+    a real scaffold, asserted here for the one fixture that assembles a partial
+    scripts dir by hand rather than by bootstrapping."""
     dest = tmp_path / "project-trajectory"
     (dest / "scripts").mkdir(parents=True)
     names = ["check.py"]
@@ -192,6 +199,7 @@ def _kit_copy(tmp_path, *, prompts=False, skills=False):
         names += ["gen_skills_index.py"]
     for name in names:
         shutil.copy2(SCRIPTS / name, dest / "scripts" / name)
+    shutil.copytree(SCRIPTS / "kitlib", dest / "scripts" / "kitlib")
     if prompts:
         shutil.copytree(KIT / "prompts", dest / "prompts")
     if skills:

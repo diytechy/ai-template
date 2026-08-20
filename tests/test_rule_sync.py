@@ -997,21 +997,38 @@ def test_the_migration_table_and_the_converter_name_the_same_six():
         assert converter[name] == (section, key), name
 
 
-# --- the declared-line reader, 5-way (repo-lock.md §8.2, 2026-08-12 census) ---
-# "The first non-empty, non-comment line of a one-word policy file" is written
-# out FIVE times: agent_common.read_declared and subagent_gate.read_declared
-# (same name, two different signatures), plus a third name for the identical
-# rule — `_first_declared_line` — in bootstrap.py, check_privacy.py and
-# check_trajectory.py. Plumbing this small is licensed unbounded under F5, but
-# a silent divergence between copies would mean the git hooks, the bootstrap
-# migration, agent_common's docs/gate reader and the subagent fan-out gate
-# read the SAME on-disk file five different ways. Pinned by value, over one
-# table of file shapes, so a sixth copy — or a "harmonizing" edit to one of
-# the five — has to argue with a value table rather than a prose promise.
+# --- the declared-line reader: WAS 5-way, now ONE home (WI-448) ---------------
+# "The first non-empty, non-comment line of a one-word policy file" used to be
+# written out FIVE times: agent_common.read_declared and
+# subagent_gate.read_declared (same name, two different signatures), plus a
+# third name for the identical rule — `_first_declared_line` — in
+# bootstrap.py, check_privacy.py and check_trajectory.py. Two equality tests
+# lived here to hold the copies in step, because F5 licensed the duplication
+# and D-7 could only CONTAIN the drift, not remove it.
+#
+# THOSE TWO TESTS ARE GONE, AND THE REASON IS THE POINT. Owner ruling D-8
+# (`OI-16`) moved the rule into `kitlib.config.first_declared_line`; all five
+# names now resolve to that one function, so "the copies agree" is no longer a
+# property that can FAIL — there are no copies. A test asserting a function
+# equals itself is not a weaker pin, it is a VACUOUS one, and this file's own
+# `_sn_fields` lesson is that vacuous agreement is worse than no agreement: it
+# reads green while checking nothing. The drift is now UNREPRESENTABLE rather
+# than DETECTED, which is this repo's stated preference.
+#
+# What survives below is the part that is still a real choice: the subagent
+# gate's two DIVERGENCES from the shared rule. They did not disappear into the
+# shared function — they became an adapter (`read_declared_lower`) — so they
+# are still worth pinning by value. The identity test replaces the equality
+# tests: it asserts the five names ARE the one rule, which is what makes the
+# deletion of the other two safe rather than merely convenient.
 AGENT_COMMON = load_script("agent_common")
 SUBAGENT = load_script("subagent_gate")
 BOOTSTRAP_DECL = load_script("bootstrap")
 CHECK_PRIVACY = load_script("check_privacy")
+# The shipped shared-helper package the five names now resolve to. Imported as
+# a package (not via `load_script`, which loads a single `scripts/*.py`), and
+# `scripts/` is already on sys.path by then — `load_script` puts it there.
+import kitlib.config as KITCONFIG  # noqa: E402  (after the loads above)
 
 # (file contents, the declared line every None-sentinel reader returns).
 # `want` is what bootstrap/check_privacy/check_trajectory's `_first_declared_line`
@@ -1026,39 +1043,22 @@ _DECLARED_LINE_CASES = [
 ]
 
 
-def test_the_three_first_declared_line_copies_agree_exactly(tmp_path):
-    # bootstrap.py, check_privacy.py and check_trajectory.py each carry their
-    # own literal `_first_declared_line` — F5 plumbing, unbounded — but a
-    # divergence here would mean git-hook enforcement (check_privacy,
-    # check_trajectory) and the bootstrap legacy-config migration read the
-    # SAME file two different ways. Pin byte-for-byte equal, including the
-    # absent-file case none of the three signatures distinguish from empty.
-    for name, text, want in _DECLARED_LINE_CASES:
-        path = tmp_path / name
-        path.write_text(text, encoding="utf-8")
-        assert BOOTSTRAP_DECL._first_declared_line(path) == want, name
-        assert CHECK_PRIVACY._first_declared_line(path) == want, name
-        assert CT._first_declared_line(path) == want, name
-    missing = tmp_path / "does-not-exist"
-    assert BOOTSTRAP_DECL._first_declared_line(missing) is None
-    assert CHECK_PRIVACY._first_declared_line(missing) is None
-    assert CT._first_declared_line(missing) is None
-
-
-def test_agent_common_read_declared_agrees_modulo_its_default(tmp_path):
-    # agent_common.read_declared is the same rule with a fourth signature: a
-    # caller-supplied `default` in place of a hard-coded `None`. Called with
-    # default=None it must read identically to the three copies above — this
-    # is the function `docs/gate` (a generated cache) is read through, and it
-    # has to agree with the hooks' reader about the same file.
-    for name, text, want in _DECLARED_LINE_CASES:
-        path = tmp_path / name
-        path.write_text(text, encoding="utf-8")
-        assert AGENT_COMMON.read_declared(path, None) == want, name
+def test_the_five_declared_line_names_are_one_function(tmp_path):
+    # The deletion's warrant: the three `_first_declared_line` copies and
+    # agent_common.read_declared are no longer copies at all, so nothing can
+    # drift between them. Asserted by IDENTITY, not by value — a value battery
+    # over one shared function is the vacuous-agreement shape this file exists
+    # to refuse. `is` is the strongest statement available here and the cheapest.
+    assert BOOTSTRAP_DECL._first_declared_line is KITCONFIG.first_declared_line
+    assert CHECK_PRIVACY._first_declared_line is KITCONFIG.first_declared_line
+    assert CT._first_declared_line is KITCONFIG.first_declared_line
+    assert AGENT_COMMON.read_declared is KITCONFIG.read_declared
+    assert SUBAGENT.read_declared is KITCONFIG.read_declared_lower
+    # agent_common's own documented divergence — a caller default rather than a
+    # hard-coded None on absence — is the adapter's contract, so it stays pinned
+    # by value. This is the one behaviour above that is a CHOICE, not a copy.
     missing = tmp_path / "does-not-exist"
     assert AGENT_COMMON.read_declared(missing, None) is None
-    # Its own documented divergence — a caller default rather than a
-    # hard-coded None on absence — pinned as itself, not just "not None".
     assert AGENT_COMMON.read_declared(missing, "fallback") == "fallback"
 
 

@@ -77,6 +77,17 @@ import sys
 import tomllib
 from pathlib import Path
 
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# WI-448): the declared-policy line reader this module used to spell out itself.
+# Run as a subprocess this script's own dir is sys.path[0] so a plain import
+# resolves; the guard covers an in-process import (a test) whose sys.path does
+# not yet carry scripts/ — the sanctioned-sibling idiom the engines already use.
+try:
+    from kitlib import config as _kitconfig
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import config as _kitconfig
+
 # The inline allowlist marker: a line carrying it is never flagged.
 ALLOW_MARKER = "privacy-ok"
 
@@ -158,16 +169,13 @@ def _utf8_console():
             pass
 
 
-def _first_declared_line(path):
-    """The first non-empty, non-comment line of a declared-policy file, or None
-    (absent/empty) — the parse every reader shares (hooks, agent_loop.py)."""
-    if not path.exists():
-        return None
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#"):
-            return line
-    return None
+# The first non-empty, non-comment line of a declared-policy file, or None
+# (absent/empty) — the parse every reader shares (hooks, agent_loop.py). ONE
+# HOME since WI-448: this was one of FIVE literal copies of that rule, held
+# equal only by value pins in `tests/test_rule_sync.py` because the F5 ruling
+# licensed the duplication instead of removing it. Kept under its own
+# long-standing private name so no call site below moves.
+_first_declared_line = _kitconfig.first_declared_line
 
 
 def _process_gate(root, key):
@@ -186,10 +194,13 @@ def _process_gate(root, key):
     loud, and never a quiet opt-out. A MIXED config (this file and the legacy
     one both declaring the gate) reads ON for the same reason.
 
-    A LOCAL reader, per the F5 independently-copyable-script rule that already
-    keeps `_first_declared_line` here rather than importing the coordinator
-    layer. `tests/test_process_config.py` pins this and the hooks' sh equal
-    over a table of adversarial file shapes."""
+    STILL A LOCAL reader after WI-448 moved `_first_declared_line` into
+    `kitlib.config`, and the split is deliberate: the shared package owns the
+    declared-LINE rule, this module keeps the `[policies]` POLICY — which key,
+    which fail-direction, which residual — because a security gate's
+    fail-closed decision belongs beside the gate, not in a library every
+    checker imports. `tests/test_process_config.py` pins this and the hooks' sh
+    equal over a table of adversarial file shapes."""
     path = root / "docs" / "process.toml"
     if not path.is_file():
         return None

@@ -80,9 +80,19 @@ Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (
 import argparse
 import csv
 import re
-import subprocess
 import sys
 from pathlib import Path
+
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
+# WI-448): the best-effort-off-git subprocess pattern this module used to spell
+# out itself. Run as a subprocess this script's own dir is sys.path[0] so a
+# plain import resolves; the guard covers an in-process import (a test) whose
+# sys.path does not yet carry scripts/.
+try:
+    from kitlib import git as _kitgit
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import git as _kitgit
 
 # Sibling: the spine-row TEXT layer (WI-329). Run as a subprocess this script's
 # own dir is sys.path[0] so a plain import resolves; the guard covers an
@@ -2428,20 +2438,13 @@ SPINE_COLUMN = spine_carrier.SPINE_COLUMN
 _spine_stem = spine_carrier.stem
 
 
-def _git_out(root, args):
-    """stdout of a git command under `root`, or None on ANY failure (no git
-    binary, not a repo, unknown rev/path) — the best-effort-off-git pattern."""
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(root), *args],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-    except (OSError, ValueError):
-        return None
-    return proc.stdout if proc.returncode == 0 else None
+# stdout of a git command under `root`, or None on ANY failure (no git binary,
+# not a repo, unknown rev/path, non-zero exit) — the house best-effort-off-git
+# pattern. ONE HOME since WI-448 (`kitlib.git`): it was written out three times,
+# in check.py, trace.py and trunk_step.py, each docstring pointing at the others
+# as though one of them were the original. Kept under its own long-standing
+# private name so no call site below moves.
+_git_out = _kitgit.git_out
 
 
 def _full_row_bullets(row):

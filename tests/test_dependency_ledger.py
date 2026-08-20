@@ -72,11 +72,25 @@ def ledger_declared(kind: str, text: str | None = None) -> set[str]:
 
 def undeclared_imports(script_dir: Path, declared: set[str]) -> dict[str, set[str]]:
     """Map of script filename -> top-level imported modules that are neither
-    stdlib, nor a sibling module in script_dir, nor declared in the ledger."""
+    stdlib, nor a sibling module in script_dir, nor declared in the ledger.
+
+    A SIBLING IS A TOP-LEVEL `*.py` OR A PACKAGE DIRECTORY holding
+    `__init__.py` (WI-448 added the first, `kitlib/`). The kit's own shipped
+    code is never a "dependency" — the ledger exists to price code the kit does
+    not own — so a package read as third-party would demand a reviewed
+    `docs/dependencies.md` row for a file in this very repo. The scan surface
+    widens with it (`rglob`), because the stdlib-only rule binds every kit
+    module, and a package whose imports nothing checked would be the one place
+    an unargued dependency could enter unseen.
+    """
     stdlib = sys.stdlib_module_names
-    siblings = {p.stem for p in script_dir.glob("*.py")}
+    siblings = {p.stem for p in script_dir.glob("*.py")} | {
+        p.parent.name for p in script_dir.glob("*/__init__.py")
+    }
     offenders: dict[str, set[str]] = {}
-    for path in sorted(script_dir.glob("*.py")):
+    for path in sorted(script_dir.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):

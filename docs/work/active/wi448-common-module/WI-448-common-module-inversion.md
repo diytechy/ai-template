@@ -39,3 +39,54 @@ shape constraint. The successor decomposition program (WI-483, minted by the
 same triage) builds ON this row's consolidated package — its soft edge points
 here, so this row's landing decides the package topology first.
 
+### SLICE 1 LANDED 2026-08-20 — what shipped, and what this row still owes
+
+**Landed.** `project-trajectory/scripts/kitlib/` exists as a shipped package
+with themed modules (`config`, `git`, `registry`), joined `MAPPING` as four
+rows, and `bootstrap.py` imports it. The replacing rule is asserted
+(`test_bootstrap_imports_only_the_common_package`), the manifest is tested in a
+REAL SCAFFOLD (`test_the_common_package_ships_complete`, driven red on a
+deleted MAPPING row), and a scaffold was bootstrapped by hand as the standing
+lesson requires. Consolidated: the 270-line spec-folder reader (3 verbatim
+copies), the declared-line reader (5 copies), `_git_out` (3 copies). The two
+`test_rule_sync` equality pins holding the line-reader copies equal are deleted
+with the reasoning recorded in their place.
+
+**Measured** (one command, both revisions; `fig:` marker in
+`docs/log.d/2026-08-20-program-grind.md`): duplicated function-body groups
+24 -> 17, redundant copies 67 -> 48, redundant lines 757 -> 477.
+
+**STILL OWED BY THIS ROW — the reason it is not closed:**
+
+1. **`_utf8_console`, 33 remaining copies** — 264 of the 477 residual redundant
+   lines, the single largest item left and more than half of what remains.
+   Mechanically trivial across 33 files; held back only to keep slice 1
+   reviewable.
+2. **`bootstrap`'s OTHER declared duplicate** — `STACK_OI3_ROW` plus its TOML
+   row emitter, which the OI-16 blast radius names. Shedding it needs the
+   open-items key vocabulary in `kitlib` first. Note that its pin's stated
+   premise ("bootstrap runs BEFORE the kit is copied and can import no
+   sibling") is exactly what slice 1 overturned, so the comment on
+   `test_rule_sync.test_bootstraps_scaffolded_brief_uses_the_converters_own_keys`
+   is now stale and must be corrected when the duplicate goes.
+3. **The `derive_gate`/`trace` spine-policy pair** — 10 duplicated groups
+   (`is_approved`, `is_founded`, `is_drafted`, `sn_all_ids`, `sn_cited_ids`,
+   `sn_draft_ids`, `phase_num`, `llr_exempt`, `load_csv`). These are POLICY,
+   not plumbing, so they are what `test_rule_sync` pins most carefully;
+   consolidating them retires more pins and needs the care slice 1 took.
+4. **`is_example`** (the 3-home behaviour whose copies disagreed, one crashing
+   on `None`), `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
+   `_split_tokens`/`split_refs` x2, and `wi_convert`'s `spec_paths` /
+   `work_dir_for` variants of the registry reader.
+5. **The `station` and `views` theme slots**, named by the adopted shape and
+   deliberately not created empty. `WI-483`'s successor decomposition builds on
+   this topology, so its soft edge still points here until they land.
+
+**Deferred to the owner: `OI-48`** — which component owns the shared kernel.
+The package is imported from all four of CMP-006..009, so `LLR-181` carries a
+four-way `Component` tag: true about USAGE, silent about OWNERSHIP, and the
+checker's multi-membership rule treats it as the warn-only partition question
+it is. The tag also SUPPRESSES the cross-component seam rule on the package's
+edges, so the ruling is owed before the remaining slices add importers. The
+depth-0 frame is LOCKED at four entities, so a shared-kernel component is not
+an execution WI's call.

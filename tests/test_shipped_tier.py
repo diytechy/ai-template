@@ -77,14 +77,39 @@ def top_level_imports(path: Path) -> set[str]:
     return tops
 
 
+def sibling_sources(script_dir: Path, name: str) -> list[Path]:
+    """Every source file the sibling `name` contributes, or [] if it is none.
+
+    A sibling is a `*.py` beside the entry script OR A SHIPPED PACKAGE
+    DIRECTORY — a subdirectory holding `__init__.py` (WI-448 added the first,
+    `kitlib/`). Before that, `siblings` was a set of top-level `*.py` stems and
+    a package read as a THIRD-PARTY dependency: `kitlib` is not in
+    `sys.stdlib_module_names`, so the shipped bar demanded a
+    `docs/dependencies.md` row for the kit's own code. Worse than the false
+    red, and the reason this returns a file LIST rather than one path: the walk
+    would then never open the package's modules, so a real non-stdlib import
+    hidden inside `kitlib/` would be invisible to the bar it is most subject
+    to — the package is adopter-facing by construction.
+    """
+    module = script_dir / (name + ".py")
+    if module.is_file():
+        return [module]
+    package = script_dir / name
+    if (package / "__init__.py").is_file():
+        return sorted(package.glob("*.py"))
+    return []
+
+
 def reachable_nonstdlib(script_dir: Path, entries: set[str]) -> dict[str, set[str]]:
     """Non-stdlib modules reachable from `entries`, mapped module -> importers.
 
-    Walks sibling imports transitively (a sibling is a `*.py` in `script_dir`),
+    Walks sibling imports transitively (see `sibling_sources` for what counts),
     so an indirect dependency is attributed to the sibling that actually imports
     it — the file an author has to open to fix it.
     """
-    siblings = {p.stem for p in script_dir.glob("*.py")}
+    siblings = {p.stem for p in script_dir.glob("*.py")} | {
+        p.parent.name for p in script_dir.glob("*/__init__.py")
+    }
     seen: set[str] = set()
     queue = [s for s in sorted(entries) if s in siblings]
     found: dict[str, set[str]] = {}
@@ -93,11 +118,12 @@ def reachable_nonstdlib(script_dir: Path, entries: set[str]) -> dict[str, set[st
         if stem in seen:
             continue
         seen.add(stem)
-        for top in sorted(top_level_imports(script_dir / (stem + ".py"))):
-            if top in siblings:
-                queue.append(top)
-            elif top not in sys.stdlib_module_names:
-                found.setdefault(top, set()).add(stem)
+        for source in sibling_sources(script_dir, stem):
+            for top in sorted(top_level_imports(source)):
+                if top in siblings:
+                    queue.append(top)
+                elif top not in sys.stdlib_module_names:
+                    found.setdefault(top, set()).add(stem)
     return found
 
 

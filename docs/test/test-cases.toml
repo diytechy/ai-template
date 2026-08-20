@@ -1759,3 +1759,14 @@ automated = "Yes"
 evidence = """tests/test_check_doc_refs.py::test_llr_symbol_anchor_reds_on_a_planted_defect; tests/test_check_doc_refs.py::test_llr_symbol_anchor_needs_only_one_resolving_token; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_a_non_python_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory; tests/test_check_doc_refs.py::test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell; tests/test_check_doc_refs.py::test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long; tests/test_check_doc_refs.py::test_llr_symbol_anchor_sees_private_names_and_constants; tests/test_check_doc_refs.py::test_llr_symbol_anchor_does_not_double_report_a_missing_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_placeholder_rows; tests/test_gen_arch_map.py::test_module_bindings_covers_every_rendered_public_item; tests/test_gen_arch_map.py::test_module_bindings_sees_what_the_rendered_map_cannot; tests/test_gen_arch_map.py::test_module_bindings_stops_at_module_scope"""
 status = "Drafted"
 phase = 5
+
+[test.TC-176]
+verifies = ["SR-166", "LLR-181"]
+level = "Integration"
+method = """Bootstrap a real scaffold and assert the copied scripts/kitlib/ holds exactly the kit's module set, then import every module of it from the scaffold's own scripts/ directory and call through one of them, so the file list is backed by a working import rather than trusted as a proxy. Driven RED on a planted defect: deleting one kitlib MAPPING row makes this case fail while the top-level sibling-import guard stays green, which is the coverage gap that justifies the case. Separately, assert bootstrap.py's own sibling imports are exactly {kitlib} and that no kitlib module imports a non-kitlib sibling."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-181 (parent SR-166)"
+automated = "Yes"
+evidence = """tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
+status = "Drafted"
+phase = 5
