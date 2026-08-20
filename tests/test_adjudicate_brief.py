@@ -286,7 +286,9 @@ def test_the_red_tc_brief_carries_the_live_census_and_the_obligation_it_covers(
     assert "OUTCOME: DRAFTED|NEEDS-JUDGEMENT cases=N drafts=M" in text
 
 
-@pytest.mark.parametrize("green", ["Approved", "Drafted", "Modified"])
+# `Founded` replaced `Modified` at D-9 steps 7/8: the exempt set is the whole
+# closed enum, so the parametrization is the enum itself.
+@pytest.mark.parametrize("green", ["Approved", "Drafted", "Founded"])
 def test_a_census_that_has_come_clean_refuses_rather_than_briefing_an_empty_one(
     tmp_path, green
 ):

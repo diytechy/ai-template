@@ -83,7 +83,7 @@ SCRAMBLED_SRS = (
     "Permutations,Priority,Verification,Status\n"
     'SR-009,Late,SN-001,"Shall late.",R,"late",,M,Test,Approved\n'
     'SR-000,Example,SN-001,"Shall example.",R,"example",,M,Test,Drafted\n'
-    'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Modified\n'
+    'SR-002,Middle,SN-001,"Shall middle.",R,"middle",,M,Test,Drafted\n'
     'NOTE,Not a requirement,SN-001,"Shall not.",R,"nope",,M,Test,Drafted\n'
     'SR-001,First,SN-001,"Shall first.",R,"first",,M,Test,Approved\n'
 )
@@ -169,9 +169,14 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
     # example row would invent a ratification the owner does not owe.
     pending = gt._spine_pending(root)
-    assert pending, "the Drafted/Modified SRs must still project"
+    assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)
-    assert any("SR-002" in line for line in pending)  # Modified -> re-attest
+    # SR-002 read `Modified` -> re-attest until D-9 step 7 retired the marker. It
+    # reads `Drafted` now: the projection's second arm is snapshot DRIFT, which
+    # needs a seeded snapshot this loader fixture has no business carrying, so
+    # the Drafted arm is what keeps a NON-example row projecting here — which is
+    # the property under test (SR-000 must not leak into it).
+    assert any("SR-002" in line for line in pending)
 
 
 class _SubprocessShim:

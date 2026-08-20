@@ -53,7 +53,7 @@ them is precisely the false-green the kit exists to prevent.
 - **Multi-ref cells split on `;`, `,` or whitespace** (`refs()`, same file).
   Semicolon is the documented form; the other two are tolerated.
 - **`Status` is a CLOSED vocabulary of exactly three values**, all matched
-  case-insensitively: `Drafted`, `Approved`, `Modified`. Anything else is an
+  case-insensitively: `Drafted`, `Approved`, `Founded`. Anything else is an
   **integrity finding on the always-on `--strict-integrity` floor** — not a
   legal-but-inert label. *(SR/LLR/TC only: the SN tier declares the same
   vocabulary and no live pipe reads it — §2.3.)* THE OPEN-VOCABULARY PROMISE IS
@@ -149,7 +149,7 @@ ruling 2026-08-17).
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
 | `Priority` | ✔ | **open** (`M`/`S`/`C` by convention) | Required non-empty under `--strict-schema`; the *value* is never checked. |
 | `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
-| `Status` | ✔ | **closed**: `Drafted`, `Approved`, `Modified` | Drives the gate — §3.2. |
+| `Status` | ✔ | **closed**: `Drafted`, `Approved`, `Founded` | Drives the gate — §3.2. |
 | `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
 | `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
 
@@ -192,10 +192,17 @@ two scripts disagreeing about the gate.
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
 | `Approved` | `is_approved` | DevStg-Tests (when decomposed) — **the ceiling** | The row's TEXT is blessed. It makes NO claim that tests passed: `sr_bar` stops at DevStg-Tests by the 2026-08-15 ruling (OI-30 D2), so DevStg-Impl is unreachable-by-cell until a harness driver computes it from test evidence. The derived line says so: `DevStg-Tests (Release: pending harness driver)`. |
-| `Modified` | `is_modified` | reads DevStg-Tests (decomposed-but-not-approved) | Post-approval amendment; a re-attest is owed. The gate pull is deliberate — it makes a pending re-attest visible. Feeds the `modified=N` basis count and the `--ratify modified` brief. **Transitional**: it retires once the snapshot-backed drift rule is armed. |
+| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it, and whether an authored `Founded` is itself an error is still open (D-9 consequence 2). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
-`Modified` → `Approved` blesses the amendment.
+**There is no value for a post-approval amendment.** A transitional `Modified`
+carried that state until 2026-08-20 (D-9 step 7), feeding a `modified=N` basis
+count and the `--ratify modified` brief. It retired once the snapshot-backed
+drift rule had run live beside it through the signing act: an amended row now
+stays `Approved`, and what marks it is the DIFFERENCE from its copy in
+`docs/archive/last_approved/` — a property of two files, for every row rather
+than the ones somebody remembered to mark. Blessing an amendment is a reviewed
+commit that re-reads the changed cells and runs `intake.py snapshot`.
 
 ### 3.3 `Phase` — optional phased delivery
 
@@ -225,7 +232,7 @@ two scripts disagreeing about the gate.
   field on the `docs/gate` basis line (§8.3) — and it increments only when
   re-opened scope is **confirmed**: an adjudication verdict that scope moved,
   or a new draft-SN batch ratified into scope — **never on the raw derived-gate
-  drop**. A spurious `Modified` window must not burn a phase number (WI-280 is
+  drop**. A spurious re-attest window must not burn a phase number (WI-280 is
   the counterexample: 19 traced cells, 11 SRs flipped, no scope moved).
   `derive_gate.py --next-phase` prints that max + 1 — the one derived call
   every agent and the intake mint helper (WI-388) use for a newly confirmed
@@ -266,7 +273,9 @@ There is a **warn-only** lint for the resulting readout drift
 (`llr_status_advisories`): an LLR below `Approved` while *every* citing TC is
 already `Approved`. Never promoted to an error, "because making LLR status gate
 would re-introduce the exact LLR-status coupling the derived-gate model dropped."
-A `Modified` LLR is exempt — its low status is the deliberate marker, not drift.
+A `Founded` LLR is exempt — it reads ABOVE `Approved`, so there is nothing to
+lift and the nag would push it DOWN the ladder. (The exemption named the
+transitional `Modified` until that value retired, 2026-08-20.)
 
 ### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
 
@@ -390,7 +399,7 @@ the itemized listing and the cap can never disagree on one registry state.
 | `placeholders` | ✔ | ✘ | leftover `-000` rows (collected only under `--no-placeholders`) |
 | `schema` | ✔ | ✘ | empty required fields, bad enums, `Automated=Yes` without Evidence, ratified-phase misses (only under `--strict-schema`) |
 | `budget` / `module` / `component` / `interface` | ✔ | ✘ | off-spine back-link failures |
-| **advisories** | ✘ | ✘ | LLR-status drift, Modified-chain, AcceptanceCriteria testability, EARS statement pattern, paraphrase, artifact-naming, fan-out, verification coherence, knowledge-pack refs, IF endpoint join |
+| **advisories** | ✘ | ✘ | LLR-status drift, AcceptanceCriteria testability, EARS statement pattern, paraphrase, artifact-naming, fan-out, verification coherence, knowledge-pack refs, IF endpoint join |
 
 **Advisories never join the exit code, even under `--strict`** — "a warn-tier
 checker feature mints no SR and gates nothing."
@@ -412,7 +421,7 @@ it; you ratify artifacts and regenerate.
 | **SR** | `Status=Drafted` | ratified, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
-A `Modified` SR needs no rule of its own: it is decomposed-but-not-approved, so
+A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-approved, so
 it reads **DevStg-Tests**. That is the deliberate gate pull that makes a pending re-attest
 visible.
 
@@ -479,7 +488,7 @@ regenerate-a-generated-artifact step.
 
 ### 8.4 The suppressed-gate window
 
-Because the gate is a `min()`, a single Drafted or Modified row **drops the gate,
+Because the gate is a `min()`, a single Drafted row **drops the gate,
 and the harness then drops every step tagged for the higher gate.** `lint` and
 `--require-verified` simply stop running for the duration. That is
 not a relaxed bar — it is a blind spot, and it has bitten this repo: twelve
@@ -491,7 +500,11 @@ spot is the point, not which step fell into it.)
 `window_open` in `check.py` detects it and warns. Its two signals are not equally
 good evidence, which is the subtlety:
 
-- **`modified>0` is conclusive on its own.** `Modified` is *defined* as a
+- **`modified>0` is conclusive on its own** — a COMPATIBILITY arm since D-9
+  step 7 retired the value: this kit no longer emits the field, and
+  `check._basis_counts` reads its absence as 0, but a gate file written by an
+  older kit (or by a repo mid-migration) still carries one and still trips it.
+  `Modified` was *defined* as a
   post-attestation amendment, so the row can only exist in a spine that has
   already been ratified. A window by construction.
 - **`drafted>0` is ambiguous** — a `Drafted` row reads DevStg-Below in a mature repo starting a new
@@ -690,7 +703,7 @@ When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
-owning SRs flipped to `Modified`, the gate dropped, and it cost a ratify
+owning SRs flipped off `Approved`, the gate dropped, and it cost a ratify
 brief and four review rounds — for a change that altered no requirement.
 
 **The residual rule fails safe:** a column in *neither* set is treated as
@@ -699,8 +712,8 @@ un-ratified. `tests/test_trajectory_staged.py` pins both halves.
 
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
-whenever a child read `Modified`, asserting the retired chain reading. A
-`Modified` LLR/TC under an `Approved` SR is a legitimate state — a row's
+whenever a child read the retired `Modified` marker, asserting the retired
+chain reading. An amended LLR/TC under an `Approved` SR is a legitimate state — a row's
 `Status` answers for its own cells — and an UNMARKED child amendment is the
 snapshot-drift arm's find once `docs/archive/last_approved/` is seeded.
 
@@ -759,7 +772,7 @@ gate, covered on paper.
 ### 12.3 The entire product bar is DevStg-Impl-only
 
 `format`, `lint` and `tests+coverage` are tagged `{"DevStg-Impl"}`. Combined with §8.4,
-this is the sharp edge: **one Drafted or Modified row drops the gate below DevStg-Impl and
+this is the sharp edge: **one Drafted row drops the gate below DevStg-Impl and
 the test suite stops running in the gated plan.** `window_open` warns about
 exactly this, but the warning is the only thing between a window and a silently
 untested stretch.

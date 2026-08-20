@@ -167,8 +167,9 @@ is `derive_gate.py`'s internal **below-DevStg-Reqs sentinel** for a row that has
 earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
 
 - **SR / LLR / TC** — the CLOSED `Status` vocabulary is
-  `Drafted` → `Approved`, with `Modified` marking an approved row whose text
-  moved. Per-artifact bar: an SR is **DevStg-Below** while
+  `Drafted` → `Approved` → `Founded` (the last COMPUTED, never typed). An
+  approved row whose text later moves stays `Approved`; the change is caught
+  by diffing it against `docs/archive/last_approved/`. Per-artifact bar: an SR is **DevStg-Below** while
   `Drafted`, **DevStg-Reqs** once ratified (Status past `Drafted`), **DevStg-Tests** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
   TC). **DevStg-Impl is not reachable from a cell** (2026-08-15 ruling): the
@@ -189,12 +190,13 @@ earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
 The **ratification date is git-derived** — the commit that moved the `status`.
 No new field, at any tier.
 
-**A window lowers the bar; it must not create a blind spot.** While `Drafted`/
-`Modified` rows hold the gate down, the steps the *higher* gate requires would
+**A window lowers the bar; it must not create a blind spot.** While `Drafted`
+rows hold the gate down, the steps the *higher* gate requires would
 otherwise stop running entirely — so a regression introduced during the window
 goes unreported until it closes, then lands in one lump. `check.py` therefore
 runs those steps **advisory** (reported, warn-only, exit code unaffected) when
-`docs/gate`'s `# basis:` shows `drafted`/`modified` above zero. Narrow by design:
+`docs/gate`'s `# basis:` shows `drafted` above zero (and `modified`, on a gate
+file written before that value retired). Narrow by design:
 a project genuinely at a lower gate is *not* nagged — only a gate **suppressed by
 a pending ratification** triggers it. The test/coverage step stays out (the
 commit bar already runs the suite, so it is not a blind spot, and re-running it
@@ -258,7 +260,7 @@ change surfaces as a phase bump, never a hand-set marker. **The phase boundary i
 a confirmation event** (owner ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
 new draft-SN batch ratified into scope — **never on the raw derived-gate drop**;
-a spurious `Modified` window must not burn a phase number (the counterexample:
+a spurious re-attest window must not burn a phase number (the counterexample:
 19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
 moved). `derive_gate.py --next-phase` prints the derived max + 1 — the one call
 every agent (and the intake mint helper) uses for a newly confirmed phase's
@@ -278,7 +280,7 @@ a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
 - **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** A ratified
-  SR/LLR/TC (`Approved`/`Modified`) — and transitively a ratified SN — must carry a
+  SR/LLR/TC (`Approved`/`Founded`) — and transitively a ratified SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
   the component checks use), so a fully-blank downstream registry stays green: the
@@ -1769,7 +1771,7 @@ actually reads, so the review is **one page with all context**.
 
 Registry-plus-view rather than a markdown file, for a reason worth stating: the
 same surface must also carry the *attestation* depth — every `Drafted` or
-`Modified` spine row's per-cell before/after — and the only readable form of
+DRIFTED spine row's per-cell before/after — and the only readable form of
 that is a **word-level diff**, which markdown cannot mark. Generating the view
 also lets it show what a pointer cannot: which rows ride an SR's line, and the
 baseline revision each diff was computed against.
@@ -1838,9 +1840,10 @@ until a real recurring pattern earns it.
 **Phase cadence.** Any batch of spine-touching work headed for the same
 re-attestation should land as **one phase** — batch the changes so a **single
 owner sitting** covers each re-attestation, rather than paying for several
-(what is owed is carried as `Status=Modified` on the amended rows — the
-re-attest marker, process.md §7 — so the pending batch is registry state the
-sitting reads via `trace.py --ratify modified`, never commit-message prose). A
+(what is owed is the DIFFERENCE between the amended rows and their copies in
+`docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
+state the sitting reads via `trace.py --ratify modified`, never commit-message
+prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
 cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
 hook floor + the project's test command + `check_docs --stale`), not the full

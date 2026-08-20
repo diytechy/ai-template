@@ -290,14 +290,14 @@ One line each, each one seen in a real spine:
   governing `SR`/`LLR`/`TC`, and each had to be extended to the need tier
   afterwards. Guard: writing or amending a spine rule, enumerate all four tiers
   and say why each one is in or out.
-- **A row amended without its own flip** — a row's `Status` answers for its
-  OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): flip the row whose
-  text changed, and only that row — a child LLR/TC amendment never flips its
-  parent SR, and a `Modified` child under an `Approved` SR is a legitimate
-  state. The chain-completeness claim belongs to the derived `Founded` state
-  (D-9), and an UNMARKED amendment is the snapshot-drift arm's find
-  (`docs/archive/last_approved/`), never the parent signature's. Amend and
-  flip in the same commit.
+- **A row amended without its own re-attest** — a row's `Status` answers for
+  its OWN cells (`docs/process.md` §4; owner ruling 2026-08-17): re-read the
+  row whose text changed, and only that row — a child LLR/TC amendment never
+  touches its parent SR. There is no marker to set (`Modified` retired
+  2026-08-20); EVERY post-approval amendment is the snapshot-drift arm's find
+  (`docs/archive/last_approved/`), never the parent signature's, and the
+  chain-completeness claim belongs to the derived `Founded` state (D-9).
+  Amend and re-copy in the same commit.
 
 ## 6. Cell hygiene — a registry holds living truth
 

@@ -749,7 +749,7 @@ def _pending_cards(root):
     2026-08-01: gen_open_items reuses gen_trajectory.pending_block verbatim,
     and the dispatcher's exit banner must derive from that one read so
     agent-resume and the owner surfaces can never disagree about what is
-    blocking). Blocked rows with a BlockRef plus Drafted/Modified spine rows;
+    blocking). Blocked rows with a BlockRef plus Drafted/drifted spine rows;
     the tracked-pause card is excluded because a pause has its own earlier
     exit, and the coordinator's git-trailer reads stay for in-flight lanes
     only.
@@ -787,7 +787,7 @@ def _surface_banner(root, surfaced):
     card silently SUPPRESSED two genuinely queued attestation rows, hiding
     work the owner had every reason to see. The reason given for suppressing
     them (that the populations overlap, since `_pending_cards` yields blocked
-    rows with a BlockRef plus Drafted/Modified spine rows while `surfaced`
+    rows with a BlockRef plus Drafted/drifted spine rows while `surfaced`
     yields queued gate/attestation frontier rows, and one row can be both)
     justifies never SUMMING them — it does not justify hiding one.
 
@@ -869,7 +869,18 @@ RED_TC_PREFIX = "red TC "
 # Deliberately kept rather than deleted: whether the rung RETIRES or re-arms on
 # a narrower exempt set is the owner's call, recorded as a judgement item at
 # the 2026-08-15 sitting sweep.
-_TC_NOT_RED = frozenset({"approved", "drafted", "modified"})
+#
+# D-9 STEPS 7/8 SWAPPED ONE MEMBER FOR ANOTHER AND THE ARITHMETIC IS UNMOVED:
+# `modified` left with the value (it can no longer appear in a conformant repo,
+# and a set that exempts a retired word is a live reader of one), `founded`
+# joined — a TC at the top rung is green a fortiori, so exempting it is not a
+# widening. The set still covers the WHOLE closed vocabulary, so the census
+# remains structurally dead in a conformant repo, which is precisely the fact
+# the owner's judgement item is about. A DOWNSTREAM repo still carrying
+# `Modified` TCs now sees them as red here — that repo is already failing the
+# always-on integrity floor on the same cells, so the rung is naming a gap the
+# floor has already named rather than inventing one.
+_TC_NOT_RED = frozenset({"approved", "drafted", "founded"})
 
 
 def red_tc_census(root, reg=None):
@@ -889,9 +900,10 @@ def red_tc_census(root, reg=None):
 
       Approved  green, by definition.
       Drafted   pre-approval; "not yet green" is its CORRECT state.
-      Modified  the post-approval amendment state, which the §A5.1 amendment
-                adjudication already owns. Minting here too would put two
-                judgement rows on one event.
+      Founded   Approved plus a demonstration — green a fortiori (D-9 step 8).
+                It replaced `Modified`, which named the post-approval amendment
+                state the §A5.1 adjudication owns; that state no longer has a
+                word, and the amendment path still owns it via snapshot drift.
 
     A TC whose targets no closed row cites is also exempt: that is work not
     started, which the orphan/status rungs already cover, and a second row for

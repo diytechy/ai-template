@@ -36,8 +36,8 @@ from conftest import (
 
 # --- WI-316: the re-attestation brief (--ratify modified) ----------------------
 # A sitting cannot bless a delta it cannot see: per-cell before/after for every
-# Modified SR's chain, baselined at the git-derived last-Approved revision
-# (--since overrides). A generator mode: runs no checks, always exits 0.
+# DRIFTED or Drafted SR's chain, baselined at the last_approved SNAPSHOT
+# (git supplies only the stamp). A generator mode: no checks, always exits 0.
 
 _REATTEST_SR_H = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
@@ -51,8 +51,11 @@ _REATTEST_TC_H = (
 
 def _reattest_repo(root):
     """A repo with an APPROVED SNAPSHOT (SR-001 Approved, old prose) and a live
-    tree that has since been amended (Requirement changed, Status Modified,
-    LLR-002 added). Returns the git runner.
+    tree that has since been amended (Requirement changed,
+    LLR-002 added). Returns the git runner. THE AMENDMENT NO LONGER FLIPS THE
+    ROW: it wrote `Status = Modified` until D-9 step 7 retired that marker, so
+    the live row stays `Approved` and DRIFT against the snapshot is what puts
+    it in the brief — the fixture is closer to the real sequence, not further.
 
     The git repo is still built — the brief's stamp reads git, and the mirror
     invariant is a property of commits — but the BASELINE is now the snapshot
@@ -100,15 +103,15 @@ def _reattest_repo(root):
     load_script("baseline_snapshot").copy_live(root, seed=True)
     run_git("add", "-A")
     run_git("commit", "-m", "attested baseline + snapshot")
-    # The amendment: prose changes and the marker lands, and the snapshot
+    # The amendment: prose changes, NO cell announces it, and the snapshot
     # deliberately stays behind — that lag IS the signal.
     write_spine(
-        "Modified",
+        "Approved",
         "the AMENDED text",
         'LLR-002,SR-001,New slice,src/demo.py,mul,"added later",(see TC-001),Approved\n',
     )
     run_git("add", "-A")
-    run_git("commit", "-m", "amend + flip")
+    run_git("commit", "-m", "amend, no flip — the D-9 regime")
     return run_git
 
 
@@ -172,14 +175,14 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     run_git("commit", "-m", "attested, BOM'd + snapshot")
     sr_v2 = (
         _REATTEST_SR_H
-        + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Modified,1'
+        + 'SR-001,Adder,SN-001,"new text","w","a",,C,Test,Approved,1'
         + "\n"
     )
     (req / "system-requirements.csv").write_bytes(
         b"\xef\xbb\xbf" + sr_v2.encode("utf-8")
     )
     run_git("add", "-A")
-    run_git("commit", "-m", "amend + flip, BOM'd")
+    run_git("commit", "-m", "amend, no flip, BOM'd")
     proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "No approved baseline" not in proc.stdout
@@ -187,7 +190,8 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
 
 
 def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
-    # No Modified SR -> the explicit nothing-owed line (and --out still writes).
+    # Nothing drifted, nothing Drafted -> the explicit nothing-owed line (and
+    # --out still writes). The selector read `Modified` until D-9 step 7.
     make_minimal_project(scaffold)
     proc = run_py(
         ["scripts/trace.py", "--ratify", "modified", "--out", "docs/ratify/r.md"],
@@ -214,7 +218,8 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
 
 
 def _ratify_repo(tmp_path):
-    """A git repo with a Approved SR chain, amended and flipped to Modified, so
+    """A git repo with an Approved SR chain amended IN PLACE (D-9 step 7 retired
+    the flip), so
     `--ratify modified` has something real to render. Returns (run_git, rev) with
     `rev` the attested baseline commit."""
     import shutil as _sh
@@ -258,10 +263,10 @@ def _ratify_repo(tmp_path):
     run_git("commit", "-m", "attested baseline + snapshot")
     rev = run_git("rev-parse", "HEAD").stdout.strip()
 
-    # A later commit that amends the SR text and flips it Modified.
-    write("Modified", sr_req="The system shall do the AMENDED thing.")
+    # A later commit that amends the SR text, leaving its Status alone.
+    write("Approved", sr_req="The system shall do the AMENDED thing.")
     run_git("add", "-A")
-    run_git("commit", "-m", "amend + flip")
+    run_git("commit", "-m", "amend, no flip — the D-9 regime")
     return run_git, rev, write
 
 
@@ -326,7 +331,7 @@ def test_a_changed_cell_makes_it_stale(tmp_path):
     """Drift direction 2 — the same row, different content."""
     _run_git, _rev, write = _ratify_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    write("Modified", sr_req="The system shall do the RE-AMENDED thing.")
+    write("Approved", sr_req="The system shall do the RE-AMENDED thing.")
     proc = _check(tmp_path)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "STALE" in proc.stderr

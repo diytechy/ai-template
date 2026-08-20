@@ -87,24 +87,30 @@ the bar derives from it:
   pass; the derived bar follows. Note what `Approved` does and does not say: it
   blesses the row's **TEXT** and makes no claim that any test passed — whether
   they pass is the harness's answer, never a cell's.
-- **Re-attest (`Modified` → `Approved`)** — an `Approved` row whose content was
-  amended after attestation carries `Status=Modified` (canonical semantics:
-  process.md §4): the derived bar reads `DevStg-Tests` for its phase until the
-  sitting rules, and the pending-owner-actions projection carries one line per
-  Modified SR. Read the before/after first — `python scripts/trace.py --ratify
-  modified [--out docs/ratify/<date>-reattest.md]`. `Modified` → `Approved` is
-  the one flip, and it blesses the amended TEXT; if the amendment invalidated
-  the evidence, that is the harness's problem to report and not a second Status
-  value. Record the ruling in the log's Decisions, like any ratification.
-  Amend-and-flip land in the **same commit** (the `--staged` warn enforces it);
-  a row's `Status` answers for its OWN cells (owner ruling 2026-08-17) — a
-  child LLR/TC amendment flips the child, never the owning SR.
+- **Re-attest (an amended `Approved` row)** — **there is no Status cell to
+  move.** An approved row whose content is later amended STAYS `Approved`;
+  what marks it is the DIFFERENCE from its copy in
+  `docs/archive/last_approved/`, and the pending-owner-actions projection
+  carries one line per drifted SR. Read the before/after first — `python
+  scripts/trace.py --ratify modified [--out docs/ratify/<date>-reattest.md]`
+  (the scope word is a CLI name, not a Status value). Blessing the amendment
+  is `python scripts/intake.py snapshot` in the reviewed commit: the copy IS
+  the signature now, so without it the record of what was blessed does not
+  move. If the amendment invalidated the evidence, that is the harness's
+  problem to report and not a Status value. Record the ruling in the log's
+  Decisions, like any ratification. Amend and re-copy in the **same commit**
+  (the `--staged` warn enforces it); a row's `Status` answers for its OWN
+  cells (owner ruling 2026-08-17) — a child LLR/TC amendment never touches
+  the owning SR.
 
   > **The vocabulary is CLOSED at three values** — `Drafted`, `Approved`,
-  > `Modified` — matched case-insensitively, and a value outside it is an
-  > always-on integrity finding. `Draft`, `Verified` and `Planned` are RETIRED
-  > (D-9, 2026-08-15): `Verified`/`Planned` folded into `Approved`, which is why
-  > there is no longer an evidence-invalidated Status. Do not reintroduce them.
+  > `Founded` — matched case-insensitively, and a value outside it is an
+  > always-on integrity finding. `Founded` is COMPUTED (the artifacts the row
+  > calls for exist); never type it to advance a gate. `Draft`, `Verified`,
+  > `Planned` and `Modified` are RETIRED — `Verified`/`Planned` folded into
+  > `Approved` (D-9, 2026-08-15), which is why there is no evidence-invalidated
+  > Status, and `Modified` retired (2026-08-20) once the snapshot diff answered
+  > the same question. Do not reintroduce them.
 
 **Carry the batch-scoped hierarchy view.** A ratification brief presents the
 batch's `SN → SR → LLR/TC` tree with its prose so the acceptor rules on the whole

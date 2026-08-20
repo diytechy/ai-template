@@ -1,7 +1,6 @@
 +++
 id = "WI-464"
 title = "Re-tier v2 — the one-decision tiering model, ruled 2026-08-15 (log 2026-08-15p) and planned in docs/plans/2026-08-15-retier-v2-one-decision-tiering.md. Executes the owner's four rulings: R1 one-decision-per-row / one-home-per-method; R2 requirement cells never name a concrete artifact (supersedes 2.7(a) — capability/artifact-class voice, concrete names only in acceptance as current carriers); R3 the warn-first SR->LLR fan-out advisory (declared bound, default 7, per-row re-stamp with reason); R4 the IF end-state direction (owner re-point to design tier + the this_project disagreement advisory; wi455 executes the removals). Six slices: prose home + byte budgets -> the two advisories -> the 34-row HOLDS-bundle reword -> the seven fan-out offender splits -> the folded sitting-desk items (L1 pair, TC-123, LLR-014/TC-014 re-points, owner re-point pass) -> settle, second read, cross-family round, ONE sitting signs and seeds. Sequencing ruled: v2 runs BEFORE the sign/seed; the seed deliberately waits. May amend non-Modified rows under the owner's explicit sanction — every such touch named in the slice's log entry, never ridden in quietly. Preconditions before slice S3: WI-461, WI-462, WI-463."
-specref = "docs/plans/2026-08-15-retier-v2-one-decision-tiering.md"
 workstream = "process"
 sr_refs = []
 needs = []

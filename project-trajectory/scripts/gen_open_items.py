@@ -9,9 +9,9 @@ Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
 Why HTML and not markdown: the depth an owner needs to rule a re-attest is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
-markdown cannot mark that. The first sitting under the `Modified` regime read a
-POINTER ("run `trace.py --ratify modified`") and could not act from it, which is
-what this replaces. The CSV is a machine source: it is read raw about as often
+markdown cannot mark that. The first sitting under the retired `Modified` regime
+read a POINTER ("run `trace.py --ratify modified`") and could not act from it,
+which is what this replaces. The CSV is a machine source: it is read raw about as often
 as `work-items.csv` is, i.e. never.
 
 WHAT IT RENDERS, in the order an owner needs it:
@@ -20,7 +20,9 @@ WHAT IT RENDERS, in the order an owner needs it:
      the one-line, what is being decided, blast radius, options, recommendation,
      and the WI rows that carry the work.
   2. APPROVAL & RE-ATTESTATION — every SR whose `Status` is `Drafted` (owes a
-     first approval) or `Modified` (owes a re-attest), with its whole chain:
+     first approval) or whose chain has DRIFTED from the approved snapshot
+     (owes a re-attest — D-9 step 7 retired the `Modified` marker and left the
+     comparison as the whole detector), with its whole chain:
      per-cell before/after, unchanged runs collapsible, additions and deletions
      marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION. An empty
      section reads as *check the baseline*, never as *nothing changed* — the
@@ -584,24 +586,24 @@ def _attestation_cards(model, srs_by_id=None):
     """One card per SR owing an approval or a re-attest, its chain beneath.
 
     `srs_by_id` supplies the SR row's own cells for the case where the SR does
-    NOT appear among its chain rows — which happens whenever nothing but the
-    `Approved`→`Modified` flip touched it and an LLR or TC carries the whole
-    amendment. Without it that owner reads a diff of a child row with no
-    statement of the requirement it hangs from."""
+    NOT appear among its chain rows — which happens whenever the SR's own cells
+    did not move and an LLR or TC carries the whole amendment. Without it that
+    owner reads a diff of a child row with no statement of the requirement it
+    hangs from."""
     srs_by_id = srs_by_id or {}
     if not model:
         return (
-            '<p class="empty">No <code>Drafted</code> or '
-            "<code>Modified</code> "
-            "<strong>SR</strong> — no SR owes an approval or a "
+            '<p class="empty">No <code>Drafted</code> '
+            "<strong>SR</strong> and no drifted chain — no SR owes an "
+            "approval or a "
             "re-attest. Say only what was checked: this view keys on SR "
             "rows (a row's Status answers for its own cells, owner ruling "
-            "2026-08-17m), so a chain row flagged or "
-            "amended under an <code>Approved</code> SR "
-            "shows in the registry and, once "
-            "<code>docs/archive/last_approved/</code> is seeded, in the "
-            "snapshot-drift arm (warn-tier on "
-            "every run, never gating) — not here. "
+            "2026-08-17m), so a chain row amended under an "
+            "<code>Approved</code> SR reaches this view through the "
+            "snapshot-drift arm — which compares against "
+            "<code>docs/archive/last_approved/</code> — and through nothing "
+            "else, the <code>Modified</code> marker having retired at D-9 "
+            "step 7. "
             "The earlier wording said <em>spine row</em>, which denied a state "
             "this view cannot see (122-REVIEW-A).</p>"
         )
@@ -638,9 +640,10 @@ def _attestation_cards(model, srs_by_id=None):
         if not any(r["kind"] == "SR" and r["id"] == entry["id"] for r in entry["rows"]):
             sr_ctx = _context_block(
                 srs_by_id.get(entry["id"]),
-                heading="{} itself — no cell changed beyond the Status flip".format(
-                    entry["id"]
-                ),
+                # The heading named "beyond the Status flip" until D-9 step 7,
+                # when the flip retired: an amended row's Status does not move at
+                # all now, so the honest statement is about the SR's OWN cells.
+                heading="{} itself — no cell of this row changed".format(entry["id"]),
             )
         body = [_chain_row(row) for row in entry["rows"]]
         if not entry["rows"]:
@@ -703,9 +706,9 @@ def render(root):
     root = Path(root)
     reg = tr.load_registries(root / "docs")
     # The model selects on STATE, not on a status literal (D-9 step 4):
-    # `Drafted` or `Modified`, or a chain that has DRIFTED from the approved
-    # snapshot. Drift is the arm no cell can carry, and the reason this page
-    # survives the rename with nothing to re-key.
+    # `Drafted`, or a chain that has DRIFTED from the approved snapshot. Drift
+    # is the arm no cell can carry, and the reason this page survived both the
+    # rename and step 7's retirement with nothing to re-key.
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
     items = load_open_items(root)
     pure = pending_block_text(root)
@@ -768,10 +771,10 @@ def render(root):
         "<footer>Source: <code>{registry}</code> + the spine "
         "registries. Rule a decision by appending to <code>docs/log.md</code>'s "
         "Decisions log and setting the row's <code>Status</code>; bless an amendment "
-        "by moving the spine row's <code>Status</code> "
-        "<code>Modified</code>→<code>Approved</code> — and from the first signing onward, "
-        "run <code>intake.py snapshot</code> in the SAME commit, or the record of "
-        "what was blessed does not move. The gate re-derives on its own.</footer>\n"
+        "by re-reading the drifted cells and running "
+        "<code>intake.py snapshot</code> in a reviewed commit — the copy IS the "
+        "blessing now that no <code>Status</code> cell records one, so without it "
+        "the record of what was blessed does not move. The gate re-derives on its own.</footer>\n"
         "</div>\n<script>{js}</script>\n</body></html>\n"
     ).format(
         css=CSS,

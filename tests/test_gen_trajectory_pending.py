@@ -110,7 +110,12 @@ def test_blocked_row_with_dev_tree_doc_cites_the_plain_path(tmp_path):
     assert "git show" not in body
 
 
-# --- (e) Drafted / Modified spine rows (WI-316) ----------------------------------
+# --- (e) Drafted / DRIFTED spine rows (WI-316) ---------------------------------
+# The second arm read `Modified` until D-9 step 7 retired the marker; it now
+# reads SNAPSHOT DRIFT, which is a property of the live registry against its
+# `docs/archive/last_approved/` copy rather than of a cell. These fixtures
+# carry no snapshot, so the DRAFTED arm is what they drive; the drift arm has
+# its own coverage in tests/test_baseline_snapshot.py, where a snapshot exists.
 
 BOM = bytes([0xEF, 0xBB, 0xBF])
 SR_HEADER = (
@@ -125,22 +130,32 @@ def _write_srs(repo, body):
     )
 
 
-def test_modified_sr_projects_reattest_owed_with_brief_pointer(tmp_path):
-    # A Modified SR (post-attestation amendment) projects one pure-region line:
-    # re-attest owed, both flips named, pointing at the before/after brief. The
-    # -000 example row is inert, exactly like every other projection source.
+def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
+    """D-9 STEP 7, pinned in the direction that could otherwise go unnoticed.
+
+    This test used to prove that a `Modified` SR projected a re-attest line
+    naming both flips. The marker retired, and what replaced it is SNAPSHOT
+    DRIFT — so a row still carrying the retired word projects NOTHING here,
+    which is correct (there is no baseline in this fixture to have drifted
+    from) and is exactly the silence a migration must not leave unchecked.
+    The safety net is elsewhere and is named here so the pair is legible: the
+    cell is out-of-vocabulary, so `trace.py --strict-integrity` reds it at
+    every gate. A projection going quiet is only acceptable because another
+    surface got louder.
+
+    The `-000` example-row rule is re-driven on the live vocabulary, since
+    that is the property this fixture uniquely covers.
+    """
     _init(tmp_path)
     _write_srs(
         tmp_path,
-        'SR-000,EXAMPLE,,"r","x","a",,C,Test,Modified,1,\n'
+        'SR-000,EXAMPLE,,"r","x","a",,C,Test,Drafted,1,\n'
         'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,\n',
     )
     body = _block(tmp_path)
-    assert "SR-004" in body and "re-attest owed" in body
-    assert "Gate derivation" in body and "phase 2" in body
-    assert "--ratify modified" in body
-    assert "`Modified`→`Approved`" in body and "`Approved`" in body
+    assert "SR-004" not in body
     assert "SR-000" not in body  # the example row never projects
+    assert "None — no durable owner action is pending" in body
 
 
 def test_draft_sr_projects_ratification_owed(tmp_path):
@@ -156,22 +171,24 @@ def test_draft_sr_projects_ratification_owed(tmp_path):
 def test_bommed_registry_still_projects(tmp_path):
     # Adversarial-review F4: a BOM'd SR registry (the realistic Excel
     # round-trip) glued the BOM to the SR-ID header and silently hid every
-    # Drafted/Modified line — the projection read "None pending" while a
-    # re-attest was owed. read_rows now reads utf-8-sig.
+    # Drafted line — the projection read "None pending" while a ratification
+    # was owed. read_rows now reads utf-8-sig.
     _init(tmp_path)
-    body = SR_HEADER + 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,'
+    body = SR_HEADER + 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Drafted,2,'
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_bytes(
         BOM + (body + chr(10)).encode("utf-8")
     )
     assert "SR-004" in _block(tmp_path)
 
 
-def test_verified_sr_does_not_project_and_flip_drops_the_line(tmp_path):
-    # A Approved SR projects nothing; flipping Modified->Approved (the re-attest)
-    # drops the line on the next regeneration — the projection is stateless.
+def test_approved_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
+    # An Approved SR projects nothing; flipping Drafted->Approved (the
+    # ratification) drops the line on the next regeneration — the projection is
+    # stateless. It drove Modified->Approved until D-9 step 7 retired that
+    # marker; the surviving flip is the one a Status cell still records.
     _init(tmp_path)
     _write_srs(
-        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Modified,2,\n'
+        tmp_path, 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Drafted,2,\n'
     )
     assert "SR-004" in _block(tmp_path)
     _write_srs(

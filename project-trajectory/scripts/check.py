@@ -1011,7 +1011,7 @@ def _resolve_bar_alias(value, what):
 GATE_FILE = Path("docs/gate")
 
 # `derive_gate.py` writes its inputs into a `# basis:` comment above the value.
-# The two counts below say whether the bar is SUPPRESSED by an open ratification
+# The counts below say whether the bar is SUPPRESSED by an open ratification
 # window rather than reflecting the project's real maturity.
 # `drafted=` (was `drafts=`) SINCE D-9 MIGRATION STEP 5 — moved in the SAME
 # commit as `derive_gate.basis_line`, which is the whole point: a producer rename
@@ -1019,7 +1019,16 @@ GATE_FILE = Path("docs/gate")
 # stop running silently (the measured 2026-07-26/27 precedent below). The
 # producer-consumer round-trip pin in `tests/test_derive_gate.py` is what makes
 # the next such edit fail loudly.
-_BASIS_RE = re.compile(r"#\s*basis:.*\bdrafted=(\d+)\b.*\bmodified=(\d+)\b")
+#
+# `modified=` IS OPTIONAL SINCE D-9 STEP 7, deliberately: `derive_gate` stopped
+# EMITTING the field when the value retired, but this consumer keeps HONOURING it
+# for gate files this kit did not just produce. REQUIRING it would make the whole
+# regex miss on today's own `docs/gate` — "no opinion", detector disarmed;
+# DROPPING it would throw away the one CONCLUSIVE window signal for every repo
+# that still has one. `_basis_counts` owns the absent-means-zero reading.
+_BASIS_RE = re.compile(
+    r"#\s*basis:.*\bdrafted=(\d+)\b(?:.*\bmodified=(\d+)\b)?",
+)
 # The other two fields the window test needs: the raw computed level (may be
 # `DevStg-Below`, unlike the runnable value on the line below it) and the
 # per-phase breakdown, which is what distinguishes "drafts are holding a MATURE
@@ -1071,6 +1080,18 @@ def _window_ord(name):
 ADVISORY_EXCLUDE = {"tests+coverage", "module-coverage"}
 
 
+def _basis_counts(match):
+    """`(drafted, modified)` from a `_BASIS_RE` match, reading an ABSENT
+    `modified=` as zero — the one home for that reading.
+
+    They ARE the same answer here: the value retired at D-9 step 7, so a file
+    with no field cannot hold a row that would have been counted in it. NOT the
+    general rule for a missing basis field — `ex-draft=`'s absence means "this
+    file predates the field and cannot answer", which `window_open` handles with
+    a fallback rather than a zero."""
+    return int(match.group(1)), int(match.group(2) or 0)
+
+
 def window_open(gate_file=None):
     """True when an open `Drafted`/`Modified` window is holding the derived gate
     below what the artifacts otherwise support.
@@ -1096,6 +1117,18 @@ def window_open(gate_file=None):
         post-approval amendment (derive_gate's model, WI-316), so the row can
         only exist in a spine that has already been ratified. Something that was
         `Approved` is pending again — that is a window by construction.
+
+        **A COMPATIBILITY ARM SINCE D-9 STEP 7, AND STILL LIVE.** The step
+        retired the `Modified` value, so a gate file THIS kit produces carries no
+        such field and the arm never fires on it (`_basis_counts` reads an absent
+        field as 0). It is kept, tested and unweakened for files that still carry
+        one: a downstream repo mid-migration, or a gate from an older kit. It has
+        no same-kit successor yet — under the new ladder an amendment leaves no
+        cell, so the equivalent signal is snapshot DRIFT, and `drifted=N` is
+        designed (baseline-snapshot design §F4) and not built. Until it is, a
+        post-signing amendment here suppresses no bar and opens no window,
+        because it also no longer drops the gate: it surfaces on the re-attest
+        brief and `open-items.html` instead.
       * `drafted>0` is ambiguous. A `Drafted` row reads DevStg-Below, so drafts drop the gate in a
         mature repo starting a new phase AND in a project that has never
         ratified anything. The counts cannot tell those apart — `ex-draft` can,
@@ -1125,7 +1158,7 @@ def window_open(gate_file=None):
     m = _BASIS_RE.search(text)
     if not m:
         return False  # a hand-written or pre-derived gate file: no opinion
-    drafts, modified = int(m.group(1)), int(m.group(2))
+    drafts, modified = _basis_counts(m)
     if modified > 0:
         return True
     if drafts == 0:

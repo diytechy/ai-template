@@ -81,9 +81,13 @@ def test_strict_integrity_ignores_orphans_but_fails_bad_ids(scaffold):
     assert "malformed" in report
 
 
-# SR-002 is Status=Modified (ratified, re-attest owed) so the phase
-# scoping of --require-verified is what the tests exercise — a Drafted SR would be
-# exempt from --require-verified entirely (WI-089), which is a different axis.
+# SR-002 is Status=Modified — a RETIRED value since D-9 step 7, and deliberately
+# kept here as the mid-migration fixture. The phase scoping of --require-verified
+# is what these tests exercise, so the row has to be one the bar FLAGS: a Drafted
+# SR is exempt from --require-verified entirely (WI-089, a different axis), and
+# `Approved`/`Founded` both pass, which leaves no LIVE value that reaches the bar.
+# The cost is that this fixture also reds the enum floor, which
+# `test_phase_scopes_require_verified` states rather than works around.
 PHASED_SRS = """SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Permutations,Priority,Verification,Status,Phase
 SR-001,Addition,SN-001,"The system shall add two numbers.","Realizes SN-001.","add(1,2) == 3",,M,Test,Approved,v1
 SR-002,Future thing,SN-001,"The system shall do a v2 thing.","Realizes SN-001 later.","v2 behavior",,S,Test,Modified,v2
@@ -111,8 +115,18 @@ def make_phased_project(scaffold):
 
 
 def test_phase_scopes_require_verified(scaffold):
-    # A v2 SR that is not yet Approved fails an unscoped DevStg-Impl check, but a
-    # --phase v1 closure defers it explicitly (and the deferral is reported).
+    """A v2 SR that is not yet Approved fails an unscoped DevStg-Impl check; a
+    `--phase v1` closure DEFERS it explicitly, and the deferral is reported.
+
+    THE ASSERTIONS MOVED FROM EXIT CODES TO COUNTERS AT D-9 STEPS 7/8, and the
+    reason is the fixture, not the property. `--require-verified`'s population
+    is now unreachable-by-cell for a conformant repo — every live value either
+    stands the bar down or passes it — so the only row that can drive this test
+    is the mid-migration one PHASED_SRS carries, whose out-of-vocabulary Status
+    ALSO reds the always-on integrity floor. The exit code therefore stays 1
+    throughout and can no longer tell the deferred run from the scoped one.
+    `status-findings=` / `phase-deferred=` can, and they are what the phase
+    scoping actually moves."""
     make_phased_project(scaffold)
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
@@ -123,18 +137,25 @@ def test_phase_scopes_require_verified(scaffold):
         ["scripts/trace.py", "--strict", "--require-verified", "--phase", "v1"],
         cwd=scaffold,
     )
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # DEFERRED: the bar stood down for the out-of-phase row...
+    assert "status-findings=0" in proc.stdout, proc.stdout
     assert "phase-deferred=1" in proc.stdout
+    # ...and the ONLY thing still failing is the enum floor, which is phase-blind
+    # BY DESIGN: an unmigrated word is wrong at any stage, in any phase.
+    assert "integrity=1" in proc.stdout
+    assert "not in the closed vocabulary" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "Phase-deferred (explicitly out of scope)" in report
     assert "SR SR-002 (Phase=v2)" in report
 
-    # Cumulative closure: once v2 is in scope, the Drafted SR fails again.
+    # Cumulative closure: once v2 is in scope, the unblessed SR is flagged again.
     proc = run_py(
         ["scripts/trace.py", "--strict", "--require-verified", "--phase", "v1,v2"],
         cwd=scaffold,
     )
     assert proc.returncode == 1
+    assert "status-findings=1" in proc.stdout
+    assert "phase-deferred=0" in proc.stdout or "phase-deferred=" not in proc.stdout
 
 
 def test_phase_blind_orphan_rules_still_apply(scaffold):
@@ -608,7 +629,22 @@ def test_no_aspect_values_no_report_section(scaffold):
     assert "SRs by aspect" not in report
 
 
-def test_require_verified_flags_unverified_test_sr(scaffold):
+def test_require_verified_flags_an_UNMIGRATED_status(scaffold):
+    """The bar's surviving population since D-9 steps 7/8, and it is smaller
+    than it was — stated rather than discovered.
+
+    Under the closed enum every LIVE value either stands the bar down
+    (`Drafted`, pre-approval) or passes it (`Approved`, `Founded`), so a
+    conformant repo can no longer reach this finding by cell. The case that
+    remains is the one that matters most: a DOWNSTREAM repo mid-migration
+    whose rows still read `Modified` (or `Implemented`, or anything else) must
+    not pass a DevStg-Impl gate silently. So the fixture drives an
+    out-of-vocabulary value deliberately, and asserts BOTH findings — this bar
+    ("this row is not blessed") and the integrity floor ("this word is not in
+    the vocabulary"). Two findings for one fault is the right count: they
+    answer different questions, and only the second survives if the bar is
+    never run.
+    """
     make_minimal_project(scaffold)
     csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
     csv_path.write_text(
@@ -617,15 +653,41 @@ def test_require_verified_flags_unverified_test_sr(scaffold):
         ),
         encoding="utf-8",
     )
-    # Without the flag: still a clean trace (status is a DevStg-Impl concern).
+    # Without the flag: the ENUM floor already names it (D-9 correction C1 —
+    # a retired word is wrong at any stage, so it does not wait for the top
+    # bar). This used to read "still a clean trace"; the closure is what
+    # changed, and it changed in the loud direction.
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    # With the flag: the unverified Test SR fails the gate.
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "not in the closed vocabulary" in proc.stdout
+    assert "status-findings=" not in proc.stdout  # the bar did not run
+    # With the flag: the unblessed Test SR fails the DevStg-Impl bar too.
     proc = run_py(["scripts/trace.py", "--strict", "--require-verified"], cwd=scaffold)
     assert proc.returncode == 1
     assert "status-findings=1" in proc.stdout
     report = (scaffold / "docs" / "test" / "report.md").read_text(encoding="utf-8")
     assert "DevStg-Impl requires Approved" in report
+
+
+def test_require_verified_passes_EVERY_blessed_value(scaffold):
+    """The mutation half, and the one that would have failed silently: D-9
+    step 8 armed `Founded`, and a bar reading `is_approved` alone would have
+    FLAGGED every row that reached the top rung — an arming that fails what it
+    promotes. Both blessed values pass; `Drafted` stands the bar down."""
+    make_minimal_project(scaffold)
+    csv_path = scaffold / "docs" / "requirements" / "system-requirements.csv"
+    original = csv_path.read_text(encoding="utf-8")
+    for value in ("Approved", "Founded", "Drafted"):
+        csv_path.write_text(
+            original.replace(",M,Test,Approved", ",M,Test," + value),
+            encoding="utf-8",
+        )
+        proc = run_py(
+            ["scripts/trace.py", "--strict-integrity", "--require-verified"],
+            cwd=scaffold,
+        )
+        assert "status-findings=0" in proc.stdout, value + proc.stdout
+        assert "not in the closed vocabulary" not in proc.stdout, value
 
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
@@ -877,7 +939,7 @@ def test_every_declared_sn_status_leaves_the_enum_floor_silent(scaffold):
     # The other half: a rule that fired on everything would pass the assertions
     # above. All three live vocabulary words, each on its own scaffold run.
     make_minimal_project(scaffold)
-    for status in ("Drafted", "Approved", "Modified"):
+    for status in ("Drafted", "Approved", "Founded"):
         _needs_on_toml(scaffold, status)
         proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
         assert "closed vocabulary" not in proc.stdout, status

@@ -65,7 +65,7 @@ closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQU
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
 the **amend-without-flip** warn (WI-316): a staged diff changing the **ratified**
-cells of an `Approved` spine row without setting the `Modified` re-attest marker
+cells of an `Approved` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
 *Ratified*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
 WI-380) rules traceability **traced, not ratified**, so a `Module`/`CodeSymbol`/
@@ -3061,8 +3061,9 @@ def staged_findings(root):
 
 
 # The three spine registries the staged amend-without-flip warn (WI-316) watches,
-# each with its id column. The SN needs file has no Status cell (section-as-state)
-# — a changed ratified SN rides its SR chain's Modified — so it is not listed.
+# each with its id column. The SN tier is not listed: its rows were section-as-state
+# when this was written and now carry their own `status`, but the warn has never
+# been extended to them and doing so is its own decision, not a side effect.
 SPINE_CSVS = (
     ("docs/requirements/system-requirements.toml", "SR-ID"),
     ("docs/requirements/low-level-requirements.toml", "LLR-ID"),
@@ -3107,7 +3108,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
 # ratified: re-pointing an LLR at the module the code moved to amends no
 # attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
-# moved code -> 11 owning SRs to `Modified` -> the gate dropped DevStg-Impl->DevStg-Tests -> a
+# moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> a
 # ratify brief and four review rounds, for a change that altered no requirement.
 #
 # BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
@@ -3215,9 +3216,14 @@ def spine_cell_class(csv_path, column):
 # `planned` because the pair split one rung ("text blessed, evidence
 # established" vs "text blessed, evidence pending"), and OI-30 D1 folded them
 # into the single `Approved`. `Drafted` does not belong: nothing has been
-# blessed, so there is nothing to amend behind a human's back. `Modified`
-# does not either: the marker is already set, which is exactly what this guard
-# checks for the absence of. Lowercase, matching the guard's own normalisation.
+# blessed, so there is nothing to amend behind a human's back. `Founded`
+# does not either, and its exclusion is DELIBERATE rather than pending: the rung
+# is COMPUTED from a row's children existing, so a cell reading it is not a
+# second attestation of the row's own text — the `Approved` claim underneath it
+# is the one this guard watches. Lowercase, matching the guard's own
+# normalisation.
+# (`Modified` used to be listed here as excluded-because-the-marker-is-already-set;
+# it retired at D-9 step 7 and the exclusion retired with it.)
 _RATIFIED_TEXT = frozenset({"approved"})
 
 
@@ -3298,8 +3304,8 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     with the csv module over the full file text on each side (spine cells are
     long; never line-split). Returns [] when not applicable; any missing git
     context is a silent no-op, like staged_findings. A NEW row (id absent on the
-    base side) is not an amendment; a row whose Status moved (to Modified,
-    Drafted, anything) made a deliberate call this does not
+    base side) is not an amendment; a row whose Status moved (to `Drafted`,
+    `Founded`, anything) made a deliberate call this does not
     second-guess."""
     revs = _spine_revs(
         root,
@@ -3360,8 +3366,7 @@ def staged_spine_findings(root):
 
     A staged diff that changes the ratified cells of a spine row whose Status
     reads the same ratified-text value (`Approved`, since D-9 step 5) in both
-    HEAD and the stage has amended attested prose
-    without setting the `Modified` re-attest marker (process.md §7) — the
+    HEAD and the stage has amended attested prose without re-blessing it — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
     whose only changes are TRACED (§A5.1) is silent here by ruling; it still
@@ -3370,10 +3375,11 @@ def staged_spine_findings(root):
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
         "{}: ratified cell(s) {} amended while Status stays put — a "
-        "post-attestation amendment owes the Modified re-attest marker "
-        "(process.md §7); flip the amended row in this commit, or the "
-        "change rides unmarked and surfaces only as snapshot drift once "
-        "a seed exists, never as the re-attest it owes".format(
+        "post-attestation amendment owes a fresh human read (process.md §7). "
+        "Since D-9 step 7 there is no marker to set: either re-attest it in "
+        "this commit and run `intake.py snapshot` in the same commit, or the "
+        "change rides as SNAPSHOT DRIFT until the next sitting — visible on the "
+        "re-attest brief and open-items.html, but not blessed".format(
             a["id"], ", ".join(sorted(a["ratified"]))
         )
         for a in staged_spine_amendments(root)
@@ -3437,8 +3443,19 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     Index-vs-HEAD by default (the hook's question); `head` takes a commit-ish
     for the post-commit view, matching `staged_spine_amendments`' shape. Silent
     no-op when git cannot answer or no snapshot file moved — the same degrade
-    every other scan here takes. WARN-class today; the design promotes it to the
-    integrity floor with the rest of the mechanism at migration step 7."""
+    every other scan here takes.
+
+    **TWO SEVERITIES SINCE D-9 MIGRATION STEP 7, which is what the design asked
+    for** (§F3 risk 3: *"warn at the staged hook, ERROR on the integrity
+    floor"*). This producer is unchanged and returns plain strings; the
+    `--staged` loop below still prints them as warns, AND `trace.py` appends
+    them to `findings.integrity`, so they fail `--strict-integrity` — the
+    always-on floor the pre-commit hook runs at every gate. The staged warn is
+    kept rather than replaced because it is the EARLIER of the two reads: it
+    names the file while the author is still in the commit, where the fix is one
+    `intake.py snapshot` away. The pre-commit hook invokes the staged pass with
+    `|| true`, so the warn alone never blocked anything — which is exactly why
+    the arming had to add a second severity rather than raise this one."""
     revs = _spine_revs(root, base, head)
     if revs is None:
         return []
@@ -3858,7 +3875,7 @@ def main():
     # warns: the follow-up-on-a-done-SR ratchet, the critique-loop ratchet
     # (a WI closing under a CHANGES-REQUESTED critique without hardening the
     # chain), the WI-316 amend-without-flip warn (attested spine prose
-    # changed without the Modified re-attest marker), and the WI-352 close-time
+    # changed without a fresh blessing), and the WI-352 close-time
     # completion warn (the row flips to `done` while its spec still has unticked
     # Done-when boxes — the only moment that disagreement is cheaply fixable,
     # since archival leaves nothing but a cosmetic edit).

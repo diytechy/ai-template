@@ -319,13 +319,25 @@ def test_a_ratified_but_UNCITED_need_is_the_NEEDS_rung():
     assert _stage(sn_ids=("SN-001", "SN-002")) == dg.STAGE_NEEDS
 
 
-def test_a_MODIFIED_requirement_is_the_REQS_rung():
-    # The post-attestation amendment state: the text moved after it was
-    # attested, so a fresh ratification is owed ON THE SR. Reading it higher up
-    # meant a repo at `human_ratification_through = 2` — "the human ratifies SNs
-    # and SRs" — let the loop flip `Modified -> Approved` mechanically, which is
-    # a machine ratifying an SR the owner declared human-held.
-    assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_REQS
+def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
+    # D-9 STEP 7, and the deletion is what this pins. The rung read the
+    # post-attestation amendment state — the text moved after it was attested,
+    # so a fresh ratification was owed ON THE SR — and it sat ahead of the
+    # children for that reason. No cell records that state any more (owner
+    # ruling 2026-08-17m: the snapshot comparison does), so the rung went with
+    # the word and was deliberately NOT re-keyed onto drift: this axis reads
+    # CELLS, and reaching into `docs/archive/` for a rung would make a pure row
+    # computation depend on the filesystem.
+    #
+    # A row still carrying the retired value therefore lands on the LAST rung,
+    # not the Reqs one — it is simply not `Approved`, so the children-first
+    # cascade runs and the Impl discriminator catches it. That is the safe
+    # direction (an unmigrated row reads LESS finished, never more) and the
+    # integrity floor names the cell itself.
+    assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
+    # `Founded`, armed at step 8, is the opposite case and must NOT be caught:
+    # it is `Approved` plus a demonstration, so the spine is finished.
+    assert _stage(srs=(dict(SR, Status="Founded"),)) == dg.STAGE_RELEASE
 
 
 def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
@@ -361,23 +373,33 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     D-9 STEP 5 MADE THIS RUNG UNREACHABLE-BY-CELL, AND THAT IS RECORDED HERE
     RATHER THAN PAPERED OVER. The state it describes — decomposed, TCs authored,
     the SR not yet blessed — was carried by `Planned`, and OI-30 D1 folded
-    `Planned` into `Approved`. Under the narrowed enum every not-`Approved` SR is
-    either `Drafted` or `Modified`, and BOTH are caught by earlier rungs that
-    return DevStg-Reqs, so nothing reaches the Impl test at the bottom of
-    `spine_stage`. This is the STAGE-axis twin of the hazard OI-30 D2 ruled a
-    ceiling for on the BAR axis, and the ceiling covers only the bar: a repo
-    whose SRs are all ex-`Planned` now reads DevStg-Release where it used to read
-    DevStg-Impl. NAMED FOR THE SITTING (log 2026-08-15m), not fixed here —
+    `Planned` into `Approved`. Under the closed enum every not-`Approved` SR is
+    `Drafted` (caught by the earlier rung that returns DevStg-Reqs) or `Founded`
+    (which reads as blessed), so no LIVE value reaches the Impl test at the
+    bottom of `spine_stage`. This is the STAGE-axis twin of the hazard OI-30 D2
+    ruled a ceiling for on the BAR axis, and the ceiling covers only the bar: a
+    repo whose SRs are all ex-`Planned` now reads DevStg-Release where it used to
+    read DevStg-Impl. NAMED FOR THE SITTING (log 2026-08-15m), not fixed here —
     fixing it is the harness driver `spine_stage`'s own CAVEAT already owes,
     and inventing a second ceiling would pre-empt a ruling nobody has taken.
     This repo is at DevStg-Boundary, so nothing moved in practice.
 
+    STEP 7 NARROWED THE UNREACHABILITY RATHER THAN CLOSING IT. The rung is now
+    reachable by exactly one thing — an OUT-OF-VOCABULARY status, which is what
+    a retired `Modified` cell is — because the Reqs rung that used to catch it
+    retired with the word. That is the safe direction (an unmigrated row reads
+    LESS finished) and the integrity floor names the cell, so it is recorded
+    here rather than treated as a second ceiling.
+
     The assertions below therefore pin the CURRENT truth, including the
     unreachability, so that landing the harness driver reddens this test rather
     than sliding past it."""
-    for live in ("Drafted", "Modified"):
-        assert _stage(srs=(dict(SR, Status=live),)) == dg.STAGE_REQS, live
-    assert _stage(srs=(dict(SR, Status="Approved"),)) == dg.STAGE_RELEASE
+    assert _stage(srs=(dict(SR, Status="Drafted"),)) == dg.STAGE_REQS
+    for blessed in ("Approved", "Founded"):
+        assert _stage(srs=(dict(SR, Status=blessed),)) == dg.STAGE_RELEASE, blessed
+    # The one value that DOES reach the rung: an unmigrated, out-of-vocabulary
+    # cell, which the integrity floor reds independently.
+    assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
     # The children-first half is unaffected by the rename and still pins.
     unverified = dict(SR, Status="Approved")
     assert _stage(srs=(unverified,), tcs=()) == dg.STAGE_TESTS

@@ -40,7 +40,7 @@ needs a value under `DevStg-Reqs`. Say "stage Needs / Boundary" of the repo; say
     `DevStg-Impl` to the min); ratified but cited by NO SR (WI-401) =>
     `DevStg-Below` — a ratified-but-unanswered need means `DevStg-Reqs` is not
     earned. The `uncovered=N` basis count surfaces the cause beside
-    `drafted=N`/`modified=N` (a Drafted SN is exempt from the coverage rung — it
+    `drafted=N` (a Drafted SN is exempt from the coverage rung — it
     already reads `DevStg-Below` via the draft rung, one fact one rung; the
     itemized "SN has no SR" listing stays trace.py's orphan finding at
     `DevStg-Tests` strictness, this rung being the bar-input half of that split).
@@ -48,11 +48,11 @@ needs a value under `DevStg-Reqs`. Say "stage Needs / Boundary" of the repo; say
     `DevStg-Reqs`; decomposed (has its required LLR — unless the Verification is
     LLR-exempt Analysis/Inspection/Attest — AND a TC) => `DevStg-Tests`, WHICH IS
     THE CEILING (OI-30 D2: `DevStg-Impl` is unreachable-by-cell until the
-    harness driver computes it from test evidence — see `sr_bar`). A `Modified`
-    SR (post-approval amendment, WI-316) needs no rule of its own: it is
-    decomposed-but-not-approved, so it reads `DevStg-Tests` — the deliberate pull
-    that makes a pending re-attest visible. The `modified=N` basis count surfaces
-    it beside `drafted=N`.
+    harness driver computes it from test evidence — see `sr_bar`). A `Founded`
+    SR (D-9's top rung, armed for the spine at migration step 8) needs no rule of
+    its own either: it is settled, so it reads exactly as `Approved` does here —
+    the demonstration `Founded` records is about the row's CHILDREN existing, not
+    about the harness, and only the harness moves `DevStg-Tests` -> `DevStg-Impl`.
   - **LLR / TC** — Drafted => `DevStg-Below` (the new-phase signal). Once present,
     its Status does not independently gate: the SR's `Approved` status drives
     `DevStg-Tests` -> `DevStg-Impl` (matching trace.py's --require-verified,
@@ -415,8 +415,10 @@ def maturity_bar(row):
     predicate.
 
     BEHAVIOUR IS UNCHANGED BY THE RE-KEY, in both directions, and the second one
-    is why `default=APPROVED` is passed here. `Modified` maps to APPROVED and does
-    not cap, exactly as the old `is_draft`-only test did. And an UNRECOGNIZED
+    is why `default=APPROVED` is passed here. Every non-`Drafted` value in the
+    table maps at or above APPROVED and does not cap — that was true of the
+    transitional `Modified` and is true of `Founded`, which step 8 armed — exactly
+    as the old `is_draft`-only test was. And an UNRECOGNIZED
     value still does not cap: the off-spine default is DRAFTED because those
     tiers' vocabularies are schema-ADVISORY, so an unreadable row must hold its
     rung open or nothing would say anything — but `Status` is a closed INTEGRITY
@@ -432,16 +434,17 @@ def maturity_bar(row):
     )
 
 
-def is_modified(row):
-    """The post-approval `Modified` state (WI-316, process.md §7): content changed
-    after the last approval, re-attest owed. NO gate arithmetic of its own — a
-    Modified SR is simply not Approved, so sr_bar already derives DevStg-Tests
-    (decomposed-unapproved); recognized here only for the `modified=N` basis
-    count, so the pending state never hides. TRANSITIONAL: it survives step 5's
-    rename and retires at step 7, once the snapshot-backed drift rule has run
-    live alongside it through the owner's signing act. Duplicated from trace.py
-    per the F5 no-shared-module rule; pinned equal by test_rule_sync."""
-    return (row.get("Status") or "").strip().lower() == "modified"
+def is_founded(row):
+    """The ladder's top rung (repo-lock D-9): settled AND the artifacts the row
+    calls for EXIST. Armed for the spine at D-9 step 8, as it armed for CMP at
+    the registry status unification — the word becomes legal, no live cell moves
+    to it. What matters HERE is that it reads ABOVE `Approved`: `SPINE_MATURITY`
+    maps it to FOUNDED (never caps) and `spine_stage`'s Impl->Release
+    discriminator accepts it, so arming a word cannot LOWER the derived gate —
+    the rule the step-5 rename ran under. The DISCHARGE is computed per tier
+    elsewhere (migration plan C4); this reads the cell, like its two siblings.
+    Duplicated from trace.py per F5; pinned equal by test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "founded"
 
 
 # `is_planned` WAS DELETED AT D-9 STEP 5 (not re-keyed) with the word it read:
@@ -449,6 +452,13 @@ def is_modified(row):
 # rows and the `planned=` basis counter goes with the predicate. It was step-2
 # insurance against a value no predicate recognized, and its own docstring said
 # it would be deleted here rather than migrated.
+#
+# `is_modified` WAS DELETED AT D-9 STEP 7 on the same terms, as its own docstring
+# promised. It marked "approved text that has since moved" and survived step 5
+# only so the kit never had a commit with NO drift detector; its successor (the
+# `docs/archive/last_approved/` comparison) ran alongside it through the signing.
+# `modified=N` went with it, for `planned=`'s reason: a count of a value the
+# closed enum cannot hold counts integrity errors, not pending rows.
 
 
 def sn_bar(sn_id, draft_ids, cited_ids):
@@ -592,9 +602,8 @@ def stage_ord(stage):
 # rung 1 (Boundary) had no machine-readable state and rung 3's `CMP.State` was
 # read by nothing that gates. Folding IF and CMP in is what makes the recursion
 # self-reporting — but those two registries carry their OWN maturity vocabularies,
-# and the spine carries a third — which, since D-9 migration step 5, is
-# `Drafted`/`Approved` (+ the transitional `Modified`) and therefore SPEAKS THIS
-# TABLE'S OWN WORDS.
+# and the spine carries a third — which, since D-9 migration steps 5/7/8, is
+# `Drafted`/`Approved`/`Founded` and therefore SPEAKS THIS TABLE'S OWN WORDS.
 #
 # So every vocabulary maps onto ONE set of ladder semantics, stated here and
 # nowhere else:
@@ -613,21 +622,19 @@ DRAFTED, APPROVED, FOUNDED = "Drafted", "Approved", "Founded"
 # like every other table here (`_maturity` lowercases before the lookup), so this
 # is the closed `STATUS_VALUES` vocabulary spelled in the ladder's own terms.
 #
-# `modified` maps to APPROVED and NOT to DRAFTED, deliberately and transitionally:
-# a Modified row is text that WAS approved and then moved, so its rung is not
-# re-opened — it owes a re-attest, which is a surfacing obligation (`modified=N`,
-# the pending-actions projection, the brief) rather than a cap. Mapping it to
-# DRAFTED would have made step 5's rename LOWER the derived gate, which is a
-# judgement move the rename is forbidden to make. The row retires with the word
-# at step 7, leaving a two-value table.
-#
-# `FOUNDED` is unreachable from the spine today by design: it means settled AND
-# demonstrated, and the demonstration is the harness's answer, not a cell's —
-# which is the same reasoning that ceilings `sr_bar` at `BAR_TESTS` (OI-30 D2).
+# THE TRANSITIONAL `modified` ROW LEFT AT STEP 7, as this comment's previous
+# revision said it would; the state it named is now read by comparing the row
+# against its `docs/archive/last_approved/` copy, which is not a maturity.
+# `founded` JOINED AT STEP 8 under the rule that governed the rename: it maps to
+# FOUNDED, which does not cap, so a row at the top rung cannot read as work in
+# flight and drop the bar. Its demonstration is computed per tier (migration plan
+# C4), never asserted by this table. DevStg-Release still does not follow from a
+# `Founded` cell — that driver is the harness's answer, which is why `sr_bar`
+# stays ceilinged at `BAR_TESTS` (OI-30 D2).
 SPINE_MATURITY = {
     "drafted": DRAFTED,
     "approved": APPROVED,
-    "modified": APPROVED,
+    "founded": FOUNDED,
 }
 
 # BOUNDARY CROSSINGS — the depth-0 frame's `[boundary.B-##]` rows in
@@ -663,11 +670,14 @@ BIF_MATURITY = {
 # map because it is not a maturity — but ONE of its values still answers a
 # rung-3 question, and `CMP_STANDING_CLEARS` below is where it answers it.
 #
-# CMP KEEPS ITS OWN TABLE rather than sharing `SPINE_MATURITY`, and deliberately:
-# the two differ TODAY (CMP reaches `founded`, the spine does not; the spine
-# carries transitional `modified`, CMP never did) and they differ again at D-9
-# step 7 in the other direction. One table serving both would have to be read as
-# a union that is wrong for each.
+# CMP KEEPS ITS OWN TABLE rather than sharing `SPINE_MATURITY`, RE-EXAMINED at
+# D-9 step 8 rather than inherited: the two are byte-identical as of that step,
+# so collapsing them is the obvious move. Declined on the unification plan's own
+# §7(c) recommendation — two registries' vocabularies that HAPPEN to coincide,
+# not one with two names. They have already diverged in both directions (CMP
+# reached `founded` first; the spine carried `modified` and CMP never did), and
+# one shared table would make the next per-registry subset (which decision 12
+# provides for) a change to the OTHER registry's ladder.
 #
 # `founded` is REACHABLE HERE and nowhere else off-spine: a demonstrated
 # partition is a claim something computes, which is the whole test for whether a
@@ -859,25 +869,28 @@ def spine_stage(
       DevStg-Needs      a need is a draft, none is ratified, or a ratified one
                         has no SR answering it
       DevStg-Boundary   ...and the declared boundary inventory is in work
-      DevStg-Reqs       ...and a requirement is Drafted, or one is `Modified`
-                        (amended after attestation, so RE-ratification is owed)
+      DevStg-Reqs       ...and a requirement is Drafted
       DevStg-Arch       ...and the declared partition is in work
       DevStg-LLReqs     ...and an LLR is missing or Drafted
       DevStg-Tests      ...and a TC is missing or Drafted
       DevStg-Impl       ...and every SR is decomposed and every TC authored and
-                        non-Drafted, but some SR is not yet `Approved`
+                        non-Drafted, but some SR is not yet `Approved` (or above)
       DevStg-Release    nothing in work: every rung is settled and approved
+
+    THE `Modified` ARM OF THE Reqs RUNG RETIRED AT D-9 STEP 7 — no cell records
+    "amended after attestation" any more, and the successor (the snapshot
+    comparison) is deliberately NOT read here; see the rung itself.
 
     THE TWO INSERTED RUNGS (OI-21) read from the IF and CMP registries, which
     joined the fold here — see `boundary_incomplete` / `arch_incomplete` for the
     applies-when that keeps them free for a project that adopts neither.
 
     THE SPINE RUNGS STILL READ PREDICATES (`is_drafted`/`is_approved`/
-    `is_modified`) rather than `SPINE_MATURITY`, and that is not an oversight:
-    the rungs need distinctions finer than the three-way ladder (which SR is
-    Modified, which child is Drafted), while the ladder answers only "does this
-    cap its rung". `maturity_bar` — the one spine question that IS the ladder
-    question — reads the table, so the row is live rather than decorative.
+    `is_founded`) rather than `SPINE_MATURITY`, and that is not an oversight:
+    the rungs need distinctions finer than the three-way ladder (which child is
+    Drafted, which SR has not been blessed), while the ladder answers only "does
+    this cap its rung". `maturity_bar` — the one spine question that IS the
+    ladder question — reads the table, so the row is live rather than decorative.
 
     CAVEAT ON THE Impl->Release DRIVER. DevStg-Impl ends when every SR reads
     `Approved`, which is a registry CELL, not a harness run. The intended signal is
@@ -893,12 +906,10 @@ def spine_stage(
     unable to express "TCs are human-held but LLRs are not", the distinction the
     axis exists for.
 
-    WHICH RUNG OWNS AN UNVERIFIED SR: `Modified` is the SR's own rung and is
-    checked FIRST, because it means the requirement's text moved after it was
-    attested and a fresh ratification is owed on the SR itself. Any OTHER
-    not-yet-`Approved` SR is checked LAST, after the children: an SR reaches
-    `Approved` only once its LLRs and TCs are green, so while a child is still in
-    flight the child's rung is the honest answer.
+    WHICH RUNG OWNS AN UNBLESSED SR: it is checked LAST, after the children. An
+    SR reaches `Approved` only once its LLRs and TCs are green, so while a child
+    is still in flight the child's rung is the honest answer. (A two-case rule
+    until step 7, which retired the `Modified` case that was checked FIRST.)
 
     Two corners are explicit. A repo with no real SRs at all is DevStg-Needs, NOT
     DevStg-Release — the vacuous-lowest-bar short circuit in `_raw_level` exists
@@ -918,8 +929,9 @@ def spine_stage(
         return STAGE_REQS
     if any(u not in sn_cited_ids(srs) for u in sn_ids):
         return STAGE_NEEDS
-    if any(is_modified(r) for r in srs):
-        return STAGE_REQS
+    # THE `Modified` RUNG RETIRED AT STEP 7 with the word it read (owner ruling
+    # 2026-08-17m). NOT re-keyed onto drift: this axis reads CELLS, and reaching
+    # into `docs/archive/` would make a pure row computation read the filesystem.
     if arch_incomplete(cmps, have_cmps):
         return STAGE_ARCH
     llr_sr_refs, tc_refs = _decomposed_sr_ids(llrs, tcs)
@@ -936,7 +948,10 @@ def spine_stage(
     # is written, so "TCs in work" is no longer true. What remains is making them
     # pass, which is DevStg-Impl. (`is_approved` is the interim proxy for that;
     # the intended signal is the harness — see the CAVEAT above.)
-    if not all(is_approved(r) for r in srs):
+    # `is_founded` JOINS THE TEST AT STEP 8 — a correction, not a widening:
+    # `Founded` is `Approved` plus a demonstration, so reading only `is_approved`
+    # would hold a Founded SR at DevStg-Impl forever.
+    if not all(is_approved(r) or is_founded(r) for r in srs):
         return STAGE_IMPL
     return STAGE_RELEASE
 
@@ -1096,16 +1111,15 @@ def compute(docs):
         + sum(1 for r in tcs if is_drafted(r))
         + len(sn_draft)
     )
-    # `Modified` rows (WI-316): landed-but-unblessed amendments awaiting re-attest.
-    # Counted across the three registries exactly like drafts (SNs have no Status
-    # cell — a changed ratified SN rides its SR chain's Modified) and surfaced on
-    # the basis line so the pending state never hides. No gate arithmetic here:
-    # a Modified SR already computes DevStg-Tests via sr_bar's decomposed rung.
-    n_modified = (
-        sum(1 for r in srs if is_modified(r))
-        + sum(1 for r in llrs if is_modified(r))
-        + sum(1 for r in tcs if is_modified(r))
-    )
+    # `modified=` IS GONE AT D-9 STEP 7, deleted with `is_modified` and the word
+    # it counted: no cell records a landed-but-unblessed amendment any more, and
+    # the successor state is a property of two FILES, uncountable from the rows
+    # this function is handed. `check._BASIS_RE` was re-read in the SAME commit
+    # and still HONOURS the field when a gate file carries one, so a downstream
+    # repo mid-migration keeps its window detector. A `drifted=N` successor is
+    # designed (baseline-snapshot design §F4) and NOT built: it needs an import
+    # edge from here into `baseline_snapshot`, which imports THIS module.
+    #
     # `planned=` IS GONE AT D-9 STEP 5, deleted with `is_planned` and the word
     # itself (OI-30 D1 folded `Planned` into `Approved`). It was step-2 insurance
     # for a value 14 live rows carried while every counter here read past it;
@@ -1170,7 +1184,6 @@ def compute(docs):
         "stage_ord": stage_ord(stage),
         "stage_of": STAGE_OF,
         "drafted": n_draft,
-        "modified": n_modified,
         "uncovered": n_uncovered,
         "raw": raw,
         "ex_draft": ex_draft,
@@ -1259,26 +1272,34 @@ def basis_line(result):
     There is deliberately NO COMPAT SHIM: a reader that silently accepted both
     vocabularies is exactly how the retired tags would grow back.
 
-    D-9 STEP 5 RENAMED `drafts=` TO `drafted=` AND DELETED `planned=`, which is
-    a field rename and a field REMOVAL on a line whose consumers are named below
-    — done in the same commit as `check._BASIS_RE`, `test_advisory_during_window`'s
-    fixtures and this repo's own `docs/gate`, because that is exactly the edit
-    the twelve-commit precedent punished.
+    D-9 STEP 5 RENAMED `drafts=` TO `drafted=` AND DELETED `planned=`, and STEP 7
+    DELETED `modified=` — field renames and field REMOVALS on a line whose
+    consumers are named below, each done in the same commit as
+    `check._BASIS_RE`, the window-detector fixtures and this repo's own
+    `docs/gate`, because that is exactly the edit the twelve-commit precedent
+    punished.
 
     THIS LINE HAS A MACHINE CONSUMER AND IT IS NOT `--check`: `check._BASIS_RE`
-    parses `drafted=`/`modified=` out of it to decide whether an open
-    ratification WINDOW is suppressing the bar — and when that detector goes
-    blind, twelve gate steps stop running silently (the measured
-    2026-07-26/27 precedent at `check.py`'s `window_open`). So a field may be
-    inserted here only with that regex re-read in the SAME commit;
+    parses `drafted=` (and `modified=`, when a file carries one) out of it to
+    decide whether an open ratification WINDOW is suppressing the bar — and when
+    that detector goes blind, twelve gate steps stop running silently (the
+    measured 2026-07-26/27 precedent at `check.py`'s `window_open`). So a field
+    may be inserted here only with that regex re-read in the SAME commit;
     `tests/test_derive_gate.py`'s producer-consumer round-trip pin
     (`check._BASIS_RE.search(derive_gate.basis_line(result))`) is what makes a
     future edit that breaks it fail loudly instead of quietly.
+
+    THE STEP-7 REMOVAL WAS NOT SYMMETRIC WITH THE REGEX EDIT, deliberately: this
+    producer stopped EMITTING `modified=` (the value cannot exist under the closed
+    enum) while `check._BASIS_RE` kept HONOURING it as an optional group, because
+    gate files this kit did not produce still carry one. Dropping the consumer
+    half too would have disarmed the window detector's one conclusive arm for
+    exactly those repos — the failure this docstring exists to prevent.
     """
     c = result["counts"]
     per_phase = ";".join(f"{k}={v}" for k, v in result["per_phase"].items())
     return (
-        "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafted={d} modified={m} "
+        "# basis: SN={SN} SR={SR} LLR={LLR} TC={TC} drafted={d} "
         "uncovered={u} computed={raw} ex-draft={ed} phase={ph} "
         "per-phase={pp} stage={st} stage-ord={so} stage-of={sof}".format(
             SN=c["SN"],
@@ -1286,7 +1307,6 @@ def basis_line(result):
             LLR=c["LLR"],
             TC=c["TC"],
             d=result["drafted"],
-            m=result["modified"],
             u=result["uncovered"],
             raw=BAR_NAMES[result["raw"]],
             ed=BAR_NAMES[result["ex_draft"]],
@@ -1308,7 +1328,7 @@ HEADER = [
     "# line is the bar that must next be CLEARED — and therefore the STRICTNESS",
     "# SELECTOR check.py runs at. It is COMPUTED, not declared: the MIN over every",
     "# in-scope SN/SR/LLR/TC's own bar, floored to DevStg-Reqs. So the least-mature",
-    "# row picks it, and a Drafted or Modified row DROPS it (the signal that a new",
+    "# row picks it, and a Drafted row DROPS it (the signal that a new",
     "# phase is due) — which means a mature spine held down by one draft displays",
     "# exactly what a fresh scaffold displays. The `# basis:` line below is what",
     "# tells them apart: `stage=` is the rung actually in work on the eight-rung",
@@ -1319,9 +1339,10 @@ HEADER = [
     "# there is the internal below-the-lowest-bar sentinel, not a bar).",
     "#",
     "# HOW IT MOVES. By APPROVING artifacts in a reviewed commit",
-    "# (Drafted->Approved, or moving an SN out of a draft section; a Modified row",
-    "# re-attests the same way, Modified->Approved — process.md section 4), never",
-    "# by editing this line.",
+    "# (Drafted->Approved — process.md section 4), never by editing this line.",
+    "# An APPROVED row whose text is later amended does not move this value at",
+    "# all: it is caught by comparing the row against its copy in",
+    "# docs/archive/last_approved/, and it surfaces on the re-attest brief.",
     "# Regenerate: python scripts/derive_gate.py",
     "# Freshness is guarded by `--check` (a pre-commit + bar step). check.py / CI",
     "# read the first non-comment line below, exactly as before.",

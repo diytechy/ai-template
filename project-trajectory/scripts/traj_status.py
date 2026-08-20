@@ -56,10 +56,11 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 # committed-tree state ONLY:
 #   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification
 #       page);
-#   (b) Drafted/Modified SR rows (WI-316): a `Drafted` SR owes an approval, a
-#       `Modified` SR owes a re-attest (post-attestation amendment, process.md
-#       §7) — one pointer line each, naming the on-demand brief
-#       (`trace.py --ratify <id>` / `--ratify modified`) that carries the depth.
+#   (b) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
+#       an SR whose chain has moved away from its `docs/archive/last_approved/`
+#       copy owes a re-attest (post-attestation amendment, process.md §7) — one
+#       pointer line each, naming the on-demand brief (`trace.py --ratify <id>`
+#       / `--ratify modified`) that carries the depth.
 #   (c) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
 #       `Paused since <date>` line, the declared reason rendered verbatim (no
 #       clock), so an open pause is a visible accruing cost.
@@ -205,8 +206,9 @@ _SR_REL = "docs/requirements/system-requirements.toml"
 
 def _spine_pending(root):
     """Source (e), WI-316: one pointer line per `Drafted` SR (approval owed) and
-    per `Modified` SR (re-attest owed — a post-approval amendment,
-    process.md §7). Only SR rows project — deliberate surface economy, never
+    per SR whose chain has DRIFTED from the approved snapshot (re-attest owed —
+    a post-approval amendment, process.md §7). Only SR rows project — deliberate
+    surface economy, never
     attestation scope (a row's Status answers for its own cells, owner ruling
     2026-08-17m): a flagged LLR/TC under an unflagged SR shows in the registry
     and the trace report, not here. Durable committed-tree state, so these
@@ -227,8 +229,13 @@ def _spine_pending(root):
     `docs/archive/last_approved/` while its own Status still claims approval.
     That is the state the migration exists for — under the new ladder an
     amendment no longer flips its row, so a projection keyed on status words
-    alone goes quiet exactly when it matters. Vacuous while no snapshot
-    exists."""
+    alone goes quiet exactly when it matters. Vacuous while no snapshot exists.
+
+    THE `Modified` ARM LEFT AT STEP 7, and this is the surface that shows why the
+    steps were ordered as they were: the drift arm had already been rendering
+    beside it since step 4, so the projection lost a word and kept the state.
+    A projection that had swapped the two in ONE commit would have gone quiet for
+    exactly as long as it took someone to notice."""
     # `skip_example=True`: a copied template's `-000` example row owes no
     # ratification. Only the SR arm projects (the docstring's surface-economy
     # note), so the LLR/TC arms of the loader go unused here.
@@ -239,7 +246,7 @@ def _spine_pending(root):
     for r in sorted(srs, key=lambda x: x["SR-ID"]):
         status = (r.get("Status") or "").strip().lower()
         drifted = baseline_snapshot.is_drifted(_SR_REL, "SR-ID", r, snap_srs)
-        if status not in ("drafted", "modified") and not drifted:
+        if status != "drafted" and not drifted:
             continue
         sid = r["SR-ID"]
         title = (r.get("Title") or "").strip() or "(untitled)"
@@ -252,17 +259,6 @@ def _spine_pending(root):
                 "`gate-advance` skill); hierarchy brief: `python "
                 "project-trajectory/scripts/trace.py --ratify {}`.".format(
                     sid, phase_note, title, sid
-                )
-            )
-        elif status == "modified":
-            lines.append(
-                "- **{} `Modified` — re-attest owed**{}: {} — bless the "
-                "amendment in a reviewed Status-change commit "
-                "(`Modified`→`Approved`) and run `intake.py "
-                "snapshot` in the SAME commit; before/after brief: `python "
-                "project-trajectory/scripts/trace.py --ratify modified` "
-                "(committed briefs live in `docs/ratify/`).".format(
-                    sid, phase_note, title
                 )
             )
         else:
@@ -324,7 +320,7 @@ def _pause_pending(root):
 
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for the
-    generated owner surface: blocked WI rows with a BlockRef + Drafted/Modified
+    generated owner surface: blocked WI rows with a BlockRef + Drafted/DRIFTED
     spine rows owing a ratification/re-attest + the tracked `docs/work/pause`
     declaration. A pure function of the committed tree — deterministic (sorted,
     no clocks) — so the harness `open-items` freshness gate byte-compares the
@@ -335,7 +331,7 @@ def pending_block(root):
     pure_lead = (
         "_Pending owner actions — a generated projection of durable, "
         "committed-tree state (blocked rows with a ratify/attest pointer, "
-        "Drafted/Modified spine rows owing an approval or re-attest, and the "
+        "Drafted/drifted spine rows owing an approval or re-attest, and the "
         "tracked pause declaration); regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
         "This section is freshness-gated by the harness `status-map` step. The "

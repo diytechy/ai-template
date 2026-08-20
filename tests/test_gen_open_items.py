@@ -140,26 +140,40 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
     assert "An already-ruled question" not in page
 
 
-def test_draft_and_modified_rows_both_surface(tmp_path):
+def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     """ "New or changed" is the requirement: a Drafted row owes a first
-    ratification, a Modified row owes a re-attest, and a view that renders only
-    one of them silently drops half the owner's queue."""
-    repo(
-        tmp_path,
-        sr_rows=(
-            "SR-001,A drafted need,SN-001,shall do the new thing,because,"
-            "criteria,,C,Test,Drafted,1,W\n"
-            "SR-002,An amended need,SN-001,shall do the changed thing,because,"
-            "criteria,,C,Test,Modified,1,W\n"
-        ),
+    ratification, an amended row owes a re-attest, and a view that renders only
+    one of them silently drops half the owner's queue.
+
+    THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
+    `Status = Modified`; D-9 step 7 retired that marker, so an amended row
+    still reads `Approved` and the ONLY thing that can put it in this queue is
+    the comparison against `docs/archive/last_approved/`. The fixture therefore
+    has to approve first and amend after — which is the real sequence, and the
+    reason this test is worth more than it was: it now proves the surface can
+    see an amendment nothing in the registry announces.
+    """
+    drafted = (
+        "SR-001,A drafted need,SN-001,shall do the new thing,because,"
+        "criteria,,C,Test,Drafted,1,W\n"
     )
-    assert gen(tmp_path).returncode == 0
-    page = html_of(tmp_path)
+    approved = (
+        "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
+        "criteria,,C,Test,Approved,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=drafted + approved)
+    _git_init(root)
+    _approve(root)
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + drafted + approved.replace("ORIGINAL", "CHANGED"),
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
     assert 'id="SR-001-attest"' in page and "approval owed" in page
     assert 'id="SR-002-attest"' in page and "re-attest owed" in page
-    # With no snapshot at all there is no baseline for ANY row — say so plainly
-    # rather than implying a missing git history (which is no longer read).
-    assert "no docs/archive/last_approved snapshot exists yet" in page
+    # ...and the drifted cell is what the owner is shown, before and after.
+    assert "ORIGINAL" in page and "CHANGED" in page
 
 
 def test_verified_rows_are_not_in_the_queue(tmp_path):
@@ -189,10 +203,14 @@ def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_p
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
     _approve(root)
-    # Flip to Modified WITHOUT amending anything else: the row asks for a human
-    # by its own Status, and no cell has moved away from the approved text.
+    # Move the Status DOWN without amending anything else: the row asks for a
+    # human by its own Status (`Drafted` owes a first approval) while no cell
+    # has moved away from the snapshotted text — which is the exact state this
+    # empty section describes. It was reached with `Modified` until D-9 step 7
+    # retired that marker; `Drafted` is the surviving value that puts a row in
+    # the queue on its own Status rather than on a diff.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + verified.replace(",Approved,", ",Modified,"), encoding="utf-8"
+        SR_HEADER + verified.replace(",Approved,", ",Drafted,"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
@@ -502,11 +520,11 @@ def test_collapse_toggle_is_wired_to_the_unchanged_runs(tmp_path):
     # A real amendment, so a real diff renders: the `.eq` runs only exist where
     # unchanged text sits BESIDE a change, which is exactly what the toggle
     # collapses.
+    # NO STATUS FLIP SINCE D-9 STEP 7: the row stays `Approved` and reaches the
+    # queue by DRIFT alone, which is what an amendment looks like under the new
+    # ladder. The diff being rendered is the same one.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER
-        + verified.replace("a thing", "a DIFFERENT thing").replace(
-            ",Approved,", ",Modified,"
-        ),
+        SR_HEADER + verified.replace("a thing", "a DIFFERENT thing"),
         encoding="utf-8",
     )
     assert gen(root).returncode == 0
@@ -553,11 +571,11 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     root = repo(tmp_path, sr_rows=verified)
     _git_init(root)
     _approve(root)
+    # NO STATUS FLIP SINCE D-9 STEP 7 — the row stays `Approved` and reaches the
+    # queue by DRIFT on the amended cell alone.
     (root / "docs" / "requirements" / "system-requirements.csv").write_text(
         SR_HEADER
-        + verified.replace(
-            "because of the old reason", "because of a NEW reason"
-        ).replace(",Approved,", ",Modified,"),
+        + verified.replace("because of the old reason", "because of a NEW reason"),
         encoding="utf-8",
     )
     assert gen(root).returncode == 0
@@ -578,7 +596,7 @@ def test_full_row_context_renders_beside_the_diff_and_complements_it(tmp_path):
     assert ">Notes<" not in block
     # (c) The SR row rendered its own diff, so the card-level fallback block for
     # a chain-only amendment must not also fire.
-    assert "itself — no cell changed beyond the Status flip" not in page
+    assert "itself — no cell of this row changed" not in page
     # Wired to the SAME control as the text collapse, and honest without JS.
     assert "body.ctx-open .ctx" in page and "'ctx-open'" in page
     assert "<noscript><style>.ctx{display:flex;}</style></noscript>" in page
@@ -598,15 +616,16 @@ def test_sr_text_renders_when_only_a_child_row_was_amended(tmp_path):
     )
     _git_init(root)
     _approve(root)
-    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
-        SR_HEADER + sr.format("Modified"), encoding="utf-8"
-    )
+    # ONLY THE CHILD MOVES SINCE D-9 STEP 7. The SR used to flip to `Modified`
+    # to enter the queue; under the new ladder it stays `Approved` and the
+    # CHAIN DRIFT pulls it in — which is the same state this test was always
+    # about (nothing of the SR itself changed) reached the way it now happens.
     (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
         LLR_HEADER + llr.format("NEW detail"), encoding="utf-8"
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    assert "SR-010 itself — no cell changed beyond the Status flip" in page
+    assert "SR-010 itself — no cell of this row changed" in page
     assert "shall state the THING BEING VERIFIED" in page
     # The negative half: the fallback states what it is, and does not claim the
     # SR was amended — the LLR is what changed, and it still shows its diff.

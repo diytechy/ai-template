@@ -54,13 +54,15 @@ def _independent_meta_expectations():
     """Per-phase gate expectations re-derived STRAIGHT from the registry CSVs
     with none of derive_gate's machinery — a deliberate second implementation,
     so the dogfood test can catch sr_bar breaking (the adversarial review's F3:
-    compare-a-subprocess-to-the-same-function is tautological). Simplified on
-    facts the meta's own harness enforces elsewhere (orphans=0 => every
-    non-exempt SR is decomposed): a phase expects DevStg-Below if any of its SRs — OR
-    any of its LLR/TC rows, the documented new-phase signal (derive_gate's
-    "LLR/TC — Drafted => DevStg-Below"; first exercised by Phase 5's TC-133, a Drafted TC
-    under no Drafted SR) — is Drafted, else DevStg-Tests if any SR is below Approved
-    (Modified included), else DevStg-Impl."""
+    compare-a-subprocess-to-the-same-function is tautological). A phase expects
+    DevStg-Below if any of its SRs — OR any of its LLR/TC rows, the documented
+    new-phase signal (derive_gate's "LLR/TC — Drafted => DevStg-Below"; first
+    exercised by Phase 5's TC-133, a Drafted TC under no Drafted SR) — is
+    Drafted; else DevStg-Reqs if any SR is UNDECOMPOSED (no LLR cites it and no
+    TC verifies it — real since the 2026-08-20 signing approved nine SRs ahead
+    of their chains, the declared orphans debt; the old "orphans=0 => every
+    non-exempt SR is decomposed" simplification died with it); else
+    DevStg-Tests."""
     # Read with STDLIB `tomllib` straight off the file, not through
     # spine_carrier: the independence this re-derivation buys is the point (F3),
     # and it now covers the carrier as well as the gate arithmetic — if the
@@ -89,6 +91,9 @@ def _independent_meta_expectations():
         status = str(r.get("status") or "").strip().lower()
         phases.setdefault(_phase(r), []).append(status)
     draft_child_phases = set()
+    cited_srs = set()
+    import re as _re
+
     for rel, table, prefix in (
         ("docs/requirements/low-level-requirements.toml", "design", "LLR-"),
         ("docs/test/test-cases.toml", "test", "TC-"),
@@ -96,18 +101,24 @@ def _independent_meta_expectations():
         for r in _rows(rel, table, prefix):
             if str(r.get("status") or "").strip().lower() == "drafted":
                 draft_child_phases.add(_phase(r))
+            for key in ("sr_refs", "verifies"):
+                cited_srs.update(_re.findall(r"SR-\d+", str(r.get(key, ""))))
+    undecomposed_phases = {_phase(r) for r in srs if r["_id"] not in cited_srs}
     expect = {}
     for phase, statuses in phases.items():
         if any(s == "drafted" for s in statuses) or phase in draft_child_phases:
             expect[phase] = "DevStg-Below"
+        elif phase in undecomposed_phases:
+            # An Approved SR no LLR cites and no TC verifies is undecomposed:
+            # sr_bar holds its phase at the Reqs bar until the chain exists.
+            expect[phase] = "DevStg-Reqs"
         elif any(s != "approved" for s in statuses):
             expect[phase] = "DevStg-Tests"
         else:
             # OI-30 D2's ceiling, mirrored in the INDEPENDENT re-derivation
             # so this side is not simply agreeing with the code it checks.
             expect[phase] = "DevStg-Tests"
-    modified = sum(1 for sts in phases.values() for s in sts if s == "modified")
-    return expect, modified
+    return expect
 
 
 def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
@@ -119,7 +130,7 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     # Modified deriving DevStg-Reqs) still reds the dogfood. Plus: the SR-level modified
     # count is a floor for the basis count, and the committed docs/gate cache
     # matches the recomputed state (--check green).
-    expect, sr_modified = _independent_meta_expectations()
+    expect = _independent_meta_expectations()
     result = _derive(ROOT)
     for phase, gate in expect.items():
         assert result["per_phase"].get(phase) == gate, (
@@ -127,7 +138,6 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
             gate,
             result["per_phase"],
         )
-    assert result["modified"] >= sr_modified  # LLR/TC flags may add to the count
     proc = run_py([SCRIPTS / "derive_gate.py", "--print", "--root", ROOT], cwd=ROOT)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     for phase, gate in expect.items():
@@ -137,7 +147,12 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
     # ratification legitimately advances the phase (4 -> 5 at the 2026-08-13
     # re-attest sitting, which ratified the last draft SNs and SR-137..149).
     assert "phase=5" in proc.stdout
-    assert "modified={}".format(result["modified"]) in proc.stdout
+    # ...and the RETIRED field is absent from the emitted line. `modified=`
+    # left with `is_modified` at D-9 step 7 (a count of a value the closed
+    # enum no longer admits is a count of an integrity error, not of a
+    # pending state); `check._BASIS_RE` keeps honouring it when a file
+    # carries one, which the round-trip pin below drives from both sides.
+    assert "modified=" not in proc.stdout
     check = run_py([SCRIPTS / "derive_gate.py", "--check", "--root", ROOT], cwd=ROOT)
     assert check.returncode == 0, check.stdout + check.stderr
 
@@ -146,16 +161,16 @@ def test_meta_repo_phases_match_an_independent_derivation_and_cache_is_fresh():
 def test_sr_gate_rules():
     draft = {"Status": "Drafted", "Verification": "Test"}
     assert GATE.sr_bar(draft, True, True) == GATE.BAR_BELOW
-    # RE-POINTED AT D-9 STEP 5: the old "ratified but unverified" fixture read
-    # `Planned`, which FOLDED into `Approved`. The one remaining ratified-but-
-    # unblessed value is `Modified`.
-    modified = {"Status": "Modified", "Verification": "Test"}
+    # RE-POINTED AGAIN AT D-9 STEPS 7/8. It read `Planned` (folded into
+    # `Approved` at OI-30 D1), then `Modified` (retired at step 7). `sr_bar`
+    # never read either word — it reads `is_drafted` and then DECOMPOSITION —
+    # so the honest fixture for "ratified, undecomposed" is any non-Drafted
+    # value, and `Founded` is the one this step added.
+    founded = {"Status": "Founded", "Verification": "Test"}
+    assert GATE.sr_bar(founded, False, False) == GATE.BAR_REQS  # ratified, undecomposed
     assert (
-        GATE.sr_bar(modified, False, False) == GATE.BAR_REQS
-    )  # ratified, undecomposed
-    assert (
-        GATE.sr_bar(modified, True, True) == GATE.BAR_TESTS
-    )  # decomposed, re-attest owed
+        GATE.sr_bar(founded, True, True) == GATE.BAR_TESTS
+    )  # decomposed — the OI-30 D2 ceiling, whatever the cell says
     # OI-30 D2's ceiling: decomposed tops out at DevStg-Tests, whatever the cell
     # says. The dedicated pin is
     # `test_sr_bar_CEILINGS_at_DevStg_Tests_and_impl_is_unreachable_by_cell`.
@@ -169,12 +184,16 @@ def test_sr_gate_rules():
 
 def test_maturity_and_sn_gate_rules():
     # A present LLR/TC caps only when Drafted; its own Status does not gate (the
-    # SR's does), so `Approved` and `Modified` both contribute DevStg-Impl —
+    # SR's does), so `Approved` and `Founded` both contribute DevStg-Impl —
     # and so does an UNRECOGNIZED value, which is `SPINE_MATURITY`'s deliberate
     # spine-only default (the closed enum names it on the integrity floor
-    # instead; see maturity_bar).
+    # instead; see maturity_bar). The RETIRED `Modified` is driven here too,
+    # and it lands on the unrecognized arm — which is the safe direction: the
+    # word retiring must not LOWER a downstream repo's derived gate, it must
+    # surface as an integrity finding on the cell.
     assert GATE.maturity_bar({"Status": "Drafted"}) == GATE.BAR_BELOW
     assert GATE.maturity_bar({"Status": "Approved"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Founded"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Modified"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Implemented"}) == GATE.BAR_RELEASE
     assert GATE.sn_bar("SN-009", {"SN-009"}, set()) == GATE.BAR_BELOW  # draft section
@@ -239,48 +258,38 @@ def test_no_real_srs_is_g1(scaffold):
     assert _derive(scaffold)["gate"] == "DevStg-Reqs"
 
 
-def test_modified_sr_reads_g2_and_is_counted(scaffold):
-    # WI-316: a Modified SR (post-attestation amendment, re-attest owed) pulls its
-    # gate to DevStg-Tests through the EXISTING decomposed-unverified rung — no rule of its
-    # own — and the basis carries modified=N so the pending state never hides.
-    # Children stay Approved: their status never independently gates (maturity),
-    # so the pull is exactly one rung, not a DevStg-Below draft-drop.
+def test_the_modified_basis_counter_RETIRED_with_its_predicate(scaffold):
+    """D-9 STEP 7, and this replaces two tests rather than dropping them.
+
+    They pinned `modified=N`: that a `Modified` SR pulled its phase to
+    DevStg-Tests through the existing decomposed-unapproved rung (no rule of
+    its own), and that a `Modified` LLR/TC joined the count while capping
+    nothing. `Modified` retired at step 7, so neither state is reachable in a
+    conformant repo and neither assertion can be made about one.
+
+    What survives is the property that mattered, restated on the live
+    vocabulary and made STRONGER: the counter is GONE from the result dict and
+    from the emitted line, so nothing can quietly report zero pending rows
+    from a field that can only ever be zero. The rung it exercised is pinned
+    where it belongs, on `sr_bar` (an approved-and-decomposed SR reads
+    DevStg-Tests) and on `maturity_bar` (a child's status never caps past
+    Drafted) — both directly asserted below on values that still exist.
+    """
     make_minimal_project(scaffold)
-    # SR-001 keeps the minimal project's LLR/TC children (decomposed), so the
-    # Modified status pulls exactly one rung — not the undecomposed DevStg-Reqs.
-    _write(scaffold, srs=_sr("SR-001", status="Modified"))
+    _write(scaffold, srs=_sr("SR-001"))
     result = _derive(scaffold)
     assert result["raw"] == GATE.BAR_TESTS
     assert result["gate"] == "DevStg-Tests"
-    assert result["modified"] == 1
     assert result["drafted"] == 0
-    # The emitted basis line surfaces the count between drafts and computed.
-    assert (
-        # `planned=` is GONE at step 5 (deleted with the word) and `drafts=`
-        # is spelled `drafted=`; `check._BASIS_RE` moved in the same commit.
-        "drafted=0 modified=1 uncovered=0 computed=DevStg-Tests"
-        in GATE.basis_line(result)
-    )
-
-
-def test_modified_children_are_counted_but_never_gate(scaffold):
-    # A Modified LLR/TC joins the modified=N count (informational precision) but
-    # caps nothing: maturity_bar stays Drafted-only, so the SR's own status drives
-    # the gate exactly as before — the anti-coupling rule the derived-gate model
-    # dropped LLR/TC status for is untouched by WI-316.
-    make_minimal_project(scaffold)
-    _write(
-        scaffold,
-        srs=_sr("SR-001"),
-        llrs='LLR-001,SR-001,Adder,src/demo,add,"d",(see TC),Modified\n',
-        tcs='TC-001,SR-001;LLR-001,Unit,m,Smoke,"a=1","e",Yes,tests/test_demo.py::t,Modified\n',
-    )
-    result = _derive(scaffold)
-    assert (
-        result["gate"] == "DevStg-Tests"  # OI-30 D2 ceiling
-    )  # SR Approved; children's status never caps
-    assert result["modified"] == 2
-    assert GATE.maturity_bar({"Status": "Modified"}) == GATE.BAR_RELEASE
+    assert "modified" not in result
+    line = GATE.basis_line(result)
+    assert "modified=" not in line
+    assert "drafted=0 uncovered=0 computed=DevStg-Tests" in line
+    # The child-never-caps rule, on the values the enum still has — including
+    # `Founded`, armed for the spine at step 8 and mapping ABOVE Approved.
+    assert GATE.maturity_bar({"Status": "Approved"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Founded"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Drafted"}) == GATE.BAR_BELOW
 
 
 # --- the cache + --check rot guard --------------------------------------------
@@ -303,10 +312,12 @@ def test_check_detects_state_drift(scaffold):
     make_minimal_project(scaffold)
     run_py(["scripts/derive_gate.py"], cwd=scaffold)
     # Un-bless an SR: the derived gate drops but the cache still says
-    # DevStg-Impl -> STALE.
+    # DevStg-Impl -> STALE. `Drafted` since D-9 step 7 — it was `Modified`,
+    # which is no longer in the closed enum, so a fixture using it would be
+    # driving the derivation with a value the integrity floor refuses.
     srs = scaffold / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
-        srs.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Modified"),
+        srs.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Drafted"),
         encoding="utf-8",
     )
     check = run_py(["scripts/derive_gate.py", "--check"], cwd=scaffold)
@@ -688,26 +699,42 @@ def test_the_basis_line_still_parses_under_checks_window_regexes(scaffold):
     make_minimal_project(scaffold)
     _write(
         scaffold,
-        srs=_sr("SR-001", status="Modified") + _sr("SR-002", status="Approved"),
+        srs=_sr("SR-001", status="Drafted") + _sr("SR-002", status="Approved"),
     )
     result = _derive(scaffold)
     line = GATE.basis_line(result)
     basis = check._BASIS_RE.search(line)
     assert basis is not None, "check._BASIS_RE no longer matches basis_line: " + line
-    # ...and it extracts the two counts the window test reads, by VALUE — a
-    # regex that matched while capturing the wrong groups would be worse than
-    # one that did not match at all.
-    assert basis.group(1) == "0", line  # drafted (renamed from `drafts` at step 5)
-    assert basis.group(2) == "1", line  # modified
+    # ...and it extracts the counts the window test reads, by VALUE — a regex
+    # that matched while capturing the wrong groups would be worse than one
+    # that did not match at all. `_basis_counts` is the reader, so the round
+    # trip is driven through IT rather than through raw groups: the absent
+    # `modified=` field must arrive as 0, not as None.
+    assert check._basis_counts(basis) == (1, 0), line
     for name in ("_COMPUTED_RE", "_EX_DRAFT_RE", "_PER_PHASE_RE"):
         assert getattr(check, name).search(line) is not None, (name, line)
-    # THE RENAME ITSELF IS PINNED, in both directions. `drafts=` became
-    # `drafted=` and `planned=` was DELETED at step 5, and both halves of that
-    # edit have to be visible here or the regex above could be matching a field
-    # that no longer means what the consumer thinks it means.
+    # THE FIELD EDITS ARE PINNED, in both directions. `drafts=` became
+    # `drafted=`, `planned=` was DELETED at step 5, and `modified=` was DELETED
+    # at step 7 — each half has to be visible here or the regex above could be
+    # matching a field that no longer means what the consumer thinks it means.
     assert " drafted=" in line and " drafts=" not in line, line
     assert "planned=" not in line, line
-    assert result["drafted"] == 0 and "drafted=0" in line, line
+    assert "modified=" not in line, line
+    assert result["drafted"] == 1 and "drafted=1" in line, line
+    # THE CONSUMER STILL HONOURS THE RETIRED FIELD, which is the asymmetry
+    # step 7 chose deliberately: this kit stopped EMITTING `modified=`, but a
+    # gate file it did not produce — a downstream repo mid-migration, or one
+    # regenerated by an older kit — still carries one, and dropping the
+    # consumer half would silently disarm the window detector's one
+    # CONCLUSIVE arm for exactly those repos. Drive both files through the
+    # real reader.
+    legacy = line.replace(" drafted=", " drafted=0 modified=7 IGNORED=", 1)
+    legacy_match = check._BASIS_RE.search(legacy)
+    assert legacy_match is not None, legacy
+    assert check._basis_counts(legacy_match) == (0, 7), legacy
+    gate_file = scaffold / "docs" / "gate"
+    gate_file.write_text(legacy + "\nDevStg-Reqs\n", encoding="utf-8", newline="\n")
+    assert check.window_open(gate_file) is True
 
 
 # --- OI-30 D2: the sr_bar ceiling and its one rendering home ------------------

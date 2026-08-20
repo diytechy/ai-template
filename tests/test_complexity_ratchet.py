@@ -97,16 +97,13 @@ BASELINE = {
     # scan into the shared _step_sections helper) — entry deleted per the
     # ratchet's improvement rule (re-stamp/delete downward in the same commit).
     ("check.py", "main"): 16,
-    # WI-445 / OI-21: 10 -> 11. `spine_stage` IS the ladder, and the ladder gained
-    # two rungs (Boundary and Arch). A reviewed bump rather than a decomposition,
-    # for a reason the ratchet's own preference concedes: the two inserted rungs'
-    # PREDICATES are already extracted (`boundary_incomplete` / `arch_incomplete`,
-    # each with its applies-when argued in place), so what is left in the function
-    # is one branch per rung and nothing else. Splitting an eight-rung cascade
-    # into two four-rung cascades would raise the branch count nowhere and make
-    # the one thing a reader comes here for — the ORDER — unreadable. Log
-    # 2026-08-13.
-    ("derive_gate.py", "spine_stage"): 11,
+    # `spine_stage` DROPPED UNDER THE LIMIT at D-9 migration step 7 and its entry
+    # is DELETED per the improvement rule (re-stamp or delete downward in the same
+    # commit). It had been bumped 10 -> 11 at WI-445/OI-21 when the ladder gained
+    # the Boundary and Arch rungs; step 7 retired the `Modified` rung — the
+    # requirement-amended-after-attestation arm, which no cell records any more —
+    # and took one branch back out with it. Recorded DOWN rather than left as
+    # headroom for the next regression to hide in.
     # `findings_for` dropped under the limit, WI-062: the untraced/dangling
     # classification went OUT to `path_findings` rather than adding three
     # branches to the file walk — decomposition, the escape the ratchet prefers,

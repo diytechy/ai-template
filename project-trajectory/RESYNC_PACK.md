@@ -1828,6 +1828,65 @@ that is modified in the worktree but absent from the index.
   variant of that comment, take the correction — it is the half of this gap that
   no mechanism closes.
 
+### The ladder's END STATE: `Modified` RETIRES, `Founded` ARMS [since 2d51f140]
+
+*(Anchored at the signing commit that seeded `docs/archive/last_approved/`; the
+change lands in the commit(s) that follow it.)* The spine enum reaches the shape
+repo-lock D-9 ruled — **`{Drafted, Approved, Founded}`** — and both halves move in
+ONE commit, because the enum must equal the set of values at least one live
+predicate recognizes at every commit. It is enforced on the always-on
+`--strict-integrity` floor, so an unmigrated `Modified` cell is a hard finding on
+your very next commit.
+
+1. **`Modified` is DELETED, and there is no successor VALUE.** It marked
+   "approved text that has since been amended". Under the snapshot mechanism an
+   amended row STAYS `Approved` and the amendment is caught by DIFFING it against
+   its copy in `docs/archive/last_approved/` — for every row, rather than the
+   ones somebody remembered to mark. **Migrate your cells before re-syncing:** a
+   `Modified` row is one that owes a human read, so rule each one and write
+   `Approved` (with `intake.py snapshot` in the same commit), or write `Drafted`
+   if you are re-opening it. Do NOT bulk-rewrite them to `Approved` unread —
+   that laundering is the exact thing the marker existed to prevent.
+2. **`Founded` is LEGAL and COMPUTED.** It means settled AND demonstrated: the
+   artifacts the row calls for exist (SRs under an SN, LLR+TC under an SR,
+   resolving code under an LLR, a written test under a TC). The four discharge
+   computations already shipped; what this step adds is that the word is
+   recognized — `is_founded` in `trace.py` and `derive_gate.py` (F5 duplicates,
+   both move), a `SPINE_MATURITY` row mapping it ABOVE `Approved`, and every
+   blessed-text reader accepting it (`--require-verified`, `spine_stage`'s
+   Impl→Release discriminator, the LLR-status advisory's exemption). **No cell
+   moves to it in this step**, exactly as it armed for `components.toml`. Nothing
+   WRITES it: whether a tool ever should, and whether a hand-authored `Founded`
+   is itself an error, is still open (D-9 consequence 2).
+3. **THE ONE THAT BITES SILENTLY — the `# basis:` line loses `modified=N`.**
+   `derive_gate.py` no longer emits the field. The kit's own `check._BASIS_RE`
+   was made to treat it as OPTIONAL in the same commit, so a gate file that still
+   carries one keeps the window detector's conclusive arm; **local tooling that
+   REQUIRES the field goes blind rather than red.** Grep any consumer of
+   `docs/gate`'s basis line for `modified=` first. Regenerating `docs/gate`
+   (`python scripts/derive_gate.py`) is required regardless — `--check` compares
+   the line whole.
+4. **Two snapshot rules ARM as integrity ERRORS**, on the always-on
+   `--strict-integrity` floor plus the pre-commit hook. **UNANCHORED:** a row
+   whose live `Status` claims approval-or-above with no copy in the snapshot, or
+   a copy that reads below it. **THE MIRROR INVARIANT:** a snapshot file that is
+   not byte-identical to its live counterpart in the same commit. Both were
+   warn-only before. They stay **vacuous by absence** — a repo that has approved
+   nothing pays nothing — so this only bites once you have seeded a snapshot, and
+   the fix for both is the same: write text into the live registry and copy it
+   with `intake.py snapshot`, never edit the snapshot.
+5. **Predicates and sets, if you patched or imported them.** `is_modified` is
+   DELETED, not re-keyed, in BOTH `trace.py` and `derive_gate.py`.
+   `SPINE_MATURITY` loses its `modified` row and gains `founded`.
+   `dispatch._TC_NOT_RED` swaps `modified` for `founded`. `intake._apply_flips`
+   REFUSES a located row it cannot move instead of skipping it silently — under
+   this ladder its one source state is gone, so the mechanical adjudication flip
+   writes nothing pending a ruling on what should replace it.
+6. **Overwrite `registries/stakeholder-needs.template.toml`** (its maturity
+   header block drops the third value) and re-read `process.md` §4, whose closed
+   vocabulary sentence is the one home for this enum.
+
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

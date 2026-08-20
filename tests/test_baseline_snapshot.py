@@ -496,7 +496,7 @@ def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
     _rewrite(root, SR_REL, 'title = "', 'title = "amended ')
     shutil.copyfile(root / SR_REL, SNAP.snapshot_root(root) / SR_REL)
     # ...and now the live file moves AGAIN before the commit closes.
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Modified"')
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     run_git("add", "-A")
     found = CT.staged_snapshot_findings(root)
     assert any("byte-identical" in f for f in found), found
@@ -525,21 +525,45 @@ def test_deleting_the_WHOLE_record_is_SILENT(tmp_path):
     assert CT.staged_snapshot_findings(root) == []
 
 
-def test_the_unanchored_rule_is_WIRED_into_trace_as_an_advisory():
-    """The round-2 finding in one line: the rule was defined and called by
-    NOTHING, so an approval could bypass the record and no live check would say
-    so. A source pin, and deliberately — the property is "this producer reaches
-    the advisory printer", and a behavioural test would need a seeded snapshot
-    in a full docs tree to assert a list that is empty today either way."""
+def test_the_snapshot_rules_are_ARMED_on_traces_INTEGRITY_floor():
+    """D-9 MIGRATION STEP 7 — the arming, from both ends.
+
+    This test used to assert the OPPOSITE and said so: the rule reached the
+    advisory printer and was pinned OUT of `exit_code`, "the design arms it at
+    migration step 7". This is that step, so the pin inverts.
+
+    BOTH snapshot rules arm together, because they are one property read from
+    two directions: UNANCHORED asks "did every approval ride a copy" and the
+    MIRROR invariant asks "is every copy a copy". Either one alone leaves the
+    record forgeable.
+
+    Half source pin, half behavioural, and the split is deliberate: WHICH pipe
+    a producer joins is a wiring fact only the source states, while the
+    SEVERITY of that pipe is a real behaviour `exit_code` can be driven on.
+    """
+    trace = load_script("trace")
     text = (SCRIPTS / "trace.py").read_text(encoding="utf-8")
+    # WIRING: both producers are called, and both land in the integrity list.
     assert "baseline_snapshot.unanchored_findings(" in text
-    assert "findings.snapshot_advisories" in text
-    # ...and it reaches the WARNING printer rather than sitting in the bag.
+    assert "check_trajectory.staged_snapshot_findings(" in text
+    assert "findings.integrity += findings.snapshot_findings" in text
+    # ...and NOT in the advisory printer any more, which is the half that
+    # would otherwise leave the old severity standing beside the new one.
     printer = text.split("for a in (", 1)[1].split("):", 1)[0]
-    assert "snapshot_advis" in printer, printer
-    # ADVISORY, never the exit code — the design arms it at migration step 7.
-    exit_policy = text.split("def exit_code(", 1)[1].split("\ndef ", 1)[0]
-    assert "snapshot_advisories" not in exit_policy
+    assert "snapshot" not in printer, printer
+
+    # SEVERITY, driven rather than read: an integrity finding fails the
+    # always-on floor. `--strict-integrity` is the command the pre-commit hook
+    # and the DevStg-Reqs `registry-integrity` step both run.
+    class _Args:
+        strict = False
+        strict_integrity = True
+
+    findings = trace.Findings()
+    findings.integrity = []
+    assert trace.exit_code(findings, _Args()) == 0
+    findings.integrity = ["SR-001 reads Status=Approved but is ABSENT from ..."]
+    assert trace.exit_code(findings, _Args()) == 1
 
 
 def test_the_README_is_prose_and_is_exempt_from_the_mirror(tmp_path):
@@ -581,7 +605,7 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     sid, row = _first_row_at(root, "approved")
     # Amend a ratified cell AND flip the row, in one staged change.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
-    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Modified"')
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     run_git("add", "-A")
     seam = [a for a in CT.staged_spine_amendments(root) if a["id"] == sid]
     assert seam == [], "the seam saw an amend+flip it is documented to miss"

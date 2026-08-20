@@ -642,22 +642,29 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 
 
 def _policy_repo(tmp_path, level):
-    """A repo with one Modified SR, one Approved SR, one Modified LLR, and the
+    """A repo with one Drafted SR, one Approved SR, one Drafted LLR, and the
     declared gate-policy `level` — the state an adjudication row's cheap
-    outcome (no scope moved -> re-verify) acts on."""
+    outcome acts on.
+
+    THE FIXTURE ROWS READ `Drafted` SINCE D-9 STEP 7. They read `Modified`, the
+    marker that named "approved text that has since moved" and the one state
+    `_apply_flips` ever moved FROM; the word retired with the step, and a
+    fixture carrying it would be driving this repo's writer with a value its own
+    integrity floor now refuses. `Drafted` is the live below-`Approved` value,
+    which is what these fixtures need: a located row that is NOT already at the
+    value the act writes."""
     root = git_repo(tmp_path)
     req = root / "docs" / "requirements"
     req.mkdir(parents=True, exist_ok=True)
     (req / "system-requirements.csv").write_text(
         SR_HEADER
-        + 'SR-001,Adder,SN-001,"the text","why","ac",,C,Test,Modified\n'
+        + 'SR-001,Adder,SN-001,"the text","why","ac",,C,Test,Drafted\n'
         + 'SR-002,Widget,SN-001,"other text","why","ac",,C,Test,Approved\n',
         encoding="utf-8",
         newline="\n",
     )
     (req / "low-level-requirements.csv").write_text(
-        LLR_HEADER
-        + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Modified,'
+        LLR_HEADER + 'LLR-001,SR-001,Core,src/d.py,f,"the detail","why",TC-001,Drafted,'
         "CMP-001,1\n",
         encoding="utf-8",
         newline="\n",
@@ -681,7 +688,7 @@ def _declare_level(root, level):
     with gate.open("w", encoding="utf-8", newline="\n") as fh:
         fh.write(
             "# DERIVED GATE\n"
-            "# basis: SN=1 SR=2 LLR=1 TC=0 drafted=0 modified=2 uncovered=0 "
+            "# basis: SN=1 SR=2 LLR=1 TC=0 drafted=2 uncovered=0 "
             "computed=DevStg-Tests ex-draft=DevStg-Tests phase=1 "
             "per-phase=1=DevStg-Tests stage=DevStg-Tests stage-ord=5 "
             "stage-of=8\n"
@@ -706,43 +713,55 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
     ).read_bytes() == before
 
 
-def test_below_the_human_level_the_flip_is_enacted(tmp_path):
-    # The other arm: once the tier in process sits ABOVE the human's declared
-    # ratification level, a recorded LLM verdict already carries ratification
-    # authority, so the helper flips Modified -> Approved — and ONLY the Status
-    # cells move (the registries stay byte-identical elsewhere; a re-run is an
-    # idempotent no-op). The fixture's rung is `DevStg-Tests`, which only level 4
-    # holds (the dial's four notches are the SPINE tiers), so levels 0..2 are the
-    # loop-held side; both ends of that range are driven.
+def test_below_the_human_level_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path):
+    """D-9 STEP 7, and this test replaces a capability rather than losing one.
+
+    It used to prove the other arm of ruled decision 2: below the human's
+    ratification level a recorded LLM verdict carries ratification authority, so
+    the helper enacted `Modified` -> `Approved`. Step 7 retired `Modified`, the
+    ONE state that act ever moved from, and the guard it left behind — a silent
+    `continue` over every other status — resolved into an explicit refusal.
+
+    So what is proved here now is the refusal, at the SAME authority level the
+    flip used to run at: a located row this act cannot move is NAMED, with its
+    status quoted, and NOTHING is written. Fail-closed matters more than the
+    lost arm — the alternative resolutions (write to a `Drafted` row, or
+    re-bless a drifted `Approved` one) are both WIDER than the silent skip they
+    would replace, and widening mechanical ratification authority is an owner
+    ruling, not a migration step's to take. The writer's own properties did not
+    move with the guard and are proved directly below.
+    """
     for i, level in enumerate((0, 2)):
         (tmp_path / str(i)).mkdir()
         root = _policy_repo(tmp_path / str(i), level)
-        import csv as _csv
-
         sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
-        with sr_csv.open(newline="", encoding="utf-8") as fh:
-            before_rows = list(_csv.DictReader(fh))
-        action, flipped, refusal = intake.flip_verified(root, ["SR-001", "LLR-001"])
-        assert refusal is None, refusal
-        assert action == "flip"
-        assert flipped == ["LLR-001", "SR-001"]
-        with sr_csv.open(newline="", encoding="utf-8") as fh:
-            after_rows = list(_csv.DictReader(fh))
-        # ONLY the named row's Status cell moved; every other cell of every
-        # row is exactly what it was (cell-exact — and byte-identical on the
-        # live registries, where quoting is by necessity; measured).
-        for b, a in zip(before_rows, after_rows):
-            for col in b:
-                if b["SR-ID"] == "SR-001" and col == "Status":
-                    assert (b[col], a[col]) == ("Modified", "Approved")
-                else:
-                    assert b[col] == a[col], (b["SR-ID"], col)
-        llr = (root / "docs" / "requirements" / "low-level-requirements.csv").read_text(
-            encoding="utf-8"
-        )
-        assert "Modified" not in llr
-        again = intake.flip_verified(root, ["SR-001", "LLR-001"])
-        assert again == ("flip", [], None)  # idempotent: nothing left Modified
+        llr_csv = root / "docs" / "requirements" / "low-level-requirements.csv"
+        before = (sr_csv.read_bytes(), llr_csv.read_bytes())
+        with pytest.raises(SystemExit) as excinfo:
+            intake.flip_verified(root, ["SR-001", "LLR-001"])
+        msg = str(excinfo.value)
+        # The row is NAMED, and so is the status that made it non-flippable.
+        assert "LLR-001" in msg and "Drafted" in msg, msg
+        assert "Modified" in msg and "step 7" in msg, msg
+        # ...and the refusal wrote nothing: it raises before the write loops.
+        assert (sr_csv.read_bytes(), llr_csv.read_bytes()) == before
+
+
+def test_a_row_already_at_the_written_value_is_the_ONE_silent_skip(tmp_path):
+    """The other half of the resolved guard: idempotence survives.
+
+    `SR-002` is `Approved` — already at the value this act writes — so it is
+    skipped rather than named, and the act reports no flip. That skip is the one
+    the old `if status != "Modified": continue` was RIGHT about, and separating
+    it from the refusal is the whole content of the step-7 resolution: one
+    branch was two unrelated cases wearing one `continue`.
+    """
+    root = _policy_repo(tmp_path, 0)
+    sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
+    before = sr_csv.read_bytes()
+    action, flipped, refusal = intake.flip_verified(root, ["SR-002"])
+    assert (action, flipped, refusal) == ("flip", [], None)
+    assert sr_csv.read_bytes() == before
 
 
 SR_TOML = (
@@ -752,7 +771,7 @@ SR_TOML = (
     'title = "Adder"\n'
     'sn_refs = ["SN-001"]\n'
     'requirement = """the text"""\n'
-    'status = "Modified"\n'
+    'status = "Drafted"\n'
     "phase = 1\n"
     "\n"
     "# a comment BETWEEN rows, which a re-serialisation would delete\n"
@@ -762,6 +781,30 @@ SR_TOML = (
     'status = "Approved"\n'
 )
 
+# The registry key the writer tests below pass directly.
+# `_rewrite_toml_statuses` resolves the TOML table name from it, so it is
+# the writer's real argument rather than a convenience.
+SR_REL = "docs/requirements/system-requirements.toml"
+
+
+def _write(root, text, newline="\n"):
+    """Plant `text` as the live TOML SR registry and return its path — the
+    four writer tests below share this setup exactly.
+
+    THEY DRIVE `_rewrite_toml_statuses` DIRECTLY SINCE D-9 STEP 7, where they
+    used to reach it through `flip_verified`. The properties under test are
+    the WRITER's — a line rewrite rather than a re-serialisation, TOML string
+    awareness, and the file's own newline style — and not one of them moved at
+    step 7. What moved is the POLICY guard above the writer, which now refuses
+    every located row (there is no longer a state it can move FROM), so
+    routing through it would test the refusal four more times and test the
+    writer zero times."""
+    req = root / "docs" / "requirements"
+    (req / "system-requirements.csv").unlink()
+    sr_toml = req / "system-requirements.toml"
+    sr_toml.write_text(text, encoding="utf-8", newline=newline)
+    return sr_toml
+
 
 def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     # Step 4 of the carrier migration: under the TOML carrier the
@@ -770,28 +813,24 @@ def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     # comments, ordering, and every untouched byte — so this asserts the file is
     # byte-identical apart from the single status line of the named row.
     root = _policy_repo(tmp_path, 0)
-    req = root / "docs" / "requirements"
-    (req / "system-requirements.csv").unlink()
-    sr_toml = req / "system-requirements.toml"
-    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\n")
+    sr_toml = _write(root, SR_TOML)
     before = sr_toml.read_text(encoding="utf-8")
 
-    action, flipped, refusal = intake.flip_verified(root, ["SR-001"])
-    assert refusal is None, refusal
-    assert (action, flipped) == ("flip", ["SR-001"])
+    intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
 
     after = sr_toml.read_text(encoding="utf-8")
     b, a = before.split("\n"), after.split("\n")
     assert len(b) == len(a)
     moved = [i for i in range(len(b)) if b[i] != a[i]]
     assert len(moved) == 1, [(b[i], a[i]) for i in moved]
-    assert (b[moved[0]], a[moved[0]]) == ('status = "Modified"', 'status = "Approved"')
+    assert (b[moved[0]], a[moved[0]]) == ('status = "Drafted"', 'status = "Approved"')
     # The comments and the untouched row survived, which is the whole reason
     # this is a line rewrite rather than a re-emit.
     assert "# a comment BETWEEN rows" in after
     assert 'status = "Approved"' in after.split("[requirement.SR-002]")[1]
-    # Idempotent, and it never reaches past the row it was asked for.
-    assert intake.flip_verified(root, ["SR-001"]) == ("flip", [], None)
+    # ...and it never reached past the row it was asked for: SR-002 read
+    # `Approved` before and reads it after, so the file now holds exactly two.
+    assert after.count('status = "Approved"') == 2
 
 
 # A row whose REQUIREMENT PROSE quotes registry syntax — the counterexample the
@@ -804,7 +843,7 @@ SR_TOML_PROSE = (
     "status = literal prose inside the requirement\n"
     "[requirement.SR-999] is not a table header either.\n"
     'End of requirement."""\n'
-    'status = "Modified"\n'
+    'status = "Drafted"\n'
 )
 
 
@@ -812,20 +851,15 @@ def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
     """The review's BLOCKER 3, planted verbatim.
 
     A physical-line rewrite edited a `status = ...` line INSIDE a multi-line
-    requirement string, left the row's real status at `Modified`, and returned
+    requirement string, left the row's real status where it was, and returned
     True — so the tool reported a ratification it had not made while silently
     rewriting attested requirement text. Two damages from one defect: a false
     record, and a corrupted registry cell.
     """
     root = _policy_repo(tmp_path, 0)
-    req = root / "docs" / "requirements"
-    (req / "system-requirements.csv").unlink()
-    sr_toml = req / "system-requirements.toml"
-    sr_toml.write_text(SR_TOML_PROSE, encoding="utf-8", newline="\n")
+    sr_toml = _write(root, SR_TOML_PROSE)
 
-    action, flipped, refusal = intake.flip_verified(root, ["SR-001"])
-    assert refusal is None, refusal
-    assert (action, flipped) == ("flip", ["SR-001"])
+    intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
 
     after = sr_toml.read_text(encoding="utf-8")
     # The REAL cell moved...
@@ -864,32 +898,26 @@ def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
     and a wholesale CRLF -> LF conversion makes a one-word ratification a
     whole-file diff — on the registry whose diffs the amendment guard reads."""
     root = _policy_repo(tmp_path, 0)
-    req = root / "docs" / "requirements"
-    (req / "system-requirements.csv").unlink()
-    sr_toml = req / "system-requirements.toml"
-    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\r\n")
+    sr_toml = _write(root, SR_TOML, newline="\r\n")
     before = sr_toml.read_bytes()
     assert before.count(b"\r\n") > 3  # a genuinely CRLF fixture
 
-    assert intake.flip_verified(root, ["SR-001"])[1] == ["SR-001"]
+    intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
 
     after = sr_toml.read_bytes()
     assert after.count(b"\r\n") == before.count(b"\r\n")
     changed = [
         (b, a) for b, a in zip(before.split(b"\r\n"), after.split(b"\r\n")) if b != a
     ]
-    assert changed == [(b'status = "Modified"', b'status = "Approved"')]
+    assert changed == [(b'status = "Drafted"', b'status = "Approved"')]
 
 
 def test_an_lf_registry_is_not_given_crlf_either(tmp_path):
     """The other half of MAJOR 6 — preserving the style must not mean guessing
     it. An LF file stays LF."""
     root = _policy_repo(tmp_path, 0)
-    req = root / "docs" / "requirements"
-    (req / "system-requirements.csv").unlink()
-    sr_toml = req / "system-requirements.toml"
-    sr_toml.write_text(SR_TOML, encoding="utf-8", newline="\n")
-    intake.flip_verified(root, ["SR-001"])
+    sr_toml = _write(root, SR_TOML)
+    intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
     assert b"\r\n" not in sr_toml.read_bytes()
 
 
@@ -898,19 +926,14 @@ def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_
     # status line the rewrite cannot find must REFUSE, because reporting a flip
     # that was never written is a ratification the registry does not carry.
     root = _policy_repo(tmp_path, 0)
-    req = root / "docs" / "requirements"
-    (req / "system-requirements.csv").unlink()
-    (req / "system-requirements.toml").write_text(
-        SR_TOML, encoding="utf-8", newline="\n"
-    )
-    located, tables = intake._locate_spine_rows(root, {"SR-001"})
-    # Plant the defect: the row is located as Modified, but its status line is
-    # gone from the file by the time the writer runs.
-    (req / "system-requirements.toml").write_text(
-        SR_TOML.replace('status = "Modified"\n', ""), encoding="utf-8", newline="\n"
-    )
+    # Plant the defect: the writer is asked for a row whose status LINE is not
+    # in the file. It used to be planted by locating the row first and deleting
+    # the line behind the locator's back; driving the writer directly says the
+    # same thing without routing through the policy guard, which since D-9
+    # step 7 refuses every located row before the writer is reached.
+    sr_toml = _write(root, SR_TOML.replace('status = "Drafted"\n', ""))
     with pytest.raises(SystemExit) as excinfo:
-        intake._apply_flips(root, tables, located)
+        intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
     assert "refusing to report a flip that was not written" in str(excinfo.value)
 
 

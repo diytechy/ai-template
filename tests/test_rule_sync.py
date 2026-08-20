@@ -99,25 +99,48 @@ def test_is_approved_agrees():
         assert GATE.is_approved({"Status": retired}) is False, retired
 
 
-def test_is_modified_agrees():
-    # Both files recognize the post-attestation Modified state (WI-316): trace.py
-    # for the --ratify modified brief, derive_gate.py
-    # for the modified=N basis count. Divergence would let a pending re-attest hide
-    # from one surface while the other reports it — the same false-green class the
-    # is_drafted/is_approved pins exist for. Same casing/whitespace/None battery,
-    # plus the two sibling magic values (each must read NOT-modified in both).
+def test_is_founded_agrees():
+    # Both files decide the ladder's TOP rung, armed for the spine at D-9 step 8
+    # (trace.py for the LLR-status advisory's exemption, derive_gate.py for the
+    # SPINE_MATURITY lookup and the Impl->Release discriminator). Divergence
+    # would let a Founded row read settled on one surface and unblessed on the
+    # other — the same false-green class the is_drafted/is_approved pins exist
+    # for. Same casing/whitespace/None battery, plus the two sibling live values
+    # and the RETIRED `Modified` (each must read NOT-founded in both).
     cases = [
-        {"Status": "Modified"},
-        {"Status": "modified"},
-        {"Status": "  MODIFIED  "},
+        {"Status": "Founded"},
+        {"Status": "founded"},
+        {"Status": "  FOUNDED  "},
         {"Status": "Approved"},
         {"Status": "Drafted"},
+        {"Status": "Modified"},
         {"Status": ""},
         {"Status": None},
         {},
     ]
     for row in cases:
-        assert TRACE.is_modified(row) == GATE.is_modified(row), row
+        assert TRACE.is_founded(row) == GATE.is_founded(row), row
+    assert TRACE.is_founded({"Status": "Founded"}) is True
+    assert GATE.is_founded({"Status": "Modified"}) is False
+
+
+def test_is_modified_is_GONE_from_both_copies():
+    # D-9 STEP 7. `Modified` was the TRANSITIONAL marker for "approved text that
+    # has since moved" and its own docstring named this commit: the predicate
+    # survived step 5's rename only so the kit never had a commit with no drift
+    # detector at all, and it retired once its successor — the
+    # `baseline_snapshot` comparison — had run live alongside it through the
+    # owner's signing act. Deleted, not re-keyed: a surviving copy would be a
+    # second reader of a retired word, which is exactly what the grep below
+    # forbids for every module at once.
+    assert not hasattr(TRACE, "is_modified")
+    assert not hasattr(GATE, "is_modified")
+    # ...and the SPINE_MATURITY row went with it, per the registry-status
+    # unification §5B. A ladder table that still mapped the word would be a
+    # third reader of it, one the predicate grep below cannot see (it is a dict
+    # KEY, not a comparison).
+    assert "modified" not in GATE.SPINE_MATURITY
+    assert set(GATE.SPINE_MATURITY) == {"drafted", "approved", "founded"}
 
 
 def test_is_planned_is_GONE_from_both_copies():
@@ -136,10 +159,12 @@ def test_the_three_recognized_status_values_are_mutually_exclusive():
     # list of words: the enum-close-first rule the D-9 migration runs under says
     # the declared set equals the set at least one live predicate recognizes,
     # and this is where "at least one" and "at most one" are both checked.
-    # THREE since the step-5 rename narrowed the enum to
-    # {Drafted, Approved, Modified}.
-    predicates = ("is_drafted", "is_modified", "is_approved")
-    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Modified"})
+    # THE END STATE, since step 7 retired `Modified` and step 8 armed `Founded`
+    # in one act: D-9's ruled ladder, {Drafted, Approved, Founded}. The enum
+    # never held four values and never held two — the rule is that it equals the
+    # live predicate set at EVERY commit, which is why the two moved together.
+    predicates = ("is_drafted", "is_founded", "is_approved")
+    assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Founded"})
     for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
         for mod in (TRACE, GATE):
@@ -156,9 +181,14 @@ def test_the_three_recognized_status_values_are_mutually_exclusive():
 
 
 # The words D-9 retired. `Draft` and `Verified` were renamed; `Planned` was
-# FOLDED (OI-30 D1). None of the three may be honoured by any predicate in any
-# shipped script again.
-_RETIRED_STATUS_WORDS = ("draft", "verified", "planned")
+# FOLDED (OI-30 D1); `Modified` was TRANSITIONAL and retired at step 7 once the
+# snapshot comparison had run live in its place. None of the four may be
+# honoured by any predicate in any shipped script again.
+#
+# `draft` MATCHES `drafted` AS A PREFIX and that is not a bug in this list — the
+# grep below anchors the retired word between quotes, so `"drafted"` cannot be
+# hit by `"draft"`. Spelled out because the next reader will check.
+_RETIRED_STATUS_WORDS = ("draft", "verified", "planned", "modified")
 
 
 def test_no_predicate_anywhere_still_honours_a_RETIRED_status_word():
@@ -202,16 +232,28 @@ def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     # the grep above exists to catch, and it is worth pinning by value too.
     snap = load_script("baseline_snapshot")
     assert snap._APPROVAL_CLAIMED == frozenset({"approved"})
+    # The OTHER two sets keyed on Status words that the source grep above CANNOT
+    # see, because neither is a comparison — one is a dict's KEYS, the other a
+    # bare frozenset with no `status` token on its line. Both were live readers
+    # of `Modified` until step 7, so both are pinned by value here; that is the
+    # whole reason this test exists beside the grep rather than inside it.
+    dispatch = load_script("dispatch")
+    lowered = {v.lower() for v in TRACE.STATUS_VALUES}
+    assert set(GATE.SPINE_MATURITY) == lowered
+    assert dispatch._TC_NOT_RED == lowered
     for word in _RETIRED_STATUS_WORDS:
         assert word.title() not in TRACE.STATUS_VALUES
         assert word not in snap._APPROVAL_CLAIMED
+        assert word not in GATE.SPINE_MATURITY
+        assert word not in dispatch._TC_NOT_RED
 
 
 def test_status_enum_is_declared_for_every_spine_tier():
     # D-9 step 1: the SR, LLR and TC tiers each declare the SAME closed Status
     # vocabulary. LLR had no ENUM_FIELDS entry AT ALL before this, which is how
     # its Status cell came to be the one spine vocabulary nothing validated.
-    for tier in ("SR", "LLR", "TC"):
+    # SN joined at the registry status unification (2026-08-17k).
+    for tier in ("SN", "SR", "LLR", "TC"):
         assert TRACE.ENUM_FIELDS[tier]["Status"] == TRACE.STATUS_VALUES, tier
 
 

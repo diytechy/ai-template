@@ -233,19 +233,29 @@ def test_staged_spine_amend_without_flip_warns(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SR-001" in proc.stderr
     assert "Requirement" in proc.stderr
-    assert "Modified re-attest marker" in proc.stderr
+    # THE MESSAGE MOVED AT D-9 STEP 7 and the assertion moves with it. It told
+    # the author to set the `Modified` re-attest marker; that marker retired,
+    # so it now names the two real outcomes — re-attest in this commit, or the
+    # change rides as snapshot drift until the next sitting.
+    assert "SNAPSHOT DRIFT" in proc.stderr
+    assert "intake.py snapshot" in proc.stderr
+    # ...and it no longer names a value the closed enum cannot hold.
+    assert "Modified re-attest marker" not in proc.stderr
 
 
-def test_staged_spine_amend_with_flip_is_silent(tmp_path):
-    # The same amendment WITH the flip (amend + Modified in one commit — the
-    # regime the brief's baseline derivation depends on) is the sanctioned path:
-    # no warn. Mutation-proves the warn keys on the missing flip, not the diff.
+def test_staged_spine_amend_with_a_status_move_is_silent(tmp_path):
+    # The same amendment WITH the row's Status MOVING in the same commit is a
+    # deliberate call the guard does not second-guess: no warn.
+    # Mutation-proves the warn keys on the STATUS STAYING PUT, not on the diff.
+    # It drove `Modified` until D-9 step 7 retired that value; `Drafted` is the
+    # live word for the same deliberate act (the author un-blessed the row),
+    # and the guard's rule — `head_status != cur_status` — is unchanged.
     run_git = _init_spine_repo(tmp_path)
-    _amend_sr(tmp_path, "the AMENDED text", "Modified")
+    _amend_sr(tmp_path, "the AMENDED text", "Drafted")
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "re-attest marker" not in proc.stderr
+    assert "SNAPSHOT DRIFT" not in proc.stderr
 
 
 def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
@@ -272,23 +282,25 @@ def test_staged_child_amend_needs_its_own_flip_not_the_parents(tmp_path):
     run_git("add", "-A")
     run_git("commit", "-m", "attested chain")
 
-    # (1) amend the LLR + flip the LLR itself -> silent (its status moved).
-    write_llr("the AMENDED detail", "Modified")
+    # (1) amend the LLR + move the LLR's OWN status -> silent (its status
+    # moved). `Drafted` since D-9 step 7 retired `Modified`; the guard reads
+    # "did this row's status change", not which word it changed to.
+    write_llr("the AMENDED detail", "Drafted")
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "re-attest marker" not in proc.stderr
+    assert "SNAPSHOT DRIFT" not in proc.stderr
 
     # (2) the same LLR amendment left Approved -> the child warns, even with
-    # the owning SR flipped in the same commit (the exemption the retired
-    # chain reading used to grant).
+    # the owning SR's status moved in the same commit (the exemption the
+    # retired chain reading used to grant).
     write_llr("the AMENDED detail")
-    _amend_sr(tmp_path, "the original attested text", "Modified")
+    _amend_sr(tmp_path, "the original attested text", "Drafted")
     run_git("add", "-A")
     proc2 = run_traj(tmp_path, "--staged")
     assert proc2.returncode == 0, proc2.stdout + proc2.stderr
     assert "LLR-001" in proc2.stderr
-    assert "flip the amended row" in proc2.stderr
+    assert "re-attest it in this commit" in proc2.stderr
 
 
 def test_staged_spine_warn_survives_a_bom(tmp_path):
@@ -310,12 +322,12 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SR-001" in proc.stderr
-    assert "Modified re-attest marker" in proc.stderr
+    assert "SNAPSHOT DRIFT" in proc.stderr
 
 
 def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
-    # A NEW row is not an amendment; a Status-only change (e.g. the re-attest
-    # flip Modified->Approved with no content delta) made a deliberate call the
+    # A NEW row is not an amendment; a Status-only change (e.g. the ratification
+    # flip Drafted->Approved with no content delta) made a deliberate call the
     # warn does not second-guess. Both stay silent.
     run_git = _init_spine_repo(tmp_path)
     csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"

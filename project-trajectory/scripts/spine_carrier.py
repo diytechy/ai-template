@@ -999,7 +999,7 @@ def is_draft_need(need):
     """Is this need still at draft — the ONE predicate that answers it.
 
     Drafted-ness lives in `status`, the same field and the same Title-case word
-    the other three spine tiers use (`Drafted | Approved | Modified`); the SN
+    the other three spine tiers use (`Drafted | Approved | Founded`); the SN
     tier used to spell it `kind = "draft"`, a field that also carried row TYPE.
 
     A NEED WITH NO `status` IS NOT DRAFT, and that default is deliberate rather
@@ -1010,7 +1010,7 @@ def is_draft_need(need):
     key, rather than being invented into a maturity by a reader.
 
     MATCHED CASE-INSENSITIVELY, the one Status-casing rule the other three tiers
-    already follow (`trace.is_drafted`/`is_approved`/`is_modified` all lower the
+    already follow (`trace.is_drafted`/`is_approved`/`is_founded` all lower the
     cell before comparing; process.md §4). It was an EXACT compare here, and the
     asymmetry failed in the unsafe direction: a need written `status = "drafted"`
     read as ratified, floating the derived gate upward — the same silent

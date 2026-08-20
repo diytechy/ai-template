@@ -1378,7 +1378,7 @@ def _cmd_sweep(args):
 
 
 def adjudication_action(human_held):
-    """May adjudication FLIP `Modified` -> `Approved`? Ruled decision 2, re-keyed
+    """May adjudication FLIP a spine row to `Approved`? Ruled decision 2, re-keyed
     onto SN-029's ordinal: **recommend-only while the tier is HUMAN-HELD** — the
     flip is a Status change that RECOVERS THE GATE, i.e. a ratification, and a
     human-held tier's ratification is the human's act, so adjudication prepares
@@ -1396,20 +1396,25 @@ def adjudication_action(human_held):
 
 def flip_verified(root, ids):
     """Enact — or recommend — the adjudication row's cheap outcome for spine
-    rows judged no-scope-moved: `Modified` -> `Approved`. Returns
-    `(action, flipped_ids, refusal)`.
+    rows judged no-scope-moved. Returns `(action, flipped_ids, refusal)`.
 
     The hold is derived from `docs/process.toml`, never passed by hand (the
     dial's one home). Under `recommend` NOTHING is touched and the prepared
     brief prints — the adjudication worker writes it into its spec and the
-    open-items card carries the Modified rows to the sitting. Under `flip`
+    open-items card carries the pending rows to the sitting. Under `flip`
     only the named rows' Status cells move; every other cell of every row
     stays CELL-exact (and the live registries byte-identical — measured:
     their quoting is all by necessity, which QUOTE_MINIMAL reproduces), a
-    row already past `Modified` is skipped (idempotent), and an unknown id
+    row already at `Approved` is skipped (idempotent), and an unknown id
     refuses — a typo on a mechanical tool must never half-apply. The flipped
     registry still owes its regeneration (`derive_gate` recovers the gate);
-    the lane's own refresh runs it."""
+    the lane's own refresh runs it.
+
+    WHAT THE `flip` ARM STILL HAS TO MOVE is an open question since D-9 step 7
+    retired `Modified`, the one state it ever moved from — `_apply_flips` states
+    the two candidates and refuses in the meantime, naming every row it will not
+    touch. `recommend` is unaffected and is this repo's live arm (every spine
+    tier is human-held)."""
     root = Path(root)
     # SN-028: the mixed-config refusal, at the third entry point that reads
     # policy without passing through agent_loop.main. This arm decides whether
@@ -1441,7 +1446,7 @@ def flip_verified(root, ids):
                 "recommend re-verify: {} (Status={}) - judged no-scope-moved; "
                 "under session-hold '{}' the flip is the human's (ruled "
                 "decision 2). Write this brief into the adjudication row's "
-                "spec; the open-items card carries the Modified rows.".format(
+                "spec; the open-items card carries the pending rows.".format(
                     rid, located[rid][1], session_hold
                 )
             )
@@ -1452,7 +1457,7 @@ def flip_verified(root, ids):
     # and the record of WHAT TEXT was blessed are one (repo-lock D-1's standing
     # requirement, discharged by the snapshot rather than by a hash column).
     for rid in flipped:
-        _say("flipped {} Modified -> Approved ({})".format(rid, session_hold))
+        _say("flipped {} -> Approved ({})".format(rid, session_hold))
     return action, flipped, None
 
 
@@ -1481,11 +1486,13 @@ def _locate_spine_rows(root, wanted):
                 rid = (row.get(id_col) or "").strip()
                 if rid in wanted:
                     # ABSENT status is None, not "". Under this carrier an absent
-                    # key is a real state, and it is not "not Modified": a row
-                    # with no Status at all cannot be re-verified, and treating
-                    # it as an idempotent no-op reports a clean adjudication over
-                    # a row the registry never staged for one. `_apply_flips`
-                    # refuses it (fail closed).
+                    # key is a real state, and it is not the same as any value:
+                    # a row with no Status at all cannot be re-verified, and
+                    # treating it as an idempotent no-op reports a clean
+                    # adjudication over a row the registry never staged for one.
+                    # `_apply_flips` refuses it under its own arm (fail closed),
+                    # ahead of the value guard, so the message names the real
+                    # fault rather than quoting an empty cell back.
                     status = row.get("Status")
                     located[rid] = (
                         rel,
@@ -1609,9 +1616,29 @@ def _rewrite_toml_statuses(live, rel, ids):
 
 
 def _apply_flips(root, tables, located):
-    """Move each located `Modified` row to `Approved` and rewrite exactly the
-    registries that changed; the sorted flipped ids. Per carrier: a CSV rewrite
-    re-emits the mutated rows, a TOML rewrite edits the one status LINE."""
+    """Move each located row to `Approved` and rewrite exactly the registries
+    that changed; the sorted flipped ids. Per carrier: a CSV rewrite re-emits the
+    mutated rows, a TOML rewrite edits the one status LINE.
+
+    **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7 — AN OPEN QUESTION,
+    NOT A SETTLED SHAPE.** It enacted ruled decision 2's cheap outcome
+    (`Modified` -> `Approved` for a row judged no-scope-moved); under the new
+    ladder an amendment never flips its row, so an amended row already reads
+    `Approved` and there is no cell to move. The guard below skips the
+    already-blessed row and REFUSES everything else, so this path writes nothing
+    until the owner rules what the cheap outcome is under the snapshot regime:
+
+      (a) RE-BLESS — the Status write is a no-op and the product is `copy_live`,
+          i.e. a loop-held repo's adjudication re-copies drifted text into the
+          record. Decision 2's authority model applied unchanged, and the widest
+          laundering surface in the kit: a legitimate copy satisfies both the
+          mirror invariant and the unanchored rule by construction, so only
+          `human_holds` stands between drift and a blessed record.
+      (b) RETIRE — re-attestation is the human path (`intake.py snapshot` in the
+          reviewed commit) and adjudication only ever recommends.
+
+    The refusal keeps the machinery intact for (a) while behaving as (b), which
+    is the fail-closed order to hold them in."""
     import csv
 
     flipped, changed = [], set()
@@ -1629,13 +1656,31 @@ def _apply_flips(root, tables, located):
                     rid, tables[rel][0], _STATUS_KEY
                 )
             )
-        # THE TRANSITIONAL GUARD, AND IT STAYS THROUGH THE RENAME. `Modified`
-        # survives D-9 step 5 as the live re-attest marker, so this reads the
-        # word it always read. Step 7 retires the value and RESOLVES this line
-        # into an explicit refusal rather than a silent `continue` — a located
-        # row that is not flippable will then be named, not skipped.
-        if status != "Modified":
+        # RESOLVED AT D-9 STEP 7, as the guard this replaces promised. It read
+        # `if status != "Modified": continue` — one silent skip over two unrelated
+        # states: an already-blessed row (idempotent, correct) and a row this act
+        # has no business touching (silent, wrong). The resolution splits them.
+        if status == "Approved":
+            # Already at the value this act writes — the one legitimate skip, and
+            # the idempotence `flip_verified`'s docstring advertises.
             continue
+        # Everything else is REFUSED, naming the row. Fail-CLOSED and strictly
+        # less permissive than the skip it replaces:
+        #   `Drafted`  a FIRST approval, not an adjudication's cheap outcome.
+        #   `Founded`  ABOVE `Approved` — writing `Approved` moves it DOWN.
+        #   anything   outside the closed enum, already an integrity error.
+        raise SystemExit(
+            'intake: {} in {} reads `{} = "{}"` — this act moves a row TO '
+            "`Approved` and the only state it moved FROM (`Modified`) retired at "
+            "D-9 migration step 7. Under the snapshot ladder an amendment does "
+            "not flip its row at all, so there is no cell for a mechanical "
+            "adjudication to move: an amended row still reads `Approved`, and "
+            "what it owes is a fresh human read plus `intake.py snapshot` in the "
+            "same commit. Refusing rather than skipping, so the row is named "
+            "instead of being passed over.".format(
+                rid, tables[rel][0], _STATUS_KEY, status
+            )
+        )
         live, _rows = tables[rel]
         if live.suffix == ".toml":
             toml_edits.setdefault(rel, []).append(rid)

@@ -59,13 +59,16 @@ orphan/stale findings and `check_doc_refs.RECORD_PREFIXES` keeps its inherited
 citations from dangling. `check_trajectory.ARCHIVE_SPECS_DIR` already reads
 archive as live machinery input, so the class is not new.
 
-STATUS OF THIS MODULE, 2026-08-15: READER-FIRST AND ADVISORY. Nothing in the
-kit writes a snapshot yet — `docs/archive/last_approved/` does not exist in this
-repo, so every function here is vacuous, by design, until the owner's signing
-act seeds it (migration step 6). `unanchored_findings` returns advisory strings
-and joins no failure set; it is promoted to an integrity-class ERROR at
-migration step 7, and not before, because against a pre-seed or pre-rename
-snapshot it would red every row.
+STATUS OF THIS MODULE, 2026-08-20: LIVE AND ARMED. It shipped reader-first and
+advisory (2026-08-15) with every function vacuous by absence; the owner's
+signing act seeded `docs/archive/last_approved/` in the post-rename vocabulary
+(migration step 6), and step 7 promoted `unanchored_findings` to an
+INTEGRITY-class ERROR on the always-on `--strict-integrity` floor plus the
+pre-commit hook. The order was the safety property, not ceremony: run against a
+pre-seed snapshot (there was none) or a pre-rename one (it spoke the retired
+vocabulary), this rule reds every row in the repo, and a check that reds
+everything is a check that gets switched off. It stays VACUOUS BY ABSENCE for a
+repo that has approved nothing, which is a fresh adopter's honest state.
 
 VOCABULARY NOTE — THE TRANSITIONAL MAPPING IS GONE (D-9 step 5, 2026-08-15).
 This module was written against `Approved` before the value existed, and read
@@ -447,8 +450,8 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
 
 
 def unanchored_findings(root, snapshot=None):
-    """The successor to repo-lock D-9's "approved-with-no-anchor is an ERROR",
-    as ADVISORY STRINGS.
+    """The successor to repo-lock D-9's "approved-with-no-anchor is an ERROR" —
+    and, since migration step 7, an ERROR in fact.
 
     A row whose live maturity claims approval-or-above is UNANCHORED when the
     snapshot does not contain its id, or contains it at a maturity that makes no
@@ -473,12 +476,17 @@ def unanchored_findings(root, snapshot=None):
     invariant refuses a registry deleted from a standing record in the commit
     that does it (`check_trajectory.staged_snapshot_findings`).
 
-    **NOT ARMED.** These are advisory strings today and join no failure set.
-    They are promoted to the integrity class — the always-on `--strict-integrity`
-    floor plus the pre-commit hook — at migration step 7, and deliberately not
-    before: run against a pre-seed snapshot (there is none) or a pre-rename one
-    (it speaks the retired vocabulary), this rule reds every row in the repo,
-    and a check that reds everything is a check that gets switched off."""
+    **ARMED (migration step 7).** `trace.py` appends these to
+    `findings.integrity`, so they fail the always-on `--strict-integrity` floor —
+    and the pre-commit hook that runs exactly that command — at every gate.
+    INTEGRITY rather than SCHEMA because `--strict-schema` runs at DevStg-Impl
+    alone (correction C1): an approval that never rode a copy is wrong at any
+    stage, exactly like a duplicated id. Nothing in this producer changed at the
+    arming; what moved is the pipe it joins one level up, which is the whole
+    value of having run it warn-first since step 4 — the promotion was a one-line
+    change to a rule already proven quiet, not a rule nobody had seen fire.
+    Arming it EARLIER would have redded every row: before the seed there was no
+    snapshot, and before the rename it spoke the retired vocabulary."""
     if snapshot is None:
         snapshot = load_all(root)
     if snapshot is None:

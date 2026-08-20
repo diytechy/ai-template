@@ -29,10 +29,12 @@
 #   Approved  a ratified need (the steady state). RATIFY by changing `status`
 #             to "Approved" in a reviewed commit; that commit is the sign-off
 #             and its date is the ratification date.
-#   Modified  ratified text that has since been AMENDED and is not re-signed.
-#             Transitional: it exists so an amended row is visibly unsigned
-#             without a second field to say so, and it retires once approved
-#             text is snapshotted and the diff answers the same question.
+#
+# There is NO third value for "ratified text that has since been AMENDED". A
+# transitional `Modified` carried that until 2026-08-20, exactly as long as its
+# own note here said it would: it retired once approved text was snapshotted to
+# `docs/archive/last_approved/` and the DIFF answered the same question, for
+# every row rather than the ones someone remembered to mark.
 #
 # Do NOT add a second field for this axis — no `attestation`, no `amended`
 # date. When a row changed is git's job, and it holds that for every row

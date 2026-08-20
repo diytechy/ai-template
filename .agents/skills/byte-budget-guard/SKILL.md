@@ -44,8 +44,8 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 82,511 | 2026-08-18 | +63: the `13v` waiver marker renamed to `recorded waiver: <reason>` — the old token was a decision id, which the provenance rule bans from the very cell it was mandated into, and it named a ruling no adopter can read |
-| `project-trajectory/PROCESS_OPTIONS.md` | 173,985 | 2026-08-18 | +611: the enforcement audit's second half — a widened check has its false-positive rate MEASURED before any claim, and a detector is a worklist, not a definition of done |
+| `project-trajectory/PROCESS.md` | 82,499 | 2026-08-20 | **-12**: D-9 steps 7+8 — §4's closed `Status` reaches its end state (`Drafted`/`Approved`/`Founded`); the transitional `Modified` paragraph gives way to the shorter rule that an amendment has no value of its own |
+| `project-trajectory/PROCESS_OPTIONS.md` | 174,161 | 2026-08-20 | +176: D-9 steps 7+8 — the six sites still teaching `Modified` as a live value now name `Founded` and snapshot DRIFT instead |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

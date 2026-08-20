@@ -410,34 +410,34 @@ gate = **approving a batch of artifacts in a reviewed commit** (`Status`
 [process-options.md "Derived gate model"](process-options.md#derived-gate-model)).
 A `Drafted` artifact lives in the live spine (exempt from the decomposition rules),
 retiring the old `-000`/off-spine drafting workaround.
-`Status` is a **closed** vocabulary — `Drafted`, `Approved`, `Modified` — matched
+`Status` is a **closed** vocabulary — `Drafted`, `Approved`, `Founded` — matched
 **case-insensitively** (write them Title-Case); a value outside it is an
 always-on integrity finding, not a free label — it was open until 2026-08-15,
-and a word no predicate read announced nothing. Two bear gate arithmetic.
+and a word no predicate read announced nothing.
 `Approved` says the row's TEXT is blessed and says nothing about tests passing —
-whether they pass is the harness's answer, never a cell's. The third,
-`Modified`, marks a **post-approval amendment** — content changed after the row
-was attested, so a re-attest is owed. It adds no arithmetic (a Modified SR is
-simply not Approved, deriving DevStg-Tests)
-but is surfaced: the `modified=N` basis count, a pending-owner-actions line, and
-the `trace.py --ratify modified` before/after brief. Re-attest is a reviewed
-Status-change commit like approval: `Modified`→`Approved` blesses the
-amendment. The baseline those before/after diffs run against is a
+whether they pass is the harness's answer, never a cell's. `Founded` is
+`Approved` plus a demonstration: the artifacts the row calls for EXIST (SRs
+under an SN, LLR+TC under an SR, resolving code under an LLR, a written test
+under a TC). It is COMPUTED, never a claim you type to advance a gate.
+**A post-approval amendment has no value of its own** — an approved row whose
+text is later changed stays `Approved` and the change is caught by DIFFING it
+against the last approval. (A transitional `Modified` marked that state until
+2026-08-20; it is retired, and an adopter carrying it migrates —
+`RESYNC_PACK.md`.) A re-attest is a reviewed commit that re-reads the changed
+cells and re-copies the record. The baseline those before/after diffs run against is a
 **byte-for-byte copy** of the registries at the last approval —
 `docs/archive/last_approved/`, written only by the approval act itself
 (`intake.py snapshot`, in the same commit as the `Status` write; a snapshot
 file must always equal its live counterpart) and replaced wholesale at each
-approval. Amend and flip in the **same commit** (a `--staged` warn
-enforces it); a row's `Status` answers for its **own cells** — flip the row
-whose text changed, and only that row: a child (LLR/TC) amendment never flips
-its parent SR (owner ruling 2026-08-17). A child change surfaces through the
-snapshot-drift arm and the derived gate; chain-completeness is the derived
-`Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
+approval. Amend and re-copy in the **same commit** (a `--staged`
+warn enforces it); a row's `Status` answers for its **own cells** — a child
+(LLR/TC) amendment never touches its parent SR (owner ruling 2026-08-17). A
+child change surfaces through the snapshot-drift arm; chain-completeness is the
+derived `Founded` state's claim (D-9), never the signature's. **Sequence requirement-text work *into* an open window, not after it:**
 a prose standard, a registry schema change or a cleanup lands while the sitting
 is still owed, so its rows join the batch a human is already reading. Landing it
-after a re-attest flips freshly-blessed rows straight back to `Modified` and buys
-a second sitting for the same reading. There is no other value: an adopter
-carrying a wider LLR/TC vocabulary migrates it (`RESYNC_PACK.md`).
+after a re-attest drifts freshly-blessed rows straight away from the record and
+buys a second sitting for the same reading.
 Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 - **DevStg-Reqs — Requirements, UX & constraints.** The `PROJECT-VISION:` tag exists in
@@ -599,7 +599,7 @@ never-reword rule for attestations are archived in the kit repo at
 `docs/archive/retired-vocabulary.md`.
 
 **And the derived value floors — it does not achieve.** Being a min, one
-`Drafted`/`Modified` row pulls it down (deliberately: that is the new-phase
+`Drafted` row pulls it down (deliberately: that is the new-phase
 signal), so a mature spine holding one draft displays exactly what a fresh
 scaffold displays. The value answers *what must still be passed*, never *what
 has been achieved*; `stage=` and `ex-draft=` on the basis line are what tell the

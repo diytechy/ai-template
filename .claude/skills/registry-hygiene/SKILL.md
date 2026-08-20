@@ -66,9 +66,9 @@ call `trace.py` directly to iterate on a specific finding.
   `Status` cell to `Approved` (registries are hand-owned — no generator writes
   them back). It never gates: LLR status is non-gating under the derived-gate
   model (the SR's `Approved` drives DevStg-Tests→DevStg-Impl), so a lagging LLR is a readout drift,
-  not a coverage hole. A `Modified` LLR is exempt — that below-Approved status
-  is the deliberate re-attest marker (process.md §4), not a drift; do NOT lift
-  it to silence a warn.
+  not a coverage hole. A `Founded` LLR is exempt — it reads ABOVE `Approved`,
+  so there is nothing to lift and the nag would push it DOWN the ladder. (The
+  exemption named `Modified` until that value retired, 2026-08-20.)
 
 ## Verify the fix
 

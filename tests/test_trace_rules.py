@@ -608,20 +608,29 @@ def test_llr_status_coherence_predicate():
     assert warns([impl], []) == []
 
 
-def test_modified_llr_is_exempt_from_the_status_advisory():
-    # WI-316: a Modified LLR under fully-Approved TCs is DELIBERATE (a
-    # post-approval amendment awaiting re-attest), so the "lift to Approved"
-    # nag must stay silent — it would tell the owner to erase the marker the
-    # sitting needs. Mutation proof: the same row as Drafted DOES warn, so
-    # the exemption is the Modified value, not a broken lint.
+def test_a_FOUNDED_llr_is_exempt_from_the_status_advisory():
+    # THE EXEMPTION MOVED AT D-9 STEPS 7/8, and it moved for the reason it
+    # existed. It named `Modified`, whose below-`Approved` status was
+    # DELIBERATE — a post-approval amendment awaiting re-attest — so the
+    # "lift to Approved" nag would have told the owner to erase the marker the
+    # sitting needed. That word retired; `Founded` reads ABOVE `Approved`, so
+    # a Founded LLR has nothing to lift and the nag would tell it to move DOWN
+    # the ladder. Mutation proof unchanged in shape: the same row as `Drafted`
+    # DOES warn, so the exemption is the value, not a broken lint.
     from conftest import load_script
 
     trace = load_script("trace")
     ver_tc = {"TC-ID": "TC-010", "Verifies": "SR-010;LLR-010", "Status": "Approved"}
-    modified = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Modified"}
-    assert trace.llr_status_advisories([modified], [ver_tc]) == []
-    impl = {**modified, "Status": "Drafted"}
+    founded = {"LLR-ID": "LLR-010", "SR-Refs": "SR-010", "Status": "Founded"}
+    assert trace.llr_status_advisories([founded], [ver_tc]) == []
+    impl = {**founded, "Status": "Drafted"}
     assert len(trace.llr_status_advisories([impl], [ver_tc])) == 1
+    # ...and the RETIRED word is NOT exempt any more, which is the direction
+    # that would otherwise go unnoticed: a `Modified` LLR is out-of-vocabulary
+    # and the integrity floor names it, so this lint has no reason to be quiet
+    # about it as well.
+    stale = {**founded, "Status": "Modified"}
+    assert len(trace.llr_status_advisories([stale], [ver_tc])) == 1
 
 
 def test_llr_status_advisory_is_warn_only_and_reported(scaffold):

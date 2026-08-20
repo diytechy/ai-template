@@ -23,11 +23,14 @@ code and become properties of the parse:
 
 WHAT THIS DELIBERATELY DOES NOT DO. Carrier only. `Status` keeps whatever
 vocabulary the tree it converts already uses — `Drafted` / `Approved` /
-`Modified` since D-9 step 5 — because retiring `Modified`
-is what the ladder migration does, and doing it here would stamp 38 rows clean
-and launder the re-blessing they owe (repo-lock Q11). No anchor cells, no
-`Priority` float, no `SupersededBy` deletion, no SN `Status`. Those land once,
-on this carrier, in the D-3/D-4 pass.
+`Founded` since D-9 steps 5/7/8 — and a value this converter does not recognize
+is COPIED, never mapped. That is the rule, not an omission: a downstream tree
+still carrying `Modified` (or `Draft`, or `Verified`) owes a human ruling on
+each such row, and a carrier conversion that stamped them clean would launder
+exactly the re-blessing they owe (repo-lock Q11). The always-on integrity floor
+names them after the conversion, which is where they should be named. No anchor
+cells, no `Priority` float, no `SupersededBy` deletion, no SN `Status`. Those
+land once, on this carrier, in the D-3/D-4 pass.
 
 REVERSIBILITY IS THE POINT OF `--check`. It re-reads what it wrote and asserts
 the round-trip is cell-for-cell identical to the source, so a conversion that

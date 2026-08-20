@@ -58,9 +58,15 @@ def is_drafted(row):
 
     RENAMED FROM `is_draft` AT D-9 MIGRATION STEP 5 with the value it reads
     (`Draft` -> `Drafted`). `Status` is a CLOSED vocabulary since step 1 and
-    narrows to `{Drafted, Approved, Modified}` here; no predicate anywhere
-    honours the retired words, which `tests/test_rule_sync.py` asserts
-    negatively over the source of every script."""
+    reached D-9's ruled ladder at steps 7/8 — `{Drafted, Approved, Founded}`,
+    the transitional `Modified` retired and `Founded` armed. No predicate
+    anywhere honours a retired word, which `tests/test_rule_sync.py` asserts
+    negatively over the source of every script.
+
+    THIS TIER OWNS ONLY THE BOTTOM RUNG, and deliberately: `is_drafted` lives
+    here because the pure text/row predicates do, while `is_approved` and
+    `is_founded` live in `trace.py` and `derive_gate.py` as the F5-duplicated
+    pair. A third copy here would be a third answer to the same question."""
     return (row.get("Status") or "").strip().lower() == "drafted"
 
 

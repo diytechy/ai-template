@@ -191,25 +191,25 @@ def is_approved(row):
     return (row.get("Status") or "").strip().lower() == "approved"
 
 
-def is_modified(row):
-    """The post-approval `Modified` state (WI-316, process.md §7): the row landed
-    `Approved` but its content changed after the last approval, so a re-attest is
-    owed — `Modified`→`Approved` blesses the amendment. Recognized for
-    SURFACING, not gate arithmetic: a Modified SR is simply not Approved, so
-    `derive_gate.sr_gate` already reads it as decomposed-unapproved DevStg-Tests
-    with no code of its own — this predicate exists for the `modified=N` basis
-    count, the pending-owner-actions projection, and the `--ratify modified`
-    brief.
+def is_founded(row):
+    """The top rung: the row is settled AND the artifacts it calls for EXIST
+    (repo-lock D-9 — SRs under an SN, LLR+TC under an SR, resolving code under
+    an LLR, a written test under a TC).
 
-    TRANSITIONAL, AND STILL LIVE. It survives step 5's rename deliberately: its
-    successor (`baseline_snapshot`-backed drift) has to run alongside it through
-    the owner's signing act before the marker can retire, or the migration would
-    delete the only drift detector in the same commit that renames everything it
-    reads. Step 7 retires the word once the last `Modified` row is signed.
+    ARMED FOR THE SPINE AT D-9 MIGRATION STEP 8, the same way it armed for the
+    CMP tier at the registry status unification: the word becomes LEGAL, and no
+    live cell moves to it. `Founded` is ABOVE `Approved`, so every reader asking
+    "is this row's text blessed" must accept it — a `Founded` row reading as
+    un-approved would make the arming LOWER the derived gate, the judgement move
+    an arming is forbidden to make.
 
-    Same case-insensitive one-casing rule as its two live siblings; duplicated in
-    derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
-    return (row.get("Status") or "").strip().lower() == "modified"
+    THE DISCHARGE IS COMPUTED, NOT ASSERTED HERE, one test per tier and all four
+    already built (D-9 migration plan C4). Whether a tool ever WRITES the cell —
+    and whether a hand-authored `Founded` is itself an error — is D-9 consequence
+    2, still open, so nothing here decides it. Same case-insensitive casing rule
+    as its two siblings; duplicated in derive_gate.py per F5; pinned by
+    test_rule_sync."""
+    return (row.get("Status") or "").strip().lower() == "founded"
 
 
 # `is_planned` WAS DELETED AT D-9 MIGRATION STEP 5, not re-keyed — the deletion
@@ -217,10 +217,21 @@ def is_modified(row):
 # spine rows while no predicate in the kit recognized it (it read identically to
 # `Bananas`), so it was surfaced for the interval between the closure and the
 # ruling. OI-30 D1 ruled the fold — `Planned` IS `Approved` — so every site that
-# read the predicate now reads `is_approved`, `is_drafted` or `is_modified`, and
-# the word itself is out of `STATUS_VALUES`. `tests/test_rule_sync.py` asserts
-# NEGATIVELY that no predicate in any script honours `Draft`, `Planned` or
-# `Verified` again.
+# read the predicate now reads `is_approved` or `is_drafted`, and the word itself
+# is out of `STATUS_VALUES`.
+#
+# `is_modified` WAS DELETED AT D-9 MIGRATION STEP 7 on the same terms, for the
+# reason its own docstring stated in advance. It was the TRANSITIONAL marker for
+# "approved text that has since moved", kept past step 5's rename only so the kit
+# never had a commit with no drift detector at all; its successor — the
+# `docs/archive/last_approved/` comparison — ran live beside it through the
+# owner's signing act (step 6), which cleared the last `Modified` row and seeded
+# the snapshot. Owner ruling 2026-08-17m states the replacement in one line:
+# *"modified means nothing because it is caught by comparing to the snapshot"*.
+#
+# `tests/test_rule_sync.py` asserts NEGATIVELY that no predicate in any shipped
+# script honours `Draft`, `Planned`, `Verified` or `Modified` again — the
+# assertion that makes these four deletions checkable rather than remembered.
 
 
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
@@ -390,8 +401,13 @@ REQUIRED_FIELDS = {
 #
 # `Draft`→`Drafted`, `Verified`/`Planned`→`Approved` (OI-30 D1: the two
 # ratified-text rungs are ONE once the pass claim leaves the vocabulary).
-# `Modified` is TRANSITIONAL and retires at step 7.
-STATUS_VALUES = frozenset({"Drafted", "Approved", "Modified"})
+#
+# NARROWED AGAIN AT STEP 7 + ARMED AT STEP 8, in ONE act, because the enum must
+# equal the set of values at least one live predicate recognizes at EVERY commit:
+# `Modified` leaves (snapshot drift, live beside it since step 4, is now the only
+# detector — owner ruling 2026-08-17m) and `Founded` enters. D-9's ruled ladder,
+# whole: Drafted -> Approved -> Founded.
+STATUS_VALUES = frozenset({"Drafted", "Approved", "Founded"})
 
 # The enum columns whose out-of-vocabulary findings are INTEGRITY-class, not
 # schema-class (D-9 migration correction C1). `schema_findings` only runs under
@@ -532,11 +548,13 @@ def llr_status_advisories(llrs, tcs):
     under --strict or --strict-integrity), because making LLR status gate would
     re-introduce the exact LLR-status coupling the derived-gate model dropped.
     An LLR with no citing TC is the orphan rules' job, not this lint's; matching
-    is case-insensitive via the shared is_approved() predicate. A `Modified` LLR
-    is exempt (WI-316): its below-`Approved` status is DELIBERATE — a
-    post-approval amendment awaiting re-attest, not a readout drift — so the
-    "lift to Approved" nag would tell the owner to erase the very marker the
-    sitting needs."""
+    is case-insensitive via the shared is_approved() predicate.
+
+    THE EXEMPTION MOVED AT D-9 STEPS 7-8 for the reason it existed. It named
+    `Modified`, whose below-`Approved` status was DELIBERATE, so nagging it told
+    the owner to erase the marker the sitting needed. That word is retired;
+    `Founded` reads ABOVE `Approved`, so a Founded LLR has nothing to lift and
+    the nag would tell it to move DOWN the ladder."""
     citing = {}  # LLR id -> [is_approved(tc) for each citing TC]
     for r in tcs:
         tc_ok = is_approved(r)
@@ -546,7 +564,7 @@ def llr_status_advisories(llrs, tcs):
     out = []
     for r in llrs:
         lid = r.get("LLR-ID")
-        if not lid or is_approved(r) or is_modified(r):
+        if not lid or is_approved(r) or is_founded(r):
             continue
         verdicts = citing.get(lid)
         if verdicts and all(verdicts):
@@ -2124,10 +2142,16 @@ def _rubrics_cited(*cells):
 
 # The `--ratify` scopes that are NOT a phase tag or an id list — a CLOSED set,
 # routed to the re-attestation brief instead of the hierarchy view. Held as a set
-# rather than as a literal comparison so the rename at migration step 5
-# (`modified` -> `drifted`) is one edit here plus `check.py`'s `ratify-fresh`
-# step in the same commit, and so a scope that is neither reserved nor
-# resolvable cannot fall through to an empty brief.
+# rather than as a literal comparison so a scope that is neither reserved nor
+# resolvable cannot fall through to an empty brief, and so re-spelling one is a
+# single edit here plus `check.py`'s `ratify-fresh` step in the same commit.
+#
+# THE SCOPE NAME IS A CLI WORD, NOT A STATUS VALUE, and it deliberately did NOT
+# move when `Modified` retired at step 7. The snapshot design proposed re-spelling
+# it `drifted`; that renames a published command surface (`check.py`'s
+# `ratify-fresh`, the `gate-advance` skill, adopters' muscle memory) and buys
+# nothing the migration needed — the COUPLING the plan named was `reattest_model`
+# SELECTING on the literal, and that was cut at step 4.
 _RESERVED_RATIFY_SCOPES = frozenset({"modified"})
 
 
@@ -2300,8 +2324,14 @@ def _entry_kind(state):
     that means "blessed text, no evidence" — evidence is the harness's answer,
     not a cell's. A `Drafted` row owes a first approval and has no baseline to
     diff against; anything else in the model is here because its text moved after
-    it was blessed, whether it says so (`Modified`) or the snapshot does
-    (drift)."""
+    it was blessed.
+
+    AND THE SECOND ARM HAS ONE SOURCE SINCE STEP 7, where it used to have two: a
+    row said so itself (`Modified`) OR the snapshot said so (drift). The marker
+    retired with the word, so the snapshot is the whole answer — which is the
+    point of the mechanism rather than a loss (owner ruling 2026-08-17m). This
+    function is unchanged by that: it already returned `reattest` for everything
+    that is not `drafted`."""
     if state == "drafted":
         return "ratify"
     return "reattest"
@@ -2322,10 +2352,11 @@ def sr_chain_drifts(sid, chain, snapshot):
     attestation scope: a row's Status answers for its OWN cells, and a child
     amendment never flips the parent SR (owner ruling 2026-08-17m; the
     chain-completeness claim belongs to the derived `Founded` state, D-9 step
-    8). This drift arm catches the UNMARKED case — a child amended while still
-    claiming approval. A `Modified` child under an unflagged SR is the MARKED
-    case, a legitimate cell-level state; it rides no brief section until it is
-    signed or step 7 retires the word and leaves drift as the one detector.
+    8). This drift arm catches a child amended while still claiming approval —
+    which, since step 7 retired the `Modified` marker, is EVERY post-approval
+    amendment rather than only the unmarked ones. There is no longer a marked
+    case to split off: a cell cannot record an amendment the ladder does not
+    flip, so the comparison against the snapshot is the whole detector.
 
     THE ORPHANED CHILD IS NOT THIS ARM'S GAP, though it reads like one. When
     `modified_chain_advisories` was retired at that ruling it also took its
@@ -2366,16 +2397,21 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     be `statuses=("modified",)` — the "hard coupling" the migration plan named,
     because a brief that selects a literal returns a clean bill forever once
     that literal is retired, at exit 0, with nothing to notice. A row now owes
-    an act when it is `Drafted` (first approval) or `Modified` (the transitional
-    marker, still honoured until step 7 retires it) — or when its chain has
-    DRIFTED from
-    `docs/archive/last_approved/`, which is a property of two files rather than
-    of a word, and which no rename can silence.
+    an act when it is `Drafted` (a first approval is owed) — or when its chain
+    has DRIFTED from `docs/archive/last_approved/`, which is a property of two
+    files rather than of a word, and which no rename can silence.
+
+    THE `Modified` ARM LEFT AT STEP 7: the selector now reads ONE status word,
+    for the one thing a word can honestly answer — "this row has never been
+    approved". Everything post-approval is the snapshot's answer (owner ruling
+    2026-08-17m). The arm was deleted only after its successor had run live
+    beside it through the signing, which is why the migration ordered steps 4, 6
+    and 7 as it did.
 
     `snapshot` defaults to reading the live one. Pass an explicit `None` to
     compare against nothing (the vacuous state, which is also every
     pre-signing repo's): drift then answers False everywhere and the selector
-    falls back to exactly the status arms, which is today's behaviour.
+    falls back to the `Drafted` arm alone.
 
     Returns `[{id, title, kind, baseline, baseline_date, no_baseline_reason,
     rows:[{kind, id, state, cells, ratified, full}]}]` where `state` is
@@ -2410,7 +2446,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         return out
 
     def owes(sr):
-        if is_drafted(sr) or is_modified(sr):
+        if is_drafted(sr):
             return True
         return sr_chain_drifts(
             sr.get("SR-ID", ""),
@@ -2638,7 +2674,7 @@ def reattest_lines(root, srs, llrs, tcs):
         "# Re-attestation brief — spine rows owing a human act",
         "",
         "_Generated by `trace.py --ratify modified` (WI-316). One section per SR"
-        " that is `Drafted` or `Modified`, or whose"
+        " that is `Drafted`, or whose"
         " chain has DRIFTED from the approved snapshot; each chain row"
         " shows only its CHANGED cells, before (the snapshot) vs after (the"
         " working tree), ratified cells first. `Status` itself is never listed —"
@@ -3405,7 +3441,25 @@ def analyze(reg, args):
                     "status check deferred to its own phase"
                 )
                 continue
-            if not is_approved(r):
+            # `is_founded` JOINS THE PASS TEST AT D-9 STEP 8, mirroring
+            # `derive_gate.spine_stage`'s Impl->Release discriminator: `Founded`
+            # is `Approved` PLUS a demonstration, so a row at the top rung has
+            # more than cleared a bar that asks whether its text is blessed.
+            # Reading `is_approved` alone would have made arming the word FLAG
+            # the rows that reached it — an arming that fails what it promotes.
+            #
+            # WHAT THIS LEAVES, stated because it is not obvious: under the
+            # closed enum every live value now either stands the bar down
+            # (`Drafted`) or passes it, so this finding is UNREACHABLE-BY-CELL
+            # for a conformant repo — the `--require-verified` twin of the
+            # stage-axis gap OI-30 D2 ceilinged on the bar axis. It still fires,
+            # and must, for an OUT-OF-VOCABULARY value: a downstream repo
+            # mid-migration whose rows read `Modified` or `Implemented` is
+            # exactly the case that must not pass a DevStg-Impl gate silently.
+            # The integrity floor names that cell too; two findings on one fault
+            # is the right count here, because they answer different questions
+            # ("this word is not in the vocabulary" vs "this row is not blessed").
+            if not (is_approved(r) or is_founded(r)):
                 val = (r.get("Status") or "").strip()
                 method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
@@ -3596,8 +3650,10 @@ def analyze(reg, args):
     # filesystem and git, which analyze()'s pure contract forbids.
     findings.watermark_advisories = []
     # Filled after analyze() returns, for the same reason: the snapshot's
-    # unanchored rule reads the `docs/archive/last_approved/` tree.
-    findings.snapshot_advisories = []
+    # unanchored rule reads the `docs/archive/last_approved/` tree. INTEGRITY
+    # class since migration step 7 — it is also appended to `findings.integrity`
+    # there, and kept as its own list so the console can name the rule.
+    findings.snapshot_findings = []
     findings.provenance = provenance
     findings.form = form
     findings.paraphrase = paraphrase
@@ -4055,7 +4111,7 @@ def render_console(reg, findings, args, out, html_out):
     verif_coherence_advis = findings.verif_coherence_advis
     if_this_project_advis = findings.if_this_project_advis
     watermark_advis = findings.watermark_advisories
-    snapshot_advis = findings.snapshot_advisories
+    snapshot_findings = findings.snapshot_findings
     mechanized_verified = findings.mechanized_verified
     demonstrated_verified = findings.demonstrated_verified
     attested_verified = findings.attested_verified
@@ -4089,9 +4145,16 @@ def render_console(reg, findings, args, out, html_out):
         + verif_coherence_advis
         + if_this_project_advis
         + watermark_advis
-        + snapshot_advis
     ):
         print(f"WARNING (advisory): {a}")
+    # ARMED AT MIGRATION STEP 7: the UNANCHORED rule left the advisory loop above
+    # and joined the INTEGRITY class (snapshot design §B4), so it prints as a
+    # finding and `exit_code` gates on it through `findings.integrity`. It kept
+    # its own loop rather than folding into the integrity cap below because the
+    # message only makes sense under its own name — "approved with no copy
+    # recording it" is a claim about the RECORD, not about a malformed row.
+    for f in snapshot_findings:
+        print(f"FINDING (approval record): {f}")
     for f in provenance:
         print(f"FINDING (spine stand-alone): {f}")
     for f in form:
@@ -4173,7 +4236,7 @@ def render_console(reg, findings, args, out, html_out):
             else ""
         )
         + (f" watermark-advisories={len(watermark_advis)}" if watermark_advis else "")
-        + (f" unanchored-advisories={len(snapshot_advis)}" if snapshot_advis else "")
+        + (f" approval-record={len(snapshot_findings)}" if snapshot_findings else "")
         + f". Report -> {out}"
         + (f" + {html_out}" if html_out else "")
     )
@@ -4391,27 +4454,37 @@ def main():
             "against (first commit, shallow clone, or off a work tree); the "
             "live-id and complete-space rules still ran".format(WATERMARK)
         )
-    # THE UNANCHORED RULE (snapshot design §B4), as an ALWAYS-ON ADVISORY.
-    # A row whose live maturity claims approval-or-above, with no copy in
-    # `docs/archive/last_approved/` recording it — or a copy that reads below it
-    # — is an approval that never rode a copy, which is the laundering the whole
-    # mechanism exists to make visible. It was DEFINED and CALLED BY NOTHING
-    # until adversarial round 2 (2026-08-15) measured that: an approval could
-    # bypass the record and no live check would say so.
+    # THE APPROVAL-RECORD RULES — **ARMED AS INTEGRITY ERRORS AT MIGRATION STEP
+    # 7**, the successor to repo-lock D-9's "Approved-with-no-anchor is an ERROR".
+    # UNANCHORED (design §B4): a row whose live maturity claims approval-or-above
+    # with no copy in `docs/archive/last_approved/` recording it — or a copy that
+    # reads below it — is an approval that never rode a copy. THE MIRROR
+    # INVARIANT (§F3 risk 3, which asks for exactly this pair of severities:
+    # *"warn at the staged hook, ERROR on the integrity floor"*): a snapshot file
+    # that is not byte-identical to its live counterpart in the same commit. The
+    # staged warn is unchanged and still fires in `check_trajectory --staged`;
+    # what is new is that it no longer prints past a `|| true`.
     #
-    # ADVISORY, and the deferral is the design's, not a softening: §B4 arms this
-    # as an integrity ERROR at migration step 7 and DELIBERATELY NOT BEFORE,
-    # because against a pre-seed snapshot (there is none yet) or a pre-rename one
-    # it reds every row in the repo, and a check that reds everything is a check
-    # that gets switched off. Warn-first is what lets it run in the meantime, and
-    # running is what makes the step-7 promotion a one-line change to a rule
-    # already proven quiet rather than a rule nobody has ever seen fire.
-    # Vacuous today by construction: no snapshot directory exists, so the
-    # function returns [] and this pipe adds nothing to live output.
-    # `wm_root` rather than `args.root` for the reason stated just above it: the
-    # snapshot root is `<root>/docs/archive/last_approved`, so a run pointed at
-    # another docs tree must read THAT tree's record, not this one's.
-    findings.snapshot_advisories = baseline_snapshot.unanchored_findings(wm_root)
+    # ONE PIPE because they are one property read from two directions — "every
+    # approval rode a copy" and "every copy is a copy". Split, a reader has to
+    # hold both to know whether the record can be trusted.
+    #
+    # THE ARMING ORDER WAS THE POINT: these ran warn-first from step 4, because
+    # against a pre-seed snapshot (there was none) or a pre-rename one (it spoke
+    # the retired vocabulary) they would have redded every row, and a check that
+    # reds everything gets switched off. The signing seeded the snapshot in the
+    # post-rename vocabulary (step 6); only then was the promotion a one-line
+    # change to rules already proven quiet.
+    #
+    # INTEGRITY, NEVER SCHEMA (correction C1): `--strict-schema` runs at
+    # DevStg-Impl alone, so a laundering rule routed there would be inert for
+    # every repo below the top bar. Still VACUOUS BY ABSENCE for a repo that has
+    # approved nothing, and off git. `wm_root` rather than `args.root`, for the
+    # reason stated just above it.
+    findings.snapshot_findings = baseline_snapshot.unanchored_findings(
+        wm_root
+    ) + check_trajectory.staged_snapshot_findings(wm_root)
+    findings.integrity += findings.snapshot_findings
     forest = build_forest(
         reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft
     )

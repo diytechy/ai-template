@@ -88,7 +88,7 @@ def _spine(root, skip_example=False):
     """`(srs, llrs, tcs)` — the SR/LLR/TC registry rows, id-prefix-filtered.
 
     The three readers of the spine (the What icicle, the maturity numbers, the
-    Drafted/Modified pointer lines) each re-derived the same
+    Drafted/drifted pointer lines) each re-derived the same
     `read_rows(...) if id.startswith(...)` triple; the census charged the eight
     resulting blocks to WI-346 as `spine-load-repeat`. Explicitly NOT the F5
     case: F5 buys cross-SCRIPT copy-ability (a shared `_kitcommon.py` was

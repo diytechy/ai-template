@@ -151,13 +151,16 @@ def test_a_red_tc_under_a_closed_row_is_named(tmp_path):
     assert dsp.parse_red_tc(census[0]) == ("TC-001", ["SR-001"])
 
 
-@pytest.mark.parametrize("status", ["Approved", "Drafted", "Modified"])
+@pytest.mark.parametrize("status", ["Approved", "Drafted", "Founded"])
 def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
-    # Stated as EXEMPTIONS because Status is an open vocabulary — anything else
-    # is red, so the rule fails toward naming a gap rather than missing one.
+    # Stated as EXEMPTIONS rather than as a list of red words: anything else is
+    # red, so the rule fails toward naming a gap rather than missing one, and it
+    # keeps working for a downstream repo mid-migration.
     # Approved is green; Drafted is pre-ratification, where "not yet green" is
-    # correct; Modified belongs to the §A5.1 amendment adjudication, and two
-    # judgement rows for one event is the double-count this avoids.
+    # correct; Founded (armed at D-9 step 8) is Approved plus a demonstration, so
+    # it is green a fortiori. It REPLACED `Modified` here at step 7 — that word
+    # belonged to the §A5.1 amendment adjudication and retired with the marker,
+    # and a set still exempting it would be a live reader of a retired word.
     _spine(tmp_path, tc_status=status)
     assert dsp.red_tc_census(tmp_path) == []
 

@@ -79,10 +79,12 @@ distinction is why `trace.py` warns on a non-EARS opening rather than gating it.
 Note also: each SR has **measurable** acceptance criteria a test can assert (not
 "exports correctly"), links its SN, and uses `permutations` so one row covers
 many cases. `status` is the **closed** vocabulary — `Drafted`, `Approved`,
-`Modified` (process.md §4): `Approved` blesses the row's *text* and says
-nothing about tests passing (that is the harness's answer), `Modified` marks a
-post-approval amendment owing a re-attest, and an out-of-vocabulary word is an
-always-on integrity finding, not a free label. The `phase` key is omitted
+`Founded` (process.md §4): `Approved` blesses the row's *text* and says
+nothing about tests passing (that is the harness's answer), `Founded` adds
+that the artifacts the row calls for exist and is COMPUTED rather than typed,
+and an out-of-vocabulary word is an always-on integrity finding, not a free
+label. A post-approval amendment has no value of its own — it is caught by
+diffing the row against `docs/archive/last_approved/`. The `phase` key is omitted
 throughout because this is a single-shot deliverable (no phased roadmap): with
 nothing phased the ratified-row Phase rule stays unarmed, and an absent key
 means in scope for every phase. A phased roadmap instead tags every ratified
