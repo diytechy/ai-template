@@ -1652,3 +1652,18 @@ version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and gen_arch_map straddles CMP-006/CMP-009 (LLR-080). Same scan_inventory seam as IF-131; declared separately because the two consumers sit in different components and the rule covers PAIRS."""
+
+[interface.IF-133]
+direction = "Consumes"
+this_project = "scripts/hats"
+counterpart = "scripts/spine_carrier"
+contract = """reads the STAKEHOLDER-NEED tier through the CARRIER (IF-102) for the `audit` worksheet: consumes spine_carrier.load_needs, resolve, NEED_CARRIERS, stem and folded, so `docs/requirements/stakeholder-needs` answers whichever of TOML or legacy markdown is live and each need arrives under today's column names. An ABSENT registry is [] and the audit prints VACUOUS; a carrier that EXISTS and will not parse raises SystemExit, never zero rows."""
+signal = "variable"
+signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-147"]
+owner = "LLR-166"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-168) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120/122 carrier-consumption shape. The ROSTER beside it is read with tomllib directly and the two reads do not contradict: a roster row is keyed by name, is no tier and traces nowhere, while a need row is a spine row whose vocabulary - which carrier is live, what an unreadable registry means - has one home. The consumer-side contract test is tests/test_hats.py, which drives both halves this row states: an unreadable needs registry refuses instead of auditing as zero needs, and a legacy .md registry still reaches the worksheet."""

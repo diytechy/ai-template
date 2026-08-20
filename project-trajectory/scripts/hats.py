@@ -70,6 +70,12 @@ Usage (the CLI is a documentation aid; the module is library-first):
 (`--root` is the shared option and precedes the subcommand — it was written the
 other way round here until the `audit` command was added and the usage line was
 run.)
+
+Contracts: IF-133 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml). It is the `audit` subcommand's read of
+the STAKEHOLDER-NEED tier through `spine_carrier`, which is a cross-component
+edge (this module is CMP-008, the carrier CMP-006); the roster read a few lines
+above is not a seam, for the reason the tomllib note gives.
 """
 
 from __future__ import annotations

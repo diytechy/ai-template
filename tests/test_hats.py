@@ -717,6 +717,65 @@ def test_audit_over_a_repo_that_opted_out_of_hats_says_so(tmp_path, capsys):
     assert "opted out" in out
 
 
+# --- the carrier seam the audit consumes (IF-133) -----------------------------
+# The two tests above pin the ABSENT arm. The two below pin what the module gets
+# for reading the need tier through `spine_carrier` instead of `tomllib`: the
+# refusal, and the second carrier. Both are consumer-side — the carrier's own
+# tests answer for `load_needs`; these answer for hats actually going through it.
+
+# The legacy carrier, in the shape `spine_carrier.needs_from_markdown` reads:
+# a core table resolved by its own header, under a `##` heading.
+LEGACY_NEEDS_MD = """\
+## Core needs
+
+| SN-ID | Need (plain language) | Why | Priority | Acceptance |
+| --- | --- | --- | --- | --- |
+| SN-004 | A legacy registry still reaches the worksheet. | The carrier moved; \
+the tier did not. | M | The audit lists the row. |
+"""
+
+
+def test_audit_REFUSES_an_unreadable_needs_registry_over_auditing_zero_needs(
+    tmp_path, capsys
+):
+    """The fail-closed half of the consumed seam. `spine_carrier.load_needs`
+    raises on a carrier that EXISTS and will not parse; read with `tomllib`
+    directly, a broken registry comes back as no rows and the audit prints its
+    VACUOUS line — "no need row exists to face them" — about a registry full of
+    needs. That is a worse green than a red: it names its own emptiness and is
+    wrong about which registry is empty."""
+    _write(tmp_path, AUDIT_ROSTER)
+    _write_needs(tmp_path, '[need.SN-001]\nneed = "unterminated\n')
+    with pytest.raises(SystemExit) as raised:
+        hats.main(["--root", str(tmp_path), "audit", "--strict"])
+    assert "does not parse as TOML" in str(raised.value)
+    assert "VACUOUS" not in capsys.readouterr().out
+
+
+def test_audit_reads_the_LEGACY_carrier_the_live_one_has_not_migrated_from(
+    tmp_path, capsys
+):
+    """The other half: the tier answers under EITHER carrier, so an adopter
+    mid-migration gets the same worksheet. Only the `.md` is written here —
+    `resolve` refuses both homes at once, which is the rule that makes this a
+    single question rather than a precedence one."""
+    _write(tmp_path, AUDIT_ROSTER)
+    (tmp_path / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "requirements" / "stakeholder-needs.md").write_text(
+        LEGACY_NEEDS_MD, encoding="utf-8"
+    )
+    code, out = _audit(tmp_path, capsys, "--strict")
+    assert code == 0, out
+    assert "VACUOUS" not in out
+    # The row is there AND its own text came through the fold, so this cannot
+    # pass on an id scrape that never resolved a cell.
+    row = [ln for ln in out.splitlines() if ln.startswith("SN-004")][0]
+    assert "still reaches the worksheet" in row
+    assert "stakeholder-needs.md" in out.splitlines()[0], (
+        "the title names the live carrier"
+    )
+
+
 def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
     """The kit's own registries, read from disk — the run the `spine-authoring`
     skill tells an adjudicator to make. Pinned loosely on purpose: the counts

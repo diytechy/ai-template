@@ -10,6 +10,26 @@ safety_class = "spine"
 priority = 3
 +++
 
+## Deliverable
+
+Resolved by path (a): the `scripts/hats` → `scripts/spine_carrier` edge is
+declared as IF-133 in `docs/requirements/interfaces.toml`, following the
+IF-118/119/120/122 carrier-consumption shape (owner LLR-166, carried_by
+IF-102, req_refs SR-147, component CMP-008, status Drafted). The partition
+was checked and found correct — hats belongs to the round machinery, the
+carrier to the registry tier — so no membership was retagged and nothing
+was suppressed. The consumed surface (`load_needs`/`resolve`/
+`NEED_CARRIERS`/`stem`/`folded`) had no consumer-side contract test, so two
+were added to `tests/test_hats.py` and both were driven negative under a
+simulated direct-`tomllib` read: an unreadable needs registry must refuse
+rather than audit as zero needs, and the legacy `.md` carrier must still
+reach the worksheet. `hats.py` gained its `Contracts: IF-133` docstring
+line per the established convention. The watermark rose IF 132 → 133 and
+the approval snapshot was re-taken, so live and `last_approved` are
+byte-identical. `check_trajectory --strict` now exits 0 with zero errors;
+the residual warnings are the undeclared hats→plan_briefs Provides seam and
+the uncited-seam count, both named and left to the wi455 lane.
+
 ## Context
 
 Verified 2026-08-19 on this tree: `check_trajectory.py --strict` reports
