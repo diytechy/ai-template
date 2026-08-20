@@ -163,8 +163,21 @@ normalization relocates the bug), one shared conftest.pin_autocrlf helper,
 23 files swept, five clones reconciled, zero assertions changed. Full
 suite 2647/13.
 
+### WI-452 — resync helper surfacing (sonnet worker) — CLOSED complete
+
+The three surfaces verified correct as-is (the pack names the converter +
+contract; the other two defer under OI-27's one-home rule); the converter
+RUN live against a rebuilt pre-cutover scaffold (round-trip clean);
+TC-160's dead evidence pointer repaired to the four covering tests
+(traced cell, snapshot mirrored); no orchestration built. 174 targeted
+tests green.
+
 ### Adjacent findings accumulating for the closing review
 
+- (WI-452 worker) IF-103's Contract and the kit README still frame
+  `migrate_carrier.py` as "ONE-SHOT ... retirable" — in tension with the
+  ruling that made it a live resync helper with no terminus. IF-103 is
+  Drafted; cheap fix for the wi455 lane or the closing review.
 - (WI-465 worker) Five test files rely on bootstrap's `.gitattributes` for
   CRLF-safety with NOTHING pinning that invariant — a change to
   gitattributes.template or make_minimal_project's write order silently

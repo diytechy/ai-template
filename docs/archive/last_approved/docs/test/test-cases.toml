@@ -1591,7 +1591,7 @@ method = """Drive the carrier reader over a REAL repo whose spine is cut over fr
 tier = "Smoke"
 expected = "Satisfies SR-147 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_trajectory_staged.py::test_baseline_read_survives_the_carrier_cutover"
+evidence = """tests/test_trajectory_staged.py::test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it; tests/test_trajectory_staged.py::test_text_smuggled_into_the_cutover_commit_is_caught; tests/test_rule_sync.py::test_the_two_spine_carrier_readers_agree; tests/test_rule_sync.py::test_the_readers_are_the_exact_inverse_of_the_writer"""
 status = "Approved"
 phase = 5
 

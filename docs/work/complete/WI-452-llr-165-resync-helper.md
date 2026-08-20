@@ -1,7 +1,6 @@
 +++
 id = "WI-452"
 title = "Resurface LLR-165's carrier converter as the downstream-resync helper it now is (owner-ruled 2026-08-13, sitting decision 2.3): the 2.3 status lift treats SR-147/LLR-165/TC-160 as shipped one-shot migration machinery, but the owner's ruling adds a forward obligation — a downstream repo re-syncing onto this kit AFTER the carrier cutover still holds its registries on the old markdown/CSV carrier, and migrate_carrier.py's convert()/compare() (LLR-165) is exactly the proven, loss-refusing path for that conversion. Scope: (1) verify the resync surfaces (RESYNC_PACK.md's carrier entry, ADOPTING.md §6, the downstream-resync skill) actually NAME migrate_carrier.py as the adopter's conversion step with its refuse-on-loss contract, and wire the pointer where missing; (2) confirm the converter still runs against a pre-cutover scaffold (the throwaway-clone detector lesson: run it, don't read it) and that TC-159/TC-160 still exercise the path; (3) there is NO requirement that resync be mechanized end to end — helper functions are welcome, a one-command wrapper is optional and only if it stays stdlib and earns its place; do not build orchestration nobody asked for. LLR-165 stays a live row serving the resync effort, not spent history."
-specref = "docs/plans/2026-08-13-sitting-2-boundary-and-context.md#01-the-sitting-pack-decisions-dispositioned"
 workstream = "docs"
 sr_refs = ["SR-147"]
 needs = ["~WI-455"]
@@ -9,6 +8,25 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Verified the three named resync surfaces already name `migrate_carrier.py`
+with its refuse-on-loss contract (RESYNC_PACK.md fully; ADOPTING.md §6 and
+the downstream-resync skill correctly DEFER to the pack under the standing
+OI-27 one-home rule — adding the name there would reintroduce the drift
+that rule closed), so no wiring was missing and none was added. Ran the
+converter LIVE against a scaffold rebuilt from the kit's actual
+pre-cutover revision: round-trip clean, exit 0. TC-159's evidence checks
+out; TC-160's Evidence cell named a test deleted 2026-08-15 and was
+repaired to the four tests that now cover its Method clause verbatim
+(Evidence is a traced pointer cell — no amendment; snapshot mirrored). No
+orchestration built — the pack's tested copy-paste recipe is already the
+one-command surface. Surface list scoped to what is live at this session's
+start per the soft ~WI-455 edge (external.toml never had a CSV carrier).
+Adjacent finding banked: IF-103 and the kit README still frame the
+converter as one-shot/terminable, against the ruling this row executes.
+174 targeted tests + smoke green; integrity 0.
 
 ## Context
 
