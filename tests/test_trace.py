@@ -1878,7 +1878,25 @@ def test_this_repos_own_provenance_allow_entries_all_still_bite():
     spine_carrier = load_script("spine_carrier")
     root = KIT.parent
     allow = trace.load_provenance_allow(root)
-    assert allow, "the kit's own exception list must not read empty"
+    # ANTI-VACUITY, and it may no longer be "the list is non-empty". OI-34's and
+    # OI-37's executions retired the last two groups of entries, so an EMPTY list
+    # is the file's legitimate resting state — the intended end for an exception
+    # (the marker leaves the cell and the entry goes with it), not a reader that
+    # silently returned nothing. The guard that survives that and still catches
+    # what the non-empty one was reaching for is ONE KEY PER DECLARING LINE: a
+    # parse that drops entries fails it at every population size, zero included,
+    # and a line in this repo's own file that declares nothing fails it too.
+    declared = [
+        ln
+        for ln in (root / trace.PROVENANCE_ALLOW)
+        .read_text(encoding="utf-8-sig")
+        .splitlines()
+        if ln.strip() and not ln.lstrip().startswith("#")
+    ]
+    assert len(allow) == len(declared), (
+        "docs/provenance-allow has {} declaring line(s) but the reader yielded "
+        "{} key(s): {}".format(len(declared), len(allow), declared)
+    )
 
     tiers = (
         ("SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),

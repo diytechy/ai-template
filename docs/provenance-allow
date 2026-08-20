@@ -57,7 +57,14 @@
 # else. The eight citation FRAMES that were the other half of OI-36 are swept, so
 # the frame detector reports zero and this file's entries are the only exceptions.
 
-SR-043 Rationale resolved here (2026-08-16 — OI-37: the fail-open contradiction: this row's gate fails open on an internal error while SN-006 now states the bound as normative, and both candidate resolutions are behavior changes. The token is the marker that the row records the tension rather than settling it. OI-37 is ruled (2026-08-18); this entry retires with its execution. (The licence attribution — stop-subagent-fanout, MIT — is a legal notice, carries no citation token, and stays regardless.)
+# NO ACTIVE ENTRIES. Every question this file held open has been ruled AND
+# executed, so each marker left its cell and its entry went with it — the
+# intended end state for an entry here, not an accident, and the retirement
+# records below are the standing account of what each one covered. An empty list
+# is NOT a clean bill of health for the citation-frame rule: the IF `Contract`
+# hold stated in the header covers a population no entry here can name, and the
+# next knowingly-unsatisfied rule adds its line back, carrying the `OI-###` the
+# grammar above requires.
 
 # RETIRED ENTRIES, recorded rather than silently dropped (2026-08-18):
 #
@@ -92,29 +99,33 @@ SR-043 Rationale resolved here (2026-08-16 — OI-37: the fail-open contradictio
 #   on the 8 frames. The candidate-gap the token marked is now OI-39's subject
 #   (no SR states the CodeSymbol discharge obligation), so the note states the
 #   gap as a standing property of the seam instead of as an edit history.
-
-# The derived-requirement label carried as
-# `(Derived-requirement label, added <date> — PROVISIONAL, unsigned.)`. The label
-# is a DO-178C derived-requirement claim that no human has signed; nothing
-# mechanical carries "unsigned", so deleting the parenthetical would silently
-# promote 17 provisional labels to ratified ones. The `added <date>` token is the
-# whole of what each entry below covers — every other frame in these cells has
-# been swept. Each entry NAMES OI-34, the row that carries the question; it was
-# ruled 2026-08-18 (KILL the label), so these entries retire with that execution
-# rather than with a second ruling.
-SR-024 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-033 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-043 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-052 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-054 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-111 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-112 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-129 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-144 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-146 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-147 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-149 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-167 Rationale added 2026-08-16 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-175 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-176 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
-SR-177 Rationale added 2026-08-17 — OI-34: unsigned derived-requirement label, unsigned still; the row is ruled (2026-08-18, KILL the label) and this entry retires with its execution.
+#
+# RETIRED BY THEIR RULINGS (2026-08-20) — the same intended end, and the act that
+# emptied the list.
+#
+#   SR-043 Rationale (`resolved here (2026-08-16`) — OI-37 ruled RELAX SN-006:
+#   the contradiction was between the row's fail-open arm and an absolute the
+#   need had reached for, so the need's text gave way and the row's behavior did
+#   not. With nothing left unresolved, the OPEN QUESTION paragraph the token
+#   framed is replaced by the standing reason the fail-open arm is deliberate.
+#   Two questions the same ruling declined to settle are NOT covered by this
+#   retirement and owe rows of their own: an unparseable policy file reading as
+#   gate-OFF in one of three twins, and a fail-open record nothing counts.
+#   (The licence attribution — stop-subagent-fanout, MIT — is a legal notice,
+#   carries no citation token, and stays regardless.)
+#
+#   SR-024 / 033 / 043 / 052 / 053 / 054 / 111 / 112 / 129 / 144 / 146 / 147 /
+#   149 / 167 / 175 / 176 / 177 Rationale, the derived-requirement label —
+#   OI-34 ruled (c) KILL THE LABEL: an SR carries the HAT(S) it was derived from
+#   instead, and the sixteen `added <date>` tokens were the parenthetical
+#   `(Derived-requirement label, added <date> — PROVISIONAL, unsigned.)` and
+#   nothing else. Each entry existed because deleting that parenthetical while
+#   the concept stood would have silently promoted an unsigned claim to a
+#   ratified one; the ruling retires the claim itself, so nothing is promoted —
+#   there is no longer a signature state to hold. SR-053's signed variant
+#   (`charter ruled, row retained`) carried no citation token and so never had an
+#   entry, but it went in the same act, because leaving one row labelled would
+#   have left the concept alive on a population of one. What each row KEEPS is
+#   the `Hat-derived (hat.NAME)` prose already in the same cell, which is the
+#   deriving lens the label was pointing at and the carrier until the hat field
+#   lands.

@@ -1,7 +1,6 @@
 +++
 id = "WI-489"
 title = "Execute OI-34's ruling: the derived-requirement label dies, the rows carry their deriving HAT(s), and the 16 allow entries retire with the migration (ruled 2026-08-18, unminted until the ARM-3 vacuity check surfaced it)"
-specref = "docs/requirements/open-items.toml#OI-34"
 workstream = "requirements"
 sr_refs = []
 needs = []
@@ -9,6 +8,27 @@ buildtier = "medium"
 safety_class = "spine"
 priority = 2
 +++
+
+## Deliverable
+
+OI-34's ruling is executed — the derived-requirement label is gone from
+the spine. 17 SR rationale cells migrated (16 dated PROVISIONAL markers +
+SR-053's signed variant; the ruling's 18th, SR-040, left when OI-38 struck
+its paragraph), each keeping its `Hat-derived (hat.NAME)` prose as the
+hat-carrying form until WI-484's field lands. Four cells needed prose
+beyond the marker (SR-033/SR-052/SR-175 carried label references that
+would have dangled or gone false; SR-043's OPEN QUESTION paragraph retired
+under OI-37's marker-and-entry-go-together instruction, replaced by the
+standing reason the fail-open arm is deliberate under the relaxed need).
+All 17 allow entries retired with retirement records — the file's zero-
+active state is documented as the intended resting state, not a clean
+bill; the snapshot refreshed byte-identical. Vacuity findings 2 → 0;
+citation-frame findings 0 → 0 (the entries covered exactly the markers);
+integrity 0; full suite 2647 passed / 13 skipped. One test assertion
+changed deliberately and stated: the non-empty allow-list guard became
+one-key-per-declaring-line — stronger, valid at zero. PROCESS.md's
+labelled-derived-SR vocabulary deliberately left for WI-484 (not violated
+by this migration; its retirement needs the replacement WI-484 mints).
 
 ## Context
 

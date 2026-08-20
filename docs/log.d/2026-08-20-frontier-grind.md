@@ -172,7 +172,38 @@ TC-160's dead evidence pointer repaired to the four covering tests
 (traced cell, snapshot mirrored); no orchestration built. 174 targeted
 tests green.
 
+### WI-489 — the OI-34 label migration (opus worker) — CLOSED complete
+### · post-sign amendment batch #1, the record
+
+17 SR rationale cells amended in one reviewed state (population
+re-measured 17: 16 dated markers + SR-053's signed variant; SR-040 left
+with OI-38's strike). Thirteen were pure marker removals; four carried
+prose repairs, before/after quoted in the worker report and compressed
+here: SR-033 "the earlier label read as though it did" → "the derivation
+stated here must not be read as though it did"; SR-052 "narrower than the
+label suggests" → "narrower than the unmeasurable-clauses opening
+suggests"; SR-175's "labelled so the deriving lens is reviewable" → the
+lens-derivation stated without the label claim; SR-043's OPEN QUESTION FOR
+THE SITTING paragraph retired per OI-37's own ruling with the standing
+fail-open reason in its place (requirement/acceptance untouched — the
+ruling relaxed the NEED, not the behavior). All 17 allow entries retired
+with records; snapshot byte-identical; vacuity 2→0; the anti-vacuity test
+guard strengthened to one-key-per-line (valid at zero). Full suite
+2647/13.
+
 ### Adjacent findings accumulating for the closing review
+
+- (WI-489 worker) PROCESS.md ~:79-81 + spine-authoring SKILL still mandate
+  "a labelled derived SR" — not violated today (the Hat-derived prose
+  satisfies the naming half) but the vocabulary retires WITH WI-484's
+  field, owing a RESYNC entry then.
+- (WI-489 worker) two shipped docstrings (trace_text.is_allowed,
+  trace.load_provenance_allow) still use the retired parenthetical as
+  their worked example — true as history, misleading to grep.
+- (WI-489 worker) OI-37 left two sub-questions unruled with no rows (the
+  unparseable-process.toml gate-OFF asymmetry in subagent_gate vs its two
+  twins; the unread fail-open log) — recorded in the allow-file retirement
+  note so they cannot vanish.
 
 - (WI-452 worker) IF-103's Contract and the kit README still frame
   `migrate_carrier.py` as "ONE-SHOT ... retirable" — in tension with the
