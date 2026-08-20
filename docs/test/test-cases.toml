@@ -1748,3 +1748,14 @@ automated = "Yes"
 evidence = "tests/test_trace_rules.py::test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates"
 status = "Approved"
 phase = 1
+
+[test.TC-175]
+verifies = ["SR-180", "LLR-180"]
+level = "Unit"
+method = """Run the realization-symbol anchor suite over planted registries: a row whose named symbols all miss reds under --strict; a row with one resolving token among several is anchored with the misses counted; a mixed module cell binds through the half the profile can resolve; a module the profile carries no resolver for is reported as an advisory that never moves the exit code, folding to one line past the declared threshold; a private name and a module constant resolve; a module absent from disk is not reported twice; an example placeholder row is skipped. The oracle half is exercised against the rendered map it deliberately does not read, and against class-scope and module-scope boundaries."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-180 (parent SR-180)"
+automated = "Yes"
+evidence = """tests/test_check_doc_refs.py::test_llr_symbol_anchor_reds_on_a_planted_defect; tests/test_check_doc_refs.py::test_llr_symbol_anchor_needs_only_one_resolving_token; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_a_non_python_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory; tests/test_check_doc_refs.py::test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell; tests/test_check_doc_refs.py::test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long; tests/test_check_doc_refs.py::test_llr_symbol_anchor_sees_private_names_and_constants; tests/test_check_doc_refs.py::test_llr_symbol_anchor_does_not_double_report_a_missing_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_placeholder_rows; tests/test_gen_arch_map.py::test_module_bindings_covers_every_rendered_public_item; tests/test_gen_arch_map.py::test_module_bindings_sees_what_the_rendered_map_cannot; tests/test_gen_arch_map.py::test_module_bindings_stops_at_module_scope"""
+status = "Drafted"
+phase = 5

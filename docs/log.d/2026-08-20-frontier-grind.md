@@ -215,8 +215,31 @@ exactly as restored (WI-200), fixed at this close by dating the reference
 instead of naming the id. Lesson: a close that ADDS a WI id to status
 prose plants a delayed R-D red for its own close.
 
+### WI-472 — the CodeSymbol obligation minted (opus worker) — CLOSED complete
+### · the last ruled-but-unbuilt item; the ruled-execution set is EMPTY
+
+SR-180/LLR-180/TC-175 minted Drafted at phase 5 (EARS unwanted-behaviour
+shall, language-agnostic word by word, the OI-42 boundary stated in the
+row); IF-117 re-pointed with its no-design-row note rewritten to what is
+now answerable; the CMP tag chosen on a measured zero-diff; text rules
+pre-run at forced-Approved so ratification cannot red. The Drafted rows
+drop phase 5 / the stage per design (ex-draft holds — the proof the drop
+is only the mint). Full suite 2661/13. status.md's owed-by-a-ruling bullet
+removed at close (the R-D lesson applied proactively).
+
 ### Adjacent findings accumulating for the closing review
 
+- (WI-472 worker — SHARPENS the LLR-015/172 saga to its precise form)
+  `budget_findings` and `component_findings` exist in trace.py as
+  FUNCTION-LOCALS (trace.py:3352/:3390), which the anchor rule declines to
+  accept; `component_findings` is module-level only in
+  check_trajectory.py:1545, not the module LLR-172 names. Everyone was
+  partially right; the two rows are unowned by WI-482's scope and red
+  under check_doc_refs --strict. Small WI-482-class repair.
+- (WI-472 worker) IF-117's Contract cell still trips four pre-existing
+  advisories (WI id, D-token, argues, 796/500 chars) — the wi455 lane's
+  49-citation hold class; and its notes open with stale pre-renumbering
+  CMP ids.
 - (WI-479 worker) `_title_clause` splits at the first dash — WI-455's
   disclosed clause ends mid-quotation with no cue; pre-existing shared
   property (Next-work card too), now more visible. A smarter boundary

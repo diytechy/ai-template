@@ -1844,3 +1844,15 @@ test_refs = "(see TC-174)"
 status = "Approved"
 component = "CMP-006"
 phase = 1
+
+[design.LLR-180]
+sr_refs = ["SR-180"]
+title = "The realization-symbol anchor and the binding oracle behind it"
+module = "project-trajectory/scripts/check_doc_refs.py;project-trajectory/scripts/gen_arch_map.py"
+code_symbol = "symbol_findings/module_bindings"
+detail = "symbol_findings walks the live design registry and, per row, asks module_bindings for the names each named module binds at module scope plus its class-level definitions, reading the ;-joined module cell as a union rather than as a positional pairing with the symbol cell. Three verdicts: a cell carrying no identifier-shaped token is untraced (it names a file format, a CLI or CSS token, or prose, none of which is a symbol claim); a cell whose identifier tokens all miss the union is dangling, the one class that joins the failure set under --strict; a cell with at least one hit is anchored, with every remaining miss counted as untraced. Four skips, each costing a stated thing: an example placeholder row, so a generated scaffold stays copy-ready; a module the profile carries no resolver for, returned as a per-row advisory naming the row and its modules and folding to one line past the declared threshold, warn-only and never the exit code; a module absent from disk, which the path tier already reports; and a module that will not parse, which the parse pass reports. The caller owns the parse, so the oracle is pure and an unparseable module costs that module's verdict rather than the run."
+rationale = """The resolver lives with the module that already owns AST symbol extraction rather than being copied into the consumer, because a second parser that has not learned a node type does not crash — it answers that a live symbol does not exist, which on this seam is a false red on the spine. It deliberately does not read the rendered public-API map: that view drops underscore-prefixed names and module constants, which live design rows name in quantity, so reading the artifact would report real code as missing. The verdict is per row rather than per token because discharge asks whether the row's realization exists, not whether every name in the cell is exact; the harsher question reds rows for tokens that were never symbol claims, while counting the misses keeps a later tightening available. The non-resolvable-module skip is reported rather than silent because a row that discharges by default with no output is a fail-open, and the skip itself stays correct — only its visibility changed."""
+test_refs = "(see TC-175)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5

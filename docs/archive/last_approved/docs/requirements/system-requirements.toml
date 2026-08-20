@@ -906,3 +906,22 @@ priority = "C"
 verification = "Test"
 status = "Approved"
 phase = 4
+
+[requirement.SR-180]
+title = "A design row is discharged only by a realization symbol that resolves"
+sn_refs = ["SN-002", "SN-003"]
+boundary_refs = ["B-05"]
+requirement = """If none of the realization symbols a design-tier row names resolves within any implementation unit that same row names, then the delivered harness shall report that row as undischarged."""
+rationale = """Realizes SN-002 — the chain from need to test is trustworthy because it is mechanically verified rather than manually asserted, and the bottom rung of that chain is the claim a design row makes that the code it names exists. Without this row the spine states a terminating condition for every tier except the one that decides when decomposition is finished: a reader learns from the registries when a need is answered, when a requirement is decomposed and when a test verifies it, and cannot learn from them when a design row is done. The condition that settles it is built and gates, so what the spine lacks is the statement, not the mechanism, and an adopter inherits the gate without inheriting any statement of what it demands.
+
+Realizes SN-003 in the row's altitude, which is the load-bearing half of the wording rather than a stylistic preference. The obligation names no language: a realization symbol, an implementation unit, and a rule that decides whether the one resolves in the other are terms every stack carries, and the resolution rule is read from the declared stack profile exactly as the harness commands are. A row naming one language's file extension would ship one stack's requirement to every adopter — and it would buy nothing, because the association is answerable off the shelf in any stack by a multi-language tag index that asks only whether a name exists in a unit. What has to hold is the association; the form it is recorded in is no part of the obligation, which is what lets the row sit at this altitude honestly.
+
+Two alternatives lost. Per-token exactness — every named token must resolve — asks a harsher question than discharge, and on real registries it reds rows for tokens that were never symbol claims: a local, an attribute, a prose fragment. The anchor validates the coarse claim (the code is real, at a unit that is real, under a name that is really there) and counts the fine misses, so tightening the cell's grammar stays available instead of being hidden behind a green. Folding the obligation into the documentation-drift row also lost: a design row is a specification, not a documentation surface, and an unresolved realization symbol is a completeness verdict rather than drift, so the fold would put two decisions in one row.
+
+Stated so it cannot be read in: nothing here obliges source code to carry a back-link naming the requirement it implements. That is the opposite direction, it rests on weaker evidence than this one, and it is a separate question this row neither states nor implies."""
+acceptance_criteria = """A design-tier row naming a realization symbol that resolves in one of the implementation units the same row names is discharged; a row whose named symbols all fail to resolve is reported and gates at the declared release bar; a named symbol that fails to resolve beside a sibling on the same row that resolves is counted and never gates, so tightening the cell stays possible without reopening the gate. The unit cell is read as a union, never as a positional pairing with the symbol cell: a row naming several units is discharged by one symbol resolving in any one of them. A row naming only units the declared stack profile carries no resolution rule for is reported as skipped-with-reason and is not counted as discharged, so a row the harness cannot judge never reads as a pass; an example placeholder row is out of scope, so a freshly generated scaffold is silent here. The resolution rule is read off the declared stack profile rather than restated in this row; for the current profile it is a name bound at module scope, or defined at class scope, in a source module of that profile's language."""
+priority = "M"
+verification = "Test"
+status = "Drafted"
+phase = 5
+aspect = "trajectory"
