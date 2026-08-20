@@ -30,6 +30,17 @@ after OI-14 — which ruled 2026-08-13, so the door is open but the re-key is
 its own owner decision, not a filed item. `agent_common.py`'s "THE DIAL DOES
 NOT MOVE" block is the standing record.
 
+Follow-up, same day: the owner read OI-47 and reframed it — a spent-id
+record is over-built, because the ruled documents ALREADY carry the spent
+ids; seed and correct from a repo-wide citation census instead, and let the
+existing refuse-plus-`--bump-ids` machinery keep catching registry hand
+edits. Recorded as option (d) on the row with the recommendation moved to
+it (scope caveat: tests/golden carry fabricated ids — `OI-77` in test
+source — so the census scope must be declared, and its error direction is
+the safe one: over-count burns numbers, under-count re-points history).
+The row stays PENDING — the reframing is the owner thinking, not yet the
+ruling.
+
 Bookkeeping in the same commit: watermark `OI` 46 → 47 and `WI` 489 → 491 via
 `trace.py --bump-ids`; `docs/status.md`'s hand-authored watermark bullet
 re-pointed at OI-47 (the ruling is unchanged and still owed — what changed is
