@@ -4093,7 +4093,6 @@ def render_console(reg, findings, args, out, html_out):
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
-    exts, bifs, rels = reg.exts, reg.bifs, reg.rels
     orphans = findings.orphans
     integrity = findings.integrity
     advisories = findings.advisories

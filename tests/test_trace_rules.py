@@ -8,7 +8,7 @@ optional LLR Rationale column), the WI-129 LLR/TC status-coherence lint, the WI-
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
 """
 
-from conftest import KIT, load_script, make_minimal_project, run_py
+from conftest import load_script, make_minimal_project, run_py
 
 
 def test_a_spine_row_states_the_system_not_its_own_history():

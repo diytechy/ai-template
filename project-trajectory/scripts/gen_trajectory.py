@@ -751,6 +751,23 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
 """)
 
 
+def _splice_flows_into_panel(panel, flows_html):
+    """Insert `flows_html` before the How-SW panel's closing `</section>` tag.
+
+    L-02 (repo review 2026-08-19): this used to be `assert panel.endswith(...)`
+    followed by an unconditional slice — under `python -O` the assert vanishes
+    but the slice still runs, silently truncating the panel instead of failing.
+    A production invariant needs an explicit check, not a debug-only one.
+    """
+    if not panel.endswith("</section>"):
+        raise ValueError(
+            "How-SW panel does not end in </section> — cannot splice in "
+            "the authored Runtime flows block (WI-455); panel tail: "
+            + repr(panel[-40:])
+        )
+    return panel[: -len("</section>")] + flows_html + "\n</section>"
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -809,8 +826,7 @@ def build_html(root, wis):
         # it keeps today's flat graph/table (byte-identical for a no-CMP repo).
         tab, panel = sw_containment(root, mods) or _sw_panel(mods, sw_graph(root, mods))
         if flows_html:
-            assert panel.endswith("</section>")
-            panel = panel[: -len("</section>")] + flows_html + "\n</section>"
+            panel = _splice_flows_into_panel(panel, flows_html)
         extra_tabs.append(tab)
         extra_panels.append(panel)
     elif flows_html:

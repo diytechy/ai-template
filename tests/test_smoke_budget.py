@@ -41,17 +41,36 @@ def _budget(option):
     return int(cp["smoke-budget"][option])
 
 
+def _run_pytest_collect(cwd, *extra_args):
+    """A `python -m pytest --co -q` collect-only run against `cwd`, with the
+    child interpreter forced into UTF-8 mode (`-X utf8`).
+
+    M-01 (repo review 2026-08-19): without that flag, a pipe-connected child's
+    stdout/stderr default to the AMBIENT locale encoding — cp1252 on a stock
+    Windows box — not UTF-8. Collection can print non-ASCII (conftest's own
+    missing-POSIX-shell banner uses an en dash) before a single test runs, so
+    the child would emit a cp1252 byte this call's `encoding="utf-8"` decode
+    cannot read. That decode error kills the pipe's READER THREAD — the
+    exception is raised inside the thread, not here, so it never surfaces as a
+    catchable error — and leaves the crashed stream (`proc.stdout` or
+    `.stderr`) `None`; a caller that assumes a string then dies on
+    `AttributeError` for reasons that have nothing to do with the tests
+    themselves. `-X utf8` makes the child's own text streams UTF-8 by
+    construction, so whatever it prints always matches this decode."""
+    return subprocess.run(
+        [sys.executable, "-X", "utf8", "-m", "pytest", "--co", "-q", *extra_args],
+        cwd=str(cwd),
+        capture_output=True,
+        encoding="utf-8",
+    )
+
+
 def _collected_smoke_count():
     """The true count of tests the `-m smoke` commit bar collects, measured by an
     INDEPENDENT collect-only run — deterministic and invocation-independent (it
     does not depend on how the outer suite was invoked). `--co` collects but runs
     nothing, so this cannot recurse into itself."""
-    proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "--co", "-q", "-m", "smoke"],
-        cwd=str(ROOT),
-        capture_output=True,
-        encoding="utf-8",
-    )
+    proc = _run_pytest_collect(ROOT, "-m", "smoke")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # `-q --co` prints one node id (containing "::") per collected item.
     return sum(1 for line in proc.stdout.splitlines() if "::" in line)
@@ -85,3 +104,31 @@ def test_membership_ratchet_bites_past_the_ceiling():
     assert _within_budget(ceiling, ceiling)  # exactly at the line: ok
     assert _within_budget(ceiling - 1, ceiling)
     assert not _within_budget(ceiling + 1, ceiling)  # one past the line: bites
+
+
+def test_nested_collection_survives_a_non_utf8_console_byte(tmp_path):
+    # M-01 regression (repo review 2026-08-19): a collected module that prints
+    # a character during collection — exactly what conftest's own
+    # missing-POSIX-shell banner does with an en dash — must not crash the
+    # collect-only run `_collected_smoke_count` depends on. No explicit
+    # encoding is forced here: on a stock Windows box a pipe-connected child's
+    # default IS cp1252, which is the real trigger this test measures against;
+    # `_run_pytest_collect`'s `-X utf8` is what keeps the child's own default
+    # UTF-8 regardless. Before that flag existed, this reproduced the exact
+    # defect on a real Windows checkout: the reader thread died decoding byte
+    # 0x96, and `proc.stdout` came back `None`.
+    (tmp_path / "conftest.py").write_text(
+        "def pytest_sessionstart(session):\n"
+        '    print("missing-shell banner \\u2013 stub")\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "test_x.py").write_text(
+        "def test_x():\n    assert True\n", encoding="utf-8"
+    )
+    proc = _run_pytest_collect(tmp_path)
+    assert proc.stdout is not None and proc.stderr is not None, (
+        "a decode failure killed a reader thread — proc.stdout={!r} "
+        "proc.stderr={!r}".format(proc.stdout, proc.stderr)
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "test_x.py::test_x" in proc.stdout

@@ -10,6 +10,26 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+All four items landed, re-measured against the moved tree rather than the
+spec's 2026-08-19 census. M-07: `ruff check .` reports ALL CHECKS PASSED
+(the six findings fixed at cause — the dead `exts, bifs, rels` unpacking in
+`trace.py:render_console` deleted with its ratchet entry re-stamped DOWN to
+4510, the E731 lambda, the unused import, the malformed noqa, and the
+duplicate key below). M-05: the duplicate `"bootstrap.py"` baseline entry
+merged into one (the effective bound 2859 preserved — a representation fix,
+no value moved), and the baseline is now duplicate-key-PROOF:
+`test_baseline_has_no_duplicate_keys` parses this file's own AST so both
+key nodes of a repeated entry are seen even though the runtime dict binds
+only one. M-01: the nested smoke-budget collection runs its child in forced
+UTF-8 and `test_nested_collection_survives_a_non_utf8_console_byte` plants
+a cp1252-only console byte to pin it. L-02: `gen_trajectory.py`'s panel
+assert is an explicit conditional raising a descriptive error, with its
+test. Verified: the five touched test modules 98 passed; smoke 1209 passed
+/ 5 skipped (the two new regression tests joined the tier);
+strict-integrity 0; check_docs 0 broken.
+
 ## Context
 
 Four confirmed, mechanical defects batched (the WI-106 micro-fix-batch

@@ -171,7 +171,10 @@ def test_and_needs_every_clause_while_or_needs_one():
 # --- 3. selection -------------------------------------------------------------
 def test_selection_filters_on_the_declared_condition(tmp_path):
     roster = hats.load(_write(tmp_path, WELL_FORMED))
-    names = lambda ctx: [h["name"] for h in hats.applicable(roster, ctx)]
+
+    def names(ctx):
+        return [h["name"] for h in hats.applicable(roster, ctx)]
+
     assert names({}) == ["SECURITY"]
     assert names({"tags": ["scripts"]}) == ["SECURITY", "CROSS-PLATFORM"]
     assert names({"tags": ["docs"]}) == ["SECURITY"]

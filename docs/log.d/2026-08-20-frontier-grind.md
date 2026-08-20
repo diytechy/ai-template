@@ -17,6 +17,19 @@ run on record. Worker's full suite: 2592 passed / 13 skipped in 492.66s
 (one environmental posix-shell gate re-run gated).
 <!-- fig: cmd="python -m pytest -q -n auto" rev=6a6d866d -->
 
+### WI-476 — harness hygiene batch (sonnet worker) — CLOSED complete
+
+`ruff check .` ALL CHECKS PASSED (was 6 errors; the trace.py dead unpacking
+deleted with its ratchet entry re-stamped DOWN); the duplicate
+`"bootstrap.py"` baseline entry merged (effective bound preserved) and the
+baseline made duplicate-key-PROOF via an AST parse of the file's own source;
+the nested smoke-budget child runs forced-UTF8 with a planted cp1252-byte
+regression test; the gen_trajectory panel assert is an explicit raise with a
+test. Touched modules 98 passed; smoke 1209/5 (two new tests joined the
+tier). The worker's final report never arrived (it stalled waiting on its
+own background full run) — the work was verified from the diff and the
+re-run checks by the orchestrator before close.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-474 worker) `check_vocab.py:71` declares `Contracts: IF-118`, which is

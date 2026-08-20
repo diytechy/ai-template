@@ -287,6 +287,29 @@ def test_opt_out_silences(tmp_path):
     assert not (tmp_path / "PROJECT_STATE.html").exists()
 
 
+# --- L-02: the panel splice is a real invariant, not a debug-only assert -------
+
+
+def test_splice_flows_into_panel_inserts_before_the_closing_tag():
+    gt = load_script("gen_trajectory")
+    out = gt._splice_flows_into_panel("<section>body</section>", "<p>flow</p>")
+    assert out == "<section>body<p>flow</p>\n</section>"
+
+
+def test_splice_flows_into_panel_raises_on_a_malformed_panel():
+    # repo-review 2026-08-19 L-02: this used to be `assert panel.endswith(...)`
+    # followed by an unconditional slice — under `python -O` the assert is
+    # stripped and the slice runs anyway, silently truncating the panel. It
+    # must now raise regardless of -O, so the check cannot be an `assert`.
+    gt = load_script("gen_trajectory")
+    try:
+        gt._splice_flows_into_panel("<section>body</div>", "<p>flow</p>")
+    except ValueError as exc:
+        assert "</section>" in str(exc)
+    else:
+        raise AssertionError("expected a ValueError for a panel with no </section>")
+
+
 # --- F5: the sanctioned sibling import loads in-process too ---------------------
 
 
