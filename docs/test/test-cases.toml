@@ -419,10 +419,9 @@ phase = 1
 [test.TC-040]
 verifies = ["SR-040", "LLR-037"]
 level = "Integration"
-method = """Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the default, a broken map entry exits preflight naming the phase, and the banner carries review-policy.
-CORRECTED 2026-08-18: this method claimed a fourth clause — "a bloated status.md warns without blocking" — that NO test in the evidence file performs, and the row was `Approved` while claiming it. The file-granular evidence cell is what hid it: naming a 63-test file rather than the functions leaves a stated clause and an absent test indistinguishable, so the evidence below is now function-granular and the clause is dropped rather than left as a green nothing checks. The tripwire it referred to has no carrier at all (SR-040's acceptance and LLR-037 record the retirement and the refused substitute); when the sitting rules whether to rebuild it, its test is minted with it."""
+method = """Run the agent-loop suite; a REVIEW-B-mapped phase invokes the second fake CLI and not the default, a broken map entry exits preflight naming the phase, and the banner carries review-policy."""
 tier = "Full"
-expected = "Satisfies SR-040's routing and dial criteria; the resume-surface tripwire clause is unverified BY CONSTRUCTION because it has no carrier"
+expected = "Satisfies SR-040's routing and dial criteria"
 automated = "Yes"
 evidence = """tests/test_agent_loop.py::test_cmd_map_broken_entry_fails_preflight; tests/test_agent_loop.py::test_review_policy_surfaced_in_banner; tests/test_agent_loop.py::test_model_map_entry_without_equals_fails_preflight"""
 status = "Modified"
@@ -1511,7 +1510,7 @@ phase = 5
 [test.TC-153]
 verifies = ["SR-178", "LLR-158"]
 level = "Integration"
-method = """RE-POINTED off the deleted digest suite onto the tests that verify the surviving basis. Run the drift half of the baseline-snapshot suite: it DRIVES the premise rather than asserting it - test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo, which is why a baseline recorded at acceptance time is owed at all - and then pins exactly what a change is taken over. test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT (a ratified cell MUST move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one) and test_a_row_below_approval_can_never_be_drifted (no claim to fall from) are the four corners of the split. That the guard and the snapshot comparison agree is no longer a test at all but a property of the code: split_changed_cells is the ONE public basis both staged_spine_amendments and baseline_snapshot.is_drifted call, so there is no second answer to disagree with."""
+method = """Run the drift half of the baseline-snapshot suite: it DRIVES the premise rather than asserting it - test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo, which is why a baseline recorded at acceptance time is owed at all - and then pins exactly what a change is taken over. test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT (a ratified cell MUST move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one) and test_a_row_below_approval_can_never_be_drifted (no claim to fall from) are the four corners of the split. That the guard and the snapshot comparison agree is no longer a test at all but a property of the code: split_changed_cells is the ONE public basis both staged_spine_amendments and baseline_snapshot.is_drifted call, so there is no second answer to disagree with."""
 tier = "Smoke"
 expected = "Satisfies SR-178 AcceptanceCriteria via the LLR-158 detail contract"
 automated = "Yes"

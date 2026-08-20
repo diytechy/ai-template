@@ -44,6 +44,94 @@ applying that design to the kit itself.
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-19b — `OI-33` ABSORBED into `OI-32`, which becomes the combined
+  components brief; `OI-41`'s recommendation amended from (a) to a new (e).**
+  **(1) THE MERGE.** Owner direction: rule the two component rows as one, on
+  the reading that a generated view answers `OI-33`'s maintenance-protocol
+  question by deleting most of it — a reading `OI-33`'s own recommendation had
+  already reached. `OI-33` is ruled ABSORBED rather than deleted, so its id
+  stays spent (D-4) and its surviving residue is carried as PHASE 5 of the
+  combined brief: a derived view is only as true as its inputs, so the close
+  obligation becomes *leave the requirement rows correct*, with `LLR-037`'s
+  five-week deleted-symbol claim as the measured miss and the existing
+  `split_changed_cells`/`spine_cell_class` amendment machinery as the reuse.
+  **(2) THE DESIGN, in one line:** concerns recorded per decomposition on SR
+  and LLR, an LLR's EFFECTIVE set DERIVED from its parents rather than copied,
+  and a generated `components.derived.toml` whose every cell is a join over
+  rows that already exist. The derive-don't-copy choice is the anti-staleness
+  one: copying a parent's concerns down would turn re-ruling one SR into a
+  161-row sweep — the same hand-maintenance one tier lower.
+  **(3) `OI-41` (e).** Owner's objection to the phrase checker: it "will grab
+  multiple items that are not applicable". Sustained, and sharper than the
+  AGAINST originally written — a matcher's precision is a property of the
+  wording it meets, so its error rate cannot be bounded before it ships. Every
+  arm of (e) is a FIELD or a COUNT: the allow file's grammar gains a required
+  `OI-###` (making the unrecorded deferral unrepresentable for every
+  mechanized rule, since a rule either fires or an entry silences it — no
+  third state); the session log declares what it deferred, checked at the
+  commit bar, which is the only arm reaching a deferral that suppresses no
+  check (the `B`/`REL` open ruling, the one live miss); and the vacuity check
+  is re-aimed to NAME the contradicting entry rather than report "0 pending".
+  If a phrase arm is kept, it is bounded to DECLARATION surfaces, never
+  discussion surfaces — `open-items.toml` quotes the vocabulary itself.
+
+- **2026-08-19 — four owner rulings, three executed in the same sitting:
+  `OI-36` (b), `OI-38` (b), `OI-40` (b), `OI-39` (a). The citation-frame
+  detector now reports ZERO and `SR-040` no longer states an obligation
+  nothing satisfies.**
+  **(1) `OI-36` — SWEEP THE 8, HOLD THE 49.** The two populations were held by
+  the same silence and are different in kind, and the measurement that decided
+  it is which side of the attestation boundary each sits on: the 49
+  `if_contract_advisories` findings are IF `Contract` cells (off-spine, gated
+  at DevStg-Arch), while three of the 8 citation frames are spine cells
+  (`LLR-158` Detail, `LLR-178` Detail, `TC-153` Method) that would otherwise
+  re-flip once attested. So the 8 are swept — frame dropped, reason KEPT as
+  prose that stands alone — and the 49 are held for WI-455's interface lane.
+  The hold moved from a log sentence nothing pinned onto `docs/provenance-allow`'s
+  header, with its blocking chain (WI-455 → WI-469) NAMED so it can expire
+  rather than drift. It could not become an allow *entry*: `if_contract_advisories`
+  takes no `allow` parameter, so an entry would have declared nothing.
+  Passed over: (a) sweep both — drives a prose campaign through 46 cells
+  WI-455 is about to re-author; (c)/(d) — leave the exclusion unpinned, which
+  is the finding itself.
+  **(2) `OI-38` — STRIKE `SR-040`'s resume-surface tripwire.** The premise
+  dissolved, the code did not move: no session inherits a resume surface any
+  more, and `status.md` is a generated integrator artifact whose size the
+  generator owns. A requirement whose SUBJECT has no referent is stale, not
+  unmet. The clause is gone from the shall and the acceptance, and the three
+  residue paragraphs with it. THE TWO HAT LENSES ARE ANSWERED, NOT DELETED —
+  `hat.UX-ENGINEER` (a view stays usable as its volume grows) and
+  `hat.UNATTENDED-OPS` (at 3am the reader is another automated step) both rest
+  on a surface that grows across runs; the rationale now records that their
+  premise is gone rather than that they were overruled, and that both apply
+  again on the same reasoning if a per-session resume surface returns. Passed
+  over: (c) re-point to `check_docs.check_status_surface` — refused on
+  measurement, not taste (different actor, moment and surface, already another
+  requirement's carrier, and INVERTED threshold semantics).
+  **(3) `OI-40` — CORRECT THE PAIR SHUT, tracking (2).** `LLR-037`'s recording
+  paragraph and `TC-040`'s correction paragraph are gone; `TC-040`'s `expected`
+  no longer carries "unverified BY CONSTRUCTION" because the clause it named no
+  longer exists. Both cells now state only what the module does and what the
+  three function-granular evidence tests perform. The allow file's "ruled
+  together or not at all" terms were honoured — (c), splitting the pair, was
+  refused by its own grammar.
+  **(4) `OI-39` — MINT the CodeSymbol-anchor SR.** Ruled, NOT executed: the
+  mint is three rows plus an `IF-117` re-point, queued as **WI-472** so a
+  ruled-but-unbuilt decision does not become a permanent gap. The binding
+  constraint travels with it — the shall states the OBLIGATION
+  language-agnostically (a design row's named symbol RESOLVES in its named
+  implementation unit), never `.py` and never `check_doc_refs`. The
+  code-to-registry direction was considered and left to `OI-42`; recorded here
+  so no later reader infers the `Implements:` mandate was ratified alongside.
+  **ALLOW-FILE HOUSEKEEPING, the intended end for an entry:** six entries
+  retired because their questions closed — four whose markers the rulings
+  deleted (`SR-040` ×2, `LLR-037`, `TC-040`), `SR-040`'s `added 2026-08-16`
+  derived-requirement label (nothing is left unsigned because nothing is left
+  derived), and `IF-117`'s `REVERTED TO THE SR` (its candidate-gap is now
+  `OI-39`'s subject). Each is recorded in the file rather than silently
+  dropped, and `test_this_repos_own_provenance_allow_entries_all_still_bite`
+  passes.
+
 - **2026-08-18a — the pre-brief work owed is EXECUTED: `SR-140` split three
   ways, `SR-173` truth-matched from code, `SR-150` re-worded, `SR-040`'s
   tripwire adjudicated. `trace.py --strict` exits 0 — the `traceability`

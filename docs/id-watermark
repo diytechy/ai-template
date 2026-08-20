@@ -12,7 +12,7 @@
 # ever renumbered, ids from the superseded numbering are NOT covered and
 # may be re-pointed by a mint — record those at the registry instead.
 #
-# basis: B=5 CMP=9 EXT=5 IF=132 LLR=179 OI=42 REL=3 SN=40 SR=179 TC=174 WI=471
+# basis: B=5 CMP=9 EXT=5 IF=132 LLR=179 OI=42 REL=3 SN=40 SR=179 TC=174 WI=472
 #
 ASSET = 0
 B = 7
@@ -30,4 +30,4 @@ REPO = 0
 SN = 40
 SR = 179
 TC = 174
-WI = 471
+WI = 472
