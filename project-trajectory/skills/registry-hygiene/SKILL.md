@@ -27,7 +27,8 @@ python scripts/trace.py --strict
 # DevStg-Tests+: also reject leftover template example rows (ids ending -000).
 python scripts/trace.py --strict --no-placeholders
 
-# DevStg-Impl: required fields non-empty + closed Verification/Tier vocabularies + Verified.
+# DevStg-Impl: required fields non-empty + closed Verification/Tier vocabularies, plus
+# --require-verified: every non-Drafted SR must read Status=Approved.
 python scripts/trace.py --strict --no-placeholders --strict-schema --require-verified
 ```
 

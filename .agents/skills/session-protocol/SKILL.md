@@ -46,6 +46,30 @@ kit's design history — the old thread specs and the WI-1.x log — is archived
 - **Single source of truth:** state a fact once and link to it; don't paraphrase
   a rule into five files.
 
+### Standing rules
+
+Relocated here from `docs/status.md` (WI-477): they are durable doctrine, and
+the working surface is forward-only — what must happen **next**, not what is
+always true.
+
+- **An id named in `docs/status.md`'s hand-authored prose CANNOT BE CLAIMED.**
+  `integrate._status_prose_refusal` refuses it at claim time; generated blocks
+  are exempt. Point at `docs/work/queued/` and let the generated frontier name
+  ids.
+- **Never revert a real fix, or sanction a check, to green a step.** Editing a
+  declared list — a coverage floor, an orphan glob, a ratchet baseline — to
+  clear a finding IS accepting what it measures. If a ratchet fires on
+  legitimate work, re-stamp it deliberately and record the reason.
+- **Signed claims + one-machine humility.** The recurring review-era defect was
+  signed CLAIMS that pass every test (PROCESS_OPTIONS.md, "Signed
+  measurements"), and **one machine is one data point** for any OS-behaviour or
+  timing claim — state the condition, never the universal.
+- **Measure on a tree whose line endings match the index.** Before trusting any
+  byte count or hash, run `git ls-files --eol | grep 'w/crlf'` — only
+  `*.ps1`/`*.cmd`/`*.bat` should appear.
+- **Claiming runs through the integrator** (`integrate.py claim`); merges are
+  its serial fail-closed queue, and a pause is a tracked `docs/work/pause`.
+
 ## 3. End green (gates)
 
 Run the real checks and paste the real output — never a green you didn't produce:
@@ -128,9 +152,16 @@ cadence"). New behavior needs new tests
 
 ## 5. Commit in this repo's style
 
-- **Logical commits** — one per deliverable/thread, message
-  `WI-<n>: <imperative subject>` then a body explaining the *why* and any
-  deviation (see recent `git log`).
+- **Logical commits** — one per deliverable/thread, then a body explaining the
+  *why* and any deviation (see recent `git log`). **Two subject forms, and the
+  session type picks which** — enforced by nothing, stated here once so the
+  `git log` stops looking like two conventions fighting:
+  - `WI-<n>: <imperative subject>` — a session executing ONE work item. The id
+    is the subject's first token so the log greps by id.
+  - `<category>: <imperative subject>` — everything with no single WI to name:
+    a sitting, a sweep, a merge, a review round, a triage
+    (`sitting:`, `docs:`, `spine:`, `review:`, `tests:`, `open-items:`).
+    Prefer a category that already appears in `git log`; the set is open.
 - **Attribution footers are fine here** — add `Co-Authored-By:` as usual (this
   repo is not anonymous). Omit them only in a privacy-restricted / anonymous repo,
   where a tool trailer is itself a leak (process-options.md "Commit identity &

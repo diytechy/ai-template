@@ -638,7 +638,9 @@ SPINE_MATURITY = {
 }
 
 # BOUNDARY CROSSINGS — the depth-0 frame's `[boundary.B-##]` rows in
-# `external.toml` (rung 1). `Approval` is the tier's ONE maturity field.
+# `external.toml` (rung 1). `Status` is the tier's ONE maturity field — the name
+# it carries since the 2026-08-17 registry status unification, which retired the
+# transitional `Approval` spelling this table was first keyed on.
 #
 # THIS TABLE REPLACED AN `IF_MATURITY` KEYED ON `Stability` AT WI-442, and the
 # swap is the whole reason that commit could not be split. `Stability` was the

@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k headroom under Gemini's ~12k cap) | 9,948 | 2026-08-20 | −5: WI-486's back-link re-word onto its dial, paid by dropping the test-name example |
 | `CLAUDE.md` | **8,500** | 6,981 | 2026-08-18 | +176: the mandated-token rule — what the kit writes into an adopter's cell must mean something in their repo |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,957 | 2026-08-20 | -11: WI-486's two re-stamps (AGENTS.template.md, PROCESS.md), trimmed to stay under the cap |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,925 | 2026-08-20 | -51: WI-477 re-stamped the PROCESS.md row (H-06's vocabulary fix) more tersely than the WI-486 row it replaced |
 
 **`AGENTS.template.md` is parked at its cap: 52 bytes free (0.5%).** Every other
 capped file holds 2–18%, so this is the one you will hit first, and it is the DOC
@@ -44,7 +44,7 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 83,956 | 2026-08-20 | **+470**: WI-486 (OI-42) — the back-link rule stops being unconditional and states its dial (`[checks] backlink_coverage_min`). FLAGGED growth; the dial's reasoning stays in `process.toml.template`'s `[checks]` header |
+| `project-trajectory/PROCESS.md` | 84,080 | 2026-08-20 | **+124**: WI-477 (H-06) — §8's IF maturity field re-named onto the words enforcement reads (`Status`, `Drafted`/`Approved`), `Founded` ruled out of the tier. FLAGGED |
 | `project-trajectory/PROCESS_OPTIONS.md` | 174,309 | 2026-08-20 | +148: WI-485 (OI-41) — the owner-decision-surface paragraph loses its *where it lives* half (now `process.md` §5) for the pointer, and S-3's escape is corrected: an absent registry is the finding |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own

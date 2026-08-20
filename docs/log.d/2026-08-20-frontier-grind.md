@@ -191,8 +191,27 @@ with records; snapshot byte-identical; vacuity 2→0; the anti-vacuity test
 guard strengthened to one-key-per-line (valid at zero). Full suite
 2647/13.
 
+### WI-477 — the one-contract docs sweep (opus worker) — CLOSED complete
+
+The taught schema re-verified against the LIVE constants before sweeping
+(the words had moved again at the signing), then swept across every
+checklist surface + two live retired-value claims the review missed, and
+PINNED: a mutation-verified contract test reads the enforcement constants
+so the class cannot re-accrete. Three-category frame inventory; the ledger
+restated with derive-from-rows DECLINED on evidence; the gate honestly
+renamed with corruption-vs-absence tests; status.md to exactly 120 by
+relocation not deletion. Full suite 2657/13. The worker caught its own
+CRLF introduction via the rule it had just relocated.
+
 ### Adjacent findings accumulating for the closing review
 
+- (WI-477 worker) LLR-172's `module` cell anchors `component_findings` to
+  trace.py while the def lives at check_trajectory.py:1489 (the trace.py
+  occurrences are the Findings-field extension point) — WI-484's execution
+  settles which is the intended landing; check_doc_refs warns meanwhile.
+- (WI-477 worker) smoke wall-clock volatile on this box (53.8–113.9s over
+  four runs of a tier that moved by ten cheap tests) against the
+  CI-enforced 60s — the budget-vs-box question deserves its own look.
 - (WI-489 worker) PROCESS.md ~:79-81 + spine-authoring SKILL still mandate
   "a labelled derived SR" — not violated today (the Hat-derived prose
   satisfies the naming half) but the vocabulary retires WITH WI-484's

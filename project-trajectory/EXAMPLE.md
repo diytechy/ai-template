@@ -498,10 +498,28 @@ join (`MULTI_REPO.md` §7).
 contract's spec lives once in its **owner**; the coordinator's catalog only references
 the owner `IF-###`:
 
-```csv
-IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,Approval
-IF-010,Provides,export,delivery,"RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009).",SR-009,v2,approved
-IF-011,Consumes,delivery,object-store,"S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet.",SR-010,vendor-2024,approved
+```toml
+[interface.IF-010]
+direction = "Provides"
+this_project = "export"
+counterpart = "delivery"
+contract = "RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009)."
+signal = "variable"
+req_refs = ["SR-009"]
+owner = "SR-009"
+version = "v2"
+status = "Approved"
+
+[interface.IF-011]
+direction = "Consumes"
+this_project = "delivery"
+counterpart = "object-store"
+contract = "S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet."
+signal = "variable"
+req_refs = ["SR-010"]
+owner = "SR-010"
+version = "vendor-2024"
+status = "Approved"
 ```
 
 `IF-010`'s spec is owned by a repo that **builds** the surface (`export`); `IF-011` is
@@ -512,7 +530,7 @@ These `IF-###` ids are **owner-local** — each repo has its own `IF-001…`, so
 coordinator references them by a stable coordinator-level id (`CIF-###`) that also
 records the owner's current version and each consumer's pin. That mapping is what lets
 the coordinator catch **drift**: if the `export` repo ships `IF-010@v3` while `delivery`
-still pins `@v2`, the coordinator flags the stale pin (weighted by `Approval`) and
+still pins `@v2`, the coordinator flags the stale pin (weighted by `Status`) and
 sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
 judges actual compatibility, the human signs a real break. The catalog registry and
 that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).

@@ -1116,7 +1116,7 @@ between its **own modules** — record each directed seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
 direction, counterpart (another module, a file, or an external actor), contract,
 its signal type, the `Req-Refs` that realize/rely on it, its `Owner`, a
-rationale, a version, and its `Approval` state. `Owner` is the **one** row
+rationale, a version, and its `Status`. `Owner` is the **one** row
 answerable for the seam — an `SR-###` or a design-tier id, exactly one, and the
 cell that answers "who serves this" without reading three others. `Direction` is
 **flow and coverage, never ownership**: a `Provides` implies orientation but not
@@ -1142,8 +1142,9 @@ police the difference by FORM, since no check reads intent: no work-item id and
 no decision citation in `Contract` (both age — a cancelled id still reads as
 authority), no rationale connective (*because* / *rather than* / *so that* /
 *since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
-`Approval` (`drafted` · `approved`) is the row's **one** maturity field, shared
-with the boundary tier. A row ties back to a declared boundary crossing — a
+`Status` (`Drafted` · `Approved`) is the row's **one** maturity field, shared
+with the boundary tier — the spine's own vocabulary (§7) minus `Founded`, which
+never applies here: an approval says the seam is agreed, not demonstrated. A row ties back to a declared boundary crossing — a
 `B-##` row in `requirements/external.toml` (§4, "The frame is a registry"),
 via `interface_from_external` / `interface_to_external` — only when it
 REALIZES one; a row with neither is an internal seam.

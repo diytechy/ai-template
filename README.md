@@ -35,6 +35,10 @@ chasing it.
   silently skips** (SN-004, SN-008).
 - **A traceability spine** — `SN → SR → LLR → TC` registries joined by a
   generated matrix that must report **zero orphans** before each gate (SN-002).
+- **A depth-0 frame** (`external.toml` — `EXT` entities, `B` boundary crossings,
+  `REL` external relationships) — off-spine but **required**, and the tier the
+  spine's requirements form around: `DevStg-Boundary` is rung 1 of the ladder
+  and reads it. Scaffolded for every profile, shipped **inert** until filled.
 - **Runnable scripts** — Python 3.11+ on the standard library, with any
   non-stdlib dependency admitted only through a reviewed row in
   [`docs/dependencies.md`](docs/dependencies.md) — *no unargued dependencies*,
@@ -118,27 +122,54 @@ chasing it.
 - **Ratified at the 2026-08-13 sitting, commissioned rather than shipped** —
   seven needs the owner attested whose machinery was scheduled, not built. They
   are listed here because a ratified promise should be visible before its code
-  is, not after. Two have since shipped: the machine-readable record of which
-  expert and downstream-user perspectives a decomposition was examined from
-  (SN-036 — the hats roster, `hats.template.toml` + `scripts/hats.py`), and
-  system-requirement boundary references resolving to declared crossings with
-  unresolved references as mechanical findings (SN-037 — `boundary_refs`
-  resolution). Still owed: a stakeholder need readable without repo-internal
-  vocabulary (SN-033); one front-door action per platform for **each** of the
-  two universal contributor actions — preparing the dev environment and
-  resuming the loop — where today only `agent-resume.*` exists (SN-034); every
-  file the kit ships traceable to the stakeholder outcome it serves (SN-038); a
-  declared scope value on each need saying whether it binds the template, this
-  repo, or both (SN-039); and a reproducible, reviewable record of *why* the
-  system was divided into the components it has (SN-040).
+  is, not after. State each one at the half it actually reached:
+  - **Shipped.** System-requirement boundary references resolve against declared
+    crossings, unresolved ones mechanical findings (SN-037 — `boundary_refs`
+    resolution). A stakeholder need readable without repo-internal vocabulary
+    (SN-033) — `scripts/check_need_form.py`, wired at all three bars in
+    `check.py`, traced SR-150 → LLR-170 → TC-164; **warn-first by design**, since
+    promoting a form heuristic over ratified stakeholder prose to a gate is an
+    owner ruling that has not been made.
+  - **Half shipped.** The record of which expert and downstream-user
+    perspectives a decomposition was examined from (SN-036). The **roster and
+    injection** halves are built — `hats.template.toml` + `scripts/hats.py`, with
+    `plan_briefs.py` putting the applicable questions into the planning brief.
+    The **record** half — what each applied perspective produced, and a missing
+    applicable perspective reported — is **deliberately not built** (`hats.py`
+    says so in its header: injection alone already changes the output, while a
+    record built first is a form with nothing behind it). SR-161 states that
+    obligation and is `Approved` with no LLR or TC under it. Nothing gates on a
+    hat today.
+  - **Still owed.** One front-door action per platform for **each** of the two
+    universal contributor actions — preparing the dev environment and resuming
+    the loop — where today only `agent-resume.*` exists (SN-034); every file the
+    kit ships traceable to the stakeholder outcome it serves (SN-038); a declared
+    scope value on each need saying whether it binds the template, this repo, or
+    both (SN-039); and a reproducible, reviewable record of *why* the system was
+    divided into the components it has (SN-040).
+
+  Each of the seven now has a citing SR (SR-150, SR-160..SR-165), so *spine
+  coverage* is complete and is **not** what this list reports. It reports
+  **delivery**, which is the different question: SN-037's machinery shipped
+  before its SR existed and still carries no LLR or TC, while SN-040's SR carries
+  a chain describing machinery that is not built. Read a row's state as a
+  statement about the registry, and read this list for what an adopter can
+  actually run.
 
 ## The registries & trace artifacts — one map
 
 The process stores every durable fact as **one registry row**, referenced
 everywhere else by id ([`PROCESS.md`](project-trajectory/PROCESS.md) §2–§3);
 anything visual or navigable is a **generated view** of those rows, never a
-second home for them. Four registries form the required **spine**; the rest are
-optional layers a project adopts only when its scope earns them. How an
+second home for them. They come in **three** kinds, and the middle one is the
+one most often mis-read: four registries form the required **spine**; the
+**depth-0 frame** (`external.toml` — `EXT`/`B`/`REL`) is off-spine but equally
+**required**, because `DevStg-Boundary` is rung 1 of the stage ladder and
+`bootstrap.py` installs the file for every profile; the rest are genuinely
+**optional layers** a project adopts only when its scope earns them. The frame
+ships *inert*, not absent — a `-000` placeholder that costs a single-module
+project nothing — and "inert until filled" is the honest gloss, never
+"optional". How an
 ambiguously-reported problem routes *into* these tiers — coverage gap vs.
 requirement gap, then scoping via new IF/CMP/PART rows — is the
 **change-intake flow**, charted in
@@ -151,6 +182,11 @@ graph LR
     SR --> LLR["LLR-### design"]
     LLR --> TC["TC-### test"]
   end
+  subgraph frame["The depth-0 frame — off-spine but REQUIRED; ships inert, rung 1 reads it"]
+    EXT["EXT-### external entity"]
+    B["B-## boundary crossing"]
+    REL["REL-### external relationship"]
+  end
   subgraph off["Off-spine layers — optional; id-integrity-checked when present"]
     WI["WI-### work item"]
     IF["IF-### interface"]
@@ -160,6 +196,10 @@ graph LR
     CMP["CMP-### component"]
     REPO["REPO-### delegated repo"]
   end
+  B -- "Entity" --> EXT
+  REL -- "From/To" --> EXT
+  SR -- "Boundary-Refs" --> B
+  IF -. "realizes (from/to_external)" .-> B
   WI -- "SR-Refs" --> SR
   IF -- "req_refs" --> SR
   PB -- "Refs" --> SR
@@ -185,6 +225,20 @@ graph LR
 traceability matrix (`docs/test/report.md`; `--html` adds a collapsible map) and
 fails the gate on any orphan, duplicate, or malformed id (SN-002).
 
+### The depth-0 frame — required, off-spine
+
+Not an optional layer. `bootstrap.py` installs `external.toml` for **every**
+profile, and `DevStg-Boundary` is **rung 1** of the eight-rung stage ladder with
+this file as its deliverable — `derive_gate.boundary_incomplete` holds a repo
+there while any crossing reads `Drafted`. It ships **inert** (a `-000`
+placeholder only), so a project that never declares a boundary is not pinned at
+rung 1; leaving it inert is a *statement*, not an omission, and that is what
+"inert until filled" means.
+
+| Registry | Ids | What it does |
+|---|---|---|
+| [`external`](project-trajectory/registries/external.template.toml) | `EXT-###` `B-##` `REL-###` | The **depth-0 frame**, in three row kinds: who is outside the system, what **crosses its boundary**, and which external-to-external flows the system is *not* a party to. This is the tier **system requirements form around** — an SR states an observable AT a crossing, and names it in `Boundary-Refs`. A relationship carries no interface vocabulary, deliberately: it is not a crossing and must never grow a realizing IF. |
+
 ### Off-spine registries — optional layers
 
 Each lives off the joined spine (an absent or placeholder-only file costs
@@ -193,12 +247,11 @@ integrity-check the ids the moment real rows exist.
 
 | Registry | Ids | What it does — and why it exists |
 |---|---|---|
-| [`external`](project-trajectory/registries/external.template.toml) | `EXT-###` `B-##` `REL-###` | The **depth-0 frame**, in three row kinds: who is outside the system, what **crosses its boundary**, and which external-to-external flows the system is *not* a party to. This is the tier **system requirements form around** — an SR states an observable AT a crossing. A relationship carries no interface vocabulary, deliberately: it is not a crossing and must never grow a realizing IF. |
 | [`interfaces`](project-trajectory/registries/interfaces.template.toml) | `IF-###` | One **interface definition** per row — what the interface concretely *is*, in one testable line, versioned. The **`owner`** cell names the one row answerable for the seam (a design-tier id wherever one exists, else an `SR-###`); `req_refs` lists every requirement it realizes or relies on. A row ties back to a boundary crossing (`interface_from_external` / `interface_to_external`) only when it **realizes** one; a row with neither is an internal seam. Every interface is backed by an SR and a contract test ([`PROCESS.md`](project-trajectory/PROCESS.md) §8). |
 | [`performance-budgets`](project-trajectory/registries/performance-budgets.template.csv) | `PB-###` | Quantitative NFR budgets (latency, RAM, artifact size) that behavior tests can't express; `check_perf.py` compares emitted metrics against budget + baseline (§9). |
 | [`procurement`](project-trajectory/registries/procurement.template.csv) | `PART-###` | Parts the project **buys rather than builds** (motor, board, camera): vendor, cost, status, quantity. The owning `IF-###` row is each part's owner-of-record. |
 | [`assets`](project-trajectory/registries/assets.template.csv) | `ASSET-###` | The facts *about* an un-diffable binary (art, music, CAD, voice): provenance (AI-content disclosure), license, attribution, contract link, location + hash. |
-| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `State`/`SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Ratified design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
+| [`components`](project-trajectory/registries/components.template.toml) | `CMP-###` | The durable **set-grained** home for knowledge + lifecycle — a subsystem, "the left arm", a package group. It exists because no finer tier can hold either: an IF is one seam, a workstream is mutable by design, and an LLR *is* the thing a rewrite replaces — while `Status` (maturity), `Standing` (the lifecycle axis: `active`/`has-gap`/`deprecated`) and `SupersededBy` carry identity across the rewrite. **Structure is derived, never authored**: membership is a `Component` tag on LLR/IF/ASSET/PART rows; an IF with both endpoints inside a CMP is *internal*, with one endpoint inside it is that CMP's *boundary*. (Ratified design: [`AXES_AND_WORKSTREAMS.md`](docs/archive/AXES_AND_WORKSTREAMS.md); live spec: [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md) "Component layer".) |
 | [`work-items`](project-trajectory/work/WI-000.template.md) | `WI-###` | The execution DAG — *when/how* atop the spine's *what*: each WI delivers SRs, belongs to a workstream, and depends on predecessors (a bare id blocks; a `~`-prefixed id only orders). The live carrier is the **`docs/work/` spec folder** (one file per WI, status = its directory; [`work-items.template.csv`](project-trajectory/registries/work-items.template.csv) survives as the legacy migration format `wi_convert.py` reads). Validated by `check_trajectory.py`; rendered into `PROJECT_STATE.html`. |
 | [`repos`](project-trajectory/registries/repos.template.csv) | `REPO-###` | Coordinator-only, for the rare multi-repo rung: one row per delegated repo plus the coordinator SRs it fulfils ([`MULTI_REPO.md`](project-trajectory/MULTI_REPO.md) §6). |
 | [`hats`](project-trajectory/registries/hats.template.toml) | *names, no id space* | The **declared expert perspectives** every applicable decomposition must face. Each `[hat.NAME]` carries `applies_when` (a closed, evaluable condition — `always`, `scope`/`kind` equality, `tags contains`), `asks` (the question that lands in the brief) and `listens_for` (the **failure class** it catches — a hat naming no failure is refused as ceremony). Unlike the rows above it ships with **content**, because an empty roster is a form with nothing behind it, and it is **owner text**: adopters edit it, which is what keeps an inherited `applies_when` honest. `scripts/hats.py` reads it; `scripts/plan_briefs.py` injects the applicable questions into the dual-plan **planner** (decomposition) brief. Deleting it is a supported opt-out; a broken one refuses loudly. |
@@ -389,10 +442,13 @@ What each approval gate certifies — full criteria in
 and caches it (generated, never hand-edited) as **the gate that must next be
 passed**, which is also the strictness the harness runs at. It advances when a
 batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
-*pulls back* when attested content is amended — a `Status=Modified` row owes a
-re-attest and derives DevStg-Tests until the sitting blesses it (`trace.py --ratify
-modified` emits the before/after brief; semantics: PROCESS.md §7)
-(process-options.md "Derived gate model").
+*pulls back* when attested content is amended. There is no status value for that
+state: the transitional `Modified` marker retired at the 2026-08-20 signing, and
+an amendment is now detected by **drift** — the row compared against its copy in
+`docs/archive/last_approved/`, which cannot be forgotten the way setting a marker
+could. Such a row owes a re-attest until the sitting blesses it (`trace.py
+--ratify modified` still names that reserved scope and emits the before/after
+brief; semantics: PROCESS.md §7) (process-options.md "Derived gate model").
 
 - **DevStg-Reqs — Requirements/UX/Constraints.** Needs + requirements are complete,
   measurable, and consistent with the vision; every requirement links a need;

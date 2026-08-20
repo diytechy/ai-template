@@ -143,7 +143,7 @@ gate; the `single-ratify`/`autonomous` levels and their mechanics:
 - **DevStg-Release — Release readiness** *(per release; skip for a one-off)*. The
   **release** test tier passes; the generated release checklist
   (`scripts/gen_release_checklist.py`) is completed + signed; version bumped;
-  changed `Stable` interface versions communicated.
+  changed `Approved` interface versions communicated.
 - **Acceptance — the owner's final read.** A human/stakeholder exercises the real product
   (including the Demonstration/Manual items) and signs off.
 

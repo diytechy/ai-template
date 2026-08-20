@@ -53,8 +53,11 @@ CANCELLED has no function here on purpose. It is a JUDGEMENT — this will never
 be built, and here is why — so the lane that makes it writes the move and the
 report itself; only `integrate.branch_outcomes` needs to read it back.
 
-A one-way sibling of `integrate.py`: this module imports it (for the lane
-worktree, the claim read and the sha helpers), never the reverse. `dispatch.py`
+A sibling of `integrate.py`: this module imports it (for the lane worktree, the
+claim read and the sha helpers), and `integrate.branch_outcomes` imports back —
+a function-local import at `integrate.py:2186`, so the cycle is deferred to call
+time rather than absent. Stated plainly because this header claimed "never the
+reverse" while that import stood; breaking the cycle is WI-483's. `dispatch.py`
 calls both — it decides which outcome a cycle reached, and the writes live here.
 
 No `Contracts:` line, deliberately: the integrator seam this extends is IF-080,

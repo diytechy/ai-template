@@ -33,8 +33,8 @@ records where each one bites.
 | `AGENTS.template.md` stays within its byte budget | Test | `test_bootstrap.py::test_agents_template_stays_within_size_budget` |
 | Write the test first (failing-first TC) | Reviewer | DevStg-Tests review (ordering can't be mechanized; the TC's existence is checked, its *timing* is judged) |
 | Gates close only on the declared authority | Harness + Prose | `check.py --gate` runs the bar; the human attestation in `docs/log.md` is Prose |
-| A post-attestation spine amendment owes a re-attest (WI-316) | Harness + Prose | Was Prose-only (`RE-ATTESTATION PENDING` commit-message flags — durable nowhere, derived by nothing). Now: `Status=Modified` pulls the derived gate to DevStg-Tests (`derive_gate`), projects a pending-owner-actions line (`gen_trajectory --status`), counts on the basis line (`modified=N`), and the `--staged` amend-without-flip warn polices the write side (`check_trajectory`). Honest residue: *setting* the marker is still discipline — the staged warn is warn-tier and a determined omission survives it; the flip back (`Modified`→`Verified`/`Planned`) is the human judgment itself, recorded in `log.md` Decisions (Prose, correctly — that judgment is the thing being trusted) |
-| Specs act on declared `IF-###` seams (cite resolvable IFs; Proposed carries a rationale) | Harness + Reviewer | `check_trajectory` spec-interface check (warn / ERROR `--strict`, vacuous-until-armed); near-dup honesty is Reviewer (finding 4) |
+| A post-attestation spine amendment owes a re-attest (WI-316) | Harness + Prose | Was Prose-only (`RE-ATTESTATION PENDING` commit-message flags — durable nowhere, derived by nothing). Now: the row is compared against its copy in `docs/archive/last_approved/` and the DRIFT is the signal — `trace.py --ratify modified` emits the per-cell before/after brief, and the `--staged` amend-without-flip warn polices the write side (`check_trajectory`). The transitional `Status=Modified` marker RETIRED at the 2026-08-20 signing (D-9 step 7), and retiring it *strengthened* this row: the marker had to be set by hand, so a determined omission defeated it, while snapshot drift is computed and cannot be forgotten. Honest residue: the flip back — blessing the amendment — is the human judgment itself, recorded in `log.md` Decisions (Prose, correctly: that judgment is the thing being trusted) |
+| Specs act on declared `IF-###` seams (cite resolvable IFs) | Harness + Reviewer | `check_trajectory` spec-interface check (warn / ERROR `--strict`, vacuous-until-armed) verifies RESOLUTION only — the forced nearest-existing-IF rationale arm retired at WI-442 with its arming input (`Stability=Experimental`), and was not re-keyed rather than approximated. Rationale presence and near-dup honesty are both Reviewer now (finding 4) |
 | Spec-lifecycle close side: done WI clears `SpecRef`; a live spec has an open citer (archive at close) | Harness + Reviewer | `check_trajectory` R-F (WI-251; warn / ERROR `--strict`) mechanizes the pointers; whether durable spec content was **absorbed** into a spine/architecture home before archiving is Reviewer-tier (the honest gap — the sweep's per-spec dispositions live in `log.md`) |
 | One decision per row / one home per method (re-tier v2 R1, log `2026-08-15p`) | Harness (advisory) + Reviewer | `trace_text.sr_fanout_advisories` (warn-only, never the exit code): an SR whose direct-LLR fan-out exceeds the declared bound (default 7) warns unless its `rationale` carries a `fan-out re-stamp` with its reason — a DETECTOR for merged rows, deliberately not a cap. Whether a split is by observable class, and whether two rows share one interface identity, stays the consistency review's |
 | A **need or** requirement cell never names a concrete artifact (re-tier v2 R2, supersedes 2.7(a); extended from `SR` to `SN` by owner directive 2026-08-18) | Harness (advisory) + Reviewer | `trace_text.sr_artifact_advisories` (warn-only, never the exit code): a `*.py` token in an SR `requirement` cell warns unless the `rationale` carries a stated `recorded waiver:` reason; >1 SR naming one artifact warns naming the rows. `trace_text.sn_artifact_advisories` is the need-tier arm over `acceptance` only, on a wider extension list (a need's instruments are mostly configs and generated pages, not scripts) with `.md` deliberately excluded and no shared-artifact census. Presence only — capability/artifact-class VOICE is judgment, the review's |
@@ -124,11 +124,16 @@ records where each one bites.
    they are reserved for the always-loaded guide by design, and the reviewer
    charter is their only backup. Recorded as a **stated reason**, per the
    audit's bar.
-4. **Spec-interface near-duplication is reviewer-tier (WI-191).** The mechanical
-   check (`check_trajectory.spec_interface_findings`) verifies a spec's
-   `## Interfaces` citations **resolve** and that a `Proposed` citation carries a
-   **non-empty** rationale — presence, which is checkable. But whether the
-   rationale is *honest* (truly names the nearest seam) and whether a `Proposed`
+4. **Spec-interface near-duplication is reviewer-tier (WI-191), and since
+   WI-442 so is rationale PRESENCE.** The mechanical check
+   (`check_trajectory.spec_interface_findings`) verifies that a spec's
+   `## Interfaces` citations **resolve** — that is all it verifies. It also
+   demanded a non-empty rationale until WI-442 deleted the arm's arming input
+   (`Stability = Experimental`); re-keying it onto the slimmed tier's `Drafted`
+   would have armed 113 of 113 rows instead of 5 at ERROR severity, so the arm
+   was dropped rather than approximated (`spec_interface_findings`' own
+   docstring records the loss). Whether the
+   rationale is *honest* (truly names the nearest seam) and whether a proposed
    contract near-duplicates an existing `IF-###` are judgment calls:
    token-window duplicate detection works on code, not contract prose (and the
    kit no longer ships any — D-7/WI-426). Backed by the

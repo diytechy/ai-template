@@ -1,10 +1,17 @@
 """TC-043 — the subagent spawn gate (SR-043 / LLR-040).
 
-The gate is a Claude PreToolUse hook: deny-by-default fan-out control for
+The gate is a Claude PreToolUse hook: OPT-IN, FAIL-OPEN fan-out supervision for
 unattended runs, with the override held by the launcher (not the model), and
 fail-open so a broken gate never wedges the agent's tools. Exercised two ways:
 the pure `decide()` core directly, and `main()` end-to-end as the real hook
 (JSON on stdin -> permissionDecision on stdout + exit code).
+
+ABSENCE AND CORRUPTION ARE TESTED SEPARATELY (repo review 2026-08-19, M-13).
+They reach the same `allow` by different routes, and only one of them is a
+policy: an absent dial means nobody asked for the gate, while a corrupt one
+means somebody did and the file broke. Covering them with a single assertion
+is what let this module's header claim "deny-by-default" for as long as it did
+-- nothing forced a reader to look at what the failure paths actually do.
 """
 
 import json
@@ -133,3 +140,60 @@ def _env_with_root(root):
     env = dict(os.environ)
     env["CLAUDE_PROJECT_DIR"] = str(root)
     return env
+
+
+# --- absence vs corruption: the same `allow`, two different reasons -----------
+#
+# M-13's remaining half. `test_off_and_absent_allow` above covers the DECLARED
+# `off` and the pure-absence route through `decide()`. These pin the policy
+# READER's failure paths, which nothing exercised: a broken `process.toml` is
+# not the same event as no `process.toml`, and the module documents a
+# deliberate divergence from its twins about it.
+
+
+def _write_process_toml(root, body):
+    (root / "docs").mkdir(exist_ok=True)
+    (root / "docs" / "process.toml").write_text(body, encoding="utf-8")
+
+
+def test_absent_process_toml_reads_as_undeclared(tmp_path):
+    # Nobody asked for the gate. None means "this file has nothing to say",
+    # which is what sends main() on to the legacy one-word fallback.
+    assert gate.read_process_policy(tmp_path) is None
+
+
+def test_corrupt_process_toml_reads_as_undeclared_not_as_on(tmp_path):
+    # Somebody asked and the file broke. This module reads that as UNDECLARED
+    # where the twins in check_trajectory.py / gen_okf.py read an unparseable
+    # process.toml as ON -- the divergence its docstring argues for, because
+    # failing an unreadable file to `ask` would defer every spawn in the
+    # unattended run this gate exists not to wedge.
+    _write_process_toml(tmp_path, "[checks\nsubagent_gate = ")
+    assert gate.read_process_policy(tmp_path) is None
+
+
+def test_corruption_falls_through_to_the_legacy_file_rather_than_short_circuiting(
+    tmp_path,
+):
+    # The distinction has teeth: a corrupt process.toml must not swallow a
+    # policy that IS declared elsewhere. With the legacy file saying `deny`,
+    # the spawn is refused -- so corruption defers the question, it does not
+    # answer it `allow`.
+    _write_process_toml(tmp_path, "this is not toml {{{")
+    _write_policy(tmp_path, "deny")
+    proc = run_hook({"tool_name": "Task"}, tmp_path)
+    assert proc.returncode == 2
+    out = json.loads(proc.stdout)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_garbled_policy_value_asks_and_is_never_a_quiet_off(tmp_path):
+    # A non-string dial is RENDERED rather than dropped, so it reaches
+    # `decide()`'s unrecognized arm and asks. The failure this forbids is the
+    # quiet one: a garbled value on a fan-out guardrail reading as `off`.
+    _write_process_toml(tmp_path, "[checks]\nsubagent_gate = 42\n")
+    assert gate.read_process_policy(tmp_path) == "42"
+    proc = run_hook({"tool_name": "Task"}, tmp_path)
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "ask"

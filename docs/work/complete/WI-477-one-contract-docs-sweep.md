@@ -1,7 +1,6 @@
 +++
 id = "WI-477"
 title = "One authoritative contract: sweep the shipped and reference surfaces whose taught schema, delivery ledger, and posture claims drifted from enforcement (repo review 2026-08-19 H-06, H-07, H-08, L-01, M-13, L-03, M-15)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "docs"
 sr_refs = []
 needs = []
@@ -9,6 +8,36 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+One authoritative contract restored across the shipped and reference
+surfaces, with the sweep PINNED rather than repeatable:
+`tests/test_status_vocabulary_contract.py` reads the enforcement constants
+(`trace.ENUM_FIELDS`/`STATUS_VALUES`) and reds any instructing surface
+teaching a retired value or the retired `Approval` column —
+mutation-verified. H-06 swept everywhere the checklist named (the
+vocabulary re-verified FIRST: it had moved again at the signing — Approval
+retired, {Drafted, Approved} enforced for IF/frame, {Drafted, Approved,
+Founded} for spine), EXAMPLE.md's CSV IF block converted to the real TOML
+carrier, plus two LIVE `Status=Modified` claims the review itself missed.
+H-07: the three-category inventory (required spine / required-off-spine
+frame, "inert until filled" / optional layers) with EXT/B/REL in the root
+diagram and both inventories. H-08: the ledger restated shipped /
+half-shipped / still-owed; the derive-from-row-states suggestion DECLINED
+with evidence (SN-037 shipped with no LLR/TC while SN-040's chain calls
+itself not-built — row state is not a delivery proxy in either direction).
+L-01: three stale comments corrected. M-13: the gate renamed to its
+measured posture (opt-in, fail-open supervision) with four
+corruption-vs-absence tests including the fall-through-to-legacy pin; the
+posture itself stays the owner's. L-03: both live commit-subject forms
+stated once, enforcing nothing. M-15: status.md 139 → 120 lines (at
+budget; the warning gone) by RELOCATING the standing-rules doctrine to
+session-protocol §2 per its own header. Three RESYNC entries; tri-copied
+skills swept whole. PROCESS.md +124 flagged; trace.py held exactly at its
+baseline; max-tests re-stamped 1226→1240 for irreducible growth after
+cutting 24 test ids by design. Full suite 2657/13; the worker caught its
+own CRLF introduction via the very rule it had relocated.
 
 ## Context
 

@@ -19,7 +19,7 @@ is the thin, human-readable index over it.
 
 A cross-project link is a requirement with an *external* counterpart, so it
 needs the things ordinary requirements have — an owner, an acceptance contract,
-a test — **plus** a version and an `Approval` state the other side can rely on.
+a test — **plus** a version and a `Status` the other side can rely on.
 Putting these in one place stops the classic failure of interlinked projects:
 each side assumes a slightly different contract and they rot apart silently.
 
@@ -42,7 +42,7 @@ namespace, parallel to SN/SR/LLR/TC).
 | `CarriedBy` | Optional. **Interface composition** — a constituent naming the bundle that carries it (`IF-###`). Six seams riding one larger seam name the same carrier, so granularity stops being a forced choice: declare the bundle *and* its parts, and decompose only as far as is useful. The carriage graph must resolve and be acyclic; depth past 2 warns. Empty means "not a constituent", which is most rows. |
 | `Req-Refs` | The requirement(s) here that realize or rely on it — ties the interface into the local spine. **Not the design tier's `SR-Refs`**, which names a row's *parent*: this one names the requirements the seam hangs off, which is a different relationship, so it gets a different name. |
 | `Version` | Contract version the other side codes against (e.g. `v1`, a semver, a schema hash). |
-| `Approval` | **Closed**, and the row's **one** maturity field: `draft` · `approved`. Flipping a cell to `approved` is a human act in a reviewed commit. (Two columns retired into this one: an undeclared `Status` at OI-14 part B, 2026-08-13, and `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, 2026-08-14. Each overlapped its predecessor, which is why the tier now carries exactly one.) |
+| `Status` | **Closed**, and the row's **one** maturity field: `Drafted` · `Approved` — the spine's own words, shared with `external.toml`. `Founded` is **not applicable** to this tier and never will be: it means settled *and demonstrated*, while an approval says only that the seam is agreed. Flipping a cell to `Approved` is a human act in a reviewed commit. (Two columns retired into this one: `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, and a short-lived `Approval` at the 2026-08-17 status unification. Never carry a second maturity column beside it; the reason this tier has one field is that it once had two meaning different things on the same row.) |
 | `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement, so there is no "internal" value to set wrongly. |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
 | `Notes` | Free-form. The `source`/`sink` honesty valve lives here (silences the missing-direction coverage warn for `ThisProject` — see the registry's `-000` row). |
@@ -70,8 +70,8 @@ namespace, parallel to SN/SR/LLR/TC).
   validates the far side of a cross-repo reference — it is a text convention;
   keep the trail two-way by recording the counterpart repo + matching id on
   both rows.
-- **Approval gates change.** Changing an `approved` contract requires a notice
-  to the counterpart and a version bump; a `draft` one may change freely. Note
+- **Approval gates change.** Changing an `Approved` contract requires a notice
+  to the counterpart and a version bump; a `Drafted` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
 - **The `Owner` cell's side closes the read** — not `Direction`. The row named
   in `Owner` is answerable for the contract's correctness and closes the final

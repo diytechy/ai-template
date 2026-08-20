@@ -294,7 +294,7 @@ def main():
         "- [ ] `python scripts/check.py --gate DevStg-Impl --tier release` is green "
         "(paste the output in the audit log).",
         "- [ ] CHANGELOG / release notes updated.",
-        "- [ ] Version bumped; any changed `Stable` interface versions "
+        "- [ ] Version bumped; any changed `Approved` interface versions "
         "communicated to counterparts.",
         "- [ ] Docs (README / quick-reference) match the shipped behavior.",
         "- [ ] README `sn-inventory` bullets still reflect the current "

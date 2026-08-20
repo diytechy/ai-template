@@ -362,7 +362,7 @@ REQUIRED_FIELDS = {
     # rows are touched, so demanding one everywhere would manufacture 113 rushed
     # sentences — the bulk rewrite the ruling refused. `SignalNote`, `Component`
     # and `Notes` are optional by design.
-    # WI-442 replaced `Stability` with `Approval` here. The two
+    # WI-442 replaced `Stability` → `Approval` → `Status` (2026-08-17). The two
     # `Interface*External` tie-backs are deliberately NOT required — a row
     # carries one only when it realizes a boundary crossing, and requiring them
     # would demand every internal seam claim to be a boundary.
@@ -464,17 +464,17 @@ ENUM_FIELDS = {
     # typed a signal at all, in any column. `Stability` was DECLARED by
     # process.md §8 from the start and validated nowhere, which is how four rows
     # came to carry `Provisional` — a value that was never in the shipped
-    # vocabulary. There is no `Status` entry because that column RETIRED: it was
-    # undeclared, it overlapped `Stability` (the word `Stable` appeared in both
-    # on one row meaning different things), and its only consumer was the LLM
-    # planning-brief surface, which was being handed it as fact.
+    # vocabulary.
     #
-    # `Stability` LEFT this map at WI-442 and `Approval` took its place — the one
-    # maturity field for both the IF tier and the frame tiers below, which is
-    # what decision 12's "one shared status vocabulary, per-registry subsets"
-    # buys. The subset here is the two-value one; it is PROVISIONAL pending
-    # D-9's ladder, and the migration is stated in
-    # docs/requirements/external.toml's header rather than guessed at here.
+    # `Status` BELOW IS THE TIER'S ONE MATURITY FIELD, reached by two
+    # retirements: `Stability` left at WI-442 for a transitional `Approval`,
+    # which became `Status` at the 2026-08-17 registry unification — decision
+    # 12's "one shared status vocabulary, per-registry subsets", so one word
+    # means one thing across every registry. An EARLIER, UNDECLARED `Status`
+    # retired at OI-14 part B for overlapping `Stability` (`Stable` read in both
+    # on one row, meaning different things). The subset here is the two-value
+    # one, no longer provisional — D-9's ladder LANDED — and `Founded` is
+    # excluded on merit: settled AND DEMONSTRATED, not merely AGREED.
     #
     # `Direction` joined at the 2026-08-15 interface rework (plan step 1). It was
     # the one IF column carrying a vocabulary that §8 states and nothing checked,

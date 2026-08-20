@@ -2202,6 +2202,69 @@ valve from prose *about* a waiver, and in this repo two of the only two live
 
 ---
 
+### The shipped docs catch up to the enforced maturity field [since c5e19720]
+
+**No row of yours changes; the DOCS that taught you how to author them do.**
+The IF and frame tiers' one maturity field has been `Status`, valued
+`Drafted` | `Approved`, since the 2026-08-17 registry status unification — but
+`INTERFACES.template.md`, `PROCESS.md` §8, `MULTI_REPO.md`, `EXAMPLE.md`,
+`KICKOFF_PROMPT.md` and the release checklist still documented the transitional
+`Approval` column with lower-case `draft`/`approved`, and `INTERFACES.template.md`
+documented a column its own worked example did not use.
+
+| retired in the prose | now |
+|---|---|
+| `Approval` column | `Status` |
+| `draft` · `approved` | `Drafted` · `Approved` |
+| `Stable` interface (release checklist) | `Approved` interface |
+
+**What to do.** If you copied `INTERFACES.template.md` or `EXAMPLE.md` into your
+own docs and edited them, re-read the `Status` row against your registry: the
+checker has always enforced `Drafted`/`Approved` here, so a row you authored
+from the old prose is already failing `--strict-integrity` and the doc was the
+only thing telling you otherwise. `Founded` is **not applicable** to these
+tiers and never will be — it means settled *and demonstrated*, while an
+approval says only that the seam is agreed.
+
+**The kit now pins this rather than re-sweeping it.** `tests/` carries one
+cross-document contract test that reads `trace.ENUM_FIELDS` — the same dict the
+integrity floor reads — and fails when an instructing surface teaches a value
+the enum no longer carries. Ten hand-maintained copies of one vocabulary is what
+produced this entry; a rename now breaks a test instead of rotting a doc.
+
+### The spec-of-record's new-seam row and its retired checker arm [since c5e19720]
+
+**If your specs cite `Status=Proposed` seams, the value was never legal.**
+`specs/README.template.md` and `specs/WI-000.template.md` instructed you to file
+a new seam as a `Status=Proposed` row; no version of the IF schema has carried
+`Proposed`. File it `Status=Drafted`. The `IF-045 (Proposed)` notation *on the
+citation line* is unaffected — that is the spec's own shorthand for "this row is
+being minted by this filing", not a registry value, and `plan_coverage.py` still
+reads it.
+
+**And the rationale check is gone, which those templates still promised.**
+`check_trajectory.spec_interface_findings` verifies that your `## Interfaces`
+citations **resolve** — nothing more. The forced nearest-existing-IF rationale
+arm retired with its arming input (`Stability = Experimental`) at WI-442 and was
+deliberately not re-keyed: on this repo's registry the obvious re-key would have
+armed 113 rows instead of 5, at ERROR severity under `--strict`. Rationale
+presence is now reviewer-tier alongside rationale honesty
+(`docs/rubrics/spec-interface-hygiene.md`). If you relied on that check, the
+rubric is where the obligation lives.
+
+### Skill-copy wording: commit subjects and the standing rules [since c5e19720]
+
+**Kit-owned files — overwrite them and move on.** The `session-protocol` skill
+now states both live commit-subject forms (`WI-<n>:` for a session executing one
+work item, `<category>:` for sittings, sweeps, merges and reviews) instead of
+only the first, and carries a **Standing rules** subsection relocated out of the
+forward-only `status.md`. The `registry-hygiene` skill's DevStg-Impl line names
+the `--require-verified` flag instead of a bare "+ Verified", which folded into
+`Approved` at the status unification. Nothing enforces the commit form; it is
+stated once so a log carrying both stops reading as two conventions.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

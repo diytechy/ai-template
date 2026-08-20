@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""Subagent spawn gate — deny-by-default fan-out control for unattended runs.
+"""Subagent spawn gate — OPT-IN, FAIL-OPEN fan-out supervision for unattended runs.
+
+NAMED FOR WHAT IT DOES, not for what a fan-out control usually does. This header
+read "deny-by-default" until the 2026-08-19 repo review (M-13) measured the
+behaviour against the sentence: an ABSENT policy allows, an `off` policy allows,
+an unreadable `process.toml` allows, and any internal error allows — every one of
+those by design and pinned by tests. Nothing here denies until a human writes
+`deny`. The old headline described the opposite posture, which is the most
+expensive kind of comment to be wrong: a reader budgeting risk would have
+credited this module with a refusal it never makes. Whether the fail posture
+SHOULD invert is an owner call, deliberately not taken here.
 
 A Claude Code `PreToolUse` hook (SR-043; realizes SN-006 "a walk-away run stays
 safe" + SN-012 "opt-in"). During an unattended coordinator run a driver session

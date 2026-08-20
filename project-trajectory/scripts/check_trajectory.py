@@ -57,9 +57,9 @@ RESTORED, mode-aware (WI-200):** `status.md` is forward-only, so a `done` WI id
 lingering there is a finding — WARN plain, ERROR under `--strict` — *except* when
 the file carries the kit's generated-block marker (`<!-- BEGIN GENERATED ... -->`,
 the `gen_arch_map`/`gen_trajectory` idiom), where it is an integrator snapshot
-that cannot accrete prose and the successor freshness check applies (specified in
-`status_forward_only_findings`, not yet implemented — no status.md generator
-exists). `--staged` adds the warn-first **no-validation-delta** checks: the
+that cannot accrete prose and the successor freshness check applies. IMPLEMENTED
+since WI-234 — `status_forward_only_findings` below, and the stand-down is scoped
+to the marked block, not the whole file. `--staged` adds the warn-first **no-validation-delta** checks: the
 follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the

@@ -7,9 +7,10 @@ spec-of-record's `## Interfaces` section (or a proposed decomposition's per-WI
 near-duplicating it.
 **Used by:** a plan/spec CRITIQUE session — the WI-191 reviewer-tier check, and
 **WI-190's** dual-plan protocol imports **B1** as its seam-duplication anchor.
-`check_trajectory` already verifies citations *resolve* and that a `Proposed`
-citation *carries* a rationale; this rubric judges what code cannot — is the
-rationale *true*, and is the new seam *actually* new?
+`check_trajectory` verifies that citations *resolve* — and, since WI-442
+retired the rationale arm with its arming input, nothing else. So this rubric
+carries the whole load below that line: does the citation carry a rationale at
+all, is it *true*, and is the new seam *actually* new?
 
 The verdict is `VERDICT: APPROVE|CHANGES-REQUESTED findings=N`, each finding
 citing an anchor id (`B1`…). Judge the seams as a first-time reader of
