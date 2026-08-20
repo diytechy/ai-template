@@ -22,3 +22,8 @@ that survives until someone runs the suite on a stock Windows install.
 The fix pattern is already in the tree: `test_integrate.py::git_repo` pins
 `core.autocrlf false` repo-locally beside its existing `commit.gpgsign
 false` pin, with the mechanism recorded in the fixture docstring.
+
+(2026-08-19, repo-review triage: the 2026-08-19 repository review's M-17 —
+archived at `docs/archive/repo-review-2026-08-19.md` — independently reached
+this row's exact scope, 28 sites and the five `git_repo` clones. No scope
+change; noted so the review's finding resolves here.)

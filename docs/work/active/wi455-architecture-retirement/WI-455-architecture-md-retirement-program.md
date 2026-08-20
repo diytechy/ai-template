@@ -4,8 +4,27 @@ title = "The docs/architecture.md RETIREMENT program (owner-ruled 2026-08-13u, s
 specref = "docs/plans/2026-08-13-sitting-2-boundary-and-context.md#decision-8--where-the-boundary-record-lives-once-ruled"
 workstream = "process"
 sr_refs = []
-needs = ["~WI-442"]
+needs = ["~WI-442", "~WI-469"]
 buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Context
+
+### Frontier reconciliation (2026-08-19, repo-review triage)
+
+- **The `~WI-469` soft edge encodes an ordering that already ruled.** WI-469's
+  own scope states "the wi455 column drop … follows this WI, never precedes
+  it"; until now that ordering lived in WI-469's prose only, with no edge in
+  either direction. The edge is soft because only the column-drop slice waits —
+  the lane's other work does not.
+- **The `gen_arch_map`/MAPPING collision set grew.** The title's SEQUENCING
+  clause names WI-390 clause (2) and WI-448; the 2026-08-19 review triage
+  minted WI-483 (the core decomposition program), which contests the same
+  module and the same MAPPING line. Four programs now touch it — read all
+  four before any slice that moves `gen_arch_map`.
+- **The 49 held `Contract`-cell provenance citations ride this lane** (OI-36
+  ruled 2026-08-19): the hold and its WI-469 blocker chain are recorded in
+  `docs/provenance-allow`'s header, which is the surface to re-open if the
+  chain outlives the lane.

@@ -4,7 +4,7 @@ title = "Resurface LLR-165's carrier converter as the downstream-resync helper i
 specref = "docs/plans/2026-08-13-sitting-2-boundary-and-context.md#01-the-sitting-pack-decisions-dispositioned"
 workstream = "docs"
 sr_refs = ["SR-147"]
-needs = []
+needs = ["~WI-455"]
 buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
@@ -36,4 +36,10 @@ scaffold-surface change is a declared re-sync entry). Either sequence this row
 its start and that those two programs each carry their own resync entry.
 (The old IF-103 tension is DISSOLVED — 13u retires `Stability`, so the
 converter's maturity is not the frame's business. No action here.)
+
+(2026-08-19, repo-review triage: the paragraph above's "run last" choice is now
+encoded as the `~WI-455` soft edge — `external.toml` landed, so the wi455 lane
+is the one remaining feeder. The alternative — scope to surfaces live at start
+— remains the claiming session's call; the edge is soft for exactly that
+reason.)
 

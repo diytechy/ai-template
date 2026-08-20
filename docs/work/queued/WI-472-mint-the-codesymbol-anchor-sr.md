@@ -9,3 +9,15 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 2
 +++
+
+## Context
+
+(2026-08-19, repo-review triage.) The 2026-08-19 repository review's M-08
+(archived at `docs/archive/repo-review-2026-08-19.md`) supplies fresh evidence
+for the obligation this row states: three live LLR anchors verified stale
+(LLR-087, LLR-088, LLR-112 — their repair is WI-482's, not this row's), while
+two of the review's five claims were REFUTED on verification (LLR-015's
+symbol exists; LLR-172 is honestly Drafted/not-built). The refuted pair is
+exactly the distinction the minted SR must survive: a planned symbol declared
+as planned is not a stale anchor. The OI-42 boundary in the title stands —
+the review's code-to-registry findings route there, not here.

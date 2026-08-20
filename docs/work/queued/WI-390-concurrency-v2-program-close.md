@@ -5,10 +5,17 @@ workstream = "process"
 specref = "docs/concurrency-v2.md"
 buildtier = "medium"
 safety_class = "spine"
-needs = ["WI-380", "WI-381", "WI-383", "WI-384", "WI-386", "WI-387", "WI-388", "~WI-389"]
+needs = ["WI-380", "WI-381", "WI-383", "WI-384", "WI-386", "WI-387", "WI-388", "~WI-389", "~WI-464"]
 +++
 
 ## Context
+
+### The `~WI-464` soft edge (2026-08-19, repo-review triage)
+
+The 2026-08-13w section below already rules that this row's spine amendment
+"does not open its own window: it runs INSIDE the re-tier campaign's window" —
+that campaign is WI-464. The ordering lived in prose only; the soft edge now
+encodes it for the scheduler. Nothing else about this row moved.
 
 ### The verify list lost a member (WI-426, 2026-08-11)
 
