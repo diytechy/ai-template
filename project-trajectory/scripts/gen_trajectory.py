@@ -514,14 +514,14 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
           <div class="label">Definition completeness</div>
           <div class="big">$def_pct%</div>
           <div class="sub">$sr_verified of $sr_total system requirements approved</div>
-          <div class="meter def"><span style="width:$def_pct%"></span></div>
+          <div class="meter def" role="img" aria-label="Definition completeness meter, $def_pct% filled"><span style="width:$def_pct%"></span></div>
         </div>
         <div class="card">
           <div class="label">Execution</div>
           <div class="big">$wi_pct%</div>
           <div class="sub">$wi_done of $wi_total work items done · $wi_active active$wi_cancelled_clause</div>
           $wi_active_line
-          <div class="meter exe"><span style="width:$wi_pct%"></span></div>
+          <div class="meter exe" role="img" aria-label="Execution meter, $wi_pct% filled"><span style="width:$wi_pct%"></span></div>
         </div>
       </div>
 

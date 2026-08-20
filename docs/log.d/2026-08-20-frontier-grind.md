@@ -147,6 +147,14 @@ LLR-015/LLR-172's symbols "no longer exist in trace.py" REFUTES on grep
 (12–13 occurrences each) — banked for the closing review with the
 check_doc_refs --strict 54-dangling figure it rode in on.
 
+### WI-470 — open-items A3 coverage (sonnet worker) — CLOSED complete
+
+The A3 closure reaches gen_open_items via two regression tests (the source
+idioms were already right — the closure gained teeth, not changes); the
+process-flow now-marker gains a worded cue in the proven 6:1 accent-text
+idiom after the badge form MEASURED 2.98:1 dark and was rejected; the hero
+meters carry aria-label identities. Three tests; smoke green.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475

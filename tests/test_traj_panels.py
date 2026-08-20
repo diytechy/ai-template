@@ -250,6 +250,28 @@ def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
     assert 'class="stg now" data-gates="DevStg-Impl"' in text  # code+tests
 
 
+def test_process_now_marker_carries_a_worded_cue_not_border_alone(tmp_path):
+    """A3 (WI-470, SR-052 coverage remainder): the "now" tier used to be
+    marked by an accent BORDER alone — colour was the only thing that told a
+    reader which lifecycle tier is current, one panel away from the plain
+    "Next stage to clear" sentence above the list (`test_process_current_gate_
+    highlight_follows_docs_gate` pins the border/class half; this pins the
+    word). Every `.stg now` tier must carry the word "now" in its own markup,
+    and a tier that is NOT current must not."""
+    with_gate(tmp_path, "DevStg-Reqs")
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert ".nowtag{" in text  # the CSS rule is actually wired, not just the span
+    now_lis = re.findall(r'<li class="stg now"[^>]*>(.*?)</li>', text)
+    assert now_lis, "no now-tier rendered — the fixture is vacuous"
+    for li in now_lis:
+        assert '<span class="nowtag">now</span>' in li
+    other_lis = re.findall(r'<li class="stg" data-gates="[^"]*">(.*?)</li>', text)
+    assert other_lis, "no non-now tier rendered — the negative half is vacuous"
+    for li in other_lis:
+        assert "nowtag" not in li
+
+
 def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
     # Link-outs resolve in THIS repo: the scaffolded docs/ copies win when
     # present (the downstream case); with neither present the scaffolded
@@ -851,3 +873,24 @@ def test_t1_three_core_reading_tasks_reach_labelled_entry_points(tmp_path):
     # sitting directly in the tab bar — never behind a descend/expand.
     assert 'data-tab="sw"' in navbar
     assert "How (SW architecture)" in navbar
+
+
+def test_hero_meters_carry_a_worded_identity_at_the_meter(tmp_path):
+    """A3 (WI-470, SR-052 coverage remainder): the definition/execution hero
+    meters differ only by fill colour (`--accent` vs `--done`, gen_trajectory's
+    `.meter.def` / `.meter.exe`) — the values are texted (`.big`) and a
+    `.label` names the surrounding CARD, but the meter GRAPHIC itself carried
+    no identity of its own, so which-meter-is-which rode the fill alone at the
+    bar. Each meter now names itself, at the meter, independent of its
+    sibling `.label`'s DOM position."""
+    hero, _navbar = _landing_dashboard(tmp_path)
+    assert re.search(
+        r'<div class="meter def" role="img" '
+        r'aria-label="Definition completeness meter, \d+% filled">',
+        hero,
+    )
+    assert re.search(
+        r'<div class="meter exe" role="img" '
+        r'aria-label="Execution meter, \d+% filled">',
+        hero,
+    )

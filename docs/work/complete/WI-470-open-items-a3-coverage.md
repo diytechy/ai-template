@@ -1,7 +1,6 @@
 +++
 id = "WI-470"
 title = "SR-052 coverage: bring gen_open_items.py inside the mechanized A3 no-colour-alone closure, and word the dashboard's two thin spots — the process-flow 'you are here' tier (accent border, no word) and the hero-meter identities (which-meter-is-which rides fill colour). The C-ACC-2 remainder: the candidate itself was ruled matched-to-SR-052 (sitting-3 §0.4 item 8, 2026-08-17; log 2026-08-17h) because SR-052's Approved text already states no-information-by-colour-alone with LLR-113/TC-118 mechanizing it — what is left is exactly this coverage work, not a spine row."
-specref = "docs/plans/2026-08-17-wi468-obligation-intake-options.md"
 workstream = "dashboard"
 sr_refs = ["SR-052"]
 needs = []
@@ -9,6 +8,23 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Extended the A3 no-colour-alone closure to `gen_open_items.py` with two
+targeted regression tests — the diff-mark shape-cue CSS pin (del keeps
+line-through, ins keeps its box-shadow underline substitute) and the
+kind-pill distinct-wording render check over a real page carrying both
+pill kinds (the case a CSS-only check cannot catch); the module's idioms
+were already correct, so the closure gained TESTS, not source change.
+Gave the process-flow "now" marker a worded `nowtag` cue — deliberately
+accent TEXT on surface (6.29:1 light / 5.98:1 dark, the `.pflow .g` idiom)
+after measuring the filled-badge alternative at 2.98:1 in dark theme,
+below the dashboard's own A4 floor. Gave each hero meter an `aria-label`
+naming itself independent of its sibling label and fill colour. The
+`.empty` border ruled out of A3 scope with the reasoning in-file; the
+retired accessibility rubric deliberately not widened. Three new tests;
+targeted suites 83+120 passed; smoke green.
 
 ## Context
 

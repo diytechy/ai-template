@@ -330,6 +330,81 @@ def test_theme_drift_guard_reads_the_shipped_css_not_a_mirror():
     assert gi.theme_tokens()["light"]["--text"] == "#0f172a"
 
 
+# --- A3 closure, extended here (WI-470, SR-052 coverage remainder) -----------
+# `test_a3_every_painted_vocabulary_member_is_explained_in_words`
+# (test_traj_render_sweeps.py) sweeps gen_trajectory's declared palette dicts —
+# this module has no such dict to enumerate; its colour-differentiated idioms
+# (the diff marks, the ratify/re-attest pills) were held apart by comment
+# discipline alone (the module docstring's own claim: "ins/del carries
+# line-through + box-shadow ... pills carry words"). These are that closure's
+# equivalent for THIS module's own two encodings — each pinned so a future
+# edit that quietly drops the non-colour half reds here instead of shipping.
+#
+# OUT OF SCOPE, stated rather than silently narrowed: `.empty`'s
+# `--pending`-coloured left border (the callout accent on an explanatory
+# paragraph) is a single accent used for one meaning with nothing competing
+# against it — A3 guards against colour doing the work of DISTINGUISHING
+# between concepts, and there is only one concept here, always paired with a
+# full sentence of prose. Nothing to disambiguate, so nothing to close.
+
+
+def test_a3_diff_marks_keep_a_shape_cue_not_colour_alone(tmp_path):
+    """The word-diff's `<ins>`/`<del>` are the CSS-level half: the shape cue is
+    baked into the rule itself, not into any registry content, so it can be
+    pinned directly against the CSS the page ships (the same source
+    `theme_tokens` reads — never a mirror that could drift out from under it).
+    `<del>` keeps its line-through (a mark visible without colour perception);
+    `<ins>` trades the default underline for a box-shadow rule rather than
+    leaving colour as the only thing that tells the two apart."""
+    gi = load_script("gen_open_items")
+    ins_rule = re.search(r"\.diff ins\{([^}]*)\}", gi.CSS, re.S).group(1)
+    del_rule = re.search(r"\.diff del\{([^}]*)\}", gi.CSS, re.S).group(1)
+    assert "text-decoration:line-through" in del_rule.replace("\n", "").replace(
+        "  ", ""
+    )
+    ins_flat = ins_rule.replace("\n", "").replace("  ", "")
+    assert "text-decoration:none" in ins_flat  # the underline is deliberately OFF...
+    assert "box-shadow" in ins_flat  # ...replaced by a shape cue, not dropped
+
+
+def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
+    """The `.pill.ratify` / `.pill` pair (`_KIND_LABELS`) is the render-level
+    half: the two kinds share the same shape and differ only in `--pending`
+    vs `--muted` colour (the CSS above), so a colour-only encoding here would
+    be a future edit that let two DIFFERENTLY-coloured kinds render the SAME
+    words — nothing in the CSS itself could catch that, only the rendered
+    text can. A fixture that owes one of each kind proves both actually
+    appear together on one page with distinct wording, not just that the code
+    CAN produce distinct wording."""
+    drafted = (
+        "SR-001,A drafted need,SN-001,shall do the new thing,because,"
+        "criteria,,C,Test,Drafted,1,W\n"
+    )
+    approved = (
+        "SR-002,An amended need,SN-001,shall do the ORIGINAL thing,because,"
+        "criteria,,C,Test,Approved,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=drafted + approved)
+    _git_init(root)
+    _approve(root)
+    (root / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SR_HEADER + drafted + approved.replace("ORIGINAL", "CHANGED"),
+        encoding="utf-8",
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    ratify_texts = set(re.findall(r'<span class="pill ratify">([^<]*)</span>', page))
+    plain_texts = set(re.findall(r'<span class="pill">([^<]*)</span>', page))
+    assert ratify_texts, "no ratify-kind pill rendered — the sweep is vacuous"
+    assert plain_texts, "no plain-kind pill rendered — the sweep is vacuous"
+    collide = ratify_texts & plain_texts
+    assert not collide, (
+        "a colour-differentiated pill kind shares its wording with a "
+        "differently-coloured kind — colour alone would be all that told "
+        "them apart: {}".format(collide)
+    )
+
+
 def test_the_view_names_its_authority(tmp_path):
     """If the view and `trace.py --ratify` ever disagree, the brief wins and the
     view is the bug. That is only useful if the page SAYS so where a reader

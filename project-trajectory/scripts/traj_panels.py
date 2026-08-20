@@ -909,13 +909,20 @@ def process_panel(root, wis, stats):
     for label, span, note in stages:
         now = gate in span.split("→") if span else False
         stage_lis.append(
-            '<li class="stg{}" data-gates="{}"><b>{}</b><span class="g">{}</span>'
-            '<span class="n">{}</span></li>'.format(
-                " now" if now else "",
-                esc(span),
-                esc(label),
-                esc(span or "—"),
-                esc(note),
+            '<li class="stg{cls}" data-gates="{span}">{tag}<b>{label}</b>'
+            '<span class="g">{spantxt}</span>'
+            '<span class="n">{note}</span></li>'.format(
+                cls=" now" if now else "",
+                span=esc(span),
+                # WI-470 (SR-052/A3 coverage): the "now" marker used to be an
+                # accent BORDER alone — colour is the only thing that told a
+                # reader which tier is current, one panel away from the plain
+                # "Next stage to clear" sentence above. This pairs it with a
+                # word at the marked tier itself, not just elsewhere on the page.
+                tag='<span class="nowtag">now</span>' if now else "",
+                label=esc(label),
+                spantxt=esc(span or "—"),
+                note=esc(note),
             )
         )
 
@@ -956,6 +963,17 @@ def process_panel(root, wis, stats):
         "color:var(--muted);}"
         "#process .pflow li.now{border:2px solid var(--accent);"
         "padding:calc(.5rem - 1px) calc(.7rem - 1px) calc(.55rem - 1px);}"
+        # The worded pair to the accent border above (WI-470): the word "now"
+        # is what survives without colour perception, the border is decoration
+        # on top of it. Coloured TEXT on --surface, not a filled badge — the
+        # same combination `.pflow .g` already uses below, deliberately: an
+        # accent FILL with white text measures 2.98:1 in dark theme (checked
+        # against the A4 threshold this dashboard holds itself to elsewhere,
+        # e.g. the WI-293 --slot note), which a second filled chip here would
+        # have repeated.
+        "#process .pflow li.now .nowtag{display:block;font-size:var(--tiny);"
+        "font-weight:800;letter-spacing:.06em;text-transform:uppercase;"
+        "color:var(--accent);margin-bottom:.15rem;}"
         "#process .pflow li.opt{border-style:dashed;}"
         "#process .pflow b{display:block;font-size:var(--small);}"
         "#process .pflow .g{display:block;font-size:var(--tiny);font-weight:700;"
