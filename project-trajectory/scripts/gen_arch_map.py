@@ -230,19 +230,66 @@ def module_bindings(tree):
     return names
 
 
+class ContractsGrammarError(ValueError):
+    """A module's `Contracts:` block declares an IF-### id only on a
+    continuation line that opens with a bare id token (WI-478) — the
+    ambiguous wrapped-list shape a comma-separated `Contracts: X (...), Y
+    (...), ...` enumeration produces when it line-wraps mid-list. A
+    marker-line-only grammar cannot silently accept that shape; move the id
+    onto the line carrying the literal word `Contracts` instead of letting it
+    wrap onto its own line."""
+
+
+# The marker-line-only Contracts grammar (WI-478): every id a module declares
+# belongs on the line carrying the word `Contracts`. A later, unindented line
+# in the same paragraph/comment run may still MENTION an id already found
+# there — ordinary explanatory prose, common across the kit's own modules
+# (`adjudicate_brief.py`, `agent_loop.py`, ...) — but a line that OPENS with a
+# bare `IF-###` token no earlier line declared reads as a new list item, not a
+# mid-sentence aside: that shape is refused rather than silently dropped.
+_LEADING_ID_RE = re.compile(r"^(IF-\d+)\b")
+
+
+def _refuse_ambiguous_continuation(lines, ids):
+    """Raise ContractsGrammarError if any `lines` (the text following a
+    Contracts marker line, up to the first blank line) opens with a bare
+    `IF-###` token not already in `ids`. Never adds to `ids` itself — a
+    continuation line is prose, not a second declaration site."""
+    for line in lines:
+        if not line.strip():
+            return  # blank line ends the paragraph/comment run
+        m = _LEADING_ID_RE.match(line.strip())
+        if m and m.group(1) not in ids:
+            raise ContractsGrammarError(
+                "Contracts: {} is declared only on a continuation line "
+                "({!r}) — WI-478's marker-line grammar requires every "
+                "declared id on the line carrying the word `Contracts`; move "
+                "it there.".format(m.group(1), line.strip())
+            )
+
+
 def module_contracts(tree, source_lines):
     """The IF-### seam ids this module declares via a `Contracts: IF-###, ...`
     line in its module docstring or a top-of-file comment (WI-056). Restricted to
     lines carrying the word `Contracts`, so an IF id merely mentioned in prose is
-    not mistaken for a declaration."""
+    not mistaken for a declaration.
+
+    Grammar (WI-478): the declared ids are the ones on that marker line, full
+    stop — `_refuse_ambiguous_continuation` hard-fails rather than silently
+    missing an id a wrapped enumeration pushed onto its own line (dispatch.py's
+    real defect: IF-088/IF-089 read as undeclared because they opened
+    continuation lines the old harvester never scanned)."""
     ids = set()
     doc = ast.get_docstring(tree) or ""
-    for line in doc.splitlines():
+    doc_lines = doc.splitlines()
+    for i, line in enumerate(doc_lines):
         if "Contracts" in line:
             ids.update(CONTRACTS_RE.findall(line))
-    for line in source_lines[:8]:
+            _refuse_ambiguous_continuation(doc_lines[i + 1 :], ids)
+    for i, line in enumerate(source_lines[:8]):
         if "Contracts" in line and line.lstrip().startswith("#"):
             ids.update(CONTRACTS_RE.findall(line))
+            _refuse_ambiguous_continuation(source_lines[i + 1 : 8], ids)
     return sorted(ids)
 
 

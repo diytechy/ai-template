@@ -415,6 +415,52 @@ def test_contracts_and_if_edges(tmp_path):
     assert "IF-005" not in gen_arch_map.build_dependency_diagram([str(src)], ext)
 
 
+# --- WI-478: the Contracts continuation grammar --------------------------------
+# dispatch.py's real defect: `Contracts: IF-015 (...),` wraps mid-list, so
+# IF-088/IF-089 each open their own continuation line instead of sitting on the
+# marker line — the old harvester only ever scanned lines containing the literal
+# word "Contracts", so both ids silently read as undeclared (two false
+# check_trajectory --strict warnings on visibly-declared interfaces).
+
+
+def test_contracts_continuation_refuses_ambiguous_wrap(tmp_path):
+    """A multiline `Contracts:` block shaped exactly like dispatch.py's old
+    defect — a marker line declaring one id, then further comma-separated list
+    items that each wrap onto their OWN line — must not silently drop the
+    wrapped ids. The declared marker-line-only grammar (WI-478) refuses the
+    shape instead."""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "d.py").write_text(
+        '"""D.\n\n'
+        "Contracts: IF-015 (one seam),\n"
+        "IF-088 (a continuation-line seam the old harvester missed),\n"
+        "IF-089 (a second one).\n"
+        '"""\n\n\ndef run():\n    """go"""\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(gen_arch_map.ContractsGrammarError, match="IF-088"):
+        gen_arch_map.build_map([str(src)])
+
+
+def test_contracts_continuation_may_repeat_a_marker_id(tmp_path):
+    """A continuation line that opens with an id ALREADY on the marker line —
+    the shape the kit's own modules use throughout (e.g. `Contracts: IF-084,
+    IF-130 ...` followed by prose starting "IF-130 is...") — is ordinary
+    explanatory prose, not ambiguous, and must still harvest cleanly."""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "d.py").write_text(
+        '"""D.\n\n'
+        "Contracts: IF-003, IF-004 - the seams this module declares.\n"
+        "IF-004 is what this module provides to its one caller.\n"
+        '"""\n\n\ndef run():\n    """go"""\n',
+        encoding="utf-8",
+    )
+    out = gen_arch_map.build_map([str(src)])
+    assert "Contracts (interfaces): IF-003, IF-004" in out
+
+
 def test_if_edges_absent_registry_is_vacuous(tmp_path):
     # No IF rows -> the diagram is exactly the import graph (never-breaking).
     src = tmp_path / "src"

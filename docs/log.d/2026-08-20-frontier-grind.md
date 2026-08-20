@@ -50,6 +50,15 @@ Stop-preference native-exit behavior. Scaffold-verified; RESYNC entry.
 Worker full suite 2621/13 green.
 <!-- fig: cmd="python -m pytest -q -n auto" rev=27a65c19 -->
 
+### WI-478 — Contracts marker-line grammar (sonnet worker) — CLOSED complete
+
+Marker-line-only grammar with `ContractsGrammarError` on an ambiguous
+continuation (the alternative rejected on measurement: eight modules
+legitimately re-mention foreign IF ids in flush-left prose); dispatch.py's
+wrap fixed; the two false undeclared warnings gone, proven by a
+before/after strict diff whose only delta is those two lines; two
+regression tests. 117 arch/dispatch tests + smoke 1209/5 green.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475
