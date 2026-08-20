@@ -94,6 +94,22 @@
 #                    that ABSENCE is the statement — there is no cell to set to
 #                    "internal" and get wrong.
 #
+#                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING, recorded
+#                    here so the next reader does not file it as an omission:
+#                    `B-02` (authority in — rulings, attestations and Status
+#                    flips) has no port of its own. Authority enters as CONTENT
+#                    on B-01's write path: a human edits a Status cell and
+#                    commits, and the hook floor admits that write exactly as it
+#                    admits any other. Minting a row for it would manufacture a
+#                    surface that does not exist. The condition that changes the
+#                    answer is concrete — when the recorder requiring an
+#                    acceptance to be stamped on the accepted artifact's own row
+#                    ships (`SR-140`), its contract IS an admission surface for
+#                    authority, because it can refuse an attestation whose digest
+#                    does not match. Until then there is nothing to state a
+#                    contract about, and `trace.py`'s advisory naming B-02
+#                    unrealized is reporting a deliberate state.
+#
 #   component        OPTIONAL — the `CMP-###` this seam belongs to, the same
 #                    membership tag the primitive tiers carry.
 #
@@ -516,6 +532,7 @@ req_refs = ["SR-017", "SR-031"]
 owner = "SR-017"
 version = "v1"
 status = "Drafted"
+notes = """No tie-back, and the absence is the statement. `git` is not a party of its own in the boundary frame - the entity that holds the checkout absorbs it - so reading a staged range through git is this system reading the session's own working copy, not an exchange with a fourth party. What crosses at the hook floor is the admission verdict, and the hook-facing rows carry that tie-back; this row states the scanner's INPUT to that floor, which is machinery behind the crossing rather than the crossing."""
 
 [interface.IF-033]
 direction = "Consumes"
@@ -560,6 +577,7 @@ req_refs = ["SR-022"]
 owner = "SR-022"
 version = "v1"
 status = "Drafted"
+notes = """No tie-back, and the gap is in the FRAME rather than in this row: the far side is a network source the locked boundary table names no entity for, so there is no crossing id this row could honestly point at. The `external:` marker therefore records only that the endpoint is outside this tree. Whether a vendored-source upstream is a party the frame should carry is a live question for the frame's owner; until it is answered this row must not manufacture a tie-back to a crossing that describes something else."""
 
 [interface.IF-037]
 direction = "Consumes"
@@ -615,6 +633,7 @@ req_refs = ["SR-026", "SR-040"]
 owner = "SR-040"
 version = "v1"
 status = "Drafted"
+notes = """No tie-back, and the frame already states the reason: the model-runner surface is an external-to-external relationship touching the SESSION and not the system, so invoking a configured agent CLI crosses no boundary of this system. Contrast the subagent-gate row, which faces the same CLI and DOES tie back - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act."""
 
 [interface.IF-042]
 direction = "Consumes"
@@ -986,6 +1005,7 @@ owner = "LLR-140"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
+interface_to_external = "B-05"
 
 [interface.IF-081]
 direction = "Provides"
@@ -998,6 +1018,7 @@ owner = "SR-170"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
+interface_to_external = "B-05"
 
 [interface.IF-082]
 direction = "Consumes"
@@ -1010,7 +1031,7 @@ owner = "LLR-049"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """sink — wI-280 slice 11: gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
+notes = """sink — wI-280 slice 11: gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-083]
 direction = "Consumes"
@@ -1024,7 +1045,7 @@ owner = "LLR-049"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """sink — wI-280 slice 11: the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
+notes = """sink — wI-280 slice 11: the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-084]
 direction = "Consumes"
@@ -1038,7 +1059,7 @@ owner = "LLR-049"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """sink — wI-280 slice 11: the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-002."""
+notes = """sink — wI-280 slice 11: the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-085]
 direction = "Consumes"
@@ -1149,7 +1170,7 @@ owner = "LLR-154"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-002 by the gen_trajectory facade); seam driven by TC-056's station sync pins"""
+notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-009 by the gen_trajectory facade); seam driven by TC-056's station sync pins"""
 
 [interface.IF-094]
 direction = "Consumes"
@@ -1201,7 +1222,7 @@ owner = "LLR-162"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = "the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097."
+notes = "intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097."
 
 [interface.IF-100]
 direction = "Consumes"
@@ -1214,7 +1235,7 @@ owner = "LLR-162"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
+notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
 
 [interface.IF-101]
 direction = "Consumes"
@@ -1245,7 +1266,7 @@ notes = """source - spine_carrier consumes nothing by design, the trace_text pat
 direction = "Provides"
 this_project = "scripts/migrate_carrier"
 counterpart = "docs/requirements"
-contract = """migrate_carrier.py: the ONE-SHOT converter that moves the spine's four tiers from their two legacy carriers (stakeholder-needs.md prose tables, SR/LLR/TC CSV) to the TOML carrier spine_carrier reads. convert(root, write) -> (findings, written_paths): findings is EMPTY only when every cell survived a re-read of what was emitted, so the caller decides whether a lossy conversion is allowed to write. CLI: --check converts in memory and verifies the round-trip, writing nothing, exit 1 with a finding naming the registry, row id and field for each cell that did not survive; without --check it writes each .toml beside its source and STILL refuses on a lossy result. KEY is the column -> carrier-key map and the definition of record; spine_carrier.SPINE_COLUMN is its inverse, pinned by test_rule_sync."""
+contract = """migrate_carrier.py: the carrier converter that moves the spine's four tiers from their two legacy carriers (stakeholder-needs.md prose tables, SR/LLR/TC CSV) to the TOML carrier spine_carrier reads. convert(root, write) -> (findings, written_paths): findings is EMPTY only when every cell survived a re-read of what was emitted, so the caller decides whether a lossy conversion is allowed to write. CLI: --check converts in memory and verifies the round-trip, writing nothing, exit 1 with a finding naming the registry, row id and field for each cell that did not survive; without --check it writes each .toml beside its source and STILL refuses on a lossy result. KEY is the column -> carrier-key map and the definition of record; spine_carrier.SPINE_COLUMN is its inverse, pinned by test_rule_sync."""
 signal = "variable"
 signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
 req_refs = ["SR-147"]
@@ -1253,7 +1274,7 @@ owner = "LLR-165"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """source - reads the registries and writes beside them; consumes no kit module. Its approval is deliberately unsettled: this is migration scaffolding with a defined end. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson), and it is RETIRABLE once no supported repo is still on the legacy carriers - the same expiry the CSV fallback in spine_carrier and both module-size ratchet entries carry."""
+notes = """source - reads the registries and writes beside them; consumes no kit module. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson). NOT one-shot, and NOT awaiting retirement: a downstream repo re-syncing onto a newer kit AFTER the carrier cutover still holds its registries on a legacy carrier, so this converter is the standing path for that conversion and has no terminus to wait for. The CSV fallback in spine_carrier does expire - once no supported baseline predates the migration - and this module does not expire with it, which is why its maturity is its own affair rather than the conversion programme's."""
 
 [interface.IF-104]
 direction = "Consumes"
@@ -1267,7 +1288,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-105]
 direction = "Consumes"
@@ -1281,7 +1302,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-003 and spine_carrier is CMP-001, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-106]
 direction = "Consumes"
@@ -1295,7 +1316,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-107]
 direction = "Consumes"
@@ -1309,7 +1330,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-108]
 direction = "Consumes"
@@ -1323,7 +1344,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-109]
 direction = "Consumes"
@@ -1337,7 +1358,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-110]
 direction = "Consumes"
@@ -1351,7 +1372,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-111]
 direction = "Consumes"
@@ -1366,7 +1387,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-112]
 direction = "Consumes"
@@ -1393,7 +1414,7 @@ owner = "LLR-162"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """the cross-component edge CMP-004 -> CMP-002; the provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
+notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
 
 [interface.IF-114]
 direction = "Consumes"
@@ -1407,7 +1428,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
+notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
 
 [interface.IF-115]
 direction = "Provides"
@@ -1420,7 +1441,7 @@ owner = "LLR-167"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """intra-component (both CMP-004), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
+notes = """intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
 
 [interface.IF-116]
 direction = "Consumes"
@@ -1433,7 +1454,7 @@ owner = "LLR-002"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """the cross-component edge CMP-004 -> CMP-001, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared because these two mints sit off max(live) + 1, which would otherwise re-issue the id of anything deleted."""
+notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared because these two mints sit off max(live) + 1, which would otherwise re-issue the id of anything deleted."""
 
 [interface.IF-117]
 direction = "Consumes"
@@ -1446,7 +1467,7 @@ owner = "LLR-180"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """the cross-component edge CMP-003 -> CMP-002, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the duplicated-derivation hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py. THE OWNER-SIDE CELL NOW HOLDS A DESIGN ROW, and the standing no-design-row note it used to carry is withdrawn rather than merely deleted: LLR-180 names module_bindings beside symbol_findings, so the providing endpoint of this seam is answerable by a design row for the first time (LLR-023 answers only for the rendered arch-map splice/drift — exactly the artifact this contract DISCLAIMS — and LLR-080 for sw_graph/build_html;build_module_map, which is why neither could take it). The requirement side moved with it: SR-180 states the discharge obligation this seam realizes, which SR-147 never did (it states one machine-parseable carrier, not a symbol-binding oracle) and SR-158 never did (its acceptance names the verdict shape alone — the doc-refs step: dangling gates, untraced counted). Both new rows are Drafted and await ratification; the pointers here are traced cells and move ahead of that."""
+notes = """the cross-component edge CMP-007 -> CMP-006, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the duplicated-derivation hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py. THE OWNER-SIDE CELL NOW HOLDS A DESIGN ROW, and the standing no-design-row note it used to carry is withdrawn rather than merely deleted: LLR-180 names module_bindings beside symbol_findings, so the providing endpoint of this seam is answerable by a design row for the first time (LLR-023 answers only for the rendered arch-map splice/drift — exactly the artifact this contract DISCLAIMS — and LLR-080 for sw_graph/build_html;build_module_map, which is why neither could take it). The requirement side moved with it: SR-180 states the discharge obligation this seam realizes, which SR-147 never did (it states one machine-parseable carrier, not a symbol-binding oracle) and SR-158 never did (its acceptance names the verdict shape alone — the doc-refs step: dangling gates, untraced counted). Both new rows are Drafted and await ratification; the pointers here are traced cells and move ahead of that."""
 
 [interface.IF-118]
 direction = "Consumes"
@@ -1460,7 +1481,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-002 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
 
 [interface.IF-119]
 direction = "Consumes"
@@ -1474,7 +1495,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
 
 [interface.IF-120]
 direction = "Consumes"
@@ -1489,7 +1510,7 @@ carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-004 and spine_carrier is CMP-001. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1)."""
 
 [interface.IF-121]
 direction = "Provides"
@@ -1667,3 +1688,34 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-168) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120/122 carrier-consumption shape. The ROSTER beside it is read with tomllib directly and the two reads do not contradict: a roster row is keyed by name, is no tier and traces nowhere, while a need row is a spine row whose vocabulary - which carrier is live, what an unreadable registry means - has one home. The consumer-side contract test is tests/test_hats.py, which drives both halves this row states: an unreadable needs registry refuses instead of auditing as zero needs, and a legacy .md registry still reaches the worksheet."""
+
+[interface.IF-134]
+direction = "Provides"
+this_project = "project-trajectory/hooks/pre-commit"
+counterpart = "external:git"
+contract = """git invokes this hook at commit time with no arguments; exit 0 admits the staged write into governed state, any nonzero exit refuses the commit, and the failing check is named on stderr. `git commit --no-verify` skips the invocation entirely, so this seam admits only the writes a session routes through it."""
+signal = "variable"
+signal_note = """typed at mint: the admission verdict is a two-value alphabet, but the refusal names the failing check in unbounded text on the same act, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-019", "SR-137"]
+owner = "LLR-019"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+interface_from_external = "B-01"
+interface_to_external = "B-04"
+notes = """The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same bar away from the bypass, never this seam alone."""
+
+[interface.IF-135]
+direction = "Provides"
+this_project = "project-trajectory/hooks/pre-push"
+counterpart = "external:git"
+contract = """git invokes this hook before a push with the remote name and URL on argv and the outgoing ref pairs on stdin; exit 0 releases the push and any nonzero exit refuses it, naming the offending range on stderr. `git push --no-verify` skips the invocation, so the refusal binds only a session that routes through it."""
+signal = "variable"
+signal_note = """typed at mint: the release/refuse verdict is a two-value alphabet, but the refusal names the offending range in unbounded text on the same act, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-020"]
+owner = "LLR-020"
+version = "v1"
+status = "Drafted"
+component = "CMP-007"
+interface_to_external = "B-04"
+notes = """Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution."""

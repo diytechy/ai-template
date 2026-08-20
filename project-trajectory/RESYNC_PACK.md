@@ -934,8 +934,9 @@ a rule a passing prose mention of an id could trip, silently un-ratifying a need
 The legacy carriers stay readable for now: every kit reader resolves TOML first and
 falls back, so a repo that has not migrated keeps working. That fallback is
 **deliberate dead weight with an expiry** and will be dropped once no supported
-baseline predates the migration — `migrate_carrier.py` is marked `Provisional` for
-the same reason.
+baseline predates the migration — `migrate_carrier.py` does NOT share that
+expiry: it is the standing conversion path a repo re-syncing onto a newer kit
+still needs, so it stays live after the fallback goes.
 
 ### Carrier batch 2: `open-items` and `agents` move too [since 955cddec]
 
