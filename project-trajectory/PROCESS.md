@@ -158,8 +158,14 @@ Stable, zero-padded, never reused.
 - **The traceability matrix is generated** by a small join over the registries'
   ID/parent columns; it reports **orphans** (req with no child/test; test/LLR
   with no parent). Hand-maintaining the matrix is forbidden.
-- **Code carries back-links** (`Implements: SR-007, LLR-014`); test names embed
-  the verified ID. The registry rows are authoritative.
+- **Code carries back-links to the depth you declare** (`Implements: SR-007,
+  LLR-014`); test names embed the verified ID. The registry rows are
+  authoritative. The obligation is a DIAL, not a blanket rule:
+  `docs/process.toml` `[checks] backlink_coverage_min` is the minimum share of
+  live LLR rows a literal `Implements:` declaration must name, and the harness
+  reports the measured share every run. It ships at `0` — report the number,
+  gate nothing — and rises by writing the declarations, never by lowering the
+  bar. A regulated setting raises it rather than being handed a softened guide.
 - **Architecture is derived, never committed**: the module/function map, import
   graph and seams are read live from the source tree and the registries into the
   dashboard, so there is no markdown copy to drift. The one authored narrative

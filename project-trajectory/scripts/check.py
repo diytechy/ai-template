@@ -216,6 +216,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "perf-budgets",
         "design-flows",
         "trajectory",
+        "backlink-coverage",
         "trajectory-map",
         "status-map",
         "open-items",
@@ -520,9 +521,25 @@ def steps(coverage, tier, gate, phase=None, profile=None):
     # --gate) stays warn-first for both.
     traj_cmd = [sys.executable, str(_SCRIPTS / "check_trajectory.py")]
     vocab_cmd = [sys.executable, str(_SCRIPTS / "check_vocab.py"), "--root", "."]
+    # Reverse back-link coverage (OI-42 ruled (e), WI-486) rides the SAME
+    # severity ladder, third of three, for the same reason: the number must be
+    # visible at every commit and gate only where a repo past its requirements
+    # bar has no excuse. It is vacuous while `[checks] backlink_coverage_min`
+    # is 0, which is what the kit ships — the step then reports the percentage
+    # and can never fail.
+    backlink_cmd = [
+        sys.executable,
+        str(_SCRIPTS / "gen_arch_map.py"),
+        "--backlink-coverage",
+        "--root",
+        ".",
+        "--src",
+        src,
+    ]
     if gate in (BAR_TESTS, BAR_RELEASE):
         traj_cmd.append("--strict")
         vocab_cmd.append("--strict")
+        backlink_cmd.append("--strict-backlinks")
     # Cross-agent skill-sync drift gate (S7): byte-compare each per-agent skill
     # copy (.claude/.gemini/.agents) to the ONE neutral source. gen_skills_index
     # is a KIT-only script (it needs the neutral skills/ source, which only the
@@ -738,6 +755,21 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "trajectory",
             (),
             traj_cmd,
+            {BAR_TESTS, BAR_RELEASE},
+            "process",
+        ),
+        # Reverse back-link coverage (OI-42 ruled (e), WI-486): the share of
+        # LIVE LLR rows named by a literal `Implements:` declaration under
+        # [paths] src. The percentage is the progress bar a back-link campaign
+        # has otherwise never had — it measures ADHERENCE rather than policing
+        # the links that exist. REPORT-ONLY as shipped (the dial is 0), vacuous
+        # on a repo with no LLR rows, and language-agnostic: it reads comment
+        # TEXT, so it costs no parser in any stack. From DevStg-Tests on, beside
+        # the other spine-coherence steps.
+        (
+            "backlink-coverage",
+            (),
+            backlink_cmd,
             {BAR_TESTS, BAR_RELEASE},
             "process",
         ),

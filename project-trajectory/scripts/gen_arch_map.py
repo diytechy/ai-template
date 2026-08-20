@@ -63,10 +63,20 @@ porting a generator (see ADOPTING.md). `--comment-prefix` sets the comment
 tokens scanned (default `#`, `//`, `--`). `--flow` and the dependency diagram
 are symbol-mode only (they need a parser).
 
+Reverse back-link coverage (`--backlink-coverage`): the same `Implements:`
+grammar, run the other way round — for each LIVE LLR row, does any literal
+declaration in the source surface name it? A REPORT, not a gate: the bar lives
+in `docs/process.toml` `[checks] backlink_coverage_min` and ships at `0`, so the
+number appears in every run and nothing fails. It measures PRESENCE, never
+correctness. See the section above `main()` for the direction argument.
+
 Usage:
     python scripts/gen_arch_map.py --doc FILE [--src SRC ...] [--flow ENTRY]
                                    [--mode symbols|files] [--comment-prefix TOK ...]
                                    [--check] [--strict-parse]
+    python scripts/gen_arch_map.py --backlink-coverage [--src SRC ...]
+                                   [--root DIR] [--backlink-ext .EXT ...]
+                                   [--strict-backlinks]
 
     --src            One or more source roots to scan (default: src). Repeatable.
     --doc            File(s) to update in place (required; repeatable) — each
@@ -93,6 +103,7 @@ import argparse
 import ast
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # Sibling: the registry CARRIER. Run as a subprocess this script's own dir is
@@ -122,13 +133,28 @@ def _utf8_console():
             pass
 
 
+# The policy home (SN-028) this module reads ONE key out of — see
+# `read_backlink_min`. Named here rather than inlined so the message a reader
+# acts on and the file it points at cannot drift apart.
+PROCESS_TOML = "process.toml"
 BEGIN = "<!-- BEGIN GENERATED MODULE MAP -->"
 END = "<!-- END GENERATED MODULE MAP -->"
 BEGIN_FLOW = "<!-- BEGIN GENERATED FLOW -->"
 END_FLOW = "<!-- END GENERATED FLOW -->"
 BEGIN_DIAGRAM = "<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->"
 END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
+# THE TWO PARSING GRAMMARS IN THIS MODULE ARE SEPARATE, and deliberately so.
+# `Implements:` (below) is a SYMBOL-level back-link declaration over the four
+# spine tiers; `Contracts:` (further down) is a MODULE-level interface-seam
+# declaration over IF ids, with its own hard refusal of the ambiguous wrapped
+# form (WI-478). They share nothing but a family resemblance — merging them
+# would put one refusal policy on two conventions whose failure costs differ by
+# an order of magnitude (see `backlink_ids`).
 IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
+# The literal token a back-link DECLARATION must carry (WI-486 / OI-42 ruled
+# (b)). `backlink_ids` is the kit's ONE definition of a back-link and both arms
+# read it: the map's `Implements` column and the reverse-coverage scan.
+IMPLEMENTS_MARKER = "Implements:"
 # Interface-seam ids a module declares via a `Contracts: IF-###, ...` line
 # (process.md §8) — harvested like Implements, but module-level (WI-056).
 CONTRACTS_RE = re.compile(r"\bIF-\d+\b")
@@ -138,6 +164,35 @@ IF_ID_RE = re.compile(r"IF-\d+")
 # (`project-trajectory/scripts/check.py`) collapse to one key. Kept in sync with
 # trace.py / check_trajectory (a small stable helper duplicated per the F5 rule).
 _MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+# The file types `--backlink-coverage` reads (OI-42's declared extension list):
+# `_MODULE_EXTS` — the kit's existing answer to "what is a source module" —
+# extended with the families that list half-covers. Overridable per repo with
+# `--backlink-ext`, which REPLACES this list rather than adding to it.
+#
+# WIDEN THIS WITH CARE, and the asymmetry is the reason: the denominator is the
+# LLR row count, never the file count, so adding an extension can only RAISE the
+# measured percentage and never lower it. Over-inclusion therefore produces
+# false PASSES — a stray `LLR-040` in a config comment scores as a carrier — so
+# the conservative list is the tight one.
+BACKLINK_EXTS = _MODULE_EXTS + (
+    ".tsx",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".java",
+    ".kt",
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".cs",
+    ".rb",
+    ".php",
+    ".swift",
+    ".scala",
+    ".lua",
+    ".sql",
+)
 # Comment tokens the file-level fallback (--mode files) reads a summary from.
 # The three most common line-comment markers; override with --comment-prefix.
 DEFAULT_COMMENT_PREFIXES = ("#", "//", "--")
@@ -175,17 +230,61 @@ def signature(node):
     return "({})".format(", ".join(parts))
 
 
+def backlink_ids(line):
+    """The spine ids ONE line of text DECLARES as back-links — the kit's single
+    definition of a back-link (WI-486 / OI-42 ruled (b)+(e)).
+
+    A declaration is the literal `Implements:` token followed, ON THE SAME LINE,
+    by `SN|SR|LLR|TC-###` ids. Anything else is prose: an id before the token,
+    an id on a neighbouring line, an id in a sentence that never says
+    `Implements:`. Both consumers read exactly this — `implements()` fills the
+    map's third column with it, `scan_backlinks()` measures reverse coverage
+    with it — so the map cannot report a link the coverage scan would not count,
+    and vice versa.
+
+    WHY IT IS A MARKER-LINE RULE. Until WI-486 this harvested ANY spine id from
+    a symbol's docstring or the four comment lines above its `def`, which meant
+    the column reported a regex's reading of nearby English: measured over the
+    kit's own 788 public symbols, 50 carried a non-empty column holding 62
+    back-links, of which 60 had never been declared by anyone and 13 named no
+    live registry row. `trace.id_sort_key`'s docstring explains that "SR-9
+    orders before SR-10" — a SORTING example — and the map recorded that
+    function as implementing SR-9 and SR-10. A traceability artifact that
+    invents links is worse than one that has none, because a reader can only
+    discount what they know is empty.
+
+    NO REFUSAL HERE, unlike `Contracts:` (WI-478), and the asymmetry is
+    deliberate rather than an oversight. That grammar hard-fails on an id
+    stranded on a continuation line because an IF declaration is module-level,
+    rare, and feeds a coverage check that would otherwise report a
+    visibly-declared seam as undeclared. A back-link is per-symbol and
+    optional-by-dial (see `read_backlink_min`); raising a `SystemExit` because
+    a declaration line happened to wrap mid-list would break every adopter's map
+    generation over a docstring reflow. An id that wraps onto its own line is
+    simply not declared — which the reverse-coverage number reports honestly.
+    (No example of the token is spelled out in this docstring on purpose: this
+    function's own prose is inside the surface it scans, and an illustration
+    would be harvested as a real declaration — the very defect it describes.)"""
+    _before, marker, after = line.partition(IMPLEMENTS_MARKER)
+    return IMPLEMENTS_RE.findall(after) if marker else []
+
+
 def implements(node, source_lines):
-    """Collect requirement ids annotated near a symbol (docstring + the few
-    comment lines just above its definition)."""
+    """The requirement ids DECLARED near a symbol — in its own docstring, or in
+    the four lines just above its `def`/`class`.
+
+    Literal declarations only since WI-486: every line goes through
+    `backlink_ids`, so a line that does not carry the `Implements:` token
+    contributes nothing however many spine ids it mentions. Expect this column
+    to be EMPTY for most symbols in most repos; that is the honest state of a
+    convention almost nobody follows, and `--backlink-coverage` is what measures
+    it rather than papering over it."""
     ids = set()
-    doc = ast.get_docstring(node) or ""
-    ids.update(IMPLEMENTS_RE.findall(doc))
+    for line in (ast.get_docstring(node) or "").splitlines():
+        ids.update(backlink_ids(line))
     start = node.lineno - 1  # 0-based line of the def
     for i in range(max(0, start - 4), start):
-        line = source_lines[i]
-        if "Implements" in line or line.lstrip().startswith("#"):
-            ids.update(IMPLEMENTS_RE.findall(line))
+        ids.update(backlink_ids(source_lines[i]))
     return sorted(ids)
 
 
@@ -841,6 +940,160 @@ def build_flow(src_roots, entry):
     return "\n".join(lines)
 
 
+# --- REVERSE BACK-LINK COVERAGE (WI-486; OI-42 ruled (b)+(e), 2026-08-20) -----
+# THE QUESTION, AND WHY IT RUNS THIS WAY ROUND. For each LIVE LLR row, does any
+# literal `Implements:` declaration in the declared source surface name it? That
+# is LLR-to-code, not comment-to-registry, and the direction is the whole design:
+# running from the registry outward, the scan never forms an opinion about an id
+# it finds in a comment, so a RETIRED id narrating accurate history (which ruling
+# D-4 makes a true sentence, never a defect) is simply not a subject here. The
+# rival shape — scan comments, check each id resolves — needs a declared
+# history-marker convention before it can be anything but noise, and inventing
+# one is a design decision, not a regex. This shape needs none.
+#
+# WHAT IT MEASURES AND WHAT IT DOES NOT. PRESENCE, never CORRECTNESS: a
+# back-link naming the wrong symbol counts clean. It is a coverage number for a
+# convention, not a verifier of the links it counts. Say that out loud rather
+# than letting a percentage imply more than it holds.
+#
+# SURFACE = `docs/stack.ini` `[paths] src`, and deliberately NOT `[paths] tests`
+# — an LLR that is verified but never built must not score as implemented, and
+# the LLR-to-TC link already lives in the registry (`TestRefs`/`Verifies`).
+LLR_REGISTRY = "docs/requirements/low-level-requirements.toml"
+BACKLINK_MIN_KEY = "backlink_coverage_min"
+
+
+def scan_backlinks(src_roots, exts=BACKLINK_EXTS):
+    """`{spine id: [source path, ...]}` for every literal `Implements:`
+    declaration under `src_roots` — the reverse index the coverage number is
+    computed from.
+
+    TEXT, not AST, and language-agnostic by construction: it reads comment
+    content rather than syntax, so it costs an adopter no parser and no
+    toolchain in any language. Unreadable/binary files are skipped rather than
+    crashing the scan (a report must not die on one stray file)."""
+    exts = tuple(e.lower() for e in exts)
+    found = {}
+    for _root, base, path in _walk_roots(src_roots, "*"):
+        if not path.is_file() or path.suffix.lower() not in exts:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue
+        rel = path.relative_to(base).as_posix()
+        for line in text.splitlines():
+            for rid in backlink_ids(line):
+                found.setdefault(rid, set()).add(rel)
+    return {rid: sorted(paths) for rid, paths in sorted(found.items())}
+
+
+def backlink_coverage(src_roots, row_ids, exts=BACKLINK_EXTS):
+    """`(covered, uncovered, percent)` for `row_ids` against the declarations
+    found under `src_roots`. `percent` is 0.0 for an EMPTY row set, which the
+    caller must read as vacuous rather than as a failure — a repo with no LLR
+    rows has nothing to cover."""
+    declared = scan_backlinks(src_roots, exts)
+    covered = sorted(rid for rid in row_ids if rid in declared)
+    uncovered = sorted(rid for rid in row_ids if rid not in declared)
+    total = len(covered) + len(uncovered)
+    return covered, uncovered, (100.0 * len(covered) / total if total else 0.0)
+
+
+def read_backlink_min(root):
+    """`[checks] backlink_coverage_min` from `docs/process.toml` — the declared
+    minimum reverse-coverage percentage. 0 (report the number, gate nothing) is
+    both the shipped default and the answer for an absent, unreadable,
+    wrong-typed or out-of-range dial.
+
+    A LOCAL `tomllib` READ, per F5 (owner 2026-07-12, no shared `_kitcommon.py`):
+    this module is imported by three checkers and copied standalone into every
+    scaffold, so it must not reach into the coordinator layer that already knows
+    how to read this file. It is the same posture `check_trajectory._process_check`
+    and `gen_okf._process_check` hold for their own keys.
+
+    IT FALLS BACK TO 0 RATHER THAN "ON, LOUDLY" — the opposite of those two
+    boolean readers, and the reason is that this dial is not a boolean. A
+    malformed file cannot tell us what bar the adopter meant, and inventing one
+    would gate a repo on a number nobody declared. The loud half is not lost, it
+    is elsewhere and stronger: `agent_common.PROCESS_ONLY_KEYS` type-checks this
+    key and `config_conflicts` REFUSES a wrong-typed dial outright, so the
+    residual silent case here is a file that fails to parse at all — which the
+    same refusal reports on its own line."""
+    path = Path(root) / "docs" / PROCESS_TOML
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return 0
+    value = (data.get("checks") or {}).get(BACKLINK_MIN_KEY)
+    if isinstance(value, bool) or not isinstance(value, int):
+        return 0
+    return value if 0 <= value <= 100 else 0
+
+
+def live_llr_ids(root, registry=LLR_REGISTRY):
+    """Every LLR id in the project's design registry, `-000` template rows
+    dropped. `[]` when the registry is absent under either carrier — a repo
+    without a design tier has nothing to measure, and the report says so."""
+    return [
+        str(row.get("LLR-ID") or "").strip()
+        for row in spine_carrier.load(Path(root) / registry, "LLR-ID", False)
+        if str(row.get("LLR-ID") or "").strip()
+    ]
+
+
+def backlink_report(src_roots, root, exts=BACKLINK_EXTS, registry=LLR_REGISTRY):
+    """`(lines, ok)` — the reverse-coverage report and whether the declared
+    minimum is met. `ok` is True whenever the scan is VACUOUS (no LLR rows), so
+    a fresh scaffold and a repo that never adopted the design tier both pay
+    nothing."""
+    ids = live_llr_ids(root, registry)
+    minimum = read_backlink_min(root)
+    roots = ", ".join(str(s) for s in src_roots)
+    if not ids:
+        return [
+            "back-link coverage: no live LLR rows under {} — vacuous.".format(
+                Path(root) / registry
+            )
+        ], True
+    covered, uncovered, pct = backlink_coverage(src_roots, ids, exts)
+    lines = [
+        "back-link coverage: {}/{} live LLR rows ({:.1f}%) are named by a "
+        "literal `Implements:` declaration under {}; declared minimum {}% "
+        "(docs/{} [checks] {}).".format(
+            len(covered), len(ids), pct, roots, minimum, PROCESS_TOML, BACKLINK_MIN_KEY
+        )
+    ]
+    if minimum == 0:
+        # The shipped position, and it is stated on every run rather than
+        # implied by silence: a reader must be able to tell "this repo declined
+        # the bar" from "this repo has never heard of the layer".
+        lines.append(
+            "back-link coverage: REPORT-ONLY — the minimum is 0, so the number "
+            "is reported and nothing is gated. Raise it when your practice "
+            "earns the bar."
+        )
+    elif pct < minimum:
+        lines.append(
+            "back-link coverage: WARNING - {:.1f}% is below the declared "
+            "minimum of {}%. {} LLR row(s) carry no back-link, starting with "
+            "{}. Raise coverage by writing the declarations, never by lowering "
+            "the dial.".format(pct, minimum, len(uncovered), ", ".join(uncovered[:5]))
+        )
+    return lines, (pct >= minimum)
+
+
+def _backlink_exit(src_roots, args):
+    """Print the report and return the process exit code. Warn-first by default;
+    `--strict-backlinks` promotes a below-minimum reading to a failure, the same
+    warn-then-error ladder `interfaces_check`/`components_check` ride."""
+    exts = tuple(args.backlink_ext) if args.backlink_ext else BACKLINK_EXTS
+    lines, ok = backlink_report(src_roots, args.root, exts)
+    for line in lines:
+        print(line, file=sys.stdout if ok else sys.stderr)
+    return 1 if (not ok and args.strict_backlinks) else 0
+
+
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -897,9 +1150,41 @@ def main():
         action="store_true",
         help="exit 1 if any scanned module fails to parse",
     )
+    ap.add_argument(
+        "--backlink-coverage",
+        action="store_true",
+        help="REPORT MODE (writes nothing, needs no --doc): what share of live "
+        "LLR rows is named by a literal `Implements:` declaration under --src. "
+        "The bar is docs/process.toml [checks] backlink_coverage_min",
+    )
+    ap.add_argument(
+        "--root",
+        default=".",
+        help="repo root holding docs/process.toml and the LLR registry "
+        "(--backlink-coverage only; default: .)",
+    )
+    ap.add_argument(
+        "--backlink-ext",
+        action="append",
+        default=None,
+        help="source extension the back-link scan reads (repeatable; REPLACES "
+        "the default list, which is _MODULE_EXTS plus the wider source "
+        "families — see BACKLINK_EXTS)",
+    )
+    ap.add_argument(
+        "--strict-backlinks",
+        action="store_true",
+        help="exit 1 when back-link coverage is below the declared minimum "
+        "(warn-first without it; vacuous while the minimum is 0)",
+    )
     args = ap.parse_args()
 
     src_roots = args.src or ["src"]
+    # The report mode returns before every --doc/marker contract below: it reads
+    # the source tree and writes nothing, so requiring a splice target would be
+    # asking for a document the measurement never touches.
+    if args.backlink_coverage:
+        sys.exit(_backlink_exit(src_roots, args))
     if not args.doc:
         raise SystemExit(
             "gen_arch_map: pass --doc <file carrying the MODULE MAP marker "

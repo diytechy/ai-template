@@ -1,7 +1,6 @@
 +++
 id = "WI-475"
 title = "Launchers accept any runnable python and ignore a valid .venv: prefer the project environment and probe version >= 3.11 before selection (repo review 2026-08-19 H-01)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "process"
 sr_refs = []
 needs = []

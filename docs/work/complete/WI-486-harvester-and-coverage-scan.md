@@ -1,7 +1,6 @@
 +++
 id = "WI-486"
 title = "Tighten the Implements harvester to literal declarations, ship the reverse-coverage scanner report-only with its dial in process.toml, and re-word the shipped mandate onto the dial (OI-42 ruled (b)+(e), 2026-08-20)"
-specref = "docs/requirements/open-items.toml#OI-42"
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +8,29 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+Executed OI-42's (b)+(e) ruling. `gen_arch_map.implements()` now harvests
+only literal `Implements:` declarations through `backlink_ids()` — the
+kit's single definition of a back-link, physically shared with the reverse
+scanner and kept clearly separate from WI-478's `Contracts:` grammar,
+deliberately WITHOUT its hard refusal (a SystemExit over a reflowed
+docstring would break map generation for every adopter; an uncounted
+wrapped id is instead reported honestly by the percentage). The map's
+third column dropped 50 symbols / 62 links → 2 / 4 (subagent_gate's two
+genuine declarations) — exactly OI-42's predicted honest state, pinned by
+a regression test asserting on the COLUMN. The reverse scanner
+(`--backlink-coverage`) measures per live LLR whether any literal
+declaration under `[paths] src` (not tests) names it: 1/161 (0.6%),
+REPORT-ONLY at the shipped `[checks] backlink_coverage_min = 0` dial, 50%
+recorded as WI-487's target; the `backlink-coverage` check.py step rides
+the strict ladder from DevStg-Tests. PROCESS.md:161 and
+AGENTS.template.md:83/:102 re-worded onto the dial (AGENTS −5 bytes, 52
+free under cap; PROCESS +470 flagged); the enforcement-audit Implements
+row corrected to the measured truth; two RESYNC entries. The scanner's own
+SR/LLR/TC mint DEFERRED to the owner: its permanence turns on WI-487's
+outcome and every spine tier is human-held. Full suite 2643/13 green.
 
 ## Context
 

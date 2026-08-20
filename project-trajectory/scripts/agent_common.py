@@ -189,13 +189,28 @@ PROCESS_ONLY_KEYS = {
     ("attestation", "final_review"): "str",
     ("attestation", "complete_review"): "str",
     ("attestation", "complete_sample_rate"): "int",
+    # The reverse back-link coverage bar (OI-42 ruled (e), WI-486). It sits in
+    # `[checks]` beside six BOOLEANS and is an INT, which is exactly why it
+    # needs the type check: its reader
+    # (`gen_arch_map.read_backlink_min`) answers 0 — report-only — for anything
+    # it cannot read as an int in range, so a hand-written
+    # `backlink_coverage_min = "50"` would silently disarm a bar the repo
+    # believes it declared. That reader is deliberately quiet (a threshold has
+    # no conservative default to fail toward); this table is where it gets loud.
+    ("checks", "backlink_coverage_min"): "int",
 }
 
 # Dials whose value must also fall in a RANGE. `human_ratification_through` is
 # the one that matters: `-1` is not merely odd, it is the single input that
 # reads as LESS human involvement than the owner asked for, so it is refused
 # here and falls back conservatively at the reader (`ratification_level`).
-PROCESS_KEY_RANGES = {("attestation", "human_ratification_through"): (0, 4)}
+PROCESS_KEY_RANGES = {
+    ("attestation", "human_ratification_through"): (0, 4),
+    # A percentage. Out of range is refused rather than clamped, for the reason
+    # stated above: `101` is not "the strictest bar", it is a value nobody can
+    # satisfy, and `-1` reads as a bar that can never fire.
+    ("checks", "backlink_coverage_min"): (0, 100),
+}
 
 # The two keys the git hooks match in pure sh (M-42 fail-closed). Named here
 # because the cross-parser agreement test (tests/test_process_config.py) is

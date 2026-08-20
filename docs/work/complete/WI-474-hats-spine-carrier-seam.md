@@ -1,7 +1,6 @@
 +++
 id = "WI-474"
 title = "Declare or re-partition the hats -> spine_carrier seam: the one live strict-architecture ERROR (repo review 2026-08-19 H-03)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "requirements"
 sr_refs = []
 needs = []

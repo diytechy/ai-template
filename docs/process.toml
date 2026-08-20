@@ -158,3 +158,11 @@ live_status = false
 # Opt-in, off: "ask" / "deny" arm the subagent-spawn gate. This repo runs
 # subagents freely under a human-launched loop, so the gate stays a no-op.
 subagent_gate = "off"
+# The reverse back-link coverage bar, as a PERCENTAGE of live LLR rows (OI-42
+# ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing — the
+# shipped position, and this repo's honest one: measured 1 of 161 live LLR rows
+# (0.6%) at WI-486, on the tightened literal-`Implements:` grammar. 50 is the
+# recorded TARGET that WI-487's back-link campaign is sized to clear, and the
+# dial rises only after the tags land. The shipped template's [checks] header
+# carries the full reasoning.
+backlink_coverage_min = 0

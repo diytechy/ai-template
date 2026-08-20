@@ -127,6 +127,26 @@ reasoning in the Deliverable).
 Deferred open items: none — WI-489 executes an ALREADY-ruled item; no new
 owner decision was deferred by this session.
 
+### WI-486 — harvester + reverse-coverage scanner (opus worker) — CLOSED complete
+
+The fabricating harvester is dead: literal `Implements:` only, ONE shared
+grammar with the reverse scanner, the map column 50/62 → 2/4 (the honest
+state, pinned on the column). Coverage measured 1/161 (0.6%), report-only
+at the shipped 0 dial, 50% = WI-487's target; guides re-worded onto the
+dial (AGENTS −5B under cap; PROCESS +470B flagged); audit row corrected;
+RESYNC ×2. The scanner's SR/LLR/TC mint deferred to the owner (WI-487's
+outcome shapes it; every tier human-held). Full suite 2643/13. Worker
+flagged its own transient `git stash`/pop incident, verified recovered.
+
+**Orchestrator's own close-ritual defect, fixed in this close:** nine of
+the day's terminal specs still carried `specref` (R-F: a terminal WI's
+SpecRef is EMPTY — learned at WI-464, not applied to the grind closes
+until WI-486's worker surfaced the nine strict errors). All nine stripped;
+strict back to ZERO errors. The worker's companion claim that
+LLR-015/LLR-172's symbols "no longer exist in trace.py" REFUTES on grep
+(12–13 occurrences each) — banked for the closing review with the
+check_doc_refs --strict 54-dangling figure it rode in on.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475

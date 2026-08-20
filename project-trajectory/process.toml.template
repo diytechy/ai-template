@@ -230,3 +230,25 @@ live_status = false
 # thing an adopter TURNS ON. Shipping it visibly at "off" is what the overturn
 # asked for — the dial is now readable without arming it.
 subagent_gate = "off"
+# REVERSE BACK-LINK COVERAGE, as a NUMBER rather than a yes/no (OI-42 ruled
+# (b)+(e), 2026-08-20). The minimum PERCENTAGE of your live LLR rows that must
+# be named by a literal `Implements:` declaration somewhere under
+# `docs/stack.ini` `[paths] src`. `0` is the off position — the number is
+# reported on every run and nothing is gated — and it is what ships.
+#
+# WHY IT SHIPS AT 0 AND NOT AT THE TARGET. The convention this measures is
+# stated in `process.md` and `AGENTS.template.md`, and the kit's own scripts
+# followed it at 2 of 781 public symbols when it was measured: 0.6% of live LLR
+# rows. Shipping the bar at the 50% target would fire on the FIRST RUN in the
+# kit's own repo and in every fresh scaffold, failing a bar its own author
+# misses by roughly 80x — which trains readers to silence the warning rather
+# than to write the tags. So the measurement ships and the bar does not.
+#
+# 50 IS THE RECORDED TARGET, and the ONLY sanctioned way to reach it is to
+# write the declarations and then raise this number to a bar the tree already
+# clears. The number goes up because the tags landed; never because the bar
+# came down. Below the dial the check WARNS at a plain run and FAILS from
+# DevStg-Tests on (`--strict-backlinks`), the same warn-then-error ladder the
+# three check dials above ride. Born here, so unlike those six it has no legacy
+# one-word file and cannot be double-declared.
+backlink_coverage_min = 0

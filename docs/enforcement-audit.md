@@ -63,7 +63,7 @@ records where each one bites.
 | No sunk-cost shipping, no blind retries | Prose | judgment; the loop's stall guard makes repeated failure *visible* |
 | Ask one good question, not five hedges | Prose | judgment; not mechanizable |
 | Repo text is memory; promote durable facts to `docs/` | Prose + Harness | `check_docs` keeps the promoted links live; the promotion itself is judgment |
-| Back-link implementing symbols with `Implements: SR-/LLR-` | **Prose (gap)** | see Findings — surfaced by the map but **not required** by any check |
+| Back-link implementing symbols with `Implements: SR-/LLR-` | **Harness (measured, dialed) + Reviewer** | **Re-classed 2026-08-20 by owner ruling OI-42 (b)+(e), executed WI-486** — it was `Prose (gap)`, "surfaced by the map but not required by any check", and both halves of that sentence were wrong by then. The rule is no longer unconditional: `PROCESS.md` and `AGENTS.template.md` state it as a DIAL, `docs/process.toml` `[checks] backlink_coverage_min`, and `gen_arch_map.py --backlink-coverage` reports the share of live LLR rows a literal `Implements:` declaration names — warn-first, `--strict-backlinks` from DevStg-Tests, shipped at `0` so the number prints and nothing gates. It measures PRESENCE, never correctness: a back-link naming the wrong symbol counts clean, which is the Reviewer's half and is not claimed here. See Findings 2 for what the map's column used to say |
 | Every environment-gated skip routes through the declared gate (WI-326) | **Harness + Reviewer (bounded gap)** | `tests/test_env_gates.py` bans, over the AST, a `skipif` condition that probes a gated tool, a function that both probes and skips, and a module that probes with `which` and skips while importing neither declared helper. What it CANNOT see, and does not claim to: a **cross-module** probe (module A decides, module B skips); a probe that shells out (`subprocess.run(["git", ...])`) rather than using `which`; and a probe whose result is frozen into a module constant at import time. Those are semantic. The first two AST rules were **driven and bypassed** by 130-REVIEW-A (helper indirection plus the tool name passed through a variable), which is why the module rule exists and why the residue is written down here instead of implied by a guard that would be advertising a property it lacks |
 | A signed measurement is reproducible, or marked historical (WI-342) | **Reviewer (truth) + Harness (presence of provenance, WI-392)** | process-options.md "Signed measurements". Nothing can tell a live measurement from a recollection, so the **truth** of a figure stays Reviewer — asking "re-derive that number" works: 127-REVIEW-A and 128-REVIEW-A between them refuted or marked UNVERIFIABLE eight signed figures, and three false figures on 2026-08-01 each cost a review round. The mechanizable half is now mechanized: a figure declared under the opt-in marker (`fig: cmd="…" rev=…`, or a derivation for a figure computed from declared figures) must carry the command that produced it and the revision it was driven at — `check_figures.py`, warn-first, gating at the `[step:figures]` `--strict` DevStg-Impl step. Presence, never truth; an unmarked figure is out of scope by design ("declared figures carry provenance", never "all figures do"). **Rung 2 — re-derivation by running the recorded command — is a declared absence, deliberately NOT built** (WI-392; drain plan 2026-08-01 row 6): recorded commands are an execution surface needing an allow-list, most figures are legitimately historical (valid only at the recorded revision, which may be unreachable), and some are expensive (tests+coverage 634 s) or non-deterministic — recorded here so it is never implied as covered |
 | A review finding is confirmed (reproduced) or refuted before code changes; a re-review round verifies fixes, never hunts fresh findings in them (WI-373) | Reviewer + Prose | process-options.md "The LLM-gate verdict protocol" (the finding lifecycle). Symmetric to the signed-measurements row: nothing mechanical can tell a reproduction from a recollection, so the round record holding the confirm/refute evidence is the enforcer; `score_reviews.py`'s confirmed-finding rate is the advisory backstop *on paper* — its scoreboard has been dark since 2026-07-15, and feed-or-delete is an open owner call (2026-07-28 audit rec #8). The evidence: rounds 127→131 ran ~70% non-product findings, and the self-aimed rounds converged to zero while manufacturing work |
@@ -88,13 +88,35 @@ records where each one bites.
    holds its transitive import closure to `Tier=shipped` + a recorded ruling.
    **Resolved, and the honest gap it exposed is now closed rather than
    recorded.**
-2. **The `Implements:` back-link convention is unenforced.** `gen_arch_map.py`
-   *harvests* an `Implements: SR-/LLR-` docstring tag into the code map's third
-   column, and the working agreement asks for it — but nothing **requires** it,
-   so the meta-repo's own scripts carry none and the column is empty. Honest
-   class today: **Prose** (a documented convention with no enforcer). Closing
-   it (a warn-first check that an LLR's named `CodeSymbol` carries the tag)
-   pairs naturally with the architecture-connectivity work; **filed, not built.**
+2. **The `Implements:` back-link convention was unenforced — and the entry that
+   said so had itself gone stale.** The original finding read "the meta-repo's
+   own scripts carry none and the column is empty". Measured 2026-08-18 (OI-42):
+   **two** public symbols carried a literal tag — `subagent_gate.decide` and
+   `subagent_gate.main`, both `SR-043`/`LLR-040`, 2 of 781 — and the column was
+   **not** empty. It was populated for 50 symbols with 62 back-links, of which
+   **60 had never been declared by anyone and 13 named no live registry row**,
+   because `gen_arch_map.implements()` regexed any spine id out of a symbol's
+   docstring or the four comment lines above its `def` without ever requiring
+   the word `Implements`. Five were pure illustrations: `trace.id_sort_key`'s
+   docstring explains that "SR-9 orders before SR-10" — a **sorting example** —
+   and the map recorded that function as implementing SR-9 and SR-10. So the
+   single instrument this repo relies on to keep an unenforced rule visible had
+   drifted away from the rule it was watching, in the direction that reads as
+   evidence rather than as absence.
+   **Both halves closed 2026-08-20 (OI-42 ruled (b)+(e), WI-486)**, and the
+   table row above carries the new class. The harvester now requires the literal
+   token (`gen_arch_map.backlink_ids`, the kit's one definition of a back-link),
+   which emptied the column for 48 of the 50 — the honest state, and it will
+   read as a regression to anyone who saw the column full. The gap half became a
+   *measurement* rather than a policing check: `--backlink-coverage` asks, for
+   each live LLR row, whether any literal declaration in the declared source
+   surface names it. Measured here at the change: **1 of 161 (0.6%)**. It ships
+   report-only (`backlink_coverage_min = 0`); 50% is the recorded target that
+   WI-487's back-link campaign is sized to clear, and the dial rises only after
+   the tags land. What is still **filed, not built**: the decay answer — a
+   revisioned marker (OI-42 option (c)) that turns a requirement's revision bump
+   into a reported defect at every stale tag — re-considered at the campaign's
+   close, because coverage that lands and then rots is worse than 0.6%.
 3. **The judgment rules are honestly Prose.** The "how to think" rules
    (ask-one-question, distrust-certainty, no-sunk-cost, name-the-contradiction,
    right-size — and, since WI-373, confirm-or-refute, reversal-evidence, and

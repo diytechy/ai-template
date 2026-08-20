@@ -1,7 +1,6 @@
 +++
 id = "WI-478"
 title = "gen_arch_map harvests Contracts: declarations from the marker line only, so continuation-line IF ids report as undeclared (repo review 2026-08-19 M-09)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "process"
 sr_refs = []
 needs = []

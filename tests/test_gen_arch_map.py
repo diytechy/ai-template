@@ -547,3 +547,196 @@ def test_module_bindings_stops_at_module_scope():
         ast.parse("def outer():\n    a_local = 1\n    def inner():\n        pass\n")
     )
     assert bound == {"outer"}
+
+
+# --- WI-486: the literal back-link grammar + reverse coverage -----------------
+# OI-42's measurement over this repo's own 781 public symbols: 50 got a
+# non-empty `Implements` column carrying 62 back-links, 60 of which nobody had
+# declared and 13 of which named no live row — `trace.id_sort_key`'s SORTING
+# example ("SR-9 orders before SR-10") was recorded as two requirements that
+# function implements. These pin the grammar that ended it, and the scan that
+# runs it in reverse.
+
+
+PROSE_MOD = '''"""A module whose prose merely MENTIONS spine ids.
+
+SR-9 orders before SR-10 here — a sorting illustration, not a declaration.
+"""
+
+
+# A comment above the def naming LLR-1 and SR-2, as a counter-example.
+def sorted_ids():
+    """Explain that a TC citing LLR-1 next to SR-2 is the shape to avoid."""
+
+
+def declared():
+    """Does the thing. Implements: SR-070, LLR-071"""
+'''
+
+
+def test_prose_ids_near_a_symbol_are_no_longer_harvested(tmp_path):
+    """THE REGRESSION PIN for OI-42's central defect: an id in a docstring
+    sentence, or in a comment line above a `def`, is PROSE. Only a line carrying
+    the literal token declares. Before WI-486 every id below was harvested and
+    the map reported them as implemented requirements."""
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "m.py").write_text(PROSE_MOD, encoding="utf-8")
+    # The COLUMN, not the whole map: the rendered summary legitimately quotes
+    # the prose those ids sit in — what must be empty is the back-link cell.
+    ((_rel, _summary, _imports, _contracts, rows),) = gen_arch_map.scan_inventory(
+        [str(src)]
+    )
+    column = {name: ids for name, _sig, _summ, ids in rows}
+    assert column["sorted_ids"] == []
+    # ...and the one real declaration still lands, or the tightening would have
+    # emptied the column by breaking it rather than by being honest.
+    assert column["declared"] == ["LLR-071", "SR-070"]
+    assert "| LLR-071, SR-070 |" in gen_arch_map.build_map([str(src)])
+
+
+def test_backlink_ids_is_the_one_definition_of_a_declaration():
+    """The shared grammar itself, driven directly — `implements()` and
+    `scan_backlinks()` both read it, so a divergence here is a divergence
+    between the map's column and the coverage percentage."""
+    f = gen_arch_map.backlink_ids
+    assert f("    Implements: SR-007, LLR-014") == ["SR-007", "LLR-014"]
+    assert f("# Implements: TC-003 and SN-004") == ["TC-003", "SN-004"]
+    # No token: prose, however many ids it names.
+    assert f("SR-9 orders before SR-10") == []
+    assert f("see LLR-014 for the design") == []
+    # An id BEFORE the token is not declared by it — position is the rule.
+    assert f("SR-001 is history. Implements: SR-002") == ["SR-002"]
+    # A wrapped list item is not a declaration; it is refused for `Contracts:`
+    # and simply uncounted here (the module docstring states the asymmetry).
+    assert f("  LLR-015 (the second item of a wrapped list),") == []
+
+
+def _backlink_repo(tmp_path, llr_rows, dial=None, module=None):
+    """A minimal repo: an LLR registry, an optional process.toml dial, and one
+    source module. Returns (root, src_root)."""
+    root = tmp_path
+    (root / "docs" / "requirements").mkdir(parents=True, exist_ok=True)
+    (root / "docs" / "requirements" / "low-level-requirements.toml").write_text(
+        "".join('[design."{}"]\ntitle = "row"\n'.format(r) for r in llr_rows),
+        encoding="utf-8",
+    )
+    if dial is not None:
+        (root / "docs" / "process.toml").write_text(
+            "[checks]\nbacklink_coverage_min = {}\n".format(dial), encoding="utf-8"
+        )
+    src = root / "src"
+    src.mkdir(exist_ok=True)
+    if module is not None:
+        (src / "m.py").write_text(module, encoding="utf-8")
+    return root, str(src)
+
+
+def test_reverse_coverage_counts_only_declarations(tmp_path):
+    """The percentage is over LIVE LLR ROWS, and only a literal declaration
+    covers one. The `-000` template row is not live and must not enter the
+    denominator (a placeholder would otherwise dilute every fresh scaffold)."""
+    root, src = _backlink_repo(
+        tmp_path,
+        ["LLR-000", "LLR-001", "LLR-002", "LLR-003"],
+        module='"""M.\n\nLLR-002 is discussed here in prose.\n"""\n\n\n'
+        'def go():\n    """Go. Implements: LLR-001"""\n',
+    )
+    covered, uncovered, pct = gen_arch_map.backlink_coverage(
+        [src], gen_arch_map.live_llr_ids(root)
+    )
+    assert covered == ["LLR-001"]
+    assert uncovered == ["LLR-002", "LLR-003"]  # the prose mention covers nothing
+    assert round(pct, 1) == 33.3  # 1 of 3 live rows, LLR-000 excluded
+
+
+def test_reverse_coverage_reads_non_python_source_but_not_unlisted_types(tmp_path):
+    """Language-agnostic BY CONSTRUCTION — it reads comment text, not syntax —
+    but only for the declared extension list. The `.md` case is the guard for
+    OI-42's asymmetry: widening the list can only RAISE the score, so an
+    over-inclusive default would score prose files as carriers."""
+    root, src = _backlink_repo(tmp_path, ["LLR-001", "LLR-002"])
+    (tmp_path / "src" / "run.go").write_text(
+        "// Implements: LLR-001\nfunc main() {}\n", encoding="utf-8"
+    )
+    (tmp_path / "src" / "notes.md").write_text(
+        "Implements: LLR-002\n", encoding="utf-8"
+    )
+    found = gen_arch_map.scan_backlinks([src])
+    assert found == {"LLR-001": ["src/run.go"]}
+    _covered, _unc, pct = gen_arch_map.backlink_coverage(
+        [src], gen_arch_map.live_llr_ids(root)
+    )
+    assert pct == 50.0
+    # ...and the list is overridable per repo, which is the declared escape.
+    assert "LLR-002" in gen_arch_map.scan_backlinks([src], (".md",))
+
+
+def test_the_dial_reads_zero_for_everything_it_cannot_trust(tmp_path):
+    """0 is report-only AND the fallback: a threshold has no conservative
+    default to fail toward, so an unreadable dial must not invent a bar. The
+    loud half is `agent_common.PROCESS_ONLY_KEYS`, which refuses the wrong type
+    outright — pinned in tests/test_rule_sync.py."""
+    root, _src = _backlink_repo(tmp_path, ["LLR-001"], dial=50)
+    assert gen_arch_map.read_backlink_min(root) == 50
+    for bad in ('"50"', "true", "-1", "101"):
+        (root / "docs" / "process.toml").write_text(
+            "[checks]\nbacklink_coverage_min = {}\n".format(bad), encoding="utf-8"
+        )
+        assert gen_arch_map.read_backlink_min(root) == 0, bad
+    (root / "docs" / "process.toml").unlink()
+    assert gen_arch_map.read_backlink_min(root) == 0
+
+
+def test_the_report_is_vacuous_without_llr_rows_and_gates_only_above_the_dial(
+    tmp_path,
+):
+    """Three postures in one place, because they are one decision: no rows =
+    vacuous (a fresh scaffold pays nothing), dial 0 = report the number and gate
+    nothing (what the kit ships), dial above the measurement = the warning."""
+    root, src = _backlink_repo(tmp_path, [])
+    lines, ok = gen_arch_map.backlink_report([src], root)
+    assert ok and "vacuous" in lines[0]
+
+    root, src = _backlink_repo(tmp_path, ["LLR-001", "LLR-002"], dial=0)
+    lines, ok = gen_arch_map.backlink_report([src], root)
+    assert ok, lines
+    assert "0/2 live LLR rows (0.0%)" in lines[0]
+    assert "REPORT-ONLY" in lines[1]
+
+    (root / "docs" / "process.toml").write_text(
+        "[checks]\nbacklink_coverage_min = 50\n", encoding="utf-8"
+    )
+    lines, ok = gen_arch_map.backlink_report([src], root)
+    assert not ok
+    assert "WARNING" in lines[1] and "LLR-001" in lines[1]
+
+
+def test_backlink_cli_is_warn_first_and_strict_only_on_demand(scaffold):
+    """The exit contract, driven through the real CLI on a real scaffold: the
+    report never needs a --doc target, a below-bar reading WARNS at exit 0, and
+    only --strict-backlinks turns it into a failure. check.py appends that flag
+    from DevStg-Tests on, which is what makes the dial a gate an adopter opts
+    into rather than one the kit arms for them."""
+    from conftest import run_py
+
+    (scaffold / "docs" / "requirements" / "low-level-requirements.toml").write_text(
+        '[design."LLR-001"]\ntitle = "row"\n', encoding="utf-8"
+    )
+    (scaffold / "docs" / "process.toml").write_text(
+        "[checks]\nbacklink_coverage_min = 50\n", encoding="utf-8"
+    )
+    args = [
+        "scripts/gen_arch_map.py",
+        "--backlink-coverage",
+        "--root",
+        ".",
+        "--src",
+        "src",
+    ]
+    warn = run_py(args, cwd=scaffold)
+    assert warn.returncode == 0
+    assert "0/1 live LLR rows" in warn.stdout + warn.stderr
+    strict = run_py(args + ["--strict-backlinks"], cwd=scaffold)
+    assert strict.returncode == 1
+    assert "WARNING" in strict.stdout + strict.stderr

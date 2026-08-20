@@ -1,7 +1,6 @@
 +++
 id = "WI-482"
 title = "Repair the three verified-stale LLR CodeSymbol anchors (LLR-087, LLR-088, LLR-112) — the review's other two anchor claims were refuted (repo review 2026-08-19 M-08, as verified)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "requirements"
 sr_refs = []
 needs = []

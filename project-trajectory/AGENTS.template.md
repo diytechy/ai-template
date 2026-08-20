@@ -80,9 +80,9 @@ Code a newcomer — human or model — can navigate without re-deriving the desi
   lives in exactly one place.
 - **Intention-revealing names; no cryptic abbreviations.** Comments explain
   *why*; the code says what.
-- **Back-link to requirements:** `Implements: SR-007, LLR-014` on implementing
-  symbols; test names embed the verified id
-  (`test_export_quotes_special_fields_sr001`).
+- **Back-link to requirements** as far as `[checks] backlink_coverage_min`
+  asks: `Implements: SR-007, LLR-014` on implementing symbols; test names
+  embed the verified id.
 - **Match the surrounding style.** Read a neighboring file first; mirror its
   idioms.
 - **Fail loudly, never silently.** No bare excepts; nonzero exit on failure
@@ -99,8 +99,8 @@ public-symbol docstrings** into the index agents read first:
 - **Every module: a header docstring** — its single responsibility plus any
   invariant it upholds ("pure core — no I/O").
 - **Every public symbol: a docstring** — purpose, the *meaning* (and units) of
-  parameters and return, failure modes; include `Implements: SR-/LLR-` so the
-  back-link lands in the map.
+  parameters and return, failure modes; `Implements: SR-/LLR-` per the dial
+  above, into the map.
 - **Explain the *why* at every non-obvious point:** the algorithm/order/
   constant choice, the edge case a branch guards, the invariant that must
   hold. Comment the surprising, not the obvious.

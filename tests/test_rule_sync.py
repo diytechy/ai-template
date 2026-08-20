@@ -922,6 +922,13 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "okf_export": True,
         "live_status": False,
         "subagent_gate": "off",
+        # SEVENTH, added by OI-42's ruling (WI-486) and the first one here that
+        # is not a yes/no: the reverse back-link coverage BAR, a percentage.
+        # `0` is its off position and must stay the shipped value — 50 is the
+        # recorded target, and shipping the target as the default would fire
+        # the check on its first run in every fresh scaffold, which is the
+        # precise defect OI-42 documents about the rule it measures.
+        "backlink_coverage_min": 0,
     }
     # And this repo's own instance declares the same six KEYS — the structure
     # that must not drift (CLAUDE.md: "VALUES may diverge … STRUCTURE must not").
@@ -938,6 +945,34 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "okf_export": False,
     }
     assert live["checks"] == {**checks, **OWNER_DIALS}
+
+
+def test_the_backlink_bar_is_type_checked_where_its_reader_stays_quiet(tmp_path):
+    """WI-486 / OI-42: `[checks] backlink_coverage_min` is read by
+    `gen_arch_map.read_backlink_min`, which answers 0 — report-only — for
+    anything it cannot read as an int in 0..100. That is right for a THRESHOLD
+    (a malformed file cannot tell you what bar the adopter meant) and it is
+    exactly the shape that once turned a quoted `review_rounds` into "no review
+    required". So the LOUD half must live in `config_conflicts`, and this pins
+    the two halves as one decision: the reader degrades, the refusal fires."""
+    ac = load_script("agent_common")
+    gam = load_script("gen_arch_map")
+    assert ac.PROCESS_ONLY_KEYS[("checks", "backlink_coverage_min")] == "int"
+    assert ac.PROCESS_KEY_RANGES[("checks", "backlink_coverage_min")] == (0, 100)
+    docs = tmp_path / "docs"
+    docs.mkdir(parents=True)
+    for bad in ('"50"', "101"):
+        (docs / "process.toml").write_text(
+            "[checks]\nbacklink_coverage_min = {}\n".format(bad), encoding="utf-8"
+        )
+        assert gam.read_backlink_min(tmp_path) == 0, bad  # quiet
+        findings = ac.config_conflicts(docs)
+        assert any("backlink_coverage_min" in f for f in findings), bad  # loud
+    (docs / "process.toml").write_text(
+        "[checks]\nbacklink_coverage_min = 50\n", encoding="utf-8"
+    )
+    assert gam.read_backlink_min(tmp_path) == 50
+    assert ac.config_conflicts(docs) == []
 
 
 def test_the_migration_table_and_the_converter_name_the_same_six():

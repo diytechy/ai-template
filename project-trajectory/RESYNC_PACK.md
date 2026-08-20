@@ -1985,6 +1985,65 @@ about the artifacts changed — what changed is that they are no longer optional
   the substrate, never the mechanism. A fresh registry renders "the owner queue
   is empty" perfectly truthfully — which is the failure the three arms above
   exist to catch.
+### The `Implements:` harvester tightens — expect the map's third column to EMPTY [since 1bf4e9ef]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)* `gen_arch_map.py` used to harvest ANY `SN|SR|LLR|TC-###` token out of a
+public symbol's docstring or the four comment lines above its `def`. It now
+requires the literal `Implements:` token on the same line
+(`gen_arch_map.backlink_ids`). **This will look like a regression and is not.**
+
+- **What you will see:** the `Implements` column of your generated MODULE MAP
+  goes mostly or entirely blank on the next regeneration. In the kit's own repo
+  it dropped from 50 populated symbols to 2 — because 60 of the 62 links it had
+  been reporting were never declared by anyone, and 13 named no live registry
+  row. A sorting example in a docstring ("SR-9 orders before SR-10") was being
+  reported as two requirements that function implements.
+- **What to do:** regenerate, look at what is left, and treat the empty column
+  as your real starting point. If a symbol genuinely implements a row, write the
+  declaration — a line carrying `Implements:` followed by the ids, in the
+  docstring or in the four lines above the `def`.
+- **The grammar is MARKER-LINE ONLY and does NOT refuse a wrapped list**,
+  unlike the `Contracts:` grammar it sits beside. An id pushed onto its own
+  continuation line is simply not declared; nothing raises. That asymmetry is
+  deliberate (the module docstring states it) — a hard failure over a reflowed
+  docstring would break map generation for everyone.
+- **If your map is spliced into `AGENTS.md`/`CLAUDE.md`**, this changes a file
+  agents read on every session. Regenerate in the same commit so the doc and the
+  code agree.
+
+### Reverse back-link coverage: a new `[checks]` dial and a new harness step [since 1bf4e9ef]
+
+*(Same commit as the entry above.)* The other half of the same ruling. The
+kit now MEASURES the convention instead of only asserting it, and the shipped
+guide states it as a dial rather than an unconditional rule.
+
+- **Add the dial.** `docs/process.toml` gains a seventh `[checks]` key —
+  `backlink_coverage_min = 0`. It is the minimum PERCENTAGE of your live LLR
+  rows that a literal `Implements:` declaration must name, and `0` is its off
+  position. Copy the key and its header comment from
+  `process.toml.template`; born there, it has no legacy one-word file, so
+  nothing needs migrating and it cannot be double-declared.
+- **A new harness step runs it.** `check.py` gains `backlink-coverage`
+  (`gen_arch_map.py --backlink-coverage`) at `DevStg-Tests` and `DevStg-Impl`.
+  It reports the percentage on every run; below the dial it WARNS, and
+  `--strict-backlinks` (which the step passes from `DevStg-Tests` on) turns that
+  into a failure. **At `0` it can never fail** — so a straight re-sync changes
+  no exit code anywhere.
+- **Scope, so the number means what you think:** the surface is
+  `docs/stack.ini` `[paths] src` and deliberately NOT `[paths] tests` (an LLR
+  that is verified but never built must not score as implemented). The file
+  types are `gen_arch_map.BACKLINK_EXTS`, overridable with `--backlink-ext`.
+  Widen that list only with care: the denominator is your LLR count, so a wider
+  list can only RAISE the score — over-inclusion produces false PASSES.
+- **It measures PRESENCE, never correctness.** A back-link naming the wrong
+  requirement counts clean. Do not read the percentage as a verification result.
+- **Raising the dial is a decision, and only one direction is legitimate:**
+  write the declarations, then raise the number to a bar your tree already
+  clears. The kit records 50% as the target; it ships at 0 because a bar its own
+  author misses by 80x trains readers to silence warnings.
+- **Vacuous with no LLR registry**, so a repo that has not scaffolded the design
+  tier pays nothing.
 
 
 ## 4. Translation helper — concept renames

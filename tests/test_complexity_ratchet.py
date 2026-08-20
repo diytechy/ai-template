@@ -152,7 +152,7 @@ BASELINE = {
     (
         "gen_arch_map.py",
         "main",
-    ): 18,  # +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
+    ): 19,  # +1 2026-08-20 WI-486 (OI-42 ruled (e)): the `--backlink-coverage` report mode returns before every --doc/marker contract below it, so the dispatch is one `if` at the top of main(). It cannot be decomposed away — the whole point is that the report reads the source tree and writes NOTHING, so it must exit before the splice-target refusal asks for a document the measurement never touches; the report itself is already extracted (`_backlink_exit`). Reviewed bump. Earlier +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
     ("gen_cases.py", "all_pairs"): 13,
     ("gen_cases.py", "main"): 12,
     ("gen_okf.py", "_doc_title_and_summary"): 13,

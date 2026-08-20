@@ -1,7 +1,6 @@
 +++
 id = "WI-485"
 title = "Every announced deferral resolves to an open item: the allow-file OI-### grammar, the session-log deferral declaration, the re-aimed vacuity check, and the open-items layer always-on (OI-41 ruled (e), 2026-08-20)"
-specref = "docs/requirements/open-items.toml#OI-41"
 workstream = "process"
 sr_refs = []
 needs = []

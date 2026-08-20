@@ -1,7 +1,6 @@
 +++
 id = "WI-480"
 title = "Dev-toolchain currency: qualify pytest 9.0.3+, add scheduled Python SCA, and generate a reproducible CI lock (repo review 2026-08-19 M-11, L-04)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "process"
 sr_refs = []
 needs = []

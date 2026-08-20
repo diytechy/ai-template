@@ -1,7 +1,6 @@
 +++
 id = "WI-481"
 title = "Seed the live performance-budget registry: the perf gate is green because it compares nothing (repo review 2026-08-19 M-16)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "process"
 sr_refs = []
 needs = []

@@ -1,7 +1,6 @@
 +++
 id = "WI-476"
 title = "Harness-hygiene batch: the six live Ruff findings, a duplicate-key-proof size-ratchet baseline, the smoke tier's nested UTF-8 decode crash, and one load-bearing assert (repo review 2026-08-19 M-07, M-05, M-01, L-02)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "process"
 sr_refs = []
 needs = []
