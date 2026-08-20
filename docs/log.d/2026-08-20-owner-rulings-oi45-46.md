@@ -23,14 +23,17 @@ recommendation cell and its executing WI queued in the same commit.
 | OI-45 | **(b) RETIRE THE ARM, with an owner scope note on who may still move a Status cell.** What retires is MECHANICAL ratification — a scripted path moving a Status cell with no judgment behind it. The note: an LLM session or adjudicator is fully expected to flip a row's Status to `Approved` and further to `Founded` for spine content past the human approval gate/level (`human_ratification_through`) — at the human's request, or when working through content the declared level does not hold to human ratification. Bites on comments and docstrings, not code paths: the record says "not MECHANIZED", never "no agent may ever move a Status cell." Also answers the authority half of D-9 consequence 2: an agent-authored `Founded` under those conditions is sanctioned. | **WI-490** |
 | OI-46 | **(1a) + (2a) as recommended** — `subagent_gate.py`'s present-but-unparseable arm aligns to its twins' fail-closed reading (absence stays allow, the ruled opt-in posture untouched), and the session banner surfaces `out/subagent-gate.log`'s tail count so the fail-open record becomes auditable. M-13 tests extended; RESYNC entry owed. | **WI-491** |
 
-Also answered for the owner, nothing minted: `human_ratification_through`'s
-numeric-to-string conversion is NOT in the queue and never was — OI-21 ruled
-shape (i) (the int dial MAPPED onto the stage ladder via
+Also answered for the owner: `human_ratification_through`'s
+numeric-to-string conversion was NOT in the queue and never had been — OI-21
+ruled shape (i) (the int dial MAPPED onto the stage ladder via
 `agent_common.DIAL_HOLDS`, executed by WI-445) and named shape (ii), re-keying
 the dial to `DevStg-*` strings, as a future option that "can supersede (i)"
-after OI-14 — which ruled 2026-08-13, so the door is open but the re-key is
-its own owner decision, not a filed item. `agent_common.py`'s "THE DIAL DOES
-NOT MOVE" block is the standing record.
+after OI-14 — which ruled 2026-08-13, so the door was open but unexercised.
+The owner then exercised it (follow-up, 2026-08-20): the conversion is
+DECIDED but sits in deferment — **WI-493** minted directly into
+`docs/work/deferred/`, carrying the verified touch surface and the
+supersedes-shape-(i) note; it enters the frontier only when the owner wakes
+it. Watermark `WI` 492 → 493 in the same commit.
 
 Follow-up, same day: the owner read OI-47 and reframed it — a spent-id
 record is over-built, because the ruled documents ALREADY carry the spent
