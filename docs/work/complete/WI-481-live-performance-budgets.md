@@ -10,6 +10,24 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Seeded `docs/requirements/performance-budgets.csv` with four real PB rows
+covering the feedback-path commands the review named: PB-001 trace.py full
+analysis (measured 0.97s, budget 5s), PB-002 the derive_gate+gen_trajectory
+freshness pair (6.46s, budget 20s), PB-003 check_docs (1.94s, budget 8s),
+PB-004 the whole pre-commit hook end to end (7.7s, budget 30s) — each
+wall-clock figure measured on this box at 94489f7a on a second (warm) run,
+carrying its `fig:` provenance marker and a single-machine disclaimer, at
+Gate=warn per the stack.ini noisy-runtime-metric convention, budgets at
+3–5x measured. Refs verified resolvable (budgets=4 budget-findings=0); the
+stale declared-absences line removed with its three readers checked; the PB
+watermark rose 0 → 4 via --bump-ids. `check_perf --tier all` moved from
+the vacuous "no budgets to compare" OK to an honest "4 budget(s), SKIP (no
+metrics wired)" — the automated measurement emitter stays unwired per the
+spec's own scope and is the named residue. 177 targeted tests + smoke
+green.
+
 ## Context
 
 `check_perf.py --tier all` reports `OK - no performance budgets to compare`:

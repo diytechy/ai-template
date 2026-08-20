@@ -44,7 +44,6 @@ docs/process.md — the master PROCESS.md lives in project-trajectory/ (status.m
 docs/process-options.md — the master PROCESS_OPTIONS.md lives in project-trajectory/ (status.md non-goal)
 docs/plan.md — superseded by the trajectory layer + parallel dispatch (WI-252 mutual exclusion)
 docs/interfaces.md — cross-project contract index; skip for a standalone deliverable (its own header)
-docs/requirements/performance-budgets.csv — process.md §9 perf layer not enabled (opt-in, off-spine)
 docs/requirements/procurement.csv — a meta-repo purchases no parts (opt-in, off-spine)
 docs/requirements/assets.csv — a meta-repo ships no binary assets (opt-in, off-spine)
 run.cmd — no product to launch (status.md non-goal; the launchers here are agent-resume.*)

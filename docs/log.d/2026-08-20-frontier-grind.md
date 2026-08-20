@@ -86,6 +86,12 @@ workflow (verified catching then clearing the pytest advisory);
 check instead of auto-commit (refused under push=human, reasoning in the
 workflow); pip-audit + uv ledgered in docs/dependencies.md.
 
+Post-close confirmation from the worker's finishing run: the FULL suite is
+fully green under pytest 9.1.1 with the golden fix in — 2626 passed / 13
+skipped in 483.65s, exit 0 — and the committed content matches the
+worker's authored files byte-for-byte.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=94489f7a -->
+
 **The golden episode, recorded for the closing review:** WI-466's widened
 guard added the triple line to mechanized-only output; the clean/orphan
 goldens (slow-tiered, invisible to the commit-bar smoke) went red at
@@ -94,6 +100,15 @@ surfaced them — regenerated deliberately at 74c20704. Two lessons: a
 smoke-invisible module can carry a red across a close, and a worker's
 "goldens verified unaffected" claim was wrong where the orchestrator's
 verification (smoke only) could not catch it.
+
+### WI-481 — live performance budgets (sonnet worker) — CLOSED complete
+
+Four PB rows seeded with warm-run measured bases + fig: markers (trace
+0.97s/5s, regen pair 6.46s/20s, check_docs 1.94s/8s, whole hook 7.7s/30s),
+declared-absence line retired with its three readers checked, PB watermark
+0→4. check_perf moved from vacuous OK to an honest 4-budgets SKIP naming
+the unwired metrics emitter — that emitter is the named residue for a
+future WI.
 
 ### Adjacent findings accumulating for the closing review
 
