@@ -152,9 +152,25 @@ rather than a fourth prose recipe.
 (`git ls-files --eol | grep 'w/crlf'`): no file this session touched appears,
 and the index is LF throughout.
 
+- **full unfiltered suite, on the LANDED commit**: `2685 passed, 14 skipped in
+  571.42s (0:09:31)`
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=46de9442 -->
+  The pre-fix run of the same command was `7 failed, 2677 passed, 14 skipped in
+  498.73s` — all seven were the predicted guard classes (the two package-blind
+  scans, the isolated-copy fixture, the size ratchet, the uncontained-module
+  view), and every one was FIXED rather than waived.
 - smoke: `1244 passed, 5 skipped in 66.21s`
   <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b94bf58c-dirty -->
-- `check_docs.py --root . --stale`: `OK - 960 doc(s), 1323 intra-repo link(s), 0 broken (1 orphan warning(s))`
+  Re-run on the landed commit: `1244 passed, 5 skipped in 134.16s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=46de9442 -->
+  **Read the 134s as contended, not as a budget measurement** — the full suite
+  above was still finishing on the same box when it started. The uncontended
+  figures this session are 66.21 s and 71.97 s, both already past the 60 s
+  ceiling `docs/stack.ini` declares. That is consistent with CLAUDE.md's own
+  2026-08-20 record for this box (54.9 / 64.0 / 55.7, one over), so nothing
+  here is new evidence and the budget is NOT moved to fit it. One box is one
+  data point.
+- `check_docs.py --root . --stale`: `OK - 960 doc(s), 1325 intra-repo link(s), 0 broken (1 orphan warning(s))`
 - `check_trajectory.py --root . --strict`: exit 0. The baseline at `b94bf58c`
   was also exit 0 (50 warn lines); the kitlib work transiently made it exit 1
   (4 modules in no CMP component) and the `LLR-181` row cleared it. The red was
