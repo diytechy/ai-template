@@ -1,7 +1,9 @@
 ## 2026-08-20 — OI-45 and OI-46 rule; the rowless watermark ruling finally gets its row (OI-47)
 
-Deferred open items: OI-47 — minted THIS session and deliberately left
-pending. It is the standing `B`/`REL` watermark mechanism: the decision
+Deferred open items: none — OI-47 was minted, twice narrowed, and RULED
+within this same session; the pending queue it entered is empty again.
+
+OI-47 is the standing `B`/`REL` watermark mechanism: the decision
 announced on two surfaces (`external.toml`'s SPENT IDS header,
 `docs/status.md`'s "ONE ruling still owed" bullet) that OI-41's founding
 evidence named as the sharpest announced-but-rowless instance — and that
@@ -60,7 +62,21 @@ mark or live max, so a landed raise self-justifies). Options rewritten on
 the row: (d) recorded as withdrawn-by-measurement, (e) minted (a one-shot
 recorded-correction verb carrying the ruling id), (c) re-priced as a
 two-commit replay that is green under existing rules. Recommendation:
-(e), else (c). Still PENDING.
+(e), else (c).
+
+**OI-47 RULED (owner, 2026-08-20): (e).** The correction verb raises a
+named mark with the authorizing ruling id recorded in the watermark
+header; the integrity rule accepts a recorded raise and nothing else
+changes; the one-time B=8/REL=4 correction lands in the same change and
+the SPENT IDS block then retires to a pointer at the row. Execution:
+**WI-492**. The mint-to-ruled arc ran inside one session — the surface
+built for decisions carried the question for exactly as long as it was
+open, which is the OI-41 class working as intended. `docs/status.md`'s
+hand-authored watermark bullet is deleted rather than re-pointed: the
+ruling it announced is made, and execution is the WI registry's business
+(naming the id in status prose would refuse its claim). Bookkeeping for
+this commit: watermark `WI` 491 → 492 via `trace.py --bump-ids`; surfaces
+regenerated.
 
 Bookkeeping in the same commit: watermark `OI` 46 → 47 and `WI` 489 → 491 via
 `trace.py --bump-ids`; `docs/status.md`'s hand-authored watermark bullet
