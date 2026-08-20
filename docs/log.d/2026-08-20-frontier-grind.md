@@ -59,6 +59,15 @@ wrap fixed; the two false undeclared warnings gone, proven by a
 before/after strict diff whose only delta is those two lines; two
 regression tests. 117 arch/dispatch tests + smoke 1209/5 green.
 
+### WI-482 — the three stale anchors (sonnet worker) — CLOSED complete
+
+LLR-087/088 re-pointed to `traj_render._drill_layer_svg/_render_drill` and
+`DRILL_SCRIPT` (module cells corrected; each target READ before citing),
+LLR-112 to `gen_trajectory.HTML_TEMPLATE`; traced-cell moves only, snapshot
+refreshed byte-identical, `check_doc_refs` clean on all three ids,
+integrity 0, smoke 1209/5. The planned-symbol declared form deferred behind
+WI-472's obligation SR, with reasoning on the row.
+
 ### Adjacent findings accumulating for the closing review
 
 - (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475

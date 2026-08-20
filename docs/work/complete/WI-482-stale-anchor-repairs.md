@@ -10,6 +10,25 @@ safety_class = "spine"
 priority = 2
 +++
 
+## Deliverable
+
+Repaired the three verified-stale LLR CodeSymbol anchors by re-pointing
+each to its live realizing symbol, verified by READING the target code
+first: LLR-087 → `traj_render._drill_layer_svg/_render_drill` (module cell
+moved too — gen_trajectory only imports the names, which module_bindings
+does not count); LLR-088 → `traj_render.DRILL_SCRIPT` (the descend/
+breadcrumb logic lives inside that embedded-JS constant, matching sibling
+LLR-100's existing citation shape); LLR-112 → `gen_trajectory.HTML_TEMPLATE`
+(the literal carrier of the querySelectorAll wiring and roving tabindex
+TC-117 exercises). TRACED-cell moves only — no normative text touched; the
+snapshot refreshed byte-identical; `check_doc_refs` shows zero occurrences
+of the three ids in the dangling/untraced lists post-fix;
+`--strict-integrity` exit 0. The spec's second half (a declared
+planned-symbol form) EVALUATED AND DEFERRED with reasoning: no live row
+needs it today (both NOT-BUILT rows anchor on symbols that resolve), and a
+marker grammar in `check_doc_refs.symbol_findings` should follow WI-472's
+obligation SR rather than precede and pre-empt it.
+
 ## Context
 
 The review claimed five bad live anchors; verification 2026-08-19 confirmed

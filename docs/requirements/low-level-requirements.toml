@@ -863,8 +863,8 @@ phase = 2
 [design.LLR-087]
 sr_refs = ["SR-169"]
 title = "Hierarchy seam ports"
-module = "project-trajectory/scripts/gen_trajectory.py"
-code_symbol = "_drill_svg/_drill_edges"
+module = "project-trajectory/scripts/traj_render.py"
+code_symbol = "_drill_layer_svg/_render_drill"
 detail = "Attaches IF seams to visible input/output ports and aggregates cross-container seams at boundaries. At every visible tier seams terminate at the correct ports, and boundary aggregation adds no duplicates."
 test_refs = "(see TC-089)"
 status = "Approved"
@@ -874,8 +874,8 @@ phase = 2
 [design.LLR-088]
 sr_refs = ["SR-169"]
 title = "One-layer hierarchy navigation"
-module = "project-trajectory/scripts/gen_trajectory.py"
-code_symbol = "_descend/_breadcrumb"
+module = "project-trajectory/scripts/traj_render.py"
+code_symbol = "DRILL_SCRIPT"
 detail = "Handles pointer and keyboard one-layer descent and breadcrumb restoration in self-contained views. Double-click and Enter/Space each descend a focused container exactly one layer; breadcrumb actions restore prior levels."
 test_refs = "(see TC-090)"
 status = "Approved"
@@ -1096,7 +1096,7 @@ phase = 3
 sr_refs = ["SR-052"]
 title = "Keyboard reachability of every wired control (A1 core)"
 module = "project-trajectory/scripts/gen_trajectory.py"
-code_symbol = "emitted querySelectorAll wiring; tabindex + native-link emission"
+code_symbol = "HTML_TEMPLATE"
 detail = """The mechanized core of accessibility anchor A1 (docs/rubrics/dashboard-accessibility.md): every element the emitted page WIRES an interaction to is keyboard-focusable. The wired set is DERIVED from the document's own DOM-selecting calls and then classified — a control selector (its matches receive per-element click/focus/dblclick/keydown listeners) may match only elements carrying tabindex=0 or natively tab-ordered (a button; an SVG a-with-href, the LLR-101 predicate), and each non-control selector records why its matches are not focus stops. A newly wired selector fails the owning test until classified. The derivation reads EVERY DOM-selecting API (querySelector/querySelectorAll/closest/matches, any quote style) and fails loudly on a non-literal selector argument, which a static read cannot classify. A control-selector wiring loop that attaches click or dblclick must attach focus or keydown beside it, statically asserted. Order-integrity: document order IS emission order, no positive tabindex may reorder the walk, and tabindex=-1 is legal only on the roving tablist buttons. SCOPE — and no wider: focusability, order-integrity and activation PAIRING of the wired set over the shipped artifact plus the seven-fixture emitter sweep. Runtime behaviour equivalence is not driven, and whether the order FEELS sensible stays a reader-experience judgement. Runtime-created controls (the breadcrumb buttons) are native <button>s, keyboard-operable by construction and outside the static walk — a recorded limit."""
 rationale = """A control reachable only by pointer is unreachable for a keyboard user, and the page still looks complete, so nothing reports it. Enumerating the controls by hand was rejected: a per-element list goes stale the moment a selector is added, whereas deriving the wired set from the document's own calls means a new selector fails until someone classifies it. Two narrowings are load-bearing and must not be relaxed back: the derivation has to read every DOM-selecting API rather than one spelling of one call, or it silently misses wired controls; and the key-handler half has to be asserted statically rather than deferred to a browser, or mouse-only wiring ships."""
 test_refs = "(see TC-117)"
