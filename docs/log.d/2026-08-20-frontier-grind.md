@@ -203,8 +203,27 @@ renamed with corruption-vs-absence tests; status.md to exactly 120 by
 relocation not deletion. Full suite 2657/13. The worker caught its own
 CRLF introduction via the rule it had just relocated.
 
+### WI-479 — dashboard title defense (sonnet worker) — CLOSED complete
+
+The hero routes through the existing Next-work disclosure (2,253 chars →
+187 rendered, verified on the live WI-455 title), the grid aligns start,
+and a one-line warn-only title advisory lands (12 open titles named, none
+reworded). Screenshot-verified 390/1280/1680 + 320px reflow + keyboard.
+Full suite 2660/13. **The one red it surfaced was the orchestrator's:**
+the WI-477 close left "by WI-477" in status.md's hand prose — R-D fired
+exactly as restored (WI-200), fixed at this close by dating the reference
+instead of naming the id. Lesson: a close that ADDS a WI id to status
+prose plants a delayed R-D red for its own close.
+
 ### Adjacent findings accumulating for the closing review
 
+- (WI-479 worker) `_title_clause` splits at the first dash — WI-455's
+  disclosed clause ends mid-quotation with no cue; pre-existing shared
+  property (Next-work card too), now more visible. A smarter boundary
+  heuristic is its own small review.
+- (WI-479 worker) the 10px/8.5px fixed graph label sizes are a real
+  legibility concern whose fix risks the text-fitting math in both
+  icicle and DAG views — own WI (font bump vs a co-equal table view).
 - (WI-477 worker) LLR-172's `module` cell anchors `component_findings` to
   trace.py while the def lives at check_trajectory.py:1489 (the trace.py
   occurrences are the Findings-field extension point) — WI-484's execution

@@ -29,6 +29,12 @@ Checks (integrity, in the spirit of `trace.py`):
     error — and it never constrains readiness.
   - every `SR-Refs` id exists in `system-requirements.toml` — a WARN, not a
     failure (a draft SR referenced ahead of its registry row is legitimate).
+  - an OPEN work item's `Title` over `_TITLE_CONCISE_MAX` characters is a WARN,
+    never a failure and never a suggestion to reword what is already filed
+    (repo-review 2026-08-19 M-03): a Title is a UI label everywhere the
+    dashboard renders it, so keep it a concise name and put the rationale in
+    the body. Closed rows are excluded (a historical record); findings are
+    summarised, not one line per row.
 
 **The registry SSOT rules** (S1; process-options.md "Trajectory /
 work-items layer"). The WI `Deliverable` is **backward-only** (what shipped) and
@@ -230,6 +236,18 @@ TERMINAL_STATUSES = ("done", "cancelled", "partial")
 # dependency is still live work whose cited requirements can drift under it).
 # `done`/`cancelled` are terminal and need no re-validation.
 BACKLOG_STALE_STATUSES = ("queued", "active", "blocked")
+
+# WI-479 (repo-review 2026-08-19 M-03): a WI Title is a UI label everywhere the
+# dashboard renders it — the landing hero's active-work line, the Next-work
+# card — and both already clip/disclose past ~140 raw characters rather than
+# trust the registry to stay short (gen_trajectory's `_NEXT_WORK_TITLE`). This
+# bound is the OTHER half: nudge a Title toward concise AT THE SOURCE, without
+# ever failing a gate or asking anyone to reword what is already filed — ten of
+# the eleven live (open) titles measured at this WI's filing were multi-sentence
+# program narratives, so a validation-only fix would have forced a mass reword
+# of owner-authored text. Set a shade under the dashboard's own bound so the
+# advisory fires before a reader ever meets the clipped render.
+_TITLE_CONCISE_MAX = 120
 
 # The clause both backlog-staleness warns end with. The clock it must clear
 # reads the WI's OWN registry spec under docs/work/ (`_spec_row_times`), never
@@ -870,6 +888,40 @@ def cell_integrity_errors(rows):
     return errors
 
 
+def _title_length_warns(wis):
+    """`[]` or one summarised WARN string naming how many OPEN work items carry
+    a Title over `_TITLE_CONCISE_MAX` characters (WI-479, M-03).
+
+    Scoped to `OPEN_STATUSES` — a closed row is a historical record this
+    advisory never asks anyone to reword. Summarised into ONE line (worst-first,
+    first 5 named) rather than one line per row — the same call the IF-coverage
+    rule elsewhere in this module already made (its `SUMMARISED` comment: N warn
+    lines is a check nobody reads)."""
+    over = sorted(
+        (
+            w
+            for w in wis
+            if w["status"] in OPEN_STATUSES and len(w["title"]) > _TITLE_CONCISE_MAX
+        ),
+        key=lambda w: -len(w["title"]),
+    )
+    if not over:
+        return []
+    shown = ", ".join(
+        "{} ({} chars)".format(w["id"], len(w["title"])) for w in over[:5]
+    )
+    return [
+        "{} open work item(s) carry a Title over {} characters — keep the "
+        "Title a concise name and put rationale in the body, not the "
+        "registry cell{}: {}".format(
+            len(over),
+            _TITLE_CONCISE_MAX,
+            " (first 5 shown)" if len(over) > 5 else "",
+            shown,
+        )
+    ]
+
+
 def validate(wis, known_srs):
     """Return the hard-error strings for the work-item graph ([] = clean).
 
@@ -878,7 +930,8 @@ def validate(wis, known_srs):
     non-empty, so a repo without SRs yet does not spuriously warn. Soft (`~`)
     predecessors must resolve like hard ones, but only **hard** edges are
     subject to the acyclicity ERROR — a cycle that needs a soft edge to close
-    is a WARN (conflicting ordering hints), never a failure."""
+    is a WARN (conflicting ordering hints), never a failure. An overlong OPEN
+    Title also WARNS (never fails) — see `_title_length_warns`."""
     ids = {w["id"] for w in wis}
     errors = []
 
@@ -895,6 +948,9 @@ def validate(wis, known_srs):
                     "(not in the SR registry; draft?)".format(w["id"], s),
                     file=sys.stderr,
                 )
+
+    for msg in _title_length_warns(wis):
+        print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
 
     # A hard cycle makes the trajectory unstartable -> ERROR.
     hard_map = {w["id"]: [p for p in w["preds"] if p in ids] for w in wis}

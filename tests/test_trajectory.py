@@ -301,6 +301,54 @@ def test_known_sr_ref_does_not_warn(tmp_path):
     assert "WARN" not in proc.stderr
 
 
+# --- Title length (WI-479, M-03): warn (never fail), open-only, summarised ------
+
+
+def test_overlong_open_title_warns_but_passes(tmp_path):
+    # A queued (open) WI with a Title past the concise-label bound: a WARN on
+    # stderr naming the id and its length, a clean exit — never a failure and
+    # never a rewrite of the cell.
+    long_title = "T" * 150
+    write_wis(tmp_path, "WI-001,{},t,,,queued,\n".format(long_title))
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "WARN" in proc.stderr
+    assert "carry a Title over" in proc.stderr
+    assert "WI-001 (150 chars)" in proc.stderr
+
+
+def test_concise_open_title_does_not_warn(tmp_path):
+    write_wis(tmp_path, "WI-001,Short title,t,,,queued,\n")
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "carry a Title over" not in proc.stderr
+
+
+def test_overlong_closed_title_is_excluded_as_historical(tmp_path):
+    # A `done` row keeps its long Title forever (a historical record) — this
+    # advisory is scoped to OPEN_STATUSES and never asks anyone to reword it.
+    long_title = "T" * 150
+    write_wis(tmp_path, "WI-001,{},t,,,done,shipped\n".format(long_title))
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "carry a Title over" not in proc.stderr
+
+
+def test_many_overlong_open_titles_summarise_to_one_line(tmp_path):
+    # Six open WIs over the bound produce ONE warn line naming the count and
+    # the first five (worst-first) — never one line per row (the IF-coverage
+    # rule elsewhere in check_trajectory.py sets this precedent).
+    rows = "".join(
+        "WI-{:03d},{},t,,,queued,\n".format(n, "T" * (130 + n)) for n in range(1, 7)
+    )
+    write_wis(tmp_path, rows)
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.stderr.count("carry a Title over") == 1
+    assert "6 open work item(s)" in proc.stderr
+    assert "(first 5 shown)" in proc.stderr
+
+
 # --- tolerant of messy input ----------------------------------------------------
 
 

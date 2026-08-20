@@ -369,8 +369,11 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   table.swmap .sub { color:var(--muted); font-size:var(--rel); }
   .vision { font-size:var(--display); line-height:1.4; font-weight:600;
             letter-spacing:-.02em; margin:0; max-width:60ch; }
+  /* WI-479 (M-03): `align-items:start` stops CSS Grid's default `stretch` from
+     forcing Definition and Execution to equal height — an overlong Execution
+     sub-line no longer drags a matching blank slab into its empty sibling. */
   .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-           gap:1rem; margin:1.75rem 0 .5rem; }
+           gap:1rem; margin:1.75rem 0 .5rem; align-items:start; }
   .card { background:var(--surface); border:1px solid var(--border);
           border-radius:var(--r-card); padding:1.1rem 1.2rem; box-shadow:var(--shadow); }
   .card .label { font-size:var(--xsmall); text-transform:uppercase; letter-spacing:.05em;
@@ -378,7 +381,11 @@ HTML_TEMPLATE = string.Template("""<!doctype html>
   .card .big { font-size:var(--hero); font-weight:700; letter-spacing:-.03em;
                margin:.15rem 0 .1rem; }
   .card .sub { font-size:var(--small); color:var(--muted); }
-  .card .sub.nowat { color:var(--active); font-weight:600; margin-top:.2rem; }
+  /* WI-479 (M-03): bound the active-summary's MEASURE (line length), the same
+     unit `.vision` already uses, so an opened disclosure reads as a paragraph
+     rather than a full-bleed line stretching the whole card width. */
+  .card .sub.nowat { color:var(--active); font-weight:600; margin-top:.2rem;
+                      max-width:60ch; }
   .meter { background:var(--border); border-radius:var(--r-pill); height:.55rem;
            overflow:hidden; margin-top:.7rem; }
   .meter > span { display:block; height:100%; border-radius:var(--r-pill); }
@@ -781,12 +788,28 @@ def build_html(root, wis):
     # T1 (dashboard-usability): name the in-flight work on the landing hero so
     # "find the next work" costs zero tab switches — the When drill buries the
     # active leaf several descents deep. Empty (no markup) when nothing is active.
+    #
+    # WI-479 (M-03): this used to concatenate the ENTIRE title verbatim, with no
+    # length or disclosure rule — one program-narrative title (WI-455's) expanded
+    # the Execution card to thousands of vertical pixels, with a matching blank
+    # slab beside it in Definition and screens of orange prose before mobile
+    # navigation. Each title now goes through the SAME native `details/summary`
+    # disclosure the "Next work" card already uses (`_next_work_title`, imported
+    # above): under the bound it renders whole, over it the reader gets the
+    # leading clause plus a keyboard/pointer-operable "show all" — never a
+    # silent, affordance-less cut. `<span class="nwt">` wires the same CSS that
+    # already makes that disclosure inline and hides its marker/cue.
     active_wis = [w for w in wis if w["status"] == "active"]
     wi_active_line = ""
     if active_wis:
-        names = "; ".join("{} — {}".format(w["id"], w["title"]) for w in active_wis)
+        names = "; ".join(
+            '{} — <span class="nwt">{}</span>'.format(
+                esc(w["id"]), _next_work_title(w["title"])
+            )
+            for w in active_wis
+        )
         wi_active_line = '<div class="sub nowat">{} {}</div>'.format(
-            STATUS_GLYPH["active"], html.escape(names)
+            STATUS_GLYPH["active"], names
         )
     stats = spine_stats(root)
     workstreams = len({w["workstream"] for w in wis})

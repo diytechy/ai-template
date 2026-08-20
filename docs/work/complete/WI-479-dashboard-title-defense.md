@@ -1,7 +1,6 @@
 +++
 id = "WI-479"
 title = "The dashboard renders an unbounded active-WI title into the hero: defensive truncation and disclosure, start-aligned grid, and a warn on non-concise titles (repo review 2026-08-19 M-03)"
-specref = "docs/archive/repo-review-2026-08-19.md"
 workstream = "dashboard"
 sr_refs = ["SR-052"]
 needs = []
@@ -9,6 +8,28 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 3
 +++
+
+## Deliverable
+
+The hero is defended: `build_html`'s active-WI line routes every title
+through the same `_next_work_title` disclosure the Next-work card already
+uses (native details/summary — same CSS, same keyboard operability, no new
+JS); verified against the live WI-455 title, 2,253 raw chars → 187
+rendered. `.cards` aligns start (the equal-height slab dies) and the
+opened line is bounded at 60ch. The registry side is a WARN-ONLY advisory
+(`_title_length_warns`, 120-char bound, open WIs only, summarized to ONE
+line worst-first per the house precedent against unreadable warn floods)
+— currently naming 12 open titles, no existing title reworded. Verified by
+rendering a throwaway copy and screenshotting with the repo's own tooling
+at 390/1280/1680px plus a 320px reflow check, and by exercising the
+disclosure's keyboard path. Judged and recorded rather than churned: the
+sticky-header capture artifact is the shots-README's own documented
+caveat; the 10px/8.5px graph labels are real but their fix risks the
+text-fitting math in two views — own WI; `_title_clause`'s abrupt
+first-dash split is a pre-existing shared property now more visible.
+Full suite 2660/13 green (one failure was the orchestrator's own R-D
+token, fixed at close). check_trajectory.py re-stamped 4075→4131 with
+reason.
 
 ## Context
 
