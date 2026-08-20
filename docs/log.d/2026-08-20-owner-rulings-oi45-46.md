@@ -41,6 +41,27 @@ the safe one: over-count burns numbers, under-count re-points history).
 The row stays PENDING — the reframing is the owner thinking, not yet the
 ruling.
 
+Second follow-up, same day: the owner asked whether tests actually carry
+placeholder ids and argued the census needs no scope provisions since this
+repo's marks are already seeded. A census was run (`git ls-files` + the id
+grammar over the tree, 2026-08-20, this box): tests are saturated
+(WI-4010, SR-999, B-99, OI-99) AND non-test prose is too — reviews use
+SR-999/LLR-999/TC-999/WI-999 illustratively, plans use B-24,
+`gen_open_items.py`'s comments use WI-999, the shipped EXAMPLE.md uses
+REPO-1..4 — so an unscoped census would seed B=100/SR=1000/WI=4011, and a
+scope tight enough to fix that is the provisioning the owner declined. The
+owner's structural point survives and goes further: no future first-seed
+exists (every space here is seeded; adopters seed from the zero template),
+so NO census ships at all and OI-47 collapses to the one-time correction's
+mechanism. The marks are NOT yet corrected (still B=7/REL=3 — the owner's
+"already corrected" was ahead of the record); the refusal bites only at
+the raising commit (`trace._mark_history_findings` justifies by committed
+mark or live max, so a landed raise self-justifies). Options rewritten on
+the row: (d) recorded as withdrawn-by-measurement, (e) minted (a one-shot
+recorded-correction verb carrying the ruling id), (c) re-priced as a
+two-commit replay that is green under existing rules. Recommendation:
+(e), else (c). Still PENDING.
+
 Bookkeeping in the same commit: watermark `OI` 46 → 47 and `WI` 489 → 491 via
 `trace.py --bump-ids`; `docs/status.md`'s hand-authored watermark bullet
 re-pointed at OI-47 (the ruling is unchanged and still owed — what changed is
