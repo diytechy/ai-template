@@ -313,6 +313,42 @@ def test_a_current_brief_passes_the_check(tmp_path):
     assert "is current" in proc.stderr, proc.stderr
 
 
+def test_a_SNAPSHOT_README_ONLY_commit_leaves_the_brief_FRESH(tmp_path):
+    """MAJOR-11, 2026-08-20: `ratify_check` compared the derived stamp lines, so
+    the brief went STALE on a commit that moved no row it renders — the snapshot's
+    README, a `.gitignore`, anything that touches the snapshot directory or a
+    registry's status line. A guard that fires on every commit is learned as
+    noise, and the read it exists to force is the first thing dropped."""
+    run_git, _rev, _write = _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    assert _check(tmp_path).returncode == 0
+    readme = load_script("baseline_snapshot").snapshot_root(tmp_path) / "README.md"
+    readme.write_text("# the stamp, re-worded\n", encoding="utf-8")
+    run_git("add", "-A")
+    run_git("commit", "-m", "prose only — the snapshot's own README")
+    proc = _check(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "is current" in proc.stderr, proc.stderr
+
+
+def test_the_brief_states_what_the_stamp_IS_and_names_approval_provenance(tmp_path):
+    """MAJOR-4, 2026-08-20: the baseline line called any snapshot write "the
+    reviewed commit that last moved an approval", which a traced-cell refresh
+    moves while approving nothing. It now says what `stamp` is, and the
+    provenance a reader was being promised is derived beside it."""
+    _ratify_repo(tmp_path)
+    assert _brief(tmp_path).returncode == 0
+    out = (tmp_path / "docs" / "ratify" / "brief.md").read_text(encoding="utf-8")
+    assert "the commit that last wrote this record" in out, out
+    assert "reviewed commit that last moved an approval" not in out
+    assert "_Approval provenance:" in out, out
+    # This fixture is a CSV-carrier repo, where a status move has no line shape
+    # to pickaxe for — so the honest answer here is the degrade, stated rather
+    # than guessed. `test_baseline_snapshot` drives the positive arm over the
+    # TOML carrier this repo actually runs on.
+    assert "or git cannot say" in out, out
+
+
 def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
     """Drift direction 1 — the 121-CRITIQUE shape: chain rows added to the
     registry after the brief was written, so an owner blesses fewer rows than
@@ -356,11 +392,16 @@ def test_a_closed_window_is_a_no_op(tmp_path):
 
     CLOSING THE WINDOW NOW TAKES TWO ACTS, and that is D-9's whole point: the
     Status flip AND the copy that records what was blessed. See the test below
-    for what the first without the second looks like."""
+    for what the first without the second looks like.
+
+    THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves ratified
+    text under a row that is already `Approved` — the D-9 ladder's own shape, and
+    the one the authority gate makes a human declare (`--approves`), because it
+    is indistinguishable from laundering without the declaration."""
     _run_git, _rev, write = _ratify_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Approved", sr_req="The system shall do the AMENDED thing.")
-    load_script("baseline_snapshot").copy_live(tmp_path)
+    load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "window is closed" in proc.stderr
@@ -385,8 +426,10 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     assert "## SR-001" in proc.stdout
     assert "before: The system shall do the thing." in proc.stdout
     assert "after: The system shall do the AMENDED thing." in proc.stdout
-    # ...and the copy is what clears it.
-    load_script("baseline_snapshot").copy_live(tmp_path)
+    # ...and the copy is what clears it — carrying the ref that names the act,
+    # since 2026-08-20: absorbing ratified text under a standing approval is the
+    # one refresh that cannot be told from laundering without a human saying so.
+    load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
     after = run_py(
         [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
         cwd=tmp_path,

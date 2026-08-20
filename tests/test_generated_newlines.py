@@ -234,11 +234,13 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # prose (the section-2 summary and the empty-state card both had to name
     # snapshot drift instead of a marker that no longer exists), and
     # 880 -> 1057 when WI-485 (OI-41) landed the two deferral arms above `main`
-    # (the log.d declaration reader and the vacuity count).
+    # (the log.d declaration reader and the vacuity count), and
+    # 1057 -> 1158 when the 2026-08-20 batch-close pass added ARM 2's SCOPE rule
+    # (`fragment_scope_findings`) and the measured all-clear counts above it.
     # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 1057)], sites
+    assert sites == [("gen_open_items.py", 1158)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

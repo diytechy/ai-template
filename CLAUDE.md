@@ -58,7 +58,9 @@ that easier to achieve in a real project — or get out of the way.
 - **Self-test before claiming done.** The per-commit bar is the fast **smoke**
   tier (`python -m pytest -q -n auto -m smoke`) — budgeted at **60 s** wall in
   [`docs/stack.ini`](docs/stack.ini) and enforced in CI by
-  `scripts/check_smoke_budget.py`; it measured ~17.6 s. Run the **full**
+  `scripts/check_smoke_budget.py`; **measured 2026-08-20 on this box: 54.9 /
+  64.0 / 55.7 s over three warm runs — one of them past the 60 s ceiling.** One
+  box is one data point and the budget is not moved to fit it. Run the **full**
   unfiltered suite (`python -m pytest -q -n auto`, ~6 min) before claiming a
   WI/slice done, at phase close, and after a broad script change — it
   bootstraps a temp scaffold and exercises every script end-to-end. Paste the

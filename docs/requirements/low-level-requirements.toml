@@ -157,7 +157,7 @@ phase = 1
 sr_refs = ["SR-015"]
 title = "PB back-link resolution"
 module = "project-trajectory/scripts/trace.py"
-code_symbol = "budget_findings"
+code_symbol = "analyze"
 detail = """Resolves each PB row's Refs to a real SR/LLR/Module id; an empty or unresolvable Refs is a finding."""
 test_refs = "(see TC-015)"
 status = "Approved"
@@ -1753,7 +1753,7 @@ phase = 1
 [design.LLR-172]
 sr_refs = ["SR-165"]
 title = "Component derivation record: element completeness + the ranking recompute"
-module = "project-trajectory/scripts/trace.py"
+module = "project-trajectory/scripts/check_trajectory.py"
 code_symbol = "component_findings"
 detail = """Extends the existing component pass — the one home that already reads docs/requirements/components.toml and already emits CMP findings — with the derivation-record rules SR-165 states, rather than adding a second reader of the same registry. Per live CMP row: the record must declare the candidate partitions considered, the objective and the constraints they were scored against, a score per candidate, the selected partition, and the human ruling that named the components and adopted it; a missing element is one finding naming the row AND the element. Two derived rules on top of presence, because presence alone is satisfiable by a record that says nothing: (1) THE RANKING RECOMPUTES — re-rank the recorded candidates from the record's own objective, constraints and scores and compare with the recorded order, a mismatch being a finding, which is what makes the record falsifiable without a reviewer re-running a model session; (2) A SELECTION THE SCORES DO NOT RANK FIRST is a finding unless the record carries a human override naming that choice, so a legitimate "the scores said A, the human chose B" is expressible and an unexplained one is not. Vacuous by construction on a project declaring no components, and on the example -000 rows. NOT BUILT YET: the record cells do not exist on the CMP schema today — recorded as open debt on this row and TC-166; SR-165 carries Test verification precisely because the check is mechanizable, and this is the debt that verification incurs, recorded rather than silently owed."""
 rationale = """The check belongs where component_findings already is for the reason the census keeps applying: a second module reading components.toml would be a second answer to "is this partition recorded", and the two would drift. The recompute is the load-bearing half — an element-presence check passes on a record whose scores contradict its own conclusion, which is the exact failure SN-040 exists to catch (the next reviser cannot tell load-bearing boundaries from accidents). The override arm is what stops the recompute rule from forbidding human judgement: the requirement is that a departure from the scores is RECORDED, never that it is disallowed."""

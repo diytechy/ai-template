@@ -8,6 +8,7 @@ decisions moved to tests/test_trace_rules.py, the git-backed re-attestation
 brief to tests/test_trace_briefs.py.
 """
 
+import pytest
 from conftest import (
     KIT,
     load_script,
@@ -1257,10 +1258,16 @@ def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
     An endpoint naming a path the repo has DECLARED it does not carry is neither
     rot nor external — the layer is opt-in and switched off, and the row is
     honest about what the module would read if it were on. This repo's worked
-    case is `docs/requirements/performance-budgets.csv`: check_perf's budgets
-    registry, absent because process.md §9's perf layer is not enabled, with the
-    reason already written down one directory up. Naming it would have been the
-    checker demanding the repo delete a true statement."""
+    case is `docs/requirements/assets.csv`: the off-spine asset registry, absent
+    because a meta-repo ships no binary assets, with the reason already written
+    down one directory up. Naming it would have been the checker demanding the
+    repo delete a true statement.
+
+    RE-POINTED 2026-08-20 (the batch review's MINOR-19): the example was
+    `performance-budgets.csv` until WI-481 seeded that registry and deleted its
+    declared-absence line, which left this docstring teaching a worked case that
+    had become live. The scenario below uses a synthetic path, so only the
+    example named in words moved."""
     make_minimal_project(scaffold)
     body = (
         'IF-001,Provides,src/demo,docs/off/budgets.csv,"x",SR-001,v1,Stable,Active,,\n'
@@ -1897,6 +1904,17 @@ def test_this_repos_own_provenance_allow_entries_all_still_bite():
         "docs/provenance-allow has {} declaring line(s) but the reader yielded "
         "{} key(s): {}".format(len(declared), len(allow), declared)
     )
+    # ...and when the population IS zero, SAY SO IN THE RUN (2026-08-20, the
+    # batch review's MINOR-14). The one-key-per-line guard above is real at
+    # every size, but the LIVENESS sweep below has nothing to sweep with an
+    # empty list, and a dot in the output reads exactly like a list that was
+    # checked. A skip is the honest render of "this half did not run".
+    if not declared:
+        pytest.skip(
+            "docs/provenance-allow declares nothing — the one-key-per-line "
+            "guard above held at zero population, and the liveness sweep below "
+            "has no entry to match against a live token"
+        )
 
     tiers = (
         ("SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
@@ -1997,6 +2015,56 @@ def test_a_ruled_row_still_satisfies_arm_1_and_no_registry_is_vacuous(tmp_path):
     bare = _allow_repo(tmp_path / "bare", entry, oi_rows=None)
     assert trace.open_item_states(bare) is None
     assert not trace.provenance_allow_findings(trace.parse_provenance_allow(bare), None)
+
+
+def test_a_line_the_grammar_cannot_read_is_REPORTED_not_silently_dropped(tmp_path):
+    """PARSE HONESTY (2026-08-20, the batch review's MAJOR-6). "Fail-soft in the
+    LOUD direction" was half true: dropping a malformed entry does un-silence the
+    finding it was written for, but it also removes the entry from every COUNT —
+    and OI-41's vacuity arm IS a count. One mistyped separator and an exception
+    that a human reads as live counts as none, so the arm prints an all-clear
+    over a surface that still defers."""
+    trace = load_script("trace")
+    root = _allow_repo(
+        tmp_path,
+        "# a comment declares nothing, and is not counted\n"
+        "SR-001 Rationale added 2026-08-16 — OI-5: the reviewed reason.\n"
+        "SR-002 Rationale added 2026-08-16 -- OI-5: a hyphen, not an em dash.\n"
+        "SR-003 — OI-5: too few key fields to name a token.\n",
+    )
+    entries, unparsed = trace.read_provenance_allow(root)
+    assert len(entries) == 1
+    assert [ln for ln, _text in unparsed] == [3, 4]
+    findings = trace.provenance_allow_parse_findings(root)
+    assert len(findings) == 1, findings
+    assert "docs/provenance-allow:3" in findings[0]
+    assert "2 such line(s)" in findings[0]
+    # The legal file says nothing at all.
+    clean = _allow_repo(
+        tmp_path / "clean",
+        "SR-001 Rationale added 2026-08-16 — OI-5: the reviewed reason.\n",
+    )
+    assert trace.provenance_allow_parse_findings(clean) == []
+
+
+def test_an_unreadable_allow_line_reds_the_integrity_floor(scaffold):
+    # Integrity-class like ARM 1's field rule, and for the same reason: the line
+    # either parses or it does not, so there is no false positive to warn-first
+    # about, and the always-on floor is the only pipe that runs at every gate.
+    (scaffold / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 -- OI-1: a hyphen, not an em dash.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 1, out
+    assert "DECLARES an exception and the grammar cannot read it" in out, out
+    (scaffold / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — OI-1: the reviewed reason.\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict-integrity"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
 def test_an_unresolved_allow_entry_reds_the_integrity_floor(scaffold):

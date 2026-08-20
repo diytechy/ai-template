@@ -43,7 +43,12 @@ cells carry the full design; the build obligations:
 
 - **ARM 1 (hard immediately):** `docs/provenance-allow`'s entry grammar gains
   a required `OI-###`; an entry naming a nonexistent or non-pending row is a
-  finding; the 19 entries that promise a row in prose migrate in one pass.
+  finding <!-- CORRECTION 2026-08-20: the NON-PENDING half of this obligation
+  was deliberately NOT built — ARM 1 enforces present + resolves-to-a-row, and
+  the row's state is ARM 3's count. The Deliverable above records the narrowing
+  and its reason; this bullet is the obligation as written before the build, left
+  standing so the narrowing is visible rather than invisible. -->; the 19
+  entries that promise a row in prose migrate in one pass.
   The file's grammar is already parsed and tested — extend, don't rebuild.
 - **ARM 2 (the declared-weak arm — keep it labelled):** a session's
   `docs/log.d/` fragment declares the `OI` ids it deferred, checked at the

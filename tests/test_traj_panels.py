@@ -679,6 +679,52 @@ def test_t1_hero_names_the_active_work_item(tmp_path):
     assert "WI-002" in hero and "Harness" in hero  # id + title on the hero
 
 
+def test_t1_hero_OVERLONG_active_title_discloses_natively(tmp_path):
+    """WI-479's defense, PINNED BEHAVIOURALLY (2026-08-20, the batch review's
+    ROUND-SOL MAJOR-10). The panel test above asserts the id and a title
+    fragment, both of which survive deleting the disclosure routing entirely —
+    so the narrow-width defense and its keyboard operability could be removed
+    with every test green. What has to hold is the MARKUP: a native
+    `<details>/<summary>` (no script, keyboard-operable by construction), a
+    worded "show all" cue rather than a silent cut, and the remainder present in
+    the document rather than thrown away.
+
+    The bound is `traj_panels._NEXT_WORK_TITLE`, read rather than restated so a
+    re-tuned bound cannot leave this test asserting against a stale number."""
+    panels = load_script("traj_panels")
+    bound = panels._NEXT_WORK_TITLE
+    tail = "and here is the remainder that must still be reachable"
+    long_title = ("A" * (bound + 5)) + " " + tail
+    make_repo(
+        tmp_path,
+        "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
+        "WI-002,{},scripts,SR-001,WI-001,active,harness green\n".format(long_title),
+    )
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    hero = text.split('class="hero"', 1)[1].split("</section>", 1)[0]
+    assert "<details><summary>" in hero, hero[:600]
+    assert "</summary>" in hero and "</details>" in hero
+    assert 'class="nwrev">… show all<' in hero, "the cue must be worded, not a bare cut"
+    # The remainder is DISCLOSED, not discarded — it sits after the summary.
+    disclosed = hero.split("</summary>", 1)[1].split("</details>", 1)[0]
+    assert tail in disclosed, disclosed
+    # ...and a title UNDER the bound stays plain, so the disclosure is a
+    # response to length rather than unconditional markup.
+    make_repo(
+        tmp_path / "short",
+        "WI-001,Bootstrap,scripts,SR-001,,done,the adder\n"
+        "WI-002,Harness,scripts,SR-001,WI-001,active,harness green\n",
+    )
+    assert gen(tmp_path / "short").returncode == 0
+    short_hero = (
+        html_of(tmp_path / "short")
+        .split('class="hero"', 1)[1]
+        .split("</section>", 1)[0]
+    )
+    assert "<details><summary>" not in short_hero
+
+
 def test_t1_hero_active_line_absent_when_nothing_is_active(tmp_path):
     # T1: no active WI -> no hero active line (empty markup, not a stray label).
     wis = (

@@ -94,7 +94,11 @@ matching prose is the same failure the harvester makes below, at smaller scale.)
   Both are in `subagent_gate.py` (`decide` at :130, `main` at :187) and both
   read `Implements: SR-043, LLR-040`.
 - **Reverse coverage: 1 of 161 live LLR rows (0.6%)** is named by any
-  `Implements:` back-link in the scripts — LLR-040.
+  `Implements:` back-link in the scripts — LLR-040. (Re-measured
+  2026-08-20 at the batch close: **1 of 162 (0.6%)**; LLR-180 joined the
+  denominator, the carrier set did not move. The scan counts a spine id
+  anywhere in comment text, string literals included — the error is toward
+  false PASSES only.)
 - **300 three-digit spine-id citations** (`\b(SN|SR|LLR|TC)-\d{3}\b`) appear
   across the scripts, spanning **83 distinct ids, of which 8 name no live
   registry row** (21 occurrences): SN-000, SN-013, SN-016, SN-030, SN-031,

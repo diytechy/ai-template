@@ -6,6 +6,31 @@ cross-family Sol via codex) at the end, consolidated and iterated in one
 action. One entry per WI as it closes; adjacent findings accumulate at the
 bottom for the closing review.
 
+Deferred open items: OI-45, OI-46 — the two decisions this day ANNOUNCED
+without minting a row, found by the closing review (ROUND-OPUS MAJOR-7) as
+OI-41's founding class reproduced on arming day. OI-45: whether any
+mechanical path may ever carry ratification authority now that D-9 step 7
+left `intake._apply_flips` writing nothing. OI-46: OI-37's two residues —
+the gate-OFF parse asymmetry in `subagent_gate` against its two twins, and
+the fail-open log nothing reads. **This line is the FRAGMENT'S OWN
+declaration**: it stands in the top matter, above the first `### `, so it
+speaks for the whole file. A declaration inside a section speaks for that
+section alone — which is exactly the correction this fragment earned, since
+WI-485's `Deferred open items: none` was true of WI-485 and read as the
+day's answer (`gen_open_items.fragment_scope_findings`, added at the
+closing iterate pass).
+
+**On the figures below (note added 2026-08-20, closing review ROUND-OPUS
+MAJOR-9).** Eleven full-suite totals appear in these entries; four carry a
+`fig:` marker naming the producing command and revision, and **seven are
+WORKER SELF-REPORTS** — numbers a grind worker pasted into its final summary,
+whose provenance is that worker's own session transcript and nothing this
+repo retains. They are labelled here rather than marked, deliberately:
+attaching a `fig:` marker now would manufacture provenance for a run the
+orchestrator did not witness, which is worse than an unmarked number. Read
+them as reported, not as driven. The standing lesson is the close ritual's,
+not the workers': a figure that matters is re-driven by the closer.
+
 ### WI-474 — the hats→spine_carrier seam (opus worker) — CLOSED complete
 
 IF-133 minted (carrier-consumption shape per IF-118/119/120/122; owner
@@ -103,12 +128,20 @@ verification (smoke only) could not catch it.
 
 ### WI-481 — live performance budgets (sonnet worker) — CLOSED complete
 
-Four PB rows seeded with warm-run measured bases + fig: markers (trace
+Four PB rows seeded with warm-run measured bases + fig: markers (trace <!-- fig-ok -->
 0.97s/5s, regen pair 6.46s/20s, check_docs 1.94s/8s, whole hook 7.7s/30s),
 declared-absence line retired with its three readers checked, PB watermark
 0→4. check_perf moved from vacuous OK to an honest 4-budgets SKIP naming
 the unwired metrics emitter — that emitter is the named residue for a
 future WI.
+
+CORRECTED 2026-08-20 (closing review, ROUND-OPUS MAJOR-8): this WI's commit
+title claims "the perf gate stops being vacuous", and the gate did not. The
+SKIP now NAMES what is missing; the gate still cannot fail while all four
+rows sit at `Gate=warn` and no metrics emitter is wired — both deliberate,
+recorded postures — and the step is dormant at this repo's derived gate.
+The MESSAGE stopped being vacuous. The same correction is filed inside the
+WI's completed spec.
 
 ### WI-485 — OI-41's three arms + always-on (opus worker) — CLOSED complete
 

@@ -2562,10 +2562,14 @@ def dead_dependency_findings(wis):
 # one.)
 
 
-def _git(root, args):
+def _git(root, args, stdin=None):
     """`git -C <root> <args>` stdout on success, else None (git absent, not a
     repo, no such object). Every staged-mode git call degrades to None so the
-    no-validation-delta warn is a silent no-op outside a git checkout."""
+    no-validation-delta warn is a silent no-op outside a git checkout.
+
+    `stdin` feeds a batch command (`cat-file --batch-check`), which is how the
+    committed-mirror scan asks about many blobs in ONE subprocess instead of two
+    per file — the cost matters because that scan rides the always-on floor."""
     try:
         proc = subprocess.run(
             ["git", "-C", str(root)] + args,
@@ -2573,6 +2577,7 @@ def _git(root, args):
             text=True,
             encoding="utf-8",
             errors="replace",
+            input=stdin,
         )
     except (OSError, ValueError):
         return None
@@ -3559,6 +3564,115 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
                 "written by copying the live file (`intake.py snapshot`). A hand "
                 "edit, a partial copy and a copy-then-amend-live all land "
                 "here".format(name, live_rel)
+            )
+    return out
+
+
+def _snapshot_write_revs(root):
+    """`{snapshot path: the rev that last wrote it}` over the COMMITTED history,
+    or None when git cannot answer.
+
+    One `git log --name-only` over the snapshot root answers for every file at
+    once: history is walked newest-first, so the FIRST commit that names a path
+    is the one that last wrote it. `--no-renames` for the reason `_spine_revs`
+    gives — a moved registry must show up under its old path too."""
+    log = _git(
+        root,
+        ["log", "--format=%x01%H", "--name-only", "--no-renames", "--", SNAPSHOT_DIR],
+    )
+    if log is None:
+        return None
+    out, rev = {}, None
+    for line in log.splitlines():
+        if line.startswith("\x01"):
+            rev = line[1:].strip()
+            continue
+        name = line.strip()
+        if name and rev and name not in out:
+            out[name] = rev
+    return out
+
+
+def committed_snapshot_findings(root):
+    """THE MIRROR INVARIANT OVER THE COMMITTED TREE — the half `staged_snapshot_
+    findings` cannot reach (adversarial round, 2026-08-20: ROUND-OPUS CRITICAL-3
+    / ROUND-SOL MAJOR-2).
+
+    The staged rule is keyed on a snapshot file being IN THE COMMIT. That makes
+    it exact and cheap, and it makes its blind spot exact too: once a forged or
+    stale copy has LANDED — hooks bypassed, or a commit made outside them — no
+    later run stages a snapshot file, so nothing ever looks at it again. The
+    divergence is silent forever, which is the opposite of what a record of what
+    a human blessed is for.
+
+    So this asks the same question of history rather than of the index: for every
+    file under the snapshot root, **was it a copy of its live counterpart at the
+    commit that last wrote it?** That framing is what makes the rule safe to run
+    ALWAYS, and the alternative shape — comparing the snapshot to live in the
+    WORKING TREE — is the one to refuse: the snapshot is deliberately behind live
+    while an amendment is pending, and that lag IS the signal (see
+    `baseline_snapshot`'s header). A rule that redded every pending amendment
+    would be switched off within a day. Here, live moving on afterwards changes
+    nothing: the comparison is pinned to the snapshot's own writing commit, so a
+    legitimate copy stays green forever and a forgery stays red forever.
+
+    Blob-identity via `git cat-file --batch-check` rather than two `git show`s
+    per file: git names identical content with the identical object id, so
+    comparing object ids IS the byte comparison, at two subprocesses total.
+
+    Degrades to `[]` off git, on any git failure, and for an untracked snapshot
+    (a scaffold that has committed nothing has no committed state to judge)."""
+    revs = _snapshot_write_revs(root)
+    if not revs:
+        return []
+    prefix = SNAPSHOT_DIR + "/"
+    pairs, specs = [], []
+    for name, rev in sorted(revs.items()):
+        if not name.startswith(prefix):
+            continue
+        live_rel = name[len(prefix) :]
+        # The README is prose with no live counterpart (design §F8), exactly as
+        # in the staged rule — excluded by name so a genuinely missing registry
+        # stays loud.
+        if live_rel == SNAPSHOT_README:
+            continue
+        pairs.append((name, live_rel, rev))
+        specs += ["{}:{}".format(rev, name), "{}:{}".format(rev, live_rel)]
+    if not pairs:
+        return []
+    batch = _git(
+        root, ["cat-file", "--batch-check=%(objectname)"], stdin="\n".join(specs) + "\n"
+    )
+    if batch is None:
+        return []
+    ids = batch.splitlines()
+    if len(ids) != len(specs):
+        return []  # unparseable batch: an unanswerable question makes no finding
+    out = []
+    for i, (name, live_rel, rev) in enumerate(pairs):
+        snap_id, live_id = ids[2 * i].strip(), ids[2 * i + 1].strip()
+        if snap_id.endswith("missing"):
+            # The commit that last named this path DELETED it. That is the
+            # staged rule's subject (a partial deletion is caught in the commit
+            # that does it) and not a mirror question — there is no copy left to
+            # compare.
+            continue
+        if live_id.endswith("missing"):
+            out.append(
+                "{} was written into the {} snapshot at {} where {} did not "
+                "exist — a snapshot file with no live counterpart in its own "
+                "writing commit is a record of text the repo never had".format(
+                    name, SNAPSHOT_DIR, rev[:8], live_rel
+                )
+            )
+        elif snap_id != live_id:
+            out.append(
+                "{} is NOT byte-identical to {} at {}, the commit that last "
+                "wrote it — the snapshot is the record of what a human blessed, "
+                "so it may only ever be written by copying the live file "
+                "(`intake.py snapshot`). This divergence has LANDED: re-copy it "
+                "in a reviewed commit, or restore the copy that was "
+                "blessed".format(name, live_rel, rev[:8])
             )
     return out
 

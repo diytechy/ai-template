@@ -15,6 +15,7 @@ from conftest import (
     KIT,
     LLRS,
     make_minimal_project,
+    pin_autocrlf,
     process_key,
     run_py,
     set_process_key,
@@ -251,6 +252,7 @@ def test_hook_runs_end_to_end_when_sh_available(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
@@ -276,6 +278,7 @@ def test_hook_honors_kit_scripts_dir_override(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
 
     ok = subprocess.run(
         [sh, HOOK],
@@ -306,6 +309,7 @@ def test_hook_skips_clearly_when_no_working_python3(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     fakebin = scaffold / "fakebin"
     fakebin.mkdir()
     for name in ("python3", "python"):
@@ -343,6 +347,7 @@ def test_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     set_process_key(scaffold, "policies", "privacy_check", True)
     env = _shadow_python(scaffold)
     proc = subprocess.run(
@@ -359,6 +364,7 @@ def test_commit_msg_hook_fails_closed_when_privacy_on_but_no_python(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     (scaffold / "MSG.txt").write_text("an innocent message\n", encoding="utf-8")
     env = _shadow_python(scaffold)
 
@@ -397,6 +403,7 @@ def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
         )
 
     assert git("init").returncode == 0
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     git("config", "user.name", "Test User")
     git("config", "user.email", "someone@example.com")
     key = "-----BEGIN RSA " + "PRIVATE KEY-----\n"  # split so this line is not a match
@@ -430,6 +437,7 @@ def test_hook_privacy_author_guard(scaffold):
         )
 
     assert git("init").returncode == 0
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     git("config", "user.name", "Test User")
     git("config", "user.email", "real.person@gmail.com")
 
@@ -474,6 +482,7 @@ def test_commit_msg_hook_scans_message(scaffold):
     sh = shutil.which("sh")
     make_minimal_project(scaffold)
     subprocess.run(["git", "init"], cwd=str(scaffold), capture_output=True)
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     HOOK_CM = ".githooks/commit-msg"
 
     def run_msg(text):

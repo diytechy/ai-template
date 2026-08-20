@@ -247,8 +247,16 @@ subagent_gate = "off"
 # 50 IS THE RECORDED TARGET, and the ONLY sanctioned way to reach it is to
 # write the declarations and then raise this number to a bar the tree already
 # clears. The number goes up because the tags landed; never because the bar
-# came down. Below the dial the check WARNS at a plain run and FAILS from
-# DevStg-Tests on (`--strict-backlinks`), the same warn-then-error ladder the
-# three check dials above ride. Born here, so unlike those six it has no legacy
-# one-word file and cannot be double-declared.
+# came down. WHERE THE STEP RUNS, stated exactly (corrected 2026-08-20): the
+# `backlink-coverage` step exists from DevStg-Tests on and NOT below it, so a
+# plain run does not warn — it does not run the step at all. From DevStg-Tests
+# the step reports, and `--strict-backlinks` (which `check.py` adds at that bar
+# and above) turns a below-minimum reading into a failure. Born here, so unlike
+# those six it has no legacy one-word file and cannot be double-declared.
+#
+# READ THE NUMBER WITH ITS ONE CAVEAT: the scan reads comment TEXT and applies no
+# position restriction, so a spine id inside a string literal or a negated
+# example counts as a carrier. Because the denominator is your live LLR count,
+# that error can only RAISE the score — false passes, never false failures — so
+# a number near your bar deserves a look at what is carrying it.
 backlink_coverage_min = 0

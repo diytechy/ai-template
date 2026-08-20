@@ -132,6 +132,18 @@ README = "README.md"
 # move. A human-only approval cell with no baseline reopens the
 # "approved text moved and nobody saw" hole exactly one tier down from the one
 # this mechanism closes.
+#
+# **THE OFF-SPINE HALF IS COPIED AND, IN THIS REPO TODAY, COMPARED BY NO RULE**
+# (2026-08-20, the batch review's MINOR-13, measured: 130 of 534 snapshotted rows
+# are IF/CMP and every one of them reads `Drafted`). That is not a defect and it
+# is not a gap to close: both `is_drifted` and `unanchored_findings` ask their
+# question only of rows that CLAIM approval, and a row below approval has made no
+# claim to fall from. So the protection those tiers get is currently ZERO, and it
+# begins — with no code change at all — at their first approval. The copy is
+# taken now precisely so that the day a human moves one of those cells, the
+# record of what they blessed already exists to compare against. Stated here
+# because "we snapshot the off-spine tiers" reads like live protection, and for
+# one more registry-approval cycle it is not.
 SNAPSHOTTED = (
     "docs/requirements/stakeholder-needs.toml",
     "docs/requirements/system-requirements.toml",
@@ -254,6 +266,65 @@ def stamp(root):
     return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
 
 
+def approval_stamp(root):
+    """`(short rev, date)` of the last commit that MOVED A STATUS CELL in a
+    snapshotted registry, or `("", "")` when git cannot say.
+
+    THE COMPANION TO `stamp`, AND THE ONE A READER ACTUALLY WANTS (adversarial
+    round, 2026-08-20: ROUND-OPUS MAJOR-4). `stamp` answers "when was this record
+    last WRITTEN", which is a fact about the copy and nothing more — a
+    traced-cell refresh moves it while approving nothing. The provenance question
+    a brief's reader is asking is "when did an approval last happen here", and
+    the only mechanical trace of an approval is a `status` line moving in a
+    registry the snapshot covers.
+
+    `-G` over the status-line regex rather than `-S`: a pickaxe on the STRING
+    counts occurrences, and an approval changes a status line's VALUE without
+    changing how many there are, so `-S` is blind to exactly the commit being
+    looked for. `-G` matches the added/removed lines of the diff, where BOTH
+    sides of a maturity edit land — the removed line carrying the old value and
+    the added line carrying the new one.
+
+    ADVISORY, like `stamp`, and degrades the same way: it is rendered for a human
+    and computed by nothing. A row addition also moves a status line into
+    existence and will be named here — that is a first approval or a new draft,
+    and either way it is the honest answer to "what last touched a status cell".
+
+    **CARRIER-SHAPED, AND IT SAYS SO WHEN IT CANNOT ANSWER.** A status cell has a
+    LINE of its own under the TOML carrier and none under CSV, where it is one
+    field of a row line that changes for a dozen unrelated reasons. So this
+    derivation answers for TOML and returns the empty stamp for a CSV-carrier
+    repo, which the brief renders as "or git cannot say" — the degrade stated
+    rather than a wrong commit named. Widening it to CSV would mean claiming an
+    approval from any row edit, which is the overclaim this function exists to
+    replace."""
+    try:
+        proc = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "log",
+                "-1",
+                "--format=%h %cs",
+                "-G",
+                r'^\s*(status|Status)\s*=\s*"',
+                "--",
+                *SNAPSHOTTED,
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except (OSError, ValueError):
+        return "", ""
+    if proc.returncode != 0:
+        return "", ""
+    parts = proc.stdout.strip().split()
+    return (parts[0], parts[1]) if len(parts) >= 2 else ("", "")
+
+
 def _claims_approval(row):
     """True when this row claims approval or above, on the ONE cell every tier
     now uses: `Status`, spine and off-spine alike.
@@ -348,7 +419,180 @@ def rows_for(snapshot, rel, id_col):
     return snapshot.get((spine_carrier.stem(rel), id_col), {})
 
 
-def copy_live(root, *, seed=False):
+def refresh_ledger(root, snapshot=None):
+    """What a refresh WOULD ABSORB, per registry:
+    `{rel: {"absorbed": {row id: {cell: (before, after)}}, "flips": [row id]}}`.
+
+    The two halves are the two sides of the authority question `copy_live` asks
+    below. `absorbed` is the ratified text a copy would silently re-bless: rows
+    whose SNAPSHOT copy claims approval (that is the record that would be
+    overwritten) whose ratified cells have moved. `flips` is the authorising act
+    — a row whose `Status` differs between the record and the tree, which is a
+    human moving a maturity cell in a reviewed commit.
+
+    A FLIPPED ROW'S OWN AMENDMENT IS NEVER ABSORBED: amend-plus-flip is the
+    sanctioned shape of a re-approval (`test_the_amendment_seam_is_BLIND_to_an_
+    amend_plus_flip` explains why no diff-based seam can see it), so the flip is
+    recorded and the row leaves the absorbed set.
+
+    Rows the snapshot does not carry are not here at all — an approval with no
+    copy is UNANCHORED, a louder finding `unanchored_findings` owns. Rows below
+    approval in the record are not here either: a `Drafted` row's text was never
+    blessed, so copying it re-blesses nothing.
+
+    `{}` when the repo has no snapshot (nothing to absorb)."""
+    if snapshot is None:
+        snapshot = load_all(root)
+    if snapshot is None:
+        return {}
+    ledger = {}
+    for rel, id_col in SNAPSHOT_TIERS:
+        entry = ledger.setdefault(rel, {"absorbed": {}, "flips": []})
+        live = spine_carrier.resolve(Path(root) / rel)
+        if live is None:
+            continue
+        before_rows = rows_for(snapshot, rel, id_col)
+        for row in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+            rid = str(row.get(id_col) or "").strip()
+            before = before_rows.get(rid) if rid else None
+            if before is None:
+                continue
+            if (before.get("Status") or "").strip() != (
+                row.get("Status") or ""
+            ).strip():
+                entry["flips"].append(rid)
+                continue
+            if not _claims_approval(before):
+                continue
+            changed = check_trajectory.split_changed_cells(rel, id_col, before, row)
+            if changed["ratified"]:
+                entry["absorbed"][rid] = changed["ratified"]
+    return ledger
+
+
+def refresh_refusal(root, approves=None, snapshot=None):
+    """The refusal text for an unauthorised refresh, or `""` when the copy is
+    authorised — THE AUTHORITY CHECK THE WRITER SHIPPED WITHOUT (adversarial
+    round, 2026-08-20: ROUND-OPUS CRITICAL-2 / ROUND-SOL CRITICAL-1).
+
+    The hole was exact and was executed end to end: `copy_live` refused only to
+    CREATE the directory, so once a repo had signed, `intake.py snapshot`
+    re-blessed whatever text happened to be in the tree. Two commits — rewrite an
+    Approved requirement, then refresh — left every check green with the record
+    rewritten to match, and the drift the mechanism exists to render had been
+    absorbed into the baseline.
+
+    THREE WAYS A REFRESH IS AUTHORISED, and the first two need no flag at all:
+
+      1. **It absorbs nothing ratified.** Traced-cell refreshes (a `Module`,
+         `CodeSymbol`, `TestRefs` or ref pointer re-point) and Drafted-row work
+         stay exactly as cheap as they were — this is the common case, and the
+         review verified the WI-482/WI-452 class of the same day was clean.
+      2. **A `Status` cell moved in that same registry.** Amend-plus-flip is
+         ratification: a human moved a maturity cell in the reviewed commit the
+         copy rides.
+      3. **`--approves <ref>` names the approval act.** The escape for the shape
+         the ladder genuinely has — an amendment to an Approved row that a
+         sitting ruled without moving its Status (the D-9 ladder's own case, and
+         what the day's 17-cell amendment batch was). The ref is not validated,
+         and could not usefully be: it is a HUMAN's citation of the act, recorded
+         into the snapshot's prose stamp so the record says under whose authority
+         it moved. What the flag buys is that the act is NAMED and deliberate
+         rather than a side effect of a helper that always said yes.
+
+    Per REGISTRY rather than per row, because that is the granularity of the
+    reviewed commit: the sitting rules a registry's rows together, and a
+    row-level pairing would demand a flip for each amended row, which is exactly
+    the flip the D-9 ladder deleted."""
+    if approves:
+        return ""
+    try:
+        ledger = refresh_ledger(root, snapshot)
+    except SystemExit:
+        # AN UNREADABLE RECORD CANNOT BE COMPARED, and `copy_live` is the repair
+        # path for exactly that state (a stale other-carrier file, a snapshot
+        # that does not parse). Refusing here would brick the only tool that
+        # fixes it. The bypass this leaves is real and is bounded: corrupting the
+        # record first means COMMITTING the corruption, which reds both mirror
+        # rules — the staged one in the commit that does it, and the committed
+        # one on every strict run afterwards.
+        return ""
+    blocked = [
+        (rel, e)
+        for rel, e in sorted(ledger.items())
+        if e["absorbed"] and not e["flips"]
+    ]
+    if not blocked:
+        return ""
+    lines = [
+        "baseline_snapshot: REFUSED — this refresh would ABSORB ratified text "
+        "into the record of what a human blessed, and nothing in this working "
+        "tree authorises it:"
+    ]
+    for rel, entry in blocked:
+        for rid, cells in sorted(entry["absorbed"].items())[:5]:
+            lines.append("  {} {}: {}".format(rel, rid, ", ".join(sorted(cells))))
+        extra = len(entry["absorbed"]) - 5
+        if extra > 0:
+            lines.append("  {} (+{} more row(s))".format(rel, extra))
+    lines.append(
+        "A snapshot copy IS the approval record, so ratified text reaches it only "
+        "through an approval act. Three ways forward: flip the row's `Status` in "
+        "the same tree (amend-plus-flip is ratification); or re-run with "
+        "`intake.py snapshot --approves <ref>` naming the sitting, log fragment "
+        "or commit that ruled these cells (the ref is recorded into the "
+        "snapshot's README stamp); or revert the amendment and leave the drift "
+        "standing, which is what the re-attestation brief is for. Traced cells "
+        "(Module/CodeSymbol/TestRefs and the ref pointers) are never blocked here."
+    )
+    return "\n".join(lines)
+
+
+def _record_approval(base, ref, written):
+    """Append the `--approves` ref to the snapshot's prose stamp, creating the
+    stamp when the repo has none.
+
+    STILL PROSE, STILL PARSED BY NOTHING (design §F8, repo-lock D-10's
+    tripwire) — the line is a sentence a human reads, and no code in the kit
+    reads this file back. The whole point of recording it here rather than in a
+    field is that a field would be the ledger this mechanism replaced: the
+    machine facts stay in the copied files and in git."""
+    path = base / README
+    stamped = (
+        "- {} — refreshed under approval ref: **{}** ({} registry file(s)).\n".format(
+            _today(), ref, len(written)
+        )
+    )
+    if not path.is_file():
+        path.write_text(
+            "# `last_approved` — the approval stamp\n\n"
+            "**This file is prose. Nothing parses it.** Every machine fact about "
+            "the snapshot comes from the copied registry files beside it, or "
+            "from `git log` over this directory.\n\n"
+            "## Refreshes recorded under an explicit approval\n\n"
+            "Each line below is a human's citation of the act that authorised a "
+            "refresh absorbing ratified text (`intake.py snapshot --approves "
+            "<ref>`). A refresh that absorbs nothing ratified, or that rides a "
+            "`Status` flip, needs no entry.\n\n" + stamped,
+            encoding="utf-8",
+            newline="\n",
+        )
+        return
+    text = path.read_text(encoding="utf-8")
+    if not text.endswith("\n"):
+        text += "\n"
+    path.write_text(text + stamped, encoding="utf-8", newline="\n")
+
+
+def _today():
+    """Today, ISO. Its own function so the stamp writer has one clock and the
+    tests have one thing to read."""
+    import datetime
+
+    return datetime.date.today().isoformat()
+
+
+def copy_live(root, *, seed=False, approves=None):
     """Mirror every SNAPSHOTTED registry into `docs/archive/last_approved/`;
     the sorted list of repo-relative paths written.
 
@@ -365,6 +609,14 @@ def copy_live(root, *, seed=False):
     `--seed` is reachable only from `intake.py snapshot --seed`, and
     `tests/test_baseline_snapshot.py` pins that no loop module, hook or
     `check.py` contains the flag.
+
+    **AND REFUSES TO REFRESH ONE WITHOUT AUTHORITY** (`refresh_refusal`, 2026-08-20).
+    Creating was guarded and rewriting was not, which made the second act the
+    cheap one: after the first signing this function re-blessed any text it was
+    pointed at. A refresh that would absorb RATIFIED text now needs either a
+    `Status` flip in the same registry or an explicit `approves` ref, which is
+    recorded into the snapshot's prose stamp. Traced-cell refreshes are
+    unaffected and need no flag.
 
     **NOTHING SHOULD EVER WIRE THIS INTO A FRESHNESS STEP.** Exactly two callers
     are sanctioned: `intake._apply_flips` (the mechanical path, called AFTER the
@@ -385,6 +637,14 @@ def copy_live(root, *, seed=False):
                 "been ruled.".format(base)
             )
         base.mkdir(parents=True, exist_ok=True)
+    else:
+        # The authority gate, keyed on the directory EXISTING rather than on
+        # `seed`: creating is seeding and rewriting is refreshing, whatever flag
+        # the caller passed. `--seed` against a standing record is a mistake, and
+        # a mistake is exactly the thing that must not sail past the check.
+        refusal = refresh_refusal(root, approves)
+        if refusal:
+            raise SystemExit(refusal)
     written = []
     for rel in SNAPSHOTTED:
         suffixes = (
@@ -405,7 +665,10 @@ def copy_live(root, *, seed=False):
         dest = dest_dir / live.name
         shutil.copyfile(live, dest)
         written.append(dest.relative_to(Path(root)).as_posix())
-    return sorted(written)
+    written = sorted(written)
+    if approves:
+        _record_approval(base, approves, written)
+    return written
 
 
 def is_drifted(rel, id_col, live_row, snapshot_rows):

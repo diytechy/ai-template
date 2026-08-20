@@ -161,7 +161,12 @@ subagent_gate = "off"
 # The reverse back-link coverage bar, as a PERCENTAGE of live LLR rows (OI-42
 # ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing — the
 # shipped position, and this repo's honest one: measured 1 of 161 live LLR rows
-# (0.6%) at WI-486, on the tightened literal-`Implements:` grammar. 50 is the
+# (0.6%) at WI-486 and re-measured 1 of 162 (0.6%) at the 2026-08-20 batch close,
+# on the tightened literal-`Implements:` grammar. READ THE NUMBER WITH ITS ONE
+# CAVEAT: the scan has no position restriction, so a spine id in a string literal
+# or a negated example counts as a carrier — and since the denominator is the LLR
+# count, that error can only RAISE the score. False passes, never false failures.
+# 50 is the
 # recorded TARGET that WI-487's back-link campaign is sized to clear, and the
 # dial rises only after the tags land. The shipped template's [checks] header
 # carries the full reasoning.

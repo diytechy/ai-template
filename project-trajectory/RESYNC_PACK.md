@@ -2263,6 +2263,59 @@ the `--require-verified` flag instead of a bare "+ Verified", which folded into
 `Approved` at the status unification. Nothing enforces the commit form; it is
 stated once so a log carrying both stops reading as two conventions.
 
+### The `last_approved` snapshot gains an AUTHORITY GATE (`--approves`) [since 46616726]
+
+**Kit-owned files — overwrite them and move on:** `scripts/baseline_snapshot.py`,
+`scripts/intake.py`. **What changes for you:** `intake.py snapshot` used to copy
+whatever was in the tree, every time. It now REFUSES a refresh that would absorb
+RATIFIED text into `docs/archive/last_approved/` unless one of three things is
+true — the copy absorbs nothing ratified (a `Module`/`CodeSymbol`/`TestRefs` or
+ref-pointer refresh, the common case, unchanged and free); a `Status` cell moved
+in the same registry (amend-plus-flip IS ratification); or you pass
+`--approves <ref>` naming the sitting, log fragment or commit that ruled the
+cells, which is recorded into the snapshot's prose stamp
+(`docs/archive/last_approved/README.md`, created if you have none).
+
+**Why:** an adversarial round executed the hole end to end. Creating the record
+was guarded (`--seed`) and REWRITING it was not, so a two-commit path — amend an
+Approved requirement, then refresh — re-blessed the amendment with every check
+green and the drift absorbed into the baseline. **What you must do:** nothing,
+unless your sitting ritual amends approved text without moving its `Status`. If
+it does, add `--approves` to that one command; the refusal names the rows and
+the cells, so you will not have to guess which case you are in.
+
+### The mirror invariant reaches COMMITTED state [since 46616726]
+
+**Kit-owned files — overwrite them and move on:** `scripts/check_trajectory.py`,
+`scripts/trace.py`. **What changes for you:** `trace.py --strict-integrity` — the
+always-on floor your pre-commit hook runs — now also compares every file under
+`docs/archive/last_approved/` against its live counterpart **at the commit that
+last wrote it**, not just at the staged commit. A forged or stale snapshot that
+LANDED (hooks bypassed, or a commit made outside them) now reds every subsequent
+run instead of being invisible after the fact.
+
+**It cannot fire on a pending amendment**, and that is deliberate: the comparison
+is pinned to the snapshot's own writing commit, so live moving ahead — the lag
+that IS the signal — stays silent. Two `git` invocations per run; silent off git
+and for an untracked snapshot. **What you must do:** run
+`trace.py --strict-integrity` once after syncing. If it reds with a LANDED
+divergence, your record and your registries disagreed at some past commit — the
+finding names the file and the commit; re-copy in a reviewed commit
+(`intake.py snapshot --approves <ref>`) or restore the copy that was blessed.
+
+### `backlink_coverage_min`: where the step actually runs [since 46616726]
+
+**Kit-owned file — overwrite it and move on:** `process.toml.template`. **What
+changes for you:** prose only, and it corrects a false statement. The `[checks]
+backlink_coverage_min` header claimed the check "WARNS at a plain run and FAILS
+from DevStg-Tests on". The first half was never true: `check.py`'s
+`backlink-coverage` step exists from DevStg-Tests on and **not below**, so a
+plain run does not warn — it does not run the step. The same block now also
+carries the measurement's one caveat (the scan applies no position restriction,
+so a spine id in a string literal counts as a carrier — an error that can only
+RAISE your score, never lower it). Your `docs/process.toml` VALUE is yours; only
+the kit's commentary moved.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

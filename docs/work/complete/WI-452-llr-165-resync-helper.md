@@ -28,6 +28,15 @@ Adjacent finding banked: IF-103 and the kit README still frame the
 converter as one-shot/terminable, against the ruling this row executes.
 174 targeted tests + smoke green; integrity 0.
 
+**Provenance label (added 2026-08-20, closing review ROUND-OPUS MAJOR-9):**
+"Ran the converter LIVE … round-trip clean, exit 0" is a WORKER SELF-REPORT.
+Its provenance is that worker's session transcript; this repo retains no
+artifact of the run — no scaffold, no log, no `fig:` marker — so it cannot
+be re-read, only re-driven. Labelled rather than marked, deliberately:
+attaching a provenance marker after the fact would manufacture evidence for
+a run the closer did not witness. The claim is plausible and untested here;
+TC-159 remains the standing mechanized cover for the same path.
+
 ## Context
 
 **The TC-159 chain gap is CLOSED — this guard is spent (updated 2026-08-14f).**

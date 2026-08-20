@@ -30,7 +30,7 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k headroom under Gemini's ~12k cap) | 9,948 | 2026-08-20 | −5: WI-486's back-link re-word onto its dial, paid by dropping the test-name example |
-| `CLAUDE.md` | **8,500** | 6,981 | 2026-08-18 | +176: the mandated-token rule — what the kit writes into an adopter's cell must mean something in their repo |
+| `CLAUDE.md` | **8,500** | 7,147 | 2026-08-20 | +166: the stale ~17.6 s smoke figure replaced by three warm readings, one past the ceiling |
 | `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,925 | 2026-08-20 | -51: WI-477 re-stamped the PROCESS.md row (H-06's vocabulary fix) more tersely than the WI-486 row it replaced |
 
 **`AGENTS.template.md` is parked at its cap: 52 bytes free (0.5%).** Every other

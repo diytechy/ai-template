@@ -861,6 +861,89 @@ def test_the_vacuity_arm_names_the_contradicting_entry(tmp_path):
     assert gi.deferral_findings(root, tr.open_item_states(root)) == []
 
 
+def test_a_SECTION_scoped_declaration_does_not_speak_for_the_whole_fragment(tmp_path):
+    """ARM 2's SCOPE rule (2026-08-20, the batch review's MAJOR-7). The day's own
+    grind fragment carried twenty per-WI sections and ONE declaration —
+    `Deferred open items: none`, true of the section it stood in — while two
+    decisions announced in other sections had no rows at all. That is OI-41's
+    founding class reproduced inside the artifact built to catch it."""
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    _log_d(
+        root,
+        "WI-1-grind.md",
+        "## a day's grind\n\n"
+        "### WI-1 — first\n\nDeferred open items: none — nothing here.\n\n"
+        "### WI-2 — second\n\nthe owner ruled something and no row was made.\n",
+    )
+    decls = gi.fragment_declarations(root)
+    assert decls[0]["scope"] == "WI-1 — first", decls
+    findings = gi.deferral_findings(root, tr.open_item_states(root))
+    assert len(findings) == 1 and "1 of 2 sections" in findings[0], findings
+    # The fix is one line of TOP MATTER: a declaration above the first `### `
+    # speaks for the whole fragment, because that is where the file's own record
+    # is written.
+    _log_d(
+        root,
+        "WI-1-grind.md",
+        "## a day's grind\n\nDeferred open items: OI-4\n\n"
+        "### WI-1 — first\n\nDeferred open items: none — nothing here.\n\n"
+        "### WI-2 — second\n\nthe owner ruled something and no row was made.\n",
+    )
+    assert any(d["scope"] is None for d in gi.fragment_declarations(root))
+    assert gi.deferral_findings(root, tr.open_item_states(root)) == []
+
+
+def test_a_single_section_fragment_is_never_scope_warned(tmp_path):
+    # Narrow by construction: the rule needs at least two sections to have a
+    # generalisation to make, and a fragment that declares NOTHING is the arm's
+    # ruled weakness rather than this rule's business.
+    gi = load_script("gen_open_items")
+    tr = load_script("trace")
+    root = repo(tmp_path, oi_rows=PENDING_OI)
+    _log_d(root, "WI-1-one.md", "## s\n\n### only\n\nDeferred open items: OI-4\n")
+    _log_d(root, "WI-2-quiet.md", "## s\n\n### a\n\nx\n\n### b\n\ny\n")
+    assert gi.deferral_findings(root, tr.open_item_states(root)) == []
+
+
+def test_an_ABSENT_registry_with_live_entries_is_a_finding_not_a_silence(tmp_path):
+    """MAJOR-6's third arm. `states is None` really is a vacuum — there is no
+    count to contradict — but a repo whose exception surface defers into a queue
+    that does not exist is the founding class at its strongest, and it was the
+    one state that produced nothing at all."""
+    gi = load_script("gen_open_items")
+    root = repo(tmp_path, oi_rows=None)
+    (root / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 — OI-5: ruled, execution owed.\n",
+        encoding="utf-8",
+    )
+    assert load_script("trace").open_item_states(root) is None
+    findings = gi.deferral_findings(root, None)
+    assert len(findings) == 1 and "has no docs/requirements/open-items" in findings[0]
+    # ...and with no entries either, the vacuum is still a vacuum.
+    (root / "docs" / "provenance-allow").write_text("", encoding="utf-8")
+    assert gi.deferral_findings(root, None) == []
+
+
+def test_the_all_clear_prints_MEASURED_counts_not_a_literal(tmp_path):
+    """MAJOR-6's second arm: the reassurance used to be a hardcoded sentence, so
+    it read identically whether the measurement had found nothing or had failed
+    to run. Every disarming path (a dropped line, an unreadable declaration)
+    produces the same empty findings list, which is exactly when the counts
+    matter."""
+    root = repo(tmp_path, oi_rows=RULED_OI)
+    (root / "docs" / "provenance-allow").write_text(
+        "SR-001 Rationale added 2026-08-16 -- OI-5: a hyphen, not an em dash.\n",
+        encoding="utf-8",
+    )
+    _log_d(root, "WI-1-none.md", "## s\n\nDeferred open items: none\n")
+    proc = gen(root, "--check")
+    assert "0 parsed entries" in proc.stdout, proc.stdout
+    assert "1 unreadable declaring line(s)" in proc.stdout, proc.stdout
+    assert "1 fragment declaration(s) read, 1 of them `none`" in proc.stdout
+
+
 def test_the_deferral_arms_print_but_never_move_the_exit_code(tmp_path):
     # Warn-first by the ruling. The exit code of this step stays the FRESHNESS
     # verdict; a contradiction that redded the commit bar would be switched off.

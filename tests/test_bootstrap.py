@@ -620,6 +620,18 @@ def test_scaffold_pins_hook_line_endings(scaffold):
     text = ga.read_text(encoding="utf-8")
     assert ".githooks/pre-commit text eol=lf" in text
     assert ".githooks/pre-push text eol=lf" in text
+    # THE GLOBAL RULE, ASSERTED SINCE 2026-08-20 (the batch review's ROUND-SOL
+    # MINOR-15). Five test modules rely on this line for CRLF-safety — fixture
+    # trees are built by copying kit files and then diffed byte-for-byte — and
+    # nothing pinned it: deleting it from the template left every hook-specific
+    # assertion above green while Windows fixtures began producing CRLF diffs
+    # and snapshot mismatches. The default is the load-bearing half; the
+    # per-path rules below it are the exceptions.
+    assert "* text=auto eol=lf" in text, (
+        "the scaffolded .gitattributes must carry the global LF normalization "
+        "default — the per-path hook pins do not cover the fixture trees that "
+        "depend on it"
+    )
 
 
 def test_scaffolded_process_doc_drops_template_meta_prose(scaffold):

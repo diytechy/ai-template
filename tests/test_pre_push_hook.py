@@ -14,7 +14,7 @@ import shutil
 import subprocess
 
 import pytest
-from conftest import augment_env, env_gate_skipif, set_process_key
+from conftest import augment_env, env_gate_skipif, pin_autocrlf, set_process_key
 
 HOOK = ".githooks/pre-push"
 ZERO = "0" * 40
@@ -48,6 +48,7 @@ def repo(scaffold):
     The middle commit's message carries a marker so tests can prove the
     reviewer saw the *intermediate* history, not just the endpoints."""
     assert git(scaffold, "init").returncode == 0
+    pin_autocrlf(scaffold)  # WI-461/WI-465; see conftest.pin_autocrlf
     git(scaffold, "config", "user.name", "Test User")
     git(scaffold, "config", "user.email", "12345+t@users.noreply.github.com")
     git(scaffold, "config", "core.hooksPath", ".git/hooks")

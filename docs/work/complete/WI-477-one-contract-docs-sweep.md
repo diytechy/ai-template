@@ -16,7 +16,22 @@ surfaces, with the sweep PINNED rather than repeatable:
 `tests/test_status_vocabulary_contract.py` reads the enforcement constants
 (`trace.ENUM_FIELDS`/`STATUS_VALUES`) and reds any instructing surface
 teaching a retired value or the retired `Approval` column —
-mutation-verified. H-06 swept everywhere the checklist named (the
+mutation-verified. **SCOPED HONESTLY 2026-08-20** (closing review,
+ROUND-OPUS MINOR-15 / ROUND-SOL MAJOR-7, which planted the cases): "any
+instructing surface" was one channel, not any — the scan read
+`status = "<word>"` ASSIGNMENTS over a hand-listed set of eleven files, so
+a sentence ("Valid statuses are Drafted, Modified, and Approved") passed
+clean, and a new instructing document landed outside the list unseen. The
+covered channels are now THREE and are named as such: the assignment
+channel; a narrow PROSE channel (a retired word on a line that also says
+`status`, with a token-scoped historical exemption, measured
+zero-to-zero on the live surfaces); and the surface list itself, which
+every kit-root `.md` must now either join or be excluded from with a
+stated reason. Two internal weaknesses went in the same pass — a
+disjointness assertion that was true by construction, and a line-scoped
+`retire` exemption that excused a whole table row. Still not covered,
+stated rather than implied: a sentence that teaches a value without using
+the word `status`. H-06 swept everywhere the checklist named (the
 vocabulary re-verified FIRST: it had moved again at the signing — Approval
 retired, {Drafted, Approved} enforced for IF/frame, {Drafted, Approved,
 Founded} for spine), EXAMPLE.md's CSV IF block converted to the real TOML

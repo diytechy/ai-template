@@ -598,6 +598,7 @@ def scaffold_with_queued_wi(tmp_path, bar=None):
     write_spec(repo, "queued", "WI-401", specref="docs/log.md", bar=bar)
     record_ids(repo)  # WI-401 is an ALLOCATED id; the mark must cover it
     _git(repo, "init", "-q")
+    pin_autocrlf(repo)  # WI-461/WI-465; see conftest.pin_autocrlf
     _git(repo, "config", "user.email", "t@example.com")
     _git(repo, "config", "user.name", "T")
     _git(repo, "config", "commit.gpgsign", "false")

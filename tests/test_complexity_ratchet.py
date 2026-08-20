@@ -148,6 +148,20 @@ BASELINE = {
     # `tier_completion_findings` rather than being written as two more branches
     # here — the simplification the ratchet prefers, applied as far as it goes.
     ("check_trajectory.py", "main"): 22,
+    (
+        "check_trajectory.py",
+        "committed_snapshot_findings",
+    ): 12,  # NEW 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3):
+    # the mirror invariant over COMMITTED state. The 12 is what a per-file mirror
+    # comparison irreducibly costs: two degrade arms (git cannot answer / nothing
+    # under the snapshot root), the README exemption, the batch-length sanity check,
+    # and the three outcomes per file (the copy was deleted in its own writing
+    # commit -> not a mirror question; the live counterpart did not exist -> a
+    # record of text the repo never had; the ids differ -> a LANDED divergence).
+    # Splitting the loop out would move six of those branches into a helper whose
+    # only caller is this function, which the ratchet's own preference reads as
+    # motion rather than simplification; the spec-collection half IS already
+    # extracted (`_snapshot_write_revs`). Reviewed entry, reason in the log.
     ("gen_arch_map.py", "build_dependency_diagram"): 14,
     (
         "gen_arch_map.py",

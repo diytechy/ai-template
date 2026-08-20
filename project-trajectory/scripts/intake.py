@@ -1452,10 +1452,11 @@ def flip_verified(root, ids):
             )
         return action, [], None
     flipped = _apply_flips(root, tables, located)
-    # THE ANCHOR IS NO LONGER OWED HERE: `_apply_flips` copies the flipped
-    # registries into `docs/archive/last_approved/` in the same act, so the flip
-    # and the record of WHAT TEXT was blessed are one (repo-lock D-1's standing
-    # requirement, discharged by the snapshot rather than by a hash column).
+    # NO ANCHOR IS OWED HERE, AND NO COPY IS TAKEN — because nothing is written.
+    # `_apply_flips` skips an already-blessed row and refuses every other state,
+    # so this list is empty and the snapshot is untouched by the mechanical path
+    # (2026-08-20: the unreachable write-and-copy block went with the dead arm;
+    # OI-45 carries whether any mechanical path ever regains the authority).
     for rid in flipped:
         _say("flipped {} -> Approved ({})".format(rid, session_hold))
     return action, flipped, None
@@ -1616,9 +1617,8 @@ def _rewrite_toml_statuses(live, rel, ids):
 
 
 def _apply_flips(root, tables, located):
-    """Move each located row to `Approved` and rewrite exactly the registries
-    that changed; the sorted flipped ids. Per carrier: a CSV rewrite re-emits the
-    mutated rows, a TOML rewrite edits the one status LINE.
+    """SKIP an already-blessed row, REFUSE everything else, WRITE NOTHING; the
+    sorted flipped ids, which is now always empty.
 
     **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7 — AN OPEN QUESTION,
     NOT A SETTLED SHAPE.** It enacted ruled decision 2's cheap outcome
@@ -1637,12 +1637,15 @@ def _apply_flips(root, tables, located):
       (b) RETIRE — re-attestation is the human path (`intake.py snapshot` in the
           reviewed commit) and adjudication only ever recommends.
 
-    The refusal keeps the machinery intact for (a) while behaving as (b), which
-    is the fail-closed order to hold them in."""
-    import csv
-
-    flipped, changed = [], set()
-    toml_edits = {}
+    The refusal behaves as (b). **THE MACHINERY FOR (a) IS GONE (2026-08-20),
+    and that is the honest state**: the write loops it left standing were
+    unreachable behind the refusal, so what looked like "kept intact for (a)"
+    was dead code with a source-grep test pinning it. The question is OI-45's,
+    with (b) recommended; if (a) is ever ruled it arrives with the authority
+    model the review showed the record needs, not by reviving these lines. The
+    signature keeps `root`/`tables` because the caller's contract is unchanged
+    and the ruling could restore a writer here."""
+    flipped = []
     for rid, (rel, status, row, status_ix) in sorted(located.items()):
         if status is None:
             # The row exists and carries NO Status at all. Absent is not
@@ -1681,39 +1684,18 @@ def _apply_flips(root, tables, located):
                 rid, tables[rel][0], _STATUS_KEY, status
             )
         )
-        live, _rows = tables[rel]
-        if live.suffix == ".toml":
-            toml_edits.setdefault(rel, []).append(rid)
-        else:
-            row[status_ix] = "Approved"
-        flipped.append(rid)
-        changed.add(rel)
-    for rel, ids in toml_edits.items():
-        _rewrite_toml_statuses(tables[rel][0], rel, ids)
-    for rel in changed:
-        live, rows = tables[rel]
-        if rows is None:
-            continue
-        with live.open("w", newline="", encoding="utf-8") as fh:
-            csv.writer(fh, quoting=csv.QUOTE_MINIMAL, lineterminator="\n").writerows(
-                rows
-            )
-    # THE COPY RIDES THE FLIP, AND THE ORDER IS LOAD-BEARING. It runs AFTER both
-    # write loops, so the snapshot captures each registry WITH the flip already
-    # written — which is what makes the unanchored rule decidable: the snapshot
-    # row itself reads the approved value, so a live approval whose snapshot
-    # copy reads below approval is provably an approval that never rode a copy.
-    # Copying first would snapshot the pre-flip text and invert that evidence.
-    #
-    # Only `if flipped`: a run that ruled nothing must not touch the record of
-    # what was blessed. And only `if exists`: before the first signing there is
-    # no snapshot, and the FIRST one must be the owner's deliberate act
-    # (`intake.py snapshot --seed`) rather than a side effect of the mechanical
-    # path — so this arm is VACUOUS BY ABSENCE, never a refusal. Refusing here
-    # would break adjudication in every repo that has not signed yet, which is
-    # every fresh adopter.
-    if flipped and baseline_snapshot.exists(root):
-        baseline_snapshot.copy_live(root)
+    # THE WRITE LOOPS AND THE COPY WENT WITH THE ARM (2026-08-20, the batch
+    # review's MINOR-12). Everything that used to follow the refusal above — the
+    # per-carrier status write, the CSV re-emit, and the `copy_live` that rode
+    # them — was UNREACHABLE from the moment the refusal replaced the silent
+    # skip: the loop now either `continue`s an already-blessed row or raises.
+    # Dead code that LOOKS live is worse than no code, and a test was pinning a
+    # guard on it by source grep, which reads as coverage of a path nothing can
+    # execute. What the arm would have to become is an owner ruling, not a
+    # dormant draft: OI-45 carries the question, with (b) RETIRE recommended, and
+    # `_cmd_snapshot`'s authority-gated refresh is the mechanical door the record
+    # actually has. Restoring the writes means implementing that ruling, with its
+    # authority model, not un-commenting this.
     return sorted(flipped)
 
 
@@ -1771,6 +1753,16 @@ def _cmd_snapshot(args):
     launder exactly the re-blessing those rows owe (repo-lock D-10's sequencing
     rule, with "stamping hashes" swapped for "copying files").
 
+    `--approves <ref>` NAMES THE APPROVAL ACT, and is needed only when the copy
+    would absorb RATIFIED text that no `Status` flip in the same registry
+    authorises (`baseline_snapshot.refresh_refusal`, 2026-08-20). It is the
+    door the adversarial round found standing open: creating the record was
+    guarded and rewriting it was not, so a two-commit path — amend an Approved
+    row, then refresh — re-blessed the amendment with every check green. The
+    ref is a human's citation, recorded into the snapshot's prose stamp; nothing
+    validates it, because nothing can. What it buys is that the act is named.
+    Traced-cell refreshes (the common case) still need no flag at all.
+
     IT COPIES OFF-SPINE APPROVAL CELLS AND DOES NOT MOVE THEM, which is the
     distinction OI-30 D3 makes and the reason this path needs no
     `agent_common.human_approves` refusal. `SNAPSHOTTED` includes
@@ -1785,14 +1777,18 @@ def _cmd_snapshot(args):
     `tests/test_ratification_level.py` fails the moment a shipped loop module
     starts writing one."""
     root = Path(args.root).resolve()
-    written = baseline_snapshot.copy_live(root, seed=args.seed)
+    approves = getattr(args, "approves", None)
+    written = baseline_snapshot.copy_live(root, seed=args.seed, approves=approves)
     return _cli_result(
         None,
-        "snapshot: {} registry file(s) copied to {}{}".format(
+        "snapshot: {} registry file(s) copied to {}{}{}".format(
             len(written),
             baseline_snapshot.SNAPSHOT_DIR,
             " (SEEDED — this is the first snapshot; it blesses the text you just ruled)"
             if args.seed
+            else "",
+            " (APPROVED BY: {} — recorded in the snapshot's stamp)".format(approves)
+            if approves
             else "",
         ),
     )
@@ -1846,6 +1842,15 @@ def main(argv=None):
         "the owner's signing commit, after every pending row has been ruled — "
         "seeding earlier blesses text nobody read. Unreachable from every loop "
         "module and hook (pinned by tests/test_baseline_snapshot.py)",
+    )
+    snap.add_argument(
+        "--approves",
+        default=None,
+        metavar="REF",
+        help="NAME THE APPROVAL ACT this refresh rides — a sitting, a log "
+        "fragment, a commit. Required only when the copy would absorb ratified "
+        "text that no Status flip authorises; the ref is recorded into the "
+        "snapshot's prose stamp. A traced-cell refresh needs no flag",
     )
     snap.set_defaults(func=_cmd_snapshot)
     args = ap.parse_args(argv)

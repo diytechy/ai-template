@@ -834,10 +834,31 @@ DEFERRED_DECL_RE = re.compile(
 NONE_WORDS = frozenset({"none", "nothing", "no", "n/a", "nil"})
 _OI_IN_TEXT_RE = re.compile(r"\bOI-\d+\b")
 
+# A fragment SECTION. `### ` because that is the level a multi-entry fragment
+# uses for its per-item records (the grind fragment's twenty per-WI entries);
+# `## ` is the fragment's own title.
+_SECTION_RE = re.compile(r"^###\s+(.*)$", re.M)
+
 
 def fragment_declarations(root):
     """What each `docs/log.d/` fragment DECLARES it deferred: a list of
-    `{file, line, ids, none}`, sorted by file.
+    `{file, line, ids, none, scope}`, sorted by file.
+
+    **POSITION IS SCOPE** (2026-08-20, the batch review's MAJOR-7). A declaration
+    standing inside a `### ` section speaks for THAT SECTION (`scope` is the
+    heading); one standing in the fragment's top matter, above the first section,
+    speaks for the whole fragment (`scope` is None). The rule was forced by
+    measurement: the day's grind fragment carried twenty per-WI sections and ONE
+    declaration — `Deferred open items: none`, inside the WI-485 entry, true of
+    that entry — and it read as the file's answer while two decisions announced
+    in other sections had no rows at all. That is OI-41's founding class
+    reproduced inside the very artifact built to catch it.
+
+    The cheaper of the two candidate rules, deliberately: the alternative (one
+    declaration per FILE, the fragment defined as one session's record) needs a
+    definition of "session" the log does not carry — several fragments on one day
+    are one session, and one fragment can span two. Position is already in the
+    text, costs one regex, and is what a reader is doing anyway.
 
     ARM 2, and it is the DECLARED-WEAK arm — ruled with its weakness on the
     record rather than discovered later. It reaches the class ARM 1 cannot: a
@@ -854,6 +875,7 @@ def fragment_declarations(root):
     out = []
     for path in sorted(Path(root).joinpath(LOG_D_REL).glob("*.md")):
         text = path.read_text(encoding="utf-8-sig", errors="replace")
+        sections = [(m.start(), m.group(1).strip()) for m in _SECTION_RE.finditer(text)]
         for match in DEFERRED_DECL_RE.finditer(text):
             payload = match.group(1)
             ids = _OI_IN_TEXT_RE.findall(payload)
@@ -861,14 +883,59 @@ def fragment_declarations(root):
             none = bool(first) and first[0].strip(":;,.").lower() in NONE_WORDS
             if not ids and not none:
                 continue
+            above = [head for start, head in sections if start < match.start()]
             out.append(
                 {
                     "file": "{}/{}".format(LOG_D_REL, path.name),
                     "line": text.count("\n", 0, match.start()) + 1,
                     "ids": ids,
                     "none": none and not ids,
+                    "scope": above[-1] if above else None,
                 }
             )
+    return out
+
+
+def fragment_scope_findings(root):
+    """ARM 2's SCOPE rule as printable lines: a sectioned fragment whose only
+    declarations are section-scoped leaves its other sections undeclared, and a
+    reader generalises the one answer they can see.
+
+    Warn-first like the rest of ARM 2, and narrow in three ways so it cannot
+    become the noise that gets the arm ignored: it fires only on a fragment with
+    at least TWO sections, only when that fragment already carries at least one
+    declaration (a fragment that declares nothing is the arm's ruled weakness,
+    not this rule's business), and it prints ONE line per fragment naming the
+    count rather than one per undeclared section. The fix is one line of top
+    matter: a file-level declaration speaks for the whole fragment."""
+    out = []
+    for path in sorted(Path(root).joinpath(LOG_D_REL).glob("*.md")):
+        rel = "{}/{}".format(LOG_D_REL, path.name)
+        decls = [d for d in fragment_declarations(root) if d["file"] == rel]
+        if not decls:
+            continue
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+        heads = [m.group(1).strip() for m in _SECTION_RE.finditer(text)]
+        if len(heads) < 2 or any(d["scope"] is None for d in decls):
+            continue
+        declared = {d["scope"] for d in decls}
+        missing = [h for h in heads if h not in declared]
+        if not missing:
+            continue
+        out.append(
+            "{}: {} of {} sections carry no deferral declaration, and the {} "
+            "that do speak only for their own section (first: `{}`). A reader "
+            "takes the one answer they can see for the file's. Add a "
+            "FILE-LEVEL `Deferred open items:` line to the fragment's top "
+            "matter, above the first `### ` heading — that one speaks for the "
+            "whole fragment".format(
+                rel,
+                len(missing),
+                len(heads),
+                len(decls),
+                decls[0]["scope"],
+            )
+        )
     return out
 
 
@@ -898,13 +965,33 @@ def deferral_findings(root, states=None):
     search by hand. It compares COUNTS, so it fires for a deferral whose wording
     no vocabulary knows.
 
-    Vacuous when the repo carries no open-items registry (`states is None`):
-    there is no count to contradict."""
+    **REGISTRY-ABSENT NO LONGER DISARMS IN SILENCE** (2026-08-20, the batch
+    review's MAJOR-6). `states is None` means the repo carries no open-items
+    registry, and the vacuum is still real — there is no count to contradict, so
+    the count arms cannot run. What was wrong was the SILENCE: a repo with an
+    exception surface that defers and no queue to defer INTO is the strongest
+    form of the founding class, not the weakest, and it was the one state that
+    produced nothing at all. It now says so, once, naming how many entries stand.
+    Still warn-first, and still no count comparison — an absent registry is a
+    migration, and the finding says which one is owed."""
     if states is None:
-        return []
+        entries = tr.parse_provenance_allow(root)
+        if not entries:
+            return []
+        return [
+            "{} carries {} exception entr{} while this repo has no {} at all — "
+            "every one of them defers a decision into a queue that does not "
+            "exist. The layer is always-on: scaffold the registry (the deferrals "
+            "already have somewhere to point) or retire the entries".format(
+                tr.PROVENANCE_ALLOW,
+                len(entries),
+                "y" if len(entries) == 1 else "ies",
+                OPEN_ITEMS_REL,
+            )
+        ]
     pending = sorted(k for k, v in states.items() if v == "pending")
     decls = fragment_declarations(root)
-    out = []
+    out = fragment_scope_findings(root)
     for d in decls:
         for oid in d["ids"]:
             if oid not in states:
@@ -948,7 +1035,17 @@ def report_deferrals(root):
     CHECKED rather than nothing at all. An empty queue that no surface
     contradicts is a real state and the reader is entitled to see it asserted;
     silence here would read exactly like the "up to date" this row was raised
-    over. Returns the finding count (never an exit code)."""
+    over. Returns the finding count (never an exit code).
+
+    **THE ALL-CLEAR IS MEASURED, NOT WORDED** (2026-08-20, the batch review's
+    MAJOR-6). It used to print the literal "no allow entry defers" whenever the
+    findings list was empty — a sentence, not a reading. Every way the arms can
+    be disarmed (a malformed entry the grammar drops, a fragment whose marker
+    line declares neither an id nor a none-word) produces exactly that empty
+    list, so the reassurance was strongest precisely where the measurement had
+    failed. It now prints the COUNTS it actually took: how many entries parsed,
+    how many fragment declarations were read, and — the number that matters —
+    how many declaring lines the grammar could not read at all."""
     states = tr.open_item_states(root)
     findings = deferral_findings(root, states)
     for line in findings:
@@ -958,14 +1055,18 @@ def report_deferrals(root):
         and states is not None
         and not any(v == "pending" for v in states.values())
     ):
-        declared = [d for d in fragment_declarations(root) if d["none"]]
+        entries, unparsed = tr.read_provenance_allow(root)
+        decls = fragment_declarations(root)
         print(
-            "gen_open_items: 0 pending rows — and nothing contradicts it ({}; "
-            "{}).".format(
-                "no allow entry defers",
-                "{} declares none".format(declared[0]["file"])
-                if declared
-                else "no log.d fragment declares a deferral",
+            "gen_open_items: 0 pending rows — and nothing contradicts it: "
+            "{} parsed entr{} in {} ({} unreadable declaring line(s)); "
+            "{} fragment declaration(s) read, {} of them `none`.".format(
+                len(entries),
+                "y" if len(entries) == 1 else "ies",
+                tr.PROVENANCE_ALLOW,
+                len(unparsed),
+                len(decls),
+                sum(1 for d in decls if d["none"]),
             )
         )
     return len(findings)

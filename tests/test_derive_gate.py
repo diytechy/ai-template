@@ -184,18 +184,30 @@ def test_sr_gate_rules():
 
 def test_maturity_and_sn_gate_rules():
     # A present LLR/TC caps only when Drafted; its own Status does not gate (the
-    # SR's does), so `Approved` and `Founded` both contribute DevStg-Impl —
-    # and so does an UNRECOGNIZED value, which is `SPINE_MATURITY`'s deliberate
-    # spine-only default (the closed enum names it on the integrity floor
-    # instead; see maturity_bar). The RETIRED `Modified` is driven here too,
-    # and it lands on the unrecognized arm — which is the safe direction: the
-    # word retiring must not LOWER a downstream repo's derived gate, it must
-    # surface as an integrity finding on the cell.
+    # SR's does), so `Approved` and `Founded` both contribute DevStg-Impl.
+    #
+    # THE TWO ARMS THAT USED TO BE ONE (2026-08-20, ROUND-SOL MAJOR-6). This
+    # pinned `Modified` AND `Implemented` at DevStg-Impl via a blanket
+    # `default=APPROVED` for every unrecognized value — which meant a typo
+    # derived a finished bar. The RETIRED spellings are now named
+    # (`SPINE_TRANSITIONAL`) and read exactly as before, so the migration
+    # tolerance is unchanged and a downstream repo's gate cannot be lowered by
+    # a rename; anything genuinely unrecognized holds its rung open.
     assert GATE.maturity_bar({"Status": "Drafted"}) == GATE.BAR_BELOW
     assert GATE.maturity_bar({"Status": "Approved"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Founded"}) == GATE.BAR_RELEASE
+    # Transitional, documented, unchanged:
     assert GATE.maturity_bar({"Status": "Modified"}) == GATE.BAR_RELEASE
     assert GATE.maturity_bar({"Status": "Implemented"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Verified"}) == GATE.BAR_RELEASE
+    assert GATE.maturity_bar({"Status": "Draft"}) == GATE.BAR_BELOW  # pre-rename
+    # ...and the hole that closed: a typo is not a maturity.
+    assert GATE.maturity_bar({"Status": "Approvd"}) == GATE.BAR_BELOW
+    assert GATE.maturity_bar({"Status": "Bananas"}) == GATE.BAR_BELOW
+    assert GATE.maturity_bar({"Status": ""}) == GATE.BAR_BELOW
+    # The two tables never overlap: a retired spelling that came back would be
+    # live vocabulary, and this tolerance must not shadow it.
+    assert not (set(GATE.SPINE_TRANSITIONAL) & set(GATE.SPINE_MATURITY))
     assert GATE.sn_bar("SN-009", {"SN-009"}, set()) == GATE.BAR_BELOW  # draft section
     # WI-401: a ratified SN must be cited by >=1 SR SN-Refs to contribute DevStg-Impl;
     # ratified-and-uncovered caps at DevStg-Below (an unanswered need has not earned DevStg-Reqs).

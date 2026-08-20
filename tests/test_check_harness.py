@@ -118,6 +118,46 @@ def test_failing_test_fails_the_harness(scaffold):
     assert "RESULT: FAIL" in proc.stdout
 
 
+def test_backlink_coverage_step_is_wired_at_the_right_bars(tmp_path):
+    """THE WIRING NOBODY PINNED (2026-08-20, the batch review's MINOR-20). Every
+    other part of the reverse-coverage layer has a test — the grammar, the
+    percentage, the dial reader, the report's vacuity — while the fact that
+    `check.py` runs it AT ALL was pinned by nothing. A step nothing invokes is a
+    measurement nobody takes, and the whole ruling was "ship the measurement".
+
+    Two facts, both driven off the real step table: the step EXISTS from
+    DevStg-Tests on and not below (which is also why the shipped template must
+    not claim it warns at a plain run — below that bar it does not run), and
+    `--strict-backlinks` rides exactly the bars that promote it."""
+    check = load_script("check")
+
+    def step(gate):
+        return next(
+            (s for s in check.steps(80, "full", gate) if s[0] == "backlink-coverage"),
+            None,
+        )
+
+    at_reqs = step("DevStg-Reqs")
+    assert at_reqs is not None, "the step vanished from the table entirely"
+    _name, requires, cmd, gates, layer = at_reqs
+    assert layer == "process" and requires == ()  # kit-owned, stdlib-only
+    assert "--backlink-coverage" in cmd, cmd
+    # WHERE IT RUNS: the gate set is the step table's own answer, and it does
+    # NOT include the requirements bar — so a plain run does not warn, it does
+    # not run the step. (The shipped template claimed otherwise until 2026-08-20.)
+    assert gates == {"DevStg-Tests", "DevStg-Impl"}, gates
+    # ...and below its bars it is never promoted, so a stray invocation cannot
+    # gate on a dial the repo has not reached.
+    assert "--strict-backlinks" not in cmd, cmd
+    for gate in ("DevStg-Tests", "DevStg-Impl"):
+        found = step(gate)
+        assert found is not None, "no backlink-coverage step at {}".format(gate)
+        assert "--strict-backlinks" in found[2], (
+            "at {} the step must promote a below-minimum reading to a failure; "
+            "without the flag the dial can never gate at any bar".format(gate)
+        )
+
+
 def test_step_plan_wiring():
     # Unit-level checks on the step table, without spawning tools.
     check = load_script("check")

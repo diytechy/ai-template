@@ -16,7 +16,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from conftest import env_gate_skipif, augment_env, run_py, set_process_key
+from conftest import (
+    augment_env,
+    env_gate_skipif,
+    pin_autocrlf,
+    run_py,
+    set_process_key,
+)
 
 SCRIPT = "scripts/check_privacy.py"
 # This kit repo (a git checkout) and its real check_privacy.py, for the
@@ -68,6 +74,7 @@ def git(root, *args):
 
 def init_repo(root):
     assert git(root, "init").returncode == 0
+    pin_autocrlf(root)  # WI-461/WI-465; see conftest.pin_autocrlf
     git(root, "config", "user.name", "Test User")
     git(root, "config", "user.email", "12345+t@users.noreply.github.com")
     # Keep hook managers/global hooksPath out of the test repo's commits.

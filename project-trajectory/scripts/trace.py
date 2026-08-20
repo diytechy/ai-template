@@ -1648,19 +1648,47 @@ def parse_provenance_allow(root):
 
     Fail-soft in the LOUD direction, unchanged: a line with no separator, or with
     fewer than three key fields, declares NOTHING and is dropped here, so the
-    worst a malformed entry can do is leave a finding reported."""
+    worst a malformed entry can do is leave a finding reported — **and, since
+    2026-08-20, is REPORTED as dropped** (`read_provenance_allow`), because the
+    other half of "declares nothing" is that it also COUNTS as nothing, and the
+    arms that reason about how many exceptions stand were reading that silence as
+    an empty surface."""
+    return read_provenance_allow(root)[0]
+
+
+def read_provenance_allow(root):
+    """`(entries, unparsed)` — the whole parse, both halves.
+
+    `unparsed` is `[(lineno, line)]` for every DECLARING line the grammar
+    dropped: not blank, not a comment, and not parseable as an entry. It exists
+    because "fail-soft in the loud direction" was only half true (2026-08-20, the
+    batch review's MAJOR-6). Dropping a malformed entry does un-silence the
+    finding it was written to silence, which is the loud direction — but it also
+    removes the entry from every COUNT, and OI-41's vacuity arm is a count: it
+    contradicts an empty queue with the exceptions still standing. So a
+    mistyped separator (`--` for ` — `) made an exception vanish from the count
+    while still reading, to a human, exactly like a live entry, and the arm then
+    printed an all-clear. One character, and the surface reports empty.
+
+    The counting rule is deliberately the CHEAP one — non-blank, non-comment — so
+    it cannot itself be evaded by a subtler malformation: anything a human would
+    read as an entry counts as one, and the parser must agree or say so."""
     path = Path(root) / PROVENANCE_ALLOW
     if not path.is_file():
-        return []
-    out = []
+        return [], []
+    out, unparsed = [], []
     text = path.read_text(encoding="utf-8-sig", errors="replace")
     for lineno, raw in enumerate(text.split("\n"), start=1):
         line = raw.strip()
-        if not line or line.startswith("#") or PROVENANCE_ALLOW_SEP not in line:
+        if not line or line.startswith("#"):
+            continue
+        if PROVENANCE_ALLOW_SEP not in line:
+            unparsed.append((lineno, line))
             continue
         head, reason = line.split(PROVENANCE_ALLOW_SEP, 1)
         key = head.split()
         if len(key) < 3:
+            unparsed.append((lineno, line))
             continue
         first = reason.split()[0].strip(":;,.") if reason.split() else ""
         out.append(
@@ -1673,7 +1701,37 @@ def parse_provenance_allow(root):
                 "reason": reason.strip(),
             }
         )
-    return out
+    return out, unparsed
+
+
+def provenance_allow_parse_findings(root):
+    """PARSE HONESTY: a declaring line the grammar could not read is an INTEGRITY
+    finding naming it, not a silent drop.
+
+    Integrity-class for the same reason ARM 1 is: it is a field-shaped fact about
+    a file this repo maintains, with no false positives — the line either parses
+    or it does not — and the always-on floor is the only pipe that runs at every
+    gate. Reported at the FIRST unparsed line rather than all of them, with the
+    count, because the fix is the same edit for every one and a wall of identical
+    findings is how a real one gets skipped over."""
+    _entries, unparsed = read_provenance_allow(root)
+    if not unparsed:
+        return []
+    lineno, line = unparsed[0]
+    return [
+        "{}:{}: this line DECLARES an exception and the grammar cannot read it "
+        "({} such line(s)) — `{}`. An entry is `<ROW-ID> <Cell> <token>` then "
+        "`{}OI-###: <reason>` (the separator is an em dash with a space each "
+        "side). A dropped line still reads like a live exception to a human, "
+        "while counting as none — which is how the deferral count reports an "
+        "empty surface that is not empty".format(
+            PROVENANCE_ALLOW,
+            lineno,
+            len(unparsed),
+            line[:80],
+            PROVENANCE_ALLOW_SEP,
+        )
+    ]
 
 
 def open_item_states(root):
@@ -2003,11 +2061,17 @@ def _declared_absences(root):
     An endpoint naming one of them is neither rot nor external: the layer is
     opt-in and switched off, and the row is honest about what the module would
     read if it were on. This repo's worked case is
-    `docs/requirements/performance-budgets.csv` — check_perf's declared budgets
-    registry, absent because process.md §9's perf layer is not enabled, with the
-    reason already written down one directory up. Reporting it as a dangling
-    endpoint would have been the checker demanding the repo delete a true
-    statement.
+    `docs/requirements/assets.csv` — the off-spine asset registry, absent
+    because a meta-repo ships no binary assets, with the reason already written
+    down one directory up. Reporting it as a dangling endpoint would have been
+    the checker demanding the repo delete a true statement.
+
+    RE-POINTED 2026-08-20 (the batch review's MINOR-19). The example here was
+    `docs/requirements/performance-budgets.csv` for as long as this repo's perf
+    layer was off — and WI-481 seeded that registry and deleted its
+    declared-absence line in the same act, leaving two readers teaching a worked
+    case that is now present. A worked example naming a live file teaches the
+    opposite of the rule.
 
     Fail-soft in the quiet direction (no file -> no declarations), because that
     is the state of every repo that has never needed one."""
@@ -2712,6 +2776,23 @@ def newest_ratify_brief(root):
 # dissolves rather than being guarded against.
 
 
+# The two lines `reattest_lines` derives from git rather than from the registry.
+# Excluded from the freshness comparison, and named ONCE here so the renderer and
+# the gate can never disagree about which lines are derived (the renderer's own
+# note points back at this constant).
+_DERIVED_STAMP_PREFIXES = ("_Baseline: ", "_Approval provenance: ")
+
+
+def _without_derived_stamps(text):
+    """`text` with the derived stamp lines dropped — the comparable half of a
+    re-attestation brief."""
+    return "\n".join(
+        line
+        for line in text.splitlines()
+        if not line.startswith(_DERIVED_STAMP_PREFIXES)
+    )
+
+
 def ratify_check(root, srs, llrs, tcs, out_path):
     """`(code, message)` for `--ratify modified --check` — a plain
     regenerate-and-compare, like every other freshness gate in the kit.
@@ -2734,7 +2815,17 @@ def ratify_check(root, srs, llrs, tcs, out_path):
     could move, so `--check` had to read the file's own declaration back rather
     than compute one. The snapshot is a directory of files; regenerating cannot
     move it, so the comparison is honest without the self-stamp — and the WI-325
-    "a gate that re-derives its own expectation" blocker dissolves."""
+    "a gate that re-derives its own expectation" blocker dissolves.
+
+    THE DERIVED STAMP LINES ARE EXCLUDED, and that is the same blocker in a
+    smaller shape (2026-08-20, the batch review's MAJOR-11). `reattest_lines`
+    renders two lines that come from `git log`, not from the registry: the
+    snapshot's write commit and the last status-cell move. Both change on commits
+    that move no row the brief renders, so comparing them made the brief STALE on
+    a clean checkout — and a guard that fires on every commit is learned as noise
+    and then ignored, which costs exactly the reads this gate exists to force. The
+    comparison now covers the CONTENT: the rows, their cells, and the prose around
+    them."""
     if not out_path.exists():
         return 0, "no brief at {} — nothing to gate".format(out_path)
     model = reattest_model(root, srs, llrs, tcs)
@@ -2746,7 +2837,7 @@ def ratify_check(root, srs, llrs, tcs, out_path):
     except OSError as exc:
         return 1, "cannot read {}: {}".format(out_path, exc)
     rendered = "\n".join(reattest_lines(root, srs, llrs, tcs)) + "\n"
-    if rendered == existing:
+    if _without_derived_stamps(rendered) == _without_derived_stamps(existing):
         return 0, "{} is current".format(out_path)
     return 1, (
         "{} is STALE against the registry and the {} snapshot. Regenerate it "
@@ -2779,6 +2870,7 @@ def reattest_lines(root, srs, llrs, tcs):
     (WI-322): the model owns the comparison, this owns the prose."""
     model = reattest_model(root, srs, llrs, tcs)
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
+    appr_rev, appr_date = baseline_snapshot.approval_stamp(root)
     lines = [
         "# Re-attestation brief — spine rows owing a human act",
         "",
@@ -2792,14 +2884,35 @@ def reattest_lines(root, srs, llrs, tcs):
         " onward, run `intake.py snapshot` in the SAME commit, or the record of"
         " what was blessed does not move._",
         "",
+        # TWO DERIVED LINES, AND THEY ANSWER DIFFERENT QUESTIONS (2026-08-20, the
+        # batch review's MAJOR-4). This said "the reviewed commit that last moved
+        # an approval" of a stamp that is nothing of the kind: `stamp` is a
+        # `git log` over the snapshot DIRECTORY, so any write moves it — at the
+        # time of the review it named a commit that moved zero approvals. The
+        # line now says what the stamp IS, and the provenance the reader was
+        # actually being promised is derived beside it, from the only mechanical
+        # trace an approval leaves: a status line moving in a snapshotted
+        # registry. Both are EXCLUDED from `ratify_check`'s comparison
+        # (`_DERIVED_STAMP_PREFIXES`) — a brief that goes stale because its own
+        # stamp moved is a guard that fires on every commit.
         "_Baseline: `{}` — {}._".format(
             baseline_snapshot.SNAPSHOT_DIR,
-            "copied {} ({}), the reviewed commit that last moved an approval".format(
+            "copied {} ({}), the commit that last wrote this record".format(
                 stamp_date, stamp_rev
             )
             if stamp_rev
             else "no snapshot exists yet, so every row below awaits a FIRST "
             "approval and renders its current text in full",
+        ),
+        "",
+        "_Approval provenance: {}._".format(
+            "the last commit to move a `Status` cell in a snapshotted registry is"
+            " {} ({}) — the record's maturity cells have not moved since".format(
+                appr_rev, appr_date
+            )
+            if appr_rev
+            else "no commit in this checkout moved a `Status` cell in a"
+            " snapshotted registry (or git cannot say)"
         ),
         "",
     ]
@@ -4557,9 +4670,14 @@ def main():
     # and the open-items registry are FILES, so the rule cannot live in the pure
     # pass either. `docs.parent` — the root `load_provenance_allow` already read
     # the entries from, so the file that is CHECKED is the file that SUPPRESSES.
+    # TWO PRODUCERS OVER ONE FILE: the FIELD rule (every entry names a row that
+    # resolves) and the PARSE rule (every declaring line is readable). The second
+    # is not pedantry — a line the grammar drops still reads as a live exception
+    # to a human while counting as none, which is precisely how the vacuity arm
+    # was made to print an all-clear over a surface that still deferred.
     findings.integrity += provenance_allow_findings(
         parse_provenance_allow(docs.parent), open_item_states(docs.parent)
-    )
+    ) + provenance_allow_parse_findings(docs.parent)
     if committed is None:
         # SILENCE IS NOT SUCCESS. "A mark only ever rises" cannot be read from the
         # working tree — a lowered mark looks exactly like a correct one — so with
@@ -4601,9 +4719,18 @@ def main():
     # every repo below the top bar. Still VACUOUS BY ABSENCE for a repo that has
     # approved nothing, and off git. `wm_root` rather than `args.root`, for the
     # reason stated just above it.
-    findings.snapshot_findings = baseline_snapshot.unanchored_findings(
-        wm_root
-    ) + check_trajectory.staged_snapshot_findings(wm_root)
+    #
+    # THREE PRODUCERS SINCE 2026-08-20, not two: the staged mirror answers for
+    # the commit being made, and `committed_snapshot_findings` answers for the
+    # commits already made. The gap between them was a working laundering step —
+    # a forged copy committed with the hook bypassed was seen once, in a run
+    # nobody had to make, and never again. Same pipe, because it is still one
+    # property: every approval rode a copy, and every copy is a copy.
+    findings.snapshot_findings = (
+        baseline_snapshot.unanchored_findings(wm_root)
+        + check_trajectory.staged_snapshot_findings(wm_root)
+        + check_trajectory.committed_snapshot_findings(wm_root)
+    )
     findings.integrity += findings.snapshot_findings
     forest = build_forest(
         reg.sn_ids, reg.srs, reg.llrs, reg.tcs, findings.orphan_ids, reg.sn_draft

@@ -414,22 +414,29 @@ def maturity_bar(row):
     table edit correction C2 promised, rather than a fourth private copy of the
     predicate.
 
-    BEHAVIOUR IS UNCHANGED BY THE RE-KEY, in both directions, and the second one
-    is why `default=APPROVED` is passed here. Every non-`Drafted` value in the
-    table maps at or above APPROVED and does not cap — that was true of the
-    transitional `Modified` and is true of `Founded`, which step 8 armed — exactly
-    as the old `is_draft`-only test was. And an UNRECOGNIZED
-    value still does not cap: the off-spine default is DRAFTED because those
-    tiers' vocabularies are schema-ADVISORY, so an unreadable row must hold its
-    rung open or nothing would say anything — but `Status` is a closed INTEGRITY
-    enum since step 1, so an unrecognized spine value is already an always-on
-    ERROR on the `--strict-integrity` floor. Defaulting to DRAFTED here would
-    make the rename silently LOWER the derived gate for the downstream repo whose
-    LLRs read `Implemented` — a judgement move a rename is forbidden to make, and
-    a second punishment for a fault the floor already names."""
+    BEHAVIOUR IS UNCHANGED BY THE RE-KEY, in both directions. Every non-`Drafted`
+    value in the table maps at or above APPROVED and does not cap — that was true
+    of the transitional `Modified` and is true of `Founded`, which step 8 armed —
+    exactly as the old `is_draft`-only test was.
+
+    **THE UNKNOWN VALUE NOW FAILS CLOSED (2026-08-20, ROUND-SOL MAJOR-6), and
+    the migration tolerance it was carrying is kept by NAME instead.** This
+    passed `default=APPROVED`, reasoning that an unrecognized spine value is
+    already an integrity ERROR on the always-on floor, so holding its rung open
+    would punish one fault twice and would let D-9's rename silently LOWER the
+    derived gate for a downstream repo whose LLRs still read `Implemented`. The
+    first half of that reasoning survives; the second half was doing the work,
+    and it did not need a blanket default to do it. A blanket default cannot tell
+    `Implemented` from `Approvd`: a one-character typo derived the same finished
+    bar as an approval, on the axis the automation dial reads, and `derive_gate`
+    runs perfectly well without the integrity checker ever having been invoked.
+    So the retired spellings are enumerated (`SPINE_TRANSITIONAL`) and read
+    exactly as they always did, while everything else takes `_maturity`'s
+    fail-honest DRAFTED — the typo hole closes and the migration tolerance
+    stays."""
     return (
         BAR_BELOW
-        if _caps(_maturity(row.get("Status"), SPINE_MATURITY, default=APPROVED))
+        if _caps(_maturity(row.get("Status"), SPINE_MATURITY_READ))
         else BAR_RELEASE
     )
 
@@ -636,6 +643,30 @@ SPINE_MATURITY = {
     "approved": APPROVED,
     "founded": FOUNDED,
 }
+
+# THE RETIRED SPELLINGS, NAMED (2026-08-20, ROUND-SOL MAJOR-6). Not live
+# vocabulary and never part of `SPINE_MATURITY`: nothing may author these, and
+# the closed-enum integrity rule names any cell that does. What naming them buys
+# is that `maturity_bar` can tell a MID-MIGRATION registry from a TYPO, which a
+# blanket `default=APPROVED` could not — `Approvd` derived the same finished bar
+# as `Approved`, on the axis the automation dial reads. Each read is the
+# documented one: `modified` left at D-9 step 7 and an amended row was still
+# APPROVED; `implemented` is the pre-rename LLR/TC word this tolerance exists
+# for; `verified`/`planned` folded INTO `approved` at step 5 (OI-30 D1); `draft`
+# is the pre-rename `drafted` and is the one that CAPS, since promoting a draft
+# on a spelling is the error this table must not make. Anything outside both
+# tables holds its rung open (`_maturity`'s fail-honest default).
+SPINE_TRANSITIONAL = {
+    "modified": APPROVED,
+    "implemented": APPROVED,
+    "verified": APPROVED,
+    "planned": APPROVED,
+    "draft": DRAFTED,
+}
+
+# What `maturity_bar` reads: the live ladder plus those retired spellings,
+# composed ONCE so "what does this accept?" has one home.
+SPINE_MATURITY_READ = dict(SPINE_TRANSITIONAL, **SPINE_MATURITY)
 
 # BOUNDARY CROSSINGS — the depth-0 frame's `[boundary.B-##]` rows in
 # `external.toml` (rung 1). `Status` is the tier's ONE maturity field — the name
