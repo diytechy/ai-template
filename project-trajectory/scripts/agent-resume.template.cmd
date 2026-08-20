@@ -67,19 +67,29 @@ if not defined AGENT_CMD (
   pause
   exit /b 1
 )
-REM Probe by RUNNING the candidate, not just finding it: on a bare Windows
-REM box `where python` matches the Microsoft-Store app-execution alias, a
-REM stub that opens the Store instead of running (the hooks' pattern).
+REM Pick the interpreter that can actually RUN the engine, in preference order:
+REM this repo's OWN .venv first (the pinned 3.11+ toolchain scripts\setup.ps1
+REM builds), then `python` on PATH, then `py -3`. Every candidate is probed by
+REM RUNNING it - twice, because "found" and "usable" are two different questions:
+REM   1. `-c "pass"` - does it run at all? On a bare Windows box `where python`
+REM      matches the Microsoft-Store app-execution alias, a stub that opens the
+REM      Store instead of running (the hooks' pattern).
+REM   2. sys.version_info - the engine and every kit script import tomllib, so
+REM      anything below the kit's 3.11 floor is a broken boot, not a find. An
+REM      adopter targeting an older runtime lowers this WITH scripts/setup.*.
+REM `call` is load-bearing: without it cmd hands control to a .cmd/.bat shim
+REM python (pyenv-win ships exactly that) and never returns to this file.
 set "PY="
-python -c "" >nul 2>nul
-if not errorlevel 1 set "PY=python"
+set "PYWHY="
+if exist ".venv\Scripts\python.exe" call :pickpy ".venv\Scripts\python.exe"
+if exist ".venv\bin\python" call :pickpy ".venv\bin\python"
+call :pickpy "python"
+call :pickpy "py -3"
 if not defined PY (
-  py -3 -c "" >nul 2>nul
-  if not errorlevel 1 set "PY=py -3"
-)
-if not defined PY (
-  echo agent-resume.cmd: Python 3 not found on PATH ^(the Store alias stub
-  echo does not count^). Install Python 3 and re-run.
+  echo agent-resume.cmd: no Python 3.11+ interpreter found.
+  echo Rejected:%PYWHY%
+  echo Build the project environment ^(scripts\setup.ps1^) or install
+  echo Python 3.11+ and re-run.
   pause
   exit /b 1
 )
@@ -88,9 +98,28 @@ if defined AGENT_SESSION_TIMEOUT (
 ) else (
   set "TIMEOUT_ARGS="
 )
-%PY% scripts\agent_loop.py %TIMEOUT_ARGS% %*
+call %PY% scripts\agent_loop.py %TIMEOUT_ARGS% %*
 set "EXITCODE=%ERRORLEVEL%"
 echo.
 echo Exited with code %EXITCODE%.
 pause
 exit /b %EXITCODE%
+
+REM --- interpreter probe (called above; unreachable by fall-through) -----------
+:pickpy
+REM Probe ONE candidate (%~1, which may carry a flag like `py -3`) and record why
+REM it lost; the first candidate that answers Python 3.11+ wins and later ones
+REM are skipped. The rejection list is what the diagnostic above prints.
+if defined PY goto :eof
+call %~1 -c "pass" >nul 2>nul
+if errorlevel 1 (
+  set "PYWHY=%PYWHY% [%~1: not runnable here]"
+  goto :eof
+)
+call %~1 -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" >nul 2>nul
+if errorlevel 1 (
+  set "PYWHY=%PYWHY% [%~1: older than Python 3.11]"
+  goto :eof
+)
+set "PY=%~1"
+goto :eof

@@ -10,6 +10,31 @@ safety_class = "ordinary"
 priority = 3
 +++
 
+## Deliverable
+
+Every launcher that selects a Python now prefers the repository's `.venv`
+and probes each candidate by RUNNING it — once for runnability (the
+Store-alias guard) and once for `sys.version_info >= (3, 11)` — refusing
+with a list of rejected candidates and reasons when none qualifies: root
+`agent-resume.{cmd,sh}` and their shipped templates, plus `check.{sh,ps1}`;
+`agent-resume.command` inherits the policy through its `exec` of the `.sh`
+twin and now says so (the one honest exception, documented). On Windows the
+probe and engine invocations are `call`-prefixed — without it cmd.exe hands
+control to a `.cmd` shim python (pyenv-win ships one) and the pre-change
+launcher exited 0 having run NOTHING, proven by driving the old launcher
+against such a shim. Two real bugs found by executing rather than reading:
+PowerShell drops an empty string from a native command line (so a `-c ""`
+probe rejected every candidate) and PowerShell 7.4+ turns non-zero native
+exits into terminating errors under Stop preference.
+`tests/test_launcher_interpreter.py` (27 tests, slow-tiered by the declared
+mechanical boundary) executes the selection against fake interpreters that
+are the real python with a spoofed version — venv preferred, below-floor
+refused AND NAMED, floor-satisfying PATH python taken, stale venv fallen
+through, alias stub walked past to `py -3` — replacing the text-inspecting
+confidence the review flagged. Verified on a bootstrapped scaffold;
+RESYNC_PACK entry `[since 27a65c19]`. Worker full suite: 2621 passed / 13
+skipped in 506.88s.
+
 ## Context
 
 Confirmed against the tree: `agent-resume.cmd:89-105` probes candidates only

@@ -26,11 +26,38 @@ baseline made duplicate-key-PROOF via an AST parse of the file's own source;
 the nested smoke-budget child runs forced-UTF8 with a planted cp1252-byte
 regression test; the gen_trajectory panel assert is an explicit raise with a
 test. Touched modules 98 passed; smoke 1209/5 (two new tests joined the
-tier). The worker's final report never arrived (it stalled waiting on its
-own background full run) — the work was verified from the diff and the
-re-run checks by the orchestrator before close.
+tier). The worker's final report arrived AFTER the close (it had stalled on
+its own background full run; the work was verified from the diff first) and
+confirms: full unfiltered suite 2596 passed / 13 skipped in 453.88s; the
+M-01 crash was REPRODUCED live before fixing (the cp1252 em dash killing
+subprocess's reader thread); the spec's "malformed noqa" finding no longer
+existed on the moved tree — the real sixth was a second F841. Two declared
+deviations, both accepted: M-05 deliberately narrowed to the duplicate
+merge + AST guard (stripping ~1,700 lines of per-entry history judged
+disproportionate for a quick batch — if wanted it is its own WI), and no
+RESYNC entry (no adopter-facing behavior moved).
+<!-- fig: cmd="python -m pytest -q -n auto" rev=34a42f7e -->
+
+### WI-475 — launcher interpreter selection (opus worker) — CLOSED complete
+
+One selection policy in every probing launcher (.venv first, runnability
+then version probe, refusal NAMES every rejected candidate), the `.command`
+wrapper documented as the honest inherited exception, `call`-prefixed cmd
+invocations (the shim trap: the old launcher exited 0 having run nothing),
+and 27 executable selection tests replacing text inspection. Two live bugs
+found by execution: PowerShell's empty-string argument drop and 7.4+'s
+Stop-preference native-exit behavior. Scaffold-verified; RESYNC entry.
+Worker full suite 2621/13 green.
+<!-- fig: cmd="python -m pytest -q -n auto" rev=27a65c19 -->
 
 ### Adjacent findings accumulating for the closing review
+
+- (WI-475 worker) `run.template.{sh,cmd}` carry the IDENTICAL pre-WI-475
+  runnability-only pattern — same defect class, product-launcher surface,
+  worth its own WI.
+- (WI-475 worker) the smoke tier measures ~56s against the declared 60s
+  budget on this box — the stamp's headroom is gone; and smoke membership
+  is 1214/1216 — the next new smoke module trips the membership ratchet.
 
 - (WI-474 worker) `check_vocab.py:71` declares `Contracts: IF-118`, which is
   NOT its row (IF-118 is gen_open_items→spine_carrier) — and the checker

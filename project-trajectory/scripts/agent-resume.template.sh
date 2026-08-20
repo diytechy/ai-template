@@ -65,9 +65,44 @@ if [ -z "$AGENT_CMD" ]; then
   exit 1
 fi
 export AGENT_CMD AGENT_MODEL AGENT_MODEL_MAP AGENT_PREFER_MAP AGENT_CMD_MAP AGENT_CMD_INTERACTIVE
-PY="$(command -v python3 || command -v python)" || {
-  echo "agent-resume.sh: python3 not found." >&2; exit 1;
+# Pick the interpreter that can actually RUN the engine, in preference order:
+# this repo's OWN .venv first (the pinned >=3.11 toolchain scripts/setup.sh
+# builds), then python3, then python. Every candidate is probed by RUNNING it —
+# twice, because "found" and "usable" are two different questions:
+#   1. `-c "pass"` — does it run at all? A Windows `python3` on PATH is often
+#      the Microsoft-Store alias stub, which exists and runs nothing.
+#   2. sys.version_info — the engine and every kit script import tomllib, so
+#      anything below the kit's 3.11 floor is a broken boot, not a find. An
+#      adopter targeting an older runtime lowers this WITH scripts/setup.*.
+# Both .venv layouts are probed: bin/ is POSIX, Scripts/ is what a
+# Windows-created venv has, so a Git Bash user finds their own venv too (the
+# check.sh / pre-commit pattern).
+PY=""
+PYWHY=""
+pick_py() {
+  if [ -n "$PY" ]; then return 0; fi
+  if ! "$1" -c "pass" >/dev/null 2>&1; then
+    PYWHY="$PYWHY [$1: not runnable here]"
+    return 0
+  fi
+  if ! "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' \
+    >/dev/null 2>&1; then
+    PYWHY="$PYWHY [$1: older than Python 3.11]"
+    return 0
+  fi
+  PY="$1"
 }
+if [ -x ".venv/bin/python" ]; then pick_py ".venv/bin/python"; fi
+if [ -x ".venv/Scripts/python.exe" ]; then pick_py ".venv/Scripts/python.exe"; fi
+pick_py python3
+pick_py python
+if [ -z "$PY" ]; then
+  echo "agent-resume.sh: no Python 3.11+ interpreter found." >&2
+  echo "Rejected:$PYWHY" >&2
+  echo "Build the project environment (scripts/setup.sh) or install Python" >&2
+  echo "3.11+ and re-run." >&2
+  exit 1
+fi
 if [ -n "$AGENT_SESSION_TIMEOUT" ]; then
   set -- --session-timeout "$AGENT_SESSION_TIMEOUT" "$@"
 fi

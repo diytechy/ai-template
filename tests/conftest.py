@@ -181,6 +181,16 @@ SLOW_MODULES = frozenset(
         # loses only the hard stop; the hard failure lands at slice/phase close and
         # in CI, which is where a gate result is claimed.
         "test_prereq_toolchain",  # designed to red below the declared Python floor
+        # WI-475: the launcher interpreter-selection suite. Filed here by the
+        # MECHANICAL boundary this set is drawn on, not by preference — every
+        # test in it RUNS a launcher (sh / cmd.exe / pwsh) against fake
+        # interpreters and several build a real `python -m venv`, so its cost is
+        # subprocess-dominated exactly like test_bootstrap and test_onboard_devsetup,
+        # the two modules that own the rest of the launcher surface. Measured 8.0 s
+        # serially for 25 tests on this box (3.11.9, 24 cores) — a seventh of the
+        # 60 s commit bar for a surface that changes about once a year. Nothing is
+        # weakened: it runs in full at slice/phase close and in CI.
+        "test_launcher_interpreter",  # launchers driven against fake interpreters
     }
 )
 

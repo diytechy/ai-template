@@ -1886,6 +1886,50 @@ your very next commit.
    header block drops the third value) and re-read `process.md` §4, whose closed
    vocabulary sentence is the one home for this enum.
 
+### Launchers select an interpreter: prefer `.venv`, require 3.11+ [since 27a65c19]
+
+*(Anchored at the preceding commit; the change lands in the commit that follows
+it.)* Your `agent-resume.{cmd,sh}` and `scripts/check.{sh,ps1}` used to accept
+**any runnable** `python` — the launchers asked "does it run?" and never "is it
+the version this harness needs?", and `agent-resume.*` did not look at `.venv`
+at all. On a multi-Python workstation that is a broken front door: the kit's
+scripts import `tomllib` (3.11+), so an ambient 3.8 first on PATH dies at import
+with a valid `./.venv` sitting unused two directories away. Found in the kit's
+own repo, where the text-inspecting launcher tests all passed while it happened.
+
+**The policy, identical in all four files.** Candidates in order — `.venv`
+(both layouts: `bin/python`, `Scripts/python.exe`), then `python`/`python3`,
+then `py -3` on Windows — each probed by RUNNING it twice: `-c "pass"` (does it
+run at all? the Microsoft-Store alias stub does not) and then
+`sys.version_info >= (3, 11)`. First one that answers both wins; if none does,
+the launcher refuses and prints **every rejected candidate with its reason**
+rather than a bare "not found" about a python that is plainly there.
+
+- **Take the two `check` launchers wholesale** — `scripts/check.sh` and
+  `scripts/check.ps1` are kit-owned thin launchers with nothing of yours in them.
+- **The root `agent-resume.*` launchers are the "preserve always" class** (§2.2):
+  their EDIT slots are yours. So do NOT overwrite them — port the block instead.
+  It is self-contained and sits between the `AGENT_CMD` guard and the engine
+  line: copy it from `scripts/agent-resume.template.{cmd,sh}`, keeping your own
+  slot values above it untouched. `agent-resume.command` needs no change at all;
+  it `exec`s the `.sh` twin and inherits the selection (the template's comment
+  now says so).
+- **Windows: the `call` in front of the probe and the engine line is load-bearing,
+  not style.** Without it `cmd.exe` hands control to a `.cmd`/`.bat` shim python
+  (pyenv-win ships exactly that shape) and never returns — the launcher then exits
+  silently having done nothing. If you hand-port only part of this entry, port
+  that.
+- **PowerShell: the probe is `-c "pass"`, never `-c ""`.** PowerShell drops an
+  empty string when it builds a native command line, so the empty form arrives as
+  a bare `-c` and *every* candidate reads as broken.
+- **If your project deliberately targets an older Python**, this floor is the same
+  `(3, 11)` your `scripts/setup.{sh,ps1}` and the kit's `agent_common.MIN_PYTHON`
+  already assert — lower it in all of them together or not at all.
+- **A stale `.venv` no longer wins by merely existing**, which is the half of
+  "prefer the venv" that is easy to get wrong: a venv built on an old interpreter
+  is rejected with its reason and the launcher falls through to a good PATH
+  python, instead of pinning you to the broken one.
+
 
 ## 4. Translation helper — concept renames
 
