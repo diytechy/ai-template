@@ -243,8 +243,12 @@ def test_a_TRACED_cell_moving_is_NOT_drift(tmp_path):
 
 def test_a_row_below_approval_can_never_be_drifted(tmp_path):
     # It has made no claim to fall from. A Drafted row differing from its snapshot
-    # copy is work in progress, not a broken attestation.
-    root = _seeded(tmp_path)
+    # copy is work in progress, not a broken attestation. The live registries
+    # carry no Drafted row since the 2026-08-20 signing, so the fixture makes
+    # its own (first SR flipped pre-seed) rather than borrowing one.
+    root = _tree(tmp_path)
+    _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
+    SNAP.copy_live(root, seed=True)
     snapshot = SNAP.load_all(root)
     before = SNAP.rows_for(snapshot, SR_REL, "SR-ID")
     sid, row = _first_row_at(root, "drafted")

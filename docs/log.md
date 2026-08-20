@@ -38,12 +38,41 @@ applying that design to the kit itself.
 | G2 — Decomposition & Test Coverage | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
 | G3 — Implementation | n/a | n/a | MET 2026-07-07 | MET 2026-07-07 | ✅ Peter Johnson 2026-07-07 |
 | DevStg-Needs (sitting 1 of 2: the nine draft SNs ratified as written; the Modified SR texts re-attested as amended; SR re-statement/retier deliberately held open for sitting 2) | MET 2026-08-13 | n/a | MET 2026-08-13 | n/a | ✅ Peter Johnson 2026-08-13 (ruled in session; recorded by the coordinator) |
+| DevStg-Boundary…DevStg-Tests text-sign (sitting 3: the full spine — 243 SN/SR/LLR/TC status flips, every Drafted ratified and every Modified re-attested as amended through the 2026-08-20 readability sweep, the ten ex-Planned rows included in the read; the 11 external.toml frame rows approved in the same act, clearing DevStg-Boundary; docs/archive/last_approved/ SEEDED in the same commit) | MET 2026-08-20 | n/a | MET 2026-08-20 | MET 2026-08-20 (TC text signed; whether tests pass stays the harness's answer) | ✅ Peter Johnson 2026-08-20 ("I approve of all", ruled in writing; recorded by the coordinator) |
 
 ## Decisions log
 
 _Ratified or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids)._
 
+- **2026-08-20a — SITTING 3 CLOSED: the spine is SIGNED and the baseline is
+  SEEDED.** The owner read the SNs in full and the other spine registries in
+  overview and ruled in writing: "I approve of all … this should knock out
+  sitting 3 and open up the rest of the work frontier." Executed as the
+  reviewed Status-change commit that ruling authorizes (an agent may make the
+  ratifying commit on the acceptor's behalf, `human_ratification_through = 4`
+  satisfied by the owner's written ruling): 243 spine status cells flipped —
+  SN 18 Modified→Approved; SR 28 Drafted + 42 Modified→Approved; LLR 23
+  Drafted + 84 Modified→Approved; TC 23 Drafted + 25 Modified→Approved — the
+  ten ex-Planned rows (SR-137/138/139/140/144/146/147/148/149/150) included
+  in the owner's read per §5's warning. TWO DELIBERATE ACTS BEYOND THE
+  PRESCRIBED SIGN, declared: (1) the 11 `external.toml` frame rows
+  (EXT-001/002/003/005, B-01/02/04/05, REL-001/002/003) flipped
+  Drafted→Approved in the same human act — sitting-2 locked the frame, §4's
+  own close condition says the stage has not really cleared while
+  `DevStg-Boundary` caps it, and the owner's "all" covers the frame they read
+  in overview; (2) one seven-word truth-preservation edit on LLR-172, whose
+  text said "which is why this row and TC-166 are Draft" — false the moment
+  they flip — now "recorded as open debt on this row and TC-166". The
+  baseline SEEDED (`intake.py snapshot --seed`, seven registries, byte-for-
+  byte) in the SAME commit; drift detection is born here. Step 7/8 of the
+  D-9 migration (retire `Modified`, arm UNANCHORED, compute `Founded`) follow
+  as the mechanical same-sequence act. WI-464's last act was this sitting —
+  closed complete. NOT closed by this sitting, still the owner's: the
+  mis-seeded `B`/`REL` watermark MECHANISM (options framed at `2026-08-17w`;
+  interim SPENT IDS protection standing). Known-open red, unaffected and
+  owned: the `trajectory` cross-component ERROR (WI-474, first in the grind).
+  Phase-close bar: full unfiltered suite 2588 passed / 13 skipped in 393.86s.
 - **2026-08-19b — `OI-33` ABSORBED into `OI-32`, which becomes the combined
   components brief; `OI-41`'s recommendation amended from (a) to a new (e).**
   **(1) THE MERGE.** Owner direction: rule the two component rows as one, on

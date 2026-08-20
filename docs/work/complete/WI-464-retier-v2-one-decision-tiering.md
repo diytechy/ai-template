@@ -10,6 +10,18 @@ safety_class = "spine"
 priority = 2
 +++
 
+## Deliverable
+
+All six slices executed 2026-08-16 (the plan's §0 table was the cursor;
+per-slice log entries `2026-08-15p`…`2026-08-16i`), and the program's LAST
+act — the ONE sitting — ran 2026-08-20: the owner approved the spine in
+writing ("I approve of all"), 243 spine status cells flipped in the reviewed
+signing commit, the 11 frame rows approved with them, and the baseline
+seeded (`intake.py snapshot --seed`) in the same commit (log Decisions
+`2026-08-20a`; Sittings row of the same date). R1–R4 are live in the
+registries; the fan-out and `this_project` advisories ship; the amendment
+window this program held open CLOSED at the sitting.
+
 ## Context
 
 The program exists because the owner's 2.7(a) grounding question (log

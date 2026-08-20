@@ -9,51 +9,25 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
 [`PROJECT_STATE.html`](../PROJECT_STATE.html)), and
 [archive/](archive/README.md) (design history, with per-file dispositions).
 
-- **THE TARGET — ONE SITTING, and it is the owner's.** Everything mechanizable
-  ahead of it is executed. The spine layer is **settled**; every act on it is
-  **provisional and overturnable**; **nothing is signed, nothing is seeded**,
-  and `docs/archive/last_approved/` deliberately does not exist yet. **Run the
-  sitting from two documents, in this order:**
-  [plans/2026-08-13-sitting-3-spine-verification.md](plans/2026-08-13-sitting-3-spine-verification.md)
-  — its 2026-08-16 banner, then **§0.4, the desk** (§0.3 ledger, §2.1 window,
-  §3 status-vocabulary sequence, §4 close mechanics) — and
-  [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md) §5,
-  the procedure in order: read the regenerated brief
-  ([ratify/2026-08-13-wi444.md](ratify/2026-08-13-wi444.md)) **plus the ten
-  ex-`Planned` rows no brief lists**, rule the open calls, **sign**, **seed the
-  snapshot in the same reviewed commit**, then step 7 arms.
-- **What the sitting still has to RULE.** The one below — **the pending briefs
-  are all RULED** (five on 2026-08-20, rulings + execution rows in
-  [log.d/2026-08-20-owner-rulings-review-ois.md](log.d/2026-08-20-owner-rulings-review-ois.md));
-  the rest is ruled, countersign-only ([log.md](log.md)). Note the item below
-  is itself an open ruling that carries no `OI` row — `OI-41`'s subject, whose
-  ruled ARM 2 exists to catch exactly this class once built.
-  1. **The mis-seeded `B`/`REL` watermarks.** `B-08`/`REL-004` were allocated
-     and cut, the seeding probe could not see them, and raising the marks by
-     hand is REFUSED by `trace.py`'s integrity rule now that both spaces carry a
-     committed mark. **The owner rules the MECHANISM for correcting a
-     mis-computed seed.** Interim protection: a SPENT IDS block in
-     `external.toml`'s header.
-- **What the sitting has to DO, beyond that one.** The **attestation**: the
-  re-attest window, the **LLR/TC draft ratifications** (same sequence), and the
-  remainder of the status-vocabulary sequence — review-package §5 step 7: retire
-  the transitional `Modified` so the enum lands at `{Drafted, Approved,
-  Founded}` (drift = snapshot comparison), turn `intake`'s `!= "Modified"` guard
-  into a refusal, arm the UNANCHORED rule as an ERROR. Registry-status
-  unification §5B (D-9 steps 7–8) is POST-sign AND POST-seed — deliberately NOT
-  done. The **amendment window closes at that sitting, not before**; §0.3's
-  ledger is 9-of-9 RULED and §0.4's WORK OWED block is empty, so no pre-work is
-  owed. Known-open, unrelated: the `trajectory` gating red, and the brief's
-  freshness check (it re-reddens on every spine amendment).
-  **Countersign-only, added 2026-08-18k:** fifteen SN `acceptance` cells reworded
-  from instrument voice to condition voice under the owner's artifact-voice
-  directive — a wording sweep, no `status` cell moved, per-row before/after in
-  [log.d/2026-08-18-sn-artifact-voice.md](log.d/2026-08-18-sn-artifact-voice.md).
-  **Also countersign-only:** `SN-006` relaxed on the owner's ruling (the
-  unattended layer moves forward as far as it can and surfaces only when it
-  cannot proceed; the human-held override stays, the absolute goes) — a
-  provisional amendment, before/after in
-  [log.d/2026-08-18-owner-rulings.md](log.d/2026-08-18-owner-rulings.md).
+- **THE SPINE IS SIGNED AND THE BASELINE IS SEEDED** (sitting 3, 2026-08-20 —
+  the owner's written approval; the record: [log.md](log.md) Decisions
+  `2026-08-20a` + the Sittings row of the same date). `docs/archive/last_approved/`
+  exists and drift detection is live: a post-sign amendment is a live edit the
+  snapshot comparison reports, adjudicated per the declared ratification level —
+  never a silent ride. The D-9 step 7/8 follow-on (retire `Modified`, arm
+  UNANCHORED as an ERROR, compute `Founded`) lands as the same-sequence
+  mechanical act. Known-open, unrelated: the `trajectory` gating red (owned,
+  first in the grind).
+- **The ONE ruling still owed:** the mis-seeded `B`/`REL` watermark
+  MECHANISM. `B-08`/`REL-004` were allocated and cut, the seeding probe could
+  not see them, and raising the marks by hand is REFUSED by `trace.py`'s
+  integrity rule now that both spaces carry a committed mark. **The owner
+  rules the MECHANISM for correcting a mis-computed seed** (options framed in
+  [log.md](log.md) `2026-08-17w`). Interim protection: the SPENT IDS block in
+  `external.toml`'s header.
+- **The frontier is OPEN and the grind runs in series** (owner directive
+  2026-08-20): the generated block below carries the order; one large
+  adversarial review (internal + cross-family) closes the batch.
 - **The `wi455-architecture-retirement` lane owns what the sitting does not:**
   the crossing-ownership re-key onto each named owner, the five
   `external:`-marked IF rows with no tie-back, B-04's half realization, the D-3
@@ -75,16 +49,15 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   `wi416-parked-handback-contract` branch holds a 271-line pre-ruling draft
   that exists nowhere else (its rows are disposed; the handback ruling
   superseded it) — delete only after deciding the draft is not wanted.
-- **STARTING COLD? Read in this order:** this block →
-  [plans/2026-08-15-review-package.md](plans/2026-08-15-review-package.md) →
-  sitting-3 §0.4 → [log.md](log.md)'s `2026-08-15*`/`2026-08-16*` Decisions.
-  The standing constraint under all of it: **the depth-0 frame is LOCKED** —
-  **4 entities · 4 crossings · 3 relationships**, ids of the cut rows spent and
-  watermark-held; the repository is the system, the template is the deliverable.
-  What the sitting owes a look at in
-  [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md):
-  the 21 judgement owner picks, the `carried_by` prototype on `IF-102` and its
-  provisional depth bound of 2, and the `IF-097`/`IF-080` calls.
+- **STARTING COLD? Read in this order:** this block → [log.md](log.md)'s
+  `2026-08-20*` Decisions → the generated frontier below. The standing
+  constraint under all of it: **the depth-0 frame is LOCKED and now APPROVED**
+  — **4 entities · 4 crossings · 3 relationships**, ids of the cut rows spent
+  and watermark-held; the repository is the system, the template is the
+  deliverable. Still owed a look, now by the wi455 lane rather than a sitting:
+  [plans/2026-08-15-interface-rework-plan.md](plans/2026-08-15-interface-rework-plan.md)'s
+  21 judgement owner picks, the `carried_by` prototype on `IF-102`, and the
+  `IF-097`/`IF-080` calls.
 - **Unfiled follow-ups** (no ids yet, so listed as topics): the stage-ladder
   program's deferred codex review round; the SN-036 per-decomposition coverage
   record (re-derive it — the basis line now reads `uncovered=0`); the two
@@ -102,22 +75,22 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
 <!-- BEGIN GENERATED STATUS -->
 _Derived facts — regenerated by `python project-trajectory/scripts/gen_trajectory.py --status`; do not hand-edit (the forward-only intent below is hand-authored)._
 
-- **In stage:** **DevStg-Boundary** (stage 1 of 8, system boundary interfaces in work) · **next to clear: DevStg-Reqs** (per-phase `1=DevStg-Below;3=DevStg-Tests;4=DevStg-Below;5=DevStg-Below`, derived current **phase=5**) — one vocabulary, and the VERB says which reading: a repo is IN a stage and CLEARS a stage. [`derive_gate.py`](../project-trajectory/scripts/derive_gate.py) derives both, cached to [`docs/gate`](gate).
-- **Spine:** **SN=27 SR=72 LLR=161 TC=157** (74 drafts) · 125 seams · 4 components.
+- **In stage:** **DevStg-Arch** (stage 3 of 8, architecture (partition) in work) · **next to clear: DevStg-Reqs** (per-phase `1=DevStg-Tests;3=DevStg-Tests;4=DevStg-Reqs;5=DevStg-Reqs`, derived current **phase=5**) — one vocabulary, and the VERB says which reading: a repo is IN a stage and CLEARS a stage. [`derive_gate.py`](../project-trajectory/scripts/derive_gate.py) derives both, cached to [`docs/gate`](gate).
+- **Spine:** **SN=27 SR=72 LLR=161 TC=157** (0 drafts) · 125 seams · 4 components.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
   - **WI-448** `P3` — OI-16 execution (inversion confirmed by the owner 2026-08-13): the common-module program
   - **WI-455** `P3` — The docs/architecture.md RETIREMENT program (owner-ruled 2026-08-13u, sitting-2 decision…
   - **WI-469** `P3` — Consumes rows that name the MEDIUM, not whom the medium serves
   - **WI-473** `P3` — Gate scheduling loses every established product check when one draft row lands: design an…
   - **WI-474** `P3` — Declare or re-partition the hats -> spine_carrier seam: the one live strict-architecture…
-  - **WI-464** `P2` — Re-tier v2
   - **WI-472** `P2` — Mint the SR that states the CodeSymbol-anchor obligation, plus its LLR and TC, and re-poi…
   - **WI-482** `P2` — Repair the three verified-stale LLR CodeSymbol anchors (LLR-087, LLR-088, LLR-112)
   - **WI-483** `P2` — Successor decomposition program: break the seven-module import cycle behind typed read mo…
   - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
   - **WI-390** — PROGRAM CLOSE for concurrency-v2 (docs/concurrency-v2.md §A9 deletion ledger). NOT a swee…
   - **WI-486** `P3` — Tighten the Implements harvester to literal declarations, ship the reverse-coverage scann…
-  - _(+14 more ready — see the dashboard)_
+  - **WI-452** `P3` — Resurface LLR-165's carrier converter as the downstream-resync helper it now is (owner-ru…
+  - _(+13 more ready — see the dashboard)_
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit):** `python -m pytest -q -n auto -m smoke` +

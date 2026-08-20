@@ -125,22 +125,22 @@ def test_every_frame_row_carries_the_approval_element():
             assert row.get("status") in ("Drafted", "Approved"), (table, rid)
 
 
-def test_nothing_in_the_live_frame_is_approved_yet():
-    """The flip authority, asserted rather than asked for. `process.toml`'s
-    `human_ratification_through` covers the SPINE tiers only; until sitting-3
-    §3.6 rules the mechanized extension, a `status` cell here is the OWNER's
-    to flip in a reviewed commit. Nothing this program builds may set one.
-
-    This test is expected to be EDITED by that ratification — deliberately. It
-    is the tripwire that makes a loop-authored approval a red test rather than a
-    quiet line in a diff."""
+def test_the_live_frame_approval_state_is_pinned():
+    """The flip authority, asserted rather than asked for: a `status` cell here
+    is the OWNER's to flip in a reviewed commit, and nothing the kit builds may
+    set one. The pre-sign form of this test pinned {"Drafted"} and fired — as
+    designed — at the 2026-08-20 sitting-3 ratification, where the owner
+    approved the locked frame in writing (log Decisions 2026-08-20a); this
+    edit IS that ratification's sanctioned update. The tripwire now points the
+    other way: the frame is uniformly Approved, and any row leaving that state
+    is again a red test rather than a quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
     approvals = {
         row.get("status")
         for table in ("entity", "boundary", "relationship")
         for row in tables[table].values()
     }
-    assert approvals == {"Drafted"}
+    assert approvals == {"Approved"}
 
 
 # --- the join rules ------------------------------------------------------------
