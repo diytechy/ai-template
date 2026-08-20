@@ -115,6 +115,11 @@ review_rounds = 1
 # secrets floor below is separate and runs regardless.
 # KEYED-GREPPABLE: the three git hooks match this exact line shape so a
 # Python-less box still fails closed (M-42).
+# `false` here is a RULED posture, not an unexamined default: OI-44 (ruled
+# 2026-08-20) defers the publication/identity decision to the first act that
+# would publish this repo's history beyond the owner's machines — re-answer
+# OI-44 before that act. Do not re-raise "privacy off + identities in
+# history" as a finding; it resolves at that row.
 privacy_check = false
 # The always-on secrets floor (key/token shapes in the staged diff, message and
 # outgoing range) — was docs/secrets-scan, where ABSENCE read as on.
