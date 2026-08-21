@@ -101,6 +101,18 @@ first — mechanical bookkeeping must not stale an honest APPROVE).
 
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
 own bar passed on this exact tree.
+
+Contracts: IF-055, IF-080 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml). IF-055
+is the `claim` operation's read through schedule.py's pure frontier/class
+library (load_wis/evaluate + the SCHED_* constants) — this module owns the
+claim commit and branch cut, the library stays side-effect-free. IF-080 is
+this module's own CLI (`claim`/`refresh`/`integrate`/`audit`), which
+dispatch.py's docstring already cites inline and handback.py's docstring
+declines to declare on the sibling's behalf. Both rows sat undeclared —
+part of the drift docs/concurrency-v2.md §A9.1 hands to the WI-390
+program-close row rather than to any single builder; declared here now that
+the program is closing.
 """
 
 from __future__ import annotations

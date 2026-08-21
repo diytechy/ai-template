@@ -10,6 +10,99 @@ needs = ["WI-380", "WI-381", "WI-383", "WI-384", "WI-386", "WI-387", "WI-388", "
 
 ## Context
 
+### Slice 1 landed (2026-08-20, sonnet worker) — connectivity + prose closed, the spine amendment deferred as a window question
+
+**Landed to `docs/work/active/wi390-concurrency-v2-program-close/`, not
+`complete/`: the row is honestly unfinished.** What this slice closed, of the
+four surfaces §A9.1 names:
+
+- **(2) Connectivity — the drift THIS program caused, closed.** `scripts/lane`
+  and `scripts/handback` were arch-map modules naming no `IF-###` row at all
+  (both docstrings said so explicitly, naming this row as owner); minted
+  `IF-136` (dispatch consumes lane) and `IF-137` (dispatch consumes handback),
+  declared in `dispatch.py`'s `Contracts:` line. `IF-055` and `IF-080`
+  (`this_project = scripts/integrate`) and `IF-081` (`this_project =
+  scripts/trunk_step`) sat in the registry with no script declaring them;
+  declared in `integrate.py` and `trunk_step.py` respectively. `drive.py`
+  itself no longer exists (already fully renamed away by an earlier build) and
+  was never flagged live — the design doc's own list was stale on that one
+  entry. Verified by re-running `check_trajectory.py --strict`
+  before/after: all five WARNs gone, no new ones introduced (two transient
+  citation-frame/length findings on the two new rows were fixed before
+  landing, not left).
+- **(3) Process prose — the one live contradiction found and fixed.**
+  `PROCESS_OPTIONS.md`'s "serial merge queue" paragraph still read "a `--no-ff`
+  merge onto a candidate worktree", which `integrate.py`'s own docstring
+  contradicts (no candidate worktree exists — §A2 deleted it; the bar runs
+  once, on the branch, at refresh). Grepped `PROCESS_OPTIONS.md` and
+  `AGENTS.template.md` for the rest of the retired vocabulary (`SCHED_`,
+  `single-WI`, `packing`, `EXIT_NEEDS_HUMAN`, `parked-branch`, `merge-conflict`
+  / `conflict arm`, `candidate worktree`) — zero further hits. Byte delta:
+  `PROCESS_OPTIONS.md` 175,330 -> 175,531 (+201, watched, FLAGGED, re-stamped
+  in all three tracked skill copies).
+- **(4) Stamps — verified, nothing owed.** `check_stubs.py` is a
+  downstream-adopter tool (scans a `src/` dir this repo doesn't have) and runs
+  clean here by construction. The size ratchet (`tests/test_module_size_ratchet.py`)
+  carries no `drive.py` entry to retire — it was never in `BASELINE`. The
+  duplication-census stamp this row's title still names is confirmed gone
+  (D-7/WI-426, already recorded in this file's own WI-426 section below); no
+  substitute obligation is owed here (no duplicated POLICY was left behind by
+  this slice).
+
+**(1) THE SPINE AMENDMENT — a window question for the owner, not decided
+here.** Two separate facts, both re-measured this session rather than trusted
+from this file's stale citations:
+
+- `SR-093`, `SR-124`, `SR-131`, `SR-132`, `SR-050` no longer exist in
+  `docs/requirements/system-requirements.toml` at all (zero grep hits) —
+  deleted outright, not marked `Superseded`, by the unrelated WI-451 SR
+  re-tier campaign's tombstone class (2026-08-14b), per this file's own
+  2026-08-18b note. `SR-133`'s clause was folded into `SR-006` verbatim. This
+  is **already a re-scope of a spine-class row**, which this file's own
+  2026-08-18b note says is "not a builder's call — raise it at the sitting" —
+  so it is raised here, not acted on: the six original amendment targets are
+  gone by a different program's ruling, and nothing further is owed from this
+  row on them.
+- `LLR-051`/`LLR-056`/`TC-051`/`TC-056` (the WI-414 re-scope's four surviving
+  targets) are **not** `Modified` as the 2026-08-13w note assumed — re-measured
+  today, all four are **`Approved`**. `LLR-056.detail` and `TC-056.method` /
+  `.expected` still describe the retired two-intersecting-hoops render ("6 for
+  the 5-stage intake loop + 5 for the 4-stage decision loop = 11", "the LLM_Agent
+  hub"), while `TC-056.evidence` already cites only the live station-cycle tests
+  (`test_process_tab_renders_the_station_cycle` and six siblings) and the
+  shipped render (`traj_panels._station_panel`) draws one station cycle, not
+  two hoops — confirmed by reading the test and the render, not assumed.
+  **Recommendation:** replace `LLR-056.detail`'s "(A) the intake loop ... (B)
+  the human-decision loop ... two circular working loops" framing with a
+  station-cycle description (the seven ring stages `test_process_tab_renders_
+  the_station_cycle` pins: Dispatcher tick -> Claim -> Lane build -> Station
+  refresh -> Merge slot -> Trunk advance -> Intake mint), and replace
+  `TC-056.method`/`.expected`'s two-hoop/11-edge claim with an assertion over
+  that same ring — `TC-056.evidence` needs no change, since it already names
+  the right tests. **Not executed here** because both rows are `Approved`:
+  amending an Approved cell overrides attestation, which this repo's own
+  precedent (`SR-006`/`LLR-014`/`TC-014`, WI-473 today) treats as the sitting's
+  act, not a builder's — and this row is `safety_class = spine` precisely so
+  its amendments land in one owner-reviewed window rather than by a session's
+  unilateral edit.
+
+**Two findings banked, not fixed here (out of this row's four-item scope):**
+`docs/registry-machinery-reference.md`-style: `check_trajectory` now reports
+`scripts/lane` and `scripts/handback` "declares no Consumes seam" (the
+provide-only-leaf advisory, same class already carried by
+`scripts/kitlib/station` since WI-483) — expected given their docstrings'
+own "no back-channel, no state file" design, not a defect, left unmarked for
+the same reason `kitlib/station` was. Separately, `gen_arch_map.module_contracts`'s
+per-line `"Contracts" in line` substring match is naively fooled by a NEGATIVE
+statement: `handback.py`'s own docstring line 63 ("No `Contracts:` line,
+deliberately: the integrator seam this extends is IF-080, whose row already
+sits...") contains both the trigger substring and the id on the same line, so
+the harvester silently counted it as a DECLARATION of IF-080 — which is why
+`check_trajectory` never actually WARNed about IF-080 even before this
+session's fix. A false quiet, not a false red, so nothing here depended on it
+being wrong; banked for whoever next touches `gen_arch_map.py`'s Contracts
+grammar.
+
 ### The `~WI-464` soft edge (2026-08-19, repo-review triage)
 
 The 2026-08-13w section below already rules that this row's spine amendment

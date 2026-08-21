@@ -54,8 +54,11 @@ Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry
         (no operation flag = both, compile first, then regen)
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
 
-Contracts: IF-120 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-081, IF-120 — the interface seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml). IF-081 is this
+module's own CLI (`--compile-log`/`--regen`), sitting undeclared as part of the
+drift docs/concurrency-v2.md §A9.1 hands to the WI-390 program-close row rather
+than to any single builder; declared here now that the program is closing.
 """
 
 import argparse

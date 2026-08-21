@@ -962,6 +962,169 @@ Gate figures, this tree:
   only its counts, `drafted` and as-of commit — `computed`, `ex-draft`,
   `per-phase`, `stage` byte-identical, so no gate, bar or phase moved.
 
+### WI-390 — concurrency-v2 program close (sonnet worker) — SLICE landed, row stays ACTIVE
+
+**Slice 1 of the program's closing row.** Landed to
+`docs/work/active/wi390-concurrency-v2-program-close/`, not `complete/`: of
+the four surfaces `docs/concurrency-v2.md` §A9.1 names as owed to this row,
+three closed and one is a window question for the owner. Spec Context carries
+the full account.
+
+Deferred open items: **the LLR-056/TC-056 spine amendment** (below) — a
+recommendation is written into the row's Context, execution is not, because
+both cells are `Approved` and amending an Approved cell overrides
+attestation, this repo's own precedent for the sitting's act, not a
+builder's.
+
+**(2) Connectivity — the drift this program itself caused, closed.**
+`scripts/lane` and `scripts/handback` were arch-map modules naming no
+`IF-###` row at all — both modules' own docstrings said so, explicitly
+naming this row as the owner ("part of the drift docs/concurrency-v2.md
+§A9.1 hands to the program-close row rather than to any single builder").
+Minted `IF-136` (dispatch consumes lane) and `IF-137` (dispatch consumes
+handback), owners `LLR-150`/`LLR-144` (the rows that already describe these
+two modules), declared via a `Contracts:` line in `dispatch.py`. `IF-055`
+and `IF-080` (`this_project = scripts/integrate`) and `IF-081`
+(`this_project = scripts/trunk_step`) sat in the registry with no script
+declaring them — the design doc's own named list; declared in `integrate.py`
+and `trunk_step.py` respectively. `drive.py` itself no longer exists (already
+renamed away by an earlier build in this same program) and was not live-flagged
+at all — the design doc's list was stale on that one entry, recorded rather
+than acted on.
+
+**A checker false-quiet found along the way, banked rather than fixed.**
+`check_trajectory` never actually warned about `IF-080` even before this
+session, and the reason is a real defect in `gen_arch_map.module_contracts`:
+its per-line harvester matches any line containing the substring
+`"Contracts"`, and `handback.py`'s own docstring line 63 — *"No `Contracts:`
+line, deliberately: the integrator seam this extends is IF-080, whose row
+already sits..."* — contains both the trigger word and the id on the SAME
+line, so a sentence explicitly saying there is no declaration was read as
+one. A false quiet, not a false red, so nothing this session depended on it
+being wrong (`IF-080` was fixed for real regardless); flagged for whoever
+next touches the Contracts grammar.
+
+**(3) Process prose — the one live contradiction, found by reading rather
+than by grep.** A literal-term grep of `PROCESS_OPTIONS.md` and
+`AGENTS.template.md` for the retired vocabulary (`SCHED_`, `single-WI`,
+`packing`, `EXIT_NEEDS_HUMAN`, `parked-branch`, `merge-conflict`/`conflict
+arm`) came back clean — already scrubbed by Phase 5. But
+`PROCESS_OPTIONS.md`'s "serial merge queue" paragraph still read *"a
+`--no-ff` merge onto a candidate worktree"*, which directly contradicts
+`integrate.py`'s own docstring: there is no candidate worktree any more
+(§A2 deleted it — trunk-is-ancestor makes the merge trivially clean and the
+composed tree byte-identical to the branch tip, so the bar runs ONCE, on the
+branch, at refresh, not again on a merge-time candidate). Corrected onto the
+live model; byte delta `PROCESS_OPTIONS.md` 175,330 -> 175,531 (**+201**,
+watched, FLAGGED, re-stamped in all three tracked skill copies).
+
+**(4) Stamps — verified mechanically, nothing owed.** `check_stubs.py` scans
+a `src/` directory this repo does not have (it is a downstream-adopter tool)
+and runs clean by construction: `check_stubs: OK - no source directory at
+src`. The size ratchet (`tests/test_module_size_ratchet.py`) carries no
+`drive.py` baseline entry to retire — the module was never tracked there.
+The duplication-census stamp this row's own title still names is already
+confirmed gone (D-7/WI-426, recorded in this file's own earlier section); no
+substitute `test_rule_sync.py` pin is owed, since this slice left no
+duplicated POLICY behind.
+
+**(1) The spine amendment — re-measured, and it splits into a closed half and
+an open window question.** Two facts, neither trusted from this file's own
+stale citations:
+
+- `SR-093`/`SR-124`/`SR-131`/`SR-132`/`SR-050` are **gone** from
+  `docs/requirements/system-requirements.toml` (zero grep hits) — deleted
+  outright, not marked `Superseded`, by the unrelated WI-451 SR re-tier
+  campaign's tombstone class (2026-08-14b); `SR-133`'s clause folded into
+  `SR-006` verbatim. This file's own 2026-08-18b note already calls this "a
+  re-scope of a spine-class row… not a builder's call — raise it at the
+  sitting rather than inventing a mapping." Raised here, not re-mapped: the
+  six original amendment targets are closed by a different program's ruling,
+  and nothing further is owed from this row on them.
+- `LLR-051`/`LLR-056`/`TC-051`/`TC-056` (the WI-414 re-scope's four surviving
+  targets) are **not** `Modified`, as the 2026-08-13w note assumed —
+  re-measured today, all four are **`Approved`**. `LLR-056.detail` and
+  `TC-056.method`/`.expected` still describe the retired two-intersecting-hoops
+  render ("6 for the 5-stage intake loop + 5 for the 4-stage decision loop =
+  11", the shared `LLM_Agent` hub), while `TC-056.evidence` already cites only
+  the live station-cycle tests and the shipped render
+  (`traj_panels._station_panel`) draws one station cycle — confirmed by
+  reading the render and `test_process_tab_renders_the_station_cycle`, not
+  assumed. **Recommendation, written into the row's Context rather than
+  executed:** re-word `LLR-056.detail` off the two-loop framing onto the
+  seven-stage station-cycle description its own Evidence already tests
+  (Dispatcher tick -> Claim -> Lane build -> Station refresh -> Merge slot ->
+  Trunk advance -> Intake mint), and re-word `TC-056.method`/`.expected` to
+  match — `.evidence` needs no change. **Not executed**, because both cells
+  are `Approved`: amending an Approved cell overrides attestation, and this
+  repo's own precedent today (`SR-006`/`LLR-014`/`TC-014`, the WI-473
+  session) treats that as the sitting's act — which is also why this row
+  carries `safety_class = spine` in the first place, so its amendments land
+  in one owner-reviewed window rather than by a session's unilateral edit.
+
+**A second advisory found and accepted as expected, not fixed.**
+`check_trajectory` now reports `scripts/lane` and `scripts/handback`
+"declares no Consumes seam" — the provide-only-leaf advisory, same class
+already carried unmarked by `scripts/kitlib/station` since WI-483. Both
+modules' own docstrings describe a deliberate no-back-channel,
+no-state-file design, so this is the honest shape, not a defect; left
+unmarked for the same reason the precedent was.
+
+**Gates.** Line endings checked before trusting any count
+(`git ls-files --eol | grep 'w/crlf'`): none of this session's touched files
+appear in the pre-existing ~47-file residue list.
+
+- `trace.py --root . --bump-ids`: `IF 135 -> 137` (the two new rows), written
+  through the generator, never by hand.
+- `trace.py --strict-integrity`: exit 0 both before and after fixing two
+  transient findings the new rows themselves produced on the first pass — a
+  citation-frame hit (`WI-381`/`WI-387`/`WI-390` named inside live `Contract`/
+  `Notes` cells) and a 545-char `IF-137` contract past the 500 ceiling; both
+  fixed by dropping the id/date frame and tightening the prose, never by
+  editing the rule that caught them.
+- `check_trajectory.py --root . --strict`: exit 0. Diffed the WARN list
+  before/after: the five targeted connectivity WARNs (`lane`, `handback`,
+  `IF-055`, `IF-080`, `IF-081`) are gone; no new ones appeared beyond the
+  expected `lane`/`handback` "no Consumes seam" advisories addressed above.
+- smoke: first run caught a real ratchet fire (`integrate.py` baseline 2530 ->
+  2542, the new `Contracts:` paragraph) — re-stamped deliberately with the
+  reason in `tests/test_module_size_ratchet.py`, never reverted. Clean re-run:
+  `1278 passed, 5 skipped in 75.73s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b9538b26-dirty -->
+  Past the declared 60 s ceiling, consistent with this box's own 2026-08-20
+  record; not new evidence, budget not moved.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1327 intra-repo
+  link(s), 0 broken (1 orphan warning(s))`.
+- The regenerated surfaces were diffed line by line before staging
+  (`trunk_step.py --regen`): `docs/status.md`'s generated block moved only
+  the seam count (128 -> 130) and `docs/gate` moved only its as-of commit —
+  `basis`, `computed`'s DevStg value, `per-phase`, `stage` byte-identical, so
+  no gate, bar or phase moved. `PROJECT_STATE.html` moved the as-of sha and
+  the active-work-item count/listing (4 -> 5, `WI-390` now shown active) and
+  nothing else.
+- **The byte-budget-guard skill hit its own trap, live, a second witness for
+  the WI-473 finding.** The first FOREGROUND full-suite attempt was reaped
+  when the turn ended before it finished (frozen at 65%, no output growth on
+  re-check) — re-run per protocol rather than trusted from a truncated log,
+  and the re-run caught a real defect the first attempt would have too: the
+  `PROCESS_OPTIONS.md` re-stamp row, written to satisfy this session's own
+  guard, pushed all three tracked `byte-budget-guard/SKILL.md` copies to
+  5,072 bytes against their 5,000 cap. `test_always_loaded_docs_stay_within_
+  byte_caps` (outside the smoke tier) caught it; smoke had gone green across
+  it. Fixed by tightening the new row's prose (99 bytes shorter), never by
+  moving the cap — all three copies now 4,973 bytes.
+- **full unfiltered suite, run to completion in the FOREGROUND after the
+  reaped attempt was discarded and re-run**: `2719 passed, 14 skipped in
+  506.64s (0:08:26)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=c2c72757-dirty -->
+  2697 -> 2719 (WI-483/484's own additions landed on trunk since the last
+  recorded full-suite total this fragment shows); nothing from this session
+  added or removed a test. Final smoke re-check on the landed tree:
+  `1278 passed, 5 skipped in 56.78s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=c2c72757-dirty -->
+  and `check_trajectory.py --root . --strict`: exit 0, clean (490 work items,
+  455 done, 21 cancelled, graph acyclic).
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked

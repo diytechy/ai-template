@@ -646,7 +646,7 @@ the staleness mid-slice.**
 
 ### 5.1 WI-390 — concurrency-v2 program close
 
-[`../work/queued/WI-390-concurrency-v2-program-close.md`](../../work/queued/WI-390-concurrency-v2-program-close.md)
+[`../work/queued/WI-390-concurrency-v2-program-close.md`](../../work/active/wi390-concurrency-v2-program-close/WI-390-concurrency-v2-program-close.md)
 · `safety_class = "spine"` · `buildtier = medium` · **no `priority` key** (worth
 ruling if it is meant to sort last).
 

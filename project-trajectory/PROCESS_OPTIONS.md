@@ -2522,12 +2522,14 @@ commits `Blocked-WI:` + `BlockRef:` instead; exit 3). Session logs and
 managed review evidence are tag-scoped so parallel branches never collide.
 
 **The serial merge queue.** `integrate.py integrate` takes each finished
-claimed branch in turn: a `--no-ff` merge onto a candidate worktree (the
-composed tree **is** the candidate, by construction — a one-page merge
-queue), the trunk step folded into the merge commit, and the **declared bar**
-run on the composed tree read fail-closed — a missing or empty check
-declaration is a **refusal**, never a skip, and any SKIP in the report
-refuses (the fail-open lesson, stated as a contract). The `[attestation]` dials
+claimed branch in turn: a `--no-ff` merge straight onto trunk — there is no
+separate composed tree or candidate worktree to merge onto (docs/concurrency-v2.md
+§A2 deleted both: trunk-is-ancestor makes a merge conflict unrepresentable, so
+the merge is trivially clean and its tree is byte-identical to the branch tip)
+— with the trunk step folded into the merge commit, and the **declared bar**
+already run ONCE, on the branch itself at refresh, read fail-closed — a
+missing or empty check declaration is a **refusal**, never a skip, and any SKIP
+in the report refuses (the fail-open lesson, stated as a contract). The `[attestation]` dials
 (RULING-7) are enforced by requiring the corresponding **verdict artifact**
 (review file `docs/reviews/WI-<n>-<PHASE>.md`, critique, attestation) with
 git-derived freshness before the trunk fast-forwards; a red queue parks

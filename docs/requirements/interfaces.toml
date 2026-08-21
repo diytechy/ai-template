@@ -1756,3 +1756,29 @@ status = "Drafted"
 component = "CMP-007"
 interface_to_external = "B-04"
 notes = """Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution."""
+
+[interface.IF-136]
+direction = "Consumes"
+this_project = "scripts/dispatch"
+counterpart = "scripts/lane"
+contract = """the dispatcher's lane-mechanics seam (docs/concurrency-v2.md §A4.2): the admitted lane table calls lane.ensure_worktree/spawn_worker/spawn_refresh to run one claimed branch's worker session and §A2 station refresh as their own subprocesses, then reads back only the tree-derived signal (specs moved out of active/<branch>/) plus each subprocess's exit code - no state file, no back-channel. dispatch.py decides what an exit or a red refresh MEANS; lane.py only runs and reports."""
+signal = "variable"
+req_refs = ["SR-156"]
+owner = "LLR-150"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """A program-close connectivity mint: the seam was already load-bearing (the extraction that split it out is what the design's §A4.2 describes) but carried no IF row of its own, and lane.py's own docstring says so rather than paper over the drift by declaring it from the extracted half."""
+
+[interface.IF-137]
+direction = "Consumes"
+this_project = "scripts/dispatch"
+counterpart = "scripts/handback"
+contract = """the dispatcher's terminal-outcome writes seam (docs/concurrency-v2.md §A3): dispatch.py decides which of the three outcomes a lane reached (merged/cancelled/handback); handback.py owns the WRITES for the two non-merge closes - close_partial (the immutable per-close report + the terminal partial/ move) and quarantine (the reverted, bar-inert red-arm close) - so decision and write stay in separate modules and every lane still ends in a merge."""
+signal = "variable"
+req_refs = ["SR-156"]
+owner = "LLR-144"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """A program-close connectivity mint, same posture as IF-080: handback.py's own docstring says declaring this seam from the sibling would paper over the drift, since it belongs to the module that runs it."""
