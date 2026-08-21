@@ -121,6 +121,15 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`): `kitlib.ladder`
+# is the ONE home for the eight-rung stage vocabulary this module used to define
+# (WI-498 slice 0). Same guarded idiom as the sibling import above.
+try:
+    from kitlib import ladder as _ladder
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import ladder as _ladder
+
 # --- THE BAR LADDER (the strictness axis) --------------------------------------
 # The derived bar. `DevStg-Reqs` / `DevStg-Tests` / `DevStg-Impl` are the three
 # runnable bars check.py knows; `DevStg-Below` is the INTERNAL sentinel for "below
@@ -504,108 +513,29 @@ def sn_bar(sn_id, draft_ids, cited_ids):
 # subset of rung boundaries a human must certify — you CLEAR one.** The stage is
 # state, the bar is an event.
 #
-# THE LADDER — REQUIREMENTS BEFORE ARCHITECTURE. Architecture is a RESPONSE to
-# requirements: a scope is partitioned in the way that best satisfies its
-# obligations, so partitioning first means partitioning against nothing but the
-# frame. The boundary happens ONCE (only the system's own frame comes from the
-# needs and the context; every boundary below it is PRODUCED BY a partition),
-# rungs 2 and 3 RECURSE as the decomposition descends, and rung 4 is TERMINAL by
-# OI-20's binding rule — a requirement that still needs allocating to sub-parts is
-# a rung-2 requirement for that sub-scope; one that BINDS to a realization
-# artifact is an LLR, and that is the bottom.
-#
-#   0 DevStg-Needs      vision and stakeholder needs in work
-#   1 DevStg-Boundary   the system's frame: what is outside, what crosses,
-#                       each crossing typed.  HAPPENS ONCE.
-#      ══ DevStg-Reqs ══  Stakeholder · UX · System Engineer     (was G1)
-#   2 DevStg-Reqs       the obligations at the current level's boundaries,
-#                       system and component alike.  RECURSES.
-#   3 DevStg-Arch       partition each scope into sub-boundaries.  RECURSES;
-#                       exits when no child needs partitioning.
-#   4 DevStg-LLReqs     the inside of a leaf, bound to a realization artifact
-#                       (a code symbol, or a part source).  TERMINAL.
-#   5 DevStg-Tests      the test set for those obligations in work
-#      ══ DevStg-Tests ══  System Engineer · Test Engineer       (was G2)
-#   6 DevStg-Impl       IMPLEMENTATION in work
-#      ══ DevStg-Impl ══  System Engineer · Test Engineer     (was G3)
-#   7 DevStg-Release    all complete; release checklist and version tagging
-#
-# THE LABEL IS THE IDENTIFIER; POSITION IS DERIVED. A stage is `DevStg-<Label>`
-# over a CLOSED vocabulary — not a minted id, so it takes no `docs/id-watermark`
-# space and no retire-never-remint rule applies. The ordinal is NOT in the key,
-# because position changes when the ladder changes and this kit's standing rule is
-# that derived facts are generated and rendered, never authored into a key: the
-# basis line carries `stage=DevStg-LLReqs stage-ord=4 stage-of=8` and renderers
-# show "stage 4 of 8, <description>", so inserting a rung self-corrects every
-# ordinal with no citation moved. That is exactly the failure an integer ladder
-# produced here on 2026-08-12: an inserted rung shifted every cached number
-# silently, in the direction of LESS human involvement.
-#
-# THE LADDER IS NOT MONOTONIC, and that is the truth about iterative
-# decomposition rather than a defect in the report. Rungs 2 and 3 oscillate as
-# the recursion descends: a newly identified sub-component landing a drafted CMP
-# row, or an untyped seam landing an experimental IF row, DROPS the reported
-# stage back to Arch or Boundary at a lower scope with nobody deciding to. That
-# is what makes the recursion self-reporting and needs no ladder machinery at
-# all. If a monotonic reading is ever wanted it is a SECOND derived number (a
-# high-water mark) shown BESIDE the honest one, never instead of it.
-STAGE_NEEDS = "DevStg-Needs"
-STAGE_BOUNDARY = "DevStg-Boundary"
-STAGE_REQS = "DevStg-Reqs"
-STAGE_ARCH = "DevStg-Arch"
-STAGE_LLREQS = "DevStg-LLReqs"
-STAGE_TESTS = "DevStg-Tests"
-STAGE_IMPL = "DevStg-Impl"
-STAGE_RELEASE = "DevStg-Release"
-
-# THE CLOSED VOCABULARY, in ladder order. Every comparison routes through
-# `stage_ord` below; ordering operators on the raw value are BANNED (pinned by
-# tests/test_stage_ladder.py, which greps the kit's scripts for them).
-STAGE_ORDER = [
-    STAGE_NEEDS,
-    STAGE_BOUNDARY,
-    STAGE_REQS,
-    STAGE_ARCH,
-    STAGE_LLREQS,
-    STAGE_TESTS,
-    STAGE_IMPL,
-    STAGE_RELEASE,
-]
-STAGE_OF = len(STAGE_ORDER)
-
-# One-line descriptions, for renderers that show "stage N of 8, <description>".
-STAGE_DESC = {
-    STAGE_NEEDS: "vision and stakeholder needs in work",
-    STAGE_BOUNDARY: "system boundary interfaces in work",
-    STAGE_REQS: "requirement definition in work",
-    STAGE_ARCH: "architecture (partition) in work",
-    STAGE_LLREQS: "LLR definition in work",
-    STAGE_TESTS: "test-case definition in work",
-    STAGE_IMPL: "implementation in work",
-    STAGE_RELEASE: "nothing in work; release checklist available",
-}
-
-
-def stage_ord(stage):
-    """The 0-based position of a stage label on STAGE_ORDER.
-
-    THIS IS THE ONLY LEGAL WAY TO COMPARE TWO STAGES, and it RAISES on an unknown
-    label rather than degrading to a default. The reason is the whole argument for
-    the label carrier: an unknown stage means the ladder moved under a cached
-    value, and the wrong-answer direction of a silent default is LESS human
-    involvement (`human_holds` compares against this axis). Failing loudly turns a
-    silent policy change into a visible one.
-
-    Ordering operators on the raw label are banned for the same reason they were
-    wrong on the retired tags: `DevStg-Arch < DevStg-Boundary` lexically, which
-    inverts rungs 1 and 3."""
-    try:
-        return STAGE_ORDER.index(stage)
-    except ValueError:
-        raise ValueError(
-            "derive_gate: {!r} is not a rung on the stage ladder — expected one of "
-            "{}".format(stage, ", ".join(STAGE_ORDER))
-        ) from None
+# THE VOCABULARY ITSELF MOVED OUT (WI-498 slice 0, plan §5 item 0). The rung
+# strings, their order, `STAGE_OF`, `STAGE_DESC` and the `stage_ord` lookup are
+# `kitlib.ladder`'s — one home, imported by everyone, so the equality pins that
+# used to hold `agent_common`'s restatement in step retire: the drift is now
+# UNREPRESENTABLE rather than DETECTED (the WI-448 declared-line precedent,
+# `tests/test_rule_sync.py`). The names are RE-EXPORTED below because
+# `derive_gate.STAGE_*` is the spelling six modules and the test suite already
+# read, and re-pointing every citation is churn this slice does not need.
+# The ladder's own design rationale — why requirements precede architecture, why
+# the label and not the ordinal is the identifier, why it is not monotonic —
+# travelled with it and is NOT restated here.
+STAGE_NEEDS = _ladder.STAGE_NEEDS
+STAGE_BOUNDARY = _ladder.STAGE_BOUNDARY
+STAGE_REQS = _ladder.STAGE_REQS
+STAGE_ARCH = _ladder.STAGE_ARCH
+STAGE_LLREQS = _ladder.STAGE_LLREQS
+STAGE_TESTS = _ladder.STAGE_TESTS
+STAGE_IMPL = _ladder.STAGE_IMPL
+STAGE_RELEASE = _ladder.STAGE_RELEASE
+STAGE_ORDER = _ladder.STAGE_ORDER
+STAGE_OF = _ladder.STAGE_OF
+STAGE_DESC = _ladder.STAGE_DESC
+stage_ord = _ladder.stage_ord
 
 
 # --- THE MATURITY MAPPING TABLE — ONE HOME (OI-21 question 5b) -----------------

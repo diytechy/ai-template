@@ -2110,6 +2110,46 @@ test would notice, and neither was ever a supported read.
 
 **Nothing in your `docs/` changes**, and no registry cell moves.
 
+### `kitlib/ladder.py` — the eight-rung stage vocabulary gets one home [since f23e6002]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**A sixth module in `scripts/kitlib/`, and the same copy-it-whole rule.** The
+`DevStg-*` rung labels, their ladder order, the derived rung count, the
+per-rung descriptions and `stage_ord` (the only legal way to compare two
+stages) now live in `scripts/kitlib/ladder.py`. They used to be defined in
+`scripts/derive_gate.py` and RESTATED as literals in `scripts/agent_common.py`
+(pinned equal by a test) and `scripts/traj_status.py` (pinned by nothing at
+all), which is three places a reworded or inserted rung had to be edited in
+step.
+
+**If you only overwrite kit files, you need do nothing but include the new
+module in the copy.** `derive_gate.STAGE_ORDER`, `derive_gate.STAGE_DESC`,
+`derive_gate.STAGE_NEEDS` … `derive_gate.STAGE_RELEASE`, `derive_gate.STAGE_OF`
+and `derive_gate.stage_ord` are all still there and still resolve to the same
+values; they are re-exports now. No call signature changed, no derived value
+changed, and `docs/gate`'s `# basis:` line is byte-identical for an unchanged
+spine.
+
+**If you import those names yourself**, prefer `from kitlib.ladder import
+STAGE_ORDER` going forward. The re-exports are kept, not deprecated — but a
+tool of yours that needs the rung vocabulary should not have to load the gate
+derivation engine to get it.
+
+**If you have your OWN copy of the rung strings** — a script, a renderer, a
+template filter that spells out the eight labels or their descriptions — this
+is the moment to delete it and import instead. That is exactly the drift this
+change removes inside the kit, and the copy the kit had gone unpinned in a
+renderer, where a stale sentence shows up as wrong output rather than as a
+failing test.
+
+**One error-message note.** `stage_ord` on an unknown label still raises
+`ValueError`; the message now reads `kitlib.ladder: …` where it read
+`derive_gate: …`. Only a test asserting on that prefix would notice.
+
+**Nothing in your `docs/` changes**, and no registry cell moves. The bar
+vocabulary (`BAR_*`, `docs/gate`'s value itself) is untouched by this entry.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

@@ -41,7 +41,8 @@ from pathlib import Path
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
-# declared-policy line reader and the `docs/work/` spec-folder registry reader.
+# declared-policy line reader, the `docs/work/` spec-folder registry reader, and
+# (WI-498 slice 0) the stage ladder's closed rung vocabulary.
 # It replaces the F5 rule, which had licensed those copies unbounded and left
 # `tests/test_rule_sync.py` pinning them equal by value. Run as a subprocess
 # this script's own dir is sys.path[0] so a plain import resolves; the guard
@@ -49,10 +50,12 @@ from pathlib import Path
 # scripts/ — the same sanctioned-sibling idiom the engines use for each other.
 try:
     from kitlib import config as _kitconfig
+    from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
+    from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
 
 # Sibling scripts (the WI-218 split): preflight validates the AGENT_CMD
@@ -547,22 +550,17 @@ def ratification_level(docs):
 # because "is this a rung I recognize" and "is this rung held" are different
 # questions and only the first can be answered from the held sets. Without it an
 # unrecognized label (`""`, a typo, a rung from a newer kit) falls through the
-# membership test and reads NOT HELD, which is the permissive direction. This
-# module cannot import `derive_gate` (the F5 no-shared-module rule), so the set is
-# restated here and pinned equal to `derive_gate.STAGE_ORDER` by
-# tests/test_ratification_level.py.
-LADDER_RUNGS = frozenset(
-    {
-        "DevStg-Needs",
-        "DevStg-Boundary",
-        "DevStg-Reqs",
-        "DevStg-Arch",
-        "DevStg-LLReqs",
-        "DevStg-Tests",
-        "DevStg-Impl",
-        "DevStg-Release",
-    }
-)
+# membership test and reads NOT HELD, which is the permissive direction.
+#
+# IT USED TO BE A LITERAL RESTATEMENT HERE (WI-498 slice 0 ended that). The
+# reason given was the F5 no-shared-module rule — this module could not import
+# `derive_gate` — so the eight strings were spelled out again and pinned equal to
+# `derive_gate.STAGE_ORDER` by tests/test_ratification_level.py. F5 was replaced
+# by owner ruling D-8 (`OI-16`): the vocabulary now has ONE home in `kitlib`,
+# which this module already imports, and the pin retired with the restatement it
+# guarded. Drift is unrepresentable rather than detected — the WI-448
+# declared-line precedent.
+LADDER_RUNGS = _kitladder.LADDER_RUNGS
 
 DIAL_HOLDS = {
     0: frozenset(),
@@ -639,7 +637,7 @@ def human_holds(docs, stage):
 
     AN UNREADABLE STAGE IS HELD, and so is an UNRECOGNIZED rung label — the same
     conservative direction as an unreadable level. Note the deliberate asymmetry
-    with `derive_gate.stage_ord`, which RAISES on an unknown label: there, an
+    with `kitlib.ladder.stage_ord`, which RAISES on an unknown label: there, an
     unknown stage means the ladder moved under a cached value and the operator
     must see it; here, the question is who ratifies, and the only safe answer to
     "I do not recognize this rung" is "the human does".

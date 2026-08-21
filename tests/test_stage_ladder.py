@@ -62,7 +62,11 @@ _GREP_ALLOW = "ladder-compare: allow"
 
 
 def _kit_sources():
-    return sorted(SCRIPTS.glob("*.py"))
+    # `kitlib/*.py` is in scope too, and that is not housekeeping: WI-498 slice 0
+    # moved the ladder ITSELF into that package, so a top-level-only glob would
+    # have stopped scanning the very module that defines the values this rule
+    # protects — the enforcer must follow the data.
+    return sorted(SCRIPTS.glob("*.py")) + sorted((SCRIPTS / "kitlib").glob("*.py"))
 
 
 def test_no_module_compares_a_ladder_value_lexically():

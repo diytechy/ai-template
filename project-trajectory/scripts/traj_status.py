@@ -27,6 +27,11 @@ import check_trajectory as ct
 # OI-30 D2 ceiling note.
 import derive_gate
 import traj_parse
+
+# The stage ladder's ONE home (WI-498 slice 0): the rung descriptions this
+# module used to keep an unpinned private copy of. Imported straight from the
+# shared package, not through `derive_gate` — see `_STAGE_LABELS` below.
+from kitlib import ladder as _ladder
 from traj_parse import _spine, cmp_rows, spine_stats
 
 
@@ -352,20 +357,16 @@ def pending_block(root):
 # ladder"). Derived by derive_gate.py and read here off `docs/gate`'s `# basis:`
 # line, never recomputed.
 #
-# THE ORDINAL IS NOT IN THIS TABLE, and that is the whole point of the label
-# carrier (OI-21): the renderer reads `stage-ord=`/`stage-of=` off the same basis
-# line, so inserting a rung self-corrects every rendered "stage N of M" with no
-# edit here. This map holds only the human sentence each label expands to.
-_STAGE_LABELS = {
-    "DevStg-Needs": "vision and stakeholder needs in work",
-    "DevStg-Boundary": "system boundary interfaces in work",
-    "DevStg-Reqs": "requirement definition in work",
-    "DevStg-Arch": "architecture (partition) in work",
-    "DevStg-LLReqs": "LLR definition in work",
-    "DevStg-Tests": "test-case definition in work",
-    "DevStg-Impl": "implementation in work",
-    "DevStg-Release": "nothing in work; release checklist available",
-}
+# THIS WAS A BYTE-IDENTICAL COPY of `derive_gate.STAGE_DESC` until WI-498 slice
+# 0, and — unlike `agent_common`'s restatement — NOTHING pinned it. A renderer is
+# the worst place for a silent copy: a reworded or inserted rung would have shown
+# the dashboard's readers the OLD sentence, or dropped the stage bullet entirely
+# (the `stage in _STAGE_LABELS` guard below degrades to bar-only wording), with
+# every test still green. The table now has one home in `kitlib.ladder`, which
+# this module imports DIRECTLY rather than through `derive_gate`: a render leaf
+# should not have to load a 1,400-line derivation engine to read eight strings —
+# the same direction WI-483 took `station` out of the merge coordinator.
+_STAGE_LABELS = _ladder.STAGE_DESC
 
 
 def _stage_line(gate, basis, gate_detail):

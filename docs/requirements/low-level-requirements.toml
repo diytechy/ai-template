@@ -1881,6 +1881,18 @@ status = "Drafted"
 component = "CMP-008"
 phase = 5
 
+[design.LLR-184]
+sr_refs = ["SR-139"]
+title = "The stage ladder as one enum home below every axis that reads it"
+module = "project-trajectory/scripts/kitlib/ladder.py"
+code_symbol = "STAGE_ORDER/STAGE_DESC/LADDER_RUNGS/stage_ord"
+detail = "The eight-rung DevStg vocabulary as pure data below its readers: the rung labels in the ruled order (STAGE_ORDER), the same set for the is-this-a-rung-I-recognize question (LADDER_RUNGS), the derived size (STAGE_OF, computed from the order and never authored), the one-line description per rung for renderers (STAGE_DESC), and stage_ord, the ONLY legal comparison, which RAISES on an unknown label rather than defaulting because the wrong-answer direction of a silent default is LESS human involvement. The module imports nothing at all, not even stdlib, which is the strongest form of the package rule that a kitlib module stays import-clean of the rest of scripts. derive_gate re-exports every name under its former spelling and agent_common's LADDER_RUNGS and traj_status's _STAGE_LABELS bind to these objects, so no caller had to move; the two equality pins that used to hold those restatements in step retired with the restatements, replaced by identity assertions that warrant the deletion."
+rationale = """A closed vocabulary that several axes read must sit below all of them. This one was DEFINED in four places - derive_gate as the intended source, agent_common as a literal frozenset restated because the retired F5 no-shared-module rule forbade the import, traj_status as a byte-identical copy of the descriptions, and prose - held together by test pins rather than by one import. Two of those copies were pinned; the renderer's was pinned by NOTHING, so a reworded or inserted rung would have shown the dashboard the old sentence or dropped the stage bullet entirely, with every test green. Pins could contain that class and never shrink it, which is the same argument the kit already settled for the declared-line reader when its five copies collapsed to one home: drift is better made unrepresentable than detected. The component tag is single deliberately, for LLR-182's reason and against LLR-181's four-way usage tag: the readers straddle components, but the vocabulary's MEANING is decided by the component that derives the stage - a consumer reading a table does not own it - and a usage tag would suppress the cross-component seam rule on exactly the new edges this extraction creates, which is the one thing a shared kernel most needs policed. Which unit owns the shared kernel AS A WHOLE is a partition question the locked frame does not answer, and this row does not settle it - it states an owner for one module's meaning, which is a smaller claim."""
+test_refs = "(see TC-179)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5
+
 [design.LLR-183]
 sr_refs = ["SR-161"]
 hat_refs = ["MAINTAINER", "TEST-ENGINEER"]

@@ -40,6 +40,10 @@ theme and says so in its own docstring:
   * `registry` — the `docs/work/` spec-folder work-item reader: the row shape,
                  the frontmatter/status/body parse, and the ordered read.
   * `git`      — the best-effort-off-git subprocess pattern.
+  * `ladder`   — the eight-rung `DevStg-*` STAGE vocabulary: the rung labels in
+                 ladder order, the derived rung count, the per-rung
+                 descriptions, and `stage_ord`, the only legal comparison.
+                 Pure data — it imports nothing at all.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
                  the bar-attestation trailer label, and the "exactly one
@@ -54,6 +58,14 @@ module that claims lanes and moves specs in order to read a table. A view did
 exactly that, which is how the render leaf became part of the runtime scripts'
 strongly connected component. A shared home is not only for things that were
 duplicated; it is also for things that were correctly single and wrongly PLACED.
+
+`ladder` (WI-498 slice 0) is BOTH shapes at once, which is why it is the
+clearest case in the package. It was DUPLICATED — the eight rung strings
+restated in `agent_common`, the descriptions copied byte-for-byte into
+`traj_status` — and it was also wrongly PLACED, because the one home it did have
+was `derive_gate`, a 1,400-line engine that parses the registries and writes
+`docs/gate`. So a renderer needing eight sentences either loaded the engine or
+kept a copy, and it kept a copy that nothing pinned.
 
 One further theme slot is NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
 CREATED, because an empty module is a worse statement than an absent one:

@@ -25,6 +25,6 @@
 # Freshness is guarded by `--check` (a pre-commit + bar step). check.py / CI
 # read the first non-comment line below, exactly as before.
 #
-# basis: SN=27 SR=73 LLR=165 TC=161 drafted=9 uncovered=0 computed=DevStg-Below ex-draft=DevStg-Reqs phase=5 per-phase=1=DevStg-Tests;3=DevStg-Tests;4=DevStg-Reqs;5=DevStg-Below stage=DevStg-Reqs stage-ord=2 stage-of=8
-# computed 2026-08-21 (as-of 2bd0ed61)
+# basis: SN=27 SR=73 LLR=166 TC=162 drafted=11 uncovered=0 computed=DevStg-Below ex-draft=DevStg-Reqs phase=5 per-phase=1=DevStg-Tests;3=DevStg-Tests;4=DevStg-Reqs;5=DevStg-Below stage=DevStg-Reqs stage-ord=2 stage-of=8
+# computed 2026-08-21 (as-of f23e6002)
 DevStg-Reqs

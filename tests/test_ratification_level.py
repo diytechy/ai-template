@@ -31,6 +31,11 @@ from conftest import load_script, set_process_key
 
 ac = load_script("agent_common")
 dg = load_script("derive_gate")
+# The ladder's ONE home since WI-498 slice 0. Imported as a package (not via
+# `load_script`, which loads a single `scripts/*.py`); `scripts/` is already on
+# sys.path by here — `load_script` puts it there. The name is `kit_ladder`
+# because this module's own `LADDER` is the dial-to-rung expectation table.
+import kitlib.ladder as kit_ladder  # noqa: E402  (after the loads above)
 
 
 def _docs(tmp_path, level=None, **extra):
@@ -212,16 +217,28 @@ def test_an_absent_dial_holds_everything_and_says_nothing(tmp_path):
 
 
 def test_the_dial_and_the_ladder_name_THE_SAME_EIGHT_RUNGS():
-    """The one-home guard, and it is the only thing standing between two modules
-    that MUST NOT import each other.
+    """THE EQUALITY HALF OF THIS PIN IS GONE, AND THE REASON IS THE POINT.
 
-    `agent_common` restates the closed vocabulary because the F5 no-shared-module
-    rule keeps it from importing `derive_gate`. If the two drift, the failure is
-    silent and permissive: an unrecognized rung falls out of `LADDER_RUNGS` and
-    `human_holds` would... hold it (the conservative direction, deliberately), but
-    a rung MISSING from `DIAL_HOLDS` while present in `LADDER_RUNGS` would read as
-    unheld at every level below 4. Pin both directions."""
-    assert ac.LADDER_RUNGS == set(dg.STAGE_ORDER)
+    This test used to open `assert ac.LADDER_RUNGS == set(dg.STAGE_ORDER)` — a
+    by-VALUE guard holding two literal copies of the closed vocabulary in step,
+    because the F5 no-shared-module rule kept `agent_common` from importing
+    `derive_gate` and licensed the restatement. WI-498 slice 0 moved the ladder
+    to `kitlib.ladder`; both names now RESOLVE to that one object, so "the copies
+    agree" is no longer a property that can fail — there are no copies. A test
+    asserting a frozenset equals itself is not a weaker pin, it is a VACUOUS one,
+    which reads green while checking nothing. Drift is now UNREPRESENTABLE rather
+    than DETECTED, this repo's stated preference and exactly the trade WI-448
+    made when the five-way declared-line reader collapsed to one home
+    (`tests/test_rule_sync.py`, "the declared-line reader: WAS 5-way, now ONE
+    home"). The identity assertion below is the deletion's warrant.
+
+    WHAT SURVIVES IS THE PART THAT IS STILL A REAL CHOICE: `DIAL_HOLDS` is a
+    hand-authored mapping from dial level to held rungs, NOT a copy of anything,
+    and a rung MISSING from it while present in `LADDER_RUNGS` reads as unheld at
+    every level below 4 — the permissive direction. That containment is pinned."""
+    assert ac.LADDER_RUNGS is kit_ladder.LADDER_RUNGS
+    assert dg.STAGE_ORDER is kit_ladder.STAGE_ORDER
+    assert dg.stage_ord is kit_ladder.stage_ord
     named = set()
     for held in ac.DIAL_HOLDS.values():
         if held is not None:

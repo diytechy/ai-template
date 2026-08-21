@@ -1771,6 +1771,12 @@ MAPPING = [
     # coordinator to reach. It ships for the same reason as the rest — the
     # scripts that import it are in this list, so the package must be whole.
     ("scripts/kitlib/station.py", "scripts/kitlib/station.py"),
+    # WI-498 slice 0 added `ladder`: the eight-rung DevStg stage vocabulary,
+    # which `derive_gate` defined and `agent_common`/`traj_status` each restated
+    # as a literal. `derive_gate`, `agent_common` and `traj_status` are all in
+    # this list and all import it now, so — the rule above, again — the package
+    # must be whole or a fresh scaffold ImportErrors on its first check.
+    ("scripts/kitlib/ladder.py", "scripts/kitlib/ladder.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

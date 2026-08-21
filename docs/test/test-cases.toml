@@ -1782,6 +1782,17 @@ evidence = """tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle
 status = "Drafted"
 phase = 5
 
+[test.TC-179]
+verifies = ["SR-139", "LLR-184"]
+level = "Unit"
+method = """Three claims, driven separately. THE SHAPE: assert STAGE_ORDER whole against the ruled eight-rung order rather than spot-checking it, since an insertion in the wrong place is the failure the vocabulary exists to surface; assert STAGE_OF equals the order's length so the size stays derived; assert the description map's key set equals the rung set in BOTH directions, because a missing entry does not crash a renderer - it silently drops the stage line. THE ORDERING CONTRACT: stage_ord answers each rung's position and RAISES on the unknown-label cases including a retired G-tag and a bar spelling; and the labels are asserted NOT to alphabetize, which is what makes ordering operators wrong by construction rather than only by rule. THE IMPORT CLEANLINESS: parse the module's own source and assert it contains no import statement of any kind. Separately, assert by IDENTITY that derive_gate, agent_common and traj_status resolve to these objects - the warrant for the equality pins that retired, stated as `is` because a value battery over one shared object is vacuous agreement."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-184 (parent SR-139)"
+automated = "Yes"
+evidence = """tests/test_kitlib_ladder.py::test_the_ladder_is_the_ruled_EIGHT_RUNGS_in_the_ruled_ORDER; tests/test_kitlib_ladder.py::test_stage_ord_is_the_position_and_RAISES_on_an_unknown_label; tests/test_kitlib_ladder.py::test_the_module_imports_NOTHING; tests/test_kitlib_ladder.py::test_every_reader_resolves_to_this_one_object"""
+status = "Drafted"
+phase = 5
+
 [test.TC-178]
 verifies = ["SR-161", "LLR-183"]
 level = "Unit"
