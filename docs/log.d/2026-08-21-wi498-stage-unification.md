@@ -254,6 +254,220 @@ Deferred open items: none — the module-size threshold question is recorded at
 the ratchet entry and resolves in slice 2 by deletion, and the smoke wall clock
 is already OI-52's; neither is a new decision owed.
 
+### Slice 2 — selection at-or-above; the bar axis retires from selection (opus worker) — LANDED
+
+Every check-selection site now keys on the effective stage read through
+`derive_stage.read`, and `check.py` no longer reads `docs/gate` at all. The
+harness selector was the entire A-class half of the bar-vs-stage census; it is
+gone, with the membership rule it served.
+
+**THE FINDING THAT SHAPED EVERY THRESHOLD, and it inverts the census's own
+translation table.** The obvious re-key — map each bar tag to the lowest STAGE in
+that bar's span (`DevStg-Tests` → `DevStg-Arch`, per `STAGE_BAR`) — is wrong, and
+measurably so. The bar was a MIN over every in-scope row, so the `DevStg-Tests`
+bar was reached **only by a spine already fully decomposed and TC'd**, which on
+the ladder is the `DevStg-Impl` RUNG, three above the span's floor; and
+`DevStg-Impl` as a bar was never reached at all under the OI-30 D2 ceiling. So
+the behaviour-preserving translation is *"the rung at which that bar was actually
+reached"*, not *"the lowest rung the bar's span covers"*. Taking the span floor
+would have started running five steps three rungs early — on this repo, two of
+them RED (see below). The rule each threshold was then derived under: **the
+lowest rung at which the artifact the step grades is required to exist and be
+complete** — the rung from which a failure is a defect rather than work in
+progress.
+
+| step | old `gates=` set | new threshold | reasoning |
+|---|---|---|---|
+| `format` | {Impl} | `DevStg-Impl` | grades built code. Unreachable from any derived value before (the ceiling) — **OI-51's exact defect** |
+| `lint` | {Impl} | `DevStg-Impl` | as `format` |
+| `tests+coverage` | {Impl} | `DevStg-Impl` | as `format` |
+| `registry-integrity` | **{Reqs} only** | `DevStg-Needs` | a `{Reqs}`-only set is not at-or-above expressible. A structurally broken registry is unreadable at *every* rung. **THE ONE BEHAVIOURAL DELTA** — it now also runs at the top, duplicating `traceability --strict`'s integrity subset; accepted, one cheap read-only pass |
+| `derived-gate` | all three | `DevStg-Needs` | freshness of a file still written (dual state, below) |
+| `derived-stage` | all three | `DevStg-Needs` | the go-forward guard (slice 1) |
+| `traceability` | {Tests,Impl} | `DevStg-Impl` | **not a choice.** Its two orphan rules — "SR has no LLR", "SR has no test" — are literally the predicates holding a repo at the LLReqs and Tests rungs (`spine_stage`), so it cannot be green below Impl by construction. Behaviour preserved exactly |
+| `vocabulary` | all three | `DevStg-Needs` | unchanged |
+| `need-form` | all three | `DevStg-Needs` | unchanged |
+| `privacy` | all three | `DevStg-Needs` | unchanged |
+| `doc-navigability` | all three | `DevStg-Needs` | unchanged |
+| `perf-budgets` | {Impl} | `DevStg-Impl` | grades measured metrics of a built product |
+| `design-flows` | {Tests,Impl} | `DevStg-Tests` | **WIDENED one rung.** Its comment has always read "required from DevStg-Tests on"; the bar's min-fold made it arrive a rung later. The flows answer to a SETTLED decomposition, which is what leaving the LLReqs rung means — the rung the author named is the honest one |
+| `trajectory` | {Tests,Impl} | `DevStg-Tests` | **WIDENED one rung**, same restoration. Warn-first here; the `--strict` promotion keeps its own higher rung |
+| `backlink-coverage` | {Tests,Impl} | `DevStg-Impl` | **DIVERGES from the old placement argument** ("beside the other spine-coherence steps"). What it grades is a literal `Implements:` declaration IN SOURCE; below the rung where source exists the percentage grades a non-existent artifact and the declared minimum is a floor nobody could meet |
+| `trajectory-map` | {Impl} | `DevStg-Impl` | the generated-view family: "churns while the plan is still forming", which stops at Impl |
+| `status-map` | {Impl} | `DevStg-Impl` | as above |
+| `open-items` | {Impl} | `DevStg-Impl` | as above |
+| `okf` | {Impl} | `DevStg-Impl` | as above |
+| `ratify-fresh` | {Tests,Impl} | `DevStg-Needs` | **WIDENED to always**, the clearest case in the table. It guards a brief a HUMAN attests FROM, and attestation happens at every rung — the old tag put it out of reach for exactly the repos that attest most (an early one, pinned at the floor for its whole requirements phase). Doubly self-arming already, so a repo with no brief still pays nothing |
+| `skills-sync` | {Impl} | `DevStg-Impl` | generated-artifact freshness family |
+| `skills-index` | all three | `DevStg-Needs` | unchanged |
+| `prompt-catalog` | all three | `DevStg-Needs` | unchanged |
+| `staged-divergence` | all three | `DevStg-Needs` | unchanged |
+| declared `[step:*]` default | {Impl} | `DevStg-Impl` | value unchanged |
+
+**The two SEVERITY promotions were deliberately NOT widened**, and the asymmetry
+with the table above is the point. `trace --require-verified/--strict-schema`
+and the `--strict` trio (`trajectory`/`vocabulary`/`backlink`) both keyed on bars
+that meant "fully decomposed", i.e. the Impl rung, and both stay there. Moving a
+promotion to `DevStg-Arch` — which "past its requirements bar" reads like — would
+change a severity the owner ruled warn-first-until-mature. That is a policy
+change, not a re-key, and it is not this slice's to make. `ALL` stays excluded
+from the `--strict` trio for its original reason: the pre-commit floor passes no
+stage and must not block a commit on status.md drift.
+
+**The honesty case, reported not absorbed.** Before touching anything I ran the
+plan the mechanical (span-floor) translation would have produced — this repo's
+effective stage is `DevStg-Arch`, so the `{Tests,Impl}` family would have gone
+live. Real output, `check.py --stage-cleared DevStg-Tests --jobs 0`:
+`FAIL traceability` (15 orphan SRs — SR-151/152/160/162/163 and ten more) and
+`FAIL backlink-coverage` (49.4% against the declared 50% minimum, 85 LLR rows
+with no back-link). **Neither red was a reason to pick a different threshold, and
+neither is why the thresholds are where they are** — the derivation above is
+independent of them and was written from `spine_stage`'s rung predicates. But
+both confirm it from the other side: the orphans ARE the rung-4/5 predicates, so
+a repo at Arch failing them is a repo being asked to have finished the rung it is
+standing on. The two checks stay red as information; nothing was sanctioned.
+
+**What retired, and why it costs nothing.** `product_floor` + `floor_plan` +
+`floor_notice` (the WI-473 monotonic floor) and `window_open` + `advisory_plan` +
+`run_advisory` + `ADVISORY_EXCLUDE` (the 2026-07-27 advisory tier) are DELETED,
+with `GATE_FILE`, the four `# basis:` regexes, `_basis_counts` and `_window_ord`.
+Both mechanisms existed for one cause — a derived bar a single drafted row could
+collapse — and the effective stage removes that cause by construction, for EVERY
+step rather than the product ones the floor covered. The floor's guarantee is now
+a property of the input; the advisory tier's warn-only steps now GATE, which is
+strictly stronger than what the ruling bought. The owner's 2026-07-27 ruling is
+honoured by deletion rather than violated by it: it said a suppressed step must
+still be SEEN, and a step that is not suppressed is seen by running. One thing
+genuinely goes: the `modified>0` compatibility arm, which read a field this kit
+stopped emitting at D-9 step 7 and which only an old-kit gate file carries.
+
+**The flag surface, decided.** `--stage` is canonical. `--gate` stays accepted
+**silently and indefinitely** — it is a flag NAME an adopter's hooks and CI pass
+literally, the word was never retired where it means a check that can fail, and
+the sweep measured that `--gate` is the only spelling anything in this repo
+actually passes. `--stage-cleared` is accepted and **WARNS**, one line per run:
+unlike `--gate` it makes a CLAIM about the axis (the value is a bar being
+cleared) and that claim is the exact trap OI-51 retires — it survived inside the
+2026-08-18 rename meant to remove it (census C-1). argparse records only the
+dest, so `_warn_retired_flag_spelling` reads argv. **No third alias generation is
+owed**, which the census expected: the three bar spellings are all ladder rungs,
+so an adopter's value stays legal; what changed is the READING, and a reading
+migrates by a RESYNC note, not a translation table.
+
+**The adopter-authored surface.** `[step:*]` `gates = <list of bars>` becomes
+`from-stage = <one rung>`. The legacy list is translated with one notice per run
+naming the SECTION (the CLI aliases cannot name a file; this can), and the fold
+is `_LEGACY_BAR_THRESHOLD` — `Reqs→Needs`, `Tests→Impl`, `Impl→Impl` — for the
+same min-fold reason as the built-ins, so an adopter's step keeps its effective
+arrival rather than starting three rungs early. Declaring both keys fails loudly.
+This repo's own three sections were migrated in the same commit.
+
+**The dual state, and who `docs/gate` is still for.** It is still WRITTEN and
+still `derived-gate`-freshness-gated, because two un-cut consumers remain and
+both are slice 4's: `check_trajectory.read_derived_phases` (the phase-drop
+detector, which reads `per-phase=` and *silently drops* what it cannot parse) and
+`intake._gate_moved` → `tier_signal`. The three display readers
+(`traj_parse`/`traj_panels`/`traj_status`) also still read it; they are
+presentation and belong with slice 5's vocabulary work, and leaving them
+FUNCTIONING is what the plan's transitional state asks. So only the
+production-dead `STAGE_BAR`/`stage_to_bar` crossing table died in `derive_gate`
+this slice — the bar ordinals, `BAR_NAMES`, `BAR_ORDER` and the alias table stay
+as long as the file they produce does. Slice 5's migration retires the file and
+takes them with it.
+
+**The C-01 acceptance, driven at the SELECTION level on a real bootstrapped
+scaffold.** A mature, frame-free scaffold, then one ordinary Drafted requirement
+added in the SAME phase (a draft in a new phase is ignored by a different arm of
+the fold, so it would prove the easier half):
+
+```
+MATURE    Plan at stage DevStg-Release (tier smoke): | derived BAR: DevStg-Tests
+   steps: 24 [backlink-coverage, derived-gate, derived-stage, design-flows,
+   doc-navigability, format, lint, need-form, okf, open-items, perf-budgets,
+   privacy, prompt-catalog, ratify-fresh, registry-integrity, skills-index,
+   skills-sync, staged-divergence, status-map, tests+coverage, traceability,
+   trajectory, trajectory-map, vocabulary]
++1 DRAFT  Plan at stage DevStg-Release (tier smoke): | derived BAR: DevStg-Reqs
+   steps: 24 [... identical ...]
+
+BAR MOVED: DevStg-Tests -> DevStg-Reqs   (the retired axis collapsed)
+PLAN IDENTICAL: True
+```
+
+The two-sided proof matters: without the bar half this is a fixture where nothing
+moved. `tests/test_selection_at_or_above.py` (15 tests) drives the same scenario
+plus the reachability of the three product steps, the threshold-vs-membership
+delta, the `from-stage`/`gates` contract, the flag surface, and a reader-seam
+case proving the plan follows an edited tree while the file stays byte-identical.
+It SUCCEEDS `test_product_floor.py`, discharging that file's own written
+obligation ("this test exists so nobody reads the floor as having fixed it"; both
+it and `test_advisory_during_window.py` retired with their mechanisms).
+
+**A FINDING THE ACCEPTANCE TEST FORCED OUT, and it limits the fix's reach.** A
+fully decomposed scaffold does NOT reach `DevStg-Release` — it reads
+`DevStg-Boundary`, floored to `DevStg-Reqs`. `boundary_incomplete` (rung 1)
+applies whenever `external.toml` EXISTS, and a scaffold ships one carrying no
+ratified crossing, which is honestly "the frame is in work". So slice 1's banked
+finding about the frame rungs dominating is sharper than recorded: **on a fresh
+scaffold the product steps OI-51 exists to reach stay unreachable until the
+adopter settles or removes their boundary registry.** The fixtures declare no
+frame (a legal adopter shape, and the one the census drove its own demonstration
+over) and say why in `_mature_frame_free`.
+
+**Scaffold-verified, per the standing lesson.** A real `bootstrap.py --dest` run:
+`docs/stage` and `docs/gate` both arrive; `check.py --list` reads
+`Plan at stage DevStg-Reqs` (the placeholder makes the reader DERIVE, and an
+empty spine floors); the plan is 11 steps and `check.py --tier smoke --lenient`
+is **RESULT: PASS** — `ci/check.yml`'s fresh-scaffold promise holds.
+
+Ratchets re-stamped deliberately: `check.py` **2337 → 2164** (the deletion, with
+the five additions named on the entry so the net is not read as pure
+subtraction); `check.py:main` complexity **16 → 15**; smoke membership
+**1343 → 1331** (re-stamped DOWN rather than left as slack — a ceiling would have
+absorbed the shrink silently); `derive_gate.py`'s module-size entry **deleted**
+(1467, back under threshold) with a tombstone recording that the drop is smaller
+than slice 1's note predicted, and why.
+
+Adopter-facing: a RESYNC_PACK §3 entry that LEADS with what starts running,
+`stack.ini.template`'s `from-stage` contract, `ADOPTING.md`'s `[step:*]` line,
+`README.md`'s harness row, PROCESS.md's tense note + harness line, and
+PROCESS_OPTIONS.md's advisory/floor paragraphs replaced by the at-or-above rule.
+`ci/check.yml`, `integrate._run_bar` and the five launcher/setup scripts pass
+`--stage`. The WI `bar:` frontmatter key is deliberately NOT renamed: its three
+values are ladder rungs whose selection is identical under the new thresholds, so
+the rename is vocabulary and belongs to slice 5.
+
+Byte deltas: `PROCESS.md` 84,383 → 84,524 (**+141**, flagged, watched);
+`PROCESS_OPTIONS.md` 177,258 → 176,428 (**−830**); `byte-budget-guard/SKILL.md`
+4,974 → 4,834 (cap 5,000). No capped file grew.
+
+Gates, real output on this box:
+
+- `python -m pytest -q -n auto -m smoke` → **1318 passed, 5 skipped in 80.62 s**
+  on the final tree; two readings across the slice: **68.6 / 80.6 s**.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` → **OK —
+  978 doc(s), 1350 intra-repo link(s), 0 broken (1 orphan warning)**.
+- `python project-trajectory/scripts/check_trajectory.py --root . --strict` →
+  **clean (495 work item(s), 461 done (93%), 21 cancelled, graph acyclic)**.
+- `python project-trajectory/scripts/trace.py --root . --strict-integrity` →
+  **SN=27 SR=73 LLR=168 TC=164 orphans=15 integrity=0 components=4
+  component-findings=0 interfaces=130 interface-findings=0**.
+- `python project-trajectory/scripts/check_vocab.py --root . --strict` →
+  **clean (459 live authored file(s); no retired gate tags)**.
+- `python project-trajectory/scripts/check.py --jobs 0` (this repo's own plan, at
+  the new keying) → **RESULT: PASS**, 11 steps — the 10 that ran before plus
+  `ratify-fresh`, which the re-derivation widened and which passes.
+- Full unfiltered suite: see the close line below.
+
+**Smoke wall-clock, reported not absorbed:** 80.6 s against the declared 60 s, on
+a tier that read 51.3 / 62.9 / 55.0 s at slice 1 and 72.8 s at slice 0. One box
+is one data point; the SECONDS budget was NOT moved and remains OI-52's.
+
+Deferred open items: none — the two red checks above are information about this
+repo's spine, not a decision owed; the WI-473 disposition is a program
+bookkeeping act recorded in the findings below; and the smoke wall clock is
+already OI-52's.
+
 ### Adjacent findings accumulating for the program close
 
 _(per-slice sections are inserted ABOVE this section, in land order;
@@ -310,6 +524,47 @@ banked findings accumulate below as list items)_
   slice 2/3 hollow out that module. When they do, these two want a public home
   (with `is_drafted`, which is already public and does the spine half of the
   same job) rather than being carried across as underscore imports.
+- **WI-473's row is still QUEUED and its mechanism has now been superseded**
+  (slice 2). The product-regression floor was BUILT under that id (the
+  module-size entry records the +146) but the row never left `docs/work/queued/`,
+  so this slice deleted the deliverable of an open work item. The deletion is
+  the ruled plan's (§5 item 2 supersedes the floor), not a worker's improvisation
+  — but the row now needs a disposition, and `complete` versus `cancelled` is a
+  real judgement: it SHIPPED and was then superseded. Not touched here, because
+  closing another WI's row is not this slice's to do. Whoever closes it also owns
+  `docs/work/queued/WI-473-monotonic-product-floor.md:62`, which cites the now
+  deleted `tests/test_product_floor.py` — the one NEW dangling doc-reference this
+  slice created (`check_doc_refs --strict` went 93 → 90 dangling overall, so the
+  net moved the right way, and that step is red at HEAD too and gated at no rung
+  this repo occupies). `docs/requirements/open-items.toml:2043` cites the same
+  deleted test inside OI-51's own record; the successor test carries the
+  obligation forward in its docstring.
+- **A fully decomposed SCAFFOLD cannot reach the rung OI-51's fix needs**
+  (slice 2), which sharpens slice 1's frame-rung finding rather than repeating
+  it. `boundary_incomplete` applies whenever `external.toml` EXISTS, and
+  `bootstrap.py` ships one with no ratified crossing — honestly "the frame is in
+  work" — so a scaffold with a perfect SN→SR→LLR→TC chain reads
+  `DevStg-Boundary`, floors to `DevStg-Reqs`, and selects none of the
+  `DevStg-Impl`-threshold steps. The product checks OI-51 exists to make
+  reachable therefore stay unreachable for an adopter until they settle their
+  boundary registry or declare no frame. Nothing here is wrong — the rung is
+  reporting a real state — but the fix's reach is narrower than "a decomposed
+  spine gets its product checks", and slice 3 should decide knowing it.
+- **`derive_gate` is again under the module-size threshold (1467), and the drop
+  was much smaller than slice 1's entry predicted** (slice 2). That entry said
+  "slice 2 removes the bar ordinals, BAR_NAMES, BAR_ORDER and STAGE_BAR — expect
+  a large drop"; only the production-dead crossing table could actually go,
+  because the module still WRITES `docs/gate` for two live detectors. The bar
+  axis cannot leave `derive_gate` until the FILE leaves, which is slice 5. Worth
+  carrying: the same expectation will be wrong again if slice 4 is planned as
+  "delete the bar" rather than "re-key the detectors first".
+- **`ruff check` reports two PRE-EXISTING unused imports** (slice 2), found while
+  linting this slice's own edits: `tests/test_agent_loop.py:16` (`inspect`) and
+  `tests/test_trace_hats.py:38` (`pytest`). Not touched — unrelated code — and
+  recorded because of WHY they survived: `lint` is a `DevStg-Impl`-threshold
+  product step, and this repo's effective stage is `DevStg-Arch`, so it does not
+  run here. That is the same class of gap OI-51 names, showing up in the kit's
+  own tree; it closes for this repo when the spine settles, not by an edit.
 - **The fingerprint catches staleness the value comparison cannot** (slice 1).
   Because `fingerprint=` is itself a compared field, an input edit that moves no
   stage value still reds `--check` — correctly, since the recorded fingerprint

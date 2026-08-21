@@ -20,17 +20,23 @@ docs (census, deep-check, schedule map) as evidence. This is a
 MULTI-SESSION PROGRAM lane; each slice ends green at the commit bar and
 lands the largest honest coherent piece.
 
-**Program state:** slices 0 and 1 landed 2026-08-21; slices 2-5 remain, in
-order, and slice 2 (selection re-keys at-or-above) is next. Slice 1 delivered
-`kitlib/stage.py` (the declared inputs, the fingerprint, the format, the floor,
-the fold and the common reader), `derive_stage.py` (the per-phase,
-draft-excluded, floored derivation), the committed `docs/stage`, and a
-`derived-stage` freshness step wired exactly like `derived-gate`. **`docs/gate`
-remains and is still authoritative for every one of its readers** — that is the
-plan's transitional dual state, and cutting them over is slice 2's job. Slice 2
-inherits two things it should read first: `derive_stage.read(root)` is the
-one-line common reader to point consumers at, and the banked finding that the
-bar axis must be swept by VALUE (`"DevStg-`), not by constant name.
+**Program state:** slices 0, 1 and 2 landed 2026-08-21; slices 3-5 remain, in
+order, and slice 3 (ladder re-discrimination + the phase rule) is next.
+Slice 2 re-keyed the whole harness selector onto the effective stage:
+`check.py` reads `docs/stage` through `derive_stage.read` and reads `docs/gate`
+NOWHERE, the bar constants and the membership rule are deleted, and the product
+floor and advisory tier retired with the draft-collapse they compensated for.
+**`docs/gate` is still WRITTEN and still freshness-gated** — the dual state
+persists for exactly two un-cut consumers, both slice 4's
+(`check_trajectory.read_derived_phases` and `intake._gate_moved`/`tier_signal`),
+plus the three display readers that belong with slice 5's vocabulary work. Slice
+3 inherits three things worth reading first: the per-step threshold table and
+its derivation rule live in the fragment's "Slice 2" section; the
+Impl/Release discriminator is still exactly one fall-through in
+`derive_gate.spine_stage`, which both files follow; and the frame-rung finding
+below is now known to cap a fresh SCAFFOLD at `DevStg-Boundary`, so the rung
+slice 3 makes reachable is not reachable from a scaffold until its boundary
+registry settles.
 
 The slices, in the plan's order (§5):
 
@@ -67,9 +73,28 @@ The slices, in the plan's order (§5):
    NOT touched, deliberately: no consumer re-keyed (slice 2), and the
    Impl/Release discriminator is unchanged (slice 3) — the effective stage is
    the designed aggregation over TODAY's rung mapping.
-2. **Selection re-keys at-or-above** — gates= sets re-derived deliberately
-   per step; bar constants deleted; all docs/gate readers onto the common
-   reader.
+2. **Selection re-keys at-or-above** — LANDED 2026-08-21. Every step's
+   `gates=` set re-derived one at a time into a from-stage threshold under one
+   stated rule (the lowest rung at which the artifact the step grades must
+   exist and be complete), with the per-step table in the log fragment. The
+   finding that shaped it: the retired bar was a MIN over every row, so
+   `DevStg-Tests` was reached only by a fully decomposed spine — the
+   `DevStg-Impl` RUNG — and mapping a bar tag to the floor of its span would
+   have started five steps three rungs early. `traceability` lands at
+   `DevStg-Impl` because its orphan rules ARE the rung-4/5 predicates.
+   `format`/`lint`/`tests+coverage` become reachable from a derived value for
+   the first time (OI-51's defect); `registry-integrity` is the one behavioural
+   delta; `design-flows`/`trajectory`/`ratify-fresh` widen to the applies-when
+   their own comments already claimed. `product_floor` and the advisory tier
+   are DELETED. Flag surface: `--stage` canonical, `--gate` silent,
+   `--stage-cleared` warns. Adopter `[step:*]` key `gates=` → `from-stage=`,
+   legacy translated. Record:
+   `docs/log.d/2026-08-21-wi498-stage-unification.md`, "Slice 2".
+   NOT touched, deliberately: the two SEVERITY promotions stay at the Impl
+   rung (widening one is a policy change, not a re-key); the WI `bar:`
+   frontmatter key keeps its name (its three values are rungs and select
+   identically — the rename is slice 5's); the detectors' internals and the
+   display readers of `docs/gate` are left FUNCTIONING for slices 4 and 5.
 3. **Ladder re-discrimination + the phase rule** — all-Founded →
    DevStg-Impl; Release evidence-gated (unreachable until the carrier row
    lands — honest); the authoring-time decrease check with exactly the
