@@ -2964,9 +2964,25 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # on every row of the re-tier campaign, which is the noise that gets a window
 # ignored — and the campaign's re-statements touch `Requirement` anyway, which
 # IS ratified, so nothing escapes attestation by this choice.
+#
+# `Hat-Refs` (SR and LLR) joins the TRACED half at WI-484, and the classification
+# is the load-bearing half of shipping the cell rather than a footnote. Three
+# reasons, in the order that decides it: (1) it is the same SHAPE of pointer as
+# `SN-Refs`/`Boundary-Refs` — which declared row in another registry bears on this
+# one — carrying no prose either side; (2) the residual would classify it RATIFIED,
+# so the phase-2 backfill would arm a re-attest window on every row it touched,
+# which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
+# (3) the owner's own sequencing note prices this ruling — the cell "is NOT
+# anticipated to be an attested cell, so it can be tacked on AFTER the sitting
+# without re-opening anything signed", which is only true if it is classified here.
+# It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: re-pointing `SN-Refs`
+# may have moved SCOPE, which is a judgement adjudication exists to make, while a
+# hat re-point restates which lens the row is attributable to and moves no
+# obligation. If phase 5's amend-without-flip arm ever wants that routing, it is
+# one line — added on evidence, not in advance.
 SPINE_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
-        {"SN-Refs", "Boundary-Refs", "Phase", "Aspect", "Lifecycle"}
+        {"SN-Refs", "Boundary-Refs", "Hat-Refs", "Phase", "Aspect", "Lifecycle"}
     ),
     # `SR-Refs` is here BY RULING (WI-388, closing WI-380 REVIEW-A finding 3 —
     # the cell §A5.1 left unclassified): it is the same shape of pointer as
@@ -2977,7 +2993,15 @@ SPINE_TRACED_CELLS = {
     # adjudication (intake.ROUTED_TRACED_CELLS) like its two siblings; it
     # never arms a re-attest window directly.
     "docs/requirements/low-level-requirements.toml": frozenset(
-        {"Module", "CodeSymbol", "TestRefs", "Component", "Phase", "SR-Refs"}
+        {
+            "Module",
+            "CodeSymbol",
+            "TestRefs",
+            "Component",
+            "Phase",
+            "SR-Refs",
+            "Hat-Refs",
+        }
     ),
     "docs/test/test-cases.toml": frozenset(
         {"Verifies", "Evidence", "Automated", "Phase"}

@@ -2414,6 +2414,61 @@ needed, and a `docs/gate` written before the `ex-draft=` field existed simply
 gets no floor (the floor abstains rather than guessing) until you next run
 `scripts/derive_gate.py`.
 
+### The derived-requirement LABEL becomes a cell: `Hat-Refs` on SR and LLR [since 046843eb]
+
+*(Anchored at the PRECEDING commit — this entry ships with the change itself.)*
+
+**Kit-owned files — overwrite them and move on:** `scripts/spine_carrier.py`,
+`scripts/migrate_carrier.py`, `scripts/trace.py`, `scripts/check_trajectory.py`,
+`PROCESS.md`, `skills/spine-authoring/SKILL.md`, and the two `-000` example rows
+in `registries/system-requirements.template.toml` +
+`registries/low-level-requirements.template.toml`.
+
+**What changes for you:** the SR and LLR tiers gain one **optional** key,
+`hat_refs` (column `Hat-Refs`) — a typed array of **hat roster NAMES**
+(`["SECURITY", "MAINTAINER"]`) naming the declared perspectives in
+`docs/requirements/hats.toml` that a row's content is attributable to. `PROCESS.md`
+and the `spine-authoring` skill used to tell you to record a derived
+requirement's deriving hat as a **prose label in `Rationale`**. That instruction
+is retired: a prose label resolves against nothing, so no check could tell a live
+hat from one you deleted last month. The cell replaces it.
+
+**Nothing you have already written breaks.** The key is optional at every tier
+that declares it, and an **absent cell means NOT RECORDED — never "no
+perspective applied"**, so nothing reads a blank as a claim. Concretely:
+
+- **A `Hat-Refs` naming a hat your roster does not declare is a hard finding**
+  under `trace.py --strict` (class `hat`), in the same class as an SR citing a
+  deleted SN. This is the arm that stops the cell rotting when you retire a hat.
+- **Coverage is warn-only, permanently.** `trace.py` reports ONE advisory line
+  counting the rows with no `Hat-Refs`, plus one naming hats no row is
+  attributable to. Neither ever gates. A repo that adopts the key and fills
+  nothing stays green.
+- **Deleted your `docs/requirements/hats.toml`?** The whole check is vacuous —
+  absence is opt-out for the hats layer, so there is no name a row could fail to
+  cite. Nothing to do.
+
+**The one rule worth reading before you fill any LLR cell:** an LLR's `hat_refs`
+carries **only what its own design decomposition raised — never a copy of its
+parent SR's**. A row's EFFECTIVE set is DERIVED (`trace.effective_hats`: own refs
+unioned with its `SR-Refs` parents'). Copy the parent's hats down instead and
+re-ruling one requirement becomes a sweep over every child it has; derive them
+and the same re-ruling propagates on the next read, correcting no LLR cell at all.
+
+**Backfilling is optional and is its own piece of work — do not let a tool do
+it.** If your rationale cells carry prose hat attributions today, they can be
+lifted mechanically ONLY where the row states its own derivation in a fixed
+label form. In this kit's own repo a regex over `hat.` matched 19 rows and TWO of
+them were wrong: one names a hat in order to REFUSE it as a basis, and one
+carries a struck attribution. Read every row you migrate.
+
+**Cell classification, if you run the ratification ladder:** `Hat-Refs` is
+declared **traced**, not ratified (`check_trajectory.SPINE_TRACED_CELLS`), so
+adding it to an already-approved row does not arm a re-attest window or trip the
+`last_approved` drift comparison — the drift basis reads the ratified half only.
+It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: a hat re-point restates
+which lens a row is attributable to and moves no obligation.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

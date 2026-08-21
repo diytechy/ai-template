@@ -790,6 +790,12 @@ def _findings_stub(trace, **overrides):
         "component_findings",
         "interface_backlink_findings",
         "frame_backlink_findings",
+        # WI-484. THIS LIST IS A HAND-MAINTAINED MIRROR of what `exit_code`
+        # reads, and it drifted silently the moment that function gained an arm:
+        # the AttributeError surfaced only in the FULL suite, because this
+        # module is not in the commit tier. A new `exit_code` arm must be added
+        # here in the same edit.
+        "hat_dangling",
         "provenance",
         "form",
     ):

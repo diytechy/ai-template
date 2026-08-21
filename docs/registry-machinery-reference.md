@@ -698,8 +698,8 @@ When an **`Approved`** spine row is amended, `staged_spine_amendments` in
 
 | Registry | **Traced** (amend freely) | **Ratified** (opens a re-attest window) |
 |---|---|---|
-| SR | `SN-Refs`, `Boundary-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
-| LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` | `Title`, `Detail`, `Rationale`, `SR-Refs` |
+| SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
+| LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
@@ -731,6 +731,7 @@ All optional; all vacuous when absent or `-000`-only.
 | `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. |
 | procurement | `PART-###` | `Component` | membership only |
 | assets | `ASSET-###` | `Component` | membership only |
+| `docs/requirements/hats.toml` — the declared perspectives | hat NAME (`[hat.SECURITY]`; no numeric space, so no `-000` row) | SR/LLR `Hat-Refs` | Resolution is HARD: a `Hat-Refs` naming a hat the roster does not declare joins the `--strict` failure set (class `hat`). Coverage is warn-only FOREVER — one advisory counting rows attributable to no perspective, one naming hats no row is attributable to, and BOTH are suppressed entirely until at least one row fills the cell, so adopting the kit is quiet. Coverage counts **effective** sets (`trace.effective_hats`: a row's own refs unioned with its `SR-Refs` parents'), never cells — an LLR's cell holds only what its own decomposition raised, and copying a parent's hats down is the staleness this derivation exists to forbid. Vacuous with no roster (absence is opt-out for the whole layer); `trace.py` reads NAMES only and `scripts/hats.py` remains the sole validator of roster content. |
 | repos | `REPO-###` (legacy `MOD-###`) | `DelegatedSRs` | Must name real coordinator SRs; empty is allowed. Cross-repo reconciliation is deferred. |
 
 ---

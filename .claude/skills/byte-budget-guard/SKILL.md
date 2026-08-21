@@ -44,7 +44,7 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 84,080 | 2026-08-20 | **+124**: WI-477 (H-06) — §8's IF maturity field re-named onto the words enforcement reads (`Status`, `Drafted`/`Approved`), `Founded` ruled out of the tier. FLAGGED |
+| `project-trajectory/PROCESS.md` | 84,383 | 2026-08-20 | **+303** FLAGGED: WI-484 — §1's derived-SR clause re-pointed off the retired prose label onto the `Hat-Refs` cell, carrying the two rules a reader cannot derive from a column name (a blank means *not recorded*; an LLR's effective set is own + parents', never a copy) |
 | `project-trajectory/PROCESS_OPTIONS.md` | 175,330 | 2026-08-20 | **+1,021** FLAGGED: WI-473 (review C-01) — the product-regression floor: product steps select at `max(bar, ex-draft)`, so drafting cannot withdraw format/lint/tests |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own

@@ -775,10 +775,224 @@ banked ~47-file CRLF residue; the index stays LF.
   it does not cover the records edit. Re-run rather than argued away — smoke on
   the landed tree below.
 
+### WI-484 — concern/hat references on SR and LLR rows (opus worker) — SLICE landed, row goes ACTIVE
+
+**Slice 1 of a six-phase program row.** Landed to
+`docs/work/active/wi484-concern-refs-component-view/`, not `complete/`: phases 0
+and 1 shipped whole, phase 2 is partial, and phases 3/4/5 are untouched. The
+spec Context now carries the six owed items in the order they should be taken.
+
+Deferred open items: none — phase 0's field-name ruling was DELEGATED to this
+execution by the row's own spec ("one name, ruled here"), so ruling it is
+executing the item, not deferring a new one. Phase 4's newly measured blocker is
+recorded as a lane item rather than minted: it is a mechanism gap in `hats.py`,
+not a question needing the owner's judgement, and the roster edit it gates on is
+owner text either way.
+
+**Phase 0, RULED: `hat_refs` / column `Hat-Refs`, values are roster NAMES.** Not
+a coin-flip between the owner's `hats_ref` and the brief's `concern_refs` — both
+were declined on precedent already written into the file the cell lands in.
+`hats_ref` is the one form no sibling takes (`sn_refs`, `boundary_refs`,
+`sr_refs`, `req_refs` are all singular-noun + `_refs`), so it keeps the owner's
+VOCABULARY — hats, not concerns — in the house idiom. `concern_refs` fell to
+`boundary_refs`' own minting rule three lines above it in `SPINE_COLUMN`: a refs
+column is named for the tier it resolves INTO, which is why that cell is not
+`bif_refs`. A `concern` cell resolving against `[hat.NAME]` rows is exactly the
+vocabulary hop that rule refuses. The `C-SEC-2`-style clause numbering living in
+eight rationale cells is NOT promoted to a second id space — it resolves nowhere
+and stays prose.
+
+**Phase 1, the cell and its three rules.** `hat_refs` is OPTIONAL on the SR and
+LLR tiers; `trace.load_hat_names` reads the roster's table keys;
+`trace.hat_findings` splits severity the way `sr_boundary_findings` does —
+resolution is a `--strict` finding under its own `hat` class, coverage is one
+advisory line — and `trace.effective_hats` derives a design row's set as its own
+refs unioned with its SR parents' — and it is WIRED, not reserved: the coverage
+arm counts EFFECTIVE sets, which is the difference between 220/237 and **178/238**
+on this repo's own spine (42 design rows inherit attribution from a parent). A
+derivation defined and called by nothing is the exact defect this module's own
+size-baseline records against `unanchored_findings`. `LLR-183`/`TC-178` minted Drafted under
+**`SR-161`**, which is not a convenience: SR-161 is *"Decompositions carry a
+perspective record"*, the row `LLR-168` says the record half of SN-036 was
+DELIBERATELY not built for. It was an ORPHAN (no LLR, no TC) until this slice — trace's orphan count drops
+**17 → 15** as a side effect, and that is the honest test of the choice: if the
+cell had needed a new SR, the perspective record would have had two homes.
+The row states what it does NOT discharge in the `LLR-172` debt-stating pattern:
+SR-161 wants not-applicable distinguished from considered-with-no-finding, and
+this cell expresses neither — both are facts about a DECOMPOSITION, this cell is
+a fact about a ROW, and applicability is separately derivable from the roster's
+own predicates, so storing it would store a derived fact and let it go stale.
+
+**The anti-staleness decision, which is the whole design.** An LLR's cell holds
+only what its own decomposition raised. Copying parents down would turn
+re-ruling ONE requirement into a sweep over every child it has — the
+hand-maintenance the generated view exists to escape, moved one tier down and
+multiplied by the fan-out. `test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited`
+pins it on the same child dict.
+
+**The second reader of `hats.toml` is deliberate, and the alternative was
+worse.** `trace.py` is CMP-006, `hats.py` is CMP-008, and the declared crossing
+between them (`IF-133`) already runs CMP-008 → CMP-006. Importing `hats` here to
+save a `tomllib.load` would mint a component-level CYCLE — against the direction
+the live WI-483 lane is pulling. So trace reads the roster's KEYS only;
+`hats.py` stays the sole validator of roster CONTENT, the two answer different
+questions, and `test_the_roster_path_matches_the_hats_module` pins the paths
+equal (a TEST may import both where the shipped code may not).
+
+**The backfill, and the measurement that says a tool must not finish it.** 17 SR
+rows migrated — exactly the population stating its own derivation in the ruled
+`Hat-derived (hat.X)` label form, extracted from that parenthetical only. A
+naive `hat.` regex over `rationale` matches **19**, and both extras are wrong in
+opposite directions: `SR-015` names `hat.PERFORMANCE` in order to REFUSE it as a
+basis, and `SR-040` carries an attribution left struck under OI-38. Cross-check
+that the migration is faithful: it leaves exactly **5** hats attributed to no
+row, matching OI-32's own independent census ("eleven distinct hats appear
+across the 18", 16 − 11 = 5). Coverage moved 237/237 → 220/237 by cells, and to 178/238 once the effective-set
+reading landed. The prose was
+NOT deleted — `Rationale` is a ratified cell on Approved rows, so the
+de-duplication is owner-adjacent and recorded as owed.
+
+**No re-attest window opened, and that is a classification, not luck.**
+`spine_cell_class`'s residual reads an unclassified column as RATIFIED, so
+shipping the cell without classifying it would have armed a window on all 17
+Approved rows and tripped the `last_approved` drift comparison. `Hat-Refs` joins
+`SPINE_TRACED_CELLS` at both tiers — which is what makes the owner's own
+sequencing note ("NOT anticipated to be an attested cell, so it can be tacked on
+AFTER the sitting") true rather than hoped. Deliberately NOT added to
+`intake.ROUTED_TRACED_CELLS`: a hat re-point restates which lens a row is
+attributable to and moves no obligation.
+
+**The first-run-adopter defect, caught by regenerating a golden.** The first
+build emitted the coverage line and "16 hats attributed to NO row" on every run
+— and a freshly bootstrapped scaffold ships all 16 hats with zero `Hat-Refs`, so
+every new adopter would have been greeted by sixteen declared perspectives
+called "unrecorded or ceremony" about a layer they had not opted into. That is
+this kit's own FIRST-RUN-ADOPTER failure class, and it is how an advisory pipe
+stops being read. Both advisories are now gated on the cell being IN USE; the
+regenerated goldens show the scaffold report gaining two quiet metric rows and
+one factual section, and nothing else.
+
+**The vocabulary retirement the WI-489 worker banked, discharged.** `PROCESS.md`
+and the `spine-authoring` skill no longer teach "a labelled derived SR"; both
+now name the cell, and the skill says why a prose label is not a record (it
+resolves against nothing, so nothing can tell a retired hat from a live one).
+Shipped as a `RESYNC_PACK.md` entry `[since 046843eb]` carrying the four things
+an adopter needs: nothing existing breaks, coverage never gates, the roster is
+opt-out, and DO NOT let a tool do the backfill — with this repo's own 19-vs-17
+measurement as the argument.
+
+**Two ratchets re-stamped, one REFUSED and fixed instead.** `trace.py`
+4761 → 4961 (measured POST-`ruff format`, which reflowed one call in this
+session's own edit after the first stamp — the WI-483 trap, re-encountered) and `check_trajectory.py` 4018 → 4042 (declaration only), reasons in
+the baseline entries. The complexity ratchet fired on `render_report` 17 → 18
+and was NOT bumped: the section moved into a `_hat_report_section` helper
+following `_frame_report_section`, which is the idiom that file already agreed
+on for a conditionally-rendered section — the C901 census is unchanged by this
+WI. `max-tests` 1269 → 1291 for 22 new tests, 21 of them pure.
+
+**The full suite earned its place in the bar, concretely.** The first full run
+came back `2 failed` on `tests/test_trace_rules.py`, a module the commit tier
+does not carry: `_findings_stub` is a HAND-MAINTAINED mirror of the attributes
+`exit_code` reads, and it drifted silently the moment `exit_code` gained the
+`hat_dangling` arm. Smoke was green across that defect twice. Fixed in the stub
+with the rule recorded in place.
+
+Byte deltas, one line per touched file:
+`project-trajectory/PROCESS.md` 84,080 → 84,383 (**+303**, FLAGGED — watched
+file). The growth is one sentence-pair replacing one clause, and it is
+load-bearing rather than expansion: the retired clause told an author to write a
+prose label, so re-pointing it at the cell is the minimum, and the two rules a
+reader cannot derive from the column name — that a BLANK means *not recorded*
+rather than *none applied*, and that an LLR's effective set is own + parents'
+rather than a copy — are exactly the two an adopter gets wrong by default. Both
+are stated once here and nowhere else in the core. Tightened once before landing
+(a first draft measured +354). No other capped or watched file was touched:
+`AGENTS.template.md` 9,948 and `CLAUDE.md` 7,147 unchanged.
+
+Gate figures, this tree:
+- `trace.py --root . --strict`: **zero hat findings** on the live spine, and the
+  run's exit 1 is the pre-existing `trajectory` orphan red status.md already
+  names (SRs with no LLR) — unchanged by this WI except that it SHRANK, 17 → 15.
+- `check_trajectory.py --strict`: **clean** (490 work items, 455 done, 21
+  cancelled, graph acyclic); warnings only, all pre-existing shared-specref
+  pairs.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1327 intra-repo link(s), 0
+  broken`.
+- **full unfiltered suite, run to completion in the FOREGROUND**:
+  `2719 passed, 14 skipped in 625.68s (0:10:25)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=046843eb-dirty -->
+  2697 -> 2719 is exactly this session's 22 new tests and nothing else moved.
+  **An earlier run was DISCARDED rather than reported, and it is the reason the
+  full suite is the bar for a slice.** That run came back `2 failed` on
+  `tests/test_trace_rules.py` — a module the commit tier does not carry — where
+  `_findings_stub` is a hand-maintained mirror of the attributes `exit_code`
+  reads and drifted the moment `exit_code` gained the `hat_dangling` arm. Smoke
+  was green across that defect twice. A second run was abandoned deliberately:
+  the effective-set wiring landed after it started, so its tree was stale, and a
+  suite result is only a claim about the tree it ran on. The figure above is the
+  third, on the tree being committed. **Read its scope honestly:** it was taken
+  with the code, tests, registries, spine rows and regenerated surfaces all in
+  place, but before this fragment and the `registry-machinery-reference.md` row
+  were written — docs-only edits, and the one test that READS that file
+  (`tests/test_status_vocabulary_contract.py`, 8 passed) was re-run on the final
+  tree.
+- smoke, final reading on the same tree: `1278 passed, 5 skipped in 68.11s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=046843eb-dirty -->
+  (earlier readings this session, before the last two edits: 69.04 s and
+  64.90 s).
+  **EVERY READING IS OVER THE DECLARED 60 s CEILING AND THE BUDGET IS NOT MOVED.** This
+  box's prior readings on a smaller tier were 54.9 / 64.0 / 55.7 s and then
+  46.97 s at the WI-483 stamp, so it already straddled the ceiling before this
+  WI added ~3.5 s of mostly-pure tests. Three readings here, all 64-69 s. Reported as a machine condition and as
+  more evidence for the already-banked seconds-budget question (the WI-477 and
+  WI-475 workers each recorded it); a run brushing a budget is not a reason to
+  raise the budget.
+- The regenerated surfaces were diffed before staging: `docs/status.md`'s
+  generated block moved **one line** (the spine counts), and `docs/gate` moved
+  only its counts, `drafted` and as-of commit — `computed`, `ex-draft`,
+  `per-phase`, `stage` byte-identical, so no gate, bar or phase moved.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
 findings accumulate below as list items)_
+
+- (WI-484 worker — **settles two banked items, both by measurement**) The
+  `LLR-172` / `budget_findings` anchor pair banked by the WI-477 and WI-472
+  workers is **already resolved and needs no WI**. `LLR-172` names
+  `check_trajectory.py` today and `component_findings` IS a module-level def at
+  `check_trajectory.py:1318`; `check_doc_refs --strict` reports ZERO hits for
+  `LLR-172`, `LLR-015`, `component_findings` or `budget_findings`; and no LLR
+  row names `budget_findings` at all. The WI-482 close ("the three stale
+  anchors") appears to have taken it. The banked note said WI-484's execution
+  would settle which module was the intended landing — it settles it by
+  measuring that the question closed already.
+- (WI-484 worker) The `spine-authoring` skill's FRONTMATTER `description` still
+  reads "a labelled derived requirement" — the one live occurrence of the
+  retired vocabulary left in the tree. Deliberately not fixed here: the
+  description is copied into `project-trajectory/skills/INDEX.csv`, a
+  trunk-owned generated artifact `[generated]` says a work branch must never
+  commit. It is a one-line trunk step.
+- (WI-484 worker — a real checker hole, same class as the WI-474 worker's
+  `Contracts:` finding) `tests/test_trace_rules.py::_findings_stub` is a
+  hand-maintained list mirroring what `trace.exit_code` reads, with NOTHING
+  pinning the two together. Adding an `exit_code` arm without it raises
+  `AttributeError` — found only by the full suite, since the module is outside
+  the commit tier. A one-line assertion comparing the stub's attribute set to
+  the names `exit_code` reads would close it; worth the same defensive treatment
+  the WI-465 worker asked for on `.gitattributes`.
+- (WI-484 worker) `docs/registry-machinery-reference.md`'s traced/ratified table
+  listed LLR `SR-Refs` as RATIFIED while `SPINE_TRACED_CELLS` has had it TRACED
+  since WI-388. Corrected in this slice rather than banked, because leaving a
+  known-false row beside the true `Hat-Refs` row I was adding is worse than the
+  scope cost — but it is evidence the table is a second hand-maintained mirror
+  of a constant, the same shape as the `_findings_stub` finding above.
+- (WI-484 worker) Phase 4 of this program is blocked on a MECHANISM, not a
+  ruling: `hats.py` refuses any unknown roster key and has no optional-key
+  concept, so a `knowledge` field cannot be added to `hats.toml` without minting
+  one — and it would otherwise become mandatory on all 16 live rows and all 16
+  shipped-template rows. `hats.toml` is also declared owner text. Whoever takes
+  phase 4 should expect to build `OPTIONAL_KEYS` first.
 
 - (WI-483 worker — the one the closing review should weigh) **the shared
   kernel's four-way component tag is no longer just an open question, it is a

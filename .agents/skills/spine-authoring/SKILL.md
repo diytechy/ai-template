@@ -129,12 +129,16 @@ Four questions:
     obligation. This is why the checker warns rather than gates: only you can
     tell those two apart.
 - **(c) If the obligation arrived through a lens rather than the need's text,
-  LABEL it derived.** This is DO-178C's **derived requirement** class: content
-  beyond what the parent demands, legitimate *because* it is (i) labelled as
-  derived, (ii) carrying a rationale that names the deriving lens — the hat, the
-  design constraint, the implementation fact — and (iii) fed back upward so the
-  need owner sees it. Name the deriving hat in `Rationale` and record it in the
-  decomposition's perspective record. **Never silently trace a derived row to a
+  RECORD the lens.** This is DO-178C's **derived requirement** class: content
+  beyond what the parent demands, legitimate *because* it is (i) recorded as
+  derived in a cell something reads, (ii) carrying a rationale that argues the
+  deriving lens — the hat, the design
+  constraint, the implementation fact — and (iii) fed back upward so the
+  need owner sees it. Name the deriving hat in **`Hat-Refs`** (roster names; the
+  cell IS the perspective record, and a name the roster does not declare is a
+  finding) and argue it in `Rationale`. A prose label alone is not the record: it
+  resolves against nothing, so nothing can tell a retired hat from a live one.
+  **Never silently trace a derived row to a
   parent whose text does not demand it**: that is the single most common way a
   spine acquires structure nobody asked for and nobody can audit.
   - A row derivable **only** through a hat that ships switched OFF must say so.

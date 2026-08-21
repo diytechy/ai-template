@@ -119,6 +119,10 @@ REF_COLS = {
     "SR-Refs",
     "Req-Refs",
     "Boundary-Refs",
+    # WI-484: a typed array like every other multi-ref cell. A hat NAME carries no
+    # comma or semicolon (`hats.py` keys are upper-case, `-`-joined), so the
+    # `trace_text.refs` split reads it back exactly as written.
+    "Hat-Refs",
     "Verifies",
     "SupersededBy",
     "WI-Refs",
@@ -132,6 +136,7 @@ KEY = {
     "Title": "title",
     "SN-Refs": "sn_refs",
     "Boundary-Refs": "boundary_refs",
+    "Hat-Refs": "hat_refs",
     "SR-Refs": "sr_refs",
     "Verifies": "verifies",
     "Requirement": "requirement",

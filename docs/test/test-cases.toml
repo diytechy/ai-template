@@ -1781,3 +1781,14 @@ automated = "Yes"
 evidence = """tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_kitlib_station.py::test_outcome_of_names_one_outcome_or_none"""
 status = "Drafted"
 phase = 5
+
+[test.TC-178]
+verifies = ["SR-161", "LLR-183"]
+level = "Unit"
+method = """Four halves, one per claim the row makes. RESOLUTION: build a spine whose SR and LLR rows carry a Hat-Refs naming a hat the roster declares and one naming a hat it does not, and assert the second is reported and joins the --strict failure set under its own class while the first is silent. VACUITY: delete the roster and assert the same tree reports nothing at all, then leave a roster that will not parse and assert the same - absence is opt-out for the layer, and a rule that reddened every row on a malformed roster would punish the wrong file. COVERAGE NEVER GATES: assert a tree whose rows carry no Hat-Refs at all exits zero under --strict and reports exactly one coverage advisory. THE DERIVED SET: assert effective_hats returns the union of a row's own refs with its SR parents', that a parent's change moves the child's answer with no child cell edited, and that a dangling SR-Refs contributes nothing rather than raising. Plus the anti-drift pin the second reader needs: assert trace's roster path equals hats.ROSTER_REL, since a test may import both modules where the shipped code may not."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-183 (parent SR-161)"
+automated = "Yes"
+evidence = """tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module"""
+status = "Drafted"
+phase = 5

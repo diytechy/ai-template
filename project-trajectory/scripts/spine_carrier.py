@@ -130,6 +130,20 @@ SPINE_COLUMN = {
     # have kept the retired `BIF-###` id shape alive in a column name sitting
     # beside the `B-##` ids that replaced it.
     "boundary_refs": "Boundary-Refs",
+    # WI-484 / OI-32 phase 0 — the HAT reference, on the SR and LLR tiers: which
+    # declared perspective(s) in `docs/requirements/hats.toml` this row's content
+    # is ATTRIBUTABLE to. Named `hat_refs` and not `hats_ref`/`concern_refs`, and
+    # the choice is decided by precedent rather than taste. Against `hats_ref`:
+    # every sibling in this map is `<singular tier noun>_refs` (`sn_refs`,
+    # `boundary_refs`, `sr_refs`, `req_refs`), so `hats_ref` is the one form no
+    # other column takes. Against `concern_refs`: `boundary_refs` was minted three
+    # lines up under the rule "named for the tier it resolves into", and a cell
+    # named for `concern` resolving against `[hat.NAME]` rows is exactly the
+    # vocabulary hop that rule refuses. The value space is the ROSTER NAMES
+    # (`SECURITY`, `UNATTENDED-OPS`) — `hats.py` already validates them and they
+    # are what a composer holds; the prose `C-SEC-2` numbering that appears in
+    # eight live rationale cells is NOT a second id space, and resolves nowhere.
+    "hat_refs": "Hat-Refs",
     "sr_refs": "SR-Refs",
     "verifies": "Verifies",
     "requirement": "Requirement",
@@ -293,10 +307,17 @@ SPINE_TIER_KEYS = {
         "priority",
         "acceptance",
     ),
+    # `hat_refs` is OPTIONAL on both row tiers that declare it, and the absence
+    # semantics are stated here because they are the whole difference between a
+    # useful cell and a lie: an ABSENT `hat_refs` means NOT RECORDED, never "no
+    # perspective reached this row". Nothing may read a blank as a negative claim,
+    # which is why the checker's coverage arm is a warn-only count and never a
+    # finding (WI-484 / OI-32 phase 1).
     "SR-ID": (
         "title",
         "sn_refs",
         "boundary_refs",
+        "hat_refs",
         "requirement",
         "rationale",
         "acceptance_criteria",
@@ -309,6 +330,7 @@ SPINE_TIER_KEYS = {
     ),
     "LLR-ID": (
         "sr_refs",
+        "hat_refs",
         "title",
         "module",
         "code_symbol",

@@ -77,7 +77,11 @@ text**, tailored with the frame at `DevStg-Boundary`; `scripts/hats.py` reads
 it and the planning briefs put each applicable hat's question to the
 decomposition, so edge-case and discipline coverage is regenerated per
 decomposition, never hand-recorded. An obligation only a hat's charter demands enters the spine as
-a **labelled derived SR** naming the deriving hat in its rationale. A domain
+a **derived** SR naming the deriving hat in `Hat-Refs` — the SR/LLR cell listing,
+by roster name, the perspectives a row is attributable to (an undeclared name is
+a finding; a blank means *not recorded*, never *none applied*). An LLR lists only
+what its own decomposition raised; the EFFECTIVE set derives as own + parents',
+so re-ruling one SR corrects no child cell. A domain
 hat owns the `SR`/`LLR` rows in its area (identify them by the LLR `Module`
 or its component id) and brings its own release-checklist items.
 The SR `Aspect` tag is **not** that grouping: it is an optional, closed-vocabulary

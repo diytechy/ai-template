@@ -12,6 +12,7 @@
 # value. Delete it on the first real entry.
 [design.LLR-000]
 sr_refs = ["SR-000"]
+hat_refs = ["SECURITY"]  # OPTIONAL. The declared perspective(s) in docs/requirements/hats.toml raised AT THIS DESIGN DECOMPOSITION - by roster NAME, and a real shipped one so this row resolves when copied. NEVER a copy of the parent SR's cell: a row's EFFECTIVE set is DERIVED (this row's own refs, unioned with its SR parents'), so re-ruling one requirement propagates to every child on the next read and corrects no LLR cell at all. Copying down instead would turn one re-ruling into a sweep over every child - the hand-maintenance this design exists to escape, moved one tier down and multiplied. An ABSENT cell means NOT RECORDED, never "no perspective reached this row".
 title = "EXAMPLE - delete on first real entry"
 module = "path/to/module"
 code_symbol = "function_or_type"

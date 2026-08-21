@@ -81,6 +81,7 @@ import argparse
 import csv
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
@@ -1506,6 +1507,152 @@ def sr_boundary_findings(srs, bifs, ifs):
     return findings, advisories
 
 
+HAT_ROSTER_REL = "docs/requirements/hats.toml"
+
+
+def load_hat_names(root):
+    """The declared hat NAMES from `docs/requirements/hats.toml`, as a set.
+
+    A SECOND READER OF THAT FILE, DELIBERATELY, AND THE SPLIT IS WHAT MAKES IT
+    SAFE. `hats.py` is the roster's owner and the only validator of its CONTENT —
+    the three required keys, the closed `applies_when` grammar, the unknown-key
+    refusal. This reads exactly one thing that module does not answer for anybody
+    else: IS THIS NAME DECLARED. Two readers of one file are a drift hazard only
+    when they answer the SAME question two ways; these answer different questions,
+    and `tests/test_trace_hats.py` pins this path against `hats.ROSTER_REL` so
+    the two cannot separate silently. (A test may import both modules; this one may not —
+    `hats.py` is CMP-008 and `trace.py` is CMP-006, and the declared crossing
+    between them already runs the other way, IF-133. Importing it here would mint
+    a component-level cycle to save a `tomllib.load`.)
+
+    ABSENT IS OPT-OUT, exactly as the roster's own header states: no file, no
+    declared names, and `hat_findings` goes vacuous rather than reporting every
+    `Hat-Refs` in the repo as dangling. A file that exists and will not parse
+    yields the empty set too — LOUDLY WRONG IS NOT AVAILABLE HERE, because this
+    is an advisory-and-findings pass, not the roster's load path, and `hats.py`
+    raises `HatsError` on that same file the moment any composer touches it."""
+    path = Path(root) / HAT_ROSTER_REL
+    if not path.exists():
+        return set()
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return set()
+    table = data.get("hat")
+    return set(table) if isinstance(table, dict) else set()
+
+
+def effective_hats(row, sr_by_id):
+    """One design row's EFFECTIVE hat set: its own `Hat-Refs` unioned with those
+    of its SR parents. Returns a sorted list.
+
+    THIS FUNCTION IS THE ANTI-STALENESS DECISION, and it is the whole reason the
+    LLR cell is defined as "raised AT this decomposition" rather than "everything
+    that bears on this row". The alternative — copying the parent's hats down at
+    authoring time — makes re-ruling ONE requirement a sweep over every child it
+    has, which is the hand-maintenance this design exists to escape, one tier down
+    and multiplied by the fan-out. Deriving means an SR-tier change propagates on
+    the next read and corrects no LLR cell at all.
+
+    A dangling `SR-Refs` contributes nothing rather than raising: parentage is
+    already a reported finding of its own, and a derivation that crashed on it
+    would report the same defect twice, the second time as a stack trace."""
+    own = set(refs(row.get("Hat-Refs")))
+    for pid in refs(row.get("SR-Refs")):
+        parent = sr_by_id.get(pid)
+        if parent:
+            own.update(refs(parent.get("Hat-Refs")))
+    return sorted(own)
+
+
+def hat_findings(srs, llrs, hat_names, sr_by_id=None):
+    """SR/LLR `Hat-Refs` resolution, as `(findings, advisories)` — the pair shape
+    `frame_findings` documents.
+
+    The severity split is `sr_boundary_findings`' and is taken for its stated
+    reason rather than a new one:
+
+      * RESOLUTION IS A FINDING. A `Hat-Refs` naming a hat the roster does not
+        declare is a dangling reference in the same class as an SR citing a
+        deleted SN, and it joins the --strict failure set. This is the arm that
+        stops the cell rotting when a hat is retired, and it is EXISTENCE
+        checking rather than meaning checking, which is what keeps it inside
+        what D-4 permits.
+
+      * COVERAGE IS AN ADVISORY, and never anything else. `Hat-Refs` is absent on
+        almost every row the day it ships, because the backfill is its own work
+        item; making presence an error would red the whole spine on day one,
+        which is how a gate becomes a gate somebody turns off. So the uncovered
+        count is ONE summary line — the number the backfill has to move.
+
+    COVERAGE IS COUNTED OVER EFFECTIVE SETS, NOT OVER CELLS, and the distinction
+    is the design's own: a design row whose parent requirement carries hats IS
+    attributable to them, so counting its blank cell as "unattributed" would
+    report the derived half of this feature as if it did not exist — and would
+    push an author toward the copy-down the derivation exists to forbid.
+    `sr_by_id` is what makes that reading available; without it (a caller with no
+    parent index) the count degrades to the cell reading, which is the same
+    answer for the SR tier and an over-report for the LLR tier.
+
+    Vacuous with no roster: absence is opt-out for the whole hats layer, so a
+    project that declares no perspectives has no name a row could fail to cite."""
+    findings, advisories = [], []
+    if not hat_names:
+        return findings, advisories
+    parents = sr_by_id or {}
+    named = set()
+    for label, id_col, rows in (("SR", "SR-ID", srs), ("LLR", "LLR-ID", llrs)):
+        for r in rows:
+            cited = refs(r.get("Hat-Refs"))
+            named.update(x for x in cited if x in hat_names)
+            for x in cited:
+                if x not in hat_names:
+                    findings.append(
+                        f"{label} {r[id_col]} Hat-Refs references unknown hat {x}"
+                    )
+    rows = list(srs) + list(llrs)
+    total = len(rows)
+    uncovered = sum(
+        1
+        for r in rows
+        # An SR has no parent tier here, so `effective_hats` reduces to its own
+        # cell; an LLR picks its parents' up. One expression, both tiers.
+        if not effective_hats(r, parents)
+    )
+    # BOTH advisories below are gated on the cell being IN USE — at least one row
+    # carrying an attribution — and that gate is not a convenience. A freshly
+    # bootstrapped project ships the roster (16 hats) and no `Hat-Refs` anywhere,
+    # so an ungated pair greets a first-run adopter with "every row records
+    # nothing" plus sixteen named perspectives called "unrecorded or ceremony",
+    # about a layer they have not opted into yet. That is this kit's own
+    # FIRST-RUN-ADOPTER failure class — noise a stranger cannot act on — and it
+    # is how an advisory pipe stops being read. Fill one cell and both lines
+    # light up, which is exactly when the question becomes answerable.
+    if not any(refs(r.get("Hat-Refs")) for r in rows):
+        return findings, advisories
+    # (The in-use gate reads CELLS, not effective sets, deliberately: "has anyone
+    # opted into this layer" is a question about what was authored, and an
+    # effective-set reading of it would be circular — no cell filled anywhere
+    # means no effective set anywhere.)
+    if uncovered:
+        advisories.append(
+            "hat coverage: {} of {} requirement/design row(s) are attributable "
+            "to no declared perspective — counted over EFFECTIVE sets, so a "
+            "design row inheriting its parent's hats is covered; an unattributed "
+            "row reads as NOT RECORDED and never as 'no perspective applied'".format(
+                uncovered, total
+            )
+        )
+    unnamed = sorted(hat_names - named)
+    if unnamed:
+        advisories.append(
+            "declared hat(s) attributed to NO row: {} — a perspective every "
+            "decomposition faces and no requirement is traceable to is either "
+            "unrecorded or ceremony".format(", ".join(unnamed))
+        )
+    return findings, advisories
+
+
 def tieback_findings(ifs, bifs):
     """An IF row's directional tie-back must name a DECLARED crossing (WI-442,
     owner naming 13m), as a list of finding strings.
@@ -1529,6 +1676,25 @@ def tieback_findings(ifs, bifs):
                 if x not in bif_ids:
                     out.append(f"IF {iid} {col} references unknown crossing {x}")
     return out
+
+
+def _hat_report_section(hat_names, findings):
+    """The report's declared-perspectives section, or nothing when the project
+    declares no roster. A HELPER rather than a branch inside `render_report` for
+    the reason `_frame_report_section` below is one: that assembler is already at
+    the complexity ratchet's ceiling, and a section that renders conditionally is
+    exactly the shape this file has agreed to lift out of it."""
+    if not hat_names:
+        return []
+    body = (
+        [f"- {f}" for f in findings]
+        if findings
+        else [
+            "{} declared hat(s); every Hat-Refs on an SR or LLR resolves to one "
+            "of them.".format(len(hat_names))
+        ]
+    )
+    return ["", "## Declared perspectives (hats; process.md §1)", ""] + body
 
 
 def _frame_report_section(exts, bifs, rels, findings):
@@ -3371,6 +3537,10 @@ def load_registries(docs):
     # than in analyze(): analyze is the pure pass over loaded rows, and an
     # exception file is an input to load, not a finding.
     reg.provenance_allow = load_provenance_allow(docs.parent)
+    # The hats ROSTER's name set, read here for the same reason the allow file is:
+    # analyze() is the pure pass over loaded rows, and a registry a cell resolves
+    # AGAINST is an input to load, not a finding (WI-484).
+    reg.hat_names = load_hat_names(docs.parent)
     reg.docs = docs
     return reg
 
@@ -3568,6 +3738,20 @@ def analyze(reg, args):
     # them out by name and "Interface findings: relationship REL-002 From
     # references unknown EXT-009" would be a label lying about its contents.
     sr_frame, sr_frame_advisories = sr_boundary_findings(srs, bifs, ifs)
+    # The SR/LLR -> hats-roster resolution (WI-484 / OI-32 phase 1). It rides the
+    # frame bundle rather than a sixth pipe on the same argument the frame rules
+    # took: this is a row citing a declared row in a NON-SPINE registry, resolved
+    # by existence, and the report reads the bundle out by name. The coverage and
+    # unattributed-hat halves are advisories and never gate.
+    # The SR/LLR -> hats-roster resolution (WI-484 / OI-32 phase 1). ITS OWN CLASS
+    # rather than folded into the frame bundle below, on that bundle's own stated
+    # rule: the report reads these lists out by NAME, and "Frame findings: SR-146
+    # Hat-Refs references unknown hat SECRUITY" would be a label lying about its
+    # contents. The coverage and unattributed-hat halves are advisories and never
+    # gate.
+    hat_dangling, hat_advisories = hat_findings(
+        srs, llrs, reg.hat_names, {r["SR-ID"]: r for r in srs}
+    )
     frame_backlink_findings = (
         frame_findings(exts, bifs, rels) + tieback_findings(ifs, bifs) + sr_frame
     )
@@ -3584,6 +3768,7 @@ def analyze(reg, args):
         + schema_advisories("B", bifs)
         + schema_advisories("REL", rels)
         + sr_frame_advisories
+        + hat_advisories
         + if_contract_advisories(ifs)
         + if_note_advisories(ifs, prov_allow)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
@@ -3896,6 +4081,7 @@ def analyze(reg, args):
     findings.knowledge_advisories = knowledge_advisories
     findings.interface_backlink_findings = interface_backlink_findings
     findings.frame_backlink_findings = frame_backlink_findings
+    findings.hat_dangling = hat_dangling
     findings.interface_advisories = interface_advisories
     findings.status_findings = status_findings
     findings.phase_deferred = phase_deferred
@@ -3918,6 +4104,8 @@ def render_report(reg, findings, args, forest):
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
     exts, bifs, rels = reg.exts, reg.bifs, reg.rels
     sn_ids, sn_draft = reg.sn_ids, reg.sn_draft
+    hat_names = reg.hat_names
+    hat_dangling = findings.hat_dangling
     orphans = findings.orphans
     orphan_ids = findings.orphan_ids
     integrity = findings.integrity
@@ -4029,6 +4217,14 @@ def render_report(reg, findings, args, forest):
                 f"| Frame findings | {len(frame_backlink_findings)} |",
             ]
             if exts or bifs or rels
+            else []
+        )
+        + (
+            [
+                f"| Declared hats | {len(hat_names)} |",
+                f"| Hat findings | {len(hat_dangling)} |",
+            ]
+            if hat_names
             else []
         )
         + [
@@ -4284,6 +4480,7 @@ def render_report(reg, findings, args, forest):
             lines += ["", "### Interface endpoint advisories (warn-only)", ""]
             lines += [f"- {a}" for a in interface_advisories]
     lines += _frame_report_section(exts, bifs, rels, frame_backlink_findings)
+    lines += _hat_report_section(hat_names, hat_dangling)
     if args.no_placeholders:
         lines += ["", "## Placeholders (--no-placeholders)", ""]
         lines += (
@@ -4350,6 +4547,7 @@ def render_console(reg, findings, args, out, html_out):
     component_findings = findings.component_findings
     interface_backlink_findings = findings.interface_backlink_findings
     frame_backlink_findings = findings.frame_backlink_findings
+    hat_dangling = findings.hat_dangling
 
     # Advisories are loud (stdout, not just the report) but never fail the run.
     # One loop over the ordered concatenation, not one loop per pipe: the pipes
@@ -4400,6 +4598,7 @@ def render_console(reg, findings, args, out, html_out):
             ("component", component_findings),
             ("interface", interface_backlink_findings),
             ("frame", frame_backlink_findings),
+            ("hat", hat_dangling),
         ]
     elif args.strict_integrity:
         failing = [("integrity", integrity)]
@@ -4484,6 +4683,7 @@ def exit_code(findings, args):
         or findings.component_findings
         or findings.interface_backlink_findings
         or findings.frame_backlink_findings
+        or findings.hat_dangling
         or findings.provenance
         or findings.form
     ):
