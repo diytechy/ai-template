@@ -636,7 +636,9 @@ def sw_containment(root, mods):
     seams internal to it, and a breadcrumb returns. IF-### seams wire endpoint block
     OUTPUT ports -> INPUT ports; a seam whose endpoints fall in two different
     top-level items renders once as an aggregated component-to-component wire at the
-    top (deduped to the boundary). Deterministic (sorted inputs, no clocks)."""
+    top (deduped to the boundary). Deterministic (sorted inputs, no clocks).
+
+    Implements: SR-169, LLR-085, LLR-086"""
     view = ct.component_top_view(root)
     if not view["top_roots"]:
         return None
@@ -988,7 +990,9 @@ def when_view(root, wis):
     count exceeds 3 (flat at or below), and the bottom tier is the work-item blocks.
     A registry with <= 3 phases AND <= 3 workstreams returns None, so the caller
     keeps the flat SVG DAG (byte-identical). Deterministic (sorted inputs,
-    no clocks)."""
+    no clocks).
+
+    Implements: SR-168, LLR-052"""
     phase_of = _wi_phases(root, wis)
     phases = {phase_of[w["id"]] for w in wis}
     workstreams = {w["workstream"] for w in wis}

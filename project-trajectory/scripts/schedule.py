@@ -76,6 +76,7 @@ REGISTRY = "docs/requirements/work-items.csv"
 # scope-judgement kind minted trunk-side at intake: exclusive, rank 1, and its
 # lane runs NO product bar (integrate.refresh's no-bar arm) — its outputs are
 # Status cells and the work registry, nothing a product bar can speak to. ---
+# Implements: SR-148, LLR-152
 SAFETY_CLASSES = (
     "ordinary",
     "spine",
@@ -322,6 +323,8 @@ def classify(wi, *, structural=None):
 
     A quarantined WI answers `(CONCURRENCY_UNCLASSIFIED, RANK_UNCLASSIFIED)`: it
     fails closed for itself and never blocks disjoint classified work.
+
+    Implements: SR-148, LLR-059, LLR-131
     """
     declared = (wi.get("safetyclass") or "").strip().lower()
     dual = (wi.get("planmode") or "").strip().lower() == "dual"
@@ -471,7 +474,10 @@ def evaluate(wis, reserved=None):
     """Classify every WI and compute its readiness disposition — the one pass the
     frontier, --explain, and simulate all share. Returns a list of records dicts,
     one per WI, ordered by the deterministic key. `reserved` is an optional set of
-    WI ids already claimed by a live train (excluded from the ready frontier)."""
+    WI ids already claimed by a live train (excluded from the ready frontier).
+
+    Implements: SR-148, LLR-058, LLR-123
+    """
     reserved = set(reserved or ())
     status = _status(wis)
     downstream = downstream_counts(wis)

@@ -39,6 +39,7 @@ def _hscroll(label):
 # tab from the status legend). `#0f766e` clears the same >=4.5:1 white-text floor
 # and stays paired with OKF_TYPE_FILL["Test Case"] below (that mirror IS
 # intentional — one concept, two label systems).
+# Implements: SR-053, LLR-102, SR-053, LLR-106, SR-053, LLR-109, SR-052, LLR-114
 TIER_FILL = {"sn": "#4338ca", "sr": "#0e7490", "llr": "#64748b", "tc": "#0f766e"}
 TIER_COL = {"sn": 0, "sr": 1, "llr": 2, "tc": 3}
 
@@ -69,12 +70,15 @@ _FOCUSABLE = re.compile(r"tabindex\s*=|<a\s[^>]*href\s*=", re.I)
 # a fallback for content that genuinely cannot fit" — made mechanical, and it is
 # stated as residue rather than hidden: a view whose natural width exceeds
 # 390 / SHRINK_FLOOR still scrolls, with the cue.
+# Implements: SR-054, LLR-116
 SHRINK_FLOOR = 0.62  # smallest fraction of natural width before scrolling resumes
 
 
 def _svg_fit_style(width):
     """The responsive sizing for an emitted diagram: fill the container, keep the
-    viewBox aspect, and never shrink past the label-legibility floor."""
+    viewBox aspect, and never shrink past the label-legibility floor.
+
+    Implements: SR-054, LLR-116"""
     return "width:100%;max-width:{:.0f}px;min-width:{:.0f}px;height:auto".format(
         width, width * SHRINK_FLOOR
     )
@@ -198,7 +202,9 @@ def _svg_role(body):
     `role="img"` is children-presentational, so declaring it over an interactive
     graph prunes the very `<title>`s the A2 anchor rests on. Deciding from the body
     rather than per call site keeps a future emitter from reintroducing that
-    silently. Full rationale + the measured before/after: LLR-101 / TC-104 (WI-297)."""
+    silently. Full rationale + the measured before/after: LLR-101 / TC-104 (WI-297).
+
+    Implements: SR-052, LLR-101"""
     return "group" if _FOCUSABLE.search(body) else "img"
 
 
@@ -216,6 +222,7 @@ def _svg_role(body):
 # this WI hit and backed out. `test_u3_svg_corner_radii_match_the_declared_scale`
 # closes the loop instead, asserting BOTH the emitted set and the source literals
 # against this tuple, so a seventh radius cannot appear un-declared.
+# Implements: SR-053, LLR-110
 SVG_RX = ("3", "8", "12")  # icicle cell · any node box · process chip
 
 
@@ -223,6 +230,7 @@ SVG_RX = ("3", "8", "12")  # icicle cell · any node box · process chip
 # bucket (spelled `retired` until WI-384) — a muted stone hue byte-distinct from
 # every other fill (done/active/queued and the drill tiers), never folded into
 # done's green, so a dead-end row reads as visibly terminal, not merely parked.
+# Implements: SR-053, LLR-102, SR-053, LLR-106, SR-053, LLR-109, SR-052, LLR-114
 STATUS_FILL = {
     "done": "#047857",
     "active": "#b45309",
@@ -265,6 +273,7 @@ STATUS_BUCKET_LABEL = {"queued": "not started", "done": "done", "active": "activ
 # per *status*, not per fill, so the four statuses sharing the "not started"
 # swatch stay distinguishable without colour perception at all. ○ open / ✎ being
 # written / ◌ parked (a dotted, un-drawn ring) / ⊘ barred / ⊗ struck-out terminal.
+# Implements: SR-052, LLR-113
 STATUS_GLYPH = {
     "done": "✓",
     "active": "●",
@@ -352,6 +361,7 @@ def _arrow_markers(*specs):
 # reasons over the vocabulary (U5's collision sweep, `_ring_ink`'s enumeration,
 # and U2's own single-source rule). A vocabulary is only "one vocabulary" if
 # every member is IN it.
+# Implements: SR-053, LLR-102, SR-053, LLR-106, SR-053, LLR-109, SR-052, LLR-114
 SW_NODE_FILL = {
     "module": "#2563eb",
     "file": "#a21caf",
@@ -384,6 +394,7 @@ SW_NODE_FILL = {
 # was byte-identical to `SW_NODE_FILL["module"]` (a phase block misread as a
 # How-SW module) — `#1e40af`/`#155e75` replace them. Pairwise (not merely
 # adjacent) deltaE across the full set is now >= 15 (`test_u5_...` asserts this).
+# Implements: SR-053, LLR-102, SR-053, LLR-106, SR-053, LLR-109, SR-052, LLR-114
 PHASE_ACCENTS = (
     "#0369a1", "#1e40af", "#991b1b", "#134e4a",
     "#be123c", "#4d7c0f", "#be185d", "#7e22ce",
@@ -406,7 +417,9 @@ def _ring_ink(fill):
     black tie), comfortably above the 3:1 UI-boundary floor for every fill in
     use. Emitted as an inline `--ring` custom property the shared CSS rules read
     with a safe fallback, so a fill this helper never saw (a future emitter) does
-    not silently regress — it just falls back to the old single-hue behaviour."""
+    not silently regress — it just falls back to the old single-hue behaviour.
+
+    Implements: SR-054, LLR-105, SR-052, LLR-114"""
 
     def lum(hexval):
         h = hexval.lstrip("#")
@@ -438,7 +451,9 @@ def _cedge_marker(fill):
     cannot inherit the host node's `--ring` (see `_arrow_markers`), so each ink
     gets its own marker and the block references the one matching its fill. A
     theme-token fill (`var(--surface)`) keeps the unsuffixed marker and the CSS
-    `var(--accent)` fallback, exactly as `_ring_style` leaves it unstamped."""
+    `var(--accent)` fallback, exactly as `_ring_style` leaves it unstamped.
+
+    Implements: SR-054, LLR-105"""
     if fill and fill.startswith("#"):
         ink = _ring_ink(fill)
         return "cedgearrow-{}".format(ink.lstrip("#")), ink
@@ -448,7 +463,9 @@ def _cedge_marker(fill):
 def _ring_style(fill):
     """`style="--ring:…"` for a node `<g>`/`<rect>` given its fill, or "" when
     `fill` is not a concrete hex (e.g. `var(--surface)`) — those keep the CSS
-    fallback since a theme-varying token can't be resolved at generation time."""
+    fallback since a theme-varying token can't be resolved at generation time.
+
+    Implements: SR-054, LLR-105"""
     if not fill or not fill.startswith("#"):
         return ""
     return ' style="--ring:{}"'.format(_ring_ink(fill))
@@ -584,6 +601,7 @@ DRILL_STYLE = (
 # Self-contained controller (no libraries, runs at parse time). Idempotent: it
 # wires every `.drill` on the page once (the `data-ready` guard), so including it
 # in more than one drill view is harmless.
+# Implements: SR-169, LLR-088, SR-054, LLR-100
 DRILL_SCRIPT = (
     "<script>(function(){"
     "for(const drill of document.querySelectorAll('.drill:not([data-ready])')){"
@@ -783,7 +801,9 @@ def _drill_layer_svg(blocks, edges, marker_scope):
     through a hidden layer's marker definition. `marker_scope` is REQUIRED for
     that reason — a default would let a successor emitter re-mint the collision
     silently, and the symptom (an arrowhead that vanishes in one layer only) is
-    invisible in the markup a test reads."""
+    invisible in the markup a test reads.
+
+    Implements: SR-169, LLR-087"""
     keys = [b["key"] for b in blocks]
     marker_scope = re.sub(r"[^A-Za-z0-9_-]", "-", marker_scope) or "drill"
     arrow = marker_scope + "-drillarrow"
@@ -959,7 +979,9 @@ def _render_drill(drill_id, root_id, root_crumb, layers):
     """Assemble a drill view: a breadcrumb nav + one `.layer` per tier layer (the
     root shown, the rest `hidden`), plus the self-contained controller. `layers` is
     an ordered list of (layer_id, svg); each container block inside a layer carries
-    `data-descend` -> a child layer id."""
+    `data-descend` -> a child layer id.
+
+    Implements: SR-054, LLR-100"""
     divs = "".join(
         '<div class="layer" data-layer="{}"{}>{}</div>'.format(
             esc(lid), "" if lid == root_id else " hidden", svg
@@ -1003,6 +1025,7 @@ def _render_drill(drill_id, root_id, root_crumb, layers):
 # `Test Case` mirrors TIER_FILL["tc"]; `Process Guide` used to reuse
 # STATUS_FILL["active"]'s `#b45309` for an unrelated concept (WI-292, U5
 # de-collision, 119-CRITIQUE) and is reassigned below.
+# Implements: SR-053, LLR-102, SR-053, LLR-106, SR-053, LLR-109, SR-052, LLR-114
 OKF_TYPE_FILL = {
     "Stakeholder Need": "#4338ca",
     "System Requirement": "#0e7490",

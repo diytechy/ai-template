@@ -159,15 +159,18 @@ live_status = false
 # subagents freely under a human-launched loop, so the gate stays a no-op.
 subagent_gate = "off"
 # The reverse back-link coverage bar, as a PERCENTAGE of live LLR rows (OI-42
-# ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing — the
-# shipped position, and this repo's honest one: measured 1 of 161 live LLR rows
-# (0.6%) at WI-486 and re-measured 1 of 162 (0.6%) at the 2026-08-20 batch close,
-# on the tightened literal-`Implements:` grammar. READ THE NUMBER WITH ITS ONE
-# CAVEAT: the scan has no position restriction, so a spine id in a string literal
-# or a negated example counts as a carrier — and since the denominator is the LLR
-# count, that error can only RAISE the score. False passes, never false failures.
-# 50 is the
-# recorded TARGET that WI-487's back-link campaign is sized to clear, and the
-# dial rises only after the tags land. The shipped template's [checks] header
-# carries the full reasoning.
-backlink_coverage_min = 0
+# ruled (b)+(e), 2026-08-20). `0` = report the number, gate nothing, and that
+# was the shipped/honest position through WI-486 (measured 1 of 165 live LLR
+# rows, 0.6%). WI-487's campaign then wrote the tags with a code-review pass —
+# measured at WI-487's close, 83 of 165 (50.3%); reproduce with
+# `python project-trajectory/scripts/gen_arch_map.py --backlink-coverage
+# --src project-trajectory/scripts --root .` — clearing the recorded 50%
+# target, so the dial rises here because the tags landed, never because the
+# bar came down. READ THE NUMBER
+# WITH ITS ONE CAVEAT: the scan has no position restriction, so a spine id in a
+# string literal or a negated example counts as a carrier — and since the
+# denominator is the LLR count, that error can only RAISE the score. False
+# passes, never false failures. The shipped template's [checks] header stays at
+# `0` for a fresh adopter (this is a VALUE this repo's own instance has earned,
+# not a STRUCTURE change) and carries the full reasoning.
+backlink_coverage_min = 50

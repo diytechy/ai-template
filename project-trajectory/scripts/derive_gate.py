@@ -325,7 +325,9 @@ def sn_cited_ids(srs):
     by the caller's row filter, and a Drafted SR's citation is deliberately in the
     set (the raw view matches trace.py's orphan exemption; the ex-draft
     counterfactual re-runs this on the non-draft subset instead). Duplicated in
-    trace.py per the F5 rule; pinned equal by test_rule_sync."""
+    trace.py per the F5 rule; pinned equal by test_rule_sync.
+
+    Implements: SR-049, LLR-147"""
     return {x for r in srs for x in refs(r.get("SN-Refs"))}
 
 
@@ -479,7 +481,9 @@ def sn_bar(sn_id, draft_ids, cited_ids):
     orphan finding at DevStg-Tests strictness — the same states-here /
     structure-there split the module docstring describes. A covered ratified SN
     has no obligation past `DevStg-Reqs` and never caps the repo (contributes
-    `DevStg-Impl` to the min)."""
+    `DevStg-Impl` to the min).
+
+    Implements: SR-049, LLR-147"""
     if sn_id in draft_ids:
         return BAR_BELOW
     return BAR_RELEASE if sn_id in cited_ids else BAR_BELOW
@@ -1407,6 +1411,7 @@ def parse_cache(text):
     return gate, basis
 
 
+# Implements: SR-049, LLR-148
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(

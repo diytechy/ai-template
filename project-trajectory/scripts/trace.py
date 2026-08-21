@@ -260,7 +260,10 @@ def llr_exempt(row):
     whitespace-padded valid method exempts here exactly as it does in the gate
     derivation (the two decision points must agree — a divergence is a false
     green or false red at a gate).
-    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync."""
+    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync.
+
+    Implements: SR-157, LLR-083
+    """
     return (row.get("Verification") or "").strip() in LLR_EXEMPT
 
 
@@ -282,7 +285,10 @@ def structure_findings(path, display=None):
     it fails --strict and --strict-integrity — wrong at any stage, like a
     duplicated id. Fully blank rows are skipped (a trailing newline is not a
     finding); '-000' example rows are NOT skipped, because a template row must
-    parse correctly too."""
+    parse correctly too.
+
+    Implements: SR-157, LLR-002
+    """
     if not path.exists():
         return []
     name = display or path.name
@@ -616,7 +622,10 @@ def id_sort_key(rid):
 
 def integrity_findings(label, raw_rows):
     """Duplicated or malformed ids in one registry (example '-000' rows skipped —
-    those are the placeholder check's job, never an integrity error)."""
+    those are the placeholder check's job, never an integrity error).
+
+    Implements: SR-157, SR-159, LLR-002, LLR-041
+    """
     key, pattern = id_key(label), ID_PATTERNS[label]
     found, seen = [], set()
     for r in raw_rows:
@@ -1088,7 +1097,10 @@ def triangle_findings(tcs, llrs):
     (a TC citing LLR-1 next to SR-2 when LLR-1 decomposes SR-1) is wrong at any
     stage, so it joins the integrity floor, not the gate-scoped orphan set. A TC
     that cites only LLRs (no SR) has no SR to contradict — the orphan rules cover
-    it. An LLR with no SR-Refs is already an orphan, so it is not double-reported."""
+    it. An LLR with no SR-Refs is already an orphan, so it is not double-reported.
+
+    Implements: SR-157, LLR-002
+    """
     llr_parents = {
         r["LLR-ID"]: set(refs(r.get("SR-Refs"))) for r in llrs if r.get("LLR-ID")
     }
@@ -1134,7 +1146,10 @@ def interface_findings(ifs, sr_ids, module_ids):
     warn-only (an IF row's ThisProject endpoint resolves to no LLR Module after
     normalization). The endpoint join is best-effort: the LLR Module set is a
     partial, differently-named inventory, so the authoritative module-coverage
-    check lives in check_trajectory against the full arch-map."""
+    check lives in check_trajectory against the full arch-map.
+
+    Implements: SR-159, LLR-041
+    """
     findings, advisories = [], []
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
@@ -1195,7 +1210,10 @@ def tc_citation_findings(tcs, spine_ids, ifs):
 
 
 def placeholder_findings(label, raw_rows):
-    """Leftover template example rows (ids ending '-000') in one registry."""
+    """Leftover template example rows (ids ending '-000') in one registry.
+
+    Implements: SR-157, LLR-003
+    """
     key = id_key(label)
     return [
         f"{label} placeholder row {r[key]} still present "
@@ -1305,7 +1323,10 @@ def sn_integrity_findings(sn_text):
 
 def schema_findings(label, rows):
     """Empty required fields and out-of-vocabulary Verification/Tier values, over
-    the real (non-placeholder) rows of one registry."""
+    the real (non-placeholder) rows of one registry.
+
+    Implements: SR-157, LLR-003
+    """
     key = id_key(label)
     out = []
     for r in rows:
@@ -2307,7 +2328,10 @@ def phase_ratified_findings(real):
     leave `Phase` blank). SN is covered transitively: at DevStg-Reqs+ every ratified SN
     has >=1 SR (the orphan rule) and SRs are phased; pre-DevStg-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
-    it."""
+    it.
+
+    Implements: SR-157, LLR-003
+    """
     all_rows = [r for label in real for r in real[label]]
     if not any(phase_num(r) is not None for r in all_rows):
         return []  # unarmed: nothing is phased yet
@@ -3549,7 +3573,10 @@ def analyze(reg, args):
     """The whole checker pass over loaded registries: orphan rules, off-spine
     back-link/membership checks, the --require-verified status criterion
     (phase-scoped), the integrity/placeholder/schema sweeps, and the always-on
-    advisories. Pure — reads reg + args flags, returns a Findings bag. No I/O."""
+    advisories. Pure — reads reg + args flags, returns a Findings bag. No I/O.
+
+    Implements: SR-157, SR-015, LLR-015
+    """
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
     pbs, mods, parts = reg.pbs, reg.mods, reg.parts
     assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
@@ -4706,6 +4733,7 @@ def _cmd_bump_ids(root):
     return 0
 
 
+# Implements: SR-157, LLR-001
 def main():
     _utf8_console()
     ap = argparse.ArgumentParser(description=__doc__)

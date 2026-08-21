@@ -266,6 +266,7 @@ OUT_HTML = "PROJECT_STATE.html"
 # it would force a follow-up regen commit after every source commit. Content
 # freshness stays byte-exact; the stamp is informational.
 ASOF_RE = re.compile(r'<p class="asof">.*?</p>', re.S)
+# Implements: SR-053, LLR-111, SR-052, LLR-112, SR-054, LLR-117
 HTML_TEMPLATE = string.Template("""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -883,6 +883,8 @@ def set_process_key(dest, section, key, value, dry_run=False, add_if_missing=Fal
     needed) instead of answering `"missing"` — what the migrator passes, so a
     conversion is TOTAL. The scaffold flags leave it off: there, an absent key
     means someone deleted it deliberately.
+
+    Implements: SR-138, LLR-156
     """
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
@@ -1019,6 +1021,7 @@ def apply_privacy_check(dest, value, dry_run):
 # tier and drained the station at a ratification; `single-ratify` held NO tier
 # (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE human at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
+# Implements: SR-138, LLR-156
 LEGACY_RATIFICATION = {
     "attended": {
         "human_ratification_through": 4,
@@ -1106,6 +1109,8 @@ def migrate_legacy_config(dest, dry_run=False):
     Idempotent: a repo with no legacy files answers `([], [])`. A legacy file
     whose value does not parse (a non-integer reviewer dial) is left in place
     and named in `notes`, never silently dropped.
+
+    Implements: SR-138, LLR-156
     """
     dest = Path(dest)
     target = dest / PROCESS_TOML_REL
@@ -1170,7 +1175,10 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     drain policy AND an end-of-run hold at once, and folding it to a single key
     is what loses two of the three (SN-029). The translation itself lives in
     `agent_common.LEGACY_RATIFICATION`, so the migrator and the readers cannot
-    disagree about what a word meant."""
+    disagree about what a word meant.
+
+    Implements: SR-138, LLR-156
+    """
     path = dest / "docs" / "gate-policy"
     if not path.is_file():
         return
@@ -1529,6 +1537,7 @@ _utf8_console = _kitconfig.utf8_console
 
 
 # (source relative to KIT, destination relative to --dest)
+# Implements: SR-010, LLR-010
 MAPPING = [
     # Agent guide: full content in AGENTS.md, thin stubs for tools that prefer
     # their own filename. All three copied unconditionally (see module docstring).
@@ -2238,7 +2247,10 @@ def kit_version():
 
 def write_kit_version(dest, dry_run):
     """Stamp docs/kit-version with the kit commit the scaffold came from, so a
-    later re-sync is diffable against kit HEAD. Returns (label, dirty, wrote)."""
+    later re-sync is diffable against kit HEAD. Returns (label, dirty, wrote).
+
+    Implements: SR-111, LLR-121
+    """
     label, dirty = kit_version()
     body = (
         "# Kit version stamp — the project-trajectory kit commit this repo was\n"
@@ -2621,7 +2633,10 @@ def _write_scaffold_file(src, dst, src_rel, dst_rel, dest, plan):
 def copy_kit_files(dest, plan):
     """The MAPPING copy pass + the GITKEEP_DIRS placeholders, as a
     `CopyOutcome`. Write-once by default (an existing file is skipped, not
-    overwritten); `--force` overwrites; `--dry-run` reports without writing."""
+    overwritten); `--force` overwrites; `--dry-run` reports without writing.
+
+    Implements: SR-011, LLR-011
+    """
     created, skipped, missing = [], [], []
     for src_rel, dst_rel in MAPPING:
         src = KIT / src_rel
@@ -2839,6 +2854,7 @@ def run_migrate_config(dest, dry_run):
     )
 
 
+# Implements: SR-010, LLR-010
 def main():
     _utf8_console()
     ap = build_parser()

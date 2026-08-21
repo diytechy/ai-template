@@ -400,6 +400,8 @@ def _abandoned_claim(root, wi_ids, branch):
     normalizes away never enters the commit and is rightly invisible to a
     commit-scoped oracle (scaffolded repos pin this via the shipped
     .gitattributes' `* text=auto eol=lf`).
+
+    Implements: SR-156, LLR-151
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     tip = _rev(root, "refs/heads/" + branch)
@@ -576,7 +578,10 @@ def _dispatch_lock(root):
     A private descriptor on purpose: `ac.acquire_lock` keeps ONE held-
     descriptor slot for the process (the coordinator's), and a claim inside a
     live dispatcher never reaches here (it passes `dispatch_lock_held=True`),
-    so this path is the hand/CLI path only and must not disturb that slot."""
+    so this path is the hand/CLI path only and must not disturb that slot.
+
+    Implements: SR-156, LLR-151
+    """
     path = ac.dispatch_lock_path(root)
     fd, exc = ac._open_lock_fd(path)
     if exc is not None:
@@ -616,7 +621,10 @@ def _claim_refusal(root, wi_ids, branch):
     The `safety_class != ordinary` arm that used to live here is DELETED
     (§A4.1, owner question B): the dispatcher admits, so the claim rung has no
     class authority — what replaced the hard stop is the dispatch-lock
-    constraint (`_dispatch_lock`) plus the barrier's wait."""
+    constraint (`_dispatch_lock`) plus the barrier's wait.
+
+    Implements: SR-156, LLR-151
+    """
     paused = ac.tracked_pause(root / "docs")
     if paused is not None:
         return (
@@ -707,6 +715,8 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     the regenerated artifacts. So trunk advances to a commit no hook inspected,
     and the next thing to bar it is a lane's §A2 refresh. Accepted for the
     window it buys, not because nothing is given up.
+
+    Implements: SR-156, LLR-140, LLR-151
     """
     wi_ids = [wi_ids] if isinstance(wi_ids, str) else list(wi_ids)
     # The ladder runs BEFORE the lock for the same reason `integrate` checks
@@ -842,6 +852,8 @@ def finished_branches(root):
     The closing commit's move to a TERMINAL directory (complete/ or
     cancelled/) IS the finished signal (§2.3 step 3) - no state file, no ref,
     just the tree.
+
+    Implements: SR-156, LLR-140
     """
     active = root / ACTIVE
     if not active.is_dir():
@@ -1195,6 +1207,8 @@ def _verdict_gate(root, branch, outcomes):
     `docs/work/` change. Neither rule weakens the other: a returned or
     cancelled spec moves under `docs/work/` too, and owes no verdict for that
     move to stale.
+
+    Implements: SR-156, LLR-140
     """
     # SN-028: the mixed-config refusal first - a repo declaring the reviewer
     # dial in BOTH homes must not have the merge slot pick one of them.
@@ -1561,6 +1575,8 @@ def _lane_bar_directives(root, branch):
     Read off the TRUNK's claimed specs — the same one-home read the merge slot
     and `dispatch._branch_exclusive` use — so the directive cannot disagree
     with the claim being merged.
+
+    Implements: SR-174, LLR-154
     """
     kinds, bars = [], []
     for _wid, name in _claimed_specs(root, branch):
@@ -2146,7 +2162,10 @@ def _refresh_bar(wt, root, tier, skip_bar, bar_gate):
     the refresh commit still attests THIS tree — the trailer verifies the same
     way — but no product bar is invoked, and the summary says so honestly,
     because the kind has nothing a product bar can speak to. Extracted from
-    `refresh` so the sequence stays readable under the complexity ratchet."""
+    `refresh` so the sequence stays readable under the complexity ratchet.
+
+    Implements: SR-174, LLR-154
+    """
     if skip_bar:
         return True, "", "no-bar (adjudication, §A5.2)"
     return _run_bar(wt, root, tier, bar_gate)
@@ -2264,6 +2283,8 @@ def integrate_one(root, branch, tier, held=None):
     construction; rulings R1/R3: a WI id is created only by a human trunk
     commit or that helper). A mint refusal stops the run LOUDLY but the merge
     stands; recovery is a trunk-side fix plus `python intake.py sweep`.
+
+    Implements: SR-156, SR-174, LLR-140, LLR-154
     """
     wi_ids = _claimed_wi_ids(root, branch)
     outcomes, refusal = _merge_refusal(root, branch, wi_ids)
@@ -2455,7 +2476,10 @@ def _generated_paths(root):
 def audit(root, since):
     """RULING-6 over a window: non-merge trunk commits must stay on bookkeeping
     surfaces. Scoped to --since because the always-on form would flag attended
-    serial work (RULING-8); widening it is an owner ruling."""
+    serial work (RULING-8); widening it is an owner ruling.
+
+    Implements: SR-156, LLR-140
+    """
     allowed = list(BOOKKEEPING_PREFIXES) + _generated_paths(root)
     code, out = ac.git(
         root,

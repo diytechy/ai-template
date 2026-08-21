@@ -247,7 +247,10 @@ def verification_coherence_advisories(srs):
 
 def ac_advisories(srs):
     """Warn-only findings: real SR rows whose AcceptanceCriteria uses a
-    comparative term with no pinning marker anywhere in the cell."""
+    comparative term with no pinning marker anywhere in the cell.
+
+    Implements: SR-157, LLR-004
+    """
     out = []
     for r in srs:
         cell = (r.get("AcceptanceCriteria") or "").strip()
@@ -572,7 +575,10 @@ def provenance_findings(srs, llrs, tcs):
     of which node box a wire grazed) and the row was reworded to describe the node
     instead of naming it, with the specific id kept in the log. A carve-out would
     cost more than it buys: any exemption a checker cannot distinguish from the
-    defect is one an author can reach for."""
+    defect is one an author can reach for.
+
+    Implements: SR-157, LLR-133
+    """
     out = []
     for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
         for r in rows:
@@ -747,7 +753,10 @@ def form_findings(srs, llrs, tcs):
     guard rather than a cleanup schedule. The negative half matters as much: a
     multi-clause `AcceptanceCriteria` is legitimate and untouched — an AC
     enumerates the ways ONE obligation is checked, which is the opposite of a row
-    holding two obligations."""
+    holding two obligations.
+
+    Implements: SR-157, LLR-134
+    """
     out = []
     for rid, r in _real(srs, "SR-ID"):
         if is_drafted(r):
@@ -861,7 +870,10 @@ def ears_advisories(srs):
     a sentence's opening is finished the moment it is written, and a warn-only
     reading costs a drafter nothing while the row is still cheap to re-shape.
     Both rows this rule found at landing were Drafted, so skipping them would
-    have shipped a guard that had never once fired."""
+    have shipped a guard that had never once fired.
+
+    Implements: SR-157, LLR-179
+    """
     out = []
     for rid, r in _real(srs, "SR-ID"):
         req = (r.get("Requirement") or "").strip()
@@ -885,7 +897,10 @@ def paraphrase_advisories(srs, llrs):
     'decompose, don't paraphrase'). Lexical overlap is a heuristic and is labelled
     as one — it never gates. Measured at 38 of 118 LLRs, which is exactly why: a
     short `Detail` legitimately shares vocabulary with the SR it decomposes, so a
-    gating version would cry wolf on correct rows and get scrolled past."""
+    gating version would cry wolf on correct rows and get scrolled past.
+
+    Implements: SR-157, LLR-135
+    """
     out = []
 
     def words(s):

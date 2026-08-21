@@ -263,6 +263,8 @@ def process_config(docs):
     mis-encoded policy file crash the coordinator while degrading everywhere
     else. `config_conflicts` reports the malformation loudly; this returns `{}`
     so a caller that only wants a value gets the DEFAULT, never a half-parse.
+
+    Implements: SR-137, SR-139, LLR-155
     """
     data = read_toml(_process_toml_path(docs))
     return data if isinstance(data, dict) else {}
@@ -334,6 +336,8 @@ def process_shape_findings(docs):
     table, a multi-line string or a key outside a `[section]` all parse fine
     and are all invisible-or-worse to a `grep -E`. Only the greppable keys are
     enforced this strictly — the rest of the file is Python-read only.
+
+    Implements: SR-137, SR-139, LLR-155
     """
     path = _process_toml_path(docs)
     if not path.is_file():
@@ -492,7 +496,10 @@ def ratification_level(docs):
     every ratification hold in the repo. A value outside 0-4 is a declaration
     nobody can honour, so it takes the same conservative fallback an unparseable
     file does. (`config_conflicts` refuses it loudly upstream; this is the
-    behaviour for callers that did not run that gate.)"""
+    behaviour for callers that did not run that gate.)
+
+    Implements: SR-137, SR-139, LLR-155
+    """
     table = process_config(docs).get("attestation")
     if isinstance(table, dict):
         value = table.get("human_ratification_through")
@@ -635,7 +642,10 @@ def human_holds(docs, stage):
     with `derive_gate.stage_ord`, which RAISES on an unknown label: there, an
     unknown stage means the ladder moved under a cached value and the operator
     must see it; here, the question is who ratifies, and the only safe answer to
-    "I do not recognize this rung" is "the human does"."""
+    "I do not recognize this rung" is "the human does".
+
+    Implements: SR-137, SR-139, LLR-155
+    """
     level = ratification_level(docs)
     if level <= 0:
         return False
@@ -824,6 +834,8 @@ def config_conflicts(docs):
     A downstream adopter never meets this un-aided: `bootstrap.py
     --migrate-config` converts the legacy files and deletes them, and both
     bootstrap and the documented re-sync run it.
+
+    Implements: SR-137, SR-139, LLR-155
     """
     path = _process_toml_path(docs)
     if not path.is_file():
@@ -975,7 +987,10 @@ def pause_reason(lane):
     reason. Presence is the whole contract — an unpause is a reviewed deletion
     commit of the one home, the TRACKED `lane/work/pause` (concurrency-
     restructure §5.6), read via `tracked_pause`. (The legacy untracked
-    `lane/pause` half, WI-147, retired with the dispatcher at Phase 5.)"""
+    `lane/pause` half, WI-147, retired with the dispatcher at Phase 5.)
+
+    Implements: SR-156, LLR-138
+    """
     tracked = tracked_pause(lane)
     return None if tracked is None else tracked["reason"]
 
@@ -1565,7 +1580,10 @@ def acquire_lock(lock_path):
     on a shared filesystem is best-effort only: flock over NFS is unreliable, so
     this guards one checkout on one host — the common and important case. A
     filesystem that cannot lock at all (ENOLCK/ENOTSUP) degrades to a warning and
-    runs unguarded rather than fail-closed on a legitimate run."""
+    runs unguarded rather than fail-closed on a legitimate run.
+
+    Implements: SR-027, LLR-029, LLR-030
+    """
     global _LOCK_FD
     fd, exc = _open_lock_fd(lock_path)
     if exc is not None:
@@ -1911,7 +1929,10 @@ def prompt_fingerprint(text):
 def write_session_log(iter_dir, meta, transcript):
     """Write the tracked, size-bounded per-session log: a `# key: value`
     metadata header (what the index is regenerated from) + the transcript
-    (credential shapes redacted — see redact_secrets)."""
+    (credential shapes redacted — see redact_secrets).
+
+    Implements: SR-176, LLR-177
+    """
     transcript, redacted = redact_secrets(transcript)
     iter_dir.mkdir(parents=True, exist_ok=True)
     header = ["# agent-loop session log — written by scripts/agent_loop.py"]
@@ -2234,7 +2255,10 @@ def _same_dir(a, b):
 
 def preflight(root, template, args):
     """Refuse to start iteration 1 on a broken footing. Returns the list of
-    failures (empty = go)."""
+    failures (empty = go).
+
+    Implements: SR-027, LLR-027
+    """
     failures = []
     if not template.strip():
         failures.append(

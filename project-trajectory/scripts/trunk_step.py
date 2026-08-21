@@ -313,7 +313,9 @@ def _plan_artifacts():
 def compile_log(root, dry_run=False):
     """Fold `docs/log.d/*.md` into `docs/log.md` in merge order and delete them.
     Returns an exit code: 0 clean (including the no-op), 1 with every reason
-    printed."""
+    printed.
+
+    Implements: SR-173, LLR-137"""
     paths = fragment_paths(root)
     if not paths:
         print("trunk_step: compile-log — 0 fragments; nothing to do.")
@@ -461,7 +463,9 @@ def regen(root, dry_run=False):
     """Re-derive the trunk's generated artifacts, in REGEN_STEPS order. Stops at
     the FIRST failure — a later generator may read an earlier one's output, so
     carrying on would pile a second, derived failure on top of the real one.
-    Returns an exit code."""
+    Returns an exit code.
+
+    Implements: SR-148, SR-170, LLR-060, LLR-124"""
     for name, applies, argv, why in REGEN_STEPS:
         if not applies(root):
             print("trunk_step: regen — skipping {} ({}).".format(name, why))

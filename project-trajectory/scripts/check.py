@@ -441,6 +441,7 @@ def _resolve_lane_map(profile, coverage, tier, phase):
 # tuple already implies the split; the layer tag formalizes and surfaces it (see
 # process.md §7 "process vs product checks"). Edit commands to fit your stack;
 # keep the gate tags and layers.
+# Implements: SR-006, LLR-006, SR-170, LLR-141
 def steps(coverage, tier, gate, phase=None, profile=None):
     # --- product commands: the declared profile (docs/stack.ini) or the built-in
     # Python-reference defaults -------------------------------------------------
@@ -1739,7 +1740,10 @@ def _divergence_mode(args):
 
 
 def _claimed_work_branch(root):
-    """The uncached answer behind `_work_branch` — see it for the contract."""
+    """The uncached answer behind `_work_branch` — see it for the contract.
+
+    Implements: SR-006, SR-170, LLR-141
+    """
     out = _git_out(root, ["symbolic-ref", "--short", "HEAD"])
     branch = (out or "").strip()
     if not branch:
@@ -1934,7 +1938,10 @@ def _skipped_product_steps(results, by_name):
 
 def run_step(name, requires, cmd, lenient):
     """Run one step, streaming its output live (the sequential path).
-    Returns (status, detail) where status in PASS/FAIL/SKIP."""
+    Returns (status, detail) where status in PASS/FAIL/SKIP.
+
+    Implements: SR-006, LLR-006
+    """
     lane_skip = _work_branch_skip(name)
     if lane_skip:
         print(lane_skip[2], flush=True)

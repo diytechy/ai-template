@@ -943,6 +943,13 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         # docs/okf/ (551 files, 27% of the tracked tree). docs/declared-absences
         # carries the absence; docs/log.d/2026-08-18-okf-off.md the decision.
         "okf_export": False,
+        # 2026-08-21, WI-487 (OI-42's campaign half): the shipped template stays
+        # at `0` for a fresh adopter (nobody has written back-links yet), but
+        # this repo just wrote them — 83 of 165 live LLR rows (50.3%), measured
+        # by `gen_arch_map.py --backlink-coverage`. The dial rises because the
+        # tags landed, never because the bar came down; docs/process.toml's own
+        # comment and docs/log.d/2026-08-20-program-grind.md carry the figure.
+        "backlink_coverage_min": 50,
     }
     assert live["checks"] == {**checks, **OWNER_DIALS}
 

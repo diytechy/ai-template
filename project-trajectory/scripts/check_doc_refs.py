@@ -682,7 +682,10 @@ def authored_lines(doc):
 def findings_for(
     doc, root, oracle, kit_root=None, record_prefixes=RECORD_PREFIXES, absences=None
 ):
-    """`(dangling, untraced)` — see the module docstring for the split."""
+    """`(dangling, untraced)` — see the module docstring for the split.
+
+    Implements: SR-158, LLR-038
+    """
     out, untraced = [], []
     rel = doc.relative_to(root).as_posix()
     for n, line in authored_lines(doc):

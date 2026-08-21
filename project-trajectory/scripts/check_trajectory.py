@@ -463,7 +463,10 @@ def load_wis(rows):
     example row is skipped (the `trace.py` placeholder rule — an off-spine
     optional registry's placeholder never blocks a gate). Integrity errors
     (malformed or duplicated ids) are collected on the raw rows so a broken id is
-    *reported*, never silently dropped."""
+    *reported*, never silently dropped.
+
+    Implements: SR-157, LLR-034
+    """
     wis, integrity, seen = [], [], set()
     for r in rows:
         wid = (r.get("WI-ID") or "").strip()
@@ -704,7 +707,10 @@ def validate(wis, known_srs):
     predecessors must resolve like hard ones, but only **hard** edges are
     subject to the acyclicity ERROR — a cycle that needs a soft edge to close
     is a WARN (conflicting ordering hints), never a failure. An overlong OPEN
-    Title also WARNS (never fails) — see `_title_length_warns`."""
+    Title also WARNS (never fails) — see `_title_length_warns`.
+
+    Implements: SR-157, LLR-034
+    """
     ids = {w["id"] for w in wis}
     errors = []
 
@@ -821,7 +827,10 @@ def arch_inventory(root):
     declarations; the import map carries the internal-import names — the
     cross-CMP rule's edge source (WI-064). Empty when the root is absent,
     files-mode (no parser), or `gen_arch_map` is not beside this script, so
-    the coverage layers stay vacuous exactly where the committed map was."""
+    the coverage layers stay vacuous exactly where the committed map was.
+
+    Implements: SR-159, LLR-067
+    """
     if gen_arch_map is None:
         return set(), {}, {}
     src, mode = _arch_scan_profile(root)
@@ -848,7 +857,10 @@ def interface_findings(root):
     Ruled opt-out, default-on: fires even with an empty/absent `interfaces.csv`
     (a multi-module arch-map with no declared seams reads "connectivity
     undeclared"); silenced only by `[checks] interfaces_check = false` or a ≤1-module
-    inventory (nothing to connect)."""
+    inventory (nothing to connect).
+
+    Implements: SR-159, LLR-042
+    """
     if not read_interfaces_check_enabled(root):
         return []
     inventory, declared_contracts, _imports = arch_inventory(root)
@@ -1066,6 +1078,8 @@ def component_top_view(root):
       top_roots    sorted `[cmp id]` top-level roots containing ≥1 module
       uncontained  sorted `[norm]` inventory modules with no membership
       count        `len(top_roots) + len(uncontained)`
+
+    Implements: SR-159, LLR-049
     """
     names = arch_inventory(root)[0]
     inventory = {}
@@ -1297,7 +1311,10 @@ def cross_component_findings(root):
     promotion. See `_cross_component_scan` for the tier split (this is tier one,
     unchanged) and `_classifiable_edges` for the vacuity guards this rule
     inherits — including the DELIBERATE vacuousness for an endpoint carrying no
-    `Component` tag, which stays the containment rule's job, not this one's."""
+    `Component` tag, which stays the containment rule's job, not this one's.
+
+    Implements: SR-159, LLR-067
+    """
     return _cross_component_scan(root)[0]
 
 
@@ -1343,7 +1360,10 @@ def component_findings(root):
       no covering IF-### row. Its warn-only sibling
       `cross_component_advisories` (WI-440) reports the edges a multi-tagged
       endpoint silences; main() prints those, not this function, because they
-      must never reach the exit code."""
+      must never reach the exit code.
+
+    Implements: SR-159, LLR-049
+    """
     if not read_components_check_enabled(root):
         return []
     view = component_top_view(root)
@@ -1696,7 +1716,10 @@ def specref_findings(root, w):
     when the anchor half landed (WI-354): folding it in line took that function
     past the complexity ratchet, and this module is already named as WI-280's
     next decomposition slice, so the rule gets its own unit rather than the
-    monolith getting another sanctioned baseline entry."""
+    monolith getting another sanctioned baseline entry.
+
+    Implements: SR-157, LLR-077
+    """
     spec = w["specref"]
     if not spec:
         return [
@@ -1757,7 +1780,10 @@ def ssot_findings(wis, root):
     imports `validate`) shares the same registry read. R-B/R-C (open-WI status
     repetition) are retired (WI-180); R-D's done-id rule is RESTORED separately in
     `status_forward_only_findings` (WI-200), kept out of here so it reads the
-    status.md text rather than the registry rows."""
+    status.md text rather than the registry rows.
+
+    Implements: SR-157, LLR-077
+    """
     out = []
     for w in wis:
         st = w["status"]
@@ -1845,7 +1871,10 @@ _TITLE_SIMILARITY = 0.8
 def _title_tokens(title):
     """A title's comparable token set: case-folded, punctuation-split,
     stopwords and pure-number tokens dropped (a WI id or a phase number is not
-    subject matter)."""
+    subject matter).
+
+    Implements: SR-157, LLR-160
+    """
     words = re.split(r"[^0-9a-z]+", (title or "").lower())
     return {w for w in words if w and w not in _TITLE_STOPWORDS and not w.isdigit()}
 
@@ -1876,7 +1905,10 @@ def queue_conflict_findings(wis):
                             duplicate or a split that never got written down.
 
     Deterministic order (sorted by the id pair), and each pair is reported once
-    per signal, never once per direction."""
+    per signal, never once per direction.
+
+    Implements: SR-157, LLR-160
+    """
     open_rows = [
         w for w in wis if (w.get("status") or "").strip().lower() in OPEN_STATUSES
     ]
@@ -1942,7 +1974,10 @@ def spec_lifecycle_findings(root, wis):
     Vacuous on a fresh scaffold (no done-with-SpecRef rows; only excluded
     boilerplate in `docs/specs/`). Whether the archived spec's durable content
     actually landed in a spine/architecture home first is the recorded
-    Reviewer-tier gap (enforcement-audit.md)."""
+    Reviewer-tier gap (enforcement-audit.md).
+
+    Implements: SR-157, LLR-097
+    """
     out = []
     open_cited = set()
     for w in wis:
@@ -2269,7 +2304,10 @@ def status_forward_only_findings(root, wis):
     blocked) ids and unknown ids do not (an unknown id is R-E-adjacent). Vacuous
     when status.md is absent or the registry is placeholder-only (no real WIs ->
     no done ids); the `[checks] trajectory_check = false` opt-out is the caller's (it
-    returns before any check runs). Returns finding-message strings."""
+    returns before any check runs). Returns finding-message strings.
+
+    Implements: SR-157, LLR-075
+    """
     path = root / STATUS_MD
     if not path.exists():
         return []
@@ -3045,7 +3083,10 @@ def spine_cell_class(csv_path, column):
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
     a miss here does not red — every column reads `ratified`, so a traced-only
     edit arms a re-attest window that was ruled not to. `stem` drops the suffix,
-    which is what `spine_carrier` exists to make possible."""
+    which is what `spine_carrier` exists to make possible.
+
+    Implements: SR-178, LLR-158
+    """
     key = spine_carrier.stem(csv_path)
     traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
     return "traced" if column in traced.get(key, ()) else "ratified"
@@ -3082,6 +3123,7 @@ def spine_cell_class(csv_path, column):
 # normalisation.
 # (`Modified` used to be listed here as excluded-because-the-marker-is-already-set;
 # it retired at D-9 step 7 and the exclusion retired with it.)
+# Implements: SR-178, LLR-158
 _RATIFIED_TEXT = frozenset({"approved"})
 
 
@@ -3089,7 +3131,10 @@ def split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
     before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
     The id column and `Status` are not content (the id is the join key; Status
-    is the flip the caller is asking about), so neither is compared."""
+    is the flip the caller is asking about), so neither is compared.
+
+    Implements: SR-178, LLR-158
+    """
     changed = {"ratified": {}, "traced": {}}
     for key in set(head) | set(row):
         if key in (id_col, "Status"):
@@ -3265,7 +3310,10 @@ def _snapshot_survives(root, new_rev):
     `":"` is the INDEX, which `ls-files --cached` reads and where a staged
     deletion has already removed the entry; anything else is `"<rev>:"`, whose
     tree `ls-tree -r` reads. Degrades to False on any git failure, which is the
-    quiet direction — an unanswerable question must not manufacture a finding."""
+    quiet direction — an unanswerable question must not manufacture a finding.
+
+    Implements: SR-179, LLR-178
+    """
     if new_rev == ":":
         out = _git(root, ["ls-files", "--cached", "--", SNAPSHOT_DIR])
     else:
@@ -3313,7 +3361,10 @@ def staged_snapshot_findings(root, base="HEAD", head=None):
     names the file while the author is still in the commit, where the fix is one
     `intake.py snapshot` away. The pre-commit hook invokes the staged pass with
     `|| true`, so the warn alone never blocked anything — which is exactly why
-    the arming had to add a second severity rather than raise this one."""
+    the arming had to add a second severity rather than raise this one.
+
+    Implements: SR-179, LLR-178
+    """
     revs = _spine_revs(root, base, head)
     if revs is None:
         return []
@@ -3587,7 +3638,10 @@ def critique_ratchet_findings(root):
     the TC registry, the tests dir, **nor** a `docs/rubrics/` file, the fix landed in
     the artifact but not the validation chain — so the same 'shipped it because
     nothing judged it' can recur. Returns warning strings ([] when not applicable).
-    Any missing git context makes it a silent no-op, like `staged_findings`."""
+    Any missing git context makes it a silent no-op, like `staged_findings`.
+
+    Implements: SR-157, LLR-084
+    """
     critique_srs = _load_critique_srs(root)
     if not critique_srs:
         return []

@@ -272,7 +272,10 @@ def load_registry(path):
     the router quietly reading the stale half. An unparseable TOML registry is
     an ERROR, never an empty pool: `{}` here means "no models are enabled",
     which under managed routing reads as a consent decision rather than a
-    broken file — a page the human never gets."""
+    broken file — a page the human never gets.
+
+    Implements: SR-154, LLR-044
+    """
     live = spine_carrier.resolve(Path(path))
     if live is None:
         return {}, []
@@ -352,7 +355,10 @@ def parse_env(spec):
     """Parse an `Env` cell (`KEY=value;KEY2=value2`) into a dict, to be merged
     over the inherited environment at launch. Lenient by construction — an entry
     without `=` or an empty key is skipped rather than crashing a walk-away run
-    (a value may contain `=` but not `;`, the row separator)."""
+    (a value may contain `=` but not `;`, the row separator).
+
+    Implements: SR-154, LLR-044
+    """
     out = {}
     for part in (spec or "").split(";"):
         part = part.strip()
@@ -478,7 +484,10 @@ def resolve_token(token, registry, tag_rank=None):
 def resolve_enabled(enabled, registry, tag_rank=None):
     """Resolve the ordered enable-list to concrete registry ids, preserving
     preference order and de-duplicating. Returns (ids, errors); an unresolvable
-    token becomes an error string (surfaced in the managed preflight)."""
+    token becomes an error string (surfaced in the managed preflight).
+
+    Implements: SR-154, LLR-044
+    """
     resolved, errors, seen = [], [], set()
     for tok in enabled:
         rid, reason = resolve_token(tok, registry, tag_rank)
@@ -721,6 +730,8 @@ def select(
       - Among the unpinned legal remainder, `weights`/`counter` drive a
         deterministic weighted rotation (WI-236); absent weights == uniform ==
         the historical line-order pick, byte-identical to before.
+
+    Implements: SR-154, LLR-044
     """
     cooldowns = cooldowns or {}
     exclude = set(exclude_families or ())
@@ -857,6 +868,8 @@ def escalate(rounds, constants=None, swapped=False, at_top_tier=False, fails_sin
 
     Returns {'action', 'reason', 'next_primary'} with action in
     {continue, swap-implementer, tier-up, page-human}.
+
+    Implements: SR-154, LLR-081
     """
     c = constants or DEFAULT_CONSTANTS
     if not rounds:
@@ -952,7 +965,10 @@ def failure_action(human_held, keep_nondependent=False):
     sharing the second answer; splitting them makes each dial mean one thing.
 
     Redesign re-enters the change-intake flow (process.md §5 — linked, not
-    restated). Returns a dict the coordinator enacts and logs."""
+    restated). Returns a dict the coordinator enacts and logs.
+
+    Implements: SR-154, LLR-081
+    """
     if human_held:
         return {
             "mode": "human-held",
@@ -1078,6 +1094,8 @@ def planner_pair(
     (`PAIR_TWO_FAMILY`, not degraded); if it can only land the same family it is
     the pool-degraded pair. Both sessions are distinct objects even when they
     share a `model_id` — freshness is object identity, not id difference.
+
+    Implements: SR-155, LLR-072
     """
     cooldowns = cooldowns or {}
     first_id, first_reason = select(
@@ -1147,6 +1165,8 @@ def planner_fallback(
 
     When no non-failed family is routable either, returns a `PAIR_NO_RESPONDER`
     pair with `(None, None)` for the coordinator to page on.
+
+    Implements: SR-155, LLR-072
     """
     cooldowns = cooldowns or {}
     failed_family = getattr(failed, "family", "") or ""

@@ -302,7 +302,10 @@ def _kind_action(kind, human_held, approval_held=False):
     caller that first learns which registry a row would touch has somewhere to
     say so — and `tests/test_ratification_level.py` pins that no shipped loop
     module writes an `approval` cell in the meantime, which is the guard that
-    actually bites today."""
+    actually bites today.
+
+    Implements: SR-148, LLR-149
+    """
     if kind in ("ordinary", "critique"):
         return "parallel"
     if kind == "spine":
@@ -313,7 +316,7 @@ def _kind_action(kind, human_held, approval_held=False):
 
 
 def _judgement_first(ready_kinds):
-    """SR-141 — DISPOSE FIRST: `adjudication` rows move to the head of
+    """SR-148 — DISPOSE FIRST: `adjudication` rows move to the head of
     the frontier, everything else keeping its relative order.
 
     A stable partition, not a re-sort: `schedule._KIND_RANK` is §A1's RULED
@@ -357,7 +360,10 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
     The barrier property is the wait arm: any exclusive-kind row on the
     frontier (they all sort ahead of parallel kinds by rank) stops NEW
     admission outright — nothing slips past it into a free lane — and the
-    batch admits only into an idle station, as the sole toucher of trunk."""
+    batch admits only into an idle station, as the sole toucher of trunk.
+
+    Implements: SR-148, LLR-149, LLR-159
+    """
     if not ready_kinds:
         return "empty", []
     ready_kinds = _judgement_first(ready_kinds)
@@ -914,7 +920,10 @@ def red_tc_census(root, reg=None):
     A TC whose targets no closed row cites is also exempt: that is work not
     started, which the orphan/status rungs already cover, and a second row for
     it would double-count. Same for `partial`/`cancelled` closers — see
-    `_implemented_ids`."""
+    `_implemented_ids`.
+
+    Implements: SR-148, LLR-159
+    """
 
     import trace as tr
 

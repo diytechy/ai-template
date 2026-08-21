@@ -175,6 +175,7 @@ def _utf8_console():
 # equal only by value pins in `tests/test_rule_sync.py` because the F5 ruling
 # licensed the duplication instead of removing it. Kept under its own
 # long-standing private name so no call site below moves.
+# Implements: SR-031, LLR-031
 _first_declared_line = _kitconfig.first_declared_line
 
 
@@ -284,7 +285,9 @@ def read_privacy_enabled(root):
 
 def email_ok(email):
     """True when an email is exempt from privacy flagging: an RFC 2606 example
-    domain, or a match against any EXEMPT_EMAILS glob (case-insensitive)."""
+    domain, or a match against any EXEMPT_EMAILS glob (case-insensitive).
+
+    Implements: SR-018, LLR-018"""
     email = email.lower()
     domain = email.rsplit("@", 1)[-1]
     if domain in EXAMPLE_DOMAINS or domain.endswith(EXAMPLE_SUFFIXES):
@@ -332,7 +335,9 @@ class Scanner:
     `secrets_on` gates the always-on credential floor (key/token shapes);
     `privacy_on` gates the privacy classes (home-dir usernames, account/
     hostname, non-exempt emails, the global git identity). At least one is true
-    whenever a Scanner is built — main() exits early otherwise."""
+    whenever a Scanner is built — main() exits early otherwise.
+
+    Implements: SR-017, LLR-017"""
 
     def __init__(self, root, secrets_on=True, privacy_on=True):
         self.secrets_on = secrets_on

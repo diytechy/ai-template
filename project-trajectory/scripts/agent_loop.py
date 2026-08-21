@@ -361,7 +361,10 @@ def worker_prompt(root, wi_rows, wi, train, base, rework_text=""):
     predecessor context + the current branch diff + any rework finding, slotted
     into WORKER_PROMPT (`train` is the session tag = the claim branch name).
     Reads NOTHING from docs/status.md or docs/next-wi — the explicit
-    assignment is the whole scope."""
+    assignment is the whole scope.
+
+    Implements: SR-026, LLR-061
+    """
     row = wi_rows.get(wi, {})
 
     preds = []
@@ -561,7 +564,10 @@ def reviewer_prompt(prompt_templates, phase, verdict_path):
     template (a FILE the operator wired) if present, else the embedded
     REVIEWER_PROMPT — with {verdict} resolved to the path the reviewer must
     write. Never carries the implementer's self-assessment (redaction by
-    construction)."""
+    construction).
+
+    Implements: SR-154, LLR-045
+    """
     base = prompt_templates.get(phase, _kit_prompt(prompts.REVIEWER))
     return base.replace("{verdict}", str(verdict_path))
 
@@ -646,7 +652,10 @@ def session_model(model_map, default_model):
 def session_template(cmd_map, default_template, phase):
     """The per-phase command template (AGENT_CMD_MAP), else AGENT_CMD — phase
     keys are free-form, so REVIEW-A/REVIEW-B route providers without any loop
-    change."""
+    change.
+
+    Implements: SR-040, LLR-037
+    """
     return cmd_map.get(phase, default_template)
 
 
@@ -697,7 +706,10 @@ RUBRIC_PATH_RE = re.compile(r"docs/rubrics/[\w./\-]+\.md")
 def load_critique_srs(docs):
     """The SR ids whose Verification is `Critique` (docs/requirements/
     system-requirements.toml). Empty — absent file, or no such row — makes the whole
-    critique layer vacuous, exactly like an absent enable-list makes routing off."""
+    critique layer vacuous, exactly like an absent enable-list makes routing off.
+
+    Implements: SR-154, LLR-048
+    """
     out = set()
     for r in spine_carrier.load(
         Path(docs) / "requirements" / "system-requirements.toml", "SR-ID"
@@ -729,7 +741,10 @@ def build_scope_srs(root, docs, commit_range):
     Reads the registry through `load_wi_registry` (the spec-folder home) —
     the direct-CSV read this carried silently answered EMPTY in a
     folder-registry tree, disarming the critique scope (found while
-    classifying its census pair at Phase 5, fixed with item 3)."""
+    classifying its census pair at Phase 5, fixed with item 3).
+
+    Implements: SR-154, LLR-048
+    """
     wi_ids = build_scope_wis(root, docs, commit_range)
     srs = set()
     for wid, r in load_wi_registry(Path(docs).parent).items():
@@ -773,7 +788,10 @@ def critique_brief(root, docs, scope_srs):
     Requirement/Rationale/AcceptanceCriteria — the SN/SR intent, never the TC), the
     verifying TC's artifact recipe (its Parameters cell), and the full text of every
     rubric the TC names. Carries rubric + intent + recipe and NOTHING from the
-    implementer's session — redaction by construction."""
+    implementer's session — redaction by construction.
+
+    Implements: SR-154, LLR-048
+    """
     docs = Path(docs)
     sr_by_id = {
         (r.get("SR-ID") or "").strip(): r
@@ -827,7 +845,10 @@ def critique_brief(root, docs, scope_srs):
 def critique_prompt(prompt_templates, verdict_path, brief):
     """The redacted critique prompt: the CRITIQUE prompt-map template (a FILE the
     operator wired) if present, else the embedded CRITIQUE_PROMPT — with {verdict}
-    and {brief} resolved. Never carries the implementer's self-assessment."""
+    and {brief} resolved. Never carries the implementer's self-assessment.
+
+    Implements: SR-154, LLR-048
+    """
     base = prompt_templates.get("CRITIQUE", _kit_prompt(prompts.CRITIQUE))
     return base.replace("{verdict}", str(verdict_path)).replace("{brief}", brief)
 
@@ -1130,13 +1151,19 @@ class RoutingState:
 
     def note_session(self, committed, errored):
         """Fold one session's outcome into the stall/error counters: a commit
-        resets the stall; an error before work increments the error run."""
+        resets the stall; an error before work increments the error run.
+
+        Implements: SR-172, LLR-175
+        """
         self.stall = 0 if committed else self.stall + 1
         self.errors = self.errors + 1 if errored else 0
 
     def stall_verdict(self, limit):
         """None (keep going), "agent-error" (the whole stall run errored before
-        working — an unavailable agent), or "stall" (a work stall)."""
+        working — an unavailable agent), or "stall" (a work stall).
+
+        Implements: SR-028, LLR-028
+        """
         if self.stall < limit:
             return None
         return "agent-error" if self.errors >= limit else "stall"
@@ -1147,7 +1174,10 @@ def limit_reset_hint(output, data, exit_code):
 
     Only an *error* is eligible (the JSON result's is_error, or a nonzero
     session exit for plain-text templates) — a healthy transcript merely
-    *mentioning* limits must never read as a throttle."""
+    *mentioning* limits must never read as a throttle.
+
+    Implements: SR-171, LLR-174
+    """
     if data:
         if not data.get("is_error"):
             return None
@@ -1168,7 +1198,10 @@ def seconds_until_reset(hint, now=None):
     'Mon 12:00am', '14:30' or 'Tue 09:00' — both am/pm and 24-hour clocks,
     since the message wording is locale-dependent. None when unparseable —
     the caller then sleeps the --limit-retry-fallback (when waiting is
-    enabled) or exits WAITING with the raw hint in the banner."""
+    enabled) or exits WAITING with the raw hint in the banner.
+
+    Implements: SR-171, LLR-174
+    """
     if not hint:
         return None
     now = now or datetime.datetime.now()
@@ -1221,7 +1254,10 @@ def classify_outcome(reset_hint, timed_out, state, committed, data, exit_code):
     Reporting only: it still counts toward the stall guard (no commit), but the
     abort banner names it (Thread 45).
 
-    Returns (outcome, errored)."""
+    Returns (outcome, errored).
+
+    Implements: SR-028, LLR-028
+    """
     errored = (
         not reset_hint
         and not timed_out
@@ -1615,7 +1651,10 @@ def build_worker_assignment(args, root):
     scoping logs and review evidence) is --train when given, else the current
     branch name — the §2.3 claim branch. Returns (None, None) when this is not
     a worker process, (worker, None) on success, or (None, EXIT_PREFLIGHT)
-    after printing its own error."""
+    after printing its own error.
+
+    Implements: SR-026, LLR-061
+    """
     # --- worker assignment mode (WI-181, LLR-061) -----------------------------
     # worker != None switches the loop from "resume from the lane" to "build
     # the explicit assignment": no lane status/next-wi reads or writes, no
@@ -2754,6 +2793,7 @@ def _drive_entry(root, args):
     return dispatch.run(root, args)
 
 
+# Implements: SR-154, LLR-045, SR-155, LLR-132
 def main():
     _utf8_console()
     args = parse_args()
