@@ -457,7 +457,11 @@ Gates, real output on this box:
 - `python project-trajectory/scripts/check.py --jobs 0` (this repo's own plan, at
   the new keying) → **RESULT: PASS**, 11 steps — the 10 that ran before plus
   `ratify-fresh`, which the re-derivation widened and which passes.
-- Full unfiltered suite: see the close line below.
+- `python -m pytest -q -n auto` (full, unfiltered, on the landed tree) →
+  **2786 passed, 14 skipped in 658.42 s**. The count fell from slice 1's 2798
+  because two test modules retired with the mechanisms they pinned
+  (`test_product_floor`, `test_advisory_during_window`) and
+  `test_selection_at_or_above` succeeded them with 15.
 
 **Smoke wall-clock, reported not absorbed:** 80.6 s against the declared 60 s, on
 a tier that read 51.3 / 62.9 / 55.0 s at slice 1 and 72.8 s at slice 0. One box
