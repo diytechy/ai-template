@@ -161,6 +161,7 @@ try:
     import plan_runner
     import prompts
     import score_reviews
+    import subagent_gate
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
@@ -170,6 +171,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     import plan_runner
     import prompts
     import score_reviews
+    import subagent_gate
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
@@ -1792,6 +1794,21 @@ def run_interactive(
     return proc.returncode
 
 
+def _subagent_gate_log_count(root):
+    """Line count of `out/subagent-gate.log` (one decision per line: allow,
+    ask, deny, or the fail-open "gate error, failing open" entries) — 0 if the
+    file was never written, i.e. the gate never fired. `subagent_gate.py`
+    writes the file but nothing read it before OI-46 ruled (2a) (2026-08-20):
+    a write nobody reads is a record only in name, so `print_run_banner`
+    below surfaces this count on every unattended launch (WI-491)."""
+    path = Path(root) / "out" / subagent_gate.LOG_NAME
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as handle:
+            return sum(1 for _ in handle)
+    except OSError:
+        return 0
+
+
 def print_run_banner(
     root,
     branch,
@@ -1846,6 +1863,13 @@ def print_run_banner(
         "vendored core is injected per session when the policy selects that "
         "session's model)".format(guardrails_policy)
     )
+    gate_log_count = _subagent_gate_log_count(root)
+    if gate_log_count:
+        print(
+            "subagent-gate: {} decision(s) recorded in out/subagent-gate.log "
+            "(allow/ask/deny + fail-open-on-error; OI-46 (2a), WI-491 — read it "
+            "if that count looks high)".format(gate_log_count)
+        )
     print("agent command: {}".format(template))
     for ph in sorted(cmd_map):
         print("  cmd-map [{}]: {}".format(ph, cmd_map[ph]))

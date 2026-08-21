@@ -368,6 +368,39 @@ def test_review_policy_surfaced_in_banner(loop_repo):
     assert "review-policy: 2" in proc.stdout
 
 
+def test_subagent_gate_log_tail_surfaced_in_banner(loop_repo):
+    # OI-46 ruled (2a), 2026-08-20 (WI-491): out/subagent-gate.log records
+    # every subagent-gate decision (including every fail-open-on-error allow)
+    # and nothing read it -- the cheapest form in which the record becomes a
+    # record is the launch banner surfacing its line count.
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    out_dir = repo / "out"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "subagent-gate.log").write_text(
+        "Task\tallow\tgate off (docs/process.toml [checks] subagent_gate)\n"
+        "Task\tallow\tgate error, failing open: boom\n",
+        encoding="utf-8",
+    )
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "subagent-gate: 2 decision(s) recorded in out/subagent-gate.log" in proc.stdout
+    )
+
+
+def test_subagent_gate_log_absent_stays_silent_in_banner(loop_repo):
+    # The gate never fired (or is opted out entirely) -> no line at all, so the
+    # banner does not grow noise for the common case (repo-review 2026-07-21
+    # M-21's own reason for keeping the log out of tracked docs/ applies the
+    # same way to the console: nothing happened, nothing to read).
+    repo, ctl, template = loop_repo
+    (ctl / "actions.txt").write_text("done", encoding="utf-8")
+    proc = _loop(repo, template)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "subagent-gate:" not in proc.stdout
+
+
 def _vendor_core(repo, body):
     gdir = repo / "docs" / "guardrails"
     gdir.mkdir(parents=True, exist_ok=True)

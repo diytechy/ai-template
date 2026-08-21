@@ -4,12 +4,18 @@
 NAMED FOR WHAT IT DOES, not for what a fan-out control usually does. This header
 read "deny-by-default" until the 2026-08-19 repo review (M-13) measured the
 behaviour against the sentence: an ABSENT policy allows, an `off` policy allows,
-an unreadable `process.toml` allows, and any internal error allows — every one of
-those by design and pinned by tests. Nothing here denies until a human writes
-`deny`. The old headline described the opposite posture, which is the most
-expensive kind of comment to be wrong: a reader budgeting risk would have
-credited this module with a refusal it never makes. Whether the fail posture
-SHOULD invert is an owner call, deliberately not taken here.
+an unreadable `process.toml` allowed, and any internal error allows — every one
+of those by design and pinned by tests. A `docs/process.toml` that is PRESENT
+but does not parse no longer belongs on that list (OI-46 ruled (1a),
+2026-08-20 — executed here, WI-491): it now reads fail-closed (`ask`), aligned
+with the two twin readers in `check_trajectory.py` / `gen_okf.py`, which have
+always treated the same state as ON rather than as a quiet opt-out — three
+readers, one direction. Nothing here denies until a human writes `deny`, or the
+gate cannot tell what the human wrote. The old headline described the opposite
+posture, which is the most expensive kind of comment to be wrong: a reader
+budgeting risk would have credited this module with a refusal it never makes.
+Whether the fail posture on a genuine ABSENCE should also invert stays an owner
+call, deliberately not taken here.
 
 A Claude Code `PreToolUse` hook (SR-043; realizes SN-006 "a walk-away run stays
 safe" + SN-012 "opt-in"). During an unattended coordinator run a driver session
@@ -29,9 +35,14 @@ readable without being armed. The env override `SUBAGENT_GATE=allow` — set in
 the launcher environment, which the model cannot write — bypasses the gate for a
 deliberately-supervised run.
 
-**Fail open with a paper trail:** any error (unreadable payload, missing repo)
-allows the call and logs the reason, because a broken gate must never wedge the
-tools. Every decision appends to `out/subagent-gate.log` (gitignored cache).
+**Fail open with a paper trail, for what remains open:** a malformed
+`PreToolUse` payload or any other internal error still allows the call and logs
+the reason, because a broken gate must never wedge the tools (SN-006's relaxed
+posture keeps this arm even after OI-46). A PRESENT-but-unparseable
+`docs/process.toml` is no longer in that list — see above. Every decision
+appends to `out/subagent-gate.log` (gitignored cache); `agent_loop.py`'s launch
+banner surfaces its line count (OI-46 ruled (2a), WI-491) so the paper trail is
+actually read somewhere, not just written.
 
 Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
@@ -70,11 +81,22 @@ LOG_NAME = "subagent-gate.log"
 POLICY = "docs/process.toml [checks] subagent_gate"
 LEGACY_POLICY = "docs/subagent-gate"
 
+# Sentinel `read_process_policy` returns when `docs/process.toml` is PRESENT
+# but does not parse/read — distinct from `None` ("this file has nothing to
+# say": absent, or parses fine with no `subagent_gate` key). `decide()` gives
+# it its own branch, resolving to `ask` (fail-closed), and `main()` treats it
+# as terminal — NOT a None, so it does not fall through to the legacy
+# `docs/subagent-gate` file, matching how the twin readers in
+# `check_trajectory.py` / `gen_okf.py` resolve the same state terminally
+# rather than as undeclared (OI-46 ruled (1a), 2026-08-20; WI-491). Never a
+# str, so it can never collide with a real — however garbled — policy token.
+UNPARSEABLE = object()
+
 
 def read_process_policy(root):
-    """`[checks] subagent_gate` out of `docs/process.toml`, lowercased, or None
+    """`[checks] subagent_gate` out of `docs/process.toml`, lowercased; None
     when this file has nothing to say (fall through to the legacy one-word
-    file).
+    file); UNPARSEABLE when the file is PRESENT but does not parse or read.
 
     A LOCAL reader, per the F5 independently-copyable-script rule that already
     keeps `read_declared` here rather than importing a sibling — the cost the
@@ -83,18 +105,24 @@ def read_process_policy(root):
     asking" arm: a garbled dial on a fan-out guardrail must be loud, never a
     quiet `off`.
 
-    THE ONE PLACE THIS READER DELIBERATELY DIFFERS from the twin in
-    `check_trajectory.py` / `gen_okf.py`: an UNPARSEABLE process.toml reads as
-    *undeclared* here, where those two read it as ON. Their failure mode is a
-    check that silently stops running; this module's is the opposite — see
-    "fail OPEN with a paper trail" above. Failing an unreadable file to `ask`
-    would defer every spawn in an unattended run, which is the wedge this
-    module exists not to be. `tests/test_rule_sync.py` pins all three copies —
-    including this divergence — by value (D-7).
+    UNTIL OI-46 (WI-491, 2026-08-20) this was the one place this reader
+    deliberately differed from the twin in `check_trajectory.py` /
+    `gen_okf.py`: an unparseable process.toml read as *undeclared* here, where
+    those two read it as ON. That let a corrupted policy file fall through to
+    the legacy one-word file (or, absent that too, to a quiet `allow`) — the
+    ruled fail-open asymmetry. It now returns UNPARSEABLE instead, which
+    `decide()` resolves to `ask`: a garbled `docs/process.toml` is exactly the
+    place SN-006's relaxed wording means to bite ("surface to the human only
+    where it cannot proceed"), not a place to keep moving.
+    `tests/test_rule_sync.py` pins all three copies by value (D-7), now
+    including the aligned direction rather than the retired divergence.
 
     Contract:
       Inputs:  root: path-like repo root
-      Outputs: str | None — the policy token, lowercased; None if undeclared
+      Outputs: str | None | UNPARSEABLE — the policy token, lowercased; None
+               if undeclared (absent file, or file parses with no
+               `subagent_gate` key); UNPARSEABLE if the file is PRESENT but
+               does not parse/read.
     """
     path = Path(root) / "docs" / "process.toml"
     if not path.is_file():
@@ -103,7 +131,7 @@ def read_process_policy(root):
         # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
         data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        return None
+        return UNPARSEABLE
     table = data.get("checks")
     value = table.get("subagent_gate") if isinstance(table, dict) else None
     return None if value is None else str(value).strip().lower()
@@ -136,19 +164,28 @@ def decide(tool_name, policy, override):
 
     Contract:
       Inputs:  tool_name: str          (the PreToolUse tool name)
-               policy: str             (the [checks] subagent_gate token, or
-                                        the legacy file's; "" = off)
+               policy: str | UNPARSEABLE (the [checks] subagent_gate token, or
+                                        the legacy file's; "" = off;
+                                        UNPARSEABLE = docs/process.toml is
+                                        PRESENT but did not parse/read)
                override: str           (SUBAGENT_GATE env value, lowercased)
       Outputs: (decision, reason) where decision in
                {allow, ask, deny, defer}; `defer` = not a spawn tool, not our
-               business. An unrecognized policy value resolves to `ask` (the
-               safer direction, never harder than the explicit `deny`).
+               business. An unrecognized policy value, and UNPARSEABLE, both
+               resolve to `ask` (the safer direction, never harder than the
+               explicit `deny`) — OI-46 ruled (1a) for the latter, aligning
+               this reader's present-but-broken arm with its twins (WI-491).
     Implements: SR-043, LLR-040
     """
     if tool_name not in SPAWN_TOOLS:
         return "defer", "not a spawn tool"
     if override == "allow":
         return "allow", "SUBAGENT_GATE=allow override (human-set)"
+    if policy is UNPARSEABLE:
+        return "ask", (
+            "docs/process.toml is present but did not parse; asking "
+            "(fail-closed, aligned with its twin readers — OI-46 (1a))"
+        )
     if policy in ("", "off"):
         return "allow", "gate off ({})".format(POLICY)
     if policy == "deny":

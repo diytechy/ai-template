@@ -7,11 +7,14 @@ the pure `decide()` core directly, and `main()` end-to-end as the real hook
 (JSON on stdin -> permissionDecision on stdout + exit code).
 
 ABSENCE AND CORRUPTION ARE TESTED SEPARATELY (repo review 2026-08-19, M-13).
-They reach the same `allow` by different routes, and only one of them is a
-policy: an absent dial means nobody asked for the gate, while a corrupt one
-means somebody did and the file broke. Covering them with a single assertion
-is what let this module's header claim "deny-by-default" for as long as it did
--- nothing forced a reader to look at what the failure paths actually do.
+Only one of them is a policy: an absent dial means nobody asked for the gate
+(`allow`), while a corrupt one means somebody did and the file broke -- and
+since OI-46 ruled (1a) (2026-08-20, WI-491) those two routes no longer land on
+the same decision either: a present-but-unparseable process.toml now asks
+(fail-closed), aligned with the twin readers in check_trajectory.py /
+gen_okf.py. Covering them with a single assertion is what let this module's
+header claim "deny-by-default" for as long as it did -- nothing forced a
+reader to look at what the failure paths actually do.
 """
 
 import json
@@ -162,29 +165,32 @@ def test_absent_process_toml_reads_as_undeclared(tmp_path):
     assert gate.read_process_policy(tmp_path) is None
 
 
-def test_corrupt_process_toml_reads_as_undeclared_not_as_on(tmp_path):
-    # Somebody asked and the file broke. This module reads that as UNDECLARED
-    # where the twins in check_trajectory.py / gen_okf.py read an unparseable
-    # process.toml as ON -- the divergence its docstring argues for, because
-    # failing an unreadable file to `ask` would defer every spawn in the
-    # unattended run this gate exists not to wedge.
+def test_corrupt_process_toml_reads_unparseable_not_undeclared(tmp_path):
+    # Somebody asked and the file broke. OI-46 ruled (1a), 2026-08-20 (WI-491):
+    # this module now aligns with the twins in check_trajectory.py / gen_okf.py,
+    # which read an unparseable process.toml as ON (loud) rather than
+    # undeclared (quiet). Here "loud" is the UNPARSEABLE sentinel, which
+    # decide() resolves to `ask` -- distinct from the plain `None` an absent
+    # file returns, so main() does not fall through to the legacy file.
     _write_process_toml(tmp_path, "[checks\nsubagent_gate = ")
-    assert gate.read_process_policy(tmp_path) is None
+    assert gate.read_process_policy(tmp_path) is gate.UNPARSEABLE
+    assert gate.decide("Task", gate.UNPARSEABLE, "")[0] == "ask"
 
 
-def test_corruption_falls_through_to_the_legacy_file_rather_than_short_circuiting(
-    tmp_path,
-):
-    # The distinction has teeth: a corrupt process.toml must not swallow a
-    # policy that IS declared elsewhere. With the legacy file saying `deny`,
-    # the spawn is refused -- so corruption defers the question, it does not
-    # answer it `allow`.
+def test_corruption_no_longer_falls_through_to_the_legacy_file(tmp_path):
+    # Before OI-46, a corrupt process.toml fell through to the legacy file
+    # (or, absent that too, a quiet `allow`) -- the ruled asymmetry. Now a
+    # present-but-broken process.toml is TERMINAL and fails closed on its own,
+    # the same way check_trajectory.py / gen_okf.py never consult a fallback
+    # once their own reader reads ON: the legacy file's `deny` is not even
+    # reached, and the corrupt dial itself asks rather than silently
+    # deferring to whatever else is declared.
     _write_process_toml(tmp_path, "this is not toml {{{")
     _write_policy(tmp_path, "deny")
     proc = run_hook({"tool_name": "Task"}, tmp_path)
-    assert proc.returncode == 2
+    assert proc.returncode == 0
     out = json.loads(proc.stdout)
-    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
+    assert out["hookSpecificOutput"]["permissionDecision"] == "ask"
 
 
 def test_garbled_policy_value_asks_and_is_never_a_quiet_off(tmp_path):

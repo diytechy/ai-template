@@ -789,8 +789,10 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
 # It is duplicated POLICY, not plumbing: each copy decides "is this check on",
 # and a copy that drifts does not fail loudly — it silently stops running a
 # check, or silently starts running one an adopter switched off. So the D-7 bar
-# applies: pin the copies BY VALUE over one table of file shapes, including the
-# one place they deliberately disagree.
+# applies: pin the copies BY VALUE over one table of file shapes. `subagent_gate`
+# used to deliberately disagree on a present-but-unparseable file (undeclared,
+# not ON); OI-46 ruled (1a) (2026-08-20, WI-491) retired that disagreement, so
+# the pin below now guards the aligned DIRECTION instead of the divergence.
 CT = load_script("check_trajectory")
 OKF = load_script("gen_okf")
 SGATE = load_script("subagent_gate")
@@ -848,20 +850,24 @@ def test_an_absent_process_toml_is_undeclared_in_all_three_copies(tmp_path):
     assert SGATE.read_process_policy(tmp_path) is None
 
 
-def test_the_subagent_copy_diverges_only_where_its_module_says_it_does(tmp_path):
-    # subagent_gate's dial is a WORD, not a bool, and its module contract is
-    # "fail OPEN with a paper trail" — a broken gate must never wedge the tools.
-    # So on an unparseable file it reads UNDECLARED where the other two read ON.
-    # Pinned here because a later reader "harmonizing" the three copies would be
-    # turning an unreadable config into `ask` on every spawn.
+def test_the_subagent_copy_now_agrees_in_direction_with_its_twins(tmp_path):
+    # subagent_gate's dial is a WORD, not a bool, so its VALUES can never be
+    # pinned equal to the other two -- but OI-46 ruled (1a) (2026-08-20,
+    # WI-491) aligned its DIRECTION on a present-but-broken process.toml: it
+    # now reads UNPARSEABLE (decide() -> ask, fail-closed), the same
+    # loud-not-quiet posture CT/OKF express as True (ON). This replaces the
+    # divergence this test used to pin -- a later reader "harmonizing" the
+    # three copies now finds them already aligned, not something to guard
+    # against re-diverging.
     _write_toml(tmp_path, '[checks]\nsubagent_gate = "deny"\n')
     assert SGATE.read_process_policy(tmp_path) == "deny"
     _write_toml(tmp_path, '[checks]\nSUBAGENT_GATE = "deny"\n')
-    assert SGATE.read_process_policy(tmp_path) is None
+    assert SGATE.read_process_policy(tmp_path) is None  # wrong key -> undeclared
 
     broken = tmp_path / "broken"
     _write_toml(broken, '[checks\nsubagent_gate = "deny"\n')
-    assert SGATE.read_process_policy(broken) is None  # undeclared, not `ask`
+    assert SGATE.read_process_policy(broken) is SGATE.UNPARSEABLE  # present, broken
+    assert SGATE.decide("Task", SGATE.UNPARSEABLE, "")[0] == "ask"  # fail-closed
     assert CT._process_check(broken, "trajectory_check") is True  # ON, loudly
     assert OKF._process_check(broken, "okf_export") is True
 

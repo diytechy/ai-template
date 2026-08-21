@@ -452,7 +452,13 @@ BASELINE = {
     # `live-status` is the ONE of the six read through the coordinator layer, so
     # it costs a `declared_policy` swap and the comment saying why — no local
     # reader here, which is the whole point of the F5 split recorded below.
-    # +40 (3162 -> 3202) 2026-08-21, WI-487: the back-link campaign — literal
+    # +24 (3202 -> 3226) 2026-08-21, WI-491 (OI-46 ruled (2a)): the launch
+    # banner surfaces `out/subagent-gate.log`'s tail count — a new sibling
+    # import (`subagent_gate`, for its `LOG_NAME` constant), a small
+    # `_subagent_gate_log_count` reader, and one conditional `print` in
+    # `print_run_banner`. Reviewed bump, reason in
+    # docs/log.d/2026-08-20-program-grind.md.
+    # Earlier: +40 (3162 -> 3202) 2026-08-21, WI-487: the back-link campaign — literal
     # `Implements:` declarations added near the symbols this module's own live
     # LLR rows already name (docstring/comment lines only, no executable
     # change). Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md.
@@ -460,7 +466,7 @@ BASELINE = {
     # module docstring's dial description — the scaffold's shipped value changed
     # and the sentence that stated it had to change with it, or the docstring
     # would assert a default the template no longer carries.
-    "agent_loop.py": 3202,
+    "agent_loop.py": 3226,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
