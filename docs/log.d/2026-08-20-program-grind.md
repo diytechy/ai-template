@@ -1215,6 +1215,119 @@ new OI.
   files (the spec, `docs/status.md`, `docs/gate`, `PROJECT_STATE.html`)
   appear in the pre-existing residue list.
 
+### WI-487 — the back-link campaign (sonnet worker, 7 parallel review batches) — CLOSED complete
+
+Executed the campaign half of OI-42's ruling. Reverse coverage rose from
+1/165 (0.6%) at WI-486's close to **83/165 (50.3%)**, clearing the recorded
+50% target — `python project-trajectory/scripts/gen_arch_map.py
+--backlink-coverage --src project-trajectory/scripts --root .`
+<!-- fig: cmd="python project-trajectory/scripts/gen_arch_map.py --backlink-coverage --src project-trajectory/scripts --root ." rev=5d0dc4f6 -->
+Seven parallel batches (by module group) each read an LLR row's `detail`
+text and the actual code before tagging — 79 tags placed across 17 modules,
+14 candidates SKIPPED on real registry-staleness findings rather than
+forced (banked below). One tag that WAS placed did not survive this
+worker's own verification pass and was removed: **LLR-005**, whose registry
+`code_symbol` (`module_findings`) names a function-local inside
+`trace.analyze`, never a real module-scope binding — no placement honestly
+carried the claim. A replacement, independently code-reviewed, closed the
+gap to hold the target: **LLR-038** on `check_doc_refs.findings_for`
+(confirmed against the function body — it runs exactly the path/`sym:`
+scan the row describes).
+
+**Verification method, since this worker did not originate the seven
+batches' own numbers first-hand.** An automated cross-check (AST-parsed
+every `Implements:` line's enclosing top-level symbol against each row's
+registry `code_symbol`) flagged 9 of 83 candidates; 8 were the checker's
+own false positives (comments correctly placed 1-4 lines above a module
+constant or inside a class docstring, which a naive span heuristic
+misattributes to a neighboring method/assignment) verified by direct
+reading; the 9th was LLR-005, above.
+
+**`docs/process.toml` `[checks] backlink_coverage_min` rises 0 → 50** (this
+repo's own instance value; the shipped `process.toml.template` stays 0 for
+a fresh adopter — VALUE divergence, not STRUCTURE). `test_rule_sync.py`'s
+`OWNER_DIALS` allowlist gained the entry with its reason, caught by the
+full suite (see gate totals) after the smoke tier passed clean — that test
+is not in the smoke tier's module set. `dispatch.py:310`'s dangling SR-141
+citation (merged into SR-148 2026-08-14) is repointed, closing the row's
+"rides along" item. The module-size ratchet's 8 legitimate growers
+(agent_common.py, agent_loop.py, bootstrap.py, check.py,
+check_trajectory.py, derive_gate.py, integrate.py, trace.py — all
+prose/docstring lines, zero executable change) are re-stamped in
+`tests/test_module_size_ratchet.py` with reasons.
+
+**The decay answer, owed at close per the ruling.** RE-CONSIDERED option
+(c) (the OFT-style revisioned marker) and recommend NOT building it now —
+it mints a revision field on every spine row plus a marker-grammar
+migration, a large human-held decision, to guard a convention this same
+session just hand-wrote. The campaign's own code-review pass found sharper
+evidence than OI-42's original WI-425 citation: three LLR rows'
+`code_symbol` cells were ALREADY stale before any tag was written
+(`LLR-147` names `sn_gate`, live function is `sn_bar`; `LLR-077` names
+`spec_ref_findings`, live function is `specref_findings`; `LLR-005`, above)
+— pre-existing registry drift the mandatory read-the-code step surfaced,
+not decay from this campaign's own tags. Recommended instead: a cheaper
+report-only companion check in `gen_arch_map` confirming each declared
+`Implements:` line's adjacent symbol still parses as a real definition
+(existence, not meaning; no spine field) — sized as its own small WI if the
+owner wants it. Full recommendation on the WI's own spec
+(`docs/work/complete/WI-487-implements-backlink-campaign.md`, "Decay
+answer, recorded at close").
+
+**Gate totals, all foreground/unfiltered, this session:**
+- Commit-bar smoke (final, post-fix): `1278 passed, 5 skipped in 62.74s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=5d0dc4f6 -->
+- `check_docs.py --stale`: `OK - 961 doc(s), 1335 intra-repo link(s), 0
+  broken (1 orphan warning(s))`.
+- Full unfiltered suite (first pass, foreground, caught the real
+  `test_rule_sync.py` OWNER_DIALS gap): `1 failed, 2718 passed, 14 skipped
+  in 542.76s`. After the fix, re-run: `2719 passed, 14 skipped in 472.24s`
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=5d0dc4f6 -->
+  — the +1 over WI-484's 2718/2719-ish baseline is this WI's own new
+  OWNER_DIALS assertion coverage, not a new test file.
+- `check_trajectory.py --strict`: exits 0, `clean (490 work item(s), 457
+  done (93%), 21 cancelled, graph acyclic)` — warn-only pre-existing noise
+  (open-WI title lengths, shared-specref pairs, IF connectivity/TC-coverage
+  gaps) untouched by this row.
+
+**Deviations from the orchestrator's relayed batch totals.** The
+orchestrator's mid-session relay of the seven batches' self-reported
+tag/skip counts (A1 11/2 … A7 9/4, summing to 78 tagged) did not match the
+tree: 83 distinct LLR ids carried a tag before this worker's own fix pass,
+and specific ids the relay described as "skipped" (LLR-005) were in fact
+present in the working tree, tagged — the relay's provenance was each
+batch's own final-message summary, not a re-read of the diff. This worker
+verified against the actual files rather than the relayed arithmetic before
+acting, per instructions.
+
+**Banked findings** (registry staleness the code-review pass surfaced;
+Approved rows, not touched — spine tiers are human-held):
+- LLR-143's `detail` is contradicted by the code/a test (batch A5 finding;
+  not independently re-verified by this worker beyond confirming no tag
+  was forced).
+- LLR-089's registered `code_symbol` never existed in `schedule.py` (batch
+  A5 finding).
+- LLR-050, LLR-142, and a third `derive_gate.py`/`check.py` row describe
+  D-9-retired behavior (predicates deleted at the D-9 migration steps
+  recorded in `tests/test_module_size_ratchet.py`'s own baseline
+  comments) — batch A6/A7 findings.
+- LLR-057, LLR-104, LLR-108's `module` cells are stale after a file split
+  (batch A6/A7 findings; same class as the WI-472/WI-477 `LLR-172`
+  banked item already on this fragment).
+- LLR-147's `code_symbol` names `sn_gate`; the live function is `sn_bar`
+  (this worker's own verification pass, above — tag placed on `sn_bar`
+  since the code genuinely matches, but the registry cell itself is stale
+  and worth a future WI-482-class repair).
+- LLR-077's `code_symbol` names `spec_ref_findings`; the live function is
+  `specref_findings` (same class, same disposition: tagged the real
+  function, registry spelling is what drifted).
+
+Deferred open items: none — the decay recommendation (don't build (c) now;
+consider a lighter existence-check WI later) is recorded on WI-487's own
+spec rather than a new OI, since OI-42 already covers this ground and
+stays `ruled`; the banked registry-staleness findings above are candidates
+for a future small WI-482-class repair, not an owner decision.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
