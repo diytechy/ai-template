@@ -96,7 +96,10 @@ BASELINE = {
     # extra_steps dropped under the limit (WI-279 lifted its [step:] section
     # scan into the shared _step_sections helper) — entry deleted per the
     # ratchet's improvement rule (re-stamp/delete downward in the same commit).
-    ("check.py", "main"): 16,
+    (
+        "check.py",
+        "main",
+    ): 15,  # RE-STAMPED DOWN -1 2026-08-21, WI-498 slice 2: main() sheds the floor-notice and advisory-tier branches with the tiers themselves (OI-51). Re-stamped down in the same commit, per this file's rule.
     # `spine_stage` DROPPED UNDER THE LIMIT at D-9 migration step 7 and its entry
     # is DELETED per the improvement rule (re-stamp or delete downward in the same
     # commit). It had been bumped 10 -> 11 at WI-445/OI-21 when the ladder gained

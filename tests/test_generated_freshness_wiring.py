@@ -144,18 +144,21 @@ def test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor():
             )
 
 
-def test_the_two_new_steps_gate_at_every_gate():
+def test_the_two_new_steps_gate_at_every_rung():
     # The gate-set decision, pinned. These two are NOT the {DevStg-Impl} doc-freshness
     # family: that family is DevStg-Impl-only because those views are of the project's own
     # evolving spine and churn while the plan forms. These index the APPARATUS
     # (the loop's prompt templates, the skill library) — kit source that does not
     # move as a downstream plan matures — and their consumers (session forensics,
     # an agent choosing a skill) are live from the first session. Concretely: this
-    # kit's own docs/gate reads DevStg-Reqs while its ratification window is open, so a
-    # {DevStg-Impl} step would not run in the kit's own CI at all for the window's whole
-    # duration, which is the gap re-created rather than closed.
+    # kit's own effective stage sits low while its ratification window is open,
+    # so an Impl-threshold step would not run in the kit's own CI at all for the
+    # window's whole duration, which is the gap re-created rather than closed.
+    #   The tag was a three-bar membership set and is now the LOWEST RUNG
+    # (WI-498 slice 2), which says the same thing more directly: there is no
+    # rung from which these two do not apply.
     for name in ("skills-index", "prompt-catalog"):
-        assert _step(name)[3] == {"DevStg-Reqs", "DevStg-Tests", "DevStg-Impl"}, name
+        assert _step(name)[3] == "DevStg-Needs", name
 
 
 def test_the_reference_ci_inherits_new_steps_without_editing_it():

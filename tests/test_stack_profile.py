@@ -208,56 +208,70 @@ def test_extra_step_joins_the_plan_with_derived_requires():
     # step; its required-import set is auto-derived from the argv (a `{py} -m
     # <mod>` step declares <mod>; a bare executable declares nothing).
     prof = _profile(
-        "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = DevStg-Tests DevStg-Impl\n"
+        "[step:dup-code]\ncommand = {py} -m duplo {src}\nfrom-stage = DevStg-Arch\n"
         "[step:license-lint]\ncommand = npx license-checker\n"
     )
     plan = check.steps(80, "all", "all", None, prof)
     dup = next(s for s in plan if s[0] == "dup-code")
     assert dup[1] == ("duplo",)  # `{py} -m duplo` declares the module
     assert dup[2][-1] == "src"  # {src} expanded
-    # Sorted by LADDER POSITION, never lexically: `DevStg-Impl` alphabetizes
-    # BEFORE `DevStg-Tests`, which is exactly why OI-21 banned ordering operators
-    # on the raw value and routed every comparison through `bar_ord`.
-    assert sorted(dup[3], key=check.bar_ord) == ["DevStg-Tests", "DevStg-Impl"]
+    # ONE RUNG, not a set of bars (WI-498 slice 2): the declared value is the
+    # rung the step becomes relevant at, and selection is AT OR ABOVE it — which
+    # is asserted as behaviour here rather than as a sorted list, because the
+    # ordering that list existed to pin now lives in `at_or_above`.
+    assert dup[3] == "DevStg-Arch"
+    assert check.at_or_above("DevStg-Tests", dup[3])
+    assert not check.at_or_above("DevStg-Reqs", dup[3])
     assert dup[4] == "product"
     lic = next(s for s in plan if s[0] == "license-lint")
     assert lic[1] == ()  # non-`-m` command declares no import (PATH guard covers it)
-    assert sorted(lic[3]) == ["DevStg-Impl"]  # default bar
+    assert lic[3] == "DevStg-Impl"  # the default rung
 
 
 def test_a_retired_gates_value_in_stack_ini_TRANSLATES():
-    """OI-21 contract break 2: `gates =` is a value the ADOPTER authors, so the
-    retired `G1|G2|G3` tags translate on read — silently here, because  # check_vocab: allow
-    check_vocab.py sees this same file and can name the offending line, which is a
-    better message than a per-step reader could give. New templates author the new
-    form; an adopter's existing stack.ini keeps working until their re-sync."""
+    """TWO retirements, one reader, applied in order.
+
+    `gates =` is a value the ADOPTER authors, so the retired `G1|G2|G3` tags  # check_vocab: allow
+    still translate on read (OI-21 break 2). Since WI-498 slice 2 the `gates =`
+    MEMBERSHIP LIST is itself retired in favour of a single `from-stage` rung, so
+    the translated list is then folded to the rung it effectively meant. An
+    adopter's stack.ini from either era keeps working until their re-sync.
+
+    THE FOLD IS NOT THE SPAN FLOOR, which is the part worth pinning: the
+    DevStg-Tests BAR was a MIN over every row and so was reached only by a fully
+    decomposed spine — the DevStg-Impl RUNG — while the DevStg-Reqs bar is the
+    floor every repo already sits at, so it folds to DevStg-Needs and the step
+    keeps running always."""
     prof = _profile(
         "[step:dup-code]\ncommand = {py} -m duplo {src}\ngates = G2 G3\n"  # check_vocab: allow
         "[step:legacy-mixed]\ncommand = npx thing\ngates = G1, DevStg-Impl\n"  # check_vocab: allow
     )
+    check._LEGACY_GATES_WARNED.clear()
     plan = check.steps(80, "all", "all", None, prof)
     dup = next(s for s in plan if s[0] == "dup-code")
-    assert dup[3] == {"DevStg-Tests", "DevStg-Impl"}
+    assert dup[3] == "DevStg-Impl"
     mixed = next(s for s in plan if s[0] == "legacy-mixed")
-    assert mixed[3] == {"DevStg-Reqs", "DevStg-Impl"}
+    assert mixed[3] == "DevStg-Needs"
 
 
-def test_extra_step_is_gate_scoped(scaffold):
-    # A [step:] declared for DevStg-Tests/DevStg-Impl must not run at DevStg-Reqs, and must show at its gates.
+def test_extra_step_is_stage_scoped(scaffold):
+    # A [step:] declared from DevStg-Arch on must not run below that rung, and
+    # must show at EVERY rung at or above it — the at-or-above half is what a
+    # membership set could not express.
     (scaffold / "docs" / "stack.ini").write_text(
-        "[step:cap-integrity]\ncommand = {py} scripts/check_caps.py\ngates = DevStg-Tests,DevStg-Impl\n",
+        "[step:cap-integrity]\ncommand = {py} scripts/check_caps.py\n"
+        "from-stage = DevStg-Arch\n",
         encoding="utf-8",
     )
-    at_g1 = run_py(
-        ["scripts/check.py", "--gate", "DevStg-Reqs", "--list"], cwd=scaffold
+    below = run_py(
+        ["scripts/check.py", "--stage", "DevStg-Reqs", "--list"], cwd=scaffold
     )
-    assert "cap-integrity" not in at_g1.stdout, at_g1.stdout
-    at_g2 = run_py(
-        ["scripts/check.py", "--gate", "DevStg-Tests", "--list"], cwd=scaffold
-    )
-    assert at_g2.returncode == 0, at_g2.stdout + at_g2.stderr
-    line = next(ln for ln in at_g2.stdout.splitlines() if "cap-integrity" in ln)
-    assert "[product]" in line and "check_caps.py" in line
+    assert "cap-integrity" not in below.stdout, below.stdout
+    for stage in ("DevStg-Arch", "DevStg-Release"):
+        at = run_py(["scripts/check.py", "--stage", stage, "--list"], cwd=scaffold)
+        assert at.returncode == 0, at.stdout + at.stderr
+        line = next(ln for ln in at.stdout.splitlines() if "cap-integrity" in ln)
+        assert "[product]" in line and "check_caps.py" in line
 
 
 def test_extra_step_runs_via_run_step(scaffold):

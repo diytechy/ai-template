@@ -190,41 +190,30 @@ earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
 The **ratification date is git-derived** — the commit that moved the `status`.
 No new field, at any tier.
 
-**A window lowers the bar; it must not create a blind spot.** While `Drafted`
-rows hold the gate down, the steps the *higher* gate requires would
-otherwise stop running entirely — so a regression introduced during the window
-goes unreported until it closes, then lands in one lump. `check.py` therefore
-runs those steps **advisory** (reported, warn-only, exit code unaffected) when
-`docs/gate`'s `# basis:` shows `drafted` above zero (and `modified`, on a gate
-file written before that value retired). Narrow by design:
-a project genuinely at a lower gate is *not* nagged — only a gate **suppressed by
-a pending ratification** triggers it. The test/coverage step stays out (the
-commit bar already runs the suite, so it is not a blind spot, and re-running it
-every gate run for the life of a window buys nothing).
+**A window cannot create a blind spot, because it no longer lowers what runs**
+(`OI-51`, ruled 2026-08-21). `check.py` selects each step by comparing the repo's
+**effective stage** — the rung the *settled* spine has earned, recorded in
+`docs/stage` — against the single rung that step declares: it runs when the repo
+is **at or above** it. The effective stage is derived with the pending rows
+removed, so drafting a requirement cannot drop a step out of the plan at all. The
+question each step answers is *"is it relevant to run this yet?"*, not *"which
+bar did I pass that permits it?"*.
 
-**And a product check does not fall at all.** Advisory is right for *maturity*
-checks; "does the code that already exists still build, lint and pass?" is a
-different question that drafting says nothing about. So `check.py` selects
-**product-layer** steps (`docs/stack.ini`'s `[product]`, plus each `[step:*]
-layer = product`) at `max(derived bar, ex-draft)` — the bar the *ratified* rows
-earned, which drafting cannot lower. This is the second derived number §4 allows
-*beside* the honest one: nothing is stored, the same arithmetic is re-run with
-the pending rows removed. Not a universal high-water mark — demoting a ratified
-row, or approving one below the spine's minimum, still lowers it; both are
-reviewed human-held acts visible as a changed `ex-draft=` in a tracked derived
-file, and that visibility is the sanction for a deliberate lowering. There is
-deliberately **no** dial that turns the floor off. The run names the steps it
-holds, so a step tagged for a higher bar never sits in the plan unexplained.
+*What this replaced, and why the replacement is not a relabel.* Two compensating
+mechanisms used to exist because the derived **bar** was a MIN over every
+in-scope row and one draft collapsed it: an **advisory tier** that re-ran the
+suppressed steps warn-only, and a **product-regression floor** that re-selected
+product-layer steps at the level the ratified rows earned. Both are deleted with
+the collapse they answered. Nothing is lost by the deletion — what the advisory
+tier ran warn-only now *gates*, and the floor's guarantee ("drafting cannot lower
+this") now holds for **every** step rather than only the product ones. There is
+still deliberately **no** dial that turns any of it off.
 
-*Scope, stated precisely because the sentence above reads wider than the
-mechanism (corrected 2026-08-21):* the floor selects at one bar — `DevStg-Tests`,
-the highest `ex-draft` can reach while `derive_gate`'s release ceiling stands —
-and it selects by set MEMBERSHIP. The shipped `[product]` format/lint/test steps
-are tagged `{DevStg-Impl}` only, so the floor cannot hold them; it holds exactly
-the `[step:*]` rows a project declares at `gates = DevStg-Tests` **and**
-`layer = product`. In a repo with none, the live set is empty. Whether the three
-built-ins should sit at a reachable bar is an owner question, open as `OI-51`
-in the kit's registry.
+*The consequence worth stating plainly:* the bar was ceilinged, so steps declared
+at the implementation rung — the shipped `format`/`lint`/`tests+coverage` among
+them — could not be selected by a derived value at all. On the stage axis they
+can, once a spine is decomposed and settled. A project that had been quietly
+skipping its own product checks starts running them.
 
 **Drafted artifacts live in the live spine** (§4) — the exemption in detail: a
 Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'s

@@ -291,7 +291,7 @@ def main():
         "",
         "## 6. Release hygiene",
         "",
-        "- [ ] `python scripts/check.py --gate DevStg-Impl --tier release` is green "
+        "- [ ] `python scripts/check.py --stage DevStg-Impl --tier release` is green "
         "(paste the output in the audit log).",
         "- [ ] CHANGELOG / release notes updated.",
         "- [ ] Version bumped; any changed `Approved` interface versions "

@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,948 | 2026-08-20 | −5: WI-486's back-link re-word onto its dial, paid by dropping an example |
 | `CLAUDE.md` | **8,500** | 7,147 | 2026-08-20 | +166: the stale ~17.6 s smoke figure replaced by three warm readings, one past the ceiling |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,974 | 2026-08-21 | -8: the row had drifted 57 low (4,925 stamped, 4,982 real); every Baseline cell is now test-pinned |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,834 | 2026-08-21 | -140: the two WATCHED rows re-stamped for WI-498 slice 2, both shorter than the entries they replace |
 
 **Two files are parked at their caps: `AGENTS.template.md` 52 bytes free (0.5%)
 and this one under 1%;** `CLAUDE.md` holds ~16%. Those two are what you hit
@@ -48,8 +48,8 @@ in the session/WI note. Enforced by convention + that report.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 84,383 | 2026-08-20 | **+303** FLAGGED: WI-484 — §1's derived-SR clause re-pointed onto the `Hat-Refs` cell, carrying the two rules a column name cannot give (blank = *not recorded*; an LLR's effective set is own + parents') |
-| `project-trajectory/PROCESS_OPTIONS.md` | 177,258 | 2026-08-21 | **+657** FLAGGED: review W-10 — the product floor's scope, precisely: it selects at ONE bar by membership, so its live set is empty in every shipped config |
+| `project-trajectory/PROCESS.md` | 84,524 | 2026-08-21 | **+141** FLAGGED: WI-498 slice 2 — the tense note and the harness line re-keyed onto `--stage`, the rung a repo is IN, which is what now selects checks (OI-51) |
+| `project-trajectory/PROCESS_OPTIONS.md` | 176,428 | 2026-08-21 | **−830** WI-498 slice 2: the advisory tier and the product floor retire with the draft-collapse they compensated for, replaced by the at-or-above rule |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

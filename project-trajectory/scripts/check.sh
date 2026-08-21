@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Thin launcher for the check harness on Linux/macOS. Prefers the project venv,
 # then any Python 3.11+ on PATH. All arguments pass straight through to check.py,
-# e.g.:  ./scripts/check.sh --gate DevStg-Impl --tier smoke
+# e.g.:  ./scripts/check.sh --stage DevStg-Impl --tier smoke
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

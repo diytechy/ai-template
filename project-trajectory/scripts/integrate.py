@@ -1410,7 +1410,7 @@ def _run_bar(wt, root, tier, gate=None):
     check = _branch_tree_script(wt, root, "check.py")
     argv = [str(py), str(check), "--jobs", "0", "--tier", tier, "--trunk-lane"]
     if gate:
-        argv += ["--gate", gate]
+        argv += ["--stage", gate]
     code, out = _run(argv, wt)
     skips = [ln for ln in out.splitlines() if re.match(r"\s*SKIP\s", ln)]
     if code != 0:

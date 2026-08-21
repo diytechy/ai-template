@@ -252,5 +252,8 @@ def test_okf_step_wired_at_g3(scaffold):
     allg = check.steps(80, "full", "all")
     cmd = next(s[2] for s in allg if s[0] == "okf")
     assert any("gen_okf.py" in str(t) for t in cmd) and "--check" in cmd
-    gates = next(s[3] for s in allg if s[0] == "okf")
-    assert gates == {"DevStg-Impl"}
+    # ONE RUNG since WI-498 slice 2: the generated-view family runs from the
+    # Impl rung on, where the plan has stopped forming and the view can be
+    # held to its regeneration.
+    threshold = next(s[3] for s in allg if s[0] == "okf")
+    assert threshold == "DevStg-Impl"

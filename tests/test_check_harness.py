@@ -125,36 +125,47 @@ def test_backlink_coverage_step_is_wired_at_the_right_bars(tmp_path):
     `check.py` runs it AT ALL was pinned by nothing. A step nothing invokes is a
     measurement nobody takes, and the whole ruling was "ship the measurement".
 
-    Two facts, both driven off the real step table: the step EXISTS from
-    DevStg-Tests on and not below (which is also why the shipped template must
-    not claim it warns at a plain run — below that bar it does not run), and
-    `--strict-backlinks` rides exactly the bars that promote it."""
-    check = load_script("check")
+    Two facts, both driven off the real step table: the step's THRESHOLD is the
+    DevStg-Impl rung and not below (which is also why the shipped template must
+    not claim it warns at a plain run — below that rung it does not run), and
+    `--strict-backlinks` rides exactly the rungs that promote it.
 
-    def step(gate):
+    The threshold moved to Impl at WI-498 slice 2, and the reason is in the step
+    table: what this grades is a literal `Implements:` declaration IN SOURCE, so
+    below the rung where source exists it would grade an artifact that does not.
+    The retired `{DevStg-Tests, DevStg-Impl}` tag named BARS, and the DevStg-Tests
+    bar was itself only reached by a fully decomposed spine — the Impl rung — so
+    this is where the step effectively always ran."""
+    check = load_script("check")
+    ladder = check._kitladder
+
+    def step(stage):
         return next(
-            (s for s in check.steps(80, "full", gate) if s[0] == "backlink-coverage"),
+            (s for s in check.steps(80, "full", stage) if s[0] == "backlink-coverage"),
             None,
         )
 
-    at_reqs = step("DevStg-Reqs")
+    at_reqs = step(ladder.STAGE_REQS)
     assert at_reqs is not None, "the step vanished from the table entirely"
-    _name, requires, cmd, gates, layer = at_reqs
+    _name, requires, cmd, threshold, layer = at_reqs
     assert layer == "process" and requires == ()  # kit-owned, stdlib-only
     assert "--backlink-coverage" in cmd, cmd
-    # WHERE IT RUNS: the gate set is the step table's own answer, and it does
-    # NOT include the requirements bar — so a plain run does not warn, it does
-    # not run the step. (The shipped template claimed otherwise until 2026-08-20.)
-    assert gates == {"DevStg-Tests", "DevStg-Impl"}, gates
-    # ...and below its bars it is never promoted, so a stray invocation cannot
+    # WHERE IT RUNS: the threshold is the step table's own answer, and a repo at
+    # the requirements rung is NOT at or above it — so a plain run does not warn,
+    # it does not run the step at all. (The shipped template claimed otherwise
+    # until 2026-08-20.)
+    assert threshold == ladder.STAGE_IMPL, threshold
+    assert not check.at_or_above(ladder.STAGE_REQS, threshold)
+    # ...and below its rung it is never promoted, so a stray invocation cannot
     # gate on a dial the repo has not reached.
     assert "--strict-backlinks" not in cmd, cmd
-    for gate in ("DevStg-Tests", "DevStg-Impl"):
-        found = step(gate)
-        assert found is not None, "no backlink-coverage step at {}".format(gate)
+    for stage in (ladder.STAGE_IMPL, ladder.STAGE_RELEASE):
+        found = step(stage)
+        assert found is not None, "no backlink-coverage step at {}".format(stage)
+        assert check.at_or_above(stage, found[3])
         assert "--strict-backlinks" in found[2], (
             "at {} the step must promote a below-minimum reading to a failure; "
-            "without the flag the dial can never gate at any bar".format(gate)
+            "without the flag the dial can never gate at any rung".format(stage)
         )
 
 
@@ -271,10 +282,10 @@ def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
     # check.py consumes the derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md §5):
     # the derived-gate freshness step is a process-layer step at every gate.
     check = load_script("check")
-    for gate in ("DevStg-Reqs", "DevStg-Tests", "DevStg-Impl"):
-        plan = [s for s in check.steps(80, "full", gate) if gate in s[3]]
+    for stage in check._kitladder.STAGE_ORDER:
+        plan = check.resolve_plan(stage, 80, "full", None, None)
         match = [s for s in plan if s[0] == "derived-gate"]
-        assert match, "derived-gate missing at {}".format(gate)
+        assert match, "derived-gate missing at {}".format(stage)
         assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
     # End-to-end: on a DevStg-Impl-complete project (docs/gate regenerated to DevStg-Impl) the step
     # passes; un-verifying an SR without regenerating docs/gate makes it FAIL.
@@ -312,37 +323,51 @@ def test_run_steps_reports_every_failure(scaffold):
     assert any("FAIL" in ln and "registry-integrity" in ln for ln in lines), proc.stdout
 
 
-def test_step_gate_honours_an_explicit_gate(scaffold):
-    # WI-355: --run-step/--run-steps used to resolve their plan at gate "all"
-    # unconditionally, so `--gate DevStg-Impl --run-steps trajectory` ran the WARN-first
-    # command while `--gate DevStg-Impl --list` advertised the --strict one. _step_gate is
-    # the explicit-vs-defaulted sentinel: an explicitly passed --gate builds the
-    # command AT that gate; a defaulted one (argparse default=None — what the
-    # pre-commit hook passes) stays "all" and must NEVER consult docs/gate, or
-    # the commit floor would arm --strict (see the trajectory step's comment).
+def test_step_stage_honours_an_explicit_stage(scaffold):
+    # WI-355: --run-step/--run-steps used to resolve their plan at "all"
+    # unconditionally, so `--stage DevStg-Impl --run-steps trajectory` ran the
+    # WARN-first command while `--stage DevStg-Impl --list` advertised the
+    # --strict one. _step_stage is the explicit-vs-defaulted sentinel: an
+    # explicitly passed --stage builds the command AT that rung; a defaulted one
+    # (argparse default=None — what the pre-commit hook passes) stays ALL and
+    # must NEVER consult the derived stage, or the commit floor would arm
+    # --strict (see the trajectory step's comment).
     check = load_script("check")
-    assert check._step_gate("DevStg-Impl") == "DevStg-Impl"
-    assert check._step_gate("DevStg-Reqs") == "DevStg-Reqs"
-    assert check._step_gate(None) == "all"
-    assert check._step_gate("") == "all"
+    ladder = check._kitladder
+    assert check._step_stage(ladder.STAGE_IMPL) == ladder.STAGE_IMPL
+    assert check._step_stage(ladder.STAGE_REQS) == ladder.STAGE_REQS
+    assert check._step_stage(None) == check.ALL
+    assert check._step_stage("") == check.ALL
 
     # And the sentinel really changes the command built for the step that carries
-    # the R-B..R-E promotions — the only step keying on gate in ("DevStg-Tests","DevStg-Impl").
-    def traj_cmd(gate):
-        match = [s for s in check.steps(80, "full", gate) if s[0] == "trajectory"]
-        assert match, "no trajectory step at gate {}".format(gate)
+    # the R-B..R-E promotions — the only step keying on the Impl rung for its
+    # SEVERITY rather than for its selection.
+    def traj_cmd(stage):
+        match = [s for s in check.steps(80, "full", stage) if s[0] == "trajectory"]
+        assert match, "no trajectory step at stage {}".format(stage)
         return match[0][2]
 
-    assert "--strict" in traj_cmd("DevStg-Impl")
-    assert "--strict" in traj_cmd("DevStg-Tests")
-    assert "--strict" not in traj_cmd("all")
-    # Name lookup stays unfiltered at any gate: `format` is a DevStg-Impl-only step but the
-    # hook resolves it with no --gate, so it must still be findable at "all"...
-    assert [s for s in check.steps(80, "full", "all") if s[0] == "format"]
-    # ...and at an explicit LOW gate too (WI-360, WI-355-REVIEW-A MINOR 2). The
-    # "all" assertion alone would stay green if steps() started filtering its
-    # returned table by gate — DevStg-Reqs is the case that would break, so pin it.
-    assert [s for s in check.steps(80, "full", "DevStg-Reqs") if s[0] == "format"]
+    assert "--strict" in traj_cmd(ladder.STAGE_IMPL)
+    assert "--strict" in traj_cmd(ladder.STAGE_RELEASE)
+    # Below the promotion rung it stays warn-first — and so does ALL, which is
+    # the whole point of the sentinel (the hook's floor must not block a commit
+    # on status.md drift).
+    assert "--strict" not in traj_cmd(ladder.STAGE_TESTS)
+    assert "--strict" not in traj_cmd(check.ALL)
+    # Name lookup stays unfiltered at any rung: `format`'s threshold is the Impl
+    # rung but the hook resolves it with no --stage, so it must still be findable
+    # at ALL...
+    assert [s for s in check.steps(80, "full", check.ALL) if s[0] == "format"]
+    # ...and at an explicit LOW rung too (WI-360, WI-355-REVIEW-A MINOR 2). The
+    # ALL assertion alone would stay green if steps() started filtering its
+    # returned table, and DevStg-Reqs is the case that would break, so pin it.
+    # `steps()` BUILDS the table; `resolve_plan` is what selects from it.
+    assert [s for s in check.steps(80, "full", ladder.STAGE_REQS) if s[0] == "format"]
+    assert not [
+        s
+        for s in check.resolve_plan(ladder.STAGE_REQS, 80, "full", None, None)
+        if s[0] == "format"
+    ]
 
 
 def test_run_steps_unknown_name_fails_loudly(scaffold):
@@ -511,50 +536,59 @@ def test_module_coverage_full_then_smoke_run_scopes_the_report(scaffold):
     assert not (scaffold / "coverage.json").exists()  # run-scoped away
 
 
-def test_default_gate_comes_from_gate_file(scaffold):
-    # check.py without --gate reads the committed docs/gate (bootstrap writes
-    # DevStg-Reqs), so CI enforces the bar the project is actually at — a fresh scaffold
-    # must be green, not red-until-DevStg-Impl (the day-one false-red regression).
-    gate_file = scaffold / "docs" / "gate"
-    assert gate_file.read_text(encoding="utf-8").strip() == "DevStg-Reqs"
+def test_the_default_stage_comes_from_the_derived_stage_file(scaffold):
+    """check.py without --stage reads the repo's DERIVED effective stage, so CI
+    enforces the rung the project is actually on — a fresh scaffold must be
+    green, not red-until-Impl (the day-one false-red regression).
+
+    THE SOURCE FILE CHANGED AT WI-498 slice 2: `docs/gate` (a bar) → `docs/stage`
+    (a rung), read through `kitlib.stage.read_stage` rather than by scraping a
+    line. Three properties move with it and are pinned below: a fresh scaffold
+    still resolves the floor and still passes; an explicit --stage still wins;
+    and a hand-edited value that is not a rung fails LOUDLY instead of selecting
+    a silently wrong plan. The retired-vocabulary refusal keeps its ruling
+    (OI-21 break 5 — the file is GENERATED, so a retired value there means the
+    cache predates the conversion and the fix is one regenerate, not a reader
+    that accepts both spellings forever); it is now enforced by
+    `kitlib.stage.require_rung`, which refuses everything off the ladder rather
+    than only the tags someone remembered to list."""
+    stage_file = scaffold / "docs" / "stage"
     proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Plan for gate DevStg-Reqs" in proc.stdout
-    # And the DevStg-Reqs plan actually passes on the untouched scaffold (the CI path).
+    # A fresh scaffold ships the placeholder, so the reader DERIVES: an empty
+    # spine earns nothing and the selection floor applies.
+    assert "Plan at stage DevStg-Reqs" in proc.stdout
+    # And that plan actually passes on the untouched scaffold (the CI path).
     proc = run_py(["scripts/check.py", "--tier", "smoke", "--lenient"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RESULT: PASS" in proc.stdout
 
-    # Bumping the gate raises the bar; an explicit --gate always wins; garbage
-    # in the file fails loudly rather than running a silently wrong plan.
-    gate_file.write_text("DevStg-Tests\n", encoding="utf-8")
-    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert "Plan for gate DevStg-Tests" in proc.stdout
-    proc = run_py(["scripts/check.py", "--gate", "DevStg-Reqs", "--list"], cwd=scaffold)
-    assert "Plan for gate DevStg-Reqs" in proc.stdout
-    gate_file.write_text("banana\n", encoding="utf-8")
-    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert proc.returncode != 0
-    assert "docs/gate" in proc.stdout + proc.stderr
-
-    # Comment lines are tolerated — every declared-policy file shares one
-    # parse rule (first non-empty, non-comment line): a docs/gate annotated
-    # like the sibling gate-policy/push-policy files must still resolve.
-    gate_file.write_text(
-        "# active bar (see process.md §7)\nDevStg-Tests\n", encoding="utf-8"
+    # A REAL derived record is read back rather than re-derived (the fingerprint
+    # fast path), and an explicit --stage always wins over it.
+    assert (
+        run_py([SCRIPTS / "derive_stage.py", "--root", "."], cwd=scaffold).returncode
+        == 0
     )
-    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Plan for gate DevStg-Tests" in proc.stdout
+    recorded = stage_file.read_text(encoding="utf-8")
+    assert "stage = DevStg-Reqs" in recorded
+    proc = run_py(
+        ["scripts/check.py", "--stage", "DevStg-Release", "--list"], cwd=scaffold
+    )
+    assert "Plan at stage DevStg-Release" in proc.stdout
 
-    # THE RETIRED VOCABULARY IS REFUSED IN docs/gate — no compat shim, by ruling
-    # (OI-21 break 5). docs/gate is GENERATED, so a retired value there means the
-    # cache predates the conversion and the fix is one regenerate, not a reader
-    # that quietly accepts both spellings forever.
-    gate_file.write_text("G2\n", encoding="utf-8")  # check_vocab: allow
-    proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
-    assert proc.returncode != 0
-    assert "docs/gate contains 'G2'" in proc.stdout + proc.stderr  # check_vocab: allow
+    # A hand-edited non-rung fails loudly, and the two cases differ: `banana` is
+    # not rung-shaped at all, while a retired gate tag is the value an
+    # un-regenerated cache would actually carry. Both are refused. The tag below
+    # is the INPUT under test, not a live citation.
+    for bad in ("banana", "G2"):  # check_vocab: allow
+        stage_file.write_text(
+            recorded.replace("stage = DevStg-Reqs", "stage = " + bad),
+            encoding="utf-8",
+        )
+        proc = run_py(["scripts/check.py", "--list"], cwd=scaffold)
+        assert proc.returncode != 0, bad
+        assert bad in proc.stdout + proc.stderr, bad
+        assert "stage ladder" in proc.stdout + proc.stderr, bad
 
 
 def test_list_tags_process_and_product_layers(scaffold):

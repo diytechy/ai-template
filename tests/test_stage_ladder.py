@@ -81,8 +81,8 @@ def test_no_module_compares_a_ladder_value_lexically():
                 offenders.append("{}:{}: {}".format(path.name, n, line.strip()))
     assert not offenders, (
         "a ladder value is being ordered lexically — route it through "
-        "derive_gate.stage_ord / check.bar_ord (OI-21 banned ordering operators "
-        "on the raw value; the new labels do NOT alphabetize, so this is wrong "
+        "kitlib.ladder.stage_ord (OI-21 banned ordering operators "
+        "on the raw value; the labels do NOT alphabetize, so this is wrong "
         "even where the retired G-tags made it accidentally right):\n  "
         + "\n  ".join(offenders)
     )
@@ -101,9 +101,9 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
         assert _LEXICAL.search(line), line
     must_not_catch = [
         "assert stage_ord(a) > stage_ord(b)",
-        'STAGE_BAR[STAGE_REQS] = "DevStg-Reqs"',
+        '_LEGACY_BAR_THRESHOLD[STAGE_REQS] = "DevStg-Reqs"',
         "max(bars, key=_BAR_GATES.index)",
-        "sorted(higher_bars, key=bar_ord, reverse=True)",
+        "min(rungs, key=_kitladder.stage_ord)",
     ]
     for line in must_not_catch:
         assert not _LEXICAL.search(line), line
@@ -112,17 +112,38 @@ def test_the_grep_would_actually_catch_the_thing_it_bans():
 # --- the F5-duplicated vocabulary, pinned equal --------------------------------
 
 
-def test_check_and_derive_gate_agree_on_the_bar_vocabulary():
-    """`check.py` restates the bar names rather than importing them, because it
-    must stay a wholesale drop-in that never imports a sibling (the F5 rule). So
-    nothing but this test stops the harness's step-selection vocabulary from
-    drifting away from the value `derive_gate.py` writes into `docs/gate` — and
-    that drift would present as "no checks defined", a green that ran nothing."""
-    assert check.BAR_ORDER == dg.BAR_ORDER
-    assert check.RETIRED_BAR_ALIASES == dg.RETIRED_BAR_ALIASES
-    assert check.GATES == dg.BAR_ORDER + ["all"]
-    for name in dg.BAR_ORDER:
-        assert check.bar_ord(name) == dg.bar_ord(name)
+def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
+    """The F5 duplication this test used to police is GONE (WI-498 slice 2).
+
+    `check.py` restated the three bar names because it must stay a wholesale
+    drop-in that never imports a SIBLING SCRIPT — and nothing but an equality
+    pin stopped its selection vocabulary from drifting away from the value
+    `derive_gate.py` writes, a drift that would have presented as "no checks
+    defined": a green that ran nothing. It restates nothing now. Selection keys
+    on `kitlib.ladder`, the sanctioned shared package, so the drift became
+    UNREPRESENTABLE rather than detected — the WI-448 precedent slice 0 followed.
+    What is pinned instead is that the retirement actually happened, because a
+    re-introduced private copy would silently restore the hazard."""
+    assert check.STAGES == list(dg.STAGE_ORDER) + ["all"]
+    for gone in ("BAR_ORDER", "GATES", "bar_ord", "GATE_FILE"):
+        assert not hasattr(check, gone), "the bar axis is retired from check.py"
+    # The retired VALUE aliases stay equal: those are still two hand-authored
+    # tables, so that half of the pin is still load-bearing.
+    assert check.RETIRED_STAGE_ALIASES == dg.RETIRED_BAR_ALIASES
+
+
+def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
+    """The owner's rule (OI-51) pinned as BEHAVIOR rather than as prose: a step
+    runs because the repo is at or above its threshold, `all` is above
+    everything without being a rung, and an unknown rung RAISES instead of
+    degrading to a default that would silently change which checks run."""
+    assert check.at_or_above(dg.STAGE_RELEASE, dg.STAGE_NEEDS)
+    assert check.at_or_above(dg.STAGE_IMPL, dg.STAGE_IMPL)
+    assert not check.at_or_above(dg.STAGE_ARCH, dg.STAGE_IMPL)
+    assert check.at_or_above(check.ALL, dg.STAGE_RELEASE)
+    assert check.ALL not in dg.STAGE_ORDER
+    with pytest.raises(ValueError):
+        check.at_or_above("DevStg-SomethingNew", dg.STAGE_NEEDS)
 
 
 def test_the_integrate_and_intake_bar_vocabularies_agree_too():

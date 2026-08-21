@@ -53,10 +53,10 @@ def process_entry_scripts() -> set[str]:
     """
     check = load_script("check")
     plan = check.steps(
-        coverage=80, tier="full", gate="DevStg-Impl", phase=None, profile=None
+        coverage=80, tier="full", stage="DevStg-Impl", phase=None, profile=None
     )
     stems = set()
-    for _name, _requires, cmd, _gates, layer in plan:
+    for _name, _requires, cmd, _threshold, layer in plan:
         if layer != "process":
             continue
         for arg in cmd:

@@ -937,51 +937,15 @@ def spine_stage(
     return STAGE_RELEASE
 
 
-# THE DECLARED STAGE -> BAR MAPPING (OI-21). Each bar is named for the top rung it
-# certifies, so the reconciliation is a partition of the ladder rather than an
-# arithmetic coincidence: rungs 0-2 sit under DevStg-Reqs, 3-5 under
-# DevStg-Tests, 6-7 under DevStg-Impl.
-STAGE_BAR = {
-    STAGE_NEEDS: BAR_NAMES[BAR_REQS],
-    STAGE_BOUNDARY: BAR_NAMES[BAR_REQS],
-    STAGE_REQS: BAR_NAMES[BAR_REQS],
-    STAGE_ARCH: BAR_NAMES[BAR_TESTS],
-    STAGE_LLREQS: BAR_NAMES[BAR_TESTS],
-    STAGE_TESTS: BAR_NAMES[BAR_TESTS],
-    STAGE_IMPL: BAR_NAMES[BAR_RELEASE],
-    STAGE_RELEASE: BAR_NAMES[BAR_RELEASE],
-}
-
-
-def stage_to_bar(stage):
-    """THE DECLARED MAPPING between the two axes — stated once, here, so the
-    reconciliation is auditable instead of implied.
-
-    THE RULE IS UNIFORM: `stage_to_bar(s)` is **the next bar you must clear**,
-    and under the eight-rung ladder it needs no exception. `DevStg-Release` has
-    already cleared `DevStg-Impl` and no rung past it is mechanized, so it
-    stays held to that bar rather than reporting one the harness does not know.
-    The strictness selector and the approaching bar are the same value for a good
-    reason: you are held to the bar you are trying to clear.
-
-    A LOOKUP, NOT ARITHMETIC — `stage_ord` exists and this could compare through
-    it, but a table states the partition where a reader looks, and an inserted
-    rung then fails LOUDLY here (a missing key) instead of silently landing under
-    whichever bar the inequality happens to put it.
-
-    Nothing derives the bar FROM the stage in production — `compute` still
-    computes the bar from the artifact states exactly as it always did — so this
-    is a reader's reconciliation, not a second source of truth. Keep that reading:
-    a bar is NOT a pure function of stage (DevStg-Reqs's bar includes non-goals
-    and a UX sign-off; DevStg-Tests's includes diagrammed runtime flows), and
-    deriving one from the other would silently drop the human half."""
-    try:
-        return STAGE_BAR[stage]
-    except KeyError:
-        raise ValueError(
-            "derive_gate: no bar declared for stage {!r} — add it to STAGE_BAR "
-            "(every rung on STAGE_ORDER needs one)".format(stage)
-        ) from None
+# THE STAGE -> BAR CROSSING TABLE IS GONE (WI-498 slice 2, ruled plan §5 item 2).
+# `STAGE_BAR` and `stage_to_bar` declared which bar a rung sat under, and their
+# own docstring recorded that NOTHING derived the bar from the stage in
+# production — it was a reader's reconciliation between two axes. Selection now
+# keys on the stage alone, so there are no longer two axes for a reader to
+# reconcile: the table answered a question nobody asks any more. The bar itself
+# stays computed below, because `docs/gate` is still WRITTEN for the detectors
+# that read its committed history (phase-drop, tier signal — slice 4); when
+# slice 5 retires the file, the rest of this axis goes with it.
 
 
 def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):

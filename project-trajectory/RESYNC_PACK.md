@@ -2202,6 +2202,65 @@ regeneration stays `trunk_step.py --regen` and your own explicit run.
 list resolves by carrier exactly as the derivation does, and which carrier
 answered is part of the fingerprint.
 
+### `check.py` selects AT OR ABOVE the derived stage — the bar axis leaves selection [since 1a7984ea]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**THIS ONE CHANGES WHICH CHECKS RUN IN YOUR CI. Read it before you take the
+files.** Everything else in this range was additive; this is not.
+
+**The rule.** A step used to run because its `gates=` tag CONTAINED the derived
+bar — set membership. It now runs because your repo's stage is **at or above**
+the single rung the step declares. `check.py` reads `docs/stage`, not
+`docs/gate`, and the three readers it had of the latter (`resolve_gate`,
+`window_open`, `product_floor`) are gone.
+
+**What you must expect to start running.** Under the old axis the derived bar
+was a MIN over every in-scope row and was CEILINGED at `DevStg-Tests`, so the
+steps tagged `{DevStg-Impl}` — **`format`, `lint`, `tests+coverage`, and any
+`[step:*]` of your own that took the default** — could not be selected by a
+derived value **at all**, on any repo. If your spine is fully decomposed and
+settled, they select now. That is the defect this change exists to fix, and the
+honest consequence is that a repo whose product checks have been quietly
+skipped in CI will go red on the first run. **Run `check.py --list` before you
+push** to see the plan you are about to get.
+
+**What can no longer stop running.** Drafting a requirement used to drop the
+derived bar to what a fresh scaffold reads, which removed steps; a
+compensating "product floor" and a warn-only "advisory tier" existed for that.
+The effective stage is derived over your SETTLED spine, so drafting cannot lower
+selection at all — for any step, not just the product ones. Both compensating
+mechanisms are therefore deleted, and their disappearance costs you nothing: what
+they ran warn-only now gates.
+
+**One step changes when it runs rather than whether:** `registry-integrity` was
+tagged `{DevStg-Reqs}` alone and now runs at every rung. It is a cheap read-only
+pass, and a structurally broken registry is unreadable at every rung.
+
+**Your `[step:*]` sections: `gates =` becomes `from-stage =`.** The new key takes
+ONE rung of the eight-stage ladder and means "from here up". Your existing
+`gates =` lists keep working and are translated on read, with one notice per run
+naming the section — but the translation is not the span floor you might expect:
+`gates = DevStg-Tests` becomes `from-stage = DevStg-Impl`, because the
+`DevStg-Tests` BAR was only ever reached by a fully decomposed spine, which is
+the `DevStg-Impl` RUNG. Migrating by hand means opening that judgement, so prefer
+the translation unless you know the step's real prerequisite.
+
+**The flag.** `--stage` is the canonical spelling. `--gate` keeps working
+**silently and indefinitely** — it is a flag name your hooks and CI pass
+literally. `--stage-cleared` also keeps working but now prints one deprecation
+line per run: unlike `--gate` it makes a claim about the axis ("a bar being
+cleared") that this change retires. The VALUE spellings are unchanged and the
+retired `G1`/`G2`/`G3` and `DevBar-*` aliases still translate with their warning;
+what changed is the reading — `DevStg-Tests` now says "the repo is at that rung",
+not "that bar must next be cleared".
+
+**Take:** the updated `scripts/check.py`, `scripts/derive_gate.py`,
+`scripts/integrate.py`, `ci/check.yml`, `stack.ini.template`, and the `setup.*` /
+`check.*` launcher scripts. **`docs/gate` is still generated and still
+freshness-gated** — the phase-drop and tier-signal detectors read its committed
+history, and it retires in a later entry, not this one.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

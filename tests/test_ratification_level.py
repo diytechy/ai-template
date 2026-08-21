@@ -669,48 +669,17 @@ def test_the_two_ruled_label_typos_never_shipped():
     assert dg.STAGE_ARCH == "DevStg-Arch" and dg.STAGE_IMPL == "DevStg-Impl"
 
 
-# --- the declared stage -> bar mapping -----------------------------------------
-
-
-UNIFORM_STAGE_TO_BAR = {
-    dg.STAGE_NEEDS: "DevStg-Reqs",
-    dg.STAGE_BOUNDARY: "DevStg-Reqs",
-    dg.STAGE_REQS: "DevStg-Reqs",
-    dg.STAGE_ARCH: "DevStg-Tests",
-    dg.STAGE_LLREQS: "DevStg-Tests",
-    dg.STAGE_TESTS: "DevStg-Tests",
-    dg.STAGE_IMPL: "DevStg-Impl",
-    dg.STAGE_RELEASE: "DevStg-Impl",
-}
-
-
-@pytest.mark.parametrize("stage,bar", sorted(UNIFORM_STAGE_TO_BAR.items()))
-def test_stage_to_bar_is_THE_NEXT_BAR_YOU_MUST_CLEAR(stage, bar):
-    """The ruled mapping, pinned whole.
-
-    Each bar is named for the TOP RUNG IT CERTIFIES, so the reconciliation is a
-    partition of the ladder rather than an arithmetic coincidence: rungs 0-2 sit
-    under DevStg-Reqs, 3-5 under DevStg-Tests, 6-7 under DevStg-Impl.
-    `DevStg-Release` has already cleared the top bar and no rung above it is
-    mechanized, so it stays held to that bar rather than reporting one the harness
-    does not know."""
-    assert dg.stage_to_bar(stage) == bar
-
-
-def test_stage_to_bar_names_no_bar_the_harness_does_not_know():
-    for stage in dg.STAGE_ORDER:
-        assert dg.stage_to_bar(stage) in dg.BAR_ORDER
-
-
-def test_stage_to_bar_RAISES_for_a_rung_with_no_declared_bar():
-    # A table, not an inequality, precisely so an inserted rung fails LOUDLY here
-    # instead of landing under whichever bar the arithmetic happened to give it.
-    with pytest.raises(ValueError):
-        dg.stage_to_bar("DevStg-SomethingNew")
-
-
-def test_every_rung_has_exactly_one_declared_bar():
-    assert set(dg.STAGE_BAR) == set(dg.STAGE_ORDER)
+# --- the declared stage -> bar mapping: RETIRED (WI-498 slice 2) ---------------
+#
+# `derive_gate.STAGE_BAR` / `stage_to_bar` and the four tests that pinned them
+# are gone. They declared which BAR each rung sat under, and their own docstring
+# recorded that nothing in production derived one axis from the other — the
+# table was a reader's reconciliation. Selection now keys on the stage alone
+# (`check.at_or_above`), so there is no second axis to reconcile against and the
+# pins were holding a mapping with no consumer. Deleted rather than re-pointed:
+# a test that pins a table nobody reads is the kind of green this repo treats as
+# a liability. The ladder's own pins above (order, labels, `stage_ord` raising)
+# are untouched, because those DO have consumers.
 
 
 # --- the two dials that shipped with no reader ---------------------------------

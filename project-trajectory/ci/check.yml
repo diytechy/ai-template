@@ -86,7 +86,7 @@ jobs:
       - name: Release suite (tag)
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          python scripts/check.py --gate all --tier release
+          python scripts/check.py --stage all --tier release
           python scripts/gen_release_checklist.py --version "${GITHUB_REF_NAME}"
 
       # Publish the generated reports even on failure, for review.

@@ -2143,27 +2143,29 @@ def test_the_merge_slot_mints_the_adjudication_row_at_intake(tmp_path):
 
 
 def test_the_bar_key_reaches_check_gate(tmp_path):
-    # WI-388 (5): an optional frontmatter `bar = DevStg-Reqs|DevStg-Tests|DevStg-Impl` pins the lane's
-    # verification strictness — the refresh passes it to check.py as --gate, so
-    # a row claimed to deliver evidence at a level still bars at that level if
-    # docs/gate moves mid-flight. Asserted off the recording stub's OWN argv.
+    # WI-388 (5): an optional frontmatter `bar = DevStg-Reqs|DevStg-Tests|DevStg-Impl`
+    # pins the lane's verification strictness — the refresh passes it to check.py
+    # as --stage (WI-498 slice 2 re-keyed the flag; the three VALUES are ladder
+    # rungs and are unchanged), so a row claimed to deliver evidence at a level
+    # still bars at that level if the derived value moves mid-flight. Asserted
+    # off the recording stub's OWN argv.
     root = station_repo(tmp_path, bar="DevStg-Tests")
     wt = _lane(root, "wi-401")
     sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
     order = _order(wt)
-    assert "--gate" in order and "DevStg-Tests" in order, order
-    assert order.index("--gate") + 1 == order.index("DevStg-Tests")
+    assert "--stage" in order and "DevStg-Tests" in order, order
+    assert order.index("--stage") + 1 == order.index("DevStg-Tests")
 
 
-def test_without_a_bar_key_the_refresh_passes_no_gate(tmp_path):
+def test_without_a_bar_key_the_refresh_passes_no_stage(tmp_path):
     # The complement, so the key cannot be mistaken for a default: an undeclared
-    # bar leaves check.py on its own derived-gate read, exactly as before.
+    # bar leaves check.py on its own derived-stage read, exactly as before.
     root = station_repo(tmp_path)
     wt = _lane(root, "wi-401")
     _sha, refusal = integ.refresh(root, "wi-401", "smoke")
     assert refusal is None, refusal
-    assert "--gate" not in _order(wt)
+    assert "--stage" not in _order(wt)
 
 
 def test_a_malformed_bar_value_refuses_the_refresh(tmp_path):

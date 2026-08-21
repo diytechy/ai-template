@@ -528,10 +528,11 @@ DevStg-Impl       implementation in work
 DevStg-Release    nothing in work; release checklist available
 ```
 
-**Read the marked rungs as events, in the tense that fits.** `docs/gate` caches
-the stage that must be cleared **next** and `check.py --stage-cleared <stage>`
-runs that stage's bar; the sign-off record names the stage **already** cleared.
-Same token, and the sentence around it says which. **`DevStg-Release` is not
+**Read the marked rungs as events, in the tense that fits.** The sign-off record
+names the stage **already** cleared, while `docs/gate` caches the stage that must
+be cleared **next**. Same token, and the sentence around it says which. What
+selects CHECKS is neither: `check.py --stage <rung>` names the stage the repo is
+**in**, and runs every step declared at or below it (OI-51). **`DevStg-Release` is not
 clearable** — nothing in work, nothing to certify — which is why the last bar is
 `DevStg-Impl`.
 
@@ -1046,8 +1047,9 @@ durable research findings use optional knowledge packs (`process-options.md`,
 Ready reference scripts ship with the template (Python 3.11+, stdlib only — no
 pip needed to run them):
 
-- `scripts/check.py` — the harness itself. Gate-scoped (`--gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all`,
-  defaulting to the derived gate in `docs/gate`), runs
+- `scripts/check.py` — the harness itself. Stage-scoped (`--stage <rung>|all`,
+  defaulting to the derived effective stage in `docs/stage`; a step runs when
+  that rung is at or above the one it declares), runs
   format · lint · tests · coverage · traceability · generated-artifact freshness, and exits
   nonzero on any failure. Wire it to your stack by editing `docs/stack.ini` (the
   commands/paths/tiers/coverage; its built-in `steps()` fallback is unchanged);

@@ -139,19 +139,23 @@ def test_harness_runs_registry_integrity_at_g1(scaffold):
     # Gate wiring: DevStg-Reqs gets the always-valid integrity floor (the Gilbert defect
     # class must fail at the FIRST gate, not surface at DevStg-Impl --strict-schema).
     check = load_script("check")
-    g1 = [s for s in check.steps(80, "full", "DevStg-Reqs") if "DevStg-Reqs" in s[3]]
-    (step,) = [s for s in g1 if s[0] == "registry-integrity"]
+    # The integrity floor applies from the LOWEST rung — it is the one step
+    # whose retired tag was a `{DevStg-Reqs}`-only membership set, which an
+    # at-or-above rule cannot express (WI-498 slice 2): a structurally broken
+    # registry is unreadable at every rung, so it is checked at every rung.
+    low = check.resolve_plan("DevStg-Reqs", 80, "full", None, None)
+    (step,) = [s for s in low if s[0] == "registry-integrity"]
     assert step[4] == "process" and step[1] == ()
     assert "--strict-integrity" in step[2]
     # End-to-end: a fresh scaffold passes DevStg-Reqs; a seeded misquote fails it.
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevStg-Reqs", "--lenient"], cwd=scaffold
+        ["scripts/check.py", "--stage", "DevStg-Reqs", "--lenient"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     make_minimal_project(scaffold)
     sr_path(scaffold).write_text(UNQUOTED_COMMA_SRS, encoding="utf-8")
     proc = run_py(
-        ["scripts/check.py", "--gate", "DevStg-Reqs", "--lenient"], cwd=scaffold
+        ["scripts/check.py", "--stage", "DevStg-Reqs", "--lenient"], cwd=scaffold
     )
     assert proc.returncode != 0
     assert "RESULT: FAIL" in proc.stdout

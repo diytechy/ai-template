@@ -692,22 +692,30 @@ def test_ex_draft_equals_computed_when_nothing_is_pending(scaffold):
     assert result["ex_draft"] == result["raw"]
 
 
-def test_the_basis_line_still_parses_under_checks_window_regexes(scaffold):
-    """THE PRODUCER-CONSUMER ROUND TRIP (D-9 migration §F1, risk 1).
+def test_the_basis_line_still_parses_under_its_SURVIVING_consumer(scaffold):
+    """THE PRODUCER-CONSUMER ROUND TRIP (D-9 migration §F1, risk 1), re-pointed.
 
-    `check.window_open` decides whether an open ratification window is
-    SUPPRESSING the derived bar, and it decides it by regex over the one line
-    this module writes. When that pairing breaks, nothing fails: the detector
-    silently answers "no window", and the twelve gate steps a window would have
-    kept running stop running — measured, over twelve commits, at the
-    2026-07-26/27 window (check.py's own `window_open` docstring).
+    THE LESSON IS UNCHANGED AND IS WHY THIS TEST SURVIVES ITS ORIGINAL SUBJECT.
+    When a producer field and the regex that reads it drift apart, nothing
+    fails: the consumer silently answers "nothing here" and the behaviour it
+    governs quietly stops — measured, over twelve commits, at the 2026-07-26/27
+    window. So the pin is the ROUND TRIP, driven through the real reader over
+    what `basis_line` actually emits, never a literal.
 
-    So the pin is the round trip itself, not a literal: every field
-    `check.py` extracts must be extractable from what `basis_line` actually
-    emits. A future field insert that breaks any of the four fails HERE, in the
-    commit that makes it, instead of going quiet in production.
-    """
-    check = load_script("check")
+    WHAT CHANGED (WI-498 slice 2). The consumer used to be `check.window_open`,
+    which read `drafted=`/`modified=`/`computed=`/`ex-draft=` to decide whether
+    drafts were suppressing the derived bar. Selection now keys on the
+    draft-excluded effective stage, so nothing is suppressed and that detector
+    retired with the blind spot it covered — taking the only reader of those
+    four fields with it.
+
+    ONE CONSUMER OF THIS LINE REMAINS: `check_trajectory.read_derived_phases`,
+    which parses `per-phase=` for the phase-drop detector, and it is exactly the
+    reader whose failure mode this test exists to prevent — it *silently drops*
+    values it cannot parse, so a producer rename would make the detector vacuous
+    rather than red. Re-keying it onto the stage axis is slice 4's, and until
+    then this round trip is what holds the pairing together."""
+    check_trajectory = load_script("check_trajectory")
     make_minimal_project(scaffold)
     _write(
         scaffold,
@@ -715,38 +723,30 @@ def test_the_basis_line_still_parses_under_checks_window_regexes(scaffold):
     )
     result = _derive(scaffold)
     line = GATE.basis_line(result)
-    basis = check._BASIS_RE.search(line)
-    assert basis is not None, "check._BASIS_RE no longer matches basis_line: " + line
-    # ...and it extracts the counts the window test reads, by VALUE — a regex
-    # that matched while capturing the wrong groups would be worse than one
-    # that did not match at all. `_basis_counts` is the reader, so the round
-    # trip is driven through IT rather than through raw groups: the absent
-    # `modified=` field must arrive as 0, not as None.
-    assert check._basis_counts(basis) == (1, 0), line
-    for name in ("_COMPUTED_RE", "_EX_DRAFT_RE", "_PER_PHASE_RE"):
-        assert getattr(check, name).search(line) is not None, (name, line)
+
+    # THE SURVIVING PAIRING, driven end to end through the real reader rather
+    # than through a raw regex group: write the line the producer emits and make
+    # the consumer parse a NON-EMPTY mapping out of it. Empty is the exact
+    # failure this guards, so an empty result must not read as a pass.
+    gate_file = scaffold / "docs" / "gate"
+    gate_file.write_text(line + "\nDevStg-Reqs\n", encoding="utf-8", newline="\n")
+    phases = check_trajectory.read_derived_phases(scaffold)
+    assert phases, "read_derived_phases went vacuous over a real basis line: " + line
+
     # THE FIELD EDITS ARE PINNED, in both directions. `drafts=` became
     # `drafted=`, `planned=` was DELETED at step 5, and `modified=` was DELETED
-    # at step 7 — each half has to be visible here or the regex above could be
-    # matching a field that no longer means what the consumer thinks it means.
+    # at step 7 — each half has to be visible here, or a reader could be matching
+    # a field that no longer means what it thinks it means.
     assert " drafted=" in line and " drafts=" not in line, line
     assert "planned=" not in line, line
     assert "modified=" not in line, line
     assert result["drafted"] == 1 and "drafted=1" in line, line
-    # THE CONSUMER STILL HONOURS THE RETIRED FIELD, which is the asymmetry
-    # step 7 chose deliberately: this kit stopped EMITTING `modified=`, but a
-    # gate file it did not produce — a downstream repo mid-migration, or one
-    # regenerated by an older kit — still carries one, and dropping the
-    # consumer half would silently disarm the window detector's one
-    # CONCLUSIVE arm for exactly those repos. Drive both files through the
-    # real reader.
-    legacy = line.replace(" drafted=", " drafted=0 modified=7 IGNORED=", 1)
-    legacy_match = check._BASIS_RE.search(legacy)
-    assert legacy_match is not None, legacy
-    assert check._basis_counts(legacy_match) == (0, 7), legacy
-    gate_file = scaffold / "docs" / "gate"
-    gate_file.write_text(legacy + "\nDevStg-Reqs\n", encoding="utf-8", newline="\n")
-    assert check.window_open(gate_file) is True
+    # AND THE RETIRED CONSUMER IS REALLY GONE, not merely unreferenced — a
+    # re-introduced `window_open` would start reading a file this harness no
+    # longer selects from, which is the seam slice 2 exists to cut.
+    check = load_script("check")
+    for gone in ("window_open", "_BASIS_RE", "_EX_DRAFT_RE", "product_floor"):
+        assert not hasattr(check, gone), gone
 
 
 # --- OI-30 D2: the sr_bar ceiling and its one rendering home ------------------
