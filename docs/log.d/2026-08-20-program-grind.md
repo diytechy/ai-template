@@ -321,9 +321,15 @@ edit on this box introduces CRLF unless it writes bytes.
   <!-- fig: cmd="python -m pytest -q -n auto" rev=6aff590f-dirty -->
   Same totals as the WI-448 close earlier today, which is the expected
   reading: this slice added registry rows and prose, no test and no script
-  behaviour. The smoke tier is a SUBSET of this run (it drops the
-  subprocess/scaffold-heavy modules), so this green covers the commit bar for
-  the records commit below without a second smoke run.
+  behaviour.
+  **Read the scope of that run honestly rather than as a blanket green:** it
+  was taken with the registry rows, the spec Context and the regenerated
+  surfaces all in place, but BEFORE this fragment's own text was written, so
+  it does not cover the records commit. Re-run on the landed tree rather than
+  argued away — smoke `1244 passed, 5 skipped in 74.78s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=31e00bf5 -->
+  and `check_trajectory.py --root . --strict` exit 0, clean (490 work items,
+  graph acyclic).
 - `check_trajectory.py --root . --strict`: exit 0, clean (490 work items, graph
   acyclic; the pre-existing shared-specref WARNs).
 - `check_docs.py --root . --stale`: `OK - 960 doc(s), 1325 intra-repo link(s), 0 broken (1 orphan warning(s))`
