@@ -550,19 +550,33 @@ what a downstream adopter does not have, and exactly why the root workflow's
 enforcement comment (claiming all nine checks unconditionally) read as
 enforcement the matrix was actually providing. Corrected.
 
-**Line endings.** Checked BEFORE trusting any byte count
+**Line endings, and this time the standing rule EARNED its keep on a number
+rather than on a diff.** Checked before trusting any byte count
 (`git ls-files --eol`): the three `byte-budget-guard/SKILL.md` copies were
-already CRLF in the working tree (the banked ~47-file residue); the scripted
-re-stamp preserved their existing endings and then normalized all three to LF, so
-the files this session touched leave it cleaner than they were found. Everything
-else this session wrote is LF.
+already CRLF in the working tree (the banked ~47-file residue). The scripted
+re-stamps re-planted CRLF twice — `pathlib.write_text` on Windows, the exact trap
+the WI-455 and WI-477 workers hit, now with a third witness — and all three were
+normalized to LF before staging. The consequence is not cosmetic here: the same
+file measures **4,963 bytes as CRLF and 4,873 as LF**, so 90 bytes of a 5,000
+cap (1.8%) are line-ending residue. Banked below, because it means this file's
+own stamped baselines may not all share a measurement basis.
 
 **Byte deltas, one line per touched budgeted file:**
 `project-trajectory/PROCESS_OPTIONS.md` 174,309 -> 175,330 (**+1,021**, watched,
 FLAGGED and re-stamped in all three skill copies) — the derived-gate section
 gains the floor's selection rule, what monotonicity is not being claimed, and
 why no off-dial ships; the argument and the rejected alternatives stayed out, in
-the design record. No capped file was touched.
+the design record. `byte-budget-guard/SKILL.md` 4,925 -> 4,963 CRLF / 4,873 LF
+(capped at 5,000), all three copies.
+
+**And the re-stamp itself blew the cap — caught by the FULL suite, which is the
+argument for running it.** Writing a proportionate reason for a +1,021 flag took
+that SKILL.md from 4,925 to 5,244 against its 5,000 cap. `test_bootstrap` is a
+`SLOW_MODULES` member, so the smoke tier that had just gone green could not see
+it; `pytest -q -n auto` failed on the first run and passed on the second. The
+guard's own rule applied rather than the cap moved (pay for an addition by
+tightening): the row was cut to a single clause, and the ARGUMENT for the growth
+lives here in the log, which is where a stamp's reasoning belongs anyway.
 
 **Gates.**
 
@@ -579,6 +593,22 @@ the design record. No capped file was touched.
   GENERATOR (`trace.py --bump-ids`, `OI 50 -> 51`) rather than by hand, since
   `docs/id-watermark` says do-not-hand-edit and its basis line would otherwise
   have gone stale.
+- `check_trajectory.py --root . --strict`: exit 0,
+  `clean (490 work item(s), 455 done (93%), 21 cancelled, graph acyclic)` — the
+  pre-existing shared-specref WARNs only.
+- **full unfiltered suite: `2690 passed, 14 skipped in 495.19s (0:08:15)`**
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=c23eb907-dirty -->
+  2685 -> 2690 is exactly this session's five new tests; nothing else moved. The
+  FIRST run of the same command on the same tree was `1 failed, 2689 passed, 14
+  skipped in 572.29s` — the byte-cap failure above, FIXED rather than waived.
+  **Read the scope honestly:** taken with the code, tests, registries and
+  regenerated surfaces all in place, but before this fragment's own text was
+  finished, so it does not cover the records commit — the WI-455 framing, and the
+  same remedy: smoke re-run on the landed tree rather than argued away.
+- The regenerated status block was diffed line by line before staging: **one
+  added line (the `OI-51` bullet) and nothing else**; `PROJECT_STATE.html` moved
+  only its as-of commit, and `docs/gate` did not move at all (no spine row was
+  minted, so no bar, phase or count could).
 
 ### Adjacent findings accumulating for the closing review
 
@@ -612,6 +642,19 @@ findings accumulate below as list items)_
   is the one shape the ratchet punishes. Worth a sentence wherever the ratchet's
   rule is stated ("decompose rather than re-stamp" — decompose OUTWARD, not
   inward), because the next author will reach for the same local def.
+- (WI-473 worker) **the byte-budget guard's own numbers are LINE-ENDING
+  DEPENDENT, and its baselines may not share a measurement basis.** Measured
+  this session on one file: `byte-budget-guard/SKILL.md` is **4,963 bytes with
+  CRLF and 4,873 with LF** — 90 bytes, 1.8% of its 5,000 cap, decided entirely by
+  a worktree artifact the repo's own standing rule says to check before trusting
+  any count. `test_always_loaded_docs_stay_within_byte_caps` reads the file from
+  DISK, so on a CRLF worktree it grades a number that is not the committed one;
+  the same edit can pass on one machine and fail on another. Both directions are
+  live: a stamp recorded from a CRLF tree overstates its baseline, and the cap
+  test can red on residue rather than on content. Cheap fix either way — measure
+  the INDEX form (`git show :<path> | wc -c`) or normalize before measuring — and
+  the skill already tells its reader to check `git ls-files --eol` first, so this
+  is its own rule not applied to itself.
 - (WI-473 worker) **`--list` prints the gating and advisory tiers into one
   stream, and a test that greps the combined text cannot tell "at the bar" from
   "warn-only".** This session's first fixture asserted a process step was LOST to

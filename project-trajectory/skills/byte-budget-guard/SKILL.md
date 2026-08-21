@@ -45,7 +45,7 @@ in the session/WI note. Enforced by convention + that report.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 84,080 | 2026-08-20 | **+124**: WI-477 (H-06) — §8's IF maturity field re-named onto the words enforcement reads (`Status`, `Drafted`/`Approved`), `Founded` ruled out of the tier. FLAGGED |
-| `project-trajectory/PROCESS_OPTIONS.md` | 175,330 | 2026-08-20 | **+1,021**: WI-473 (repo review C-01) — the derived-gate section gains the PRODUCT-REGRESSION FLOOR: product-layer steps select at `max(derived bar, ex-draft)`, so drafting a requirement can no longer withdraw format/lint/tests from a mature repo's CI. Flagged as the largest single growth here in weeks and deliberate: it states a new selection rule, what monotonicity is NOT being claimed, and why no off-dial ships. The argument (rejected alternatives, the release-ceiling interaction) stayed OUT, in the WI's design record. FLAGGED |
+| `project-trajectory/PROCESS_OPTIONS.md` | 175,330 | 2026-08-20 | **+1,021** FLAGGED: WI-473 (review C-01) — the product-regression floor: product steps select at `max(bar, ex-draft)`, so drafting cannot withdraw format/lint/tests |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in
