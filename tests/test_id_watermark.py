@@ -13,18 +13,59 @@ from conftest import load_script
 TRACE = load_script("trace")
 
 
-def _repo(tmp_path, marks=None, srs=("SR-001",)):
-    """A minimal tree: one spine CSV and (optionally) a watermark file."""
+# The authorizing ruling a recorded correction cites, in the shape the real one
+# has — INCLUDING the census noise that makes the binding non-trivial: OI-47's
+# live text mentions `SR=999` and `WI=4010` as illustrative figures, so a rule
+# that only asked "does the ruling mention this space?" would have authorized
+# the review's forged `SR 180 -> 500`. The fixture keeps that trap.
+_RULED_OI = """[open_item.OI-47]
+title = "The mis-seeded B/REL watermark"
+status = "ruled"
+raised = "2026-08-20"
+one_line = "the one-time correction lands B=8/REL=4"
+decision = \"\"\"B-08 and REL-004 were allocated and cut before external.toml
+existed. An unscoped census would read B=99/SR=999/WI=4010, which is why no
+standing census ships.\"\"\"
+"""
+
+
+def _repo(tmp_path, marks=None, srs=("SR-001",), ruling=False):
+    """A minimal tree: one spine CSV and (optionally) a watermark file.
+
+    `ruling=True` also lays down the open-items registry carrying the RULED
+    row a recorded correction has to cite — the authority arm resolves against
+    that file, so a correction test without it is testing the absent-registry
+    refusal instead."""
     reg = tmp_path / "docs" / "requirements"
     reg.mkdir(parents=True)
     (reg / "system-requirements.csv").write_text(
         "SR-ID,Title\n" + "".join("{},t\n".format(s) for s in srs), encoding="utf-8"
     )
+    if ruling:
+        (reg / "open-items.toml").write_text(_RULED_OI, encoding="utf-8")
+        if marks is not None:
+            # OI-47 is now a LIVE id in this tree; leaving the OI mark at 0
+            # would red rule 2 and mask what the test is about.
+            marks = dict(marks)
+            marks["OI"] = max(marks.get("OI", 0), 47)
     if marks is not None:
         (tmp_path / TRACE.WATERMARK).write_text(
             TRACE.render_watermark(marks), encoding="utf-8"
         )
     return tmp_path
+
+
+def _forged_watermark(root, marks, corrections=()):
+    """Write `docs/id-watermark` BY HAND, the way the review's attacks did.
+
+    Deliberately not `render_watermark`: these tests model an author editing the
+    file in an editor, and routing them through the writer would test the writer
+    (which refuses them) instead of the CHECKER (which is where the authority
+    has to live)."""
+    head = ["# ID WATERMARK — hand-written by this test."]
+    head += ["# correction: {} {} -> {} ({})".format(*c) for c in corrections]
+    body = ["{} = {}".format(s, marks.get(s, 0)) for s in TRACE.WATERMARK_SPACES]
+    (root / TRACE.WATERMARK).write_text("\n".join(head + body) + "\n", encoding="utf-8")
 
 
 def test_every_id_space_is_covered_by_the_mark_file():
@@ -512,15 +553,138 @@ def test_a_recorded_correction_raises_the_mark_and_the_next_mint_moves(tmp_path)
     # NAMED ruling's authority — the mechanism this WI's B=8/REL=4 fix runs on.
     # The corrected mark IS the protection from here on: B-08 can never
     # re-issue because the next mint (mark + 1) moves past it, to B-09.
-    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    root = _repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7},
+        ruling=True,
+    )
     marks, corrections = TRACE.correct_watermark(root, "B", 8, "OI-47")
     assert marks["B"] == 8
-    assert corrections["B"] == (7, 8, "OI-47")
+    assert corrections["B"] == [(7, 8, "OI-47")]
     assert marks["B"] + 1 == 9  # the next mint is B-09, never the spent B-08
     # The record survives `read_watermark`'s parse — it is a comment line, and
     # comments are skipped there — and round-trips through both readers.
     assert TRACE.read_watermark(root)["B"] == 8
-    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+    assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
+
+
+def _attack_repo(tmp_path, marks, corrections):
+    """A tree with the ruled OI row and a HAND-FORGED watermark file."""
+    root = _repo(tmp_path, ruling=True)
+    marks = dict(marks)
+    marks["OI"] = max(marks.get("OI", 0), 47)  # OI-47 is live in this tree
+    marks["SR"] = max(marks.get("SR", 0), 1)  # so is SR-001
+    _forged_watermark(root, marks, corrections)
+    return root
+
+
+# ── The four attacks the 2026-08-21 adversarial round executed against the
+# first cut of the correction verb. Each was ACCEPTED with no findings then;
+# each is a finding now. They are written against `watermark_findings(root,
+# previous)` — the same two-argument call the pre-fix code exposed — so the red
+# is the behaviour changing, not the signature.
+
+
+def test_a_hand_typed_record_for_an_unauthorized_space_is_refused(tmp_path):
+    # ATTACK 1: raise SR 180 -> 500 and type a record citing OI-47. The ruling
+    # exists and is ruled — but it authorized B=8/REL=4, and the only reason it
+    # mentions SR at all is a census figure of 999. Two lines used to burn 320
+    # SR ids with `--strict-integrity` clean.
+    root = _attack_repo(
+        tmp_path,
+        {"SR": 500},
+        [("SR", 180, 500, "OI-47")],
+    )
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"SR": 180, "OI": 47}
+    findings = TRACE.watermark_findings(root, previous)
+    assert any("never names SR at 500" in f for f in findings), findings
+
+
+def test_a_chained_second_correction_is_refused(tmp_path):
+    # ATTACK 2: a space that already carries a ruled correction gets a second
+    # one appended, citing the same ruling. The one-shot property lived only in
+    # the writer, so the checker accepted an unbounded hand-driven climb.
+    root = _attack_repo(
+        tmp_path,
+        {"B": 40},
+        [("B", 7, 8, "OI-47"), ("B", 8, 40, "OI-47")],
+    )
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 8, "OI": 47}
+    findings = TRACE.watermark_findings(root, previous)
+    assert any("ONE-SHOT per space" in f for f in findings), findings
+    assert any("nothing justifies more than 8" in f for f in findings), findings
+
+
+def test_a_record_citing_a_ruling_that_does_not_exist_is_refused(tmp_path):
+    # ATTACK 3: cite OI-999. Nothing resolved the id, so the fabricated ruling
+    # was as good as the real one.
+    root = _attack_repo(tmp_path, {"B": 40}, [("B", 8, 40, "OI-999")])
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 8, "OI": 47}
+    findings = TRACE.watermark_findings(root, previous)
+    assert any("names no RULED row" in f for f in findings), findings
+
+
+def test_a_second_record_no_longer_erases_the_first_from_the_parse(tmp_path):
+    # ATTACK 4, and the nastiest: the reader was a dict keyed by space, so the
+    # forged second line DELETED the ruled first line from every rule's view of
+    # the file. The audit trail the mechanism exists to leave was overwritable
+    # by the act it exists to catch.
+    root = _attack_repo(
+        tmp_path,
+        {"B": 40},
+        [("B", 7, 8, "OI-47"), ("B", 8, 40, "OI-47")],
+    )
+    assert TRACE.read_corrections(root)["B"] == [
+        (7, 8, "OI-47"),
+        (8, 40, "OI-47"),
+    ]
+
+
+def test_replacing_a_committed_record_is_refused(tmp_path):
+    # SOL'S HALF OF THE SAME FINDING: appending is not the only forgery — the
+    # committed record can be REWRITTEN in place, which leaves one well-formed
+    # line and a mark that self-justifies from the next commit. The committed
+    # records are read from git for the same reason the committed marks are.
+    root = _attack_repo(tmp_path, {"B": 40}, [("B", 8, 40, "OI-47")])
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 8, "OI": 47}
+    findings = TRACE.watermark_findings(root, previous, {"B": [(7, 8, "OI-47")]})
+    assert any("COMMITTED correction record was altered" in f for f in findings), (
+        findings
+    )
+
+
+def test_the_sanctioned_correction_still_passes_every_arm(tmp_path):
+    # The other direction, and the one that matters most: the REAL act — the
+    # B 7 -> 8 correction OI-47 authorized — stays clean through all four arms.
+    # A guard that refuses the forgery and the ruling alike has just retired the
+    # verb.
+    root = _attack_repo(tmp_path, {"B": 8}, [("B", 7, 8, "OI-47")])
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7, "OI": 47}
+    assert TRACE.watermark_findings(root, previous, {}) == []
+    # And once it is committed, the record keeps being checked rather than
+    # going quiet: the raise self-justifies from here, so the STANDING arms are
+    # the only thing still looking at it.
+    assert (
+        TRACE.watermark_findings(root, previous | {"B": 8}, {"B": [(7, 8, "OI-47")]})
+        == []
+    )
+
+
+def test_the_writer_refuses_a_ruling_that_does_not_authorize_the_value(tmp_path):
+    import pytest
+
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    with pytest.raises(ValueError, match="carries no open-items registry"):
+        TRACE.correct_watermark(root, "B", 8, "OI-47")
+    root = _repo(
+        tmp_path / "two",
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7},
+        ruling=True,
+    )
+    with pytest.raises(ValueError, match="names no RULED row"):
+        TRACE.correct_watermark(root, "B", 8, "OI-999")
+    with pytest.raises(ValueError, match="never names B at 40"):
+        TRACE.correct_watermark(root, "B", 40, "OI-47")
 
 
 def test_the_correction_verb_is_one_shot_and_refuses_to_replay(tmp_path):
@@ -528,13 +692,17 @@ def test_the_correction_verb_is_one_shot_and_refuses_to_replay(tmp_path):
     # standing licence to keep raising the space by citing it again.
     import pytest
 
-    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    root = _repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7},
+        ruling=True,
+    )
     TRACE.correct_watermark(root, "B", 8, "OI-47")
     with pytest.raises(ValueError, match="ONE-SHOT"):
         TRACE.correct_watermark(root, "B", 9, "OI-47")
     # The first correction's record is untouched by the refused replay.
     assert TRACE.read_watermark(root)["B"] == 8
-    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+    assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
 
 
 def test_an_unrecorded_raise_past_the_mark_is_still_refused(tmp_path):
@@ -543,7 +711,7 @@ def test_an_unrecorded_raise_past_the_mark_is_still_refused(tmp_path):
     # against a correction record being stretched to cover an unrelated raise.
     root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 9})
     previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7}
-    corrections = {"B": (7, 8, "OI-47")}  # recorded transition is 7->8, not 7->9
+    corrections = {"B": [(7, 8, "OI-47")]}  # recorded transition is 7->8, not 7->9
     findings = TRACE._mark_history_findings(
         TRACE.read_watermark(root), TRACE.live_max_ids(root), previous, corrections
     )
@@ -564,7 +732,7 @@ def test_a_lowered_mark_is_still_refused_even_with_a_correction_record(tmp_path)
     # trusting the record's shape.
     root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 3})
     previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7}
-    corrections = {"B": (7, 3, "OI-47")}  # a bogus "correction" naming this fall
+    corrections = {"B": [(7, 3, "OI-47")]}  # a bogus "correction" naming this fall
     findings = TRACE._mark_history_findings(
         TRACE.read_watermark(root), TRACE.live_max_ids(root), previous, corrections
     )
@@ -572,7 +740,11 @@ def test_a_lowered_mark_is_still_refused_even_with_a_correction_record(tmp_path)
 
 
 def test_correction_verb_refuses_a_non_raising_value(tmp_path):
-    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    root = _repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7},
+        ruling=True,
+    )
     import pytest
 
     with pytest.raises(ValueError, match="must RAISE"):
@@ -589,12 +761,13 @@ def test_bump_watermark_preserves_a_recorded_correction(tmp_path):
         tmp_path,
         marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7, "SR": 1},
         srs=("SR-001", "SR-002"),
+        ruling=True,
     )
     TRACE.correct_watermark(root, "B", 8, "OI-47")
     marks, raised = TRACE.bump_watermark(root)
     assert marks["B"] == 8  # untouched — no live B rows to raise it further
     assert "B" not in raised  # the bump itself did not move it; the correction did
-    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+    assert TRACE.read_corrections(root)["B"] == [(7, 8, "OI-47")]
 
 
 def test_force_never_overwrites_a_live_repos_marks(tmp_path):

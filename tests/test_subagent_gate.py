@@ -177,16 +177,44 @@ def test_corrupt_process_toml_reads_unparseable_not_undeclared(tmp_path):
     assert gate.decide("Task", gate.UNPARSEABLE, "")[0] == "ask"
 
 
-def test_corruption_no_longer_falls_through_to_the_legacy_file(tmp_path):
-    # Before OI-46, a corrupt process.toml fell through to the legacy file
-    # (or, absent that too, a quiet `allow`) -- the ruled asymmetry. Now a
-    # present-but-broken process.toml is TERMINAL and fails closed on its own,
-    # the same way check_trajectory.py / gen_okf.py never consult a fallback
-    # once their own reader reads ON: the legacy file's `deny` is not even
-    # reached, and the corrupt dial itself asks rather than silently
-    # deferring to whatever else is declared.
+def test_corruption_keeps_an_explicit_legacy_deny(tmp_path):
+    # THE REGRESSION THE 2026-08-21 REVIEW MEASURED (C-2), and the reason this
+    # test says the opposite of what WI-491 first wrote here. OI-46 (1a) closed
+    # the fall-through so a corrupt process.toml could not read as a quiet
+    # `off`; the first cut closed it by SHORT-CIRCUITING to `ask`, which in
+    # this exact fixture -- both surfaces live, the supported mid-migration
+    # state `bootstrap.py --migrate-config` serves -- turned an operator's
+    # explicit `deny` (exit 2, the run halts) into `ask` at exit 0. Under a
+    # non-interactive harness where `ask` degrades to proceed, the spawn
+    # happens. A fail-closed arm takes the MORE RESTRICTIVE of the two; it
+    # never loosens a decision the human already wrote down.
     _write_process_toml(tmp_path, "this is not toml {{{")
     _write_policy(tmp_path, "deny")
+    proc = run_hook({"tool_name": "Task"}, tmp_path)
+    assert proc.returncode == 2
+    out = json.loads(proc.stdout)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_corruption_with_no_legacy_file_asks(tmp_path):
+    # The other half of the same arm, kept BESIDE it so the pair reads as one
+    # rule: with nothing more restrictive declared anywhere, a corrupt
+    # process.toml still asks rather than allowing -- which is the closing
+    # direction OI-46 (1a) ruled and the only claim WI-491's subject was
+    # entitled to make.
+    _write_process_toml(tmp_path, "this is not toml {{{")
+    proc = run_hook({"tool_name": "Task"}, tmp_path)
+    assert proc.returncode == 0
+    out = json.loads(proc.stdout)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+
+def test_corruption_does_not_let_a_legacy_off_reopen_the_gate(tmp_path):
+    # And the direction the fall-through USED to fail in: a legacy `off` is
+    # LESS restrictive than `ask`, so it loses. The legacy file is a floor on
+    # this arm, never the policy.
+    _write_process_toml(tmp_path, "this is not toml {{{")
+    _write_policy(tmp_path, "off")
     proc = run_hook({"tool_name": "Task"}, tmp_path)
     assert proc.returncode == 0
     out = json.loads(proc.stdout)

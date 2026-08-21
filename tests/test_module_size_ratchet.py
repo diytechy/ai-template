@@ -694,7 +694,29 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 5174,  # +181 (4993 -> 5174; the last +2 is `ruff format` unwrapping
+    "trace.py": 5365,  # +191 (5174 -> 5365) 2026-08-21, review batch-close W-1:
+    # HARDENING THE VERB THE PREVIOUS STAMP BOUGHT, and the growth is the same
+    # pipe again rather than a new concern. The 2026-08-21 adversarial round
+    # executed four attacks against the correction record and all four were
+    # ACCEPTED (hand-typed record; chained second correction; a ruling that does
+    # not exist; a second record erasing the first from the parse). The record's
+    # authority now resolves OUTSIDE the file it guards, which is what costs the
+    # lines: `parse_corrections` + a list-valued `read_corrections` (the record
+    # is append-only), `ruled_open_item_texts` + `_ruling_names` (the cited id
+    # must be a `ruled` open item naming the space AT the corrected value —
+    # value, not space, because OI-47's own prose mentions `SR=999` as census
+    # noise and a space-only rule would have authorized the forged SR raise),
+    # `_one_correction_findings` / `_correction_record_findings` (the standing
+    # arms, which run whether or not a mark moved — a forged raise
+    # self-justifies from the NEXT commit, so a check that only ran at the
+    # raising commit went quiet exactly one commit too early), and
+    # `committed_corrections` (the git baseline that makes a committed record
+    # immutable). Roughly half the bump is the reasoning above stated where the
+    # next reader hits it. Decomposition is NOT indicated: every one of these is
+    # a watermark rule sitting inside the watermark section beside the four it
+    # joins, and the module's split axis (`trace_text.py`) takes PURE row
+    # predicates — these read two files and git.
+    # Earlier: +181 (4993 -> 5174; the last +2 is `ruff format` unwrapping
     # one call after the stamp, the WI-473/WI-483 trap hit again — measured
     # POST-format) 2026-08-21, WI-492: OI-47 ruled (e) —
     # the recorded-correction verb. THE SAME PIPE, NOT A NEW CONCERN:

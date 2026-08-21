@@ -7,10 +7,15 @@ behaviour against the sentence: an ABSENT policy allows, an `off` policy allows,
 an unreadable `process.toml` allowed, and any internal error allows — every one
 of those by design and pinned by tests. A `docs/process.toml` that is PRESENT
 but does not parse no longer belongs on that list (OI-46 ruled (1a),
-2026-08-20 — executed here, WI-491): it now reads fail-closed (`ask`), aligned
-with the two twin readers in `check_trajectory.py` / `gen_okf.py`, which have
-always treated the same state as ON rather than as a quiet opt-out — three
-readers, one direction. Nothing here denies until a human writes `deny`, or the
+2026-08-20 — executed here, WI-491): it now reads `ask`, aligned with the two
+twin readers in `check_trajectory.py` / `gen_okf.py`, which have always treated
+the same state as ON rather than as a quiet opt-out — three readers, one
+direction. Said precisely, because the first cut of this arm was not: it
+resolves to the MORE RESTRICTIVE of `ask` and whatever the legacy
+`docs/subagent-gate` declares, so a repo carrying both surfaces keeps an
+explicit `deny` when the newer file breaks (2026-08-21 review, C-2). "Closes
+relative to `allow`" was the whole claim; taking the maximum is what makes it
+true in both directions. Nothing here denies until a human writes `deny`, or the
 gate cannot tell what the human wrote. The old headline described the opposite
 posture, which is the most expensive kind of comment to be wrong: a reader
 budgeting risk would have credited this module with a refusal it never makes.
@@ -84,12 +89,14 @@ LEGACY_POLICY = "docs/subagent-gate"
 # Sentinel `read_process_policy` returns when `docs/process.toml` is PRESENT
 # but does not parse/read — distinct from `None` ("this file has nothing to
 # say": absent, or parses fine with no `subagent_gate` key). `decide()` gives
-# it its own branch, resolving to `ask` (fail-closed), and `main()` treats it
-# as terminal — NOT a None, so it does not fall through to the legacy
-# `docs/subagent-gate` file, matching how the twin readers in
-# `check_trajectory.py` / `gen_okf.py` resolve the same state terminally
-# rather than as undeclared (OI-46 ruled (1a), 2026-08-20; WI-491). Never a
-# str, so it can never collide with a real — however garbled — policy token.
+# it its own branch, resolving to `ask` — or to `deny` when the legacy
+# `docs/subagent-gate` says so, the more-restrictive rule the 2026-08-21 review
+# forced. NOT a None: the legacy file is consulted as a FLOOR, never as the
+# policy, so a corrupt process.toml can no longer read as a quiet `off` just
+# because the old file said `off`. That is what makes this terminal in the
+# sense the twin readers in `check_trajectory.py` / `gen_okf.py` are (OI-46
+# ruled (1a), 2026-08-20; WI-491). Never a str, so it can never collide with a
+# real — however garbled — policy token.
 UNPARSEABLE = object()
 
 
@@ -159,7 +166,7 @@ def read_process_policy(root):
 read_declared = _kitconfig.read_declared_lower
 
 
-def decide(tool_name, policy, override):
+def decide(tool_name, policy, override, legacy=""):
     """Pure decision core for one tool call.
 
     Contract:
@@ -169,12 +176,18 @@ def decide(tool_name, policy, override):
                                         UNPARSEABLE = docs/process.toml is
                                         PRESENT but did not parse/read)
                override: str           (SUBAGENT_GATE env value, lowercased)
+               legacy: str             (the legacy one-word file's token, ""
+                                        when absent — consulted ONLY on the
+                                        UNPARSEABLE arm)
       Outputs: (decision, reason) where decision in
                {allow, ask, deny, defer}; `defer` = not a spawn tool, not our
-               business. An unrecognized policy value, and UNPARSEABLE, both
-               resolve to `ask` (the safer direction, never harder than the
-               explicit `deny`) — OI-46 ruled (1a) for the latter, aligning
-               this reader's present-but-broken arm with its twins (WI-491).
+               business. An unrecognized policy value resolves to `ask` (the
+               safer direction, never harder than the explicit `deny`).
+               UNPARSEABLE resolves to the MORE RESTRICTIVE of `ask` and what
+               the legacy file declares — OI-46 ruled (1a) aligned this arm
+               with its twins (WI-491), and the 2026-08-21 review measured
+               that the first cut had turned an operator's explicit `deny`
+               into `ask` for a repo carrying both surfaces.
     Implements: SR-043, LLR-040
     """
     if tool_name not in SPAWN_TOOLS:
@@ -182,6 +195,19 @@ def decide(tool_name, policy, override):
     if override == "allow":
         return "allow", "SUBAGENT_GATE=allow override (human-set)"
     if policy is UNPARSEABLE:
+        # MORE RESTRICTIVE OF THE TWO, not "the newer surface wins". Relative
+        # to `allow` this arm closes, which is what OI-46 (1a) ruled and what
+        # the commit that shipped it described; relative to a legacy `deny` it
+        # would OPEN — an explicit refusal becoming unreachable the moment
+        # process.toml fails to parse, in exactly the both-surfaces-live state
+        # `bootstrap.py --migrate-config` exists to serve. A fail-closed arm
+        # never loosens a decision the human already wrote down.
+        if legacy == "deny":
+            return "deny", (
+                "docs/process.toml is present but did not parse; {} still "
+                "reads `deny` and the parse-failure arm takes the more "
+                "restrictive of the two (OI-46 (1a))".format(LEGACY_POLICY)
+            )
         return "ask", (
             "docs/process.toml is present but did not parse; asking "
             "(fail-closed, aligned with its twin readers — OI-46 (1a))"
@@ -245,10 +271,13 @@ def main(argv=None):
         payload = json.loads(raw) if raw.strip() else {}
         tool_name = payload.get("tool_name") or payload.get("toolName") or ""
         policy = read_process_policy(root)
+        legacy = ""
+        if policy is None or policy is UNPARSEABLE:
+            legacy = read_declared(Path(root) / LEGACY_POLICY)
         if policy is None:
-            policy = read_declared(Path(root) / LEGACY_POLICY)
+            policy = legacy
         override = (os.environ.get("SUBAGENT_GATE") or "").strip().lower()
-        decision, reason = decide(tool_name, policy, override)
+        decision, reason = decide(tool_name, policy, override, legacy)
     except Exception as exc:  # noqa: BLE001 — deliberate fail-OPEN; see module doc
         log_decision(root, "?", "allow", "gate error, failing open: {}".format(exc))
         return 0

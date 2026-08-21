@@ -2515,15 +2515,25 @@ not parse** (a syntax error, a bad encoding, an unreadable file) while
 `PreToolUse` hook used to read that as *undeclared* and fall through to the
 legacy `docs/subagent-gate` file or, absent that too, a quiet `allow` —
 diverging from `check_trajectory.py`/`gen_okf.py`, which have always read the
-same state as ON. It now reads `ask` (fail-closed) instead, and does **not**
-fall through to the legacy file: a broken `docs/process.toml` is a place this
-gate cannot proceed, not a place to keep moving. A genuinely **absent**
+same state as ON. It now reads `ask` instead, and the legacy file stops being
+the POLICY on that arm: a broken `docs/process.toml` is a place this gate
+cannot proceed, not a place to keep moving. A genuinely **absent**
 `docs/process.toml` is unaffected — that still allows (the opt-in posture).
+
+**Said precisely, and corrected 2026-08-21:** the arm resolves to the **more
+restrictive of `ask` and whatever the legacy `docs/subagent-gate` declares**.
+The first cut of this change short-circuited to `ask` outright, which for a
+repo carrying **both** surfaces mid-migration (the state `--migrate-config`
+exists to serve) turned an explicit legacy `deny` — exit 2, the run halts —
+into `ask` at exit 0. "Fail-closed" means never loosening a decision the human
+already wrote down, so a legacy `deny` survives a broken `process.toml`; a
+legacy `off` does not re-open the gate.
 
 **What you may notice:** if you run with `subagent_gate` enabled AND your
 `docs/process.toml` is currently malformed, your next unattended run defers
-every subagent spawn to approval instead of silently allowing them. There is
-no dial to keep the old (fail-open) reading — fix the TOML, which you would
+every subagent spawn to approval instead of silently allowing them — or keeps
+refusing them outright if your legacy `docs/subagent-gate` says `deny`. There
+is no dial to keep the old (fail-open) reading — fix the TOML, which you would
 want to do anyway.
 
 **The fail-open log is now surfaced, not just written.** Every gate decision
@@ -2562,6 +2572,20 @@ unrecorded hand-raise still trips. **One-shot, deliberately:** a space that
 already carries a recorded correction refuses a second one, even citing the
 same ruling — the verb corrects a mis-seed once, it does not hand a ruling a
 standing licence to keep raising the mark.
+
+**The record is bound to your open-items registry (hardened 2026-08-21).** The
+first cut kept the record's whole authority INSIDE the file it guards, so two
+hand-typed lines forged a raise that passed `--strict-integrity` clean. Now
+every recorded correction is checked whether or not a mark moved: the cited id
+must resolve to a row of `docs/requirements/open-items.toml` whose status is
+`ruled`, that row's text must name the space **at the corrected value** (`B =
+8`, `B=8` or `B-008`), a space may carry only ONE record, and a record already
+in git may not be edited or deleted. **What this means for you:** if you use
+`--correct-mark`, write the ruling first and let it state the number it
+authorizes — a ruling that only mentions the space in passing is refused, by
+the verb at write time and by the integrity floor thereafter. If your repo has
+no open-items registry, the verb refuses rather than proceeding on an
+unverifiable citation.
 
 **What you may notice:** nothing, unless you actually run `--correct-mark` —
 `--bump-ids` and every existing watermark rule are unchanged, and a

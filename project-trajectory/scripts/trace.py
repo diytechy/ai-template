@@ -907,13 +907,33 @@ def read_watermark(root):
     return marks
 
 
+def parse_corrections(text):
+    """`{space: [(old, new, ruling_id), ...]}` for one watermark file's TEXT,
+    in file order.
+
+    APPENDS, never overwrites — the 2026-08-21 review's fourth attack. A dict
+    keyed by space made a second correction line for the same space ERASE the
+    first from the parsed record, so the chained forgery destroyed the very
+    audit trail the mechanism exists to create, and it destroyed it inside the
+    reader every other rule consults. A list per space keeps both, which is what
+    lets `_correction_record_findings` report the second as the one-shot breach
+    it is."""
+    out = {}
+    for line in text.splitlines():
+        m = _CORRECTION_LINE.match(line.strip())
+        if m:
+            space, was, now, ruling = m.groups()
+            out.setdefault(space, []).append((int(was), int(now), ruling.strip()))
+    return out
+
+
 def read_corrections(root):
-    """`{space: (old, new, ruling_id)}` — the RECORDED CORRECTIONS lines in
-    `docs/id-watermark`'s header, if any. Unlike `read_watermark` this degrades
-    to `{}` on a missing file or on a file with no correction lines: the common
-    case is "no space was ever hand-corrected," which is not the same failure
-    as a missing mark (there the ABSENCE of a record means "nothing is taken";
-    here it means "nothing was ruled," a true and unremarkable state).
+    """`{space: [(old, new, ruling_id), ...]}` — the RECORDED CORRECTIONS lines
+    in `docs/id-watermark`'s header, if any. Unlike `read_watermark` this
+    degrades to `{}` on a missing file or on a file with no correction lines:
+    the common case is "no space was ever hand-corrected," which is not the same
+    failure as a missing mark (there the ABSENCE of a record means "nothing is
+    taken"; here it means "nothing was ruled," a true and unremarkable state).
 
     A malformed correction line is silently not a correction — the writer
     (`correct_watermark`) is the only thing that emits this line, so a reader
@@ -922,13 +942,48 @@ def read_corrections(root):
     path = Path(root) / WATERMARK
     if not path.is_file():
         return {}
+    return parse_corrections(path.read_text(encoding="utf-8-sig", errors="replace"))
+
+
+def ruled_open_item_texts(root):
+    """`{OI-###: <the row's prose, joined>}` for every open item whose status is
+    `ruled` — or None when the repo carries no open-items registry at all.
+
+    NONE IS NOT `{}`, the same distinction `open_item_states` draws: an absent
+    registry means the authority of a recorded correction CANNOT BE ESTABLISHED,
+    and (unlike the deferral rules, which go vacuous) that is refused rather than
+    waved through — a correction is the one act in this file that overrides the
+    guard, so "I could not check the ruling" must not read as "the ruling
+    checked out"."""
+    path = Path(root) / OPEN_ITEMS_REL
+    if spine_carrier.resolve(path) is None:
+        return None
     out = {}
-    for line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
-        m = _CORRECTION_LINE.match(line.strip())
-        if m:
-            space, was, now, ruling = m.groups()
-            out[space] = (int(was), int(now), ruling.strip())
+    for row in spine_carrier.load(path, "OI-ID"):
+        rid = (row.get("OI-ID") or "").strip()
+        if not rid.startswith("OI-") or rid.endswith("-000"):
+            continue
+        if (row.get("Status") or "").strip().lower() != "ruled":
+            continue
+        out[rid] = "\n".join(
+            str(v) for v in row.values() if isinstance(v, (str, int, float))
+        )
     return out
+
+
+def _ruling_names(text, space, value):
+    """Does a ruling's prose name `space` AT `value` — `B = 8`, `B=8`, `B-08`?
+
+    THE VALUE, not merely the space, and the tightening is measured rather than
+    fastidious: OI-47's own prose mentions `SR=999` and `WI=4010` as illustrative
+    census noise, so "the ruling mentions this space" would have authorized the
+    review's forged `SR 180 -> 500` on the strength of a sentence about a
+    different number entirely. A ruling that authorizes a hand-raise names the
+    value it authorizes; that is the whole content of the authority."""
+    pattern = r"(?<![A-Za-z0-9_]){}\s*[-=]\s*0*{}(?![0-9])".format(
+        re.escape(space), int(value)
+    )
+    return re.search(pattern, text) is not None
 
 
 def _mark_covers_live_findings(marks, live):
@@ -968,10 +1023,19 @@ def _mark_history_findings(marks, live, previous, corrections=None):
     A lowered mark is refused REGARDLESS of `corrections`: the check below runs
     and `continue`s before `corrections` is ever consulted, so a correction
     record — which only ever authorizes a RAISE — cannot be misread as cover
-    for a fall. `corrections` matches the observed transition EXACTLY
-    (`was == recorded old`, `now == recorded new`); a record present for the
-    space but naming a different jump does not excuse this one, which is what
-    keeps the one-shot verb from being replayed into a second, unrecorded raise."""
+    for a fall. `corrections` (`{space: [(old, new, ruling), ...]}`) matches the
+    observed transition EXACTLY (`was == recorded old`, `now == recorded new`);
+    a record present for the space but naming a different jump does not excuse
+    this one, which is what keeps the one-shot verb from being replayed into a
+    second, unrecorded raise.
+
+    THIS ARM ONLY ASKS WHETHER THE RECORD FITS THE RAISE. Whether the record is
+    ITSELF legitimate — one per space, citing a ruling that exists, is ruled, and
+    names this space at this value, and not overwriting a committed record — is
+    `_correction_record_findings`, which runs whether or not a mark moved. The
+    split matters: a forged raise self-justifies from the commit AFTER it lands
+    (`previous` becomes the forged value), so a check that only ran at the
+    raising commit would go quiet exactly one commit too early."""
     corrections = corrections or {}
     out = []
     for space in WATERMARK_SPACES:
@@ -998,8 +1062,12 @@ def _mark_history_findings(marks, live, previous, corrections=None):
             continue
         justified = max(was, live.get(space, 0))
         if now > justified:
-            fix = corrections.get(space)
-            if fix is not None and fix[0] == was and fix[1] == now:
+            records = corrections.get(space) or []
+            # EXACTLY ONE record may justify a raise. Two is the chained
+            # forgery (`_correction_record_findings` reports it in its own
+            # voice); zero is a plain hand-raise. Both fall through to the
+            # refusal below rather than being excused by the newest line.
+            if len(records) == 1 and records[0][0] == was and records[0][1] == now:
                 continue
             out.append(
                 "id watermark for {} stands at {} but nothing justifies more than "
@@ -1011,20 +1079,131 @@ def _mark_history_findings(marks, live, previous, corrections=None):
     return out
 
 
-def watermark_findings(root, previous=None):
+def _one_correction_findings(space, records, rulings):
+    """The authority arms for ONE space's recorded corrections."""
+    out = []
+    if len(records) > 1:
+        out.append(
+            "id watermark for {} carries {} recorded corrections ({}) — the "
+            "correction verb is ONE-SHOT per space: one ruling authorizes the "
+            "one correction it made, never a standing licence to keep "
+            "raising".format(
+                space,
+                len(records),
+                ", ".join("{} -> {} ({})".format(*r) for r in records),
+            )
+        )
+    for was, now, ruling in records:
+        where = "id watermark correction {} {} -> {} ({})".format(
+            space, was, now, ruling
+        )
+        if rulings is None:
+            out.append(
+                "{}: {} carries no open-items registry, so the authorizing "
+                "ruling cannot be resolved — a correction overrides the "
+                "hand-raise refusal and may not rest on an unverifiable "
+                "citation".format(where, OPEN_ITEMS_REL)
+            )
+        elif ruling not in rulings:
+            out.append(
+                "{}: names no RULED row of {} — the record's whole authority is "
+                "the ruling it cites, so the id must resolve to a row whose "
+                "status is `ruled`".format(where, OPEN_ITEMS_REL)
+            )
+        elif not _ruling_names(rulings[ruling], space, now):
+            out.append(
+                "{}: {} is ruled but its text never names {} at {} (`{} = {}` or "
+                "`{}-{:03d}`) — a ruling authorizes the correction it describes, "
+                "not every correction that cites it".format(
+                    where, ruling, space, now, space, now, space, now
+                )
+            )
+    return out
+
+
+def _correction_record_findings(corrections, rulings, committed=None):
+    """Are the RECORDED CORRECTIONS themselves legitimate — independent of
+    whether any mark moved this commit (OI-47 (e), hardened 2026-08-21).
+
+    Three arms, one per attack the review executed against the first cut:
+    ONE-SHOT (a space carrying two records chained a second, unruled raise onto
+    the first), RESOLVES (the cited ruling must be a `ruled` open item — the
+    review's forgery cited `OI-999`, which does not exist), and NAMES (that
+    ruling's text must name this space at this value — see `_ruling_names`).
+    `committed` adds the fourth: a record already in git may not be edited or
+    deleted, which is what stops a chained raise being laundered by REPLACING
+    the previous line instead of appending to it.
+
+    `committed` is None when git supplied no baseline; that arm then does not
+    run, the same convention `previous` follows in `watermark_findings`."""
+    out = []
+    for space in sorted(corrections):
+        out += _one_correction_findings(space, corrections[space], rulings)
+    for space in sorted(committed or {}):
+        old = (committed or {})[space]
+        new = corrections.get(space) or []
+        if new[: len(old)] != old:
+            out.append(
+                "id watermark for {}: a COMMITTED correction record was altered "
+                "or deleted (committed {}; now {}) — the record is the audit "
+                "trail the correction verb exists to leave, and a raise that "
+                "rewrites it is the forgery the one-shot rule refuses".format(
+                    space,
+                    ", ".join("{} -> {} ({})".format(*r) for r in old) or "none",
+                    ", ".join("{} -> {} ({})".format(*r) for r in new) or "none",
+                )
+            )
+    return out
+
+
+def committed_corrections(root):
+    """The RECORDED CORRECTIONS as committed — HEAD and every other parent,
+    per space the LONGEST list any of them carries.
+
+    Read from git for the same reason `committed_watermark` is: the working tree
+    cannot tell an original record from a rewritten one. Longest-wins across
+    parents so resolving a watermark conflict `--ours` cannot drop the other
+    side's ruled record. None when git can supply no baseline at all."""
+    revs = ["HEAD"]
+    merge_head = _git_out(root, ["rev-parse", "--verify", "--quiet", "MERGE_HEAD"])
+    if merge_head:
+        revs.append(merge_head.strip())
+    parents = _git_out(root, ["rev-list", "--parents", "-n", "1", "HEAD"]) or ""
+    revs.extend(parents.split()[1:])
+    best = {}
+    seen_any = False
+    for rev in revs:
+        text = _git_out(root, ["show", "{}:{}".format(rev, WATERMARK)])
+        if not text:
+            continue
+        seen_any = True
+        for space, records in parse_corrections(text).items():
+            if len(records) > len(best.get(space, ())):
+                best[space] = records
+    return best if seen_any else None
+
+
+def watermark_findings(root, previous=None, previous_corrections=None):
     """The id-watermark rules, integrity-class.
 
-    `previous` is the committed mark (see `committed_watermark`). When git cannot
-    supply one, the history rules DO NOT RUN and the caller says so — an unrun
-    rule that prints nothing is indistinguishable from one that passed."""
+    `previous` is the committed mark (see `committed_watermark`) and
+    `previous_corrections` the committed correction records (see
+    `committed_corrections`). When git cannot supply one, the history rules DO
+    NOT RUN and the caller says so — an unrun rule that prints nothing is
+    indistinguishable from one that passed."""
     try:
         marks = read_watermark(root)
     except ValueError as exc:
         return [str(exc)]
     live = live_max_ids(root)
+    corrections = read_corrections(root)
     out = _mark_covers_live_findings(marks, live)
+    if corrections or previous_corrections:
+        out += _correction_record_findings(
+            corrections, ruled_open_item_texts(root), previous_corrections
+        )
     if previous is not None:
-        out += _mark_history_findings(marks, live, previous, read_corrections(root))
+        out += _mark_history_findings(marks, live, previous, corrections)
     return out
 
 
@@ -1032,7 +1211,8 @@ def render_watermark(marks, basis="", corrections=None):
     """The file's text. One `<SPACE> = <int>` per line, deliberately: a merge
     conflicts per SPACE rather than per file, and a bump can be a line rewrite.
 
-    `corrections` — `{space: (old, new, ruling_id)}` from `read_corrections` —
+    `corrections` — `{space: [(old, new, ruling_id), ...]}` from
+    `read_corrections` —
     is rendered back verbatim as `# correction: …` lines so a plain
     `--bump-ids` regeneration (which calls this with whatever corrections the
     file already carried) never drops a ruled record; only `correct_watermark`
@@ -1061,10 +1241,10 @@ def render_watermark(marks, basis="", corrections=None):
             "# RECORDED CORRECTIONS — ruled, one-shot, applied by --correct-mark:"
         )
         for space in sorted(corrections):
-            was, now, ruling = corrections[space]
-            head.append(
-                "# correction: {} {} -> {} ({})".format(space, was, now, ruling)
-            )
+            for was, now, ruling in corrections[space]:
+                head.append(
+                    "# correction: {} {} -> {} ({})".format(space, was, now, ruling)
+                )
         head.append("#")
     if basis:
         head.append("# basis: {}".format(basis))
@@ -1193,8 +1373,8 @@ def correct_watermark(root, space, new_value, ruling_id):
         )
     marks = read_watermark(root)
     corrections = read_corrections(root)
-    if space in corrections:
-        was, now, ruling = corrections[space]
+    if corrections.get(space):
+        was, now, ruling = corrections[space][0]
         raise ValueError(
             "{} already carries a recorded correction ({} -> {} by {}) — the "
             "correction verb is ONE-SHOT and refuses to replay".format(
@@ -1208,11 +1388,20 @@ def correct_watermark(root, space, new_value, ruling_id):
             "{}) — a mark never falls, and a correction that does not raise "
             "corrects nothing".format(space, was, new_value)
         )
+    # THE WRITER CHECKS THE AUTHORITY TOO, and not because the checker is in
+    # doubt: `_correction_record_findings` is the authority, but a verb that
+    # writes an unresolvable record and leaves the repo red at the NEXT run has
+    # taught the operator nothing at the moment they could still fix it.
+    refusals = _one_correction_findings(
+        space, [(was, new_value, str(ruling_id))], ruled_open_item_texts(root)
+    )
+    if refusals:
+        raise ValueError(refusals[0])
     text = path.read_text(encoding="utf-8-sig", errors="replace")
     basis_match = re.search(r"^#\s*basis:\s*(.*)$", text, re.MULTILINE)
     basis = basis_match.group(1).strip() if basis_match else ""
     marks[space] = new_value
-    corrections[space] = (was, new_value, str(ruling_id))
+    corrections[space] = [(was, new_value, str(ruling_id))]
     path.write_text(
         render_watermark(marks, basis, corrections), encoding="utf-8", newline="\n"
     )
@@ -5081,7 +5270,9 @@ def main():
     # spine it never looked at.
     wm_root = docs.parent if args.docs else Path(args.root)
     committed = committed_watermark(wm_root)
-    findings.integrity += watermark_findings(wm_root, committed)
+    findings.integrity += watermark_findings(
+        wm_root, committed, committed_corrections(wm_root)
+    )
     # ARM 1 of OI-41, for the same reason and on the same floor: the allow file
     # and the open-items registry are FILES, so the rule cannot live in the pure
     # pass either. `docs.parent` — the root `load_provenance_allow` already read
