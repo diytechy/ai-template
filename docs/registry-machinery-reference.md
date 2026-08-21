@@ -545,6 +545,7 @@ keeps only the steps whose `gates` set contains the resolved gate.
 | `tests+coverage` | **DevStg-Impl** | product | the whole test run is DevStg-Impl-tagged |
 | `registry-integrity` | **DevStg-Reqs** | process | `trace.py --strict-integrity` — the always-valid floor, so a broken CSV cannot hide until DevStg-Tests |
 | `derived-gate` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | the freshness guard on `docs/gate` |
+| `derived-stage` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | the freshness guard on `docs/stage` (the effective-stage cache, WI-498 slice 1) |
 | `privacy` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | a leak is wrong at any stage |
 | `doc-navigability` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | |
 | `traceability` | **DevStg-Tests, DevStg-Impl** | process | `trace.py --strict --no-placeholders --html` |

@@ -315,7 +315,11 @@ def test_write_text_accepts_newline_on_the_declared_floor():
 
 @pytest.mark.parametrize(
     "script,artifact",
-    [("derive_gate.py", "docs/gate"), ("gen_okf.py", "docs/okf")],
+    [
+        ("derive_gate.py", "docs/gate"),
+        ("derive_stage.py", "docs/stage"),
+        ("gen_okf.py", "docs/okf"),
+    ],
 )
 def test_a_regenerated_artifact_has_no_cr_bytes(tmp_path, script, artifact):
     """Run a REAL generator into a scratch tree and read the bytes it wrote.

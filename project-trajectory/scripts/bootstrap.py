@@ -18,6 +18,8 @@ What it creates in the destination:
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
     docs/gate                                  <- gate.template  (derived gate: DevStg-Reqs)
+    docs/stage                                 <- stage.template  (derived stage: not yet
+                                                  derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
                                                   gate authority, the human-ratification level,
@@ -60,7 +62,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, derive_gate.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, derive_gate.py, derive_stage.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
@@ -1553,6 +1555,13 @@ MAPPING = [
     # ratifying artifacts in a reviewed commit + regenerating. The scaffold ships a legacy one-liner (accepted value-only);
     # `python scripts/derive_gate.py` migrates it to the generated form.
     ("gate.template", "docs/gate"),
+    # The machine-readable derived STAGE (WI-498 slice 1) — the rung the settled
+    # spine has earned, its per-phase breakdown, and a fingerprint of the
+    # declared derivation inputs that lets any reader tell a current record from
+    # a stale one. `docs/gate` remains beside it until the readers cut over. The
+    # scaffold ships a comment-only placeholder rather than invented values;
+    # `python scripts/derive_stage.py` writes the real one.
+    ("stage.template", "docs/stage"),
     # The id watermark (docs/id-watermark): the high-water mark per id space, so
     # a deleted row's number is never re-minted. REQUIRED, because trace.py
     # treats an absent mark as an error rather than as "no id is taken".
@@ -1777,6 +1786,12 @@ MAPPING = [
     # this list and all import it now, so — the rule above, again — the package
     # must be whole or a fresh scaffold ImportErrors on its first check.
     ("scripts/kitlib/ladder.py", "scripts/kitlib/ladder.py"),
+    # WI-498 slice 1 added `stage`: the DECLARED derivation inputs, their
+    # fingerprint, the `docs/stage` format and THE COMMON READER every consumer
+    # of "what stage is this repo in" calls. `derive_stage.py` below is the half
+    # that needs the registry carrier and cannot live in the package; it imports
+    # this one, so the same must-be-whole rule applies.
+    ("scripts/kitlib/stage.py", "scripts/kitlib/stage.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied
@@ -1794,6 +1809,11 @@ MAPPING = [
     # conversion on faith, which is what SR-129's 140-cell lesson forbids.
     ("scripts/migrate_carrier.py", "scripts/migrate_carrier.py"),
     ("scripts/derive_gate.py", "scripts/derive_gate.py"),
+    # The STAGE axis's producer (WI-498 slice 1). Imports `derive_gate` for the
+    # spine load and its rung predicates — so that the two axes can never
+    # disagree about what a Drafted row is — and `kitlib.stage` for the carrier;
+    # both are in this list, and all three must ship together.
+    ("scripts/derive_stage.py", "scripts/derive_stage.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),

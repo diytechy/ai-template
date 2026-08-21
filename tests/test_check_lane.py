@@ -259,6 +259,7 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert set(check._TRUNK_FRESHNESS_STEPS) == {
         "derived-gate",
+        "derived-stage",
         "trajectory-map",
         "status-map",
         "open-items",

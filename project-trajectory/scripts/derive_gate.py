@@ -825,6 +825,7 @@ def spine_stage(
     cmps=None,
     have_bifs=False,
     have_cmps=False,
+    cited_srs=None,
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
     the one a human-ratification level is compared against. Returns a
@@ -878,6 +879,16 @@ def spine_stage(
     is still in flight the child's rung is the honest answer. (A two-case rule
     until step 7, which retired the `Modified` case that was checked FIRST.)
 
+    `cited_srs` IS THE SCOPE OF THE NEED-COVERAGE RUNG, and it exists for the
+    PER-PHASE call (WI-498 slice 1). The coverage question — "does every ratified
+    need have a requirement answering it" — is repo-global: a need answered only
+    by phase 1's requirements is answered. Running this function over one phase's
+    rows with the default would read every OTHER phase's needs as uncovered and
+    report DevStg-Needs for every phase but the first. So a per-phase caller passes
+    the repo's whole (settled) SR set here while `srs` stays the phase's own rows.
+    Default `None` means "the rows I was given", which is the repo-wide call and
+    is byte-for-byte what this function did before the parameter existed.
+
     Two corners are explicit. A repo with no real SRs at all is DevStg-Needs, NOT
     DevStg-Release — the vacuous-lowest-bar short circuit in `_raw_level` exists
     for the bar's own arithmetic and would read as "everything is finished" here,
@@ -894,7 +905,10 @@ def spine_stage(
         return STAGE_BOUNDARY
     if any(is_drafted(r) for r in srs):
         return STAGE_REQS
-    if any(u not in sn_cited_ids(srs) for u in sn_ids):
+    if any(
+        u not in sn_cited_ids(cited_srs if cited_srs is not None else srs)
+        for u in sn_ids
+    ):
         return STAGE_NEEDS
     # THE `Modified` RUNG RETIRED AT STEP 7 with the word it read (owner ruling
     # 2026-08-17m). NOT re-keyed onto drift: this axis reads CELLS, and reaching
@@ -1002,15 +1016,22 @@ def _raw_level(srs, llrs, tcs, sn_ids, sn_draft):
     return raw, sr_g
 
 
-def compute(docs):
-    """Derive the gate from the spine registries under `docs`. Returns a result
-    dict: counts, the raw computed level (may be DevStg-Below), the same level recomputed
-    with the drafts removed (`ex_draft`), the per-phase breakdown, and the
-    runnable bar name (raw floored to DevStg-Reqs)."""
-    # The three spine tiers read through the CARRIER, which
-    # resolves TOML or CSV and hands back rows under today's column names — so
-    # the gate derivation below is untouched by the migration. `load_csv` stays
-    # for the off-spine registries, which do not move.
+def load_spine(docs):
+    """Every registry row both derivations read, loaded once through the carrier.
+
+    EXTRACTED FROM `compute` (WI-498 slice 1) so the STAGE derivation
+    (`derive_stage.py`) reads the same rows through the same resolution rules
+    rather than re-implementing the load. It is a pure read: no filtering beyond
+    dropping the `-000` example rows, and the `have_*` applies-when flags travel
+    with the rows they qualify, because a caller that separated them would have to
+    remember that an ABSENT registry and an EMPTY one mean opposite things at the
+    two inserted rungs.
+
+    Returns exactly the keyword arguments `spine_stage` takes."""
+    # The three spine tiers read through the CARRIER, which resolves TOML or CSV
+    # and hands back rows under today's column names — so both derivations are
+    # untouched by the migration. `load_csv` stays for the off-spine registries,
+    # which do not move.
     raw_srs = spine_carrier.load(
         docs / "requirements" / "system-requirements.toml", "SR-ID"
     )
@@ -1023,11 +1044,11 @@ def compute(docs):
     tcs = [r for r in raw_tcs if r.get("TC-ID") and not is_example(r["TC-ID"])]
 
     # THE NEEDS FILE RESOLVES THROUGH THE CARRIER, and this is the one place in
-    # the kit where a literal suffix here would be worst: an existence test on
-    # `.toml` alone answers False for a repo still on markdown, `sn_ids` and
-    # `sn_draft` both come back EMPTY, and an empty draft set makes every draft
-    # need read as ratified — the derived gate RISES on a registry the reader
-    # simply could not find. Absent must mean absent, never "no drafts".
+    # the kit where a literal suffix would be worst: an existence test on `.toml`
+    # alone answers False for a repo still on markdown, `sn_ids` and `sn_draft`
+    # both come back EMPTY, and an empty draft set makes every draft need read as
+    # ratified — the derived value RISES on a registry the reader simply could not
+    # find. Absent must mean absent, never "no drafts".
     sn_md = spine_carrier.resolve(
         docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
     )
@@ -1042,7 +1063,7 @@ def compute(docs):
     # file's existence, and a project that adopts neither registry simply never
     # sits at DevStg-Boundary or DevStg-Arch. They feed the STAGE axis only —
     # `_raw_level` is untouched, so the runnable bar is computed from exactly the
-    # rows it always was and no adopter's strictness moves because of this change.
+    # rows it always was.
     ext_path = spine_carrier.resolve(
         docs / "requirements" / "external.toml", spine_carrier.CARRIERS
     )
@@ -1069,6 +1090,27 @@ def compute(docs):
         if cmp_path is not None
         else []
     )
+    return {
+        "srs": srs,
+        "llrs": llrs,
+        "tcs": tcs,
+        "sn_ids": sn_ids,
+        "sn_draft": sn_draft,
+        "bifs": bifs,
+        "cmps": cmps,
+        "have_bifs": ext_path is not None,
+        "have_cmps": cmp_path is not None,
+    }
+
+
+def compute(docs):
+    """Derive the gate from the spine registries under `docs`. Returns a result
+    dict: counts, the raw computed level (may be DevStg-Below), the same level recomputed
+    with the drafts removed (`ex_draft`), the per-phase breakdown, and the
+    runnable bar name (raw floored to DevStg-Reqs)."""
+    spine = load_spine(docs)
+    srs, llrs, tcs = spine["srs"], spine["llrs"], spine["tcs"]
+    sn_ids, sn_draft = spine["sn_ids"], spine["sn_draft"]
 
     raw, sr_g = _raw_level(srs, llrs, tcs, sn_ids, sn_draft)
 
@@ -1139,10 +1181,10 @@ def compute(docs):
         tcs,
         sn_ids,
         sn_draft,
-        bifs=bifs,
-        cmps=cmps,
-        have_bifs=ext_path is not None,
-        have_cmps=cmp_path is not None,
+        bifs=spine["bifs"],
+        cmps=spine["cmps"],
+        have_bifs=spine["have_bifs"],
+        have_cmps=spine["have_cmps"],
     )
     return {
         "counts": {"SN": len(sn_ids), "SR": len(srs), "LLR": len(llrs), "TC": len(tcs)},

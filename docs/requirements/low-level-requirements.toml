@@ -1905,3 +1905,27 @@ test_refs = "(see TC-178)"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-185]
+sr_refs = ["SR-139"]
+title = "The stage carrier: the declared derivation inputs, their fingerprint, and the common reader"
+module = "project-trajectory/scripts/kitlib/stage.py"
+code_symbol = "DECLARED_INPUTS/fingerprint/effective_stage/read_stage"
+detail = """The stage axis's carrier, one rung above the ladder vocabulary and below every consumer of it. It holds the DECLARED derivation input set as one list (the spine registries by logical name with their carrier alternatives, plus the declared dials), the fingerprint over those inputs - SHA-256 of each file's LF-normalized content folded with the declared name and the carrier that answered, so a migration between carriers and an absent registry both move it - the ordering that admits the per-phase DevStg-Below sentinel without letting it reach the headline, the require_rung guard that REFUSES rather than truncating, the selection FLOOR, the per-phase fold, the docs/stage key=value format, and read_stage: the one function every consumer of the current stage calls. read_stage recomputes the fingerprint, returns the recorded record on a match with no registry parse, and derives fresh IN MEMORY otherwise. It never writes. The derivation is passed IN as an argument rather than imported, because the registry parse needs a sibling this package may not import."""
+rationale = """Freshness was previously something a SCHEDULE had to arrange, and the schedule had two holes: the freshness step stands down on a claimed work branch, where a green run over a stale cache is therefore reachable, and the loop reads the value once per run and threads it down, so a mid-session ratification is invisible for the rest of it. Both are closed by making verification a property of the CALL instead of the calendar, which is only affordable because the derivation's inputs are enumerable and small - under a dozen files, hashed in milliseconds, against consumers that already parse those same files wholesale. So the fingerprint is a fast path that REMOVES scans rather than adding one. It lives in kitlib for the reason ladder does: every consumer will call it, so a home inside any one consumer would make the others import that consumer. Readers never write because the committed file is load-bearing history for the event detectors, and a self-healing reader would rewrite that history from whichever process looked first, on the very lanes where a work branch must not commit a generated artifact."""
+test_refs = "(see TC-180)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5
+
+[design.LLR-186]
+sr_refs = ["SR-139"]
+title = "The effective stage: per-phase, draft-excluded, floored"
+module = "project-trajectory/scripts/derive_stage.py"
+code_symbol = "derive/_stage_map/_phase_groups/main"
+detail = """The producer that turns registry rows into the docs/stage record. It loads the spine through derive_gate.load_spine and re-uses derive_gate's own rung predicates and fall-through rather than restating them, groups the rows into phases by REFERENCE (an LLR belongs to the phase of the SR it decomposes, and a TC citing only its LLR resolves back through it), and derives each phase's stage twice: once over all rows (the honest live reading) and once over the settled subset with every Drafted row removed, off-spine rows included. The headline effective stage is the min over the phases that have EARNED a rung - a phase with nothing settled carries the sentinel and contributes no opinion - then floored. The file records the effective value, its derived position, the floored flag, the settled and live readings, the derived phase, both per-phase breakdowns, the draft count and the input fingerprint; --check recomputes and compares the whole field block, and treats the comment-only scaffold placeholder as not-yet-derived rather than stale."""
+rationale = """Three defects were driven against the previous single stage field and all three are answered here. It had no draft counterfactual, so ONE ordinary Drafted row dropped a mature repo to exactly what a fresh scaffold reads, and the depth of the drop was set by which tier the draft happened to land in; the existing ex-draft field could not be reused because it carries a BAR, which would type-check against the stage ladder and return a wrong ordinal. It had no floor, so ord 0 was reachable - below every runnable rung, where an at-or-above selector runs nothing and the run goes green because of it. And it had no per-phase reading at all, so the single global value was already a min over phases and no consumer could ask what the current phase had earned. The draft-excluded reading is shown BESIDE the honest live one rather than instead of it, which is the standing rule for any derived reading of a deliberately non-monotonic ladder. The derivation stays OUT of kitlib because it needs the registry carrier, and out of derive_gate because that module is being emptied rather than grown; keeping the rung fall-through in one place is what lets the ladder be re-discriminated later by editing one function."""
+test_refs = "(see TC-181)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5

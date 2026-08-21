@@ -44,6 +44,13 @@ theme and says so in its own docstring:
                  ladder order, the derived rung count, the per-rung
                  descriptions, and `stage_ord`, the only legal comparison.
                  Pure data — it imports nothing at all.
+  * `stage`    — the STAGE CARRIER, one rung above `ladder`: the declared
+                 derivation inputs and their fingerprint, the `docs/stage`
+                 format, the ordering that admits the per-phase sentinel, the
+                 selection floor and the per-phase fold, and THE COMMON READER
+                 every consumer of "what stage is this repo in" calls. It takes
+                 the derivation as an ARGUMENT — the registry parse needs a
+                 sibling this package may not import.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
                  the bar-attestation trailer label, and the "exactly one
@@ -66,6 +73,16 @@ restated in `agent_common`, the descriptions copied byte-for-byte into
 was `derive_gate`, a 1,400-line engine that parses the registries and writes
 `docs/gate`. So a renderer needing eight sentences either loaded the engine or
 kept a copy, and it kept a copy that nothing pinned.
+
+`stage` (WI-498 slice 1) is a THIRD shape, and naming it keeps the roster
+honest: it is NEW BEHAVIOUR placed here from the start rather than a copy pulled
+in or a misplaced home moved. It belongs here on the same test the other two
+pass — every consumer of the stage will call it, so a home inside any one
+consumer would make the others import that consumer. Note what it is NOT
+allowed to be: the derivation itself stays outside, because it needs the
+registry carrier, and this package's one asserted rule is that it imports no
+sibling. A module here that "just needed one import" would smuggle the whole
+graph into the scaffolder.
 
 One further theme slot is NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
 CREATED, because an empty module is a worse statement than an absent one:

@@ -36,6 +36,7 @@ WIRED = {
     "okf": "okf",
     "status": "status-map",
     "gate": "derived-gate",
+    "stage": "derived-stage",
     "openitems": "open-items",
     "ratify": "ratify-fresh",
     "skillsindex": "skills-index",

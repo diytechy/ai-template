@@ -35,6 +35,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/process.md",
         "docs/process-options.md",
         "docs/gate",
+        "docs/stage",
         # SN-028: the ~10 one-word policy files collapsed into ONE home. A
         # fresh scaffold ships only this; the legacy files are absent by
         # design (shipping both would be the mixed-config refusal on day one).
@@ -98,19 +99,21 @@ def test_scaffold_contains_expected_files(scaffold):
         # The shared helper package (WI-448) — every module, because a
         # PARTIAL copy is the failure mode: the scripts import
         # `kitlib.config` / `kitlib.git` / `kitlib.ladder` /
-        # `kitlib.registry` / `kitlib.station` by name, so a
+        # `kitlib.registry` / `kitlib.stage` / `kitlib.station` by name, so a
         # missing module ImportErrors on the scaffold's first check rather
         # than degrading. `test_the_common_package_ships_complete` asserts the
-        # set EXACTLY against the kit; these six rows are the spot-check that
+        # set EXACTLY against the kit; these seven rows are the spot-check that
         # keeps the expectation readable beside the other scripts.
         "scripts/kitlib/__init__.py",
         "scripts/kitlib/config.py",
         "scripts/kitlib/git.py",
         "scripts/kitlib/ladder.py",
         "scripts/kitlib/registry.py",
+        "scripts/kitlib/stage.py",
         "scripts/kitlib/station.py",
         "scripts/check.py",
         "scripts/derive_gate.py",
+        "scripts/derive_stage.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
         "scripts/check_need_form.py",
@@ -1237,8 +1240,9 @@ def test_the_common_package_ships_complete(scaffold):
         [
             "-c",
             "import kitlib, kitlib.config, kitlib.git, kitlib.ladder, "
-            "kitlib.registry; "
+            "kitlib.registry, kitlib.stage; "
             "assert kitlib.ladder.STAGE_OF == len(kitlib.ladder.STAGE_ORDER); "
+            "assert kitlib.stage.FLOOR in kitlib.ladder.LADDER_RUNGS; "
             "print(kitlib.registry.spec_work_dir('docs/x.csv'))",
         ],
         cwd=scaffold / "scripts",

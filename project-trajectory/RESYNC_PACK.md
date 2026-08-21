@@ -133,7 +133,8 @@ destination is yours, and no re-sync rule applies to it.
 ### 2.2 The four classes
 
 - **Overwrite freely (kit-owned; you don't hand-edit these).** The process
-  scripts under `scripts/` (`trace.py`, `derive_gate.py`, `check_docs.py`,
+  scripts under `scripts/` (`trace.py`, `derive_gate.py`, `derive_stage.py`,
+  `check_docs.py`,
   `check_flows.py`, `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`,
   `gen_*`, `agent_loop.py`), the git hooks (`.githooks/pre-commit`,
   `.githooks/commit-msg`, `.githooks/pre-push`), `pytest.ini` markers, and
@@ -2149,6 +2150,57 @@ failing test.
 
 **Nothing in your `docs/` changes**, and no registry cell moves. The bar
 vocabulary (`BAR_*`, `docs/gate`'s value itself) is untouched by this entry.
+
+### `docs/stage` + `derive_stage.py` — the effective stage gets its own derived file [since 87bd45dd]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**A new generated artifact, a new script, a new `kitlib` module, and a new
+`check.py` step. `docs/gate` is UNCHANGED and still authoritative for everything
+that reads it** — the two files run side by side deliberately while the readers
+are cut over in a later change. Nothing you have breaks on this entry.
+
+**Copy in, then run once.** Take `scripts/derive_stage.py`,
+`scripts/kitlib/stage.py`, the updated `scripts/check.py`, `scripts/trunk_step.py`
+and `hooks/pre-commit`, and — if you scaffolded before this entry and have no
+`docs/stage` — `stage.template` copied to `docs/stage`. Then:
+
+```
+python scripts/derive_stage.py
+git add docs/stage
+```
+
+**This overrides §1's preserve-classes rule for one path**: `docs/stage` is a
+generated cache, so it is REGENERATED, never merged — the same directive
+`docs/gate` already carries.
+
+**If you skip the run:** the new `derived-stage` step passes with a note while
+`docs/stage` is still the comment-only placeholder (there is nothing for it to be
+stale against yet), and FAILS if the file is absent entirely. So a fresh scaffold
+is green; a repo that deleted the file is loudly told which command to run. It is
+never silently green over a stale record.
+
+**What the file says, and why it is not just `docs/gate` again.** The headline
+`stage =` is the EFFECTIVE stage — the rung your SETTLED spine has earned, folded
+per phase and floored — where `docs/gate`'s `# basis:` line carried only the raw
+live reading. The practical difference: one newly Drafted requirement no longer
+drops the reported stage to what a fresh scaffold reads. The honest live value is
+still there beside it (`live-stage =`), with the per-phase breakdown and the draft
+count, so nothing is hidden — the derived reading is shown BESIDE the honest one,
+which is the rule process.md §4 has always stated.
+
+**`fingerprint =` is the part worth knowing about.** It is a SHA-256 over the
+LF-normalized content of the declared derivation inputs — your spine registries
+and `docs/process.toml`, a list stated once in `kitlib/stage.py`. Any reader
+recomputes it and trusts the recorded record only on a match, deriving fresh in
+memory otherwise. Consequences for you: the value is correct on a work branch even
+though the freshness step stands down there, and it is correct mid-session after
+you ratify something and before anyone regenerates. Readers never WRITE the file —
+regeneration stays `trunk_step.py --regen` and your own explicit run.
+
+**If your registries live in CSV rather than TOML**, nothing changes: the input
+list resolves by carrier exactly as the derivation does, and which carrier
+answered is part of the fingerprint.
 
 ## 4. Translation helper — concept renames
 

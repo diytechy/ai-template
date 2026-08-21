@@ -218,6 +218,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "lint",
         "tests+coverage",
         "derived-gate",
+        "derived-stage",
         "registry-integrity",
         "traceability",
         "vocabulary",
@@ -646,6 +647,21 @@ def steps(coverage, tier, gate, phase=None, profile=None):
             "derived-gate",
             (),
             [sys.executable, str(_SCRIPTS / "derive_gate.py"), "--check"],
+            {BAR_REQS, BAR_TESTS, BAR_RELEASE},
+            "process",
+        ),
+        # The same freshness contract for the STAGE axis's own cache (WI-498
+        # slice 1). Same tags, same layer, same trunk-lane stand-down as its
+        # sibling above, deliberately: the two files are derived from the same
+        # rows by the same predicates, and a repo where one is guarded and the
+        # other is not would be a repo where the two can silently disagree.
+        # `docs/gate` REMAINS and stays authoritative for its readers until
+        # slice 2 cuts them over — the transitional dual state the ruled plan
+        # asks for, held in step by having both gated at every bar.
+        (
+            "derived-stage",
+            (),
+            [sys.executable, str(_SCRIPTS / "derive_stage.py"), "--check"],
             {BAR_REQS, BAR_TESTS, BAR_RELEASE},
             "process",
         ),
@@ -1548,7 +1564,8 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-gate trajectory-map status-map open-items okf ratify-fresh".split()
+    "derived-gate derived-stage trajectory-map status-map open-items okf "
+    "ratify-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed

@@ -196,6 +196,7 @@ make-work that produces paraphrase, not traceability. Instead:
 
 ```
 python scripts/derive_gate.py      # compute docs/gate from the artifact states
+python scripts/derive_stage.py     # compute docs/stage (the effective stage) from the same rows
 python scripts/check.py            # gate from docs/gate (DevStg-Reqs to start)
 python scripts/trace.py            # writes docs/test/report.md
 ```

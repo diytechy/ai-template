@@ -20,12 +20,17 @@ docs (census, deep-check, schedule map) as evidence. This is a
 MULTI-SESSION PROGRAM lane; each slice ends green at the commit bar and
 lands the largest honest coherent piece.
 
-**Program state:** slice 0 landed 2026-08-21; slices 1-5 remain, in order, and
-slice 1 (`derive_stage` + `docs/stage` + the common reader) is next. Its module
-name is already reserved: the ladder took `kitlib/ladder.py` deliberately so
-`kitlib/stage.py` — the plan §2 "kitlib stage module" holding the declared input
-set, the fingerprint and the self-healing reader — lands above it with the pure
-vocabulary strictly below.
+**Program state:** slices 0 and 1 landed 2026-08-21; slices 2-5 remain, in
+order, and slice 2 (selection re-keys at-or-above) is next. Slice 1 delivered
+`kitlib/stage.py` (the declared inputs, the fingerprint, the format, the floor,
+the fold and the common reader), `derive_stage.py` (the per-phase,
+draft-excluded, floored derivation), the committed `docs/stage`, and a
+`derived-stage` freshness step wired exactly like `derived-gate`. **`docs/gate`
+remains and is still authoritative for every one of its readers** — that is the
+plan's transitional dual state, and cutting them over is slice 2's job. Slice 2
+inherits two things it should read first: `derive_stage.read(root)` is the
+one-line common reader to point consumers at, and the banked finding that the
+bar axis must be swept by VALUE (`"DevStg-`), not by constant name.
 
 The slices, in the plan's order (§5):
 
@@ -45,11 +50,23 @@ The slices, in the plan's order (§5):
    NOT touched, deliberately: `check.py`'s `BAR_*` literals and `derive_gate`'s
    bar ordinals / `BAR_NAMES` / `BAR_ORDER` / `STAGE_BAR` — the bar axis dies
    with slice 2, and slice 0 only extracts what survives.
-1. **derive_stage + docs/stage + the common reader** — the designed
-   effective per-phase stage (draft-excluded, floored), the input
-   fingerprint over the DECLARED derivation inputs, the self-healing
-   read-only reader. The deep-check's nine corner cases are this slice's
-   driven acceptance tests.
+1. **derive_stage + docs/stage + the common reader** — LANDED 2026-08-21.
+   All nine deep-check corner cases are driven acceptance tests
+   (`tests/test_kitlib_stage.py` for the five that are carrier properties,
+   `tests/test_derive_stage.py` for the four needing real rows). The design
+   decisions worth carrying forward: the reader takes the derivation as an
+   ARGUMENT (kitlib may import no sibling, and the rung logic is rewritten by
+   slices 2-3, so moving it would be work performed twice); the effective stage
+   is the MIN over phases that have EARNED a rung — max would be a high-water
+   reading process.md §4 forbids as a headline — with sentinel-carrying phases
+   ignored, which is what stops one draft collapsing the repo; and the floor is
+   a SELECTION guarantee with the honest unfloored value recorded beside it.
+   `docs/stage` is key=value, not positional. Owned by LLR-185/186 + TC-180/181,
+   single-tagged CMP-006. Record: `docs/log.d/2026-08-21-wi498-stage-unification.md`,
+   "Slice 1".
+   NOT touched, deliberately: no consumer re-keyed (slice 2), and the
+   Impl/Release discriminator is unchanged (slice 3) — the effective stage is
+   the designed aggregation over TODAY's rung mapping.
 2. **Selection re-keys at-or-above** — gates= sets re-derived deliberately
    per step; bar constants deleted; all docs/gate readers onto the common
    reader.

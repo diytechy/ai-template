@@ -144,6 +144,13 @@ SLOW_MODULES = frozenset(
         "test_trajectory_specs",  # decision over spec bodies
         "test_components_registry",  # components gate on scaffolds
         "test_derive_gate",  # derive_gate on scaffolds
+        # WI-498 slice 1: the same module, the same cost class — every test in it
+        # takes the `scaffold` fixture (a full bootstrap) and several drive
+        # `derive_stage.py` / `check.py` through run_py. Filed beside its sibling
+        # by the declared criterion, not to buy budget: its PURE half is
+        # `test_kitlib_stage`, which stays in the commit bar where the
+        # in-process default puts it.
+        "test_derive_stage",  # derive_stage on scaffolds
         "test_gen_okf",  # gen_okf on scaffolds
         "test_gen_trajectory_pending",  # pending-state gen_trajectory subprocesses
         "test_modules_registry",  # modules gate on scaffolds
