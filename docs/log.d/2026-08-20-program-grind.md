@@ -9,11 +9,14 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: OI-48, OI-49, OI-50, OI-51, OI-52, OI-53 — the running
-union of the per-section declarations below, re-derived as each session closes
-(the WI-485 fragment-scope lesson applied from the start). OI-49 and OI-50
-joined at the WI-455 close; OI-51 at WI-473; OI-52 and OI-53 were minted by the
-batch-close iterate, whose section is the last one below.
+Deferred open items: OI-51, OI-53 — the running union of the per-section
+declarations below, re-derived as each session closes (the WI-485
+fragment-scope lesson applied from the start), and RE-DERIVED AGAIN
+2026-08-21 when the owner ruled four of the six rows this batch queued
+(48, 49, 50 and 52 of the OI space — ids off the declaration line
+deliberately; the ruled record is docs/log.d/2026-08-21-owner-rulings-
+oi48-52.md, and the per-section declarations below stand as accurate
+history of the sessions that deferred them).
 
 ### WI-448 — the common-module inversion (opus worker) — SLICE landed, row stays active
 
@@ -23,7 +26,10 @@ carries the five numbered items still owed. The largest of them — 33 remaining
 `_utf8_console` copies — is 264 of the 477 redundant lines that survive, so
 closing here would have been a false complete by more than half the residue.
 
-Deferred open items: OI-48 — which component owns the shared kernel.
+Deferred open items: none still owed — SUPERSEDED 2026-08-21: this session
+deferred the shared-kernel ownership question (48 in the OI space, named
+off the declaration line so the parser reads the live state); the owner
+ruled it (d) the next day and the execution row is queued.
 
 **What shipped.** `project-trajectory/scripts/kitlib/`, the kit's first shipped
 package: `config` (the declared-policy line reader plus its two adapters),
@@ -195,7 +201,10 @@ BLOCKED, not merely unstarted, so closing here would have been a false
 complete. Spec Context now carries the three owed items with their blockers
 named.
 
-Deferred open items: OI-49, OI-50 — both minted this slice (see below).
+Deferred open items: none still owed — SUPERSEDED 2026-08-21: this slice
+minted the ratification-surface and no-crossing questions (49 and 50 in
+the OI space, named off the declaration line so the parser reads the live
+state); the owner ruled both the next day — (b) and (a) respectively.
 
 **B-01 and B-04's hook half now have a FACING, and the choice between the two
 shapes is the substance.** WI-459 handed this lane two options: tie-backs on
@@ -1774,8 +1783,11 @@ executed attacks), Group 2 (MAJOR), Group 3 (MINOR). Findings were treated as
 CLAIMS: each was re-run against the tree before it was fixed, and the one arm
 that refuted on measurement is recorded as REFUTED rather than "fixed".
 
-Deferred open items: OI-52, OI-53 — both minted by this close (see "The two
-owner decisions" below). The other four queued topics carry no row and say why.
+Deferred open items: OI-53 — minted by this close (see "The two owner
+decisions" below), still with the owner. The close's other mint — the
+smoke-budget question, 52 in the OI space, named off the declaration line
+— was ruled (a)-with-tuning on 2026-08-21 and its execution row is queued.
+The other four queued topics carry no row and say why.
 
 **Per item.**
 
