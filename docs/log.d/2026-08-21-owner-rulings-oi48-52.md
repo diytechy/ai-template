@@ -91,3 +91,28 @@ direction) and one incidental LIVE DEFECT found and queued
 always-False since the derived-gate migration — one of the four
 clearance-needing behaviors is not running at all; watermark `WI`
 496 → 497 in this commit).
+
+**Third follow-up, same day — the compute-vs-read schedule map.** The
+owner asked when the gate is computed versus read, and whether the
+readers are scheduled properly. Mapped and demonstrated
+([plans/2026-08-21-gate-schedule-map.md](../plans/2026-08-21-gate-schedule-map.md)):
+`docs/gate` is a COMMITTED CACHE of a pure function of the live
+registries — one writer (`derive_gate.py`, production-called only by
+`trunk_step.regen` on the trunk lane), freshness enforced by a `--check`
+that RECOMPUTES from the live registries and byte-compares value + basis
+lines at all three bars, so no green run or commit lands stale ON THE
+TRUNK. Reader tally: 2 protected, 6 windowed-but-self-correcting, 1
+broken (the WI-queued `_gate_moved`), 1 dead (`read_declared`, documented
+as the gate's reader, called on it nowhere). Two real windows ranked
+above the rest: (W-1) a CLAIMED WORK BRANCH switches the freshness step
+off by design (`_TRUNK_FRESHNESS_STEPS`), which FALSIFIES
+`spine_stage_of`'s written trust invariant ("either current or the step
+is already red" — in that lane it cannot be red); (W-2) `agent_loop` and
+`dispatch` hoist the stage ONCE PER RUN while the run's own merges
+regenerate the gate beneath them (`tracked_pause` is re-read every tick;
+the stage is not). De-escalation, measured: at this repo's dial 4 every
+rung is human-held, so no stage value changes any decision here today —
+both windows are latent, live only for adopters at dials 1–3, erring
+toward MORE human involvement. The W-1 invariant mismatch (re-document
+vs arm branch-lane freshness) is put to the owner in the same reply; it
+is the one place a written guarantee and the mechanism disagree.
