@@ -1,9 +1,11 @@
 ## 2026-08-21 — Four of the six queued briefs rule in one owner message; the floor question is answered but deliberately not yet ruled
 
-Deferred open items: OI-51, OI-53 — the first is ANSWERED below and awaits
-the owner's confirmation that the answer resolves the confusion the brief
-caused (the ruling stays the owner's); the second was not addressed in the
-owner's message and stays pending on the open-items surface.
+Deferred open items: OI-53 — not addressed in any of the day's owner
+messages; still pending on the open-items surface. (This line originally
+also declared the floor question, 51 in the OI space — ANSWERED below
+across four exchanges and then RULED by the owner later the same day as
+the stage unification program; the id moved off the declaration line at
+that ruling, per the parser's live-state reading.)
 
 The owner ruled four pending briefs in one message (2026-08-21); each row
 flipped `pending -> ruled` with the ruling recorded at the top of its
@@ -116,3 +118,25 @@ both windows are latent, live only for adopters at dials 1–3, erring
 toward MORE human involvement. The W-1 invariant mismatch (re-document
 vs arm branch-lane freshness) is put to the owner in the same reply; it
 is the one place a written guarantee and the mechanism disagree.
+
+**Fourth follow-up, same day — OI-51 RULES as the stage unification
+program.** The exchange chain (Impl-vs-Release measured behaviourally
+empty; the four "clearance" behaviors reduced to events-over-history plus
+one derivation rule; the enum inventory: 648 occurrences / 64 files, four
+code definition homes held equal by pins) closed with the owner agreeing
+the redesign and supplying the mechanism chain-of-thought: `docs/stage`
+carrying stage + phase + an input fingerprint, one self-healing common
+reader, and the phase-decrease rule with exactly the `LLReqs → Arch`
+decomposition-cycle exemption. Recorded as the design record + plan
+([plans/2026-08-21-stage-unification-design-record.md](../plans/2026-08-21-stage-unification-design-record.md),
+[plans/2026-08-21-stage-unification-plan.md](../plans/2026-08-21-stage-unification-plan.md));
+the owner answered the plan's four open questions (phase stays DERIVED
+with the decrease rule as an authoring-time check — verified: `phase` is
+a spine-only column, all 73 SRs carry it; both stage and phase recorded
+in `docs/stage`, the consistency principle; NO interim (a) — meta repo;
+branch trust confirmed on the serial-spine argument) and the plan went
+v1 FINAL. **OI-51 flipped `pending → ruled`** with `ruling_ref` the plan
+itself; execution row **WI-498** minted (program lane, slices 0–5;
+WI-497 folds at slice 4, the deferred WI-493 at slice 5); watermark `WI`
+497 → 498. The 2026-08-20 program-grind fragment's two OI-51 deferral
+declarations superseded in place at the same commit.

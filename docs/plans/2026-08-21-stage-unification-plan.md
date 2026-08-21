@@ -1,6 +1,8 @@
-# The stage unification plan — DRAFT v0 (owner chain-of-thought, engineered)
+# The stage unification plan — v1 FINAL (owner-ruled 2026-08-21)
 
-**Status: DRAFT, awaiting the owner's answers to §6.** Direction and evidence:
+**Status: FINAL — the owner answered all four §6 questions on 2026-08-21
+(answers recorded in §6) and OI-51 is RULED on this plan's shape.** The
+executing program row is WI-498. Direction and evidence:
 [2026-08-21-stage-unification-design-record.md](2026-08-21-stage-unification-design-record.md)
 (and the three measurement docs it cites). This document turns the owner's
 2026-08-21 chain-of-thought into an executable shape, keeping each of their
@@ -151,17 +153,27 @@ Evidence carrier (Release's input) is its OWN row, sequenced independently —
 slice 3 does not wait for it; Release simply stays unreachable until it
 lands.
 
-## 6. Open questions for the owner (the plan finalizes on these)
+## 6. The owner's answers (2026-08-21) — the plan finalized on these
 
-1. **Phase mechanism:** (i) authoring-time check keeping phase derived
-   (recommended, §4) or (ii) stored counter?
-2. **Exemption breadth:** exactly the one-rung `LLReqs → Arch` decrease, or
-   any Arch-tier rework while the phase's stage sits at LLReqs?
-3. **Interim protection:** take OI-51's narrow (a) (three tag edits so
-   adopters' PRs are checked while this program runs), or let the program
-   deliver it at slice 2?
-4. **Reader healing on claimed branches:** §3 has readers verify per call
-   and derive in memory — confirm that a claimed work branch should trust
-   its OWN registries' derivation (it edits them) rather than the
-   as-of-claim committed value. (The schedule map's W-1 dissolves either
-   way; this fixes what a branch believes about itself.)
+1. **Phase mechanism: (i), with the alignment check the owner asked for
+   verified.** Phase is traced on SPINE items only — all 73 SRs carry
+   `phase =`, LLR/TC likewise, the derivation reads exactly
+   `srs + llrs + tcs` (`derive_gate.py:1202`), and no off-spine registry
+   carries the column. The owner's consistency principle ("either stage
+   and phase are both stored to a file for traceability, or neither")
+   holds in this plan's shape: BOTH are derived values and BOTH are
+   recorded in `docs/stage` — same treatment, one file, still
+   recomputable from the registries alone.
+2. **Exemption breadth: exactly the one permutation `LLReqs → Arch`** —
+   the permitted decomposition cycle. Any deeply decomposed problem
+   would otherwise run the phase counter up; no wider Arch-tier
+   exemption.
+3. **No interim.** This is a meta repo; the owner is not worried about
+   how phases/stages run while the change goes through. OI-51's narrow
+   (a) is NOT taken; slice 2 delivers selection.
+4. **Branch trust model confirmed.** Spine work happens in series, so a
+   claimed branch derives from its OWN registries; the computation
+   running there does not hurt; and on merge the trunk adopts the
+   branch's computed stage/phase directly — that spine work was the only
+   spine work in flight, so its derived result IS the trunk's next
+   value.

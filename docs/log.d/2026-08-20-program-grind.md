@@ -9,11 +9,11 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: OI-51, OI-53 — the running union of the per-section
+Deferred open items: OI-53 — the running union of the per-section
 declarations below, re-derived as each session closes (the WI-485
 fragment-scope lesson applied from the start), and RE-DERIVED AGAIN
-2026-08-21 when the owner ruled four of the six rows this batch queued
-(48, 49, 50 and 52 of the OI space — ids off the declaration line
+2026-08-21 as the owner ruled five of the six rows this batch queued
+(48, 49, 50, 51 and 52 of the OI space — ids off the declaration line
 deliberately; the ruled record is docs/log.d/2026-08-21-owner-rulings-
 oi48-52.md, and the per-section declarations below stand as accurate
 history of the sessions that deferred them).
@@ -457,8 +457,11 @@ is an owner ruling. Spec Context now carries the four owed items with their
 blockers named. Design record:
 [../plans/2026-08-20-product-regression-floor.md](../plans/2026-08-20-product-regression-floor.md).
 
-Deferred open items: OI-51 — which bar the three built-in product checks belong
-at, now that DevStg-Impl is unreachable from the derived selector.
+Deferred open items: none still owed — SUPERSEDED 2026-08-21: this slice
+deferred the product-checks-bar question (51 in the OI space, named off
+the declaration line so the parser reads the live state); the owner ruled
+it the next day as the stage unification program after a four-exchange
+design conversation, and the program row is queued.
 
 **THE FINDING THAT CHANGED THE ROW, measured rather than inherited.** C-01 says
 one draft row "removes all product-code checks" from CI. Probed against the
