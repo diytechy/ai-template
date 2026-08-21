@@ -151,6 +151,10 @@ SLOW_MODULES = frozenset(
         # `test_kitlib_stage`, which stays in the commit bar where the
         # in-process default puts it.
         "test_derive_stage",  # derive_stage on scaffolds
+        # WI-498 slice 3: the phase rule's before-state IS `HEAD`, so every test
+        # in the module builds and commits a real git repo — the same
+        # subprocess-driving class as the module above it, not a borderline call.
+        "test_phase_rule",  # the stage-decrease rule, on real git repos
         "test_gen_okf",  # gen_okf on scaffolds
         "test_gen_trajectory_pending",  # pending-state gen_trajectory subprocesses
         "test_modules_registry",  # modules gate on scaffolds

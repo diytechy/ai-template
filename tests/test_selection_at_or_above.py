@@ -154,17 +154,23 @@ def test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value(
     that as a dormancy and named OI-51 as the ruling that owed the fix.
 
     The stage axis is not ceilinged. A fully decomposed, settled spine reaches
-    `DevStg-Release`, which is AT OR ABOVE the `DevStg-Impl` threshold — so the
-    three select. That the rung actually reached is Release rather than Impl is
-    honest and known: rung 6 is vacant under today's closed Status enum, which is
-    why the owner's rule had to be "in or above" rather than "in", and slice 3
-    re-discriminates the ladder."""
+    `DevStg-Impl` — the threshold itself — so the three select.
+
+    SLICE 3 CHANGED THE RUNG THIS REACHES, AND THE PREVIOUS TEXT PREDICTED IT.
+    It read: "That the rung actually reached is Release rather than Impl is
+    honest and known: rung 6 is vacant under today's closed Status enum, which
+    is why the owner's rule had to be 'in or above' rather than 'in', and slice
+    3 re-discriminates the ladder." It did. A settled spine now lands ON the
+    threshold rather than above it — the fix is the same size either way, but
+    the reading is no longer "nothing in work" for a repo that is being built.
+    `at_or_above` is still asserted below, because the RULE is unchanged: the
+    owner's "in or above" survives the vacancy closing."""
     _mature_frame_free(scaffold)
     proc = run_py([SCRIPTS / "derive_stage.py", "--root", "."], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
     record = check._kitstage.parse((scaffold / "docs" / "stage").read_text("utf-8"))
-    assert record["stage"] == _ladder.STAGE_RELEASE, record
+    assert record["stage"] == _ladder.STAGE_IMPL, record
     assert check.at_or_above(record["stage"], _ladder.STAGE_IMPL)
 
     listed = run_py(["scripts/check.py", "--list", "--tier", "smoke"], cwd=scaffold)
@@ -219,7 +225,7 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
     # 1. MATURE: a fully decomposed settled chain.
     bar_before, stage_before = regenerate()
     before = plan_names()
-    assert stage_before["stage"] == _ladder.STAGE_RELEASE, stage_before
+    assert stage_before["stage"] == _ladder.STAGE_IMPL, stage_before
     assert {"product-canary", "traceability", "format"} <= before, before
 
     # 2. ONE DRAFTED ROW — an ordinary new requirement, nothing else changed.
@@ -234,7 +240,7 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
     assert stage_after["live-stage"] == _ladder.STAGE_REQS, stage_after
 
     # 2b. THE CLAIM: the effective stage did not move, so the plan did not.
-    assert stage_after["stage"] == _ladder.STAGE_RELEASE, stage_after
+    assert stage_after["stage"] == _ladder.STAGE_IMPL, stage_after
     assert plan_names() == before
 
 
@@ -374,7 +380,7 @@ def test_the_stage_is_read_through_the_common_reader_not_off_a_stale_cache(
     for script in ("derive_gate.py", "derive_stage.py"):
         assert run_py([SCRIPTS / script, "--root", "."], cwd=scaffold).returncode == 0
     recorded = (docs / "stage").read_text(encoding="utf-8")
-    assert "stage = DevStg-Release" in recorded
+    assert "stage = DevStg-Impl" in recorded
 
     srs = docs / "requirements" / "system-requirements.csv"
     srs.write_text(srs.read_text(encoding="utf-8") + DRAFTED_SR, encoding="utf-8")
@@ -385,4 +391,4 @@ def test_the_stage_is_read_through_the_common_reader_not_off_a_stale_cache(
     # what this proves is that the file was NOT trusted blindly: it is byte
     # identical afterwards (readers never write) while the fingerprint missed.
     assert (docs / "stage").read_text(encoding="utf-8") == recorded
-    assert "Plan at stage DevStg-Release" in proc.stdout
+    assert "Plan at stage DevStg-Impl" in proc.stdout

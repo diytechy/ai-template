@@ -306,6 +306,20 @@ SR = {
 LLR = {"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}
 TC = {"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}
 
+# WHAT A FULLY SETTLED SPINE READS — `DevStg-Impl` since WI-498 slice 3, and
+# NAMED rather than spelled so the rungs below can say what they mean.
+#
+# Most uses of this value in this module are INCIDENTAL: the frame-rung tests
+# assert "nothing here holds the rung open", and the settled value is merely
+# what a spine with nothing holding it reads. They are not claims about the top
+# of the ladder. Spelling `dg.STAGE_RELEASE` at each of them made those tests
+# LOOK like top-rung pins, which is exactly why the deep-check's pin census
+# (`docs/plans/2026-08-21-stage-rekey-deep-check.md`, "The test pins that would
+# move") counted five and nine went red: it found the tests ABOUT the rung and
+# missed the ones that merely USED it. One name, so the next re-discrimination
+# moves one line.
+SETTLED = dg.STAGE_IMPL
+
 
 def _stage(srs=(SR,), llrs=(LLR,), tcs=(TC,), sn_ids=("SN-001",), sn_draft=(), **kw):
     return dg.spine_stage(
@@ -313,10 +327,25 @@ def _stage(srs=(SR,), llrs=(LLR,), tcs=(TC,), sn_ids=("SN-001",), sn_draft=(), *
     )
 
 
-def test_a_settled_spine_is_the_TOP_RUNG():
+def test_a_settled_spine_is_the_IMPL_rung_and_the_top_rung_is_NOT_DERIVED():
+    """FLIPPED AT WI-498 SLICE 3, under OI-51's ruling on the stage unification
+    plan (§5 item 3) — deliberately, not by drift.
+
+    WHAT THIS TEST USED TO SAY: `_stage() == dg.STAGE_RELEASE`, named "a settled
+    spine is the TOP RUNG". That was the polarity the owner ruled wrong: a spine
+    whose rows are all blessed through the test tier reported "nothing in work;
+    release checklist available" for the entire implementation period, which is
+    the wrong sentence for the longest stretch of a project.
+
+    WHAT IT SAYS NOW: Founded-through-tests reads DevStg-Impl — the tests are
+    laid, and making them pass is the work in progress.
+
+    The ladder still ENDS at DevStg-Release, and the second assertion keeps
+    saying so: the rung was not deleted, it was made evidence-gated. Nothing
+    derives it, which the companion test below pins from the source."""
+    assert _stage() == dg.STAGE_IMPL
     # The LABEL, not a number — position is derived, so no test may pin an
-    # ordinal as though it were the identifier.
-    assert _stage() == dg.STAGE_RELEASE
+    # ordinal as though it were the identifier. The vocabulary is UNCHANGED.
     assert dg.STAGE_ORDER[-1] == dg.STAGE_RELEASE
     assert dg.STAGE_OF == 8
 
@@ -351,10 +380,66 @@ def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
     # cascade runs and the Impl discriminator catches it. That is the safe
     # direction (an unmigrated row reads LESS finished, never more) and the
     # integrity floor names the cell itself.
+    #
+    # WI-498 SLICE 3 FLIPPED THE REASON WITHOUT FLIPPING THE VALUE, and that is
+    # worth stating: `Modified` used to reach DevStg-Impl by being SINGLED OUT
+    # ("not Approved, so the discriminator catches it"). The discriminator is
+    # gone — every spine that gets this far reads Impl — so the row now lands
+    # there by falling through with everything else. Same answer, and no longer
+    # dependent on an out-of-vocabulary cell being the one thing that reached
+    # the rung.
     assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
-    # `Founded`, armed at step 8, is the opposite case and must NOT be caught:
-    # it is `Approved` plus a demonstration, so the spine is finished.
-    assert _stage(srs=(dict(SR, Status="Founded"),)) == dg.STAGE_RELEASE
+    # `Founded`, armed at step 8, is the opposite case — and since slice 3 it is
+    # no longer a DIFFERENT answer. It reads Impl too: `Founded` is `Approved`
+    # plus a demonstration, and neither is evidence that the tests pass.
+    assert _stage(srs=(dict(SR, Status="Founded"),)) == SETTLED
+
+
+def test_NO_status_combination_reaches_the_RELEASE_rung():
+    """DevStg-Release is EVIDENCE-GATED and the evidence carrier does not exist,
+    so nothing derives the rung. The plan calls this state honest and deliberate
+    (§5 item 3); this test is what stops it from being quietly undone.
+
+    Driven exhaustively over the closed Status enum PLUS a retired value, across
+    all three spine tiers and both LLR-exemption shapes — 2 x 4^3 = 128 spines.
+    Not one may read the top rung."""
+    reached = set()
+    for verification in ("Test", "Analysis"):
+        for sr_status in ("Drafted", "Approved", "Founded", "Modified"):
+            for llr_status in ("Drafted", "Approved", "Founded", "Modified"):
+                for tc_status in ("Drafted", "Approved", "Founded", "Modified"):
+                    reached.add(
+                        _stage(
+                            srs=(
+                                dict(SR, Status=sr_status, Verification=verification),
+                            ),
+                            llrs=(dict(LLR, Status=llr_status),),
+                            tcs=(dict(TC, Status=tc_status),),
+                        )
+                    )
+    assert dg.STAGE_RELEASE not in reached, sorted(reached)
+    # ...and the rung the settled shapes DO land on is the one the owner named.
+    assert dg.STAGE_IMPL in reached
+
+
+def test_the_RELEASE_rung_has_no_PRODUCER_in_the_source():
+    """The companion to the exhaustive pin above, and it catches what enumeration
+    cannot: a `return STAGE_RELEASE` behind a condition no fixture happens to
+    build. The guard is structural — the rung has no producer at all — so the
+    test is structural too.
+
+    THIS IS THE OI-30 D2 GUARD ON THE STAGE AXIS. D2 ruled that a Status cell may
+    never claim the test evidence passed; on the bar axis that needed a ceiling
+    flag (`derive_gate._RELEASE_CEILING`, still live while `docs/gate` is still
+    written), and here it needs nothing, because the value is simply not
+    produced. Deleting this test is how the harness driver lands — an act."""
+    source = inspect.getsource(dg.spine_stage)
+    body = "\n".join(
+        line for line in source.splitlines() if not line.strip().startswith("#")
+    )
+    # the docstring names the rung repeatedly; only RETURNS are the question
+    assert "return STAGE_RELEASE" not in body
+    assert "STAGE_RELEASE" not in body.split('"""')[-1]
 
 
 def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
@@ -370,7 +455,7 @@ def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
 def test_an_LLR_EXEMPT_requirement_needs_no_LLR():
     # Analysis/Inspection/Attest decompose to a TC and no LLR — the same policy
     # trace.py enforces, pinned equal by test_rule_sync.
-    assert _stage(srs=(dict(SR, Verification="Analysis"),), llrs=()) == dg.STAGE_RELEASE
+    assert _stage(srs=(dict(SR, Verification="Analysis"),), llrs=()) == SETTLED
 
 
 def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
@@ -387,35 +472,39 @@ def test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung():
     and TCs are green, so while a child is in flight the child's rung is the
     honest answer — the two assertions below pin that half.
 
-    D-9 STEP 5 MADE THIS RUNG UNREACHABLE-BY-CELL, AND THAT IS RECORDED HERE
-    RATHER THAN PAPERED OVER. The state it describes — decomposed, TCs authored,
-    the SR not yet blessed — was carried by `Planned`, and OI-30 D1 folded
-    `Planned` into `Approved`. Under the closed enum every not-`Approved` SR is
-    `Drafted` (caught by the earlier rung that returns DevStg-Reqs) or `Founded`
-    (which reads as blessed), so no LIVE value reaches the Impl test at the
-    bottom of `spine_stage`. This is the STAGE-axis twin of the hazard OI-30 D2
-    ruled a ceiling for on the BAR axis, and the ceiling covers only the bar: a
-    repo whose SRs are all ex-`Planned` now reads DevStg-Release where it used to
-    read DevStg-Impl. NAMED FOR THE SITTING (log 2026-08-15m), not fixed here —
-    fixing it is the harness driver `spine_stage`'s own CAVEAT already owes,
-    and inventing a second ceiling would pre-empt a ruling nobody has taken.
-    This repo is at DevStg-Boundary, so nothing moved in practice.
+    THE VACANCY IS CLOSED (WI-498 slice 3, OI-51's ruling on the stage
+    unification plan §5 item 3), AND THIS TEST IS THE ONE THAT SAID IT WOULD BE.
+    Its previous body ended: "the assertions below therefore pin the CURRENT
+    truth, INCLUDING THE UNREACHABILITY, so that landing the harness driver
+    reddens this test rather than sliding past it." It reddened. The history it
+    recorded, kept because the sequence is the argument:
 
-    STEP 7 NARROWED THE UNREACHABILITY RATHER THAN CLOSING IT. The rung is now
-    reachable by exactly one thing — an OUT-OF-VOCABULARY status, which is what
-    a retired `Modified` cell is — because the Reqs rung that used to catch it
-    retired with the word. That is the safe direction (an unmigrated row reads
-    LESS finished) and the integrity floor names the cell, so it is recorded
-    here rather than treated as a second ceiling.
+      * D-9 step 5 made the rung unreachable-by-cell. The state it describes —
+        decomposed, TCs authored, the SR not yet blessed — was carried by
+        `Planned`, and OI-30 D1 folded `Planned` into `Approved`. Under the
+        closed enum every not-`Approved` SR was `Drafted` (caught by the Reqs
+        rung) or `Founded` (read as blessed), so no LIVE value reached the Impl
+        test at the bottom of `spine_stage`.
+      * Step 7 narrowed the unreachability rather than closing it: the rung
+        stayed reachable by exactly one thing, an OUT-OF-VOCABULARY status.
+      * Slice 3 closes it by INVERTING the discriminator instead of repairing
+        it. The rung is no longer "the spine is not yet blessed" — it is "the
+        spine IS blessed and the code is being made to pass", the reading the
+        rung was originally inserted for. It is now the rung a healthy project
+        occupies for most of its life, which is what it was always meant to be.
 
-    The assertions below therefore pin the CURRENT truth, including the
-    unreachability, so that landing the harness driver reddens this test rather
-    than sliding past it."""
+    THE VACANCY MOVED UP RATHER THAN DISAPPEARING, and that is deliberate and
+    honest: `DevStg-Release` is now the rung nothing derives, because leaving
+    Impl means the declared test cases PASS and no machine reading of that
+    exists yet. The difference from the state this docstring used to record is
+    that the vacancy is now at the TOP of the ladder, where "not yet reached" is
+    the correct thing for a rung to say, instead of in the middle, where it made
+    a state no legal spine could occupy."""
     assert _stage(srs=(dict(SR, Status="Drafted"),)) == dg.STAGE_REQS
     for blessed in ("Approved", "Founded"):
-        assert _stage(srs=(dict(SR, Status=blessed),)) == dg.STAGE_RELEASE, blessed
-    # The one value that DOES reach the rung: an unmigrated, out-of-vocabulary
-    # cell, which the integrity floor reds independently.
+        assert _stage(srs=(dict(SR, Status=blessed),)) == dg.STAGE_IMPL, blessed
+    # The unmigrated, out-of-vocabulary cell reads the same rung — no longer
+    # because it is singled out, but because everything that gets here does.
     assert _stage(srs=(dict(SR, Status="Modified"),)) == dg.STAGE_IMPL
     # The children-first half is unaffected by the rename and still pins.
     unverified = dict(SR, Status="Approved")
@@ -448,7 +537,7 @@ def test_the_two_INSERTED_rungs_are_FREE_for_a_repo_that_adopts_neither_registry
     rather than held by its internal seams. That is the correction decision 3
     made — internal definitions never typed a boundary — and a repo in exactly
     that state is every adopter mid-migration."""
-    assert _stage(have_bifs=False, have_cmps=False) == dg.STAGE_RELEASE
+    assert _stage(have_bifs=False, have_cmps=False) == SETTLED
 
 
 def test_a_DECLARED_but_EMPTY_boundary_inventory_is_honestly_INCOMPLETE():
@@ -464,9 +553,9 @@ def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     assert _stage(bifs=[dict(BIF_APPROVED, Status="Drafted")], have_bifs=True) == (
         dg.STAGE_BOUNDARY
     )
-    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
+    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == SETTLED
     assert _stage(bifs=[dict(BIF_APPROVED, Approval="Approved")], have_bifs=True) == (
-        dg.STAGE_RELEASE
+        SETTLED
     )
 
 
@@ -480,7 +569,7 @@ def test_rung_1_gates_on_APPROVAL_and_NOT_on_realization_coverage():
     approval only. An approved crossing that NOTHING realizes therefore clears
     rung 1 — which is the live state of four of this repo's six crossings, not a
     hypothetical."""
-    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == dg.STAGE_RELEASE
+    assert _stage(bifs=[BIF_APPROVED], have_bifs=True) == SETTLED
     # ...and `spine_stage` no longer takes the IF registry at all, which is the
     # structural half of the same statement: rung 1 CANNOT read realization
     # coverage, because it is no longer handed the rows that would show it.
@@ -498,12 +587,10 @@ def test_a_PLANNED_component_holds_the_ARCH_rung_open():
     deciding to. No ladder machinery, no depth in the identifier."""
     planned = dict(CMP_BUILT, Status="Drafted")
     assert _stage(cmps=[planned], have_cmps=True) == dg.STAGE_ARCH
-    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == dg.STAGE_RELEASE
+    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == SETTLED
     # A DEMONSTRATED partition is the one CMP value that reaches FOUNDED, and it
     # must not hold the rung open either.
-    assert _stage(cmps=[dict(CMP_BUILT, Status="Founded")], have_cmps=True) == (
-        dg.STAGE_RELEASE
-    )
+    assert _stage(cmps=[dict(CMP_BUILT, Status="Founded")], have_cmps=True) == (SETTLED)
     # The RETIRED words hold the rung OPEN rather than resolving. `planned` and
     # `verified` left this vocabulary at the status unification (they were the
     # retired spine words regenerated in another registry), so a stale cell
@@ -547,11 +634,10 @@ def test_a_recorded_GAP_holds_the_ARCH_rung_open_however_mature_the_row_reads():
     # field: `deprecated` is a decided state (the pre-split table read it
     # APPROVED), `active` says nothing, and an ABSENT cell is the declared
     # `omit = active` shorthand. None of the three may hold the rung.
-    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == dg.STAGE_RELEASE
+    assert _stage(cmps=[CMP_BUILT], have_cmps=True) == SETTLED
     for clears in ("active", "deprecated", "", None):
         assert (
-            _stage(cmps=[dict(CMP_BUILT, Standing=clears)], have_cmps=True)
-            == dg.STAGE_RELEASE
+            _stage(cmps=[dict(CMP_BUILT, Standing=clears)], have_cmps=True) == SETTLED
         ), clears
     # Case-folded like every other cell read here, and fail-honest on a typo:
     # the tier's schema is ADVISORY, so an unreadable standing really can arrive

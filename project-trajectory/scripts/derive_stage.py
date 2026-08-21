@@ -37,6 +37,7 @@ is. When slice 3 re-discriminates the ladder it edits ONE fall-through
 import argparse
 import datetime
 import sys
+import tempfile
 from pathlib import Path
 
 # Sibling: the derivation engine. This module reads its ROW PREDICATES and its
@@ -202,6 +203,196 @@ def read(root):
     return kitstage.read_stage(root, derive)
 
 
+# --- THE PHASE RULE (ruled plan §4 + owner answer §6.1/§6.2) ------------------
+# The spine registries this rule reads on the BEFORE side, as
+# `(declared-path, id-column, spine key)`. Declared here rather than re-derived
+# from `kitstage.DECLARED_INPUTS` because that list is the FINGERPRINT's input
+# set — it deliberately includes the frame registries and the dials, which this
+# rule holds CONSTANT (see `_before_spine`). Two lists with two jobs beat one
+# list quietly serving both.
+_SPINE_REGISTRIES = (
+    ("docs/requirements/system-requirements", "SR-ID", "srs"),
+    ("docs/requirements/low-level-requirements", "LLR-ID", "llrs"),
+    ("docs/test/test-cases", "TC-ID", "tcs"),
+)
+
+# THE EXEMPTION, and it is exactly one permutation (owner answer §6.2): a
+# decrease landing precisely on DevStg-LLReqs -> DevStg-Arch is the PERMITTED
+# DECOMPOSITION CYCLE — architecture rework surfaced by breaking a requirement
+# down is within-phase churn, and any deeply decomposed problem would otherwise
+# run the phase counter up. The owner declined a wider Arch-tier exemption, so
+# this is a pair, not a predicate over the Arch rung: a two-rung drop that
+# happens to END at Arch is NOT exempt, and neither is Arch -> anything.
+_EXEMPT_DECREASE = (kitladder.STAGE_LLREQS, kitladder.STAGE_ARCH)
+
+
+def _spine_at(root, rev):
+    """`load_spine` over the DECLARED INPUTS as they stood at `rev`, or None when
+    git cannot answer — the kit's silent-no-op degrade, not an error.
+
+    THE INPUTS ARE MATERIALIZED INTO A TEMP TREE AND THE LIVE LOADER IS RUN OVER
+    IT, rather than parsing each `git show` into rows here. Three things come
+    free that a re-implementation would have to get right and could drift on:
+    carrier resolution (`.toml` before `.csv`, and `.md` for needs), the `-000`
+    example filter, and — the one that actually bites — the `have_bifs`/
+    `have_cmps` applies-when, where an ABSENT registry and an EMPTY one mean
+    opposite things at the two inserted rungs. Materializing only the files that
+    existed at `rev` preserves absence as a value.
+
+    THE WHOLE FRAME IS READ AT `rev`, NOT HELD AT THE LIVE TREE. Holding it
+    constant was tried first and is wrong: the ruled exemption is
+    `DevStg-LLReqs -> DevStg-Arch`, and the Arch rung is derived from the
+    COMPONENT registry, so a frame pinned to the live tree makes the owner's one
+    permitted decrease unreachable — the rule would be unable to see the very
+    transition it is required to forgive."""
+    if derive_gate._git(root, ["rev-parse", "--verify", "--quiet", rev]) is None:
+        return None  # no git, or no such revision: nothing to compare against
+    with tempfile.TemporaryDirectory() as tmp:
+        found = False
+        for declared, suffixes in kitstage.DECLARED_INPUTS:
+            for suffix in suffixes:
+                text = derive_gate._git(
+                    root, ["show", "{}:{}{}".format(rev, declared, suffix)]
+                )
+                if text is None:
+                    continue
+                dest = Path(tmp) / (declared + suffix)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(text, encoding="utf-8", newline="\n")
+                found = True
+                break
+        if not found:
+            return None
+        return derive_gate.load_spine(Path(tmp) / "docs")
+
+
+def _by_id(spine):
+    """`{spine-key: {id: row}}` — the before-side lookup `_changed_rows` joins on."""
+    return {
+        key: {r[id_col]: r for r in spine.get(key, []) if r.get(id_col)}
+        for _declared, id_col, key in _SPINE_REGISTRIES
+    }
+
+
+def _effective(spine):
+    """The headline value for a spine dict — the settled, per-phase, floored fold,
+    i.e. exactly what `derive()` puts in the `stage` field."""
+    _live, settled_per_phase = _stage_map(spine, settled=True)
+    return kitstage.effective_stage(settled_per_phase)[0]
+
+
+def _changed_rows(live, before_rows):
+    """Every spine row this edit ADDED or whose `Status` it MOVED, as
+    `[(id, row, before-status-or-None)]`.
+
+    THE TRIGGER SET IS WIDER THAN THE PLAN'S WORDS, and the measurement is why.
+    Plan §4 says "a newly drafted/redrafted row"; driven on a frame-free spine
+    (slice 3), a newly DRAFTED row cannot decrease the effective stage AT ALL —
+    slice 1 excludes drafts from the settled fold, so that half of the phrase is
+    inert by construction. What actually decreases it is a redrafted child
+    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly RATIFIED
+    parent with no children yet (Impl -> LLReqs). Narrowing to the literal words
+    would have shipped a rule that cannot fire on the two shapes that matter, so
+    the trigger is "added, or Status moved" — which CONTAINS the plan's set."""
+    out = []
+    for _declared, id_col, key in _SPINE_REGISTRIES:
+        prior = before_rows.get(key, {})
+        for row in live.get(key, []):
+            rid = row.get(id_col)
+            if not rid:
+                continue
+            was = prior.get(rid)
+            before_status = None if was is None else (was.get("Status") or "").strip()
+            now_status = (row.get("Status") or "").strip()
+            if was is None or before_status.lower() != now_status.lower():
+                out.append((rid, row, before_status))
+    return out
+
+
+def phase_rule_findings(root):
+    """The authoring-time decrease rule (plan §4, owner answer §6.1).
+
+    **A spine edit that LOWERS the effective stage must surface as a phase
+    change.** When the effective stage decreased, every row this edit added or
+    re-statused must carry a `Phase` tag that is NOT the phase the settled work
+    was standing in — a NEW (higher) phase, or an already-open LOWER one. Both
+    readings of "the scope moved" satisfy it; quietly adding regressing work to
+    the phase you are standing in does not.
+
+    WHY THIS SHAPE AND NOT A STORED COUNTER (plan §4, alternative (ii) rejected):
+    phase stays a pure function of the registries. The derived `phase=` still
+    increments BECAUSE the rows say so, so there is no second phase concept to
+    drift against the row tags, and `docs/stage` records the derived value
+    exactly as `docs/gate` did.
+
+    WARN TIER, AND THE ARMING PATH IS THE POINT. This returns findings; `main`
+    prints them and exits 0 unless `--strict`. New rules arm warn-first here
+    unless a ruling says otherwise, and OI-51's ruling establishes that the rule
+    EXISTS, not that it hard-fails on day one. It promotes by being wired into
+    `check.py`'s `--strict` trio at a threshold — deliberately NOT done in this
+    slice, because a rule whose fire has never been observed on real authoring
+    should not be able to block a commit. The promotion is one call-site edit:
+    the predicate and its vocabulary do not change (`trace.schema_advisories`'s
+    warn-first twin idiom).
+
+    DEGRADES SILENTLY WITHOUT GIT, like every other two-tree rule in the kit: no
+    HEAD means no before-state, and a rule that cannot see the past has nothing
+    to say rather than something to complain about.
+
+    Implements: SR-139"""
+    root = Path(root)
+    live = derive_gate.load_spine(root / "docs")
+    before = _spine_at(root, "HEAD")
+    if before is None:
+        return []
+    before_rows = _by_id(before)
+
+    was, now = _effective(before), _effective(live)
+    if kitstage.order(now) >= kitstage.order(was):
+        return []
+    if (was, now) == _EXEMPT_DECREASE:
+        return []
+
+    # The phase the SETTLED work was standing in, on the BEFORE side — the value
+    # a new tag has to differ from. Max over non-Drafted rows, which is `phase=`
+    # itself, so the rule and the recorded field can never mean different things.
+    prior_phases = [
+        derive_gate.phase_num(r)
+        for key in ("srs", "llrs", "tcs")
+        for r in before.get(key, [])
+        if not derive_gate.is_drafted(r)
+    ]
+    prior_phases = [p for p in prior_phases if p is not None]
+    standing = max(prior_phases) if prior_phases else None
+
+    findings = []
+    for rid, row, before_status in sorted(_changed_rows(live, before_rows)):
+        phase = derive_gate.phase_num(row)
+        if standing is None or phase != standing:
+            continue
+        findings.append(
+            "{} lowers the effective stage ({} -> {}) and carries no new phase: "
+            "it is tagged phase {}, the phase the settled spine was already "
+            "standing in. {} A stage decrease is a scope change and must surface "
+            "as one — tag the row into a new phase ({}) or into an already-open "
+            "lower phase.".format(
+                rid,
+                was,
+                now,
+                phase,
+                (
+                    "The row is new."
+                    if before_status is None
+                    else "Its status moved {} -> {}.".format(
+                        before_status or "(blank)", (row.get("Status") or "").strip()
+                    )
+                ),
+                standing + 1,
+            )
+        )
+    return findings
+
+
 def main():
     derive_gate._utf8_console()
     ap = argparse.ArgumentParser(
@@ -219,8 +410,26 @@ def main():
         action="store_true",
         help="compute and print the derived record; do not write docs/stage",
     )
+    ap.add_argument(
+        "--phase-rule",
+        action="store_true",
+        help="check the authoring-time stage-decrease rule against HEAD (warn-first)",
+    )
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="with --phase-rule: exit 1 on a finding instead of warning",
+    )
     args = ap.parse_args()
     root = Path(args.root)
+
+    if args.phase_rule:
+        findings = phase_rule_findings(root)
+        for f in findings:
+            print("{} - {}".format("FAIL" if args.strict else "WARN", f))
+        if not findings:
+            print("derive_stage: phase rule clean (no un-phased stage decrease).")
+        return 1 if (findings and args.strict) else 0
 
     record = derive(root)
     record["fingerprint"] = kitstage.fingerprint(root)

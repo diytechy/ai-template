@@ -472,6 +472,235 @@ repo's spine, not a decision owed; the WI-473 disposition is a program
 bookkeeping act recorded in the findings below; and the smoke wall clock is
 already OI-52's.
 
+### Slice 3 — Founded reaches Impl; Release is evidence-gated; the phase rule arms (opus worker) — LANDED
+
+The vacant rung is occupied and the top of the ladder is honestly empty.
+`spine_stage`'s Impl/Release cell discriminator is DELETED — not re-polarized —
+so a spine decomposed and TC'd through the test tier reads **`DevStg-Impl`**, and
+**`DevStg-Release` is returned by nothing**.
+
+**The discriminator's new shape, and why the arm collapsed rather than flipping.**
+The two lines were `if not all(is_approved(r) or is_founded(r) for r in srs):
+return STAGE_IMPL` / `return STAGE_RELEASE`. Under the owner's semantics BOTH
+arms land on Impl, so the test had nothing left to decide and went with it. The
+fall-through now ends `return STAGE_IMPL`. This is a **polarity inversion**, not
+a tightening: rung 6 used to mean "the spine is NOT yet blessed" and now means
+"the spine IS blessed and the code is being made to pass" — the reading the rung
+was inserted for. One consequence worth stating because it looks like a
+regression and is not: an unmigrated out-of-vocabulary `Modified` cell still
+reads Impl, but now by falling through with everything else rather than by being
+the ONE value that could reach a rung no legal spine could occupy.
+
+**Slice 1's claim VERIFIED, not assumed.** `derive_stage` calls
+`derive_gate.spine_stage` at exactly two sites (`:153` global, `:161` per-phase),
+so editing the one fall-through moved both files with no second edit. Driven:
+this repo's `docs/stage` and `docs/gate` were both still `--check`-fresh
+afterwards, because neither derived VALUE moved here (see below).
+
+**`DevStg-Release` is unreachable, and that is the deliverable.** Leaving Impl
+means "all the declared test cases PASS", and the kit has no machine reading of
+that — the evidence carrier is its own future row. Rather than approximate it,
+the rung has no producer. Pinned twice, deliberately: exhaustively over the
+closed Status enum plus a retired value across all three tiers and both
+LLR-exemption shapes (2x4³ = 128 spines, none reaches Release), and
+STRUCTURALLY, by asserting `spine_stage`'s source contains no
+`return STAGE_RELEASE` — because enumeration cannot catch a return behind a
+condition no fixture happens to build. Deleting that second test is how the
+harness driver lands: an act, not a drift.
+
+**The OI-30 D2 ceiling: the mapping old → new, recorded at the mechanism.**
+
+| | old | new |
+|---|---|---|
+| the RULE — "a Status cell may never claim the evidence passed" | D2's ceiling comment | UNCHANGED, restated on the axis of record: `spine_stage`'s docstring |
+| the STAGE half — the Impl→Release cell test | `spine_stage:935-937` | **DELETED**, and the guard is *stronger*: a ceiling flag says "we could compute this but decline to"; no-producer says "nothing here can compute it", which is true |
+| the BAR half — `_RELEASE_CEILING` / `_CEILING_NOTE` / `bar_label` | live | **KEPT VERBATIM.** `docs/gate` is still written for slice 4's two committed-history detectors, so the bar is still read; lifting its ceiling would raise a live value on the strength of cells, which is exactly D2's hazard. Retires WITH the file, slice 5 |
+| the EXIT condition — "delete when the harness driver lands" | live | UNCHANGED and **NOT claimed**. Making the rung honestly unreachable is not the same act as making it computable |
+
+**The phase rule — surface, tier, and a measurement that reshaped it.**
+`derive_stage.phase_rule_findings` + `--phase-rule` / `--strict`. Surface chosen
+against the brief's two candidates: `trace.py` and `check_trajectory.py` both
+deliberately avoid importing the derivation (trace keeps F5 duplicates of the row
+predicates precisely so it need not), and the rule needs a real before/after
+effective stage. `derive_stage` already owns the derivation and every input, so
+it hosts the rule and reads the before-state from git. **Tier: WARN-FIRST**,
+exit 0, `--strict` promotes to exit 1; it is deliberately NOT wired into
+`check.py` and cannot block a commit. OI-51 ruled the rule EXISTS, not that it
+hard-fails on day one, and a rule whose fire has never been observed on real
+authoring should not gate. The arming path is one call-site edit — the predicate
+and its vocabulary do not change (the `trace.schema_advisories` warn-first twin
+idiom).
+
+**THE MEASUREMENT THAT CHANGED THE RULE'S TRIGGER SET, driven before the rule was
+written.** Plan §4 says "a newly drafted/redrafted row would DECREASE the
+effective stage". Driven on a frame-free synthetic spine:
+
+```
+BASELINE (2 SR settled, phase 1)                      -> DevStg-Impl    (baseline)
++ NEW DRAFTED SR in the CURRENT phase (1)             -> DevStg-Impl    SAME
++ NEW DRAFTED SR in a NEW phase (2)                   -> DevStg-Impl    SAME
++ NEW *RATIFIED* SR in the CURRENT phase, no children -> DevStg-LLReqs  DECREASE -2
++ NEW *RATIFIED* SR in a NEW phase (2), no children   -> DevStg-LLReqs  DECREASE -2
+REDRAFT an existing LLR (phase 1)                     -> DevStg-LLReqs  DECREASE -2
+REDRAFT an existing TC (phase 1)                      -> DevStg-Tests   DECREASE -1
+REDRAFT an existing SR (phase 1)                      -> DevStg-Impl    SAME
+```
+
+**A newly DRAFTED row cannot decrease the effective stage at all** — slice 1
+excludes drafts from the settled fold, so the plan's literal trigger is inert BY
+CONSTRUCTION, in both the standing-phase and new-phase directions. Keying on the
+literal words would have shipped a rule with no reachable trigger. The rule keys
+on "added, or `Status` moved", which CONTAINS the plan's set and catches the two
+shapes that actually decrease the reading. This is not a defect in either slice —
+it is slice 1's C-01 fix working — and it is pinned by its own test so nobody
+"restores" the literal wording later.
+
+**The rule as landed:** when the effective stage decreases, every row the edit
+added or re-statused must carry a `Phase` tag that is NOT the phase the settled
+work was standing in (`max` over non-Drafted rows on the before side — the same
+value `phase=` records, so the rule and the field cannot mean different things).
+A new higher phase and an already-open lower phase both satisfy it. Phase stays a
+pure function of the registries: no stored counter, plan §4 alternative (ii)
+declined.
+
+**A DESIGN CORRECTION THE EXEMPTION FORCED.** The before-state first held the
+FRAME (SN/BIF/CMP) at the live tree, to isolate the spine edit. That is wrong,
+and the ruled exemption is what proves it: `DevStg-LLReqs → DevStg-Arch` is
+derived from the COMPONENT registry, so a frame pinned live makes the owner's one
+permitted decrease **unreachable** — the rule could not see the transition it is
+required to forgive. The before-state now materializes every declared input at
+`HEAD` into a temp tree and runs `load_spine` over it, which also buys carrier
+resolution, the `-000` filter, and the `have_bifs`/`have_cmps` applies-when
+(where absent and empty mean opposite things) for free instead of by
+re-implementation.
+
+**The four directions, driven** (`tests/test_phase_rule.py`, 11 tests, real git
+repos): a stage-lowering edit in the standing phase FIRES; the byte-identical
+edit with one `Phase` cell changed PASSES; an already-open LOWER phase also
+passes; the `LLReqs → Arch` decrease passes with no phase tag; and a decrease
+that merely ENDS at Arch (Impl → Arch, three rungs) still FIRES — the exemption is
+a PAIR, not a predicate over the Arch rung, per the owner's refusal of a wider
+Arch-tier exemption. Plus the redrafted-child shape, the no-git degrade, and the
+WARN/`--strict` contract.
+
+**THIS REPO'S OWN STATE, MEASURED — no allowlist needed, and the brief asked
+either way.** Over the last **80 commits**, the effective stage DECREASED **zero
+times**; it moved once, upward (`2d51f140`, `DevStg-Reqs → DevStg-Arch`), and only
+two distinct values occur across that whole range. So the rule fires on nothing
+retroactively and no seeded allowlist (the OI-43/WI-488 precedent) was created.
+Two independent reasons, both already banked by earlier slices: the 15 Drafted
+rows are all `phase = 5` AND cannot lower the reading anyway, and the two
+repo-global frame rungs pin every phase at `DevStg-Arch` while the partition is
+in work. `derive_stage --phase-rule` on this tree: **clean**.
+
+**The pins that inverted: NINE, not the five the deep-check counted — and the
+undercount has the same shape slice 0 found.** The deep-check's census
+("The test pins that would move") named five, all in
+`tests/test_ratification_level.py`. Nine reddened there, and four more in
+`tests/test_selection_at_or_above.py` that postdate the deep-check. The four
+extra in the first file are the FRAME-RUNG tests, which use the settled value
+only as a baseline ("nothing here holds the rung open") — they are not claims
+about the top of the ladder at all, but spelling `dg.STAGE_RELEASE` at each made
+them look like ones. Fixed at the root: a module-level **`SETTLED = dg.STAGE_IMPL`**
+now names what those tests mean, so the next re-discrimination moves one line.
+The census keyed on tests ABOUT the rung and missed the ones that merely USED it —
+the same blind spot as slice 0's enum inventory keying on CONSTANT NAMES.
+
+Flipped deliberately, each citing the ruling:
+
+1. `test_a_settled_spine_is_the_TOP_RUNG` → `..._is_the_IMPL_rung_and_the_top_rung_is_NOT_DERIVED`. The ladder still ENDS at Release and the second assertion still says so — the rung was made evidence-gated, not deleted.
+2. `test_the_MODIFIED_rung_RETIRED_and_took_no_successor` — the `Founded` arm. Same value, different reason, and the comment says which.
+3. `test_an_LLR_EXEMPT_requirement_needs_no_LLR`.
+4. **`test_an_unverified_SR_over_AUTHORED_tests_is_the_IMPL_rung`** — the pin the deep-check called "designed to fail on this change". Its own docstring ended: *"pin the CURRENT truth, INCLUDING THE UNREACHABILITY, so that landing the harness driver reddens this test rather than sliding past it."* It reddened. Rewritten to record that **the vacancy moved UP rather than disappearing**: Release is now the rung nothing derives, which is the correct thing for the TOP of a ladder to say, instead of a hole in the middle.
+5-8. the four frame-rung tests, via `SETTLED`.
+9-12. `test_selection_at_or_above.py` ×4, including the reachability test whose text also predicted this slice by name.
+
+**DIAL_HOLDS: verified unchanged, re-driven AFTER the change** (the brief's
+check, not the deep-check's claim carried forward). `human_holds` separates
+`DevStg-Impl(6)` from `DevStg-Release(7)` at **NONE** of the five dial levels —
+both fall into the `4: None` holds-everything short-circuit — and
+`APPROVAL_RUNGS` governs **no** registry at ord 6 or 7. So the re-discrimination
+is behaviourally INERT for all 27 stage-keyed ratification sites, exactly as
+predicted, and `DIAL_HOLDS` needed no edit.
+
+**Scaffold-verified, per the standing lesson, and this is where OI-51's defect
+visibly closes.** A real `bootstrap.py --dest` run: `derive_stage.py` arrives; a
+fresh scaffold writes `stage = DevStg-Reqs` (sane, floored); `--phase-rule`
+degrades cleanly with no git. Then an all-Founded frame-free fixture written into
+that scaffold:
+
+```
+derive_stage: wrote docs/stage -> DevStg-Impl.
+stage = DevStg-Impl / settled-stage = DevStg-Impl / live-stage = DevStg-Impl
+
+Plan at stage DevStg-Impl (tier smoke):
+  - format           [product] [>=DevStg-Impl]  ...ruff format --check src tests
+  - lint             [product] [>=DevStg-Impl]  ...ruff check src tests
+  - tests+coverage   [product] [>=DevStg-Impl]  ...pytest -q -m smoke
+```
+
+The three product steps OI-51 exists to reach now SELECT from a derived value on
+a real adopter shape. The frame had to be removed first — slice 2's banked
+finding holds unchanged: a scaffold's blank `external.toml` still pins it at
+`DevStg-Boundary`, so an adopter reaches this only once their boundary registry
+settles or is declared absent.
+
+**Ratchets re-stamped deliberately.** `derive_gate.py` **RE-ENTERS** the
+module-size baseline at **1523** (+56 from 1467) — and the entry is honest about
+what grew: **comment mass on a slice that deleted executable lines.** The three
+records added are the D2 rule on the axis of record, the old→new ceiling mapping
+where the surviving mechanism is, and the polarity-inversion note (without which
+a reader misreads the new arm as a tightening). **Not trimmed to fit:** the +56
+was measured after the fact, and cutting prose to clear a threshold is the
+ratchet inverted — slice 1's own near-miss note. This is the **third
+enter/delete cycle in three slices** (1503 in, deleted at 1467, back at 1523),
+which says the threshold sits exactly where this module oscillates while it holds
+two axes; the resolution remains slice 5's DELETION, not a bump.
+`tests/test_phase_rule.py` filed into `conftest.SLOW_MODULES` beside
+`test_derive_stage` — every test in it commits a real git repo, so it is that
+class, not a borderline call. Smoke membership moved 1318 → 1320 (the two new
+in-process pins) and needed no re-stamp.
+
+Adopter-facing: a RESYNC_PACK §3 entry that LEADS with the value change — an
+adopter's derived stage can move at re-sync with no edit to their registries —
+states both new rung readings plainly, and records the phase rule as warn-first
+and unwired, so **no action is required at re-sync**.
+
+Gates, real output on this box:
+
+- `python -m pytest -q -n auto -m smoke` → **1320 passed, 5 skipped in 67.76 s**.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` → **OK —
+  978 doc(s), 1350 intra-repo link(s), 0 broken (1 orphan warning)**.
+- `python project-trajectory/scripts/check_trajectory.py --root . --strict` →
+  **clean (495 work item(s), 461 done (93%), 21 cancelled, graph acyclic)**.
+- `python project-trajectory/scripts/trace.py --root . --strict-integrity` →
+  **SN=27 SR=73 LLR=168 TC=164 orphans=15 integrity=0 components=4
+  component-findings=0 interfaces=130 interface-findings=0**.
+- `python project-trajectory/scripts/check_vocab.py --root . --strict` →
+  **clean (460 live authored file(s); no retired gate tags)**.
+- `python project-trajectory/scripts/check.py --jobs 0` → **RESULT: PASS**.
+- `derive_stage.py --check` → **up to date (DevStg-Arch)**; `derive_gate.py
+  --check` → **up to date (DevStg-Reqs)**. Neither derived value moved on THIS
+  repo, because the frame rungs sit below every spine rung here — the change is
+  visible on a settled spine, which is what the scaffold run above demonstrates.
+- `python -m pytest -q -n auto` (full, unfiltered) → **2799 passed, 14 skipped in
+  610.33 s**. Up 13 from slice 2's 2786: the 11 new `test_phase_rule` tests plus
+  the two new in-process pins on the Release rung's unreachability.
+
+**Smoke wall-clock, reported not absorbed:** 67.8 s against the declared 60 s. The
+tier read 51.3 / 62.9 / 55.0 s at slice 1, 68.6 / 80.6 s at slice 2 and 72.8 s at
+slice 0, and CLAUDE.md records 54.9 / 64.0 / 55.7 s on this box on 2026-08-20. One
+box is one data point; the SECONDS budget was NOT moved and remains OI-52's.
+
+No spine mint was owed and none was made: `check_trajectory --strict` is clean,
+because this slice adds behaviour to modules the spine already owns (LLR-186
+carries `derive_stage.py`) rather than a new module. No Approved row amended.
+
+Deferred open items: none — the module-size oscillation is recorded at the
+ratchet entry and resolves in slice 5 by deletion; the evidence carrier is
+already the ruled plan's own separately-sequenced row, not a new decision; and
+the smoke wall clock is already OI-52's.
+
 ### Adjacent findings accumulating for the program close
 
 _(per-slice sections are inserted ABOVE this section, in land order;
@@ -569,6 +798,49 @@ banked findings accumulate below as list items)_
   product step, and this repo's effective stage is `DevStg-Arch`, so it does not
   run here. That is the same class of gap OI-51 names, showing up in the kit's
   own tree; it closes for this repo when the spine settles, not by an edit.
+- **Rung 3's "self-reporting recursion" DOES NOT SURVIVE INTO THE EFFECTIVE
+  STAGE** (slice 3), and this is the sharpest tension the slice found between two
+  landed designs. `arch_incomplete`'s docstring calls it "the mechanism the whole
+  eight-rung design rests on": minting a `Drafted` CMP row for a newly identified
+  sub-component "DROPS the reported stage back to Arch with nobody deciding to,
+  which is the honest report". That is true of `spine_stage` over LIVE rows and
+  **false of the effective stage** — `derive_stage._settled_off_spine` filters
+  Drafted components out of the settled fold exactly as drafts are filtered from
+  the spine, so identifying a sub-component now moves nothing. Found by driving
+  it: the phase rule's exemption test could not produce a `LLReqs → Arch`
+  decrease that way at all, and had to use a settled row recording
+  `Standing = "has-gap"` instead. Neither design is wrong on its own — slice 1
+  suppressed draft-driven collapse deliberately — but a headline behaviour of
+  rung 3 is now reachable only through the standing axis, and `derive_gate`'s
+  docstring still promises the draft route. Slice 5's prose sweep owns the
+  wording; whether the SIGNAL should be restored (the recursion is a real event
+  the ladder was built to report) is a design question for the program close.
+- **The deep-check's pin census undercounted for a structural reason worth
+  carrying into slices 4-5** (slice 3): it named five inverting pins and nine
+  reddened, because it found the tests ABOUT the top rung and missed the four
+  that merely USED the settled value as a baseline. Same shape as slice 0's enum
+  inventory keying on constant NAMES. The fix generalizes: where a test needs "a
+  spine with nothing holding it", give the value a NAME
+  (`test_ratification_level.SETTLED`) rather than spelling the rung. Slices 4/5
+  should assume any census of "what pins value X" is short by the incidental
+  uses, and grep the VALUE across `tests/` before trusting a count.
+- **`derive_gate.is_approved` and `is_founded` now have NO CALLER in their own
+  module** (slice 3) — the Impl→Release discriminator was the last one. They stay
+  because they are a shared VOCABULARY pinned equal to `trace.py`'s copies by
+  `test_rule_sync`, not private helpers, and deleting the mirror of a live
+  predicate to satisfy a dead-code reading would take the pin with it. But the
+  F5 duplication now exists with only one live side, which is a weaker
+  arrangement than when it was written. When slice 5 retires the bar axis, these
+  two want either a single home or an explicit note that `derive_gate` keeps them
+  solely for the pin.
+- **The phase rule is warn-first and UNWIRED — it runs only when invoked**
+  (slice 3). `derive_stage --phase-rule` is in no `check.py` step and in no hook,
+  so nothing runs it automatically, on this repo or an adopter's. That is the
+  deliberate arming posture (a rule whose fire has never been observed should not
+  gate), but it means the rule accumulates no field evidence on its own. Whoever
+  arms it should wire it warn-only into the pre-commit floor FIRST and collect a
+  few real firings before promoting to `--strict`; arming straight to hard from
+  zero observations would repeat the pattern OI-51 exists to correct.
 - **The fingerprint catches staleness the value comparison cannot** (slice 1).
   Because `fingerprint=` is itself a compared field, an input edit that moves no
   stage value still reds `--check` — correctly, since the recorded fingerprint

@@ -20,23 +20,32 @@ docs (census, deep-check, schedule map) as evidence. This is a
 MULTI-SESSION PROGRAM lane; each slice ends green at the commit bar and
 lands the largest honest coherent piece.
 
-**Program state:** slices 0, 1 and 2 landed 2026-08-21; slices 3-5 remain, in
-order, and slice 3 (ladder re-discrimination + the phase rule) is next.
+**Program state:** slices 0, 1, 2 and 3 landed 2026-08-21; slices 4 and 5 remain,
+in order, and slice 4 (event detectors over stage history) is next.
 Slice 2 re-keyed the whole harness selector onto the effective stage:
 `check.py` reads `docs/stage` through `derive_stage.read` and reads `docs/gate`
 NOWHERE, the bar constants and the membership rule are deleted, and the product
 floor and advisory tier retired with the draft-collapse they compensated for.
+Slice 3 then closed OI-51's vacant rung: a spine decomposed and TC'd through the
+test tier reads **`DevStg-Impl`**, and **`DevStg-Release` is returned by
+nothing** — evidence-gated, unreachable until the test-evidence carrier (its own
+separately-sequenced row) lands. It also armed the authoring-time phase rule
+WARN-FIRST and UNWIRED (`derive_stage --phase-rule`).
+
 **`docs/gate` is still WRITTEN and still freshness-gated** — the dual state
 persists for exactly two un-cut consumers, both slice 4's
 (`check_trajectory.read_derived_phases` and `intake._gate_moved`/`tier_signal`),
-plus the three display readers that belong with slice 5's vocabulary work. Slice
-3 inherits three things worth reading first: the per-step threshold table and
-its derivation rule live in the fragment's "Slice 2" section; the
-Impl/Release discriminator is still exactly one fall-through in
-`derive_gate.spine_stage`, which both files follow; and the frame-rung finding
-below is now known to cap a fresh SCAFFOLD at `DevStg-Boundary`, so the rung
-slice 3 makes reachable is not reachable from a scaffold until its boundary
-registry settles.
+plus the three display readers that belong with slice 5's vocabulary work.
+
+Slice 4 inherits four things worth reading first, all in the fragment's "Slice 3"
+section and the findings below it: the OI-30 D2 ceiling's old→new mapping (the
+BAR half is kept verbatim and dies with the file — do not lift it while
+`docs/gate` is written); the verified fact that `DIAL_HOLDS` needs no change
+because rungs 6/7 stay inert at every dial; the finding that **rung 3's
+self-reporting recursion no longer reaches the effective stage**, which bears
+directly on what signal a phase-drop detector can expect; and slice 1's standing
+warning that the two repo-global frame rungs give the stage axis no per-phase
+signal on THIS repo until the frame settles.
 
 The slices, in the plan's order (§5):
 
@@ -95,10 +104,17 @@ The slices, in the plan's order (§5):
    frontmatter key keeps its name (its three values are rungs and select
    identically — the rename is slice 5's); the detectors' internals and the
    display readers of `docs/gate` are left FUNCTIONING for slices 4 and 5.
-3. **Ladder re-discrimination + the phase rule** — all-Founded →
-   DevStg-Impl; Release evidence-gated (unreachable until the carrier row
-   lands — honest); the authoring-time decrease check with exactly the
-   LLReqs→Arch exemption.
+3. **Ladder re-discrimination + the phase rule** — LANDED 2026-08-21. The
+   Impl/Release cell discriminator is DELETED rather than re-polarized (both
+   arms landed on Impl), so all-Founded → `DevStg-Impl` and `DevStg-Release` has
+   no producer — pinned exhaustively (128 spines) and structurally (no
+   `return STAGE_RELEASE` in the source). OI-30 D2's guard survives as that
+   absence on the stage axis; its BAR half is kept verbatim while `docs/gate` is
+   still written. The authoring-time decrease check lives in
+   `derive_stage.phase_rule_findings` (`--phase-rule`, WARN-first, `--strict`
+   promotes, unwired) with exactly the `LLReqs → Arch` exemption. Measured: this
+   repo fires it zero times over 80 commits, so no allowlist was seeded. Nine
+   test pins inverted, not the five the deep-check counted.
 4. **Event detectors over stage history** — phase-drop anchors; tier
    signal fixed and re-keyed (fold WI-497 if still open); dead
    read_declared removed.

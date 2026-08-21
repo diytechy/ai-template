@@ -366,10 +366,32 @@ def sn_cited_ids(srs):
 # be truly computed by RUNNING the test sequence, which is more honest than
 # inferring it from a status cell.
 #
-# HOW IT LEAVES. Delete these three lines and the `_RELEASE_CEILING` flag when
-# the harness driver lands; `tests/test_derive_gate.py`'s ceiling pin is
-# commented as deliberately deleted at that moment, so removal is an act rather
-# than a drift.
+# WHERE THE GUARD LIVES NOW (WI-498 slice 3) — THE MAPPING, old -> new:
+#
+#   the RULE  "a Status cell may never claim the test evidence passed"
+#             -> unchanged, and now stated on the axis of record:
+#                `spine_stage`'s docstring. It is the same ruling, not a
+#                relaxation of it.
+#   the STAGE half  `spine_stage`'s Impl->Release cell test
+#             -> DELETED, and the guard is stronger for it: the top rung has no
+#                producer at all, so there is no ceiling to lift by accident.
+#                A ceiling flag says "we could compute this but decline to";
+#                no-producer says "nothing here can compute it", which is true.
+#   the BAR half  `_RELEASE_CEILING` + `_CEILING_NOTE` + `bar_label`
+#             -> KEPT, AS IS, and the restraint is deliberate. `docs/gate` is
+#                still written for two committed-history detectors (slice 4),
+#                so the bar is still read; lifting its ceiling would raise a
+#                live value on the strength of cells, which is the exact
+#                hazard D2 named. These retire WITH the file, in slice 5.
+#   the EXIT condition  "delete when the harness driver lands"
+#             -> unchanged and NOT claimed. The driver has not landed; the
+#                test-evidence carrier is its own future row (ruled plan §5).
+#                Slice 3 made the top rung honestly unreachable, which is not
+#                the same act as making it computable.
+#
+# `tests/test_derive_gate.py`'s ceiling pin stays live and is commented as
+# deliberately deleted at the moment the driver lands, so removal stays an act
+# rather than a drift.
 _RELEASE_CEILING = BAR_TESTS
 
 # The suffix a HUMAN-FACING render of the bar name carries while the ceiling
@@ -461,7 +483,15 @@ def is_founded(row):
     discriminator accepts it, so arming a word cannot LOWER the derived gate —
     the rule the step-5 rename ran under. The DISCHARGE is computed per tier
     elsewhere (migration plan C4); this reads the cell, like its two siblings.
-    Duplicated from trace.py per F5; pinned equal by test_rule_sync."""
+    Duplicated from trace.py per F5; pinned equal by test_rule_sync.
+
+    NO CALLER IN THIS MODULE SINCE WI-498 SLICE 3, and neither has `is_approved`:
+    the Impl->Release discriminator was the last one, and it retired when Release
+    stopped being derivable from a cell. Both stay because what they are is a
+    SHARED VOCABULARY pinned equal to trace.py's copies (test_rule_sync), not a
+    private helper of a rung — deleting the mirror of a live predicate to satisfy
+    a dead-code reading would take the pin with it. They leave with the bar axis
+    when `docs/gate` retires (slice 5), or earlier if the pin moves to one home."""
     return (row.get("Status") or "").strip().lower() == "founded"
 
 
@@ -841,9 +871,11 @@ def spine_stage(
       DevStg-Arch       ...and the declared partition is in work
       DevStg-LLReqs     ...and an LLR is missing or Drafted
       DevStg-Tests      ...and a TC is missing or Drafted
-      DevStg-Impl       ...and every SR is decomposed and every TC authored and
-                        non-Drafted, but some SR is not yet `Approved` (or above)
-      DevStg-Release    nothing in work: every rung is settled and approved
+      DevStg-Impl       ...and every SR is decomposed and every TC is authored
+                        and non-Drafted: the tests are LAID, and making them pass
+                        is the work in progress. THE TERMINAL RUNG of this
+                        function.
+      DevStg-Release    NOT RETURNED HERE — evidence-gated, see below
 
     THE `Modified` ARM OF THE Reqs RUNG RETIRED AT D-9 STEP 7 — no cell records
     "amended after attestation" any more, and the successor (the snapshot
@@ -860,11 +892,23 @@ def spine_stage(
     this cap its rung". `maturity_bar` — the one spine question that IS the
     ladder question — reads the table, so the row is live rather than decorative.
 
-    CAVEAT ON THE Impl->Release DRIVER. DevStg-Impl ends when every SR reads
-    `Approved`, which is a registry CELL, not a harness run. The intended signal is
-    the harness (green tests at the declared tier and coverage); the cell is
-    today's interim proxy for it, and repo-lock D-9's correction owes the swap to a
-    later batch. Nothing here should be read as proof the tests passed.
+    DevStg-Release IS UNREACHABLE FROM THIS FUNCTION, DELIBERATELY (WI-498
+    slice 3, ruled plan §5 item 3). No combination of Status cells returns it,
+    and that is the honest state rather than a gap: leaving the Impl rung means
+    "all the declared test cases PASS", and this repo has no machine reading of
+    that. The evidence carrier is its own future row; until it lands, the top of
+    the ladder is a rung nothing derives, and a reader seeing DevStg-Impl on a
+    finished-looking spine is being told the truth.
+
+    THIS DISCHARGES THE OLD Impl->Release CAVEAT AND CARRIES OI-30 D2's GUARD
+    ACROSS. That caveat read: "DevStg-Impl ends when every SR reads `Approved`,
+    which is a registry CELL, not a harness run ... nothing here should be read
+    as proof the tests passed." The swap it owed is made — not by finding a
+    better cell, but by ruling that NO cell may make the claim. D2's ceiling
+    said the same thing on the bar axis by capping `sr_bar`; on this axis the
+    guard needs no ceiling flag, because the top rung simply has no producer.
+    **A Status cell can never claim the evidence passed** — that sentence used
+    to live at the ceiling and lives here now.
 
     WHICH RUNG OWNS A MISSING ARTIFACT: the rung the artifact belongs to, not its
     parent. An SR with no LLR yet is DevStg-LLReqs, because what is being written
@@ -924,17 +968,29 @@ def spine_stage(
         is_drafted(r) for r in tcs
     ):
         return STAGE_TESTS
-    # THE Tests-vs-Impl DISCRIMINATOR. Falling through both rungs above means
-    # every SR is decomposed and every TC is authored and non-Drafted — the test set
-    # is written, so "TCs in work" is no longer true. What remains is making them
-    # pass, which is DevStg-Impl. (`is_approved` is the interim proxy for that;
-    # the intended signal is the harness — see the CAVEAT above.)
-    # `is_founded` JOINS THE TEST AT STEP 8 — a correction, not a widening:
-    # `Founded` is `Approved` plus a demonstration, so reading only `is_approved`
-    # would hold a Founded SR at DevStg-Impl forever.
-    if not all(is_approved(r) or is_founded(r) for r in srs):
-        return STAGE_IMPL
-    return STAGE_RELEASE
+    # THE Impl RUNG, AND IT IS THE LAST ONE THIS FUNCTION RETURNS (WI-498
+    # slice 3). Falling through every rung above means every SR is decomposed
+    # and every TC is authored and non-Drafted — the test set is WRITTEN, so
+    # "TCs in work" is false. What remains is making them pass, and that is
+    # DevStg-Impl. The owner's semantics, ruled 2026-08-21: Founded through the
+    # test tier = broken down with test cases laid = implementation is the work
+    # in progress.
+    #
+    # WHAT WAS HERE BEFORE, AND WHY THE ARM IS GONE. Until this slice the line
+    # read `if not all(is_approved(r) or is_founded(r) for r in srs): return
+    # STAGE_IMPL` / `return STAGE_RELEASE` — a POLARITY INVERSION from what
+    # stands now: Impl meant "the spine is not yet blessed", so a fully blessed
+    # spine reported DevStg-Release, "nothing in work; release checklist
+    # available", for the entire implementation period. That is the wrong
+    # sentence for the longest stretch of a project (OI-51) and it made rung 6
+    # reachable only by an out-of-vocabulary cell — a rung no legal spine could
+    # occupy. Both arms now land on Impl, so the test collapses away rather
+    # than being re-polarized: an unmigrated `Modified` row still reads Impl,
+    # by falling here rather than by being singled out.
+    #
+    # Release is NOT the else-branch of anything. See the docstring: it is
+    # returned by nothing until the test-evidence carrier exists.
+    return STAGE_IMPL
 
 
 # THE STAGE -> BAR CROSSING TABLE IS GONE (WI-498 slice 2, ruled plan §5 item 2).

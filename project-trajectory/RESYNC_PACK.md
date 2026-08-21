@@ -2804,6 +2804,53 @@ registry discovery). A rooted or empty destination is refused loudly instead of
 being guessed at. No action; if you scripted around the old behaviour by always
 passing a full filename, that keeps working unchanged.
 
+### A settled spine now reads `DevStg-Impl`; `DevStg-Release` is evidence-gated [since d4a8d27a]
+
+*(Anchored at the PRECEDING commit — this entry ships with the changes.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/derive_gate.py`,
+`scripts/derive_stage.py`.
+
+**YOUR DERIVED STAGE CAN CHANGE VALUE AT THIS RE-SYNC, with no edit to your
+registries.** A repo whose requirements are all `Approved` or `Founded` through
+the test tier used to derive `DevStg-Release` — rendered as *"nothing in work;
+release checklist available"*. It now derives **`DevStg-Impl`**, *"implementation
+in work"*. Nothing about your project changed; the ladder's top was
+discriminating on the wrong side. The old reading said "finished" for the entire
+stretch during which a team is actually building the thing.
+
+Read the new rungs this way:
+
+- **`DevStg-Impl`** — the requirements are broken down and the test cases are
+  LAID. Making them pass is the work in progress. This is where a healthy
+  project sits for most of its life.
+- **`DevStg-Release`** — every declared test case PASSES. **Nothing derives this
+  rung today.** It needs a machine reading of test outcomes, and the kit has
+  none: a `Status` cell may never claim the evidence passed (that rule is
+  unchanged and long-standing), and no results artifact is joined back to test
+  ids yet. The rung is deliberately unreachable rather than quietly approximated.
+  When the evidence carrier lands, it becomes reachable honestly.
+
+**What you may notice.** Under at-or-above selection, `DevStg-Impl` is the
+threshold for the product steps (`format`, `lint`, `tests+coverage`,
+`perf-budgets`, `backlink-coverage`, the generated-view family), so a settled
+spine still selects all of them — the value moved, the selection did not. Your
+dashboard and `docs/status.md` will render the new sentence after the next
+regeneration. If you had a repo genuinely reading `DevStg-Release`, it will now
+read one rung lower and no check will stop running.
+
+**New, and warn-first: the phase rule.**
+`python scripts/derive_stage.py --phase-rule` checks one authoring-time rule
+against `HEAD` — *a spine edit that LOWERS the effective stage must surface as a
+phase change.* Every row the edit added or re-statused has to carry a `Phase`
+tag that is not the phase the settled work was standing in: a new (higher)
+phase, or an already-open lower one. Exactly one decrease is exempt —
+`DevStg-LLReqs → DevStg-Arch`, the permitted decomposition cycle, since
+architecture rework surfaced by breaking a requirement down is within-phase
+churn. It **warns and exits 0**; `--strict` exits 1. It is not wired into
+`check.py` and cannot block a commit, so **no action is required at re-sync** —
+run it if you want the signal. Without git it degrades silently.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose
