@@ -9,10 +9,11 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: OI-48, OI-49, OI-50, OI-51 — the running union of the
-per-section declarations below, re-derived as each session closes (the WI-485
-fragment-scope lesson applied from the start). OI-49 and OI-50 joined at the
-WI-455 close; OI-51 at WI-473.
+Deferred open items: OI-48, OI-49, OI-50, OI-51, OI-52, OI-53 — the running
+union of the per-section declarations below, re-derived as each session closes
+(the WI-485 fragment-scope lesson applied from the start). OI-49 and OI-50
+joined at the WI-455 close; OI-51 at WI-473; OI-52 and OI-53 were minted by the
+batch-close iterate, whose section is the last one below.
 
 ### WI-448 — the common-module inversion (opus worker) — SLICE landed, row stays active
 
@@ -1763,6 +1764,160 @@ tests/test_module_size_ratchet.py`): all LF, no CRLF introduced.
   line before staging — **one line removed** (WI-492 dropping out of the
   Ready frontier) and nothing else moved, so no gate, phase or bar shifted
   from this close.
+
+### The batch-close iterate (opus worker) — CLOSED
+
+The consolidated worklist of the 2026-08-21 adversarial round
+(`docs/reviews/2026-08-21-program-grind-close/WORKLIST.md`), executed in one
+pass over three commits — Group 1 (CRITICAL, proven against the reviewers' own
+executed attacks), Group 2 (MAJOR), Group 3 (MINOR). Findings were treated as
+CLAIMS: each was re-run against the tree before it was fixed, and the one arm
+that refuted on measurement is recorded as REFUTED rather than "fixed".
+
+Deferred open items: OI-52, OI-53 — both minted by this close (see "The two
+owner decisions" below). The other four queued topics carry no row and say why.
+
+**Per item.**
+
+| item | disposition | one line |
+|---|---|---|
+| W-1 | FIXED | the recorded-correction record now resolves against a `ruled` open item that names the space AT the corrected value; four attacks proven |
+| W-2 | FIXED | the parse-failure arm takes the MORE RESTRICTIVE of `ask` and the legacy file, so an explicit `deny` survives a broken `process.toml` |
+| W-3 | FIXED | an `Implements:` declaration must OPEN its line; both prose lines stop parsing as declarations, coverage unchanged at 83/165 |
+| W-4 | FIXED | `# seed-count:` declares the allowlist baseline, an addition past it needs a reason or suppresses nothing, growth is reported, the 120-id seed is pinned |
+| W-5 | FIXED | intra-SCC edge-count ratchet (9), mutation-verified with the review's own planted edges |
+| W-6 | FIXED (one arm REFUTED) | the census recurses into packages and keys by relative path; seeding baselines for the five `kitlib` files is refused — they are 54–304 lines against a 1,500 threshold, and a sub-threshold entry trips the file's own shrink arm |
+| W-7 | FIXED (d = OI-52) | `max-tests` re-stamped, the 46.97 s stamp annotated as an unreproduced outlier, the "~7.5 s / ~5x headroom" justification replaced by a dated three-run measurement; the policy half is the owner's |
+| W-8 | FIXED | the guard's own baseline re-stamped to the measured size in all three copies, "2–18%" corrected, every Capped-table `Baseline` cell now test-pinned |
+| W-9 | FIXED | both vacuous floor tests get fixtures that bite; mutation-verified against the review's two mutations |
+| W-10 | FIXED | RESYNC_PACK, PROCESS_OPTIONS and OI-51's `blast_radius` now say the live set is EMPTY in every shipped configuration |
+| W-11 | FIXED | README and enforcement-audit read `50`; the README dial cell joins the dial-pin test |
+| W-12 | FIXED | `_declared_seam_pairs` splits on `;` like `trace.py`; 14 unresolvable pairs gone (249 → 261 pairs, 0 unsplit) |
+| W-13 | FIXED | IF-025/026/045 re-authored to their real far side; IF-045's "fan-out=1" corrected — `dispatch` reads the enable-list directly |
+| W-14 | FIXED | the `exit_code` stub is derived from the function's own reads and pinned against a named set |
+| W-15 | FIXED | `spec_move` honours directory intent and refuses a rooted/empty destination loudly |
+| W-16 | FIXED | IF-070 drops `scripts/check`, IF-072 names the reader its contract already named, IF-037 states the surface its fan-out was measured over |
+| W-17 | FIXED | 27 → 26; the duplication "after" row carries its own revision and the close figure (17/48/484) its own marker; the watermark note names B-08/REL-004 |
+| W-18 | FIXED | no ruled id sits on a `Deferred open items:` line any more; the two older fragments are SUPERSEDED in the sanctioned grammar. `gen_open_items --check`: six warnings → none |
+| W-19 | FIXED | the log-filename pin is behavioural (write three, count three, assert `LOG_NAME`) |
+| W-20 | FIXED | the dormancy pin asserts the property on a fully-decomposed fixture; `deferred >= 3` becomes a stamped window 14..26 against a measured 20 |
+| W-21 | FIXED | `--gate` help documents the floor override; the banner counts fail-open lines separately |
+| W-22 | FIXED | `docs/gate` regenerated — value unchanged, as-of names the confirming commit |
+
+**The Group-1 proofs, which are the point of the group.**
+
+*W-1.* The four attacks were re-executed as tests against `bd8fce68`'s
+`trace.py` before the fix and against the fixed one after. Pre-fix, the three
+checker attacks returned `AssertionError: []` — the guard produced NO FINDINGS
+at all for a hand-typed record raising `SR` 180 → 500 citing `OI-47`, for a
+chained second correction on an already-corrected space, and for a record
+citing `OI-999`, which does not exist. The fourth returned
+`(8, 40, 'OI-47')` where the test asked for both records: the forged second
+line had ERASED the ruled first one from the parsed map, inside the reader every
+other rule consults. Post-fix all six tests pass, and the two arms that matter
+most are the ones that keep the mechanism usable: the sanctioned `B 7 → 8`
+correction stays clean, and it stays clean AFTER it is committed — the standing
+arms run whether or not a mark moved, because a forged raise self-justifies from
+the next commit. Dogfooded live: this repo's own two records (`B 7 → 8`,
+`REL 3 → 4`, both citing OI-47) pass every arm, `integrity=0`, and they survived
+a real `--bump-ids` regeneration unchanged during this session's OI mint.
+
+The binding is to the VALUE, not the space, and that was forced by measurement:
+OI-47's own prose mentions `SR=999` and `WI=4010` as illustrative census
+figures, so "the ruling mentions this space" would have authorized the review's
+forged SR raise on the strength of a sentence about a different number. The test
+fixture keeps that trap.
+
+*W-2.* Verified with the real hook binary on a freshly bootstrapped scaffold,
+not with the unit test — the review's own method:
+
+```
+corrupt process.toml + legacy `deny`  -> permissionDecision "deny"  exit=2
+corrupt process.toml, no legacy file  -> permissionDecision "ask"   exit=0
+corrupt process.toml + legacy `off`   -> permissionDecision "ask"   exit=0
+```
+
+The first line is what WI-491 had turned into `ask`/exit 0 under a
+"fail-closed" subject, and it now matches the pre-WI-491 behaviour exactly while
+the closing direction (relative to `allow`) is preserved. The flipped test now
+pins deny-stays-deny with the other two cases beside it.
+
+**The two owner decisions, minted rather than described.**
+
+- **OI-52** — the smoke budget's meaning at the commit bar (Q-3 / Sol 7 / Opus
+  M-4). The measurement half is done and landed: three warm runs at
+  59.59 / 59.07 / 59.98 s against a 60 s budget, replacing a justification that
+  claimed ~7.5 s and ~5x headroom. What is owed is the protocol sentence — a
+  worker reading "1296 passed" reports green while the declared seconds bar has
+  failed, which is how twelve of one day's seventeen recorded runs were called
+  green by workers following the protocol exactly. The budget VALUE is not on
+  the table in any option.
+- **OI-53** — the dozen stale Approved `CodeSymbol` cells (Q-4 / Opus m-26 plus
+  the campaign's own skips). The tags are honest and the ROWS have aged; the
+  cells are Approved, so amending them is the sitting's act, not a worker's.
+  The row asks which instrument does it.
+
+Minted through the sanctioned path — rows authored into
+`docs/requirements/open-items.toml`, then `trace.py --bump-ids` raised the mark
+(`OI 51 -> 53`), never by hand — and the fragment's top-matter union above was
+re-derived to carry them.
+
+**The four queued topics that got no row, and why.** Q-1 (collective-row
+back-link semantics, `Implements-part:`) and Q-2 (a machine-readable
+consumer-set field) are both shipped-GRAMMAR changes to a registry whose
+vocabulary the wi455 lane is still settling; filing them now would ask the owner
+to rule a notation before the lane that owns it has a proposal. Q-5 (IF-056 and
+IF-077's expired deferral rationale — the 49-citation-clause deletion pass) and
+Q-6 (the `external:git` endpoint convention against EXT-001's dissolution) are
+work and vocabulary for that same lane and belong in its spec, not in the owner
+queue. All four are named in this batch's RESUME so the next session inherits
+them rather than re-discovering them.
+
+**Declined, and not re-litigated** (the worklist's own declined block): re-fixing
+the six B-05 conversions wholesale, moving the smoke budget in either direction,
+and editing OWNER-held Approved spine rows for the m-26 class.
+
+**Registry edits stayed in traced classifications** — `counterpart` and `notes`
+on six IF rows, `blast_radius` on one open item, plus two new open items. No
+`status`, `owner`, `direction` or `contract` cell moved anywhere, and no
+Approved SR/LLR/TC row was touched, so `docs/archive/last_approved` drift is
+unarmed by this close and stays green for the right reason.
+
+**Ratchets, all re-stamped deliberately with the reason at the stamp:**
+`trace.py` 5174 → 5365, `check_trajectory.py` 4295 → 4398, `agent_loop.py`
+3231 → 3240, `check.py` 2317 → 2320, smoke `max-tests` 1291 → 1306. Two
+ratchets were ADDED rather than re-stamped: the intra-SCC edge count (9) and
+the byte-budget baseline pin.
+
+**Gates, real output.** Per commit, the smoke tier and `check_docs --stale`
+(three commits, three runs): `1293 passed, 5 skipped in 59.07s` /
+`1296 passed, 5 skipped in 59.43s` / `1296 passed, 5 skipped in 59.98s`, and
+`check_docs: OK - 965 doc(s), 1335 intra-repo link(s), 0 broken`. At the close,
+one foreground unfiltered run: **`2749 passed, 14 skipped in 514.40s (0:08:34)`**
+(`python -m pytest -q -n auto`).
+`check_trajectory.py --strict` exits 0 — `clean (490 work item(s), 461 done
+(94%), 21 cancelled, graph acyclic)`. `trace.py --strict-integrity` exits 0 —
+`SN=27 SR=73 LLR=165 TC=161 orphans=15 integrity=0 ... interfaces=130
+interface-findings=0`. `gen_open_items --check`: the open-items view is up to
+date and the six stale-deferral warnings this batch carried are gone.
+Note for the record, since it is the subject of `OI-52` and since reporting it
+any other way would reproduce the exact defect Sol's finding 7 named: the three
+per-commit smoke runs came in at 59.07 / 59.43 / 59.98 s — under, but at
+0.98-1.0x of budget — and the fourth run, taken for THIS record commit, came in
+at **68.14 s, OVER the declared 60 s bar** with 1296 passed / 5 skipped. The
+tests are green and the seconds bar is not. That is a fourth reading in one
+session on one box, it is what the corrected justification predicts at this
+ratio, and it is why the protocol sentence is worth a ruling rather than a
+resolution to try harder.
+
+**Byte deltas on budgeted files.** `project-trajectory/skills/byte-budget-guard/SKILL.md`
+4,982 → 4,974 (−8; 26 bytes free under its 5,000 cap — the row that was 57 bytes
+stale is now the file's real size, and a test holds it there), with the two
+tracked copies (`.claude/skills/`, `.agents/skills/`) re-laid byte-identical. No other
+capped or watched file was touched: `AGENTS.template.md` 9,948, `CLAUDE.md`
+7,147, `PROCESS.md` 84,383 unchanged; `PROCESS_OPTIONS.md` 176,601 → 177,258
+(**+657 FLAGGED** — W-10's scope correction, stating that the product floor's
+live set is empty in every shipped configuration).
 
 ### Adjacent findings accumulating for the closing review
 

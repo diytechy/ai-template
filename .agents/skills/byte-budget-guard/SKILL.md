@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,948 | 2026-08-20 | −5: WI-486's back-link re-word onto its dial, paid by dropping an example |
 | `CLAUDE.md` | **8,500** | 7,147 | 2026-08-20 | +166: the stale ~17.6 s smoke figure replaced by three warm readings, one past the ceiling |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,975 | 2026-08-21 | -7: the row had drifted 57 low (4,925 stamped, 4,982 real); every Baseline cell is now test-pinned |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,974 | 2026-08-21 | -8: the row had drifted 57 low (4,925 stamped, 4,982 real); every Baseline cell is now test-pinned |
 
 **Two files are parked at their caps: `AGENTS.template.md` 52 bytes free (0.5%)
 and this one under 1%;** `CLAUDE.md` holds ~16%. Those two are what you hit
@@ -39,9 +39,9 @@ first, and the DOC is what gives — a cap is load-bearing (AGENTS reserves ≥2
 for the adopter's own section under Gemini's truncation) and is not to be
 raised. Adding a sentence means cutting one, in the same edit.
 
-Each `Baseline` is pinned to the file's real size by
-`test_capped_doc_baselines_match_the_real_sizes`: a stale baseline is how this
-procedure produces the overrun it exists to prevent.
+Each `Baseline` is pinned to its file's real size by
+`test_capped_doc_baselines_match_the_real_sizes`: a stale one is how this
+procedure produces the overrun it prevents.
 
 **Watched** — growth is allowed but must be flagged with a byte delta + reason
 in the session/WI note. Enforced by convention + that report.
@@ -49,7 +49,7 @@ in the session/WI note. Enforced by convention + that report.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 84,383 | 2026-08-20 | **+303** FLAGGED: WI-484 — §1's derived-SR clause re-pointed onto the `Hat-Refs` cell, carrying the two rules a column name cannot give (blank = *not recorded*; an LLR's effective set is own + parents') |
-| `project-trajectory/PROCESS_OPTIONS.md` | 176,601 | 2026-08-21 | **+1,070** FLAGGED: WI-488 (OI-43 (a)) — seam-TC coverage promotes WARN to ERROR under `--strict` at DevStg-Tests+, with a migration allowlist |
+| `project-trajectory/PROCESS_OPTIONS.md` | 177,258 | 2026-08-21 | **+657** FLAGGED: review W-10 — the product floor's scope, precisely: it selects at ONE bar by membership, so its live set is empty in every shipped config |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in
