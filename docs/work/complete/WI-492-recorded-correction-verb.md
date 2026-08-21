@@ -1,7 +1,7 @@
 +++
 id = "WI-492"
 title = "The recorded-correction verb: one sanctioned raising act for a mis-seeded watermark, and the one-time B=8/REL=4 correction (OI-47 ruled (e), 2026-08-20)"
-specref = "docs/requirements/open-items.toml#OI-47"
+specref = ""
 workstream = "scripts"
 sr_refs = []
 needs = []
@@ -9,6 +9,36 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+Full row, not a slice. `trace.py` gains the one-shot recorded-correction verb
+(`correct_watermark`/`read_corrections`, wired behind `--correct-mark SPACE
+NEW RULING`) beside the existing `bump_watermark`/`read_watermark` pair: a
+NAMED mark raises to a NAMED value on a NAMED ruling's authority, recorded as
+a `# correction: SPACE old -> new (ruling)` header comment `read_watermark`
+already skips, and `_mark_history_findings` accepts a raise only when a
+recorded correction matches the EXACT `(was, now)` transition — an
+unrecorded raise, or a record for a different jump, is still refused, and a
+lowered mark is refused unconditionally, before corrections are even
+consulted. The verb refuses to run twice for the same space (one-shot).
+
+The correction landed via the verb itself, not a hand edit: `docs/id-watermark`
+now reads `B = 8` / `REL = 4`, both citing `OI-47`. `docs/requirements/
+external.toml`'s SPENT IDS block shrank to a pointer at OI-47 — the mark now
+carries the protection that prose used to state.
+
+Tests extend `tests/test_id_watermark.py`: a recorded correction is accepted;
+an unrecorded raise is still refused; a lowered mark is refused even with a
+correction record present; the verb is one-shot and refuses to replay; a
+non-raising value is refused; `bump_watermark` preserves an existing
+correction across an ordinary regeneration; and the corrected-mark mint arm
+(next B mint is B-09).
+
+RESYNC entry: `project-trajectory/RESYNC_PACK.md` §3, "The id-watermark gains
+a RULED-correction arm (OI-47 ruled (e))".
+
+Code commit: `da4d3bcd`.
 
 ## Context
 

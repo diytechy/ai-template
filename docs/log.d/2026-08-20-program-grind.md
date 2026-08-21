@@ -1654,6 +1654,105 @@ CRLF entries.
   net-new tests (two banner tests + the filename drift guard); the four
   renamed M-13/D-7 tests each replaced an existing one.
 
+### WI-492 — the recorded-correction verb (sonnet worker) — CLOSED complete
+
+**Executes OI-47's ruling, (e), one row.** `trace.py` gains
+`correct_watermark`/`read_corrections` beside the existing
+`bump_watermark`/`read_watermark` pair, wired behind a new `--correct-mark
+SPACE NEW RULING` CLI verb — the ONLY other way a mark may rise besides
+allocation. It raises a NAMED space to a NAMED value on a NAMED ruling's
+authority and records the ruling id as a `# correction: SPACE old -> new
+(ruling)` header comment, which `read_watermark` already skips (comments are
+ignored there) so the record survives its parse untouched, exactly as the
+row's spec required. `_mark_history_findings` accepts a raise only when a
+recorded correction matches the EXACT `(was, now)` pair — a record present
+for the space but naming a different jump does not excuse this one, which is
+the guard against a ruling being cited to justify a raise it never
+authorized. Lowering is refused UNCONDITIONALLY: that check runs and
+`continue`s before `corrections` is ever consulted, so a correction record —
+which only ever authorizes a raise — cannot be misread as cover for a fall.
+
+**One-shot, enforced at the verb, not just at the finding.** A space that
+already carries a recorded correction refuses a second `--correct-mark` call
+outright (`ValueError`, "the correction verb is ONE-SHOT and refuses to
+replay"), even citing the same ruling id — a ruling authorizes ONE
+correction, not a standing licence to keep raising the mark. Proven by
+calling it twice in a test, not just by asserting the message.
+
+**The correction landed via the verb itself, dogfooded rather than
+hand-edited.** `python trace.py --correct-mark B 8 OI-47` and `--correct-mark
+REL 4 OI-47`, run against this repo's own tree: `docs/id-watermark` now reads
+`B = 8` / `REL = 4`, each with its correction line recorded in the header,
+and the pre-existing `# basis:` line (the last ALLOCATION-driven bump's
+figures) is left untouched — a correction is not an allocation and must not
+overwrite the record of one. `docs/requirements/external.toml`'s SPENT IDS
+block, the interim hand-maintained protection OI-47's own history explains,
+shrinks to a five-line pointer at OI-47: the mark now carries the fact that
+prose used to state.
+
+**`bump_watermark` preserves a recorded correction across an ordinary
+regeneration**, checked by a dedicated test: its only writer is
+`correct_watermark`, so a routine `--bump-ids` re-render (which calls
+`render_watermark` too) must carry the record forward unchanged rather than
+silently dropping it because this run's own raises had nothing to do with
+it.
+
+**A complexity ratchet fired from the two-line CLI wiring, and the fix was a
+decomposition, not a bump.** Adding `if args.correct_mark: return
+_cmd_correct_mark(...)` beside the existing `--bump-ids` branch pushed
+`main`'s McCabe count from 10 (the ceiling) to 11. Rather than re-stamp the
+ratchet, the two mutually-exclusive writer-mode branches moved into a new
+`_writer_mode(args)` helper — the same shape WI-473's `resolve_plan` used to
+keep `check.py`'s `main` at its own ceiling — which brought `main` back to
+exactly 10. `tests/test_complexity_ratchet.py` stayed green with no baseline
+edit.
+
+**Ratchet.** `trace.py` module-size baseline re-stamped 4993 → 5174 (+181,
+reasons inline in `tests/test_module_size_ratchet.py`); the last +2 is a
+`ruff format` unwrap of one call hit AFTER the first stamp, measured
+post-format — the same trap the WI-473/WI-483 entries above record, a third
+time this program.
+
+Deferred open items: none — OI-47 is fully executed by this row; no new open
+item surfaced.
+
+**Gates.** Line endings checked before trusting any count
+(`git ls-files --eol docs/id-watermark docs/requirements/external.toml
+project-trajectory/scripts/trace.py tests/test_id_watermark.py
+tests/test_module_size_ratchet.py`): all LF, no CRLF introduced.
+
+- smoke (code commit): `1284 passed, 5 skipped in 57.56s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=da4d3bcd -->
+  Re-run on the landed (records) tree: `1284 passed, 5 skipped in 116.71s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=da4d3bcd-dirty -->
+  **Read the second figure as contended, not as a budget measurement** — same
+  reading the WI-455 entry above gives its own 134.16s outlier: this session's
+  own earlier runs on this box bracket it (57.56s here, 46.97–62.69s in the
+  WI-483 entry), and nothing about this WI's own code changed between the two
+  runs. Composition is identical (same 1284/5); only wall clock moved.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1335 intra-repo link(s), 0 broken (1 orphan warning(s))`
+- `check_trajectory.py --root . --strict`: one R-F ERROR surfaced at close
+  (`status=done but SpecRef 'docs/requirements/open-items.toml#OI-47' is
+  still set`) and was fixed rather than waived — the same shape the WI-469
+  close hit: R-F's archive half is scoped to `docs/specs/`, and this row's
+  spec-of-record is a registry entry, not a per-WI spec file, so clearing
+  `specref = ""` was the whole fix, no archive move needed. Clean re-run:
+  `clean (490 work item(s), 461 done (94%), 21 cancelled, graph acyclic)` —
+  460 → 461 is exactly this close.
+- **full unfiltered suite, on the code commit**: `2732 passed, 14 skipped in
+  499.73s (0:08:19)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=da4d3bcd -->
+  2726 (the WI-491 close's own total) → 2732 is exactly this session's six
+  net-new tests. **Read the scope honestly, the same caveat every WI in this
+  fragment records:** taken on the code commit, before this fragment's own
+  text, the spec's Deliverable and the RESYNC entry were written, so it does
+  not cover the records commit. Re-checked on the landed tree instead of
+  re-argued: smoke re-run above is post-close; `check_trajectory --strict`
+  above is post-close; the regenerated `docs/status.md` diff was read line by
+  line before staging — **one line removed** (WI-492 dropping out of the
+  Ready frontier) and nothing else moved, so no gate, phase or bar shifted
+  from this close.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked

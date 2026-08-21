@@ -2534,6 +2534,47 @@ a new `_subagent_gate_log_count()` helper — no config, nothing to migrate.
 
 ---
 
+### The id-watermark gains a RULED-correction arm (OI-47 ruled (e)) [since da4d3bcd]
+
+*(Anchored at the PRECEDING commit — this entry ships with the change itself.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/trace.py`.
+
+**What changes for you:** `docs/id-watermark` could previously only rise by
+ALLOCATION (`--bump-ids`, raising every mark to the live maximum) — the one
+other way a mark could ever move was a hand-edit, which `trace.py`'s
+integrity floor has always refused outright ("a mark rises by allocating an
+id, never by hand"). If your own `docs/id-watermark` was ever mis-seeded
+below a space's true history (an id allocated, cited in ruled documents, then
+cut — before that space had a mark to protect it, or from a bug in the
+seeding computation itself), you had no sanctioned way to correct it short of
+re-allocating a live row you may not want.
+
+`trace.py` now ships a second, narrower path: `--correct-mark SPACE NEW
+RULING` raises exactly one named space to a named value, citing the id of
+the decision that authorized it. The ruling id is recorded as a `#
+correction: SPACE old -> new (RULING)` comment line in the watermark's own
+header — invisible to `read_watermark` (comments are skipped there) and
+readable by `read_corrections`, the new function `_mark_history_findings`
+consults so a correction's exact `(was, now)` transition — and only that
+transition — clears the "nothing justifies this raise" finding an
+unrecorded hand-raise still trips. **One-shot, deliberately:** a space that
+already carries a recorded correction refuses a second one, even citing the
+same ruling — the verb corrects a mis-seed once, it does not hand a ruling a
+standing licence to keep raising the mark.
+
+**What you may notice:** nothing, unless you actually run `--correct-mark` —
+`--bump-ids` and every existing watermark rule are unchanged, and a
+regeneration now carries forward any correction record your file already
+has (it only ever ADDS a record, via the new verb; an ordinary bump never
+drops one). This repo used the verb on itself the same commit it shipped:
+`B` 7 -> 8 and `REL` 3 -> 4, both citing `OI-47` — the two prior-cut,
+mis-seeded ids `docs/requirements/external.toml`'s "SPENT IDS" prose used to
+warn about by hand. That block is now a pointer at the ruling; the mark
+carries the protection.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is
