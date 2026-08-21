@@ -694,7 +694,26 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 4993,  # +4 (4989 -> 4993) 2026-08-21, WI-490: OI-45 rules (b) RETIRE
+    "trace.py": 5174,  # +181 (4993 -> 5174; the last +2 is `ruff format` unwrapping
+    # one call after the stamp, the WI-473/WI-483 trap hit again — measured
+    # POST-format) 2026-08-21, WI-492: OI-47 ruled (e) —
+    # the recorded-correction verb. THE SAME PIPE, NOT A NEW CONCERN:
+    # `read_corrections`/`correct_watermark`/`_cmd_correct_mark` sit directly
+    # beside the `read_watermark`/`bump_watermark`/`_cmd_bump_ids` triple they
+    # extend, so this is wiring living where its pipe already lives — the shape
+    # every watermark entry below already establishes. Roughly half the bump is
+    # the two docstrings recording WHY a correction is matched by the EXACT
+    # `(was, now)` pair rather than by ruling id alone (a bare ruling-id match
+    # would let one ruling justify an unbounded climb, not the single correction
+    # it actually authorized — the replay this verb exists to refuse) and why
+    # `correct_watermark` never reads `live_max_ids` (a correction is not an
+    # allocation and must not be justifiable by one, or the one-shot guard would
+    # be gameable by minting a live row first). 14 of the 181 are a DECOMPOSITION
+    # inside this same file, not a size increase to defend: `main`'s two writer
+    # flags (`--bump-ids`, `--correct-mark`) moved into a `_writer_mode` helper
+    # so the dispatcher's own McCabe count stayed at the ceiling rather than
+    # crossing it (the `resolve_plan`/`floor_notice` WI-473 precedent, applied
+    # here rather than argued past). Reviewed bump, reason in the log. Earlier +4 (4989 -> 4993) 2026-08-21, WI-490: OI-45 rules (b) RETIRE
     # THE MECHANICAL-RATIFICATION ARM — `is_founded`'s docstring stopped calling
     # "whether an authored `Founded` is itself an error" open. D-9 consequence 2
     # SPLITS: whether a tool ever WRITES the cell stays open, but whether an

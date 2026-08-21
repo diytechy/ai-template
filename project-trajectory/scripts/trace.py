@@ -714,6 +714,15 @@ WATERMARK_SPACES = tuple(
 )
 _WATERMARK_LINE = re.compile(r"^([A-Z]+)\s*=\s*(\d+)\s*$")
 _ANY_ID = re.compile(r"^([A-Z]+)-(\d+)$")
+# A mark rises by ALLOCATION (the ordinary path above) or, exactly once per
+# space, by a RULED correction — OI-47 (e): a mis-seeded mark corrected by the
+# ruling that authorized it, recorded in the header rather than hand-edited.
+# `# correction: <SPACE> <old> -> <new> (<ruling id>)` — a comment line, so it
+# is invisible to `read_watermark` (comments are skipped there) and visible to
+# `read_corrections` below. Matched against the STRIPPED line, `#` included.
+_CORRECTION_LINE = re.compile(
+    r"^#\s*correction:\s+([A-Z]+)\s+(\d+)\s*->\s*(\d+)\s*\((.+)\)\s*$"
+)
 
 
 def _csv_ids(docs):
@@ -898,6 +907,30 @@ def read_watermark(root):
     return marks
 
 
+def read_corrections(root):
+    """`{space: (old, new, ruling_id)}` — the RECORDED CORRECTIONS lines in
+    `docs/id-watermark`'s header, if any. Unlike `read_watermark` this degrades
+    to `{}` on a missing file or on a file with no correction lines: the common
+    case is "no space was ever hand-corrected," which is not the same failure
+    as a missing mark (there the ABSENCE of a record means "nothing is taken";
+    here it means "nothing was ruled," a true and unremarkable state).
+
+    A malformed correction line is silently not a correction — the writer
+    (`correct_watermark`) is the only thing that emits this line, so a reader
+    that cannot parse one is looking at either an unrelated comment or a
+    hand-edit already outside what this file promises to protect."""
+    path = Path(root) / WATERMARK
+    if not path.is_file():
+        return {}
+    out = {}
+    for line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
+        m = _CORRECTION_LINE.match(line.strip())
+        if m:
+            space, was, now, ruling = m.groups()
+            out[space] = (int(was), int(now), ruling.strip())
+    return out
+
+
 def _mark_covers_live_findings(marks, live):
     """Rules 1 and 2, read from the working tree alone: every space is marked,
     and no live id stands above its mark."""
@@ -921,15 +954,25 @@ def _mark_covers_live_findings(marks, live):
     return out
 
 
-def _mark_history_findings(marks, live, previous):
+def _mark_history_findings(marks, live, previous, corrections=None):
     """Rules 3 and 4, which need the COMMITTED mark: it never falls, and it never
-    rises past what history justifies.
+    rises past what history justifies — ALLOCATION history, or (OI-47 (e)) a
+    RULED correction recorded in the header, and nothing else.
 
     Both directions matter and for opposite reasons. A mark that FALLS re-opens
     every id above the new value. A mark that RISES by hand retires that space's
     guard permanently and silently — it would still pass "every space is marked"
     and still pass "the mark rose". Headroom left by a DELETED row stays legal,
-    because the committed mark is what carries it."""
+    because the committed mark is what carries it.
+
+    A lowered mark is refused REGARDLESS of `corrections`: the check below runs
+    and `continue`s before `corrections` is ever consulted, so a correction
+    record — which only ever authorizes a RAISE — cannot be misread as cover
+    for a fall. `corrections` matches the observed transition EXACTLY
+    (`was == recorded old`, `now == recorded new`); a record present for the
+    space but naming a different jump does not excuse this one, which is what
+    keeps the one-shot verb from being replayed into a second, unrecorded raise."""
+    corrections = corrections or {}
     out = []
     for space in WATERMARK_SPACES:
         now = marks.get(space)
@@ -955,10 +998,15 @@ def _mark_history_findings(marks, live, previous):
             continue
         justified = max(was, live.get(space, 0))
         if now > justified:
+            fix = corrections.get(space)
+            if fix is not None and fix[0] == was and fix[1] == now:
+                continue
             out.append(
                 "id watermark for {} stands at {} but nothing justifies more than "
                 "{} (the highest committed mark, or the highest live id) — a mark "
-                "rises by allocating an id, never by hand".format(space, now, justified)
+                "rises by allocating an id, never by hand (the one exception is a "
+                "RULED correction recorded via `--correct-mark`, and none is "
+                "recorded for this exact raise)".format(space, now, justified)
             )
     return out
 
@@ -976,13 +1024,19 @@ def watermark_findings(root, previous=None):
     live = live_max_ids(root)
     out = _mark_covers_live_findings(marks, live)
     if previous is not None:
-        out += _mark_history_findings(marks, live, previous)
+        out += _mark_history_findings(marks, live, previous, read_corrections(root))
     return out
 
 
-def render_watermark(marks, basis=""):
+def render_watermark(marks, basis="", corrections=None):
     """The file's text. One `<SPACE> = <int>` per line, deliberately: a merge
-    conflicts per SPACE rather than per file, and a bump can be a line rewrite."""
+    conflicts per SPACE rather than per file, and a bump can be a line rewrite.
+
+    `corrections` — `{space: (old, new, ruling_id)}` from `read_corrections` —
+    is rendered back verbatim as `# correction: …` lines so a plain
+    `--bump-ids` regeneration (which calls this with whatever corrections the
+    file already carried) never drops a ruled record; only `correct_watermark`
+    ever ADDS one."""
     head = [
         "# ID WATERMARK — generated by scripts/trace.py --bump-ids (do not hand-edit).",
         "#",
@@ -993,12 +1047,25 @@ def render_watermark(marks, basis=""):
         "#",
         "# A mark only ever RISES. Lowering one is refused by trace.py's integrity",
         "# pass, which also refuses a live id above its mark and a missing space.",
+        "# The one exception is a RULED correction (`--correct-mark`), which may",
+        "# raise a single space PAST what allocation justifies — ONE TIME, citing",
+        "# the ruling that authorized it, recorded below when used. Never by hand.",
         "#",
         "# SCOPE: a mark covers the id space AS CURRENTLY NUMBERED. If a space was",
         "# ever renumbered, ids from the superseded numbering are NOT covered and",
         "# may be re-pointed by a mint — record those at the registry instead.",
         "#",
     ]
+    if corrections:
+        head.append(
+            "# RECORDED CORRECTIONS — ruled, one-shot, applied by --correct-mark:"
+        )
+        for space in sorted(corrections):
+            was, now, ruling = corrections[space]
+            head.append(
+                "# correction: {} {} -> {} ({})".format(space, was, now, ruling)
+            )
+        head.append("#")
     if basis:
         head.append("# basis: {}".format(basis))
         head.append("#")
@@ -1075,6 +1142,10 @@ def bump_watermark(root):
     live = live_max_ids(root)
     path = Path(root) / WATERMARK
     marks = read_watermark(root) if path.is_file() else {}
+    # A regeneration must not DROP a ruled correction just because this run's
+    # allocation-driven raises had nothing to do with it — the record's only
+    # writer is `correct_watermark`; this one only carries it forward unchanged.
+    corrections = read_corrections(root) if path.is_file() else {}
     raised = {}
     for space in WATERMARK_SPACES:
         was = marks.get(space, 0)
@@ -1086,9 +1157,66 @@ def bump_watermark(root):
         "{}={}".format(s, live.get(s, 0)) for s in WATERMARK_SPACES if live.get(s)
     )
     (Path(root) / WATERMARK).write_text(
-        render_watermark(marks, basis), encoding="utf-8", newline="\n"
+        render_watermark(marks, basis, corrections), encoding="utf-8", newline="\n"
     )
     return marks, raised
+
+
+def correct_watermark(root, space, new_value, ruling_id):
+    """`--correct-mark`: the one-shot RECORDED-CORRECTION verb (OI-47 (e)).
+
+    The only other way a mark may rise, besides allocation: a NAMED space is
+    raised to a NAMED value on a NAMED ruling's authority, and the ruling id is
+    recorded in the header so `_mark_history_findings` can tell this raise
+    apart from an unrecorded (hand-edited) one. ONE-SHOT: a space that already
+    carries a recorded correction refuses a second one — replaying the verb,
+    even citing the same ruling, would let one ruling authorize an unbounded
+    climb instead of the single correction it actually made. Returns
+    `(marks, corrections)`, the file's new state.
+
+    Deliberately narrower than `bump_watermark`: it touches ONE space, never
+    reads `live_max_ids` (a correction is not an allocation and must not be
+    justified by one), and preserves the file's existing `basis` line
+    untouched — that line records the last ALLOCATION-driven bump, and a
+    correction is not one."""
+    path = Path(root) / WATERMARK
+    if not path.is_file():
+        raise ValueError(
+            "{} is missing — a correction needs a mark to correct. Regenerate "
+            "with `trace.py --bump-ids` first.".format(WATERMARK)
+        )
+    if space not in WATERMARK_SPACES:
+        raise ValueError(
+            "{!r} is not a watermark space ({})".format(
+                space, ", ".join(WATERMARK_SPACES)
+            )
+        )
+    marks = read_watermark(root)
+    corrections = read_corrections(root)
+    if space in corrections:
+        was, now, ruling = corrections[space]
+        raise ValueError(
+            "{} already carries a recorded correction ({} -> {} by {}) — the "
+            "correction verb is ONE-SHOT and refuses to replay".format(
+                space, was, now, ruling
+            )
+        )
+    was = marks.get(space, 0)
+    if new_value <= was:
+        raise ValueError(
+            "correction must RAISE {} above its current mark of {} (asked for "
+            "{}) — a mark never falls, and a correction that does not raise "
+            "corrects nothing".format(space, was, new_value)
+        )
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    basis_match = re.search(r"^#\s*basis:\s*(.*)$", text, re.MULTILINE)
+    basis = basis_match.group(1).strip() if basis_match else ""
+    marks[space] = new_value
+    corrections[space] = (was, new_value, str(ruling_id))
+    path.write_text(
+        render_watermark(marks, basis, corrections), encoding="utf-8", newline="\n"
+    )
+    return marks, corrections
 
 
 def triangle_findings(tcs, llrs):
@@ -4737,6 +4865,45 @@ def _cmd_bump_ids(root):
     return 0
 
 
+def _cmd_correct_mark(root, space, new_value_text, ruling_id):
+    """`--correct-mark SPACE NEW RULING`: the one-shot recorded-correction verb
+    (OI-47 (e)). A WRITER, like `--bump-ids` — exits before any check runs."""
+    space = space.strip().upper()
+    try:
+        new_value = int(new_value_text)
+    except ValueError:
+        print(
+            "trace: --correct-mark NEW must be an integer, got {!r}".format(
+                new_value_text
+            ),
+            file=sys.stderr,
+        )
+        return 2
+    try:
+        correct_watermark(root, space, new_value, ruling_id)
+    except ValueError as exc:
+        print("trace: {}".format(exc), file=sys.stderr)
+        return 1
+    print(
+        "trace: id watermark {} corrected -> {} (recorded, authorized by {})".format(
+            space, new_value, ruling_id
+        )
+    )
+    return 0
+
+
+def _writer_mode(args):
+    """`None` when neither writer flag is set, else the exit code of the one
+    that is. Split out of `main()` so the two mutually-exclusive early-return
+    branches cost that function ONE call, not two `if`s — the same reason
+    `resolve_plan` left `check.py`'s `main` in the WI-473 entry below."""
+    if args.bump_ids:
+        return _cmd_bump_ids(args.root)
+    if args.correct_mark:
+        return _cmd_correct_mark(args.root, *args.correct_mark)
+    return None
+
+
 # Implements: SR-157, LLR-001
 def main():
     _utf8_console()
@@ -4749,6 +4916,16 @@ def main():
         action="store_true",
         help="raise every id-watermark mark to the live maximum and exit — the "
         "regeneration workflow for docs/id-watermark (a mark only ever rises)",
+    )
+    ap.add_argument(
+        "--correct-mark",
+        nargs=3,
+        metavar=("SPACE", "NEW", "RULING"),
+        default=None,
+        help="one-shot RULED raise of a single id-watermark mark to NEW, "
+        "recording RULING (e.g. OI-47) in the header — the only other way a "
+        "mark may rise besides allocation (OI-47 (e)); refuses to replay a "
+        "space that already carries a recorded correction",
     )
     ap.add_argument(
         "--strict-integrity",
@@ -4833,10 +5010,14 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
 
-    # --bump-ids is a WRITER, not a checker: raise the marks and exit before any
-    # pass runs, so regenerating never depends on the tree already being clean.
-    if args.bump_ids:
-        return _cmd_bump_ids(args.root)
+    # --bump-ids and --correct-mark are WRITERS, not checkers: they act and exit
+    # before any pass runs, so neither depends on the tree already being clean.
+    # Folded into one call rather than two `if`s at this level, which is
+    # main()'s own complexity ceiling (`resolve_plan`/`floor_notice`'s WI-473
+    # precedent: lift a branch OUT rather than let a dispatcher grow past it).
+    writer_code = _writer_mode(args)
+    if writer_code is not None:
+        return writer_code
 
     reg = load_registries(docs)
 

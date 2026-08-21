@@ -507,6 +507,96 @@ def test_a_reference_column_before_the_id_column_does_not_hide_the_id(tmp_path):
     assert TRACE.live_max_ids(root)["IF"] == 900
 
 
+def test_a_recorded_correction_raises_the_mark_and_the_next_mint_moves(tmp_path):
+    # OI-47 (e): the correction verb raises a NAMED mark to a NAMED value on a
+    # NAMED ruling's authority — the mechanism this WI's B=8/REL=4 fix runs on.
+    # The corrected mark IS the protection from here on: B-08 can never
+    # re-issue because the next mint (mark + 1) moves past it, to B-09.
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    marks, corrections = TRACE.correct_watermark(root, "B", 8, "OI-47")
+    assert marks["B"] == 8
+    assert corrections["B"] == (7, 8, "OI-47")
+    assert marks["B"] + 1 == 9  # the next mint is B-09, never the spent B-08
+    # The record survives `read_watermark`'s parse — it is a comment line, and
+    # comments are skipped there — and round-trips through both readers.
+    assert TRACE.read_watermark(root)["B"] == 8
+    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+
+
+def test_the_correction_verb_is_one_shot_and_refuses_to_replay(tmp_path):
+    # THE POINT OF THE WHOLE VERB: a ruling authorizes ONE correction, not a
+    # standing licence to keep raising the space by citing it again.
+    import pytest
+
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    TRACE.correct_watermark(root, "B", 8, "OI-47")
+    with pytest.raises(ValueError, match="ONE-SHOT"):
+        TRACE.correct_watermark(root, "B", 9, "OI-47")
+    # The first correction's record is untouched by the refused replay.
+    assert TRACE.read_watermark(root)["B"] == 8
+    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+
+
+def test_an_unrecorded_raise_past_the_mark_is_still_refused(tmp_path):
+    # A correction record for a DIFFERENT transition (or none at all) must not
+    # excuse this one — matching the exact (was, now) pair is the whole guard
+    # against a correction record being stretched to cover an unrelated raise.
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 9})
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7}
+    corrections = {"B": (7, 8, "OI-47")}  # recorded transition is 7->8, not 7->9
+    findings = TRACE._mark_history_findings(
+        TRACE.read_watermark(root), TRACE.live_max_ids(root), previous, corrections
+    )
+    assert any("nothing justifies more than 7" in f for f in findings), findings
+    # And with no correction recorded at all, the plain hand-raise finding fires.
+    assert any(
+        "nothing justifies more than 7" in f
+        for f in TRACE._mark_history_findings(
+            TRACE.read_watermark(root), TRACE.live_max_ids(root), previous, {}
+        )
+    )
+
+
+def test_a_lowered_mark_is_still_refused_even_with_a_correction_record(tmp_path):
+    # Lowering is checked BEFORE corrections are ever consulted, so a
+    # correction record cannot be read as cover for a fall — a correction only
+    # ever authorizes a RAISE, and the rule enforces that by ordering, not by
+    # trusting the record's shape.
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 3})
+    previous = {s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7}
+    corrections = {"B": (7, 3, "OI-47")}  # a bogus "correction" naming this fall
+    findings = TRACE._mark_history_findings(
+        TRACE.read_watermark(root), TRACE.live_max_ids(root), previous, corrections
+    )
+    assert any("moved DOWN 7 -> 3" in f for f in findings), findings
+
+
+def test_correction_verb_refuses_a_non_raising_value(tmp_path):
+    root = _repo(tmp_path, marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7})
+    import pytest
+
+    with pytest.raises(ValueError, match="must RAISE"):
+        TRACE.correct_watermark(root, "B", 7, "OI-47")  # equal, not a raise
+    with pytest.raises(ValueError, match="must RAISE"):
+        TRACE.correct_watermark(root, "B", 5, "OI-47")  # a fall
+
+
+def test_bump_watermark_preserves_a_recorded_correction(tmp_path):
+    # An ordinary regeneration (`--bump-ids`) must carry a ruled correction
+    # forward unchanged — its only writer is `correct_watermark`, and a bump
+    # silently dropping the record would re-open the space it corrected.
+    root = _repo(
+        tmp_path,
+        marks={s: 0 for s in TRACE.WATERMARK_SPACES} | {"B": 7, "SR": 1},
+        srs=("SR-001", "SR-002"),
+    )
+    TRACE.correct_watermark(root, "B", 8, "OI-47")
+    marks, raised = TRACE.bump_watermark(root)
+    assert marks["B"] == 8  # untouched — no live B rows to raise it further
+    assert "B" not in raised  # the bump itself did not move it; the correction did
+    assert TRACE.read_corrections(root)["B"] == (7, 8, "OI-47")
+
+
 def test_force_never_overwrites_a_live_repos_marks(tmp_path):
     # `bootstrap --force` re-lays every scaffold file. For every OTHER target
     # that costs at most re-doing an edit — they are templates to fill, or are

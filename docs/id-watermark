@@ -7,15 +7,22 @@
 #
 # A mark only ever RISES. Lowering one is refused by trace.py's integrity
 # pass, which also refuses a live id above its mark and a missing space.
+# The one exception is a RULED correction (`--correct-mark`), which may
+# raise a single space PAST what allocation justifies — ONE TIME, citing
+# the ruling that authorized it, recorded below when used. Never by hand.
 #
 # SCOPE: a mark covers the id space AS CURRENTLY NUMBERED. If a space was
 # ever renumbered, ids from the superseded numbering are NOT covered and
 # may be re-pointed by a mint — record those at the registry instead.
 #
+# RECORDED CORRECTIONS — ruled, one-shot, applied by --correct-mark:
+# correction: B 7 -> 8 (OI-47)
+# correction: REL 3 -> 4 (OI-47)
+#
 # basis: B=5 CMP=9 EXT=5 IF=137 LLR=183 OI=51 PB=4 REL=3 SN=40 SR=180 TC=178 WI=493
 #
 ASSET = 0
-B = 7
+B = 8
 CMP = 9
 DP = 1
 EXT = 5
@@ -25,7 +32,7 @@ MOD = 0
 OI = 51
 PART = 0
 PB = 4
-REL = 3
+REL = 4
 REPO = 0
 SN = 40
 SR = 180

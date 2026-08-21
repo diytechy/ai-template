@@ -29,16 +29,12 @@
 # on purpose; the gap keeps id and frame name aligned 1:1 rather than
 # renumbering a locked table.
 #
-# SPENT IDS — DO NOT MINT `B-08` OR `REL-004`. Both were allocated and then cut,
-# and both are cited by id in ruled documents, so re-minting either would
-# silently re-point that history onto a different thing. `docs/id-watermark`
-# does NOT protect them — it reads `B = 7` and `REL = 3`, so the next mint from
-# the mark is exactly those two — and raising a mark by hand is refused by
-# `trace.py`'s integrity rule ("a mark rises by allocating an id, never by
-# hand"). This block is the only protection those two ids have, and it lives
-# here because this file is where a crossing is hand-minted. Correcting a
-# mis-computed seed needs a mechanism the kit does not have, which is an open
-# question for the owner.
+# SPENT IDS — retired to a pointer (OI-47 ruled (e), 2026-08-20, executed by
+# WI-492): `docs/id-watermark` itself now carries the protection this block
+# used to state in prose — `B` and `REL` were corrected to 8 and 4 by the
+# ruling's own recorded-correction verb (`trace.py --correct-mark`), so the
+# next mint from either mark is past `B-08`/`REL-004`, not onto them. See
+# OI-47 for the mechanism and the mis-seed this fixes.
 #
 # THE FIELDS — what each one is, and how it is used.
 #
