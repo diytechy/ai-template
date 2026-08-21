@@ -49,3 +49,53 @@ Sequencing note: independent of the sitting's status-vocabulary step 7 (the
 enum retirement changes row STATES, not the min-selector shape), but any SR
 amendment lands through the same amendment discipline as every other
 spine-class row.
+
+## Slice 1 landed 2026-08-20 — what shipped, and the four items still owed
+
+The row stays QUEUED, not complete: the mechanism is built and proven, and the
+ruling that makes it reach the three checks the finding is about is the owner's.
+Design record: [../../plans/2026-08-20-product-regression-floor.md](../../plans/2026-08-20-product-regression-floor.md).
+
+**Shipped.** `check.py` gains `product_floor()` (reads `ex-draft=` off the
+`# basis:` line), `floor_plan()` (the product-layer steps the dropped bar would
+have lost, built from the FLOOR bar's own table) and `floor_notice()` (the
+disclosure, on `--list` and the run summary); `tests/test_product_floor.py`
+carries five guards including the review's asked-for regression fixture, driven
+through the real `derive_gate` on a mature scaffold; `PROCESS_OPTIONS.md` states
+the rule; `RESYNC_PACK.md` §3 carries the adopter entry; the root
+`.github/workflows/test.yml` enforcement claim is corrected.
+
+**The design decision taken:** the floor is `max(derived bar, ex-draft)` —
+DERIVED, not a stored high-water mark — which is the shape `PROCESS.md` §4
+pre-authorizes ("a second, derived high-water number shown BESIDE the honest
+one, never instead"). It is monotonic against DRAFTING and is not claimed to be
+monotonic against anything else; a lowering therefore requires a reviewed
+human-held spine act and is visible as a changed `ex-draft=`.
+
+**Owed, in the order they unblock each other:**
+
+1. **`OI-51` — the binding constraint, and it is not the one C-01 names.**
+   Measured while building: OI-30 D2 ceilings `derive_gate.sr_bar` at
+   `DevStg-Tests`, and `ex-draft` is a MIN that includes it, so neither the bar
+   nor the floor can reach `DevStg-Impl` — where `format`/`lint`/`tests+coverage`
+   are tagged. Those three therefore gate on **no adopter's push or pull
+   request**, draft or no draft; only the tag path forces `--gate all`. The floor
+   is DORMANT for them until this is ruled (recommendation: re-tag to
+   `{DevStg-Tests, DevStg-Impl}` as the interim, harness driver as the terminus).
+   `test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so` fails
+   the day either half moves, so arming is an act rather than a drift.
+2. **The spine amendment, deferred as the sitting's act.** `SR-006` is the
+   requirement home ("shall run the required steps of *the gate that must next be
+   passed*") and `LLR-060` its design row. Both are **Approved**, and the floor
+   makes `SR-006`'s shall incomplete rather than wrong; amending an Approved cell
+   overrides attestation (the `SR-158` precedent, which left `LLR-014`/`TC-014`
+   re-points owed for exactly this reason). No spine row was minted or amended
+   here. Until it is taken, the built behaviour is ahead of its requirement.
+3. **No TC covers the floor**, following from 2 — the guards exist in `tests/`
+   but nothing in the trace registry claims them, so the coverage join does not
+   see this work.
+4. **The rehearsal this repo cannot give itself.** Its own `ex-draft` reads
+   `DevStg-Reqs` (nine Approved SRs undecomposed — the declared orphans debt), so
+   no floor engages here and the change is unobservable from the meta-repo's own
+   CI. The scaffold fixture is the cheapest place to add a rehearsal if `OI-51`
+   is ruled (a).

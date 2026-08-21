@@ -2348,6 +2348,40 @@ so a spine id in a string literal counts as a carrier — an error that can only
 RAISE your score, never lower it). Your `docs/process.toml` VALUE is yours; only
 the kit's commentary moved.
 
+### Product checks no longer fall when you draft a requirement [since aa46953e]
+
+*(Anchored at the PRECEDING commit — this entry ships with the change itself.)*
+
+**Kit-owned file — overwrite it and move on:** `scripts/check.py`. **What
+changes for you:** a repo whose spine is mature can no longer lose its
+**product-layer** checks by adding one `Drafted` row.
+
+The derived bar is a MIN over every in-scope spine row, so one ordinary draft
+requirement drops it to what a fresh scaffold shows — and `ci/check.yml` runs
+`check.py` at exactly that value on every push and pull request. Product checks
+were riding that same number, so *planning work suspended regression detection
+for already-built code*. Now `check.py` selects product-layer steps at
+`max(derived bar, ex-draft)`, where `ex-draft` is the same arithmetic with the
+pending rows removed — already on your `docs/gate` `# basis:` line. Maturity
+checks are untouched: they still fall with the bar, because that fall is the
+new-phase signal.
+
+**Which steps this covers:** everything at `layer = product` — `[product]`
+format/lint/test plus each `[step:*]` you declared as product. Process-layer
+steps are unaffected.
+
+**What you may notice:** if you have a `[step:*] layer = product` declared at or
+below the bar your ratified rows have earned, it now **gates** during a draft
+window where it previously ran advisory (warn-only) or not at all. If that step
+has been failing quietly, your first push after this re-sync reds. That is the
+change working: the failure was already there, and the exit code was not
+reporting it. There is deliberately no dial to switch the floor off.
+
+**Nothing in your `docs/` changes.** No registry cell moves, no regeneration is
+needed, and a `docs/gate` written before the `ex-draft=` field existed simply
+gets no floor (the floor abstains rather than guessing) until you next run
+`scripts/derive_gate.py`.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

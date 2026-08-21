@@ -117,8 +117,18 @@ jobs:
 
   # The kit self-adopts its own gated process (IMPROVEMENT_PLAN.md Thread 47): this
   # job runs the kit's OWN check.py at the gate docs/gate declares — the same bar a
-  # contributor runs locally, so CI enforces format · lint · tests+coverage ·
-  # traceability · privacy · doc-navigability · perf-budgets · flows · arch-map.
+  # contributor runs locally.
+  #   WHAT THAT ACTUALLY ENFORCES, corrected 2026-08-20 (WI-473, repo review C-01):
+  # the plan is SELECTED BY THE DERIVED BAR, so this job enforces the steps that
+  # bar carries and NOT a fixed list. At today's DevStg-Reqs that is registry
+  # integrity, derived-gate freshness, vocabulary, need-form, privacy,
+  # doc-navigability, the generator freshness checks and staged divergence.
+  # `format`, `lint` and `tests+coverage` are tagged DevStg-Impl and DO NOT RUN
+  # HERE — a bar this repo cannot currently derive, since OI-30 D2 ceilings
+  # sr_bar at DevStg-Tests. The previous wording claimed all nine unconditionally
+  # and was false in both directions; it read as enforcement that the `test`
+  # matrix job above (the full pytest suite, every OS/py) was actually providing.
+  # A downstream adopter has no such matrix — which is what WI-473 is about.
   # One platform: the matrix above already proves cross-OS/py portability; the gate
   # is a code-quality bar (coverage, lint, trace), not an OS-dependent one.
   gate:

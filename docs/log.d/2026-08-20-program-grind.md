@@ -9,10 +9,10 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: OI-48, OI-49, OI-50 — the running union of the per-section
-declarations below, re-derived as each session closes (the WI-485
+Deferred open items: OI-48, OI-49, OI-50, OI-51 — the running union of the
+per-section declarations below, re-derived as each session closes (the WI-485
 fragment-scope lesson applied from the start). OI-49 and OI-50 joined at the
-WI-455 close.
+WI-455 close; OI-51 at WI-473.
 
 ### WI-448 — the common-module inversion (opus worker) — SLICE landed, row stays active
 
@@ -430,11 +430,199 @@ question; the owner-reading question for `Consumes` rows that its close
 surfaced is wi455's to file (it is not yet a numbered `OI-###` row), and this
 session deliberately did not decide it.
 
+### WI-473 — the monotonic product-regression floor (opus worker) — SLICE landed, row stays QUEUED
+
+**Slice 1 of a design+build row.** The mechanism is built, proven and documented;
+the row does NOT close, because building it surfaced that the finding it
+executes names the wrong binding constraint, and the constraint that IS binding
+is an owner ruling. Spec Context now carries the four owed items with their
+blockers named. Design record:
+[../plans/2026-08-20-product-regression-floor.md](../plans/2026-08-20-product-regression-floor.md).
+
+Deferred open items: OI-51 — which bar the three built-in product checks belong
+at, now that DevStg-Impl is unreachable from the derived selector.
+
+**THE FINDING THAT CHANGED THE ROW, measured rather than inherited.** C-01 says
+one draft row "removes all product-code checks" from CI. Probed against the
+tree, that is half right and the missing half matters twice over.
+
+- What a draft actually does: `format`/`lint` degrade from GATING to **advisory**
+  (WI-336's warn-only tier already re-runs them), and `tests+coverage` stops
+  running altogether (`ADVISORY_EXCLUDE`). So the fix is *promote what already
+  runs*, not *schedule what does not*.
+- What is actually binding: **`DevStg-Impl` is unreachable from the derived
+  selector at all.** OI-30 D2 ceilings `derive_gate.sr_bar` at `DevStg-Tests`
+  ("unreachable from a status cell until a harness driver computes the release
+  bar from test evidence"), and `ex-draft` is a MIN that includes `sr_bar`. The
+  three built-in product steps are tagged `{DevStg-Impl}` only. **So they gate on
+  no adopter's push or pull request, draft or no draft** — only the tag path
+  forces `--gate all` (`ci/check.yml:89`). The draft mechanism C-01 describes is
+  real; it is simply not what is stopping the three checks the finding is about.
+
+That is a refutation of the finding's FRAMING, not of the finding — the silent
+green is worse than reported. It is also why no built-in got re-tagged here: a
+builder quietly moving three gate tags would be overturning an owner ruling's own
+enumeration by side effect. `OI-51` carries it with a recommendation.
+
+**What shipped.** `check.py` gains `product_floor()` (reads `ex-draft=` off the
+`# basis:` line it already parses for `window_open`), `floor_plan()`,
+`floor_notice()` and `resolve_plan()`. Product-LAYER steps are now selected at
+`max(derived bar, ex-draft)`; maturity checks stay on the derived bar untouched.
+Plus `PROCESS_OPTIONS.md`'s statement of the rule, a `RESYNC_PACK.md` §3 adopter
+entry, and the corrected root workflow claim.
+
+**The design decision, and why it is not a stored high-water mark.** The floor is
+DERIVED — the same MIN arithmetic with the pending rows removed. Three reasons,
+and the first is the strongest: **`PROCESS.md` §4 already pre-authorized exactly
+this shape** — *"if a monotonic reading is wanted it is a second, derived
+high-water number shown BESIDE the honest one, never instead"* — and
+`derive_gate.compute` already ruled the axis against new state (excluding the
+drafts recovers a mature spine's maturity *"WITHOUT history or a stored
+high-water"*, WI-341). A derived value also cannot be gamed by deleting the file
+that holds it, and `derive_gate --check` already guards the cache at every bar.
+
+**Monotonicity stated precisely rather than claimed loosely**, because the
+overclaim was available and this repo keeps catching it: the floor is monotonic
+against **drafting**, the act C-01 names, and nothing wider. Demoting a ratified
+row or approving one below the spine's min still lowers it — both REVIEWED
+human-held spine acts, visible as a changed `ex-draft=` in a tracked derived
+file. That visibility IS the sanction for a deliberate lowering; no new
+re-stamp file and, deliberately, no dial that turns the floor off (a switch that
+suspends real checks is a sanctioned check by another name).
+
+**The review's other suggestion was rejected on a measurement.** "Infer the
+floor from configured product commands" cannot ship default-on: `BUILTIN_PRODUCT`
+gives EVERY scaffold configured commands from minute one, so it would fire on a
+fresh repo with no source — `pytest` on an empty tree exits 5 and every new
+adopter's first CI run reds. A configured command is intent, not a cleared bar.
+
+**The fixture the review asked for, built on the PRODUCER.**
+`test_one_drafted_row_does_not_lose_an_established_product_check` makes a mature
+scaffold, runs the real `derive_gate`, adds ONE Drafted SR, re-derives, and
+asserts the bar dropped (`DevStg-Tests` -> `DevStg-Reqs`) while `ex-draft` held
+and the established product check stayed in the GATING plan. Hand-writing a
+basis line would have asserted nothing about a field rename disarming the floor —
+the D-9 precedent.
+
+**Its control assertion was WRONG on the first run, and the correction is the
+better claim.** The draft was expected to LOSE `traceability`; it does not — the
+advisory tier demotes it to warn-only, and `--list` prints both tiers, so the
+naive combined-text assertion failed. The two axes are therefore not "kept versus
+dropped" but **kept AT THE BAR versus demoted to advisory**, and the test now
+splits the output to say so. Read only as combined text, it would have passed a
+floor that promoted everything.
+
+**The dormancy is PINNED, not just noted.**
+`test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so` asserts
+both halves — the ceiling is still `BAR_TESTS`, the three built-ins are still
+`{DevStg-Impl}`-only — and fails the day either moves. `derive_gate`'s own
+ceiling comment says its removal must be *"an act rather than a drift"*; arming
+this floor is now part of that act. Without this the next reader would take
+C-01 as closed by a mechanism that cannot reach it.
+
+**Two decompositions instead of a complexity re-stamp, both measured.** A nested
+`steps_at` def took `main` 16 -> 17 (ruff's C901 counts a nested function into
+its enclosing one). Rather than bump a pinned digit, `resolve_plan` lifts the
+whole three-tier construction out of `main` — where the ORDER is the load-bearing
+part (floor folded in BEFORE the advisory tier is built, or a promoted step runs
+twice) — and `floor_notice` returns a newline-terminated string so its caller
+needs no branch. Measured after: `main` is EXACTLY 16 again, so
+`test_complexity_ratchet` is untouched.
+
+**No spine row was minted or amended, deliberately.** `SR-006` is the requirement
+home ("shall run the required steps of *the gate that must next be passed*") and
+`LLR-060` its design row; both are **Approved**, and the floor makes `SR-006`'s
+shall incomplete rather than wrong. Amending an Approved cell overrides
+attestation — the sitting's act, on the `SR-158` precedent that left
+`LLR-014`/`TC-014` re-points owed for this same reason. So the built behaviour is
+ahead of its requirement and no TC claims it; both are on the owed list rather
+than quietly absent. Minting a Drafted LLR under `SR-006` was considered and
+declined: it would state what its Approved parent does not authorize, and
+`SR-006` is phase 1 — the WI-448 lesson (a Drafted child drags its parent's whole
+phase down) would have moved an unrelated gate to dodge an amendment.
+
+**This repo cannot rehearse its own fix, and that is worth saying plainly.** Its
+`ex-draft` reads `DevStg-Reqs` (nine Approved SRs undecomposed — the declared
+orphans debt), so no floor engages here and nothing in this change is observable
+from the meta-repo's own CI. The gap has never bitten here only because the
+`test` matrix job runs the full pytest suite independently — which is exactly
+what a downstream adopter does not have, and exactly why the root workflow's
+enforcement comment (claiming all nine checks unconditionally) read as
+enforcement the matrix was actually providing. Corrected.
+
+**Line endings.** Checked BEFORE trusting any byte count
+(`git ls-files --eol`): the three `byte-budget-guard/SKILL.md` copies were
+already CRLF in the working tree (the banked ~47-file residue); the scripted
+re-stamp preserved their existing endings and then normalized all three to LF, so
+the files this session touched leave it cleaner than they were found. Everything
+else this session wrote is LF.
+
+**Byte deltas, one line per touched budgeted file:**
+`project-trajectory/PROCESS_OPTIONS.md` 174,309 -> 175,330 (**+1,021**, watched,
+FLAGGED and re-stamped in all three skill copies) — the derived-gate section
+gains the floor's selection rule, what monotonicity is not being claimed, and
+why no off-dial ships; the argument and the rejected alternatives stayed out, in
+the design record. No capped file was touched.
+
+**Gates.**
+
+- smoke: `1249 passed, 5 skipped in 58.16s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=aa46953e-dirty -->
+  Five new tests (1244 -> 1249), all in the commit bar by default; the tier's
+  declared `max-tests = 1258` is not reached and NOT re-stamped. Under this box's
+  60 s ceiling this once, which is one reading and not evidence the budget is
+  comfortable — the same box logged 54.9 / 64.0 / 55.7 earlier today.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1326 intra-repo link(s), 0 broken (1 orphan warning(s))`
+  (960 -> 961: the design record, linked from the spec.)
+- `trace.py --strict-integrity`: exit 0, integrity=0, interface-findings=0 —
+  run before and after minting `OI-51`, and the watermark raised through the
+  GENERATOR (`trace.py --bump-ids`, `OI 50 -> 51`) rather than by hand, since
+  `docs/id-watermark` says do-not-hand-edit and its basis line would otherwise
+  have gone stale.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
 findings accumulate below as list items)_
 
+- (WI-473 worker — the biggest one, and it is NOT scoped to WI-473) **an owner
+  ruling's "this relaxes nothing" enumeration missed the harness's own step
+  SELECTION, and nothing in the repo would have reported it.** OI-30 D2
+  ceilinged `sr_bar` at DevStg-Tests and reasoned it through explicitly:
+  "every consumer of DevStg-Impl was enumerated before the ruling — harness
+  strictness selection, the rung-6/7 stage record, the release checklist — and
+  every one is monotone-stricter in the bar. Withholding the top bar therefore
+  withholds ESCALATION and relaxes no check that was running." The counterexample
+  is the first item in its own list: withholding DevStg-Impl from the SELECTOR
+  does not decline to escalate, it withdraws the three product steps that were
+  only ever scheduled there. Invisible from this repo (nothing here had reached
+  DevStg-Impl, and the CI matrix runs the whole suite regardless), live for any
+  adopter with a decomposed spine. The class, which is what makes it worth
+  banking: **a "no consumer is affected" enumeration is a claim about a
+  dependency graph that nothing checks**, and this one was written by the same
+  session that made the change. A cheap mechanization exists for exactly this
+  case — the step table already declares its bars, so "which steps become
+  unreachable if bar X is never derived?" is a query, not an audit.
+- (WI-473 worker) **ruff's C901 counts a NESTED FUNCTION into its enclosing
+  one, so extracting a helper INTO a function raises the number that extraction
+  is supposed to lower.** Hit live: adding a three-line `def steps_at(g)` inside
+  `main()` took it 16 -> 17 and reddened the complexity ratchet, while moving
+  the same code to module level took it back to exactly 16. The trap is that the
+  instinctive fix for "this expression is repeated" is a local def, and here that
+  is the one shape the ratchet punishes. Worth a sentence wherever the ratchet's
+  rule is stated ("decompose rather than re-stamp" — decompose OUTWARD, not
+  inward), because the next author will reach for the same local def.
+- (WI-473 worker) **`--list` prints the gating and advisory tiers into one
+  stream, and a test that greps the combined text cannot tell "at the bar" from
+  "warn-only".** This session's first fixture asserted a process step was LOST to
+  a draft; it is not lost, it is demoted, and the naive assertion failed for the
+  right reason only by luck — the reverse mistake (asserting a step IS present)
+  would have passed while the step was merely advisory, which is precisely the
+  false green the advisory tier's own marker exists to prevent. The output does
+  mark advisory rows in the SUMMARY (`[advisory — not gating]`); `--list`'s
+  section header is the only separator, so any programmatic reader must split on
+  it. A machine-readable `--list` (or a marker per line, as the summary has)
+  would remove a whole class of test that passes for the wrong reason.
 - (WI-455 worker — a CLASS, not a one-off) **a mechanical re-pointing pass
   that rewrites CELLS and not PROSE leaves each row contradicting itself, and
   nothing catches it.** WI-441 retired CMP-001..005 and re-pointed 149 LLR +

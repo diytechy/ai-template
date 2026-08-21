@@ -1229,6 +1229,153 @@ def window_open(gate_file=None):
     return top >= _window_ord(BAR_TESTS) and top > _window_ord(computed.group(1))
 
 
+def product_floor(gate_file=None):
+    """The bar the PRODUCT-layer steps are selected at, which is NOT allowed to
+    fall just because a row was drafted. Returns a bar name, or None for "no
+    opinion" (no gate file, no `# basis:` line, an unreadable `ex-draft=`).
+
+    THE DEFECT (repo review 2026-08-19 C-01, WI-473). The derived bar is a MIN
+    over every in-scope row, so ONE ordinary draft requirement drops a mature
+    project's bar to what a fresh scaffold displays — and the shipped downstream
+    workflow runs `check.py` at exactly that value. Measured rather than
+    inherited from the finding: `format`/`lint` degrade from GATING to advisory
+    (`advisory_plan` re-runs them warn-only) and `tests+coverage` stops running
+    at all (`ADVISORY_EXCLUDE`). Either way the exit code stops reflecting
+    whether the already-built code still works — the silent green SN-008 forbids.
+
+    THE TWO AXES, which is the whole design. "Is the spine mature enough for this
+    bar?" (a draft genuinely lowers it — that IS the new-phase signal) is a
+    different question from "does the code that already exists still build, lint
+    and pass its tests?" (drafting says NOTHING about that). Maturity checks stay
+    on the derived bar, untouched; product checks get this floor.
+
+    WHY `ex-draft` AND NOT A STORED HIGH-WATER MARK. It is the same MIN
+    arithmetic over the spine with the pending rows removed, already computed and
+    already parsed here for `window_open`; process.md §4 pre-authorizes exactly
+    this shape ("a second, derived high-water number shown BESIDE the honest one,
+    never instead"); and `derive_gate.compute` already ruled the axis against new
+    state — excluding the drafts recovers a mature spine's maturity "WITHOUT
+    history or a stored high-water" (WI-341). A derived value also cannot be
+    gamed by deleting the file that holds it.
+
+    MONOTONIC AGAINST THE ACT C-01 NAMES, and the claim is not widened past that:
+    drafting can never lower this, because drafts are what `ex-draft` removes.
+    It is NOT a universal watermark — demoting a ratified row, or approving one
+    less mature than the spine's min, lowers it. Both are REVIEWED human-held
+    spine acts that surface as a changed `ex-draft=` in a tracked derived file,
+    which is how a deliberate lowering is sanctioned. Whether the second case
+    should instead be held by a true watermark is OI-51.
+
+    Deliberately NOT inferred from "product commands are configured" (the
+    review's other suggestion): BUILTIN_PRODUCT gives EVERY scaffold configured
+    commands from minute one, so that rule fires on a fresh repo with no source —
+    `pytest` on an empty tree exits 5 and every new adopter's first CI run reds.
+    A configured command is a statement of intent, not evidence of a cleared bar.
+
+    Full design record: docs/plans/2026-08-20-product-regression-floor.md."""
+    path = Path(gate_file) if gate_file else GATE_FILE
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if not _BASIS_RE.search(text):
+        return None  # a hand-written or pre-derived gate file: no opinion
+    m = _EX_DRAFT_RE.search(text)
+    # An `ex-draft` of `DevStg-Below` (or a value this build does not know) is
+    # NOT floored up to DevStg-Reqs the way the runnable bar is: a floor must
+    # never be manufactured from a level the spine has not shown, so anything
+    # outside the real bar ladder reads as no opinion.
+    if not m or m.group(1) not in BAR_ORDER:
+        return None
+    return m.group(1)
+
+
+def floor_plan(gate, plan, floor, steps_at):
+    """The PRODUCT-layer steps the floor holds in the gating plan that the
+    derived bar would have dropped — i.e. the product half of the plan this repo
+    would have had at its RATIFIED maturity, restored.
+
+    Built by ASKING `steps()` for the floor bar's own table (`steps_at`), never
+    by filtering this gate's — the same construction, and the same reason, as
+    `advisory_plan` (127-REVIEW-A BLOCKER 4: the step table is specialized to the
+    gate it was built for, so a filter can never produce a form the lower gate's
+    table does not contain). No product step is gate-specialized TODAY, so the
+    two constructions agree; asking is what keeps them agreeing if one ever
+    becomes specialized.
+
+    Selection is MEMBERSHIP at the floor, not "any bar at or below it", because
+    that is how the gate itself selects (`registry-integrity` is tagged
+    `{DevStg-Reqs}` and genuinely does not run at DevStg-Impl). Membership is
+    therefore the rule that reproduces the pre-draft plan exactly, which is the
+    property being restored — nothing more.
+
+    A step already in the gating plan under the same name is skipped: the floor
+    restores steps, it never runs one twice."""
+    if gate == "all" or not floor or bar_ord(floor) <= bar_ord(gate):
+        return []
+    have = {name for name, _r, _c, _g, _l in plan}
+    return [
+        step
+        for step in steps_at(floor)
+        if step[4] == "product" and floor in step[3] and step[0] not in have
+    ]
+
+
+def resolve_plan(gate, coverage, tier, phase, profile):
+    """Everything this invocation will run: `(plan, held, floor, advisory)`.
+
+    The three tiers are built HERE rather than in `main()` because their order is
+    load-bearing and easy to get wrong from a distance:
+
+    1. the gating plan the derived bar selects;
+    2. the PRODUCT-REGRESSION FLOOR (`floor_plan`), PREPENDED — product steps
+       lead the plan everywhere else, and `_clear_stale_coverage_report` scans
+       the gating plan for the coverage producer the floor may have just put
+       back into it;
+    3. the advisory tier, built from the plan AFTER the floor has been folded in,
+       so a step the floor restored to the bar is not ALSO run warn-only. One
+       step, one verdict.
+
+    Extracted rather than inlined for a second, stated reason: `main()`'s C901
+    complexity is pinned to the digit by tests/test_complexity_ratchet.py, and
+    this repo's rule is to decompose rather than re-stamp the ratchet."""
+
+    def steps_at(g):
+        """The step TABLE at another bar — the constructor both the floor and
+        the advisory tier need, each building from the other bar's own table
+        rather than by filtering this one (advisory_plan's BLOCKER-4 lesson)."""
+        return steps(coverage, tier, g, phase, profile)
+
+    plan = [s for s in steps_at(gate) if gate == "all" or gate in s[3]]
+    floor = product_floor()
+    held = floor_plan(gate, plan, floor, steps_at)
+    plan = held + plan
+    return plan, held, floor, advisory_plan(gate, plan, steps_at)
+
+
+def floor_notice(floor, held):
+    """The one sentence that explains why a step tagged for a HIGHER bar is
+    sitting in this bar's gating plan, or "" when the floor held nothing.
+
+    Disclosure is not decoration here. Without it `--list` prints a step tagged
+    `[DevStg-Impl]` inside a `DevStg-Reqs` plan with nothing saying why, which
+    reads as a bug in the very tool whose job is to be believable. One printer,
+    used by both `--list` and the run summary, so the two cannot drift.
+
+    Returns "" (not None) NEWLINE-TERMINATED when non-empty, so both callers can
+    `sys.stdout.write` it unconditionally — `main()`'s C901 complexity is pinned
+    to the digit by tests/test_complexity_ratchet.py, and a disclosure line is
+    not a reason to spend a re-stamp on the ratchet."""
+    if not held:
+        return ""
+    return (
+        "Product-regression floor {}: {} product step(s) stay at the bar the "
+        "RATIFIED spine earned ({}) — drafting a row lowers the derived gate, "
+        "never these.\n".format(
+            floor, len(held), ", ".join(name for name, _r, _c, _g, _l in held)
+        )
+    )
+
+
 def run_advisory(advisory, jobs, lane_map):
     """Run the warn-only tier and return its results ([] when there is none).
 
@@ -2106,16 +2253,14 @@ def main():
         missing_tool_banner(_skipped_product_steps(results, by_name))
         sys.exit(1 if any(status == "FAIL" for _n, status, _d in results) else 0)
 
-    all_for_gate = steps(coverage, args.tier, gate, args.phase, profile)
-    plan = [s for s in all_for_gate if gate == "all" or gate in s[3]]
-    # The higher gate's OWN table, not a filter of this one — see advisory_plan.
-    advisory = advisory_plan(
-        gate, plan, lambda g: steps(coverage, args.tier, g, args.phase, profile)
+    plan, held, floor, advisory = resolve_plan(
+        gate, coverage, args.tier, args.phase, profile
     )
 
     if args.list:
         print("Plan for gate {} (tier {}):".format(gate, args.tier))
         _print_steps(plan)
+        sys.stdout.write(floor_notice(floor, held))
         # The advisory tier is part of what this invocation WILL run, so --list
         # must show it or the option lies (128-REVIEW-A MINOR 5: a real window
         # listed only the weaker DevStg-Tests traceability while the run executed the DevStg-Impl
@@ -2145,6 +2290,7 @@ def main():
 
     print("\n" + "=" * 56)
     print("Check summary (gate {}, tier {}):".format(gate, args.tier))
+    sys.stdout.write(floor_notice(floor, held))
     # One loop over both tiers. Advisory rows carry their marker in the DETAIL
     # column — never the bare status word, because an "ADVISORY FAIL" that reads
     # like a FAIL in a scanned log is how a warn-only tier is mistaken for the bar.

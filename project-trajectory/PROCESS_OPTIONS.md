@@ -202,6 +202,20 @@ a pending ratification** triggers it. The test/coverage step stays out (the
 commit bar already runs the suite, so it is not a blind spot, and re-running it
 every gate run for the life of a window buys nothing).
 
+**And a product check does not fall at all.** Advisory is right for *maturity*
+checks; "does the code that already exists still build, lint and pass?" is a
+different question that drafting says nothing about. So `check.py` selects
+**product-layer** steps (`docs/stack.ini`'s `[product]`, plus each `[step:*]
+layer = product`) at `max(derived bar, ex-draft)` — the bar the *ratified* rows
+earned, which drafting cannot lower. This is the second derived number §4 allows
+*beside* the honest one: nothing is stored, the same arithmetic is re-run with
+the pending rows removed. Not a universal high-water mark — demoting a ratified
+row, or approving one below the spine's minimum, still lowers it; both are
+reviewed human-held acts visible as a changed `ex-draft=` in a tracked derived
+file, and that visibility is the sanction for a deliberate lowering. There is
+deliberately **no** dial that turns the floor off. The run names the steps it
+holds, so a step tagged for a higher bar never sits in the plan unexplained.
+
 **Drafted artifacts live in the live spine** (§4) — the exemption in detail: a
 Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'s
 child-completeness orphan rules), so a requirement is drafted in the live
