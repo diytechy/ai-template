@@ -1793,9 +1793,10 @@ def run_interactive(
 
 
 def _subagent_gate_log_count(root):
-    """Line count of `out/subagent-gate.log` (one decision per line: allow,
-    ask, deny, or the fail-open "gate error, failing open" entries) — 0 if the
-    file was never written, i.e. the gate never fired. `subagent_gate.py`
+    """`(decisions, fail_open)` from `out/subagent-gate.log` — one decision per
+    line (allow, ask, deny, or a fail-open "gate error, failing open" entry),
+    and how many of those lines are the fail-open kind. `(0, 0)` if the file was
+    never written, i.e. the gate never fired. `subagent_gate.py`
     writes the file but nothing read it before OI-46 ruled (2a) (2026-08-20):
     a write nobody reads is a record only in name, so `print_run_banner`
     below surfaces this count on every unattended launch (WI-491).
@@ -1809,9 +1810,15 @@ def _subagent_gate_log_count(root):
     path = Path(root) / "out" / "subagent-gate.log"
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as handle:
-            return sum(1 for _ in handle)
+            lines = handle.readlines()
     except OSError:
-        return 0
+        return 0, 0
+    # FAIL-OPEN LINES COUNTED SEPARATELY (2026-08-21 review, m-32). OI-46 (2a)
+    # asked for the fail-open allows to be VISIBLE, and a single total cannot
+    # do that: a log of 500 routine allows plus one fail-open reads exactly
+    # like 501 routine allows. The reason string `subagent_gate.log_decision`
+    # writes for that arm is the discriminator — "gate error, failing open".
+    return len(lines), sum(1 for ln in lines if "failing open" in ln)
 
 
 def print_run_banner(
@@ -1868,12 +1875,14 @@ def print_run_banner(
         "vendored core is injected per session when the policy selects that "
         "session's model)".format(guardrails_policy)
     )
-    gate_log_count = _subagent_gate_log_count(root)
+    gate_log_count, gate_fail_open = _subagent_gate_log_count(root)
     if gate_log_count:
         print(
-            "subagent-gate: {} decision(s) recorded in out/subagent-gate.log "
-            "(allow/ask/deny + fail-open-on-error; OI-46 (2a), WI-491 — read it "
-            "if that count looks high)".format(gate_log_count)
+            "subagent-gate: {} decision(s) recorded in out/subagent-gate.log, "
+            "{} of them FAIL-OPEN (a gate error let the spawn through) — "
+            "OI-46 (2a); read the log for those first".format(
+                gate_log_count, gate_fail_open
+            )
         )
     print("agent command: {}".format(template))
     for ph in sorted(cmd_map):

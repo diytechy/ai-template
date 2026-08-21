@@ -242,10 +242,19 @@ def test_the_graph_sees_imports_inside_function_bodies():
     deferred = sum(
         1 for edges in graph.values() for kind in edges.values() if kind == "function"
     )
-    assert deferred >= 3, (
-        "expected the kit's known deferred imports in the graph, saw {}".format(
-            deferred
-        )
+    # A STAMPED WINDOW, not a floor of 3 (2026-08-21 review, m-30). The tree
+    # carries 20 deferred edges; a `>= 3` corroborator would survive an 85%
+    # loss of detection, which is not a sensor. The window is wide enough that
+    # ordinary work does not touch it and narrow enough that a walker
+    # regression cannot hide: measured 20 at 2026-08-21, re-stamp deliberately
+    # with the reason in the log when the number legitimately moves.
+    assert 14 <= deferred <= 26, (
+        "deferred function-body imports read {}, outside the stamped window "
+        "14..26 (measured 20 at 2026-08-21). A COLLAPSE means the walker "
+        "stopped descending into function bodies and every cycle measured in "
+        "this file is understated — fix the walker, do not re-stamp. A rise "
+        "means the deferred-import population grew, which is the coupling "
+        "WI-483 is paid to reduce: re-stamp only with the reason.".format(deferred)
     )
 
 

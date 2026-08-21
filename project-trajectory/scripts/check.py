@@ -2097,7 +2097,10 @@ def main():
         metavar="{" + ",".join(GATES) + "}",
         default=None,
         help="the stage whose bar to run — the stage being CLEARED, not the one "
-        "in work (default: the derived value in docs/gate, else all). The "
+        "in work (default: the derived value in docs/gate, else all). NOTE: "
+        "product-layer steps are still selected at max(this bar, the ex-draft "
+        "floor read from docs/gate), so passing a LOWER bar does not drop them "
+        "— by design, there is no dial that turns the floor off. The "
         "retired G1/G2/G3 and DevBar-* spellings are accepted as aliases and "  # check_vocab: allow
         "warn; `--gate` is accepted silently as the prior flag name.",
     )

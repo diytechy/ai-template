@@ -388,6 +388,11 @@ def test_subagent_gate_log_tail_surfaced_in_banner(loop_repo):
     assert (
         "subagent-gate: 2 decision(s) recorded in out/subagent-gate.log" in proc.stdout
     )
+    # The fixture holds ONE fail-open line among the two, and the banner says so
+    # separately: OI-46 (2a) asked for the fail-open allows to be visible, and a
+    # total alone cannot distinguish 500 routine allows + 1 from 501 routine
+    # allows (2026-08-21 review, m-32).
+    assert "1 of them FAIL-OPEN" in proc.stdout
 
 
 def test_subagent_gate_log_absent_stays_silent_in_banner(loop_repo):
@@ -402,16 +407,31 @@ def test_subagent_gate_log_absent_stays_silent_in_banner(loop_repo):
     assert "subagent-gate:" not in proc.stdout
 
 
-def test_subagent_gate_log_filename_matches_the_writer():
+def test_subagent_gate_log_filename_matches_the_writer(tmp_path):
     # agent_loop._subagent_gate_log_count reads a LITERAL "subagent-gate.log"
     # rather than importing subagent_gate.LOG_NAME (a new CMP-008 -> CMP-007
-    # seam for one string is not worth declaring) -- this pins the literal
-    # against the module that actually writes the file, so a rename on either
-    # side reds here instead of drifting silently.
+    # seam for one string is not worth declaring), so the two sides need
+    # pinning together.
+    #
+    # BEHAVIOURALLY, not by reading the source (2026-08-21 review, m-28). The
+    # old form asserted a formatting-sensitive substring of
+    # `inspect.getsource`, which pins how the line is WRAPPED rather than what
+    # it does -- and `tests/test_module_size_ratchet.py` records a `ruff format`
+    # unwrap springing that exact trap twice in this batch. Let the writer write
+    # and the reader count: a rename on either side then fails because the
+    # count is wrong, which is the fact that matters.
     subagent_gate = load_script("subagent_gate")
     al = load_script("agent_loop")
-    src = inspect.getsource(al._subagent_gate_log_count)
-    assert '"out" / "subagent-gate.log"' in src
+    assert al._subagent_gate_log_count(tmp_path) == (0, 0)  # never written
+    for decision in ("allow", "ask", "deny"):
+        subagent_gate.log_decision(tmp_path, "Task", decision, "test")
+    assert al._subagent_gate_log_count(tmp_path) == (3, 0)
+    # ...and a FAIL-OPEN entry is counted apart from the routine ones, which is
+    # the single event OI-46 (2a) wanted surfaced and a bare total cannot show.
+    subagent_gate.log_decision(tmp_path, "?", "allow", "gate error, failing open: boom")
+    assert al._subagent_gate_log_count(tmp_path) == (4, 1)
+    # ...and it is THAT file the reader counted, under the writer's own name.
+    assert (tmp_path / "out" / subagent_gate.LOG_NAME).is_file()
     assert subagent_gate.LOG_NAME == "subagent-gate.log"
 
 

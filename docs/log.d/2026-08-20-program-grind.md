@@ -62,7 +62,7 @@ run at both revisions:
 | | groups | redundant copies | redundant lines |
 |---|---|---|---|
 | before (`b94bf58c`) | 24 | 67 | 757 |
-| after | 17 | 48 | 477 |
+| after (`46de9442`, the slice's own commit) | 17 | 48 | 477 |
 
 What it does, in readable form — hash each function's body with its docstring
 stripped, keep bodies of 4+ lines, and count the groups with more than one
@@ -88,7 +88,15 @@ dups = [v for v in groups.values() if len(v) > 1]
 <!-- fig: cmd="python -c 'import ast,hashlib,pathlib,collections;P=bytes([112,114,111,106,101,99,116,45,116,114,97,106,101,99,116,111,114,121,47,115,99,114,105,112,116,115]).decode();G=bytes([42,46,112,121]).decode();C=bytes([95,95,112,121,99,97,99,104,101,95,95]).decode();B=lambda n:(n.body[1:] if n.body and isinstance(n.body[0],ast.Expr) and isinstance(n.body[0].value,ast.Constant) and isinstance(n.body[0].value.value,str) else n.body);g=collections.defaultdict(list);[g[hashlib.sha1(chr(10).join(map(ast.dump,B(n))).encode()).hexdigest()].append(n.end_lineno-n.lineno+1) for p in sorted(pathlib.Path(P).rglob(G)) if C not in p.parts for n in ast.walk(ast.parse(p.read_bytes())) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and B(n) and n.end_lineno-n.lineno+1>=4];d=[v for v in g.values() if len(v)>1];print(len(d),sum(len(v)-1 for v in d),sum(sum(v[1:]) for v in d))'" rev=b94bf58c -->
 
 Run from the repo root at each revision; both figures above were produced by
-that exact command. Read the numbers honestly: the population is
+that exact command, the `after` row at `46de9442` rather than at the `rev=`
+of the marker above it — which names the BEFORE revision, and is corrected
+here rather than left to be read as covering both (2026-08-21 review, m-23):
+
+The same command re-run at the batch close reads **17 / 48 / 484** — seven
+redundant lines accrued after the slice closed, which is the honest state of
+the number today and not a regression in the slice's own work:
+
+<!-- fig: cmd="python -c 'import ast,hashlib,pathlib,collections;P=bytes([112,114,111,106,101,99,116,45,116,114,97,106,101,99,116,111,114,121,47,115,99,114,105,112,116,115]).decode();G=bytes([42,46,112,121]).decode();C=bytes([95,95,112,121,99,97,99,104,101,95,95]).decode();B=lambda n:(n.body[1:] if n.body and isinstance(n.body[0],ast.Expr) and isinstance(n.body[0].value,ast.Constant) and isinstance(n.body[0].value.value,str) else n.body);g=collections.defaultdict(list);[g[hashlib.sha1(chr(10).join(map(ast.dump,B(n))).encode()).hexdigest()].append(n.end_lineno-n.lineno+1) for p in sorted(pathlib.Path(P).rglob(G)) if C not in p.parts for n in ast.walk(ast.parse(p.read_bytes())) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and B(n) and n.end_lineno-n.lineno+1>=4];d=[v for v in g.values() if len(v)>1];print(len(d),sum(len(v)-1 for v in d),sum(sum(v[1:]) for v in d))'" rev=2bd0ed61 --> Read the numbers honestly: the population is
 identical-after-docstring-stripping function BODIES of 4+ lines under
 `project-trajectory/scripts/`, so it counts EXACT clones and is blind to a
 DIVERGED copy — which is the dangerous kind, and the reason the retired
@@ -341,7 +349,7 @@ edit on this box introduces CRLF unless it writes bytes.
 
 ### WI-469 — Consumes rows that name the medium (sonnet worker) — CLOSED
 
-**Full row, not a slice.** All 27 SR-owned file-as-endpoint `Consumes` rows
+**Full row, not a slice.** All 26 SR-owned file-as-endpoint `Consumes` rows
 in `docs/requirements/interfaces.toml` re-authored, each landing in one of
 the ruling's two shapes; spec moved to `docs/work/complete/`. No `status`,
 `direction`, `owner`, or `contract` cell touched anywhere — only
@@ -1490,8 +1498,11 @@ ruling — every touched docstring/comment stopped presenting (a)/(b) as an
 open question and started stating the ruled shape, with OI-45 cited as the
 record. Spec moved to `docs/work/complete/`.
 
-Deferred open items: none — OI-45 is fully executed by this row; no new
-question surfaced.
+Deferred open items: none — this row fully executes the ruling it was filed
+against (named in the section body), and no new question surfaced. The
+ruled id is deliberately not on the declaration line: the parser harvests
+every OI id in the payload, so a citation there reads as a deferral (the
+2026-08-21 review's m-24).
 
 **What moved, all docstring/comment-only, zero executable lines.**
 `intake.flip_verified`'s "what the `flip` arm still has to move" paragraph
@@ -1628,8 +1639,8 @@ f3cb9801]`): a present-but-broken `docs/process.toml` now defers subagent
 spawns instead of silently allowing them when `[checks] subagent_gate` is
 opted in.
 
-Deferred open items: none — OI-46 is fully executed by this row; no new open
-item surfaced.
+Deferred open items: none — this row fully executes the ruling it was filed
+against, and no new open item surfaced.
 
 **Ratchet.** `agent_loop.py` module-size baseline re-stamped 3202 → 3231
 (+29), reason inline in `tests/test_module_size_ratchet.py`.
@@ -1713,8 +1724,8 @@ reasons inline in `tests/test_module_size_ratchet.py`); the last +2 is a
 post-format — the same trap the WI-473/WI-483 entries above record, a third
 time this program.
 
-Deferred open items: none — OI-47 is fully executed by this row; no new open
-item surfaced.
+Deferred open items: none — this row fully executes the ruling it was filed
+against, and no new open item surfaced.
 
 **Gates.** Line endings checked before trusting any count
 (`git ls-files --eol docs/id-watermark docs/requirements/external.toml
@@ -1966,10 +1977,17 @@ findings accumulate below as list items)_
   1). Queued inside `OI-49` rather than fixed, because withdrawing or keeping
   it is the owner's ratification call and not an execution one.
 - (WI-455 worker) **the id watermark's next mint for two spaces lands on SPENT
-  ids, and the only thing preventing it is a prose block.** `docs/id-watermark`
-  reads `B = 7` and `EXT = 5` while `B-06`, `B-07` and `EXT-004` were allocated
-  and then CUT, and are cited by id in ruled documents — so a mint from the
-  mark re-points that history onto different things. `external.toml`'s header
+  ids, and the only thing preventing it is a prose block.** CORRECTED
+  2026-08-21 (review m-25): the ids at risk were **`B-08` and `REL-004`** —
+  the NEXT MINT from marks `B = 7` and `REL = 3` — and the spaces were `B` and
+  `REL`, not `B`/`EXT`. The original bullet cited `B-06`, `B-07` and `EXT-004`,
+  which sit BELOW their marks and were never mintable; the conclusion was right
+  and the evidence named the wrong three ids, which matters because this bullet
+  stood as the closing review's account of the problem. `B-08` and `REL-004`
+  were allocated and then CUT at the 2026-08-13 frame lock and are cited by id
+  in ruled documents — so a mint from either mark re-points that history onto
+  a different thing. WI-492 corrected exactly those two marks to `B = 8` /
+  `REL = 4`, which is also why `EXT` was left alone. `external.toml`'s header
   says so, and also says that correcting a mis-computed seed needs a mechanism
   the kit does not have. Pre-existing and known; surfaced again because `OI-50`
   could require a `B` mint, and if that row is ruled (b) the seed problem must

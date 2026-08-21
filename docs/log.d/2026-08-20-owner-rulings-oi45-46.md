@@ -1,7 +1,11 @@
 ## 2026-08-20 — OI-45 and OI-46 rule; the rowless watermark ruling finally gets its row (OI-47)
 
-Deferred open items: none — OI-47 was minted, twice narrowed, and RULED
-within this same session; the pending queue it entered is empty again.
+Deferred open items: none — the watermark ruling this session is named for
+was minted, twice narrowed, and RULED within this same session; the pending
+queue it entered is empty again. (Re-worded 2026-08-21: the ruled id sat on
+the declaration line, and the parser harvests every id in that line's payload,
+so a citation there read as a deferral of a row the owner had already ruled.
+The id is named in the body immediately below.)
 
 OI-47 is the standing `B`/`REL` watermark mechanism: the decision
 announced on two surfaces (`external.toml`'s SPENT IDS header,

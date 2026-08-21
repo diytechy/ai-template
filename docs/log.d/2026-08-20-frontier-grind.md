@@ -6,7 +6,14 @@ cross-family Sol via codex) at the end, consolidated and iterated in one
 action. One entry per WI as it closes; adjacent findings accumulate at the
 bottom for the closing review.
 
-Deferred open items: OI-45, OI-46 — the two decisions this day ANNOUNCED
+Deferred open items: none — SUPERSEDED 2026-08-21, and the supersession is
+recorded here rather than by deleting the original: this line declared two
+deferrals, both were minted as rows within the day and both were RULED by the
+owner the same day, so nothing declared here is still owed. The ids stay named
+in the prose below (off the declaration line, which is what the parser reads),
+because the account is the point; a declaration that goes on naming a ruled row
+reads to every later session as a question still open, and to the checker as a
+stale deferral. The two were: the decisions this day ANNOUNCED
 without minting a row, found by the closing review (ROUND-OPUS MAJOR-7) as
 OI-41's founding class reproduced on arming day. OI-45: whether any
 mechanical path may ever carry ratification authority now that D-9 step 7

@@ -181,7 +181,7 @@ def test_the_floor_never_runs_a_step_twice(tmp_path):
     )
 
 
-def test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so():
+def test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so(scaffold):
     """THE HONESTY TRIPWIRE, and the most important test in this file.
 
     Measured while building the floor, not inherited from the review: OI-30 D2
@@ -204,6 +204,23 @@ def test_the_floor_is_dormant_for_the_BUILT_IN_product_steps_and_says_so():
     assert derive_gate._RELEASE_CEILING == derive_gate.BAR_TESTS, (
         "the release ceiling moved — re-read OI-51 and arm the product floor "
         "deliberately (see this test's docstring)"
+    )
+    # THE PROPERTY, not only the constant that implements it today
+    # (2026-08-21 review, m-29): a rewritten `sn_bar`, or a changed empty-`srs`
+    # branch in `_raw_level`, could make DevStg-Impl reachable while the
+    # constant still reads BAR_TESTS and this pin stayed green. So drive the
+    # real producer over a FULLY DECOMPOSED spine — the most mature basis a
+    # fixture can present — and assert the ceiling holds there.
+    make_minimal_project(scaffold)
+    computed = derive_gate.compute(scaffold / "docs")
+    assert computed["drafted"] == 0, computed
+    # The fixture must actually be mature, or the ceiling assertion below is
+    # true for the wrong reason (an undecomposed spine cannot reach it either).
+    assert computed["ex_draft"] == derive_gate.BAR_TESTS, computed
+    assert computed["ex_draft"] <= derive_gate.BAR_TESTS, (
+        "ex-draft reached {} on a fully-decomposed spine: DevStg-Impl is now "
+        "derivable, so the floor can reach the three built-ins and OI-51 needs "
+        "reading before this test is re-stamped".format(computed["ex_draft"])
     )
     built_in = {"format", "lint", "tests+coverage"}
     tagged = {s[0]: s[3] for s in _steps_at("DevStg-Impl") if s[0] in built_in}
