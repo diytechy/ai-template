@@ -610,11 +610,230 @@ lives here in the log, which is where a stamp's reasoning belongs anyway.
   only its as-of commit, and `docs/gate` did not move at all (no spine row was
   minted, so no bar, phase or count could).
 
+### WI-483 — the successor decomposition program (opus worker) — SLICE landed, row goes ACTIVE
+
+**Slice 1 of a program row.** Landed to
+`docs/work/active/wi483-core-decomposition/`, not `complete/`: three of the
+program's six shape items are untouched and the hard half of the cycle is
+intact. Spec Context now carries the four owed items and the topology decision.
+
+Deferred open items: none — this slice deliberately minted no owner question,
+and was built so that the one it touches (`OI-48`) stays free to be ruled either
+way. See the topology decision below; that freedom cost one extra spine row and
+is the main design choice of the session.
+
+**The census reproduces the review's exactly, and is now an instrument rather
+than a paragraph.** 7 modules, 12 intra-cycle edges, **4 of them existing only
+inside function bodies** — which is the whole reason the cycle was invisible.
+`tests/test_import_layers.py` builds the AST import graph including
+function-body imports, censuses the strongly connected components against a
+baseline that may only tighten, and separately asserts the layer rule. It ships
+with its own self-test, and that is the part worth defending: a walker that
+quietly stopped descending into function bodies would make every cycle vanish
+and turn the whole file green — the exact failure mode the review describes,
+reproduced inside the instrument built to catch it. A known deferred edge
+(`integrate -> handback`) is pinned present so that regression fails loudly.
+
+**The edge broken, chosen on evidence rather than on the list order.**
+`traj_panels` — a render leaf that writes nothing and must not be able to —
+imported the 2,541-line merge coordinator for **exactly two constants**. That is
+H-02's "the dashboard can drag mutation coordinators into read-only rendering",
+literally, in one import line. So the lane-close terminal-outcome vocabulary
+moved DOWN to `project-trajectory/scripts/kitlib/station.py`: `Outcome` (a `str`
+enum — the review's named "terminal-state enum"), `OUTCOME_DIRS` (immutable),
+`BAR_GREEN`, and `outcome_of`, which is the "exactly ONE declared status
+directory, or none" DECISION lifted out of `integrate.branch_outcomes`. The
+git-tree READ stayed in the coordinator, which is the policy/effect split the
+program asks for, and the consequence is concrete rather than aesthetic: that
+rule is now assertable without building a repo, a branch and a claim first.
+
+**Cutting ONE edge dropped TWO modules: the SCC is 7 -> 5.** Not a coincidence
+worth glossing — `traj_panels`' only route into the component was that constants
+import, and `gen_trajectory`'s only route in was through `traj_panels`. The
+remaining SCC is the lifecycle core proper (`dispatch`, `handback`, `intake`,
+`integrate`, `lane`) and its three back edges are all deferred function-body
+imports carrying real behaviour, not constants. That is the hard half and none
+of it was attempted.
+
+**THE TOPOLOGY DECISION, and it cost a spine row on purpose.** `kitlib/` was the
+right home — `station` is a slot WI-448 NAMED and deliberately left uncreated,
+handing it to this row by name. The live question was the design row. Appending
+`station.py` to `LLR-181`'s `module` cell was one line and was REJECTED:
+`LLR-181` carries the four-way usage tag `OI-48` is open about, and a four-way
+tag SUPPRESSES the cross-component seam rule on every edge of the module. So
+that spelling would have stopped policing the view-to-service seam **at the exact
+moment it was fixed**, and would have spent an unruled owner question to tidy its
+own diff. Instead `LLR-182` was minted Drafted with a SINGLE `CMP-008` tag — a
+claim that is true here in a way it is not for the shared kernel, since every
+module that ships the station flow is CMP-008 — and `IF-093` re-points
+(`counterpart = scripts/kitlib/station`, `owner = LLR-182`), staying a policed
+CMP-009 -> CMP-008 seam. Net effect for the owner: `OI-48` gets a worked data
+point (per-theme ownership is available where a theme has an owner) and is
+**not** pre-empted or widened.
+
+**The parent SR was picked to move no gate, and the WI-448 lesson is why.**
+`SR-144` ("every lane close is a terminal state with an immutable record") is the
+requirement this vocabulary IS — the coordinator's own comment cites it — and it
+is phase 5, where the drafts already sit. `SR-168` was the tempting parent
+(`IF-093`'s own `req_refs`) and is phase 1: a Drafted child under it would have
+dragged phase 1 down, exactly as `LLR-181` did before it was re-grounded.
+Verified, not assumed — `docs/gate`'s regenerated basis line is byte-identical
+on `per-phase`, `stage`, `computed` and `ex-draft`; only `LLR`, `TC` and
+`drafted` moved.
+
+**Verified by BOOTSTRAPPING A REAL SCAFFOLD**, per the standing lesson, because
+MAPPING changed: the package arrived whole (five modules), `kitlib.station`
+imported and answered from the scaffold's own `scripts/`, `integrate`'s
+re-export was the SAME object there, `traj_panels` no longer holds `integrate`
+in its namespace at all, and `check_trajectory` / `trace` / `derive_gate` /
+`gen_trajectory` all ran clean. Read one result honestly: the scaffold's
+dashboard is *vacuously* clean (a fresh scaffold has no work items), so the
+station RENDER is proven by this repo's own regenerated dashboard and by
+`test_traj_panels`, not by the scaffold.
+
+**The mandated first act: the size ratchet has a live debt owner again.** It
+directed active debt to `WI-280` for months after that item closed, and WI-280's
+scope was the dashboard plus `bootstrap.main`, not the baseline. Re-pointed at
+this row in the three NORMATIVE places — the module docstring, the census
+comment, the assertion message. The **51 dated per-entry notes still reading
+"re-stamp down with WI-280" were deliberately left**, and the file now says why:
+each names the log entry that reviewed it, so it is a RECORD, and rewriting a
+dated record to cite an item that did not exist on its date falsifies it. The
+owner is stated once, at the top — which is this repo's own rule about not
+restating a fact in fifty-one places.
+
+**Ratchets re-stamped in both directions, with reasons.** `integrate.py`
+2541 -> 2530 downward (the rule requires it; the last two of the eleven are a
+`ruff format` unwrap of this session's own edit, caught by running the
+formatter over the touched files rather than by the ratchet). `bootstrap.py` 2899 -> 2904 as a
+reviewed bump: one MAPPING row plus four comment lines — a manifest growing,
+which is what a manifest does, and the same axis complaint WI-448 banked, hit
+again unchanged. The smoke MEMBERSHIP budget 1258 -> 1269 over a measured 1261,
+the file's own ~0.6% convention.
+
+**And the wall clock went DOWN while the tier grew, which is reported rather
+than pocketed.** 1261 collected / **46.97 s**, against the previous stamp's
+54.9 / 64.0 / 55.7 on this same box. Eleven pure in-process tests cannot make a
+tier 8 s faster; that spread is load. The seconds budget was NOT touched **in
+either direction** — a run that came in comfortably is no more a reason to
+tighten it than the 64.0 s run was a reason to raise it. (The very next smoke
+run, on the landed tree, read 62.69 s. Same tier, same box, 16 s apart: which is
+the point.)
+
+**One citation-frame cell cleaned as a by-product, and it is one row of another
+lane's sweep.** `IF-093`'s contract carried `WI-389`; the cell was being
+re-authored anyway, and the rule is that a living cell states the system, not its
+history. That leaves the wi455 lane's held 49-citation sweep one row smaller
+rather than colliding with it. No other held row was touched.
+
+**Gates.** Line endings checked BEFORE trusting any count
+(`git ls-files --eol`): every file this session edited with a script was written
+in BYTE mode with the file's existing newline preserved, and `git diff --numstat`
+confirms content-only diffs (`docs/stack.ini` 28/1, not a whole-file rewrite).
+`tests/test_module_size_ratchet.py` and `docs/stack.ini` were already in the
+banked ~47-file CRLF residue; the index stays LF.
+
+- smoke: `1256 passed, 5 skipped in 62.69s (0:01:02)`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b9538b26-dirty -->
+  Past the 60 s ceiling `docs/stack.ini` declares, consistent with this box's own
+  2026-08-20 record. Not new evidence; the budget is not moved to fit it.
+  Re-run on the LANDED tree, after the records edit: `1256 passed, 5 skipped in
+  43.51s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b9538b26-dirty -->
+  Three readings of the SAME tier on the SAME box this session — 46.97, 62.69,
+  43.51 — a 19 s spread with the composition unchanged between the last two.
+  That is the strongest one-box evidence this session produced, and it argues
+  neither for raising the ceiling nor for tightening it; it argues that a
+  wall-clock number from this box is a load measurement.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1327 intra-repo link(s), 0 broken (1 orphan warning(s))`
+- `trace.py --strict-integrity`: exit 0, integrity=0, interface-findings=0,
+  component-findings=0; `LLR 163 -> 164`, `TC 159 -> 160`, `drafts 5 -> 7`,
+  seams unchanged at 128. Watermark raised through the GENERATOR
+  (`trace.py --bump-ids`, LLR 181 -> 182, TC 176 -> 177), never by hand.
+- `check_trajectory.py --root . --strict`: exit 0. It went RED first, exactly as
+  predicted — `1 arch-map module(s) are in no CMP-### component
+  (scripts/kitlib/station)` — and was closed with a real spine row, never by
+  touching `[checks] components_check`.
+- The regenerated status block was diffed line by line before staging: **one
+  changed line** (the spine counts) and nothing else. `docs/gate` moved only its
+  counts and as-of commit; `per-phase`, `stage`, `computed` and `ex-draft` are
+  byte-identical, so no gate, bar or phase moved.
+- **full unfiltered suite, run to completion in the FOREGROUND**:
+  `2697 passed, 14 skipped in 602.45s (0:10:02)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=b9538b26-dirty -->
+  2690 -> 2697 is exactly this session's seven new tests and nothing else moved.
+  **Two earlier attempts were DISCARDED rather than reported, and the second
+  reason is the useful one.** The first was killed by a harness timeout at 98%
+  with no failure on screen — a run that did not finish is not a green, however
+  it looked. The second was abandoned deliberately: `ruff format` unwrapped one
+  line of this session's own edit AFTER that run started, so its tree was two
+  lines stale, and a suite result is only a claim about the tree it ran on. The
+  figure above is the third run, on the tree that is committed.
+  **Read its scope honestly**, the same caveat the WI-455 and WI-473 sections
+  record: it was taken with the code, tests, registries, spine rows and
+  regenerated surfaces all in place, but before this line itself was written, so
+  it does not cover the records edit. Re-run rather than argued away — smoke on
+  the landed tree below.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
 findings accumulate below as list items)_
 
+- (WI-483 worker — the one the closing review should weigh) **the shared
+  kernel's four-way component tag is no longer just an open question, it is a
+  DESIGN PRESSURE pulling toward the wrong answer.** `OI-48` records that
+  `LLR-181`'s four-way tag suppresses the cross-component seam rule on every
+  edge of `kitlib`. What this slice found is the second-order effect: for any
+  future module that belongs in the shared package, the CHEAPEST correct-looking
+  move — append it to `LLR-181`'s `module` cell, one line, no new spine row — is
+  the move that silently disarms a check. Here it would have un-policed the
+  exact view-to-service seam the slice existed to fix, and nothing would have
+  reported it, because a suppressed rule produces no finding by construction.
+  This slice paid a whole extra design row to avoid it, and a worker with less
+  time or less context would not. The class: **an unruled tag whose lazy
+  spelling is also its silencing spelling gets more expensive every week it
+  stays unruled**, and the cost is invisible in exactly the runs that would
+  otherwise surface it. Ruling `OI-48` is worth more than its blast radius
+  suggests.
+- (WI-483 worker) **the interface derivability check agrees on MODULE and is
+  blind to RELEVANCE, so a seam row can name a design row that has nothing to do
+  with what crosses and still pass.** `IF-093` — the dashboard's read of the
+  terminal-outcome vocabulary — carried `owner = LLR-154`, "the merge slot's
+  post-merge intake arm". The predicate compares the owner LLR's `module`
+  against the row's owner-side endpoint; `LLR-154`'s module is `integrate.py`
+  and the counterpart was `scripts/integrate`, so they agreed and the row read
+  clean. But `LLR-154` says nothing about `OUTCOME_DIRS`; it is simply *a* design
+  row that happens to live in the same 2,541-line file. That is the mechanism by
+  which a monolith launders provenance: while N design rows share one module
+  cell, any of them satisfies the check for any seam into that file, and the
+  check cannot tell which. It is also self-limiting in a useful direction —
+  decomposition FIXES it, because a smaller module has fewer rows to be confused
+  with — but until then the derivability report's "every LLR-owned row agrees
+  with its owner's Module" reads stronger than it is. Cheap partial mechanization
+  exists: compare the row's named symbols against the owner's `code_symbol`
+  where both are present, warn-only.
+- (WI-483 worker — a second witness for a finding already banked above)
+  **`spec_move.py`'s destination handling is asymmetric in the unsafe
+  direction**, and it costs a round trip every time. It REFUSES a destination
+  directory that EXISTS ("REFUSED - the destination ... already exists"), and it
+  CREATES A FILE for a trailing-slash destination that does not. So the two
+  obvious ways to move a spec into a new lane both fail, in opposite ways, and
+  only one of them fails loudly: `mkdir` first then pass the directory is
+  refused, and passing the directory without `mkdir` silently produces a file
+  where a lane was meant, which is how WI-448 briefly vanished from the registry
+  earlier today. The working spelling is the full destination FILE path, which
+  neither the refusal message nor the help text points at. One sentence in the
+  refusal ("name the destination file, or let this tool create the lane
+  directory") would close it.
+- (WI-483 worker, small) **`tests/test_bootstrap.py` hand-maintains a spot-check
+  copy of the `kitlib` MAPPING rows**, so adding one module to the package means
+  editing the manifest in two places. The comment there already concedes the
+  duplication ("these rows are the spot-check that keeps the expectation
+  readable") and `test_the_common_package_ships_complete` is the real guard, so
+  the list buys readability at the cost of a second edit site that a future
+  slice will forget. Deriving the spot-check from `bootstrap.MAPPING` would keep
+  the readability and drop the drift surface.
 - (WI-473 worker — the biggest one, and it is NOT scoped to WI-473) **an owner
   ruling's "this relaxes nothing" enumeration missed the harness's own step
   SELECTION, and nothing in the repo would have reported it.** OI-30 D2

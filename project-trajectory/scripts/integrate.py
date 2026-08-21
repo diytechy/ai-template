@@ -116,31 +116,21 @@ from pathlib import Path
 import agent_common as ac
 import score_reviews
 import spec_move
+from kitlib.station import BAR_GREEN, OUTCOME_DIRS, Outcome, outcome_of
 
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
 
-# THE THREE TERMINAL OUTCOMES (§A3 as amended by SR-144), and the whole of how a
-# lane declares one: the directory it moved its claimed specs INTO. `complete/`
-# asserts the work is done, `cancelled/` asserts it never will be, `partial/`
-# asserts it stopped early. There is no fourth answer and no state file that
-# could hold one, which is what makes "every lane ends in a merge, branches never
-# hang" a property of the tree rather than a rule someone has to remember.
-#
-# EVERY OUTCOME IS NOW TERMINAL. Before SR-144 a close into any OPEN folder
-# (`queued`/`draft`/`deferred`) read as a handback, which meant the returned row
-# went straight back on the frontier and needed a `blockref` to stop the driver
-# claiming, closing and re-claiming it forever. Those three rows are GONE from
-# this table on purpose: a lane that now closes into an open folder names NO
-# outcome and the merge refuses "exactly ONE declared state directory" — which
-# is the correct fail-closed posture, because under this contract stopping early
-# is a state with a name and a report, not a return to the queue.
-OUTCOME_DIRS = {
-    "complete": "merged",
-    "cancelled": "cancelled",
-    "partial": "partial",
-}
+# THE THREE TERMINAL OUTCOMES (§A3 as amended by SR-144) live in
+# `kitlib.station` and are re-exported here, unchanged, for every caller that
+# already reads them off this module. WI-483 moved the DEFINITION down: the
+# vocabulary depends on nothing, while this module claims lanes, merges branches
+# and moves specs, so a reader that only wants the table used to have to import
+# a mutation coordinator to get it — the dashboard did exactly that, and that
+# import was an edge of the seven-module cycle (repo review 2026-08-19, H-02).
+# `kitlib/station.py`'s docstring carries the vocabulary's own reasoning; what
+# stays here is the git-tree READ that applies it.
 
 # One LANE worktree home per repo, sibling to the checkout; one subdirectory per
 # claimed branch. The worker builds there and the station refresh runs there —
@@ -148,11 +138,6 @@ OUTCOME_DIRS = {
 # already lives. §5.6's unload GCs a clean one after its merge.
 LANE_WORKTREE_SUFFIX = "-drive"
 
-# The bar's attestation, carried as a git trailer in the refresh commit, NAMING
-# the tree and the work commit it attests so both can be checked against git.
-# See `refresh_attestation` for why the names are the whole point: a message
-# alone rides through amend, rebase and cherry-pick onto trees nobody barred.
-BAR_GREEN = "Bar-Green:"
 _ATTEST_RE = re.compile(
     r"^Bar-Green:\s+tree=([0-9a-f]{40})\s+work=([0-9a-f]{40})\s+(\S.*)$"
 )
@@ -913,19 +898,23 @@ def branch_outcomes(root, branch):
     `unresolved` and the caller refuses, here, where the outcome is read -
     rather than leaning on the duplicate-id ERROR a different script happens to
     raise later.
+
+    That last rule is `kitlib.station.outcome_of` (WI-483): reading the branch
+    tree is an EFFECT and stays here, deciding what the read means is a pure
+    function over a set of directory names and is testable without a repo.
     """
     landed = {}
     for path in _branch_tree_paths(root, branch, WORK) or []:
         parts = path.split("/")
         if len(parts) > 3 and parts[2] in OUTCOME_DIRS:
-            landed.setdefault(parts[-1], set()).add(OUTCOME_DIRS[parts[2]])
+            landed.setdefault(parts[-1], set()).add(parts[2])
     outcomes, unresolved = {}, []
     for wi_id, name in _claimed_specs(root, branch):
-        seen = landed.get(name) or set()
-        if len(seen) == 1:
-            outcomes[wi_id] = next(iter(seen))
-        else:
+        outcome = outcome_of(landed.get(name) or ())
+        if outcome is None:
             unresolved.append(name)
+        else:
+            outcomes[wi_id] = outcome
     return outcomes, unresolved
 
 
@@ -1219,7 +1208,7 @@ def _verdict_gate(root, branch, outcomes):
         ":(exclude)docs/log.d",
     )
     for wi in sorted(outcomes):
-        if outcomes[wi] != "merged":
+        if outcomes[wi] != Outcome.MERGED:
             continue
         rel = "docs/reviews/{}-REVIEW-A.md".format(wi)
         code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
@@ -2185,7 +2174,7 @@ def _partial_report_refusal(root, branch, outcomes):
     move it describes are one fact read once."""
     import handback
 
-    for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == "partial"):
+    for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == Outcome.PARTIAL):
         rel = handback.report_path(branch, wi_id)
         code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
         meta = None

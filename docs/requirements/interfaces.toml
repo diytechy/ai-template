@@ -1199,15 +1199,15 @@ component = "CMP-008"
 [interface.IF-093]
 direction = "Consumes"
 this_project = "scripts/traj_panels"
-counterpart = "scripts/integrate"
-contract = """sibling import for the station-cycle render's derived vocabulary (WI-389, the IF-092/IF-078 constants shape): OUTCOME_DIRS - the A3 terminal outcomes keyed by the spec directories that declare them, the same one-home read the merge slot classifies a finished lane by - draws the Process tab's outcome cards and their notes, and BAR_GREEN (the refresh attestation trailer label) the refresh note; constants only, no call and no write, so the dashboard's outcome vocabulary moves with the integrator instead of drifting as folklore"""
+counterpart = "scripts/kitlib/station"
+contract = """sibling import for the station-cycle render's derived vocabulary, the IF-092/IF-078 constants shape: OUTCOME_DIRS - the A3 terminal outcomes keyed by the spec directories that declare them, the same one-home table the merge slot classifies a finished lane by - draws the Process tab's outcome cards and their notes, and BAR_GREEN (the refresh attestation trailer label) the refresh note; constants only, no call and no write, so the dashboard's outcome vocabulary is READ from the vocabulary's own module instead of drifting as folklore"""
 signal = "variable"
 req_refs = ["SR-168"]
-owner = "LLR-154"
+owner = "LLR-182"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
-notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-009 by the gen_trajectory facade); seam driven by TC-056's station sync pins"""
+notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-009 by the gen_trajectory facade); seam driven by TC-056's station sync pins. The counterpart was the merge coordinator until the vocabulary was given its own module below both: a render leaf reaching into a service that claims lanes and moves specs is the direction a layered system forbids, and that import was an edge of the runtime scripts' strongly connected component. The seam stays POLICED across the same component pair, because the new counterpart carries a single owning component rather than the shared kernel's usage tag"""
 
 [interface.IF-094]
 direction = "Consumes"

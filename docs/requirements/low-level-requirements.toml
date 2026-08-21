@@ -1868,3 +1868,15 @@ test_refs = "(see TC-176)"
 status = "Drafted"
 component = "CMP-006;CMP-007;CMP-008;CMP-009"
 phase = 5
+
+[design.LLR-182]
+sr_refs = ["SR-144"]
+title = "The lane-close terminal-outcome vocabulary, one home below its readers"
+module = "project-trajectory/scripts/kitlib/station.py"
+code_symbol = "Outcome/OUTCOME_DIRS/outcome_of"
+detail = "The three terminal states a lane can close into, as a str-subclassing enum (Outcome), the declaring docs/work/ status directory each one is named by (OUTCOME_DIRS, immutable), the Bar-Green: attestation trailer label the station render draws, and outcome_of, which answers which SINGLE outcome a set of status directories names and answers None for BOTH ways the set fails to name one - naming no declared directory, and naming two. Reading a branch tree stays in the merge coordinator, which is where the effect belongs; this module holds only the decision, so it imports nothing and is exercisable without a repository. The merge coordinator re-exports OUTCOME_DIRS and BAR_GREEN under their former names, so no caller had to move to gain the type."
+rationale = """A vocabulary that several layers read must sit below all of them. This one used to be defined in the module that claims lanes, merges branches and moves specs, which meant every reader of the table imported a mutation coordinator to reach it - including the dashboard, a render leaf that writes nothing and must not be able to. That import was an edge of the strongly connected component the runtime scripts form, and it ran in the one direction a layered system forbids outright: a view into a lifecycle service. Moving the definition down cuts the edge at its cause rather than documenting it, and it removes two modules from the cycle in one act, because the render leaf was the whole route by which the dashboard facade reached the coordinator. The component tag is single deliberately: the shared kernel's ownership question is open, but the station flow is not ambiguous - the modules that ship it are all in this component - so this row states an owner instead of inheriting a four-way usage tag that would suppress the cross-component seam rule on its own edges."""
+test_refs = "(see TC-177)"
+status = "Drafted"
+component = "CMP-008"
+phase = 5

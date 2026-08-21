@@ -1757,6 +1757,11 @@ MAPPING = [
     ("scripts/kitlib/config.py", "scripts/kitlib/config.py"),
     ("scripts/kitlib/git.py", "scripts/kitlib/git.py"),
     ("scripts/kitlib/registry.py", "scripts/kitlib/registry.py"),
+    # WI-483 added `station`: the lane-close terminal-outcome vocabulary, which
+    # `integrate` used to define and every reader of it had to import the merge
+    # coordinator to reach. It ships for the same reason as the rest — the
+    # scripts that import it are in this list, so the package must be whole.
+    ("scripts/kitlib/station.py", "scripts/kitlib/station.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

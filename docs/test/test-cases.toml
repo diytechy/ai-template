@@ -1770,3 +1770,14 @@ automated = "Yes"
 evidence = """tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
 status = "Drafted"
 phase = 5
+
+[test.TC-177]
+verifies = ["SR-144", "LLR-182"]
+level = "Unit"
+method = """Two halves, because the row makes two claims. THE VOCABULARY: call outcome_of over each declared status directory and assert it answers that directory's outcome; over the empty set and over an undeclared directory and assert None; over two directories naming different outcomes and assert None, since resolving that silently once let alphabetical precedence pick the answer. THE LAYER: build the AST import graph of the shipped scripts INCLUDING imports written inside function bodies, and assert no module whose name marks it a view imports a lifecycle service. The graph walker carries its own self-test - a known deferred edge is pinned present - because a walker that stopped descending into function bodies would make every cycle vanish and report the opposite of the truth."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-182 (parent SR-144)"
+automated = "Yes"
+evidence = """tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_kitlib_station.py::test_outcome_of_names_one_outcome_or_none"""
+status = "Drafted"
+phase = 5

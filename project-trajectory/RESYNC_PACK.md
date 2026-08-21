@@ -2078,6 +2078,38 @@ at the next re-sync.
 **Nothing in your `docs/` changes**, and no registry cell moves. This is a
 scripts-only change.
 
+
+### `kitlib/station.py` — the terminal-outcome vocabulary leaves `integrate.py` [since b9538b26]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**A fifth module in `scripts/kitlib/`, and the same copy-it-whole rule.** The
+three terminal lane outcomes (`OUTCOME_DIRS`), the `Bar-Green:` attestation
+label, and the "exactly one declared status directory, or none" decision
+(`outcome_of`) now live in `scripts/kitlib/station.py`. They used to be defined
+in `scripts/integrate.py`, which meant any reader of the vocabulary imported the
+merge coordinator to reach it — including the dashboard, a render leaf that
+writes nothing.
+
+**If you only overwrite kit files, you need do nothing but include the new
+module in the copy.** `integrate.OUTCOME_DIRS` and `integrate.BAR_GREEN` are
+still there and still resolve to the same values; they are re-exports now. No
+call signature changed and no output changed.
+
+**If you import those names yourself**, prefer `from kitlib.station import
+OUTCOME_DIRS` going forward. The re-exports are kept, not deprecated — but a
+tool of yours that reaches for the vocabulary should not have to load a merge
+coordinator to get it.
+
+**One value-shape note, and it is deliberately compatible.** The outcomes are
+now members of a `str` enum (`kitlib.station.Outcome`) rather than bare strings.
+Every `==` against `"merged"` / `"cancelled"` / `"partial"`, every f-string,
+every `json.dumps` and every sort behaves exactly as before, because the enum
+subclasses `str`. Only an identity check (`is "merged"`) or a `type(x) is str`
+test would notice, and neither was ever a supported read.
+
+**Nothing in your `docs/` changes**, and no registry cell moves.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

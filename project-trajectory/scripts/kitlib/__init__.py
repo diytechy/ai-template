@@ -40,12 +40,24 @@ theme and says so in its own docstring:
   * `registry` — the `docs/work/` spec-folder work-item reader: the row shape,
                  the frontmatter/status/body parse, and the ordered read.
   * `git`      — the best-effort-off-git subprocess pattern.
+  * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
+                 lane can close into, the status directory each is declared by,
+                 the bar-attestation trailer label, and the "exactly one
+                 declared directory, or none" decision.
 
-Two further theme slots are NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
+`station` arrived by a different route from the other three, and the difference
+is worth stating because it is the shape the remaining slots should follow. The
+first three were CONSOLIDATIONS — one behaviour with several copies, pulled into
+one home. `station` was a DECOMPOSITION: the vocabulary had exactly one home
+already, but that home was the merge coordinator, so every reader had to import a
+module that claims lanes and moves specs in order to read a table. A view did
+exactly that, which is how the render leaf became part of the runtime scripts'
+strongly connected component. A shared home is not only for things that were
+duplicated; it is also for things that were correctly single and wrongly PLACED.
+
+One further theme slot is NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
 CREATED, because an empty module is a worse statement than an absent one:
-`station` (trunk/integration mechanics) and `views` (render helpers). They land
-as the consolidation program continues; `WI-483`'s successor decomposition
-builds on this topology.
+`views` (render helpers).
 
 **Stdlib only, like every kit script**, and every module here must import
 cleanly on a bare Python 3.11+ on Windows and POSIX.

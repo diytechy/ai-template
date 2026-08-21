@@ -4,13 +4,22 @@ The per-function complexity ratchet (test_complexity_ratchet.py) freezes how
 hard any one function is to read. This is its file-scale sibling: it freezes how
 large the kit's biggest scripts are, so the six coordinators the 2026-07-22 deep
 review flagged as "beyond maintainable review scale" cannot silently grow while
-the real decomposition (WI-280) is deferred.
+the real decomposition (WI-483) is deferred.
+
+THE DEBT OWNER IS `WI-483`, NOT `WI-280` (repo review 2026-08-19, H-05; the
+re-point is WI-483's own first act). This file directed its active debt to
+WI-280 for months after that item CLOSED, and WI-280's scope was the dashboard
+plus `bootstrap.main` — not the remaining baseline. A ratchet whose commentary
+names a closed item tells the next author that the debt is somebody's when it is
+nobody's, which is the one thing a growth sensor must not do. `WI-483` is the
+successor decomposition program: it breaks the seven-module import cycle behind
+typed read models and splits the largest engines by policy/effect boundary.
 
 Any kit script whose line count exceeds THRESHOLD must have an EXACT baseline
 entry below. The census may only tighten by default:
 
 - A baselined module grew, or a NEW module crossed THRESHOLD without a baseline:
-  the fix is DECOMPOSITION (WI-280), not a baseline bump. A deliberate bump is a
+  the fix is DECOMPOSITION (WI-483), not a baseline bump. A deliberate bump is a
   reviewed baseline edit whose reason lands in the WI/session log — never a
   drive-by. Moving lines into a new module is exactly the intended escape hatch:
   the new module stays under THRESHOLD (or earns its own reviewed baseline) and
@@ -19,9 +28,20 @@ entry below. The census may only tighten by default:
   renamed/removed): re-stamp its entry downward — or delete it — in the same
   commit, so the ratchet only ever tightens.
 
-This is a growth SENSOR, not an approval of the current sizes. WI-280 is the
+This is a growth SENSOR, not an approval of the current sizes. WI-483 is the
 scoped decomposition that pays this debt down; every entry here is active
 architectural debt, not a target.
+
+AND THE SENSOR MEASURES AN AXIS ITS OWN OWNER DISPUTES. The owner's `OI-16`
+correction is that "the monolith risk was always about FUNCTION size and
+complexity, not file length", and WI-448 produced the worked counterexample:
+`bootstrap.py` shed two duplicated helper bodies, gained a MAPPING declaration
+block, and this file demanded a reviewed bump on a module that got structurally
+simpler. `tests/test_complexity_ratchet.py` measures the disputed axis and —
+unlike this census — recurses into packages. Whether the line ratchet retires in
+favour of the complexity one or the two keep different jobs is an open question
+for the owner, banked in the 2026-08-20 log; until it is ruled, this file stays
+armed, because an unruled axis is not a reason to stop sensing growth.
 """
 
 import ast
@@ -40,8 +60,16 @@ THRESHOLD = 1500
 
 # Measured 2026-07-22 (len(text.splitlines()); files end with a newline, so this
 # equals `wc -l`). These six are the review's H-2 modules. Re-stamp DOWNWARD as
-# WI-280 decomposes them; an UPWARD re-stamp is the reviewed-baseline-edit escape
-# hatch (see the module docstring) and must name its WI right here.
+# the decomposition program lands; an UPWARD re-stamp is the
+# reviewed-baseline-edit escape hatch (see the module docstring) and must name
+# its WI right here.
+#
+# THE DEBT OWNER IS NAMED ONCE, IN THE MODULE DOCSTRING, AND IT IS `WI-483`.
+# Entries below carry dated notes that still read "re-stamp down with WI-280";
+# those are RECORDS of the bump they sit beside — each names the log entry that
+# reviewed it — and rewriting a dated record to cite an item that did not exist
+# on its date would falsify it. They are not re-pointed for the same reason this
+# repo does not restate a rule in five files: the owner has one home, above.
 BASELINE = {
     # +76 (4511 -> 4587), WI-284: the generated Ready-frontier block — the
     # scheduler-derived forward-looking WI list that makes the forward-only
@@ -1300,7 +1328,7 @@ BASELINE = {
     # 2859 was already the effective baseline, and the composed-sum accounting
     # below already threads the WI-439-review-fix (+15) and WI-446 (+20) deltas
     # through the 2026-08-18 merge math, so no history is lost by the merge.
-    "bootstrap.py": 2899,  # +40 (2859 -> 2899) 2026-08-20, WI-448 (D-8/OI-16, the common-module inversion) — AND THIS ENTRY IS THE RATCHET MEASURING THE WRONG AXIS, which is the owner's own correction (OI-16: the monolith risk was always FUNCTION size and complexity, not file length). What grew: the four `scripts/kitlib/*.py` MAPPING rows with the ~20-line comment stating why that block is the whole downstream risk surface of the ruling, plus the guarded import of the package. What SHRANK inside the same file: two duplicated helper bodies (`_first_declared_line`, `_utf8_console`) became one-line re-exports. So the file got a DECLARATION longer and an IMPLEMENTATION shorter, and the check asked for a reviewed bump on the declaration. Bumped deliberately; reason in docs/log.d/2026-08-20-program-grind.md. Earlier: MEASURED at the 2026-08-18 WI-455 merge: the two branches re-stamped this entry independently (+13 to 2878 on trunk, net -19 to 2846 on the landing branch) and the merged file carries BOTH changes, so 2859 is the measured sum rather than either stamp. Trunk's +13: +13 2026-08-18: docs/work README joins the scaffold — one MAPPING row with its reason comment, and the header docstring's status-dir list corrected to include `partial` (reviewed bump, reason in the log fragment 2026-08-18-work-registry-readme). The landing branch's net -19: RE-STAMPED DOWN -23 2026-08-18 (the dead `configparser` import deleted with the arch-map profile probe, plus): WI-455 (landed) commit 3 — docs/architecture.md leaves MAPPING and initialize_generated_docs re-gates on docs/status.md (the arch_cmd/profile-probe block retired). Earlier +4 2026-08-18: WI-455 (landed) — RUNTIME_FLOWS.template.md joins MAPPING (one row + three comment lines: the sitting-2 decision-8 flows move; reviewed bump, reason in the WI-455 log fragment). Earlier +17 2026-08-15: D-9 migration step 3 (log 2026-08-15g) — two MAPPING rows and their reasoning: `baseline_snapshot.py` joins the shipped script manifest (a sibling import of `intake.py`, so a scaffold without it cannot adjudicate at all — the WI-379 failure class), and the `last_approved` README template scaffolds the snapshot directory with PROSE ONLY. The second comment records why an adopter receives an empty snapshot rather than a pre-filled one: a copied snapshot would claim a human blessed text they have never seen. Reviewed bump, reason in the log (2026-08-15g). Earlier +4 2026-08-14: WI-454 — check_need_form.py joins the shipped script manifest with its reason (one MAPPING row + three comment lines; the docstring listing absorbed the name on its existing check_* line — the WI-392 shape; reviewed bump, reason in the log fragment); earlier +10 2026-08-14: WI-442 — external.toml joins MAPPING, the scaffold docstring and the boundary-vs-interface explanation an adopter reads first (reviewed bump, reason in the log); earlier +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
+    "bootstrap.py": 2904,  # +5 (2899 -> 2904) 2026-08-20, WI-483: one MAPPING row for `scripts/kitlib/station.py` plus the four comment lines saying why it ships (the scripts that import it are already in the list, so the package must arrive whole - the `schedule.py` omission class). Declaration only; no code moved into this file and none moved out. The axis complaint recorded on the entry below applies again and unchanged: this is a manifest growing, which is what a manifest does. Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +40 (2859 -> 2899) 2026-08-20, WI-448 (D-8/OI-16, the common-module inversion) — AND THIS ENTRY IS THE RATCHET MEASURING THE WRONG AXIS, which is the owner's own correction (OI-16: the monolith risk was always FUNCTION size and complexity, not file length). What grew: the four `scripts/kitlib/*.py` MAPPING rows with the ~20-line comment stating why that block is the whole downstream risk surface of the ruling, plus the guarded import of the package. What SHRANK inside the same file: two duplicated helper bodies (`_first_declared_line`, `_utf8_console`) became one-line re-exports. So the file got a DECLARATION longer and an IMPLEMENTATION shorter, and the check asked for a reviewed bump on the declaration. Bumped deliberately; reason in docs/log.d/2026-08-20-program-grind.md. Earlier: MEASURED at the 2026-08-18 WI-455 merge: the two branches re-stamped this entry independently (+13 to 2878 on trunk, net -19 to 2846 on the landing branch) and the merged file carries BOTH changes, so 2859 is the measured sum rather than either stamp. Trunk's +13: +13 2026-08-18: docs/work README joins the scaffold — one MAPPING row with its reason comment, and the header docstring's status-dir list corrected to include `partial` (reviewed bump, reason in the log fragment 2026-08-18-work-registry-readme). The landing branch's net -19: RE-STAMPED DOWN -23 2026-08-18 (the dead `configparser` import deleted with the arch-map profile probe, plus): WI-455 (landed) commit 3 — docs/architecture.md leaves MAPPING and initialize_generated_docs re-gates on docs/status.md (the arch_cmd/profile-probe block retired). Earlier +4 2026-08-18: WI-455 (landed) — RUNTIME_FLOWS.template.md joins MAPPING (one row + three comment lines: the sitting-2 decision-8 flows move; reviewed bump, reason in the WI-455 log fragment). Earlier +17 2026-08-15: D-9 migration step 3 (log 2026-08-15g) — two MAPPING rows and their reasoning: `baseline_snapshot.py` joins the shipped script manifest (a sibling import of `intake.py`, so a scaffold without it cannot adjudicate at all — the WI-379 failure class), and the `last_approved` README template scaffolds the snapshot directory with PROSE ONLY. The second comment records why an adopter receives an empty snapshot rather than a pre-filled one: a copied snapshot would claim a human blessed text they have never seen. Reviewed bump, reason in the log (2026-08-15g). Earlier +4 2026-08-14: WI-454 — check_need_form.py joins the shipped script manifest with its reason (one MAPPING row + three comment lines; the docstring listing absorbed the name on its existing check_* line — the WI-392 shape; reviewed bump, reason in the log fragment); earlier +10 2026-08-14: WI-442 — external.toml joins MAPPING, the scaffold docstring and the boundary-vs-interface explanation an adopter reads first (reviewed bump, reason in the log); earlier +6 2026-08-13: WI-445 — check_vocab.py joins the shipped script manifest with its reason (reviewed bump, reason in the log); composed at the 2026-08-13 serial merge: WI-439 (+26) + its review fix (+15, the tracked-anchor probe) + WI-446's MAPPING rows (+20); measured, reasons above and at each contributing WI
     # NEW ENTRY, +228 (1423 -> 1651), Phase 2b of the concurrency restructure
     # (docs/concurrency-restructure.md §7): the spec-folder work-item reader,
     # which crosses this module over THRESHOLD for the first time. It is one
@@ -1667,7 +1695,7 @@ BASELINE = {
     # adjudication-scope allowlist names BOTH open-items carriers — an
     # allowlist that names one suffix fails the lane toward the full bar on a
     # migrated repo, invisibly.
-    "integrate.py": 2541,  # +9 2026-08-18: the one-vocabulary rename (owner ruling; log 2026-08-18d) — the `DevBar-*` prefix retires and the SAME `DevStg-*` token names both readings, the verb carrying the axis. This module gains only the ALIAS ROWS that keep an adopter's literal value working across the re-sync (three entries plus the comment recording why the Release row resolves to `DevStg-Impl` and not `DevStg-Release` — the one mapping that is not a prefix swap, because that bar closed the Impl rung). Zero behaviour change: a canonical value resolves exactly as before. Reviewed bump, reason in the log (2026-08-18d). Earlier +7 2026-08-16: the adversarial round's F11 — the claim oracle's docstring gains the SCOPE OF "CONTENT" paragraph the WI-461 lesson owed it: every compare runs over COMMITTED BLOBS, so the repo's own clean filters define what content is, and an EOL-only edit normalized away by core.autocrlf is rightly invisible to a commit-scoped oracle (scaffolded repos pin this via the shipped .gitattributes). Prose only; no behavior moved. Reviewed bump, reason in the log (2026-08-16b). Earlier +32 2026-08-13: WI-445 — OI-21 break 3, the WI `bar:` retired-tag translation and the ladder-position (not lexical max) strictest-bar fold (reviewed bump, reason in the log)
+    "integrate.py": 2530,  # -11 (2541 -> 2530) 2026-08-20, WI-483 (repo review 2026-08-19 H-02, slice 1): the three terminal lane outcomes and the `Bar-Green:` attestation label moved to `kitlib/station.py`, and the "exactly ONE declared status directory, or none" decision moved with them as `outcome_of` - a pure function over a set of directory names. Reading the branch tree stays here, because that is the EFFECT; deciding what the read means is policy and is now testable without a repository. The point was never the nine lines: this module was the only home of a vocabulary its READERS needed, so the dashboard imported a merge coordinator to draw three labels - an edge of the seven-module import cycle. Re-stamped DOWNWARD in the same commit, per this file's rule. Earlier: +9 2026-08-18: the one-vocabulary rename (owner ruling; log 2026-08-18d) — the `DevBar-*` prefix retires and the SAME `DevStg-*` token names both readings, the verb carrying the axis. This module gains only the ALIAS ROWS that keep an adopter's literal value working across the re-sync (three entries plus the comment recording why the Release row resolves to `DevStg-Impl` and not `DevStg-Release` — the one mapping that is not a prefix swap, because that bar closed the Impl rung). Zero behaviour change: a canonical value resolves exactly as before. Reviewed bump, reason in the log (2026-08-18d). Earlier +7 2026-08-16: the adversarial round's F11 — the claim oracle's docstring gains the SCOPE OF "CONTENT" paragraph the WI-461 lesson owed it: every compare runs over COMMITTED BLOBS, so the repo's own clean filters define what content is, and an EOL-only edit normalized away by core.autocrlf is rightly invisible to a commit-scoped oracle (scaffolded repos pin this via the shipped .gitattributes). Prose only; no behavior moved. Reviewed bump, reason in the log (2026-08-16b). Earlier +32 2026-08-13: WI-445 — OI-21 break 3, the WI `bar:` retired-tag translation and the ladder-position (not lexical max) strictest-bar fold (reviewed bump, reason in the log)
     # NEW ENTRY, 1503, D-5 step 2d — the re-entry the D-1 removal note above
     # predicted, arriving from the CARRIER half rather than the anchor half:
     # "it re-enters as a NEW ENTRY if the anchor half puts it back over."
@@ -1791,7 +1819,7 @@ def test_module_sizes_exactly_match_the_committed_baseline():
     message = []
     if grew:
         message.append(
-            "module(s) grew past baseline — decompose (WI-280), do not bump "
+            "module(s) grew past baseline — decompose (WI-483), do not bump "
             "(a deliberate bump is a reviewed baseline edit, reason in the log): "
             + "; ".join(
                 "{} baseline {} -> now {}".format(

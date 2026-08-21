@@ -5,21 +5,29 @@ The OKF concept graph + type-tiered drill, the method-reference Process tab
 (lifecycle x gates, the station/lane cycle, the slice cadence), and the
 landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
 
-`integrate` and `schedule` are imported for their CONSTANTS only (the terminal
-outcomes, the bar attestation label, the kind tables): the station render
-derives its stage vocabulary from the modules that ship the flow, instead of
-restating it as literals that drift (the 2026-08-01 diagram review's ruling —
+`kitlib.station` and `schedule` are imported for their CONSTANTS only (the
+terminal outcomes, the bar attestation label, the kind tables): the station
+render derives its stage vocabulary from the modules that ship the flow, instead
+of restating it as literals that drift (the 2026-08-01 diagram review's ruling —
 the dashboard must never be pinned to itself).
 
-Contracts: IF-093, IF-094 — the constants-only Consumes seams on integrate (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.toml.
+A VIEW IMPORTS READ MODELS, NEVER A LIFECYCLE SERVICE (WI-483). Until this
+module's `station` re-point it reached those two constants through `integrate`,
+the 2,500-line merge coordinator — an edge of the seven-module import cycle the
+2026-08-19 repository review recorded (H-02), and the one direction a layered
+system forbids outright, since a render leaf writes nothing and must not be able
+to. The vocabulary moved DOWN to `kitlib/station.py`, below both. The rule is
+asserted, not merely written here: `tests/test_import_layers.py`.
+
+Contracts: IF-093, IF-094 — the constants-only Consumes seams on kitlib.station (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.toml.
 """
 
 import html
 import json
 
-import integrate
 import schedule
 import traj_parse
+from kitlib import station
 from traj_graph import GraphGeom, flat_graph
 from traj_parse import OKF_TIER_ORDER, _gate_value, _okf_nodes, _process_doc
 from traj_render import (
@@ -462,7 +470,7 @@ def _know_panel(root, svg, details):
 # advance -> the post-merge intake mint -> the dispatcher tick — with the spine
 # barrier and the intake arm visible. The 2026-08-01 diagram review's
 # constraint governs the vocabulary: stage names are DERIVED from the shipped
-# modules' own constants (integrate.OUTCOME_DIRS, integrate.BAR_GREEN,
+# modules' own constants (station.OUTCOME_DIRS, station.BAR_GREEN,
 # schedule's kind tables) wherever one exists, and every label that must stay a
 # literal here is held by a sync pin against the module it mirrors
 # (tests/test_traj_panels.py, the station suite) — the dashboard is never again
@@ -510,11 +518,11 @@ def _exclusive_kinds():
 
 def _outcome_cards():
     """The terminal outcomes as (name, [declaring dirs]) pairs, DERIVED from
-    integrate.OUTCOME_DIRS — the same one-home read the merge slot uses to
+    kitlib.station.OUTCOME_DIRS — the same one-home read the merge slot uses to
     classify a finished lane (§A3: the outcome IS the directory the claimed
     specs moved into; there is no fourth answer). Sorted for determinism."""
     by_outcome = {}
-    for status_dir, outcome in integrate.OUTCOME_DIRS.items():
+    for status_dir, outcome in station.OUTCOME_DIRS.items():
         by_outcome.setdefault(outcome, []).append(status_dir)
     return [(outcome, sorted(dirs)) for outcome, dirs in sorted(by_outcome.items())]
 
@@ -593,7 +601,7 @@ def _station_svg(root):
     ow, oh = g["outw"], g["outh"]
     oy = g["oy"]
     outcomes = _outcome_cards()
-    bar_label = integrate.BAR_GREEN.rstrip(":")
+    bar_label = station.BAR_GREEN.rstrip(":")
 
     # The ring edges + the outcome fan, one closed directed cycle. Anchors are
     # card-edge points; ends stop 5px short so the arrowheads land cleanly.

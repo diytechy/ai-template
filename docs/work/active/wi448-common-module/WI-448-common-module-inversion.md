@@ -78,9 +78,12 @@ with the reasoning recorded in their place.
    on `None`), `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
    `_split_tokens`/`split_refs` x2, and `wi_convert`'s `spec_paths` /
    `work_dir_for` variants of the registry reader.
-5. **The `station` and `views` theme slots**, named by the adopted shape and
-   deliberately not created empty. `WI-483`'s successor decomposition builds on
-   this topology, so its soft edge still points here until they land.
+5. **The `views` theme slot**, named by the adopted shape and deliberately not
+   created empty. `station` LANDED 2026-08-20 — not from this row, but from the
+   successor decomposition program, which needed the lane-close terminal-outcome
+   vocabulary somewhere below both its readers to cut a view-into-coordinator
+   import. It took its OWN single-component design row rather than joining this
+   package's four-way tag, so `OI-48` is untouched by it and still owed.
 
 **Deferred to the owner: `OI-48`** — which component owns the shared kernel.
 The package is imported from all four of CMP-006..009, so `LLR-181` carries a
