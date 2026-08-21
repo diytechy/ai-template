@@ -2502,6 +2502,36 @@ standing never-green-by-list-edit rule applies to every entry. A stale entry
 `if_tc_allow_hygiene_findings` — never blocking, so pruning it is
 housekeeping, not a fix owed under pressure.
 
+### `subagent_gate.py`'s parse-failure arm turns fail-closed (OI-46 ruled (1a)+(2a)) [since f3cb9801]
+
+*(Anchored at the PRECEDING commit — this entry ships with the change itself.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/subagent_gate.py`,
+`scripts/agent_loop.py`.
+
+**What changes for you:** if your `docs/process.toml` is **present but does
+not parse** (a syntax error, a bad encoding, an unreadable file) while
+`[checks] subagent_gate` is opted in, an unattended run's subagent-spawn
+`PreToolUse` hook used to read that as *undeclared* and fall through to the
+legacy `docs/subagent-gate` file or, absent that too, a quiet `allow` —
+diverging from `check_trajectory.py`/`gen_okf.py`, which have always read the
+same state as ON. It now reads `ask` (fail-closed) instead, and does **not**
+fall through to the legacy file: a broken `docs/process.toml` is a place this
+gate cannot proceed, not a place to keep moving. A genuinely **absent**
+`docs/process.toml` is unaffected — that still allows (the opt-in posture).
+
+**What you may notice:** if you run with `subagent_gate` enabled AND your
+`docs/process.toml` is currently malformed, your next unattended run defers
+every subagent spawn to approval instead of silently allowing them. There is
+no dial to keep the old (fail-open) reading — fix the TOML, which you would
+want to do anyway.
+
+**The fail-open log is now surfaced, not just written.** Every gate decision
+(including every fail-open-on-error allow) has always appended to
+`out/subagent-gate.log`, and nothing read it. `agent_loop.py`'s launch banner
+now prints its line count when the file is non-empty (silent otherwise), via
+a new `_subagent_gate_log_count()` helper — no config, nothing to migrate.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

@@ -13,6 +13,7 @@ assignment seam to tests/test_agent_loop_worker.py (its own leg's module).
 """
 
 import datetime
+import inspect
 import os
 import re
 import subprocess
@@ -399,6 +400,19 @@ def test_subagent_gate_log_absent_stays_silent_in_banner(loop_repo):
     proc = _loop(repo, template)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "subagent-gate:" not in proc.stdout
+
+
+def test_subagent_gate_log_filename_matches_the_writer():
+    # agent_loop._subagent_gate_log_count reads a LITERAL "subagent-gate.log"
+    # rather than importing subagent_gate.LOG_NAME (a new CMP-008 -> CMP-007
+    # seam for one string is not worth declaring) -- this pins the literal
+    # against the module that actually writes the file, so a rename on either
+    # side reds here instead of drifting silently.
+    subagent_gate = load_script("subagent_gate")
+    al = load_script("agent_loop")
+    src = inspect.getsource(al._subagent_gate_log_count)
+    assert '"out" / "subagent-gate.log"' in src
+    assert subagent_gate.LOG_NAME == "subagent-gate.log"
 
 
 def _vendor_core(repo, body):

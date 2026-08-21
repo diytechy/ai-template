@@ -161,7 +161,6 @@ try:
     import plan_runner
     import prompts
     import score_reviews
-    import subagent_gate
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
@@ -171,7 +170,6 @@ except ImportError:  # pragma: no cover - in-process fallback
     import plan_runner
     import prompts
     import score_reviews
-    import subagent_gate
 
 # The WI-218 split: the session-launch layer (slice B), the shared coordinator
 # primitives + the dual-plan runner (slice C), and (until Phase 5) the parallel dispatcher/
@@ -1800,8 +1798,15 @@ def _subagent_gate_log_count(root):
     file was never written, i.e. the gate never fired. `subagent_gate.py`
     writes the file but nothing read it before OI-46 ruled (2a) (2026-08-20):
     a write nobody reads is a record only in name, so `print_run_banner`
-    below surfaces this count on every unattended launch (WI-491)."""
-    path = Path(root) / "out" / subagent_gate.LOG_NAME
+    below surfaces this count on every unattended launch (WI-491).
+
+    The filename is a LITERAL, not `subagent_gate.LOG_NAME` — importing that
+    sibling for one string would open a new CMP-008 -> CMP-007
+    cross-component seam for a fact this small; `tests/test_agent_loop.py`'s
+    banner tests and `tests/test_subagent_gate.py`'s own log-path assertions
+    both pin the same literal, so a rename on either side breaks a test
+    before it breaks silently."""
+    path = Path(root) / "out" / "subagent-gate.log"
     try:
         with open(path, "r", encoding="utf-8", errors="replace") as handle:
             return sum(1 for _ in handle)

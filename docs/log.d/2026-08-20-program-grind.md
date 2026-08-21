@@ -1586,11 +1586,111 @@ CRLF residue list.
   is the re-run, taken as one foreground call with an explicit 600s
   timeout.)
 
+### WI-491 — the subagent-gate parse asymmetry + fail-open log (sonnet worker) — CLOSED complete
+
+**Executes OI-46's ruling, (1a)+(2a) both, one row.** `subagent_gate.py`'s
+`read_process_policy` gains an `UNPARSEABLE` sentinel (a plain `object()`)
+returned when `docs/process.toml` is PRESENT but does not parse/read;
+`decide()` resolves it to `ask` (fail-closed) via its own branch, and
+`main()` treats it as terminal rather than a `None`, so a broken
+`process.toml` no longer falls through to the legacy `docs/subagent-gate`
+file or a quiet `allow`. Genuine absence is untouched — still `allow`, the
+ruled opt-in posture. Aligned against the concrete, tested precedent —
+`tests/test_rule_sync.py`'s D-7 pin of `check_trajectory.py`/`gen_okf.py`,
+which have always read the same state as ON — rather than OI-46's own looser
+prose naming "the hook's grep reader, the loop's tomllib reader" (banked
+below: those two actually read different `[checks]` keys and reach a
+stricter posture by a different mechanism — a hard preflight refusal via
+`config_conflicts`, not a per-call `ask`).
+
+`agent_loop.py` gains `_subagent_gate_log_count(root)` and `print_run_banner`
+now prints `subagent-gate: N decision(s) recorded in out/subagent-gate.log …`
+whenever the count is non-zero, silent otherwise. **Deviation from a first
+pass:** the helper first imported `subagent_gate` for its `LOG_NAME`
+constant; `check_trajectory.py --strict` caught that as a real ERROR (a new
+`CMP-008 -> CMP-007` cross-component seam with no declared `IF-###` row, not
+merely advisory). Declaring a seam for one shared string would have widened
+this row past OI-46's ruled scope, so the fix reads a pinned literal instead
+— `tests/test_agent_loop.py::test_subagent_gate_log_filename_matches_the_writer`
+guards the two sides from drifting apart silently.
+
+**Verified against a real scaffold** (`bootstrap.py --dest <tmp> --agents
+claude`), not just the unit suite: a syntactically-broken `docs/process.toml`
+made the real `PreToolUse` hook print `permissionDecision: "ask"` (exit 0);
+adding a legacy `docs/subagent-gate` file set to `deny` alongside it left the
+decision `ask` (corruption does not fall through); removing both files
+returned `allow`. `out/subagent-gate.log` accumulated the three decisions,
+and a direct call to `agent_loop._subagent_gate_log_count` against that real
+log file read back `3`.
+
+RESYNC entry added (`project-trajectory/RESYNC_PACK.md` §4, `[since
+f3cb9801]`): a present-but-broken `docs/process.toml` now defers subagent
+spawns instead of silently allowing them when `[checks] subagent_gate` is
+opted in.
+
+Deferred open items: none — OI-46 is fully executed by this row; no new open
+item surfaced.
+
+**Ratchet.** `agent_loop.py` module-size baseline re-stamped 3202 → 3231
+(+29), reason inline in `tests/test_module_size_ratchet.py`.
+
+**Gates.** Code commit `f3cb9801`. Line endings checked
+(`git ls-files --eol | grep 'w/crlf'`): none of this session's files are new
+CRLF entries.
+
+- smoke (final): `1278 passed, 5 skipped in 57.60s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=f3cb9801-dirty -->
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1335 intra-repo
+  link(s), 0 broken (1 orphan warning(s))` — unchanged from the WI-490
+  baseline.
+- `check_trajectory.py --root . --strict`: first run caught the real
+  cross-component ERROR described above (fixed, not waived); clean re-run:
+  `clean (490 work item(s), 460 done (94%), 21 cancelled, graph acyclic)` —
+  459 → 460 is exactly this row's own close.
+- **full unfiltered suite, run to completion in the FOREGROUND**: `2726
+  passed, 14 skipped in 500.96s (0:08:20)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=f3cb9801-dirty -->
+  2723 (the WI-490 close's own total) → 2726 is exactly this session's three
+  net-new tests (two banner tests + the filename drift guard); the four
+  renamed M-13/D-7 tests each replaced an existing one.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
 findings accumulate below as list items)_
 
+- (WI-491 worker) **OI-46's ruling prose names the wrong twin pair for
+  subagent_gate.py, though its operative recommendation is unaffected.** The
+  ruling text says the two readers this module should align with are "the
+  hook's grep reader" and "the loop's tomllib reader." Measured: the git
+  hooks' grep reader (`GREPPABLE_KEYS` in `agent_common.py`) matches only
+  `privacy_check`/`privacy_review`, never `subagent_gate`; and "the loop's
+  tomllib reader" (`agent_common.declared_policy`/`process_config`) reaches
+  its stricter posture by a DIFFERENT mechanism — `config_conflicts` refuses
+  the whole coordinator launch at preflight on a malformed `process.toml`,
+  it does not resolve one dial to a stricter per-call value the way
+  `decide()` now does. The concrete, TESTED twin pair — cited by
+  `subagent_gate.py`'s own pre-existing docstring and pinned by
+  `tests/test_rule_sync.py`'s D-7 test — is `check_trajectory.py` and
+  `gen_okf.py`, which really do read the same `[checks]`-section parse
+  failure as a terminal, non-falling-through ON. WI-491 aligned against that
+  pair; the ruling's own prose reads as a paraphrase that drifted from the
+  code it was describing. No action needed — the executed behavior matches
+  the ruling's operative recommendation ("present-but-unparseable = ask,
+  absence = allow") either way — flagged only so a future reader of OI-46
+  does not go looking for a grep-based subagent_gate twin that does not
+  exist.
+- (WI-491 worker) **`agent-hooks/README.md`'s subagent-gate paragraph still
+  says "deny-by-default fan-out."** Pre-existing staleness, not introduced by
+  this row: `subagent_gate.py`'s own module docstring has stated since the
+  2026-08-19 review (M-13) that this description is exactly backwards (the
+  gate is fail-OPEN by design, `off`/absent/unparseable-formerly/error all
+  allow), and OI-46/WI-491 only narrows the unparseable arm — the module
+  stays fail-open by design everywhere else. `agent-hooks/README.md` line 30
+  was not in this WI's scope (a different file, no ruling named it) and is
+  banked here as a one-line fix for a future doc sweep: replace
+  "deny-by-default fan-out" with language matching the module's own header
+  ("OPT-IN, FAIL-OPEN … deny only once a human writes `deny`").
 - (WI-484 worker — **settles two banked items, both by measurement**) The
   `LLR-172` / `budget_findings` anchor pair banked by the WI-477 and WI-472
   workers is **already resolved and needs no WI**. `LLR-172` names
