@@ -432,7 +432,7 @@ advance.
    row evidence).
 
    **The 27 mis-authored rows are FILED, not edited:**
-   [`WI-469`](../work/queued/WI-469-consumes-names-the-medium.md)
+   [`WI-469`](../work/complete/WI-469-consumes-names-the-medium.md)
    (queued) carries the full 27-row population, the owner's correction
    (*"the file itself is the actual interface"* — they name the MEDIUM where
    they should name whom the medium serves), and the two sub-shapes, kept

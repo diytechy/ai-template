@@ -339,6 +339,97 @@ edit on this box introduces CRLF unless it writes bytes.
   line: `126 → 128 seams` and nothing else, so no gate or phase moved (the
   WI-448 lesson applied).
 
+### WI-469 — Consumes rows that name the medium (sonnet worker) — CLOSED
+
+**Full row, not a slice.** All 27 SR-owned file-as-endpoint `Consumes` rows
+in `docs/requirements/interfaces.toml` re-authored, each landing in one of
+the ruling's two shapes; spec moved to `docs/work/complete/`. No `status`,
+`direction`, `owner`, or `contract` cell touched anywhere — only
+`counterpart`, `interface_to_external` (where earned), and `notes`.
+
+**The discriminator, made concrete rather than trusted from the 2026-08-17
+counts.** A dedicated research pass re-measured genuine (content-reading, not
+docstring/MAPPING-mention) readers for each of the 18 distinct counterpart
+targets across the 27 rows. Two populations fell out cleanly:
+
+- **10 LOW fan-out rows** — a closed, small, nameable reader set — now carry
+  that set as `counterpart` (semicolon-joined module paths): IF-025, IF-026
+  (each an independent AST walker of the source tree with fan-out=1, so the
+  named module is the row's own — matching the worked coverage.json example's
+  shape exactly), IF-029, IF-035, IF-037, IF-045 (fan-out=1, agent_route is
+  the sole direct file-reader; agent_loop/plan_runner consume its API, a
+  separate seam), IF-047, IF-070 (check_coverage parses the JSON; check.py
+  only clears a stale copy — named per the WI's own worked example), IF-072.
+  **IF-052 is the interesting one**: its counterpart was `docs/gate`, but
+  `gen_trajectory` does not read that file directly — WI-280 moved the read
+  into `traj_parse._gate_value`, which the facade calls. Re-pointed at the
+  actual module boundary (`scripts/traj_parse`) rather than the file it
+  wraps — a genuine staleness catch, not just a reframing.
+- **16 PUBLISHED-CONTRACT / HIGH fan-out rows** — an open, growing consumer
+  class where naming one reader would misstate the file's role — now carry
+  `counterpart = "external:downstream adopter"` + `interface_to_external =
+  "B-05"`, the IF-013…IF-018/IF-048 shape: IF-021, IF-022, IF-023, IF-024,
+  IF-030, IF-033, IF-034, IF-038, IF-049, IF-051, IF-054, IF-057, IF-059,
+  IF-068, IF-073, IF-079. Every one of these targets a spine or declared-
+  policy registry (SR/SN/IF/OI, `docs/work`, `docs/stack.ini`,
+  `docs/process.toml`, the whole `docs` tree) that ships blank as a template
+  an adopter fills in — B-05's own `carries` text ("content of the package")
+  covers the registry FORMAT, not just a script's CLI contract, which is why
+  the tie applies even though these rows are `Consumes`, not `Provides`.
+  **`IF-028` needed no change**: the concurrent WI-455 crossing-half slice had
+  already re-pointed its counterpart from the retired `docs/architecture.md`
+  to `scripts/gen_arch_map` — already module-shaped, already this WI's goal —
+  before this session started.
+
+Each touched row's `notes` cell records the pick and its verified evidence
+(the measured reader set), e.g. IF-072's declared-absences readers verified
+as three real content-readers (`check_doc_refs`, `trace`, `check_vocab`) plus
+`tests/test_dogfood_sync.py` — the WI's own "five checkers" framing had
+over-counted a comment-only mention (`check_need_form.py`) as a read.
+
+**Self-correcting catch: the citation-frame rule applies to a row's own
+argument, not just its history.** First-draft notes cited `(WI-469):
+re-measured 2026-08-20` inline — `trace.py`'s provenance rule (no citation
+frame in any living cell) flagged all 25 of them as advisory findings on the
+first `--strict-integrity` run. Fixed by stripping the WI id/date stamp and
+keeping the argument as prose that stands alone; the account (what was
+measured, when, by what WI) lives here in the log instead. Zero citation-
+frame findings on the touched rows after the fix.
+
+**Unblocks the wi455 lane, precisely — one item cleanly, one only halfway.**
+The lane's item 2 (the 49 held `Contract`-cell provenance citations,
+`docs/provenance-allow`'s header) named WI-469 as its SOLE blocker and is now
+UNBLOCKED — the interface lane can sweep those 46 `Contract names WI-###` +
+3 `Contract cites decision` findings in one pass without re-touching rows
+this WI just edited. The lane's item 1 (the `direction`/`this_project` shed
+and the counterpart→consumers transform) has this WI's precondition
+satisfied too, but stays blocked on a SEPARATE, still-unruled owner
+question — which reading of `owner` governs a `Consumes` row, the-module-
+that-holds-the-code or the provider — that the wi455 spec flags but does not
+settle and that this WI deliberately left untouched (no `owner` cell was
+edited anywhere in this pass). Recorded, not decided: that question has no
+open-items row yet and is the owner's/wi455 lane's to file, not minted here.
+
+**Adjacent (banked below):** the specref-clearing rule at close, and a
+registry-editing footgun hit twice during the pass.
+
+**Gates.**
+
+- smoke: `1244 passed, 5 skipped in 142.92s (0:02:22)`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=b94bf58c-dirty -->
+- `check_docs.py --root . --stale`: `OK - 960 doc(s), 1325 intra-repo link(s), 0 broken (1 orphan warning(s))`
+- `check_trajectory.py --root . --strict`: `clean (490 work item(s), 455 done (93%), 21 cancelled, graph acyclic)` — two R-A/R-F errors surfaced at close (a hand-authored `docs/status.md` bullet still naming the now-`done` id; the closed spec's `SpecRef` still set) and were fixed rather than waived: the status bullet reworded to drop the id token and state the unblock without it, `specref` cleared to `""`. R-F's archive half is scoped to `docs/specs/`; this row's spec-of-record lives at `docs/plans/2026-08-13-sitting-3-spine-verification.md` (a sitting doc, not a per-WI spec file), cited by no other open WI, so clearing the field was the whole fix — no archive move needed.
+- full unfiltered suite, run in the foreground after the first attempt's
+  background process was reaped by an idle turn boundary (re-run rather than
+  trusted from a truncated log): `2685 passed, 14 skipped in 581.24s
+  (0:09:41)`
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=55689752 -->
+
+Deferred open items: none — this WI's own scope carried no open ruling
+question; the owner-reading question for `Consumes` rows that its close
+surfaced is wi455's to file (it is not yet a numbered `OI-###` row), and this
+session deliberately did not decide it.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
@@ -452,3 +543,29 @@ findings accumulate below as list items)_
   ... already exists"), so it clearly reasons about directory-ness; it should
   equally refuse (or mkdir) a trailing-slash destination that does not, rather
   than falling back to treating it as a filename. Worth a row of its own.
+- (WI-469 worker) **the citation-frame rule reaches a row's own live prose,
+  not just quoted history — hit twice in one edit pass.** Writing "(WI-469):
+  re-measured 2026-08-20" into 25 `notes` cells as honest per-row evidence
+  tripped `trace.py`'s provenance advisory on every one of them: the rule
+  bans a citation frame in ANY living cell, and a cell's own supporting
+  argument for ITS OWN CURRENT SESSION's edit is not exempt just because it
+  is fresh rather than inherited. The fix is mechanical once seen (drop the
+  id/date, keep the argument, put the account in the log) but the trap is
+  easy to walk into precisely when doing the RIGHT thing (recording evidence
+  per-row, as this WI's own spec asked for) — a worked example of "state the
+  reason, not its history" in `AGENTS.template.md`/the spine-authoring skill
+  would have caught this before the first `--strict-integrity` run rather
+  than after.
+- (WI-469 worker) **a bulk registry edit that appends a new cell after
+  `status = "Drafted"` without checking for an EXISTING later cell of the
+  same key produces unparseable TOML, and `tomllib` reports only the byte
+  offset of the LAST duplicate, not which edit caused it.** Three of 26
+  per-row edits in this session added a `notes` line right after `status`
+  without noticing the row already carried its own `notes` (or, in one case,
+  a second edit's `notes` collided with the first's) two-plus lines further
+  down — `Cannot overwrite a value` fired at parse time with no row id in the
+  message, and each of the three took a separate read-diagnose-fix round
+  trip. A cheap guard for the NEXT bulk registry edit: grep the target rows
+  for the key being added BEFORE editing, not after the parser complains —
+  `grep -c "^notes = "` inside each `[interface.IF-###]`..next-header span
+  would have caught all three up front.

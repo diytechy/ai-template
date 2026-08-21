@@ -1415,7 +1415,7 @@ why (one bullet each; cite ids)._
   **The 3 `external:` rows stand** (`IF-032` git, `IF-036` upstream docs,
   `IF-041` agent CLI).
   **The 27 mis-authored rows: FILED, not edited** —
-  [`WI-469`](work/queued/WI-469-consumes-names-the-medium.md)
+  [`WI-469`](work/complete/WI-469-consumes-names-the-medium.md)
   (queued) carries the owner's correction (*"the file itself is the actual
   interface"*), the two sub-shapes (low fan-out names the consumer;
   published-contract/high-fan-out ties back to `B-05` per
