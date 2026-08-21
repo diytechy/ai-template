@@ -1480,6 +1480,112 @@ was tightened to 4,982 in the same commit — caught by
   without a re-derive); `PROJECT_STATE.html` moved only the as-of sha/date
   and the done-count (457 → 458) plus the Next-work listing.
 
+### WI-490 — retire the mechanical-ratification arm (sonnet worker) — CLOSED complete
+
+**Full row, not a slice — and a record-only one.** Executes OI-45's ruling
+(b) RETIRE THE ARM. The code deletion itself (the write loops and
+`copy_live`) had already landed at the 2026-08-20 batch review's iterate
+pass (MINOR-12); what this WI owed was the RECORD catching up to the
+ruling — every touched docstring/comment stopped presenting (a)/(b) as an
+open question and started stating the ruled shape, with OI-45 cited as the
+record. Spec moved to `docs/work/complete/`.
+
+Deferred open items: none — OI-45 is fully executed by this row; no new
+question surfaced.
+
+**What moved, all docstring/comment-only, zero executable lines.**
+`intake.flip_verified`'s "what the `flip` arm still has to move" paragraph
+now states mechanical ratification is retired permanently, not pending;
+`intake._apply_flips`'s docstring drops the "the ruling could restore a
+writer here" hedge and states OI-45 as the record, keeping the two
+D-9-step-7 candidate shapes as history rather than live options; the
+trailing comment after its refusal loop updated the same way.
+`intake.adjudication_action` gained a paragraph noting that even where it
+returns `"flip"`, `_apply_flips` writes nothing — the name only routes
+which brief the caller owes. `intake._cmd_adjudicate` and the `adjudicate`
+subcommand's `--help` text now say RECOMMEND, never enact, per the WI's own
+instruction that a subcommand whose only act is refusal must say so where
+its help text speaks. `intake._cmd_snapshot` gained the paragraph the WI
+asked for verbatim in substance: ratification authority was deliberately
+NOT mechanized (OI-45 is the record), and this refresh is the ONE
+mechanical toucher of the approval record. `trace.is_founded`'s docstring
+splits D-9 consequence 2 into its two halves — whether a tool ever WRITES
+the cell stays open, whether an AGENT-authored `Founded` is itself an error
+is now answered (sanctioned, under the declared human-ratification level)
+— citing OI-45 instead of claiming the whole question open.
+
+**One live reference doc carried the same stale claim, found by grep rather
+than assumed absent.** `docs/registry-machinery-reference.md`'s `Founded`
+table row repeated "whether an authored `Founded` is itself an error is
+still open (D-9 consequence 2)" — the exact defect class this WI exists to
+close, just outside the three named touchpoints. Corrected to match the
+code, since a reference doc is a live surface an adopter reads, not an
+archived record.
+
+**The scope-note rule, checked rather than assumed satisfied.** Every
+touched surface states "ratification was deliberately not MECHANIZED,"
+never "no agent may ever move a Status cell" — an LLM session or
+adjudicator remains expected to flip a row's Status to `Approved`/`Founded`
+for spine content past the declared human-ratification level
+(`agent_common.human_holds` says which). A repo-wide grep for `100% human`,
+`only a human` and `never mechanically` found no other live occurrence of
+the overstatement class: the hits outside `tests/`/archived plans/reviews
+are unrelated judgments (spec-correctness, a PlanMode/SafetyClass
+conflict), and the archived/dated ones (RESYNC_PACK.md's D-9 migration
+entry, `docs/reviews/`, `docs/plans/`) are records of a past state, left
+alone on the same principle the log itself is append-only under.
+
+**No test pinned the retired framing, and none needed changing.** Searched
+for a source-grep test on the deleted write-and-copy block or on the
+docstring wording before editing: none exists (`tests/test_intake.py`'s
+`flip_verified`/`_apply_flips` coverage is behavioral only — refusal
+messages, idempotence, the missing-status raise). The full suite below is
+the confirmation the MINOR-12 deletion did not regrow and nothing else
+moved.
+
+**Ratchets re-stamped deliberately, both directions accounted for.**
+`trace.py` 4989 → 4993 (+4, `is_founded`'s split docstring) and `intake.py`
+1864 → 1901 (+37, the five touched functions plus the CLI help text) —
+docstring-only, no executable line moved, reasons in
+`tests/test_module_size_ratchet.py`'s own entries per the standing rule
+(re-stamp deliberately, never revert a real edit to dodge the ratchet).
+
+**Gates.** Line endings checked before trusting any count
+(`git ls-files --eol | grep 'w/crlf'`): none of this session's touched
+files appear among the (now 51-file, up from the banked ~47) pre-existing
+CRLF residue list.
+
+- smoke: `1278 passed, 5 skipped in 65.13s`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=366a8131-dirty -->
+  First run caught the predicted ratchet fire (`intake.py`/`trace.py` past
+  baseline); re-stamped deliberately per above, clean re-run shown.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1335 intra-repo
+  link(s), 0 broken (1 orphan warning(s))` — unchanged from the WI-488
+  baseline (no doc added or removed).
+- `check_trajectory.py --root . --strict`: first run caught a real R-F
+  (terminal WI still carrying its `SpecRef`) — fixed by clearing the field
+  rather than waived, same disposition as the WI-469/WI-467 close precedent
+  (the archive-to-`docs/archive/specs/` half of R-F is scoped to
+  `docs/specs/`; this row's spec-of-record is `docs/requirements/
+  open-items.toml#OI-45`, cited by no other open WI). Clean re-run: `clean
+  (490 work item(s), 459 done (94%), 21 cancelled, graph acyclic)` —
+  458 → 459 is exactly this row; no new WARN class.
+- The regenerated surfaces were diffed line by line before staging:
+  `docs/status.md`'s generated block moved **one line** (WI-490 dropped
+  from the Ready frontier) and nothing else; `derive_gate.py --check`
+  reported `docs/gate` already up to date (no spine row was minted, so
+  nothing to re-derive); `PROJECT_STATE.html` moved only the as-of
+  sha/date and the done-count (458 → 459).
+- **full unfiltered suite, run to completion in the FOREGROUND**: `2723
+  passed, 14 skipped in 477.10s (0:07:57)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=366a8131-dirty -->
+  Byte-identical to the WI-488 close's own total — nothing this session
+  added or removed a test, the expected reading for a docstring/comment-only
+  slice. (An earlier run auto-backgrounded past the shell tool's 120s
+  default and was reaped at the turn boundary before it could finish; this
+  is the re-run, taken as one foreground call with an explicit 600s
+  timeout.)
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked

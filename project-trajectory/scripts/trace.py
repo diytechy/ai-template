@@ -215,11 +215,15 @@ def is_founded(row):
     an arming is forbidden to make.
 
     THE DISCHARGE IS COMPUTED, NOT ASSERTED HERE, one test per tier and all four
-    already built (D-9 migration plan C4). Whether a tool ever WRITES the cell —
-    and whether a hand-authored `Founded` is itself an error — is D-9 consequence
-    2, still open, so nothing here decides it. Same case-insensitive casing rule
-    as its two siblings; duplicated in derive_gate.py per F5; pinned by
-    test_rule_sync."""
+    already built (D-9 migration plan C4). Whether a tool ever WRITES the cell
+    stays D-9 consequence 2's still-open half — nothing here decides it — but its
+    other half is ANSWERED: whether an agent-authored `Founded` is itself an
+    error is not open any more. OI-45 (ruled 2026-08-20) sanctions it, so long as
+    the row is spine content past the declared human-ratification level
+    (`agent_common.human_holds` says which) — the dial says who holds what, and
+    an authored `Founded` under it is judgment exercised, not an error class.
+    Same case-insensitive casing rule as its two siblings; duplicated in
+    derive_gate.py per F5; pinned by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "founded"
 
 

@@ -1390,7 +1390,15 @@ def adjudication_action(human_held):
     human_holds` fails that way deliberately — so the failure direction is
     `recommend`, never a machine ratification. The kit DEFAULT holds every tier
     even though this repo holds none, which is why both arms are built and
-    tested."""
+    tested.
+
+    OI-45 RULED (b) RETIRE THE ARM (2026-08-20, executed by WI-490): even where
+    this reads `flip`, `_apply_flips` writes NOTHING — it skips an
+    already-blessed row and refuses every other state. The name survives
+    because the two readings still distinguish which brief the caller owes
+    (recommend-and-stop vs. attempt-and-refuse); ratification itself moves only
+    through the human reviewed-commit path, with `intake.py snapshot` as the
+    record's one mechanical door."""
     return "recommend" if human_held else "flip"
 
 
@@ -1410,11 +1418,17 @@ def flip_verified(root, ids):
     registry still owes its regeneration (`derive_gate` recovers the gate);
     the lane's own refresh runs it.
 
-    WHAT THE `flip` ARM STILL HAS TO MOVE is an open question since D-9 step 7
-    retired `Modified`, the one state it ever moved from — `_apply_flips` states
-    the two candidates and refuses in the meantime, naming every row it will not
-    touch. `recommend` is unaffected and is this repo's live arm (every spine
-    tier is human-held)."""
+    THE `flip` ARM IS THE RULED SHAPE, not an interim state (OI-45, ruled
+    2026-08-20, executed by WI-490): mechanical ratification is RETIRED —
+    `_apply_flips` skips an already-blessed row and refuses everything else, so
+    this action writes nothing, permanently. Ratification stays a human
+    reviewed-commit act; `intake.py snapshot`'s authority-gated refresh is the
+    one mechanical door touching the approval record. That is a statement about
+    this SCRIPT, not about agent judgment — an LLM session or adjudicator is
+    still expected to move a row's Status through the reviewed-commit path for
+    spine content past the declared ratification level
+    (`agent_common.human_holds` says which). `recommend` is unaffected and is
+    this repo's live arm (every spine tier is human-held)."""
     root = Path(root)
     # SN-028: the mixed-config refusal, at the third entry point that reads
     # policy without passing through agent_loop.main. This arm decides whether
@@ -1455,8 +1469,10 @@ def flip_verified(root, ids):
     # NO ANCHOR IS OWED HERE, AND NO COPY IS TAKEN — because nothing is written.
     # `_apply_flips` skips an already-blessed row and refuses every other state,
     # so this list is empty and the snapshot is untouched by the mechanical path
-    # (2026-08-20: the unreachable write-and-copy block went with the dead arm;
-    # OI-45 carries whether any mechanical path ever regains the authority).
+    # (2026-08-20: the unreachable write-and-copy block went with the dead arm).
+    # OI-45 RULED (b) RETIRE THE ARM (2026-08-20): no mechanical path regains the
+    # authority; ratification stays human, and `intake.py snapshot`'s
+    # authority-gated refresh is the record's one mechanical door.
     for rid in flipped:
         _say("flipped {} -> Approved ({})".format(rid, session_hold))
     return action, flipped, None
@@ -1618,33 +1634,36 @@ def _rewrite_toml_statuses(live, rel, ids):
 
 def _apply_flips(root, tables, located):
     """SKIP an already-blessed row, REFUSE everything else, WRITE NOTHING; the
-    sorted flipped ids, which is now always empty.
+    sorted flipped ids, which is now always empty — and permanently so. OI-45
+    (ruled 2026-08-20, executed by WI-490) settled the question this function
+    used to carry open.
 
-    **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7 — AN OPEN QUESTION,
-    NOT A SETTLED SHAPE.** It enacted ruled decision 2's cheap outcome
-    (`Modified` -> `Approved` for a row judged no-scope-moved); under the new
-    ladder an amendment never flips its row, so an amended row already reads
-    `Approved` and there is no cell to move. The guard below skips the
-    already-blessed row and REFUSES everything else, so this path writes nothing
-    until the owner rules what the cheap outcome is under the snapshot regime:
+    **THE STATE THIS ACT MOVED FROM RETIRED AT D-9 STEP 7.** It enacted ruled
+    decision 2's cheap outcome (`Modified` -> `Approved` for a row judged
+    no-scope-moved); under the snapshot ladder an amendment never flips its
+    row, so an amended row already reads `Approved` and there is no cell to
+    move. D-9 step 7 left two candidate resolutions on the table — re-bless a
+    drifted `Approved` row under loop-hold (a), or retire the arm (b) — and
+    OI-45 RULED (b): the guard below is the ruled shape, not a stopgap awaiting
+    an owner call.
 
-      (a) RE-BLESS — the Status write is a no-op and the product is `copy_live`,
-          i.e. a loop-held repo's adjudication re-copies drifted text into the
-          record. Decision 2's authority model applied unchanged, and the widest
-          laundering surface in the kit: a legitimate copy satisfies both the
-          mirror invariant and the unanchored rule by construction, so only
-          `human_holds` stands between drift and a blessed record.
-      (b) RETIRE — re-attestation is the human path (`intake.py snapshot` in the
-          reviewed commit) and adjudication only ever recommends.
+    OI-45 IS THE RECORD, and what it retires is precise: MECHANICAL
+    ratification — a scripted path moving a Status cell with no judgment behind
+    it. It does not say no agent may ever move a Status cell. An LLM session or
+    adjudicator is fully expected to flip a row to `Approved`, and further to
+    `Founded`, for spine content past the declared human-ratification level
+    (`agent_common.human_holds` says which) — at the human's request, or when
+    working through content the level does not hold to human ratification. The
+    dial says who holds what; this function's refusal says only that no SCRIPT
+    decides. `_cmd_snapshot`'s authority-gated refresh is the one mechanical
+    door the approval record has.
 
-    The refusal behaves as (b). **THE MACHINERY FOR (a) IS GONE (2026-08-20),
-    and that is the honest state**: the write loops it left standing were
-    unreachable behind the refusal, so what looked like "kept intact for (a)"
-    was dead code with a source-grep test pinning it. The question is OI-45's,
-    with (b) recommended; if (a) is ever ruled it arrives with the authority
-    model the review showed the record needs, not by reviving these lines. The
+    **THE MACHINERY FOR RE-BLESSING IS GONE (2026-08-20)**: the write loops it
+    left standing were unreachable behind the refusal, so what looked like
+    "kept intact for (a)" was dead code with a source-grep test pinning it. The
     signature keeps `root`/`tables` because the caller's contract is unchanged
-    and the ruling could restore a writer here."""
+    — not because a future ruling might restore a writer here; restoring one
+    would be reopening OI-45, not extending this function."""
     flipped = []
     for rid, (rel, status, row, status_ix) in sorted(located.items()):
         if status is None:
@@ -1691,11 +1710,14 @@ def _apply_flips(root, tables, located):
     # skip: the loop now either `continue`s an already-blessed row or raises.
     # Dead code that LOOKS live is worse than no code, and a test was pinning a
     # guard on it by source grep, which reads as coverage of a path nothing can
-    # execute. What the arm would have to become is an owner ruling, not a
-    # dormant draft: OI-45 carries the question, with (b) RETIRE recommended, and
-    # `_cmd_snapshot`'s authority-gated refresh is the mechanical door the record
-    # actually has. Restoring the writes means implementing that ruling, with its
-    # authority model, not un-commenting this.
+    # execute. OI-45 RULED (b) RETIRE THE ARM (2026-08-20, executed by WI-490):
+    # mechanical ratification is retired for good, not deferred, and
+    # `_cmd_snapshot`'s authority-gated refresh is the one mechanical door the
+    # approval record has. An agent may still move a Status cell through the
+    # reviewed-commit path under the declared authority dial
+    # (`agent_common.human_holds`) — the retirement is of this SCRIPT, not of
+    # agent judgment. Restoring writes here means reopening the ruling, not
+    # un-commenting this.
     return sorted(flipped)
 
 
@@ -1710,8 +1732,11 @@ def _cli_result(refusal, ok_message):
 
 
 def _cmd_adjudicate(args):
-    """The adjudication worker's mechanical tool: enact (or recommend) the
-    no-scope-moved outcome per the derived session hold."""
+    """The adjudication worker's mechanical tool: RECOMMEND the no-scope-moved
+    outcome per the derived session hold. Mechanical enactment is RETIRED
+    (OI-45, ruled 2026-08-20) — the `flip` reading of the derived action
+    survives in `flip_verified`'s brief text, but `_apply_flips` writes
+    nothing, ever; ratification stays a human reviewed-commit act."""
     root = Path(args.root).resolve()
     action, flipped, refusal = flip_verified(root, _split(args.rows))
     return _cli_result(
@@ -1741,6 +1766,17 @@ def _cmd_census(args):
 def _cmd_snapshot(args):
     """THE HUMAN PATH to the `last_approved` snapshot: copy every snapshotted
     registry into `docs/archive/last_approved/`.
+
+    RATIFICATION AUTHORITY WAS DELIBERATELY NOT MECHANIZED (OI-45, ruled
+    2026-08-20) — this refresh is the ONE mechanical toucher of the approval
+    record, and it is authority-gated (`--approves` below) rather than
+    unconditional. That is a statement about which SCRIPT decides, not about
+    who may act: an LLM session or adjudicator is fully expected to move a
+    row's Status to `Approved`, and further to `Founded`, through the reviewed
+    commit this refresh then copies — at the human's request, or for spine
+    content past the declared ratification level (`agent_common.human_holds`
+    says which). `intake.flip_verified`'s mechanical `_apply_flips` is the
+    retired candidate (OI-45 (b)); this copy was never it.
 
     The owner's hand sequence at a sitting is: edit the Status cells in the
     reviewed commit -> run `intake.py snapshot` -> commit both together. The
@@ -1817,9 +1853,10 @@ def main(argv=None):
     census.set_defaults(func=_cmd_census)
     adj = sub.add_parser(
         "adjudicate",
-        help="enact (or recommend) the no-scope-moved flip — which of the two "
-        "depends on whether the tier in process is still human-held "
-        "(docs/process.toml [attestation] human_ratification_through)",
+        help="recommend re-verify for spine rows judged no-scope-moved — "
+        "mechanical enactment is RETIRED (OI-45); ratification stays a human "
+        "reviewed-commit act (docs/process.toml [attestation] "
+        "human_ratification_through)",
     )
     adj.add_argument(
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
