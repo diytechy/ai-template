@@ -64,3 +64,30 @@ step; four behaviors genuinely need clearance semantics; the stage rides
 `docs/gate` only as a comment substring one consumer regex-scrapes — the
 carrier seam any re-key crosses first). The row stays PENDING — the
 census is the owner's asked-for input, not the ruling.
+
+**Second follow-up, same day — the ladder re-discrimination question and
+the at-or-above deep check.** The owner proposed re-discriminating the
+ladder itself (all-Founded → IN `DevStg-Impl`; `DevStg-Release` requires
+all test cases PASSING) and asked for an adversarial corner-case check of
+at-or-above, plus why `docs/gate`'s headline value cannot simply be the
+current stage. The deep-check
+([plans/2026-08-21-stage-rekey-deep-check.md](../plans/2026-08-21-stage-rekey-deep-check.md)),
+driven not assumed: the re-discrimination is the OI-30 D2 harness
+driver's stage-axis half and is behaviourally INERT for all 27
+stage-keyed ratification sites (rungs 6/7 identical at every dial level)
+— but NO test-evidence source exists today at four independent points, so
+the evidence source is the real build. At-or-above is valid as an
+operator with NINE real corner cases in what it would read — worst: one
+Drafted row drops the raw stage ord 7 → as low as 0 with no floor and no
+ex-draft analogue (C-01 reproduced on the stage axis, the WI-473 floor
+unable to help), and no per-phase stage exists at all — so (e) needs a
+DESIGNED effective-stage derivation, not the raw field. `docs/gate`'s
+line: eight readers take it as the bar and `check.py` hard-exits on
+non-bar values, so the meaning cannot silently flip; three honest carrier
+options are priced in the doc. One census correction (the hyphenated-label
+claim inverted: truncation to a DIFFERENT VALID RUNG, the unsafe
+direction) and one incidental LIVE DEFECT found and queued
+(`intake._gate_moved` reads the static header comment and has been
+always-False since the derived-gate migration — one of the four
+clearance-needing behaviors is not running at all; watermark `WI`
+496 → 497 in this commit).
