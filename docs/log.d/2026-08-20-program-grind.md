@@ -1125,6 +1125,96 @@ appear in the pre-existing ~47-file residue list.
   and `check_trajectory.py --root . --strict`: exit 0, clean (490 work items,
   455 done, 21 cancelled, graph acyclic).
 
+### WI-467 — the blind re-derivation validation row (sonnet worker) — CLOSED
+
+**Not a re-run — a housekeeping close.** Before touching anything, `git log
+--all` for the spec's own path turned up two commits already claiming this
+WI's title: `cda29c42` ("83% convergence, zero contradictions") and `dea8364e`
+(the hat-aware extension), both dated 2026-08-16. `git merge-base
+--is-ancestor` against `HEAD` confirmed both are already in THIS branch's own
+history. The exercise the spec asks for — two blind, axis-diverse capability
+breakdowns, a mechanical alignment map, orphans as findings never silent
+merges — had already run in full, weeks before this grind session, and its
+findings had already been ruled on: `docs/work/complete/WI-468-hat-exposed-obligation-intake.md`
+and `docs/work/complete/WI-470-open-items-a3-coverage.md` are both terminal,
+closing the loop the alignment map opened. The one thing that had NOT
+happened was closing the WI-467 row itself — it sat in `queued/` describing
+work that was done, diffed, and acted on.
+
+**Headline result, read off the artifacts rather than trusted from commit
+prose.** Two independent blind breakdowns —
+[`plans/2026-08-16-blind-derivation-a.md`](../plans/2026-08-16-blind-derivation-a.md)
+(actor/crossing axis, 77 rows) and
+[`-b.md`](../plans/2026-08-16-blind-derivation-b.md) (lifecycle/value-flow
+axis, 73 rows), each reading only the README vision + `stakeholder-needs.toml`
++ `external.toml`, each covering 27/27 SNs — plus a hat-aware third variant,
+[`-c-hats.md`](../plans/2026-08-16-blind-derivation-c-hats.md) (80 rows, 13
+hats), owner-approved as an extension. The alignment pass,
+[`plans/2026-08-16-derivation-alignment.md`](../plans/2026-08-16-derivation-alignment.md):
+**71 obligation clusters, 59 convergent (83%), 0 flat contradictions** (5
+divergences of placement/strength), 7 tensions hit by both teams
+independently; **63 legacy SRs — 47 MATCHED, 16 ORPHANED-IN-LEGACY** (8
+implementation-born/derived-requirement class, 7 needs-understatement, 1
+accretion), **11 ORPHANED-IN-FRESH** (7 real/partial holes, 4 over-read or
+already covered). §4's hat-aware delta: 14 of the 16 legacy orphans gain a
+naming lens (derived-requirement, DO-178C class, now reviewable); `SR-053`
+alone stays underivable from every input tried (needs-only, frame-only, and
+hat-aware all three failed to produce it) — the sharpest single finding of
+the whole exercise, since it converts "maybe accretion" into "no current
+input demands this, by three independent tries."
+
+**The notable divergence worth restating for anyone reading only this
+fragment.** D1 in the alignment map: team A read the frame as FORBIDDING a
+delivered-surface obligation for SN-023 (the dashboard's rendered view sits
+outside the boundary, only the generator capability is claimable at B-05);
+team B stated the surface obligation flatly, no caveat. Not resolved by
+either team — flagged as the sharpest divergence in the whole comparison, and
+still unruled as far as this closing session can tell (not something WI-468
+or WI-470 addressed).
+
+**Why this session did not spawn a fresh blind pair.** The task brief asked
+for two independently blind agents on divergent axes; running that again
+against a spine the earlier pass already diffed, with the sitting already
+having ruled on the findings, is not a second N-version instance — it is
+implementation-mirroring against the exercise's OWN prior output, the exact
+failure class the blind-derivation guard exists to prevent. The honest act
+available was verifying the existing result held up under real downstream
+use (it did — twice, via WI-468 and WI-470), and closing the row that never
+got closed.
+
+**R-F caught a real omission on the first commit, fixed on the second.**
+`check_trajectory --strict` reds immediately after the close commit: a
+terminal WI must clear `SpecRef` (the row still pointed at
+`docs/plans/2026-08-16-tiering-research-memo.md`). Same disposition as the
+WI-469 close precedent — the archive-to-`docs/archive/specs/` half of R-F is
+scoped to `docs/specs/`, this row's spec-of-record is a plan doc, and a grep
+confirmed no other open WI cites it, so clearing the field was the whole fix.
+
+Deferred open items: none — this close mints no new question; D1's
+unresolved divergence is restated above for visibility but was already
+banked, not newly surfaced, and disposing it is the sitting's call, not a
+new OI.
+
+**Gates.**
+
+- smoke (first commit): `1278 passed, 5 skipped in 116.37s` (contended;
+  earlier same-tier readings this session ran 65–75s)
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=484e9f28-dirty -->
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1331 intra-repo link(s), 0 broken (1 orphan warning(s))`
+- full unfiltered suite, on the landed tree (both commits in place):
+  `2719 passed, 14 skipped in 496.17s (0:08:16)`
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=0adf0868 -->
+  2719 is byte-identical to the WI-484 close's own total earlier today —
+  nothing this session added or removed a test, which is the expected
+  reading for a spec-close-only slice.
+- `check_trajectory.py --root . --strict`, on the landed tree: `clean (490
+  work item(s), 456 done (93%), 21 cancelled, graph acyclic)` — 455 → 456 is
+  exactly this row.
+- Line endings checked before trusting any count
+  (`git ls-files --eol | grep 'w/crlf'`): none of this session's touched
+  files (the spec, `docs/status.md`, `docs/gate`, `PROJECT_STATE.html`)
+  appear in the pre-existing residue list.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
