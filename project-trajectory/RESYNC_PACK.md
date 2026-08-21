@@ -2469,6 +2469,39 @@ adding it to an already-approved row does not arm a re-attest window or trip the
 It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: a hat re-point restates
 which lens a row is attributable to and moves no obligation.
 
+### Seam-TC coverage promotes at DevStg-Tests+ (OI-43 ruled (a)) [since d9a0a61f]
+
+*(Anchored at the PRECEDING commit — this entry ships with the change itself.)*
+
+**Kit-owned file — overwrite it and move on:** `scripts/check_trajectory.py`.
+**What changes for you:** an IF seam cited by no TC — until now warn-only at
+every gate — becomes an **ERROR under `--strict`**, wired the same way
+`component_findings`/`spec_interface_findings` already are (`check.py` passes
+`--strict` to this step from `DevStg-Tests` on; a plain commit and a
+`DevStg-Reqs` gate stay warn-only). `interface_findings`' own total-uncited
+line is unchanged and still never gates — a new function,
+`if_tc_coverage_findings`, carries the promotable half.
+
+**What you may notice:** if your spine has crossed `DevStg-Tests` and any
+declared seam has no TC citing it, your first run after this re-sync reds —
+same shape as the WI-473 product-floor entry above, and for the same reason:
+the gap was already there, and the exit code is what changed. There is
+deliberately no dial to switch the promotion off; it shares
+`[checks] interfaces_check`, the same opt-out `interface_findings` already
+uses.
+
+**The migration allowlist is YOURS to seed, not the kit's to ship.** Create
+`docs/if-tc-coverage-allow` (absent = empty = every uncited seam errors) with
+one `IF-###` id per line, seeded from your own measurement:
+`python scripts/check_trajectory.py --root .` and read its "IF seam(s) are
+cited by no TC" line. State the basis (command, count, revision) in the file's
+own header — `docs/if-tc-coverage-allow` in this repo, if you want a worked
+example — and treat the list as a burn-down, not a permanent exemption: the
+standing never-green-by-list-edit rule applies to every entry. A stale entry
+(its seam gained a TC, or its id no longer resolves) is reported by
+`if_tc_allow_hygiene_findings` — never blocking, so pruning it is
+housekeeping, not a fix owed under pressure.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

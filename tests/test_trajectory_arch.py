@@ -385,13 +385,130 @@ def test_contracts_docstring_citation_warns(tmp_path):
 
 
 def test_interface_warns_never_fail_strict(tmp_path):
-    # Even under --strict, the connectivity warns never change the exit code
-    # (they are warns, not the R-B..R-E coherence rules --strict promotes). With
-    # no work-items registry the run is vacuously clean once the warns are printed.
+    # Even under --strict, the REMAINING connectivity warns never change the
+    # exit code (they are warns, not the R-B..R-E coherence rules --strict
+    # promotes). With no work-items registry the run is vacuously clean once
+    # the warns are printed. This scenario has no IF rows at all, so the
+    # seam-TC PROMOTION (WI-488, below) is vacuous here too — it is tested on
+    # its own scenario, not this one.
     write_arch(tmp_path, ARCH_2MOD)
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "connectivity undeclared" in proc.stderr
+
+
+# --- WI-488 (OI-43 ruled (a)): the seam-TC coverage promotion + its migration --
+# allowlist. `interface_findings`' own "cited by no TC" line (tested above,
+# `test_seam_tc_citation_warn`) stays pure warn-first forever and reports the
+# TOTAL uncited count; `if_tc_coverage_findings` is the promotable half — WARN
+# plain / ERROR under --strict — and reports only the seams NOT on
+# `docs/if-tc-coverage-allow`.
+
+
+def test_seam_tc_promotion_errors_under_strict_when_not_allowlisted(tmp_path):
+    # Same fixture as test_seam_tc_citation_warn (IF-001 TC-cited, IF-002 not),
+    # no allowlist file present -> IF-002 is a plain WARN, and --strict promotes
+    # it to an ERROR (exit 1) — distinct from, and in ADDITION to, the
+    # `interface_findings` total-uncited line.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    promo = [ln for ln in proc.stderr.splitlines() if "migration allowlist" in ln]
+    assert len(promo) == 1 and "IF-002" in promo[0] and "IF-001" not in promo[0]
+    assert "WARN" in promo[0]
+
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    promo_strict = [
+        ln for ln in strict.stderr.splitlines() if "migration allowlist" in ln
+    ]
+    assert len(promo_strict) == 1 and "ERROR" in promo_strict[0]
+    # The informational total (interface_findings, never promoted) still prints
+    # under --strict, unaffected.
+    total = [ln for ln in strict.stderr.splitlines() if "cited by no TC" in ln]
+    assert len(total) == 1 and "1 IF seam(s)" in total[0]
+
+
+def test_seam_tc_promotion_allowlisted_seam_stays_warn_under_strict(tmp_path):
+    # Same uncited IF-002, but listed on the migration allowlist: --strict
+    # stays green (no ERROR, no "migration allowlist" WARN line either — an
+    # allowlisted seam is silent on THIS check), while the informational total
+    # in `interface_findings` still reports it (the debt stays visible).
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
+        "IF-002 — seeded baseline (test fixture)\n", encoding="utf-8"
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert "migration allowlist" not in strict.stderr
+    total = [ln for ln in strict.stderr.splitlines() if "cited by no TC" in ln]
+    assert len(total) == 1 and "IF-002" in total[0]
+
+
+def test_if_tc_allow_hygiene_reports_stale_and_unknown_entries(tmp_path):
+    # A listed seam that HAS gained a TC (IF-001), and a listed id that names no
+    # live IF row (IF-999) -> both reported, never blocking, not even --strict.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,draft,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
+        "IF-001 — already covered, deliberately left to test the stale arm\n"
+        "IF-002 — still genuinely uncited, kept off the promotion for this test\n"
+        "IF-999 — deliberately unresolvable, to test the unknown arm\n",
+        encoding="utf-8",
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    stale = [ln for ln in strict.stderr.splitlines() if "prune them" in ln]
+    assert len(stale) == 1 and "IF-001" in stale[0] and "WARN" in stale[0]
+    unknown = [ln for ln in strict.stderr.splitlines() if "no live IF-### row" in ln]
+    assert len(unknown) == 1 and "IF-999" in unknown[0] and "WARN" in unknown[0]
+
+
+def test_seam_tc_promotion_shares_the_one_module_vacuity(tmp_path):
+    # <=1 module: the promotion must arm on no MORE than the warn it promotes
+    # (test_single_module_inventory_is_vacuous, above) — an uncited seam here
+    # stays silent on both checks, strict or not.
+    write_arch(tmp_path, ARCH_1MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,downstream adopter,"a to world",SR-001,v1,approved,Active,,\n',
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert "migration allowlist" not in strict.stderr
+    assert "cited by no TC" not in strict.stderr
 
 
 # --- WI-073/FB5: the How-SW top-view right-sizing rule -------------------------
@@ -1121,12 +1238,28 @@ def test_cross_cmp_import_without_seam_warns_plain_fails_strict(tmp_path):
     assert "has no declared IF-### seam" in strict.stderr
 
 
+def _write_tc_citing(tmp_path, if_id):
+    """A minimal TC citing `if_id` — WI-488's seam-TC promotion errors under
+    `--strict` on any declared, uncited seam, so a fixture whose SUBJECT is a
+    different rule (cross-component coverage, the overlap advisory, …) must
+    cite its own IF row to stay a clean `--strict` scenario."""
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;{},Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n".format(
+            if_id
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_cross_cmp_import_with_declared_seam_is_silent(tmp_path):
     _cross_cmp_repo(tmp_path)
     write_ifs(
         tmp_path,
         'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
     )
+    _write_tc_citing(tmp_path, "IF-001")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "cross-component import" not in proc.stderr
@@ -1140,6 +1273,7 @@ def test_cross_cmp_seam_covers_either_direction(tmp_path):
         tmp_path,
         'IF-001,Provides,scripts/mod_b,scripts/mod_a,"call",SR-001,v1,Stable,Active,,\n',
     )
+    _write_tc_citing(tmp_path, "IF-001")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "cross-component import" not in proc.stderr
@@ -1240,6 +1374,7 @@ def test_overlap_advisory_yields_to_a_declared_seam(tmp_path):
         tmp_path,
         'IF-001,Consumes,scripts/mod_a,scripts/mod_b,"call",SR-001,v1,Stable,Active,,\n',
     )
+    _write_tc_citing(tmp_path, "IF-001")
     proc = run_traj(tmp_path, "--strict")
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert ADVISORY not in proc.stderr

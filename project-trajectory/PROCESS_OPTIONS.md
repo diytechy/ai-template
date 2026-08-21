@@ -2198,14 +2198,29 @@ architecture connects, so the **coverage warn runs even when `interfaces.toml` i
 empty or absent**: a multi-module arch-map with no declared seams reads
 **"connectivity undeclared"** instead of passing vacuously, and the How-SW panel
 stays a bare module list — the organized graph is *earned* by declaring seams.
-`check_trajectory.py` runs this at the hook and the gate, **all warn-first** (it
-never changes an exit code). A repo with genuinely nothing to declare silences it
-with `[checks] interfaces_check = false` (the `trajectory_check`/`okf_export`
-idiom — the key ships `true`);
-a single-module inventory is vacuous. The warns: every arch-map module is a
-declared IF endpoint; each declared seam is cited by ≥1 TC; a `Contracts: IF-###`
-docstring line (harvested into the arch-map like `Implements:`) matches the
-registry.
+`check_trajectory.py` runs this at the hook and the gate. A repo with genuinely
+nothing to declare silences it with `[checks] interfaces_check = false` (the
+`trajectory_check`/`okf_export` idiom — the key ships `true`); a single-module
+inventory is vacuous. The warns, **warn-first FOREVER** (never an exit-code
+change, at any gate): every arch-map module is a declared IF endpoint; a
+`Contracts: IF-###` docstring line (harvested into the arch-map like
+`Implements:`) matches the registry.
+
+**Seam-TC coverage promotes at DevStg-Tests+ (OI-43 ruled (a), WI-488).** Each
+declared seam should be cited by ≥1 TC — the one warn above that is no longer
+permanent. `interface_findings` still reports the total uncited count,
+informationally, warn-first at every gate; a NEW function,
+`if_tc_coverage_findings`, reports the seams NOT on the migration allowlist
+`docs/if-tc-coverage-allow` and is **WARN plain, ERROR under `--strict`
+(DevStg-Tests+)** — the `component_findings`/`spec_interface_findings` idiom,
+wired the same way (`check.py` passes `--strict` from `DevStg-Tests` on). The
+allowlist was seeded at the population measured when the ruling executed, with
+a declared burn-down expectation stated in the file's own header — a migration
+device, subject to the never-green-by-list-edit rule, never a permanent
+exemption surface. A listed seam that gains a TC, or an entry naming a retired
+id, is reported (never blocked) by `if_tc_allow_hygiene_findings`, so the
+burn-down stays visible. There is deliberately no separate opt-out dial: the
+promotion shares `interfaces_check`.
 
 **Where a seam citation goes (ruled, WI-065): the TC's own `Verifies` cell**,
 alongside the SR/LLR ids — `Verifies=SR-074;IF-009`. One cell states everything

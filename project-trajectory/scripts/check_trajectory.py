@@ -91,15 +91,26 @@ gate (`trace.py` does not read WI ids at all).
 **Architecture-connectivity coverage** (S5/WI-056; process.md §8). This step is
 also the views-checker for the interface layer: every module in the arch-map
 inventory (`docs/architecture.md`'s generated block) should appear as ≥1 IF-###
-endpoint, each Active seam should be cited by a TC, and a `Contracts: IF-###`
-docstring citation should match the registry. All **warn-first** (they never
-change the exit code, at any gate) and printed at the hook. The ruled posture is
-**opt-out, default-on**: the coverage warn fires even when `interfaces.csv` is
-empty or absent — a multi-module arch-map with no declared seams reads
-"connectivity undeclared" instead of passing vacuously. It is silenced only by
-`[checks] interfaces_check = false`, or a ≤1-module inventory (nothing
-to connect). The honesty valve for a deliberate source/sink is a `source`/`sink`
-token in that module's IF row Notes (below).
+endpoint, and a `Contracts: IF-###` docstring citation should match the
+registry — both stay **warn-first forever** (never the exit code, at any gate)
+and print at the hook. The ruled posture is **opt-out, default-on**: the
+coverage warn fires even when `interfaces.csv` is empty or absent — a
+multi-module arch-map with no declared seams reads "connectivity undeclared"
+instead of passing vacuously. Silenced only by `[checks] interfaces_check =
+false`, or a ≤1-module inventory (nothing to connect). The honesty valve for a
+deliberate source/sink is a `source`/`sink` token in that module's IF row Notes
+(below).
+
+**Seam-TC coverage — WARN plain, ERROR under `--strict` (DevStg-Tests+) since
+WI-488 (OI-43 ruled (a)).** Every declared IF seam should be cited by a TC
+(`interface_findings` still reports the total uncited count, informationally,
+warn-first at every gate); `if_tc_coverage_findings` is the promotable half — it
+reports only the seams NOT on the migration allowlist `docs/if-tc-coverage-allow`
+(seeded at the population measured when the ruling executed, with a declared
+burn-down expectation — never a permanent exemption). Shares the
+`interfaces_check` opt-out; `if_tc_allow_hygiene_findings` reports (never
+blocks) an allowlist entry that has gone stale (its seam gained a TC, or its id
+no longer resolves), so the burn-down is visible rather than silently absorbed.
 
 **How-SW top-view right-sizing** (WI-073/FB5; process-options.md "Component
 layer"). The software-architecture diagram's *first view* must show at most
@@ -217,6 +228,10 @@ TOP_VIEW_MAX = 10
 # `Contracts: IF-003, IF-004` docstring line (harvested into the arch-map) or an
 # id cell yields each id cleanly.
 IF_ID_RE = re.compile(r"IF-\d+")
+
+# The seam-TC coverage migration allowlist (OI-43 ruled (a), WI-488) — see
+# `read_if_tc_allow`.
+IF_TC_ALLOW = "docs/if-tc-coverage-allow"
 # A CMP-### component id token (process-options.md "Component layer"). trace.py
 # owns CMP integrity; this loader is lenient (skips a malformed id) — it only
 # feeds the warn-first top-view coverage.
@@ -944,6 +959,12 @@ def interface_findings(root):
     # rather than a softening: this function runs in the shipped pre-commit hook,
     # where 103 warn lines is a check nobody reads and therefore a check that does
     # not work. One line carries the count, which is the number that has to fall.
+    #
+    # STAYS PURE WARN-FIRST, FOREVER, EVEN UNDER --strict — the promotable half
+    # split off at WI-488 (OI-43 ruled (a)) into `if_tc_coverage_findings` below,
+    # which reports only the seams NOT on the migration allowlist. This line keeps
+    # reporting the TOTAL uncited count (allowlisted seams included) so the whole
+    # debt stays visible even once the actionable subset goes quiet.
     tc_cited = set()
     for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
         tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
@@ -975,6 +996,160 @@ def interface_findings(root):
                     "IF {} is in the registry but no script declares it via a "
                     "Contracts: docstring line".format(r["id"])
                 )
+    return out
+
+
+# --- seam-TC coverage promotion + its migration allowlist (OI-43 ruled (a),
+# WI-488) -------------------------------------------------------------------
+
+
+def read_if_tc_allow(root):
+    """`{IF-### id: reason-or-None}` from `docs/if-tc-coverage-allow` — the
+    seam-TC coverage migration allowlist. Absent file: empty dict.
+
+    Grammar, deliberately the cheap kind: one non-blank, non-`#`-comment line
+    per entry, the first whitespace-run-delimited token an `IF-###` id,
+    optionally followed by ` — <reason>`. FAIL-SOFT IN THE LOUD DIRECTION, the
+    `docs/provenance-allow` rule: a line whose first token does not parse as an
+    IF-### id declares nothing and is dropped, so the worst a malformed entry
+    can do is leave the finding it was meant to silence still reported — never
+    the reverse."""
+    path = Path(root) / IF_TC_ALLOW
+    if not path.is_file():
+        return {}
+    out = {}
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        head, _, reason = line.partition(" — ")
+        token = head.split()[0] if head.split() else ""
+        if IF_ID_RE.fullmatch(token):
+            out[token] = reason.strip() or None
+    return out
+
+
+def if_tc_coverage_findings(root):
+    """The PROMOTABLE half of seam-TC coverage (OI-43 ruled (a), WI-488): an IF
+    seam cited by no TC — the rung-2 seam-TC rule `interface_findings` already
+    reports informationally, in full — becomes an ERROR when it is NOT on the
+    migration allowlist `docs/if-tc-coverage-allow`. Returns the finding
+    string(s) ([] when clean or opted out); the caller prints them WARN plain
+    and promotes them to ERROR under `--strict` (DevStg-Tests+), the
+    `component_findings` idiom.
+
+    THE ALLOWLIST IS A MIGRATION DEVICE, NOT A PERMANENT EXEMPTION SURFACE. It
+    was seeded at the population measured when the ruling executed (the file's
+    own header carries the exact count, command and revision) — the standing
+    never-green-by-list-edit rule (session-protocol skill §2) governs every
+    entry: adding one to silence a genuinely NEW uncited seam is ACCEPTING what
+    it measures, not laundering it, and should carry its own reason. An
+    allowlisted seam still counts in `interface_findings`' total; it simply does
+    not error here. `if_tc_allow_hygiene_findings` reports — never blocks — a
+    listed seam that has since gained a TC, so a shrinking list (the declared
+    burn-down) stays visible rather than silently absorbed.
+
+    Opt-out shares `interface_findings`' `[checks] interfaces_check` dial —
+    same data, same switch — AND its ≤1-module arch-map vacuity: the promoted
+    rule must arm on no MORE than the warn it promotes, so a `files`-mode or
+    single-module adopter that never saw this warn does not suddenly see this
+    error. Widening scope is a second, unruled change riding a severity one.
+
+    DELIBERATELY UNCLAIMED (no `Implements:` line): `LLR-042` (`SR-159`) is
+    `Approved`, and its own `detail` says the connectivity layer emits its
+    findings "without changing exit status" — true of `interface_findings`,
+    which this function does not touch, and now FALSE of the seam-TC rule this
+    function promotes. Amending an Approved cell overrides attestation (the
+    sitting's act, the SR-006/LLR-060 precedent, WI-473); minting a fresh
+    Drafted LLR under `SR-159` was considered and declined for the same reason
+    that session gave first — `SR-159` is phase 1, and a Drafted child would
+    drag that phase's derived bar down as a side effect of unrelated work. So
+    the built behaviour is ahead of its requirement on purpose, recorded as
+    owed on WI-488's own spec rather than claimed here.
+    """
+    if not read_interfaces_check_enabled(root):
+        return []
+    inventory, _declared_contracts, _imports = arch_inventory(root)
+    if len(inventory) <= 1:
+        return []  # nothing to connect — vacuous, the interface_findings gate
+    ifs = load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))
+    if not ifs:
+        return []
+    tc_cited = set()
+    for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
+        tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
+    allow = read_if_tc_allow(root)
+    new_uncited = [
+        r["id"] for r in ifs if r["id"] not in tc_cited and r["id"] not in allow
+    ]
+    if not new_uncited:
+        return []
+    shown = ", ".join(new_uncited[:5])
+    return [
+        "{} IF seam(s) have no citing TC and are not on the migration allowlist "
+        "({}) — cite the seam from a TC, or add a reasoned entry to the "
+        "allowlist (process.md §8; OI-43/WI-488){}: {}".format(
+            len(new_uncited),
+            IF_TC_ALLOW,
+            " — first 5" if len(new_uncited) > 5 else "",
+            shown,
+        )
+    ]
+
+
+def if_tc_allow_hygiene_findings(root):
+    """`docs/if-tc-coverage-allow` hygiene (WI-488) — WARN-ONLY, never the exit
+    code, not even under `--strict`: unlike a NEW uncited seam, a STALE entry is
+    never a defect to fix under pressure. Two shapes:
+
+    - a listed seam has since gained a TC citation — burn-down PROGRESS, so
+      pruning the entry is housekeeping, not a fix owed to a red build;
+    - a listed id resolves to no live IF-### row (retired/renumbered).
+
+    Kept structurally apart from `if_tc_coverage_findings` so a shrinking
+    allowlist can never itself be mistaken for a new finding, and so this
+    class can never gate even by an unintended promotion of that function.
+    Shares that function's ≤1-module arch-map vacuity: reporting a listed
+    seam as stale is meaningless while the coverage rule it tracks never arms.
+
+    DELIBERATELY UNCLAIMED — see `if_tc_coverage_findings`' own note on why no
+    `Implements:` line names `LLR-042` here.
+    """
+    if not read_interfaces_check_enabled(root):
+        return []
+    allow = read_if_tc_allow(root)
+    if not allow:
+        return []
+    inventory, _declared_contracts, _imports = arch_inventory(root)
+    if len(inventory) <= 1:
+        return []
+    ifs = load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))
+    all_ids = {r["id"] for r in ifs}
+    tc_cited = set()
+    for r in spine_carrier.load(root / TC_CSV, "TC-ID"):
+        tc_cited.update(IF_ID_RE.findall(r.get("Verifies", "") or ""))
+    out = []
+    unknown = sorted(i for i in allow if i not in all_ids)
+    if unknown:
+        shown = ", ".join(unknown[:5])
+        out.append(
+            "{} {} entries name no live IF-### row (retired/renumbered){}: {}".format(
+                len(unknown),
+                IF_TC_ALLOW,
+                " — first 5" if len(unknown) > 5 else "",
+                shown,
+            )
+        )
+    stale = sorted(i for i in allow if i in tc_cited)
+    if stale:
+        shown = ", ".join(stale[:5])
+        out.append(
+            "{} {} entries are now cited by a TC — prune them (burn-down "
+            "progress, never a defect){}: {}".format(
+                len(stale), IF_TC_ALLOW, " — first 5" if len(stale) > 5 else "", shown
+            )
+        )
     return out
 
 
@@ -3928,7 +4103,16 @@ def main():
     # SILENCES, which is a question about the PARTITION rather than a defect in
     # the edge, and no partition has been ruled — so it must never join the exit
     # code, not even under --strict, which the component block would do.
-    for w in interface_findings(root) + cross_component_advisories(root):
+    # ...and the seam-TC-coverage allowlist HYGIENE advisory (WI-488) shares it
+    # for the same reason: a stale (now-covered, or now-retired) allowlist entry
+    # is never itself a defect, so it must never join the exit code either — the
+    # PROMOTABLE half of seam-TC coverage is `if_tc_coverage_findings`, below,
+    # deliberately kept out of this loop.
+    for w in (
+        interface_findings(root)
+        + cross_component_advisories(root)
+        + if_tc_allow_hygiene_findings(root)
+    ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # Ratification-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
@@ -3948,6 +4132,18 @@ def main():
         else:
             print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
 
+    # Seam-TC coverage promotion (OI-43 ruled (a), WI-488) — WARN plain, ERROR
+    # under --strict (DevStg-Tests+), the component_findings idiom. Runs here
+    # (not in the wi-scoped block below) for the same reason component_findings
+    # does: the finding is a property of the arch-map + interfaces + TCs, not of
+    # the WI registry, so a repo with no work items still gets it.
+    if_tc_errors = []
+    for msg in if_tc_coverage_findings(root):
+        if args.strict:
+            if_tc_errors.append(msg)
+        else:
+            print("check_trajectory: WARN - {}".format(msg), file=sys.stderr)
+
     # The one registry home (Phase 5): `docs/work/` specs. Any finding about
     # the REGISTRY ITSELF — a malformed spec, or a stray resurrected CSV — is
     # an integrity error, the same tier as a malformed id. (WI-349's
@@ -3960,12 +4156,13 @@ def main():
     wis, integrity = load_wis(wi_rows)
     integrity = registry_errors + integrity
     if not wis and not integrity:
-        if comp_errors:
-            for e in comp_errors:
+        arch_errors = comp_errors + if_tc_errors
+        if arch_errors:
+            for e in arch_errors:
                 print("check_trajectory: ERROR - {}".format(e), file=sys.stderr)
             print(
                 "check_trajectory: {} architecture finding(s).".format(
-                    len(comp_errors)
+                    len(arch_errors)
                 ),
                 file=sys.stderr,
             )
@@ -3982,7 +4179,9 @@ def main():
     for w in phase_findings(root, wis):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    errors = comp_errors + integrity + validate(wis, load_known_srs(root))
+    errors = (
+        comp_errors + if_tc_errors + integrity + validate(wis, load_known_srs(root))
+    )
     # Specs act on declared interface boundaries (WI-191) — WARN plain, ERROR
     # under --strict (DevStg-Tests+); vacuous until a spec adopts an `## Interfaces` section.
     for msg in spec_interface_findings(root):

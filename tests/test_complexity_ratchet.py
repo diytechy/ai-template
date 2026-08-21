@@ -147,7 +147,15 @@ BASELINE = {
     # against. The tier DECISION itself was moved out to
     # `tier_completion_findings` rather than being written as two more branches
     # here — the simplification the ratchet prefers, applied as far as it goes.
-    ("check_trajectory.py", "main"): 22,
+    # WI-488 reviewed bump 22 -> 24, +2: the seam-TC coverage promotion
+    # (OI-43 ruled (a)) needs its own WARN-plain/ERROR-under-`--strict` loop
+    # beside `comp_errors`' — the same shape `component_findings` already
+    # costs main() two branches for, applied to `if_tc_coverage_findings`.
+    # Not decomposed: this file already carries two near-identical bare
+    # promotion loops (component_findings, spec_interface_findings) rather
+    # than one shared helper, so a third follows the established idiom
+    # instead of inventing a fourth shape for one caller.
+    ("check_trajectory.py", "main"): 24,
     (
         "check_trajectory.py",
         "committed_snapshot_findings",

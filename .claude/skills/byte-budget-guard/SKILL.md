@@ -45,7 +45,7 @@ in the session/WI note. Enforced by convention + that report.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 84,383 | 2026-08-20 | **+303** FLAGGED: WI-484 — §1's derived-SR clause re-pointed off the retired prose label onto the `Hat-Refs` cell, carrying the two rules a reader cannot derive from a column name (a blank means *not recorded*; an LLR's effective set is own + parents', never a copy) |
-| `project-trajectory/PROCESS_OPTIONS.md` | 175,531 | 2026-08-20 | **+201** FLAGGED: WI-390 — the merge-queue paragraph corrected off the deleted candidate-worktree model onto the live one: bar runs once, on the branch, at refresh |
+| `project-trajectory/PROCESS_OPTIONS.md` | 176,601 | 2026-08-21 | **+1,070** FLAGGED: WI-488 (OI-43 ruled (a)) — seam-TC coverage promotes WARN to ERROR under `--strict` at DevStg-Tests+, with a migration allowlist + burn-down expectation |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's own
 shipped warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

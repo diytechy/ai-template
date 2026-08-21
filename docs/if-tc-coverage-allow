@@ -1,0 +1,170 @@
+# Interface contract-test coverage — migration allowlist (OI-43 ruled (a),
+# 2026-08-20; executed WI-488).
+#
+# check_trajectory.py `if_tc_coverage_findings` promotes an IF seam cited by no
+# TC from WARN to ERROR under `--strict` (wired at gate DevStg-Tests+ by
+# check.py, the same wiring `component_findings` and `spec_interface_findings`
+# already use). An id listed here is EXEMPT from that promotion — it still
+# counts in `interface_findings`' own total-uncited line, it just does not
+# error. THIS FILE IS A MIGRATION DEVICE, NOT A PERMANENT EXEMPTION SURFACE:
+# the standing never-green-by-list-edit rule (session-protocol skill §2)
+# governs every line below — adding an entry to silence a genuinely NEW
+# uncited seam is accepting what it measures, not laundering it away, and a
+# new addition should carry its own reason (see the grammar below). Removing
+# an entry once its seam gains a real TC is the intended end state, not an
+# accident; `if_tc_allow_hygiene_findings` reports (never blocks) an entry that
+# has gone stale so the burn-down stays visible.
+#
+# GRAMMAR: one `IF-###` id per non-blank, non-comment line, optionally followed
+# by ` — <reason>`. A line whose first token does not parse as an IF-### id
+# declares nothing and is dropped (fail-soft in the loud direction — the
+# `docs/provenance-allow` rule). The 120 entries below carry no per-line reason
+# because they share ONE reason, stated once here rather than 120 times: they
+# are the SEEDED baseline, not a judgment call made row by row. A reason
+# stamped on a FUTURE addition should say what it says for every other ratchet
+# in this repo — why the seam is legitimately still untested and what would
+# close it.
+#
+# THE SEEDING MEASUREMENT (basis for the count below): 120 of 130 live IF
+# seams cited by no TC, reproduced with:
+#   python project-trajectory/scripts/check_trajectory.py --root .
+# reading the "IF seam(s) are cited by no TC" line.
+# <!-- fig: cmd="python project-trajectory/scripts/check_trajectory.py --root ." rev=d9a0a61f -->
+# This is HIGHER than the OI-43 ruling's own cited figure (115, measured
+# 2026-08-19) because the tree moved between the ruling and this row's
+# execution: WI-455 minted IF-134/135, WI-390 minted IF-136/137 and declared
+# IF-055/080/081 (three rows that existed but declared no script), and WI-483
+# re-pointed IF-093 — none of the five new/re-declared seams carry a TC yet.
+# The ruling's intent — seed at the MEASURED uncovered population, not at a
+# number frozen before the sequencing it named — governs over the stale 115.
+#
+# BURN-DOWN EXPECTATION: this list should SHRINK, never grow past what a
+# reasoned new entry adds. Concretely: (1) the WI-483 decomposition program is
+# the highest-leverage burn-down path — each module it pulls out of a monolith
+# is a natural point to add a focused seam test; (2) any WI that mints a new
+# IF row should ship a TC alongside it where practical, or add a reasoned
+# entry here where not; (3) a sitting should review this file's count as a
+# standing agenda item until it reaches zero, at which point the file (and
+# this promotion's opt-out surface) can be retired to a one-line "no active
+# entries" record, the `docs/provenance-allow` precedent.
+
+IF-001
+IF-002
+IF-003
+IF-004
+IF-005
+IF-006
+IF-008
+IF-009
+IF-010
+IF-011
+IF-012
+IF-013
+IF-014
+IF-015
+IF-016
+IF-017
+IF-018
+IF-019
+IF-020
+IF-021
+IF-022
+IF-023
+IF-024
+IF-025
+IF-026
+IF-028
+IF-029
+IF-030
+IF-031
+IF-032
+IF-033
+IF-034
+IF-035
+IF-036
+IF-037
+IF-038
+IF-039
+IF-040
+IF-041
+IF-042
+IF-043
+IF-044
+IF-045
+IF-046
+IF-047
+IF-048
+IF-049
+IF-050
+IF-051
+IF-052
+IF-053
+IF-054
+IF-055
+IF-056
+IF-057
+IF-058
+IF-059
+IF-060
+IF-061
+IF-064
+IF-065
+IF-066
+IF-068
+IF-069
+IF-070
+IF-071
+IF-072
+IF-073
+IF-074
+IF-075
+IF-076
+IF-077
+IF-078
+IF-079
+IF-080
+IF-081
+IF-082
+IF-083
+IF-084
+IF-085
+IF-086
+IF-087
+IF-088
+IF-089
+IF-092
+IF-097
+IF-098
+IF-099
+IF-100
+IF-102
+IF-103
+IF-104
+IF-105
+IF-106
+IF-107
+IF-108
+IF-109
+IF-110
+IF-111
+IF-112
+IF-113
+IF-114
+IF-115
+IF-116
+IF-117
+IF-118
+IF-119
+IF-120
+IF-121
+IF-122
+IF-125
+IF-126
+IF-130
+IF-131
+IF-132
+IF-133
+IF-134
+IF-135
+IF-136
+IF-137

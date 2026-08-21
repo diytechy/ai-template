@@ -1328,6 +1328,158 @@ spec rather than a new OI, since OI-42 already covers this ground and
 stays `ruled`; the banked registry-staleness findings above are candidates
 for a future small WI-482-class repair, not an owner decision.
 
+### WI-488 — the interface contract-test coverage promotion (sonnet worker) — CLOSED complete
+
+**Full row, not a slice.** Executes OI-43's ruling (a) in full: the
+promotion, the migration allowlist, and the declared burn-down expectation,
+sequenced behind WI-469 (closed) and the wi455 lane's landed crossing-half.
+Spec moved to `docs/work/complete/`.
+
+Deferred open items: none — see below for the one item recorded as an owed
+recommendation on the WI's own spec rather than minted as an OI (the shape
+this session's own WI-473 precedent uses for the same class of question).
+
+**The promotion.** `check_trajectory.py` gains `if_tc_coverage_findings` — an
+IF seam cited by no TC and NOT on the migration allowlist is WARN plain,
+ERROR under `--strict`, wired through `main()` exactly like
+`component_findings`/`spec_interface_findings` (so `check.py`'s existing
+gate-conditional `--strict` — passed from `DevStg-Tests` on, its own
+unmodified logic — carries the promotion for free; `check.py` itself needed
+no change). `interface_findings`' own "cited by no TC" line is UNCHANGED,
+stays warn-first forever, and still reports the TOTAL (allowlisted seams
+included), so the whole debt stays visible once the actionable subset goes
+quiet. A companion `if_tc_allow_hygiene_findings` reports — never blocks, not
+even under `--strict` — a listed seam that has since gained a TC, or an id
+that no longer resolves, so the burn-down is visible rather than silently
+absorbed.
+
+**A scope-widening bug caught before landing, not after.** The first draft
+of the two new functions checked only `[checks] interfaces_check`, not
+`interface_findings`' OWN ≤1-module arch-map vacuity gate. Measured against a
+single-module fixture: the old warn stayed silent (as designed) while the new
+promotable function fired anyway — a real behavior divergence, since the
+ruling promotes an EXISTING warn's severity, not its scope. A `files`-mode or
+single-module adopter who never saw the warn would otherwise start seeing the
+error. Both new functions now share the same vacuity check
+(`test_seam_tc_promotion_shares_the_one_module_vacuity` pins it); caught by
+building a scaffold fixture rather than only testing on this repo's own
+multi-module tree, where the bug was invisible.
+
+**The allowlist, re-measured rather than trusted from the ruling's own
+citation.** `docs/if-tc-coverage-allow`, seeded with **120** ids (was 115 at
+the 2026-08-19 ruling) — the tree moved between the ruling and this row's
+execution: WI-455 minted IF-134/135, WI-390 minted IF-136/137 and declared
+IF-055/080/081 (existed but declared no script), WI-483 re-pointed IF-093 —
+none of the five new/re-declared seams carry a TC. 130 live IF rows today
+(was 125), 120 uncited. The ruling's own text anticipated exactly this ("the
+seed problem" is not one — its INTENT, seed at the measured uncovered
+population, governs over the stale number, and its text explicitly says so).
+Not a kit-shipped template — like `docs/provenance-allow`, the file is
+absent-tolerant and each adopting repo seeds its own once the promotion
+starts to bite (`read_if_tc_allow` returns `{}` for a missing file, so a
+fresh scaffold is unaffected until it needs one).
+
+**Verified by BOOTSTRAPPING A REAL SCAFFOLD**, per the standing lesson, not
+just on this repo: a fresh two-module scaffold with one uncited seam, run
+through `check.py` itself (not `check_trajectory.py` called directly) —
+`--stage-cleared DevStg-Reqs --run-step trajectory` runs with NO `--strict`
+(WARN only, PASS, exit 0); `--stage-cleared DevStg-Tests --run-step
+trajectory` runs WITH `--strict` (the seam ERRORs, FAIL, exit 1); seeding the
+scaffold's own `docs/if-tc-coverage-allow` with that one id turns the same
+DevStg-Tests run green again. The ruling's own framing — "this repo is at
+DevStg-Reqs today, so the promotion bites nobody here until the bar rises" —
+demonstrated end to end, not assumed. Reproduced on this repo's own tree too:
+`check_trajectory.py --root . --strict` is clean with the seeded allowlist;
+removing one entry reproduces the ERROR.
+
+**Deliberately deferred, recorded rather than executed: no spine row claims
+the new mechanism.** `LLR-042` (`SR-159`) — the design row
+`interface_findings` cites — is `Approved`, and its `detail` says the
+connectivity layer emits its findings "without changing exit status": still
+TRUE of `interface_findings` (untouched), and would be FALSE if cited from
+`if_tc_coverage_findings`. Amending an Approved cell overrides attestation
+(the SR-006/LLR-060 precedent, WI-473, same session, same day). Minting a
+fresh Drafted LLR under `SR-159` was considered and declined for the same
+reason WI-448 hit first: `SR-159` is phase 1 (currently `DevStg-Tests`), and
+a Drafted child would drag that phase's derived bar down as a side effect of
+unrelated work. Recorded as an owed recommendation on the WI's own spec
+(Deliverable) rather than executed or minted as a new OI — the built
+behaviour is ahead of its requirement, honestly unclaimed rather than falsely
+claimed. No `Implements:` line names `LLR-042` from either new function.
+
+**Docs.** `PROCESS_OPTIONS.md`'s "Intra-repo interfaces & the architecture
+graph" section splits the now-inaccurate "all warn-first" claim into the two
+halves that stay true (endpoint/docstring warns) and the one that promotes,
+and states the allowlist + burn-down. `RESYNC_PACK.md` §3 gains an entry (the
+WI-473 product-floor entry's shape: what changes, what an adopter may notice
+on their first post-re-sync DevStg-Tests run, and that seeding their own
+allowlist is theirs to do). `PROCESS.md`'s and `README.md`'s "every interface
+is backed by a contract/fixture test" claim is UNCHANGED, per the spec — the
+promotion is what makes it true, not a rewording.
+
+**Two ratchets re-stamped, both reviewed bumps.** `check_trajectory.py`
+module size 4,096 → 4,295 (+199: the two new functions, the allowlist
+parser, and the doc comments recording the deliberately-unclaimed
+`Implements:` decision); `check_trajectory.py:main` complexity 22 → 24 (+2:
+one more WARN-plain/ERROR-under-`--strict` loop beside `comp_errors`' — the
+same shape `component_findings` already costs main() two branches for — not
+decomposed, since the file already carries two near-identical bare promotion
+loops rather than one shared helper, and a third follows the established
+idiom instead of inventing a fourth shape for one caller).
+
+**Line endings.** `tests/test_complexity_ratchet.py` was already
+whole-file CRLF in the working tree (pre-existing residue, the banked
+~47-file finding — confirmed by the uniform 341/341 CRLF count, not a
+partial edit of mine) and was normalized to LF before staging, since this
+session touched it. No other file this session edited appears in
+`git ls-files --eol | grep 'w/crlf'` beyond the pre-existing residue list
+(down to 42 files afterward).
+
+**Byte deltas, one line per touched budgeted file:**
+`project-trajectory/PROCESS_OPTIONS.md` 175,531 → 176,601 (**+1,070**,
+watched, FLAGGED and re-stamped in all three tracked skill copies) — the
+seam-TC coverage paragraph split off the promotable half, the allowlist and
+its burn-down expectation; the argument and the rejected framings stayed out,
+recorded here instead. `byte-budget-guard/SKILL.md`'s own re-stamp row first
+blew its 5,000-byte cap (5,028, the WI-473/WI-390 trap, a third witness) and
+was tightened to 4,982 in the same commit — caught by
+`test_always_loaded_docs_stay_within_byte_caps`, never by moving the cap.
+
+**Gates.**
+
+- smoke (final, landed tree): `1278 passed, 5 skipped in 65.57s (0:01:05)`
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=d9a0a61f-dirty -->
+  Unchanged count from the WI-484/WI-487 baseline — `test_trajectory_arch` is
+  a `SLOW_MODULES` member (subprocess-heavy, `run_traj`), so this WI's four
+  new tests land in the full tier, not smoke.
+- `check_docs.py --root . --stale`: `OK - 961 doc(s), 1335 intra-repo
+  link(s), 0 broken (1 orphan warning(s))` — unchanged from the WI-487
+  baseline (no doc added or removed).
+- `check_trajectory.py --root . --strict`: exit 0, `clean (490 work item(s),
+  458 done (93%), 21 cancelled, graph acyclic)` — 457 → 458 is exactly this
+  row; no new WARN or ERROR class beyond the pre-existing shared-specref
+  pairs.
+- **full unfiltered suite, run to completion in the FOREGROUND**:
+  `2723 passed, 14 skipped in 507.30s (0:08:27)`, exit 0
+  <!-- fig: cmd="python -m pytest -q -n auto" rev=d9a0a61f-dirty -->
+  2719 → 2723 is exactly this session's four new tests. **Two earlier full
+  runs on the pre-fix tree were real reds, fixed rather than waived**: the
+  first caught the two ratchets above; a second, taken before the scope-
+  widening bug fix, caught three UNRELATED cross-component/overlap-advisory
+  tests failing under `--strict` for the first time
+  (`test_cross_cmp_import_with_declared_seam_is_silent`,
+  `test_cross_cmp_seam_covers_either_direction`,
+  `test_overlap_advisory_yields_to_a_declared_seam`) — each fixture declares
+  a real IF seam with no TC, which the NEW promotion correctly flagged; fixed
+  by adding a TC citation to each fixture (`_write_tc_citing`), the honest
+  fix, since the promotion working as designed is not itself a defect.
+- The regenerated surfaces were diffed line by line before staging:
+  `docs/status.md`'s generated block moved **one line** (WI-488 dropped from
+  the Ready frontier) and nothing else; `docs/gate` did not move at all (no
+  spine row was minted, so `derive_gate.py --check` reports up to date
+  without a re-derive); `PROJECT_STATE.html` moved only the as-of sha/date
+  and the done-count (457 → 458) plus the Next-work listing.
+
 ### Adjacent findings accumulating for the closing review
 
 _(per-WI sections are inserted ABOVE this section, in close order; banked
