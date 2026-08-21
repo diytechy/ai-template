@@ -40,3 +40,27 @@ regenerated; `docs/status.md`'s hand prose re-pointed (the wi448/wi483
 ruling-owed sentences now cite the ruling; the close-leaves-for-the-owner
 sentence narrows to what is actually still open). Commit bar figures in the
 close record below.
+
+**Follow-up, same day — the second OI-51 exchange and the bar-vs-stage
+census.** The owner diagnosed the OI-51 confusion as the bar vocabulary
+itself and stated the general preference: behavior ties to development
+STAGES ("in or above DevStg-Impl → run the checks" — the question being
+"when is it relevant for me to run these checks", not "what previous step
+did I pass"), never to bars or clears — then asked for a census of which
+semantics the kit actually checks. Taken the same day
+([plans/2026-08-21-bar-vs-stage-census.md](../plans/2026-08-21-bar-vs-stage-census.md)):
+**91 sites — 55 bar/clearance, 27 current-stage, 9 mixed**, split cleanly
+on a module boundary (check SELECTION is 100% bar-keyed; ratification
+AUTHORITY is 100% stage-keyed already). The decision-critical fact: the
+stage axis carries no OI-30 D2 ceiling, but **rung 6 is VACANT** — the
+closed Status enum makes `spine_stage`'s Impl discriminator unreachable,
+so a legal spine jumps `DevStg-Tests` → `DevStg-Release` (already pinned,
+named-for-the-sitting, at `test_ratification_level.py:359`). The owner's
+shape therefore works in its AT-OR-ABOVE form only; an equality test on
+`DevStg-Impl` inherits unreachability from a second, independent cause.
+Recorded on the row as option (e) with the census's FOR/AGAINST (step
+tags are set MEMBERSHIP today, so at-or-above is a semantics change per
+step; four behaviors genuinely need clearance semantics; the stage rides
+`docs/gate` only as a comment substring one consumer regex-scrapes — the
+carrier seam any re-key crosses first). The row stays PENDING — the
+census is the owner's asked-for input, not the ruling.
