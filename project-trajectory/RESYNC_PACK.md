@@ -2402,6 +2402,18 @@ new-phase signal.
 format/lint/test plus each `[step:*]` you declared as product. Process-layer
 steps are unaffected.
 
+**In practice today that is your declared steps only, and the honest form of
+the sentence above says so** (corrected 2026-08-21). The floor engages at one
+bar, `DevStg-Tests` — `ex-draft` can never exceed it while `derive_gate`'s
+release ceiling stands — and it selects by MEMBERSHIP, while `[product]`
+format/lint/test are tagged `{DevStg-Impl}` only. So the floor cannot reach
+those three, and it holds nothing at all unless you have written both
+`gates = DevStg-Tests` and `layer = product` into a `[step:*]`. Whether the
+three built-ins should be reachable is a live owner question (`OI-51` in the
+kit's own registry); until it is ruled, do not read this entry as covering
+them, and do not expect the red the next paragraph describes unless you have
+declared such a step.
+
 **What you may notice:** if you have a `[step:*] layer = product` declared at or
 below the bar your ratified rows have earned, it now **gates** during a draft
 window where it previously ran advisory (warn-only) or not at all. If that step
@@ -2596,6 +2608,50 @@ drops one). This repo used the verb on itself the same commit it shipped:
 mis-seeded ids `docs/requirements/external.toml`'s "SPENT IDS" prose used to
 warn about by hand. That block is now a pointer at the ruling; the mark
 carries the protection.
+
+---
+
+### Four checker corrections from the 2026-08-21 close review [since bd8fce68]
+
+*(Anchored at the PRECEDING commit — this entry ships with the changes.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/gen_arch_map.py`,
+`scripts/check_trajectory.py`, `scripts/spec_move.py`.
+
+**1. A back-link declaration must now OPEN its line.** `Implements:` is read as
+a declaration only when nothing precedes it on the line but whitespace, a
+comment marker (`#`, `//`, `--`, `*`, `;`, `%`, `<!--`) or a quote. Two
+docstring lines in the kit explaining that an id was *deliberately unclaimed*
+were being harvested as declarations OF that id — a false link in a derived
+artifact, sourced from the sentence denying it. **What you may notice:** a
+declaration written after a summary sentence on the same line
+(`"""Do the thing. Implements: LLR-001"""`) no longer counts, so
+`--backlink-coverage` can report a lower percentage than before. The fix is to
+put the token at the start of its own line; nothing else changes. Re-run
+`python scripts/gen_arch_map.py --backlink-coverage --src <your src>` after the
+re-sync and compare — this repo's own figure was unchanged (83/165).
+
+**2. `docs/if-tc-coverage-allow` grows only with a reason.** The file gains one
+machine-readable header key, `# seed-count: <int>`, naming how many entries are
+the seeded baseline; every entry past that count must carry ` — <reason>` or it
+declares nothing (the seam still errors), and allowlist hygiene reports the
+growth either way. **What you may notice:** nothing until you add an entry — a
+file with no `seed-count:` line has no baseline to grow past and behaves exactly
+as before. When you seed yours, put the key in the header so future additions
+cost a sentence, which is the whole burn-down discipline.
+
+**3. A `;`-joined endpoint cell now declares every pair it names.**
+`check_trajectory` read `scripts/a; scripts/b` as one module name where
+`trace.py` split it, so a real cross-component seam could be reported as
+undeclared while the row plainly named both modules. Strictly fewer false
+findings; no action.
+
+**4. `spec_move.py` recognizes directory intent.** A destination ending in `/`,
+or naming an existing directory, now takes the source's filename rather than
+writing a FILE named like the lane (which made the moved spec invisible to
+registry discovery). A rooted or empty destination is refused loudly instead of
+being guessed at. No action; if you scripted around the old behaviour by always
+passing a full filename, that keeps working unchanged.
 
 ---
 

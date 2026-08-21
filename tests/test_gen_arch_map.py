@@ -570,7 +570,10 @@ def sorted_ids():
 
 
 def declared():
-    """Does the thing. Implements: SR-070, LLR-071"""
+    """Does the thing.
+
+    Implements: SR-070, LLR-071
+    """
 '''
 
 
@@ -605,8 +608,21 @@ def test_backlink_ids_is_the_one_definition_of_a_declaration():
     # No token: prose, however many ids it names.
     assert f("SR-9 orders before SR-10") == []
     assert f("see LLR-014 for the design") == []
-    # An id BEFORE the token is not declared by it — position is the rule.
-    assert f("SR-001 is history. Implements: SR-002") == ["SR-002"]
+    # THE TOKEN MUST OPEN THE LINE (2026-08-21 review, M-3). Until then the
+    # rule was only "ids after the token", so a SENTENCE that mentions the
+    # token mid-line declared everything downstream of it — and two docstring
+    # lines in check_trajectory.py explaining that `LLR-042` is DELIBERATELY
+    # UNCLAIMED were harvested as declarations OF `LLR-042`, putting a false
+    # link in a derived artifact sourced entirely from the sentence denying it.
+    # A line whose token is preceded by prose declares nothing now, including
+    # this previously-counted shape:
+    assert f("SR-001 is history. Implements: SR-002") == []
+    assert f("    DELIBERATELY UNCLAIMED (no `Implements:` line): `LLR-042`") == []
+    assert f("    `Implements:` line names `LLR-042` here.") == []
+    # Only whitespace, comment markers and quote characters may precede it —
+    # the shapes a real declaration is actually written in.
+    assert f('    """Implements: SR-005') == ["SR-005"]
+    assert f("    #   Implements: SR-006") == ["SR-006"]
     # A wrapped list item is not a declaration; it is refused for `Contracts:`
     # and simply uncounted here (the module docstring states the asymmetry).
     assert f("  LLR-015 (the second item of a wrapped list),") == []
@@ -639,13 +655,19 @@ def test_reverse_coverage_counts_only_declarations(tmp_path):
     root, src = _backlink_repo(
         tmp_path,
         ["LLR-000", "LLR-001", "LLR-002", "LLR-003"],
+        # The declaration OPENS its line (2026-08-21 review, M-3); the
+        # same-line-as-summary shape on `also()` declares nothing any more, and
+        # is kept here so the narrowing is pinned rather than assumed.
         module='"""M.\n\nLLR-002 is discussed here in prose.\n"""\n\n\n'
-        'def go():\n    """Go. Implements: LLR-001"""\n',
+        'def go():\n    """Go.\n\n    Implements: LLR-001\n    """\n\n\n'
+        'def also():\n    """Also. Implements: LLR-003"""\n',
     )
     covered, uncovered, pct = gen_arch_map.backlink_coverage(
         [src], gen_arch_map.live_llr_ids(root)
     )
     assert covered == ["LLR-001"]
+    # LLR-003's token sits after a summary sentence on the same line, so it is
+    # a mention rather than a declaration — the M-3 narrowing, pinned.
     assert uncovered == ["LLR-002", "LLR-003"]  # the prose mention covers nothing
     assert round(pct, 1) == 33.3  # 1 of 3 live rows, LLR-000 excluded
 

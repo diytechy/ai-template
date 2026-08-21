@@ -216,6 +216,16 @@ file, and that visibility is the sanction for a deliberate lowering. There is
 deliberately **no** dial that turns the floor off. The run names the steps it
 holds, so a step tagged for a higher bar never sits in the plan unexplained.
 
+*Scope, stated precisely because the sentence above reads wider than the
+mechanism (corrected 2026-08-21):* the floor selects at one bar — `DevStg-Tests`,
+the highest `ex-draft` can reach while `derive_gate`'s release ceiling stands —
+and it selects by set MEMBERSHIP. The shipped `[product]` format/lint/test steps
+are tagged `{DevStg-Impl}` only, so the floor cannot hold them; it holds exactly
+the `[step:*]` rows a project declares at `gates = DevStg-Tests` **and**
+`layer = product`. In a repo with none, the live set is empty. Whether the three
+built-ins should sit at a reachable bar is an owner question, open as `OI-51`
+in the kit's registry.
+
 **Drafted artifacts live in the live spine** (§4) — the exemption in detail: a
 Drafted SR needs no LLR/TC, a Drafted LLR no TC, a Drafted SN no SR (`trace.py`'s
 child-completeness orphan rules), so a requirement is drafted in the live

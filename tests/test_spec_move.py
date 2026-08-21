@@ -446,3 +446,47 @@ def test_the_move_stages_the_working_tree_content_not_the_stale_index_blob(tmp_p
         encoding="utf-8"
     )
     assert staged == on_disk
+
+
+def test_a_trailing_slash_destination_names_the_lane_not_a_file(tmp_path):
+    """2026-08-21 review (Sol 8): the WI-448 invocation shape, exactly.
+
+    A caller passes a LANE — `docs/work/active/wi448-common-module/` — because
+    in this registry the directory IS the state. The trailing slash used to be
+    normalized away and the spec was written as a FILE named like the lane, so
+    registry discovery stopped seeing the WI at all; with no predecessor
+    referencing the row, nothing fired. The move must land INSIDE the lane."""
+    repo = tmp_path / "repo"
+    (repo / "docs" / "work" / "queued").mkdir(parents=True)
+    src = repo / "docs" / "work" / "queued" / "WI-448-common-module.md"
+    src.write_text("# WI-448\n", encoding="utf-8")
+
+    touched, err = sm.move_spec(
+        repo,
+        "docs/work/queued/WI-448-common-module.md",
+        "docs/work/active/wi448-common-module/",
+    )
+    assert err is None, err
+    landed = repo / "docs" / "work" / "active" / "wi448-common-module"
+    assert landed.is_dir(), "the lane became a file: {}".format(sorted(repo.rglob("*")))
+    assert (landed / "WI-448-common-module.md").is_file()
+    assert not src.exists()
+
+    # An EXISTING directory means the same thing without the slash.
+    (repo / "docs" / "work" / "complete").mkdir(parents=True)
+    touched, err = sm.move_spec(
+        repo,
+        "docs/work/active/wi448-common-module/WI-448-common-module.md",
+        "docs/work/complete",
+    )
+    assert err is None, err
+    assert (repo / "docs" / "work" / "complete" / "WI-448-common-module.md").is_file()
+
+    # And an ambiguous destination is refused LOUDLY rather than guessed at:
+    # a rooted or empty path is not a lane, and silently appending the source
+    # name to it would write OUTSIDE the repo.
+    for bogus in ("/", "", "   ", "/somewhere/"):
+        _touched, err = sm.move_spec(
+            repo, "docs/work/complete/WI-448-common-module.md", bogus
+        )
+        assert err and "not a repo-relative path" in err, (bogus, err)

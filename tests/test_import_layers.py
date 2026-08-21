@@ -70,6 +70,27 @@ CYCLES = [
     ("dispatch", "handback", "intake", "integrate", "lane"),
 ]
 
+# --- the cycle DENSITY baseline (2026-08-21 review, M-12 / Sol 4) ------------
+#
+# `CYCLES` is a partition — a set of module NAMES — so an edge added between
+# two modules already in the same component leaves it byte-identical. The
+# review proved the hole by mutation: two brand-new deferred cycle edges
+# appended to `lane.py` (`import dispatch`, `import handback` inside a
+# function) left all three tests green. That is the exact pattern this file's
+# docstring calls "the failure mode the review describes", and WI-483's
+# remaining slices are paid to REMOVE three such edges — a ratchet that reports
+# success while the tangle tightens is worse than none.
+#
+# So: the number of edges whose head and tail are both inside one component,
+# deferred function-body imports INCLUDED (they are the ones that hide).
+# Measured 2026-08-21 at 9 for the single five-module component:
+#   module-level: dispatch->handback, dispatch->intake, dispatch->integrate,
+#                 dispatch->lane, handback->integrate, lane->integrate
+#   deferred:     intake->dispatch, integrate->handback, integrate->intake
+# Asserted `<=`, and re-stamped DOWNWARD only — cutting one is the work; the
+# stamp follows the cut in the same commit, with the reason in the log.
+MAX_INTRA_CYCLE_EDGES = 9
+
 
 def _module_name(path):
     """The dotted module name a scripts-relative path imports as."""
@@ -241,6 +262,47 @@ def test_no_new_import_cycle():
         "accepting what it measures. A cycle that SHRANK is a win: re-stamp "
         "the entry downward, or delete it, in the same commit, with the "
         "reason in the session log.".format(found, baseline)
+    )
+
+
+def intra_cycle_edges(graph=None):
+    """Every edge with both ends inside one strongly connected component, as
+    `(importer, imported, kind)` — the density `CYCLES` cannot see."""
+    graph = import_graph() if graph is None else graph
+    out = []
+    for component in strongly_connected(graph):
+        members = set(component)
+        for importer in sorted(members):
+            for imported, kind in sorted(graph.get(importer, {}).items()):
+                if imported in members:
+                    out.append((importer, imported, kind))
+    return out
+
+
+def test_no_new_edge_inside_an_existing_cycle():
+    """The density half of the ratchet — see MAX_INTRA_CYCLE_EDGES."""
+    edges = intra_cycle_edges()
+    assert len(edges) <= MAX_INTRA_CYCLE_EDGES, (
+        "the tangle inside the existing import cycle(s) GREW: {} intra-cycle "
+        "edges against a baseline of {}.\n  {}\nAdding an edge between two "
+        "modules already in one component leaves the CYCLES partition "
+        "identical, which is why this count exists. Do NOT raise the number to "
+        "get green — that IS accepting what it measures. Route the new call "
+        "through a lower layer (`kitlib.station` is the precedent), or cut an "
+        "existing edge to pay for it.".format(
+            len(edges),
+            MAX_INTRA_CYCLE_EDGES,
+            "\n  ".join("{} -> {} ({})".format(*e) for e in edges),
+        )
+    )
+    # DOWNWARD RE-STAMPS ARE OWED, not optional: a stale-high baseline is a
+    # ratchet that has stopped ratcheting.
+    assert len(edges) == MAX_INTRA_CYCLE_EDGES, (
+        "intra-cycle edges are DOWN to {} from a baseline of {} — a win. "
+        "Re-stamp MAX_INTRA_CYCLE_EDGES to {} in this commit and record which "
+        "edge went, so the next slice starts from the real number.".format(
+            len(edges), MAX_INTRA_CYCLE_EDGES, len(edges)
+        )
     )
 
 

@@ -315,6 +315,27 @@ def move_spec(root, src_rel, dest_rel, *, new_text=None):
     dest_rel = str(dest_rel).replace("\\", "/")
     if not (root / src_rel).is_file():
         return None, "no file to move at {}".format(src_rel)
+    # A DESTINATION THAT MEANS A DIRECTORY GETS THE SOURCE'S FILENAME APPENDED —
+    # a trailing slash, or a path that already IS a directory. The 2026-08-21
+    # review (Sol 8) measured the alternative: invoked with a lane directory
+    # (`docs/work/active/wi448-common-module/`), the trailing slash was
+    # normalized away and this function wrote a FILE named like the lane, so the
+    # spec vanished from registry discovery — and if no predecessor referenced
+    # the row, nothing fired at all. Directory intent is the ONE ambiguity worth
+    # resolving rather than refusing, because it is what a caller naturally
+    # types for a state-is-the-directory registry.
+    if not dest_rel.strip("/ ") or dest_rel.startswith("/"):
+        return None, (
+            "the destination {!r} is not a repo-relative path to a file or lane".format(
+                dest_rel
+            )
+        )
+    if dest_rel.endswith("/") or (root / dest_rel).is_dir():
+        if not dest_rel.endswith("/"):
+            dest_rel += "/"
+        dest_rel += posixpath.basename(src_rel)
+    if dest_rel.endswith("/") or not posixpath.basename(dest_rel):
+        return None, "the destination {!r} names no file".format(dest_rel)
     if (root / dest_rel).exists():
         return None, "the destination {} already exists".format(dest_rel)
     (root / dest_rel).parent.mkdir(parents=True, exist_ok=True)

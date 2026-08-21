@@ -25,6 +25,15 @@
 # in this repo — why the seam is legitimately still untested and what would
 # close it.
 #
+# THE SEED IS DECLARED TO THE MACHINE, not only to the reader (2026-08-21
+# review, W-4): the key below names how many of the entries are the seeded
+# baseline. Everything past it is an ADDITION — it must carry its own
+# ` — <reason>` or it suppresses nothing, and `if_tc_allow_hygiene_findings`
+# reports the growth either way. The exact 120-id set is also pinned in
+# tests/test_trajectory_arch.py, so a silent swap inside the baseline is a
+# failing test rather than a diff nobody reads.
+# seed-count: 120
+#
 # THE SEEDING MEASUREMENT (basis for the count below): 120 of 130 live IF
 # seams cited by no TC, reproduced with:
 #   python project-trajectory/scripts/check_trajectory.py --root .

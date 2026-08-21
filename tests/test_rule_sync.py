@@ -958,6 +958,21 @@ def test_the_shipped_template_declares_every_checks_dial_at_todays_default():
         "backlink_coverage_min": 50,
     }
     assert live["checks"] == {**checks, **OWNER_DIALS}
+    # AND THE README'S DIAL TABLE, whose third column is this repo's own value
+    # (2026-08-21 review, M-13). The dial was raised 0 -> 50 and both documents
+    # that state its value went on saying 0 for the rest of the batch, because
+    # nothing compared them: a future worker consulting the declared one-stop
+    # tour of the policy home would have been told the bar is off. The pin is
+    # the value's presence in the row, not the row's prose.
+    row = [
+        ln
+        for ln in (ROOT / "README.md").read_text(encoding="utf-8").splitlines()
+        if ln.startswith("| `process.toml` `backlink_coverage_min`")
+    ]
+    assert len(row) == 1, "the README dial table lost its backlink row"
+    assert (
+        "`{}`".format(OWNER_DIALS["backlink_coverage_min"]) in row[0].split("|")[-2]
+    ), "README's dial table states a different value than docs/process.toml: " + row[0]
 
 
 def test_the_backlink_bar_is_type_checked_where_its_reader_stays_quiet(tmp_path):

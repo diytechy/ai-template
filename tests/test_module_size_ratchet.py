@@ -37,8 +37,10 @@ correction is that "the monolith risk was always about FUNCTION size and
 complexity, not file length", and WI-448 produced the worked counterexample:
 `bootstrap.py` shed two duplicated helper bodies, gained a MAPPING declaration
 block, and this file demanded a reviewed bump on a module that got structurally
-simpler. `tests/test_complexity_ratchet.py` measures the disputed axis and —
-unlike this census — recurses into packages. Whether the line ratchet retires in
+simpler. `tests/test_complexity_ratchet.py` measures the disputed axis; this
+census recurses into packages too since 2026-08-21 (see `_all_modules`), so the
+two now cover the same files and differ only in what they measure about them.
+Whether the line ratchet retires in
 favour of the complexity one or the two keep different jobs is an open question
 for the owner, banked in the 2026-08-20 log; until it is ruled, this file stays
 armed, because an unruled axis is not a reason to stop sensing growth.
@@ -1089,7 +1091,7 @@ BASELINE = {
     # complexity ratchet DELETE `cross_component_findings`' entry instead of
     # bumping it. The rest is the two docstrings recording why the direction is
     # the fix and why the advisory must never join the exit code.
-    "check_trajectory.py": 4295,  # +199 (4096 -> 4295) 2026-08-21, WI-488: the seam-TC coverage promotion (OI-43 ruled (a)) — `if_tc_coverage_findings` (the promotable half, WARN plain/ERROR under `--strict` from DevStg-Tests+), `if_tc_allow_hygiene_findings` (stale/unknown allowlist entries, warn-only forever) and `read_if_tc_allow` (the `docs/if-tc-coverage-allow` parser), plus the doc comments explaining why `interface_findings`' own total-uncited line stays unclaimed by any `Implements:` line (the Approved `LLR-042` this promotion outruns) and why the ≤1-module arch-map vacuity is shared rather than widened. Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +54 (4042 -> 4096) 2026-08-21, WI-487: the back-link campaign — literal `Implements:` declarations added near thirteen already-anchored symbols (docstring/comment lines only, no executable change). Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +24 (4018 -> 4042) 2026-08-20, WI-484: DECLARATION ONLY, zero executable change — `Hat-Refs` joins SPINE_TRACED_CELLS at both row tiers, with the comment block recording why the classification is the load-bearing half of shipping the cell: the residual reads an unclassified column as RATIFIED, so leaving it out would arm a re-attest window on every row the backfill touches, which is exactly the noise `Boundary-Refs` was classified out of. The LLR frozenset reflows to one-per-line at seven members. Reviewed bump, reason in the log. Earlier: -227 (4245 -> 4018) 2026-08-20, WI-448: the same 270-line spec-folder reader moved to `kitlib/registry.py`, and `_first_declared_line` became a re-export of `kitlib.config.first_declared_line`. The module keeps its OWN `_process_check` policy reader deliberately — the shared package owns the declared-LINE rule, not this checker's fail-direction. Re-stamped DOWNWARD in the same commit. Earlier: +114 (4131 -> 4245) 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3 / ROUND-SOL MAJOR-2): the mirror invariant reaches COMMITTED state. The staged rule is keyed on a snapshot file being IN the commit, so a forged copy that LANDED — hooks bypassed — was invisible to every run afterwards, forever. `committed_snapshot_findings` + `_snapshot_write_revs` answer the same question of history instead (~75 lines with two subprocess calls total, via `git cat-file --batch-check`: identical content has an identical object id, so comparing ids IS the byte comparison), and `_git` gains an optional stdin. NOT DECOMPOSABLE into a sibling: this is the staged rule's other half, sharing its constants, its README exemption and its degrade posture — splitting them would put one half of one invariant in another module. Most of the bump is the docstring recording which comparison was REFUSED and why (snapshot-vs-live in the working tree reds every pending amendment). Reviewed bump, reason in the log. Earlier +56 2026-08-20: WI-479 (repo-review 2026-08-19
+    "check_trajectory.py": 4398,  # +103 (4295 -> 4398) 2026-08-21, review batch-close W-4 and W-12. W-12 (+24) splits a `;`-joined endpoint cell into its several endpoints in `_declared_seam_pairs`, via a small `_seam_endpoints` helper, so this reader stops disagreeing with `trace.py` about the same cells. W-4 (+79): the seam-TC allowlist stops being growable in silence. `parse_if_tc_allow` (the ordered parse plus the `# seed-count:` header key), `if_tc_allow_growth`, the reason-required-past-the-seed rule inside `read_if_tc_allow`, and the growth arm in `if_tc_allow_hygiene_findings` — the review executed the one-line edit that greens the gate (append the bare id; lexically identical to the 120 seeded lines; no hygiene line, no test, no reason). Roughly half the bump is the reasoning at the two readers. Sits in the seam-TC section beside the two functions it serves; nothing here is a second concern. Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +199 (4096 -> 4295) 2026-08-21, WI-488: the seam-TC coverage promotion (OI-43 ruled (a)) — `if_tc_coverage_findings` (the promotable half, WARN plain/ERROR under `--strict` from DevStg-Tests+), `if_tc_allow_hygiene_findings` (stale/unknown allowlist entries, warn-only forever) and `read_if_tc_allow` (the `docs/if-tc-coverage-allow` parser), plus the doc comments explaining why `interface_findings`' own total-uncited line stays unclaimed by any `Implements:` line (the Approved `LLR-042` this promotion outruns) and why the ≤1-module arch-map vacuity is shared rather than widened. Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +54 (4042 -> 4096) 2026-08-21, WI-487: the back-link campaign — literal `Implements:` declarations added near thirteen already-anchored symbols (docstring/comment lines only, no executable change). Reviewed bump, reason in docs/log.d/2026-08-20-program-grind.md. Earlier: +24 (4018 -> 4042) 2026-08-20, WI-484: DECLARATION ONLY, zero executable change — `Hat-Refs` joins SPINE_TRACED_CELLS at both row tiers, with the comment block recording why the classification is the load-bearing half of shipping the cell: the residual reads an unclassified column as RATIFIED, so leaving it out would arm a re-attest window on every row the backfill touches, which is exactly the noise `Boundary-Refs` was classified out of. The LLR frozenset reflows to one-per-line at seven members. Reviewed bump, reason in the log. Earlier: -227 (4245 -> 4018) 2026-08-20, WI-448: the same 270-line spec-folder reader moved to `kitlib/registry.py`, and `_first_declared_line` became a re-export of `kitlib.config.first_declared_line`. The module keeps its OWN `_process_check` policy reader deliberately — the shared package owns the declared-LINE rule, not this checker's fail-direction. Re-stamped DOWNWARD in the same commit. Earlier: +114 (4131 -> 4245) 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3 / ROUND-SOL MAJOR-2): the mirror invariant reaches COMMITTED state. The staged rule is keyed on a snapshot file being IN the commit, so a forged copy that LANDED — hooks bypassed — was invisible to every run afterwards, forever. `committed_snapshot_findings` + `_snapshot_write_revs` answer the same question of history instead (~75 lines with two subprocess calls total, via `git cat-file --batch-check`: identical content has an identical object id, so comparing ids IS the byte comparison), and `_git` gains an optional stdin. NOT DECOMPOSABLE into a sibling: this is the staged rule's other half, sharing its constants, its README exemption and its degrade posture — splitting them would put one half of one invariant in another module. Most of the bump is the docstring recording which comparison was REFUSED and why (snapshot-vs-live in the working tree reds every pending amendment). Reviewed bump, reason in the log. Earlier +56 2026-08-20: WI-479 (repo-review 2026-08-19
     # M-03) — the warn-first concise-Title advisory at registry validation:
     # `_TITLE_CONCISE_MAX`, `_title_length_warns` (OPEN_STATUSES-scoped,
     # summarised into one line rather than one per row — the same call the
@@ -1864,14 +1866,55 @@ def test_baseline_has_no_duplicate_keys():
     )
 
 
+def _all_modules():
+    """{path relative to scripts/, posix: line_count} for EVERY kit script,
+    packages included.
+
+    RECURSIVE SINCE 2026-08-21 (review M-27 / Sol 6). It globbed `scripts/*.py`
+    non-recursively and keyed on the bare filename, so the whole of
+    `scripts/kitlib/` — the shipped shared-helper package this very batch
+    created — was invisible to the census: `kitlib/registry.py` could have grown
+    to 3,000 lines with this file green. Worse, a package module could not EARN
+    a baseline either, contradicting this file's own escape-hatch rule that a
+    new module "stays under THRESHOLD or earns its own reviewed baseline".
+    Keying by relative path is what makes both halves work, and it leaves every
+    existing top-level key byte-identical."""
+    root = pathlib.Path(SCRIPTS)
+    return {
+        path.relative_to(root).as_posix(): len(
+            path.read_text(encoding="utf-8").splitlines()
+        )
+        for path in sorted(root.rglob("*.py"))
+    }
+
+
 def _census():
-    """{module_name: line_count} for every kit script over THRESHOLD."""
-    census = {}
-    for path in sorted(pathlib.Path(SCRIPTS).glob("*.py")):
-        lines = len(path.read_text(encoding="utf-8").splitlines())
-        if lines > THRESHOLD:
-            census[path.name] = lines
-    return census
+    """{module path relative to scripts/: line_count} for every kit script over
+    THRESHOLD, packages included."""
+    return {name: lines for name, lines in _all_modules().items() if lines > THRESHOLD}
+
+
+def test_the_census_sees_inside_packages():
+    """The blindness itself, pinned — not merely the consequence.
+
+    A count-only assertion would go quiet the moment the package moved or was
+    renamed, which is the same failure it is here to prevent, so this names the
+    package and asserts the census reaches it. No `kitlib/*` entry appears in
+    BASELINE because none of the five is anywhere near THRESHOLD (the largest,
+    `registry.py`, is ~304 lines); baselines are for modules OVER the line, and
+    seeding sub-threshold entries would trip this file's own shrink arm on the
+    next commit. What matters is that one CAN now be seen and baselined."""
+    modules = _all_modules()
+    assert "kitlib/registry.py" in modules, sorted(modules)
+    assert len([m for m in modules if m.startswith("kitlib/")]) >= 5
+    over = {
+        m: n for m, n in modules.items() if m.startswith("kitlib/") and n > THRESHOLD
+    }
+    assert not over, (
+        "a kitlib module crossed THRESHOLD: {} — it now needs a reviewed "
+        "BASELINE entry keyed by its scripts-relative path, exactly like a "
+        "top-level module.".format(over)
+    )
 
 
 def test_module_sizes_exactly_match_the_committed_baseline():

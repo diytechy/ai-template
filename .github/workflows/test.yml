@@ -91,14 +91,19 @@ jobs:
   # already runs in the test job above; THIS job times the actual `-m smoke` wall
   # against docs/stack.ini [smoke-budget] seconds and ENFORCES it (exit 1 on
   # breach) so a budget regression cannot ship silently.
-  # Enforce is safe here — not the flaky assert an untiered bar would be — because
-  # the re-tiered smoke tier is startup-dominated, not core-bound: measured
-  # 2026-07-23 (rework, 3.11.9) it runs ~7.5 s at 24 cores, ~8.1 s at 4, ~10.5 s
-  # at 2, so the 60 s budget keeps ~5x headroom on a GitHub-hosted runner (more
-  # cores than 2). A breach here means the tier genuinely stopped being a smoke test
-  # (a heavy subprocess/scaffold module slipped back in — which the deterministic
-  # membership ratchet also catches), not runner noise. One lane: this is a timing
-  # signal, not a portability check.
+  # RE-ARGUED 2026-08-21 (review W-7b), because the sentence that used to stand
+  # here was ~7x off and had never been re-measured: it claimed the tier is
+  # "startup-dominated, ~7.5 s at 24 cores ... ~5x headroom", so a breach could
+  # only mean a heavy module slipped back in. Re-measured warm on a 24-core box,
+  # `-n auto`, three runs: 59.59 / 59.07 / 59.98 s against the 60 s budget —
+  # the tier runs AT its budget, not at a fifth of it. Enforce stays ON because
+  # a tier at 1.0x is exactly where growth must be visible, and because the
+  # membership ratchet cannot see runtime. What a breach no longer licenses is
+  # the DIAGNOSIS: at this ratio runner contention alone can cross the line, so
+  # read the breach as "look", not as "re-tier a module". The budget VALUE is
+  # not moved to fit any box (see scripts/check_smoke_budget.py for the full
+  # measurement, and the owner's queued dial question). One lane: this is a
+  # timing signal, not a portability check.
   smoke-budget:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest

@@ -424,7 +424,7 @@ set:
 | `process.toml` `components_check` | `true`, warn-first | **opt-out** `false` | `true` — 5 components |
 | `process.toml` `live_status` | `false` | **opt-in** `true` (same as `agent_loop.py --live-status`; TTY-only either way) | `false` |
 | `process.toml` `subagent_gate` | `"off"` | **opt-in** `"ask"` / `"deny"` (Claude hook example) | `"off"` |
-| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `0` — measured **1 of 161 (0.6%)**; 50 is the recorded target WI-487's campaign is sized to clear, and the dial rises only after the tags land |
+| `process.toml` `backlink_coverage_min` | `0` — report the number, gate nothing (the one `[checks]` dial that is a percentage, not a switch) | **opt-in** raise it to the share of live LLR rows a literal `Implements:` back-link must name; below it the `backlink-coverage` step warns, and errors from `DevStg-Tests` | `50` — raised 2026-08-21 once the tags landed: **83 of 165 live LLR rows (50.3%)**, measured by `gen_arch_map.py --backlink-coverage`. The dial rose because the campaign wrote the declarations, never because the bar came down |
 | `agents.toml` + `agents-enabled` | registry seeded **inert**; no enable-list | **opt-in** — creating `agents-enabled` turns managed routing on | **on** — 8 pair rows / 3 families (ANTHROPIC / OPENAI / OPENCODE; tiers `strong/medium/quick`; Anthropic-led per tier — Fable strong, Opus medium) |
 
 Scaffold-time *structure* (which process sections your generated docs carry) is

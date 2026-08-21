@@ -776,33 +776,71 @@ def test_bucket_by_ref_groups_preserves_order_and_parses_multi():
     assert trace._bucket_by_ref([{"SR-Refs": ""}, {"SR-Refs": None}], "SR-Refs") == {}
 
 
+# The attributes `exit_code` reads, NAMED — the readable statement of the gate's
+# input schema, and the thing a reviewer checks. `_exit_code_attrs` derives the
+# same set from the function itself, and the two are asserted equal below.
+EXIT_CODE_INPUTS = {
+    "orphans",
+    "status_findings",
+    "integrity",
+    "placeholders",
+    "schema",
+    "budget_findings",
+    "module_findings",
+    "component_findings",
+    "interface_backlink_findings",
+    "frame_backlink_findings",
+    "hat_dangling",
+    "provenance",
+    "form",
+}
+
+
+def _exit_code_attrs(trace):
+    """Every `findings.<attr>` `trace.exit_code` actually reads.
+
+    2026-08-21 review, Sol 9: this stub used to be a HAND-MAINTAINED MIRROR of
+    that function's reads, and `trace.Findings` is a bare class with no
+    defaults, so the two were independent schemas. It drifted the moment
+    `exit_code` gained an arm (WI-484): the stub lacked the attribute and the
+    tests below raised `AttributeError` instead of testing the rule — and
+    because this module is outside the smoke tier, the commit bar stayed green
+    and the FULL suite found it later. Deriving the set means a new arm can no
+    longer crash these tests, and `test_the_stub_matches_what_exit_code_reads`
+    makes the addition visible rather than silent."""
+    import ast
+    import inspect
+
+    tree = ast.parse(inspect.getsource(trace.exit_code).lstrip())
+    return {
+        node.attr
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "findings"
+    }
+
+
 def _findings_stub(trace, **overrides):
     """A Findings bag with every attribute exit_code reads defaulted to empty."""
     f = trace.Findings()
-    for attr in (
-        "orphans",
-        "status_findings",
-        "integrity",
-        "placeholders",
-        "schema",
-        "budget_findings",
-        "module_findings",
-        "component_findings",
-        "interface_backlink_findings",
-        "frame_backlink_findings",
-        # WI-484. THIS LIST IS A HAND-MAINTAINED MIRROR of what `exit_code`
-        # reads, and it drifted silently the moment that function gained an arm:
-        # the AttributeError surfaced only in the FULL suite, because this
-        # module is not in the commit tier. A new `exit_code` arm must be added
-        # here in the same edit.
-        "hat_dangling",
-        "provenance",
-        "form",
-    ):
+    for attr in EXIT_CODE_INPUTS | _exit_code_attrs(trace):
         setattr(f, attr, [])
     for attr, value in overrides.items():
         setattr(f, attr, value)
     return f
+
+
+def test_the_stub_matches_what_exit_code_reads():
+    """One schema, asserted from both ends."""
+    from conftest import load_script
+
+    trace = load_script("trace")
+    assert _exit_code_attrs(trace) == EXIT_CODE_INPUTS, (
+        "trace.exit_code's inputs changed. Add the new arm to EXIT_CODE_INPUTS "
+        "in the same edit and give it a test — a gate arm nothing exercises is "
+        "an arm nobody has seen fire."
+    )
 
 
 def test_exit_code_gate_policy():

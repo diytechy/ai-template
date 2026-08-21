@@ -110,10 +110,13 @@ records where each one bites.
    read as a regression to anyone who saw the column full. The gap half became a
    *measurement* rather than a policing check: `--backlink-coverage` asks, for
    each live LLR row, whether any literal declaration in the declared source
-   surface names it. Measured here at the change: **1 of 161 (0.6%)**; **re-measured 2026-08-20 at the batch close: 1 of 162 (0.6%)** — WI-472's LLR-180 moved the denominator, LLR-040 is still the only carrier. **What the number can and cannot say:** the scan reads comment TEXT with no position restriction, so a spine id inside a string literal or a negated example counts as coverage — the error runs one way only, toward false PASSES, because the denominator is the LLR count and a wider read can only raise the score. It ships
-   report-only (`backlink_coverage_min = 0`); 50% is the recorded target that
-   WI-487's back-link campaign is sized to clear, and the dial rises only after
-   the tags land. What is still **filed, not built**: the decay answer — a
+   surface names it. Measured here at the change: **1 of 161 (0.6%)**; **re-measured 2026-08-20 at the batch close: 1 of 162 (0.6%)** — WI-472's LLR-180 moved the denominator, LLR-040 is still the only carrier. **What the number can and cannot say:** the scan reads comment TEXT with no position restriction, so a spine id inside a string literal or a negated example counts as coverage — the error runs one way only, toward false PASSES, because the denominator is the LLR count and a wider read can only raise the score. It SHIPS
+   report-only (`backlink_coverage_min = 0` in the template, for an adopter who
+   has written no back-links yet), and **this repo's own dial now stands at 50**
+   — raised 2026-08-21 after the campaign landed 83 of 165 (50.3%), so the
+   strongest enforcer of the gap half here is a bar, not a report. It gates
+   nothing at this repo's current gate (DevStg-Reqs): `--strict-backlinks` is
+   appended only from DevStg-Tests. What is still **filed, not built**: the decay answer — a
    revisioned marker (OI-42 option (c)) that turns a requirement's revision bump
    into a reported defect at every stale tag — re-considered at the campaign's
    close, because coverage that lands and then rots is worse than 0.6%.

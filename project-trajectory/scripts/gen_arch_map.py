@@ -155,6 +155,24 @@ IMPLEMENTS_RE = re.compile(r"\b(?:SR|LLR|SN|TC)-\d+\b")
 # (b)). `backlink_ids` is the kit's ONE definition of a back-link and both arms
 # read it: the map's `Implements` column and the reverse-coverage scan.
 IMPLEMENTS_MARKER = "Implements:"
+# A declaration OPENS its line: nothing may precede the token but whitespace,
+# comment markers (`#`, `//`, `--`, `*`, `;`, `%`, `<!--`) or quote characters.
+# The 2026-08-21 review measured why — two docstring lines in
+# `check_trajectory.py` explaining that `LLR-042` is DELIBERATELY UNCLAIMED
+# were parsed as declarations OF `LLR-042`, so the map's third column reported
+# the disclaimer as the tag, sourced entirely from the sentence denying it.
+# Audited over the whole scanned surface, this rule classifies all 83 genuine
+# declarations as declarations and both prose lines as prose (83/165 before and
+# after).
+# THE BACKTICK IS NOT IN THAT SET, and the omission is measured too: both prose
+# lines write the token in backticks — a QUOTED token is a mention, and a
+# mention is not a declaration. It is also the one character that would let the
+# rule back in through the door it just closed.
+# THIS NARROWS THE GRAMMAR for a declaration written after a summary sentence
+# on the same line (`"""Do the thing. Implements: LLR-001"""`), which no longer
+# declares; put the token at the start of its own line. RESYNC entry owed and
+# written — an adopter's coverage percentage can move on this.
+_DECL_OPENING = re.compile(r"^[\s#/\-*;%<!\"']*$")
 # Interface-seam ids a module declares via a `Contracts: IF-###, ...` line
 # (process.md §8) — harvested like Implements, but module-level (WI-056).
 CONTRACTS_RE = re.compile(r"\bIF-\d+\b")
@@ -265,8 +283,10 @@ def backlink_ids(line):
     (No example of the token is spelled out in this docstring on purpose: this
     function's own prose is inside the surface it scans, and an illustration
     would be harvested as a real declaration — the very defect it describes.)"""
-    _before, marker, after = line.partition(IMPLEMENTS_MARKER)
-    return IMPLEMENTS_RE.findall(after) if marker else []
+    before, marker, after = line.partition(IMPLEMENTS_MARKER)
+    if not marker or not _DECL_OPENING.match(before):
+        return []
+    return IMPLEMENTS_RE.findall(after)
 
 
 def implements(node, source_lines):

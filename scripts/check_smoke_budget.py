@@ -7,11 +7,31 @@ seconds budget declared in docs/stack.ini [smoke-budget] — a smoke test answer
 budget in two: the ALWAYS-ON deterministic membership ratchet
 (tests/test_smoke_budget.py) is the machine-independent floor; THIS is the
 wall-clock half. It defaults to `--mode warn` for LOCAL convenience (a breach
-prints a WARNING, exit 0). CI runs it with `--mode enforce` (exit 1 on breach):
-the re-tiered tier is startup-dominated, not core-bound — measured ~7.5 s at 24
-cores, ~8.1 s at 4, ~10.5 s at 2 (WI-281 rework, 2026-07-23, 3.11.9) — so the
-60 s budget keeps ~5x headroom on any real runner and a breach means the tier
-stopped being a smoke test (a heavy module slipped back in), not runner noise.
+prints a WARNING, exit 0). CI runs it with `--mode enforce` (exit 1 on breach).
+
+WHY ENFORCE, RE-ARGUED 2026-08-21 — the previous justification was seven times
+off and had never been re-measured. It read: "startup-dominated, not core-bound
+— ~7.5 s at 24 cores, ~8.1 s at 4, ~10.5 s at 2 (WI-281 rework, 2026-07-23,
+3.11.9) — so the 60 s budget keeps ~5x headroom on any real runner and a breach
+means the tier stopped being a smoke test, not runner noise." Every premise in
+that sentence is false at HEAD. RE-MEASURED, this box (24 cores, 3.11.9,
+`-n auto`, warm, three runs in one sitting): 59.59 / 59.07 / 59.98 s, against
+a 60 s budget — 0.98-1.0x, not 0.2x. The wider record agrees: of 17 smoke wall
+times in docs/log.d/2026-08-20-program-grind.md, 12 exceed 60 s (up to 142.9),
+CLAUDE.md records 54.9 / 64.0 / 55.7, and the 2026-08-21 review measured
+55.46 / 57.14 / 64.6.
+
+So the honest argument for enforcing is NOT headroom — there is none. It is
+that the tier is AT its budget: every test added to it now spends a resource
+that is already exhausted, and the breach this check reports is real
+information about that, whichever cause produced it. What must NOT be read off
+a breach any more is the diagnosis "a heavy module slipped back in": at 1.0x,
+runner contention alone can cross the line, so a breach says LOOK, not
+RE-TIER. THE BUDGET VALUE DOES NOT MOVE on this measurement — one box is one
+data point, and moving a budget to fit the machine it embarrasses is how a
+budget stops meaning anything. Whether 60 s should be enforced locally, or
+redefined as a CI target, is the owner's dial and is queued (2026-08-21 close,
+Q-3); this docstring records the measurement, not a decision.
 
 Usage:
   # time a fresh smoke run and compare (local convenience, or a CI lane):

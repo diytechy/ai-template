@@ -469,26 +469,26 @@ notes = """Published contract, not a single consumer: same population as IF-023/
 [interface.IF-025]
 direction = "Consumes"
 this_project = "scripts/gen_arch_map"
-counterpart = "scripts/gen_arch_map"
+counterpart = "project-trajectory/scripts"
 contract = """walks the Python source tree (AST) for the symbol map + internal-import diagram and reads interfaces.toml to merge the IF-### seam edges"""
 signal = "variable"
 req_refs = ["SR-070"]
 owner = "SR-070"
 version = "v1"
 status = "Drafted"
-notes = """Fan-out=1: gen_arch_map.scan_inventory is the SOLE direct AST walker of the source tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory. Named as its own module rather than left as a bare directory - nothing else independently re-walks the tree this row's contract describes."""
+notes = """The far side of this Consumes seam is the SOURCE TREE ITSELF, at the declared src root (docs/stack.ini [paths] src) - not a module, so the endpoint is that directory. Naming the row's own module as its counterpart said only that it talks to itself, which is no far side at all. gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory."""
 
 [interface.IF-026]
 direction = "Consumes"
 this_project = "scripts/check_stubs"
-counterpart = "scripts/check_stubs"
+counterpart = "project-trajectory/scripts"
 contract = """parses each *.py under the declared src root (AST) for stub-bodied public symbols at the gate"""
 signal = "variable"
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
 status = "Drafted"
-notes = """Fan-out=1: check_stubs runs its own independent AST walk of the declared src root (distinct from gen_arch_map's inventory, IF-025 - two separate walkers of the same tree for two different questions) and nothing else reads the raw directory this way."""
+notes = """The far side is the declared src root itself (docs/stack.ini [paths] src), the directory this row's contract describes - not this row's own module, which named no far side. check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way."""
 
 [interface.IF-028]
 direction = "Consumes"
@@ -609,7 +609,7 @@ req_refs = ["SR-026", "SR-031"]
 owner = "SR-031"
 version = "v1"
 status = "Drafted"
-notes = """Low fan-out: three direct readers of the `## Current State` excerpt this row's own function discloses - agent_common (this row, current_state_excerpt), gen_okf (process-guide summary) and traj_status (dashboard splice). agent_loop calls agent_common's function rather than reading docs/status.md itself. A closed, nameable set."""
+notes = """Low fan-out, MEASURED OVER ONE SURFACE and stated so: the three direct readers of the `## Current State` excerpt this row's own function discloses - agent_common (this row, current_state_excerpt), gen_okf (process-guide summary) and traj_status (dashboard splice). agent_loop calls agent_common's function rather than reading docs/status.md itself. The fan-out is NOT over docs/process.toml, which the contract names first among the surfaces this reader touches: that file has nine direct kit readers and is the reason IF-038 converted to a published-contract row. A closed, nameable set for the excerpt; a wide one for the policy home."""
 
 [interface.IF-038]
 direction = "Consumes"
@@ -696,14 +696,14 @@ status = "Drafted"
 [interface.IF-045]
 direction = "Consumes"
 this_project = "scripts/agent_route"
-counterpart = "scripts/agent_route"
+counterpart = "docs/agents.toml; docs/agents-enabled"
 contract = """reads the docs/agents pair-row model registry (Id/Family/Model/Version/Tier/CmdTemplate/Env; one row = one model x route pair; legacy Provider read as Family) and the ordered docs/agents-enabled enable-list to compose the selectable pool; absent enable-list = routing off"""
 signal = "variable"
 req_refs = ["SR-154"]
 owner = "SR-154"
 version = "v1"
 status = "Drafted"
-notes = """Fan-out=1: agent_route is the sole direct reader of the registry + enable-list; agent_loop and plan_runner call its load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves. Named as its own module rather than left as a bare directory."""
+notes = """The far side is the two declared files, which is what a Consumes row states; this row's own module named no far side. FAN-OUT IS NOT 1, correcting the earlier cell: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
 
 [interface.IF-046]
 direction = "Provides"
@@ -909,14 +909,14 @@ status = "Drafted"
 [interface.IF-070]
 direction = "Consumes"
 this_project = "scripts/check_coverage"
-counterpart = "scripts/check; scripts/check_coverage"
+counterpart = "docs/coverage-floors"
 contract = """reads the pytest-cov JSON report (per-file summary.percent_covered, path-normalized) and the docs/coverage-floors census (module + min percent; blank/# lines ignored)"""
 signal = "variable"
 req_refs = ["SR-006"]
 owner = "SR-006"
 version = "v1"
 status = "Drafted"
-notes = """Low fan-out: check_coverage is the sole parser of the JSON content; check.py never parses it but does manage its lifecycle (the COVERAGE_JSON constant, clearing a stale copy before a covered run so a prior run's report can't be graded as this run's). A closed, two-party set."""
+notes = """The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here, correcting the earlier cell: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format."""
 
 [interface.IF-071]
 direction = "Consumes"
@@ -934,14 +934,14 @@ notes = """Completes the dashboard side IF-053 already names: the import was wir
 [interface.IF-072]
 direction = "Consumes"
 this_project = "scripts/check_doc_refs"
-counterpart = "scripts/check_doc_refs; scripts/check_vocab; scripts/trace"
+counterpart = "scripts/trace; tests/test_dogfood_sync.py"
 contract = """the declared-absence read (WI-308): check_doc_refs reads an optional `<path> — <reason>` file (--declared-absences, default docs/declared-absences) and reclassifies a reference to any listed path as UNTRACED with the DECLARED reason quoted back, rather than dangling. The seam exists because a second reader needs the same facts: tests/test_dogfood_sync.py loads the file as its SCAFFOLD_OMISSIONS declaration, so the file — not an import — is the shared home, keeping the stdlib-only kit script free of any dependency on a test module. Fail-soft in the safe direction: an absent file, or a line carrying no separator, declares nothing and leaves the path dangling, so a malformed entry can never silence real rot."""
 signal = "variable"
 req_refs = ["SR-158"]
 owner = "SR-158"
 version = "v1"
 status = "Drafted"
-notes = "built and consumed together; three script readers - check_doc_refs (this row), trace (_declared_absences) and check_vocab (TEXT_NAMES scan-inclusion) - plus tests/test_dogfood_sync.py as the contract text already names. A closed, nameable set (the WI's own 'five checkers' framing over-counted comment mentions; check_need_form.py's is prose comparison only, not a read)."
+notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader - the reader the contract text already names and the cell used to omit. check_vocab is NOT one, correcting the earlier cell: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 direction = "Consumes"

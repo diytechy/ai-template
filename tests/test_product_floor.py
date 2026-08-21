@@ -79,15 +79,51 @@ def test_the_floor_reads_ex_draft_and_abstains_wherever_it_cannot_know(tmp_path)
     assert check.product_floor(tmp_path / "nope") is None
 
 
-def test_the_floor_holds_product_steps_and_never_process_ones():
+def _profile_with(tmp_path, *extra_steps):
+    """This repo's stack profile plus declared `[step:*]` sections.
+
+    Both floor-selection tests need a product step the floor CAN hold, and the
+    repo's own profile has none — so they build one the way the documentation
+    tells an adopter to, and read it back through the real loader rather than
+    hand-constructing a step tuple."""
+    stack = tmp_path / "stack.ini"
+    stack.write_text(
+        (ROOT / "docs" / "stack.ini").read_text(encoding="utf-8")
+        + "".join(extra_steps),
+        encoding="utf-8",
+    )
+    return check.load_profile(stack)
+
+
+# A product step at BOTH bars — so it is in the DevStg-Reqs gating plan already
+# AND in the DevStg-Tests table the floor asks for. Exactly the shape that makes
+# the dedup guard load-bearing.
+CANARY_BOTH_BARS = (
+    "\n[step:product-both]\n"
+    "command = {py} -c \"print('BOTH-BARS')\"\n"
+    "gates = DevStg-Reqs DevStg-Tests\n"
+    "layer = product\n"
+)
+
+
+def test_the_floor_holds_product_steps_and_never_process_ones(tmp_path):
     """The TWO AXES, which is the whole design — asserted in both directions.
 
     The positive half alone would pass a floor that simply re-ran the higher
     bar's entire plan, which is not a floor but a bar that ignores its own
     derivation. The negative half is what makes it a separation: a maturity
     check MUST still fall when the spine's maturity falls, because that fall is
-    the new-phase signal the derived value exists to give."""
-    profile = check.load_profile(ROOT / "docs" / "stack.ini")
+    the new-phase signal the derived value exists to give.
+
+    THE POSITIVE HALF IS NOW ACTUALLY THERE (2026-08-21 review, M-9). Over this
+    repo's own profile `held` is EMPTY — every product-layer step in the kit is
+    tagged `{DevStg-Impl}` only, which the floor can never select (see the
+    dormancy test below) — so `layers <= {"product"}` read `set() <= {...}` and
+    the third assertion ran over an empty set. Three of the five tests in this
+    file survived deleting the feature outright. The fixture below declares the
+    product step an adopter would, which is also the only configuration in
+    which this mechanism is live anywhere today."""
+    profile = _profile_with(tmp_path, CANARY_PRODUCT)
 
     def steps_at(gate):
         return check.steps("coverage.json", "smoke", gate, None, profile)
@@ -95,6 +131,9 @@ def test_the_floor_holds_product_steps_and_never_process_ones():
     gate = "DevStg-Reqs"
     plan = [s for s in steps_at(gate) if gate in s[3]]
     held = check.floor_plan(gate, plan, "DevStg-Tests", steps_at)
+    assert [s[0] for s in held] == ["product-canary"], (
+        "the floor held nothing, so every assertion below is vacuous: {}".format(held)
+    )
     layers = {s[4] for s in held}
     assert layers <= {"product"}, "the floor reached a process step: {}".format(held)
     # `traceability` is the control: a process step the DevStg-Tests table
@@ -104,7 +143,7 @@ def test_the_floor_holds_product_steps_and_never_process_ones():
     assert "traceability" not in {s[0] for s in held}
 
 
-def test_the_floor_never_runs_a_step_twice():
+def test_the_floor_never_runs_a_step_twice(tmp_path):
     """The floor promotes; the advisory tier reports. A step must not do both.
 
     These two mechanisms answer the same suppression from opposite directions
@@ -113,17 +152,30 @@ def test_the_floor_never_runs_a_step_twice():
     doubling the slowest steps in the plan and printing two verdicts for one
     fact. `advisory_plan` already skips a step whose command is identical, which
     is why the floor is applied to `plan` BEFORE the advisory tier is built;
-    this pins that ordering rather than the implementation detail."""
-    profile = check.load_profile(ROOT / "docs" / "stack.ini")
+    this pins that ordering rather than the implementation detail.
+
+    IT NEEDS A STEP IN BOTH TABLES TO MEAN ANYTHING (2026-08-21 review, M-8).
+    Built over this repo's own profile `held` is EMPTY, so `held + plan` was
+    just `plan` and the assertion reduced to "the DevStg-Reqs step table has
+    unique names" — a fact about the base table, nothing about the floor.
+    Proved by mutation: deleting the dedup guard in `check.floor_plan` left
+    this file 5-passed. The fixture below declares a product step at BOTH bars,
+    so that guard is the only thing keeping its name from appearing twice."""
+    profile = _profile_with(tmp_path, CANARY_BOTH_BARS)
 
     def steps_at(gate):
         return check.steps("coverage.json", "smoke", gate, None, profile)
 
     gate = "DevStg-Reqs"
     plan = [s for s in steps_at(gate) if gate in s[3]]
+    assert "product-both" in {s[0] for s in plan}, "the fixture step is not in the plan"
+    assert "product-both" in {s[0] for s in steps_at("DevStg-Tests")}
     held = check.floor_plan(gate, plan, "DevStg-Tests", steps_at)
     full = held + plan
     names = [s[0] for s in full]
+    assert names.count("product-both") == 1, (
+        "the floor re-ran a step the gating plan already carries: {}".format(names)
+    )
     assert len(names) == len(set(names)), "the floor duplicated a step: {}".format(
         names
     )

@@ -415,6 +415,52 @@ def test_always_loaded_docs_stay_within_byte_caps():
     )
 
 
+def test_capped_doc_baselines_match_the_real_sizes():
+    """The skill's `Baseline` column is a MEASUREMENT, so measure it.
+
+    2026-08-21 review, M-7: the guard's own row read 4,925 while the file was
+    4,982 — already ~20 bytes wrong when the range opened, then grown 77 more
+    without a re-stamp — and its printed headroom claim ("every other capped
+    file holds 2–18%") was false about the very file it was printed in, which
+    held 0.36%. Nothing tested a baseline cell against anything; the cap test
+    above checks size <= cap and would happily watch the baseline drift. The
+    failure that produces is the one the skill exists to prevent: an author
+    follows the procedure, records "before = 4,925", adds 40 bytes, computes
+    4,965, commits, and reds at 5,022.
+    """
+    table = ROOT / "project-trajectory" / "skills" / "byte-budget-guard" / "SKILL.md"
+    rows = {}
+    for line in table.read_text(encoding="utf-8").splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) == 5 and cells[0].startswith("`") and cells[0].endswith("`"):
+            rel = cells[0].strip("`")
+            digits = cells[2].replace(",", "")
+            if digits.isdigit():
+                rows[rel] = int(digits)
+    assert set(rows) >= set(BYTE_CAPS), (
+        "the Budgets table lost a capped row: {}".format(
+            sorted(set(BYTE_CAPS) - set(rows))
+        )
+    )
+    wrong = []
+    for rel, declared in sorted(rows.items()):
+        path = ROOT / rel
+        if not path.is_file():
+            wrong.append("{}: no such file".format(rel))
+            continue
+        real = len(path.read_bytes())
+        if real != declared:
+            wrong.append(
+                "{}: table says {:,}, file is {:,}".format(rel, declared, real)
+            )
+    assert not wrong, (
+        "; ".join(wrong) + " — re-stamp the byte-budget-guard Budgets table "
+        "(source plus every tracked skill copy) in the SAME commit as the edit. "
+        "A baseline nobody re-stamps is worse than none: the procedure tells the "
+        "next author to compute their delta from it."
+    )
+
+
 def test_status_is_working_surface_history_lives_in_log(scaffold):
     # Thread 36: status.md holds only what must be performed next; the history
     # sections (Sittings, Audit log) live in the pointed-to docs/log.md,

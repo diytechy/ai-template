@@ -232,6 +232,10 @@ IF_ID_RE = re.compile(r"IF-\d+")
 # The seam-TC coverage migration allowlist (OI-43 ruled (a), WI-488) — see
 # `read_if_tc_allow`.
 IF_TC_ALLOW = "docs/if-tc-coverage-allow"
+# The allowlist's machine-readable baseline: how many of its entries are the
+# SEEDED population (which shares one reason, stated once in the header). Past
+# that count an entry is an addition and must carry its own ` — <reason>`.
+IF_TC_SEED_RE = re.compile(r"^#\s*seed-count:\s*(\d+)\s*$")
 # A CMP-### component id token (process-options.md "Component layer"). trace.py
 # owns CMP integrity; this loader is lenient (skips a malformed id) — it only
 # feeds the warn-first top-view coverage.
@@ -1003,6 +1007,36 @@ def interface_findings(root):
 # WI-488) -------------------------------------------------------------------
 
 
+def parse_if_tc_allow(text):
+    """`([(id, reason-or-None), ...] in file order, declared seed count or
+    None)` for one allowlist file's TEXT.
+
+    The SEED COUNT is a machine-readable header key, `# seed-count: <int>`,
+    naming how many of the entries below are the migration BASELINE — the
+    population measured when the promotion was seeded, which shares one reason
+    stated once in the header rather than repeated per line. Entries past that
+    count are ADDITIONS, and an addition is a judgment someone made, so it
+    carries its own ` — <reason>`. A file that declares no seed count has no
+    baseline to grow past; every entry is then read as seeded, which is what an
+    adopter's freshly-seeded file looks like before it has ever grown."""
+    entries = []
+    seed = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            m = IF_TC_SEED_RE.match(line)
+            if m and seed is None:
+                seed = int(m.group(1))
+            continue
+        head, _, reason = line.partition(" — ")
+        token = head.split()[0] if head.split() else ""
+        if IF_ID_RE.fullmatch(token):
+            entries.append((token, reason.strip() or None))
+    return entries, seed
+
+
 def read_if_tc_allow(root):
     """`{IF-### id: reason-or-None}` from `docs/if-tc-coverage-allow` — the
     seam-TC coverage migration allowlist. Absent file: empty dict.
@@ -1013,21 +1047,39 @@ def read_if_tc_allow(root):
     `docs/provenance-allow` rule: a line whose first token does not parse as an
     IF-### id declares nothing and is dropped, so the worst a malformed entry
     can do is leave the finding it was meant to silence still reported — never
-    the reverse."""
+    the reverse.
+
+    AN ADDITION BEYOND THE DECLARED SEED NEEDS A REASON, and a bare one
+    SUPPRESSES NOTHING — the same fail-soft-loud direction. The 2026-08-21
+    review measured why: a new seam reds `--strict`, and the one-line edit that
+    greened it was appending its bare id, which was lexically indistinguishable
+    from the 120 seeded lines and produced no hygiene signal, no test failure
+    and no reason anyone could review. The list is a burn-down; growth has to
+    cost a sentence."""
     path = Path(root) / IF_TC_ALLOW
     if not path.is_file():
         return {}
+    entries, seed = parse_if_tc_allow(
+        path.read_text(encoding="utf-8-sig", errors="replace")
+    )
     out = {}
-    text = path.read_text(encoding="utf-8-sig", errors="replace")
-    for raw in text.splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
+    for i, (token, reason) in enumerate(entries):
+        if seed is not None and i >= seed and not reason:
             continue
-        head, _, reason = line.partition(" — ")
-        token = head.split()[0] if head.split() else ""
-        if IF_ID_RE.fullmatch(token):
-            out[token] = reason.strip() or None
+        out[token] = reason
     return out
+
+
+def if_tc_allow_growth(root):
+    """`([(id, reason-or-None), ...], seed)` — the entries past the declared
+    seed count, and that count (None when the file declares none)."""
+    path = Path(root) / IF_TC_ALLOW
+    if not path.is_file():
+        return [], None
+    entries, seed = parse_if_tc_allow(
+        path.read_text(encoding="utf-8-sig", errors="replace")
+    )
+    return ([] if seed is None else entries[seed:]), seed
 
 
 def if_tc_coverage_findings(root):
@@ -1056,7 +1108,8 @@ def if_tc_coverage_findings(root):
     single-module adopter that never saw this warn does not suddenly see this
     error. Widening scope is a second, unruled change riding a severity one.
 
-    DELIBERATELY UNCLAIMED (no `Implements:` line): `LLR-042` (`SR-159`) is
+    DELIBERATELY UNCLAIMED — this function declares no back-link at all.
+    `LLR-042` (`SR-159`) is
     `Approved`, and its own `detail` says the connectivity layer emits its
     findings "without changing exit status" — true of `interface_findings`,
     which this function does not touch, and now FALSE of the seam-TC rule this
@@ -1114,12 +1167,16 @@ def if_tc_allow_hygiene_findings(root):
     seam as stale is meaningless while the coverage rule it tracks never arms.
 
     DELIBERATELY UNCLAIMED — see `if_tc_coverage_findings`' own note on why no
-    `Implements:` line names `LLR-042` here.
+    back-link declaration names `LLR-042` here.
     """
     if not read_interfaces_check_enabled(root):
         return []
     allow = read_if_tc_allow(root)
-    if not allow:
+    grown, seed = if_tc_allow_growth(root)
+    # `grown` is consulted for the early return too: an addition the reader
+    # DROPPED (no reason) leaves `allow` empty while the file still grew, and
+    # that is exactly the state most worth reporting.
+    if not allow and not grown:
         return []
     inventory, _declared_contracts, _imports = arch_inventory(root)
     if len(inventory) <= 1:
@@ -1139,6 +1196,28 @@ def if_tc_allow_hygiene_findings(root):
                 IF_TC_ALLOW,
                 " — first 5" if len(unknown) > 5 else "",
                 shown,
+            )
+        )
+    if grown:
+        # GROWTH IS REPORTED EVEN WHEN EVERY ADDITION IS REASONED, because the
+        # list's declared direction is DOWN. A reasoned addition is legitimate
+        # and still worth a sitting's attention; an unreasoned one suppresses
+        # nothing (see `read_if_tc_allow`) and is named here rather than
+        # vanishing silently.
+        unreasoned = [i for i, reason in grown if not reason]
+        out.append(
+            "{} {} entr{} stand past the declared seed of {} — the list is a "
+            "burn-down, so growth is a sitting's business{}: {}".format(
+                len(grown),
+                IF_TC_ALLOW,
+                "y" if len(grown) == 1 else "ies",
+                seed,
+                " ({} carr{} no reason and therefore suppress nothing)".format(
+                    len(unreasoned), "ies" if len(unreasoned) == 1 else "y"
+                )
+                if unreasoned
+                else "",
+                ", ".join(i for i, _ in grown[:5]),
             )
         )
     stale = sorted(i for i in allow if i in tc_cited)
@@ -1353,14 +1432,38 @@ def _arch_scan_profile(root):
 
 def _declared_seam_pairs(root):
     """The IF registry's endpoint pairs, normalized and stored BOTH ways — a
-    seam is one declared relationship, whichever side authored the row."""
+    seam is one declared relationship, whichever side authored the row.
+
+    A `;`-JOINED CELL IS SEVERAL ENDPOINTS, and every combination is a declared
+    pair. `trace.py` has split on `;` since IF-097 (the comment there names it);
+    this reader did not, so the two readers of the same cells disagreed — 14 of
+    249 pairs carried an unsplit, non-existent module name as an endpoint after
+    WI-469 took the population from one row to seven (2026-08-21 review, M-14).
+    Latent, but the failure it sets up is expensive in the wrong direction: a
+    real cross-component import whose seam row plainly names both modules is
+    reported as having no declared seam, and the cheapest fix available to that
+    author is to duplicate or delete a correct row."""
     covered = set()
     for r in load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID")):
-        a, b = _norm_module(r["this"]), _norm_module(r["counterpart"])
-        if a and b:
-            covered.add((a, b))
-            covered.add((b, a))
+        for a in _seam_endpoints(r["this"]):
+            for b in _seam_endpoints(r["counterpart"]):
+                covered.add((a, b))
+                covered.add((b, a))
     return covered
+
+
+def _seam_endpoints(cell):
+    """Every normalized module endpoint in one IF endpoint cell.
+
+    Split on `;` ONLY — an endpoint may legitimately contain a space
+    (`external:downstream adopter`) or a comma. Empty results are dropped, so a
+    blank cell contributes no pair, exactly as before."""
+    out = []
+    for endpoint in (cell or "").split(";"):
+        normalized = _norm_module(endpoint.strip())
+        if normalized:
+            out.append(normalized)
+    return out
 
 
 def _classifiable_edges(root):
