@@ -872,6 +872,16 @@ stops being read. Both advisories are now gated on the cell being IN USE; the
 regenerated goldens show the scaffold report gaining two quiet metric rows and
 one factual section, and nothing else.
 
+**VERIFIED BY BOOTSTRAPPING A REAL SCAFFOLD**, per the standing lesson, not by
+the golden fixtures alone. A fresh scaffold receives `hat_refs` with its guidance
+in both `-000` rows and the 16-hat roster, and `trace --strict` there is SILENT —
+no coverage line, no unattributed-hats line, which is the first-run-adopter
+property the gate exists for. Adding one row with `hat_refs = ["SECURITY"]`
+reports no coverage line (the row is covered) and correctly names the other 15
+hats as unattributed; typo it to `SEKURITY` and the run gives
+`FINDING (hat): SR SR-001 Hat-Refs references unknown hat SEKURITY`, exit 1. The
+rule is demonstrated able to bite in an adopter's tree, not only in a fixture.
+
 **The vocabulary retirement the WI-489 worker banked, discharged.** `PROCESS.md`
 and the `spine-authoring` skill no longer teach "a labelled derived SR"; both
 now name the cell, and the skill says why a prose label is not a record (it
