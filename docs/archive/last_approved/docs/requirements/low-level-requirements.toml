@@ -113,7 +113,7 @@ phase = 1
 sr_refs = ["SR-011"]
 title = "Idempotent write + kit-version stamp"
 module = "project-trajectory/scripts/bootstrap.py"
-code_symbol = "write/--force + write_kit_version"
+code_symbol = "copy_kit_files/--force + write_kit_version"
 detail = "Skips an existing file unless --force."
 test_refs = "(see TC-011)"
 status = "Approved"
@@ -531,10 +531,11 @@ phase = 1
 
 [design.LLR-050]
 sr_refs = ["SR-049"]
-title = "Derived-gate computation + hybrid cache"
+title = "The gate-axis computation this row named is retired; its SSOT principle survives in LLR-185/LLR-186"
 module = "project-trajectory/scripts/spine_rules.py"
-code_symbol = "compute"
-detail = """Per-artifact gate rules (sr_gate/maturity_gate/sn_gate) + min-aggregation over in-scope artifacts + the cached docs/gate (basis line + --check rot guard, legacy value-only); the derived current phase (max over ratified rows via phase_num) rides the basis line and --print, the phase analogue of the derived gate. is_modified is recognized (F5-mirrored from trace.py, pinned by test_rule_sync) and counted across SR/LLR/TC onto the compared basis line as modified=N beside drafts=N - a surfacing count only, no gate arithmetic (a Modified SR reads DevStg-Tests through the existing decomposed-unverified rung of sr_gate; maturity_gate stays Draft-only so a Modified child never caps)."""
+code_symbol = "(none live — see spine_rules.py:755-768, the retirement record)"
+detail = """Retired content, recorded rather than deleted. This row originally named `compute` — the per-artifact gate rules (sr_gate/maturity_gate/sn_gate), the min-aggregation over in-scope artifacts, and the cached `docs/gate` (basis line + --check rot guard). The ruled stage unification deleted all of it: `compute`, `_raw_level`, `sr_bar`/`maturity_bar`/`sn_bar`, the BAR ordinals and `docs/gate` itself are gone (1,523 to 807 lines; `spine_rules.py:755-768` records the two-act deletion). No successor function occupies this row's identity — the module comment is the only trace of what stood here. The obligation this row actually served (SR-049: derive the per-phase readiness value from artifact states alone, never hand-set, cached for readability) is fully carried forward by its successors: LLR-185 (`kitlib/stage.py` — the declared-input carrier + fingerprint) and LLR-186 (`derive_stage.py` — the per-phase, draft-excluded, floored derivation that writes `docs/stage`). This row is kept rather than deleted so the retirement stays legible on the id that originally carried the claim; it asserts nothing live."""
+rationale = """Original rationale, kept for the record: SSOT applied to the gate itself — a hand-set marker can be bumped without the work; deriving it makes gate advancement mechanical (SN-004) and un-gameable (SN-008). The hybrid cache keeps the value readable on checkout; --check guards rot. That principle is exactly what LLR-185/LLR-186 now discharge for the stage axis; nothing about the SSOT argument was wrong, only the mechanism (the BAR/gate axis) it was pinned to, which the ruled stage unification deleted wholesale."""
 test_refs = "(see TC-050)"
 status = "Approved"
 component = "CMP-006"
@@ -545,7 +546,7 @@ sr_refs = ["SR-168"]
 title = "Process reference tab"
 module = "project-trajectory/scripts/traj_panels.py;project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "process_panel/build_html"
-detail = "Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x gates panel derived from the live registries + docs/gate (current-gate highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> gates panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step). Process-doc link-outs resolve; the tab is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
+detail = "Renders the Process tab as a fully self-contained conditional panel registered in build_html (the Knowledge-tab pattern: nav button + section id=process): (1) the artifact-lifecycle x stage panel derived from the live registries + docs/stage (current-stage highlight; per-tier counts from the spine), (2) the resume-loop panel (the managed agent_loop flow with its escalation edges), (3) the slices -> phase -> stage panel derived from the WI registry (docs/work/); links out to the process masters wherever a canonical home exists (bounded in-view restatement only where no single doc states the relationship); sorted inputs, no clocks; a data-less repo renders byte-identically; --check unchanged (the trajectory-map step). Process-doc link-outs resolve; the tab is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 test_refs = "(see TC-051)"
 status = "Approved"
 component = "CMP-009"
@@ -589,7 +590,7 @@ phase = 3
 sr_refs = ["SR-168"]
 title = "Decomposition render polish (columns, arrows, persistent hover)"
 module = "project-trajectory/scripts/traj_views.py"
-code_symbol = "when_view/_tier_column/_svg_node"
+code_symbol = "when_view"
 detail = "Polishes the tiered decomposition render: each tier column is sized no wider than its content within a declared bound (a per-tier max-width cap MAX_TIER_COL, not the current uniform column); one horizontal parent->child arrow is drawn per containment edge so containment is explicit rather than implied by nesting alone; and the hover/focus highlight persists on the last-hovered item until another takes it (a stateful highlight keyed to the last-hovered node id, killing the flash-on-exit). Self-contained, byte-deterministic; --check unchanged. Composes with LLR-052's tiering without changing its >3 thresholds. A data-less repo renders byte-identically; the polished decomposition views are part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 test_refs = "(see TC-057)"
 status = "Approved"
@@ -655,7 +656,7 @@ phase = 1
 sr_refs = ["SR-159"]
 title = "Spec interface-section validation"
 module = "project-trajectory/scripts/check_trajectory.py"
-code_symbol = "spec_interface_findings/_spec_interfaces_section/_proposed_rationale_present"
+code_symbol = "spec_interface_findings/_spec_interfaces_section"
 detail = """Validates armed spec interface ids, Proposed rationale, and the intra-module escape with warn-first/strict severity."""
 test_refs = "(see TC-068)"
 status = "Approved"
@@ -886,7 +887,7 @@ phase = 2
 sr_refs = ["SR-148"]
 title = "Structural safety cross-check"
 module = "project-trajectory/scripts/schedule.py"
-code_symbol = "structural_safety/classify"
+code_symbol = "kind_of/classify"
 detail = "Cross-checks declarations against spine, critique, checkpoint, and dual-plan evidence; quarantines only the contradictory WI. Structural evidence overrides a dishonest declaration; an invalid or missing declaration quarantines the same way, with reason codes, while disjoint classified work stays schedulable."
 test_refs = "(see TC-091)"
 status = "Approved"
@@ -1000,8 +1001,8 @@ phase = 3
 [design.LLR-104]
 sr_refs = ["SR-053"]
 title = "Process-tab node-label type scale (U1 core)"
-module = "project-trajectory/scripts/gen_trajectory.py"
-code_symbol = "--nhead/.stgt/.stgn/.hooplab/.hubname"
+module = "project-trajectory/scripts/traj_panels.py"
+code_symbol = "--nhead/.stgt/.stgn/.slotname"
 detail = """The mechanized core of uniformity anchor U1 (docs/rubrics/dashboard-uniformity.md): the Process tab's working-loops SVG no longer hardcodes 12px/9.5px/13px/13px on .stgt/.stgn/.hooplab/.hubname. .stgt/.stgn are the same per-node-label role as the shared --nlabel/--nsub tokens the icicle, dag and knowledge views already share, and reuse them directly; .hooplab/.hubname are a once-per-diagram headline label, a genuinely different role, so they take the one documented --nhead scale step. SCOPE: these four selectors resolve to a declared token, asserted structurally against the emitted CSS. Whether the sizes read as uniform belongs to LLR-111/TC-116."""
 rationale = """A magic number is invisible to every later change: two independently-drifting literals doing one job diverge the first time somebody adjusts one of them. Collapsing all four selectors onto the node-label tokens was rejected because a once-per-diagram headline is a different role, and forcing one token onto two roles is the same defect in the other direction."""
 test_refs = "(see TC-107)"
@@ -1048,7 +1049,7 @@ phase = 3
 [design.LLR-108]
 sr_refs = ["SR-052"]
 title = "Accessible-name quality, not merely presence (A2 residue)"
-module = "project-trajectory/scripts/gen_trajectory.py"
+module = "project-trajectory/scripts/traj_render.py;project-trajectory/scripts/gen_trajectory.py"
 code_symbol = "_render_drill breadcrumb label; every focusable/role=img emit site"
 detail = """The QUALITY half of accessibility anchor A2, mechanizing what LLR-101 leaves perceptual. Three rules over every focusable element and role=img graphic: it HAS an accessible name; that name is never a bare registry id; and navigation LANDMARKS are distinct. SCOPE, narrower than a first measurement suggests: A2 governs INTERACTIVE elements and meaningful graphics — a <title> on a decorative edge path is a tooltip, not an accessible name. Uniqueness is asserted for landmarks ONLY: a descend control for the same container legitimately recurs across drill layers, one visible at a time, so those repeats are one control reached by different paths. Whether a well-formed, unique, descriptive name is the RIGHT description belongs to SR-054's reading-task critique."""
 rationale = """A bare registry id tells a screen-reader user nothing about what the control is, and a reader listing landmarks hears a flat list in which two called 'Breadcrumb' are indistinguishable — which is what three drills produce unless the names are made distinct. Asserting over decorative graphics too was rejected: it would manufacture findings the accessibility standard does not make, and a check that cries wolf is one a reader stops reading."""
@@ -1397,7 +1398,7 @@ sr_refs = ["SR-173"]
 title = "Trunk-step artifact regen (dependency order)"
 module = "project-trajectory/scripts/trunk_step.py"
 code_symbol = "regen"
-detail = """Regenerates arch-map, okf, derived-gate, dashboard, status block and open-items as subprocesses in dependency order (derived-gate before its two consumers), skipping absent artifact families with a notice and stopping loudly at the first failure. Never commits; the caller owns the commit."""
+detail = """Regenerates okf, derived-stage, trajectory, status block and open-items as subprocesses in dependency order (derived-stage before its two consumers, trajectory and status), skipping absent artifact families with a notice and stopping loudly at the first failure. Never commits; the caller owns the commit."""
 rationale = """derive_stage runs before the dashboard/status regens because docs/stage is their input, not their output."""
 test_refs = "(see TC-135, TC-170)"
 status = "Approved"
@@ -1408,7 +1409,7 @@ phase = 4
 sr_refs = ["SR-026"]
 title = "Plain-launch drive loop (claim->build->integrate)"
 module = "project-trajectory/scripts/dispatch.py"
-code_symbol = "run/_resume_or_claim/_stranded_claims/_default_worker"
+code_symbol = "run"
 detail = """The serial scheduling front end a plain agent_loop.py launch runs: each cycle re-derives the ready frontier (schedule.frontier), refuses on the tracked pause and on a dirty trunk at the cycle top, resumes a parked claimed branch else claims the next queued WI in build order (integrate.claim, branch name check-ref-format-validated), launches one worker session on the claimed branch's worktree (agent_loop.py --worktree --wi with the session dials forwarded), drains the serial merge queue (integrate.integrate) counting merges from finished_branches, and stops loudly on any composed refusal - stranded claims (active specs with no branch ref) refuse by name, NEEDS-HUMAN propagates as exit 7, a stall aborts, an empty frontier drains to exit 0. The session-config preflight applies only when work needs a worker. Never pushes."""
 rationale = """Ordering only, no new authority: every refusal stays where it already lives, and the driver is ~400 lines of composition against the 4,042-line dispatcher it replaces."""
 test_refs = "(see TC-137)"
@@ -1454,11 +1455,11 @@ phase = 1
 
 [design.LLR-147]
 sr_refs = ["SR-049"]
-title = "SN-coverage gate rung + uncovered basis count"
+title = "SN-coverage stage rung, folded into spine_stage"
 module = "project-trajectory/scripts/spine_rules.py"
-code_symbol = "sn_gate/sn_cited_ids"
-detail = """sn_gate reads the cited set sn_cited_ids builds from SR SN-Refs (an F5 duplicate of trace.py's parse, pinned equal by test_rule_sync like phase_num and LLR_EXEMPT): a RATIFIED SN cited by zero SRs caps the raw level at DevStg-Below - a ratified-but-unanswered need has not earned DevStg-Reqs - while a Draft SN stays exempt from the coverage rung and rides the existing draft rung (one fact, one finding; the itemized 'SN has no SR' listing remains trace.py's orphan rule at DevStg-Tests strictness, reading the SAME cited set, so the gate input and the listing cannot contradict on one registry state). _raw_level rebuilds the cited set from the rows in scope, so the ex-draft counterfactual drops a Draft SR's citation with its row and never fabricates coverage. The compared basis line gains uncovered=N (ratified-and-uncited count) beside drafts=N/modified=N - additive for readers, but --check compares the line whole, so it is a cache-format change downstream repos regenerate through."""
-rationale = """Before this rung SN->SR linkage was not a gate input at all: an unanswered ratified need left the gate untouched, orphaning only at DevStg-Tests strictness, which is the ruled boundary. Measured safe before landing: the census on this repo read 25/25 SNs covered and zero ghost SN-Refs, so the rung lands green here and the uncovered case is constructed by fixture, not found."""
+code_symbol = "spine_stage/sn_cited_ids"
+detail = """Narrowed: this row named a standalone `sn_gate` function and a `docs/gate` basis-line field (`uncovered=N`); the ruled stage unification deleted `sn_gate`, `_raw_level` and the basis line itself with the bar axis, and no field carrying an uncovered COUNT survives. What the row actually served — a ratified SN cited by zero SRs must not read as finished — is still enforced, folded directly into `spine_stage` (`spine_rules.py:711-715`): `spine_stage` reads the cited set `sn_cited_ids` builds from SR SN-Refs (an F5 duplicate of trace.py's parse, pinned equal by test_rule_sync) and returns `DevStg-Needs` for a RATIFIED SN cited by zero SRs — a ratified-but-unanswered need has not earned the next rung — while a Draft SN stays exempt from the coverage check and rides the existing draft rung (one fact, one finding; the itemized 'SN has no SR' listing remains trace.py's orphan rule at DevStg-Tests strictness, reading the SAME cited set, so the stage input and the listing cannot contradict on one registry state). The per-phase call passes the repo's whole settled SR set as `cited_srs` so a phase's own rows are never read as the coverage scope (spine_stage's own docstring, `:685-693`). The uncovered COUNT this row also claimed is not carried forward — nothing in `docs/stage` reports a bare uncovered=N — and is recorded here as dropped rather than silently implied."""
+rationale = """Before this rung SN->SR linkage was not a stage input at all: an unanswered ratified need left the stage untouched, orphaning only at DevStg-Tests strictness, which is the ruled boundary. Measured safe before landing: the census on this repo read 25/25 SNs covered and zero ghost SN-Refs, so the rung lands green here and the uncovered case is constructed by fixture, not found."""
 test_refs = "(see TC-141)"
 status = "Approved"
 component = "CMP-006"
@@ -1469,7 +1470,7 @@ sr_refs = ["SR-049"]
 title = "Derived next phase as an output mode"
 module = "project-trajectory/scripts/derive_stage.py"
 code_symbol = "main"
-detail = """--next-phase prints max(Phase over non-draft spine rows) + 1 - the basis line's phase=N derivation exposed as an output mode (no second parse, docs/gate never written), bare so the intake mint helper and any agent can int() the answer when a confirmed scope change opens a new phase; a Draft row's phase is not yet scope and never bumps the answer; an unphased spine is the implicit foundation (1), so it prints 2. The boundary it serves is ruled: a phase increments on an adjudication-confirmed scope change or a ratified draft-SN batch, never on the raw derived-gate drop."""
+detail = """--next-phase prints max(Phase over non-draft spine rows) + 1 - the docs/stage record's phase=N derivation exposed as an output mode (no second parse, docs/stage never written), bare so the intake mint helper and any agent can int() the answer when a confirmed scope change opens a new phase; a Draft row's phase is not yet scope and never bumps the answer; an unphased spine is the implicit foundation (1), so it prints 2. The boundary it serves is ruled: a phase increments on an adjudication-confirmed scope change or a ratified draft-SN batch, never on a raw derived-stage drop."""
 rationale = """One derived call keeps the boundary number mechanical - hand-picked numbers drift, and a spurious Modified window must not burn a phase number (the counterexample: 19 traced cells once flipped 11 SRs with no scope moved)."""
 test_refs = "(see TC-142)"
 status = "Approved"
@@ -1552,7 +1553,7 @@ phase = 4
 sr_refs = ["SR-137", "SR-139"]
 title = "The config layer: one reader, checked shape, one comparison"
 module = "project-trajectory/scripts/agent_common.py"
-code_symbol = "process_config/process_shape_findings/config_conflicts/ratification_level/human_holds"
+code_symbol = "process_config/process_shape_findings/config_conflicts/ratification_through/human_holds"
 detail = """`process_config` parses `docs/process.toml` once; `declared_policy` reads a dial through it with the legacy file as fallback; `process_shape_findings` refuses every line shape the hooks' sh cannot follow; `config_conflicts` returns refusal STRINGS (never raises — `dispatch.run` sits in the tick loop's caller, where an exception would rewrite an exit-code contract) covering the double-declaration, the wrong type and the out-of-range value; `ratification_level` + `human_holds` are the ordinal and the ONE comparison every consumer makes."""
 rationale = """Five entry points read policy without passing through `agent_loop.main`, so the refusal has to live where the value is read. The comparison is stated once for the same reason the shape is checked: the failure modes here are silent, and a rule restated at four call sites is four chances to state it differently."""
 test_refs = "TC-150;TC-151"
@@ -1576,8 +1577,8 @@ phase = 5
 sr_refs = ["SR-139"]
 title = "The second axis: which tier is in process"
 module = "project-trajectory/scripts/spine_rules.py"
-code_symbol = "spine_stage/stage_to_gate/_decomposed_sr_ids"
-detail = """`spine_stage` returns the LOWEST unfinished tier, where a MISSING artifact belongs to its own tier rather than to its parent (an SR with no LLR yet is stage 2, because what is being written is an LLR), `Modified` is the SR's own tier and is checked FIRST, and any other not-yet-Approved SR is checked LAST because a child in flight is the honest answer while it is in flight. `stage_to_gate` states the mapping to the harness gate once, deliberately lossy in one direction only. The value rides `docs/gate` as an APPENDED basis field."""
+code_symbol = "spine_stage/_decomposed_sr_ids"
+detail = """`spine_stage` returns the LOWEST unfinished tier, where a MISSING artifact belongs to its own tier rather than to its parent (an SR with no LLR yet is stage 2, because what is being written is an LLR), `Modified` is the SR's own tier and is checked FIRST, and any other not-yet-Approved SR is checked LAST because a child in flight is the honest answer while it is in flight. The stage-to-bar crossing this row once named (`stage_to_gate`) was deleted with the bar axis itself; the value now rides `docs/stage` directly through `derive_stage.py` (LLR-186), with no crossing table to a second axis."""
 rationale = """Reading a missing child as the parent's tier made stages 2 and 3 unreachable during exactly the period they describe, leaving the axis unable to express the distinction it exists for. Appending rather than inserting the basis field is required: `check.py`'s basis regex depends on the existing field order."""
 test_refs = "TC-151"
 status = "Approved"
@@ -1790,7 +1791,7 @@ phase = 4
 sr_refs = ["SR-172"]
 title = "Consecutive no-progress stall guard"
 module = "project-trajectory/scripts/agent_loop.py"
-code_symbol = "LaneState.note_session/main"
+code_symbol = "RoutingState.note_session/main"
 detail = """Declared progress is a moved git HEAD: note_session resets the stall counter on a commit and increments it otherwise, so the window is consecutive and interleaved progress is never ended by the limit; a throttled (WAITING) session bypasses the counter entirely, and a timed-out one counts (it produced no commit). At --stall-limit consecutive no-commit sessions (a declared flag, default 3) the loop stops with EXIT_STALL (4) - its own exit code, distinct from success and from the error/config exits - under a STALL banner pointing at the latest iteration log. Which banner (the all-ERROR agent-unavailable wording vs the generic work stall) is stall_verdict's fork and LLR-028's home under SR-028; this row owns the counter, the declared limit and the distinct exit."""
 rationale = """The counter reads committed evidence (HEAD movement), not session prose, so a session cannot talk its way out of the guard - and the reset-on-commit is what keeps the limit a stall detector rather than a slow-progress killer."""
 test_refs = "(see TC-169)"

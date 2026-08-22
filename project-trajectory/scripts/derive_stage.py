@@ -404,18 +404,20 @@ def phase_rule_findings(root):
     HEAD means no before-state, and a rule that cannot see the past has nothing
     to say rather than something to complain about.
 
-    NO `Implements:` LINE, AND THAT IS THE HONEST STATE (ROUND-OPUS 12). This
-    carried `Implements: SR-139` until the WI-498 close, which was a mis-trace:
-    SR-139 is "Ratification as an ordinal over a derived spine stage" — it
-    governs the `human_ratification_through` dial — while this rule's obligation
-    is "a spine edit that LOWERS the effective stage must surface as a phase
-    change" (ruled plan §4, owner answer §6.1). Unrelated obligations at
-    different tiers, so `backlink-coverage` was crediting a requirement about
-    ratification authority with a realization edge from a function that does not
-    realize it — inflating its coverage with a false edge while leaving this
-    rule rowless. A false edge is worse than a missing one, so the edge is gone
-    and the row is OWED: WI-501's re-scope carries minting the SR that actually
-    states this obligation, and the declaration comes back pointing at it."""
+    Implements: SR-181
+
+    RE-POINTED AT WI-501 (OI-53 (b), 2026-08-22). This carried
+    `Implements: SR-139` until the WI-498 close, which was a mis-trace: SR-139
+    is "Ratification as an ordinal over a derived spine stage" — it governs the
+    `human_ratification_through` dial — while this rule's obligation is "a
+    spine edit that LOWERS the effective stage must surface as a phase change"
+    (ruled plan §4, owner answer §6.1). Unrelated obligations at different
+    tiers, so `backlink-coverage` was crediting a requirement about
+    ratification authority with a realization edge from a function that does
+    not realize it — inflating its coverage with a false edge while leaving
+    this rule rowless (ROUND-OPUS 12). WI-501 removed the false edge and
+    minted SR-181, which states this obligation directly; the declaration
+    above now points at the row that actually owns it."""
     root = Path(root)
     live = spine_rules.load_spine(root / "docs")
     before = _spine_at(root, "HEAD")

@@ -529,7 +529,7 @@ phase = 1
 [test.TC-050]
 verifies = ["SR-049", "LLR-050"]
 level = "Unit"
-method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
+method = """derive the stage from fixture states across every rung predicate and guard the cache; --print reports the derived current phase"""
 tier = "Full"
 expected = """spine_stage derives the correct RUNG per artifact state, walked end to end on the fixture: a Drafted SR reads DevStg-Reqs, a ratified-but-undecomposed SR DevStg-LLReqs, a decomposed SR with no test case DevStg-Tests, and a spine whose test cases are all authored and non-Drafted DevStg-Impl - never DevStg-Release, which is evidence-gated and has no producer. The derived current phase on the stage record is the highest phase over RATIFIED rows (a Drafted row in a higher phase does not bump it; an unphased spine reads None), the meta-repo's own per-phase-live reading matches an INDEPENDENT re-derivation from the raw registry TOML, and the record carries no retired modified= counter."""
 automated = "Yes"
@@ -540,12 +540,12 @@ phase = 1
 [test.TC-051]
 verifies = ["SR-168", "LLR-051"]
 level = "Integration"
-method = """Run the dashboard suite; the Process tab renders its three panels from the live registries + docs/gate (the current-gate highlight matches docs/gate and the tier counts match the spine), process-doc link-outs resolve, a bundle-/data-less repo renders byte-identically (no Process data joins), and generation stays byte-deterministic with --check tripping stale output."""
+method = """Run the dashboard suite; the Process tab renders its three panels from the live registries + docs/stage (the current-stage highlight matches docs/stage and the tier counts match the spine), process-doc link-outs resolve, a bundle-/data-less repo renders byte-identically (no Process data joins), and generation stays byte-deterministic with --check tripping stale output."""
 tier = "Full"
 parameters = "tests/test_gen_trajectory.py (the process-tab cases)"
 expected = """Process tab present with data-derived joins correct; links resolve; data-less render byte-identical; deterministic; --check trips."""
 automated = "Yes"
-evidence = """tests/test_traj_panels.py::test_process_tab_renders_three_panels_from_live_data tests/test_traj_panels.py::test_process_current_gate_highlight_follows_docs_gate tests/test_traj_panels.py::test_process_link_outs_prefer_the_scaffolded_docs tests/test_traj_panels.py::test_process_wi_counts_join_work_items tests/test_traj_panels.py::test_process_tab_omitted_and_byte_identical_without_gate tests/test_traj_panels.py::test_process_tab_is_byte_deterministic_and_check_stable tests/test_traj_panels.py::test_meta_process_tab_smoke"""
+evidence = """tests/test_traj_panels.py::test_process_tab_renders_three_panels_from_live_data tests/test_traj_panels.py::test_process_current_stage_highlight_follows_docs_stage tests/test_traj_panels.py::test_process_link_outs_prefer_the_scaffolded_docs tests/test_traj_panels.py::test_process_wi_counts_join_work_items tests/test_traj_panels.py::test_process_tab_omitted_and_byte_identical_without_stage tests/test_traj_panels.py::test_process_tab_is_byte_deterministic_and_check_stable tests/test_traj_panels.py::test_meta_process_tab_smoke"""
 status = "Approved"
 phase = 2
 
@@ -1389,7 +1389,7 @@ phase = 4
 [test.TC-142]
 verifies = ["SR-049", "LLR-148"]
 level = "Unit"
-method = """Fixture-drive --next-phase: on a spine whose non-draft max phase is 3 with a Draft row at 4 it prints 4 (a Draft phase is not yet scope) and leaves docs/gate byte-identical (output mode only); on an unphased spine it prints 2 (the implicit foundation is 1)."""
+method = """Fixture-drive --next-phase: on a spine whose non-draft max phase is 3 with a Draft row at 4 it prints 4 (a Draft phase is not yet scope) and leaves docs/stage byte-identical (output mode only); on an unphased spine it prints 2 (the implicit foundation is 1)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
@@ -1697,7 +1697,7 @@ phase = 4
 [test.TC-170]
 verifies = ["SR-173", "LLR-142"]
 level = "Unit"
-method = """Run the trunk-step regen order/commit cases: the executed step sequence follows the declared dependency table - arch-map before okf, derived-gate before its two consumers (trajectory, status), open-items last - asserted on the printed per-step lines of a real run rather than on the table constant; a regen run creates NO git commit, a green step's output staying uncommitted in the working tree for the caller's one serial commit; and the failure path is executed, not inferred - a run whose later step fails after green steps have dirtied the tree exits nonzero with HEAD unmoved and the green output still uncommitted, so a later step's failure can never leave a partially regenerated set in history."""
+method = """Run the trunk-step regen order/commit cases: the executed step sequence follows the declared dependency table - okf before derived-stage (the dashboard/status steps' input, not their output), derived-stage before its two consumers (trajectory, status), open-items last - asserted on the printed per-step lines of a real run rather than on the table constant (the retired arch-map step is no longer part of the sequence); a regen run creates NO git commit, a green step's output staying uncommitted in the working tree for the caller's one serial commit; and the failure path is executed, not inferred - a run whose later step fails after green steps have dirtied the tree exits nonzero with HEAD unmoved and the green output still uncommitted, so a later step's failure can never leave a partially regenerated set in history."""
 tier = "Smoke"
 expected = "Satisfies SR-173 AcceptanceCriteria via the LLR-142 detail contract"
 automated = "Yes"
