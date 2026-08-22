@@ -12,6 +12,57 @@ priority = 3
 
 ## Context
 
+### Slice 3, 2026-08-22 — the `SR-162` fold-in LANDS; the D-3 shed STOPS at a measurement.
+
+The lane stays ACTIVE. One of the two things this slice was scoped for landed;
+the other stopped before it edited the registry, and the stop is the slice's
+main product.
+
+**Landed: the orphan fold-in.** `SR-162` (requirement boundary references
+resolve against the declared frame) is decomposed — `LLR-187` (the frame's own
+joins, the SR→crossing rule, and the severity split that makes both adoptable;
+`trace.frame_findings`/`sr_boundary_findings`/`_frame_report_section`) and
+`TC-182` (thirteen existing test nodes across `tests/test_external_frame.py`
+and the signal-vocabulary case in `tests/test_trace.py`). Both mint `Drafted`
+— approval is the owner's act. The machinery was already delivered, so the
+decomposition RECORDS it rather than commissioning it, and the two clauses of
+the parent that are NOT delivered are stated on the row in the debt-stating
+pattern: the joined-seam signal-compatibility rule has no join to read, and the
+two-sided-change obligation is the parent's own named residual. The orphan set
+drops by one; the lane's `sr_refs` now resolves to a decomposed row.
+
+**STOPPED, with the population measured first: the D-3 shed.** `OI-54` (a)
+unblocked the transform, and the first act was to measure the 129 live rows
+against the staged spec (R4 of
+[`docs/plans/2026-08-15-retier-v2-one-decision-tiering.md`](../../../plans/2026-08-15-retier-v2-one-decision-tiering.md)
+§1.4) rather than to start editing. Three findings, and together they say the
+shed is not the pass the ruling's blast radius described:
+
+- **The ruled reading is already the authoring** on 53 of the 54 design-owned
+  `Consumes` rows — their `counterpart` IS the owner design row's module, the
+  provider — so (a) costs nothing to adopt and re-authoring them would change
+  nothing. `IF-031` is the single exception, authored under the reading that
+  was not ruled (owner = the module holding the consuming code).
+- **`this_project`'s death has an unmet precondition.** R4 kills it *"once
+  derivable as owner→LLR→`module`"*. It is derivable on all 32 design-owned
+  `Provides` rows and on none of the 12 requirement-owned ones (`IF-001`,
+  `IF-005`, `IF-009`, `IF-011`, `IF-013`, `IF-014`, `IF-015`, `IF-044`,
+  `IF-053`, `IF-065`, `IF-076`, `IF-081`), where the target shape has no cell
+  that can hold the providing module — and dropping it takes their producer
+  credit in the connectivity advisory and their source end in the declared-seam
+  pairs with it.
+- **`counterpart` is tri-modal on `Consumes` rows** since `WI-469`'s medium
+  pass — provider, medium, or consumer CLASS (the 16 `B-05` rows) — so
+  counterpart→consumers is a per-row re-judgement of 85 rows, and on the third
+  group the ruled reading puts the counterpart *beside* `this_project` in the
+  consumers list rather than opposite it, a shape `OI-54` does not state.
+
+Filed as **`OI-60`** (pending) with the full census, four options and a
+recommendation — (a) shed `direction` only and keep a provider-side endpoint
+cell until the 12 are re-pointed, plus the two free corrections. Nothing in
+`interfaces.toml` was touched. Item 1 below therefore stays OWED and is
+re-blocked, this time on a *scoped* question with a row rather than on prose.
+
 ### Slice 2 landed 2026-08-20 — the CROSSING half. What remains, measured.
 
 The lane stays ACTIVE. `docs/architecture.md` is gone (slice 1) and the
