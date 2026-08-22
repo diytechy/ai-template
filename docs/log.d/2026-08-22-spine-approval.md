@@ -126,7 +126,17 @@ by the 2026-08-18 dial), never by calling the generators out of order.
 ### Gates — all real, all on this working tree
 
 - Smoke: **1366 passed, 5 skipped in 171.95s**.
-  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=a0e6f799-dirty -->
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=a0e6f799-dirty fig-ok -->
+  **`rev=a0e6f799-dirty` IS NOT A RECONSTRUCTIBLE TREE** (ROUND-SOL-RAW 9), and
+  it is left standing with that said rather than resolved to `ac121647`. The
+  run was driven on the working tree that became that commit — but "the tree at
+  measurement time is byte-identical to the tree that was committed" is not
+  something this record can establish after the fact, and stamping the commit
+  would assert exactly that. So the figure stands as a WORKER SELF-REPORT.
+  `check_figures.py` now REFUSES a `-dirty` rev on any declared figure (that
+  arm was added at this close); this line carries `fig-ok` so the historical
+  record keeps its honest label instead of being rewritten to satisfy a checker
+  the record predates.
   **Read the wall clock with its condition**: 171.95 s against a 60 s budget, on
   a box that recorded 54.9 / 64.0 / 55.7 s on 2026-08-20 — roughly 3x slow this
   sitting, and the full suite ran long in the same proportion. One box is one

@@ -16,7 +16,13 @@
 # `fingerprint` is a SHA-256 over the LF-normalized content of the declared
 # derivation inputs (kitlib/stage.py DECLARED_INPUTS). A reader recomputes
 # it and trusts the values above ONLY on a match, deriving fresh in memory
-# otherwise — so no consumer can read a stale stage, on any lane.
+# otherwise — so no SELECTION or RATIFICATION consumer can read a stale
+# stage, on any lane. THE DISPLAY SURFACES ARE THE NAMED EXCEPTION and read
+# the recorded values directly, on purpose: PROJECT_STATE.html and the
+# generated block in docs/status.md describe the commit they ship with, so
+# on a tree whose inputs have moved they render THIS file's rung while the
+# harness derives fresh. That is the design; it is not a guarantee, so the
+# sentence above says which consumers it covers.
 #
 # HOW IT MOVES: by ratifying artifacts in a reviewed commit, never by editing
 # this file. Regenerate: python scripts/derive_stage.py
@@ -33,4 +39,4 @@ per-phase = 1=DevStg-Arch;3=DevStg-Arch;4=DevStg-Arch;5=DevStg-Arch
 per-phase-live = 1=DevStg-Arch;3=DevStg-Arch;4=DevStg-Arch;5=DevStg-Arch
 drafted = 0
 fingerprint = sha256:6175c22eed9244e0a5ffa6edccda5bdc8afff384a7bc40fd268c4eae2a76c4c3
-# computed 2026-08-22 (as-of 8885a30a)
+# computed 2026-08-22 (as-of 3ecde26c)

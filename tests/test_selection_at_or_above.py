@@ -350,7 +350,26 @@ def test_all_three_spellings_still_select_the_same_plan(scaffold, flag):
     assert "Plan at stage DevStg-Reqs" in proc.stdout
 
 
-def test_a_retired_value_alias_still_warns_and_resolves(scaffold):
+def test_a_retired_value_alias_resolves_BY_MEANING_and_says_so(scaffold):
+    """A retired tag translates to the rung a repo at that BAR had REACHED —
+    never to the same-spelled rung.
+
+    THIS TEST PINNED THE DEFECT UNTIL THE WI-498 CLOSE (ROUND-OPUS 8). It
+    asserted `G2` → `DevStg-Tests`, which is the SPELLING;  check_vocab: allow
+    the bar was a MIN
+    over every in-scope row, so the `DevStg-Tests` bar was reached only by a
+    spine already fully decomposed and TC'd — the `DevStg-Impl` RUNG, three
+    above the shared word. `_LEGACY_BAR_THRESHOLD` had that rule written down
+    for `gates =` lists; `RETIRED_STAGE_ALIASES` did not apply it, and this
+    test held the disagreement in place.
+
+    What it cost, and why the assertion below is the load-bearing one: at the
+    spelling reading `--gate G2` selected 12 steps  check_vocab: allow
+    where the arrival reading
+    selects 26, silently dropping `traceability`, `tests+coverage`, `lint`,
+    `format` and ten others. An adopter's CI passing the tag literally — the
+    exact case the silent-`--gate` concession exists to protect — stayed green
+    while quietly stopping most of its checks."""
     make_minimal_project(scaffold)
     proc = run_py(
         # The retired tag is the ARGUMENT under test, not a live citation.
@@ -366,7 +385,13 @@ def test_a_retired_value_alias_still_warns_and_resolves(scaffold):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "RETIRED gate vocabulary" in proc.stderr
-    assert "Plan at stage DevStg-Tests" in proc.stdout
+    assert "Plan at stage DevStg-Impl" in proc.stdout
+    # The warning must SAY the value moved and that the plan moved with it —
+    # the old text reported only the re-reading, so a pipeline could shrink by
+    # fourteen steps behind one line of reassurance.
+    assert "NOT the same-spelled rung" in proc.stderr, proc.stderr
+    # ...and the steps the spelling reading dropped are genuinely back.
+    assert "format" in proc.stdout
 
 
 # --- the reader seam ----------------------------------------------------------

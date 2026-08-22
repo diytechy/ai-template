@@ -194,6 +194,19 @@ def judge_marker(segment):
         )
     has_cmd = bool(cmd and cmd.group(1).strip() and not _placeholder(cmd.group(1)))
     has_rev = bool(rev_val and WORD.search(rev_val) and not _placeholder(rev_val))
+    if has_rev and rev_val.strip().endswith("-dirty"):
+        # A DIRTY REV IS NOT A REVISION (ROUND-SOL-RAW 9). `git describe`-style
+        # `<sha>-dirty` names a working tree that existed on one machine for a
+        # few minutes and cannot be checked out, so the figure it stamps is not
+        # reproducible by the reader it exists for — which is the whole content
+        # of the convention. Presence is satisfied and provenance is not, so
+        # this is judged rather than waved through.
+        return (
+            "carries a DIRTY rev ({}) — `<sha>-dirty` is a working tree, not a "
+            "tree anyone can check out, so the figure cannot be reproduced. "
+            "Commit first and stamp the resulting revision, or re-drive the "
+            "figure at a committed one".format(rev_val.strip())
+        )
     if has_cmd and has_rev:
         return None
     if has_cmd:

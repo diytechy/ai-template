@@ -495,7 +495,15 @@ differ. `per-phase` / `per-phase-live` break both out per phase, with
 derivation inputs (`DECLARED_INPUTS` in
 [`scripts/kitlib/stage.py`](../project-trajectory/scripts/kitlib/stage.py)). A reader recomputes it
 and trusts the recorded values ONLY on a match, deriving fresh in memory
-otherwise — so no consumer can read a stale stage, on any lane.
+otherwise — so no **selection or ratification** consumer can read a stale stage,
+on any lane. **The display surfaces are the named exception**, by design:
+`traj_parse._stage_value` and `traj_status._stage_facts` parse the recorded file
+directly, without the fingerprint check, so a generated artifact describes the
+commit it ships with. On a tree whose declared inputs have moved,
+`PROJECT_STATE.html` and the generated status block therefore render the
+recorded rung while `check.py` and `human_holds` derive fresh. Only three call
+sites reach `read_stage` — `check.py`, `agent_common.py`, `check_trajectory.py`
+— and those are exactly the deciding ones.
 
 - `check.py` reads `stage` and runs every step whose declared `from-stage`
   threshold sits at or below it. An out-of-vocabulary value is a hard exit, not

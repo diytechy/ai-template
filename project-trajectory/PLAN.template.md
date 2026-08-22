@@ -36,7 +36,7 @@ Discipline (same bullet rules as status.md Open items):
 - **B-1** `pending` (size M, tier cheap) — Implement the CSV export behind
   `SR-000`'s acceptance predicate.
   **Scope:** `src/export.py` (new), `LLR-000`, `TC-000`.
-  **Done-when:** `TC-000` passes in the smoke tier; `scripts/check.py --gate DevStg-Tests`
+  **Done-when:** `TC-000` passes in the smoke tier; `scripts/check.py --stage DevStg-Tests`
   green.
 
 ## Notes for the next PLAN session

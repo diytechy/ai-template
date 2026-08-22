@@ -1148,15 +1148,38 @@ STAGES = list(_kitladder.STAGE_ORDER) + [ALL]
 # `DevStg-Tests` keeps a legal value — what changed is the READING (the repo is
 # at that rung, rather than that bar must next be cleared), and a reading is
 # migrated by the RESYNC note, not by a translation table.
+# THE VALUES ARE ARRIVAL RUNGS, BY MEANING — never the same-spelled rung
+# (corrected at the WI-498 close, ROUND-OPUS 8). A retired tag names a BAR the
+# repo had CLEARED, and the bar was a MIN over every in-scope row, so the rung a
+# repo at that bar had actually reached is what the tag translates to. That is
+# the same by-meaning rule `_LEGACY_BAR_THRESHOLD` states for `gates =` lists
+# and the same one the phase-anchor grammar uses; this table was the one place
+# taking the SPELLING.
+#
+# WHAT IT COST, driven: `--gate G2` resolved to `DevStg-Tests` and produced a
+# 12-step plan where the equivalent arrival (`DevStg-Impl`) produces 26. The 14
+# steps that silently dropped out included `traceability`, `tests+coverage`,
+# `lint`, `format` and `backlink-coverage` — so an adopter's CI passing
+# `--gate G2` literally (the exact case the silent-`--gate` concession exists to
+# protect) stayed green while quietly stopping most of its checks.
+#
+# COMPOSITION IS UNCHANGED for `gates =` step lists: `_step_threshold` maps
+# through this table and then through `_LEGACY_BAR_THRESHOLD`, and every entry
+# below lands on the same threshold it did before (Impl -> Impl, Reqs -> Needs).
+# Only the CURRENT-STAGE direction moves, which is the one that was wrong.
 RETIRED_STAGE_ALIASES = {  # check_vocab: allow
+    # The Reqs bar IS the floor every repo sits at.
     "G1": _kitladder.STAGE_REQS,  # check_vocab: allow
-    "G2": _kitladder.STAGE_TESTS,  # check_vocab: allow
+    # The Tests bar was reached ONLY by a spine already fully decomposed and
+    # TC'd, which on the ladder is the DevStg-Impl RUNG — three above the word
+    # it shares with the bar.
+    "G2": _kitladder.STAGE_IMPL,  # check_vocab: allow
     "G3": _kitladder.STAGE_IMPL,  # check_vocab: allow
     # The `DevBar-*` prefix, retired 2026-08-18. `DevBar-Release` resolves to
     # `DevStg-Impl`, NOT to `DevStg-Release`: that bar never certified the
     # Release rung, and the alias carries the correction.
     "DevBar-Reqs": _kitladder.STAGE_REQS,  # check_vocab: allow
-    "DevBar-Tests": _kitladder.STAGE_TESTS,  # check_vocab: allow
+    "DevBar-Tests": _kitladder.STAGE_IMPL,  # check_vocab: allow
     "DevBar-Release": _kitladder.STAGE_IMPL,  # check_vocab: allow
 }
 
@@ -1179,14 +1202,35 @@ def at_or_above(current, threshold):
 
 def _resolve_stage_alias(value, what):
     """Translate a retired `G1`/`G2`/`G3` tag to a canonical rung, warning once.  check_vocab: allow
-    Anything else passes through untouched for the caller's own validation."""
+    Anything else passes through untouched for the caller's own validation.
+
+    THE WARNING NAMES THE TRANSLATION'S DIRECTION, because the value moving is
+    the thing an operator most needs to see (ROUND-OPUS 8): the tag translates
+    BY MEANING, so a bar-era value can resolve to a rung several above the word
+    it shares with the ladder, and the plan the run executes changes with it.
+    The old text reported only the re-reading and said nothing about the plan,
+    so an adopter's pipeline could shrink by fourteen steps behind one line of
+    reassurance."""
     v = (value or "").strip()
     if v in RETIRED_STAGE_ALIASES:
         canonical = RETIRED_STAGE_ALIASES[v]
+        note = (
+            ""
+            if canonical == v.replace("DevBar-", "DevStg-")
+            else (
+                " NOTE: that is NOT the same-spelled rung — a retired tag named "
+                "a BAR the repo had CLEARED, and the bar was a MIN over every "
+                "in-scope row, so it translates to the rung a repo at that bar "
+                "had actually REACHED. The plan is the one for {!r}, which runs "
+                "every step at or above it; `--list` shows exactly which."
+            ).format(canonical)
+        )
         print(
             "check: {} {!r} uses the RETIRED gate vocabulary — reading it as {!r}. "
             "The tags retired at OI-21; update to the stage-ladder rung names "
-            "({}).".format(what, v, canonical, "|".join(_kitladder.STAGE_ORDER)),
+            "({}).{}".format(
+                what, v, canonical, "|".join(_kitladder.STAGE_ORDER), note
+            ),
             file=sys.stderr,
         )
         return canonical
@@ -1557,7 +1601,7 @@ def _divergence_mode(args):
         if args.strict:
             sys.exit(
                 "check: --strict applies only to --staged-divergence today (the "
-                "plan's severity comes from --stage-cleared)"
+                "plan's severity comes from --stage)"
             )
         return
     sys.exit(staged_divergence(".", strict=args.strict))

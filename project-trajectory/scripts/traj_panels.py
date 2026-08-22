@@ -963,7 +963,7 @@ def process_panel(root, wis, stats):
         ("per-WI slice", "one scoped work item; ends at the commit bar"),
         ("commit bar", "the per-commit suite + doc checks — every commit"),
         ("phase close", "a phase's slices batch to one re-attestation sitting"),
-        ("gate bar", "the full check.py --gate run at phase close / advance"),
+        ("rung bar", "the full check.py --stage run at phase close / advance"),
         ("CI", "runs the same bar on every push"),
     ]
     bar_lis = "".join(
@@ -1089,7 +1089,7 @@ def process_panel(root, wis, stats):
         + "\n"
         "<h3>3 · Slices → phase → the check bars</h3>\n"
         '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
-        "a phase closes at the <strong>gate bar</strong> — the commit-bar-vs-gate-bar "
+        "a phase closes at the <strong>rung bar</strong> — the commit-bar-vs-rung-bar "
         'cadence lives in <a href="'
         + esc(opts_doc)
         + '">'

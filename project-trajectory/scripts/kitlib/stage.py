@@ -42,6 +42,19 @@ deriver it trusts, and the fresh-derivation branch is visible at every call site
 instead of hidden behind a module global. `derive_stage.read()` is the one-line
 wiring every production consumer calls.
 
+WHO THE FRESHNESS GUARANTEE COVERS, stated once so no surface has to overclaim
+it. `read_stage` recomputes the fingerprint on every call and derives fresh on a
+mismatch, so no SELECTION or RATIFICATION consumer can read a stale stage, on
+any lane — and those are exactly the three call sites that reach it (`check.py`,
+`agent_common`, `check_trajectory`). The DISPLAY surfaces deliberately do not:
+`traj_parse._stage_value` and `traj_status._stage_facts` parse the recorded file
+directly, so a generated artifact describes the commit it ships with. That is
+coherent with READERS NEVER WRITE below, and it means the honest sentence names
+the consumer class rather than saying "no consumer, on any lane" — an
+unqualified universal the dashboard and the status block are standing
+counterexamples to (ROUND-OPUS 6, on the one property this program is named
+for).
+
 READERS NEVER WRITE (plan §3). Nothing in this module opens a file for writing.
 The committed `docs/stage` is load-bearing history — the phase-drop and tier
 signals (slice 4) are deltas of the COMMITTED file — so regeneration stays an
@@ -358,7 +371,13 @@ HEADER = [
     "# `fingerprint` is a SHA-256 over the LF-normalized content of the declared",
     "# derivation inputs (kitlib/stage.py DECLARED_INPUTS). A reader recomputes",
     "# it and trusts the values above ONLY on a match, deriving fresh in memory",
-    "# otherwise — so no consumer can read a stale stage, on any lane.",
+    "# otherwise — so no SELECTION or RATIFICATION consumer can read a stale",
+    "# stage, on any lane. THE DISPLAY SURFACES ARE THE NAMED EXCEPTION and read",
+    "# the recorded values directly, on purpose: PROJECT_STATE.html and the",
+    "# generated block in docs/status.md describe the commit they ship with, so",
+    "# on a tree whose inputs have moved they render THIS file's rung while the",
+    "# harness derives fresh. That is the design; it is not a guarantee, so the",
+    "# sentence above says which consumers it covers.",
     "#",
     "# HOW IT MOVES: by ratifying artifacts in a reviewed commit, never by editing",
     "# this file. Regenerate: python scripts/derive_stage.py",

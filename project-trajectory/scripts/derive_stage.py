@@ -602,11 +602,29 @@ def main():
                 "derive_stage: {} up to date ({}).".format(STAGE_FILE, record["stage"])
             )
             return 0
+        # THE CAUSE IS BRANCHED, because one message was false in the case the
+        # design calls NORMAL (ROUND-OPUS 14). An input edit that moves no rung
+        # still reds `--check` — correctly, and the fragment banks that as the
+        # intended direction — but the message said "the derived stage moved"
+        # precisely when it had not, and the `cached:`/`now:` blocks printed
+        # underneath REFUTE it: every derived value byte-identical, only the
+        # fingerprint differing. A reader comparing the two blocks (which are
+        # printed side by side to be compared) concludes the check is lying.
+        only_fingerprint = [
+            key
+            for key in set(cached) | set(record)
+            if key != "fingerprint" and cached.get(key) != record.get(key)
+        ] == []
+        cause = (
+            "the derivation INPUTS changed, so the recorded fingerprint has "
+            "become a false claim — every derived value below is unchanged"
+            if only_fingerprint
+            else "the derived stage moved but the cache did not"
+        )
         print(
-            "derive_stage: {} STALE — the derived stage moved but the cache did "
-            "not.\n  cached:\n{}\n  now:\n{}\n"
+            "derive_stage: {} STALE — {}.\n  cached:\n{}\n  now:\n{}\n"
             "  run `python scripts/derive_stage.py` and commit the result.".format(
-                STAGE_FILE, cached_block, block
+                STAGE_FILE, cause, cached_block, block
             ),
             file=sys.stderr,
         )

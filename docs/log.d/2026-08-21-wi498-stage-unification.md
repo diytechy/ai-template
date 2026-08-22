@@ -94,7 +94,15 @@ the package docstring's themed-module list.
 Gates, real output on this box:
 
 - `python -m pytest -q -n auto` (full, unfiltered) → **2755 passed, 14 skipped
-  in 592.38 s**. The run BEFORE this one is worth recording rather than
+  in 592.38 s**. **PROVENANCE, ADDED AT THE CLOSE (ROUND-SOL-RAW 9): this
+  figure carries NO producing revision and one cannot honestly be
+  reconstructed** — the run predates its slice's commit and no tree OID was
+  recorded, so nothing identifies which tree to check out. It stands as a
+  WORKER SELF-REPORT, not a reproducible measurement, and it is labelled rather
+  than back-filled: inventing a `rev=` here would manufacture exactly the
+  provenance the convention exists to carry. The close's own full-suite figure,
+  at the end of this fragment, is stamped with a real committed revision. The
+  run BEFORE this one is worth recording rather than
   overwriting: **2753 passed, 14 skipped, 2 failed in 597.76 s**, and both
   failures were mine and both were the guards doing their job — the smoke
   membership ratchet (re-stamped above) and `check_vocab` refusing the retired
@@ -233,6 +241,9 @@ ADOPTING first-green-run list, and the §9.1 step table.
 Gates, real output on this box:
 
 - `python -m pytest -q -n auto` (full, unfiltered) → **2798 passed, 14 skipped in 644.25 s**
+  — **no producing revision was recorded; a WORKER SELF-REPORT, labelled rather
+  than back-filled (ROUND-SOL-RAW 9; see slice 1's note above for why no `rev=`
+  is invented here).**
 - `python -m pytest -q -n auto -m smoke` → **1330 passed, 5 skipped in 51.31 s**
   on the final tree. Three readings were taken across the slice and the SPREAD
   is the honest figure, not the best of them: **51.3 / 62.9 / 55.0 s** — the
@@ -463,7 +474,9 @@ Gates, real output on this box:
   the new keying) → **RESULT: PASS**, 11 steps — the 10 that ran before plus
   `ratify-fresh`, which the re-derivation widened and which passes.
 - `python -m pytest -q -n auto` (full, unfiltered, on the landed tree) →
-  **2786 passed, 14 skipped in 658.42 s**. The count fell from slice 1's 2798
+  **2786 passed, 14 skipped in 658.42 s** — **no producing revision was
+  recorded; a WORKER SELF-REPORT, labelled rather than back-filled
+  (ROUND-SOL-RAW 9).** The count fell from slice 1's 2798
   because two test modules retired with the mechanisms they pinned
   (`test_product_floor`, `test_advisory_during_window`) and
   `test_selection_at_or_above` succeeded them with 15.
