@@ -30,6 +30,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # plain here: the facade's guarded import is the module family's ONE sys.path
 # repair, and it runs before this module is ever imported.
 import check_trajectory as ct
+from kitlib import stage as _kitstage
 
 # Sibling: the arch-map AST walk — sw_modules' source since WI-455 retired the
 # committed docs/architecture.md MODULE MAP block it used to parse back
@@ -444,22 +445,33 @@ def _okf_nodes(root):
     return nodes, sorted(edges)
 
 
-PROCESS_GATE_FILE = "docs/gate"
+PROCESS_STAGE_FILE = _kitstage.STAGE_FILE
 
 
-def _gate_value(root):
-    """The runnable gate from docs/gate — the first non-comment line (the
-    derive_gate.parse_cache contract, a small stable parse duplicated per the F5
-    rule), or None when the file is absent/comment-only. None is the Process
-    tab's omit condition: no gate layer, no method view."""
-    path = root / PROCESS_GATE_FILE
+def _stage_value(root):
+    """The repo's effective stage from `docs/stage`, or None when the file is
+    absent or carries no readable record. None is the Process tab's omit
+    condition: no stage layer, no method view.
+
+    READS THE RECORDED FILE, deliberately not through the self-healing reader
+    (WI-498 slice 5). The dashboard is itself a generated artifact regenerated at
+    the same points `docs/stage` is, and its freshness is gated by
+    `trajectory-map`; rendering the COMMITTED record keeps the page and the file
+    it cites describing one commit. A render leaf that derived fresh would print
+    a value the file beside it does not carry, which for a display is the worse
+    failure — and it would spawn the derivation to draw a page.
+
+    The duplicated "first non-comment line" parse this replaces is gone with the
+    positional file: `kitlib.stage.parse` addresses the field BY NAME, so a
+    reordered record cannot silently hand a display the wrong value."""
+    path = root / PROCESS_STAGE_FILE
     if not path.exists():
         return None
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        s = line.strip()
-        if s and not s.startswith("#"):
-            return s
-    return None
+    try:
+        record = _kitstage.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except ValueError:  # a hand-edited or cross-ladder value: omit the layer
+        return None
+    return record.get("stage") if record else None
 
 
 def _process_doc(root, scaffolded, master):

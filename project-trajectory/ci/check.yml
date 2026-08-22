@@ -67,12 +67,13 @@ jobs:
       # `docs/stack.ini` `[ci-tiers]`; the `if:` guards and `--tier` flags below
       # are that declaration's CI half, and the kit pins the two together. To
       # raise or lower CI scope, edit the declaration — not these lines.
-      #   The GATE is orthogonal and comes from the repo's committed `docs/gate`
-      # file (check.py reads it), so CI enforces the bar the project is actually
-      # at — a freshly-scaffolded DevStg-Reqs repo is green, and the bar rises when
-      # artifacts are ratified in a reviewed commit and docs/gate is regenerated
-      # (it is DERIVED from the artifact states by derive_gate.py, not hand-set;
-      # the derived-gate step guards its freshness). In CI we do NOT pass
+      #   The STAGE is orthogonal and comes from the repo's committed `docs/stage`
+      # file (check.py reads it and runs every step declared at or above that
+      # rung), so CI enforces what the project has actually earned — a
+      # freshly-scaffolded DevStg-Reqs repo is green, and more steps select when
+      # artifacts are ratified in a reviewed commit and docs/stage is regenerated
+      # (it is DERIVED from the artifact states by derive_stage.py, not hand-set;
+      # the derived-stage step guards its freshness). In CI we do NOT pass
       # --lenient: a missing required tool must fail, so checks can't be
       # silently skipped.
       - name: Smoke (push)

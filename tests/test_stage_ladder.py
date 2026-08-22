@@ -17,7 +17,7 @@ a reviewer cannot hold by reading:
      sweep. `check_vocab.py` is that enforcer and the rest of this module is its
      acceptance suite.
 
-Also pinned here: the vocabulary duplicated across `derive_gate.py` and
+Also pinned here: the vocabulary duplicated across `spine_rules.py` and
 `check.py` under the F5 no-shared-module rule, which nothing else compares.
 """
 
@@ -28,7 +28,7 @@ import sys
 import pytest
 from conftest import ROOT, SCRIPTS, load_script
 
-dg = load_script("derive_gate")
+dg = load_script("spine_rules")
 check = load_script("check")
 vocab = load_script("check_vocab")
 
@@ -118,7 +118,7 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
     `check.py` restated the three bar names because it must stay a wholesale
     drop-in that never imports a SIBLING SCRIPT — and nothing but an equality
     pin stopped its selection vocabulary from drifting away from the value
-    `derive_gate.py` writes, a drift that would have presented as "no checks
+    `spine_rules.py` writes, a drift that would have presented as "no checks
     defined": a green that ran nothing. It restates nothing now. Selection keys
     on `kitlib.ladder`, the sanctioned shared package, so the drift became
     UNREPRESENTABLE rather than detected — the WI-448 precedent slice 0 followed.
@@ -127,9 +127,14 @@ def test_check_selects_on_the_SHARED_ladder_and_restates_no_vocabulary():
     assert check.STAGES == list(dg.STAGE_ORDER) + ["all"]
     for gone in ("BAR_ORDER", "GATES", "bar_ord", "GATE_FILE"):
         assert not hasattr(check, gone), "the bar axis is retired from check.py"
-    # The retired VALUE aliases stay equal: those are still two hand-authored
-    # tables, so that half of the pin is still load-bearing.
-    assert check.RETIRED_STAGE_ALIASES == dg.RETIRED_BAR_ALIASES
+    # AND IT IS RETIRED FROM THE PRODUCER TOO (WI-498 slice 5). `derive_gate.py`
+    # became `spine_rules.py` — a pure library of row predicates and the rung
+    # fall-through — when `docs/gate` was deleted, so the bar constants this
+    # pin used to compare against are gone at BOTH ends rather than one.
+    for gone in ("BAR_ORDER", "BAR_NAMES", "RETIRED_BAR_ALIASES", "GATE_FILE"):
+        assert not hasattr(dg, gone), "the bar axis is retired from spine_rules"
+    for gone in ("main", "compute", "basis_line", "bar_label"):
+        assert not hasattr(dg, gone), "spine_rules writes nothing and has no CLI"
 
 
 def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
@@ -146,20 +151,36 @@ def test_selection_is_at_or_above_and_routes_through_the_shared_ordinal():
         check.at_or_above("DevStg-SomethingNew", dg.STAGE_NEEDS)
 
 
-def test_the_integrate_and_intake_bar_vocabularies_agree_too():
+def test_the_integrate_and_intake_WI_stage_vocabularies_agree_too():
     """The WI `bar:` key is read by two modules, each with its own copy of the
     translation (F5 again). A row accepted by one and refused by the other would
-    strand a claimed lane."""
+    strand a claimed lane.
+
+    RE-ANCHORED AT WI-498 slice 5. The three copies used to be pinned against
+    `derive_gate.BAR_ORDER`; the bar axis is deleted, so the anchor is now the
+    LADDER itself — the key's three values were always ladder rungs, which is
+    exactly why slice 2 could re-key selection without touching them. Pinning
+    them as a SUBSET of `STAGE_ORDER` rather than as a list keeps the real
+    guarantee (the copies agree, and every value they accept is a real rung)
+    without freezing WHICH rungs a WI may name.
+
+    The KEY is still spelled `bar:`, and that is the last adopter-authored
+    surface carrying the retired word. Renaming it is a migration entry of its
+    own and is deliberately NOT folded in here (no WI spec in this repo sets it,
+    so nothing is wrong today — only old-flavoured)."""
     intake = load_script("intake")
     integrate = load_script("integrate")
-    assert set(intake.WI_BARS) == set(integrate._BAR_GATES) == set(dg.BAR_ORDER)
-    for retired, canonical in dg.RETIRED_BAR_ALIASES.items():
+    assert set(intake.WI_BARS) == set(integrate._BAR_GATES)
+    assert set(intake.WI_BARS) <= set(dg.STAGE_ORDER)
+    # The two hand-authored RETIRED-tag tables still have to agree with each
+    # other — that half of the pin never depended on the bar axis.
+    for retired, canonical in intake._RETIRED_WI_BARS.items():
         assert intake.normalize_bar(retired) == canonical
         assert integrate._normalize_bar(retired) == canonical
     # ...and a correctly-authored value survives BOTH readers unchanged. The
     # retired readers case-folded with `.upper()`, which would have mangled every
     # canonical value into `DEVBAR-REQS` and refused it.
-    for name in dg.BAR_ORDER:
+    for name in intake.WI_BARS:
         assert intake.normalize_bar(name) == name
         assert integrate._normalize_bar(name) == name
 
@@ -267,12 +288,40 @@ def test_the_allow_markers_exempt_a_declaration_site(planted):
     assert _run_vocab(planted, "--strict").returncode == 0
 
 
+def test_every_token_the_regex_MATCHES_has_a_translation_to_offer():
+    """`findings_for` indexes `SUGGEST` by the first matched token, so a token the
+    regex can match but the table cannot translate is a KeyError — the enforcer
+    CRASHING instead of reporting, on the one input it exists to catch.
+
+    This is not hypothetical: WI-498 slice 5 shipped `\\[g[123]\\]` against a
+    SUGGEST table holding only `[g1]`/`[g2]`, so any line naming `[g3]` took the
+    checker down. There was never a `g3` anchor — `check_trajectory`'s
+    `PHASE_ANCHOR_RE` accepts `g[12]` — so the fix narrowed the regex to the real
+    vocabulary rather than inventing a translation for a token that never existed.
+    Pinned structurally, because the next author to widen the alternation has no
+    other way to be told that the table must widen with it."""
+    for tag in ("G0", "G1", "G2", "G3", "G-Release", "G-Final"):
+        assert tag in vocab.SUGGEST, tag
+    for token in ("[g1]", "[g2]", "[reqs]", "[tests]"):
+        assert token in vocab.SUGGEST, token
+        assert vocab.RETIRED_TAG_RE.search("[4]-" + token), token
+    # The token the crash rode in on: matched, untranslatable. Neither now.
+    assert not vocab.RETIRED_TAG_RE.search("[4]-[g3]")
+    # And the general form — nothing the regex matches may be missing a mapping.
+    probe = "G0 G1 G2 G3 G-Release G-Final DevBar-Reqs DevBar-Tests "
+    probe += "DevBar-Below DevBar-Release [4]-[g1] [4]-[g2] [4]-[reqs] [4]-[tests]"
+    for tag in vocab.RETIRED_TAG_RE.findall(probe):
+        assert tag in vocab.SUGGEST, "regex matches {!r} with no SUGGEST".format(tag)
+
+
 def test_the_WORD_gate_survives_wherever_it_means_a_check_that_can_fail(planted):
     """The load-bearing half of "tag-scoped". A blanket find-replace on the word
-    would rename `docs/gate`, `derive_gate.py` and `--gate` — paths and flags
-    adopters invoke literally — and destroy working code for a cosmetic gain."""
+    would rename `docs/gate-policy`, `subagent_gate.py` and the `--gate` flag —
+    paths and flags adopters invoke literally — and destroy working code for a
+    cosmetic gain. (`docs/gate` and `derive_gate.py` DID retire, at WI-498
+    slice 5; the word did not retire with them, which is what this pins.)"""
     (planted / "docs" / "status.md").write_text(
-        "Run the gate: `derive_gate.py --check` guards docs/gate. The freshness "
+        "Run the gate: `check.py --gate` reads docs/gate-policy. The freshness "
         "gate is wired into subagent_gate and test_env_gates; check_perf's budget "
         "gates fail loudly.\n",
         encoding="utf-8",

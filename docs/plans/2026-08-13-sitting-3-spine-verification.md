@@ -3,7 +3,7 @@
 > **RE-STAMPED 2026-08-16 — READ THIS BANNER, THEN §0.4.** Everything in §0.1,
 > §0.2 and §2.1 was measured on **2026-08-14**, before the re-tier merged and
 > before re-tier v2 ran; **none of those figures survived the day** — re-derive
-> at convening from [`../gate`](../gate)'s basis line and the regenerated brief,
+> at convening from `../gate`'s basis line and the regenerated brief,
 > never from a table here. What changed structurally: **the decision ledger
 > (§0.3) is 9 of 9 RULED**, so this sitting is owed no ledger ruling at all.
 > What it is owed is the **ATTESTATION** — the LLR/TC draft ratifications, the
@@ -925,7 +925,7 @@ markdown, which is why it stays a pointer.
 > `2026-08-15m`). The window itself is unchanged in KIND: the `Modified` rows
 > re-attest and the `Drafted` rows ratify, as one sequence with the
 > status-vocabulary program (`2026-08-14e`). **Read the live window off
-> [`../gate`](../gate)'s basis line and the regenerated brief**; the table stays
+> `../gate`'s basis line and the regenerated brief**; the table stays
 > as the record of what the window looked like when this sitting was assembled.
 
 Measured 2026-08-14 against the live registries (assembly figures of
@@ -1162,7 +1162,7 @@ Adapted from the sitting pack §5, corrected for the current state.
    vocabulary (`2026-08-15m`) that is `Modified` → **`Approved`** and `Drafted`
    → **`Approved`**, both rungs landing on the same word; the retired
    `Verified`/`Planned` targets this step originally named no longer exist.
-   **[`../gate`](../gate) is DERIVED, never hand-set.** **Then seed the snapshot
+   **`../gate` is DERIVED, never hand-set.** **Then seed the snapshot
    in the same reviewed commit** (`intake.py snapshot --seed`) — the copy must
    ride the approval, and it is the birth of drift detection.
 3. **`python project-trajectory/scripts/derive_gate.py`** regenerates the bar; the
@@ -1185,7 +1185,7 @@ Adapted from the sitting pack §5, corrected for the current state.
 7. **Merge-to-main and push stay yours.** Everything is committed locally on
    `infra/mechanized-loop`; this repo runs `push = "human"`.
 
-**The basis line as of assembly** ([`../gate`](../gate), computed 2026-08-13) —
+**The basis line as of assembly** (`../gate`, computed 2026-08-13) —
 **it will have moved by the time you close, and that movement is the point:**
 
 ```

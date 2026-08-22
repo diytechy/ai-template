@@ -8,8 +8,8 @@
 # claim that could never be true.
 #
 # So `derive_stage.py --check` treats a file in this form as "not yet in derived
-# form" and passes with a note — the same smooth-transition path `docs/gate` has
-# always given a legacy hand-set marker — until the first real derivation lands.
+# form" and passes with a note — the same smooth-transition path the kit has
+# always given a not-yet-derived marker — until the first real derivation lands.
 #
 # Run it whenever you like; `trunk_step.py --regen` runs it for you at the trunk
 # regeneration points:

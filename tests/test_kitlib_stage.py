@@ -220,7 +220,7 @@ def test_the_reader_returns_ONE_RECORD_SHAPE_whichever_path_it_took(tmp_path):
 def test_a_file_with_no_stage_field_parses_as_None_rather_than_raising():
     """A scaffold that has never derived, or a pre-migration tree. The reader
     then derives fresh and `--check` asks for the one-time generation — the same
-    smooth-transition path `derive_gate` gives a legacy hand-set gate."""
+    smooth-transition path `spine_rules` gives a legacy hand-set gate."""
     assert stage.parse("# just a header\n") is None
     assert stage.parse("") is None
 

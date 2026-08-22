@@ -112,7 +112,7 @@ def _settled(sr, phase):
 
 
 def _stage(root):
-    return DS._effective(DS.derive_gate.load_spine(root / "docs"))
+    return DS._effective(DS.spine_rules.load_spine(root / "docs"))
 
 
 # --- the baseline the four directions move from -------------------------------

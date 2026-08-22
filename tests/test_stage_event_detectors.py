@@ -1,6 +1,10 @@
 """The two EVENT detectors, re-keyed to the stage axis — the DECISIONS
 (WI-498 slice 4).
 
+check_vocab: allow-file — this module's subject IS the anchor translation, so it
+authors both the retired and the canonical spelling on purpose (the same reason
+`tests/test_trajectory_arch.py` carries the marker).
+
 The ruled plan's §5 item 4, and the design record's §2.5 finding that made it a
 slice rather than a second axis: *the clearance-needing behaviours reduce to
 events plus one derivation rule* — the phase-drop detector and the tier signal

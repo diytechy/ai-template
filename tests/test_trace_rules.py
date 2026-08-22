@@ -399,7 +399,7 @@ def test_a_requirement_states_one_testable_obligation():
     )
     # Passive WITH a named actor is fine — the actor is what was missing.
     assert not flags(
-        sr={"Requirement": "The gate shall be computed by derive_gate.py."}
+        sr={"Requirement": "The gate shall be computed by spine_rules.py."}
     )
     # ZERO 'shall' is NOT a finding. A placeholder, or a project whose obligation
     # keyword is not the English word "shall", is following a different convention
@@ -1278,10 +1278,10 @@ def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
     # different module than the owner LLR implements — so the derivation R4 rests
     # on would silently change the row's meaning.
     fires = trace.if_this_project_advisories(
-        [_if_row(ThisProject="scripts/derive_gate")], llrs
+        [_if_row(ThisProject="scripts/spine_rules")], llrs
     )
     assert len(fires) == 1
-    assert "IF-101" in fires[0] and "ThisProject='scripts/derive_gate'" in fires[0]
+    assert "IF-101" in fires[0] and "ThisProject='scripts/spine_rules'" in fires[0]
     assert "LLR-014" in fires[0] and "check_perf.py" in fires[0]
     assert "derivable as owner→LLR→module" in fires[0]
     assert "wi455" in fires[0] and "warn-only, never the exit code" in fires[0]
@@ -1304,7 +1304,7 @@ def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
     # among several is filed correctly, not misfiled.
     assert (
         trace.if_this_project_advisories(
-            [_if_row(ThisProject="scripts/derive_gate; scripts/check_perf")], llrs
+            [_if_row(ThisProject="scripts/spine_rules; scripts/check_perf")], llrs
         )
         == []
     )
@@ -1323,7 +1323,7 @@ def test_a_bundle_moduled_owner_matches_on_any_of_its_modules():
         {
             "LLR-ID": "LLR-014",
             "Module": "project-trajectory/scripts/check_perf.py;"
-            "project-trajectory/scripts/derive_gate.py",
+            "project-trajectory/scripts/spine_rules.py",
         }
     ]
     # Provides: `ThisProject` names one module of the bundle — silent.
@@ -1332,7 +1332,7 @@ def test_a_bundle_moduled_owner_matches_on_any_of_its_modules():
     consuming = _if_row(
         Direction="Consumes",
         ThisProject="scripts/trunk_step",
-        Counterpart="scripts/derive_gate",
+        Counterpart="scripts/spine_rules",
     )
     assert trace.if_this_project_advisories([consuming], llrs) == []
     # An endpoint naming NONE of the bundle's modules still fires.
@@ -1352,7 +1352,7 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     # An SR owner names no module, so nothing is derivable and nothing disagrees.
     assert (
         trace.if_this_project_advisories(
-            [_if_row(Owner="SR-014", ThisProject="scripts/derive_gate")], llrs
+            [_if_row(Owner="SR-014", ThisProject="scripts/spine_rules")], llrs
         )
         == []
     )
@@ -1361,7 +1361,7 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     # defect look like two.
     assert (
         trace.if_this_project_advisories(
-            [_if_row(Owner="LLR-999", ThisProject="scripts/derive_gate")], llrs
+            [_if_row(Owner="LLR-999", ThisProject="scripts/spine_rules")], llrs
         )
         == []
     )
@@ -1369,7 +1369,7 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     # counterpart-transform business (45 of 122 counterparts are non-module facts).
     for endpoint in (
         "docs/requirements/performance-budgets.csv",
-        "docs/gate",
+        "docs/stage",
         "external:downstream adopter",
         "agent CLI",
         ".github/workflows/check.yml",
@@ -1381,14 +1381,14 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     # An owner LLR with no Module cell is the required-field rule's finding.
     assert (
         trace.if_this_project_advisories(
-            [_if_row(ThisProject="scripts/derive_gate")], [{"LLR-ID": "LLR-014"}]
+            [_if_row(ThisProject="scripts/spine_rules")], [{"LLR-ID": "LLR-014"}]
         )
         == []
     )
     # A `-000` example row is a blank form, not a seam.
     assert (
         trace.if_this_project_advisories(
-            [_if_row(**{"IF-ID": "IF-000", "ThisProject": "scripts/derive_gate"})], llrs
+            [_if_row(**{"IF-ID": "IF-000", "ThisProject": "scripts/spine_rules"})], llrs
         )
         == []
     )
@@ -1406,7 +1406,7 @@ def test_a_consumes_row_is_answered_for_on_the_counterpart_side():
     # `Counterpart`. Reading `ThisProject` here would invert the whole rule.
     consuming = _if_row(
         Direction="Consumes",
-        ThisProject="scripts/derive_gate",
+        ThisProject="scripts/spine_rules",
         Counterpart="scripts/check_perf",
     )
     assert trace.if_this_project_advisories([consuming], llrs) == []

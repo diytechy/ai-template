@@ -8,7 +8,7 @@ The frame's *content* is a human ruling and nothing here judges it. What is
 mechanized, and what this module pins, is the joining: a crossing names a
 declared entity, a relationship names two, a tie-back names a declared crossing,
 and every row carries the one maturity field the boundary rung reads
-(`derive_gate.boundary_incomplete` — its own tests live in
+(`spine_rules.boundary_incomplete` — its own tests live in
 tests/test_ratification_level.py).
 """
 

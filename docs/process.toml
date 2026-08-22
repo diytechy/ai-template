@@ -29,7 +29,7 @@
 #      resume IS the contract) and `docs/agents-enabled` (presence = consent to
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
-#   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
+#   3. `docs/stage` — a GENERATED CACHE (derive_stage.py), not configuration.
 #   (The fourth exception — CHECK-ENABLEMENT TOGGLES stay files, WI-423 — is
 #   OVERTURNED, owner 2026-08-11: "creating files to toggle something off is
 #   also very confusing … far better to tie those into process.toml and key
@@ -46,15 +46,33 @@
 # the state where two readers disagree about the same policy.
 
 [attestation]
-# How far up the SN -> SR -> LLR -> TC spine a HUMAN ratifies, cumulatively
-# ("through" this tier). The dispatcher compares the IN-PROCESS stage of a row
-# against this number: at or below it, work SURFACES for the human; above it,
-# the loop dispatches and an LLM verdict carries ratification authority.
-#   0 = nothing is human-held; the loop ratifies every tier itself
-#   1 = the human ratifies SNs
-#   2 = ... and SRs
-#   3 = ... and LLRs
-#   4 = ... and TCs (every tier human-held; the most conservative setting)
+# THE HIGHEST STAGE RUNG A HUMAN STILL RATIFIES, cumulatively ("through" this
+# rung). The dispatcher compares the rung a row is IN against this value: AT OR
+# BELOW it, work SURFACES for the human; above it, the loop dispatches and an
+# LLM verdict carries ratification authority. It is the exact mirror of the rule
+# that selects checks — a check runs at or ABOVE its `from-stage`, a human
+# ratifies at or BELOW this dial.
+#
+# The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
+# for "nothing is human-held; the loop ratifies every rung itself":
+#
+#   DevStg-Below      nothing is human-held
+#   DevStg-Needs      the human ratifies stakeholder needs
+#   DevStg-Boundary   ... and the system frame
+#   DevStg-Reqs       ... and the requirements
+#   DevStg-Arch       ... and the partition
+#   DevStg-LLReqs     ... and the low-level requirements
+#   DevStg-Tests      ... and the test cases
+#   DevStg-Impl       ... and the implementation
+#   DevStg-Release    everything (the most conservative setting)
+#
+# IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
+# carries the number is READ, TRANSLATED AND WARNED — not refused — and
+# `python scripts/bootstrap.py --migrate-config --dest .` rewrites it. The old
+# notches map 0 -> DevStg-Below, 1 -> DevStg-Boundary, 2 -> DevStg-Arch,
+# 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
+# level held before.
+#
 # Named `human_ratification_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
@@ -66,18 +84,18 @@
 # to sit above is DELETED rather than left inert: shipping it beside the
 # ordinal is the shadowing defect the template names, and the kit must
 # not carry in its own config the shape it refuses downstream.
-human_ratification_through = 4
+human_ratification_through = "DevStg-Release"
 # OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
 # (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
 # each one already gates: `external` -> DevStg-Boundary, `interfaces` and
 # `components` -> DevStg-Arch. An `approval` cell may be machine-flipped only
-# when its registry's rung is not human-held by the number above; an
+# when its registry's rung is not human-held by the dial above; an
 # approval-carrying registry with NO rung mapping is HELD. A declared list was
 # proposed and OVERTURNED — the registry-to-rung association already exists in
-# `derive_gate` (`boundary_incomplete`, `arch_incomplete`), so a second
+# `spine_rules` (`boundary_incomplete`, `arch_incomplete`), so a second
 # declaration would be a rival answer to a question already answered. The map
-# lives beside `DIAL_HOLDS` in `agent_common.py` as `APPROVAL_RUNGS`, read by
+# lives beside `human_holds` in `agent_common.py` as `APPROVAL_RUNGS`, read by
 # `agent_common.human_approves`. THIS IS A COMMENT, NOT A KEY: there is nothing
 # here to configure, which is the point of deriving it.
 # The separate "always show me the full breakdown at the end" hold, split out

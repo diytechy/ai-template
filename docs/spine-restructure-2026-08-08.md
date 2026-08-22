@@ -303,23 +303,23 @@ wants.
 
 **The baseline-commit question, answered:** rows do not each need a git hash. The
 comparison baseline is *the newest commit where the derived gate was at or above
-1*, which `derive_gate.py` can find from history — and `intake.py:376` already does
+1*, which `spine_rules.py` can find from history — and `intake.py:376` already does
 `git show <rev>:docs/gate`, so the machinery exists.
 
 **SRs:**
 
-1. `derive_gate.py` **shall** compute an attestation depth on 0..3 from the same spine states it reads for the gate.
-2. `derive_gate.py` **shall** record that depth in the `docs/gate` basis line. *(split from 1)*
-3. `derive_gate.py` **shall** compute a depth of 0 when a ratified need's content differs from its content at the baseline commit.
+1. `spine_rules.py` **shall** compute an attestation depth on 0..3 from the same spine states it reads for the gate.
+2. `spine_rules.py` **shall** record that depth in the `docs/gate` basis line. *(split from 1)*
+3. `spine_rules.py` **shall** compute a depth of 0 when a ratified need's content differs from its content at the baseline commit.
 4. `check_trajectory.py` **shall** report a ratified need whose ratified cells changed while its downstream rows kept `Verified`.
 5. `dispatch.py` **shall** drain its lanes and exit zero with a banner naming the requested review when `docs/work/attest` is present. <!-- path-ok: proposed or upstream path -->
 6. `agent_common.py` **shall** read `docs/work/attest` as a declared request whose presence is its state. <!-- path-ok: proposed or upstream path -->
 
 > **Corrected from the draft:** an earlier version put the numeric→tier mapping in
 > `gate.template`. That is wrong — `gate.template` is a **one-line file containing
-> `DevStg-Reqs`**, and `derive_gate.py:594` rewrites `docs/gate` **whole**, so anything
+> `DevStg-Reqs`**, and `spine_rules.py:594` rewrites `docs/gate` **whole**, so anything
 > placed there survives only until the scaffold's first run. The mapping's single
-> home is `derive_gate`'s `HEADER` constant, which ships downstream and
+> home is `spine_rules`'s `HEADER` constant, which ships downstream and
 > regenerates verbatim.
 
 ### C.1 → **amend SN-025** (free) · resume autonomy
@@ -562,7 +562,7 @@ detail.
 
 **S5 · Build SN-029.** Un-archive `docs/specs/derived-gate-model.md` first — 15 <!-- path-ok: proposed or upstream path -->
 files cite that live path and it exists only under `docs/archive/`. Then
-`attest-depth=N` on the basis line (+ mapping in `derive_gate`'s `HEADER`), with
+`attest-depth=N` on the basis line (+ mapping in `spine_rules`'s `HEADER`), with
 `--check` tolerant of the field's absence **on the old side only**; extend
 `check_trajectory`'s amendment seam to the needs markdown reusing
 `_split_changed_cells`; add `docs/work/attest`. **Do not touch `gate-policy`'s <!-- path-ok: proposed or upstream path -->
@@ -601,7 +601,7 @@ The waiver means **not running the full DevStg-Reqs/DevStg-Tests/DevStg-Impl rat
 step of a change to the infrastructure that implements those gates. It does **not**
 stop:
 
-- `derive_gate.py` recomputing the gate on every commit, and `--check` byte-comparing the basis line
+- `spine_rules.py` recomputing the gate on every commit, and `--check` byte-comparing the basis line
 - the **module-size ratchet** firing on any shrink below baseline (baselines are **exact, not ceilings**)
 - the dupes census reddening on a changed fingerprint
 - 30 test modules naming the config files by path

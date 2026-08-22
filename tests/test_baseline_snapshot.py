@@ -473,7 +473,7 @@ def test_an_APPROVAL_cell_tier_is_drift_compared_like_the_spine(tmp_path):
 
 
 def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
-    # CMP carries `Status` too, whose ladder semantics are derive_gate's, not a
+    # CMP carries `Status` too, whose ladder semantics are spine_rules's, not a
     # second set written here — `Approved` and `Founded` are the values that
     # table maps to Approved-or-above.
     root, row, _unclaimed = _approved_offspine(
@@ -487,9 +487,9 @@ def test_a_STATE_cell_tier_is_drift_compared_like_the_spine(tmp_path):
 
 def test_the_claimed_sets_are_DERIVED_from_derive_gates_one_ruled_table():
     """The anti-duplication pin. A hand-written literal set here would be a
-    rival answer to "is this row settled", agreeing with `derive_gate` until
+    rival answer to "is this row settled", agreeing with `spine_rules` until
     someone edits one of them — and the ladder table is the declared one home."""
-    dg = load_script("derive_gate")
+    dg = load_script("spine_rules")
     claimed = (dg.APPROVED, dg.FOUNDED)
     assert SNAP._APPROVAL_CELL_CLAIMED == frozenset(
         k for k, v in dg.BIF_MATURITY.items() if v in claimed

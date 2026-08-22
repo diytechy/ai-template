@@ -2,10 +2,17 @@
 verbatim from tests/test_trajectory.py by behavior boundary).
 
 Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
-bound (WI-073/FB5), knowledge⇒component coupling (WI-153), the [phase]-[g*]
-anchors + phase-drop detector (WI-093), the ratification-brief hierarchy-view
+bound (WI-073/FB5), knowledge⇒component coupling (WI-153), the phase anchors +
+phase-drop detector (WI-093), the ratification-brief hierarchy-view
 lint (WI-146b), cross-CMP edges without a declared IF (WI-064), and specs
 acting on declared interface boundaries (WI-191).
+
+check_vocab: allow-file — THE ANCHOR FIXTURES MUST AUTHOR THE RETIRED SPELLING.
+`check_trajectory` TRANSLATES `[p]-[g1]`/`[p]-[reqs]` on read and never rewrites
+a committed WI title, so the only way to prove the translation still works is to
+build titles carrying it. A file-level marker rather than ~25 line-level ones:
+every occurrence here is one fixture class with one reason, and a marker per line
+would say the same thing 25 times while hiding whether a NEW one had appeared.
 """
 
 import csv

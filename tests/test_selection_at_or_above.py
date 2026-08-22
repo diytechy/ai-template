@@ -28,7 +28,7 @@ import pytest
 from conftest import SCRIPTS, load_script, make_minimal_project, run_py
 
 check = load_script("check")
-derive_gate = load_script("derive_gate")
+spine_rules = load_script("spine_rules")
 
 # `kitlib` is a package, not a top-level script, so the ladder comes through
 # `check`'s own already-resolved import rather than a second loader path — and
@@ -178,10 +178,15 @@ def test_the_three_built_in_product_steps_are_REACHABLE_from_a_derived_value(
     for step in ("format", "lint", "tests+coverage"):
         assert step in listed.stdout, listed.stdout
 
-    # ...and the BAR the retired axis would have selected at still cannot reach
-    # them, which is what makes this a fix rather than a fixture that changed.
-    computed = derive_gate.compute(scaffold / "docs")
-    assert computed["gate"] == _ladder.STAGE_TESTS
+    # THE COUNTERFACTUAL THIS USED TO DRIVE IS NO LONGER RUNNABLE, and saying so
+    # is more honest than dropping the paragraph. It regenerated the retired BAR
+    # on the same fixture and asserted it read `DevStg-Tests` — one rung short of
+    # the three product steps' threshold — which is what made this a fix rather
+    # than a fixture that changed. WI-498 slice 5 DELETED that axis, so there is
+    # nothing left to compute the counterfactual with. What survives is the pin
+    # that the deletion happened (a re-introduced bar would restore the hazard)
+    # plus the threshold itself.
+    assert not hasattr(spine_rules, "compute"), "the bar derivation is retired"
     assert _thresholds()["format"] == _ladder.STAGE_IMPL
 
 
@@ -195,9 +200,17 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
     PRODUCT steps only, and here nothing at all is lost, process steps included.
 
     The proof obligation is two-sided, and the second side is what stops this
-    from being a tautology: the derived BAR must be shown to have genuinely
-    dropped, because that drop is what used to remove the checks. A fixture where
-    nothing moved would pass this test while proving nothing."""
+    from being a tautology: something must be shown to have genuinely MOVED when
+    the draft landed. A fixture where nothing moved would pass this test while
+    proving nothing.
+
+    THE MOVING SIDE CHANGED CARRIER AT WI-498 slice 5. It was the derived BAR,
+    which the draft collapsed from `DevStg-Tests` to `DevStg-Reqs`; that axis is
+    now deleted. The `live-stage` field carries the same evidence on the
+    surviving axis — the unfiltered reading, where a draft DOES show — so the
+    two-sided proof is intact and now runs entirely within one vocabulary. That
+    the settled `stage` and the live reading disagree here is the C-01 fix
+    itself, stated as a measurement rather than as a claim."""
     docs = scaffold / "docs"
     _mature_frame_free(scaffold)
     stack = docs / "stack.ini"
@@ -206,12 +219,9 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
     )
 
     def regenerate():
-        for script in ("derive_gate.py", "derive_stage.py"):
-            proc = run_py([SCRIPTS / script, "--root", "."], cwd=scaffold)
-            assert proc.returncode == 0, proc.stdout + proc.stderr
-        return derive_gate.compute(docs), check._kitstage.parse(
-            (docs / "stage").read_text("utf-8")
-        )
+        proc = run_py([SCRIPTS / "derive_stage.py", "--root", "."], cwd=scaffold)
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        return check._kitstage.parse((docs / "stage").read_text("utf-8"))
 
     def plan_names():
         proc = run_py(["scripts/check.py", "--list", "--tier", "smoke"], cwd=scaffold)
@@ -223,7 +233,7 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
         }
 
     # 1. MATURE: a fully decomposed settled chain.
-    bar_before, stage_before = regenerate()
+    stage_before = regenerate()
     before = plan_names()
     assert stage_before["stage"] == _ladder.STAGE_IMPL, stage_before
     assert {"product-canary", "traceability", "format"} <= before, before
@@ -231,12 +241,11 @@ def test_one_drafted_row_cannot_drop_a_single_selected_check(scaffold):
     # 2. ONE DRAFTED ROW — an ordinary new requirement, nothing else changed.
     srs = docs / "requirements" / "system-requirements.csv"
     srs.write_text(srs.read_text(encoding="utf-8") + DRAFTED_SR, encoding="utf-8")
-    bar_after, stage_after = regenerate()
+    stage_after = regenerate()
 
-    # 2a. THE CONTROL: the retired axis really did collapse. Without this the
-    #     test below could pass on a fixture where nothing ever moved.
-    assert bar_before["gate"] == _ladder.STAGE_TESTS
-    assert bar_after["gate"] == _ladder.STAGE_REQS, bar_after
+    # 2a. THE CONTROL: the draft really did move something. Without this the
+    #     claim below could pass on a fixture where nothing ever moved.
+    assert stage_before["live-stage"] == _ladder.STAGE_IMPL, stage_before
     assert stage_after["live-stage"] == _ladder.STAGE_REQS, stage_after
 
     # 2b. THE CLAIM: the effective stage did not move, so the plan did not.
@@ -377,7 +386,7 @@ def test_the_stage_is_read_through_the_common_reader_not_off_a_stale_cache(
     on a claimed branch and could not have caught it."""
     docs = scaffold / "docs"
     _mature_frame_free(scaffold)
-    for script in ("derive_gate.py", "derive_stage.py"):
+    for script in ("spine_rules.py", "derive_stage.py"):
         assert run_py([SCRIPTS / script, "--root", "."], cwd=scaffold).returncode == 0
     recorded = (docs / "stage").read_text(encoding="utf-8")
     assert "stage = DevStg-Impl" in recorded

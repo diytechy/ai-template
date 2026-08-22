@@ -1,7 +1,7 @@
 """`kitlib.ladder` — the eight-rung DevStg stage vocabulary, one home (TC-179).
 
 The vocabulary used to be DEFINED in four places and held together by equality
-pins: `derive_gate` (the intended SSOT), `agent_common.LADDER_RUNGS` (a literal
+pins: `spine_rules` (the intended SSOT), `agent_common.LADDER_RUNGS` (a literal
 frozenset, pinned), `traj_status._STAGE_LABELS` (a byte-identical copy of the
 descriptions, pinned by NOTHING), and prose. WI-498 slice 0 collapsed that to one
 module, so the pins retired: drift became UNREPRESENTABLE rather than DETECTED.
@@ -122,7 +122,7 @@ def test_every_reader_resolves_to_this_one_object():
     drift, which is what makes deleting the old equality pins safe rather than
     merely convenient.
     """
-    dg = load_script("derive_gate")
+    dg = load_script("spine_rules")
     ac = load_script("agent_common")
     ts = load_script("traj_status")
     assert dg.STAGE_ORDER is ladder.STAGE_ORDER

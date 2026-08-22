@@ -31,7 +31,7 @@ _failure_tail = agent_common._failure_tail
 WI229_HOOK_OUT = (
     "\n=== arch-map : python check.py --run-step arch-map ===\n"
     "  PASS  arch-map         0.2s\n"
-    "\n=== derived-gate : C:/Users/x/.venv/Scripts/python.exe derive_gate.py "
+    "\n=== derived-gate : C:/Users/x/.venv/Scripts/python.exe spine_rules.py "
     "--check --root . ===\n"
     "  PASS  derived-gate     0.1s\n"
     "\n=== trajectory : C:/Users/x/.venv/Scripts/python.exe check_trajectory.py "

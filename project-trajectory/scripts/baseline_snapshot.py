@@ -107,12 +107,12 @@ from pathlib import Path
 # test) whose sys.path does not yet carry scripts/.
 try:
     import check_trajectory
-    import derive_gate
+    import spine_rules
     import spine_carrier
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import check_trajectory
-    import derive_gate
+    import spine_rules
     import spine_carrier
 
 # The snapshot's root, repo-relative. One generation only: it is REPLACED
@@ -194,19 +194,19 @@ _APPROVAL_CLAIMED = frozenset({"approved"})
 # them into a hand-written literal would re-introduce exactly the rival answer
 # the derivation below exists to prevent.
 #
-# DERIVED FROM `derive_gate`'s ONE RULED LADDER TABLE rather than restated as a
-# literal set here, and that is the whole point of deriving it: derive_gate.py's
+# DERIVED FROM `spine_rules`'s ONE RULED LADDER TABLE rather than restated as a
+# literal set here, and that is the whole point of deriving it: spine_rules.py's
 # `BIF_MATURITY`/`CMP_MATURITY` are where each vocabulary's ladder semantics are
 # "stated here and nowhere else", so a second hand-written set would be a rival
 # answer to "is this row settled" that agrees until someone edits one of them.
 # `Approved` and `Founded` both claim — `Founded` is `Approved` plus a
 # demonstration, and this predicate asks about the TEXT being blessed.
-_CLAIMED_MATURITY = (derive_gate.APPROVED, derive_gate.FOUNDED)
+_CLAIMED_MATURITY = (spine_rules.APPROVED, spine_rules.FOUNDED)
 _APPROVAL_CELL_CLAIMED = frozenset(
-    k for k, v in derive_gate.BIF_MATURITY.items() if v in _CLAIMED_MATURITY
+    k for k, v in spine_rules.BIF_MATURITY.items() if v in _CLAIMED_MATURITY
 )
 _STATE_CELL_CLAIMED = frozenset(
-    k for k, v in derive_gate.CMP_MATURITY.items() if v in _CLAIMED_MATURITY
+    k for k, v in spine_rules.CMP_MATURITY.items() if v in _CLAIMED_MATURITY
 )
 
 
@@ -346,7 +346,7 @@ def _claims_approval(row):
     that split it (`Verified`, `Planned`) folded into it under OI-30 D1. The two
     off-spine arms were never transitional and are unchanged, except that
     `BIF_MATURITY`'s below-approval key is spelled `drafted` since 5b — which
-    this reads through `derive_gate` rather than restating, so the re-spelling
+    this reads through `spine_rules` rather than restating, so the re-spelling
     needed no edit here at all.
 
     **SN IS ABSENT BY DECISION, NOT BY OMISSION** (design §B7). The reason

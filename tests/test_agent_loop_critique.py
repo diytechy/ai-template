@@ -371,8 +371,12 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
 ):
     repo, ctl, cmd = critique_repo
     _set_critique_control(repo, "1", disposition)
-    # SN-029: the loop-held end of the ordinal.
-    set_process_key(repo, "attestation", "human_ratification_through", 0)
+    # SN-029: the loop-held end of the ladder. `DevStg-Below` is the sentinel
+    # BELOW every rung, so no rung is at-or-below it and nothing is human-held
+    # (WI-498 slice 5 / WI-493 re-keyed this dial off the 0-4 ordinal; the
+    # retired `0` still reads through the migration window, but a fixture that
+    # spells it leaves the re-key untested exactly here).
+    set_process_key(repo, "attestation", "human_ratification_through", "DevStg-Below")
     _git(repo, "add", "docs/process.toml")
     _git(repo, "commit", "-qm", "set the loop-held ratification level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")

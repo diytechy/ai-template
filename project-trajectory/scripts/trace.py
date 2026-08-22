@@ -194,10 +194,13 @@ def is_approved(row):
     (ratified text, evidence pending) folded into this same value at the same
     act under OI-30 D1 — the two named one rung and one of them named it more
     clearly. The consequence the fold created (a decomposed ex-`Planned` row
-    would have read DevStg-Impl under the old `sr_bar`) is closed by the
-    `sr_bar` ceiling ruled at OI-30 D2.
+    would have read DevStg-Impl under the old `sr_bar`) is closed by OI-30 D2,
+    which now stands on the stage axis as an ABSENCE: `spine_stage` returns the
+    Release rung for nothing at all (WI-498 slice 3), so no cell can claim the
+    evidence passed. The `sr_bar` ceiling that carried the ruling before it
+    retired with the bar axis at slice 5.
 
-    Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    Duplicated in spine_rules.py per the F5 rule; pinned equal by
     test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "approved"
 
@@ -223,7 +226,7 @@ def is_founded(row):
     (`agent_common.human_holds` says which) — the dial says who holds what, and
     an authored `Founded` under it is judgment exercised, not an error class.
     Same case-insensitive casing rule as its two siblings; duplicated in
-    derive_gate.py per F5; pinned by test_rule_sync."""
+    spine_rules.py per F5; pinned by test_rule_sync."""
     return (row.get("Status") or "").strip().lower() == "founded"
 
 
@@ -252,7 +255,7 @@ def is_founded(row):
 # SR Verification methods that decompose to a TC but no LLR — there is no code to
 # write, only its acceptance to analyze/inspect/attest, so the orphan rule below
 # exempts them from the "SR with no LLR" finding. The derived gate mirrors this
-# exact set as derive_gate.LLR_EXEMPT; tests/test_rule_sync.py pins the two equal
+# exact set as spine_rules.LLR_EXEMPT; tests/test_rule_sync.py pins the two equal
 # (WI-099) so the orphan report and the gate computation never disagree about what
 # "decomposed" means. (Critique is NOT here: its artifact is produced by code, only
 # its acceptance is subjective.)
@@ -264,7 +267,7 @@ def llr_exempt(row):
     whitespace-padded valid method exempts here exactly as it does in the gate
     derivation (the two decision points must agree — a divergence is a false
     green or false red at a gate).
-    Duplicated in derive_gate.py per the F5 rule; pinned equal by test_rule_sync.
+    Duplicated in spine_rules.py per the F5 rule; pinned equal by test_rule_sync.
 
     Implements: SR-157, LLR-083
     """
@@ -276,7 +279,7 @@ def phase_num(row):
     None when blank/unparseable. The one phase-parse the kit uses — the ratified-phase
     schema rule and the `--phase` foundation filter share it, so a downstream repo that
     kept `vN` labels parses identically (the phase doctrine, process.md §4).
-    Duplicated in derive_gate.py per the F5 rule."""
+    Duplicated in spine_rules.py per the F5 rule."""
     m = re.search(r"\d+", (row.get("Phase") or ""))
     return int(m.group()) if m else None
 
@@ -562,8 +565,9 @@ def llr_status_advisories(llrs, tcs):
     """Warn-only findings (WI-129): an LLR whose Status reads below `Approved`
     while *every* TC that cites it is already `Approved`. The evidence to lift it
     exists, so the gap is a readout drift, not a coverage hole — mechanically
-    harmless (the derived gate ignores LLR/TC Status past `Drafted`; only the SR's
-    `Approved` drives DevStg-Tests->DevStg-Impl, derive_gate.maturity_gate), but confusing at a
+    harmless (the derived stage ignores LLR/TC Status past `Drafted` — a Drafted
+    LLR holds the LLReqs rung open and a settled one says nothing further;
+    `spine_rules.spine_stage`), but confusing at a
     ratification review, where a below-`Approved` LLR under an `Approved` SR reads
     like an unfinished decomposition. Warn only: never promoted to an error (not
     under --strict or --strict-integrity), because making LLR status gate would
@@ -1571,7 +1575,7 @@ def sn_all_ids(text):
     `text`, whole-text — a prose mention counts exactly like a table row, which
     is the sharp edge registry-machinery-reference §2.1 records (ratified +
     uncited caps the derived gate at DevStg-Below since WI-401). `-000` placeholders
-    excluded. Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    excluded. Duplicated in spine_rules.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408), because this scrape decides which ids BOTH
     surfaces run their rules over."""
     return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
@@ -1595,7 +1599,7 @@ def sn_draft_ids(text):
     re-drafted an already-attested need, because the id universe is a whole-text
     scrape while draft-ness was a heading scan. A field cannot be set by
     mentioning the id in a sentence. `-000` placeholders stay excluded.
-    Duplicated in derive_gate.py per the F5 rule; pinned equal by
+    Duplicated in spine_rules.py per the F5 rule; pinned equal by
     test_rule_sync."""
     return spine_carrier.draft_ids_from_text(text)
 
@@ -1603,10 +1607,10 @@ def sn_draft_ids(text):
 def sn_cited_ids(srs):
     """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
     "SN has no SR" orphan rule reads (and, since WI-401, the gate input behind
-    derive_gate.py's SN-coverage rung: that rung caps the raw level, this
+    spine_rules.py's SN-coverage rung: that rung caps the raw level, this
     listing itemizes the ids at DevStg-Tests strictness). No filtering here: -000 rows
     are excluded by the caller's row filter, and a Draft SR's citation is
-    deliberately in the set. Duplicated in derive_gate.py per the F5 rule;
+    deliberately in the set. Duplicated in spine_rules.py per the F5 rule;
     pinned equal by test_rule_sync."""
     return {x for r in srs for x in refs(r.get("SN-Refs"))}
 
@@ -1797,7 +1801,7 @@ def sr_boundary_findings(srs, bifs, ifs):
     crossing has an interface row" is decision 6 (a BIF with no realizing IF),
     deferred BY RULING to post-schema, so this reports the realization gap as an
     advisory and gates nothing on it. `ifs` is read for exactly that count, and
-    the same restraint is why `derive_gate.boundary_incomplete` reads approval
+    the same restraint is why `spine_rules.boundary_incomplete` reads approval
     and not realization.
 
     Vacuous with no frame registry: a project that declares no boundary has no
@@ -3971,7 +3975,7 @@ def analyze(reg, args):
     for u in sorted(sn_ids):
         # A Drafted SN (section-as-state, §4a) is being drafted requirement-first and
         # is exempt from the child-completeness rule, like a Drafted SR. The gate
-        # half of this rule is derive_gate's SN-coverage rung (WI-401): same
+        # half of this rule is spine_rules's SN-coverage rung (WI-401): same
         # cited set (sn_cited_ids), same Drafted exemption — this lists the ids,
         # that caps the level, and neither fires twice on one fact.
         if u not in sr_sn_refs and u not in sn_draft:
@@ -4136,7 +4140,7 @@ def analyze(reg, args):
     # The foundation (minimum) phase is never phase-deferred — it is in scope for
     # every delivery filter, which is exactly what a blank Phase bought before the
     # phase back-fill (the phase doctrine, process.md §4). Digit-parse (`v2`/`2` ->
-    # 2 — the same parse derive_gate uses) so the minimum compares numerically; an
+    # 2 — the same parse spine_rules uses) so the minimum compares numerically; an
     # all-blank downstream registry has no parseable phase, so the blank rule below
     # still carries it. The `tag in phases` match stays literal (CLI label-agnostic).
     foundation_phase = min(
@@ -4181,7 +4185,7 @@ def analyze(reg, args):
     if args.require_verified:
         for r in srs:
             # The DevStg-Impl status bar applies to every ratified SR regardless of
-            # Verification method — matching derive_gate.sr_gate, which already
+            # Verification method — matching spine_rules.sr_gate, which already
             # demands is_approved for any decomposed SR before DevStg-Impl with no
             # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
             # Analysis/Inspection SR left Implemented can never derive DevStg-Impl yet used
@@ -4200,7 +4204,7 @@ def analyze(reg, args):
                 )
                 continue
             # `is_founded` JOINS THE PASS TEST AT D-9 STEP 8, mirroring
-            # `derive_gate.spine_stage`'s Impl->Release discriminator: `Founded`
+            # `spine_rules.spine_stage`'s Impl->Release discriminator: `Founded`
             # is `Approved` PLUS a demonstration, so a row at the top rung has
             # more than cleared a bar that asks whether its text is blessed.
             # Reading `is_approved` alone would have made arming the word FLAG

@@ -73,7 +73,10 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     dest = _bootstrap(tmp_path, "--gate-policy", "autonomous")
     policy = dest / "docs" / "process.toml"
     assert _level(dest) == "autonomous"
-    assert COMMON.ratification_level(dest / "docs") == 0, (
+    # WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung it
+    # always meant, and `ratification_level` with it: the loop-held end is no
+    # longer `0` but `DevStg-Below` — no rung a human still ratifies.
+    assert COMMON.ratification_through(dest / "docs") == "DevStg-Below", (
         "the posture must READ as loop-held, which is the whole point"
     )
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"

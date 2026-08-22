@@ -1,7 +1,7 @@
 """Generated text is written LF on every platform (WI-348).
 
 Found 2026-07-28 on `docs/gate`, which `.gitattributes` declares `eol=lf`:
-`git ls-files --eol` reported `i/lf w/crlf` the moment `derive_gate.py`
+`git ls-files --eol` reported `i/lf w/crlf` the moment `spine_rules.py`
 regenerated it on Windows. Harmless for that one file — git's clean filter
 normalizes the committed blob and every reader strips — but it is the same defect
 CLASS as WI-337, where a tool hashed the checkout's bytes and the resulting
@@ -316,7 +316,11 @@ def test_write_text_accepts_newline_on_the_declared_floor():
 @pytest.mark.parametrize(
     "script,artifact",
     [
-        ("derive_gate.py", "docs/gate"),
+        # `("spine_rules.py", "docs/gate")` was the third case until WI-498
+        # slice 5: the artifact was deleted and `spine_rules.py` lost its CLI,
+        # so the case wrote nothing and took the `pytest.skip` below FOREVER —
+        # a green that proved nothing, which is exactly what that skip exists
+        # to make visible rather than to absorb.
         ("derive_stage.py", "docs/stage"),
         ("gen_okf.py", "docs/okf"),
     ],

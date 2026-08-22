@@ -22,8 +22,26 @@ from conftest import (
     skip_without_env_gates,
     write_wi_registry,
 )
+from kitlib import stage as kitstage
 
 HOOK = ".githooks/pre-commit"
+
+
+def set_dial(scaffold, section, key, value):
+    """Write a policy dial AND regenerate `docs/stage` — the pair a real repo
+    performs, so a hook test reds on the thing under test and not on setup.
+
+    `docs/process.toml` is a DECLARED derivation input (`kitlib/stage.py`
+    DECLARED_INPUTS), so writing ANY dial changes the stage fingerprint and the
+    commit floor's `derived-stage` step then correctly reports the committed
+    record as stale. That is deliberate (WI-498 slice 1: the fingerprint catches
+    staleness a value comparison cannot), and it is why the re-sync recipe
+    re-keys the dial BEFORE regenerating. Fixtures that write a dial and then run
+    the hook must do the same or they fail two steps early, with the real
+    assertion never reached — which is exactly how these tests failed at the
+    slice-5 close, silently, in a module the smoke tier does not carry."""
+    set_process_key(scaffold, section, key, value)
+    run_py(["scripts/derive_stage.py", "--root", "."], cwd=scaffold)
 
 
 def test_bootstrap_copies_pre_commit_hook(scaffold):
@@ -186,13 +204,32 @@ def test_run_steps_gate_promotes_the_warn_first_floor(scaffold):
 
     _wi_001("docs/specs/WI-404.md")
     # No --gate (what the pre-commit hook passes): the floor stays warn-first even
-    # though the scaffold's own docs/gate declares a real bar — a defaulted --gate
-    # must not be resolved through docs/gate, or every commit would be held to the
-    # gate bar. The declared value is DevStg-Tests since OI-30 D2 ceilinged
-    # `sr_bar`; what matters here is only that it is ABOVE the warn-first floor.
-    gate_lines = (scaffold / "docs" / "gate").read_text(encoding="utf-8").splitlines()
-    declared = [ln.strip() for ln in gate_lines if ln.strip()[:1] not in ("", "#")]
-    assert declared == ["DevStg-Tests"], declared
+    # though the scaffold's own derived state declares a real rung — a defaulted
+    # --gate must not be resolved through it, or every commit would be held to
+    # that rung. RE-KEYED at WI-498 slice 5, which retired `docs/gate` and its
+    # three-value BAR: the derived carrier is now `docs/stage`, read through the
+    # carrier's own parser rather than by scraping a bare line. What matters here
+    # is only that the declared rung is ABOVE the warn-first floor.
+    #
+    # THE FRAME HAS TO GO FIRST, and that is not fixture noise — it is slices 2
+    # and 3's banked finding driven here. `boundary_incomplete` applies whenever
+    # `external.toml` EXISTS, and the scaffold ships one carrying no ratified
+    # crossing, so a minimal project reads `DevStg-Boundary` and FLOORS to
+    # `DevStg-Reqs` — the floor itself, which would make this test vacuous
+    # (nothing is above the warn-first floor, so a defaulted `--gate` resolving
+    # through the derived state could not be distinguished from one that does
+    # not). Declaring no frame is a legal adopter shape and is what the
+    # at-or-above fixtures use for the same reason; frame-free, this spine reads
+    # `DevStg-Impl`, which is genuinely above the floor.
+    for frame in ("external", "components"):
+        for suffix in (".toml", ".csv"):
+            carrier = scaffold / "docs" / "requirements" / (frame + suffix)
+            if carrier.exists():
+                carrier.unlink()
+    run_py(["scripts/derive_stage.py", "--root", "."], cwd=scaffold)
+    stage_text = (scaffold / "docs" / "stage").read_text(encoding="utf-8")
+    declared = kitstage.parse(stage_text)
+    assert declared and declared["stage"] == "DevStg-Impl", declared
     warn = run_py(["scripts/check.py", "--run-steps", "trajectory"], cwd=scaffold)
     assert warn.returncode == 0, "R-E must warn, not block, at the commit floor"
     # Explicitly asking for the DevStg-Impl bar really gates it (the WI-354 session read
@@ -417,7 +454,7 @@ def test_hook_secrets_floor_blocks_staged_key_with_privacy_off(scaffold):
     assert "private key header" in (blocked.stdout + blocked.stderr)
 
     # The opt-out lifts the floor for a repo that needs it.
-    set_process_key(scaffold, "policies", "secrets_scan", False)
+    set_dial(scaffold, "policies", "secrets_scan", False)
     ok = subprocess.run([sh, HOOK], cwd=str(scaffold), capture_output=True, text=True)
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
@@ -454,7 +491,7 @@ def test_hook_privacy_author_guard(scaffold):
     assert ok.returncode == 0, ok.stdout + ok.stderr
 
     # privacy-check on + a private (non-exempt) author: a designed block.
-    set_process_key(scaffold, "policies", "privacy_check", True)
+    set_dial(scaffold, "policies", "privacy_check", True)
     blocked = run_hook()
     assert blocked.returncode != 0, "a private author must be blocked"
     assert "exempt allowlist" in blocked.stderr

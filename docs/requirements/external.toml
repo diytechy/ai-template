@@ -66,7 +66,7 @@
 #                  NOT APPLICABLE to this tier and never will be: it means
 #                  settled AND demonstrated, while an approval says the crossing
 #                  is AGREED. The rung that reads it is
-#                  `derive_gate.boundary_incomplete` ("is the boundary inventory
+#                  `spine_rules.boundary_incomplete` ("is the boundary inventory
 #                  still in work?"), through one table, `BIF_MATURITY`.
 #
 #                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may

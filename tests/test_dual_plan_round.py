@@ -295,10 +295,10 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
     # a human: the single-shot flag reaches the pause-free end state —
     # EXIT_STALL (attention), never NEEDS-HUMAN.
     root, fake = make_fixture(tmp_path)
-    # SN-029: the loop-held tier — the ordinal's 0 end, where a recorded
-    # verdict carries ratification authority. Declared as the LEVEL, not as
-    # the retired enum word.
-    set_process_key(root, "attestation", "human_ratification_through", 0)
+    # SN-029: the loop-held tier — `DevStg-Below`, the sentinel below every
+    # rung, where a recorded verdict carries ratification authority. Declared
+    # as the RUNG (WI-493), not as the retired enum word or the 0-4 ordinal.
+    set_process_key(root, "attestation", "human_ratification_through", "DevStg-Below")
 
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
@@ -318,7 +318,7 @@ def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
     root, fake = make_fixture(tmp_path)
     # The retired `single-ratify` level was two facts: a human-held tier PLUS
     # `keep_nondependent`. Both are declared now, separately.
-    set_process_key(root, "attestation", "human_ratification_through", 4)
+    set_process_key(root, "attestation", "human_ratification_through", "DevStg-Release")
     set_process_key(root, "attestation", "keep_nondependent", True)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),

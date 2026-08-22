@@ -32,8 +32,8 @@ python scripts/trace.py --strict --no-placeholders
 python scripts/trace.py --strict --no-placeholders --strict-schema --require-verified
 ```
 
-`scripts/check.py` (or `scripts/check.{sh,ps1}`) runs the gate-appropriate set
-automatically from the derived gate in `docs/gate` — prefer it for a full gate run;
+`scripts/check.py` (or `scripts/check.{sh,ps1}`) runs the stage-appropriate set
+automatically from the derived rung in `docs/stage` — prefer it for a full gate run;
 call `trace.py` directly to iterate on a specific finding.
 
 ## Reading findings
@@ -65,7 +65,7 @@ call `trace.py` directly to iterate on a specific finding.
   fails a run) — an LLR reads below `Approved` while every TC that cites it is
   `Approved`, so the evidence to lift it already exists. Fix: edit the LLR's
   `Status` cell to `Approved` (registries are hand-owned — no generator writes
-  them back). It never gates: LLR status is non-gating under the derived-gate
+  them back). It never gates: LLR status is non-gating under the derived-stage
   model (the SR's `Approved` drives DevStg-Tests→DevStg-Impl), so a lagging LLR is a readout drift,
   not a coverage hole. A `Founded` LLR is exempt — it reads ABOVE `Approved`,
   so there is nothing to lift and the nag would push it DOWN the ladder. (The

@@ -17,5 +17,5 @@
 #                     sync (full delegation, still gated by the sync ritual).
 # A process rule honored by agent drivers and coordinators (hooks are
 # per-clone and can only assist). Change this value in a reviewed commit,
-# like docs/gate.
+# like the other declared policy files.
 human

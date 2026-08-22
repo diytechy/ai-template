@@ -898,7 +898,7 @@ def _wi_st(w):
 
 
 # The label for an SR whose `Phase` cell is blank — the derived-gate model's
-# unnamed default phase (derive_gate prints it `(default)` too). A WI delivering
+# unnamed default phase (spine_rules prints it `(default)` too). A WI delivering
 # such an SR IS phased (the default phase), distinct from a WI that delivers no SR
 # at all (`unphased`).
 DEFAULT_PHASE = "(default)"

@@ -258,7 +258,8 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
     claim(tmp_path, "wi-360")
     monkeypatch.chdir(tmp_path)
     assert set(check._TRUNK_FRESHNESS_STEPS) == {
-        "derived-gate",
+        # `derived-gate` left the set at WI-498 slice 5 with the docs/gate BAR
+        # axis it guarded; `derived-stage` is the surviving derived-artifact step.
         "derived-stage",
         "trajectory-map",
         "status-map",

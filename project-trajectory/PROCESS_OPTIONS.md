@@ -21,7 +21,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Layer | Applies when — skip the section if not | What it adds |
 |---|---|---|
 | Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
-| Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/gate` (generated) + `derive_gate.py` |
+| Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/stage` (generated) + `derive_stage.py` |
 | Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
 | Gate authority levels | a repo ratifies fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_ratification_through` + a deviation register |
@@ -58,7 +58,7 @@ converts with `python scripts/bootstrap.py --migrate-config --dest .` — runnin
 with both homes live is refused, not resolved by precedence. Three kinds of
 declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
 presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
-the generated `docs/gate`. The six per-checker enablement toggles are **in** it,
+the generated `docs/stage`. The six per-checker enablement toggles are **in** it,
 as the `[checks]` section (owner 2026-08-11, overturning WI-423: absence as a
 declaration is unreadable, so each ships as a visible key at its current
 default — four `true`, `live_status = false`, `subagent_gate = "off"`).
@@ -149,34 +149,35 @@ expands only the **mechanics** an adopter can defer until they hit them.
 `docs/archive/specs/derived-gate-model.2026-07-20.md`, not shipped downstream —
 where it and §4 disagree, §4 rules.)
 
-**How the value is cached.** `docs/gate` is a **generated** file:
-`scripts/derive_gate.py` computes the value from the spine and caches it (a
-`# basis:` derivation + a compute date, then the value on the first non-comment
-line, so `check.py`'s `resolve_gate()` reads it unchanged). Ratify artifacts,
-then regenerate: `python scripts/derive_gate.py`. The `derived-gate` step (`derive_gate.py --check`, a pre-commit floor + every
+**How the value is cached.** `docs/stage` is a **generated** file:
+`scripts/derive_stage.py` computes the record from the spine and caches it (a
+`key = value` block: the rung, its ordinal, the per-phase breakdown, and a
+`fingerprint` over the inputs so no reader trusts a stale one).
+Ratify artifacts, then regenerate: `python scripts/derive_stage.py`. The
+`derived-stage` step (`derive_stage.py --check`, a pre-commit floor + every
 gate) guards the cache against rot — a ratification that moved the states but not
 the cache fails loudly. **Hybrid:** the cache means the value is known on
-checkout with no recompute; a legacy hand-set `docs/gate` with no `# basis:` line
-is accepted **value-only** until a one-time `derive_gate.py` migration (so an
-adopter upgrades without a red day). The basis line also carries §4's `stage=N`
-and `ex-draft=`.
+checkout with no recompute; a `stage.template` placeholder with no derived record
+yet is accepted **with a note** until the first derivation (so an
+adopter upgrades without a red day). The record also carries §4's `stage-ord`
+and the unfloored `live-stage`.
 
 **Artifact states (one field, every tier).** Maturity is the row's own `Status`,
-gated by one `Drafted` bit. Each row contributes its own bar to the min; `DevStg-Below` below
-is `derive_gate.py`'s internal **below-DevStg-Reqs sentinel** for a row that has not
-earned DevStg-Reqs yet — a fold value, never a gate a repo sits at (§4):
+gated by one `Drafted` bit. Each row contributes its own stage to the min; `DevStg-Below` below
+is the axis's **below-the-ladder sentinel** for a row that has not earned a rung
+yet — a fold value, never a rung a repo sits at (§4):
 
 - **SR / LLR / TC** — the CLOSED `Status` vocabulary is
   `Drafted` → `Approved` → `Founded` (the last COMPUTED, never typed). An
   approved row whose text later moves stays `Approved`; the change is caught
-  by diffing it against `docs/archive/last_approved/`. Per-artifact bar: an SR is **DevStg-Below** while
+  by diffing it against `docs/archive/last_approved/`. Per-artifact stage: an SR is **DevStg-Below** while
   `Drafted`, **DevStg-Reqs** once ratified (Status past `Drafted`), **DevStg-Tests** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
-  TC). **DevStg-Impl is not reachable from a cell** (2026-08-15 ruling): the
-  release bar is what the harness computes from test evidence, and until that
-  driver lands `sr_bar` ceilings at DevStg-Tests and the derived line says so —
-  `DevStg-Tests (Release: pending harness driver)`. An LLR/TC caps only when
-  `Drafted`; once present its own Status doesn't gate — the SR's does.
+  TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
+  carried onto this axis at WI-498 slice 3): release is what the harness computes
+  from test evidence, and until that carrier lands `spine_stage` returns the top
+  rung for nothing at all. An LLR/TC caps only when `Drafted`; once present its
+  own Status doesn't gate — the SR's does.
 - **SN** — maturity is the **same field**: `status = "Drafted"` on a
   `[need.SN-###]` table in `stakeholder-needs.toml` is DevStg-Below, anything
   else reads ratified (DevStg-Reqs). A ratified need must also be cited by ≥1
@@ -225,19 +226,32 @@ Drafted SR is skipped by the DevStg-Impl approval criterion (pre-approval).
 **Ratification = a reviewed Status-change commit** (§4). That commit *is* the
 sign-off (`gate-advance` skill), and it composes with
 the gate-authority levels (below): `attended` ratifies each batch; `single-ratify`
-ratifies the batch once at its `[phase]-[g2]` close (one review per phase gate);
-`autonomous` on a fresh-context reviewer's recorded verdict. An agent may make the
-ratifying commit, governed by the level.
+ratifies the batch once at its `[phase]-[DevStg-Impl]` close (one review per
+phase); `autonomous` on a fresh-context reviewer's recorded verdict. An agent may
+make the ratifying commit, governed by the level.
 
-**Phase = a derived detector + a committed anchor.** §4's floor drop — the
-derived value falling **below a phase's last-closed level** because new or
-reopened content entered — is the
-*signal* that a new phase is due; `check_trajectory` warns "open a `[phase]-[g*]`"
-(warn-first). But phase **identity + membership** live in a committed
-**`[phase]-[g*]` work item** — a WI whose Title carries the `[<phase>]-[g<N>]` tag
-— not a git-history walk (which a rebase/squash moves and which carries no
-membership). `[phase]-[g1]` is the requirement-structuring batch; `[phase]-[g2]`
-the decomposition + TC batch; its predecessor is the prior phase's close.
+**Phase = a derived detector + a committed anchor.** §4's drop — a phase's
+derived stage falling **below the rung its last-closed anchor recorded**, because
+new or reopened content entered — is the *signal* that a new phase is due;
+`check_trajectory` warns "open a `[phase]-[<rung>]`" (warn-first). But phase
+**identity + membership** live in a committed **anchor work item** — a WI whose
+Title carries the `[<phase>]-[DevStg-<Rung>]` tag — not a git-history walk (which
+a rebase/squash moves and which carries no membership).
+
+**An anchor names THE RUNG THE PHASE STANDS AT once that anchor closes**, which
+is not the rung the batch was working on, and the difference is the one trap in
+this grammar. `[<phase>]-[DevStg-LLReqs]` is the requirement-structuring batch:
+closing it means the phase's SRs are authored *and* ratified, so the phase has
+LEFT `DevStg-Reqs` and now stands at `DevStg-LLReqs`.
+`[<phase>]-[DevStg-Impl]` is the decomposition + TC batch: closing it clears both
+the LLReqs and the Tests predicates, so the phase stands at `DevStg-Impl`. Each
+anchor's predecessor is the next-LOWER anchor of its own phase; the first one's
+is the prior phase's close.
+
+The retired spellings `[<phase>]-[g1]`/`[reqs]` and `[<phase>]-[g2]`/`[tests]` <!-- check_vocab: allow -->
+are TRANSLATED on read and never rewritten — a WI title is a citation — and they
+translate BY MEANING, to `DevStg-LLReqs` and `DevStg-Impl` respectively, not to
+the same-named rung. `check_vocab` refuses them in newly authored text.
 
 **Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
 in parallel** — draft + ratify all the new/reopened SN/SR together, which is
@@ -245,18 +259,18 @@ exactly where "this also modifies SR-12" and other conflicts surface in one revi
 — then each work item runs **DevStg-Tests → DevStg-Impl in series** (the per-WI vertical slice):
 
 ```
-Phase N:  [phase-N-g1]  draft+ratify ALL new/reopened SN/SR   (parallel, batch review)
+Phase N:  [N]-[DevStg-LLReqs]  draft+ratify ALL new/reopened SN/SR  (parallel, batch)
               │
-          [phase-N-g2]  decompose to LLR/TC, all Approved     (parallel, batch review)
+          [N]-[DevStg-Impl]     decompose to LLR/TC, all Approved   (parallel, batch)
               │
           WI-a ─ DevStg-Tests→DevStg-Impl ─┐
           WI-b ─ DevStg-Tests→DevStg-Impl ─┤  (series, per-WI vertical slices)
           WI-c ─ DevStg-Tests→DevStg-Impl ─┘
 ```
 
-A reopen during a later phase's g1 revs the phase: the affected verified artifact
-returns to `Drafted`, the derived gate for that phase drops, and the batch
-review sees it alongside the new work. (One sanctioned relaxation of the series
+A reopen during a later phase's requirement batch revs the phase: the affected
+approved artifact returns to `Drafted`, that phase's derived stage drops, and the
+batch review sees it alongside the new work. (One sanctioned relaxation of the series
 rule: a run of *independent, off-spine* dev slices may batch into one BUILD
 session + one review round — "Dev-slice batching" under Unattended operation;
 spine-touching slices always stay per-slice.) Within a phase the derived value
@@ -272,10 +286,10 @@ phase is derived** — the highest phase any ratified spine row carries — so a
 change surfaces as a phase bump, never a hand-set marker. **The phase boundary is
 a confirmation event** (owner ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
-new draft-SN batch ratified into scope — **never on the raw derived-gate drop**;
+new draft-SN batch ratified into scope — **never on the raw derived-stage drop**;
 a spurious re-attest window must not burn a phase number (the counterexample:
 19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
-moved). `derive_gate.py --next-phase` prints the derived max + 1 — the one call
+moved). `derive_stage.py --next-phase` prints the derived max + 1 — the one call
 every agent (and the intake mint helper) uses for a newly confirmed phase's
 number.
 
@@ -289,7 +303,7 @@ scope filters and the phase-drop detector's per-phase-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
 *silently vacuous*, disarming a warn without telling anyone, which is worse than
 a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
-`v2` → 2, `2` → 2, the same parse `derive_gate` uses), so legacy labels still
+`v2` → 2, `2` → 2, the same parse `spine_rules` uses), so legacy labels still
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
 - **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** A ratified
@@ -375,11 +389,12 @@ the set when the scope needs them.
 ## Gate authority levels
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo lowers
-`[attestation] human_ratification_through` below its shipped `4` — i.e. wants
-some tier's gate accepted by something other than a per-gate human pause. The
-default (`4`, every tier **human-held**) needs none of this section — it is
-exactly the §4/§5 flow. Generalized from a field adoption's ratified
-deviation register (a spatial-capture pilot), this layer's worked reference.
+`[attestation] human_ratification_through` below its shipped `"DevStg-Release"`
+— i.e. wants some rung's gate accepted by something other than a per-gate human
+pause. The default (`"DevStg-Release"`, every rung **human-held**) needs none of
+this section — it is exactly the §4/§5 flow. Generalized from a field adoption's
+ratified deviation register (a spatial-capture pilot), this layer's worked
+reference.
 
 **Selection.** The level is chosen **before the kit is ported** — by the
 owner, with an agent recommendation from the project brief
@@ -449,7 +464,7 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
 - **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
   and `Role: LLM-GATE`; the Sittings acceptor column reads `LLM-GATE`.
   APPROVE → the driver makes the **ratifying Status-change commit** (and
-  regenerates `docs/gate` via `derive_gate.py`), citing the verdict block (the
+  regenerates `docs/stage` via `derive_stage.py`), citing the verdict block (the
   verdict is the review of record — this is the `autonomous` ratification the
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
@@ -607,7 +622,7 @@ gate closes, or the project's scope is complete. Five steps:
 The policy is a **process rule** honored by agent drivers and any unattended
 coordinator — hooks can only *assist* per-clone, which is exactly why the
 authority is structural, not hook-based. Change the value in a reviewed
-commit, like `docs/gate`.
+commit.
 
 **Why this beats a push-time filter (recorded).** (1) A structural model
 cannot be circumvented by pushing with a different tool — the branch the user
@@ -1547,7 +1562,7 @@ not a custom memory tool. The kit's committed artifacts already form the
 agent-neutral, reviewable memory layer: `status.md` *Current State* (cheap
 context reload, §6), `AGENTS.md` (guide re-read every session), the generated
 code map (layout without re-deriving it), the registries (requirement + interface
-truth), `docs/gate` (current bar). **Agent-native memory tools** — e.g. auto-memory
+truth), `docs/stage` (current rung). **Agent-native memory tools** — e.g. auto-memory
 dirs, MCP memory servers, `.planning/`-style context layers — are a legitimate and
 optional *scratch* space for a session's working notes; they are **not** the home
 for any load-bearing fact. Why: agent memory is per-session, per-host, and often
@@ -2498,7 +2513,7 @@ restructure): its measured lifetime record (19 reservations → 8 integrations
 hand-rolled forge with git itself.
 
 **What stays repo-singular (trunk-owned, never forked per branch):** the one
-`SN→SR→LLR→TC` requirement spine and every registry, `docs/gate` +
+`SN→SR→LLR→TC` requirement spine and every registry, `docs/stage` +
 `docs/process.toml` (every declared dial in one home), the
 root `status.md`/`log.md`, `AGENTS.md`, and every generated artifact. The
 spine is **deliberately singular** (§10): `trace.py --strict` still demands

@@ -133,7 +133,7 @@ destination is yours, and no re-sync rule applies to it.
 ### 2.2 The four classes
 
 - **Overwrite freely (kit-owned; you don't hand-edit these).** The process
-  scripts under `scripts/` (`trace.py`, `derive_gate.py`, `derive_stage.py`,
+  scripts under `scripts/` (`trace.py`, `spine_rules.py`, `derive_stage.py`,
   `check_docs.py`,
   `check_flows.py`, `check_perf.py`, `check_privacy.py`, `gen_arch_map.py`,
   `gen_*`, `agent_loop.py`), the git hooks (`.githooks/pre-commit`,
@@ -177,14 +177,17 @@ destination is yours, and no re-sync rule applies to it.
   (session history), `docs/runtime-flows.md`'s authored flows (the architecture
   itself derives — there is no committed copy to preserve, see the
   `docs/architecture.md` RETIRES entry), `AGENTS.md` project content, the root launchers' EDIT
-  slots, `docs/gate`, and `.gitignore`/`.gitattributes` (merge new kit lines in by
-  hand). `bootstrap.py` **skips existing files**, so a plain re-run won't clobber
+  slots, and `.gitignore`/`.gitattributes` (merge new kit lines in by
+  hand). (`docs/gate` was in this set until it RETIRED — see below.) `bootstrap.py` **skips existing files**, so a plain re-run won't clobber
   these — but don't run it with `--force` against a live repo without a diff pass.
 
 Two classes have **exceptions that an entry states**, and the entry wins: a §3
-entry may invert a standing rule for one file (the clearest case is a migration
-that requires `docs/gate` to be **regenerated** rather than preserved). Read the
-applicable entries before applying the classes, not after.
+entry may invert a standing rule for one file, and `docs/gate` is the case that
+demonstrates both directions — an early migration required it to be
+**regenerated** rather than preserved, and the final one **DELETES** it outright
+(nothing derives or reads it any more; its successor is `docs/stage`, which is
+generated and so is regenerated, never merged). Read the applicable entries
+before applying the classes, not after.
 
 ### 2.3 Set-together files
 
@@ -495,10 +498,10 @@ the delegate versions, and move your old `RUN_CMD` value into a `[run]` line
 
 ### The derived gate (`docs/gate` becomes generated) [since 03b27c44]
 
-The re-sync ships `derive_gate.py` and a `check.py --run-step derived-gate` step
+The re-sync ships the deriver and a `check.py --run-step derived-gate` step
 (so re-sync `check.py` + the hook together). `docs/gate` is now **generated** from
-the artifact states — run `python scripts/derive_gate.py` **once** to migrate your
-legacy hand-set `docs/gate` to the derived form (until you do, the
+the artifact states — it had to be regenerated once to migrate a legacy hand-set
+value to the derived form (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated) (until you did, the
 `derived-gate --check` step accepts the old one-line value **value-only**, so an
 un-migrated repo is never broken). After migrating you stop bumping the line — you
 ratify artifacts (`Status` `Draft`→`Planned`, or an SN section move) in a reviewed
@@ -512,7 +515,7 @@ that last set `docs/gate`, states no reviewer ever ratified. Find that commit
 (`git diff <sha>..HEAD -- docs/requirements docs/test`), and stage everything
 added or materially changed since per the new model — new stakeholder needs into a
 `## Draft needs (unratified)` section, not-yet-re-reviewed SRs to `Status=Draft` —
-so `derive_gate.py` reproduces the gate your history actually attests instead of
+so `spine_rules.py` reproduces the gate your history actually attests instead of
 laundering post-attestation additions into it. If the derived value still
 disagrees with your old hand-set line after that, **the disagreement is the
 finding**: ratify (or demote) deliberately before relying on the derived gate.
@@ -533,7 +536,7 @@ vocabulary rule).
 The DevStg-Impl traceability floor `trace.py --require-verified` now demands
 `Status=Verified` for **every** ratified, in-phase SR regardless of its
 `Verification` method (was `Verification=Test` only), matching
-`derive_gate.sr_gate` — which already blocked DevStg-Impl for any unverified decomposed SR.
+`spine_rules.sr_gate` — which already blocked DevStg-Impl for any unverified decomposed SR.
 **Downstream impact:** a repo passing `--require-verified` today with a non-Test SR
 (Demonstration / Manual / Analysis / Inspection / Attest / Critique) still below
 `Verified` will now fail — it was never actually at the derived gate, only
@@ -646,9 +649,8 @@ flip, and `trace.py --ratify modified` emits a per-cell before/after brief again
 the git-derived attested baseline. Never breaking for a registry that never writes
 the value — with one **flagged migration**: the `docs/gate` `# basis:` line now
 carries `modified=N` beside `drafts=N`, so the first `check.py`/pre-commit run
-after re-sync reds the `derived-gate` freshness step once. Fix:
-`python scripts/derive_gate.py` and commit the regenerated `docs/gate` (the
-first-non-comment-line gate value and its consumers are unchanged).
+after re-sync reds the `derived-gate` freshness step once. The fix was to
+regenerate and commit `docs/gate` (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated).
 
 ### The LLR `Rationale` column [since c1bcc389]
 
@@ -793,7 +795,7 @@ across ratified rows when you take this kit version — a mechanical, diffable e
 (`Phase` is a *traced* cell, so no re-attest window opens). Once you phase any row,
 phase every *ratified* SR/LLR/TC — blank stays legal on `Draft` rows only — and the
 foundation (minimum) phase stays in scope under `--phase`.
-`derive_gate.py --next-phase` prints the number a newly confirmed phase takes.
+`derive_stage.py --next-phase` prints the number a newly confirmed phase takes.
 
 ### One policy home (`docs/process.toml`) [since c560f928]
 
@@ -1049,7 +1051,7 @@ place:
   **CLEAR** a bar. `DevStg-Below` is an internal sentinel, not a bar.
 
 **The word "gate" survives** wherever it means a check that can fail — the
-`docs/gate` path, `derive_gate.py`, `check.py --gate`, "the freshness gate". Only
+`docs/gate` path, `spine_rules.py`, `check.py --gate`, "the freshness gate". Only
 the TAGS retired. Do **not** run a blanket find-replace on the word; the
 conversion is tag-scoped, and `scripts/check_vocab.py` (new, shipped) tells you
 which of your own lines still carry a tag.
@@ -1067,8 +1069,7 @@ convert at your own pace.
    is *field*-compatible but not *value*-compatible: your committed file carries
    `G1` on its value line and `computed=G0 … stage=4` in its basis, and `stage=4`
    means something DIFFERENT under the eight-rung ladder than it did under the
-   six-integer one. Run `python scripts/derive_gate.py` once and commit the
-   result. There is **no compat shim** — `--check` reports the old cache STALE on
+   six-integer one. That cache had to be regenerated once (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated). There is **no compat shim** — `--check` reported the old cache STALE on
    the first recompute, deliberately, because a reader that accepted both
    vocabularies is how the retired tags grow back. The failure direction is safe:
    a stale cache makes the stage unreadable, and an unreadable stage is treated
@@ -1142,7 +1143,7 @@ stage means** — read that item before re-syncing scripts.
   requirements form around**. An `IF-###` row is a concrete interface
   definition and ties BACK to a crossing only when it realizes one.
 - **RUNG 1's APPLIES-WHEN MOVED, and your stage may RISE silently.**
-  `derive_gate.boundary_incomplete` used to read `interfaces.toml` and cap you
+  `spine_rules.boundary_incomplete` used to read `interfaces.toml` and cap you
   at `DevStg-Boundary` while any IF row read `Stability = Experimental`. It now
   reads `external.toml`'s crossing `Approval`. **A repo that carries
   `interfaces.toml` and no `external.toml` therefore SKIPS rung 1 entirely**
@@ -1414,7 +1415,7 @@ inertness. **Order matters; each step below is a separate failure if skipped.**
    spelling is unchanged). One word, one meaning, across every registry.
 3. **The predicate renames, if you patched or imported them:** `is_draft` →
    `is_drafted` (in `trace_text.py`, re-exported by `trace.py`), `is_verified` →
-   `is_approved` (in `trace.py` AND `derive_gate.py` — they are F5 duplicates
+   `is_approved` (in `trace.py` AND `spine_rules.py` — they are F5 duplicates
    and both move). **`is_planned` is DELETED, not re-keyed**; every site that
    read it now reads one of the three live predicates.
 4. **The templates.** Overwrite `registries/*.template.toml`: the SR and TC
@@ -1424,14 +1425,14 @@ inertness. **Order matters; each step below is a separate failure if skipped.**
    integrity rule, so nothing fails — but leaving them means your template
    teaches a vocabulary the checker refuses.
 5. **THE ONE THAT BITES SILENTLY — the `# basis:` line format.**
-   `derive_gate.py` now emits `drafted=N` where it emitted `drafts=N`, and it no
+   `spine_rules.py` now emits `drafted=N` where it emitted `drafts=N`, and it no
    longer emits `planned=N` at all. Any consumer that parses that line by regex
    must move in the same commit or it goes BLIND rather than red — the kit's own
    `check._BASIS_RE` did exactly this once and twelve gate steps stopped running
    for twelve commits before anyone noticed. If you have local tooling reading
    `docs/gate`'s basis line, grep it for `drafts=` and `planned=` first.
-   Regenerating `docs/gate` (`python scripts/derive_gate.py`) is required
-   regardless: `--check` compares the line whole.
+   Regenerating `docs/gate` was required regardless, because `--check`
+   compared the line whole (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated).
 
 **If you carry a WIDER LLR/TC vocabulary** (`Implemented`, `In-Review`, …), this
 is the change that ends it. The kit used to document `Status` as open with three
@@ -1565,7 +1566,7 @@ out-of-vocabulary one.**
    CMP is the one off-spine tier that reaches `Founded`, because a demonstrated
    partition is a claim something actually computes (`arch_incomplete`, rung 3).
 3. **The predicate and table renames, if you patched or imported them.**
-   `derive_gate.CMP_MATURITY` is now the identity over the one enum
+   `spine_rules.CMP_MATURITY` is now the identity over the one enum
    (`drafted`/`approved`/`founded`, lower-cased keys — `_maturity` lower-cases
    before the lookup, so your Title-case cells resolve). `has-gap` and
    `deprecated` are **gone from it**: they are `standing` values now, and
@@ -1583,10 +1584,10 @@ out-of-vocabulary one.**
 
 **What does NOT change: any row's meaning.** Every off-spine row in the kit sat
 in its vocabulary's first state when this ran, so the migration re-spelled cells
-without moving any of them. The kit verified that by asserting its `derive_gate`
+without moving any of them. The kit verified that by asserting its `spine_rules`
 basis line was **byte-identical** before and after. If your registries carry
 approved or verified rows, you do not get that check for free — apply the value
-map above deliberately, and re-run `derive_gate.py` to compare.
+map above deliberately, and re-run `spine_rules.py` to compare.
 
 ### `docs/work/README.md` — the registry's own location→status contract [since 712ff788]
 
@@ -1853,7 +1854,7 @@ your very next commit.
    artifacts the row calls for exist (SRs under an SN, LLR+TC under an SR,
    resolving code under an LLR, a written test under a TC). The four discharge
    computations already shipped; what this step adds is that the word is
-   recognized — `is_founded` in `trace.py` and `derive_gate.py` (F5 duplicates,
+   recognized — `is_founded` in `trace.py` and `spine_rules.py` (F5 duplicates,
    both move), a `SPINE_MATURITY` row mapping it ABOVE `Approved`, and every
    blessed-text reader accepting it (`--require-verified`, `spine_stage`'s
    Impl→Release discriminator, the LLR-status advisory's exemption). **No cell
@@ -1861,13 +1862,12 @@ your very next commit.
    WRITES it: whether a tool ever should, and whether a hand-authored `Founded`
    is itself an error, is still open (D-9 consequence 2).
 3. **THE ONE THAT BITES SILENTLY — the `# basis:` line loses `modified=N`.**
-   `derive_gate.py` no longer emits the field. The kit's own `check._BASIS_RE`
+   `spine_rules.py` no longer emits the field. The kit's own `check._BASIS_RE`
    was made to treat it as OPTIONAL in the same commit, so a gate file that still
    carries one keeps the window detector's conclusive arm; **local tooling that
    REQUIRES the field goes blind rather than red.** Grep any consumer of
    `docs/gate`'s basis line for `modified=` first. Regenerating `docs/gate`
-   (`python scripts/derive_gate.py`) is required regardless — `--check` compares
-   the line whole.
+   was required regardless, because `--check` compared the line whole (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated).
 4. **Two snapshot rules ARM as integrity ERRORS**, on the always-on
    `--strict-integrity` floor plus the pre-commit hook. **UNANCHORED:** a row
    whose live `Status` claims approval-or-above with no copy in the snapshot, or
@@ -1878,7 +1878,7 @@ your very next commit.
    the fix for both is the same: write text into the live registry and copy it
    with `intake.py snapshot`, never edit the snapshot.
 5. **Predicates and sets, if you patched or imported them.** `is_modified` is
-   DELETED, not re-keyed, in BOTH `trace.py` and `derive_gate.py`.
+   DELETED, not re-keyed, in BOTH `trace.py` and `spine_rules.py`.
    `SPINE_MATURITY` loses its `modified` row and gains `founded`.
    `dispatch._TC_NOT_RED` swaps `modified` for `founded`. `intake._apply_flips`
    REFUSES a located row it cannot move instead of skipping it silently — under
@@ -2119,15 +2119,15 @@ test would notice, and neither was ever a supported read.
 `DevStg-*` rung labels, their ladder order, the derived rung count, the
 per-rung descriptions and `stage_ord` (the only legal way to compare two
 stages) now live in `scripts/kitlib/ladder.py`. They used to be defined in
-`scripts/derive_gate.py` and RESTATED as literals in `scripts/agent_common.py`
+`scripts/spine_rules.py` and RESTATED as literals in `scripts/agent_common.py`
 (pinned equal by a test) and `scripts/traj_status.py` (pinned by nothing at
 all), which is three places a reworded or inserted rung had to be edited in
 step.
 
 **If you only overwrite kit files, you need do nothing but include the new
-module in the copy.** `derive_gate.STAGE_ORDER`, `derive_gate.STAGE_DESC`,
-`derive_gate.STAGE_NEEDS` … `derive_gate.STAGE_RELEASE`, `derive_gate.STAGE_OF`
-and `derive_gate.stage_ord` are all still there and still resolve to the same
+module in the copy.** `spine_rules.STAGE_ORDER`, `spine_rules.STAGE_DESC`,
+`spine_rules.STAGE_NEEDS` … `spine_rules.STAGE_RELEASE`, `spine_rules.STAGE_OF`
+and `spine_rules.stage_ord` are all still there and still resolve to the same
 values; they are re-exports now. No call signature changed, no derived value
 changed, and `docs/gate`'s `# basis:` line is byte-identical for an unchanged
 spine.
@@ -2146,7 +2146,7 @@ failing test.
 
 **One error-message note.** `stage_ord` on an unknown label still raises
 `ValueError`; the message now reads `kitlib.ladder: …` where it read
-`derive_gate: …`. Only a test asserting on that prefix would notice.
+`spine_rules: …`. Only a test asserting on that prefix would notice.
 
 **Nothing in your `docs/` changes**, and no registry cell moves. The bar
 vocabulary (`BAR_*`, `docs/gate`'s value itself) is untouched by this entry.
@@ -2255,7 +2255,7 @@ retired `G1`/`G2`/`G3` and `DevBar-*` aliases still translate with their warning
 what changed is the reading — `DevStg-Tests` now says "the repo is at that rung",
 not "that bar must next be cleared".
 
-**Take:** the updated `scripts/check.py`, `scripts/derive_gate.py`,
+**Take:** the updated `scripts/check.py`, `scripts/spine_rules.py`,
 `scripts/integrate.py`, `ci/check.yml`, `stack.ini.template`, and the `setup.*` /
 `check.*` launcher scripts. **`docs/gate` is still generated and still
 freshness-gated** — the phase-drop and tier-signal detectors read its committed
@@ -2318,7 +2318,7 @@ shadows nothing and drifts silently.
 The tags retire; the traceability survives. Grep your own prose, scripts, CI,
 hooks and registry cells for the left-hand spelling — **as a whole-word TAG, not
 as the word "gate"**, which survives wherever it means a check that can fail
-(`docs/gate`, `derive_gate.py`, `--gate`, "the freshness gate" all stay).
+(`docs/gate`, `spine_rules.py`, `--gate`, "the freshness gate" all stay).
 
 | retired tag | now | what it names |
 |---|---|---|
@@ -2383,12 +2383,12 @@ token, so the flag has to say which reading it means — the stage being *cleare
 not the stage in work. **`--gate` is still accepted, silently and indefinitely**:
 it is a string your hooks, CI and launchers pass literally, and the word "gate"
 was never retired where it means a check that can fail. `docs/gate` and
-`derive_gate.py` **keep their names** for the same reason.
+`spine_rules.py` **keep their names** for the same reason.
 
 **What to do:** take the kit-owned scripts wholesale, then `grep -rn 'DevBar-'`
 your own prose, `docs/stack.ini` and CI. Convert at your pace — and if you keep
 a hand-written `docs/gate`, note that it regenerates: `python
-scripts/derive_gate.py`. `scripts/check_vocab.py` now refuses the prefix in
+scripts/spine_rules.py`. `scripts/check_vocab.py` now refuses the prefix in
 authored files (warn-first, `--strict` gates), with your history, archives and
 attestation quotes carved out as always — a record of what happened is not
 rewritten.
@@ -2555,7 +2555,7 @@ steps are unaffected.
 
 **In practice today that is your declared steps only, and the honest form of
 the sentence above says so** (corrected 2026-08-21). The floor engages at one
-bar, `DevStg-Tests` — `ex-draft` can never exceed it while `derive_gate`'s
+bar, `DevStg-Tests` — `ex-draft` can never exceed it while `spine_rules`'s
 release ceiling stands — and it selects by MEMBERSHIP, while `[product]`
 format/lint/test are tagged `{DevStg-Impl}` only. So the floor cannot reach
 those three, and it holds nothing at all unless you have written both
@@ -2572,10 +2572,10 @@ has been failing quietly, your first push after this re-sync reds. That is the
 change working: the failure was already there, and the exit code was not
 reporting it. There is deliberately no dial to switch the floor off.
 
-**Nothing in your `docs/` changes.** No registry cell moves, no regeneration is
-needed, and a `docs/gate` written before the `ex-draft=` field existed simply
-gets no floor (the floor abstains rather than guessing) until you next run
-`scripts/derive_gate.py`.
+**Nothing in your `docs/` changes.** No registry cell moves and no regeneration
+is needed; a `docs/gate` written before the `ex-draft=` field existed simply got
+no floor (the floor abstained rather than guessing) until the next regeneration
+(SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated).
 
 ### The derived-requirement LABEL becomes a cell: `Hat-Refs` on SR and LLR [since 046843eb]
 
@@ -2808,7 +2808,7 @@ passing a full filename, that keeps working unchanged.
 
 *(Anchored at the PRECEDING commit — this entry ships with the changes.)*
 
-**Kit-owned files — overwrite and move on:** `scripts/derive_gate.py`,
+**Kit-owned files — overwrite and move on:** `scripts/spine_rules.py`,
 `scripts/derive_stage.py`.
 
 **YOUR DERIVED STAGE CAN CHANGE VALUE AT THIS RE-SYNC, with no edit to your
@@ -2906,6 +2906,140 @@ ratification authority — and it retires with them in a later entry.
 `kitlib.config.read_declared` was described in two places as the reader for
 `docs/gate`. No call site has ever put it to that file. The function is
 unchanged; only the false claim is gone.
+
+### `docs/gate` RETIRES; the stage becomes the one axis; the dial re-keys [since 2a0a85a4]
+
+*(Anchored at the PRECEDING commit — this entry ships with the changes. It is
+the LAST entry of the WI-498 stage-unification program and is written so the
+whole re-sync can be executed from this entry alone; the six entries above it
+land the machinery in stages, this one lands the migration.)*
+
+**Kit-owned files — overwrite and move on:** every `scripts/*.py`,
+`project-trajectory/PROCESS.md`, `PROCESS_OPTIONS.md`, `ADOPTING.md`,
+`README.md`, `skills/gate-advance/SKILL.md`, `process.toml.template`,
+`gate-policy.template`, `stack.ini.template`, `ci/check.yml`, `hooks/pre-commit`.
+
+**Two files change NAME, and a rename reads to a diff as an unrelated deletion
+plus an unrelated addition (§4's warning, in force here):**
+
+| was | is | note |
+|---|---|---|
+| `scripts/derive_gate.py` | `scripts/spine_rules.py` | it derives no gate and writes no file; what survives is the row predicates and the rung fall-through. **No `main()`** — anything that ran it as a command must move (see below) |
+| `docs/gate` | `docs/stage` | already shipped by an earlier entry; this one DELETES the predecessor |
+
+#### Do this, in order
+
+1. **Delete `docs/gate`.** Nothing reads it. It is the one file in the kit whose
+   re-sync rule INVERTS: `ADOPTING.md` used to class it *preserve always*
+   (it was a derived file with your values in it), and it is now *delete*.
+   `git rm docs/gate` — it is not migrated, and no value in it is needed.
+2. **Delete `gate.template`** from your kit copy if you vendored the templates.
+3. **Re-key the ratification dial.** From your **KIT CHECKOUT** (not your own
+   repo — `bootstrap.py` is kit-side and is never scaffolded into an adopting
+   repo, unlike every other `scripts/…` command in this list), run
+   `python project-trajectory/scripts/bootstrap.py --migrate-config --dest <your repo>`.
+   It rewrites `[attestation] human_ratification_through` from the retired 0–4
+   ordinal to a `DevStg-*` rung in place and prints what it did
+   (`… migrated the retired ordinal 2 -> `DevStg-Arch` … The rungs held are
+   unchanged.`). An out-of-range value is left alone with a note. See "the dial"
+   below for what happens if you skip this entirely (a warning per run, not a
+   failure).
+4. **Regenerate `docs/stage`:** `python scripts/derive_stage.py`. Commit it.
+   **This step is AFTER the dial re-key on purpose.** `docs/process.toml` is one
+   of the declared derivation inputs (`kitlib/stage.py DECLARED_INPUTS` — it is
+   listed deliberately over-inclusively, because an over-inclusive fingerprint
+   costs a spurious re-derivation while an under-inclusive one costs a stale
+   read). So rewriting the dial CHANGES THE FINGERPRINT: regenerate first and
+   step 3 immediately re-stales the file you just committed, and step 6 fails
+   `derived-stage` with a correct complaint. If you have already done them in
+   the other order, just run `derive_stage.py` again — nothing is lost.
+5. **Grep your own surfaces** for `derive_gate`, `docs/gate` and `--gate-policy`
+   prose. Your history — logs, archives, closed work items, attestation records
+   — is NOT swept: it is a record of what happened and rewriting it makes it a
+   record of something else. Sweep only what is normative or teaching.
+6. **Run the checks:** `python scripts/check.py --jobs 0`, then
+   `python scripts/check_vocab.py --root . --strict`.
+
+#### What changed, and why each thing moved
+
+**THERE IS NOW ONE AXIS.** The kit derived two values over the same registry
+rows: an eight-rung STAGE ladder (where the decomposition has got to) and a
+three-value BAR (how strict the harness runs). The bar is deleted. It was a
+`min` over every in-scope row, so a single drafted requirement collapsed it to
+what a fresh scaffold reads and product checks silently stopped running — the
+defect OI-51 names. The stage is derived over the SETTLED spine, so drafting
+cannot lower what selects your checks, and the honest unfloored reading rides
+beside it in the same file (`live-stage =`, `per-phase-live =`).
+
+**Selection: at-or-above.** A step runs when your stage is AT OR ABOVE its
+threshold. In `docs/stack.ini`, a `[step:*]` section's `gates = <list of bars>`
+becomes `from-stage = <one rung>`. The legacy list is still read and translated,
+with one notice per run naming the section; declaring both keys fails loudly.
+
+**Flags:** `--stage` is canonical. `--gate` is accepted **silently and
+indefinitely** — it is a flag name your hooks and CI pass literally, and the
+word was never retired where it means a check that can fail. `--stage-cleared`
+is accepted and WARNS: unlike `--gate` it makes a claim about the axis, and that
+claim is the trap being retired. **Your VALUES do not change**: the three bar
+spellings were always ladder rungs, so `--gate DevStg-Tests` still resolves.
+What changed is the READING, which is why this is a note and not a translation
+table.
+
+**The `derived-gate` check step is gone**, with the file it guarded.
+`derived-stage` (`derive_stage.py --check`) is its successor and was already
+shipped. If your CI names steps explicitly, drop `derived-gate`.
+
+**`--next-phase` moved house.** It was `derive_gate.py --next-phase`; it is now
+`derive_stage.py --next-phase`, because that module already derives `phase` from
+the same rows by the same rule. Same output — the next delivery phase number,
+printed bare so a script can `int()` it.
+
+**THE DIAL: `human_ratification_through` is a rung, not a number.** It names the
+HIGHEST rung a human still ratifies, and every rung AT OR BELOW it is
+human-held — the mirror of the selection rule above. The shipped default is
+`"DevStg-Release"` (everything human-held). `"DevStg-Below"` means nothing is.
+
+| retired | now | holds |
+|---|---|---|
+| `0` | `"DevStg-Below"` | nothing |
+| `1` | `"DevStg-Boundary"` | Needs, Boundary |
+| `2` | `"DevStg-Arch"` | ...and Reqs, Arch |
+| `3` | `"DevStg-LLReqs"` | ...and LLReqs |
+| `4` | `"DevStg-Release"` | everything |
+
+Each row holds **exactly** the rungs its number held — the equivalence was driven
+before the old mapping table was deleted, so this is a re-spelling and not a
+policy change. **A repo still carrying the number keeps working**: it is read,
+translated, and warned about once per run, and step 4 above ends the warning. An
+out-of-range number (`-1`, `9`) is refused as it always was, and reads as the
+most conservative setting until you fix it. The re-key also makes three settings
+reachable that the ordinal could not spell — `DevStg-Needs`, `DevStg-Reqs`,
+`DevStg-Tests` and `DevStg-Impl` are now legal dial values.
+
+**A settled spine reads `DevStg-Impl`, and `DevStg-Release` is derived by
+nothing** (shipped by an earlier entry, restated here because it is the value
+change an adopter notices): leaving Impl means the declared tests PASS, which no
+`Status` cell may claim.
+
+**PHASE ANCHORS: the canonical title is `[<phase>]-[DevStg-<Rung>]`.** The
+retired `[<phase>]-[g1]`/`[reqs]` and `[<phase>]-[g2]`/`[tests]` spellings are
+TRANSLATED on read and never rewritten — a WI title is a citation. **They
+translate BY MEANING, not by spelling**, and this is the one trap in the change:
+a closed `[reqs]`/`[g1]` anchor records **`DevStg-LLReqs`** (its SRs are
+authored AND ratified, so the phase has LEFT the Reqs rung) and a closed
+`[tests]`/`[g2]` anchor records **`DevStg-Impl`**. Both are two rungs above the
+word they share with the ladder. Taking the spelling would under-report every
+phase's reach. `check_vocab.py` refuses the retired tokens in newly authored
+text; mark a line that must quote one with `check_vocab: allow`.
+
+**`check_vocab.py` scope correction:** `docs/stage` is now in scope as a
+generated surface (its predecessor was named in the exemption list but not in
+the text-file list, so that exemption never actually fired), and `docs/log.d/`,
+`docs/work/partial/` and `docs/rubrics/` join the history/citation carve-outs.
+
+**Where the depth went.** `PROCESS.md` §4 now teaches one vocabulary in fewer
+words; the phase-anchor grammar and the batch cadence are taught in
+`PROCESS_OPTIONS.md` under "Trajectory / work-items layer".
 
 ---
 

@@ -94,7 +94,7 @@ def test_acceptance_and_why_cells_are_exempt_by_sn033s_own_text(tmp_path):
             'priority = "M"\n'
             'need = """A team sees each check pass or fail."""\n'
             'why = """check.py and trace.py enforce it via --strict."""\n'
-            'acceptance = """docs/gate reads DevStg-Reqs; SR-001 has a TC."""\n'
+            'acceptance = """docs/stage reads DevStg-Reqs; SR-001 has a TC."""\n'
         ),
     )
     proc = form(tmp_path)

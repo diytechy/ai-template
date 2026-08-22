@@ -3,11 +3,13 @@
 
 Stack-agnostic, standard-library only. This is the stage axis's own producer
 (WI-498 slice 1, ruled plan `docs/plans/2026-08-21-stage-unification-plan.md`
-§§1-3). `docs/gate` REMAINS and stays authoritative for its readers until slice 2
-cuts them over; the two files are a deliberate transitional dual state, derived
-from the same rows by the same predicates, and both freshness-gated.
+§§1-3). It is now the ONLY derived-state producer: the transitional dual state
+this module was born beside ended at slice 5, when `docs/gate` was deleted, its
+`derive_gate.py` became the import-only `spine_rules.py`, and the retired axis's
+one surviving CLI (`--next-phase`) was rehomed HERE — so the printed number and
+the recorded `phase =` field are derived from the same rows by the same rule.
 
-WHAT THIS ADDS THAT `docs/gate` DID NOT HAVE.
+WHAT THIS ADDED THAT THE RETIRED `docs/gate` DID NOT HAVE.
 
 1. **A per-phase stage.** `spine_stage` took no phase argument and `_per_phase`
    folded BARS, so "the current phase's stage" did not exist — the sharpest gap
@@ -28,10 +30,10 @@ THE DIVISION OF LABOUR. The pure half — the input list, the fingerprint, the f
 format, the ordering, the floor and the fold — is `kitlib/stage.py`, because
 `kitlib` may not import a sibling and the registry parse cannot go there. This
 module is the half that needs the carrier: it loads the spine through
-`derive_gate.load_spine`, groups the rows by phase, and calls `derive_gate`'s own
+`spine_rules.load_spine`, groups the rows by phase, and calls `spine_rules`'s own
 rung predicates so that the two axes can never disagree about what a Drafted row
 is. When slice 3 re-discriminates the ladder it edits ONE fall-through
-(`derive_gate.spine_stage`) and both files follow.
+(`spine_rules.spine_stage`) and both files follow.
 """
 
 import argparse
@@ -47,25 +49,44 @@ from pathlib import Path
 # subprocess this script's own dir is sys.path[0], and the fallback covers an
 # in-process import (a test) whose sys.path does not yet carry scripts/.
 try:
-    import derive_gate
+    import spine_rules
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import derive_gate
+    import spine_rules
 
 try:
+    from kitlib import config as kitconfig
+    from kitlib import git as kitgit
     from kitlib import ladder as kitladder
     from kitlib import stage as kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import config as kitconfig
+    from kitlib import git as kitgit
     from kitlib import ladder as kitladder
     from kitlib import stage as kitstage
 
 STAGE_FILE = kitstage.STAGE_FILE
 
 
+def _git(root, args):
+    """`git -C root <args>` stdout, STRIPPED, or None on any failure.
+
+    A four-line wrapper over `kitlib.git.git_out` rather than a call to it,
+    because `git_out` does NOT strip and every call here wants a bare token (a
+    short SHA, a date) or a file body this module writes into a temp tree the
+    same way its predecessor did. The strip is behaviour, not tidiness: it moved
+    here VERBATIM when `derive_gate` became `spine_rules` (WI-498 slice 5) and
+    shed its CLI, and changing it silently would change what the before-side
+    tree contains.
+    """
+    out = kitgit.git_out(root, list(args))
+    return out.strip() if out is not None else None
+
+
 def _phase_label(row):
     """The phase bucket a row belongs to — the same `(default)` convention
-    `derive_gate._per_phase` uses, so the two per-phase lines name the same
+    `spine_rules._per_phase` uses, so the two per-phase lines name the same
     buckets and a consumer can join them."""
     return (row.get("Phase") or "").strip() or "(default)"
 
@@ -75,7 +96,7 @@ def _phase_groups(srs, llrs, tcs):
     from.
 
     ASSOCIATION IS BY REFERENCE, NOT BY THE CHILD'S OWN `Phase` CELL, matching
-    `derive_gate._per_phase`. The rungs ask "does THIS SR have an LLR, and is that
+    `spine_rules._per_phase`. The rungs ask "does THIS SR have an LLR, and is that
     LLR settled" — so an LLR belongs to the phase of the SR it decomposes, whatever
     its own cell says, and a mislabelled child cannot hide a phase's undecomposed
     requirement. A TC that cites only its LLR (a legal shape) is resolved back to
@@ -90,14 +111,14 @@ def _phase_groups(srs, llrs, tcs):
 
     llr_srs = {}
     for row in llrs:
-        cited = derive_gate.refs(row.get("SR-Refs"))
+        cited = spine_rules.refs(row.get("SR-Refs"))
         llr_srs[row.get("LLR-ID") or ""] = cited
         for label in {sr_phase[s] for s in cited if s in sr_phase}:
             by_phase.setdefault(label, ([], [], []))[1].append(row)
 
     for row in tcs:
         labels = set()
-        for ref in derive_gate.refs(row.get("Verifies")):
+        for ref in spine_rules.refs(row.get("Verifies")):
             for s in llr_srs.get(ref, [ref]):
                 if s in sr_phase:
                     labels.add(sr_phase[s])
@@ -117,7 +138,7 @@ def _settled_off_spine(rows, table):
     return [
         r
         for r in rows
-        if not derive_gate._caps(derive_gate._maturity(r.get("Status"), table))
+        if not spine_rules._caps(spine_rules._maturity(r.get("Status"), table))
     ]
 
 
@@ -135,13 +156,13 @@ def _stage_map(spine, settled):
     live_labels = set(_phase_groups(srs, llrs, tcs))
 
     if settled:
-        srs = [r for r in srs if not derive_gate.is_drafted(r)]
-        llrs = [r for r in llrs if not derive_gate.is_drafted(r)]
-        tcs = [r for r in tcs if not derive_gate.is_drafted(r)]
+        srs = [r for r in srs if not spine_rules.is_drafted(r)]
+        llrs = [r for r in llrs if not spine_rules.is_drafted(r)]
+        tcs = [r for r in tcs if not spine_rules.is_drafted(r)]
         sn_ids = sn_ids - sn_draft
         sn_draft = set()
-        bifs = _settled_off_spine(bifs, derive_gate.BIF_MATURITY)
-        cmps = _settled_off_spine(cmps, derive_gate.CMP_MATURITY)
+        bifs = _settled_off_spine(bifs, spine_rules.BIF_MATURITY)
+        cmps = _settled_off_spine(cmps, spine_rules.CMP_MATURITY)
 
     frame = dict(
         sn_ids=sn_ids,
@@ -151,7 +172,7 @@ def _stage_map(spine, settled):
         have_bifs=spine["have_bifs"],
         have_cmps=spine["have_cmps"],
     )
-    overall = derive_gate.spine_stage(srs, llrs, tcs, **frame)
+    overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
     groups = _phase_groups(srs, llrs, tcs)
     per_phase = {}
     for label in sorted(live_labels):
@@ -159,7 +180,7 @@ def _stage_map(spine, settled):
         if not group or not group[0]:
             per_phase[label] = kitstage.BELOW
             continue
-        per_phase[label] = derive_gate.spine_stage(
+        per_phase[label] = spine_rules.spine_stage(
             group[0], group[1], group[2], cited_srs=srs, **frame
         )
     return overall, per_phase
@@ -169,7 +190,7 @@ def derive(root):
     """The stage record for the tree at `root` — the deriver the common reader
     calls on a fingerprint miss, and the value `--check` compares."""
     docs = Path(root) / "docs"
-    spine = derive_gate.load_spine(docs)
+    spine = spine_rules.load_spine(docs)
     live, live_per_phase = _stage_map(spine, settled=False)
     _, settled_per_phase = _stage_map(spine, settled=True)
 
@@ -178,8 +199,8 @@ def derive(root):
     settled_stage = min(earned, key=kitstage.order) if earned else kitstage.BELOW
 
     rows = spine["srs"] + spine["llrs"] + spine["tcs"]
-    drafted = sum(1 for r in rows if derive_gate.is_drafted(r)) + len(spine["sn_draft"])
-    phases = [derive_gate.phase_num(r) for r in rows if not derive_gate.is_drafted(r)]
+    drafted = sum(1 for r in rows if spine_rules.is_drafted(r)) + len(spine["sn_draft"])
+    phases = [spine_rules.phase_num(r) for r in rows if not spine_rules.is_drafted(r)]
     phases = [p for p in phases if p is not None]
 
     return {
@@ -245,15 +266,13 @@ def _spine_at(root, rev):
     COMPONENT registry, so a frame pinned to the live tree makes the owner's one
     permitted decrease unreachable — the rule would be unable to see the very
     transition it is required to forgive."""
-    if derive_gate._git(root, ["rev-parse", "--verify", "--quiet", rev]) is None:
+    if _git(root, ["rev-parse", "--verify", "--quiet", rev]) is None:
         return None  # no git, or no such revision: nothing to compare against
     with tempfile.TemporaryDirectory() as tmp:
         found = False
         for declared, suffixes in kitstage.DECLARED_INPUTS:
             for suffix in suffixes:
-                text = derive_gate._git(
-                    root, ["show", "{}:{}{}".format(rev, declared, suffix)]
-                )
+                text = _git(root, ["show", "{}:{}{}".format(rev, declared, suffix)])
                 if text is None:
                     continue
                 dest = Path(tmp) / (declared + suffix)
@@ -263,7 +282,7 @@ def _spine_at(root, rev):
                 break
         if not found:
             return None
-        return derive_gate.load_spine(Path(tmp) / "docs")
+        return spine_rules.load_spine(Path(tmp) / "docs")
 
 
 def _by_id(spine):
@@ -341,7 +360,7 @@ def phase_rule_findings(root):
 
     Implements: SR-139"""
     root = Path(root)
-    live = derive_gate.load_spine(root / "docs")
+    live = spine_rules.load_spine(root / "docs")
     before = _spine_at(root, "HEAD")
     if before is None:
         return []
@@ -357,17 +376,17 @@ def phase_rule_findings(root):
     # a new tag has to differ from. Max over non-Drafted rows, which is `phase=`
     # itself, so the rule and the recorded field can never mean different things.
     prior_phases = [
-        derive_gate.phase_num(r)
+        spine_rules.phase_num(r)
         for key in ("srs", "llrs", "tcs")
         for r in before.get(key, [])
-        if not derive_gate.is_drafted(r)
+        if not spine_rules.is_drafted(r)
     ]
     prior_phases = [p for p in prior_phases if p is not None]
     standing = max(prior_phases) if prior_phases else None
 
     findings = []
     for rid, row, before_status in sorted(_changed_rows(live, before_rows)):
-        phase = derive_gate.phase_num(row)
+        phase = spine_rules.phase_num(row)
         if standing is None or phase != standing:
             continue
         findings.append(
@@ -394,7 +413,7 @@ def phase_rule_findings(root):
 
 
 def main():
-    derive_gate._utf8_console()
+    kitconfig.utf8_console()
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -411,6 +430,15 @@ def main():
         help="compute and print the derived record; do not write docs/stage",
     )
     ap.add_argument(
+        "--next-phase",
+        dest="next_phase",
+        action="store_true",
+        help="print the next delivery phase number — max(Phase over non-draft "
+        "spine rows) + 1, i.e. the record's phase=N plus one; an unphased spine "
+        "is the implicit foundation (1), so it prints 2. Output mode only: "
+        "docs/stage is not written",
+    )
+    ap.add_argument(
         "--phase-rule",
         action="store_true",
         help="check the authoring-time stage-decrease rule against HEAD (warn-first)",
@@ -422,6 +450,25 @@ def main():
     )
     args = ap.parse_args()
     root = Path(args.root)
+
+    if args.next_phase:
+        # The one derived answer to "a confirmed scope change opens a new phase —
+        # what number does it take?" (owner ruling 2026-08-01, WI-402: a phase
+        # increments on an adjudication-confirmed scope change or a ratified
+        # draft-SN batch, NEVER on a raw derived-value drop — a spurious window
+        # must not burn a phase number). Printed bare so the intake mint helper
+        # (WI-388) can int() the output. A Drafted row's phase is not yet scope,
+        # so it never bumps the answer.
+        #
+        # REHOMED FROM `derive_gate.py` AT WI-498 slice 5, when that module's CLI
+        # retired with `docs/gate`. It lands HERE rather than anywhere else
+        # because this module already derives `phase` from exactly the same rows
+        # by the same rule — so the printed number and the recorded `phase =`
+        # field cannot come to mean different things, which is the whole reason
+        # the old one reused the basis line instead of parsing again.
+        cur = derive(root)["phase"]
+        print((cur if cur is not None else 1) + 1)
+        return 0
 
     if args.phase_rule:
         findings = phase_rule_findings(root)
@@ -446,7 +493,7 @@ def main():
         # moves the recorded values while every input byte stays put. The
         # fingerprint answers "do the inputs still match", the recompute answers
         # "does the whole record still hold", and only the second is a freshness
-        # guard. The same asymmetry `derive_gate --check` has always had.
+        # guard. The same asymmetry `spine_rules --check` has always had.
         if not path.exists():
             print(
                 "derive_stage: {} is absent — run `python scripts/derive_stage.py` "
@@ -457,7 +504,7 @@ def main():
         cached = kitstage.parse(path.read_text(encoding="utf-8", errors="replace"))
         if cached is None:
             # THE SCAFFOLD / MIGRATION FORM, and it PASSES — the same
-            # smooth-transition path `derive_gate --check` gives a legacy
+            # smooth-transition path `spine_rules --check` gives a legacy
             # hand-set marker. A file with no stage field has never been
             # derived: it is `stage.template` as `bootstrap.py` copied it, or an
             # adopter's tree between the resync and the first regeneration.
@@ -491,10 +538,9 @@ def main():
         )
         return 1
 
-    as_of = derive_gate._git(root, ["rev-parse", "--short", "HEAD"]) or "no-git"
+    as_of = _git(root, ["rev-parse", "--short", "HEAD"]) or "no-git"
     date = (
-        derive_gate._git(root, ["log", "-1", "--format=%cs"])
-        or datetime.date.today().isoformat()
+        _git(root, ["log", "-1", "--format=%cs"]) or datetime.date.today().isoformat()
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

@@ -52,11 +52,17 @@ try:
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import stage as _kitstage
+
+# This module's own directory, so `spine_stage_of` can spawn the sibling
+# `derive_stage.py` on a fingerprint miss without importing it.
+_SCRIPTS_DIR = Path(__file__).resolve().parent
 
 # Sibling scripts (the WI-218 split): preflight validates the AGENT_CMD
 # template through the headless session layer. The guard covers an in-process
@@ -157,7 +163,7 @@ read_declared = _kitconfig.read_declared
 #
 # NOT here, deliberately (each documented in process.toml.template's header):
 # docs/stack.ini (adopter-owned product toolchain), docs/work/pause and
-# docs/agents-enabled (presence-as-semantics), docs/gate (a generated cache).
+# docs/agents-enabled (presence-as-semantics), docs/stage (a generated cache).
 # The six check-enablement toggles USED to be a fourth exception; the owner
 # overturned that on 2026-08-11 and they are rows below.
 PROCESS_TOML = "process.toml"
@@ -199,10 +205,15 @@ PROCESS_KEYS = {
 # never be double-declared and appear here rather than in PROCESS_KEYS. They
 # still need the type check: the failure PROCESS_KEYS' check exists to stop (a
 # quoted `review_rounds` reading as "no review required") applies verbatim to a
-# quoted `human_ratification_through`, which would read as 4 with no diagnostic
-# and look exactly like a repo that never set it.
+# `human_ratification_through`, whose wrong value reads as the conservative
+# default with no diagnostic and looks exactly like a repo that never set it.
+#
+# IT IS A `str` SINCE WI-493: the dial names a `DevStg-*` rung, not a 0-4 tier
+# ordinal. The type check alone is therefore much weaker than it was — every
+# typo is still a `str` — which is why the VOCABULARY check below exists and
+# why it, not the type, is now the arm that catches a bad dial.
 PROCESS_ONLY_KEYS = {
-    ("attestation", "human_ratification_through"): "int",
+    ("attestation", "human_ratification_through"): "str",
     ("attestation", "keep_nondependent"): "bool",
     ("attestation", "final_review"): "str",
     ("attestation", "complete_review"): "str",
@@ -218,17 +229,43 @@ PROCESS_ONLY_KEYS = {
     ("checks", "backlink_coverage_min"): "int",
 }
 
-# Dials whose value must also fall in a RANGE. `human_ratification_through` is
-# the one that matters: `-1` is not merely odd, it is the single input that
-# reads as LESS human involvement than the owner asked for, so it is refused
-# here and falls back conservatively at the reader (`ratification_level`).
+# Dials whose value must also fall in a RANGE. Out of range is refused rather
+# than clamped: `101` is not "the strictest bar", it is a value nobody can
+# satisfy, and `-1` reads as a bar that can never fire.
 PROCESS_KEY_RANGES = {
-    ("attestation", "human_ratification_through"): (0, 4),
-    # A percentage. Out of range is refused rather than clamped, for the reason
-    # stated above: `101` is not "the strictest bar", it is a value nobody can
-    # satisfy, and `-1` reads as a bar that can never fire.
     ("checks", "backlink_coverage_min"): (0, 100),
 }
+
+# Dials whose value must come from a CLOSED VOCABULARY. This replaced
+# `human_ratification_through`'s `(0, 4)` range row at WI-493, and it is the
+# same guarantee carried on the new value's own terms: the retired range refused
+# `-1` because that single input reads as LESS human involvement than the owner
+# asked for, and a misspelled rung does exactly the same thing — it is
+# unrecognized, so it falls to a default rather than to what was meant. Refused
+# here, loudly, and fallen back on conservatively at the reader
+# (`ratification_through`). Populated lazily below, where the rung vocabulary
+# is in scope.
+PROCESS_KEY_VOCAB = {}
+
+# THE MIGRATION WINDOW: for a re-keyed dial, the exact set of PREVIOUS values
+# the reader still translates. Filled below from the translation table itself,
+# so the window and the translation cannot come to disagree about which old
+# values are honoured.
+#
+# WHY A VALUE SET AND NOT A TYPE. Declaring "the old TYPE is still accepted"
+# was tried first and was wrong in a way worth recording: it accepted every
+# int, so `human_ratification_through = -1` — the single input the retired
+# `(0, 4)` range row existed to refuse, because it is the one that reads as
+# LESS human involvement than the owner asked for — stopped being refused at
+# all. A migration window must be exactly as wide as the migration.
+#
+# Without the window at all, `config_conflicts` — a HARD refusal consulted by
+# dispatch, intake and integrate — would refuse an adopter's committed
+# `human_ratification_through = 4` the moment they took the kit upgrade, on a
+# dial `ratification_through` reads perfectly well. The signal for a legacy
+# value is the reader's WARNING, once per run, naming the migrator; the refusal
+# stays reserved for values nothing can honour.
+PROCESS_KEY_LEGACY_VALUES = {}
 
 # The two keys the git hooks match in pure sh (M-42 fail-closed). Named here
 # because the cross-parser agreement test (tests/test_process_config.py) is
@@ -463,24 +500,89 @@ def declared_policy(docs, legacy_name, default):
 #                  LLM verdict
 LEGACY_RATIFICATION = {
     "attended": {
-        "human_ratification_through": 4,
+        "human_ratification_through": _kitladder.STAGE_RELEASE,
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-ratify": {
-        "human_ratification_through": 0,
+        "human_ratification_through": _kitstage.BELOW,
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_ratification_through": 0,
+        "human_ratification_through": _kitstage.BELOW,
         "keep_nondependent": True,
         "final_review": "off",
     },
 }
+
+# --- THE RE-KEY (WI-493, OI-21 shape (ii), folded into WI-498 slice 5) ---------
+# THE DIAL MOVED, DELIBERATELY, and the block below this one used to say the
+# opposite. OI-21 ruled shape (i) — keep the 0-4 ordinal and MAP it onto the
+# ladder through a declared `DIAL_HOLDS` table — and named this conversion as
+# shape (ii), available to supersede (i). The owner exercised that clause; the
+# stage unification is where it lands, because the reason (i) was ever needed is
+# the reason it is now unnecessary.
+#
+# WHY THE MAPPING TABLE COULD RETIRE RATHER THAN BE RE-KEYED. `DIAL_HOLDS`
+# existed to bridge TWO vocabularies: an ordinal counting ratifiable TIERS and a
+# ladder of labelled RUNGS. Shape (i)'s own argument against the retired
+# `stage < level` arithmetic was that it compared two different ladders that
+# happened to line up. Under one vocabulary there is only one ladder, so the
+# comparison stops being a coincidence and becomes the definition: the dial names
+# the HIGHEST rung a human still ratifies, and every rung AT OR BELOW it is held.
+# That is the exact mirror of the at-or-above rule slice 2 gave check selection.
+#
+# EQUIVALENCE DRIVEN BEFORE THE TABLE WAS DELETED, not asserted after: all five
+# former levels hold precisely the same rung sets under the ordinal rule
+# (0 -> 0 rungs, 1 -> 2, 2 -> 4, 3 -> 5, 4 -> 8). The old table's most
+# hand-reasoned property — that `DevStg-Boundary` rides `DevStg-Needs` and
+# `DevStg-Arch` rides `DevStg-Reqs`, chosen because it errs toward MORE human
+# involvement — falls out of the ordering for free, because each inserted rung
+# sits immediately above the rung it was made to ride. `tests/test_ratification_
+# level.py` pins the equivalence permutation by permutation.
+#
+# WHAT THE RE-KEY BUYS BEYOND THE VOCABULARY: three settings the ordinal could
+# not express. `DevStg-Needs`, `DevStg-Reqs`, `DevStg-Tests` and `DevStg-Impl`
+# are now legal dial values with obvious meanings (hold Needs but not Boundary;
+# hold through Reqs but not the partition; and so on). The old dial had five
+# notches for eight rungs and the three it could not name were unreachable
+# rather than forbidden.
+#
+# "NOTHING IS HUMAN-HELD" IS `DevStg-Below`, not a fourth kind of value. It is
+# the sentinel `kitlib.stage` already declares for "below every rung", used here
+# in exactly that sense: set the dial below the ladder and no rung is at or below
+# it. A magic word like `"none"` would have been a second vocabulary in the one
+# place this program exists to remove one.
+RATIFICATION_RUNGS = frozenset(_kitladder.LADDER_RUNGS) | {_kitstage.BELOW}
+
+# Declared UP THERE with the other dial tables and filled HERE, because the
+# vocabulary is this module's own and the table is read by the shared
+# validator. One value, one home.
+PROCESS_KEY_VOCAB[("attestation", "human_ratification_through")] = RATIFICATION_RUNGS
+
+# The 0-4 ordinal an unmigrated repo still declares. READ, TRANSLATED AND
+# WARNED — not refused: the value is a dial in an adopter's committed
+# `process.toml`, and refusing it would stop their loop dead on a kit upgrade
+# for a spelling. `bootstrap.py --migrate-config` rewrites it in place, and the
+# warning names that command. There is no clamping arm: an int outside 0-4 was
+# malformed before the re-key and is malformed after it.
+LEGACY_DIAL_ORDINALS = {
+    0: _kitstage.BELOW,
+    1: _kitladder.STAGE_BOUNDARY,
+    2: _kitladder.STAGE_ARCH,
+    3: _kitladder.STAGE_LLREQS,
+    4: _kitladder.STAGE_RELEASE,
+}
+
+PROCESS_KEY_LEGACY_VALUES[("attestation", "human_ratification_through")] = frozenset(
+    LEGACY_DIAL_ORDINALS
+)
+
 # Fail toward MORE human involvement on anything unreadable: a dial nobody can
-# parse must not silently hand ratification authority to the loop.
-RATIFICATION_FALLBACK = 4
+# parse must not silently hand ratification authority to the loop. The top rung
+# is the conservative end — it holds every rung there is.
+RATIFICATION_FALLBACK = _kitladder.STAGE_RELEASE
 
 
 def legacy_ratification(word, key):
@@ -490,30 +592,52 @@ def legacy_ratification(word, key):
     return LEGACY_RATIFICATION.get(str(word).strip().lower(), {}).get(key)
 
 
-def ratification_level(docs):
-    """`[attestation] human_ratification_through` as an int 0-4.
+def ratification_through(docs):
+    """`[attestation] human_ratification_through` as a `DevStg-*` rung.
 
-    0 = nothing is human-held (the loop ratifies every tier itself)
-    1 = the human ratifies SNs — 2 = ...and SRs — 3 = ...and LLRs
-    4 = ...and TCs — every tier human-held, the most conservative setting
+    The HIGHEST rung a human still ratifies; every rung at or below it is held
+    (`human_holds`). `DevStg-Below` means nothing is held — the loop ratifies
+    every rung itself. `DevStg-Release`, the shipped default, holds everything.
 
-    Falls back through the legacy `gate-policy` enum, then to 4.
+    Falls back through the legacy `gate-policy` enum, then to `DevStg-Release`.
 
-    AN OUT-OF-RANGE INT IS MALFORMED, NOT CLAMPED. Clamping looks kind and is
-    the one behaviour that can fail in the dangerous direction: `-1` clamps to
-    0, which reads as "nothing is human-held" — a typo silently disarming
-    every ratification hold in the repo. A value outside 0-4 is a declaration
-    nobody can honour, so it takes the same conservative fallback an unparseable
-    file does. (`config_conflicts` refuses it loudly upstream; this is the
-    behaviour for callers that did not run that gate.)
+    A LEGACY 0-4 INT IS TRANSLATED AND WARNED, not refused (WI-493). See
+    `LEGACY_DIAL_ORDINALS`: an adopter's committed dial must not stop their loop
+    on a kit upgrade, and the warning names the migrator that fixes it. An int
+    OUTSIDE 0-4 was malformed before the re-key and stays malformed.
+
+    AN UNRECOGNIZED VALUE IS MALFORMED, NOT COERCED — the same reasoning the
+    out-of-range int always took, and it matters more now that the vocabulary is
+    open-looking. `"devstg-arch"`, `"Arch"` or a rung from a newer kit takes the
+    conservative fallback rather than a best guess, because every wrong guess
+    here fails in the direction of LESS human involvement.
+    (`config_conflicts` refuses it loudly upstream; this is the behaviour for
+    callers that did not run that gate.)
 
     Implements: SR-137, SR-139, LLR-155
     """
     table = process_config(docs).get("attestation")
     if isinstance(table, dict):
         value = table.get("human_ratification_through")
-        if isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 4:
-            return value
+        if isinstance(value, str) and value.strip() in RATIFICATION_RUNGS:
+            return value.strip()
+        if isinstance(value, int) and not isinstance(value, bool):
+            rung = LEGACY_DIAL_ORDINALS.get(value)
+            if rung is not None:
+                print(
+                    # ASCII ONLY, deliberately. This prints from a LIBRARY
+                    # path, so no caller is guaranteed to have run
+                    # `utf8_console()` first; an em-dash here reaches a cp1252
+                    # console as a replacement character in a message whose
+                    # whole job is to be read and acted on.
+                    "agent_common: [attestation] human_ratification_through = {} "
+                    "is the RETIRED 0-4 ordinal - reading it as `{}` (WI-493). "
+                    "Run `python scripts/bootstrap.py --migrate-config` to "
+                    "rewrite it.".format(value, rung),
+                    file=sys.stderr,
+                )
+                return rung
+            return RATIFICATION_FALLBACK
         if value is not None:
             return RATIFICATION_FALLBACK
     legacy = legacy_ratification(
@@ -523,72 +647,48 @@ def ratification_level(docs):
     return RATIFICATION_FALLBACK if legacy is None else legacy
 
 
-# --- OI-21: THE DECLARED DIAL -> LADDER MAPPING, one home ----------------------
-# THE DIAL DOES NOT MOVE. `human_ratification_through` stays the RATIFIABLE-TIER
-# ORDINAL 0-4 that SN-029 defined (0 = nothing held, 1 = SNs, 2 = ...and SRs,
-# 3 = ...and LLRs, 4 = ...and TCs). It was NOT re-keyed onto the eight rungs and
-# it was NOT re-keyed to artifact depth: OI-21 ruled shape (i), MAP the dial onto
-# the ladder, and ruled explicitly that re-keying approval to the depth and tier
-# of the artifact touched is a change to WHEN A HUMAN IS RE-ENGAGED whose
-# wrong-answer direction is silently LESS human involvement — so it is decided on
-# its own, once IF/CMP maturity joins the ratifiable fold, never defaulted here.
+# --- OI-21 -> WI-493: THE DIAL AND THE LADDER ARE ONE VOCABULARY --------------
+# THE DIAL MOVED. It was the RATIFIABLE-TIER ORDINAL 0-4 SN-029 defined (0 =
+# nothing held, 1 = SNs, 2 = ...and SRs, 3 = ...and LLRs, 4 = ...and TCs), mapped
+# onto the eight rungs by a declared `DIAL_HOLDS` table under OI-21 shape (i).
+# WI-493 executed shape (ii): it now names a `DevStg-*` rung directly, and the
+# table retired because there is no longer a second vocabulary to map from. The
+# full argument, the driven equivalence and what the change buys are recorded at
+# the re-key block above `RATIFICATION_RUNGS`.
 #
-# WHAT DID CHANGE is that the stage axis is now eight labelled rungs instead of
-# six integers, so `stage < level` — an arithmetic coincidence between two
-# ladders that happened to line up — is no longer expressible, and should never
-# have been. The relation is now STATED: each level names the exact set of rungs
-# it holds.
+# WHAT DID *NOT* MOVE, and this is the part OI-21 was emphatic about: the dial
+# still says WHICH SPINE RUNGS a human ratifies. It was NOT re-keyed to artifact
+# DEPTH. Re-keying approval to the depth and tier of the artifact touched is a
+# change to WHEN A HUMAN IS RE-ENGAGED whose wrong-answer direction is silently
+# LESS human involvement, so it is decided on its own — once IF/CMP maturity
+# joins the ratifiable fold — and never defaulted here.
 #
-# WHERE THE TWO NEW RUNGS LAND, and why. `DevStg-Boundary` and `DevStg-Arch`
-# produce artifacts (IF and CMP rows) that are not yet RATIFIABLE tiers — the
-# dial has no notch for them. Each is therefore held whenever the rung BELOW it
-# is held: Boundary rides Needs, Arch rides Reqs. That direction is chosen, not
-# arbitrary — it is the one that errs toward MORE human involvement, which is the
-# safe side of the only mistake this table can make. Attaching them to the rung
-# ABOVE would have let a level-1 repo do its boundary work unattended.
+# WHERE THE TWO INSERTED RUNGS LAND is no longer a decision this module makes.
+# `DevStg-Boundary` and `DevStg-Arch` produce artifacts (IF and CMP rows) that
+# are not ratifiable TIERS, so the old ordinal had no notch for them and the
+# table had to choose: each was held whenever the rung BELOW it was held —
+# Boundary rides Needs, Arch rides Reqs — chosen because it errs toward MORE
+# human involvement. Under the at-or-below rule that choice falls out of the
+# LADDER ORDER for free, because each inserted rung sits immediately above the
+# rung it was made to ride. The hand-reasoned property became a structural one.
 #
-# EVERY PRE-EXISTING ANSWER IS PRESERVED EXACTLY for the four ratifiable rungs:
-# level 1 holds Needs; 2 adds Reqs; 3 adds LLReqs; 4 adds Tests. `DevStg-Impl`
-# and `DevStg-Release` are held by level 4 ALONE (implementation is not a
-# ratification tier — SN-029; the separate end-of-run read is `final_review`).
-#
-# `LADDER_RUNGS` names the whole closed vocabulary — not just the held subsets —
+# `LADDER_RUNGS` names the whole closed vocabulary — not just the held subset —
 # because "is this a rung I recognize" and "is this rung held" are different
-# questions and only the first can be answered from the held sets. Without it an
-# unrecognized label (`""`, a typo, a rung from a newer kit) falls through the
-# membership test and reads NOT HELD, which is the permissive direction.
+# questions, and `human_holds` must answer the first CONSERVATIVELY. Without it
+# an unrecognized label (`""`, a typo, a rung from a newer kit) would compare as
+# an ordinal lookup failure rather than as a hold.
 #
 # IT USED TO BE A LITERAL RESTATEMENT HERE (WI-498 slice 0 ended that). The
 # reason given was the F5 no-shared-module rule — this module could not import
-# `derive_gate` — so the eight strings were spelled out again and pinned equal to
-# `derive_gate.STAGE_ORDER` by tests/test_ratification_level.py. F5 was replaced
-# by owner ruling D-8 (`OI-16`): the vocabulary now has ONE home in `kitlib`,
-# which this module already imports, and the pin retired with the restatement it
-# guarded. Drift is unrepresentable rather than detected — the WI-448
-# declared-line precedent.
+# the derivation engine — so the eight strings were spelled out again and pinned
+# equal by tests/test_ratification_level.py. F5 was replaced by owner ruling D-8
+# (`OI-16`): the vocabulary now has ONE home in `kitlib`, which this module
+# already imports, and the pin retired with the restatement it guarded. Drift is
+# unrepresentable rather than detected — the WI-448 declared-line precedent.
 LADDER_RUNGS = _kitladder.LADDER_RUNGS
 
-DIAL_HOLDS = {
-    0: frozenset(),
-    1: frozenset({"DevStg-Needs", "DevStg-Boundary"}),
-    2: frozenset({"DevStg-Needs", "DevStg-Boundary", "DevStg-Reqs", "DevStg-Arch"}),
-    3: frozenset(
-        {
-            "DevStg-Needs",
-            "DevStg-Boundary",
-            "DevStg-Reqs",
-            "DevStg-Arch",
-            "DevStg-LLReqs",
-        }
-    ),
-    # Level 4 holds EVERYTHING, including the top two rungs — stated as the
-    # absolute it is rather than as a set that must be kept in step with
-    # STAGE_ORDER. `human_holds` short-circuits on it before consulting the map.
-    4: None,
-}
 
-
-# THE OFF-SPINE SIBLING OF `DIAL_HOLDS` (owner ruling OI-30 D3, 2026-08-15).
+# THE OFF-SPINE SIBLING OF THE DIAL (owner ruling OI-30 D3, 2026-08-15).
 #
 # `human_ratification_through` governs the SPINE tiers. The off-spine registries
 # that carry an off-spine `status` cell — `interfaces.toml`, `external.toml`,
@@ -600,7 +700,7 @@ DIAL_HOLDS = {
 # *"I thought this would follow the dev-stage directly? Why build a new enum?"*
 # The proposal on the table was a new `[attestation] human_approval_registries`
 # list; it was OVERTURNED because the registry-to-rung association ALREADY
-# EXISTS in `derive_gate` — `boundary_incomplete` gates DevStg-Boundary on
+# EXISTS in `spine_rules` — `boundary_incomplete` gates DevStg-Boundary on
 # `external.toml`'s approvals, and `arch_incomplete` gates DevStg-Arch on the
 # component registry. So the association is existing fact, and a second
 # declaration of it would be a rival answer that agrees until someone edits one.
@@ -625,21 +725,25 @@ def human_holds(docs, stage):
     """Is work at spine `stage` still the HUMAN's to ratify?
 
     The one comparison every consumer makes, stated once. `stage` is
-    `derive_gate.spine_stage`'s `DevStg-<Label>` answer — the rung currently in
+    `spine_rules.spine_stage`'s `DevStg-<Label>` answer — the rung currently in
     work — and a rung the declared level holds surfaces rather than dispatching.
 
-    THE COMPARISON IS A DECLARED LOOKUP, NOT ARITHMETIC (OI-21). It reads through
-    `DIAL_HOLDS` above, which states for each level the exact set of rungs it
-    holds. The retired form was `stage < level` over two integer ladders, correct
-    only while they happened to line up — and that coincidence is precisely what
+    THE COMPARISON IS AN ORDINAL ON THE ONE LADDER (OI-21 -> WI-493). It reads through
+    the ONE ladder. The dial names the highest rung a human still ratifies, so
+    every rung AT OR BELOW it is held — the mirror of the at-or-above rule that
+    selects checks. The form retired at OI-21 was `stage < level` over two
+    DIFFERENT integer ladders, correct only while they happened to line up, and
+    the shape retired at WI-493 was the table that bridged them; what makes the
+    comparison sound now is that there is one ladder. That old coincidence is what
     the 2026-08-12 rung insert nearly broke, silently, in the direction of less
     human involvement.
 
-    BOTH ENDS OF THE LADDER ARE ABSOLUTE. Level 4 holds everything including the
-    close, because `DevStg-Release` means "nothing in work: every rung settled and
-    approved" — the state a bar-advance row runs in, and the shipped default is
-    documented as "every tier human-held; the most conservative setting". Level 0
-    holds nothing; only the middle consults the stage.
+    BOTH ENDS OF THE LADDER ARE ABSOLUTE, and they are now spelled as the values
+    they always meant. `DevStg-Release` — the shipped default — holds everything
+    including the close, because it is the top rung and everything is at or below
+    it. `DevStg-Below` is the sentinel for "nothing is human-held": set below the
+    ladder, no rung is at or below it. Only a dial between the two consults the
+    stage at all.
 
     AN UNREADABLE STAGE IS HELD, and so is an UNRECOGNIZED rung label — the same
     conservative direction as an unreadable level. Note the deliberate asymmetry
@@ -650,14 +754,14 @@ def human_holds(docs, stage):
 
     Implements: SR-137, SR-139, LLR-155
     """
-    level = ratification_level(docs)
-    if level <= 0:
+    dial = ratification_through(docs)
+    if dial == _kitstage.BELOW:
         return False
-    if level >= 4:
+    if dial == _kitladder.STAGE_RELEASE:
         return True
     if stage not in LADDER_RUNGS:
         return True
-    return stage in DIAL_HOLDS.get(level, frozenset())
+    return _kitladder.stage_ord(stage) <= _kitladder.stage_ord(dial)
 
 
 def human_approves(docs, registry):
@@ -762,38 +866,73 @@ def keep_nondependent(docs):
 
 
 def spine_stage_of(root):
-    """This repo's derived spine stage, read off the generated `docs/gate`
-    basis line — the same read `traj_status` does for every other basis field.
+    """This repo's EFFECTIVE stage, through the common reader
+    (`kitlib.stage.read_stage`) — the value `human_holds` compares the declared
+    ratification dial against, i.e. the input to who may ratify.
 
-    Read rather than recomputed: `docs/gate` is a freshness-gated generated
-    artifact, so the cached value is either current or the `derived-gate` step
-    is already red. Returns None when the file predates the field, which
-    `human_holds` treats as human-held.
+    THE TRUST INVARIANT IS NOW TRUE BY CONSTRUCTION, and that is the whole point
+    of this cut-over (WI-498 slice 5, ruled plan §3). The retired form scraped
+    `stage=` off a comment on the generated `docs/gate` and justified itself by
+    saying the file was freshness-gated, "so the cached value is either current
+    or the `derived-gate` step is already red". THAT WAS NOT TRUE IN TWO PLACES
+    the gate schedule map measured: the freshness step STANDS DOWN on a claimed
+    branch, and `agent_loop`/`dispatch` hoist this value once per run and thread
+    it down, so a mid-session ratification was invisible to every later consumer.
+    Both windows close here rather than being re-documented — the reader
+    re-fingerprints the declared inputs on every call and derives fresh in memory
+    when they have moved. It still never WRITES: regeneration stays the trunk
+    regen points' auditable act.
 
-    THE FIELD CARRIES A `DevStg-<Label>` (OI-21), and this reader accepts ONLY
-    that form. A cache written before the conversion carries a bare integer,
-    which no longer matches — so it reads None and `human_holds` holds the work
-    for a human until `derive_gate.py` is rerun. That is the deliberate
-    field-compatible-not-value-compatible migration: the one state a stale cache
-    can produce is MORE human involvement, and `--check` reports the line stale on
-    the first recompute anyway. A regex that accepted both would be the compat
-    shim OI-21 refused."""
-    try:
-        text = (Path(root) / "docs" / "gate").read_text(
-            encoding="utf-8", errors="replace"
-        )
-    except OSError:
+    Returns None when the stage cannot be established at all — no `docs/stage`,
+    an unparseable or hand-edited record, or a derivation that would not run.
+    `human_holds` reads None as HUMAN-HELD, so every failure direction here ends
+    in MORE human involvement, never less. That fail-safe is why this reader
+    swallows the derivation error the CLI callers surface."""
+    path = Path(root) / _kitstage.STAGE_FILE
+    if not path.exists():
         return None
-    match = re.search(r"#\s*basis:.*\bstage=(DevStg-[A-Za-z]+)\b", text)
-    return match.group(1) if match else None
+    try:
+        record = _kitstage.read_stage(
+            Path(root), lambda r: _kitstage.derive_via_subprocess(_SCRIPTS_DIR, r)
+        )
+    except (_kitstage.DerivationError, ValueError, OSError):
+        return None
+    stage = record.get("stage")
+    return stage if isinstance(stage, str) and stage.startswith("DevStg-") else None
 
 
 def _legacy_present(docs, legacy_name):
     return (Path(docs) / legacy_name).is_file()
 
 
+def _in_legacy_window(value, legacy_values):
+    """Is `value` EXACTLY one of the retired values a re-keyed dial still honours?
+
+    A FUNCTION, NOT A BARE `in`, AND AN EXACT TYPE TEST, because Python's
+    numeric tower makes the obvious spelling wrong three ways and each one fails
+    silently — the migration window would swallow a malformed dial that the type
+    check exists to name:
+
+      * `True == 1`, so a `true` dial would pass for the ordinal 1 and take the
+        window's silent pass instead of the wrong-type refusal it has earned;
+      * `2.0 == 2`, so a float dial would too — a wrong-typed value falling
+        through to a default with no diagnostic, which IS the failure this
+        table's type check was written for;
+      * an unhashable value (`[4]`, an inline table) raises `TypeError` from
+        `in` against a set — and `config_conflicts` promises its callers it
+        returns a list and never raises, because two of the three call it from
+        inside an exit-code contract.
+
+    `type(value) is int` refuses all three at once: `bool` and `float` are not
+    `int`, and a non-int never reaches the membership test."""
+    if type(value) is not int:
+        return False
+    return value in legacy_values
+
+
 def _key_value_findings(data, section, key, kind):
-    """Type + range findings for ONE declared dial ([] when absent or sound).
+    """Type, range and vocabulary findings for ONE declared dial ([] when absent
+    or sound).
 
     Shared by both halves of `config_conflicts` — the legacy-file dials and the
     process.toml-only ones — because "a wrong-typed dial must never fall through
@@ -802,6 +941,28 @@ def _key_value_findings(data, section, key, kind):
     if not (isinstance(table, dict) and key in table):
         return []
     value = table[key]
+    legacy_values = PROCESS_KEY_LEGACY_VALUES.get((section, key))
+    if legacy_values is not None and _in_legacy_window(value, legacy_values):
+        # A value this dial USED to take, which the reader migrates and warns
+        # about; refusing it here would be the kit refusing to start over a
+        # spelling it already knows how to read. Anything outside the window —
+        # including an out-of-range int — falls through to the findings below.
+        return []
+    if legacy_values is not None and type(value) is int:
+        # AN INT OUTSIDE THE WINDOW: still refused, but by a message that names
+        # the migration rather than the type. Whoever meets this is the one
+        # person whose 0-4 dial was out of range BEFORE the re-key, and telling
+        # them "expected str" while the four lines above silently accept 0-4 is
+        # accurate and useless.
+        return [
+            "docs/{} [{}] {} = {!r} is the RETIRED 0-4 ordinal, out of range. "
+            "There is no rung it meant, so it reads as the most conservative "
+            "setting. Set it to a DevStg-* rung (or `{}` for 'nothing is "
+            "human-held'); `bootstrap.py --migrate-config` converts an "
+            "IN-range one for you.".format(
+                PROCESS_TOML, section, key, value, _kitstage.BELOW
+            )
+        ]
     if _coerce(value, kind) is None:
         return [
             "docs/{} [{}] {} = {!r} is a {}, expected {} — a wrong-typed "
@@ -818,6 +979,28 @@ def _key_value_findings(data, section, key, kind):
             "negative value would read as 'nothing is human-held' and "
             "silently disarm every ratification hold in the repo.".format(
                 PROCESS_TOML, section, key, value, low_high[0], low_high[1]
+            )
+        ]
+    vocab = PROCESS_KEY_VOCAB.get((section, key))
+    if vocab is not None and str(value).strip() not in vocab:
+        # THE LEGACY ORDINAL IS NOT A CONFLICT. `ratification_through` reads it,
+        # translates it and warns; saying it twice — once as a refusal here and
+        # once as a warning there — would make a kit upgrade look like a broken
+        # config to a repo whose dial is merely old.
+        if isinstance(value, int) and not isinstance(value, bool):
+            return []
+        return [
+            "docs/{} [{}] {} = {!r} names no rung. Legal values are {} (and "
+            "`{}` for 'nothing is human-held'). It falls back to the most "
+            "conservative setting rather than to what was probably meant: an "
+            "unrecognized dial that guessed would read as LESS human "
+            "involvement than the owner asked for.".format(
+                PROCESS_TOML,
+                section,
+                key,
+                value,
+                ", ".join("`{}`".format(r) for r in _kitladder.STAGE_ORDER),
+                _kitstage.BELOW,
             )
         ]
     return []

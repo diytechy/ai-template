@@ -22,7 +22,7 @@ lives in [`requirements/`](requirements/) + [`test/`](test/).
 - **Enforcement floor** (`project-trajectory/hooks/*`) — the pre-commit /
   pre-push / commit-msg hooks that run the integrity + secrets floor
   agent-neutrally (SR-019/SR-020).
-- **Declared config** (`docs/stack.ini`, the generated `docs/gate`, and
+- **Declared config** (`docs/stack.ini`, the generated `docs/stage`, and
   `docs/process.toml` — the one home for every process dial) — read once by the
   harness and the coordinator so a behavior is declared in text, not baked into
   a script (SR-007/SR-031).

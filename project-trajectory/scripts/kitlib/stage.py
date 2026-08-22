@@ -20,7 +20,7 @@ below and imports nothing. This module imports stdlib and `ladder`, nothing else
 THE BOUNDARY, AND WHY IT IS A CALLBACK (the deliberate choice this slice owes a
 record). The derivation proper — load the spine registries through the carrier,
 fall through the eight rungs, group by phase — is ~600 lines that live in
-`derive_gate` today and are REWRITTEN by slices 2 and 3 (the ladder
+`spine_rules` today and are REWRITTEN by slices 2 and 3 (the ladder
 re-discriminates; the bar axis is deleted out from under them). Hauling that into
 `kitlib` now would (a) drag `spine_carrier` and the whole registry-parsing graph
 into a package whose one asserted rule is that it imports no sibling
@@ -54,6 +54,8 @@ deliberately stood down.
 
 import hashlib
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 from . import ladder
@@ -62,7 +64,7 @@ from . import ladder
 STAGE_FILE = "docs/stage"
 
 # THE SELECTION FLOOR. The effective stage is never reported below this rung, for
-# the reason the BAR axis floors at the same place (`derive_gate`'s
+# the reason the BAR axis floors at the same place (`spine_rules`'s
 # `max(BAR_REQS, raw)`): a value below it selects NOTHING under an at-or-above
 # rule, so a fresh scaffold would go green because no check ran — the silent green
 # SN-008 forbids, and the exact promise `ci/check.yml` makes ("a freshly-scaffolded
@@ -290,12 +292,12 @@ def effective_stage(per_phase):
 
 
 # --- THE FILE FORMAT ----------------------------------------------------------
-# THE COMPARED FIELDS, in file order. KEY=VALUE, NOT POSITION: `docs/gate` puts
-# its machine value on "the first non-comment line" and its stage inside a
-# comment, an idiom re-implemented in five readers and silent on mis-order. Every
-# field here is addressed by name, so slice 2's consumers re-point at a key
-# instead of a line number, and a field added later is invisible to a reader that
-# does not know it.
+# THE COMPARED FIELDS, in file order. KEY=VALUE, NOT POSITION: the retired
+# `docs/gate` put its machine value on "the first non-comment line" and its
+# stage inside a comment, an idiom re-implemented in five readers and silent on
+# mis-order. Every field here is addressed by name, so slice 2's consumers
+# re-pointed at a key instead of a line number, and a field added later is
+# invisible to a reader that does not know it.
 FIELDS = (
     "stage",
     "stage-ord",
@@ -462,6 +464,61 @@ def _refuse_non_rungs(record):
                 require_rung(value, where="docs/stage `{} =`".format(key))
 
 
+# --- THE DERIVER SEAM ---------------------------------------------------------
+class DerivationError(Exception):
+    """`derive_via_subprocess` could not produce a record.
+
+    RAISED, NOT HANDLED HERE, because the two production callers want OPPOSITE
+    failure policies and both are right: `check.py` exits with a message (a CLI
+    that cannot select its plan must not guess one), while
+    `agent_common.spine_stage_of` answers None, which `human_holds` reads as
+    HUMAN-HELD (a coordinator that cannot establish the stage must not let an
+    agent ratify). One mechanism, one home; the policy stays at the call site."""
+
+
+def derive_via_subprocess(scripts_dir, root):
+    """The deriver `read_stage` calls on a fingerprint miss, run as a SUBPROCESS.
+
+    WHY A SUBPROCESS AND NOT AN IMPORT (WI-498 slices 2 and 5). The derivation
+    proper is `derive_stage.py`, a SIBLING SCRIPT; `check.py` and `agent_common`
+    are both wholesale drop-ins that never import a sibling (the F5 rule), and
+    `kitlib` itself may not. Spawning is the coupling those modules already have
+    with every kit script they run, so the rule is kept without duplicating a
+    600-line derivation. The cost lands only on a MISS — a fresh scaffold whose
+    `docs/stage` is still the placeholder, or a tree edited since the last
+    regeneration — never on the fast path.
+
+    HOMED HERE BY THE SECOND CONSUMER (slice 5). Slice 2 wrote this body inside
+    `check.py`; slice 5 cut `spine_stage_of` onto the same reader, and copying it
+    would have minted exactly the kind of F5 duplicate this package exists to
+    retire — with the sharper edge that the copies would be a plan selector and a
+    ratification authority drifting apart in silence."""
+    script = Path(scripts_dir) / "derive_stage.py"
+    if not script.exists():
+        raise DerivationError(
+            "docs/stage needs re-deriving and {} is missing — re-sync the kit "
+            "scripts".format(script.name)
+        )
+    proc = subprocess.run(
+        [sys.executable, str(script), "--root", str(root), "--print"],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise DerivationError(
+            "could not derive the current stage ({} --print exited {}):\n{}".format(
+                script.name, proc.returncode, proc.stderr.strip()
+            )
+        )
+    record = parse(proc.stdout)
+    if record is None:
+        raise DerivationError(
+            "{} --print emitted no stage field — the derivation and this reader "
+            "disagree about the record format".format(script.name)
+        )
+    return record
+
+
 # --- THE COMMON READER --------------------------------------------------------
 def read_stage(root, derive, memo=_DEFAULT):
     """THE ONE FUNCTION every consumer of "what stage is this repo in" calls.
@@ -477,7 +534,7 @@ def read_stage(root, derive, memo=_DEFAULT):
     and the commit-bar `--check` is what stops a stale copy from being committed.
 
     THIS CLOSES BOTH STALE WINDOWS THE SCHEDULE MAP FOUND, BY CONSTRUCTION rather
-    than by scheduling. The branch-lane window (`derived-gate` stands down on a
+    than by scheduling. The branch-lane window (`derived-stage` stands down on a
     claimed branch, so a green run over a stale cache is reachable there) closes
     because a reader no longer trusts a cache the freshness step cannot police —
     it verifies per call, and on a claimed branch derives from that branch's OWN

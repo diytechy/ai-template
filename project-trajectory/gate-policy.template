@@ -1,7 +1,7 @@
 # RETIRED SCAFFOLD SOURCE (SN-028). This dial now lives in
 # process.toml.template -> docs/process.toml. SN-029 then RETIRED the
 # three-value enum itself: the dial is `[attestation]
-# human_ratification_through` (0-4) plus `keep_nondependent` and
+# human_ratification_through` (a `DevStg-*` rung) plus `keep_nondependent` and
 # `final_review`, and
 # bootstrap.py no longer copies this file into a new repo — shipping both
 # homes would hand every scaffold the mixed-config refusal. The file stays
@@ -10,18 +10,19 @@
 # adoption; the text below describes that legacy home, not today's.
 #
 # Gate-authority policy (process.md §4; process-options.md "Gate authority
-# levels"). One value on the last line — who ratifies a gate advance. Gates are
-# DERIVED: docs/gate is computed from the artifact states by derive_gate.py, and a
-# gate advances when a batch of artifacts is RATIFIED in a reviewed commit
+# levels"). One value on the last line — who ratifies a gate advance. Stages are
+# DERIVED: docs/stage is computed from the artifact states by derive_stage.py, and
+# a gate advances when a batch of artifacts is RATIFIED in a reviewed commit
 # (Status Draft->Planned, or an SN moved out of a draft section). This level
 # governs WHO may make that ratifying commit:
 #   attended      — a human ratifies each batch (the default; standard §4).
-#   single-ratify — LLM-gate review through DevStg-Reqs+DevStg-Tests; the human ratifies the
-#                   queued batch once at the phase's [g2] close; autonomous after.
+#   single-ratify — LLM review through the requirement and test rungs; the human
+#                   ratifies the queued batch once at the phase's
+#                   [DevStg-Impl] close; autonomous after.
 #   autonomous    — every gate except the owner's final read closes on an independent
 #                   fresh-context LLM reviewer's recorded verdict.
 # A non-default level is amended into the repo by the deviation register
 # (docs/gate-policy.md — scaffolded by `bootstrap.py --gate-policy`); the §4
 # fixed points hold at every level. This policy value is itself hand-set — change
-# it in a reviewed commit (docs/gate itself is generated, never hand-edited).
+# it in a reviewed commit (docs/stage itself is generated, never hand-edited).
 attended

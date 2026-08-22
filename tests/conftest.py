@@ -143,7 +143,7 @@ SLOW_MODULES = frozenset(
         "test_trajectory_arch",  # decision over architecture inputs
         "test_trajectory_specs",  # decision over spec bodies
         "test_components_registry",  # components gate on scaffolds
-        "test_derive_gate",  # derive_gate on scaffolds
+        "test_spine_rules",  # spine_rules on scaffolds
         # WI-498 slice 1: the same module, the same cost class — every test in it
         # takes the `scaffold` fixture (a full bootstrap) and several drive
         # `derive_stage.py` / `check.py` through run_py. Filed beside its sibling
@@ -702,7 +702,7 @@ WI_REGISTRY_COLUMNS = [
 # two helpers, so the file's shape is stated ONCE for the whole suite. The
 # writer DELEGATES to bootstrap.set_process_key rather than carrying a second
 # line-rewriter: a test helper that re-implements the thing under test can only
-# ever agree with itself (the F3 lesson recorded in test_derive_gate).
+# ever agree with itself (the F3 lesson recorded in test_spine_rules).
 
 
 def process_toml(root):
@@ -1051,10 +1051,14 @@ def make_minimal_project(root):
     # on-by-default export exists and is fresh (its hook/DevStg-Impl --check passes).
     proc = run_py(["scripts/gen_okf.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    # The derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md): this is a full DevStg-Impl chain,
-    # so docs/gate is regenerated from the artifact states — the scaffold shipped
-    # the fresh-repo DevStg-Reqs, and ratifying artifacts up to a DevStg-Impl-complete spine is what
-    # advances the derived gate. Keeps the derived-gate freshness step green.
-    proc = run_py(["scripts/derive_gate.py"], cwd=root)
+    # The derived STAGE: this is a full DevStg-Impl chain, so docs/stage is
+    # regenerated from the artifact states — the scaffold shipped a placeholder,
+    # and ratifying artifacts up to a settled spine is what advances the derived
+    # rung. Keeps the `derived-stage` freshness step green.
+    #
+    # It ran `derive_gate.py` until WI-498 slice 5 retired `docs/gate` along with
+    # that module's whole CLI (what survives is `spine_rules.py`, a pure library
+    # with no `main()`). The successor is the one that still writes a file.
+    proc = run_py(["scripts/derive_stage.py"], cwd=root)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     return root

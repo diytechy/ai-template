@@ -69,7 +69,7 @@ with the reasoning recorded in their place.
    sibling") is exactly what slice 1 overturned, so the comment on
    `test_rule_sync.test_bootstraps_scaffolded_brief_uses_the_converters_own_keys`
    is now stale and must be corrected when the duplicate goes.
-3. **The `derive_gate`/`trace` spine-policy pair** — 10 duplicated groups
+3. **The `spine_rules`/`trace` spine-policy pair** — 10 duplicated groups
    (`is_approved`, `is_founded`, `is_drafted`, `sn_all_ids`, `sn_cited_ids`,
    `sn_draft_ids`, `phase_num`, `llr_exempt`, `load_csv`). These are POLICY,
    not plumbing, so they are what `test_rule_sync` pins most carefully;

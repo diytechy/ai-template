@@ -900,7 +900,7 @@ def needs_from_text(text):
     sniffing which carrier wrote it.
 
     Exists because the two SN scrapers the gate depends on take TEXT, not a
-    path, and are pinned equal across `trace` and `derive_gate`. Under TOML the
+    path, and are pinned equal across `trace` and `spine_rules`. Under TOML the
     id scrape happens to keep working — `[need.SN-001]` still contains the token
     — but the DRAFT scan does not: it looks for a markdown heading containing
     the word "draft", finds none, and reports zero drafts. Every draft need

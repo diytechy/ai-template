@@ -88,7 +88,7 @@ Entry points only — read the directories for the rest.
   `docs/requirements/`, `docs/test/`, `docs/work/`, `docs/stack.ini`,
   `docs/runtime-flows.md` (the authored Runtime flows; the structural
   architecture is derived into the dashboard — WI-455), the
-  derived `docs/gate` (never hand-set), and the generated root
+  derived `docs/stage` (never hand-set), and the generated root
   [`PROJECT_STATE.html`](PROJECT_STATE.html) (`python
   project-trajectory/scripts/gen_trajectory.py`). The traced "product" is
   `project-trajectory/scripts` + `tests/`; the self-application boundary is **no

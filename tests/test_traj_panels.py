@@ -4,7 +4,7 @@ this module's subject is `traj_panels.py`).
 
 The three panel families that hang off their own data source: the Knowledge tab
 (the committed OKF bundle, incl. the SR-089 `>3` type-tiering rule), the Process
-tab (docs/gate + the two circular working-loop diagrams, and the WCAG floors the
+tab (docs/stage + the two circular working-loop diagrams, and the WCAG floors the
 hub/loop paint has to clear), and the landing hero + "Next work" card that names
 the ready frontier.
 """
@@ -25,7 +25,8 @@ from traj_fixtures import (
     html_of,
     make_repo,
     with_bundle,
-    with_gate,
+    with_stage,
+    write_stage,
 )
 
 
@@ -196,19 +197,20 @@ def test_knowledge_graph_stays_flat_at_or_below_type_threshold(tmp_path):
 
 
 def test_process_tab_renders_three_panels_from_live_data(tmp_path):
-    # SR-050: with a docs/gate the dashboard gains the Process tab — the three
-    # linked panels, each joining a canonical data source (docs/gate, the spine
+    # SR-050: with a docs/stage the dashboard gains the Process tab — the three
+    # linked panels, each joining a canonical data source (docs/stage, the spine
     # registries, the docs/work/ registry) rather than restating hand-set numbers.
     # WI-389: panel 2 is the station cycle (the concurrency-v2 flow that now
     # ships), replacing the pre-station serial resume-loop chips.
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert 'data-tab="process"' in text and 'id="process"' in text
-    # the three panels are present and titled
-    assert "Artifact lifecycle × the stages a human clears" in text
+    # the three panels are present and titled (WI-498 slice 5 re-keyed panels 1
+    # and 3 onto the stage ladder and the surviving sense of "bar")
+    assert "Artifact lifecycle × the stage ladder" in text
     assert "The station cycle" in text
-    assert "Slices → phase → gates" in text
+    assert "Slices → phase → the check bars" in text
     # panel 1 joins the spine registries (make_repo: 1 SN, 2 SR / 1 Approved,
     # 3 LLR, 4 TC) — live counts, not prose
     assert "1 SN" in text
@@ -228,37 +230,47 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     assert "http://" not in low and "https://" not in low
 
 
-def test_process_current_gate_highlight_follows_docs_gate(tmp_path):
-    # The derived-gate highlight reflects docs/gate: a lifecycle tier is `now`
-    # iff the gate value falls in its declared gate span. (The panel says "next
-    # gate to pass" since 2026-08-12 — a repo is IN a stage, PASSES a gate.)
-    with_gate(tmp_path, "DevStg-Reqs")
+def test_process_current_stage_highlight_follows_docs_stage(tmp_path):
+    # RE-KEYED FROM THE BAR AXIS (WI-498 slice 5), name and all: the concern is
+    # unchanged — a lifecycle tier is `now` iff the DERIVED value falls in its
+    # declared span — but the value read from `docs/stage` is one of the eight
+    # LADDER RUNGS, so the spans are rung spans and the attribute is
+    # `data-stages=`. Every tier is asserted at both readings, not just the
+    # moving ones: under the old three-value axis a tier could only be missed by
+    # a span typo, while under eight rungs a repo standing at an unclaimed rung
+    # would silently highlight nothing at all.
+    with_stage(tmp_path, "DevStg-Reqs")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Next stage to clear: <b>DevStg-Reqs</b>" in text
-    assert 'class="stg now" data-gates="DevStg-Reqs"' in text  # SN
-    assert 'class="stg now" data-gates="DevStg-Reqs→DevStg-Tests"' in text  # SR
-    assert 'class="stg" data-gates="DevStg-Tests"' in text  # LLR not yet
-    assert 'class="stg" data-gates="DevStg-Impl"' in text  # code+tests not yet
+    assert "Stage: <b>DevStg-Reqs</b> — the rung this repo is IN" in text
+    assert 'class="stg" data-stages="DevStg-Needs"' in text  # SN done
+    assert 'class="stg now" data-stages="DevStg-Boundary→DevStg-Reqs"' in text  # SR
+    assert 'class="stg" data-stages="DevStg-Arch→DevStg-LLReqs"' in text  # LLR not yet
+    assert 'class="stg" data-stages="DevStg-Tests"' in text  # TC not yet
+    assert 'class="stg" data-stages="DevStg-Impl"' in text  # code+tests not yet
 
-    (tmp_path / "docs" / "gate").write_text("DevStg-Impl\n", encoding="utf-8")
+    write_stage(tmp_path, "DevStg-Impl")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
-    assert "Next stage to clear: <b>DevStg-Impl</b>" in text
-    assert 'class="stg" data-gates="DevStg-Reqs"' in text  # SN no longer highlighted
-    assert 'class="stg now" data-gates="DevStg-Tests→DevStg-Impl"' in text  # TC
-    assert 'class="stg now" data-gates="DevStg-Impl"' in text  # code+tests
+    assert "Stage: <b>DevStg-Impl</b> — the rung this repo is IN" in text
+    assert 'class="stg" data-stages="DevStg-Needs"' in text  # SN no longer current
+    assert 'class="stg" data-stages="DevStg-Boundary→DevStg-Reqs"' in text  # nor SR
+    assert 'class="stg" data-stages="DevStg-Arch→DevStg-LLReqs"' in text  # nor LLR
+    assert 'class="stg" data-stages="DevStg-Tests"' in text  # nor TC
+    assert 'class="stg now" data-stages="DevStg-Impl"' in text  # code+tests
+    # exactly one tier is current at a time — the panel's whole claim
+    assert text.count('class="stg now"') == 1
 
 
 def test_process_now_marker_carries_a_worded_cue_not_border_alone(tmp_path):
     """A3 (WI-470, SR-052 coverage remainder): the "now" tier used to be
     marked by an accent BORDER alone — colour was the only thing that told a
     reader which lifecycle tier is current, one panel away from the plain
-    "Next stage to clear" sentence above the list (`test_process_current_gate_
-    highlight_follows_docs_gate` pins the border/class half; this pins the
+    stage sentence above the list (`test_process_current_stage_highlight_
+    follows_docs_stage` pins the border/class half; this pins the
     word). Every `.stg now` tier must carry the word "now" in its own markup,
     and a tier that is NOT current must not."""
-    with_gate(tmp_path, "DevStg-Reqs")
+    with_stage(tmp_path, "DevStg-Reqs")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert ".nowtag{" in text  # the CSS rule is actually wired, not just the span
@@ -266,7 +278,7 @@ def test_process_now_marker_carries_a_worded_cue_not_border_alone(tmp_path):
     assert now_lis, "no now-tier rendered — the fixture is vacuous"
     for li in now_lis:
         assert '<span class="nowtag">now</span>' in li
-    other_lis = re.findall(r'<li class="stg" data-gates="[^"]*">(.*?)</li>', text)
+    other_lis = re.findall(r'<li class="stg" data-stages="[^"]*">(.*?)</li>', text)
     assert other_lis, "no non-now tier rendered — the negative half is vacuous"
     for li in other_lis:
         assert "nowtag" not in li
@@ -276,7 +288,7 @@ def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
     # Link-outs resolve in THIS repo: the scaffolded docs/ copies win when
     # present (the downstream case); with neither present the scaffolded
     # default is emitted (what bootstrap writes).
-    with_gate(tmp_path)
+    with_stage(tmp_path)
     assert gen(tmp_path).returncode == 0
     assert 'href="docs/process.md"' in html_of(tmp_path)  # the default
 
@@ -290,27 +302,27 @@ def test_process_link_outs_prefer_the_scaffolded_docs(tmp_path):
 
 def test_process_wi_counts_join_work_items(tmp_path):
     # Panel 3's numbers are a live join over the WI registry (total + done counts).
-    with_gate(tmp_path, "DevStg-Tests", SMALL_WIS)
+    with_stage(tmp_path, "DevStg-Tests", SMALL_WIS)
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert "4 work items · 1 done." in text
 
 
-def test_process_tab_omitted_and_byte_identical_without_gate(tmp_path):
-    # The vacuity guarantee (the Knowledge-tab idiom): with no docs/gate the tab
+def test_process_tab_omitted_and_byte_identical_without_stage(tmp_path):
+    # The vacuity guarantee (the Knowledge-tab idiom): with no docs/stage the tab
     # is omitted and the artifact is byte-for-byte what it was before this view
-    # existed. Proven by round-trip: render gate-less, add the gate (tab
+    # existed. Proven by round-trip: render stage-less, add the stage file (tab
     # appears), remove it, re-render == the original bytes exactly.
     make_repo(tmp_path)
     assert gen(tmp_path).returncode == 0
     without = (tmp_path / "PROJECT_STATE.html").read_bytes()
     assert b'data-tab="process"' not in without
 
-    (tmp_path / "docs" / "gate").write_text("DevStg-Reqs\n", encoding="utf-8")
+    write_stage(tmp_path, "DevStg-Reqs")
     assert gen(tmp_path).returncode == 0
     assert b'data-tab="process"' in (tmp_path / "PROJECT_STATE.html").read_bytes()
 
-    (tmp_path / "docs" / "gate").unlink()
+    (tmp_path / "docs" / "stage").unlink()
     assert gen(tmp_path).returncode == 0
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == without
 
@@ -318,22 +330,22 @@ def test_process_tab_omitted_and_byte_identical_without_gate(tmp_path):
 def test_process_tab_is_byte_deterministic_and_check_stable(tmp_path):
     # Sorted inputs, no clocks -> a second render is byte-identical and --check
     # passes fresh / trips stale (no new freshness exclusion).
-    with_gate(tmp_path)
+    with_stage(tmp_path)
     assert gen(tmp_path).returncode == 0
     first = (tmp_path / "PROJECT_STATE.html").read_bytes()
     again = gen(tmp_path)
     assert again.returncode == 0 and "already up to date" in again.stdout
     assert (tmp_path / "PROJECT_STATE.html").read_bytes() == first
     assert gen(tmp_path, "--check").returncode == 0
-    # a gate flip is content: --check must trip until regenerated
-    (tmp_path / "docs" / "gate").write_text("DevStg-Impl\n", encoding="utf-8")
+    # a stage flip is content: --check must trip until regenerated
+    write_stage(tmp_path, "DevStg-Impl")
     stale = gen(tmp_path, "--check")
     assert stale.returncode == 1 and "STALE" in stale.stderr
 
 
 def test_meta_process_tab_smoke():
     # Over the real meta repo: the panel renders, the banner matches the real
-    # docs/gate, and every link-out resolves (here the kit masters, since the
+    # docs/stage, and every link-out resolves (here the kit masters, since the
     # meta-repo scaffolds no docs/process.md).
     ct = load_script("check_trajectory")
     gt = load_script("gen_trajectory")
@@ -343,8 +355,10 @@ def test_meta_process_tab_smoke():
     assert out is not None
     tab, panel = out
     assert 'data-tab="process"' in tab
-    gate = gt._gate_value(ROOT)
-    assert gate and "Next stage to clear: <b>{}</b>".format(gate) in panel
+    stage = gt._stage_value(ROOT)
+    assert (
+        stage and "Stage: <b>{}</b> — the rung this repo is IN".format(stage) in panel
+    )
     hrefs = set(re.findall(r'href="([^"]+)"', panel))
     assert "project-trajectory/PROCESS.md" in hrefs
     for href in hrefs:
@@ -382,7 +396,7 @@ def test_process_tab_renders_the_station_cycle(tmp_path):
     # SVG — the ring claim → lane build → (terminal outcomes) → station refresh
     # → merge slot → trunk advance → intake mint → dispatcher tick, drawn as a
     # single directed closed cycle.
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert "The station cycle" in text
@@ -423,7 +437,7 @@ def test_station_outcomes_derive_from_the_integrator(tmp_path):
     integ = load_script("integrate")
     outcomes = sorted(set(integ.OUTCOME_DIRS.values()))
     assert len(outcomes) == 3  # the §A3 table: merged / cancelled / handback
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
     for outcome in outcomes:
@@ -441,7 +455,7 @@ def test_station_slot_is_the_serial_waist(tmp_path):
     # The merge slot renders exactly once, as the emphasized (filled) node, and
     # says what makes it the waist: serial, one branch at a time, the ancestor
     # check. The slot fill is the theme-invariant --slot token (the A4 lesson).
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     station = _station_div(text)
@@ -457,7 +471,7 @@ def test_station_refresh_pins_the_bar_attestation(tmp_path):
     # refresh sequence the integrator actually runs (merge trunk in, trunk_step,
     # the bar) — derived/pinned, never folklore.
     integ = load_script("integrate")
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
     assert integ.BAR_GREEN.rstrip(":") in station
@@ -488,7 +502,7 @@ def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
         if sched._KIND_CONCURRENCY[k] == sched.CONCURRENCY_EXCLUSIVE
     ]
     assert tp._exclusive_kinds() == exclusive
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     assert "Spine barrier" in text
@@ -527,7 +541,7 @@ def test_station_intake_arm_pins_to_the_intake_mint(tmp_path):
         disp.gap_census,
     ):
         assert callable(arm)
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     station = _station_div(text)
@@ -557,11 +571,11 @@ def test_station_byte_identical_without_data(tmp_path):
     # work-item-rich (a data-less repo renders byte-identically).
     minimal = tmp_path / "min"
     minimal.mkdir()
-    with_gate(minimal, "DevStg-Tests")
+    with_stage(minimal, "DevStg-Tests")
     assert gen(minimal).returncode == 0
     rich = tmp_path / "rich"
     rich.mkdir()
-    with_gate(rich, "DevStg-Tests", SMALL_WIS)
+    with_stage(rich, "DevStg-Tests", SMALL_WIS)
     assert gen(rich).returncode == 0
     assert _station_div(html_of(minimal)) == _station_div(html_of(rich))
 
@@ -573,7 +587,7 @@ def test_station_advance_card_names_the_shipped_merge(tmp_path):
     # misstating the shipped act; it now says "advance", which also still fits
     # the notemax budget (no truncating "…").
     tp = load_script("traj_panels")
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     station = _station_div(html_of(tmp_path))
     assert "advance trunk to the barred tree" in station
@@ -593,7 +607,7 @@ def test_station_narrow_width_scrolls_instead_of_blurring(tmp_path):
     # explicit cue - so 390px stays HONEST about the cut instead of blurring it.
     tr = load_script("traj_render")
     tp = load_script("traj_panels")
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     text = html_of(tmp_path)
     station_svg_tag = re.search(r'<svg class="stationsvg"[^>]*>', text).group(0)
@@ -623,9 +637,9 @@ def test_a4_no_sub_label_opacity_discount(tmp_path):
     # `{ ... opacity }` — the rule the old `.hubsub` joined in WI-293 (a
     # surviving `fill-opacity:.85` put the dark-theme sub-label at 2.57:1);
     # WI-389's redraw renamed the emphasized node hub → slot, same guard.
-    # Fixture is with_gate, not with_bundle: `.slotsub` only exists once the
+    # Fixture is with_stage, not with_bundle: `.slotsub` only exists once the
     # Process tab renders, so under with_bundle this guard was vacuous for it.
-    with_gate(tmp_path, "DevStg-Tests")
+    with_stage(tmp_path, "DevStg-Tests")
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     assert ".slotsub{" in css, "Process tab did not render — guard would be vacuous"
@@ -642,7 +656,7 @@ def test_a4_theme_token_fills_behind_white_text_meet_the_floor(tmp_path):
     white-on-#818cf8 at 2.98:1 in dark while measuring 6.29:1 in light. Any token
     used as a fill behind white text is checked against both declarations here.
     """
-    with_gate(tmp_path, "DevStg-Tests")  # the Process tab's render condition
+    with_stage(tmp_path, "DevStg-Tests")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     # every custom property used as a fill under a white-text selector
@@ -659,7 +673,7 @@ def test_a4_slot_fill_is_not_the_page_accent(tmp_path):
     """WI-293 regression guard: --accent is tuned as INK on the page background
     and lightens in dark theme, so re-pointing the slot fill at it silently
     reintroduces the 2.98:1 defect. The merge slot keeps its own token."""
-    with_gate(tmp_path, "DevStg-Tests")  # the Process tab's render condition
+    with_stage(tmp_path, "DevStg-Tests")  # the Process tab's render condition
     assert gen(tmp_path).returncode == 0
     css = html_of(tmp_path)
     slot_rule = re.search(r"#process \.slot rect\{([^}]*)\}", css)

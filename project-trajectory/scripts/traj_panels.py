@@ -2,7 +2,7 @@
 gen_trajectory.py).
 
 The OKF concept graph + type-tiered drill, the method-reference Process tab
-(lifecycle x gates, the station/lane cycle, the slice cadence), and the
+(lifecycle x the stage ladder, the station/lane cycle, the slice cadence), and the
 landing-hero Next-work card. The facade re-exports, so consumers are unchanged.
 
 `kitlib.station` and `schedule` are imported for their CONSTANTS only (the
@@ -29,7 +29,7 @@ import schedule
 import traj_parse
 from kitlib import station
 from traj_graph import GraphGeom, flat_graph
-from traj_parse import OKF_TIER_ORDER, _gate_value, _okf_nodes, _process_doc
+from traj_parse import OKF_TIER_ORDER, _okf_nodes, _process_doc, _stage_value
 from traj_render import (
     DRILL_STYLE,
     OKF_TYPE_CODE,
@@ -454,11 +454,11 @@ def _know_panel(root, svg, details):
 #
 # The method reference view: the dashboard's other tabs show project *state*;
 # this one shows the *process* the state moves through. Data-derived where a
-# canonical source exists — the current gate from docs/gate, tier counts from
+# canonical source exists — the effective stage from docs/stage, tier counts from
 # the spine registries, work-item counts from the docs/work/ registry — and linking out to
 # the process docs everywhere a canonical home exists. The in-view restatement
 # is limited to the relationships no single doc states as one picture (the
-# lifecycle x gates ordering, the station cycle, the slice -> phase -> gate-bar
+# lifecycle x ladder ordering, the station cycle, the slice -> phase -> gate-bar
 # cadence) — the WI-085 anti-duplication ruling.
 
 # --- the station/lane cycle (WI-389, docs/concurrency-v2.md ruled 2026-07-31) ---
@@ -873,17 +873,17 @@ def _station_panel(root):
 
 def process_panel(root, wis, stats):
     """The Process tab + panel as (tab, panel), or None when there is no
-    docs/gate (the tab is then omitted -> a gate-less repo renders
+    docs/stage (the tab is then omitted -> a stage-less repo renders
     byte-identically; the Knowledge-tab vacuity idiom). Three linked panels:
-    artifact lifecycle x gates (live tier counts; the tiers the derived
-    next-gate spans are highlighted), the station cycle (WI-389 — the
-    concurrency-v2 station/lane model as shipped, its stage vocabulary derived
-    from the flow modules' own constants), and slices -> phase -> gates
+    artifact lifecycle x the stage ladder (live tier counts; the tier whose rung
+    the repo currently stands at is highlighted), the station cycle (WI-389 — the
+    concurrency-v2 station/lane model as shipped, its vocabulary derived
+    from the flow modules' own constants), and slices -> phase -> the check bars
     (commit bar vs gate bar). Fully self-contained (style inside the panel, no
     script needed — the shared tab switcher handles it); sorted inputs, no
     clocks."""
-    gate = _gate_value(root)
-    if not gate:
+    stage = _stage_value(root)
+    if not stage:
         return None
 
     proc_doc = _process_doc(root, "docs/process.md", "project-trajectory/PROCESS.md")
@@ -891,22 +891,43 @@ def process_panel(root, wis, stats):
         root, "docs/process-options.md", "project-trajectory/PROCESS_OPTIONS.md"
     )
 
-    # Panel 1 — artifact lifecycle x gates. Live counts join the spine
-    # registries; a TIER is highlighted when the derived gate falls in its
-    # gate span (DevStg-Tests spans SR / LLR+architecture / TC — the tiers a project
-    # heading for DevStg-Tests is working across). NB "stage" below is this panel's
-    # local name for a lifecycle TIER row, not the 0-5 spine stage of
-    # process.md §4 — the two ladders are different axes.
-    stages = [
+    # Panel 1 — artifact lifecycle x THE STAGE LADDER. Live counts join the spine
+    # registries; a TIER is highlighted when the repo's effective stage falls in
+    # that tier's rung span.
+    #
+    # RE-KEYED FROM BAR SPANS TO RUNGS (WI-498 slice 5), and this was forced, not
+    # cosmetic: the value fed in here used to be a BAR (one of three) and the
+    # spans were bar spans, so with `docs/stage` supplying a RUNG (one of eight) a
+    # repo standing at DevStg-Arch or DevStg-LLReqs would have matched no row at
+    # all and the panel would have highlighted nothing, silently. Under one
+    # vocabulary the mapping also gets simpler to state: each tier is named for
+    # the rung at which producing it IS the work in hand.
+    #
+    # The two FRAME rungs ride with the tier that authors them, which is the
+    # bundling this panel already used for architecture: `DevStg-Boundary` sits
+    # with SR because the crossings are a requirements-tier artifact
+    # (docs/requirements/external.toml), exactly as `DevStg-Arch` sits with LLR.
+    # Six rows against eight rungs, and no row claims `DevStg-Release` — nothing
+    # derives that rung (slice 3), so a row highlighting there would be a claim
+    # the axis cannot make.
+    #
+    # NB "tier" below is a lifecycle ROW of this panel; the rung beside it is the
+    # process.md §4 stage. One ladder now, so the old "two different axes" caveat
+    # this comment used to carry is gone with the axis it warned about.
+    tiers = [
         ("Vision", "", "one home (the README tag)"),
-        ("SN", "DevStg-Reqs", "{} SN".format(stats["sn_total"])),
+        ("SN", "DevStg-Needs", "{} SN".format(stats["sn_total"])),
         (
             "SR",
-            "DevStg-Reqs→DevStg-Tests",
+            "DevStg-Boundary→DevStg-Reqs",
             "{} SR · {} approved".format(stats["sr_total"], stats["sr_verified"]),
         ),
-        ("LLR + architecture", "DevStg-Tests", "{} LLR".format(stats["llr_total"])),
-        ("TC", "DevStg-Tests→DevStg-Impl", "{} TC".format(stats["tc_total"])),
+        (
+            "LLR + architecture",
+            "DevStg-Arch→DevStg-LLReqs",
+            "{} LLR".format(stats["llr_total"]),
+        ),
+        ("TC", "DevStg-Tests", "{} TC".format(stats["tc_total"])),
         (
             "code + tests",
             "DevStg-Impl",
@@ -914,10 +935,10 @@ def process_panel(root, wis, stats):
         ),
     ]
     stage_lis = []
-    for label, span, note in stages:
-        now = gate in span.split("→") if span else False
+    for label, span, note in tiers:
+        now = stage in span.split("→") if span else False
         stage_lis.append(
-            '<li class="stg{cls}" data-gates="{span}">{tag}<b>{label}</b>'
+            '<li class="stg{cls}" data-stages="{span}">{tag}<b>{label}</b>'
             '<span class="g">{spantxt}</span>'
             '<span class="n">{note}</span></li>'.format(
                 cls=" now" if now else "",
@@ -934,7 +955,9 @@ def process_panel(root, wis, stats):
             )
         )
 
-    # Panel 3 — the slice -> phase -> gate cadence (the docs/work/ registry is canonical).
+    # Panel 3 — the slice -> phase -> check-bar cadence (the docs/work/ registry
+    # is canonical). "Bar" here is the SURVIVING sense — a set of checks that must
+    # pass — not the retired three-value axis; the heading says which.
     wi_done = sum(1 for w in wis if w["status"] == "done")
     bars = [
         ("per-WI slice", "one scoped work item; ends at the commit bar"),
@@ -1037,18 +1060,18 @@ def process_panel(root, wis, stats):
         '<p class="cap">The method reference — the other tabs show project '
         "<em>state</em>; this one shows the <strong>process</strong> the state "
         "moves through. Data-derived where a canonical source exists "
-        "(<code>docs/gate</code>, the spine registries, "
+        "(<code>docs/stage</code>, the spine registries, "
         "<code>docs/work/</code>). A view — the process docs are the source "
         "of truth.</p>\n" + style + "\n"
-        '<p class="gnow">Next stage to clear: <b>' + esc(gate) + "</b> — derived "
-        "as the min over the artifact states and cached to <code>docs/gate</code> "
-        "(<code>derive_gate.py</code>). One vocabulary, and the VERB says which "
-        "reading is meant: a repo is IN a stage and CLEARS a stage. The "
-        "highlighted tiers are the ones clearing this stage certifies.</p>\n"
-        "<h3>1 · Artifact lifecycle × the stages a human clears</h3>\n"
+        '<p class="gnow">Stage: <b>' + esc(stage) + "</b> — the rung this repo is "
+        "IN, derived over its settled spine and recorded in <code>docs/stage</code> "
+        "(<code>derive_stage.py</code>). ONE ladder: a stage is a state, and "
+        "ratification is the event that moves it. The highlighted tier is the one "
+        "whose artifacts are the work in hand at this rung.</p>\n"
+        "<h3>1 · Artifact lifecycle × the stage ladder</h3>\n"
         '<p class="cap">Each tier decomposes the one above it; beside it is the '
-        "stage whose CLEARING ratifies that tier — the tiers (§3) and the ladder "
-        "(§4) live "
+        "rung at which producing that tier IS the work — the tiers (§3) and the "
+        "ladder (§4) live "
         'in <a href="' + esc(proc_doc) + '">' + esc(proc_doc) + "</a>. Counts are "
         "live from this repo's registries.</p>\n"
         '<ol class="pflow">' + "".join(stage_lis) + "</ol>\n"
@@ -1064,7 +1087,7 @@ def process_panel(root, wis, stats):
         + "</a> “Unattended operation” · “Parallel work”.</p>\n"
         + station_html
         + "\n"
-        "<h3>3 · Slices → phase → gates</h3>\n"
+        "<h3>3 · Slices → phase → the check bars</h3>\n"
         '<p class="cap">A per-WI slice ends at the <strong>commit bar</strong>; '
         "a phase closes at the <strong>gate bar</strong> — the commit-bar-vs-gate-bar "
         'cadence lives in <a href="'

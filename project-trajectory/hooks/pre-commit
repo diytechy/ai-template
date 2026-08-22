@@ -219,12 +219,12 @@ fi
 #                        --strict orphan check: orphans are a DevStg-Tests+ gate criterion
 #                        (a mid-DevStg-Reqs registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
-#      - derived-gate    docs/gate is GENERATED from artifact states by
-#                        derive_gate.py (docs/archive/specs/derived-gate-model.2026-07-20.md); --check
-#                        fails if a ratify/reopen moved the gate but the cache did
-#                        not. A legacy hand-set gate (no `# basis:` line) is
-#                        compared value-only, so a not-yet-migrated repo is green.
-#                        Regenerate with `python scripts/derive_gate.py`.
+#      - derived-stage   docs/stage is GENERATED from artifact states by
+#                        derive_stage.py; --check fails if a ratify/reopen moved
+#                        the derived rung, or any declared derivation input, but
+#                        the recorded file did not. Its predecessor `derived-gate`
+#                        retired with `docs/gate` and the three-value bar axis.
+#                        Regenerate with `python scripts/derive_stage.py`.
 #      - skills-sync     per-agent skill copies byte-match the ONE neutral
 #                        source; one-command fix (bootstrap.py --sync); a no-op
 #                        where the kit-only generator isn't beside check.py.
@@ -258,7 +258,7 @@ fi
 #                        Skips cleanly with no git and outside a checkout.
 #    When a step reports STALE, regenerate in dependency order — okf ->
 #    trajectory (the dashboard consumes the bundle); the gate marker via
-#    derive_gate.py and the stage marker via derive_stage.py, then the status
+#    spine_rules.py and the stage marker via derive_stage.py, then the status
 #    snapshot via `gen_trajectory.py --status`
 #    (it reads the fresh gate), then the owner surface via `gen_open_items.py`
 #    — then STAGE THE REGENERATED FILES (`git add`) and re-commit. Staging is
@@ -267,7 +267,7 @@ fi
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-gate,derived-stage,skills-sync,skills-index,prompt-catalog,ratify-fresh,staged-divergence
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,ratify-fresh,staged-divergence
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

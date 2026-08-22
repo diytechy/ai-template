@@ -531,9 +531,9 @@ verifies = ["SR-049", "LLR-050"]
 level = "Unit"
 method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
 tier = "Full"
-expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed DevStg-Reqs, decomposed-unverified DevStg-Tests - including a Modified SR, whose phase reads DevStg-Tests with children counted-but-never-capping - and verified DevStg-Impl) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
+expected = """spine_rules computes the correct gate per artifact state (draft drop, undecomposed DevStg-Reqs, decomposed-unverified DevStg-Tests - including a Modified SR, whose phase reads DevStg-Tests with children counted-but-never-capping - and verified DevStg-Impl) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_spine_rules.py"
 status = "Approved"
 phase = 1
 
@@ -1378,11 +1378,11 @@ phase = 1
 [test.TC-141]
 verifies = ["SR-049", "LLR-147"]
 level = "Unit"
-method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (the runnable value floors to DevStg-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevStg-Impl); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevStg-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and derive_gate.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (the runnable value floors to DevStg-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevStg-Impl); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevStg-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_spine_rules.py"
 status = "Approved"
 phase = 4
 
@@ -1393,7 +1393,7 @@ method = """Fixture-drive --next-phase: on a spine whose non-draft max phase is 
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_derive_stage.py"
 status = "Approved"
 phase = 4
 
@@ -1785,7 +1785,7 @@ phase = 5
 [test.TC-179]
 verifies = ["SR-139", "LLR-184"]
 level = "Unit"
-method = """Three claims, driven separately. THE SHAPE: assert STAGE_ORDER whole against the ruled eight-rung order rather than spot-checking it, since an insertion in the wrong place is the failure the vocabulary exists to surface; assert STAGE_OF equals the order's length so the size stays derived; assert the description map's key set equals the rung set in BOTH directions, because a missing entry does not crash a renderer - it silently drops the stage line. THE ORDERING CONTRACT: stage_ord answers each rung's position and RAISES on the unknown-label cases including a retired G-tag and a bar spelling; and the labels are asserted NOT to alphabetize, which is what makes ordering operators wrong by construction rather than only by rule. THE IMPORT CLEANLINESS: parse the module's own source and assert it contains no import statement of any kind. Separately, assert by IDENTITY that derive_gate, agent_common and traj_status resolve to these objects - the warrant for the equality pins that retired, stated as `is` because a value battery over one shared object is vacuous agreement."""
+method = """Three claims, driven separately. THE SHAPE: assert STAGE_ORDER whole against the ruled eight-rung order rather than spot-checking it, since an insertion in the wrong place is the failure the vocabulary exists to surface; assert STAGE_OF equals the order's length so the size stays derived; assert the description map's key set equals the rung set in BOTH directions, because a missing entry does not crash a renderer - it silently drops the stage line. THE ORDERING CONTRACT: stage_ord answers each rung's position and RAISES on the unknown-label cases including a retired G-tag and a bar spelling; and the labels are asserted NOT to alphabetize, which is what makes ordering operators wrong by construction rather than only by rule. THE IMPORT CLEANLINESS: parse the module's own source and assert it contains no import statement of any kind. Separately, assert by IDENTITY that spine_rules, agent_common and traj_status resolve to these objects - the warrant for the equality pins that retired, stated as `is` because a value battery over one shared object is vacuous agreement."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-184 (parent SR-139)"
 automated = "Yes"

@@ -23,7 +23,7 @@ WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
 WHAT IT DOES NOT TOUCH — and this is the load-bearing half. **The word "gate"
 survives wherever it means a check that can fail.** `test_env_gates`,
 `subagent_gate`, `check_perf`'s budget gates, "the freshness gate", `docs/gate`
-and `derive_gate.py` themselves are all correct English and correct filenames; a
+and `spine_rules.py` themselves are all correct English and correct filenames; a
 blanket find-replace over the word would destroy working code and rename paths
 adopters invoke literally. The sweep this check enforces was TAG-SCOPED, so this
 check is too.
@@ -90,7 +90,22 @@ from pathlib import Path
 # enforcer or attention becomes the only thing holding the edits in place"); that
 # condition binds this sweep identically, which is why the prefix is refused in
 # the same commit that converts it.
-RETIRED_TAG_RE = re.compile(r"\bG(?:-Release|-Final|0|1|2|3)\b|\bDevBar-\w+")
+# `[g1]`/`[g2]` are refused BARE: the token has no other meaning in this repo.
+# The set is EXACTLY the anchor vocabulary `check_trajectory.PHASE_ANCHOR_RE`
+# accepts (`g[12]`) — there was never a `g3` anchor, and matching one would have
+# been a finding with no translation to offer (see the SUGGEST pin below).
+# `[reqs]`/`[tests]` are refused only in the ANCHOR POSITION (`]-[reqs]`), and
+# the asymmetry is deliberate rather than tidy — those two spellings are ordinary
+# English in square brackets, so a bare match reds every markdown link whose text
+# happens to be "tests". A checker that cries wolf on link text is a checker
+# people learn to scroll past, which is the failure this file's own docstring
+# names.
+RETIRED_TAG_RE = re.compile(
+    r"\bG(?:-Release|-Final|0|1|2|3)\b"
+    r"|\bDevBar-\w+"
+    r"|\[g[12]\]"
+    r"|(?<=\]-)\[(?:reqs|tests)\]"
+)
 
 # The canonical replacements, printed in the finding so the fix is in the message.
 SUGGEST = {
@@ -107,6 +122,31 @@ SUGGEST = {
     "DevBar-Below": "DevStg-Below",
     "DevBar-Release": "DevStg-Impl - NOT DevStg-Release: that bar closes the Impl "
     "rung, and DevStg-Release sits outside the derived range entirely",
+    # THE PHASE-ANCHOR GRAMMAR (WI-498 slices 4-5). A phase anchor is a WI TITLE,
+    # `[<phase>]-[<token>]`, and the canonical token is now the RUNG the phase
+    # stands at once that anchor closes: `[4]-[DevStg-LLReqs]`.
+    #
+    # THESE FOUR MAPPINGS ARE REVIEWED, NOT MECHANICAL, and that is the whole
+    # reason they are spelled out one by one. Three spellings are SHARED between
+    # the retired bar axis and the live ladder (`DevStg-Reqs`, `DevStg-Tests`,
+    # `DevStg-Impl` name a bar in one reading and a rung in the other), so
+    # "translate the token to the same-named rung" is available, obvious, and
+    # WRONG — it records a reach BELOW where the phase actually stands, which is
+    # the failure direction that loses the event a drop detector exists to
+    # report. Closing a `reqs`/`g1` anchor means the phase's SRs are authored AND
+    # ratified, which is the LLReqs rung — two above the token's spelling.
+    #
+    # `check_trajectory` TRANSLATES these on read and never rewrites a committed
+    # title; what this table refuses is AUTHORING one afresh, or a live doc
+    # TEACHING the retired spelling. A declaration site that must name them (the
+    # translation table itself, a re-sync note) carries `check_vocab: allow`.
+    "[g1]": "[DevStg-LLReqs] - the rung the phase stands at once its SRs are "
+    "ratified, NOT [DevStg-Reqs], which is two rungs below it",
+    "[reqs]": "[DevStg-LLReqs] - same reading as [g1]; the token names what the "
+    "anchor CLOSED, the rung names where the phase now stands",
+    "[g2]": "[DevStg-Impl] - LLRs and TCs authored and non-Drafted, NOT "
+    "[DevStg-Tests], which is one rung below it",
+    "[tests]": "[DevStg-Impl] - same reading as [g2]",
 }
 
 # In-file markers. Kept as plain strings so a file can carry one in whatever
@@ -141,6 +181,18 @@ EXEMPT_GLOBS = (
     # history: the append-only project log, including its dated sign-off and
     # ratification entries (the attestation carve-out's other half)
     "docs/log.md",
+    # history: the per-branch log FRAGMENTS `trunk_step.py` compiles into
+    # docs/log.md in merge order. They are the same record one merge earlier, so
+    # exempting the compiled log and scanning its inputs was a boundary that only
+    # held while no fragment happened to quote a retired tag (WI-498 slice 5 found
+    # it the moment the anchor grammar joined the refused set — three of its own
+    # slice records tripped it, correctly, for quoting what they translated).
+    "docs/log.d/*",
+    # history: a partial close's spec, whose immutable report is the close event
+    "docs/work/partial/*",
+    # citations: a rubric records the anchor it was AUTHORED at (D-4 — a WI title
+    # is a citation, and a citation names the thing as it was called)
+    "docs/rubrics/*",
     # attestation quotes: registry cells quoted byte-for-byte at a pinned baseline
     "docs/ratify/*",
     # history: closed and cancelled work-item specs (D-4 — a WI title is a citation)
@@ -159,8 +211,13 @@ EXEMPT_GLOBS = (
     "docs/open-items.html",
     "PROJECT_STATE.html",
     "docs/test/report.md",
-    # generated + format-migrated with the conversion (one forced regenerate)
-    "docs/gate",
+    # generated: the derived stage record (`derive_stage.py` writes it, and its
+    # own `--check` is what keeps it honest). It replaced `docs/gate` at WI-498
+    # slice 5, and the swap is not just a rename in this table: the predecessor
+    # was ALSO out of `TEXT_NAMES`, so `--list-scope` reported it as "not a text
+    # surface" and this exemption never actually fired. Naming the successor in
+    # both places is what makes the skip say WHY.
+    "docs/stage",
     # owner-only, never a working surface
     "OWNER_SCRATCHPAD.md",
 )
@@ -185,7 +242,7 @@ TEXT_SUFFIXES = {
     ".json",
 }
 # Extensionless live files that are still authored surfaces.
-TEXT_NAMES = {"gate", "gate-policy", "declared-absences", "pre-commit", "pre-push"}
+TEXT_NAMES = {"stage", "gate-policy", "declared-absences", "pre-commit", "pre-push"}
 
 
 def _utf8_console():

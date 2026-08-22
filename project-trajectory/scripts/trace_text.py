@@ -65,7 +65,7 @@ def is_drafted(row):
 
     THIS TIER OWNS ONLY THE BOTTOM RUNG, and deliberately: `is_drafted` lives
     here because the pure text/row predicates do, while `is_approved` and
-    `is_founded` live in `trace.py` and `derive_gate.py` as the F5-duplicated
+    `is_founded` live in `trace.py` and `spine_rules.py` as the F5-duplicated
     pair. A third copy here would be a third answer to the same question."""
     return (row.get("Status") or "").strip().lower() == "drafted"
 

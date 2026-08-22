@@ -34,12 +34,12 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
      bundle-less repo renders byte-identically to before this view existed.
   6. **Process** — the method reference (WI-085): *how this project is built* —
      the artifact lifecycle x gates flow (live tier counts from the spine, the
-     current derived gate highlighted from `docs/gate`), the agent-resume loop,
-     the slice -> phase -> gate-bar cadence, and (WI-142/LLR-056) the two circular working loops —
+     current derived stage highlighted from `docs/stage`), the agent-resume loop,
+     the slice -> phase -> check-bar cadence, and (WI-142/LLR-056) the two circular working loops —
      intake and human-decision — sharing one LLM_Agent entry. Data-derived where
      a canonical source exists; links out to the process docs and the canonical
-     working surfaces. Omitted when there is no `docs/gate`, so a gate-less repo
-     renders byte-identically.
+     working surfaces. Omitted when there is no `docs/stage`, so a stage-less
+     repo renders byte-identically.
 
 Deterministic by construction (sorted inputs, fixed layout passes, no clocks;
 the as-of stamp derives from the last source-touching *commit*), so the
@@ -49,7 +49,7 @@ Stdlib only. Usage:  python scripts/gen_trajectory.py [--root .] [--check] [--st
   (default)  regenerate PROJECT_STATE.html when the sources changed.
   --check    validate + verify freshness without writing; nonzero exit if the
              registry is invalid or the committed HTML is stale.
-  --status   splice the derived-facts snapshot (spine + derived gate + open-items
+  --status   splice the derived-facts snapshot (spine + derived stage + open-items
              one-liners) into docs/status.md's `<!-- BEGIN GENERATED STATUS -->`
              block (WI-202) AND the durable pending-owner-actions projection into
              (WI-234); with --check, byte-compare BOTH for freshness — the
@@ -122,10 +122,10 @@ import traj_parse  # noqa: F401
 from traj_parse import (  # noqa: F401
     OKF_DIR,
     OKF_TIER_ORDER,
-    PROCESS_GATE_FILE,
+    PROCESS_STAGE_FILE,
     WORKSTREAM_LABELS,
     _asof,
-    _gate_value,
+    _stage_value,
     _git,
     _okf_frontmatter,
     _okf_nodes,
@@ -214,7 +214,7 @@ from traj_status import (  # noqa: F401
     _blocked_pending,
     _clip_title,
     _frontier_lines,
-    _gate_facts,
+    _stage_facts,
     _open_item_oneliners,
     _pause_pending,
     _spine_counts,
@@ -954,7 +954,7 @@ def main():
     ap.add_argument(
         "--status",
         action="store_true",
-        help="splice the derived-facts snapshot (spine + derived gate + "
+        help="splice the derived-facts snapshot (spine + derived stage + "
         "open-items one-liners) into docs/status.md instead of rendering the "
         "dashboard; with --check, byte-compare it for freshness (the WI-200 "
         "forward-only guard's successor). Vacuous without the marker pair. The "

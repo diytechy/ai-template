@@ -101,6 +101,11 @@ def test_advisory_surfaces_at_g1_via_registry_integrity_step(scaffold):
     # while the gate itself stays green — warn, not fail.
     make_minimal_project(scaffold)
     swap_ac(scaffold, "Behaves the same as the reference implementation")
+    # Editing a spine registry moves the `docs/stage` fingerprint, so re-derive
+    # before running the harness: this test grades the AC advisory, and a
+    # genuinely stale derived cache left behind by the fixture would red the run
+    # for an unrelated (and correct) freshness finding.
+    assert run_py(["scripts/derive_stage.py"], cwd=scaffold).returncode == 0
     proc = run_py(
         ["scripts/check.py", "--gate", "DevStg-Reqs", "--lenient"], cwd=scaffold
     )

@@ -410,10 +410,10 @@ owner decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires a human —
 the stop banner + typed exit codes:
 [process-options.md "Unattended operation"](process-options.md#unattended-operation-walk-away-runs).
-The gate value in `docs/gate` is **derived from the artifact states**, not
-hand-set: `scripts/derive_gate.py` generates it as the **min over every in-scope
-artifact's own bar**, so it names the gate the repo must next *pass* and thereby
-selects the strictness the harness runs at ("Stages and gates" below). Closing a
+The rung in `docs/stage` is **derived from the artifact states**, not
+hand-set: `scripts/derive_stage.py` generates it as the **min over every in-scope
+artifact's own rung**, so it names the rung the repo is IN and thereby
+selects the strictness the harness runs at ("Stages and gates" below). Crossing a
 gate = **approving a batch of artifacts in a reviewed commit** (`Status`
 `Drafted`→`Approved`, at every tier including SN), never a manual bump (§7
 "The derived gate"; the model + parallel/series workflow:
@@ -493,19 +493,21 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
   Demonstration/Manual items) and approves. For shipped software this is the
   human half of DevStg-Release; for a bespoke deliverable it stands alone.
 
-**The stage ladder — one vocabulary, two readings.** **A repo is *in* a stage
-and it *clears* a stage. The same `DevStg-` token names both; the VERB is what
-distinguishes them, never a second spelling.** Clearing is an *event*: it says
-what was just closed out, and what the project is in now that it is closed. So a
-bar is never a separate thing with a separate name — it is a rung that a named
-human signs off, and the **three clearable rungs are a strict subset of the
-eight**. (Owner ruling 2026-08-18. The retired `G*` tags failed because one axis  <!-- check_vocab: allow -->
-had to say both "already met" and "to pass next" and could say neither; the
-`DevBar-` prefix that first replaced them failed differently — two spellings for  <!-- check_vocab: allow -->
-one ladder meant `DevBar-Release` and `DevStg-Release` sat three letters apart  <!-- check_vocab: allow -->
-while meaning a strictness level and a per-release milestone. One vocabulary plus
-an explicit verb carries both readings without either trap.) **Eight rungs; the
-three a human clears are marked:**
+**The stage ladder — one vocabulary, one axis.** **A stage is a STATE: the repo
+is *in* exactly one rung, and that rung is DERIVED from the artifact states, never
+declared.** Ratification is an **event** that moves it — a named human signing off
+a reviewed Status-change commit — and an event is recorded where events are (the
+phase anchors, §5), not as a second value beside the state. There is no separate
+"bar" axis and no second spelling: a certified rung boundary is **a rung that a
+named human signs off**, and the **three signed boundaries are a strict subset of
+the eight rungs**. (Owner rulings 2026-08-18 and OI-51. Three vocabularies have
+now failed here, each the same way — by carrying two questions on one token. The
+`G*` tags had one axis saying both "already met" and "to pass next"; the  <!-- check_vocab: allow -->
+`DevBar-` prefix split the spelling instead of the question; and the derived  <!-- check_vocab: allow -->
+three-value bar that followed was a MIN over every row, so one drafted
+requirement collapsed it to what a fresh scaffold reads. The ladder answers
+"where is this repo" once, and everything else asks it.) **Eight rungs; the three
+whose boundary a human signs are marked:**
 
 ```
 DevStg-Needs      vision and stakeholder needs in work
@@ -528,13 +530,16 @@ DevStg-Impl       implementation in work
 DevStg-Release    nothing in work; release checklist available
 ```
 
-**Read the marked rungs as events, in the tense that fits.** The sign-off record
-names the stage **already** cleared, while `docs/gate` caches the stage that must
-be cleared **next**. Same token, and the sentence around it says which. What
-selects CHECKS is neither: `check.py --stage <rung>` names the stage the repo is
-**in**, and runs every step declared at or below it (OI-51). **`DevStg-Release` is not
-clearable** — nothing in work, nothing to certify — which is why the last bar is
-`DevStg-Impl`.
+**One value, and everything reads it.** `docs/stage` records the rung the repo is
+**in**, derived over its SETTLED spine so a draft cannot lower it, with the
+honest unfloored reading beside it. `check.py --stage <rung>` runs every step
+declared at or **below** that rung (OI-51); `[attestation]
+human_ratification_through` names the highest rung a human still ratifies, and
+holds every rung at or **below** it — the same ladder read from each end. A
+sign-off record names the rung whose boundary was **just** signed and therefore
+the rung the project has **entered**. **`DevStg-Release` has no signed boundary
+and is derived by nothing** — leaving `DevStg-Impl` means the declared tests
+PASS, which no cell may claim and no machine here yet computes.
 
 **Requirements come before architecture**, because architecture is a *response*
 to requirements: a scope is partitioned in whatever way best satisfies its
@@ -575,8 +580,8 @@ second, derived high-water number shown *beside* the honest one, never instead.
 `docs/id-watermark` space and no retire-never-remint rule. The ordinal is *not*
 in the key, because position changes when the ladder changes and this kit's
 standing rule is that derived facts are generated and rendered, never authored
-into a key: `docs/gate`'s `# basis:` line carries `stage=DevStg-LLReqs
-stage-ord=4 stage-of=8` and renderers show "stage 4 of 8, …", so inserting a rung
+into a key: `docs/stage` records `stage = DevStg-LLReqs`,
+`stage-ord = 4`, `stage-of = 8` and renderers show "stage 4 of 8, …", so a new rung
 self-corrects every ordinal with no citation moved. **Every comparison routes
 through a `STAGE_ORDER` lookup that raises on an unknown label**; ordering
 operators on the raw value are banned, and are now obviously wrong rather than
@@ -584,24 +589,23 @@ accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
 **There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
 lowest runnable bar; say "stage Needs", never "at DevStg-Below".
 
-**The rule is uniform: `stage → bar` is the next bar you must clear** — each bar
-named for the **top rung it certifies**, so the mapping is a partition of the
-ladder rather than arithmetic: Needs/Boundary/Reqs → `DevStg-Reqs` ·
-Arch/LLReqs/Tests → `DevStg-Tests` · Impl/Release → `DevStg-Impl`. That is
-also the strictness the harness holds you to, for a good reason: you are held to
-the bar you are trying to clear. The stage is the axis
-`[attestation] human_ratification_through` is compared against — through a
-**declared lookup**, never `stage < level` arithmetic. Its own levels stay 0–4
-(the four *spine* tiers; implementation is not a ratification tier), and the two
-inserted rungs each ride the rung below them: `DevStg-Boundary` is held whenever
-`DevStg-Needs` is, `DevStg-Arch` whenever `DevStg-Reqs` is — the direction that
-errs toward *more* human involvement.
+**The ratification dial is a rung, on this same ladder.** `[attestation]
+human_ratification_through` takes a `DevStg-*` value (or `DevStg-Below` for
+"nothing is human-held"), and every rung **at or below** it is the human's to
+ratify. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
+until OI-21 shape (ii) landed; a repo still carrying the number is read,
+translated and warned, and `bootstrap.py --migrate-config` rewrites it. The two
+inserted rungs need no special case any more: `DevStg-Boundary` sits immediately
+above `DevStg-Needs` and `DevStg-Arch` immediately above `DevStg-Reqs`, so each
+is held whenever the rung below it is — the direction that errs toward *more*
+human involvement — and now by the ORDER rather than by a hand-written pairing.
 
-**But a bar is not a pure function of stage** — the mapping is a reader's
-reconciliation, not a second source of truth. `DevStg-Reqs`'s bar includes
-non-goals captured and a UX sign-off; `DevStg-Tests`'s includes key runtime flows
-diagrammed. None of that is derivable from which rung is in work, so never derive
-the bar from the stage: that silently drops the human half.
+**What a signature certifies is NOT derivable from the rung.** Leaving
+`DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving
+`DevStg-Tests` requires the key runtime flows diagrammed. No derivation can see
+any of that, which is exactly why ratification is an **event a human records**
+and not a function of the state. A repo that inferred its sign-offs from its
+derived rung would have dropped the whole human half.
 
 **The retired vocabulary** — the tags this ladder replaced survive only as
 read-side aliases, which is `check.py`'s and `check_vocab.py`'s behaviour, not a
@@ -664,10 +668,10 @@ phase 1 before 2/3. Every ratified SR/LLR/TC carries the **`Phase`** it was
 ratified in — a bare integer, digits only (a ratified prefixed/blank cell is a
 schema finding once any row is phased); an SN's phase is
 derived from its SRs. The project's **current phase is derived** = the highest
-ratified phase, mirroring the derived gate (`derive_gate.py --next-phase` prints
+ratified phase, mirroring the derived rung (`derive_stage.py --next-phase` prints
 the next number); a phase increments only when re-opened scope is **confirmed**
 — an adjudication verdict that scope moved, or a ratified draft-SN batch —
-never on the raw derived-gate drop.
+never on the raw derived-stage drop.
 Traceability stays phase-blind while the DevStg-Impl approval criterion and DevStg-Release
 scope by phase (`check.py --gate DevStg-Impl --phase 1`; the foundation phase is always in
 scope), reporting out-of-phase SRs as **phase-deferred**.
@@ -941,19 +945,19 @@ format check · linter (warnings as errors) · unit + integration tests · cover
 coverage + traceability reports as artifacts. The architecture views are
 derived from source + registries, so no map step is owed.
 
-**The derived gate is cached, and CI reads it.** The gate the repo must next
-pass lives on the first non-comment line of `docs/gate` — now **generated** by
-`scripts/derive_gate.py` from the artifact states, not hand-set (§4 "Stages and
+**The derived gate is cached, and CI reads it.** The rung the repo is IN
+lives in `docs/stage` — **generated** by
+`scripts/derive_stage.py` from the artifact states, not hand-set (§4 "Stages and
 gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
-`--gate` to it and the reference CI passes no explicit gate, so **CI enforces the
-bar the project is actually working toward** — a fresh scaffold deriving DevStg-Reqs is
-green, and the bar rises when a batch of artifacts is **ratified in a reviewed
-commit** and `docs/gate` is regenerated. The `derived-gate` step
-(`derive_gate.py --check`) guards the cache against rot on every trunk-lane
+`--stage` to it and runs every step declared at or above it, so **CI enforces the
+bar the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
+green, and more steps select when a batch of artifacts is **ratified in a reviewed
+commit** and `docs/stage` is regenerated. The `derived-stage` step
+(`derive_stage.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag
 runs the full bar regardless.
-Without a derived gate, CI would apply the end-state DevStg-Impl bar from day one and
+Without a derived stage, CI would apply the end-state DevStg-Impl bar from day one and
 stay red for months — training everyone to ignore it.
 
 **Push authority.** Who may *publish* (`git push`) is likewise declared, not
@@ -967,7 +971,7 @@ per-clone). Levels + the iteration-branch sync ritual:
 and naming the split is what keeps the kit portable across stacks:
 
 - **Process checks are kit-owned and stdlib-only** (`requires=()` in `check.py`):
-  traceability (`trace.py`), the derived-gate freshness guard (`derive_gate.py`),
+  traceability (`trace.py`), the derived-stage freshness guard (`derive_stage.py`),
   design-flow validation (`check_flows.py`), doc navigability (`check_docs.py`),
   perf-budget comparison (`check_perf.py`), and generated-artifact freshness
   (`gen_trajectory.py` and its siblings). They are identical in every

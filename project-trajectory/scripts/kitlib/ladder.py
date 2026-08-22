@@ -3,7 +3,7 @@ the only legal way to compare two rungs.
 
 WHY THIS IS A MODULE (WI-498 slice 0, the stage unification program; the shape
 is design-record §3's single-owner verdict and plan §5 item 0). The ladder's
-SEMANTICS were defined in FOUR code homes: `derive_gate` (the intended SSOT),
+SEMANTICS were defined in FOUR code homes: `spine_rules` (the intended SSOT),
 `agent_common.LADDER_RUNGS` (a literal frozenset, restated because the retired
 F5 no-shared-module rule forbade the import and held equal by a test pin),
 `traj_status._STAGE_LABELS` (a byte-identical copy of `STAGE_DESC`, pinned by
@@ -22,8 +22,8 @@ whose deleted equality tests are the precedent this one follows).
 THE LADDER IS ITS OWN THEME, not a corner of a bigger module — the package's
 "themed modules, never one generic `common.py`" constraint. It is the `station`
 shape rather than the `config` shape: the vocabulary was correctly SINGLE and
-wrongly PLACED. Every reader of the rung names had to import `derive_gate` — a
-1,400-line derivation engine that parses registries and writes `docs/gate` — in
+wrongly PLACED. Every reader of the rung names had to import `spine_rules` — a
+1,400-line derivation engine that parsed registries and wrote `docs/gate` — in
 order to read a table of eight strings. `traj_status`, a RENDER leaf, was one of
 those readers, which is why it kept a private copy instead. The vocabulary
 depends on nothing, so it belongs below every one of them.
@@ -45,10 +45,10 @@ index lookup has no reason to reach for anything, and having nothing to reach
 for is what makes it safe for a render leaf and the scaffolder alike.
 
 WHAT IS DELIBERATELY NOT HERE. The BAR axis — `BAR_*` ordinals, `BAR_NAMES`,
-`BAR_ORDER`, `STAGE_BAR` — stays in `derive_gate`/`check` this slice. The ruled
-plan deletes that axis with slice 2; slice 0 only extracts what SURVIVES the
-unification, and hauling a dying vocabulary into the new home would be work
-performed twice.
+`BAR_ORDER`, `STAGE_BAR` — was left in `spine_rules`/`check` at slice 0. The
+ruled plan deleted that axis outright, and slice 0 only extracted what SURVIVED
+the unification: hauling a dying vocabulary into the new home would have been
+work performed twice. The axis is gone repo-wide as of slice 5.
 """
 
 # --- THE LADDER (SN-029 / OI-21, ruled 2026-08-13; moved here WI-498) ----------
@@ -81,7 +81,7 @@ performed twice.
 #   7 DevStg-Release    all complete; release checklist and version tagging
 #
 # (Which of those rung boundaries a HUMAN must certify is the bar axis, and it is
-# `derive_gate`'s until slice 2 retires it. The crossings it names today —
+# `spine_rules`'s until slice 2 retires it. The crossings it names today —
 # DevStg-Reqs, DevStg-Tests, DevStg-Impl — are stated there, once.)
 #
 # THE LABEL IS THE IDENTIFIER; POSITION IS DERIVED. A stage is `DevStg-<Label>`
@@ -130,7 +130,7 @@ STAGE_OF = len(STAGE_ORDER)
 
 # The whole closed vocabulary as a SET, for the "is this a rung I recognize"
 # question. `agent_common` used to restate this as its own `LADDER_RUNGS`
-# frozenset because it could not import `derive_gate`; it now imports this name.
+# frozenset because it could not import `spine_rules`; it now imports this name.
 # The membership question is genuinely different from "is this rung held" and
 # only the first can be answered from the held sets — without it an unrecognized
 # label (`""`, a typo, a rung from a newer kit) falls through the membership test

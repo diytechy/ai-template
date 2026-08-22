@@ -1489,15 +1489,18 @@ def _normalize_bar(value):
 # drafted follow-ups), the three spine registries (the Status flip — the
 # path-level bound is the honest checkable one; the cell-level judgement
 # belongs to the amendment seam and the verdict round), the open-items
-# registry ("surface an open item" is a ruled R3 outcome), the derived gate
+# registry ("surface an open item" is a ruled R3 outcome), the derived stage
 # the flip recovers, and the record surfaces (the log fragment, the review
 # verdicts). The declared [generated] set joins at read time — the trunk step
-# owns those and a lane's refresh regenerates them anyway.
+# owns those and a lane's refresh regenerates them anyway, which is why
+# `docs/stage` needs NO row of its own here: it is declared `[generated]`, so
+# it arrives with that set. (Its predecessor `docs/gate` was listed literally
+# and RETIRED at WI-498 slice 5; a dead pathspec silently NARROWS this
+# allowlist, failing lanes toward the full bar for no reason.)
 _ADJUDICATION_SURFACES = (
     "docs/work/",
     "docs/log.d/",
     "docs/reviews/",
-    "docs/gate",
     # BOTH carrier paths per spine tier: this is a pathspec
     # allowlist matched against `git diff --name-only`, and a repo that has not
     # migrated stages the `.csv` name. Naming one suffix would fail the lane

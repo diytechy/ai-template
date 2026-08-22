@@ -174,9 +174,14 @@ def test_adopter_facing_checks_meet_the_shipped_bar():
 
 def test_the_process_layer_still_covers_the_kit_floor():
     """Guard the derivation itself: if check.py stopped tagging the traceability
-    or derived-gate steps `process`, this bar would silently cover nothing."""
+    or derived-stage steps `process`, this bar would silently cover nothing.
+
+    `spine_rules` was on this list as `derive_gate`, the entry script of the
+    `derived-gate` step. WI-498 slice 5 retired `docs/gate` and that step with
+    it, and the module became a pure library with no CLI — so the successor here
+    is `derive_stage`, which is what the surviving freshness step runs."""
     entries = process_entry_scripts()
-    for expected in ("trace", "derive_gate", "check_docs"):
+    for expected in ("trace", "derive_stage", "check_docs"):
         assert expected in entries, (
             f"{expected}.py is no longer an entry script of any `process`-layer "
             "step — either check.py's layer tags moved or this bar has gone blind"

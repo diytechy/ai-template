@@ -3,7 +3,7 @@
 
 Stack-agnostic kit, **Python reference implementation**. This is the runnable
 version of the "harness contract" in `process.md §7`: format · lint · tests ·
-coverage · derived-gate freshness · traceability · doc-navigability · perf-budgets
+coverage · derived-stage freshness · traceability · doc-navigability · perf-budgets
 · work-item trajectory. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
 the format/lint/test commands + `src`/`tests` paths (the "EDIT FOR YOUR STACK"
 block just under the imports is the identical built-in fallback), and add any
@@ -224,7 +224,6 @@ BUILTIN_STEP_NAMES = frozenset(
         "format",
         "lint",
         "tests+coverage",
-        "derived-gate",
         "derived-stage",
         "registry-integrity",
         "traceability",
@@ -721,29 +720,14 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_NEEDS,
             "process",
         ),
-        # Derived-gate freshness (docs/archive/specs/derived-gate-model.2026-07-20.md §5): docs/gate is
-        # now GENERATED from artifact states by derive_gate.py, not hand-set —
-        # `--check` recomputes and fails if the cache drifted (the arch-map/OKF/
-        # dashboard freshness idiom, applied to the gate marker itself). Runs at
-        # every gate: resolve_gate reads the cached value to pick the plan, so the
-        # cache must be fresh whenever check.py runs, and this catches a stale one
-        # (a legacy hand-set gate with no `# basis:` line is compared value-only,
-        # so a not-yet-migrated repo stays green — the smooth-transition path).
-        (
-            "derived-gate",
-            (),
-            [sys.executable, str(_SCRIPTS / "derive_gate.py"), "--check"],
-            _kitladder.STAGE_NEEDS,
-            "process",
-        ),
-        # The same freshness contract for the STAGE axis's own cache (WI-498
-        # slice 1). Same tags, same layer, same trunk-lane stand-down as its
-        # sibling above, deliberately: the two files are derived from the same
-        # rows by the same predicates, and a repo where one is guarded and the
-        # other is not would be a repo where the two can silently disagree.
-        # `docs/gate` REMAINS and stays authoritative for its readers until
-        # slice 2 cuts them over — the transitional dual state the ruled plan
-        # asks for, held in step by having both gated at every bar.
+        # THE FRESHNESS CONTRACT FOR THE DERIVED STAGE (WI-498 slice 1). Same
+        # tags, same layer and the same trunk-lane stand-down as the registry
+        # step above: `docs/stage` is derived from the registry rows by the
+        # predicates in `spine_rules`, so a repo where the rows are guarded and
+        # the cache is not would be a repo where the two can silently disagree.
+        # It arrived beside a twin step over `docs/gate`, held in step so the
+        # transitional dual state could not diverge; slice 5 deleted that file,
+        # its readers and its `derived-gate` step, leaving this one alone.
         (
             "derived-stage",
             (),
@@ -754,7 +738,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # THE THRESHOLD IS THE Impl RUNG, AND IT IS NOT A CHOICE (WI-498 slice 2).
         # `--strict` fails on ORPHANS, and the two orphan rules — "SR has no LLR"
         # and "SR has no test" — are LITERALLY the predicates that hold a repo at
-        # the LLReqs and Tests rungs (derive_gate.spine_stage). So this step
+        # the LLReqs and Tests rungs (spine_rules.spine_stage). So this step
         # cannot be green below DevStg-Impl by construction: running it lower
         # would demand the output of the very rung the repo is standing on. The
         # retired tag said "from the DevStg-Tests BAR on", which under the bar's
@@ -1060,11 +1044,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # agent reads INDEX.csv to decide whether a skill applies; an operator
         # reads CATALOG.md to join a session log's `# prompt-sha:` back to the
         # template that produced it, i.e. while debugging a session that already
-        # behaved oddly. That is `derived-gate`'s shape (an artifact the
-        # machinery's own honesty rests on), not the dashboards'. Concretely:
-        # this kit's own docs/gate reads DevStg-Reqs while its ratification window is
-        # open, so a {DevStg-Impl} step would not run in the kit's own CI for the whole
-        # duration of that window — the gap, re-created.
+        # behaved oddly. That is `derived-stage`'s shape (an artifact the
+        # machinery's own honesty rests on), not the dashboards'. The concrete
+        # case this was written against — a repo pinned at the lowest reading for
+        # the whole duration of a ratification window, so a `DevStg-Impl` step
+        # never ran in its own CI — is the collapse `docs/stage` removes by
+        # deriving over the SETTLED spine; the ARGUMENT for the tag survives it.
         (
             "skills-index",
             (),
@@ -1232,57 +1217,29 @@ def _warn_retired_flag_spelling(argv=None):
 # freshness step is deliberately stood down (`_TRUNK_FRESHNESS_STEPS`) and a
 # green run over a stale cache used to be reachable.
 #
-# `docs/gate` IS NO LONGER READ BY THIS MODULE AT ALL. Three of its readers
-# retired with this re-key: `resolve_gate` (the plan selector), `window_open`
-# (the advisory tier's trigger) and `product_floor` (the WI-473 ex-draft floor).
-#
-# WHO IS LEFT (updated WI-498 slice 4, which cut the two EVENT detectors over —
-# `check_trajectory`'s phase drop and `intake`'s tier signal now read the stage
-# axis, so neither is a reason to keep this file). FOUR readers remain and they
-# are slice 5's, in two classes: the three DISPLAY readers (`traj_parse`,
-# `traj_panels`, `traj_status`) and — not a display reader, and NOT in slice 2's
-# enumeration — `agent_common.spine_stage_of`, which regex-scrapes `stage=` off
-# the `# basis:` line and feeds `human_holds`, i.e. RATIFICATION AUTHORITY. The
-# `derived-gate` freshness step therefore stays in the plan below: one of the
-# four decides who may ratify, and it must not read a stale value.
+# `docs/gate` IS GONE (WI-498 slice 5). The file, its producer's writer half,
+# its `derived-gate` freshness step and the three-value BAR axis it carried are
+# all deleted, and the count of its readers went 6 -> 4 -> 0 across slices 2, 4
+# and 5. The last four were the three DISPLAY readers (`traj_parse`,
+# `traj_panels`, `traj_status`), which now render the stage vocabulary, and
+# `agent_common.spine_stage_of` — not display at all, but the input to
+# `human_holds`, i.e. RATIFICATION AUTHORITY — which now comes through the common
+# reader above. That one is why the freshness step could not retire earlier: a
+# stale value there decides who may ratify.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
 
 
 def _derive_stage(root):
-    """The deriver `kitlib.stage.read_stage` calls on a fingerprint miss, run as
-    a SUBPROCESS.
+    """The deriver `kitlib.stage.read_stage` calls on a fingerprint miss.
 
-    check.py must stay a wholesale drop-in that never IMPORTS a sibling script
-    (the F5 rule); `kitlib` is the sanctioned shared package, `derive_stage.py`
-    is a sibling. Spawning it is exactly the coupling this module already has
-    with every other kit script it runs, so the rule is kept without duplicating
-    a 600-line derivation — the alternative both slices 0 and 1 rejected as work
-    performed twice. The cost lands only on a MISS: a fresh scaffold whose
-    `docs/stage` is still the placeholder, or a tree edited since the last
-    regeneration. Never on the fast path."""
-    script = _SCRIPTS / "derive_stage.py"
-    if not script.exists():
-        sys.exit(
-            "check: docs/stage needs re-deriving and {} is missing — re-sync the "
-            "kit scripts, or pass --stage explicitly".format(script.name)
-        )
-    proc = subprocess.run(
-        [sys.executable, str(script), "--root", str(root), "--print"],
-        capture_output=True,
-        text=True,
-    )
-    if proc.returncode != 0:
-        sys.exit(
-            "check: could not derive the current stage ({} --print exited {}):\n"
-            "{}".format(script.name, proc.returncode, proc.stderr.strip())
-        )
-    record = _kitstage.parse(proc.stdout)
-    if record is None:
-        sys.exit(
-            "check: {} --print emitted no stage field — the derivation and this "
-            "reader disagree about the record format".format(script.name)
-        )
-    return record
+    The mechanism moved to `kitlib.stage.derive_via_subprocess` at slice 5, when
+    `agent_common.spine_stage_of` became its second caller; what stays here is
+    this module's FAILURE POLICY, which is the half that differs. A CLI that
+    cannot establish the stage exits rather than selecting a guessed plan."""
+    try:
+        return _kitstage.derive_via_subprocess(_SCRIPTS, root)
+    except _kitstage.DerivationError as exc:
+        sys.exit("check: {} — or pass --stage explicitly".format(exc))
 
 
 def resolve_stage(explicit, root="."):
@@ -1402,8 +1359,7 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-gate derived-stage trajectory-map status-map open-items okf "
-    "ratify-fresh".split()
+    "derived-stage trajectory-map status-map open-items okf ratify-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1944,8 +1900,8 @@ def main():
     #   `--gate` — SILENT, unchanged. It is the flag name an adopter's hooks, CI
     # and launchers pass literally (and, measured this slice, the only spelling
     # anything in this repo actually passes); the word "gate" was never retired
-    # where it means a check that can fail; `docs/gate` and `derive_gate.py` keep
-    # their names by the same ruling.
+    # where it means a check that can fail; `spine_rules.py` keeps its name by
+    # that same ruling (`docs/gate` did too, until slice 5 deleted the file).
     #   `--stage-cleared` — WARNS. Unlike `--gate` it makes a CLAIM about the
     # axis, and the claim is now the wrong one: it says the value is a bar being
     # cleared. That is the exact vocabulary trap OI-51 retires (it survived
@@ -2048,17 +2004,17 @@ def main():
     args = ap.parse_args()
     global _FORCE_TRUNK_LANE
     _FORCE_TRUNK_LANE = args.trunk_lane
-    # check.py resolves docs/gate and docs/stack.ini
-    # relative to the CWD (unlike the sibling scripts, which take --root). Run it
-    # anywhere but the repo root and it would silently see no profile and no gate
-    # — falling back to the built-in commands and gate `all`, i.e. a different,
+    # check.py resolves docs/stage and docs/stack.ini relative to the CWD
+    # (unlike the sibling scripts, which take --root). Run it anywhere but the
+    # repo root and it would silently see no profile and no stage — falling back
+    # to the built-in commands and stage `all`, i.e. a different,
     # stricter-or-weaker plan rather than an error. Anchor that invariant loudly:
     # the whole plan assumes a docs/ tree at CWD, so refuse to run without one
     # instead of diverging quietly (deep-review-2026-07-12b M2 / WI-100).
     if not Path("docs").is_dir():
         sys.exit(
             "check: must run at the repo root — no docs/ directory in {} "
-            "(the gate and stack-profile reads are CWD-relative)".format(Path.cwd())
+            "(the stage and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     _divergence_mode(args)  # exits when --staged-divergence selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow

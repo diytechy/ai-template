@@ -7,8 +7,13 @@ mechanical), each slice ending green at the commit bar. Spec-of-record:
 (v1 FINAL); the OI-51 ruling is its authority. One section per slice as it
 lands; adjacent findings accumulate at the bottom.
 
-Deferred open items: none yet — declarations accumulate per section; this
-top-matter line is re-derived at each close.
+Deferred open items: none — re-derived at the slice-5 close over all six
+sections, and every one of them declares none. What the PROGRAM still owes the
+owner is not a deferred decision but an itemized close list, carried in the lane
+spec and pointed at from the slice-5 section: WI-473's disposition, the Approved
+spine cells whose design prose describes deleted machinery (OI-53 already holds
+the `CodeSymbol` half), the `DECLARED_INPUTS` cost-model question the recovery
+measured, and PB-002's re-measurement. The smoke wall clock remains OI-52's.
 
 ### Slice 0 — one enum home (opus worker) — LANDED
 
@@ -948,6 +953,446 @@ consequence of the frame being in work, not a decision owed; the `check_trajecto
 module-size question is recorded at its ratchet entry; and the smoke wall clock is
 already OI-52's.
 
+### Slice 5 — one vocabulary; docs/gate retires; the program closes (opus worker) — LANDED
+
+`docs/gate` is deleted, the bar axis is gone from the kit, and the ratification
+dial speaks the ladder. **WI-493 folded and closed** — its spec is in
+`docs/work/complete/` with the Deliverable filled and its SpecRef cleared (R-F).
+**This slice closes the program**; the close account is at the end of the section.
+
+**RECONCILIATION OF AN INTERRUPTED SESSION — THIS SLICE RAN IN THREE SITTINGS,
+and the third is a recovery. The record must say so, and the honest headline is
+that the residue's BUILD was sound and its CLAIMS were not.** Sittings one and
+two were each interrupted before committing, leaving ~121 modified/renamed
+files in the working tree and a slice-5 section here already claiming LANDED —
+with **no gates block and no close account**, which is exactly the tell this
+section itself named: every other section carries one. Sitting three reconciled
+the residue against the ruled plan §5 before any new work (session-protocol §1).
+The rule applied throughout: **the residue is a claim, and a claim is checked by
+running something.** Nine defects were found that way, and every one of them was
+invisible to reading.
+
+- **KEPT, verified piece by piece** — the whole build, and it is genuinely
+  coherent. `docs/gate` and `gate.template` absent, `derive_gate.py` →
+  `spine_rules.py` (807 lines, measured), the dial at `"DevStg-Release"`, all
+  four readers cut over in their two classes, all three materialized copies of
+  each swept skill byte-identical by digest (a half-applied sweep being the
+  failure `test_dogfood_sync` exists for). Every byte figure the residue
+  recorded re-measured **exactly right**, on a tree whose line endings match the
+  index (`git ls-files --eol` clean — the CRLF trap this slice banked did not
+  bite the recovery either).
+- **REVERTED as out of scope — three, and two are the same defect: a mechanical
+  rename applied to a record of the past, which converts an accurate history
+  into a false present.**
+  1. `open-items.toml` OI-51's `recommendation` — a RULED OWNER RECORD — had
+     been swept from "derive_stage replaces derive_gate" to "…replaces
+     spine_rules". `spine_rules` IS the renamed `derive_gate`, so the amended
+     sentence asserts a module replaces itself, and it corrupts the ruling the
+     whole program cites as its authority. Restored.
+  2. `performance-budgets.csv` PB-002 — the row's `fig:` marker pins a measured
+     figure to `rev=94489f7a`. The sweep rewrote the *command* while leaving the
+     revision, so the provenance claimed a command that did not exist at the
+     revision it names — and named `spine_rules.py --check`, which cannot run at
+     ALL now (no CLI). Whole hunk reverted; re-measuring PB-002 against
+     `derive_stage.py --check` is its own row, banked below.
+  3. `docs/work/queued/WI-473` — a QUEUED spec recording a mechanism slice 2
+     SUPERSEDED. The sweep rewrote its internals to `spine_rules.sr_bar` (a
+     deleted symbol on a live module) and to a deleted test "driven through the
+     real `spine_rules`". Reverted whole; its disposition is the program
+     close's, not a sweep's.
+- **FINISHED, because neither earlier sitting did it** — the gates (below, real
+  output), the scaffold verification driven end to end, the dial equivalence and
+  the migration recipe re-driven rather than carried forward, the program close,
+  and this record.
+- **CORRECTED — six defects the checks found and reading did not.** They are
+  written up at their mechanisms below, because each is a lesson rather than a
+  typo: the `check_vocab` **crash**, the two **dead-CLI instructions**, the
+  **dead pathspec**, the **untested re-key**, the **undriven test claim**, and
+  the migration recipe's **wrong location** (its ORDER had been fixed by sitting
+  two; its LOCATION was still wrong and no one had run it).
+
+**THE FOUR READERS, CUT IN TWO CLASSES, AND THE SPLIT IS THE SLICE'S FIRST
+DECISION.** Slice 4 handed over three DISPLAY readers plus
+`agent_common.spine_stage_of` (ratification authority). They did NOT get the same
+treatment, deliberately:
+
+| reader | now reads | why this and not the other |
+|---|---|---|
+| `agent_common.spine_stage_of` | the SELF-HEALING reader (`kitlib.stage.read_stage`) | it decides WHO MAY RATIFY. Its docstring justified itself by saying `docs/gate` was freshness-gated "so the cached value is either current or the step is already red" — **untrue in the two places the schedule map measured**: the step stands down on a claimed branch, and `agent_loop`/`dispatch` hoist the value once per run. Both windows close BY CONSTRUCTION now; the written trust invariant became true instead of re-documented |
+| `traj_parse._stage_value`, `traj_panels`, `traj_status._stage_facts` | the RECORDED file, through `kitlib.stage.parse` | a dashboard is itself a generated artifact, regenerated at the same points and byte-compared by its own freshness step. Rendering the COMMITTED record keeps the page and the file it cites describing ONE commit; a render leaf that derived fresh would print a value the file beside it does not carry, and would spawn a derivation to draw a page |
+
+The duplicated "first non-comment line" parse died with the positional file:
+every display site now addresses a field BY NAME, so a reordered record cannot
+hand a display the wrong value.
+
+**A SECOND CONSUMER TURNED A COPY INTO A SEAM.** `spine_stage_of` needed the
+subprocess deriver `check.py` wrote at slice 2. Copying it would have minted
+exactly the F5 duplicate `kitlib` exists to retire — with the sharper edge that
+the copies would be *a plan selector and a ratification authority* drifting apart
+in silence. It moved to `kitlib.stage.derive_via_subprocess`, raising
+`DerivationError`, because the two callers want OPPOSITE failure policies and
+both are right: a CLI that cannot establish the stage exits; a coordinator that
+cannot answers None, which `human_holds` reads as HUMAN-HELD. One mechanism, one
+home, policy at the call site.
+
+**THE CONSOLIDATION DECISION: `derive_gate.py` → `spine_rules.py`, 1,523 lines →
+807** (the first sitting recorded 800; `wc -l` says 807, and the corrected number
+is the one that stands). Deleted with the axis: `BAR_*`, `BAR_NAMES`/`BAR_ORDER`,
+`RETIRED_BAR_ALIASES`, `bar_ord`/`resolve_bar`, `bar_label` and the ceiling pair,
+`sr_bar`/`maturity_bar`/`sn_bar`, `_raw_level`, `compute`, the per-phase bar fold,
+`basis_line`, `HEADER`, `render_cache`/`parse_cache`, `GATE_FILE`, `_git`,
+`_utf8_console` and `main()`. What survives is the row predicates, the maturity
+tables and `spine_stage` — **the engine `derive_stage` already called**.
+
+The rename was NOT cosmetic and the old docstring is why: it defended the name
+itself — *"the FILE keeps its name; `docs/gate` and `derive_gate.py` are paths
+adopters invoke literally"* — and that argument expired with the file. A module
+named for a value it no longer derives, shipped beside a path that no longer
+exists, is the accreted dishonesty this program exists to remove; it would have
+been the loudest surviving instance of the retired vocabulary in the kit.
+`spine_rules` pairs with `spine_carrier`: **the carrier LOADS rows, the rules
+JUDGE them.** Absorbing it into `derive_stage` was the alternative and was
+declined — that module is a CLI with the phase rule, and merging would rebuild
+the 1,200-line two-job module whose oscillation the ratchet has been reporting for
+three slices. The cost was small where it counts: only TWO modules import it
+(`derive_stage`, `baseline_snapshot`); the other 375 citations were prose.
+
+**A REGRESSION CAUGHT BY READING THE DOCS, NOT THE TESTS.** Deleting `main()`
+deleted `--next-phase`, which `PROCESS.md`, `PROCESS_OPTIONS.md` and
+`RESYNC_PACK.md` all teach as "the one call" for the next phase number, and which
+no test covered as a CLI contract. It is REHOMED onto `derive_stage.py`, which
+already derives `phase` from the same rows by the same rule — so the printed
+number and the recorded `phase =` field cannot come to mean different things,
+which is why the original reused the basis line instead of parsing again.
+
+**WI-493's FOLD, and the finding its own spec did not anticipate.** The spec said
+"`DIAL_HOLDS` (retired or re-keyed) — the session decides". It **RETIRED**. That
+table bridged TWO vocabularies: an ordinal counting ratifiable TIERS and a ladder
+of labelled RUNGS. Shape (i)'s own argument against the retired `stage < level`
+arithmetic was that it compared two ladders that happened to line up — and under
+one vocabulary there is only one ladder, so the comparison stops being a
+coincidence and becomes the definition: `stage_ord(stage) <= stage_ord(dial)`,
+the exact mirror of the at-or-above rule slice 2 gave selection. **Equivalence
+driven BEFORE the deletion, not asserted after:** all five former levels hold
+precisely the same rung sets (0 → 0 rungs, 1 → 2, 2 → 4, 3 → 5, 4 → 8). The old
+table's most hand-reasoned property — Boundary rides Needs, Arch rides Reqs,
+chosen because it errs toward MORE human involvement — **falls out of the ladder
+ORDER for free**, because each inserted rung sits immediately above the one it was
+made to ride. A hand-reasoned property became a structural one. The re-key also
+makes four settings reachable the five-notch ordinal could not spell.
+
+**THE MIGRATION WINDOW COST A DEFECT TO GET RIGHT, TWICE, AND BOTH ARE WORTH THE
+LINES.** First shape: "the previous TYPE is still accepted". Wrong — it accepted
+every int, so `human_ratification_through = -1`, the single input the retired
+`(0, 4)` range row existed to refuse *because it reads as LESS human involvement
+than the owner asked for*, stopped being refused at all. Narrowed to the exact SET
+of translated values, filled from the translation table so the two cannot
+disagree. Second shape, found by the test re-key: `value in legacy_values` is
+wrong three ways in Python's numeric tower — `True == 1` and `2.0 == 2` both slip
+into a window they were never in, and an **unhashable** value RAISES out of
+`config_conflicts`, whose docstring promises three callers (dispatch, intake,
+integrate) that it "never raises" because they call it inside an exit-code
+contract. `type(value) is int` refuses all three at once. Driven as themselves by
+hand-written TOML — `_docs` renders non-scalars QUOTED, so a loop through it
+proved nothing, and this test *was* briefly vacuous in exactly that way.
+
+**THE SWEEP, MEASURED.** Live-surface occurrences of
+`docs/gate` / `derive_gate` / `derived-gate` / `gate.template`:
+**728 → 276 (−452, −62%)**.
+
+<!-- fig: cmd="grep -rEnI 'docs/gate|derive_gate|derived-gate|gate[.]template' project-trajectory tests docs/requirements docs/work/active docs/work/queued docs/work/deferred .github README.md CLAUDE.md docs/status.md docs/stack.ini docs/registry-machinery-reference.md docs/enforcement-audit.md docs/runtime-flows.md docs/repo-lock.md docs/concurrency-v2.md docs/concurrency-restructure.md docs/spine-restructure-2026-08-08.md docs/test/test-cases.toml docs/test/report.md | grep -v docs/gate-policy | grep -vc __pycache__" rev=2a0a85a4 -->
+
+(The BEFORE number is the same command run against a clean checkout of
+`2a0a85a4`.) The 276 survivors are deliberate and were read, not left: `RESYNC_PACK.md` (52 —
+a migration pack must name what it migrates), `open-items.toml` (20 — ruling
+records), the archived spec FILENAME `derived-gate-model.2026-07-20.md` cited
+across `trace.py` and others, `docs/spine-restructure-2026-08-08.md` (12 — a plan
+whose header pins it to a measured revision), and tombstones that exist to say
+what retired. All 15 remaining `derive_gate` mentions are rename records.
+
+**HISTORY IS NOT SWEPT, and the boundary is now declared in the enforcer rather
+than in a worker's head:** `docs/log.md`, `docs/log.d/`, `docs/archive/`,
+`docs/plans/`, `docs/reviews/`, `docs/ratify/`, `docs/handbacks/`,
+`docs/work/{complete,cancelled,partial}/` and `docs/rubrics/` (citations of the
+anchor a rubric was AUTHORED at). `check_vocab`'s `EXEMPT_GLOBS` gained
+`docs/log.d/*`, `docs/work/partial/*` and `docs/rubrics/*` — and the first of
+those was found the moment the anchor grammar joined the refused set, when three
+of this program's own slice records tripped it, correctly, for quoting what they
+translated.
+
+**`check_vocab` GAINED THE ANCHOR ALIASES — reviewed, and asymmetric on
+purpose.** `[g1]`/`[g2]` are refused BARE; `[reqs]`/`[tests]` only in the ANCHOR
+POSITION (`]-[reqs]`), because those two spellings are ordinary English in square
+brackets and a bare match reds every markdown link whose text happens to be
+"tests" — a checker that cries wolf is one people learn to scroll past, which is
+this file's own stated failure mode. The SUGGEST entries carry slice 4's
+translation BY MEANING (`[g1]` → `DevStg-LLReqs`, `[g2]` → `DevStg-Impl` — two
+rungs above the word they share), which is why they are spelled out one by one
+rather than generated. **No VALUE alias generation was owed** and none was made:
+slice 2 established that the three bar spellings are all ladder rungs, so an
+adopter's value stays legal — what changed is the READING, and a reading migrates
+by a RESYNC note. Scope correction found by the census: `docs/gate` was in
+`EXEMPT_GLOBS` but NOT in `TEXT_NAMES`, so that exemption never actually fired;
+`docs/stage` is now named in both, so the skip says WHY.
+
+**Byte deltas (measured on an LF tree — see the line-endings finding below):**
+`PROCESS.md` 84,524 → 84,803 (**+279**, FLAGGED, watched); `PROCESS_OPTIONS.md`
+176,425 → 177,301 (**+876**, FLAGGED, watched — the phase-anchor grammar that
+`PROCESS.md` §4 no longer has room to teach lands here, which is the budget
+discipline working); `AGENTS.template.md` 9,948 → **9,941 (−7)**, cap 10,000;
+`CLAUDE.md` 7,147 → **7,148 (+1)**, cap 8,500. No capped file grew meaningfully
+and neither is near its cap.
+
+**Scaffold-verified end-to-end, per the standing lesson.** A real
+`bootstrap.py --dest` run: no `docs/gate` and no `derive_gate.py` anywhere (the
+only surviving `*gate*` file is the unrelated `subagent_gate.py`); `docs/stage`,
+`spine_rules.py` and `derive_stage.py` all arrive; the dial scaffolds as
+`"DevStg-Release"`, reads back as itself with zero conflicts and holds
+`DevStg-Impl`; `derive_stage` writes and `--check` passes; `--next-phase` prints
+`2`; `check_vocab --strict` and `trace --strict-integrity` are clean; and
+`check.py --tier smoke --lenient` is **RESULT: PASS** — `ci/check.yml`'s
+fresh-scaffold promise holds. Then the legacy dial was planted and
+`--migrate-config` rewrote it loudly (`2 -> DevStg-Arch`), leaving an
+out-of-range `9` alone with a note. **Every one of those claims was re-driven in
+the second sitting rather than carried forward, and all of them held.**
+
+**THE DEFECT THAT ONLY RUNNING THE RECIPE CAUGHT, and it was adopter-facing.**
+The migration entry's ordered do-this list read *regenerate `docs/stage`* (step
+3) then *re-key the dial* (step 4). Driving it in that order on a real scaffold
+produced **`FAIL derived-stage exit 1`** at the entry's own step 6. The cause is
+this program's own design working correctly: `docs/process` is a DECLARED
+derivation input (`kitlib/stage.py DECLARED_INPUTS`, listed deliberately
+over-inclusively because an over-inclusive fingerprint costs a spurious
+re-derivation while an under-inclusive one costs a stale read), so rewriting the
+dial CHANGES THE FINGERPRINT and re-stales the file the adopter just committed.
+Every adopter following the list literally would have hit a red commit bar on a
+correct complaint. The steps are now swapped, with the reason and the one-line
+recovery stated at the step so the order cannot be "tidied" back. Re-driven end
+to end in the corrected order on a clean scaffold: dial `2 -> DevStg-Arch`,
+regenerate, then `check.py --tier smoke --lenient` → **RESULT: PASS** and
+`check_vocab --strict` clean. **This is the argument for the standing lesson in
+its strongest form: the claim "the fresh-scaffold promise holds" was TRUE, and
+the recipe beside it was still broken — verifying the artifact is not the same
+act as verifying the instructions for it.**
+
+**THE DIAL EQUIVALENCE, RE-DRIVEN INDEPENDENTLY rather than carried forward**
+(the brief's check on `spine_stage_of`'s cut-over). `DIAL_HOLDS` is absent from
+`agent_common`; `human_holds` was then run over all eight rungs at each of the
+five legacy dial values, with the expected rung COUNTS transcribed from the
+retired table rather than read from the new code, so the two sides are
+independent: `0 → 0`, `1 → 2`, `2 → 4`, `3 → 5`, `4 → 8` — **all five match**.
+Both fail-safe directions re-confirmed at the same time: an unestablished stage
+(`None`) and an unrecognized rung label are each HELD. So the re-key is
+behaviourally inert, and `spine_stage_of`'s rewritten trust docstring is true by
+construction: it reads through `kitlib.stage.read_stage`, re-fingerprints the
+declared inputs per call, never writes, and swallows `DerivationError` into
+`None`, which `human_holds` reads as human-held — every failure direction ends
+in MORE human involvement.
+
+Adopter-facing: **one migration entry set** an adopter can execute the whole
+program from — the ordered do-this list (delete `docs/gate`, delete
+`gate.template`, regenerate, migrate the dial, sweep, verify), both renames, the
+selection and flag changes, the `from-stage` key, the dial table with its
+five-row equivalence, the anchor grammar with its two traps, and the
+`check_vocab` scope correction. **`ADOPTING.md`'s re-sync class rule INVERTED**:
+`docs/gate` was *preserve always* and is now *delete*.
+
+Ratchets re-stamped deliberately: `agent_common.py`, `check.py`, `bootstrap.py`,
+`check_vocab.py`, `traj_status.py`, `traj_panels.py`, `traj_parse.py`,
+`kitlib/stage.py`; `spine_rules.py`'s module-size entry **deleted** (807 lines,
+far under threshold) — the third enter/delete cycle resolves by the DELETION
+slices 1-3 predicted rather than by a bump.
+
+Spine: **IF-130 retired** (`status = "Drafted"`, never ratified) with the seam it
+declared — `traj_status` called `bar_label`, and both are gone; `traj_status` now
+imports no derivation engine at all, which completes the WI-483 render-leaf
+direction. Five other Drafted IF rows were re-keyed off `docs/gate`.
+**LLR-148's carrier was re-pointed to `derive_stage.py`** because `--next-phase`
+moved there — a carrier must point at the carrier.
+
+**THE SIX CORRECTIONS THE RECOVERY MADE, each found by RUNNING something.**
+They share one shape, and it is worth naming because it is the shape of every
+large sweep: **a mechanical rename is a text operation, and the things it edits
+are not all text.** Some are executable data, some are instructions, some are
+provenance.
+
+1. **`check_vocab` CRASHED on an input it was built to catch.** The alias regex
+   shipped `\[g[123]\]` against a `SUGGEST` table holding only `[g1]`/`[g2]`,
+   and `findings_for` indexes that table by the matched token — so any line
+   naming `[g3]` raised `KeyError: '[g3]'`. The enforcer of the whole sweep
+   would have died rather than reported, on exactly the class of line it exists
+   to find. There was never a `g3` anchor (`check_trajectory.PHASE_ANCHOR_RE`
+   accepts `g[12]`, and `[g3]` appears nowhere in this repo), so the fix
+   NARROWS the regex to the real vocabulary rather than inventing a translation
+   for a token that never existed. Pinned structurally by
+   `test_every_token_the_regex_MATCHES_has_a_translation_to_offer`, because the
+   next author to widen the alternation has no other way to learn the table must
+   widen with it.
+2. **Two live docs instructed the reader to run a CLI that no longer exists.**
+   `registry-machinery-reference.md` carried a copy-paste block of three
+   `spine_rules.py --print/--check/--next-phase` commands, and `RESYNC_PACK`
+   told adopters `spine_rules.py --next-phase`. The rename was applied; the fact
+   that the SAME slice deleted that module's `main()` was not. All four now name
+   `derive_stage.py`, which really does carry those three flags. This is the
+   sharpest form of the general shape: the sweep's own headline act (the rename)
+   is what made these sentences wrong.
+3. **A DEAD PATHSPEC in live executable data.** `integrate._ADJUDICATION_SURFACES`
+   — an allowlist matched against `git diff --name-only` — still carried the
+   literal `"docs/gate"`. It is silent in the dangerous direction: it cannot
+   match, so it quietly NARROWS the no-bar path and fails adjudication lanes
+   toward the full ~11-minute bar with nothing to see. The row is deleted and
+   **no successor replaces it**: `docs/stage` is declared `[generated]`, and that
+   set already joins this tuple at read time — so the comment now says so, since
+   the obvious next move is to re-add the successor by hand and duplicate the
+   join.
+4. **WI-493's re-key was UNTESTED at three call sites.** `test_agent_loop_critique`
+   and `test_dual_plan_round` (×2) still wrote the retired 0-4 ordinal into
+   `docs/process.toml`. They passed — through the legacy migration window — which
+   is precisely the problem: the fixtures exercised the SHIM and never the
+   re-key, while their comments taught the retired form as current. Converted to
+   `"DevStg-Below"` / `"DevStg-Release"`, the values the driven equivalence table
+   says those ordinals mean.
+5. **A test claim that measurement refuted.**
+   `test_run_steps_gate_promotes_the_warn_first_floor` had been re-keyed to
+   assert the scaffold's `docs/stage` reads `DevStg-Tests`. It reads
+   `DevStg-Reqs`, floored — and the test's own comment says what it needs ("the
+   declared rung is ABOVE the warn-first floor"), so the assertion as written
+   made the test VACUOUS: nothing would be above the floor, and a defaulted
+   `--gate` that resolved through the derived state would be indistinguishable
+   from one that did not. The cause is slices 2 and 3's own banked finding,
+   arriving unrecognized: `boundary_incomplete` applies whenever `external.toml`
+   EXISTS, and the scaffold ships one with no ratified crossing. The fixture now
+   declares no frame (a legal adopter shape, and what the at-or-above fixtures
+   use for the same reason), reaches `DevStg-Impl`, and the test means something
+   again. **Driven, not assumed:** frame present → `DevStg-Boundary` floored to
+   `DevStg-Reqs`; frame removed → `DevStg-Impl`.
+6. **THE MIGRATION RECIPE WAS STILL WRONG, IN A SECOND WAY, AND THIS IS THE
+   SLICE'S BEST ARGUMENT FOR ITS OWN STANDING LESSON.** Sitting two found and
+   fixed the recipe's ORDER (regenerate before re-keying the dial re-stales the
+   file) and wrote that up as "the defect that only running the recipe caught".
+   Its step 3 was still `python scripts/bootstrap.py --migrate-config --dest .`
+   — and `bootstrap.py` is **kit-side and never scaffolded into an adopting
+   repo**, unlike every other `scripts/…` command in that list. An adopter
+   following it literally gets `can't open file … scripts/bootstrap.py`. So the
+   step was corrected TWICE, by two different sittings, each of which had run
+   *part* of it: order once, location once. The entry now names the kit checkout
+   explicitly and quotes the real success line. Re-driven end to end on a clean
+   scaffold in the corrected form: dial `2 -> DevStg-Arch`, regenerate, then
+   `check.py --tier smoke --lenient` → **RESULT: PASS** and `check_vocab
+   --strict` clean.
+
+**THE THREE PRE-COMMIT-HOOK FAILURES, and why the smoke tier could not have
+caught them.** The full suite reported three failures in
+`tests/test_pre_commit_hook.py` — a `conftest.SLOW_MODULES` member, so **the
+commit bar never runs it**. Two were correction 4's sibling: `docs/process.toml`
+is a DECLARED derivation input, so writing ANY policy dial changes the stage
+fingerprint and the floor's `derived-stage` step correctly reports the committed
+record stale — the hook then died two steps before the privacy guard the tests
+were actually about, with `stderr` empty and no `FAIL` line visible in the
+truncated capture. The fixtures now write the dial and regenerate, which is the
+pair a real repo performs (`set_dial`, whose docstring records why). The third
+was correction 5. **The lesson is about tiering, not about these tests:** a slice
+that changes what a commit costs must run the tier that carries the commit hook,
+and two sittings ended without running it.
+
+**A DESIGN QUESTION THIS SURFACED, banked rather than decided.** `kitlib/stage.py`
+`DECLARED_INPUTS` includes `docs/process` with the comment "Today's derivation
+does not read `process.toml`; it is declared an input anyway because the ruled
+plan names it and because the error direction is safe in exactly one direction —
+an over-inclusive fingerprint costs a spurious re-derivation (milliseconds,
+correct answer)". **That cost accounting holds for the READER and not for the
+GATE.** `read_stage` does re-derive in memory for milliseconds and return the
+right answer; `--check` HARD-FAILS, so the real price of over-inclusion is a RED
+COMMIT BAR after any policy-dial edit, on a file the derivation does not read.
+Not changed here: ruled plan §2 names `docs/process.toml` in the input set, so
+narrowing it is a spec deviation and the owner's call, not a recovery worker's.
+Recorded for the close with the measurement attached.
+
+**Ratchets re-stamped in the recovery, deliberately, each with its reason on the
+entry.** `integrate.py` **2566 → 2569** (comment only; the executable change was
+the dead-pathspec DELETION). `trace.py` **5365 → 5369** (docstring only: two
+sites where the rename had been applied to sentences naming `sr_bar` and
+`maturity_gate`, symbols the same slice deleted — a citation that cannot be
+resolved is worse than the stale name it replaced). `bootstrap.py` **3024 →
+3023**, re-stamped DOWN: its module docstring's "What it creates" manifest still
+listed `docs/gate <- gate.template` one line above the `docs/stage` row that
+replaced it — a promise the MAPPING had correctly stopped keeping.
+
+Gates, real output on this box (the recovery sitting, on the landed tree):
+
+- `python -m pytest -q -n auto` (full, unfiltered) → **2830 passed, 14 skipped in
+  486.84 s**. The run BEFORE it is recorded rather than overwritten, because it
+  is the whole reason this sitting exists: **3 failed, 2827 passed, 14 skipped in
+  604.32 s** — all three in `tests/test_pre_commit_hook.py`, a `SLOW_MODULES`
+  member the commit bar never runs, which is how two sittings ended claiming
+  LANDED over them. Same 2,830 collected both times; the three are now green
+  rather than gone. (Measured on the pre-commit tree; the doc edits that followed
+  it are the banked SR-148 finding and two prose corrections, no code — a
+  committed-tree reading is pasted in the follow-up commit, as slices 2 and 4
+  each did.)
+- `python -m pytest -q -n auto -m smoke` → **1365 passed, 5 skipped**; two
+  readings on the final tree, **74.98 / 60.28 s**, and the SPREAD is the honest
+  figure rather than the better of them.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` → **OK —
+  978 doc(s), 1340 intra-repo link(s), 0 broken (1 orphan warning)**.
+- `python project-trajectory/scripts/check_trajectory.py --root . --strict` →
+  **clean (495 work item(s), 463 done (94%), 21 cancelled, graph acyclic)** — the
+  done count moved 462 → 463 with WI-493's close.
+- `python project-trajectory/scripts/trace.py --root . --strict-integrity` →
+  **SN=27 SR=73 LLR=168 TC=164 orphans=15 integrity=0 components=4
+  component-findings=0 interfaces=129 interface-findings=0**. Interfaces 130 →
+  129 with IF-130's retirement, and interface-findings is back to 0: re-pointing
+  IF-050's `this_project` at `scripts/derive_stage` (its own contract says
+  `derive_stage` writes the record) made it DISAGREE with owner LLR-050's module,
+  so the OWNER moved to **LLR-186**, the row that actually implements the
+  endpoint. A carrier must point at the carrier, and so must an owner.
+- `python project-trajectory/scripts/check_vocab.py --root . --strict` →
+  **clean (421 live authored file(s); no retired gate tags)**. The count falls
+  from slice 4's 461 because `docs/log.d/*`, `docs/work/partial/*` and
+  `docs/rubrics/*` joined `EXEMPT_GLOBS` as declared history.
+- `python project-trajectory/scripts/check.py --jobs 0` → **RESULT: PASS**, 10
+  steps. Two freshness steps were red first and both were regenerated, not
+  sanctioned: `derived-stage` (registry + `process.toml` edits moved the
+  fingerprint) and `ratify-fresh` (`docs/ratify/2026-08-13-wi444.md` had gone
+  stale against the changed registries — regenerated with the exact command the
+  failure names, which is the machinery working: an owner blessing a stale brief
+  blesses rows they were never shown).
+- A real `bootstrap.py --dest` scaffold: **no `docs/gate`, no `derive_gate.py`,
+  no `gate.template`** (the only surviving `*gate*` file is the unrelated
+  `subagent_gate.py`); `docs/stage`, `spine_rules.py` and `derive_stage.py` all
+  arrive; the dial scaffolds as `"DevStg-Release"`; `derive_stage` writes,
+  `--check` passes, `--print` reads `DevStg-Reqs`, `--next-phase` prints `2`;
+  `check_vocab --strict` and `trace --strict-integrity` clean; `check.py --list`
+  shows `derived-stage` and no `derived-gate`; and `check.py --tier smoke
+  --lenient` is **RESULT: PASS** — `ci/check.yml`'s fresh-scaffold promise holds.
+
+**Smoke wall-clock, reported not absorbed:** 74.98 / 60.28 s against the declared
+60 s — one reading well past the ceiling and one a whisker over it. Across this
+program the tier has read 72.8 s (slice 0), 51.3 / 62.9 / 55.0 (slice 1),
+68.6 / 80.6 (slice 2), 67.8 (slice 3), 146.3 / 73.3 (slice 4) and 75.0 / 60.3
+here, against CLAUDE.md's 54.9 / 64.0 / 55.7 on this box on 2026-08-20. **The
+SECONDS budget was NOT moved** at any slice, including this one; one box is one
+data point and the decision remains OI-52's execution row. The membership ratchet
+moved with the tier and was re-stamped at the slices that grew it.
+
+**Byte deltas, measured on an LF tree** (`git ls-files --eol` shows only the
+`.cmd`/`.ps1` files, so the CRLF trap this slice banked did not bite):
+`project-trajectory/AGENTS.template.md` **9,941** (cap 10,000, 59 free, unchanged
+by the recovery); `CLAUDE.md` **7,148** (cap 8,500, unchanged);
+`project-trajectory/skills/byte-budget-guard/SKILL.md` **4,902** (cap 5,000,
+unchanged, and all three materialized copies byte-identical);
+`project-trajectory/PROCESS.md` **84,803** (unchanged); `PROCESS_OPTIONS.md`
+**177,301 → 177,292 (−9)** as the recovery's vocabulary corrections landed there,
+and the watched row was **re-stamped in all three skill copies** — a watched
+baseline is pinned by nothing, which this slice already banked as a finding.
+No capped file changed and none is near its cap.
+
+Deferred open items: none — the `DECLARED_INPUTS` question above is a
+measurement handed to the owner inside the ruled plan's own §2 wording, not a
+new decision a session is owed; the WI-473 disposition and the Approved spine
+cells are the program close's and are itemized in the lane spec; and the smoke
+wall clock remains OI-52's.
+
 ### Adjacent findings accumulating for the program close
 
 _(per-slice sections are inserted ABOVE this section, in land order;
@@ -1154,3 +1599,114 @@ banked findings accumulate below as list items)_
   "at the phase `[g2]` close". That is slice 5's vocabulary sweep by the program's
   own division of labour — noted here so the sweep has the new canonical spelling
   and the translation table to work from rather than re-deriving them.
+
+- **A SEVENTH APPROVED ROW joins the list, found by the recovery's census, and
+  it is the one that states RETIRED CONFIG VALUES as an ACCEPTANCE CRITERION**
+  (slice 5 recovery): **SR-148**'s `acceptance_criteria` reads "at
+  `human_ratification_through = 0` no spine tier produces a human hold, levels 1
+  through 4 hold exactly their documented cumulative tiers". WI-493 retired that
+  0-4 ordinal, so an Approved row now grades the system against values the config
+  no longer accepts. It is worse than the six below in kind — those describe
+  deleted machinery, this one is a TEST the row could not pass as written — and
+  it is left for the same reason: re-authoring an Approved cell is
+  ratification-bearing. The re-key is behaviourally inert (the driven
+  equivalence: `0` → `DevStg-Below`, `4` → `DevStg-Release`, all five levels
+  holding identical rung sets), so the criterion's MEANING survives its spelling;
+  only its literal values are unreachable.
+- **SIX APPROVED SPINE ROWS NOW DESCRIBE A SYSTEM THAT DOES NOT EXIST, and this
+  is the largest thing slice 5 deliberately did not fix** — LLR-050 ("Derived-gate
+  computation + hybrid cache"), LLR-051, LLR-142, LLR-148, LLR-157 ("The second
+  axis: which tier is in process") and SR-006. Their DESIGN PROSE describes
+  `compute`, the `docs/gate` cache, the min-fold and a second axis, all deleted.
+  Slice 5 re-pointed only what a rename or a move makes MECHANICALLY wrong — the
+  `module =` carriers (a carrier must point at the carrier), and LLR-148's,
+  because `--next-phase` moved to `derive_stage.py` — and left the prose, because
+  re-authoring an Approved cell is a ratification-bearing act and this repo's dial
+  holds every rung. **The edits are not silent:** they surface in the
+  re-attestation brief, which now carries SR-049's whole chain as drifted. Two
+  things for the close: LLR-050 designates a DELETED behaviour whose successors
+  already have their own rows (LLR-185/186), so it may want retiring rather than
+  re-wording; and the `module =` re-pointing itself is a worker touching Approved
+  cells, which the owner should see stated rather than infer from a diff.
+- **The WI `bar:` frontmatter key is the last adopter-authored surface carrying
+  the retired word, and it was DEFERRED, not missed** (slice 5). Slice 2 banked
+  the rename as "vocabulary, belongs to slice 5"; slice 5 measured it and left it.
+  The reasons: **no WI spec in this repo sets it** (0 of 495), so nothing is
+  wrong today — only old-flavoured; its three values are ladder rungs, so nothing
+  mis-selects; and renaming an adopter-visible frontmatter key is a migration
+  entry of its own, landing on top of a re-sync that already deletes a file,
+  renames a script, changes a flag, re-keys a config key and re-keys a dial.
+  `tests/test_stage_ladder.py`'s pin was re-anchored onto `STAGE_ORDER` (a subset
+  assertion) rather than deleted, so the three hand-authored copies still have to
+  agree. Whoever renames it owns `intake.WI_BARS`, `integrate._BAR_GATES`,
+  `intake._RETIRED_WI_BARS` and one RESYNC entry.
+- **A WATCHED byte baseline drifts silently, and both had** (slice 5). The
+  CAPPED rows are pinned to the real file size by
+  `test_capped_doc_baselines_match_the_real_sizes`; the WATCHED rows are pinned
+  by nothing. `PROCESS.md` and `PROCESS_OPTIONS.md` had each moved from their last
+  stamp before this slice measured them, which means the delta the byte-budget
+  procedure tells the next author to compute was being computed from a stale
+  number — the exact failure the skill's own text calls "worse than none". Both
+  are re-stamped and the skill now says so at the Watched table. The cheap fix, if
+  the owner wants one: extend the existing pin to the watched rows with a
+  tolerance, or drop the tolerance and accept a re-stamp per edit.
+- **`pathlib.write_text()` writes CRLF on Windows, and it silently invalidated
+  every byte measurement in this session until it was caught** (slice 5). The
+  repo's `.gitattributes` normalizes on commit, so the COMMITTED content was never
+  at risk — but `wc -c` on the working tree read a capped file 183 bytes over its
+  cap that was actually 59 under, and the session-protocol rule ("measure on a
+  tree whose line endings match the index") is what turned that from a wrong
+  conclusion into a caught one. 137 files were normalized back. Worth carrying:
+  any edit script in this repo must pass `newline=""` or write bytes, and the
+  `git ls-files --eol | grep 'w/crlf'` check belongs BEFORE any byte figure, not
+  after a surprise.
+- **`check_vocab`'s anchor aliases are deliberately ASYMMETRIC, and the reason
+  generalizes** (slice 5). `[g1]`/`[g2]` are refused bare; `[reqs]`/`[tests]` only
+  in the anchor position (`]-[reqs]`). The first draft refused all four bare and
+  produced 42 findings, of which ~7 were markdown links whose text happened to be
+  "tests" and rubric lines citing the anchor they were authored at. A checker that
+  fires on link text is one people learn to scroll past — this file's own
+  docstring names that failure — so the rule is: refuse a retired token bare only
+  when it has no other meaning in the repo, and require its grammatical position
+  otherwise.
+- **`DECLARED_INPUTS` conflates two consumers with OPPOSITE cost profiles**
+  (slice 5 recovery, and the sharpest thing the close should look at).
+  `docs/process.toml` is a declared derivation input although — by its own
+  comment — "today's derivation does not read" it. The comment defends this as
+  costing "a spurious re-derivation (milliseconds, correct answer)", which is
+  true of `read_stage` and FALSE of `--check`: the freshness gate hard-fails, so
+  the real price is a **red commit bar after any policy-dial edit**. Measured:
+  writing `[policies] privacy_check` re-staled `docs/stage` and took the
+  pre-commit floor down two steps before the check under test. Ruled plan §2
+  names the file in the input set, so this was NOT changed — but the choice was
+  made on a cost model that does not hold for one of its two consumers, and the
+  owner should re-decide it with that stated. Cheap options if they want one:
+  fingerprint only the keys the derivation reads, or let `--check` pass when the
+  fingerprint moved but every derived VALUE is identical.
+- **PB-002 measures a command that no longer exists** (slice 5 recovery). The
+  row's metric is `derive_gate.py --check + gen_trajectory.py --check` with a
+  `fig:` marker pinned to `rev=94489f7a`. The sweep had rewritten the command to
+  `spine_rules.py --check` while leaving the revision — falsifying the
+  provenance AND naming a command that cannot run (no CLI). Reverted whole,
+  because a figure's `fig:` line is a claim about how it was produced. The row
+  now needs a real re-measurement against `derive_stage.py --check` and a fresh
+  revision stamp; that is a small row of its own, not a sweep edit.
+- **A slice that changes what a COMMIT costs must run the tier carrying the
+  commit hook** (slice 5 recovery). `tests/test_pre_commit_hook.py` is a
+  `SLOW_MODULES` member, so the smoke tier — the per-commit bar — never runs it.
+  Three real failures sat in it through two sittings that both ended without a
+  full-suite run, and the residue's own section claimed LANDED over them. The
+  tiering is correct (that module is subprocess-and-scaffold work); the process
+  lesson is that "ends green at the commit bar" is not a sufficient close
+  condition for a slice that edits the hook's own inputs, and this program's
+  own instructions already say the full suite is the close bar. Two sittings
+  skipped it and the third found three failures in it.
+- **The `[reqs]`/`[tests]` anchors have no live TEACHING surface for the NEW
+  spelling outside PROCESS_OPTIONS and the gate-advance skill** (slice 5, from
+  the census). Slice 4 moved the GRAMMAR and slice 5 moved the PROSE, but the
+  canonical `[<phase>]-[DevStg-<Rung>]` form is now taught in exactly two places
+  and used in `check_trajectory` and the tests. If a third generation of this
+  vocabulary ever lands, the lesson from three censuses in this program holds:
+  grep the VALUE, not the constant name; grep the tests that USE a value, not
+  only those ABOUT it; and build the retirement list from the FILENAME, not by
+  extending a previous list.

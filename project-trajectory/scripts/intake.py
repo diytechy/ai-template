@@ -40,7 +40,7 @@ Three triggers, plus the drafts-not-mints arm:
       which is the invariant working, not an inconvenience.
 
 **Tier signals are measurable, never judged**: rows touched and a moved
-`docs/gate` (trigger a), the handback reason class (trigger b), and the census
+`docs/stage` (trigger a), the handback reason class (trigger b), and the census
 kind (trigger c) set `buildtier`; deeper review is reached by a drafted
 follow-up carrying `planmode = "dual"` — never by a second kind (`arbiter` is
 not used as a kind name; the dual-plan arbiter owns that word).
@@ -1454,7 +1454,7 @@ def flip_verified(root, ids):
     their quoting is all by necessity, which QUOTE_MINIMAL reproduces), a
     row already at `Approved` is skipped (idempotent), and an unknown id
     refuses — a typo on a mechanical tool must never half-apply. The flipped
-    registry still owes its regeneration (`derive_gate` recovers the gate);
+    registry still owes its regeneration (`spine_rules` recovers the gate);
     the lane's own refresh runs it.
 
     THE `flip` ARM IS THE RULED SHAPE, not an interim state (OI-45, ruled
@@ -1477,8 +1477,8 @@ def flip_verified(root, ids):
     if conflicts:
         return "recommend", [], conflicts[0]
     # SN-029: the ordinal comparison, not the retired enum. `spine_stage_of`
-    # reads the tier currently in process off the generated docs/gate basis
-    # line; `human_holds` compares it against `human_ratification_through`.
+    # reads the tier currently in process through `kitlib.stage.read_stage`;
+    # `human_holds` compares it against `human_ratification_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     session_hold = "human-held" if human_held else "loop-held"
     action = adjudication_action(human_held)

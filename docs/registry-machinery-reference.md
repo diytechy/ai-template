@@ -1,17 +1,22 @@
-# Registry machinery reference — the SN → SR → LLR → TC spine, the gate, and the bar
+# Registry machinery reference — the SN → SR → LLR → TC spine and the derived stage
 
 A **reference doc** (like `project-trajectory/EXAMPLE.md` and
 `project-trajectory/ADOPTING.md`): not a working surface, not scaffolded, not a
 registry. It describes what the kit's scripts *actually enforce* on the
-traceability spine — every field, every rule, how the gate is derived from those
-rows, and how the derived gate then decides which tests and coverage floors run.
+traceability spine — every field, every rule, how the stage is derived from those
+rows, and how the derived stage then decides which tests and coverage floors run.
 
 Compiled 2026-08-01 by reading the scripts rather than the prose docs. Where a
 claim is made, the enforcing file is named so it can be re-derived. Line numbers
 are given as a reading aid and will drift; the function names will not.
 
-**Scope.** The four spine tiers in full, the gate derivation in full, the
-harness's gate→tier→coverage path in full, and what sits outside the derived
+**One axis, since WI-498 (2026-08-21).** The kit derived TWO values over these
+rows — the eight-rung stage ladder and a three-value "bar" that selected checks.
+The bar is deleted and this doc describes only the stage. Where a table below
+still reads like a strictness selector, the value it names is a RUNG.
+
+**Scope.** The four spine tiers in full, the stage derivation in full, the
+harness's stage→tier→coverage path in full, and what sits outside the derived
 range (`DevStg-Release`/`the owner's final read`, §9.5). The off-spine registries
 (IF / PB / CMP / PART / ASSET / REPO) get a summary in §10. The **work-item**
 registry (`docs/work/`) is a different machine with its own states and fields and
@@ -36,8 +41,8 @@ Two engines read these rows and must never disagree:
 
 - `project-trajectory/scripts/trace.py` **enforces structure** — it joins all
   four tiers and emits findings in six classes.
-- `project-trajectory/scripts/derive_gate.py` **picks the level** — it reads the
-  same rows and computes which gate the repo has reached.
+- `project-trajectory/scripts/spine_rules.py` **picks the rung** — it reads the
+  same rows and computes which stage the repo has reached.
 
 Shared rules are duplicated between them per the kit's F5 independently-copyable
 convention and pinned equal by `tests/test_rule_sync.py`. A divergence between
@@ -86,7 +91,7 @@ Ratifying a need = **moving the table row up** in a reviewed commit. That commit
 column. Parsed by `sn_draft_ids` (a line-scanner that tracks the current heading
 and collects `SN-###` tokens under draft ones). The id *universe* those states
 partition is a **whole-text scrape** (`sn_all_ids`, an F5 twin at
-derive_gate/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
+spine_rules/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
 the file counts, tables and prose alike — so an SN id mentioned only in
 ratified *prose* and cited by no SR caps the derived gate at DevStg-Below (§8.1) exactly
 as an uncovered table row does.
@@ -171,7 +176,7 @@ Three separate mechanisms read this cell.
    acceptance to analyse — so the "SR has no LLR" orphan rule stands down.
    `Critique` is deliberately *not* exempt: its artifact is produced by code,
    only its acceptance is subjective. The set is mirrored byte-for-byte in
-   `derive_gate.LLR_EXEMPT`.
+   `spine_rules.LLR_EXEMPT`.
 2. **The verification-basis split** — always reported, never gates:
    - **mechanized** = `Test` — rests on a runnable check.
    - **attested** = `Attest` — rests on a named human's recorded judgment.
@@ -183,15 +188,15 @@ Three separate mechanisms read this cell.
 
 **Important:** `--require-verified` (the DevStg-Impl bar) applies to **every ratified SR
 regardless of method**. It was once Test-only, which let a `Demonstration` SR
-sitting at `Implemented` pass `trace.py` while `derive_gate` refused it DevStg-Impl — the
+sitting at `Implemented` pass `trace.py` while `spine_rules` refused it DevStg-Impl — the
 two scripts disagreeing about the gate.
 
 ### 3.2 `Status` — the three magic values
 
-| Value | Predicate | Gate effect | Rule effect |
+| Value | Predicate | Stage effect | Rule effect |
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
-| `Approved` | `is_approved` | DevStg-Tests (when decomposed) — **the ceiling** | The row's TEXT is blessed. It makes NO claim that tests passed: `sr_bar` stops at DevStg-Tests by the 2026-08-15 ruling (OI-30 D2), so DevStg-Impl is unreachable-by-cell until a harness driver computes it from test evidence. The derived line says so: `DevStg-Tests (Release: pending harness driver)`. |
+| `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3, where `spine_stage` returns **DevStg-Release for nothing at all** — a Status cell can never claim the evidence passed, so the top rung waits on a test-evidence carrier. |
 | `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-ratification level (`agent_common.human_holds`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
@@ -232,13 +237,13 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
   phases — is never deferred. The `tag in phases` match itself stays literal
   (CLI label-agnostic) — which is exactly why the cells must be numeric.
 - **The phase boundary is a confirmation event** (owner ruling 2026-08-01). The
-  current phase is derived — `max()` over non-draft spine rows, the `phase=N`
-  field on the `docs/gate` basis line (§8.3) — and it increments only when
+  current phase is derived — `max()` over non-draft spine rows, the `phase = N`
+  field in `docs/stage` (§8.3) — and it increments only when
   re-opened scope is **confirmed**: an adjudication verdict that scope moved,
-  or a new draft-SN batch ratified into scope — **never on the raw derived-gate
+  or a new draft-SN batch ratified into scope — **never on the raw derived-stage
   drop**. A spurious re-attest window must not burn a phase number (WI-280 is
   the counterexample: 19 traced cells, 11 SRs flipped, no scope moved).
-  `derive_gate.py --next-phase` prints that max + 1 — the one derived call
+  `derive_stage.py --next-phase` prints that max + 1 — the one derived call
   every agent and the intake mint helper (WI-388) use for a newly confirmed
   phase's number (an unphased spine is the implicit foundation `1`, so it
   prints `2`; a Drafted row's phase is not yet scope and never bumps the answer).
@@ -259,14 +264,14 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
 | `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Ratified prose. |
 | `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Ratified when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
-| `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below and exempt from "no TC". Otherwise **does not gate** — §4.1. |
+| `Status` | ✔ | closed, as SR | `Drafted` HOLDS THE `DevStg-LLReqs` RUNG OPEN (`spine_stage`: `any(is_drafted(r) for r in llrs)`) and exempts the row from "no TC". Otherwise **does not move the stage** — §4.1. |
 | `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
 | `Phase` | ✘ | digit-parseable | = the parent SR's Phase by convention. Same arming rule. |
 
 ### 4.1 LLR Status does not gate — on purpose
 
-`maturity_gate` in `derive_gate.py`: an LLR caps the gate **only** when its
-`SPINE_MATURITY` reading is DRAFTED (DevStg-Below, the new-phase signal). Once
+`spine_stage` in `spine_rules.py`: an LLR holds its rung open **only** when
+`is_drafted` reads it as DRAFTED (the new-phase signal). Once
 present, its own Status is irrelevant — the SR's `Approved` drives the SR rung,
 matching `--require-verified`, which checks SRs and not children. A downstream
 repo whose LLRs all read `Implemented` is unaffected here (that value defaults
@@ -276,7 +281,7 @@ floor instead, so one fault is not punished twice).
 There is a **warn-only** lint for the resulting readout drift
 (`llr_status_advisories`): an LLR below `Approved` while *every* citing TC is
 already `Approved`. Never promoted to an error, "because making LLR status gate
-would re-introduce the exact LLR-status coupling the derived-gate model dropped."
+would re-introduce the exact LLR-status coupling the derived-stage model dropped."
 A `Founded` LLR is exempt — it reads ABOVE `Approved`, so there is nothing to
 lift and the nag would push it DOWN the ladder. (The exemption named the
 transitional `Modified` until that value retired, 2026-08-20.)
@@ -417,7 +422,7 @@ it; you ratify artifacts and regenerate.
 
 ### 8.1 The per-artifact rules
 
-`derive_gate.py` asks each in-scope artifact what level it has reached.
+`spine_rules.py` asks each in-scope artifact what level it has reached.
 
 | Tier | DevStg-Below | DevStg-Reqs | DevStg-Tests | DevStg-Impl |
 |---|---|---|---|---|
@@ -454,41 +459,54 @@ Two floors keep the answer honest:
 
 - A repo with **no real SRs yet** (a fresh scaffold) is **DevStg-Reqs** — the
   requirements-drafting start — never a vacuous DevStg-Impl.
-- The **cached runnable value is floored at DevStg-Reqs**, because the harness's gate
-  vocabulary is `DevStg-Reqs|DevStg-Tests|DevStg-Impl|all`. The raw computed level, DevStg-Below drops included, is
-  recorded in the `# basis:` comment so nothing hides.
+- The **cached selection value is floored at DevStg-Reqs**, so a repo below the
+  floor still selects its integrity checks. The unfloored reading, DevStg-Below
+  drops included, is recorded beside it (`settled-stage`, `live-stage`) so
+  nothing hides.
 
-### 8.3 The cache: `docs/gate`
+### 8.3 The cache: `docs/stage`
 
-The computed value is written to `docs/gate`, whose contract is a **declared-policy
-file** every reader in the kit shares: *the first non-empty, non-comment line*.
-Everything above it is commentary, including the machine-readable basis:
+The computed record is written to `docs/stage`, a `key = value` file whose
+`stage =` field is the rung the repo is IN. Comment lines carry the header;
+every fact is a field:
 
 ```
-# basis: SN=25 SR=136 LLR=130 TC=127 drafted=0 modified=0 uncovered=0 computed=DevStg-Impl ex-draft=DevStg-Impl phase=4 per-phase=1=DevStg-Impl;2=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl
-# computed 2026-08-02 (as-of d35c3b93)
-DevStg-Impl
+stage = DevStg-Arch
+stage-ord = 3
+stage-of = 8
+floored = no
+settled-stage = DevStg-Arch
+live-stage = DevStg-Reqs
+phase = 5
+per-phase = 1=DevStg-Arch;3=DevStg-Arch;4=DevStg-Arch;5=DevStg-Arch
+per-phase-live = 1=DevStg-Arch;3=DevStg-Arch;4=DevStg-Arch;5=DevStg-Reqs
+drafted = 15
+fingerprint = sha256:0ead5927…
 ```
 
-`uncovered=N` (WI-401) counts the ratified SNs no SR cites — normally the count
-behind the coverage rung's DevStg-Below cap, so a `computed=DevStg-Below` with `drafted=0` names its
-cause (before the rung, a DevStg-Below always implied a draft). One corner parts them:
-with **zero real SRs** the vacuous-DevStg-Reqs branch returns before the rung ever runs,
-so a requirements-drafting repo legitimately shows `uncovered>0` with nothing
-capped — the count staying visible there is deliberate. Like `ex-draft=`, it is an
-additive field, but the basis line is **compared whole** by `--check`: adding
-it was a cache-format change, and any repo picking up this derive_gate passes
-through it by rerunning the generator once — the ordinary
-regenerate-a-generated-artifact step.
+`stage` is the SELECTION value: the rung the SETTLED spine has earned, folded as
+the min over the phases that have earned one, then floored. `settled-stage` is
+that same fold before the floor, `live-stage` the honest reading over ALL rows —
+drafts included and unfloored — and `drafted` is how far the two are allowed to
+differ. `per-phase` / `per-phase-live` break both out per phase, with
+`DevStg-Below` as the has-nothing-settled-yet sentinel (never a rung).
 
-- `resolve_gate` in `check.py` reads that first non-comment line. An
-  out-of-vocabulary value is a hard exit, not a fallback.
-- **No file → `all`**, i.e. the *full* bar. A repo without the marker never gets
-  a silently weaker one.
-- Freshness is guarded by `derive_gate.py --check`, wired as the `derived-gate`
-  step at **every** gate (DevStg-Reqs, DevStg-Tests and DevStg-Impl) and in the pre-commit hook. It
-  recomputes and fails on drift. A legacy hand-set gate with no `# basis:` line
-  is compared value-only, so a not-yet-migrated repo stays green.
+`fingerprint` is a SHA-256 over the LF-normalized content of the declared
+derivation inputs (`DECLARED_INPUTS` in
+[`scripts/kitlib/stage.py`](../project-trajectory/scripts/kitlib/stage.py)). A reader recomputes it
+and trusts the recorded values ONLY on a match, deriving fresh in memory
+otherwise — so no consumer can read a stale stage, on any lane.
+
+- `check.py` reads `stage` and runs every step whose declared `from-stage`
+  threshold sits at or below it. An out-of-vocabulary value is a hard exit, not
+  a fallback.
+- **No file → the `derived-stage` step FAILS**, naming the command to run. A repo
+  that deleted the record never gets a silently weaker bar.
+- Freshness is guarded by `derive_stage.py --check`, wired as the `derived-stage`
+  step at **every** rung and in the pre-commit hook. It recomputes and fails on
+  drift. A file still in `stage.template`'s comment-only placeholder form counts
+  as "not yet in derived form" and passes with a note, so a not-yet-migrated repo
+  stays green.
 
 ### 8.4 The suppressed-gate window
 
@@ -548,7 +566,6 @@ keeps only the steps whose `gates` set contains the resolved gate.
 | `lint` | **DevStg-Impl** | product | |
 | `tests+coverage` | **DevStg-Impl** | product | the whole test run is DevStg-Impl-tagged |
 | `registry-integrity` | **DevStg-Reqs** | process | `trace.py --strict-integrity` — the always-valid floor, so a broken CSV cannot hide until DevStg-Tests |
-| `derived-gate` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | the freshness guard on `docs/gate` |
 | `derived-stage` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | the freshness guard on `docs/stage` (the effective-stage cache, WI-498 slice 1) |
 | `privacy` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | a leak is wrong at any stage |
 | `doc-navigability` | DevStg-Reqs, DevStg-Tests, DevStg-Impl | process | |
@@ -562,9 +579,9 @@ Two consequences worth internalising:
 
 - **The entire product bar — format, lint and the test suite — is DevStg-Impl-only.** At
   DevStg-Reqs and DevStg-Tests the harness runs process checks and does not run the tests.
-- `--gate` on the command line wins; a *defaulted* gate for `--run-step` /
-  `--run-steps` resolves to `all`, never `docs/gate`, so the pre-commit hook's
-  floor stays warn-first.
+- `--stage` on the command line wins (the retired `--gate` spelling is still
+  accepted); a *defaulted* stage for `--run-step` / `--run-steps` resolves to
+  `all`, never `docs/stage`, so the pre-commit hook's floor stays warn-first.
 
 ### 9.2 Tier → which tests run
 
@@ -628,7 +645,7 @@ silently not enforcing the floors.
 
 Generated-artifact freshness is the **trunk lane's** job. On a claimed work
 branch — one with a `docs/work/active/<branch>/` spec directory — the steps in
-`_TRUNK_FRESHNESS_STEPS` (`derived-gate`, `trajectory-map`,
+`_TRUNK_FRESHNESS_STEPS` (`derived-stage`, `trajectory-map`,
 `status-map`, `open-items`, `okf`, `ratify-fresh`) are reported SKIP with their
 reason instead of running. Gating a branch on freshness would red every branch
 for drift it is forbidden to fix.
@@ -639,8 +656,8 @@ uses — that tree *is* the tree that becomes trunk, so the branch stands in the
 trunk lane for exactly that one run.
 
 **The practical consequence:** a work branch runs a genuinely weaker bar than
-trunk, including the `derived-gate` freshness check. The gate a branch reports is
-the value as-of-base.
+trunk, including the `derived-stage` freshness check. The stage a branch reports
+is the value as-of-base.
 
 ### 9.5 What sits OUTSIDE the derived range: DevStg-Release and the owner's final read
 
@@ -731,7 +748,7 @@ All optional; all vacuous when absent or `-000`-only.
 | Registry | Id | Back-link cell | Rule |
 |---|---|---|---|
 | `docs/requirements/interfaces.toml` | `IF-###` | `Req-Refs`, `interface_from_external` / `interface_to_external` | Back-links join the `--strict` failure set, and so does a directional tie-back naming a crossing `external.toml` does not declare. The `ThisProject` ↔ LLR `Module` endpoint join is **warn-only**. Citable from a TC's `Verifies`. |
-| `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Status`; B `Entity`/`Direction`/`Carries`/`Status`; REL `From`/`To`/`Kind`/`Flow`/`Status`. `Status` (`Drafted`\|`Approved`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `derive_gate.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `Drafted`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). |
+| `docs/requirements/external.toml` — the depth-0 FRAME (WI-442) | `EXT-###` (entities), `B-##` (boundary crossings), `REL-###` (relationships) | crossing `Entity`; relationship `From`/`To` | THREE tiers on ONE path, keyed by id column. Every reference must resolve to a declared entity, joining the `--strict` failure set — **and crossings or relationships declared with NO entity at all are a finding of their own**, not a vacuous pass. Required fields per tier: EXT `Name`/`Class`/`Description`/`Status`; B `Entity`/`Direction`/`Carries`/`Status`; REL `From`/`To`/`Kind`/`Flow`/`Status`. `Status` (`Drafted`\|`Approved`) is the one maturity field, shared with the IF tier, and **rung 1 of the stage ladder reads it** — `spine_rules.boundary_incomplete` caps the repo at `DevStg-Boundary` while any crossing is `Drafted`. Realization coverage (a crossing with no realizing IF row) is REPORTED and never gated: decision 6, deferred by ruling. An SR names its crossing(s) in `Boundary-Refs` — resolution hard, coverage advisory (SN-037). |
 | performance budgets | `PB-###` | `Refs` | Must resolve to a real SR id, LLR id, **or LLR `Module` path**. Empty `Refs` → finding. |
 | `docs/requirements/components.toml` | `CMP-###` | `PartOf`, `SupersededBy` | Must name real CMP ids. When non-empty, every `Component` tag on LLR/IF/PART/ASSET must resolve. `Knowledge` refs under `docs/knowledge/` are **warn-only**. |
 | procurement | `PART-###` | `Component` | membership only |
@@ -850,10 +867,10 @@ python project-trajectory/scripts/trace.py --strict --no-placeholders --html
 python project-trajectory/scripts/trace.py --strict --no-placeholders --html \
     --require-verified --strict-schema [--phase 2]
 
-# what gate do the registries derive to, and on what basis
-python project-trajectory/scripts/derive_gate.py --print
-python project-trajectory/scripts/derive_gate.py --check     # freshness guard
-python project-trajectory/scripts/derive_gate.py --next-phase  # the number a newly
+# what stage do the registries derive to, and on what basis
+python project-trajectory/scripts/derive_stage.py --print
+python project-trajectory/scripts/derive_stage.py --check     # freshness guard
+python project-trajectory/scripts/derive_stage.py --next-phase  # the number a newly
                                                 # confirmed phase takes (§3.3)
 
 # the whole harness at a chosen gate/tier

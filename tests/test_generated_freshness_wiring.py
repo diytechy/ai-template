@@ -35,7 +35,8 @@ WIRED = {
     "trajectory": "trajectory-map",
     "okf": "okf",
     "status": "status-map",
-    "gate": "derived-gate",
+    # WI-498 slice 5 retired the `gate` kind (docs/gate and its three-value BAR)
+    # along with its `derived-gate` enforcer; `stage` is the surviving axis.
     "stage": "derived-stage",
     "openitems": "open-items",
     "ratify": "ratify-fresh",

@@ -4,15 +4,18 @@ The docs/status.md GENERATED STATUS splice (WI-202), the pending-owner-
 actions derivation gen_open_items renders (WI-234), and the generated
 Ready-frontier lines. The facade re-exports, so consumers are unchanged.
 
-Contracts: IF-084, IF-125, IF-130 — the seams this module declares (process.md
+Contracts: IF-084, IF-125 — the seams this module declares (process.md
 §8; rows of record in docs/requirements/interfaces.toml): IF-084 is IF-056's
 derivation-loader read of check_trajectory, as held by the sibling that now
 carries the import; IF-125 is the READ-ONLY consumption of the `last_approved`
 baseline (IF-123), so the generated surface reports pending amendments against
 what was blessed rather than against HEAD, and never refreshes the snapshot;
-IF-130 is `_stage_line`'s call to derive_gate.bar_label, the ONE rendering
-home for the release-ceiling note, so this surface can never word the
-withheld top bar differently from the others.
+a THIRD seam retired at WI-498 slice 5 with the bar axis it rendered.
+`_stage_line` called the derivation engine's release-ceiling renderer for the ONE
+wording of that note, and `DevStg-Release` is now derived by nothing, so there is
+no withheld top value left to word; the row is out of the registry. This module
+imports no derivation engine at all any more — the WI-483 render-leaf direction,
+completed.
 """
 
 import re
@@ -21,17 +24,14 @@ import sys
 import baseline_snapshot
 import check_trajectory as ct
 
-# The bar-name RENDERER only (`bar_label`) — not a second gate derivation. The
-# value still comes from `docs/gate`'s cached basis line; this module asks
-# derive_gate how a human should READ that value, which is the one home for the
-# OI-30 D2 ceiling note.
-import derive_gate
 import traj_parse
 
-# The stage ladder's ONE home (WI-498 slice 0): the rung descriptions this
-# module used to keep an unpinned private copy of. Imported straight from the
-# shared package, not through `derive_gate` — see `_STAGE_LABELS` below.
+# The stage carrier's ONE home: the rung descriptions (slice 0) and the
+# `docs/stage` record format (slice 1). A RENDER LEAF NOW IMPORTS NEITHER
+# `spine_rules` NOR `derive_stage` — reading the recorded file needs only the
+# format, and the derivation engines stay out of a module that draws pages.
 from kitlib import ladder as _ladder
+from kitlib import stage as _kitstage
 from traj_parse import _spine, cmp_rows, spine_stats
 
 
@@ -49,9 +49,9 @@ from traj_parse import _spine, cmp_rows, spine_stats
 STATUS_MD = "docs/status.md"
 STATUS_BEGIN = "<!-- BEGIN GENERATED STATUS -->"
 STATUS_END = "<!-- END GENERATED STATUS -->"
-# derive_gate.py's cached `# basis:` line in docs/gate — the fresh, freshness-
-# guarded derivation the status snapshot PROJECTS (never recomputes).
-_GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
+# The `# basis:` regex retired with `docs/gate` (WI-498 slice 5): `docs/stage`
+# is key=value, so the snapshot addresses a field BY NAME through
+# `kitlib.stage.parse` instead of scraping a comment line.
 
 # --- the pending-owner-actions projection (WI-234) ------------------------------
 # `--status` also splices a second GENERATED block — at the END of
@@ -84,40 +84,51 @@ _GATE_BASIS_RE = re.compile(r"^#\s*basis:\s*(.+)$", re.M)
 # --- the status.md derived snapshot (WI-202) -----------------------------------
 
 
-def _gate_facts(root):
-    """The derived-gate facts for the status snapshot, read from `docs/gate` — the
-    cached, freshness-guarded SSOT (derive_gate.py owns it; check.py's `derived-gate`
-    step keeps it fresh). Returns `(gate_value, basis)`: the gate is the first
-    non-comment line; `basis` parses the `# basis:` line's `k=v` tokens
-    (SN/SR/LLR/TC/drafts/computed/phase/per-phase) when present, else `{}` (a legacy
-    hand-set gate with no basis line). The snapshot PROJECTS this rather than
-    recomputing what derive_gate already cached — one home for the derivation."""
-    p = root / "docs" / "gate"
-    if not p.exists():
-        return "", {}
-    text = p.read_text(encoding="utf-8", errors="replace")
-    gate = ""
-    for ln in text.splitlines():
-        ln = ln.strip()
-        if ln and not ln.startswith("#"):
-            gate = ln
-            break
-    basis = {}
-    m = _GATE_BASIS_RE.search(text)
-    if m:
-        for tok in m.group(1).split():
-            if "=" in tok:
-                k, v = tok.split("=", 1)
-                basis[k] = v
-    return gate, basis
+def _fmt_per_phase(value):
+    """`{"4": "DevStg-Arch", "5": "DevStg-Reqs"}` back to `4=DevStg-Arch;5=DevStg-Reqs`.
+
+    `kitlib.stage.parse` COERCES the per-phase field to a mapping (so consumers
+    address a phase by key); the retired `# basis:` line handed this surface the
+    raw string. Rendering it back here rather than reaching for the unparsed text
+    keeps one reader of the file — and keeps the snapshot's wording stable across
+    the cut-over, so `--status --check` moves for a real reason or not at all."""
+    if isinstance(value, dict):
+        return ";".join("{}={}".format(k, value[k]) for k in sorted(value))
+    return str(value)
 
 
-def _spine_counts(root, basis):
-    """`{SN,SR,LLR,TC}` string counts for the snapshot: the fresh `docs/gate`
-    basis line when present (the authoritative derivation), else a direct count
-    of the registries (the legacy-gate fallback)."""
-    if all(k in basis for k in ("SN", "SR", "LLR", "TC")):
-        return {k: basis[k] for k in ("SN", "SR", "LLR", "TC")}
+def _stage_facts(root):
+    """The derived stage record for the status snapshot, read from `docs/stage`
+    (`derive_stage.py` owns it; check.py's `derived-stage` step keeps it fresh),
+    or `{}` when the file is absent or carries no readable record.
+
+    READS THE RECORDED FILE, not the self-healing reader — the same choice
+    `traj_parse._stage_value` records and for the same reason: this block is a
+    GENERATED artifact whose own freshness is byte-compared by
+    `gen_trajectory.py --status --check`, so it must describe the commit it is
+    generated alongside rather than derive a value the file beside it does not
+    carry."""
+    path = root / _kitstage.STAGE_FILE
+    if not path.exists():
+        return {}
+    try:
+        record = _kitstage.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except ValueError:  # a hand-edited or cross-ladder value: degrade, never guess
+        return {}
+    return record or {}
+
+
+def _spine_counts(root):
+    """`{SN,SR,LLR,TC}` string counts for the snapshot, counted from the
+    registries.
+
+    THE CACHED-COUNTS FAST PATH RETIRED WITH `docs/gate` (WI-498 slice 5). That
+    file's `# basis:` line carried SN/SR/LLR/TC and this function preferred them;
+    `docs/stage` deliberately does not — it records the STAGE derivation, and row
+    counts are not an input to it (they would have to be fingerprinted to be
+    trustworthy, for a display convenience). The registry count was already the
+    fallback arm here and is now the only arm, at no new cost class: this
+    snapshot already loads the IF and CMP registries two lines below."""
     st = spine_stats(root)
     return {
         "SN": str(st["sn_total"]),
@@ -353,104 +364,118 @@ def pending_block(root):
 
 
 # The eight-rung stage ladder's descriptions, for the generated snapshot line.
-# STATE units: a repo is IN a stage and CLEARS a bar (process.md §4 "The stage
-# ladder"). Derived by derive_gate.py and read here off `docs/gate`'s `# basis:`
-# line, never recomputed.
+# A repo is IN a stage; ratification is the event that moves it (process.md §4
+# "The stage ladder"). Derived by derive_stage.py and read here off the recorded
+# `docs/stage`, never recomputed.
 #
-# THIS WAS A BYTE-IDENTICAL COPY of `derive_gate.STAGE_DESC` until WI-498 slice
+# THIS WAS A BYTE-IDENTICAL COPY of `spine_rules.STAGE_DESC` until WI-498 slice
 # 0, and — unlike `agent_common`'s restatement — NOTHING pinned it. A renderer is
 # the worst place for a silent copy: a reworded or inserted rung would have shown
 # the dashboard's readers the OLD sentence, or dropped the stage bullet entirely
 # (the `stage in _STAGE_LABELS` guard below degrades to bar-only wording), with
 # every test still green. The table now has one home in `kitlib.ladder`, which
-# this module imports DIRECTLY rather than through `derive_gate`: a render leaf
+# this module imports DIRECTLY rather than through `spine_rules`: a render leaf
 # should not have to load a 1,400-line derivation engine to read eight strings —
 # the same direction WI-483 took `station` out of the merge coordinator.
 _STAGE_LABELS = _ladder.STAGE_DESC
 
 
-def _stage_line(gate, basis, gate_detail):
-    """The snapshot's first bullet, STAGE-first.
+def _stage_line(record, detail):
+    """The snapshot's first bullet: the rung this repo is IN.
 
-    The bar value alone cannot say whether a boundary is ahead or behind, and —
-    being a min floored by any Drafted row — it reads identically for a fresh
-    scaffold and a mature spine holding one draft. The stage is the state; the bar
-    is what must next be cleared, which is also the strictness the harness runs at.
+    ONE VOCABULARY, ONE VALUE (WI-498 slice 5). This bullet used to render two —
+    the stage the repo was in AND the "next bar to clear" — because two axes were
+    derived side by side. The bar axis retired with `docs/gate`, and with it the
+    sentence that had to keep telling readers which reading was meant. A stage is
+    a STATE; ratification is the EVENT that moves it, and it is reported where
+    events are (the phase anchors), not folded into the state.
 
-    A `docs/gate` predating the `stage=` field, or carrying a label this ladder
-    does not name (including a cache still holding the retired integer form),
-    degrades to the bar-only wording rather than inventing a stage — the same
-    absent-means-absent direction derive_gate takes.
-
-    THE BAR NAME IS RENDERED THROUGH `derive_gate.bar_label`, not interpolated
-    raw: while the OI-30 D2 ceiling holds, the name carries "(Release: pending
-    harness driver)" so a reader never mistakes a withheld top bar for a
-    regression. One home, so this surface and `PROJECT_STATE.html` (which renders
-    this same block) cannot disagree."""
-    gate_txt = derive_gate.bar_label(gate) if gate else "(none)"
-    stage = basis.get("stage")
-    link = "[`derive_gate.py`](../project-trajectory/scripts/derive_gate.py)"
-    if stage in _STAGE_LABELS:
-        ord_txt = basis.get("stage-ord")
-        of_txt = basis.get("stage-of")
-        # The position rides the basis line; when an older cache omits it, name
-        # the rung without a position rather than guessing one.
-        where = (
-            "stage {o} of {n}".format(o=ord_txt, n=of_txt)
-            if ord_txt is not None and of_txt is not None
-            else "stage"
-        )
+    A `docs/stage` that is absent, or carries a rung this ladder does not name,
+    degrades to naming no stage rather than inventing one — the same
+    absent-means-absent direction the derivation takes. `bar_label`'s
+    "(Release: pending harness driver)" suffix retires with the bar it named:
+    `DevStg-Release` is now returned by NOTHING (slice 3), so there is no withheld
+    top value for a reader to mistake for a regression."""
+    stage = record.get("stage")
+    link = "[`derive_stage.py`](../project-trajectory/scripts/derive_stage.py)"
+    if stage not in _STAGE_LABELS:
         return (
-            "- **In stage:** **{s}** ({where}, {label}) · **next to clear: {g}**"
-            "{detail} — one vocabulary, and the VERB says which reading: a repo "
-            "is IN a stage and CLEARS a stage. {link} derives both, cached to "
-            "[`docs/gate`](gate).".format(
-                s=stage,
-                where=where,
-                label=_STAGE_LABELS[stage],
-                g=gate_txt,
-                detail=gate_detail,
-                link=link,
-            )
+            "- **Stage:** not derived — no readable `docs/stage`. {link} writes "
+            "it; `check.py`'s `derived-stage` step keeps it fresh.".format(link=link)
         )
+    ord_txt = record.get("stage-ord")
+    of_txt = record.get("stage-of")
+    # The position rides the record; when it is absent, name the rung without a
+    # position rather than guessing one.
+    #
+    # `stage-ord` IS 0-BASED and the sentence is 1-BASED, so it is rendered +1.
+    # Without that, `DevStg-Needs` — the FIRST rung — read "stage 0 of 8", and
+    # this repo at the fourth rung read "stage 3 of 8". The record keeps the
+    # 0-based ordinal because that is what comparisons want (`stage_ord` is the
+    # index into `STAGE_ORDER`); only the human sentence counts from one, which
+    # is why the conversion belongs at the renderer and not in the field.
+    where = (
+        "stage {o} of {n}".format(o=ord_txt + 1, n=of_txt)
+        if isinstance(ord_txt, int) and of_txt is not None
+        else "stage"
+    )
+    # `floored` arrives as a BOOL from `kitlib.stage.parse`, not the `"yes"` the
+    # file spells. Comparing against the spelling made this disclosure
+    # unrenderable — and it is the one the FLOOR's own design note calls
+    # mandatory: the floored value is a selection guarantee, never a claim about
+    # the repo, so a reader must be told when it differs from the honest reading.
+    floored = " · floored for selection" if record.get("floored") else ""
     return (
-        "- **Next bar:** derived **{g}**{detail} — the harness at that bar is "
-        "the bar. {link} derives it, cached to [`docs/gate`](gate).".format(
-            g=gate_txt, detail=gate_detail, link=link
+        "- **In stage:** **{s}** ({where}, {label}){floored}{detail} — the rung "
+        "this repo is IN, derived over its settled spine. {link} derives it, "
+        "recorded in [`docs/stage`](stage).".format(
+            s=stage,
+            where=where,
+            label=_STAGE_LABELS[stage],
+            floored=floored,
+            detail=detail,
+            link=link,
         )
     )
 
 
 def status_block(root):
     """The GENERATED STATUS block CONTENT (between the markers) for docs/status.md:
-    the derived gate + spine snapshot (projected from `docs/gate`, the freshness-
-    guarded SSOT) plus the open-items one-liners (from the registry). Derived
+    the derived stage + spine snapshot (projected from `docs/stage`, the
+    freshness-guarded SSOT) plus the open-items one-liners (from the registry). Derived
     facts ONLY — the forward-only intent stays hand-authored outside the markers.
     Deterministic (no clocks), so the `--status --check` byte-compare is stable,
     exactly like the arch-map / dashboard freshness gates."""
-    gate, basis = _gate_facts(root)
-    counts = _spine_counts(root, basis)
+    record = _stage_facts(root)
+    counts = _spine_counts(root)
     seams = len(ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID")))
     comps = len(cmp_rows(root))
 
-    gate_bits = []
-    if basis.get("per-phase"):
-        gate_bits.append("per-phase `{}`".format(basis["per-phase"]))
-    if basis.get("phase"):
-        gate_bits.append("derived current **phase={}**".format(basis["phase"]))
-    gate_detail = " ({})".format(", ".join(gate_bits)) if gate_bits else ""
+    stage_bits = []
+    if record.get("per-phase"):
+        stage_bits.append("per-phase `{}`".format(_fmt_per_phase(record["per-phase"])))
+    if record.get("phase"):
+        stage_bits.append("derived current **phase={}**".format(record["phase"]))
+    stage_detail = " ({})".format(", ".join(stage_bits)) if stage_bits else ""
 
-    drafts = basis.get("drafted")  # renamed with the value at D-9 step 5
+    # THE CARRIER HANDS THIS OVER TYPED (WI-498 slice 5). `docs/gate`'s
+    # `# basis:` line was scraped into STRINGS, so the pluralization compared
+    # `drafts == "1"`; `kitlib.stage.parse` coerces `drafted` to an INT, against
+    # which that test is never true and every repo read "(1 drafts)". Caught by
+    # the cut-over's own test repair, and fixed at the comparison rather than by
+    # stringifying the field — a typed carrier is the improvement, and a
+    # renderer reaching back for the string form would give it up.
+    drafts = record.get("drafted")  # renamed with the value at D-9 step 5
     draft_bit = ""
     if drafts is not None:
-        draft_bit = " ({} draft{})".format(drafts, "" if drafts == "1" else "s")
+        draft_bit = " ({} draft{})".format(drafts, "" if drafts == 1 else "s")
 
     lines = [
         "_Derived facts — regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`; do not hand-edit "
         "(the forward-only intent below is hand-authored)._",
         "",
-        _stage_line(gate, basis, gate_detail),
+        _stage_line(record, stage_detail),
         "- **Spine:** **SN={sn} SR={sr} LLR={llr} TC={tc}**{d} · {seams} seam{sp} · "
         "{comps} component{cp}.".format(
             sn=counts["SN"],

@@ -315,12 +315,15 @@ def test_migration_folds_every_dial_in_and_deletes_the_file(tmp_path):
     # word expands to the THREE dials it always meant — folding it to a single
     # key is what lost two of the three and let a repo scaffold with one
     # posture while running with another.
-    assert cfg["attestation"]["human_ratification_through"] == 0
+    # WI-493 re-keyed the dial to the DevStg-* rung it always meant: the
+    # loop-held end that used to be the ordinal `0` is now `DevStg-Below`, the
+    # sentinel for "no rung is a human's to ratify".
+    assert cfg["attestation"]["human_ratification_through"] == "DevStg-Below"
     assert cfg["attestation"]["keep_nondependent"] is True
     assert cfg["attestation"]["final_review"] == "off"
     assert "gate_policy" not in cfg["attestation"]
-    assert ac.ratification_level(tmp_path / "docs") == 0
-    assert ac.human_holds(tmp_path / "docs", 0) is False, (
+    assert ac.ratification_through(tmp_path / "docs") == "DevStg-Below"
+    assert ac.human_holds(tmp_path / "docs", "DevStg-Needs") is False, (
         "the whole point: `autonomous` must actually read as loop-held"
     )
     assert cfg["policies"] == {

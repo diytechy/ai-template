@@ -42,6 +42,11 @@ pytestmark = env_gate_skipif("git")
 intake = load_script("intake")
 ac = load_script("agent_common")
 wi_convert = load_script("wi_convert")
+# The stage carrier's ONE home since WI-498 slice 1 — imported as a package (not
+# via `load_script`, which loads a single `scripts/*.py`); `scripts/` is already
+# on sys.path by here, because `load_script` puts it there.
+import kitlib.ladder as kit_ladder  # noqa: E402  (after the loads above)
+import kitlib.stage as kit_stage  # noqa: E402  (after the loads above)
 
 T_BASE = 1_000_000
 T_CODE = 1_000_100
@@ -643,10 +648,16 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 # --- the gate-policy arms (ruled decision 2, owner 2026-07-31; §A8) ------------
 
 
-def _policy_repo(tmp_path, level):
+def _policy_repo(tmp_path, dial):
     """A repo with one Drafted SR, one Approved SR, one Drafted LLR, and the
-    declared gate-policy `level` — the state an adjudication row's cheap
+    declared ratification `dial` — the state an adjudication row's cheap
     outcome acts on.
+
+    `dial` IS A `DevStg-*` RUNG SINCE WI-493, not the retired 0-4 ordinal. The
+    ordinal would still be READ (the migration window translates it and warns),
+    which is exactly why the fixture does not use it: a suite that keeps
+    declaring the retired spelling proves the window works and stops proving
+    anything about the dial the kit actually ships.
 
     THE FIXTURE ROWS READ `Drafted` SINCE D-9 STEP 7. They read `Modified`, the
     marker that named "approved text that has since moved" and the one state
@@ -671,30 +682,50 @@ def _policy_repo(tmp_path, level):
         encoding="utf-8",
         newline="\n",
     )
-    _declare_level(root, level)
+    _declare_dial(root, dial)
     _commit(root, "the flagged spine + the declared policy", when=T_CODE)
     return root
 
 
-def _declare_level(root, level):
-    """Declare BOTH halves of SN-029's comparison: the human-ratification level
-    in docs/process.toml, and the spine stage the derived gate reports.
+# The rung `_declare_dial` records, named because both sides of the comparison
+# are read against it: a dial AT or BELOW `DevStg-Tests` holds this repo, and a
+# dial above it does not.
+FIXTURE_STAGE = kit_ladder.STAGE_TESTS
 
-    The stage is written into a docs/gate basis line rather than derived from a
-    real spine, because what is under test here is the COMPARISON — a fixture
-    that had to build a whole spine to move one side of it would be testing
-    derive_gate instead."""
-    set_process_key(root, "attestation", "human_ratification_through", level)
-    gate = root / "docs" / "gate"
-    gate.parent.mkdir(parents=True, exist_ok=True)
-    with gate.open("w", encoding="utf-8", newline="\n") as fh:
+
+def _declare_dial(root, dial):
+    """Declare BOTH halves of SN-029's comparison: the human-ratification dial
+    in docs/process.toml, and the spine stage the derived record reports.
+
+    The stage is RECORDED rather than derived from a real spine, because what is
+    under test here is the COMPARISON — a fixture that had to build a whole spine
+    to move one side of it would be testing spine_rules instead.
+
+    THE CARRIER MOVED AT WI-498 SLICE 5, and this fixture had to move with it.
+    `agent_common.spine_stage_of` used to scrape `stage=` off a comment line in
+    the generated `docs/gate`; it now goes through `kitlib.stage.read_stage`,
+    which re-fingerprints the declared derivation inputs on EVERY call and trusts
+    a recorded value only on a match. A fixture still writing `docs/gate`
+    therefore declared no stage at all: the reader answered None, `human_holds`
+    reads None as HUMAN-HELD (its documented fail-safe), and both arms of the
+    comparison silently collapsed onto the same answer — a below-the-dial test
+    passing for the reason a held one does.
+
+    So the record is written to `docs/stage` WITH the current fingerprint, which
+    is what puts the reader on its recorded fast path. Only `stage` and
+    `fingerprint` are written: `parse` addresses fields BY NAME and leaves an
+    absent one absent, so a fixture states what it is declaring and nothing
+    else."""
+    set_process_key(root, "attestation", "human_ratification_through", dial)
+    path = root / kit_stage.STAGE_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="\n") as fh:
         fh.write(
-            "# DERIVED GATE\n"
-            "# basis: SN=1 SR=2 LLR=1 TC=0 drafted=2 uncovered=0 "
-            "computed=DevStg-Tests ex-draft=DevStg-Tests phase=1 "
-            "per-phase=1=DevStg-Tests stage=DevStg-Tests stage-ord=5 "
-            "stage-of=8\n"
-            "DevStg-Tests\n"
+            "# DERIVED STAGE (fixture-written; see tests/test_intake.py)\n"
+            "stage = {}\n"
+            "fingerprint = {}\n".format(
+                FIXTURE_STAGE, kit_stage.fingerprint(root, memo=None)
+            )
         )
 
 
@@ -702,7 +733,7 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
     # Ruled decision 2: under `attended` the flip is a Status change that
     # RECOVERS THE GATE — a ratification, and ratification is the human's act.
     # The helper prepares the brief and touches NOTHING.
-    root = _policy_repo(tmp_path, 4)
+    root = _policy_repo(tmp_path, kit_ladder.STAGE_RELEASE)
     before = (root / "docs" / "requirements" / "system-requirements.csv").read_bytes()
     action, flipped, refusal = intake.flip_verified(root, ["SR-001", "LLR-001"])
     assert refusal is None, refusal
@@ -715,11 +746,11 @@ def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys
     ).read_bytes() == before
 
 
-def test_below_the_human_level_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path):
+def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path):
     """D-9 STEP 7, and this test replaces a capability rather than losing one.
 
     It used to prove the other arm of ruled decision 2: below the human's
-    ratification level a recorded LLM verdict carries ratification authority, so
+    ratification dial a recorded LLM verdict carries ratification authority, so
     the helper enacted `Modified` -> `Approved`. Step 7 retired `Modified`, the
     ONE state that act ever moved from, and the guard it left behind — a silent
     `continue` over every other status — resolved into an explicit refusal.
@@ -732,10 +763,18 @@ def test_below_the_human_level_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path
     would replace, and widening mechanical ratification authority is an owner
     ruling, not a migration step's to take. The writer's own properties did not
     move with the guard and are proved directly below.
+
+    THE TWO DIALS ARE THE RE-KEYED 0 AND 2 (WI-493): `DevStg-Below` is the
+    sentinel that holds nothing, and `DevStg-Arch` is BELOW the fixture's
+    recorded `DevStg-Tests`, so neither holds this repo and both reach the
+    writer's guard. Driving both is what keeps the arm honest — a single
+    `DevStg-Below` case would also pass against a `human_holds` that had
+    collapsed to a constant False.
     """
-    for i, level in enumerate((0, 2)):
+    for i, dial in enumerate((kit_stage.BELOW, kit_ladder.STAGE_ARCH)):
         (tmp_path / str(i)).mkdir()
-        root = _policy_repo(tmp_path / str(i), level)
+        root = _policy_repo(tmp_path / str(i), dial)
+        assert ac.human_holds(root / "docs", ac.spine_stage_of(root)) is False, dial
         sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
         llr_csv = root / "docs" / "requirements" / "low-level-requirements.csv"
         before = (sr_csv.read_bytes(), llr_csv.read_bytes())
@@ -758,7 +797,7 @@ def test_a_row_already_at_the_written_value_is_the_ONE_silent_skip(tmp_path):
     it from the refusal is the whole content of the step-7 resolution: one
     branch was two unrelated cases wearing one `continue`.
     """
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
     before = sr_csv.read_bytes()
     action, flipped, refusal = intake.flip_verified(root, ["SR-002"])
@@ -814,7 +853,7 @@ def test_the_flip_rewrites_ONE_LINE_of_the_toml_carrier(tmp_path):
     # properties that matter are what a re-serialisation would destroy —
     # comments, ordering, and every untouched byte — so this asserts the file is
     # byte-identical apart from the single status line of the named row.
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_toml = _write(root, SR_TOML)
     before = sr_toml.read_text(encoding="utf-8")
 
@@ -858,7 +897,7 @@ def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
     rewriting attested requirement text. Two damages from one defect: a false
     record, and a corrupted registry cell.
     """
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_toml = _write(root, SR_TOML_PROSE)
 
     intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
@@ -883,7 +922,7 @@ def test_a_row_with_no_status_key_at_all_REFUSES(tmp_path):
     never staged for one. Distinct from the existing test below, which removes
     the line only AFTER locating a Modified row.
     """
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     req = root / "docs" / "requirements"
     (req / "system-requirements.csv").unlink()
     (req / "system-requirements.toml").write_text(
@@ -899,7 +938,7 @@ def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
     """The review's MAJOR 6: the writer advertises "every other byte unchanged",
     and a wholesale CRLF -> LF conversion makes a one-word ratification a
     whole-file diff — on the registry whose diffs the amendment guard reads."""
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_toml = _write(root, SR_TOML, newline="\r\n")
     before = sr_toml.read_bytes()
     assert before.count(b"\r\n") > 3  # a genuinely CRLF fixture
@@ -917,7 +956,7 @@ def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
 def test_an_lf_registry_is_not_given_crlf_either(tmp_path):
     """The other half of MAJOR 6 — preserving the style must not mean guessing
     it. An LF file stays LF."""
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_toml = _write(root, SR_TOML)
     intake._rewrite_toml_statuses(sr_toml, SR_REL, ["SR-001"])
     assert b"\r\n" not in sr_toml.read_bytes()
@@ -927,7 +966,7 @@ def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_
     # The mutation that proves the writer can still fail: a located row whose
     # status line the rewrite cannot find must REFUSE, because reporting a flip
     # that was never written is a ratification the registry does not carry.
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     # Plant the defect: the writer is asked for a row whose status LINE is not
     # in the file. It used to be planted by locating the row first and deleting
     # the line behind the locator's back; driving the writer directly says the
@@ -940,18 +979,18 @@ def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_
 
 
 def test_an_unknown_row_id_refuses_the_flip(tmp_path):
-    root = _policy_repo(tmp_path, 0)
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
     action, flipped, refusal = intake.flip_verified(root, ["SR-999"])
     assert flipped == []
     assert refusal is not None and "SR-999" in refusal
 
 
-def test_an_unreadable_level_fails_toward_recommend(tmp_path):
+def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     # Fail toward the human, never toward a machine ratification. Every input
     # this rung can fail on resolves the same way: an out-of-vocabulary dial, a
-    # docs/gate with no stage field (a repo that predates SN-029), and an
-    # unparseable one all read as HUMAN-HELD.
-    root = _policy_repo(tmp_path, 4)
+    # stage record with no stage field (a repo that predates the carrier), and
+    # an unparseable one all read as HUMAN-HELD.
+    root = _policy_repo(tmp_path, kit_ladder.STAGE_RELEASE)
     action, _flipped, refusal = intake.flip_verified(root, ["SR-001"])
     assert refusal is None, refusal
     assert action == "recommend"
@@ -959,9 +998,23 @@ def test_an_unreadable_level_fails_toward_recommend(tmp_path):
     assert intake.adjudication_action(True) == "recommend"
     assert intake.adjudication_action(False) == "flip"
 
-    # The upstream comparison's own failure directions.
-    docs = root / "docs"
+    # The upstream comparison's own failure directions, driven at a MIDDLE dial.
+    # THAT IS NOT A DETAIL: at `DevStg-Release` `human_holds` answers True before
+    # it ever looks at the stage, so an unreadable-stage assertion made there is
+    # VACUOUS — it would pass against a `human_holds` with the fail-safe deleted.
+    # At `DevStg-Arch` the fixture's own recorded rung is NOT held, so a True can
+    # only have come from the unreadable-stage arm.
+    (tmp_path / "middle").mkdir()
+    middle = _policy_repo(tmp_path / "middle", kit_ladder.STAGE_ARCH)
+    docs = middle / "docs"
+    assert ac.spine_stage_of(middle) == FIXTURE_STAGE, "the record must be READ"
+    assert ac.human_holds(docs, FIXTURE_STAGE) is False, "the baseline: not held"
     assert ac.human_holds(docs, None) is True, "an unknown stage is human-held"
-    assert ac.human_holds(docs, "3") is True, "a non-int stage is human-held"
-    set_process_key(root, "attestation", "human_ratification_through", "four")
-    assert ac.ratification_level(docs) == 4, "a wrong-typed dial holds every tier"
+    assert ac.human_holds(docs, "3") is True, "a non-rung stage is human-held"
+    # ...and an unreadable DIAL holds every rung, whatever the stage says. The
+    # rung is named rather than read back through `spine_stage_of` because the
+    # write above moves the fingerprint, which would send the reader off to
+    # re-derive — a different question than the one under test.
+    set_process_key(middle, "attestation", "human_ratification_through", "four")
+    assert ac.ratification_through(docs) == kit_ladder.STAGE_RELEASE
+    assert ac.human_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"

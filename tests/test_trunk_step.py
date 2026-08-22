@@ -247,7 +247,7 @@ def test_regen_skips_absent_artifact_families(tmp_path, capsys):
     out = capsys.readouterr().out
     for name in (
         "okf",
-        "derived-gate",
+        "derived-stage",
         "trajectory",
         "status",
         "open-items",
@@ -275,8 +275,8 @@ def test_regen_fails_loudly_on_a_broken_generator(tmp_path, capsys):
 
 def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
     # SR-173: a producer runs before every consumer that reads it — okf first
-    # (the dashboard's Knowledge tab reads the BUNDLE), derived-gate before
-    # trajectory and status (both read docs/gate), open-items last (nothing
+    # (the dashboard's Knowledge tab reads the BUNDLE), derived-stage before
+    # trajectory and status (both read docs/stage), open-items last (nothing
     # reads it back). Asserted on the EXECUTED surface (the printed per-step
     # lines of a real run), not on the REGEN_STEPS table, so a reorder of the
     # table shows up here even though every family skips.
@@ -290,7 +290,7 @@ def test_regen_runs_in_declared_dependency_order(tmp_path, capsys):
         out.index("skipping {}".format(name))
         for name in (
             "okf",
-            "derived-gate",
+            "derived-stage",
             "trajectory",
             "status",
             "open-items",
@@ -343,12 +343,12 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     # F14). A failure planted in the LAST entry makes "a later step fails"
     # vacuous — the early `return 1` would skip nothing observable, and a
     # mutation making regen carry on (`_rc = 1; continue`) would leave this
-    # test green. Here `derived-gate` (step 2 of 5) fails while `open-items`
+    # test green. Here `derived-stage` (step 2 of 5) fails while `open-items`
     # (step 5) is APPLICABLE and would run green if reached, so the
     # stop-at-first-failure contract is what the assertions turn on.
     #
     # WHY THE FAILURE IS AN UNWRITABLE OUTPUT (WI-455): the green step used to
-    # be `arch-map` and the mid-list failure a registry `derive_gate` could not
+    # be `arch-map` and the mid-list failure a registry the deriver could not
     # parse. `arch-map` retired, which makes `okf` step 1 — and `okf` reads
     # every registry, so a malformed-registry failure now lands FIRST, with no
     # green step before it. Occupying the output path is the remaining way to
@@ -357,13 +357,16 @@ def test_regen_failure_after_green_steps_commits_nothing(tmp_path, capsys):
     _seed_regen_repo(tmp_path)
     _commit(tmp_path, "seed")
     head_before = _git(tmp_path, "rev-parse", "HEAD").strip()
-    # `docs/gate` EXISTS (so the family arms) but cannot be written.
-    (tmp_path / "docs" / "gate").mkdir()
+    # `docs/stage` EXISTS (so the family arms) but cannot be written. It was
+    # `docs/gate` until WI-498 slice 5 retired that file and its regen step; the
+    # successor occupies the same position in the list, so the mid-list
+    # placement this test turns on is unchanged.
+    (tmp_path / "docs" / "stage").mkdir()
 
     assert ts.regen(tmp_path) == 1
     captured = capsys.readouterr()
     assert "regen — okf ok" in captured.out, "a green step must precede"
-    assert "regen FAILED at derived-gate" in captured.err
+    assert "regen FAILED at derived-stage" in captured.err
     # THE CONTINUATION ASSERTION — the one the last-step placement could not
     # make. `open-items` applies, so had regen carried on it would have printed
     # either an `ok` or a `FAILED at open-items`; neither may appear, and it

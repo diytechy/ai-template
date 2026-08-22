@@ -229,7 +229,7 @@ fails the gate on any orphan, duplicate, or malformed id (SN-002).
 
 Not an optional layer. `bootstrap.py` installs `external.toml` for **every**
 profile, and `DevStg-Boundary` is **rung 1** of the eight-rung stage ladder with
-this file as its deliverable — `derive_gate.boundary_incomplete` holds a repo
+this file as its deliverable — `spine_rules.boundary_incomplete` holds a repo
 there while any crossing reads `Drafted`. It ships **inert** (a `-000`
 placeholder only), so a project that never declares a boundary is not pinned at
 rung 1; leaving it inert is a *statement*, not an omission, and that is what
@@ -390,8 +390,10 @@ process**, traced by its own `SN→SR→LLR→TC` spine and gated by its own
 - The meta-repo's needs, requirements, and tests live under
   [`docs/requirements/`](docs/requirements/) + [`docs/test/`](docs/test/) —
   distinct from the blank templates the kit *ships*.
-- Its own derived bar is honest rather than flattering: [`docs/gate`](docs/gate) currently reads **DevStg-Reqs**, stage **DevStg-Boundary** (1 of 8) — the spine re-opened deliberately for the 2026-08 boundary/re-tier program after passing **DevStg-Impl** (gate-walk record:
-  [`docs/log.md`](docs/log.md)).
+- Its own derived stage is honest rather than flattering:
+  [`docs/stage`](docs/stage) currently reads **DevStg-Arch** (stage 4 of 8) — the
+  spine re-opened deliberately for the 2026-08 boundary/re-tier program after
+  reaching **DevStg-Impl** (the record: [`docs/log.md`](docs/log.md)).
 
 ### Configuration at a glance (defaults vs. this repo)
 
@@ -408,9 +410,9 @@ set:
 
 | Option (`docs/…`) | Fresh-scaffold default | Turn on / off | This repo |
 |---|---|---|---|
-| `gate` | **generated** — `derive_gate.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevStg-Reqs` (derived; re-opened for the 2026-08 re-tier program after DevStg-Impl) |
-| `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the ordinal below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
-| `process.toml` `human_ratification_through` | `4` (every tier human-held) | lower the ordinal — `3` SNs+SRs+LLRs, … `0` nothing human-held | `4` — every spine tier human-held (owner directive 2026-08-14; the live dial is the key in [`docs/process.toml`](docs/process.toml)) |
+| `stage` | **generated** — `derive_stage.py` computes it from artifact states (a fresh scaffold reads `DevStg-Reqs`) | never hand-edited; advances by *ratifying* artifacts | `DevStg-Arch` (derived; re-opened for the 2026-08 re-tier program after DevStg-Impl) |
+| `process.toml` `gate_policy` | **not shipped** — SN-029 retired the enum for the dial below; a legacy key is read only as a migration fallback | `bootstrap.py --gate-policy <word>` still takes `"attended"` / `"single-ratify"` / `"autonomous"`, but **translates** it to the dials rather than storing it (and scaffolds a deviation register) | not declared; the `"autonomous"` posture is recorded in its [register](docs/gate-policy.md) |
+| `process.toml` `human_ratification_through` | `"DevStg-Release"` (every rung human-held) | name a lower rung — every rung **at or below** the value is human-held, down to `"DevStg-Below"` (nothing human-held) | `"DevStg-Release"` — every spine rung human-held (owner directive 2026-08-14; the live dial is the key in [`docs/process.toml`](docs/process.toml)) |
 | `process.toml` `push` | `"human"` | opt-in `"agent-iteration"` / `"agent"` | `"human"` |
 | `process.toml` `review_rounds` | `1` | reviewer dial `0`–`2` (an **int**, not a word) | `1` |
 | `process.toml` `privacy_check` | `false` | **opt-in** `true` (PII/identity layer) | `false` |
@@ -436,12 +438,14 @@ specified in [`PROCESS_OPTIONS.md`](project-trajectory/PROCESS_OPTIONS.md).
 
 What each approval gate certifies — full criteria in
 [`PROCESS.md`](project-trajectory/PROCESS.md) §4, which also carries the ruled
-**stage/gate** model: a repo is *in* a stage (one of the eight rungs of §4's
-`DevStg-*` ladder), and *passes* a gate. The gate value in `docs/gate` is
-*derived*, not declared — `derive_gate.py` computes it from the artifact states
-and caches it (generated, never hand-edited) as **the gate that must next be
-passed**, which is also the strictness the harness runs at. It advances when a
-batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
+**stage** model: a repo is *in* exactly one stage (one of the eight rungs of
+§4's `DevStg-*` ladder), and there is no second axis — a certified rung boundary
+is simply one a named human signs. The value in `docs/stage` is *derived*, not
+declared — `derive_stage.py` computes it from the artifact states over the
+SETTLED spine (so drafting cannot lower it) and records it, generated and never
+hand-edited, as **the rung the repo is in**, which is also what the harness
+selects its checks at: every step declared at or below it runs. It advances when
+a batch of artifacts is **ratified** in a reviewed `Status`-change commit, and it
 *pulls back* when attested content is amended. There is no status value for that
 state: the transitional `Modified` marker retired at the 2026-08-20 signing, and
 an amendment is now detected by **drift** — the row compared against its copy in

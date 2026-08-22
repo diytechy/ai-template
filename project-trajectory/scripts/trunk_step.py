@@ -420,17 +420,17 @@ def _open_items(root):
 #   okf          reads the registries; the dashboard's Knowledge tab reads the
 #                BUNDLE, so a stale bundle would bake stale knowledge into the
 #                dashboard (PROCESS_OPTIONS.md "okf -> trajectory").
-#   derived-gate reads artifact STATES only — nothing generated — and both
-#                surfaces below read its `docs/gate` output.
-#   derived-stage the same inputs on the STAGE axis (WI-498 slice 1), and it
-#                feeds nothing generated YET — no dashboard reads it until
-#                slice 2 re-keys the readers. It sits beside its sibling
-#                rather than after the dashboards so that the two derived
-#                caches are always written from the SAME tree state: split
-#                across the regen sequence they could straddle an edit and
-#                record two different spines.
-#   trajectory   the dashboard highlights the current gate from `docs/gate`.
-#   status       the snapshot projects the derived gate + spine counts.
+#   derived-stage reads artifact STATES only — nothing generated — and both
+#                surfaces below read its `docs/stage` output. It sits BEFORE
+#                the dashboards rather than after them so that the derived
+#                cache and the surfaces projecting it are always written from
+#                the SAME tree state: split across the regen sequence they
+#                could straddle an edit and record two different spines. (It
+#                arrived at slice 1 beside a `derived-gate` twin over
+#                `docs/gate`, feeding nothing generated until slice 2 re-keyed
+#                the readers; slice 5 deleted that twin and its file.)
+#   trajectory   the dashboard highlights the current stage from `docs/stage`.
+#   status       the snapshot projects the derived stage + spine counts.
 #   open-items   reads the registry + git; nothing reads it back.
 REGEN_STEPS = (
     (
@@ -438,12 +438,6 @@ REGEN_STEPS = (
         lambda root: (Path(root) / "docs" / "okf").is_dir(),
         _cmd("gen_okf.py"),
         "docs/okf/ absent",
-    ),
-    (
-        "derived-gate",
-        _has("docs/gate"),
-        _cmd("derive_gate.py"),
-        "docs/gate absent",
     ),
     (
         "derived-stage",

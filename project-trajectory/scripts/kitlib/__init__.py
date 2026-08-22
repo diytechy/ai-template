@@ -70,7 +70,7 @@ duplicated; it is also for things that were correctly single and wrongly PLACED.
 clearest case in the package. It was DUPLICATED — the eight rung strings
 restated in `agent_common`, the descriptions copied byte-for-byte into
 `traj_status` — and it was also wrongly PLACED, because the one home it did have
-was `derive_gate`, a 1,400-line engine that parses the registries and writes
+was `spine_rules`, a derivation engine that parsed the registries and wrote
 `docs/gate`. So a renderer needing eight sentences either loaded the engine or
 kept a copy, and it kept a copy that nothing pinned.
 

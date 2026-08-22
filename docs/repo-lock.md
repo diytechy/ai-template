@@ -81,7 +81,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
 - ~~**Rule the stage/gate semantics**~~ — **RULED and EXECUTED: gate-as-state
   is retired for stage semantics** per the
   [proposal](archive/plans/2026-08-11-stage-gate-semantics.md). The implementation
-  rung exists (stage 4; done is 5), `docs/gate`'s header tells the truth,
+  rung exists (stage 4; done is 5), `docs/gate`'s header told the truth,
   `PROCESS.md` §4 carries the model, the sweep is done, full bar green.
   Judgment calls → **§8.7**.
 - ~~**Rule the six SN-tier intake items**~~ — **RULED and EXECUTED as
@@ -246,7 +246,7 @@ demoting three needs on this exact test. And the tabled items in **§8.4** and
 **DELETED 2026-08-13w — this section was a second, drifting source of truth.**
 Every row it carried (stage, spine counts, pending-brief count, last full bar)
 had gone measurably wrong against the generated surfaces. Read the facts where
-they are derived: [`docs/gate`](gate) (the basis line), the generated snapshot
+they are derived: [`docs/stage`](stage) (the derived record), the generated snapshot
 in [`status.md`](status.md), and [`open-items.html`](open-items.html). The
 2026-08-13 sitting rulings that re-scope this file's still-owed items are in
 [`log.md`](log.md) Decisions 13d–13v; note for **D-9**: its migration mapping
@@ -330,7 +330,7 @@ same meaning; where they need different meanings they need different names.
 
 - **`Phase`** — add to SN as the same mechanical integer the spine uses
   (option (a); the ruling's *intent* is satisfied without disturbing the gate).
-  It is **not** advisory today: `derive_gate` and `trace` parse it, `trace`
+  It is **not** advisory today: `spine_rules` and `trace` parse it, `trace`
   filters the SR set by it, and the release checklist groups on it.
 - **`Priority`** — a float, higher = first, relative **within a registry**.
   Free on SR (146 rows, value inert); **load-bearing on WI**, where
@@ -423,7 +423,7 @@ every push, so a cell is a stale duplicate. Deleting it makes the ladder
 uniform, and **dissolves the word-reuse hazard rather than working around it** —
 `Verified` is not re-pointed, it ceases to exist.
 
-> **CORRECTION, 2026-08-11 — this paragraph originally said `derive_gate`'s DevStg-Impl
+> **CORRECTION, 2026-08-11 — this paragraph originally said `spine_rules`'s DevStg-Impl
 > rung ("decomposed AND `Status=Verified`") "becomes simply at `Founded`".
 > That is WRONG, and the owner's question found it.** `Founded` **is** the old
 > DevStg-Tests condition (decomposed — its LLR and TC exist), so mapping DevStg-Impl onto it
@@ -438,7 +438,7 @@ uniform, and **dissolves the word-reuse hazard rather than working around it** �
 >
 > **The fix is where `PROCESS.md` already puts it: the HARNESS is the signal** —
 > DevStg-Impl's bar is *"passes the full harness: format/lint, full test tier, coverage
-> ≥ threshold … no stubs."* `derive_gate` never read it; it read a cell that
+> ≥ threshold … no stubs."* `spine_rules` never read it; it read a cell that
 > claimed it. So the DevStg-Tests→DevStg-Impl driver must become a harness result, not a status
 > value — which also makes the proposed **stage 4 → 5** boundary
 > (implementation → release candidate) harness-driven, consistently with the
@@ -496,7 +496,7 @@ spends the word six times meaning compress-to-essence) · `Grounded`
    the count rose with the 2026-08-12 intake), leaving `kind` holding only the
    tier distinction. One fact, one home.
 4. **The three F5-duplicated predicates change together** — `is_draft` /
-   `is_verified` / `is_modified` across `trace_text` · `trace` · `derive_gate`,
+   `is_verified` / `is_modified` across `trace_text` · `trace` · `spine_rules`,
    pinned by `test_rule_sync`. That pin is the migration's safety rail; it must
    also assert that **no predicate still honours a retired word**.
 5. **The other carriers:** `IF`'s `Status` overlaps its own `Stability` column
@@ -525,8 +525,8 @@ spends the word six times meaning compress-to-essence) · `Grounded`
 
 Three already existed; the fourth was built.
 
-- **SN** → `derive_gate`'s coverage rung, counted as `uncovered=N`.
-- **SR** → `derive_gate`'s existing DevStg-Tests decomposition test.
+- **SN** → `spine_rules`'s coverage rung, counted as `uncovered=N`.
+- **SR** → `spine_rules`'s existing DevStg-Tests decomposition test.
 - **TC** → the file-existence half of the `Evidence` check (sufficient under R2).
 - **LLR** → **BUILT as WI-429**, taken under the owner's *"proceed"*;
   **ratification owed with the ladder migration.** `CodeSymbol`/`Module`
@@ -698,8 +698,8 @@ else.
 
   | class | citations | where |
   |---|---|---|
-  | **live kit source** | **8** | `derive_gate.py` (4) · `check.py` (2) · `trace.py` · `check_trajectory.py` |
-  | **live kit tests** | **5** | `test_trajectory_arch` · `test_trace` · `test_derive_gate` · `test_check_harness` · `conftest` |
+  | **live kit source** | **8** | `spine_rules.py` (4) · `check.py` (2) · `trace.py` · `check_trajectory.py` |
+  | **live kit tests** | **5** | `test_trajectory_arch` · `test_trace` · `test_spine_rules` · `test_check_harness` · `conftest` |
   | **live shipped doc** | **1** | `PROCESS_OPTIONS.md` — the one an adopter reads, pointing at a path absent even from the kit |
   | live docs | 7 | `log.md` (2) · `spine-restructure` · `reviews/003-REVIEW-A` · `repo-review-2026-07-21` · this file · the stage/gate proposal |
   | generated | 1 | `okf/system-requirements/SR-049` (the bundle itself is gone since 2026-08-18 — `okf_export` off, docs/declared-absences) |

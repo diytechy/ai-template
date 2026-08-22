@@ -1284,8 +1284,8 @@ def run(root, args, worker=None, tier="all"):
     """
     lanes_total = _lane_count(args, root)
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
-    # as the enum was. `spine_stage_of` reads the tier currently in process off
-    # the generated docs/gate basis line; `human_holds` compares it against the
+    # as the enum was. `spine_stage_of` reads the tier currently in process
+    # through `kitlib.stage.read_stage`; `human_holds` compares it against the
     # declared `human_ratification_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     keep_going = ac.keep_nondependent(root / "docs")

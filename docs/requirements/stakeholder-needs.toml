@@ -24,7 +24,7 @@
 #   status      Maturity, and the ONE vocabulary the whole spine speaks (SN,
 #               SR, LLR, TC), so "what is un-approved right now?" is one
 #               question with one answer rather than a per-registry special
-#               case. `derive_gate.py` reads it to compute the stage.
+#               case. `spine_rules.py` reads it to compute the stage.
 #
 #                 Drafted   still being drafted — reads DevStg-Below, and
 #                           `trace.py` exempts it from the "every SN needs an

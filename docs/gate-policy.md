@@ -21,7 +21,7 @@ in the title. What the word now means here, read off
 
 | dial | this repo | meaning |
 |---|---|---|
-| `human_ratification_through` | `0` | nothing is human-held; the loop ratifies every tier itself |
+| `human_ratification_through` | `"DevStg-Below"` | nothing is human-held; the loop ratifies every rung itself |
 | `keep_nondependent` | `false` | a paged round does not carry non-dependent work forward |
 | `final_review` | `"always"` | the end-of-run review is never skipped — the fixed point below, as a dial |
 
@@ -36,8 +36,8 @@ self-applied (adopted via **WI-107**, `docs/archive/specs/WI-107.2026-07-20.md`)
 `autonomous`, every gate **except the owner's final read** closes on an **independent
 fresh-context LLM reviewer's recorded verdict** — no human batch sitting. This
 is config-layer only: **no spine change**, so the flip does **not** move the
-derived gate (`docs/gate` is always whatever `derive_gate.py` computes — the
-level never moves the derived value; read `docs/gate` for the current level
+derived stage (`docs/stage` is always whatever `derive_stage.py` computes — the
+level never moves the derived value; read `docs/stage` for the current stage
 rather than this register). The level governs only WHO ratifies a gate,
 not what the gate computes. _(The flip's reviewed commit is the owner's
 in-chat directive + this register update, 2026-07-15.)_

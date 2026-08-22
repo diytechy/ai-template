@@ -2,8 +2,8 @@
 
 THE BEHAVIOUR THAT HAD FIVE HOMES (census 2026-08-12, `repo-lock.md` §8.2;
 confirmed independently by the 2026-08-19 review, H-09). A declared-policy file
-under `docs/` — `docs/gate`, `docs/subagent-gate`, the legacy one-word dials —
-states ONE word, and every reader answers the same question: what is the first
+under `docs/` — `docs/subagent-gate` and the legacy one-word dials — states
+ONE word, and every reader answers the same question: what is the first
 line that is neither blank nor a comment? That question was answered by
 `agent_common.read_declared`, `subagent_gate.read_declared`, and three separate
 `_first_declared_line` copies in `bootstrap.py`, `check_privacy.py` and

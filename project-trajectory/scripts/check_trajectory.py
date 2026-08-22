@@ -1812,12 +1812,12 @@ def spec_interface_findings(root):
 # THE TRANSLATION IS BY MEANING, NOT BY SPELLING, and the two differ by two rungs
 # in both rows — which is precisely the trap the stage/bar spelling overlap sets:
 #
-#   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are
+#   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are  check_vocab: allow
 #                              authored AND ratified. `spine_stage` clears its
 #                              `any(is_drafted(sr))` test from there on, so what
 #                              the phase then stands at is DevStg-LLReqs — NOT
 #                              DevStg-Reqs, which is the rung it has just LEFT.
-#   `[p]-[tests]` / `[p]-[g2]` decomposition: LLRs and TCs authored and
+#   `[p]-[tests]` / `[p]-[g2]` decomposition: LLRs and TCs authored and  check_vocab: allow
 #                              non-Drafted. That clears the LLReqs and Tests
 #                              predicates both, so the phase stands at
 #                              DevStg-Impl — NOT DevStg-Tests.
@@ -2395,7 +2395,7 @@ def spec_lifecycle_findings(root, wis):
 # review had refuted three of its claims — a deriver would have flipped it), and
 # `draft`/`deferred`/`blocked`/`cancelled` are decisions, not outcomes. What was missing is
 # not derivation but RECONCILIATION — the shape every other declared-vs-computed
-# pair here already has (`derive_gate --check` recomputes and fails on drift;
+# pair here already has (`spine_rules --check` recomputes and fails on drift;
 # every generator carries `--check`). So this compares the declared cell against
 # the completion evidence and reports DISAGREEMENT, never auto-flipping: an
 # auto-flip would re-create exactly the false completion that WI-336 and

@@ -227,7 +227,7 @@ is broader.)*
 
 **M1. Hand-synchronized rule duplication between `trace.py` and `derive_gate.py`.**
 - **Location:** `LLR_EXEMPT` at
-  [derive_gate.py:78](../../../project-trajectory/scripts/derive_gate.py#L78) vs the
+  `derive_gate.py:78` vs the
   inline tuple at [trace.py:1024](../../../project-trajectory/scripts/trace.py#L1024);
   `is_draft`, `sn_draft_ids`, `refs`, `load_csv` duplicated wholesale ("kept in
   sync with trace.py's orphan rule" — a comment, not a check).
@@ -264,10 +264,10 @@ everything else takes `--root`.**
 **M3. Status-vocabulary case handling is inconsistent.**
 - **Location:** `is_draft()` lowercases
   ([trace.py:250](../../../project-trajectory/scripts/trace.py#L250),
-  [derive_gate.py:110](../../../project-trajectory/scripts/derive_gate.py#L110)); the
+  `derive_gate.py:110`); the
   Verified checks compare exact-case (`r.get("Status") == "Verified"`,
   [trace.py:1163](../../../project-trajectory/scripts/trace.py#L1163),
-  [derive_gate.py:141](../../../project-trajectory/scripts/derive_gate.py#L141)).
+  `derive_gate.py:141`).
 - **Problem:** `status=draft` and `Status=Draft` both count as draft, but
   `verified` (lowercase) silently counts as *not* verified. The failure direction
   is safe (a gate under-reports, never over-reports), but the asymmetry is

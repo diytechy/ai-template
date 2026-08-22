@@ -47,7 +47,7 @@ def test_minimal_project_is_green(scaffold):
 
 
 def test_off_root_fails_loudly(tmp_path):
-    # M2 / WI-100: check.py reads docs/gate + docs/stack.ini
+    # M2 / WI-100: check.py reads docs/stage + docs/stack.ini
     # relative to CWD. Run it where there is no docs/ tree and it must FAIL loudly
     # rather than silently fall back to the built-in commands and gate `all` (a
     # different, weaker plan). tmp_path has no docs/, so this stands in for "off
@@ -258,13 +258,14 @@ def test_run_steps_batch_passes_on_clean_project(scaffold):
     # The pre-commit hook's batched floor: several independent steps in one
     # interpreter spawn, run concurrently, each reported. Green on a fully
     # traced, freshly mapped project. Mirrors the shipped hook's batch (which
-    # now includes derived-gate, the docs/gate freshness guard).
+    # includes derived-stage, the docs/stage freshness guard — it was
+    # derived-gate over docs/gate until WI-498 slice 5 retired that axis).
     make_minimal_project(scaffold)
     proc = run_py(
         [
             "scripts/check.py",
             "--run-steps",
-            "okf,trajectory-map,trajectory,registry-integrity,derived-gate,skills-sync",
+            "okf,trajectory-map,trajectory,registry-integrity,derived-stage,skills-sync",
         ],
         cwd=scaffold,
     )
@@ -273,31 +274,36 @@ def test_run_steps_batch_passes_on_clean_project(scaffold):
         "okf",
         "trajectory-map",
         "registry-integrity",
-        "derived-gate",
+        "derived-stage",
     ):
         assert name in proc.stdout
 
 
-def test_derived_gate_step_wired_at_every_gate_and_runs(scaffold):
-    # check.py consumes the derived gate (docs/archive/specs/derived-gate-model.2026-07-20.md §5):
-    # the derived-gate freshness step is a process-layer step at every gate.
+def test_derived_stage_step_wired_at_every_rung_and_runs(scaffold):
+    # check.py consumes the derived STAGE: the derived-stage freshness step is a
+    # process-layer step at every rung. RE-KEYED at WI-498 slice 5 — the same
+    # claim was made about `derived-gate` over `docs/gate` until that step and
+    # the three-value BAR axis it guarded were retired; the concern (the derived
+    # spine state's freshness is gated everywhere, from stdlib, with no tool
+    # requirement) survives intact on the successor.
     check = load_script("check")
     for stage in check._kitladder.STAGE_ORDER:
         plan = check.resolve_plan(stage, 80, "full", None, None)
-        match = [s for s in plan if s[0] == "derived-gate"]
-        assert match, "derived-gate missing at {}".format(stage)
+        match = [s for s in plan if s[0] == "derived-stage"]
+        assert match, "derived-stage missing at {}".format(stage)
         assert match[0][4] == "process" and match[0][1] == ()  # stdlib, no tool
-    # End-to-end: on a DevStg-Impl-complete project (docs/gate regenerated to DevStg-Impl) the step
-    # passes; un-verifying an SR without regenerating docs/gate makes it FAIL.
+    # End-to-end: on a DevStg-Impl-complete project (docs/stage regenerated to
+    # DevStg-Impl) the step passes; un-approving an SR without regenerating
+    # docs/stage makes it FAIL.
     make_minimal_project(scaffold)
-    ok = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    ok = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     sr = scaffold / "docs" / "requirements" / "system-requirements.csv"
     sr.write_text(
         sr.read_text(encoding="utf-8").replace(",Test,Approved", ",Test,Drafted"),
         encoding="utf-8",
     )
-    bad = run_py(["scripts/check.py", "--run-step", "derived-gate"], cwd=scaffold)
+    bad = run_py(["scripts/check.py", "--run-step", "derived-stage"], cwd=scaffold)
     assert bad.returncode != 0
     assert "STALE" in bad.stdout + bad.stderr
 

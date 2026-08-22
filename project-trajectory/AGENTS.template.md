@@ -41,12 +41,12 @@ the ladder, and the ID scheme. The short version needed every session:
   test before the code that satisfies it: red → green → refactor — within the
   traceability spine, not instead of it.
 - **The stage ladder:** `DevStg-` Needs · Boundary · Reqs · Arch · LLReqs ·
-  Tests · Impl · Release. You are IN a stage and CLEAR a bar (`DevStg-Reqs` →
-  `-Tests` → `-Release`) per `docs/process.toml`. Never self-advance; log it.
+  Tests · Impl · Release. You are IN one; a human signs three of the rung
+  boundaries, per `docs/process.toml`. Never self-advance; log it.
 - **The check harness is the bar:** `python scripts/check.py` runs format,
-  lint, tests, coverage, traceability, flow checks and map freshness at the
-  derived bar (`docs/gate`); `--tier smoke` is the fast subset. Never report a
-  result you didn't run — paste the real output.
+  lint, tests, coverage, traceability, flow checks and map freshness at or
+  above the derived stage (`docs/stage`); `--tier smoke` is the fast subset.
+  Never report a result you didn't run — paste the real output.
 - **Behavior is reviewed as diagrams, not rows:** runtime flows (especially
   concurrent ones) are authored Mermaid sequence diagrams in
   [docs/runtime-flows.md](docs/runtime-flows.md), kept current

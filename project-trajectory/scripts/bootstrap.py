@@ -17,7 +17,6 @@ What it creates in the destination:
     GEMINI.md                                  <- GEMINI.stub.template.md (points to AGENTS.md)
     docs/process.md                            <- PROCESS.md  (load-bearing core)
     docs/process-options.md                    <- PROCESS_OPTIONS.md  (opt-in layers)
-    docs/gate                                  <- gate.template  (derived gate: DevStg-Reqs)
     docs/stage                                 <- stage.template  (derived stage: not yet
                                                   derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
@@ -62,7 +61,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, derive_gate.py, derive_stage.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
@@ -814,7 +813,7 @@ GATE_POLICY_DEVIATIONS = {
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
             "`Role: LLM-GATE`; the driver makes the ratifying Status-change "
-            "commit + regenerates docs/gate (derive_gate.py) citing it",
+            "commit + regenerates docs/stage (derive_stage.py) citing it",
         ),
         (
             "mid-run escalation to the human",
@@ -940,8 +939,8 @@ def apply_gate_policy(dest, level, dry_run):
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
     `LEGACY_RATIFICATION` above) rather than stored. Storing it was the
-    defect: the template ships `human_ratification_through = 4`, and
-    `ratification_level` prefers that key, so a `gate_policy = "autonomous"`
+    defect: the template ships `human_ratification_through`, and
+    `ratification_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
     non-default posture scaffolded as fully attended — silently, since neither
     dial is wrong on its own and `config_conflicts` had no rule against the
@@ -1026,20 +1025,35 @@ def apply_privacy_check(dest, value, dry_run):
 # Implements: SR-138, LLR-156
 LEGACY_RATIFICATION = {
     "attended": {
-        "human_ratification_through": 4,
+        "human_ratification_through": "DevStg-Release",
         "keep_nondependent": False,
         "final_review": "always",
     },
     "single-ratify": {
-        "human_ratification_through": 0,
+        "human_ratification_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_ratification_through": 0,
+        "human_ratification_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "off",
     },
+}
+
+# The retired 0-4 ordinal this dial took before WI-493 (OI-21 shape (ii)),
+# mapped onto the rungs each level used to hold. DUPLICATED from
+# `agent_common.LEGACY_DIAL_ORDINALS` under the same F5 rule as the table above
+# and pinned equal by tests/test_rule_sync.py: bootstrap imports no kit sibling,
+# because it is the one script an adopter may run from a bare download.
+# `--migrate-config` uses it to rewrite an adopter's number in place, so the
+# reader's per-run warning has an end.
+LEGACY_DIAL_ORDINALS = {
+    0: "DevStg-Below",
+    1: "DevStg-Boundary",
+    2: "DevStg-Arch",
+    3: "DevStg-LLReqs",
+    4: "DevStg-Release",
 }
 
 
@@ -1098,6 +1112,67 @@ LEGACY_CONFIG = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
+def _migrate_dial_ordinal(dest, notes, dry_run):
+    """Rewrite a `human_ratification_through` still holding the retired 0-4
+    ordinal as the `DevStg-*` rung that ordinal meant (WI-493).
+
+    NOT A LEGACY *FILE* migration like its siblings — the value is already in
+    `docs/process.toml`; only its VOCABULARY is old. It rides here because this
+    is the one command an adopter is told to run at re-sync, and because the
+    alternative is `agent_common.ratification_through` printing its translation
+    warning on every run of every kit script, forever.
+
+    Silent when the dial is absent or already a rung. A number OUTSIDE the
+    retired range is left alone and named in `notes` rather than guessed at:
+    there is no rung it meant, and an out-of-range dial is the one input that
+    reads as LESS human involvement than the owner asked for, so a migrator that
+    picked a value for it would be making a ratification-authority decision.
+
+    Implements: SR-138, LLR-156
+    """
+    key = "human_ratification_through"
+    path = Path(dest) / PROCESS_TOML_REL
+    if not path.is_file():
+        return
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+    at, _ = _locate_process_key(lines, "[attestation]", key)
+    if at is None:
+        return
+    raw = lines[at].split("=", 1)[1].strip()
+    # A LINE READ, not a TOML parse, because this module parses no TOML at all:
+    # it is the one script an adopter may run from a bare download, and every
+    # other write it makes to this file is a line rewrite for the same reason.
+    # The one-`key = value`-per-line convention `docs/process.toml` owes the git
+    # hooks is what makes reading a bare integer off the line exact.
+    if not re.fullmatch(r"-?\d+", raw):
+        return
+    rung = LEGACY_DIAL_ORDINALS.get(int(raw))
+    if rung is None:
+        notes.append(
+            "{} [attestation] {} = {} is outside the retired 0-4 range, so "
+            "there is no rung it meant — left in place. Set it to a DevStg-* "
+            "rung, or one of {}; until then it reads as the most conservative "
+            "setting.".format(
+                PROCESS_TOML_REL,
+                key,
+                raw,
+                ", ".join(LEGACY_DIAL_ORDINALS.values()),
+            )
+        )
+        return
+    set_process_key(dest, "attestation", key, rung, dry_run=dry_run)
+    notes.append(
+        "{} [attestation] {} {} the retired ordinal {} -> `{}` (WI-493). The "
+        "rungs held are unchanged.".format(
+            PROCESS_TOML_REL,
+            key,
+            "would migrate" if dry_run else "migrated",
+            raw,
+            rung,
+        )
+    )
+
+
 def migrate_legacy_config(dest, dry_run=False):
     """Fold every legacy one-word policy file into docs/process.toml and DELETE
     it. Returns `(moved, notes)` — the dest-relative legacy paths absorbed, and
@@ -1120,6 +1195,7 @@ def migrate_legacy_config(dest, dry_run=False):
         return [], ["{} is absent — nothing to migrate into".format(PROCESS_TOML_REL)]
     moved, notes = [], []
     _migrate_gate_policy(dest, moved, notes, dry_run)
+    _migrate_dial_ordinal(dest, notes, dry_run)
     for legacy_name, section, key, coerce in LEGACY_CONFIG:
         path = dest / "docs" / legacy_name
         if not path.is_file():
@@ -1548,19 +1624,20 @@ MAPPING = [
     ("GEMINI.stub.template.md", "GEMINI.md"),
     ("PROCESS.md", "docs/process.md"),
     ("PROCESS_OPTIONS.md", "docs/process-options.md"),
-    # The machine-readable derived gate (first non-comment line: DevStg-Reqs|DevStg-Tests|DevStg-Impl) — the
-    # gate the repo must next PASS. check.py and CI read it, so a young project's
-    # CI enforces the bar it is actually working toward. It is DERIVED from the
-    # artifact states by derive_gate.py (not hand-set); closing a gate =
-    # ratifying artifacts in a reviewed commit + regenerating. The scaffold ships a legacy one-liner (accepted value-only);
-    # `python scripts/derive_gate.py` migrates it to the generated form.
-    ("gate.template", "docs/gate"),
-    # The machine-readable derived STAGE (WI-498 slice 1) — the rung the settled
-    # spine has earned, its per-phase breakdown, and a fingerprint of the
-    # declared derivation inputs that lets any reader tell a current record from
-    # a stale one. `docs/gate` remains beside it until the readers cut over. The
-    # scaffold ships a comment-only placeholder rather than invented values;
-    # `python scripts/derive_stage.py` writes the real one.
+    # The machine-readable derived STAGE — the rung the settled spine has
+    # earned, its per-phase breakdown, and a fingerprint of the declared
+    # derivation inputs that lets any reader tell a current record from a stale
+    # one. check.py and CI select their plan from it, so a young project's CI
+    # runs the checks it is actually ready for. DERIVED from the artifact states
+    # by derive_stage.py, never hand-set. The scaffold ships a comment-only
+    # placeholder rather than invented values; `python scripts/derive_stage.py`
+    # writes the real one.
+    #
+    # IT REPLACED `gate.template` -> `docs/gate` AT WI-498 slice 5. That file
+    # carried a three-value BAR — "the gate the repo must next PASS" — which was
+    # a second axis over the same rows; the ladder now answers both questions
+    # with one value. An adopter's `docs/gate` is DELETED at re-sync, not
+    # migrated: nothing reads it.
     ("stage.template", "docs/stage"),
     # The id watermark (docs/id-watermark): the high-water mark per id space, so
     # a deleted row's number is never re-minted. REQUIRED, because trace.py
@@ -1568,7 +1645,7 @@ MAPPING = [
     # NOT all-zeros: the template covers the example rows the other templates
     # seed (OI=2), so it is generated from a real scaffold, never hand-written.
     # NEVER --force THIS ONE onto a live repo. Every other target here is a
-    # template to fill or is regenerable from the tree (docs/gate <- derive_gate);
+    # template to fill or is regenerable from the tree (docs/stage <- derive_stage);
     # this file is the only record of ids that have been DELETED, so overwriting
     # it with the fresh-scaffold marks destroys information nothing can recover.
     # `copy_file` therefore exempts it from --force (see WATERMARK_DEST).
@@ -1781,8 +1858,8 @@ MAPPING = [
     # scripts that import it are in this list, so the package must be whole.
     ("scripts/kitlib/station.py", "scripts/kitlib/station.py"),
     # WI-498 slice 0 added `ladder`: the eight-rung DevStg stage vocabulary,
-    # which `derive_gate` defined and `agent_common`/`traj_status` each restated
-    # as a literal. `derive_gate`, `agent_common` and `traj_status` are all in
+    # which `spine_rules` defined and `agent_common`/`traj_status` each restated
+    # as a literal. `spine_rules`, `agent_common` and `traj_status` are all in
     # this list and all import it now, so — the rule above, again — the package
     # must be whole or a fresh scaffold ImportErrors on its first check.
     ("scripts/kitlib/ladder.py", "scripts/kitlib/ladder.py"),
@@ -1808,8 +1885,8 @@ MAPPING = [
     # migration's evidence — an adopter that cannot run --check has to take the
     # conversion on faith, which is what SR-129's 140-cell lesson forbids.
     ("scripts/migrate_carrier.py", "scripts/migrate_carrier.py"),
-    ("scripts/derive_gate.py", "scripts/derive_gate.py"),
-    # The STAGE axis's producer (WI-498 slice 1). Imports `derive_gate` for the
+    ("scripts/spine_rules.py", "scripts/spine_rules.py"),
+    # The STAGE axis's producer (WI-498 slice 1). Imports `spine_rules` for the
     # spine load and its rung predicates — so that the two axes can never
     # disagree about what a Drafted row is — and `kitlib.stage` for the carrier;
     # both are in this list, and all three must ship together.

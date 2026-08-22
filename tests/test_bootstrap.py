@@ -34,7 +34,8 @@ def test_scaffold_contains_expected_files(scaffold):
         "docs/stack.ini",
         "docs/process.md",
         "docs/process-options.md",
-        "docs/gate",
+        # WI-498 slice 5 deleted `docs/gate` (and gate.template) from the
+        # scaffold surface; `docs/stage` is the derived state a scaffold ships.
         "docs/stage",
         # SN-028: the ~10 one-word policy files collapsed into ONE home. A
         # fresh scaffold ships only this; the legacy files are absent by
@@ -112,7 +113,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/kitlib/stage.py",
         "scripts/kitlib/station.py",
         "scripts/check.py",
-        "scripts/derive_gate.py",
+        "scripts/spine_rules.py",
         "scripts/derive_stage.py",
         "scripts/check_doc_refs.py",
         "scripts/check_figures.py",
@@ -811,12 +812,14 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # where that decision gets made — this one has a ruling, and
     # tests/test_blackout_isolation.py holds the rest of it.
     cfg = process_toml(scaffold)
-    # SN-029: the gate-authority posture is the ORDINAL plus its two orthogonal
-    # dials, not a stored enum word. The default is the conservative end.
-    assert cfg["attestation"]["human_ratification_through"] == 4
+    # SN-029: the gate-authority posture is the RUNG-THROUGH dial plus its two
+    # orthogonal dials, not a stored enum word. The default is the conservative
+    # end — WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung
+    # string it always meant, and `4` is now `"DevStg-Release"`.
+    assert cfg["attestation"]["human_ratification_through"] == "DevStg-Release"
     assert cfg["attestation"]["keep_nondependent"] is False
     assert "gate_policy" not in cfg["attestation"]
-    assert cfg["attestation"]["human_ratification_through"] == 4
+    assert cfg["attestation"]["human_ratification_through"] == "DevStg-Release"
     assert cfg["policies"] == {
         "push": "human",
         "review_rounds": 1,

@@ -1,4 +1,4 @@
-"""Pin the gate-policy that trace.py and derive_gate.py each carry to be equal.
+"""Pin the gate-policy that trace.py and spine_rules.py each carry to be equal.
 
 The F5 rule lets the kit's scripts duplicate *plumbing* (small CSV/heading loaders)
 so each stays an independently-copyable drop-in. But the two files also duplicate
@@ -39,7 +39,7 @@ readers; extend either rather than reaching for a new census.
 from conftest import KIT, ROOT, load_script, make_minimal_project, run_py
 
 TRACE = load_script("trace")
-GATE = load_script("derive_gate")
+GATE = load_script("spine_rules")
 
 
 def test_llr_exempt_sets_agree():
@@ -75,7 +75,7 @@ def test_is_drafted_agrees():
 
 def test_is_approved_agrees():
     # Both files decide the `Approved` state (the DevStg-Impl --require-verified
-    # criterion in trace.py, the gate derivation in derive_gate.py). Matched
+    # criterion in trace.py, the gate derivation in spine_rules.py). Matched
     # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
     # two equivalent across the same casing/whitespace/None battery as is_drafted.
     # The two RETIRED spellings that folded into this value (`Verified`,
@@ -101,7 +101,7 @@ def test_is_approved_agrees():
 
 def test_is_founded_agrees():
     # Both files decide the ladder's TOP rung, armed for the spine at D-9 step 8
-    # (trace.py for the LLR-status advisory's exemption, derive_gate.py for the
+    # (trace.py for the LLR-status advisory's exemption, spine_rules.py for the
     # SPINE_MATURITY lookup and the Impl->Release discriminator). Divergence
     # would let a Founded row read settled on one surface and unblessed on the
     # other — the same false-green class the is_drafted/is_approved pins exist
@@ -196,7 +196,7 @@ def test_no_predicate_anywhere_still_honours_a_RETIRED_status_word():
     # over the source rather than a call over the two copies above, for the same
     # reason the id-watermark seed pin is: the failure this guards against is a
     # THIRD copy — a module that kept comparing `Status` to a retired literal
-    # while `trace` and `derive_gate` moved. A predicate-level battery cannot see
+    # while `trace` and `spine_rules` moved. A predicate-level battery cannot see
     # a module it does not import.
     #
     # The rule is narrow on purpose: a retired word inside a COMMENT is history
@@ -285,8 +285,8 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
 
 def test_llr_exempt_agrees():
     # Both files decide the LLR-exemption at their own decision point (trace's
-    # orphan rule, derive_gate's sr_bar). Review 017 caught them disagreeing on
-    # a whitespace-padded valid method (derive_gate stripped, trace did not) —
+    # orphan rule, spine_rules's sr_bar). Review 017 caught them disagreeing on
+    # a whitespace-padded valid method (spine_rules stripped, trace did not) —
     # the exact false-green/false-red divergence WI-099 promised away. Pin the
     # predicate equivalent, and pin the padded case to the fixed direction.
     cases = [
@@ -309,7 +309,7 @@ def test_llr_exempt_agrees():
 
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
-    # derive_gate.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
+    # spine_rules.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
     # sr_bar has always demanded is_approved for ANY decomposed SR with no
     # per-method carve-out; trace's bar used to fire only for Verification=Test, so
     # a decomposed Demonstration/Analysis/Inspection SR left Approved could never
@@ -327,6 +327,10 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         "Attest",
         "Critique",
     ]
+    # Computed once from the first method, then every other method must match it:
+    # the pin is SAMENESS across the vocabulary, so hard-coding the rung here
+    # would make it a pin on the ladder instead.
+    method_blind_rung = None
     for m in methods:
         # RE-POINTED AT D-9 STEP 5: the "ratified but not approved" fixture was
         # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
@@ -341,18 +345,42 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         assert TRACE.is_drafted(verified) is False, m  # bar applies (ratified)
         assert TRACE.is_approved(verified) is True, m  # Approved -> passes
         assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
-        # sr_bar for a decomposed SR is method-blind too — every method, same
-        # answer. Since OI-30 D2 that answer is DevStg-Tests for BOTH sides (the
-        # ceiling), so the equivalence this test pins now lives entirely on the
-        # trace side above; the assertion below keeps sr_bar method-blind, which
-        # is the half the ceiling does not touch.
-        assert GATE.sr_bar(verified, True, True) == GATE.BAR_TESTS, m
-        assert GATE.sr_bar(implemented, True, True) == GATE.BAR_TESTS, m
-    # A Drafted SR is pre-ratification and exempt from BOTH: trace's bar stands down
-    # (is_drafted True, so the loop `continue`s) and sr_bar returns DevStg-Below (below DevStg-Reqs).
+        # RE-POINTED AT WI-498 slice 5: `sr_bar` is DELETED with the bar axis, so
+        # the derivation side of this pin moves onto the rung fall-through that
+        # replaced it. The claim is unchanged and is the half the OI-30 D2
+        # ceiling never touched — a DECOMPOSED SR derives the same rung whatever
+        # its Verification method says, so neither side can re-grow a method
+        # filter. (An LLR is supplied for every method, so the LLR-exemption is
+        # deliberately not what is being measured here; `test_llr_exempt_agrees`
+        # owns that.)
+        stage_v = GATE.spine_stage(
+            [dict(verified, **{"SR-ID": "SR-001", "SN-Refs": "SN-001"})],
+            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}],
+            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}],
+            {"SN-001"},
+            set(),
+        )
+        if method_blind_rung is None:
+            method_blind_rung = stage_v
+        assert stage_v == method_blind_rung, m
+    # A Drafted SR is pre-ratification and exempt from trace's bar (is_drafted
+    # True, so the loop `continue`s) while it HOLDS ITS RUNG OPEN on the
+    # derivation side — the two are the same fact seen from each end, which is
+    # what lets a draft live in the live spine and still show as work in
+    # progress. `sr_bar` said this by returning the below-everything sentinel;
+    # the fall-through says it by stopping at the requirements rung.
     draft = {"Verification": "Test", "Status": "Drafted"}
     assert TRACE.is_drafted(draft) is True
-    assert GATE.sr_bar(draft, True, True) == GATE.BAR_BELOW
+    assert (
+        GATE.spine_stage(
+            [dict(draft, **{"SR-ID": "SR-001", "SN-Refs": "SN-001"})],
+            [{"LLR-ID": "LLR-001", "SR-Refs": "SR-001", "Status": "Approved"}],
+            [{"TC-ID": "TC-001", "Verifies": "SR-001", "Status": "Approved"}],
+            {"SN-001"},
+            set(),
+        )
+        == GATE.STAGE_REQS
+    )
 
     # The predicate pins above are necessary but not sufficient: because is_drafted/
     # is_approved read Status (not Verification), restoring a Verification=="Test"
@@ -424,7 +452,7 @@ def test_sn_all_ids_agrees():
 def test_sn_cited_ids_agrees():
     # WI-401: the SN-coverage rung made SR SN-Refs a GATE input, so "which SN ids
     # do the SRs cite" is policy duplicated across the pair — trace.py's
-    # "SN has no SR" orphan listing and derive_gate.py's coverage rung must read
+    # "SN has no SR" orphan listing and spine_rules.py's coverage rung must read
     # the SAME set, or the gate and the itemized findings contradict on one
     # registry state (the exact WI-099 divergence class). Pin the parse
     # equivalent across separators, empties, and absent cells.
@@ -442,7 +470,7 @@ def test_sn_cited_ids_agrees():
     # Semantics pins: every separator splits; the function filters NOTHING itself.
     # -000 rows are excluded by the CALLER's row filter (compute/analyze), and a
     # Drafted SR's citation is deliberately IN the set — the raw-view exemption the
-    # double-counting seam manages (derive_gate's ex-draft view re-runs the same
+    # double-counting seam manages (spine_rules's ex-draft view re-runs the same
     # parse on the non-draft subset instead of special-casing it here).
     assert GATE.sn_cited_ids([{"SN-Refs": "SN-001;SN-002 SN-003,SN-000"}]) == {
         "SN-001",
@@ -469,15 +497,38 @@ def test_the_legacy_ratification_translation_agrees():
     # And the two ends are what the words always meant, stated here so a future
     # edit to either copy has to argue with a named expectation rather than
     # merely keeping two dictionaries equal to each other.
-    assert BOOT.LEGACY_RATIFICATION["attended"]["human_ratification_through"] == 4
-    assert BOOT.LEGACY_RATIFICATION["autonomous"]["human_ratification_through"] == 0
+    # RE-KEYED AT WI-493 (folded into WI-498 slice 5): the dial is a rung, not a
+    # 0-4 ordinal. The two ends still mean what the words always meant — the top
+    # of the ladder holds everything, and the sentinel below it holds nothing.
+    assert (
+        BOOT.LEGACY_RATIFICATION["attended"]["human_ratification_through"]
+        == "DevStg-Release"
+    )
+    assert (
+        BOOT.LEGACY_RATIFICATION["autonomous"]["human_ratification_through"]
+        == "DevStg-Below"
+    )
+    # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
+    # first: `--migrate-config` rewrites an adopter's retired ordinal using
+    # bootstrap's table, while every kit script READS one through
+    # `agent_common`'s. If the two disagreed, a repo would be migrated to one
+    # rung and run at another — the SN-029 shadowing defect, in a new costume.
+    assert BOOT.LEGACY_DIAL_ORDINALS == COMMON.LEGACY_DIAL_ORDINALS
+    assert BOOT.LEGACY_DIAL_ORDINALS == {
+        0: "DevStg-Below",
+        1: "DevStg-Boundary",
+        2: "DevStg-Arch",
+        3: "DevStg-LLReqs",
+        4: "DevStg-Release",
+    }
 
 
 def test_the_retired_enum_key_is_no_longer_shipped():
     # The shadowing defect, pinned so it cannot come back: the template used to
     # ship BOTH `gate_policy = "attended"` and `human_ratification_through = 4`,
-    # and since `ratification_level` prefers the ordinal, every repo that chose
-    # a non-default posture scaffolded as fully attended with no diagnostic.
+    # and since `ratification_through` prefers the explicit dial, every repo that
+    # chose a non-default posture scaffolded as fully attended with no
+    # diagnostic.
     from conftest import KIT
 
     text = (KIT / "process.toml.template").read_text(encoding="utf-8")
@@ -487,7 +538,7 @@ def test_the_retired_enum_key_is_no_longer_shipped():
         if ln.strip().startswith("gate_policy") and "=" in ln
     ]
     assert declared == [], declared
-    assert "human_ratification_through = 4" in text
+    assert 'human_ratification_through = "DevStg-Release"' in text
 
 
 def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
@@ -1156,7 +1207,7 @@ def test_the_carrier_value_writer_and_reader_are_the_exact_inverse():
 
 # --- is_example, including None (repo-lock.md §8.2, 2026-08-12 census) ---------
 def test_is_example_agrees_across_all_three_copies_including_none():
-    # derive_gate.is_example and gen_release_checklist.is_example both guard
+    # spine_rules.is_example and gen_release_checklist.is_example both guard
     # `(rid or "").endswith(...)`; trace_text.is_example (imported into
     # trace.py's own namespace as `is_example`, so `TRACE.is_example` IS this
     # function) did not, and crashed on None. Every current call site
@@ -1207,7 +1258,7 @@ def test_is_drifted_has_exactly_ONE_home():
     distinction is worth pinning rather than remembering.
 
     `is_drafted`/`is_planned`/`is_modified`/`is_approved` are duplicated between
-    `trace.py` and `derive_gate.py` on purpose: each reads ONE cell, each script
+    `trace.py` and `spine_rules.py` on purpose: each reads ONE cell, each script
     stays independently copyable, and the tests above pin the copies equal by
     value. `is_drifted` is a different animal — it joins a live registry against
     a snapshot tree through the carrier resolver and the §A5.1 cell split, so a

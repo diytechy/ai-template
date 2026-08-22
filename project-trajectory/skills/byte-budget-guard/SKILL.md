@@ -29,27 +29,25 @@ before you edit and again before you commit.
 
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
-| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,948 | 2026-08-20 | −5: WI-486's back-link re-word onto its dial, paid by dropping an example |
-| `CLAUDE.md` | **8,500** | 7,147 | 2026-08-20 | +166: the stale ~17.6 s smoke figure replaced by three warm readings, one past the ceiling |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,834 | 2026-08-21 | -140: the two WATCHED rows re-stamped for WI-498 slice 2, both shorter than the entries they replace |
+| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,941 | 2026-08-21 | −7: WI-498 slice 5 — the two-axis sentence becomes one axis; the harness line says at-or-above the derived stage |
+| `CLAUDE.md` | **8,500** | 7,148 | 2026-08-21 | +1: WI-498 slice 5 — the repo map's `docs/gate` becomes `docs/stage` |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,902 | 2026-08-21 | +68: WI-498 slice 5 — all four other rows re-stamped in one act |
 
-**Two files are parked at their caps: `AGENTS.template.md` 52 bytes free (0.5%)
-and this one under 1%;** `CLAUDE.md` holds ~16%. Those two are what you hit
-first, and the DOC is what gives — a cap is load-bearing (AGENTS reserves ≥2k
-for the adopter's own section under Gemini's truncation) and is not to be
-raised. Adding a sentence means cutting one, in the same edit.
-
-Each `Baseline` is pinned to its file's real size by
-`test_capped_doc_baselines_match_the_real_sizes`: a stale one is how this
-procedure produces the overrun it prevents.
+**`AGENTS.template.md` and this file are parked at their caps** (~1% free
+each); `CLAUDE.md` holds ~16%. Those two are what you hit first, and the DOC is
+what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
+section under Gemini's truncation) and is not to be raised. Adding a sentence
+means cutting one, in the same edit. Each `Baseline` is pinned to its file's
+real size by `test_capped_doc_baselines_match_the_real_sizes`.
 
 **Watched** — growth is allowed but must be flagged with a byte delta + reason
-in the session/WI note. Enforced by convention + that report.
+in the session/WI note. NOTHING PINS THESE: both had drifted un-flagged before
+WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 84,524 | 2026-08-21 | **+141** FLAGGED: WI-498 slice 2 — the tense note and the harness line re-keyed onto `--stage`, the rung a repo is IN, which is what now selects checks (OI-51) |
-| `project-trajectory/PROCESS_OPTIONS.md` | 176,428 | 2026-08-21 | **−830** WI-498 slice 2: the advisory tier and the product floor retire with the draft-collapse they compensated for, replaced by the at-or-above rule |
+| `project-trajectory/PROCESS.md` | 84,803 | 2026-08-21 | **+279** FLAGGED: WI-498 slice 5 — §4 re-teaches ONE axis (the bar retires; the dial becomes a rung). Depth it no longer has room for moved to PROCESS_OPTIONS |
+| `project-trajectory/PROCESS_OPTIONS.md` | 177,292 | 2026-08-21 | **+867** FLAGGED: WI-498 slice 5 — the phase-anchor passage taught the retired grammar as current; it now teaches `[<phase>]-[DevStg-<Rung>]` and the trap that an anchor records the rung the phase stands at once it CLOSES. Absorbs the depth §4 shed |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

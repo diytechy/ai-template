@@ -38,7 +38,7 @@
 #      resume IS the contract) and `docs/agents-enabled` (presence = consent to
 #      managed routing). A key in a shared file cannot express deletion-as-an-
 #      act, nor survive as a one-line reviewed diff.
-#   3. `docs/gate` — a GENERATED CACHE (derive_gate.py), not configuration.
+#   3. `docs/stage` — a GENERATED CACHE (derive_stage.py), not configuration.
 #   (There used to be a fourth exception here — the six CHECK-ENABLEMENT
 #   toggles stay one-word files, WI-423. It is OVERTURNED, owner 2026-08-11:
 #   "creating files to toggle something off is also very confusing … far
@@ -65,7 +65,7 @@
 # THE GATE-AUTHORITY DIAL. This section used to open with a three-value enum
 # (`gate_policy = "attended" | "single-ratify" | "autonomous"`). SN-029 RETIRED
 # it and this file no longer ships the key, because shipping both was itself
-# the bug: the template's `human_ratification_through = 4` shadowed whatever
+# the bug: the template's `human_ratification_through` shadowed whatever
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
@@ -73,26 +73,47 @@
 # is the one home for the translation, and `bootstrap.py --migrate-config`
 # applies it to a legacy `docs/gate-policy` file):
 #
-#   attended       human_ratification_through = 4, keep_nondependent = false
-#   single-ratify  = 0, keep_nondependent = true, final_review = "always"
-#   autonomous     = 0, keep_nondependent = true, final_review = "off"
+#   attended       human_ratification_through = "DevStg-Release",
+#                  keep_nondependent = false
+#   single-ratify  = "DevStg-Below", keep_nondependent = true,
+#                  final_review = "always"
+#   autonomous     = "DevStg-Below", keep_nondependent = true,
+#                  final_review = "off"
 #
 # Note what that makes visible: the enum's words were never one axis. Each
 # bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
 # why four separate tables had to re-interpret the same word.
-# How far up the SN -> SR -> LLR -> TC spine a HUMAN ratifies, cumulatively
-# ("through" this tier). The dispatcher compares the IN-PROCESS stage of a row
-# against this number: at or below it, work SURFACES for the human; above it,
-# the loop dispatches and an LLM verdict carries ratification authority.
-#   0 = nothing is human-held; the loop ratifies every tier itself
-#   1 = the human ratifies SNs
-#   2 = ... and SRs
-#   3 = ... and LLRs
-#   4 = ... and TCs (every tier human-held; the most conservative setting)
+# THE HIGHEST STAGE RUNG A HUMAN STILL RATIFIES, cumulatively ("through" this
+# rung). The dispatcher compares the rung a row is IN against this value: AT OR
+# BELOW it, work SURFACES for the human; above it, the loop dispatches and an
+# LLM verdict carries ratification authority. It is the exact mirror of the rule
+# that selects checks — a check runs at or ABOVE its `from-stage`, a human
+# ratifies at or BELOW this dial.
+#
+# The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
+# for "nothing is human-held; the loop ratifies every rung itself":
+#
+#   DevStg-Below      nothing is human-held
+#   DevStg-Needs      the human ratifies stakeholder needs
+#   DevStg-Boundary   ... and the system frame
+#   DevStg-Reqs       ... and the requirements
+#   DevStg-Arch       ... and the partition
+#   DevStg-LLReqs     ... and the low-level requirements
+#   DevStg-Tests      ... and the test cases
+#   DevStg-Impl       ... and the implementation
+#   DevStg-Release    everything (the most conservative setting)
+#
+# IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
+# carries the number is READ, TRANSLATED AND WARNED — not refused — and
+# `python scripts/bootstrap.py --migrate-config --dest .` rewrites it. The old
+# notches map 0 -> DevStg-Below, 1 -> DevStg-Boundary, 2 -> DevStg-Arch,
+# 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
+# level held before.
+#
 # Named `human_ratification_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
-human_ratification_through = 4
+human_ratification_through = "DevStg-Release"
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
 #   "always" — the loop stops for a final human read even when the level would

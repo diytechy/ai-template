@@ -17,6 +17,7 @@
 #                   it). A window whose start is after its end wraps past
 #                   midnight.
 # The half-open window [start, end) blocks `start` through the minute before
-# `end` and releases at `end`. Change this value in a reviewed commit, like
-# docs/gate. The default below pauses new sessions during weekday working hours.
+# `end` and releases at `end`. Change this value in a reviewed commit, like the
+# other declared policy files. The default below pauses new sessions during
+# weekday working hours.
 12:00-19:00

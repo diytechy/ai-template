@@ -345,7 +345,7 @@ object count grows. Sha-length is not a stable input.)
 
 1. **Both stamps are already excluded from the freshness gates, by design.**
    `gen_trajectory.ASOF_RE` drops the as-of line from the `--check`
-   byte-compare ("the stamp is informational"), and `derive_gate --check`
+   byte-compare ("the stamp is informational"), and `spine_rules --check`
    compares only the deterministic `# basis:` line, never `# computed … (as-of
    …)`. The drift is invisible to every gate that would red on it — which is
    also why the harness is green today despite a committed artifact *always*
@@ -757,7 +757,7 @@ the adjudication WI** — one behaviour, one home, one owner.
 **Confirmed against the code — the premise holds, with one honest correction.**
 
 - **Detection → gate drop** is real: `Modified`/`Draft` rows change what
-  `derive_gate.py` computes, `docs/gate` falls (e.g. DevStg-Impl→DevStg-Tests), and the window
+  `spine_rules.py` computes, `docs/gate` falls (e.g. DevStg-Impl→DevStg-Tests), and the window
   *lowers* the bar without blinding it (the higher gate's steps run advisory).
 - **Surfacing is real**: `gen_open_items.py` renders one card per `Draft` (owes
   a first ratification) or `Modified` (owes a re-attest) SR **with its whole
@@ -780,7 +780,7 @@ the adjudication WI** — one behaviour, one home, one owner.
 | Level | Escalation action | `pause_wi` | Keeps non-dependent work? | Who ratifies a gate |
 |---|---|---|---|---|
 | `attended` (default) | `stop-needs-human` | yes | **no** — start nothing new | a human, per batch |
-| `single-ratify` | `surface-block-continue-others` | yes | **yes** | LLM-gate through DevStg-Reqs+DevStg-Tests; the human ratifies the queued batch once at the phase's `[g2]` close, autonomous after |
+| `single-ratify` | `surface-block-continue-others` | yes | **yes** | LLM-gate through DevStg-Reqs+DevStg-Tests; the human ratifies the queued batch once at the phase's `[DevStg-Impl]` close, autonomous after |
 | `autonomous` (this repo) | `design-check-session` | yes | **yes** | an independent fresh-context LLM reviewer's recorded verdict, every gate except the owner's final read |
 
 **What the dispatcher does with each kind, per level.** This is the table the
@@ -792,7 +792,7 @@ barrier needs and the one place the design must not invent policy:
 | `high-risk`, `protected` | dispatch (exclusive) | dispatch | dispatch |
 | `spine` — build a scope change | dispatch: it is **work**, not a ratification. It *opens* a window; closing it is the next row's job | dispatch | dispatch |
 | `adjudication` | dispatch — but **see the open decision below** | dispatch | dispatch |
-| `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[g2]` close; otherwise surface | dispatch (recorded reviewer verdict ratifies) |
+| `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[DevStg-Impl]` close; otherwise surface | dispatch (recorded reviewer verdict ratifies) |
 
 **Fixed points survive every level** and the dispatcher must not paper over
 them: the owner's final read is the human's; **no un-run greens**; the harness is still the

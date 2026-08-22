@@ -255,7 +255,7 @@ def test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries
     scaffold,
 ):
     """W-1, THE LARGEST STALE WINDOW THE SCHEDULE MAP FOUND, closed by
-    construction. `derived-gate` is a member of `_TRUNK_FRESHNESS_STEPS`, so it
+    construction. `derived-stage` is a member of `_TRUNK_FRESHNESS_STEPS`, so it
     reports SKIP on any claimed work branch — and a skipped step never affects the
     exit code, which makes a GREEN run over a stale cache reachable there and
     nowhere else.
@@ -380,6 +380,56 @@ def test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder(scaffold):
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
+
+
+# --- WI-402: --next-phase, the derived next phase as an output mode -----------
+# MOVED HERE FROM tests/test_spine_rules.py AT WI-498 SLICE 5, with the CLI it
+# drives: `--next-phase` was rehomed from the retired `derive_gate.py` CLI onto
+# this module, which already derives `phase` from the same rows by the same rule.
+# The WI-402 ruling the two tests record is still live, and `--next-phase` is
+# still taught in PROCESS.md, PROCESS_OPTIONS.md and RESYNC_PACK.md — so the pin
+# moves rather than retires. The "does not write" assertion moves with it, from
+# `docs/gate` to `docs/stage`.
+def _phased_srs(scaffold):
+    (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
+        SRS_H
+        + _sr("SR-001", phase="1")
+        + _sr("SR-002", phase="3")
+        # A Drafted row in a higher phase: its phase is not yet scope.
+        + _sr("SR-003", status="Drafted", phase="4"),
+        encoding="utf-8",
+    )
+
+
+def test_next_phase_prints_max_plus_one(scaffold):
+    # --next-phase = max(phase over non-draft spine rows) + 1, printed bare so
+    # the intake mint helper (WI-388) can shell out and int() the answer when a
+    # confirmed scope change opens a new phase. A Drafted row's phase is not yet
+    # scope, so it never bumps the answer — same derivation as the record's
+    # phase=N, exposed as an output mode.
+    make_minimal_project(scaffold)
+    _phased_srs(scaffold)
+    stage_file = scaffold / kitstage.STAGE_FILE
+    before = stage_file.read_text(encoding="utf-8")
+    proc = run_py(
+        [SCRIPTS / "derive_stage.py", "--root", scaffold, "--next-phase"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.stdout.strip() == "4"  # max ratified = 3; the Drafted 4 is excluded
+    # An output mode over the existing derivation: docs/stage is not rewritten.
+    assert stage_file.read_text(encoding="utf-8") == before
+
+
+def test_next_phase_on_an_unphased_spine(scaffold):
+    # An unphased spine is the implicit foundation (phase 1) — what blank bought
+    # before the phase model — so the first opened phase is 2, never 1, which
+    # would collapse the new scope into the foundation the blank rows occupy.
+    make_minimal_project(scaffold)
+    proc = run_py(
+        [SCRIPTS / "derive_stage.py", "--root", scaffold, "--next-phase"], cwd=scaffold
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.stdout.strip() == "2"
 
 
 # --- the dogfood --------------------------------------------------------------

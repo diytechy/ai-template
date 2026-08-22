@@ -95,12 +95,12 @@ where a conclusion survives its broken reason, that is said too.
 | 2 | **Boundary draft §3's flag**: "SR-035 … it is `Modified`, so touching it costs a re-attest" | **SR-035 is live at `Verified`.** The *bundling* conclusion survives — touching a `Verified` row **flips it `Modified` and opens a window either way** — but the stated reason is false. |
 | 3 | **WI-390's body** (`## Context`, WI-414 re-scope): "SR-055 — still requires 'two circular working loops' … still `Verified`" | **SR-055 is `Modified`. So is SR-050.** SR-093/124/131/132/133 are still `Verified`; LLR-051/056 and TC-051/056 still `Verified`. Do not re-quote WI-390's list without re-measuring. |
 | 4 | **WI-442's title**: "regularize the two accidental 'agent CLI' IF rows … **during part B's schema pass**" | **Part B is WI-443 and is COMPLETE.** The sub-clause's vehicle has sailed; the two rows are **IF-020** and **IF-041**. It needs re-homing (§5.2). |
-| 5 | **Pack §5's basis block** (`drafts=51 modified=64 uncovered=0 phase=4 stage=DevStg-Needs stage-ord=0`) | Superseded by the live [`../gate`](../gate) — the current basis is quoted verbatim at §0.4. |
+| 5 | **Pack §5's basis block** (`drafts=51 modified=64 uncovered=0 phase=4 stage=DevStg-Needs stage-ord=0`) | Superseded by the live `../gate` — the current basis is quoted verbatim at §0.4. |
 | 6 | **Boundary draft §0**: "No new registry was ever proposed" | True **as history** — nothing ever was. Amended by the draft's own §1b and §4 item 5: **whether an external-entity registry is minted is now open** (decision 5). |
 | 7 | **Boundary draft §4 item 4**: IF-103 "should stay Experimental until the conversion program ends" | **Direct tension with the ruled 2.3 rider**, which makes `migrate_carrier.py` a **live resync helper** — so the conversion program has **no terminus**, and IF-103 would hold `DevStg-Boundary` down indefinitely. This sitting must reconcile (decision 4). |
 | 8 | **Pack §2.3**: lifted SR-147 / LLR-165 / **TC-160** | It never lifted **TC-159** — the TC that actually verifies LLR-165. Live: **TC-159 `Draft`** (verifies SR-147 + LLR-165); TC-160 `Planned` (verifies SR-147 + LLR-166); LLR-165 `Planned` with `test_refs = TC-159`; LLR-166 `Draft`. **The 2.3 execution left the chain internally inconsistent** — owed at sitting 3 §2. |
 
-### 0.4 The current basis line — verbatim from [`../gate`](../gate)
+### 0.4 The current basis line — verbatim from `../gate`
 
 ```
 # basis: SN=27 SR=148 LLR=151 TC=148 drafts=27 modified=51 uncovered=8 computed=DevBar-Below ex-draft=DevBar-Below phase=5 per-phase=1=DevBar-Tests;2=DevBar-Tests;3=DevBar-Tests;4=DevBar-Below;5=DevBar-Below stage=DevStg-Boundary stage-ord=1 stage-of=8
