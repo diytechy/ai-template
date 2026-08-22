@@ -259,10 +259,15 @@ def test_the_fingerprint_is_INVARIANT_under_CRLF_working_tree_churn(tmp_path):
     fingerprint that flipped on line endings would report every cross-platform
     checkout stale — stale-noise, on a mechanism whose whole value is that a
     mismatch means something."""
-    lf = _tree(tmp_path / "lf", **{"docs/process": b"a = 1\nb = 2\n"})
-    crlf = _tree(tmp_path / "crlf", **{"docs/process": b"a = 1\r\nb = 2\r\n"})
-    assert (crlf / "docs/process.toml").read_bytes() != (
-        lf / "docs/process.toml"
+    lf = _tree(
+        tmp_path / "lf", **{"docs/requirements/stakeholder-needs": b"a = 1\nb = 2\n"}
+    )
+    crlf = _tree(
+        tmp_path / "crlf",
+        **{"docs/requirements/stakeholder-needs": b"a = 1\r\nb = 2\r\n"},
+    )
+    assert (crlf / "docs/requirements/stakeholder-needs.toml").read_bytes() != (
+        lf / "docs/requirements/stakeholder-needs.toml"
     ).read_bytes()
     assert stage.fingerprint(lf, memo=None) == stage.fingerprint(crlf, memo=None)
 
@@ -272,8 +277,21 @@ def test_content_still_moves_the_fingerprint(tmp_path):
     fingerprint blind to a real edit."""
     root = _tree(tmp_path)
     before = stage.fingerprint(root, memo=None)
-    (root / "docs/process.toml").write_text("changed\n", encoding="utf-8")
+    (root / "docs/requirements/stakeholder-needs.toml").write_text(
+        "changed\n", encoding="utf-8"
+    )
     assert stage.fingerprint(root, memo=None) != before
+
+
+def test_process_toml_is_NOT_an_input(tmp_path):
+    """Owner ruling 2026-08-21 (amending plan §2): dials govern who may ratify,
+    not what stage is derived — and an over-inclusive fingerprint costs a red
+    commit bar after every policy-dial edit, not "milliseconds". A process.toml
+    edit must not move the fingerprint."""
+    root = _tree(tmp_path)
+    before = stage.fingerprint(root, memo=None)
+    (root / "docs" / "process.toml").write_text("dial = 1\n", encoding="utf-8")
+    assert stage.fingerprint(root, memo=None) == before
 
 
 # --- corner case 7: a mid-process input change -------------------------------

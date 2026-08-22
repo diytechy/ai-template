@@ -1,7 +1,7 @@
 +++
 id = "WI-473"
 title = "Gate scheduling loses every established product check when one draft row lands: design and build a monotonic product-regression floor beside the derived-bar selector (repo review 2026-08-19 C-01)"
-specref = "docs/archive/repo-review-2026-08-19.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,36 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+**Shipped in full at slice 1 (2026-08-20), then deliberately superseded and
+deleted by the WI-498 stage unification (2026-08-21, the OI-51 ruling) —
+closed COMPLETE per the owner's disposition (2026-08-21, "no preference,
+move to complete"): completion records work done, not perpetual existence.**
+
+What this row delivered, and why it counts even though the code is gone:
+`product_floor()`/`floor_plan()`/`floor_notice()` in `check.py` with five
+guards including the review-specified regression fixture (all green at
+c23eb907/b9538b26); the corrected `.github/workflows/test.yml` enforcement
+claim (which SURVIVES); the design record
+`docs/plans/2026-08-20-product-regression-floor.md` (survives as history);
+and — the load-bearing part — **building it refuted C-01's framing**: the
+floor's construction surfaced that `DevStg-Impl` was unreachable from the
+derived selector at all, which became OI-51, whose four-exchange ruling
+became the stage unification program that made the floor unnecessary (the
+effective stage carries the draft-exclusion by design, and C-01 is pinned
+fixed at the SELECTION level by `tests/test_selection_at_or_above.py`,
+this row's tests' named successor).
+
+The four items the slice left owed, each dispositioned by the program:
+(1) OI-51 — RULED, as the unification rather than the interim re-tag;
+(2) the SR-006/LLR-060 amendment — folds into the stale-Approved-rows
+batch beside OI-53 (the prose describes superseded machinery);
+(3) TC coverage — superseded with the mechanism (the successor test file
+carries the obligation);
+(4) the rehearsal — delivered by WI-498 slice 2's C-01-at-selection
+acceptance run on a real scaffold.
 
 ## Context
 

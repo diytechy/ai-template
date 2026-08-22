@@ -30,11 +30,11 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,941 | 2026-08-21 | −7: WI-498 slice 5 — the two-axis sentence becomes one axis; the harness line says at-or-above the derived stage |
-| `CLAUDE.md` | **8,500** | 7,148 | 2026-08-21 | +1: WI-498 slice 5 — the repo map's `docs/gate` becomes `docs/stage` |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,902 | 2026-08-21 | +68: WI-498 slice 5 — all four other rows re-stamped in one act |
+| `CLAUDE.md` | **8,500** | 7,238 | 2026-08-22 | +90: the human-hold sentence points at the dial instead of paraphrasing it (owner dial change) |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,925 | 2026-08-22 | +0: the CLAUDE.md row re-stamp after the owner dial-change sweep |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
-each); `CLAUDE.md` holds ~16%. Those two are what you hit first, and the DOC is
+each); `CLAUDE.md` holds ~15%. Those two are what you hit first, and the DOC is
 what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's

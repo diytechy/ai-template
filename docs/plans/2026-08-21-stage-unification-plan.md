@@ -32,9 +32,14 @@ hashing the repo scope is expensive and duplicates other scans.
 **The adjustment that dissolves the concern: the derivation's input set is
 not "the repository" — it is enumerable and small.** `derive_stage` is a
 pure function of the spine registries (`docs/requirements/*.toml`,
-`docs/test/test-cases.toml`), the declared dials it reads
-(`docs/process.toml`), and — once the Release rung is evidence-gated — the
-test-evidence carrier. That is under a dozen files. The schedule map
+`docs/test/test-cases.toml`) and — once the Release rung is evidence-gated
+— the test-evidence carrier. That is under a dozen files. *(Amended by
+owner ruling 2026-08-21, post-build: this list originally also named
+`docs/process.toml` "the declared dials it reads" — the derivation reads
+no dial, and the build measured the over-inclusion's real cost as a red
+commit bar after every policy-dial edit, not the "milliseconds" argued
+below. Dials govern who may ratify, not what stage is derived; the dial
+file is deliberately NOT an input, pinned by its own test.)* The schedule map
 verified this: the current `--check` already recomputes from exactly the
 live registries. OWNER_SCRATCHPAD.md, ignored files, and the rest of the
 tree were never inputs, so they never need scanning or excluding — the

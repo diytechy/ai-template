@@ -129,14 +129,14 @@ DECLARED_INPUTS = (
     ("docs/requirements/external", (".toml", ".csv")),
     ("docs/requirements/components", (".toml", ".csv")),
     ("docs/test/test-cases", (".toml", ".csv")),
-    # THE DECLARED DIALS. Today's derivation does not read `process.toml`; it is
-    # declared an input anyway because the ruled plan names it and because the
-    # error direction is safe in exactly one direction — an over-inclusive
-    # fingerprint costs a spurious re-derivation (milliseconds, correct answer),
-    # while an under-inclusive one costs a stale read (the failure this module
-    # exists to make impossible). When a dial does enter the derivation, no list
-    # has to be remembered.
-    ("docs/process", (".toml",)),
+    # `process.toml` is DELIBERATELY NOT an input (owner ruling 2026-08-21,
+    # amending the plan's §2 list): the derivation does not read it, and the
+    # original "over-inclusion costs milliseconds" argument priced the wrong
+    # cost — the real price was a RED commit bar after every policy-dial edit,
+    # because the committed fingerprint went stale over a file whose value never
+    # reaches the stage. Dials govern who may ratify, not what stage is derived.
+    # If a dial ever DOES enter the derivation, add its file here in the same
+    # change that reads it.
 )
 
 

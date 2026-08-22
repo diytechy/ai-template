@@ -248,15 +248,25 @@ def test_the_shipped_default_holds_a_bar_advance(tmp_path):
     )
 
 
-def test_BOTH_shipped_homes_declare_the_dial_as_the_TOP_RUNG_STRING():
+def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
     """The re-key is only real if the files an adopter actually gets carry the
     new spelling — and a `4` left in either one would still WORK (the migration
     window reads it), silently, which is exactly how a re-key half-lands.
 
     Both homes are read, and NEITHER is allowed to be missing: a `continue` over
-    an absent path is how a guard like this goes vacuous."""
+    an absent path is how a guard like this goes vacuous.
+
+    The pin is STRUCTURAL on this repo's own file and VALUED on the template —
+    the dogfood rule (CLAUDE.md): VALUES may diverge between the kit's template
+    and this repo's instance (the owner set this repo's dial to `DevStg-Needs`
+    on 2026-08-21, a declared-policy act), STRUCTURE must not (both homes carry
+    a quoted ladder-rung string, never the retired ordinal)."""
     root = _Path(__file__).resolve().parents[1]
-    for rel in ("docs/process.toml", "project-trajectory/process.toml.template"):
+    rungs = {'"{}"'.format(r) for r in dg.STAGE_ORDER}
+    for rel, expect in (
+        ("docs/process.toml", None),  # structural: any valid rung string
+        ("project-trajectory/process.toml.template", '"{}"'.format(dg.STAGE_RELEASE)),
+    ):
         path = root / rel
         assert path.is_file(), rel
         declared = [
@@ -264,7 +274,11 @@ def test_BOTH_shipped_homes_declare_the_dial_as_the_TOP_RUNG_STRING():
             for line in path.read_text(encoding="utf-8").splitlines()
             if line.split("#", 1)[0].strip().startswith("human_ratification_through")
         ]
-        assert declared == ['"{}"'.format(dg.STAGE_RELEASE)], (rel, declared)
+        assert len(declared) == 1, (rel, declared)
+        if expect is None:
+            assert declared[0] in rungs, (rel, declared)
+        else:
+            assert declared == [expect], (rel, declared)
     assert ac.RATIFICATION_FALLBACK == dg.STAGE_RELEASE
 
 
