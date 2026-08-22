@@ -1,10 +1,14 @@
 ## 2026-08-21 — The post-program owner session: the dial drops to Needs, three close items execute, two campaigns and two briefs mint
 
-Deferred open items: OI-53, OI-54 — the first updated in place (the owner's
-dial change moved its recommendation to the tracked-repair route, grown by
-the seven WI-498 prose rows; awaiting the word), the second minted this
-session to give the wi455 lane's blocking question the row it had lacked
-since 2026-08-20 (the OI-41 founding class, corrected).
+Deferred open items: none still owed — SUPERSEDED 2026-08-22: this session
+deferred the stale-cell repair route and the Consumes-owner reading (53
+and 54 in the OI space, named off the declaration line so the parser
+reads the live state); the owner ruled both the next day — (b)+(d) and
+(a) respectively — and the execution rows are queued. The first was
+updated in place before ruling (the dial change moved its recommendation
+to the tracked-repair route); the second was minted this session to give
+the wi455 lane's blocking question the row it had lacked since 2026-08-20
+(the OI-41 founding class, corrected).
 
 The owner's session, in order:
 

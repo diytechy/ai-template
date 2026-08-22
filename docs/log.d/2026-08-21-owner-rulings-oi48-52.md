@@ -1,11 +1,12 @@
 ## 2026-08-21 — Four of the six queued briefs rule in one owner message; the floor question is answered but deliberately not yet ruled
 
-Deferred open items: OI-53 — not addressed in any of the day's owner
-messages; still pending on the open-items surface. (This line originally
-also declared the floor question, 51 in the OI space — ANSWERED below
-across four exchanges and then RULED by the owner later the same day as
-the stage unification program; the id moved off the declaration line at
-that ruling, per the parser's live-state reading.)
+Deferred open items: none still owed — SUPERSEDED 2026-08-22: everything
+this file ever declared is ruled. It originally declared the floor
+question (51 in the OI space — answered across four exchanges below, then
+ruled the same day as the stage unification program) and the stale-cell
+batch (53 — ruled (b)+(d) on 2026-08-22, execution rows queued); both ids
+sit off the declaration line per the parser's live-state reading, and the
+per-exchange record below stands as history.
 
 The owner ruled four pending briefs in one message (2026-08-21); each row
 flipped `pending -> ruled` with the ruling recorded at the top of its
