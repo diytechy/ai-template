@@ -917,7 +917,10 @@ Gates, real output on this box:
   final tree, **146.3 / 73.3 s** (the first taken immediately after a full
   `check.py --jobs 0` run on the same box, which is why the SPREAD is reported
   rather than the better number)
-- `python -m pytest -q -n auto` (full, unfiltered) → **2817 passed, 14 skipped in 642.87 s**.
+- `python -m pytest -q -n auto` (full, unfiltered) → **2817 passed, 14 skipped in 642.87 s**,
+  and re-run on the COMMITTED tree afterwards (the pre-commit reading predates two
+  prose corrections and the two generated-surface regens the close required):
+  **2817 passed, 14 skipped in 638.15 s**.
   Up 18 from slice 3's 2799: the 18 new tests across the two new modules, against
   the two retired `test_trajectory_arch` phase tests replaced by four
 - `python project-trajectory/scripts/check_docs.py --root . --stale` → **OK —
