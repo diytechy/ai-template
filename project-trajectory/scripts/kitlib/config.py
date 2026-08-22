@@ -67,10 +67,15 @@ def first_declared_line(path):
 def read_declared(path, default):
     """`first_declared_line`, with `default` for the undeclared case.
 
-    Still the reader for `docs/gate` (a generated cache with a one-value last
-    line) and for the LEGACY half of the SN-028 dual-read window; new policy
+    The reader for the LEGACY half of the SN-028 dual-read window; new policy
     reads go through `agent_common.declared_policy`, which prefers
     `docs/process.toml`.
+
+    NOT A READER OF `docs/gate`, though this docstring said so until WI-498
+    slice 4 (the gate schedule map's reader E). No call site has ever put it to
+    that file — `docs/gate` is a deliberate NON-row in `PROCESS_KEYS`, and every
+    live gate reader spelled its own one-line parse out locally. The function is
+    unchanged and undeprecated; only the claim was false.
 
     Contract:
       Inputs:  path: path-like; default: value to answer when undeclared

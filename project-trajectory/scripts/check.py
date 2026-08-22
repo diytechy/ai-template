@@ -1235,9 +1235,16 @@ def _warn_retired_flag_spelling(argv=None):
 # `docs/gate` IS NO LONGER READ BY THIS MODULE AT ALL. Three of its readers
 # retired with this re-key: `resolve_gate` (the plan selector), `window_open`
 # (the advisory tier's trigger) and `product_floor` (the WI-473 ex-draft floor).
-# The file is still WRITTEN — the phase-drop and tier-signal detectors are deltas
-# of its committed history, and re-keying those is slice 4's — which is why the
-# `derived-gate` freshness step stays in the plan below.
+#
+# WHO IS LEFT (updated WI-498 slice 4, which cut the two EVENT detectors over —
+# `check_trajectory`'s phase drop and `intake`'s tier signal now read the stage
+# axis, so neither is a reason to keep this file). FOUR readers remain and they
+# are slice 5's, in two classes: the three DISPLAY readers (`traj_parse`,
+# `traj_panels`, `traj_status`) and — not a display reader, and NOT in slice 2's
+# enumeration — `agent_common.spine_stage_of`, which regex-scrapes `stage=` off
+# the `# basis:` line and feeds `human_holds`, i.e. RATIFICATION AUTHORITY. The
+# `derived-gate` freshness step therefore stays in the plan below: one of the
+# four decides who may ratify, and it must not read a stale value.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
 
 

@@ -693,29 +693,36 @@ def test_ex_draft_equals_computed_when_nothing_is_pending(scaffold):
 
 
 def test_the_basis_line_still_parses_under_its_SURVIVING_consumer(scaffold):
-    """THE PRODUCER-CONSUMER ROUND TRIP (D-9 migration §F1, risk 1), re-pointed.
+    """THE PRODUCER-CONSUMER ROUND TRIP (D-9 migration section F1, risk 1), re-pointed twice.
 
     THE LESSON IS UNCHANGED AND IS WHY THIS TEST SURVIVES ITS ORIGINAL SUBJECT.
     When a producer field and the regex that reads it drift apart, nothing
     fails: the consumer silently answers "nothing here" and the behaviour it
-    governs quietly stops — measured, over twelve commits, at the 2026-07-26/27
+    governs quietly stops - measured, over twelve commits, at the 2026-07-26/27
     window. So the pin is the ROUND TRIP, driven through the real reader over
     what `basis_line` actually emits, never a literal.
 
-    WHAT CHANGED (WI-498 slice 2). The consumer used to be `check.window_open`,
-    which read `drafted=`/`modified=`/`computed=`/`ex-draft=` to decide whether
-    drafts were suppressing the derived bar. Selection now keys on the
-    draft-excluded effective stage, so nothing is suppressed and that detector
-    retired with the blind spot it covered — taking the only reader of those
-    four fields with it.
+    WHAT CHANGED THE FIRST TIME (WI-498 slice 2). The consumer used to be
+    `check.window_open`, which read `drafted=`/`modified=`/`computed=`/`ex-draft=`
+    to decide whether drafts were suppressing the derived bar. Selection now keys
+    on the draft-excluded effective stage, so that detector retired with the blind
+    spot it covered.
 
-    ONE CONSUMER OF THIS LINE REMAINS: `check_trajectory.read_derived_phases`,
-    which parses `per-phase=` for the phase-drop detector, and it is exactly the
-    reader whose failure mode this test exists to prevent — it *silently drops*
-    values it cannot parse, so a producer rename would make the detector vacuous
-    rather than red. Re-keying it onto the stage axis is slice 4's, and until
-    then this round trip is what holds the pairing together."""
-    check_trajectory = load_script("check_trajectory")
+    WHAT CHANGED AGAIN (WI-498 slice 4). The consumer named here was then
+    `check_trajectory.read_derived_phases`, reading `per-phase=` for the
+    phase-drop detector. That detector now reads `docs/stage`, so **`per-phase=`
+    on this line has NO code consumer left at all** - and this test is where that
+    fact has to be recorded rather than discovered, because a field nothing reads
+    can be renamed freely and nobody would learn it from a green suite.
+
+    THE SURVIVING PAIRING IS `agent_common.spine_stage_of`, over `stage=`, and it
+    is a sharper subject than either predecessor: it feeds `human_holds`, i.e.
+    WHO MAY RATIFY, and its documented failure mode on a miss is to return None,
+    which `human_holds` treats as human-held. So a producer rename here does not
+    red anything - it silently routes more work to a human, which is the safe
+    direction and therefore the one nobody investigates. Exactly the drift this
+    round trip exists to catch."""
+    agent_common = load_script("agent_common")
     make_minimal_project(scaffold)
     _write(
         scaffold,
@@ -726,27 +733,31 @@ def test_the_basis_line_still_parses_under_its_SURVIVING_consumer(scaffold):
 
     # THE SURVIVING PAIRING, driven end to end through the real reader rather
     # than through a raw regex group: write the line the producer emits and make
-    # the consumer parse a NON-EMPTY mapping out of it. Empty is the exact
-    # failure this guards, so an empty result must not read as a pass.
+    # the consumer resolve a rung out of it. None is the exact failure this
+    # guards, so a None must not read as a pass.
     gate_file = scaffold / "docs" / "gate"
     gate_file.write_text(line + "\nDevStg-Reqs\n", encoding="utf-8", newline="\n")
-    phases = check_trajectory.read_derived_phases(scaffold)
-    assert phases, "read_derived_phases went vacuous over a real basis line: " + line
+    stage = agent_common.spine_stage_of(scaffold)
+    assert stage is not None, (
+        "spine_stage_of went vacuous over a real basis line: " + line
+    )
+    assert stage in GATE.STAGE_ORDER, stage
 
     # THE FIELD EDITS ARE PINNED, in both directions. `drafts=` became
     # `drafted=`, `planned=` was DELETED at step 5, and `modified=` was DELETED
-    # at step 7 — each half has to be visible here, or a reader could be matching
+    # at step 7 - each half has to be visible here, or a reader could be matching
     # a field that no longer means what it thinks it means.
     assert " drafted=" in line and " drafts=" not in line, line
     assert "planned=" not in line, line
     assert "modified=" not in line, line
     assert result["drafted"] == 1 and "drafted=1" in line, line
-    # AND THE RETIRED CONSUMER IS REALLY GONE, not merely unreferenced — a
-    # re-introduced `window_open` would start reading a file this harness no
-    # longer selects from, which is the seam slice 2 exists to cut.
+    # AND THE RETIRED CONSUMERS ARE REALLY GONE, not merely unreferenced.
     check = load_script("check")
     for gone in ("window_open", "_BASIS_RE", "_EX_DRAFT_RE", "product_floor"):
         assert not hasattr(check, gone), gone
+    check_trajectory = load_script("check_trajectory")
+    assert not hasattr(check_trajectory, "read_derived_phases")
+    assert not hasattr(check_trajectory, "GATE_FILE")
 
 
 # --- OI-30 D2: the sr_bar ceiling and its one rendering home ------------------

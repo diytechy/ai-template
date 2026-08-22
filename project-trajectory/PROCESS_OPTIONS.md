@@ -285,7 +285,7 @@ dishonesty. **Every ratified SR/LLR/TC carries the `Phase` it was ratified in** 
 *derived* as the minimum phase of its
 referencing SRs (no `stakeholder-needs.toml` schema change). Numeric-only is a
 correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--ratify`
-scope filters and the phase-drop detector's `per-phase=`-to-anchor join match the
+scope filters and the phase-drop detector's per-phase-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
 *silently vacuous*, disarming a warn without telling anyone, which is worse than
 a crash. The digit-extract parse is retained for grandfathering (`phase_num`:

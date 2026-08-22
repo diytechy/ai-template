@@ -218,11 +218,15 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
   always leave it blank. Numeric-only is a correctness rule, not a style: two
   joins match the cell **literally**, never by parse — the `--phase`/`--ratify`
   scope filters (`in_phase`/`_scope_srs`) and check_trajectory's phase-drop
-  join of `docs/gate`'s `per-phase=` labels against `[phase]-[g<N>]` WI title
-  anchors — so a reformatted `P1`/`v2` cell went silently vacuous there,
-  disarming the warn without telling anyone. (Legacy `[v3]`-style title anchors
-  in `docs/work/complete/` are history — never rewritten; the rule bites live
-  registry cells only.)
+  join of `docs/stage`'s `per-phase-live=` labels against phase-anchor WI titles
+  — so a reformatted `P1`/`v2` cell went silently vacuous there, disarming the
+  warn without telling anyone. (Legacy `[v3]`-style title anchors in
+  `docs/work/complete/` are history — never rewritten; the rule bites live
+  registry cells only. The anchor's own vocabulary changed at WI-498 slice 4:
+  a new title takes `[<phase>]-[DevStg-<Rung>]`, and the retired
+  `[g1|g2|reqs|tests]` spellings are translated on read — `reqs`/`g1` to
+  `DevStg-LLReqs`, `tests`/`g2` to `DevStg-Impl`, by MEANING rather than by the
+  spelling each shares with a different rung.)
 - `--phase 1,2` scopes `--require-verified`. A blank Phase is always in scope
   (downstream compatibility), and the **foundation phase** — `min()` over all SR
   phases — is never deferred. The `tag in phases` match itself stays literal

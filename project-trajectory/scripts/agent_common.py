@@ -129,16 +129,22 @@ EXIT_PAUSED = 8
 OWNER_ONLY_PATHS = ("OWNER_SCRATCHPAD.md",)
 
 
-# The one-word declared-policy reader (docs/gate, the legacy docs/push-policy,
-# …): the first non-empty, non-comment line, or `default` when nothing is
-# declared. ONE HOME since WI-448 — this name used to carry its own literal
-# copy of a rule four other modules also spelled out (`subagent_gate`, and
-# `_first_declared_line` in bootstrap/check_privacy/check_trajectory), pinned
-# equal by tests because D-7 could only contain the drift, not remove it.
-# Re-exported under its own long-standing name; still the reader for
-# `docs/gate` (a generated cache with a one-value last line) and for the LEGACY
-# half of the SN-028 dual-read window, while new policy reads go through
-# `declared_policy` below, which prefers `docs/process.toml`.
+# The one-word declared-policy reader (the legacy docs/push-policy, …): the
+# first non-empty, non-comment line, or `default` when nothing is declared. ONE
+# HOME since WI-448 — this name used to carry its own literal copy of a rule four
+# other modules also spelled out (`subagent_gate`, and `_first_declared_line` in
+# bootstrap/check_privacy/check_trajectory), pinned equal by tests because D-7
+# could only contain the drift, not remove it. Re-exported under its own
+# long-standing name; the reader for the LEGACY half of the SN-028 dual-read
+# window, while new policy reads go through `declared_policy` below, which
+# prefers `docs/process.toml`.
+#
+# `docs/gate` USED TO HEAD THAT LIST AND WAS NEVER READ THROUGH HERE (corrected
+# WI-498 slice 4, the gate schedule map's reader E): it is a deliberate NON-row in
+# `PROCESS_KEYS` twenty lines below, and every live gate reader spelled its own
+# one-line parse out locally. A documented reader that no call site uses is worse
+# than none — it makes a scheduling map of the file look one reader deeper than it
+# is.
 read_declared = _kitconfig.read_declared
 
 

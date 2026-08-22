@@ -20,8 +20,8 @@ docs (census, deep-check, schedule map) as evidence. This is a
 MULTI-SESSION PROGRAM lane; each slice ends green at the commit bar and
 lands the largest honest coherent piece.
 
-**Program state:** slices 0, 1, 2 and 3 landed 2026-08-21; slices 4 and 5 remain,
-in order, and slice 4 (event detectors over stage history) is next.
+**Program state:** slices 0-4 landed 2026-08-21; slice 5 (vocabulary +
+migration) is the last one and is next.
 Slice 2 re-keyed the whole harness selector onto the effective stage:
 `check.py` reads `docs/stage` through `derive_stage.read` and reads `docs/gate`
 NOWHERE, the bar constants and the membership rule are deleted, and the product
@@ -32,20 +32,24 @@ nothing** — evidence-gated, unreachable until the test-evidence carrier (its o
 separately-sequenced row) lands. It also armed the authoring-time phase rule
 WARN-FIRST and UNWIRED (`derive_stage --phase-rule`).
 
-**`docs/gate` is still WRITTEN and still freshness-gated** — the dual state
-persists for exactly two un-cut consumers, both slice 4's
-(`check_trajectory.read_derived_phases` and `intake._gate_moved`/`tier_signal`),
-plus the three display readers that belong with slice 5's vocabulary work.
+**`docs/gate` is still WRITTEN and still freshness-gated, and after slice 4 the
+hand-off is EXACT: FOUR readers remain and all four are slice 5's.** Both EVENT
+detectors are cut over. What is left is three DISPLAY readers (`traj_parse`,
+`traj_panels`, `traj_status`) and — not display, and missing from slice 2's own
+enumeration — `agent_common.spine_stage_of`, which scrapes `stage=` off the
+`# basis:` line and feeds `human_holds`, i.e. RATIFICATION AUTHORITY. That fourth
+reader is why the `derived-gate` freshness step stays wired until the file
+retires: three of the four draw pages, one decides who may ratify.
 
-Slice 4 inherits four things worth reading first, all in the fragment's "Slice 3"
-section and the findings below it: the OI-30 D2 ceiling's old→new mapping (the
-BAR half is kept verbatim and dies with the file — do not lift it while
-`docs/gate` is written); the verified fact that `DIAL_HOLDS` needs no change
-because rungs 6/7 stay inert at every dial; the finding that **rung 3's
-self-reporting recursion no longer reaches the effective stage**, which bears
-directly on what signal a phase-drop detector can expect; and slice 1's standing
-warning that the two repo-global frame rungs give the stage axis no per-phase
-signal on THIS repo until the frame settles.
+Slice 5 inherits, all in the fragment's per-slice sections and the findings below
+them: the OI-30 D2 ceiling's old→new mapping (the BAR half is kept verbatim and
+dies WITH the file); the verified fact that `DIAL_HOLDS` needs no change because
+rungs 6/7 stay inert at every dial; slice 4's ANCHOR TRANSLATION table, which is
+the live example of why the shared spellings cannot be remapped mechanically
+(`[p]-[reqs]` records `DevStg-LLReqs`, two rungs off the word it shares); and the
+standing warning that the two repo-global frame rungs give the stage axis no
+per-phase signal on THIS repo until the frame settles — now visible as the
+detector's own stand-down warn rather than as silence.
 
 The slices, in the plan's order (§5):
 
@@ -115,9 +119,30 @@ The slices, in the plan's order (§5):
    promotes, unwired) with exactly the `LLReqs → Arch` exemption. Measured: this
    repo fires it zero times over 80 commits, so no allowlist was seeded. Nine
    test pins inverted, not the five the deep-check counted.
-4. **Event detectors over stage history** — phase-drop anchors; tier
-   signal fixed and re-keyed (fold WI-497 if still open); dead
-   read_declared removed.
+4. **Event detectors over stage history** — LANDED 2026-08-21, folding and
+   closing **WI-497**. The phase-drop detector reads `docs/stage`'s
+   `per-phase-live` through the common reader, and an anchor's recorded reach is
+   a LADDER RUNG. Two decisions carry it. (a) THE ANCHOR TRANSLATION IS BY
+   MEANING: a closed `[p]-[reqs]`/`[g1]` records `DevStg-LLReqs` and
+   `[p]-[tests]`/`[g2]` records `DevStg-Impl` — both two rungs off the spelling
+   they share with the ladder, in the direction that would make the detector
+   under-report. Legacy anchors are TRANSLATED, never re-recorded (a WI title is
+   committed history); new ones take the rung itself,
+   `[<phase>]-[DevStg-<Rung>]`. (b) THE LIVE READING, NOT THE SETTLED ONE — a
+   redraft IS the event, and the settled fold excludes drafts by construction,
+   which also discharges slice 3's banked rung-3 tension: the recursion is
+   visible where events are detected while selection stays uncollapsed. New: the
+   detector ABSTAINS on the three repo-global rungs and says so once, instead of
+   attributing a repo-wide fact to a phase. `intake._gate_moved` →
+   `_stage_moved`, a two-point delta of `docs/stage`'s `stage` field across the
+   two trees; `tier_signal`'s `strong` arm is driven end-to-end and proven able
+   to fire for the first time since the derived-gate migration. The dead
+   `read_declared`-reads-`docs/gate` claim is corrected in both homes (the
+   function is live and untouched; only the claim was false). Record:
+   `docs/log.d/2026-08-21-wi498-stage-unification.md`, "Slice 4".
+   NOT touched, deliberately: the display readers and the ratification reader of
+   `docs/gate` (slice 5), and the prose surfaces that still teach
+   `[phase]-[g1|g2]` — the anchor GRAMMAR moved here, the teaching moves there.
 5. **Vocabulary + migration** — PROCESS.md §4 + skills; check_vocab alias
    generation (reviewed, not scripted); RESYNC_PACK entries; fold WI-493;
    the 648-site sweep.

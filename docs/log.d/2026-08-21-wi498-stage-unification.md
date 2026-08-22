@@ -701,6 +701,250 @@ ratchet entry and resolves in slice 5 by deletion; the evidence carrier is
 already the ruled plan's own separately-sequenced row, not a new decision; and
 the smoke wall clock is already OI-52's.
 
+### Slice 4 — the detectors move to stage history; the tier signal lives again (opus worker) — LANDED
+
+Both event detectors now read the stage axis, and `docs/gate`'s remaining readers
+are exactly four, all slice 5's. **WI-497 folded and closed** — its spec is in
+`docs/work/complete/` with the Deliverable filled and its SpecRef cleared (R-F).
+
+**THE ANCHOR TRANSLATION IS THE SLICE'S REAL DECISION, and the spelling is a
+trap in both rows.** A phase anchor is a WI TITLE (`[v2]-[g1]`, `[v2]-[reqs]`) —
+committed history — so the retired spellings are TRANSLATED on read, never
+re-recorded, exactly as the `g1`/`g2` changeover already did one generation ago.
+What they translate TO was the question, and the deep-check's warning ("three
+spellings are shared between the axes, so a mechanical remap is unsafe") is
+concrete here:
+
+| anchor token | what closing it means | recorded reach | the spelling |
+|---|---|---|---|
+| `reqs` / `g1` | the phase's SRs are authored AND ratified, clearing `spine_stage`'s `any(is_drafted(sr))` test | **`DevStg-LLReqs`** | `DevStg-Reqs` — the rung it has just LEFT, two below |
+| `tests` / `g2` | LLRs and TCs authored and non-Drafted, clearing the LLReqs and Tests predicates both | **`DevStg-Impl`** | `DevStg-Tests`, one below |
+
+An anchor records **the rung the phase stands at once it closes** — slice 2's
+inversion finding applied on this axis. Taking the spelling would have recorded a
+reach below the phase's real standing, i.e. made the detector UNDER-report, which
+is the failure direction that loses the event it exists for. Going forward the
+canonical spelling IS the rung: `[<phase>]-[DevStg-LLReqs]`, `[<phase>]-[DevStg-Impl]`,
+or any other rung — one vocabulary, and a title that says which rung it means.
+The predecessor-shape rule generalized with it, from "a `tests` anchor lists its
+`reqs` anchor" (expressible only with two fixed levels) to "each anchor lists the
+next-LOWER anchor of its own phase".
+
+**THE DETECTOR READS THE *LIVE* PER-PHASE FIELD; SELECTION STAYS ON THE SETTLED
+ONE — and that split is what discharges slice 3's banked tension rather than
+trading it away.** The event is "new or reopened content entered a phase whose
+anchor is closed", and a Drafted or re-Drafted row IS that event. `per-phase`
+excludes drafts by construction (slice 1's C-01 fix, which exists so one draft
+cannot collapse selection), so keying detection there would make the detector
+blind to precisely its own subject. `per-phase-live` is where the drafts are.
+Driven from both sides: the same fixture fires on the live field and is silent on
+the settled one.
+
+That answers the slice-3 finding directly. `arch_incomplete`'s "self-reporting
+recursion" — minting a Drafted component for a newly identified sub-component
+drops the reported stage with nobody deciding to — became false of the EFFECTIVE
+stage at slice 1 and stays false, correctly. It is true of the LIVE reading, and
+the live reading is what the detector consumes. Driven on a real scaffold: adding
+one `Drafted` CMP row leaves `per-phase` byte-identical and moves `per-phase-live`
+to `DevStg-Arch`. **The signal survives where events are detected; only the
+headline stopped moving.** No design had to give.
+
+**THE ABSTENTION, which is the one part that is not a re-key, and it is why the
+detector is quieter on this repo than the bar axis was.** Three of the eight
+rungs are decided by REPO-WIDE registries even when `spine_stage` is called with
+one phase's rows — `DevStg-Needs` (the need registry, and through `cited_srs` the
+whole settled SR set), `DevStg-Boundary` (external), `DevStg-Arch` (components);
+the frame arguments are passed whole to every per-phase call. When a phase reads
+one of those, EVERY phase reads it at once and none is reporting anything about
+its own content. Concluding "new or reopened content entered phase 4" from that
+value is arithmetically true and causally invented. So `kitlib.stage.REPO_GLOBAL_RUNGS`
+is declared beside the per-phase sentinel it is a sibling of, and the detector
+abstains there — **and says so**, once, naming the rung and the phases. The
+schedule map's standing criticism of this detector (reader H) was that it "silently
+drops what it cannot parse", going vacuous where a reader assumes clean; an
+abstention that announces itself is the correction to that, not a second defect.
+
+**THE HONEST COST, stated because it is a live warn changing shape on this repo.**
+Before this slice `check_trajectory --strict` printed:
+
+```
+WARN - phase '4' dropped to DevStg-Reqs but its closed [4]-[tests] anchor
+       recorded level DevStg-Tests
+```
+
+After it, that warn is gone and the stand-down warn is in its place: phases 3 and
+4 both read `DevStg-Arch` (all four CMP rows are Drafted), a repo-global rung. The
+underlying fact — a drafted row sits in phase 4 — has not been fixed and is not
+being hidden; the stage axis simply cannot attribute it to phase 4 while the frame
+dominates, and slice 1 banked exactly this warning ("slice 4's phase-drop detector
+will get no signal from the stage axis until the frame settles"). The choice was
+between abstaining loudly and fabricating an attribution, and the second is not
+available. It resumes on this repo when the partition settles; it works today on
+any repo whose frame is settled or absent, which the scaffold run below shows.
+
+**The tier signal, fixed on the NEW carrier and PROVEN able to fire.**
+`intake._gate_moved` → **`_stage_moved`**: a two-point delta of `docs/stage`'s
+`stage` FIELD across the two git trees, through `kitlib.stage.parse`. Not "the
+first non-comment line" as WI-497's spec proposed — `docs/stage` is key=value
+precisely so a reader addresses a field by name, which is the stronger fix and is
+the deviation from that spec's literal wording. `tier_signal`'s keyword became
+`stage_moved` so the signal and its input name one axis. Unreadable on either side
+now answers False, which the retired docstring CLAIMED and the code did not do (a
+None against a value compared unequal and reported a move); that matters at exactly
+one commit per adopting repo — the kit upgrade that first writes `docs/stage`.
+
+**The proof the fix alone does not give.** A function dead since the derived-gate
+migration needs more than a unit test of its input: it needs the ROW. So
+`intake._amendment_drafts` is driven over a real two-commit repo whose merged delta
+both amends a ratified spine cell and moves the recorded stage — the minted row
+reads `buildtier = "strong"` — against the byte-identical counterfactual with the
+stage held still, which reads `medium`. One row touched in both, so `rows_touched > 3`
+cannot be what carried it. Re-driven inside a real bootstrapped scaffold as well:
+`_stage_moved: True`, `tier_signal: strong`.
+
+**WI-497's sibling sweep, mechanized.** Two `splitlines()[0]` sites remain in the
+kit (`integrate.py`, `trunk_step.py`) and NEITHER is in the defect class — both
+read the first line of git command output, where line 0 is the value by the
+command's own contract. The sweep is now an AST read
+(`test_no_kit_script_takes_splitlines_0_of_a_GENERATED_file`) naming those two, so
+a third site must be judged rather than inherited. It reads the AST rather than
+grepping because the clearest way to record a retired defect is to NAME it, and a
+grep-shaped pin reds on the comment explaining why the code is gone.
+
+**The dead `read_declared` claim, corrected at the smallest honest scope.** The
+schedule map's reader E is documented in two homes as "still the reader for
+`docs/gate`" and is called on that file by NOTHING. The function itself is very
+much alive — it is the reader for the legacy half of the SN-028 dual-read window —
+so the honest change is to the CLAIM, not the code: no deprecation, no removal, and
+a note recording why the claim could never have been true (`docs/gate` is a
+deliberate NON-row in `PROCESS_KEYS` twenty lines below), so the next census does
+not re-add it.
+
+**THE CUT-OVER ACCOUNTING, and it corrects slice 2's own enumeration.** Slice 2
+recorded `docs/gate`'s survivors as two event detectors plus three display readers.
+Both detectors are now cut over — and the remaining set is **four**, not three:
+
+| reader | class | whose |
+|---|---|---|
+| `traj_parse._gate_value` | display | slice 5 |
+| `traj_panels` | display | slice 5 |
+| `traj_status._gate_facts` | display | slice 5 |
+| **`agent_common.spine_stage_of`** | **RATIFICATION AUTHORITY** — regex-scrapes `stage=` off the `# basis:` line and feeds `human_holds` | slice 5 |
+
+The fourth was in the schedule map (reader F, "the sharpest" windowed reader) and
+out of slice 2's list. It is not display, and it is why the `derived-gate`
+freshness step stays wired until the file retires: three of the four draw pages,
+one decides who may ratify. `derive_gate` still writes the file and the bar
+ordinals stay with it. Recorded at `check.py`'s own note and in the lane spec.
+
+**Scaffold-verified, per the standing lesson**, and this is where the design is
+visible rather than argued. A real `bootstrap.py --dest` run, two settled phases,
+one legacy `[1]-[g2]` anchor and one canonical `[2]-[DevStg-Impl]` anchor:
+
+```
+A. two settled phases                stage = DevStg-Impl
+   per-phase-live = 1=DevStg-Impl;2=DevStg-Impl        -> no warn
+
+B. phase 2's TC goes back to Drafted  stage = DevStg-Tests
+   per-phase-live = 1=DevStg-Impl;2=DevStg-Tests
+   WARN - phase '2' dropped to DevStg-Tests but its closed [2]-[DevStg-Impl]
+          anchor recorded reach DevStg-Impl - new or reopened content entered
+
+C. one Drafted component              stage = DevStg-Arch
+   per-phase-live = 1=DevStg-Arch;2=DevStg-Arch
+   WARN - phase-drop detector stood down for phase(s) 1, 2: each reads
+          DevStg-Arch, a repo-global rung ...
+```
+
+Both anchor spellings resolve, the drop fires on the reopen, and the abstention
+takes over the moment the frame goes into work. A fresh scaffold is silent
+(`check_trajectory` vacuously clean, exit 0).
+
+**Tests: 29 new, split by the DECLARED cost criterion rather than by subject.**
+`tests/test_stage_event_detectors.py` (11, in-process, in the commit bar) carries
+the decisions: the translation table and both traps, the live-vs-settled split
+driven from both sides, the abstention matrix over all eight rungs, the three
+hook-safe degradations, and three cut-over pins (the sweep, the corrected
+`read_declared` claim, and no `docs/gate` PATH literal left in either re-keyed
+module — read off the AST, excluding docstrings, so prose explaining the history
+does not red them). `tests/test_stage_event_detectors_driven.py` (7) is filed into
+`conftest.SLOW_MODULES`: every test either takes the `scaffold` fixture or commits
+a real git repo. That split cost the slice its own headline pin — the end-to-end
+`strong`-arm fire needs two committed trees and so runs at close and in CI, not per
+commit — which is the direction that shows the tiering is by criterion and not by
+convenience. `tests/test_trajectory_arch.py`'s five existing phase tests were
+re-keyed in place (+2 new: a canonical-spelling parse, and a `DevStg-*` token
+naming no rung, which must be refused loudly now the regex's token set is open).
+
+**A FIXTURE-ORDER FRAGILITY FOUND WHILE EXECUTING, and fixed in the three modules
+this slice touched.** `kitlib` is a package under `scripts/`, which nothing puts on
+`sys.path` until the first `load_script` call — so a module-level `from kitlib
+import ...` in a test file resolves only when some earlier-collected module happens
+to have called it first. It held by accident until an xdist worker collected
+`test_trajectory_arch` first and the module errored at import. The three modules
+here now insert the path explicitly; the same latent pattern in
+`test_kitlib_stage`, `test_derive_stage` and `test_phase_rule` is banked below
+rather than swept, since touching them is outside this slice.
+
+**Ratchets re-stamped deliberately, four of them, each with its reason on the
+entry.** `check_trajectory.py` **4398 → 4496**: the block measures 217 lines of
+which 64 are comment or blank, and the bump is mostly those — the translation
+table's derivation, the live-vs-settled reasoning, and the abstention. Not
+decomposable as a unit (it is one detector sharing one anchor vocabulary), but the
+module has now grown at five of the last six stamps and the entry says so rather
+than implying otherwise. `intake.py` **1901 → 1940**: the executable half is
+roughly a wash; the bump records a defect that was silent for a whole vocabulary
+generation, because a dead mechanism that leaves no note behind is how it gets
+rebuilt. `agent_common.py` **2412 → 2418** and `check.py` **2164 → 2171**: both
+COMMENT ONLY, zero executable change. Smoke membership **1331 → 1344** for the
+eleven in-process tests, headroom stated as a count (+8) exactly as the last
+fourteen stamps did. **The 60 s SECONDS budget was NOT moved** — see below.
+
+Adopter-facing: a RESYNC_PACK §3 entry that LEADS with the fact that a mechanism
+which has been silently dead in an adopter's repo starts firing, and is explicit
+that no NEW adjudication rows appear — some existing ones are simply graded at the
+tier they always warranted. It also states the anchor translation with both traps,
+the new canonical spelling, and the abstention's user-visible shape (one stand-down
+warn instead of a false drop warn per phase).
+
+No spine mint was owed and none was made: `check_trajectory --strict` is clean —
+this slice adds behaviour to modules the spine already owns and one new TEST module
+pair, which is the `test_phase_rule` precedent. No Approved row amended.
+
+Gates, real output on this box:
+
+- `python -m pytest -q -n auto -m smoke` → **1331 passed, 5 skipped**; two readings on the
+  final tree, **146.3 / 73.3 s** (the first taken immediately after a full
+  `check.py --jobs 0` run on the same box, which is why the SPREAD is reported
+  rather than the better number)
+- `python -m pytest -q -n auto` (full, unfiltered) → **2817 passed, 14 skipped in 642.87 s**.
+  Up 18 from slice 3's 2799: the 18 new tests across the two new modules, against
+  the two retired `test_trajectory_arch` phase tests replaced by four
+- `python project-trajectory/scripts/check_docs.py --root . --stale` → **OK —
+  978 doc(s), 1350 intra-repo link(s), 0 broken (1 orphan warning)**.
+- `python project-trajectory/scripts/check_trajectory.py --root . --strict` →
+  **clean (495 work item(s), 462 done (93%), 21 cancelled, graph acyclic)** — the
+  done count moved 461 → 462 with WI-497's close.
+- `python project-trajectory/scripts/trace.py --root . --strict-integrity` →
+  **SN=27 SR=73 LLR=168 TC=164 orphans=15 integrity=0 components=4
+  component-findings=0 interfaces=130 interface-findings=0**.
+- `python project-trajectory/scripts/check_vocab.py --root . --strict` →
+  **clean (461 live authored file(s); no retired gate tags)**.
+- `python project-trajectory/scripts/check.py --jobs 0` → **RESULT: PASS**
+- `derive_stage.py --check` / `derive_gate.py --check` → **up to date (DevStg-Arch)** / **up to date
+  (DevStg-Reqs)**. Neither derived value moved: this slice edits no registry row
+
+**Smoke wall-clock, reported not absorbed:** 73.3 s on an idle box (and 146.3 s on a loaded one) against the declared 60 s.
+The tier read 51.3 / 62.9 / 55.0 s at slice 1, 68.6 / 80.6 s at slice 2, 72.8 s at
+slice 0 and 67.8 s at slice 3, and CLAUDE.md records 54.9 / 64.0 / 55.7 s on this
+box on 2026-08-20. One box is one data point; the SECONDS budget was NOT moved and
+remains OI-52's.
+
+Deferred open items: none — the abstention's practical effect on THIS repo is a
+consequence of the frame being in work, not a decision owed; the `check_trajectory`
+module-size question is recorded at its ratchet entry; and the smoke wall clock is
+already OI-52's.
+
 ### Adjacent findings accumulating for the program close
 
 _(per-slice sections are inserted ABOVE this section, in land order;
@@ -847,3 +1091,63 @@ banked findings accumulate below as list items)_
   has become a false claim. Worth knowing before slice 2 wires more readers: the
   file goes stale strictly more often than its headline changes, and that is the
   intended direction, not noise to tune out.
+
+- **Slice 2's dual-state enumeration UNDERCOUNTED `docs/gate`'s readers, and the
+  one it missed is the least display-like of them** (slice 4). It recorded "two
+  event detectors plus three display readers"; the real remainder after cutting
+  the detectors over is FOUR, because `agent_common.spine_stage_of` scrapes
+  `stage=` off the `# basis:` line and feeds `human_holds` — RATIFICATION
+  AUTHORITY, not presentation. It was in the schedule map (reader F, called "the
+  sharpest" windowed reader) and simply did not make the slice's list. Corrected
+  at `check.py`'s note and in the lane spec. **This is the same census blind spot
+  slices 0 and 3 each recorded once already** — slice 0's enum inventory keyed on
+  constant NAMES and missed a private copy; slice 3's pin census keyed on tests
+  ABOUT a rung and missed the ones that merely USED it; this one keyed on the
+  reader CLASS the slice was working in. Three for three: slice 5 should build
+  its retirement list by grepping the FILENAME across the kit, not by extending
+  any of these lists.
+- **`derive_gate.basis_line`'s `per-phase=` field now has NO code consumer at
+  all** (slice 4). `check_trajectory.read_derived_phases` was the last one. The
+  field is still emitted and is still compared by `--check`, so it cannot rot
+  silently, but nothing reads it — which means it can be renamed freely and no
+  test would teach anyone that. Recorded at
+  `test_the_basis_line_still_parses_under_its_SURVIVING_consumer`, which this
+  slice re-pointed onto `agent_common.spine_stage_of`/`stage=` (its second
+  re-pointing; slice 2 was the first). Slice 5 retires the line with the file.
+- **The phase-drop detector is VACUOUS ON THIS REPO and now says so out loud**
+  (slice 4). Every phase reads `DevStg-Arch` while the four CMP rows are Drafted,
+  so the detector abstains rather than attribute a repo-wide fact to a phase, and
+  the bar axis's one live warn (phase 4) is replaced by one stand-down warn. The
+  detector is correct and the repo's frame is genuinely in work — but it means
+  **a real signal class has no home right now**: "the repo as a whole dropped
+  below what its closed anchors recorded" is a true and useful event that no
+  detector reports, because this one is scoped per phase. Whether the frame rungs
+  deserve a REPO-level drop detector beside the per-phase one is a design question
+  for the program close; it was deliberately not invented here, since a second
+  detector is not a re-key.
+- **`check_trajectory.py` is 4,496 lines and grew at five of the last six
+  stamps** (slice 4). Its ratchet entry now says so. Each bump has been
+  individually defensible — a checker gains checks — but "is this still ONE
+  checker" is a question the module-size ratchet asks and nobody has answered.
+  WI-483's decomposition program is the natural home; this slice deliberately did
+  not open it.
+- **A test module's `from kitlib import ...` resolves by ACCIDENT of collection
+  order** (slice 4). `kitlib` is a package under `scripts/`, which nothing puts on
+  `sys.path` until the first `load_script` call, so a module-level kitlib import
+  in a test file works only if an earlier-collected module happened to call it.
+  It held until an xdist worker collected `test_trajectory_arch` first and the
+  module errored at import. Fixed explicitly in the three modules this slice
+  touched; **`test_kitlib_stage.py`, `test_derive_stage.py` and
+  `test_phase_rule.py` still carry the latent form** (and `test_kitlib_stage`'s
+  `from conftest import SCRIPTS  # noqa: F401  (puts scripts/ on sys.path)`
+  states a belief that is simply not true — importing conftest does not do it).
+  Not swept here: they are other slices' modules and green today. Whoever touches
+  them next should make it explicit, or `conftest` should do it once at import.
+- **The anchor GRAMMAR moved but the PROSE that teaches it did not** (slice 4).
+  `PHASE_ANCHOR_RE` and `RATIFY_ANCHOR_RE` now accept `[<phase>]-[DevStg-<Rung>]`
+  and are held equal to each other by a test rather than by a comment. But the
+  `gate-advance` skill, the PROCESS surfaces and the WI-146 records still teach
+  `[phase]-[g1|g2]`, and `docs/concurrency-v2.md` still describes ratification
+  "at the phase `[g2]` close". That is slice 5's vocabulary sweep by the program's
+  own division of labour — noted here so the sweep has the new canonical spelling
+  and the translation table to work from rather than re-deriving them.

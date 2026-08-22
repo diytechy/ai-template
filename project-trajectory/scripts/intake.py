@@ -73,6 +73,15 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 
+# The stage axis's format + parser (WI-498). `_stage_moved` reads `docs/stage` out
+# of two git trees, so it needs the FORMAT reader, not the filesystem-bound common
+# one — the parse rule has exactly one home either way.
+try:
+    from kitlib import stage as kitstage
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import stage as kitstage
+
 import agent_common as ac
 import baseline_snapshot
 import check_trajectory
@@ -225,9 +234,9 @@ def next_wi_id(root):
     return "WI-{:03d}".format(max(top, mark) + 1)
 
 
-def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
+def tier_signal(trigger, *, rows_touched=0, stage_moved=False):
     """`buildtier` from MEASURABLE inputs (the amendment's clause 2): rows
-    touched + gate delta for an amendment, the census kind for a gap row.
+    touched + STAGE delta for an amendment, the census kind for a gap row.
     Deeper review is a drafted follow-up with `planmode = "dual"`, never a tier
     here and never a second kind.
 
@@ -239,7 +248,7 @@ def tier_signal(trigger, *, rows_touched=0, gate_moved=False):
     `_close_drafts` reads it there: prose that carries control flow must be a
     typed field."""
     if trigger == "amendment":
-        return "strong" if gate_moved or rows_touched > 3 else "medium"
+        return "strong" if stage_moved or rows_touched > 3 else "medium"
     if trigger == "red-tc":
         # LLR-159. One target is a local question (is this TC stale, or
         # was the close optimistic?); several mean the closed row's claim spans
@@ -477,13 +486,43 @@ def _routed_amendments(root, before, after):
     return routed
 
 
-def _gate_moved(root, before, after):
-    """Did `docs/gate`'s value move across the merge? Read off the two trees —
-    a measurable input, not a judgement; unreadable answers False."""
+def _stage_moved(root, before, after):
+    """Did the repo's effective STAGE move across the merge? A two-point delta of
+    `docs/stage`'s headline value, read off the two git trees — a measurable
+    input, not a judgement.
+
+    THIS FUNCTION WAS DEAD FOR THE WHOLE DERIVED-GATE ERA (WI-497, folded into
+    WI-498 slice 4). It read `docs/gate` and took `splitlines()[0]` — the FIRST
+    line, which since the derived model is the static do-not-hand-edit header and
+    is byte-identical at every revision, not the first NON-COMMENT line every
+    other reader took. So it answered False unconditionally and `tier_signal`
+    could never mint its `strong` adjudication row. It worked before the derived
+    migration, when a hand-set gate file's line 0 WAS the value, and broke
+    silently at it. The fix is not a better line index: `docs/stage` is key=value
+    precisely so a reader addresses a FIELD (slice 1), and `kitlib.stage.parse` is
+    the one parser for it.
+
+    UNREADABLE ON EITHER SIDE ANSWERS FALSE, which is a deliberate tightening of
+    the retired contract ("unreadable answers False" was written but not
+    implemented — a None on one side and a value on the other compared unequal and
+    reported a move). It also keeps the one-time migration boundary quiet: at the
+    commit that first wrote `docs/stage` the before side has no file, and that is
+    a kit upgrade, not a ratification."""
     values = []
     for rev in (before, after):
-        code, out = ac.git(root, "show", "{}:docs/gate".format(rev))
-        values.append(out.splitlines()[0].strip() if code == 0 and out else None)
+        code, out = ac.git(root, "show", "{}:{}".format(rev, kitstage.STAGE_FILE))
+        if code != 0 or not out:
+            return False
+        try:
+            record = kitstage.parse(out)
+        except ValueError:
+            # A rung this kit does not know, at one of the two revisions. The
+            # `derived-stage` step is what reports that; a tier signal declines
+            # to guess rather than minting a strong row off an unreadable value.
+            return False
+        if record is None:
+            return False
+        values.append(record["stage"])
     return values[0] != values[1]
 
 
@@ -557,7 +596,7 @@ def _amendment_drafts(root, before, after):
             "buildtier": tier_signal(
                 "amendment",
                 rows_touched=len(records),
-                gate_moved=_gate_moved(root, before, after),
+                stage_moved=_stage_moved(root, before, after),
             ),
             "sr_refs": _owning_srs(records),
             "specref": records[0]["registry"],

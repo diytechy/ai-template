@@ -82,6 +82,27 @@ FLOOR = ladder.STAGE_REQS
 # it, so it can never become the headline by an unnoticed fall-through.
 BELOW = "DevStg-Below"
 
+# THE RUNGS A PER-PHASE READING CANNOT OWN (WI-498 slice 4). Three of the eight
+# rungs are decided by REPO-WIDE inputs even when `spine_stage` is called with one
+# phase's rows: `DevStg-Needs` (the need registry and — through `cited_srs` — the
+# repo's whole settled SR set; slice 1 added that seam precisely because coverage
+# is a repo-global question), `DevStg-Boundary` (`boundary_incomplete` over the
+# repo's external registry) and `DevStg-Arch` (`arch_incomplete` over the repo's
+# component registry). The frame arguments are passed WHOLE to every per-phase
+# call, so when a per-phase value lands on one of these it is a repo-wide fact
+# wearing a phase's label: every phase reads the same rung, and none of them is
+# reporting anything about its own content.
+#
+# WHAT THIS IS FOR: an event detector comparing a phase's reading against a
+# recorded reach must ABSTAIN on these values rather than conclude a drop — the
+# reading is dominated, so "below the recorded reach" is true of the repo and
+# unattributable to the phase. The other five rungs (`Reqs` via the phase's own
+# Drafted SRs, `LLReqs`/`Tests`/`Impl` via its own children) ARE the phase's, and
+# a comparison against them is sound.
+REPO_GLOBAL_RUNGS = frozenset(
+    {ladder.STAGE_NEEDS, ladder.STAGE_BOUNDARY, ladder.STAGE_ARCH}
+)
+
 # --- THE DECLARED DERIVATION INPUTS -------------------------------------------
 # THE ONE LIST (plan §2). The derivation is a pure function of exactly these
 # files; adding an input (the test-evidence carrier, when the Release rung is

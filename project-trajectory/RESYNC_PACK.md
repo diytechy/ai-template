@@ -2851,6 +2851,62 @@ churn. It **warns and exits 0**; `--strict` exits 1. It is not wired into
 `check.py` and cannot block a commit, so **no action is required at re-sync** —
 run it if you want the signal. Without git it degrades silently.
 
+### A dead adjudication signal comes back to life; the phase-drop detector re-keys [since ae4f6bce]
+
+*(Anchored at the PRECEDING commit — this entry ships with the changes.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/intake.py`,
+`scripts/check_trajectory.py`, `scripts/kitlib/stage.py`,
+`scripts/kitlib/config.py`, `scripts/agent_common.py`, `scripts/check.py`.
+
+**A MECHANISM THAT HAS BEEN SILENTLY DEAD IN YOUR REPO STARTS FIRING.**
+`intake.py` mints an adjudication row when a merged commit amends a ratified
+spine cell, and it grades that row `strong` (deeper review) when the amendment
+moved the repo's derived stage. The stage half of that test has been broken
+since the gate became a generated file: it compared the FIRST LINE of
+`docs/gate`, which is the static "do not hand-edit" header and is identical at
+every revision. So the answer was always "no move", and `strong` was reachable
+only by touching more than three rows at once. It now reads the `stage` field of
+`docs/stage` at the two commits.
+
+**What you will see:** occasionally an adjudication row that used to arrive
+`buildtier = "medium"` now arrives `strong`. That is the tier the amendment
+always warranted. Nothing about the mint's trigger changed, so no NEW rows
+appear — only some existing ones are graded higher. If you route `strong` rows
+to a heavier review lane, expect a little more traffic there.
+
+**The phase-drop detector now reads the stage axis.** `check_trajectory.py`'s
+warn-first check — *a phase dropped below the level its own closed anchor
+recorded* — used to read `docs/gate`'s `# basis: per-phase=` line and now reads
+`docs/stage`'s `per-phase-live` through the common reader. Three consequences:
+
+- **Your closed phase anchors keep working, untouched.** A phase anchor is a WI
+  title (`[v2]-[g1]`, `[v2]-[reqs]`, …) and those are committed history. They
+  are TRANSLATED on read, by meaning rather than by spelling: `[p]-[reqs]`/`[g1]`
+  records that the phase reached **`DevStg-LLReqs`**, `[p]-[tests]`/`[g2]` that
+  it reached **`DevStg-Impl`**. Note both are two rungs off the word — `reqs` is
+  the rung the phase LEFT, not the one it landed on.
+- **New anchors take the rung itself:** `[<phase>]-[DevStg-LLReqs]`,
+  `[<phase>]-[DevStg-Impl]`, or any other rung. One vocabulary, and a title that
+  says which rung it means. The old spellings are accepted forever.
+- **It now ABSTAINS instead of blaming a phase for a repo-wide fact.** Three
+  rungs — `DevStg-Needs`, `DevStg-Boundary`, `DevStg-Arch` — are decided by your
+  need, external and component registries, which are read whole for every phase.
+  While one of those holds, every phase reads that rung at once and no drop can
+  be attributed to any one of them. You get ONE warn saying the detector stood
+  down, naming the rung and the phases, instead of a false drop warn per phase.
+  If your component registry has drafted rows, this is the state you are in, and
+  the detector resumes when the frame settles.
+
+**`docs/gate` is still generated and still freshness-gated.** Four readers
+remain — three display surfaces and `agent_common.spine_stage_of`, which feeds
+ratification authority — and it retires with them in a later entry.
+
+**One documentation correction with no behaviour attached:**
+`kitlib.config.read_declared` was described in two places as the reader for
+`docs/gate`. No call site has ever put it to that file. The function is
+unchanged; only the false claim is gone.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

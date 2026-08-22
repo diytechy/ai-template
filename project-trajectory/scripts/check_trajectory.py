@@ -134,15 +134,20 @@ enabled. It reuses the existing `Component`-tag join (no new join) and the same
 `components_check` opt-out, and is dormant — costing a non-adopter nothing —
 until a pack (any `docs/knowledge/*.md` but the `README.md` index) exists.
 
-**Phase archetype + phase-drop detector** (WI-093; derived-gate model §7/§9.3).
-A phase's pre-dev batch is a first-class WI whose Title carries a `[<phase>]-[g<N>]`
-tag (`[v2]-[g1]` = requirement structuring, `[v2]-[g2]` = decomposition + TCs).
-This step recognizes those anchors and, reading the derived per-phase levels from
-`docs/gate`'s `# basis:` line, warns when a phase's derived gate has **dropped
-below** the level its own closed `[phase]-[gN]` anchor recorded — the signal that
-new or reopened content entered and a new phase-gate WI is due. All **warn-first**
-(never an exit-code change, at any gate); vacuous on a single-phase repo with no
-anchors (the meta case) or a legacy `docs/gate` with no basis line.
+**Phase archetype + phase-drop detector** (WI-093; derived-gate model §7/§9.3;
+re-keyed to the stage axis by WI-498 slice 4). A phase's pre-dev batch is a
+first-class WI whose Title carries a phase-anchor tag recording the LADDER RUNG
+the phase stands at once it closes (`[v2]-[DevStg-LLReqs]` = requirement
+structuring, `[v2]-[DevStg-Impl]` = decomposition + TCs; the retired
+`[v2]-[reqs|tests|g1|g2]` spellings are translated on read, never authored).
+This step recognizes those anchors and, reading the LIVE per-phase stage through
+the common reader (`derive_stage.read` over `docs/stage`), warns when a phase has
+**dropped below** the reach its own closed anchor recorded — the signal that new
+or reopened content entered and a new phase-anchor WI is due. It ABSTAINS where a
+phase's reading is a repo-global rung (`kitlib.stage.REPO_GLOBAL_RUNGS`), saying
+so once rather than going silently vacuous. All **warn-first** (never an
+exit-code change, at any stage); vacuous on a single-phase repo with no anchors
+(the meta case) or where the stage axis cannot be read.
 
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
@@ -170,11 +175,15 @@ from pathlib import Path
 # scripts/ — the same sanctioned-sibling idiom the engines use for each other.
 try:
     from kitlib import config as _kitconfig
+    from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
+    from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import stage as _kitstage
 
 # Sibling: the spine's registry carrier. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
@@ -1788,87 +1797,152 @@ def spec_interface_findings(root):
 # walk is rebase-sensitive and carries no membership, §9.3). Both checks are
 # WARN-FIRST — like the connectivity coverage, they never change the exit code.
 #
-# THE ARCHETYPE CONVERTED, THE LIVE ANCHORS DID NOT (OI-21 contract break 4).
-# New titles take `[<phase>]-[reqs]` (requirement structuring) and
-# `[<phase>]-[tests]` (decomposition + TCs) — the two bars those anchors certify.
-# The ~20 anchors already committed carry `[<phase>]-[g1]` / `[<phase>]-[g2]` and
-# STAY THAT WAY: a WI title is a citation, and D-4 refuses re-pointing history.
-# So the regex reads both spellings and normalizes to one internal level; the
-# retired spelling is accepted forever on the read side and never authored again.
-GATE_FILE = "docs/gate"
-PHASE_ANCHOR_RE = re.compile(r"^\[([^\]]+)\]-\[(g[12]|reqs|tests)\]", re.IGNORECASE)
-# Anchor token -> internal level. `g1`/`g2` are the retired spellings, kept for
-# the committed history only.
-_ANCHOR_LEVEL = {"reqs": 1, "tests": 2, "g1": 1, "g2": 2}
-# The canonical spelling of each level, for the messages a new anchor should copy.
-_ANCHOR_NAME = {1: "reqs", 2: "tests"}
-_BAR_LEVEL = {
-    "DevStg-Below": 0,
-    "DevStg-Reqs": 1,
-    "DevStg-Tests": 2,
-    "DevStg-Impl": 3,
+# RE-KEYED TO THE STAGE AXIS (WI-498 slice 4, ruled plan §5 item 4). The detector
+# used to compare a phase's derived BAR against an anchor's internal level 1/2.
+# Both halves moved: the current reading now comes from `docs/stage`'s
+# `per-phase-live` field through the common reader, and an anchor's recorded reach
+# is a LADDER RUNG. The bar axis is out of this module entirely.
+#
+# THE ANCHOR VOCABULARY, AND WHY THE LEGACY SPELLINGS ARE TRANSLATED RATHER THAN
+# RE-RECORDED. A phase anchor is a WI TITLE — a committed record of what a closed
+# work item did — so D-4's refusal to re-point history applies exactly as it did
+# at the `g1`/`g2` changeover: the ~20 anchors already in `docs/work/complete/`
+# stay spelled as they were, and the read side declares the translation.
+#
+# THE TRANSLATION IS BY MEANING, NOT BY SPELLING, and the two differ by two rungs
+# in both rows — which is precisely the trap the stage/bar spelling overlap sets:
+#
+#   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are
+#                              authored AND ratified. `spine_stage` clears its
+#                              `any(is_drafted(sr))` test from there on, so what
+#                              the phase then stands at is DevStg-LLReqs — NOT
+#                              DevStg-Reqs, which is the rung it has just LEFT.
+#   `[p]-[tests]` / `[p]-[g2]` decomposition: LLRs and TCs authored and
+#                              non-Drafted. That clears the LLReqs and Tests
+#                              predicates both, so the phase stands at
+#                              DevStg-Impl — NOT DevStg-Tests.
+#
+# So an anchor records THE RUNG THE PHASE STANDS AT ONCE IT CLOSES (slice 2's
+# inversion finding, on this axis: a bar value corresponds to the rung at which it
+# was reached). Going forward the canonical spelling IS that rung, verbatim:
+# `[<phase>]-[DevStg-LLReqs]`, `[<phase>]-[DevStg-Impl]` — stage vocabulary, no
+# second word to keep in step, and any rung is expressible rather than just two.
+PHASE_ANCHOR_RE = re.compile(
+    r"^\[([^\]]+)\]-\[(g[12]|reqs|tests|DevStg-[A-Za-z]+)\]", re.IGNORECASE
+)
+# Legacy anchor token -> the rung it recorded. Read side only; never authored.
+_ANCHOR_REACH = {
+    "reqs": _kitladder.STAGE_LLREQS,
+    "g1": _kitladder.STAGE_LLREQS,
+    "tests": _kitladder.STAGE_IMPL,
+    "g2": _kitladder.STAGE_IMPL,
 }
-_PER_PHASE_RE = re.compile(r"per-phase=(\S+)")
 
 
-def read_derived_phases(root):
-    """`{phase-label: bar-level-int}` parsed from the `# basis:` line of the
-    generated docs/gate (derive_gate.py's hybrid cache — read the committed value,
-    never recompute here). Empty when docs/gate is absent or a legacy hand-set gate
-    with no basis line, so the drop detector is then vacuous. The basis format is
-    derive_gate.basis_line's `per-phase=<label>=DevStg-<Name>;...` (a shared
-    contract; a cache still carrying the retired G-values simply parses to nothing
-    and the detector goes vacuous until it is regenerated — the same
-    one-forced-regenerate migration the basis line itself takes)."""
-    path = root / GATE_FILE
-    if not path.exists():
+def _anchor_reach(token):
+    """The rung a phase-anchor token records, or None when the token is
+    rung-shaped but names no rung on the ladder.
+
+    A `DevStg-*` token is matched CASE-INSENSITIVELY by the regex above (titles
+    are prose), so it is folded back onto the canonical spelling here rather than
+    handed to `require_rung`, which is deliberately exact."""
+    lowered = token.lower()
+    if lowered in _ANCHOR_REACH:
+        return _ANCHOR_REACH[lowered]
+    for rung in _kitladder.STAGE_ORDER:
+        if rung.lower() == lowered:
+            return rung
+    return None
+
+
+def phase_stages(root):
+    """`{phase-label: rung-or-DevStg-Below}` — the LIVE per-phase stage, read
+    through the common reader (`derive_stage.read`, ruled plan §3), or `{}` when
+    the stage axis cannot be read at all.
+
+    THE LIVE READING, NOT THE SETTLED ONE, AND THAT IS THE WHOLE DESIGN. This is
+    an EVENT detector: its question is "did new or reopened content enter a phase
+    that had closed an anchor?", and a Drafted or re-Drafted row IS that event.
+    The headline `stage`/`per-phase` fields exclude drafts by construction — slice
+    1's C-01 fix, which exists so one draft cannot collapse SELECTION — so they
+    cannot see the event at all, by design. `per-phase-live` is where the drafts
+    are, and reading it here is what lets selection stay uncollapsed while
+    detection stays sharp. (It also answers slice 3's banked tension: rung 3's
+    self-reporting recursion, a Drafted component dropping the reported stage, is
+    visible on the live reading even though it no longer moves the effective one.)
+
+    THE IMPORT IS LAZY AND DEGRADES TO VACUOUS. This module runs in the shipped
+    pre-commit hook, and the `ratify-fresh` lesson (130-REVIEW-A) is that a hook
+    which hard-requires a sibling an adopter's tree may not have blocks every
+    commit. A fixture that copies `check_trajectory.py` alone therefore loses the
+    drop half only — the same vacuity an absent `docs/gate` produced before."""
+    try:
+        import derive_stage
+    except ImportError:  # pragma: no cover - exercised via the sys.path fallback
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        try:
+            import derive_stage
+        except ImportError:
+            return {}
+    try:
+        record = derive_stage.read(Path(root))
+    except (OSError, ValueError):
+        # A hand-edited or ladder-stale docs/stage RAISES in `kitlib.stage.parse`
+        # (its ruled direction). That is the `derived-stage` step's finding to
+        # report, not this advisory detector's to crash the hook over.
         return {}
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        s = line.strip()
-        if s.startswith("# basis:"):
-            m = _PER_PHASE_RE.search(s)
-            if not m or m.group(1) == "(none)":
-                return {}
-            out = {}
-            for pair in m.group(1).split(";"):
-                if "=" in pair:
-                    label, bar = pair.rsplit("=", 1)
-                    if bar in _BAR_LEVEL:
-                        out[label] = _BAR_LEVEL[bar]
-            return out
-    return {}
+    return dict(record.get("per-phase-live") or {})
 
 
 def phase_anchors(wis):
-    """`({(phase, level): wi}, [shape-warnings])` — the phase-anchor WIs parsed
-    from Titles, over BOTH the canonical `[phase]-[reqs|tests]` spelling and the
-    retired `[phase]-[g1|g2]` one the committed anchors carry. A duplicate
-    (phase, level) anchor — including one spelled each way, which is exactly the
-    collision worth catching during the changeover — and a `tests` anchor whose
-    predecessors omit its `reqs` anchor, are warned (advisory only)."""
+    """`({(phase, rung): wi}, [shape-warnings])` — the phase-anchor WIs parsed
+    from Titles, over the canonical `[phase]-[DevStg-<Rung>]` spelling and the
+    retired `[phase]-[reqs|tests]` / `[phase]-[g1|g2]` ones the committed anchors
+    carry (all translated by `_anchor_reach`). A duplicate (phase, rung) anchor —
+    including one spelled each way, which is exactly the collision worth catching
+    during a changeover — and an anchor whose predecessors omit the next-lower
+    anchor of its own phase, are warned (advisory only)."""
     anchors, warns = {}, []
     for w in wis:
         m = PHASE_ANCHOR_RE.match(w["title"])
         if not m:
             continue
-        level = _ANCHOR_LEVEL[m.group(2).lower()]
-        key = (m.group(1), level)
+        reach = _anchor_reach(m.group(2))
+        if reach is None:
+            warns.append(
+                "phase anchor {} names [{}]-[{}], which is not a rung on the "
+                "stage ladder — expected one of {}".format(
+                    w["id"], m.group(1), m.group(2), ", ".join(_kitladder.STAGE_ORDER)
+                )
+            )
+            continue
+        key = (m.group(1), reach)
         if key in anchors:
             warns.append(
                 "duplicate phase anchor [{}]-[{}] ({} and {})".format(
-                    key[0], _ANCHOR_NAME[level], anchors[key]["id"], w["id"]
+                    key[0], reach, anchors[key]["id"], w["id"]
                 )
             )
             continue
         anchors[key] = w
-    for (phase, level), w in anchors.items():
-        if level == 2 and (phase, 1) in anchors:
-            lower = anchors[(phase, 1)]["id"]
-            if lower not in (w["preds"] + w["soft"]):
+    # THE PREDECESSOR SHAPE RULE, GENERALIZED. It used to be "a `tests` anchor
+    # lists its `reqs` anchor", which was expressible only because there were
+    # exactly two levels. On a ladder it is "each anchor lists the next-LOWER
+    # anchor of its own phase" — the same rule, stated over whatever rungs the
+    # phase actually recorded.
+    by_phase = {}
+    for phase, reach in anchors:
+        by_phase.setdefault(phase, []).append(reach)
+    for phase, reaches in by_phase.items():
+        ordered = sorted(reaches, key=_kitstage.order)
+        for higher, lower in zip(ordered[1:], ordered):
+            w = anchors[(phase, higher)]
+            lower_id = anchors[(phase, lower)]["id"]
+            if lower_id not in (w["preds"] + w["soft"]):
                 warns.append(
-                    "phase anchor {} ([{}]-[tests]) does not list its "
-                    "[{}]-[reqs] ({}) as a predecessor".format(
-                        w["id"], phase, phase, lower
+                    "phase anchor {} ([{}]-[{}]) does not list its "
+                    "[{}]-[{}] ({}) as a predecessor".format(
+                        w["id"], phase, higher, phase, lower, lower_id
                     )
                 )
     return anchors, warns
@@ -1876,37 +1950,58 @@ def phase_anchors(wis):
 
 def phase_findings(root, wis):
     """The phase-archetype + phase-drop warns (WI-093; warn-first). Returns the
-    warn strings ([] when vacuous — no anchors and no per-phase drop data, the
-    single-phase meta case). The drop detector reads the derived per-phase levels
-    from docs/gate's basis: for each phase with a **done** phase anchor (its
-    recorded closed level), if the current derived level for that phase is below
-    it, new/reopened content dropped it — warn to open a new phase-anchor WI. The
-    message names the CANONICAL anchor spelling even when the closed anchor it
-    read used the retired one, because the WI it is asking for is a NEW row."""
+    warn strings ([] when vacuous — no anchors, or no readable stage axis, the
+    single-phase meta case).
+
+    THE DROP RULE. For each phase with a **done** anchor, take the highest rung
+    its closed anchors recorded and compare the phase's current LIVE stage against
+    it; below means new or reopened content entered, and a new phase-anchor WI is
+    due. The message names the CANONICAL anchor spelling even when the closed
+    anchor it read used a retired one, because the WI it is asking for is a NEW
+    row.
+
+    THE ABSTENTION, WHICH IS THE ONLY THING HERE THAT IS NOT A DIRECT RE-KEY.
+    `kitlib.stage.REPO_GLOBAL_RUNGS` names the three rungs a per-phase reading
+    cannot own — they are decided by repo-wide registries and passed whole to
+    every per-phase call. A phase sitting on one of them is BELOW its recorded
+    reach as a matter of arithmetic while saying nothing whatever about its own
+    content: every phase reads the same rung at once, and blaming any one of them
+    for "new or reopened content" would be a fabricated attribution. So the
+    detector abstains there — and, because the schedule map's standing criticism
+    of this detector was that it went VACUOUS SILENTLY when it could not parse the
+    cache, it says so once, naming the rung and the phases it stood down for."""
     anchors, warns = phase_anchors(wis)
-    derived = read_derived_phases(root)
-    # phase -> the highest anchor level whose anchor WI is done
+    live = phase_stages(root)
+    # phase -> the highest rung any of its DONE anchors recorded
     closed = {}
-    for (phase, level), w in anchors.items():
+    for (phase, reach), w in anchors.items():
         if w["status"] == "done":
-            closed[phase] = max(closed.get(phase, 0), level)
-    bar_of = {v: k for k, v in _BAR_LEVEL.items()}
-    for phase, level in sorted(closed.items()):
-        cur = derived.get(phase)
-        if cur is not None and cur < level:
+            current = closed.get(phase)
+            if current is None or _kitstage.order(reach) > _kitstage.order(current):
+                closed[phase] = reach
+    stood_down = {}
+    for phase, reach in sorted(closed.items()):
+        cur = live.get(phase)
+        if cur is None:
+            continue
+        if cur in _kitstage.REPO_GLOBAL_RUNGS:
+            stood_down.setdefault(cur, []).append(phase)
+            continue
+        if _kitstage.order(cur) < _kitstage.order(reach):
             warns.append(
                 "phase {!r} dropped to {} but its closed [{}]-[{}] anchor recorded "
-                "level {} — new or reopened content entered; open a new "
-                "[{}]-[reqs|tests] work item to structure it (derived model "
-                "§9.3)".format(
-                    phase,
-                    bar_of.get(cur, cur),
-                    phase,
-                    _ANCHOR_NAME[level],
-                    bar_of.get(level, level),
-                    phase,
-                )
+                "reach {} — new or reopened content entered; open a new "
+                "[{}]-[DevStg-<rung>] work item to structure it (derived model "
+                "§9.3)".format(phase, cur, phase, reach, reach, phase)
             )
+    for rung, phases in sorted(stood_down.items()):
+        warns.append(
+            "phase-drop detector stood down for phase(s) {}: each reads {}, a "
+            "repo-global rung decided by the need/boundary/component registries "
+            "rather than by any one phase's content — the comparison against a "
+            "closed anchor's recorded reach would be unattributable. It resumes "
+            "when the frame settles".format(", ".join(sorted(phases)), rung)
+        )
     return warns
 
 
@@ -3819,11 +3914,14 @@ CRITIQUE_VERDICT_RE = re.compile(
 # whichever of the two is live (repo-lock §8.1).
 OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 # A phase anchor appearing anywhere in a brief cell — the canonical
-# `[<phase>]-[reqs|tests]` spelling and the retired `[<phase>]-[g1|g2]` one the
-# committed briefs carry (OI-21 break 4: the archetype converted, the anchors did
-# not). Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored
-# to the start of a Title and this one matches mid-cell.
-RATIFY_ANCHOR_RE = re.compile(r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests)\]", re.IGNORECASE)
+# `[<phase>]-[DevStg-<Rung>]` spelling (WI-498 slice 4) and the retired
+# `[<phase>]-[reqs|tests]` / `[<phase>]-[g1|g2]` ones the committed briefs carry.
+# Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored to the
+# start of a Title and this one matches mid-cell; the accepted TOKEN SET is the
+# same, and is held equal to it by a test rather than by this comment.
+RATIFY_ANCHOR_RE = re.compile(
+    r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests|DevStg-[A-Za-z]+)\]", re.IGNORECASE
+)
 # The brief satisfies the rule only by naming a ratification/hierarchy VIEW — a
 # bare `trace.py --ratify` command mention no longer counts (WI-146 REVIEW-A): a
 # command can be unexecuted or wrong-scope, so it is not proof the generated view
@@ -3838,7 +3936,7 @@ RATIFY_VIEW_RE = re.compile(
 
 def ratify_brief_findings(root):
     """Warn-first brief lint (WI-146b): an open-items row whose decision is a
-    `[phase]-[g1|g2]` ratification should point at the batch-scoped ratification
+    phase-anchor ratification should point at the batch-scoped ratification
     hierarchy view (`trace.py --ratify <phase>`) instead of hand-copying registry
     rows. WARN only — never a gate fail (the house stance for prose surfaces,
     WI-129/132).
@@ -3867,7 +3965,7 @@ def ratify_brief_findings(root):
         if not is_ratification or RATIFY_VIEW_RE.search(body):
             continue
         out.append(
-            "{}: a [phase]-[g1|g2] ratification brief should name the batch-scoped "
+            "{}: a phase-anchor ratification brief should name the batch-scoped "
             "hierarchy view (generate it with `trace.py --ratify <phase>`) instead "
             "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_REL)
         )

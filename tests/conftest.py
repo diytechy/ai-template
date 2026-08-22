@@ -155,6 +155,15 @@ SLOW_MODULES = frozenset(
         # in the module builds and commits a real git repo — the same
         # subprocess-driving class as the module above it, not a borderline call.
         "test_phase_rule",  # the stage-decrease rule, on real git repos
+        # WI-498 slice 4: the two event detectors' DRIVEN half. Every test in it
+        # either takes the `scaffold` fixture (a full bootstrap — the claim that
+        # three rungs are repo-global is a claim about `spine_stage` and is
+        # driven, not asserted) or builds and commits a real git repo (the tier
+        # signal's whole subject is a delta between two committed trees). Filed
+        # by the declared criterion, not to buy budget: its in-process half is
+        # `test_stage_event_detectors`, which stays in the commit bar where the
+        # default puts it.
+        "test_stage_event_detectors_driven",  # scaffolds + real git repos
         "test_gen_okf",  # gen_okf on scaffolds
         "test_gen_trajectory_pending",  # pending-state gen_trajectory subprocesses
         "test_modules_registry",  # modules gate on scaffolds
