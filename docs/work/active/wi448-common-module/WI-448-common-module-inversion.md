@@ -83,13 +83,17 @@ with the reasoning recorded in their place.
    successor decomposition program, which needed the lane-close terminal-outcome
    vocabulary somewhere below both its readers to cut a view-into-coordinator
    import. It took its OWN single-component design row rather than joining this
-   package's four-way tag, so `OI-48` is untouched by it and still owed.
+   package's four-way tag.
 
-**Deferred to the owner: `OI-48`** — which component owns the shared kernel.
-The package is imported from all four of CMP-006..009, so `LLR-181` carries a
-four-way `Component` tag: true about USAGE, silent about OWNERSHIP, and the
-checker's multi-membership rule treats it as the warn-only partition question
-it is. The tag also SUPPRESSES the cross-component seam rule on the package's
-edges, so the ruling is owed before the remaining slices add importers. The
-depth-0 frame is LOCKED at four entities, so a shared-kernel component is not
-an execution WI's call.
+**`OI-48` is RULED (d) AND EXECUTED (2026-08-21 / WI-494, 2026-08-22)**: which
+component owns the shared kernel is settled. `LLR-181`'s four-way `Component`
+tag — true about USAGE, silent about OWNERSHIP — collapses to `CMP-006` alone
+(the recorded closest-fit reason: registry.py's bulk within the row's own
+module set). The package's real cross-component consumption now rides the
+declared shared-kernel surface (`docs/kernel-modules-allow`), OI-48's reuse
+provision — never a bare `Component` tag, and never special-cased to kitlib —
+so `cross_component_findings` stays live on every edge NOT into a declared
+kernel module. `station.py` (item 5, `LLR-182`) is confirmed NOT part of the
+kernel declaration: its one cross-component edge is already a declared,
+policed seam (`IF-093`), so its tag stays `CMP-008` unmoved. The remaining
+consolidation slices below are unblocked.

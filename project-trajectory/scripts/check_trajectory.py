@@ -238,6 +238,15 @@ TOP_VIEW_MAX = 10
 # id cell yields each id cleanly.
 IF_ID_RE = re.compile(r"IF-\d+")
 
+# The declared shared-kernel surface (OI-48 ruled (d), WI-494) — see
+# `read_kernel_modules`. The reuse provision's home: a small declared file,
+# consistent with the `docs/*-allow` idiom `provenance-allow` and
+# `if-tc-coverage-allow` already established, over a `[checks]`-side list —
+# a per-entry recorded REASON is the point, and `docs/process.toml` carries
+# dials, not reasoned prose.
+KERNEL_ALLOW = "docs/kernel-modules-allow"
+KERNEL_ALLOW_SEP = " — "
+
 # The seam-TC coverage migration allowlist (OI-43 ruled (a), WI-488) — see
 # `read_if_tc_allow`.
 IF_TC_ALLOW = "docs/if-tc-coverage-allow"
@@ -1475,6 +1484,101 @@ def _seam_endpoints(cell):
     return out
 
 
+def _parse_kernel_allow(root):
+    """`(entries, unparsed)` for `docs/kernel-modules-allow` — the whole parse,
+    both halves, the `docs/provenance-allow` split (`trace.read_provenance_allow`):
+    `entries` is `[(normalized module key, reason, lineno)]`; `unparsed` is
+    `[(lineno, line)]` for every DECLARING line the grammar dropped, so a
+    malformed entry is reported rather than silently read as an empty file
+    (`kernel_allow_parse_findings`).
+
+    Grammar: one non-blank, non-`#`-comment line per entry, `<module path> —
+    <reason>` (an em dash, space each side — the same separator
+    `docs/provenance-allow` uses). A REASON IS REQUIRED, unlike
+    `docs/if-tc-coverage-allow`'s migration seed: OI-48's reuse provision is
+    a deliberate recorded act every time, never a bare-baseline default, so
+    there is no seeded-population exception here. A line with no separator,
+    or an empty module or reason on either side of it, DECLARES NOTHING — it
+    is dropped (fail-safe: absence of a valid declaration grants no
+    exemption) and counted as unparsed."""
+    path = Path(root) / KERNEL_ALLOW
+    if not path.is_file():
+        return [], []
+    out, unparsed = [], []
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    for lineno, raw in enumerate(text.split("\n"), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if KERNEL_ALLOW_SEP not in line:
+            unparsed.append((lineno, line))
+            continue
+        head, reason = line.split(KERNEL_ALLOW_SEP, 1)
+        module = _norm_module(head.strip())
+        reason = reason.strip()
+        if not module or not reason:
+            unparsed.append((lineno, line))
+            continue
+        out.append((module, reason, lineno))
+    return out, unparsed
+
+
+def read_kernel_modules(root):
+    """`{normalized module key: reason}` — the declared shared-kernel surface
+    (OI-48 ruled (d), 2026-08-21; executed WI-494). Absent file, or a file
+    with no parseable entries: empty dict — the FAIL-SAFE DEFAULT the ruling
+    requires, since an empty mapping exempts nothing and every edge stays
+    policed by the ordinary cross-component rule.
+
+    `_cross_component_scan` treats an import edge whose DESTINATION resolves
+    into this set as not a seam at all — neither a finding nor the
+    multi-membership advisory — because the module is a declared shared
+    kernel: consumed across components BY DESIGN, and re-declaring that fact
+    edge-by-edge (the WI-064 seam registry) would restate "everyone imports
+    the shared helper" once per caller (OI-48's option (b), priced and
+    declined). The exemption is ONE-DIRECTIONAL: an edge OUT of a kernel
+    module — a kernel module importing a non-kernel sibling — is not
+    exempted here and stays fully policed, because a shared kernel importing
+    outward is the one shape a layered system forbids regardless of who
+    calls it (WI-448's dedicated bootstrap-manifest test polices the literal
+    kitlib case already; this rule polices any OTHER declared kernel the
+    same way going forward).
+
+    NEVER A KITLIB HARDCODE — the reuse provision's whole point: any future
+    shared module whose real consumers span components takes this same
+    declared path, one entry, one recorded reason, a deliberate act rather
+    than a default."""
+    return {module: reason for module, reason, _ in _parse_kernel_allow(root)[0]}
+
+
+def kernel_allow_parse_findings(root):
+    """PARSE HONESTY for `docs/kernel-modules-allow`, the
+    `provenance_allow_parse_findings` idiom: a declaring line the grammar
+    cannot read is an explicit finding naming it, not a silent drop — the
+    other half of "declares nothing" is that it also grants no exemption,
+    and a malformed line that still reads like a live entry to a human is
+    the state most worth reporting. Reported at the FIRST unparsed line with
+    a count, not all of them, for the same reason `provenance_allow_parse_findings`
+    does: the fix is the same edit for every one.
+
+    Shares `component_findings`' WARN-plain / ERROR-under-`--strict`
+    promotion and its `[checks] components_check` opt-out — this file is
+    part of the components layer, not a spine-integrity surface, so it rides
+    that gate rather than the always-on floor `docs/provenance-allow` uses."""
+    _entries, unparsed = _parse_kernel_allow(root)
+    if not unparsed:
+        return []
+    lineno, line = unparsed[0]
+    return [
+        "{}:{}: this line DECLARES a kernel module and the grammar cannot "
+        "read it ({} such line(s)) — `{}`. An entry is `<module path>{}"
+        "<reason>` and BOTH fields are required — a bare module path or a "
+        "missing separator suppresses nothing".format(
+            KERNEL_ALLOW, lineno, len(unparsed), line[:80], KERNEL_ALLOW_SEP
+        )
+    ]
+
+
 def _classifiable_edges(root):
     """Yield `(src, dst, src_cmps, dst_cmps)` for every internal import edge
     the cross-CMP rules can classify — both endpoints normalized, both carrying
@@ -1540,6 +1644,16 @@ def _cross_component_scan(root):
     An edge whose endpoints are single-tagged into the SAME component is
     ordinary intra-component wiring and is neither.
 
+    A THIRD, EARLIER exit (OI-48 ruled (d), WI-494): an edge whose
+    DESTINATION is a declared shared-kernel module (`read_kernel_modules`) is
+    not a seam at all — neither a finding nor the multi-membership advisory.
+    Checked before the overlap split, so a kernel module that still carries a
+    residual multi-tag is not ALSO advised about (the advisory exists to
+    surface undeclared candidates; a module already declared kernel is a
+    settled candidate, not an open one). One-directional by construction —
+    the exemption keys on `dst_n`, never `src_n`, so an edge OUT of a kernel
+    module stays exactly as policed as any other edge.
+
     ONE scan per run, cached per root: the two public wrappers used to each
     trigger their own scan from `main`, so the two tiers were computed from two
     separate reads of the same registries — the exact could-disagree state this
@@ -1550,15 +1664,21 @@ def _cross_component_scan(root):
     cached = _SCAN_CACHE.get(str(root))
     if cached is not None:
         return cached
-    # `covered` is resolved LAZILY: with zero classifiable edges the old rule
-    # never read interfaces.csv at all, and an unreadable interfaces.csv must
-    # not turn a vacuous scan into a crash (review finding).
+    # `covered` and `kernel` are resolved LAZILY: with zero classifiable edges
+    # the old rule never read interfaces.csv (or now kernel-modules-allow) at
+    # all, and an unreadable file must not turn a vacuous scan into a crash
+    # (review finding, extended to the new surface for the same reason).
     covered = None
+    kernel = None
     findings, advisories = [], []
     for src_n, dst_n, src_cmps, dst_cmps in _classifiable_edges(root):
         if covered is None:
             covered = _declared_seam_pairs(root)
         if (src_n, dst_n) in covered:
+            continue
+        if kernel is None:
+            kernel = read_kernel_modules(root)
+        if dst_n in kernel:
             continue
         edge = "{} ({}) -> {} ({})".format(
             src_n,
@@ -1595,10 +1715,13 @@ def cross_component_findings(root):
     a finding, mechanized from the same committed artifacts the other component
     rules read. The CALLER gates the opt-out (`component_findings` shares
     `[checks] components_check`) and the WARN-plain / ERROR-under-`--strict`
-    promotion. See `_cross_component_scan` for the tier split (this is tier one,
-    unchanged) and `_classifiable_edges` for the vacuity guards this rule
-    inherits — including the DELIBERATE vacuousness for an endpoint carrying no
+    promotion. See `_cross_component_scan` for the tier split (this is tier one)
+    and `_classifiable_edges` for the vacuity guards this rule inherits —
+    including the DELIBERATE vacuousness for an endpoint carrying no
     `Component` tag, which stays the containment rule's job, not this one's.
+    Since OI-48 (WI-494) an edge into a declared shared-kernel module
+    (`read_kernel_modules`, `docs/kernel-modules-allow`) is exempted here
+    before either tier — see `_cross_component_scan`'s "THIRD, EARLIER exit".
 
     Implements: SR-159, LLR-067
     """
@@ -1623,7 +1746,7 @@ def component_findings(root):
     """The How-SW component-coverage finding(s) (process-options.md "Component
     layer"). Returns the finding strings ([] when opted out or clean). The caller
     prints them WARN plain and promotes them to ERROR under `--strict` (DevStg-Tests+).
-    Opt-out via `[checks] components_check = false`. Four rules, all off the arch-map ⇒
+    Opt-out via `[checks] components_check = false`. Five rules, all off the arch-map ⇒
     CMP join:
 
     - **Top-view right-sizing** (WI-073/FB5): vacuous when the arch-map inventory
@@ -1647,7 +1770,18 @@ def component_findings(root):
       no covering IF-### row. Its warn-only sibling
       `cross_component_advisories` (WI-440) reports the edges a multi-tagged
       endpoint silences; main() prints those, not this function, because they
-      must never reach the exit code.
+      must never reach the exit code. An edge into a declared shared-kernel
+      module (OI-48 (d), WI-494) is exempted from BOTH before either can fire
+      — see `_cross_component_scan`.
+    - **Declared-kernel allowlist hygiene** (OI-48 (d), WI-494): see
+      `kernel_allow_parse_findings` — a `docs/kernel-modules-allow` line the
+      grammar cannot read (missing module, missing reason, or no separator)
+      is reported, the same parse-honesty shape
+      `if_tc_allow_hygiene_findings` and `provenance_allow_parse_findings`
+      use for their own allow-files. A malformed line grants no exemption
+      either way (fail-safe), so this rule is reporting, never gating, the
+      fail-safe default — it just says so out loud instead of leaving the
+      author to notice a seam finding that did not go away.
 
     Implements: SR-159, LLR-049
     """
@@ -1686,6 +1820,7 @@ def component_findings(root):
             )
         )
     out.extend(cross_component_findings(root))
+    out.extend(kernel_allow_parse_findings(root))
     return out
 
 

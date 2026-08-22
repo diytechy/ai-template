@@ -510,6 +510,20 @@ def test_fresh_scaffold_passes_trace(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
 
 
+def test_scaffold_ships_no_declared_kernel_surface(scaffold):
+    # OI-48 (d) / WI-494's fail-safe default, proven in a REAL scaffold rather
+    # than a synthetic fixture: `docs/kernel-modules-allow` is a this-repo
+    # declared surface (the `docs/provenance-allow`, `docs/if-tc-coverage-allow`
+    # precedent), never bootstrap.py MAPPING material, so a fresh adopter
+    # starts with NO declared kernel and therefore NO exemption — every
+    # cross-component import stays fully policed until an adopter deliberately
+    # declares one.
+    assert not (scaffold / "docs" / "kernel-modules-allow").exists()
+    check_trajectory = load_script("check_trajectory")
+    assert check_trajectory.read_kernel_modules(scaffold) == {}
+    assert check_trajectory.kernel_allow_parse_findings(scaffold) == []
+
+
 def test_scaffold_ships_no_architecture_doc(scaffold):
     # WI-455 (sitting-2 decision 8): the structural architecture DERIVES —
     # the dashboard and checks scan the registries + source AST — so no

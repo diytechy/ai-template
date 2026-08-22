@@ -1611,6 +1611,106 @@ def test_components_check_off_silences_the_overlap_advisory(tmp_path):
     assert ADVISORY not in proc.stderr
 
 
+# --- OI-48 (d): the declared shared-kernel exemption (WI-494) -----------------
+# `docs/kernel-modules-allow` — an import edge whose DESTINATION is listed there
+# is not a seam at all (neither the hard finding nor the multi-membership
+# advisory). Fail-safe by construction: absence of a valid declaration grants
+# no exemption, so a module not listed (or listed with a malformed entry) stays
+# fully policed.
+
+
+def write_kernel_allow(root, body):
+    (root / "docs" / "kernel-modules-allow").write_text(body, encoding="utf-8")
+
+
+def test_declared_kernel_destination_is_not_a_seam(tmp_path):
+    # mod_a (CMP-001) imports mod_b (CMP-002); mod_b is declared kernel — no
+    # finding, no advisory, clean even under --strict.
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(tmp_path, "scripts/mod_b — WI-494 test: shared reader.\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 0, strict.stdout + strict.stderr
+    assert "cross-component import" not in strict.stderr
+    assert ADVISORY not in strict.stderr
+
+
+def test_undeclared_module_still_fires_the_hard_finding(tmp_path):
+    # The fail-safe default AND the "still fully live for every other edge"
+    # half: a kernel-modules-allow file that declares OTHER modules does not
+    # blanket-exempt an edge into a module it does not name.
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(
+        tmp_path, "scripts/some_other_module — WI-494 test: not this edge.\n"
+    )
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "cross-component import" in strict.stderr
+
+
+def test_absent_kernel_allow_file_exempts_nothing(tmp_path):
+    # No file at all: read_kernel_modules answers {} and the ordinary rule
+    # runs exactly as it did before OI-48 — the fail-safe default.
+    _cross_cmp_repo(tmp_path)
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "cross-component import" in strict.stderr
+
+
+def test_kernel_exemption_also_silences_the_overlap_advisory(tmp_path):
+    # A declared kernel module that still carries a residual multi-tag is not
+    # ALSO advised about: the advisory exists to surface undeclared
+    # candidates, and a declared one is a settled candidate, not an open one.
+    _overlap_repo(tmp_path)  # mod_a tagged CMP-001+CMP-002, mod_b tagged CMP-002
+    write_kernel_allow(tmp_path, "scripts/mod_b — WI-494 test: declared kernel.\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert ADVISORY not in plain.stderr
+
+
+def test_kernel_exemption_is_one_directional(tmp_path):
+    # Declaring mod_a (the SOURCE) kernel does not exempt ITS OWN outbound
+    # edge — the exemption keys on the destination only.
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(tmp_path, "scripts/mod_a — WI-494 test: wrong side.\n")
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "cross-component import" in strict.stderr
+
+
+def test_kernel_allow_entry_without_a_reason_is_dropped_and_reported(tmp_path):
+    # No ` — <reason>` separator: the entry DECLARES NOTHING (OI-41 ARM
+    # precedent) — no exemption, AND the malformed line is reported rather
+    # than silently read as an empty file.
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(tmp_path, "scripts/mod_b\n")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "cross-component import" in plain.stderr
+    assert "grammar cannot read it" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "grammar cannot read it" in strict.stderr
+
+
+def test_kernel_allow_entry_with_empty_reason_is_dropped_and_reported(tmp_path):
+    # A separator present but nothing after it — same fail-safe: dropped,
+    # reported, no exemption.
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(tmp_path, "scripts/mod_b — \n")
+    plain = run_traj(tmp_path)
+    assert "cross-component import" in plain.stderr
+    assert "grammar cannot read it" in plain.stderr
+
+
+def test_kernel_allow_hygiene_shares_the_components_check_opt_out(tmp_path):
+    _cross_cmp_repo(tmp_path)
+    write_kernel_allow(tmp_path, "scripts/mod_b\n")  # malformed, no reason
+    (tmp_path / "docs" / "components-check").write_text("off\n", encoding="utf-8")
+    proc = run_traj(tmp_path, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "grammar cannot read it" not in proc.stderr
+
+
 # --- specs act on declared interface boundaries (WI-191) ----------------------
 
 # Two declared seams for the spec-citation checks.

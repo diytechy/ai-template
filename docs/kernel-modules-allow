@@ -1,0 +1,54 @@
+# docs/kernel-modules-allow — the declared shared-kernel surface (OI-48 ruled
+# (d), 2026-08-21; executed WI-494).
+#
+# Read by project-trajectory/scripts/check_trajectory.py's
+# `read_kernel_modules`. `cross_component_findings` treats an import edge
+# whose DESTINATION is listed here as NOT A SEAM AT ALL — neither a hard
+# finding nor the multi-membership advisory. A module below is consumed
+# across components BY DESIGN: re-declaring that fact edge-by-edge (the
+# WI-064 seam registry, OI-48's option (b)) would restate "everyone imports
+# the shared helper" once per caller, which is the over-tracing the kit's
+# proportionality doctrine (SN-012) already refuses elsewhere.
+#
+# THIS IS THE REUSE PROVISION OI-48 generalised into, not a kitlib special
+# case: any future module whose real consumers span components takes this
+# same declared path — one entry, one recorded reason — never a hardcoded
+# name inside the checker. Each addition is a deliberate act; the
+# multi-membership advisory (WI-440) keeps surfacing undeclared candidates
+# so a future kernel does not hide behind a stale four-way `Component` tag
+# the way this one did before OI-48.
+#
+# GRAMMAR, the docs/provenance-allow idiom: one non-blank, non-`#`-comment
+# line per entry, `<module path> — <reason>` (an em dash, space each side).
+# A REASON IS REQUIRED — unlike docs/if-tc-coverage-allow's migration seed,
+# there is no bare-baseline exception here, because a kernel declaration is
+# never a default (OI-41 ARM precedent: hard at birth). A line with no
+# separator, or an empty module or reason on either side of it, DECLARES
+# NOTHING: it grants no exemption (fail-safe — absence of a valid
+# declaration means the seam rule still applies in full) and is reported by
+# `kernel_allow_parse_findings` (WARN plain, ERROR under `--strict`, the
+# `[checks] components_check` opt-out).
+#
+# ONE-DIRECTIONAL: exempting a destination never exempts that same module as
+# a SOURCE. A kernel module importing a non-kernel sibling stays fully
+# policed — kitlib's own case is additionally caught by a dedicated static
+# test (tests/test_bootstrap.py, WI-448's bootstrap-manifest check), which
+# this file does not replace.
+#
+# `project-trajectory/scripts/kitlib/station.py` IS DELIBERATELY ABSENT.
+# Its one cross-component edge (scripts/traj_panels -> scripts/kitlib/station)
+# is already declared and policed as IF-093, authored alongside LLR-182 for
+# exactly this module so the edge stays a normal, scrutinized seam rather
+# than an invisible kernel exemption — adding it here would silence an edge
+# that was deliberately kept visible. Its `Component` tag stays `CMP-008`
+# (LLR-182), unchanged by this ruling's execution: station.py's real
+# consumer base is the lane-close machinery that component already owns,
+# not general reuse across all four components the way config/git/registry/
+# ladder/stage are.
+
+project-trajectory/scripts/kitlib/__init__.py — WI-448/OI-48(d): the package root; a bare `import kitlib` (bootstrap.py) is a whole-package import of the same shared kernel every submodule below belongs to (LLR-181).
+project-trajectory/scripts/kitlib/config.py — WI-448/OI-48(d): first_declared_line and its two adapters, imported by scripts across CMP-006/007/008/009 (LLR-181).
+project-trajectory/scripts/kitlib/git.py — WI-448/OI-48(d): git_out, the best-effort-off-git subprocess pattern, imported by scripts across CMP-006/007/008/009 (LLR-181).
+project-trajectory/scripts/kitlib/registry.py — WI-448/OI-48(d): the docs/work/ spec-folder reader; the package's largest module by a clear margin (304 of the four LLR-181 modules' 572 lines, measured 2026-08-22), the recorded closest-fit reason CMP-006 is the owning component (LLR-181).
+project-trajectory/scripts/kitlib/ladder.py — WI-448/OI-48(d): the eight-rung DevStg vocabulary, read by every stage-reading axis across CMP-006/008/009 (LLR-184).
+project-trajectory/scripts/kitlib/stage.py — WI-448/OI-48(d): the stage carrier and its fingerprinted read_stage, called by every stage consumer across CMP-006/008/009 (LLR-185).

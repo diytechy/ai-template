@@ -90,15 +90,22 @@ The read model landed in `kitlib/` — the `station` theme slot WI-448 named and
 deliberately left uncreated, handing it to this row — under a NEW `LLR-182` with
 a SINGLE `CMP-008` tag, NOT appended to `LLR-181`'s module list. Appending would
 have been one line cheaper and was rejected: `LLR-181` carries the four-way
-usage tag `OI-48` is open about, and a four-way tag SUPPRESSES the
+usage tag `OI-48` was open about at the time, and a four-way tag SUPPRESSES the
 cross-component seam rule on the module's edges — so the view-to-service seam
 would have stopped being policed at the exact moment it was fixed, and the slice
 would have spent an unruled owner question to tidy its own diff. A single tag is
 also true here in a way it is not for the shared kernel: the station flow's
 modules are all CMP-008. `IF-093` is therefore RE-POINTED (counterpart
 `scripts/kitlib/station`, owner `LLR-182`) and stays a policed CMP-009 to
-CMP-008 seam. This gives `OI-48` a worked data point — per-theme ownership is
-available where a theme has an owner — but does NOT pre-empt it.
+CMP-008 seam. This gave `OI-48` a worked data point — per-theme ownership is
+available where a theme has an owner — and did NOT pre-empt it: `OI-48` is now
+RULED (d) AND EXECUTED (2026-08-21 / WI-494, 2026-08-22), which confirmed this
+row's data point rather than overriding it — `LLR-181` collapses to `CMP-006`
+alone (the recorded closest-fit reason: registry.py's bulk), its real
+cross-component consumption moves to the declared shared-kernel surface
+(`docs/kernel-modules-allow`), and `LLR-182`'s single `CMP-008` tag stays
+exactly as this row left it, `IF-093` still the declared seam and station.py
+still outside the kernel declaration.
 
 **STILL OWED BY THIS ROW — the reason it is not closed:**
 
