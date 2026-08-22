@@ -1,7 +1,7 @@
 +++
 id = "WI-498"
 title = "The stage unification program: one axis, one vocabulary, one owner (OI-51 ruled 2026-08-21; plan v1 FINAL)"
-specref = "docs/plans/2026-08-21-stage-unification-plan.md"
+specref = ""
 workstream = "scripts"
 sr_refs = []
 needs = []
@@ -9,6 +9,29 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+**CLOSED COMPLETE 2026-08-22.** All six ruled slices landed 2026-08-21
+(slice 5 recovered from an interrupted session, residue reconciled); the
+adversarial program close ran 2026-08-22 (internal Opus + cross-family
+Sol, docs/reviews/2026-08-22-wi498-program-close/) and its 17-item
+consolidated worklist was executed in full — including both reviewers'
+Release-producer mutants now redding the rebuilt pins, the staged-
+divergence promotion (OI-31's gap closed), the five false blessed prose
+cells re-authored, and the stale-row census rebuilt BY VALUE (22 rows,
+carried by WI-501). The signed figures were independently reproduced
+(2831/14 exact at the approval commit). Every item the close owed is
+dispositioned: WI-473 closed complete-with-supersession; the stale
+Approved cells re-scoped into WI-501; `docs/process.toml` dropped from
+DECLARED_INPUTS by owner ruling, pinned; PB-002 and PB-004 re-measured on
+the live machinery. What the program deliberately leaves open has rows:
+WI-500 (the test-evidence carrier that makes Release reachable), WI-501/
+WI-502 (the cell repairs + the mechanized cross-check), WI-503 (the
+ratify-brief immutability split), and the wi455/wi448/wi483/wi484 lanes
+it unblocked or reshaped. The spine mints it produced were approved by
+the owner's 2026-08-22 written act (ac121647). One axis, one vocabulary,
+one owner — delivered.
 
 ## Context
 
