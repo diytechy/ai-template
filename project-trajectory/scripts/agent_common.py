@@ -2585,14 +2585,10 @@ def stop_banner(status_path, label, detail=""):
     )
 
 
-def _utf8_console():
-    """Emit UTF-8 whatever the OS console codepage is (bootstrap.py's guard):
-    session transcripts echoed into findings can carry any characters."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
+# The console guard's one home is the shipped package (WI-448 / D-8); this
+# module already imports `kitlib.config` under its guard above, so the alias
+# rides that import rather than adding an unguarded second one.
+_utf8_console = _kitconfig.utf8_console
 
 
 def head_sha_full(root):

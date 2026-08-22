@@ -78,6 +78,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # The retired TAGS, as whole words. `G-Release`/`G-Final` are matched before the
 # bare digits by putting them first in the alternation.
 #
@@ -243,16 +247,6 @@ TEXT_SUFFIXES = {
 }
 # Extensionless live files that are still authored surfaces.
 TEXT_NAMES = {"stage", "gate-policy", "declared-absences", "pre-commit", "pre-push"}
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the same guard trace.py and
-    check_docs.py use — a non-ASCII path must not wedge a cp1252 console)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def is_exempt(rel):

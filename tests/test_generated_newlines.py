@@ -236,11 +236,14 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # 880 -> 1057 when WI-485 (OI-41) landed the two deferral arms above `main`
     # (the log.d declaration reader and the vacuity count), and
     # 1057 -> 1158 when the 2026-08-20 batch-close pass added ARM 2's SCOPE rule
-    # (`fragment_scope_findings`) and the measured all-clear counts above it.
+    # (`fragment_scope_findings`) and the measured all-clear counts above it, and
+    # 1158 -> 1150 when WI-448's second slice deleted this module's local
+    # `_utf8_console` copy in favour of the one shipped home (`kitlib.config`) —
+    # a pure subtraction above the site, which is the direction this pin likes.
     # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 1158)], sites
+    assert sites == [("gen_open_items.py", 1150)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

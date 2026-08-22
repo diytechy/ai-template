@@ -31,21 +31,14 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Column order of the generated index. `scope` and the applicability axes come
 # first so a scan can filter on them without reading `description`.
 COLUMNS = ["name", "scope", "stacks", "domains", "phases", "tags", "description"]
 LIST_FIELDS = ("stacks", "domains", "phases", "tags")
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (a non-ASCII description or
-    path in a finding must not raise UnicodeEncodeError on a legacy Windows
-    cp1252 console). Python 3.7+ streams expose `.reconfigure`; guard the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # The per-agent skill dirs the kit fans the neutral source out to (S7). Mirrors

@@ -69,6 +69,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): the best-effort-off-git subprocess pattern this module used to spell
 # out itself. Run as a subprocess this script's own dir is sys.path[0] so a
@@ -122,16 +126,6 @@ FRAGMENT_NAME_RE = re.compile(
 # and this step outlived that module (retired at Phase 5).
 MD_LINK_TARGET_RE = re.compile(r"(\]\()([^)\s]+)(\))")
 URL_SCHEME_RE = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|//)", re.I)
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is (the same
-    guard as trace.py / check.py — a non-ASCII path can't wedge a cp1252 console)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # stdout of a git command under `root`, or None on ANY failure (no git binary,

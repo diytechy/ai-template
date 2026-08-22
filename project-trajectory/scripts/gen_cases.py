@@ -53,7 +53,10 @@ Contracts: IF-017 — the interface seams this module declares (process.md §8; 
 import argparse
 import itertools
 import re
-import sys
+
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
 
 
 def parse_spec(spec):
@@ -165,18 +168,6 @@ def boundary_corners(dims):
             seen.add(c)
             out.append(c)
     return out
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
-    non-ASCII path / title / registry cell can't raise UnicodeEncodeError on a
-    legacy Windows cp1252 console (verbatim across the
-    kit). Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def emit_toml_rows(cases, args, strategy, param_str):

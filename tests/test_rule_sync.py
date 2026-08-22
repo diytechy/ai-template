@@ -13,7 +13,11 @@ THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
 (owner, 2026-07-12) that a shared `_kitcommon.py` is REJECTED: each kit script
 must stay stdlib-only and independently copy-able, so small stable helpers —
 `_utf8_console`, the one-line declared-policy readers, argparse/exit
-scaffolding, the spec-folder registry reader — are duplicated on purpose. That
+scaffolding, the spec-folder registry reader — were duplicated on purpose. Read
+that list as HISTORY: owner ruling D-8 (`OI-16`) superseded F5 for three of the
+four, and the console guard was the last to go (WI-448 slice 2, 2026-08-22) —
+all 34 copies now resolve to `kitlib.config.utf8_console`, so nothing is left
+for a pin here to hold equal. See the D-8 note above the declared-line pins. That
 ruling used to be stated in the duplication census's header (`docs/dupes-allow`,
 read by `check_dupes.py`), which BOUNDED the duplication by fingerprinting every
 sanctioned block. D-7 tore the census down: one real catch at the one-time

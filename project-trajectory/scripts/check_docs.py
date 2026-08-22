@@ -100,6 +100,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the spine's registry CARRIER.
 try:
     import spine_carrier
@@ -107,18 +111,6 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
 from urllib.parse import unquote
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
-    non-ASCII doc path or link target in a finding can't raise
-    UnicodeEncodeError on a legacy Windows cp1252 console. Python 3.7+ streams
-    expose `.reconfigure`; guard for the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # A fenced code block opens/closes on a line of >=3 backticks or tildes.

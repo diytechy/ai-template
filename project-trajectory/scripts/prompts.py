@@ -53,6 +53,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Kit files are located relative to this script (bootstrap.py's KIT pattern).
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 PROMPTS = KIT / "prompts"
@@ -91,14 +95,6 @@ class PromptError(Exception):
     """A template could not be loaded or filled. Raised, not returned: every
     caller either preflights (and reports) or is composing a session that must
     not launch with a hole where a brief belongs."""
-
-
-def _utf8_console():
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def strip_dispatcher_block(text):

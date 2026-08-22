@@ -48,19 +48,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # A finding line names the plan by its file basename: `plan_coverage: FAIL -
 # <planfile>: <message>` (plan_coverage.check_plan formats every finding as
 # "<name>: ..."). The basename is captured up to the first colon.
 FAIL_RE = re.compile(r"^plan_coverage: FAIL - (.+?):")
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def _implicated_plans(stdout, plan_key_of):

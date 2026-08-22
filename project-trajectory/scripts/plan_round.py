@@ -39,7 +39,10 @@ rows of record in docs/requirements/interfaces.toml).
 
 import argparse
 import json
-import sys
+
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
 
 # --- step vocabulary (what the coordinator is asked to run) -------------------
 STEP_PLAN = "PLAN"  # a planner session (per plan key)
@@ -83,15 +86,6 @@ class RoundCapError(ValueError):
     """The caller attempted a transition the protocol forbids (a second
     critique round, a revision without CHANGES-REQUESTED, a third arbiter
     run). Raised, never recorded: a cap violation is a coordinator bug."""
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def new_round(slug, budget=DEFAULT_ROUND_BUDGET):

@@ -82,6 +82,10 @@ import tempfile
 import tomllib
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # The registry's column order, which IS the schema (docs/requirements/
 # work-items.csv; pinned against the shipped template by test_dogfood_sync).
 # Reconstructing this header exactly is half of what "lossless" means.
@@ -213,16 +217,6 @@ SLUG_CHARS = 30
 
 class ConvertError(Exception):
     """A refusal: the input cannot be converted without inventing something."""
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is (the same
-    guard as trace.py / check.py — a non-ASCII path can't wedge a cp1252 console)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # --- the TOML emitter (tomllib is read-only) ---------------------------------

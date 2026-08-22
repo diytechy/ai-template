@@ -67,6 +67,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 WI_ID_RE = re.compile(r"^WI-\d+$")
 REGISTRY = "docs/requirements/work-items.csv"
 
@@ -162,15 +166,6 @@ _PARTIAL = "partial"
 # one (still being figured out). Neither is schedulable and neither is terminal,
 # so each keeps its own disposition rather than being folded into the other.
 _NEVER_READY = ("deferred", "draft")
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # --- small self-contained loaders (duplicated per the F5 rule) ----------------

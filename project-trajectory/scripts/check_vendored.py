@@ -35,13 +35,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-
-def _utf8_console():
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
 
 
 def parse_manifest(text):

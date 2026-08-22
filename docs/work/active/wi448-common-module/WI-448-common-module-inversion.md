@@ -56,12 +56,35 @@ with the reasoning recorded in their place.
 `docs/log.d/2026-08-20-program-grind.md`): duplicated function-body groups
 24 -> 17, redundant copies 67 -> 48, redundant lines 757 -> 477.
 
+### SLICE 2 LANDED 2026-08-22 — item 1, the console guard
+
+**Landed.** The 33 remaining `_utf8_console` copies are deleted; every one of
+them — plus `bootstrap.py`'s existing alias — now resolves to the single shipped
+`kitlib.config.utf8_console`, which slice 1 had already placed. NO new kitlib
+module and no `MAPPING` change was needed: the behaviour's theme (console
+encoding) was already declared as `config`'s, so joining the existing theme was
+the smallest-total-code answer D-8 asks for. 32 scripts take a one-line
+`from kitlib.config import utf8_console as _utf8_console`; `agent_common.py`
+aliases off the guarded `kitlib.config` import it already carries. The
+module-local NAME is preserved, so the three cross-module call sites
+(`ct._utf8_console()`, `prompts._utf8_console()`, `ac._utf8_console()`) are
+untouched and CLI behaviour is byte-identical. NO DRIFT was found: all 33 bodies
+were identical modulo the docstring and one loop-variable name
+(`gen_open_items.py` spelled it `stream`, which the shipped home also uses).
+Manifest completeness re-verified by bootstrapping a REAL scaffold and importing
+all 32 shipped scripts there (`gen_skills_index.py` is kit-authoring, not in
+`MAPPING`; verified in-repo).
+
+**Measured** (the slice-1 command, both revisions; `fig:` marker in
+`docs/log.d/2026-08-22-wi448-utf8-console.md`): duplicated function-body groups
+17 -> 15, redundant copies 47 -> 15, redundant lines 479 -> 194. Every one of
+the 15 residual groups is named in items 3 and 4 below — there is nothing left
+in the population this row has not already scoped.
+
 **STILL OWED BY THIS ROW — the reason it is not closed:**
 
-1. **`_utf8_console`, 33 remaining copies** — 264 of the 477 residual redundant
-   lines, the single largest item left and more than half of what remains.
-   Mechanically trivial across 33 files; held back only to keep slice 1
-   reviewable.
+1. ~~**`_utf8_console`, 33 remaining copies**~~ — **LANDED 2026-08-22** (slice 2,
+   above). Was 268 of the residual redundant lines, the single largest item.
 2. **`bootstrap`'s OTHER declared duplicate** — `STACK_OI3_ROW` plus its TOML
    row emitter, which the OI-16 blast radius names. Shedding it needs the
    open-items key vocabulary in `kitlib` first. Note that its pin's stated

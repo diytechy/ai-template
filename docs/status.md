@@ -76,11 +76,18 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   the provider, the consumers set carries the verified readers), so the
   lane's next slice executes the transform across the ~20 rows in one
   reviewed pass per its staged spec.
-- **The `wi448-common-module` lane is OPEN with slice 1 landed** (2026-08-20):
-  `scripts/kitlib/` ships, `bootstrap.py` imports it, and the manifest is
-  tested in a real scaffold. The row's spec Context lists the five items still
-  owed — the 33 remaining `_utf8_console` copies are the biggest and the next
-  slice. **`OI-48` is RULED (d) (2026-08-21) AND EXECUTED (2026-08-22)**:
+- **The `wi448-common-module` lane is OPEN with slices 1 and 2 landed**
+  (2026-08-20 / 2026-08-22): `scripts/kitlib/` ships, `bootstrap.py` imports
+  it, the manifest is tested in a real scaffold, and the console guard now has
+  exactly one home — slice 2 deleted the last 33 `_utf8_console` copies in
+  favour of `kitlib.config.utf8_console`, taking the residual duplication to
+  15 groups / 15 copies / 194 lines. The row's spec Context lists what is
+  still owed; the next slice is item 2 (`bootstrap`'s `STACK_OI3_ROW`
+  duplicate, which needs the open-items key vocabulary in `kitlib` first) or
+  item 3 (the `spine_rules`/`trace` spine-policy pair, the largest remaining
+  block at 10 groups and the one that retires real
+  `test_rule_sync` pins). **`OI-48` is RULED (d) (2026-08-21) AND EXECUTED
+  (2026-08-22)**:
   `LLR-181`'s four-way tag collapses to `CMP-006` alone (the
   measured closest-fit component), and the package's real cross-component
   consumption now rides a declared shared-kernel surface

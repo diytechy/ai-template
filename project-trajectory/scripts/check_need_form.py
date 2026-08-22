@@ -84,6 +84,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the spine's registry CARRIER (the check_docs.py idiom) — the needs
 # registry answers through whichever of TOML/CSV-era markdown is live, and an
 # unreadable registry refuses loudly instead of scanning as empty.
@@ -176,16 +180,6 @@ def _looks_like_path(token, root=None):
         return (Path(root) / token).exists()
     except (OSError, ValueError):  # unstattable charset member (e.g. `*`)
         return False
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check_docs.py
-    guard — a non-ASCII phrase must not wedge a cp1252 console)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def load_allow(root):

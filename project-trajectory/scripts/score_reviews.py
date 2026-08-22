@@ -50,6 +50,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # The finding line: "- [SEVERITY] <anchor> -> issue -> change [-> @owner]".
 # Arrows may be "->" or the unicode arrow; we split on either.
 FINDING_RE = re.compile(r"^\s*-\s*\[(?P<sev>[A-Za-z]+)\]\s*(?P<body>.+)$")
@@ -99,14 +103,6 @@ REVIEW_POLICY_PATHS = (
     "project-trajectory/scripts/score_reviews.py",
     "project-trajectory/scripts/agent_route.py",
 )
-
-
-def _utf8_console():
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 class Finding:

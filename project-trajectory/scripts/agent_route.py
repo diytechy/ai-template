@@ -76,6 +76,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the registry CARRIER (repo-lock D-6 — the vocabulary gets ONE home
 # and the readers import it; a re-sync copies this file with its declared
 # siblings, ADOPTING.md §6). The model registry joined that carrier in the
@@ -196,16 +200,6 @@ class Model:
         self.cmd_template = cmd_template
         self.env = env
         self.notes = notes
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the kit's guard); routing
-    reasons and model ids echoed to stdout stay ASCII, but a Notes cell needn't."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # The safe shape for a Model cell: letters/digits plus . _ : - / (router ids

@@ -63,6 +63,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gen_trajectory as gt  # noqa: E402  (path set above)
@@ -266,18 +270,6 @@ def normalize(text):
     (`esc`), the file is written LF-only, and the compare normalizes both sides —
     the artifact is line-ending-clean and the gate is line-ending-agnostic."""
     return text.replace(chr(13) + chr(10), chr(10)).replace(chr(13), chr(10))
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the OS console codepage is: this module prints em
-    dashes and arrows in its own messages, and a legacy Windows cp1252 console
-    would raise UnicodeEncodeError (or hand a caller undecodable bytes) on a
-    plain `print`. Same guard the sibling kit scripts carry."""
-    for stream in (sys.stdout, sys.stderr):
-        try:
-            stream.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def esc(text):

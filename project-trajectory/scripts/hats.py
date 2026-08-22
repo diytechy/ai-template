@@ -87,6 +87,10 @@ import sys
 import tomllib
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the spine's registry CARRIER (the check_need_form.py idiom). The
 # `audit` subcommand reads the STAKEHOLDER-NEED tier, and that tier's vocabulary
 # — which carrier is live, TOML vs the CSV-era markdown, what an unreadable
@@ -744,15 +748,6 @@ def _audit_lines(root):
 
 
 # --- CLI (documentation aid; the module is library-first) ---------------------
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
-
-
 def _context_from_args(args):
     ctx = {}
     if args.scope:

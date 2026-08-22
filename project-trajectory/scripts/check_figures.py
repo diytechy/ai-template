@@ -86,6 +86,10 @@ from pathlib import Path
 
 from check_doc_refs import authored_lines, doc_files
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # The opt-in marker. `(?<![\w-])` keeps `config:` / `reconfig:` (any word
 # ending in "fig") out of scope; `fig-ok` never reaches this test — the line
 # exemption is checked first.
@@ -241,18 +245,6 @@ def findings_for(doc, root):
                     '{}:{}: declared figure {} — "{}"'.format(rel, n, why, snippet)
                 )
     return out, declared
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
-    non-ASCII path / quoted line can't raise UnicodeEncodeError on a legacy
-    Windows cp1252 console (verbatim across the kit). Python 3.7+ streams
-    expose `.reconfigure`; guard for the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 def main():

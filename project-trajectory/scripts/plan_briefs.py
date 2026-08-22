@@ -68,6 +68,10 @@ import re
 import sys
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
@@ -152,15 +156,6 @@ IF_SURFACE_COLUMNS = (
 
 # A `{{NAME}}` slot placeholder (NAME is word chars, as the shipped templates use).
 PLACEHOLDER_RE = re.compile(r"\{\{(\w+)\}\}")
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the console codepage is (the trace.py/check.py guard)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # --- prompt-template loading (kit template or operator override) --------------

@@ -165,6 +165,10 @@ import sys
 import tomllib
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): one home for behaviours this module used to spell out itself — the
 # declared-policy line reader and the `docs/work/` spec-folder registry reader.
@@ -316,17 +320,6 @@ BACKLOG_REAFFIRM_HINT = (
     "filename: editing the Title renames the file, and a rename does not "
     "re-date the clock)"
 )
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so a
-    non-ASCII work-item title / path can't raise UnicodeEncodeError on a legacy
-    Windows cp1252 console (same guard as check.py / check_privacy.py)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # The first non-empty, non-comment line of a declared-policy file, or None

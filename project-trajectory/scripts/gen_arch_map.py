@@ -106,6 +106,10 @@ import sys
 import tomllib
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # Sibling: the registry CARRIER. Run as a subprocess this script's own dir is
 # sys.path[0] so a plain import resolves; the guard covers an in-process import
 # (a test) whose sys.path does not yet carry scripts/ — the sanctioned-sibling
@@ -119,18 +123,6 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import spine_carrier
-
-
-def _utf8_console():
-    """Emit UTF-8 to stdout/stderr whatever the OS console codepage is. Kit
-    scripts print non-ASCII (an em-dash WARNING, `§` refs) that a legacy Windows
-    cp1252 console raises UnicodeEncodeError on — wedging the run, not just
-    mojibaking. Python 3.7+ streams expose `.reconfigure`; guard for the rest."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # The policy home (SN-028) this module reads ONE key out of — see

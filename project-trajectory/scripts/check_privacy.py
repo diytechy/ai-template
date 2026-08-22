@@ -77,6 +77,10 @@ import sys
 import tomllib
 from pathlib import Path
 
+# The console guard's one home is the shipped package (WI-448 / D-8);
+# aliased to the module-local name so no call site changes.
+from kitlib.config import utf8_console as _utf8_console
+
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
 # WI-448): the declared-policy line reader this module used to spell out itself.
 # Run as a subprocess this script's own dir is sys.path[0] so a plain import
@@ -158,15 +162,6 @@ TOKEN_RES = (
 # Identity terms shorter than this are too collision-prone to word-match.
 MIN_TERM_LEN = 3
 GENERIC_TERMS = PLACEHOLDER_USERS | {"localhost", "desktop", "laptop", "runner"}
-
-
-def _utf8_console():
-    """Emit UTF-8 whatever the OS console codepage is (same guard as check.py)."""
-    for s in (sys.stdout, sys.stderr):
-        try:
-            s.reconfigure(encoding="utf-8")
-        except (AttributeError, ValueError):
-            pass
 
 
 # The first non-empty, non-comment line of a declared-policy file, or None

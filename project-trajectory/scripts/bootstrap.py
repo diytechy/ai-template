@@ -1608,9 +1608,9 @@ def raise_watermark(dest, space, floor):
 # Emit UTF-8 to stdout/stderr whatever the OS console codepage is, so the
 # non-ASCII characters in the created-file list / dirty-tree WARNING can't
 # raise UnicodeEncodeError on a legacy Windows cp1252 console. The SECOND of
-# the two duplicates this module shed at WI-448 — this exact body is written
-# out 34 times across the kit, and this is the first of them to resolve to the
-# shipped package (the remaining 33 are the consolidation program's next slice).
+# the two duplicates this module shed at WI-448 — this exact body was written
+# out 34 times across the kit; this was the first to resolve to the shipped
+# package and slice 2 (2026-08-22) resolved the other 33, so it has one home.
 _utf8_console = _kitconfig.utf8_console
 
 
