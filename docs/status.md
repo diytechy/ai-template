@@ -120,14 +120,19 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   `wi416-parked-handback-contract` branch holds a 271-line pre-ruling draft
   that exists nowhere else (its rows are disposed; the handback ruling
   superseded it) — delete only after deciding the draft is not wanted.
-- **STARTING COLD? Read in this order:** this block → [log.md](log.md)'s
-  `2026-08-20*` Decisions → the generated frontier below. The standing
-  constraint under all of it: **the depth-0 frame is LOCKED and now APPROVED**
-  — **4 entities · 4 crossings · 3 relationships**, ids of the cut rows spent
-  and watermark-held; the repository is the system, the template is the
-  deliverable. The 2026-08-15 interface-rework provisional state is ruled
-  (`OI-49` (b), 2026-08-21): live cells ratify in bulk, the named exception
-  reads ride the queued dossier row, `IF-097`/`IF-080` closed by the record.
+- **STARTING COLD? Read in this order:** this block → the `2026-08-22`
+  fragments in [log.d/](log.d/) (the rulings, the program close, the
+  per-WI sessions) → the generated frontier below, then grind it IN SERIES
+  (one worker per row, routed by BuildTier; full-suite runs FOREGROUND with
+  an explicit timeout — a backgrounded run dies when the session's turn
+  ends, the lesson every interrupted worker of this arc re-learned; use a
+  `--basetemp` on D: while C: stays low). The standing constraint under all
+  of it: **the depth-0 frame is LOCKED and APPROVED** — **4 entities ·
+  4 crossings · 3 relationships**, cut-row ids spent and watermark-held;
+  the repository is the system, the template is the deliverable. The
+  2026-08-15 interface-rework provisional state is ruled (`OI-49` (b),
+  2026-08-21): live cells ratify in bulk, the named exception reads ride
+  the queued dossier row, `IF-097`/`IF-080` closed by the record.
 - **Unfiled follow-ups** (no ids yet, so listed as topics): the stage-ladder
   program's deferred codex review round; the SN-036 per-decomposition coverage
   record (re-derive it — the basis line now reads `uncovered=0`); the two

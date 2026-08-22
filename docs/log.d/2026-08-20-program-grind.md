@@ -9,14 +9,14 @@ at the bottom for the closing review. Program rows that cannot honestly
 complete in one session land their largest coherent slice and record the
 remainder — no false completes.
 
-Deferred open items: OI-53 — the running union of the per-section
-declarations below, re-derived as each session closes (the WI-485
-fragment-scope lesson applied from the start), and RE-DERIVED AGAIN
-2026-08-21 as the owner ruled five of the six rows this batch queued
-(48, 49, 50, 51 and 52 of the OI space — ids off the declaration line
-deliberately; the ruled record is docs/log.d/2026-08-21-owner-rulings-
-oi48-52.md, and the per-section declarations below stand as accurate
-history of the sessions that deferred them).
+Deferred open items: none still owed — the running union of the
+per-section declarations below, re-derived as each session closed (the
+WI-485 fragment-scope lesson applied from the start), and now FULLY
+SUPERSEDED: the owner ruled all six rows this batch queued (48 through 53
+of the OI space — ids off the declaration line deliberately; the ruled
+records are docs/log.d/2026-08-21-owner-rulings-oi48-52.md and
+docs/log.d/2026-08-22-oi53-54-rule.md, and the per-section declarations
+below stand as accurate history of the sessions that deferred them).
 
 ### WI-448 — the common-module inversion (opus worker) — SLICE landed, row stays active
 
@@ -1786,11 +1786,12 @@ executed attacks), Group 2 (MAJOR), Group 3 (MINOR). Findings were treated as
 CLAIMS: each was re-run against the tree before it was fixed, and the one arm
 that refuted on measurement is recorded as REFUTED rather than "fixed".
 
-Deferred open items: OI-53 — minted by this close (see "The two owner
-decisions" below), still with the owner. The close's other mint — the
-smoke-budget question, 52 in the OI space, named off the declaration line
-— was ruled (a)-with-tuning on 2026-08-21 and its execution row is queued.
-The other four queued topics carry no row and say why.
+Deferred open items: none still owed — SUPERSEDED 2026-08-22: this close
+minted the stale-cell question (53 in the OI space, named off the
+declaration line) and the smoke-budget question (52); the owner ruled 52
+on 2026-08-21 ((a)-with-tuning) and 53 on 2026-08-22 ((b)+(d)); both
+execution rows are queued. The other four queued topics carry no row and
+say why.
 
 **Per item.**
 
