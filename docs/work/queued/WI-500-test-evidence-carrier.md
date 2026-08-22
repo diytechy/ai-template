@@ -3,7 +3,7 @@ id = "WI-500"
 title = "The test-evidence carrier: the input that makes DevStg-Release reachable (owed by the ruled stage unification plan)"
 specref = "docs/plans/2026-08-21-stage-unification-plan.md"
 workstream = "scripts"
-sr_refs = []
+sr_refs = ["SR-151", "SR-152"]
 needs = []
 buildtier = "strong"
 safety_class = "spine"
@@ -41,3 +41,10 @@ record + the slice-3 fragment section before shaping):
 - Adopter-facing throughout: RESYNC entry, scaffold verification, and the
   shipped ci lane is the natural producer (a harness driver writing the
   record on a green full run).
+
+**Orphan fold-in (owner-directed 2026-08-22):** this row's build DISCHARGES
+the decomposition debt on `SR-151` (hosted CI runs the declared bar per
+trigger) and `SR-152` (the hosted CI verdict is the harness's own) — the
+two orphaned SRs whose subject IS this carrier and its CI-lane producer.
+Mint their LLR/TC rows as part of the design, so the carrier lands traced
+rather than rowless.

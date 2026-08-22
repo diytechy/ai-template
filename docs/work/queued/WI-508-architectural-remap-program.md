@@ -3,7 +3,7 @@ id = "WI-508"
 title = "The architectural remapping program: blind minimal-map re-derivation, divergences filed as consolidation WIs (OI-58 ruled (c), 2026-08-22)"
 specref = "docs/requirements/open-items.toml#OI-58"
 workstream = "process"
-sr_refs = []
+sr_refs = ["SR-163"]
 needs = ["WI-448", "WI-483", "WI-507"]
 buildtier = "strong"
 safety_class = "spine"
@@ -29,3 +29,9 @@ length, deep-modules, the repo's own one-home findings) is the derivation
 brief's framing. Multi-session program lane; slices end green at the
 commit bar; spine-touching consolidations follow the ordinary approval
 machinery under the declared dial.
+
+**Orphan fold-in (owner-directed 2026-08-22):** the remap IS `SR-163`'s
+verification exercise (every shipped file maps to a stakeholder outcome)
+— decompose that SR into its LLR/TC as the program's slice 1 framing act,
+so the blind derivation has the requirement it is checking traced before
+it runs.

@@ -3,7 +3,7 @@ id = "WI-506"
 title = "Session continuity: the template review, the resume-pack ritual, and the investigated context-restart trigger (OI-57 ruled (b), 2026-08-22)"
 specref = "docs/requirements/open-items.toml#OI-57"
 workstream = "process"
-sr_refs = []
+sr_refs = ["SR-177"]
 needs = []
 buildtier = "medium"
 safety_class = "ordinary"
@@ -32,3 +32,10 @@ Executes OI-57 (b), with (c)'s trigger investigated in the same row:
 
 Adopter-facing template changes carry RESYNC entries; the prompt catalog
 regenerates.
+
+**Orphan fold-in (owner-directed 2026-08-22):** this row's telemetry
+investigation DISCHARGES the decomposition debt on `SR-177` (fan-out
+utilisation reported from the run's own telemetry — mint its LLR/TC while
+in that surface), and the template review mints the missing TC for
+`LLR-164` (the generated prompt catalogue + freshness gate), which this
+row regenerates anyway.
