@@ -531,7 +531,7 @@ verifies = ["SR-049", "LLR-050"]
 level = "Unit"
 method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
 tier = "Full"
-expected = """spine_rules computes the correct gate per artifact state (draft drop, undecomposed DevStg-Reqs, decomposed-unverified DevStg-Tests - including a Modified SR, whose phase reads DevStg-Tests with children counted-but-never-capping - and verified DevStg-Impl) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
+expected = """spine_stage derives the correct RUNG per artifact state, walked end to end on the fixture: a Drafted SR reads DevStg-Reqs, a ratified-but-undecomposed SR DevStg-LLReqs, a decomposed SR with no test case DevStg-Tests, and a spine whose test cases are all authored and non-Drafted DevStg-Impl - never DevStg-Release, which is evidence-gated and has no producer. The derived current phase on the stage record is the highest phase over RATIFIED rows (a Drafted row in a higher phase does not bump it; an unphased spine reads None), the meta-repo's own per-phase-live reading matches an INDEPENDENT re-derivation from the raw registry TOML, and the record carries no retired modified= counter."""
 automated = "Yes"
 evidence = "tests/test_spine_rules.py"
 status = "Approved"
@@ -1378,7 +1378,7 @@ phase = 1
 [test.TC-141]
 verifies = ["SR-049", "LLR-147"]
 level = "Unit"
-method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (the runnable value floors to DevStg-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevStg-Impl); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevStg-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+method = """Fixture-drive the SN-coverage rung: a ratified SN cited by zero SR SN-Refs HOLDS the DevStg-Needs rung directly (the ladder reads the rung the work is at, rather than capping a bar and flooring it), and drafted=0 on the same stage record is what keeps the two causes of that rung apart - coverage here, not a draft; citing the need from an SR's SN-Refs releases the rung and the otherwise-identical registry state climbs to DevStg-Impl; -000 rows on both sides of the join are out of scope, so an SN-000 placeholder never fires the rung and an example SR-000 row cannot fake coverage of a real need; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"

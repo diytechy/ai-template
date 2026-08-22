@@ -55,6 +55,22 @@ four carry post-sign drift already committed on this branch, every one of it the
 same mechanical `derive_gate` → `spine_rules` re-pointing from the WI-498 stage
 unification:
 
+> **CORRECTION, 2026-08-22 (the program-close review round).** The sentence
+> above is wrong about the four amendments, and the owner's warrant was given
+> against it, so it is corrected here rather than quietly edited. "Mechanical
+> re-pointing" was true of the EDIT and false of its EFFECT: three of the four
+> sections carried **prose** cells, not just carriers, and the token
+> substitution left five ratified cells asserting things that are FALSE —
+> `spine_rules` computing a gate, having `--check`/`--print`/a basis line,
+> being a regen step, and `docs/gate` still being the dashboard's input, in the
+> commit that deleted that file. Found independently by both reviewers
+> (ROUND-OPUS 2 = ROUND-SOL-RAW 4). The five cells — LLR-142 `Rationale`,
+> LLR-124 `Detail`, TC-050 `Expected`, TC-141 `Method`, SR-140 `Rationale` —
+> were re-authored at the close against the live code, and the baseline
+> re-seeded through `intake.py snapshot --approves` naming that act. **What
+> this act blessed was therefore not what its record claimed**; what stands
+> approved now is the corrected text.
+
 - **`SR-049`** — `LLR-050`/`LLR-147` `Module` → `spine_rules.py`, `LLR-148` →
   `derive_stage.py`; `TC-050` `Expected` and `TC-141` `Method` re-worded onto
   the live module name; `TC-050`/`TC-141`/`TC-142` `Evidence` re-pointed.

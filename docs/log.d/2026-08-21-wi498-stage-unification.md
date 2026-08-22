@@ -1624,7 +1624,22 @@ banked findings accumulate below as list items)_
   `module =` carriers (a carrier must point at the carrier), and LLR-148's,
   because `--next-phase` moved to `derive_stage.py` — and left the prose, because
   re-authoring an Approved cell is a ratification-bearing act and this repo's dial
-  holds every rung. **The edits are not silent:** they surface in the
+  holds every rung.
+  **CORRECTION (program close, 2026-08-22) — THAT LAST CLAUSE WAS FALSE WHEN IT
+  WAS WRITTEN.** The restraint rule is stated correctly and the sweep did not
+  keep it: `c170da9f` rewrote FIVE prose cells across five Approved rows —
+  LLR-142 `Rationale`, LLR-124 `Detail`, TC-050 `Expected`, TC-141 `Method`,
+  SR-140 `Rationale` — by substituting the token `derive_gate` → `spine_rules`
+  without checking the referent survived, which left every one of them asserting
+  something false (`spine_rules` has no CLI, no `--check`, no `--print` and no
+  basis line; it is not a regen step; and `docs/gate` is the file the same
+  commit deleted). Both adversarial reviewers found it independently
+  (ROUND-OPUS 2 = ROUND-SOL-RAW 4). The close re-authored all five against what
+  `derive_stage`/`trunk_step` actually do and re-seeded the baseline through
+  `intake.py snapshot --approves` — the authority gate refused the bare refresh
+  and named exactly those five cells, which is the confirmation that nothing
+  else moved. The record and the diff now agree.
+  **The edits are not silent:** they surface in the
   re-attestation brief, which now carries SR-049's whole chain as drifted. Two
   things for the close: LLR-050 designates a DELETED behaviour whose successors
   already have their own rows (LLR-185/186), so it may want retiring rather than
