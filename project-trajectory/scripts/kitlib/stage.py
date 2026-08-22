@@ -142,17 +142,44 @@ DECLARED_INPUTS = (
 
 def input_paths(root):
     """`[(declared, resolved-Path-or-None)]` for every declared input, in
-    declared order. `resolved` is the first carrier that exists."""
+    declared order. `resolved` is the live carrier, or None when none exists.
+
+    REFUSES A DUAL-CARRIER STATE, exactly as `spine_carrier.resolve` does, and
+    for the same reason — two homes for one fact is the state the carrier
+    migration exists to leave, and a precedence rule that silently picks one is
+    how a half-finished migration keeps working while reading the stale half.
+
+    IT USED TO TAKE THE FIRST HIT AND STOP, which made this fingerprint blind to
+    the one input change that matters most (ROUND-SOL-RAW 6). Start from a
+    fingerprinted `.toml` registry and add a conflicting `.csv` beside it: only
+    the TOML was ever hashed, so the fingerprint did not move, so `read_stage`
+    matched it and returned the RECORDED stage — without ever invoking the
+    derivation that would have refused the two-home state. The forbidden state
+    was reachable AND invisible, which is worse than either alone.
+
+    A CARRIER MIGRATION (one home to the other) still moves the fingerprint
+    without any of this, because the fold covers `resolved.name`; what needed
+    fixing was only the state where BOTH exist."""
     out = []
     base = Path(root)
     for declared, suffixes in DECLARED_INPUTS:
-        found = None
-        for suffix in suffixes:
-            candidate = base / (declared + suffix)
-            if candidate.is_file():
-                found = candidate
-                break
-        out.append((declared, found))
+        live = [
+            base / (declared + suffix)
+            for suffix in suffixes
+            if (base / (declared + suffix)).is_file()
+        ]
+        if len(live) > 1:
+            raise SystemExit(
+                "kitlib.stage: REFUSED — {} exists under BOTH carriers ({}). "
+                "Two homes for one fact is the state the migration exists to "
+                "leave; delete the stale one in the same commit that wrote the "
+                "other rather than letting a precedence rule pick. (The derived "
+                "stage reads this file, so the refusal is the same one "
+                "spine_carrier.resolve raises.)".format(
+                    Path(declared).name, ", ".join(p.name for p in live)
+                )
+            )
+        out.append((declared, live[0] if live else None))
     return out
 
 

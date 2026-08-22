@@ -16,8 +16,12 @@ mid-process input change, and the CRLF invariance. The other four need real
 registry rows and live in `test_derive_stage.py`.
 """
 
+import io
+from pathlib import Path
+from unittest import mock
+
 import pytest
-from conftest import SCRIPTS  # noqa: F401  (puts scripts/ on sys.path)
+from conftest import SCRIPTS, load_script  # noqa: F401  (puts scripts/ on sys.path)
 
 from kitlib import ladder, stage
 
@@ -292,6 +296,109 @@ def test_process_toml_is_NOT_an_input(tmp_path):
     before = stage.fingerprint(root, memo=None)
     (root / "docs" / "process.toml").write_text("dial = 1\n", encoding="utf-8")
     assert stage.fingerprint(root, memo=None) == before
+
+
+def test_a_SECOND_CARRIER_beside_a_declared_input_is_REFUSED(tmp_path):
+    """The dual-carrier hole (ROUND-SOL-RAW 6), and it was the sharp shape of
+    the fingerprint's one blind spot.
+
+    `input_paths` accepted the FIRST existing suffix and stopped, so a
+    conflicting second carrier beside a fingerprinted registry was never hashed.
+    The fingerprint therefore did not move, `read_stage` matched it and returned
+    the RECORDED stage, and the derivation that would have refused the two-home
+    state — `spine_carrier.resolve`, which raises on exactly this — was never
+    reached. The forbidden state was both reachable and invisible.
+
+    It now refuses at the fingerprint, which is the earliest honest point: the
+    derived stage READS this file, so a reader must not be able to answer from a
+    cache whose input set is ambiguous."""
+    root = _tree(tmp_path)
+    assert stage.fingerprint(root, memo=None)  # single carrier: fine
+    declared, suffixes = stage.DECLARED_INPUTS[1]  # system-requirements
+    assert len(suffixes) > 1, "this input must admit two carriers for the test"
+    (root / (declared + suffixes[1])).write_bytes(b"# the stale half\n")
+    with pytest.raises(SystemExit) as excinfo:
+        stage.fingerprint(root, memo=None)
+    assert "BOTH carriers" in str(excinfo.value)
+    # ...and the refusal names both files, so the remedy is unambiguous.
+    assert suffixes[0] in str(excinfo.value) and suffixes[1] in str(excinfo.value)
+
+
+def test_every_file_the_DERIVATION_READS_is_a_declared_input(tmp_path):
+    """THE INVERSE DEFECT, which nothing guarded (ROUND-OPUS 7).
+
+    The existing pin is one-directional by construction: `test_process_toml_is_
+    NOT_an_input` proves a NAMED file is not an input. Nothing proved an UNNAMED
+    file is not one — and that is the expensive direction. The over-inclusive
+    error costs a spurious re-derivation (a red commit bar, which is how the
+    process.toml ruling got made). The under-inclusive error costs a PERMANENT
+    false green: the moment `load_spine` reads a registry `DECLARED_INPUTS` does
+    not name, the fingerprint stops covering it, `read_stage` matches on a hash
+    that ignores every edit to it, and every consumer returns a stale stage
+    forever — with `derive_stage --check` passing, because it compares the same
+    uncovered fingerprint.
+
+    So: run the real derivation under a read-audit and assert the set of files
+    it actually opened is a SUBSET of `input_paths(root)`.
+
+    THE TREE IS BAITED, and it has to be or the guard is vacuous. An audit over
+    a tree containing ONLY the declared inputs can never catch anything: the
+    undeclared read would be a miss on a file that does not exist. So the
+    fixture plants every other registry the kit ships under `docs/` — starting
+    with `interfaces.toml`, the obvious future candidate (a spine registry the
+    ladder does not yet read, while two rungs already key on off-spine ones) —
+    and the audit fails if the derivation touches any of them. Verified
+    non-vacuous by mutation: teaching `load_spine` to read `interfaces.toml`
+    reds this test.
+    """
+    spine_rules = load_script("spine_rules")
+    root = _tree(tmp_path)
+    # THE BAIT: every registry the kit ships that is NOT a declared input.
+    bait = [
+        "docs/requirements/interfaces.toml",
+        "docs/requirements/performance-budgets.csv",
+        "docs/requirements/open-items.toml",
+        "docs/requirements/hats.toml",
+        "docs/requirements/assets.csv",
+        "docs/requirements/procurement.csv",
+        "docs/process.toml",
+        "docs/stack.ini",
+    ]
+    declared_names = {d for d, _s in stage.DECLARED_INPUTS}
+    for rel in bait:
+        assert not any(rel.startswith(d) for d in declared_names), (
+            rel + " IS a declared input — it cannot serve as bait"
+        )
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"# bait: reading this must fail the audit\n")
+
+    declared = {p.resolve() for _d, p in stage.input_paths(root) if p is not None}
+    assert declared, "the fixture must present at least one declared input"
+
+    opened = []
+    real_open = io.open
+
+    def _audit(file, *args, **kwargs):
+        try:
+            opened.append(Path(file).resolve())
+        except TypeError:  # a file descriptor, not a path — not a registry read
+            pass
+        return real_open(file, *args, **kwargs)
+
+    with mock.patch("io.open", _audit), mock.patch("builtins.open", _audit):
+        spine_rules.load_spine(root / "docs")
+
+    under_docs = {p for p in opened if p.is_relative_to((root / "docs").resolve())}
+    undeclared = sorted(
+        str(p.relative_to(root.resolve())) for p in under_docs - declared
+    )
+    assert not undeclared, (
+        "load_spine read {} file(s) under docs/ that DECLARED_INPUTS does not "
+        "name, so the fingerprint no longer covers every input and a stale read "
+        "becomes permanent: {}. Add each to DECLARED_INPUTS in the same change "
+        "that taught the derivation to read it.".format(len(undeclared), undeclared)
+    )
 
 
 # --- corner case 7: a mid-process input change -------------------------------
