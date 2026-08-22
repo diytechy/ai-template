@@ -257,6 +257,7 @@ owner = "SR-006"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
+notes = """owner = SR-006, not SR-007: the contract's central claim — running a gate's declared steps as subprocesses and exiting nonzero on any required failure, degrading only to a reported SKIP — restates SR-006's own requirement text almost verbatim ("run the required steps of the gate ... fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing"). SR-007 governs a different observable (the declared stack profile's own validity, refused when malformed) that this contract never states; SR-007's own rationale draws the same line ("a missing declared binary fails under SR-006"). req_refs correctly cites both parents this seam realizes/relies on; owner names the one answerable for THIS contract's central claim. This row is one of the requirement-owned Provides rows with no LLR owning scripts/check outright, so a design-tier owner is not yet available; a future re-point pass that finds or mints one would supersede this pick."""
 
 [interface.IF-014]
 direction = "Provides"
@@ -692,6 +693,7 @@ req_refs = ["SR-154", "SR-155"]
 owner = "SR-154"
 version = "v1"
 status = "Drafted"
+notes = """owner = SR-154, not SR-155: of the seven named call surfaces, five (load_registry/load_enabled, resolve_enabled, parse_env, select, escalate/failure_action) serve the general cross-family review-routing capability SR-154 states verbatim ("obtain each review or critique verdict ... resolved ... from the delivered agent registry's declared ... rows ... drawn from a different model family wherever one is configured"). Only planner_pair()/planner_fallback() serve SR-155's contested-planning round, and there as one input function among several the round also needs (briefs, cross-critique, arbitration — none of which this module carries) — SR-155's own fan-out rationale names the round's children as "the successive phases of that single round", of which planner selection is one step, not the round itself. The majority-surface owner is SR-154. req_refs correctly cites both parents; owner names the one answerable for THIS module's contract as a whole. This row is one of the requirement-owned Provides rows with no LLR owning scripts/agent_route outright, so a design-tier owner is not yet available; a future re-point pass that finds or mints one would supersede this pick."""
 
 [interface.IF-045]
 direction = "Consumes"
