@@ -249,10 +249,13 @@ fi
 #                        modified on disk but absent from the INDEX, i.e. which
 #                        one you regenerated and did not `git add`. Without it a
 #                        regenerate-and-forget commit is honestly green and
-#                        lands stale (measured: 3b8d306d). WARN-ONLY today —
-#                        it never blocks a commit (OI-31 ruled option (b),
-#                        promoted to an error once it has run clean for a
-#                        program) — and it does NOT catch an artifact staged
+#                        lands stale (measured: 3b8d306d). IT BLOCKS since the
+#                        WI-498 close: OI-31 ruled option (b) warn-first and
+#                        promoted "once it has run clean for a program", and
+#                        that is the promotion — so a regenerated-but-unstaged
+#                        artifact REFUSES the commit rather than warning past
+#                        it. Fix by staging the regenerated files (or reverting
+#                        them). It does NOT catch an artifact staged
 #                        while stale, which needs the gates themselves to read
 #                        the staged tree (OI-31 option (a), the destination).
 #                        Skips cleanly with no git and outside a checkout.

@@ -1070,11 +1070,16 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # about to be COMMITTED — see staged_divergence() for the detector, its
         # degradation, and the gap it does NOT close. Three WIRING decisions,
         # which live here because nothing else records them:
-        #   WARN-ONLY TODAY, and the `--strict` promotion is deliberately NOT
-        # passed here — the same posture as need-form's, for a stated reason:
-        # the ruling promotes this to an error "once it has run clean for a
-        # program", and wiring the promotion early would wedge every commit of
-        # the program mid-flight. Promoting it is a one-word edit on this line.
+        #   PROMOTED TO AN ERROR by the `--strict` below (WI-498 close), on
+        # OI-31's own trigger — "once it has run clean for a program". It ran
+        # clean for this one, and the close's review measured what warn-only
+        # costs (ROUND-SOL-RAW 1, CRITICAL): stage a registry edit, regenerate
+        # `docs/stage`, forget the `git add`, and every freshness step passes on
+        # bytes the commit does not contain. So the bar now vouches for the tree
+        # being COMMITTED. The bare `--staged-divergence` stays warn-only: the
+        # severity lives at the WIRING, where the ruling put it. Adopter-visible
+        # and deliberate — a partially-staged commit that leaves a regenerated
+        # artifact behind is refused (RESYNC_PACK entry, this program).
         #   AT EVERY BAR, like vocabulary/need-form: the question is about the
         # commit in front of you, which a DevStg-Reqs repo makes exactly as often
         # as a DevStg-Impl one. Deliberately NOT in _TRUNK_FRESHNESS_STEPS either:
@@ -1084,7 +1089,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         (
             "staged-divergence",
             (),
-            [sys.executable, str(_SCRIPTS / "check.py"), "--staged-divergence"],
+            [
+                sys.executable,
+                str(_SCRIPTS / "check.py"),
+                "--staged-divergence",
+                "--strict",
+            ],
             _kitladder.STAGE_NEEDS,
             "process",
         ),
@@ -1454,9 +1464,11 @@ def staged_divergence(root=".", strict=False):
     tier testable against a temp scaffold). This step covers the shape that
     actually happened — a forgotten `git add` — and leaves the rarer one open.
 
-    WARN-FIRST: findings are reported and the exit code stays 0 unless `strict`.
-    The promotion exists so the ruling's "error once it has run clean for a
-    program" is a one-word edit, and is deliberately not wired into the step.
+    SEVERITY LIVES AT THE WIRING, not here: this entry point reports and exits
+    0 unless `strict`, and the PLAN STEP passes `--strict` (steps(), OI-31's
+    promotion taken at the WI-498 close). So the bare
+    `check.py --staged-divergence` stays the detector an author runs mid-work,
+    while the bar — hook floor and CI alike — refuses.
 
     DEGRADES, never crashes and never fails: no git binary, not a checkout, a
     root that is not the checkout's top level, or a failing git call each SKIP
@@ -1516,9 +1528,10 @@ def staged_divergence(root=".", strict=False):
     for path in hits:
         print("      {}".format(path))
     print(
-        "    Fix: `git add` them, then re-commit. (If leaving them out is\n"
-        "    deliberate — a partially-staged commit — nothing is required: this\n"
-        "    step does not block a commit today.)\n"
+        "    Fix: `git add` them, then re-commit — or revert them. Leaving\n"
+        "    them out is not free: the PLAN step runs --strict (OI-31's ruled\n"
+        "    promotion, WI-498 close), so the bar vouches for the tree being\n"
+        "    COMMITTED. This bare detector reports only.\n"
         "    GAP, so this is not read as a guarantee: it does NOT catch an\n"
         "    artifact that was STAGED WHILE STALE. The freshness gates read the\n"
         "    working tree, so a stale blob in the index passes them and passes\n"

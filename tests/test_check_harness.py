@@ -683,7 +683,10 @@ def test_divergence_step_reports_a_regenerated_but_unstaged_artifact(tmp_path):
     (repo / "notes.md").write_text("edited too\n", encoding="utf-8")
     proc = _divergence(repo)
     out = proc.stdout + proc.stderr
-    assert proc.returncode == 0, "warn-first: the step must never block a commit"
+    assert proc.returncode == 0, (
+        "the BARE detector still reports-only — the severity moved to the plan "
+        "step's --strict, not to this entry point"
+    )
     assert "WARN" in out and "HOUSE_DASHBOARD.html" in out, out
     assert "docs/bundle" not in out, "an unmodified declared artifact was named"
     assert "notes.md" not in out, "an UNDECLARED dirty file was reported: " + out
@@ -696,6 +699,69 @@ def test_divergence_step_reports_a_regenerated_but_unstaged_artifact(tmp_path):
     assert strict.returncode == 1, (
         "the ruled promotion path must be reachable: " + strict.stdout + strict.stderr
     )
+
+
+# The census Sol's CRITICAL is driven against: a `docs/stage` row, because the
+# derived stage is the artifact whose staleness the WI-498 program is named for.
+_STAGE_CENSUS = """[generated]
+docs/stage = stage
+"""
+
+
+def _stale_stage_repo(tmp_path):
+    """Sol's scenario, byte for byte (ROUND-SOL-RAW finding 1): a registry edit
+    STAGED, and the regenerated `docs/stage` left in the worktree."""
+    (tmp_path / "docs" / "requirements").mkdir(parents=True)
+    (tmp_path / "docs" / "stack.ini").write_text(_STAGE_CENSUS, encoding="utf-8")
+    (tmp_path / "docs" / "stage").write_text("stage: DevStg-Needs\n", encoding="utf-8")
+    reg = tmp_path / "docs" / "requirements" / "system-requirements.toml"
+    reg.write_text('[req.SR-001]\nstatus = "Drafted"\n', encoding="utf-8")
+    _git(tmp_path, "init", "-q")
+    pin_autocrlf(tmp_path)
+    _git(tmp_path, "config", "user.email", "t@example.com")
+    _git(tmp_path, "config", "user.name", "T")
+    _git(tmp_path, "add", "-A")
+    _git(tmp_path, "commit", "-q", "-m", "base")
+    # The edit that moves the derived stage, STAGED …
+    reg.write_text('[req.SR-001]\nstatus = "Approved"\n', encoding="utf-8")
+    _git(tmp_path, "add", "docs/requirements/system-requirements.toml")
+    # … and the regeneration that answers it, NOT staged.
+    (tmp_path / "docs" / "stage").write_text("stage: DevStg-Impl\n", encoding="utf-8")
+    return tmp_path
+
+
+def test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage(tmp_path):
+    # THE CRITICAL THIS CLOSES (OI-31's ruled promotion, taken at the WI-498
+    # close). Before it, this exact tree — the one Sol drove — passed the whole
+    # commit bar: `derived-stage --check` reads the WORKING TREE and sees the
+    # fresh bytes, the divergence detector warned and exited 0, and the commit
+    # landed the edited registry beside the OLD derived stage.
+    #
+    # Driven through `--run-steps`, NOT the bare `--staged-divergence` flag,
+    # because the defect was never in the detector: it was in the WIRING, which
+    # did not pass --strict. A test of the flag alone would have stayed green
+    # through the entire defect (it did — the old positive case asserted the
+    # promotion was *reachable*, never that it was *taken*).
+    repo = _stale_stage_repo(tmp_path)
+    proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode != 0, (
+        "the bar must REFUSE a commit whose derived stage is regenerated but "
+        "unstaged — this is the exact tree that used to pass: " + out
+    )
+    assert "FAIL" in out and "docs/stage" in out, out
+
+
+def test_the_PLAN_STEP_passes_once_the_regeneration_is_staged(tmp_path):
+    # The other half, so the refusal above is a decision and not a step that
+    # reds on every tree: stage the regeneration — the correct workflow — and
+    # the same bar goes green.
+    repo = _stale_stage_repo(tmp_path)
+    _git(repo, "add", "docs/stage")
+    proc = run_py([SCRIPTS / "check.py", "--run-steps", "staged-divergence"], cwd=repo)
+    out = proc.stdout + proc.stderr
+    assert proc.returncode == 0, out
+    assert "FAIL" not in out, out
 
 
 def test_divergence_step_is_silent_on_a_clean_tree(tmp_path):
