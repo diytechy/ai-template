@@ -232,9 +232,85 @@ def test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt(repo):
     assert _stage(repo) == ladder.STAGE_ARCH  # Impl -> Arch, three rungs
 
     findings = DS.phase_rule_findings(repo)
+    # TWO findings since the WI-498 close widened attribution: this edit has two
+    # independent causes and now reports both. It used to report only SR-002 —
+    # which is what made this test look like coverage of the component half
+    # while the component half was in fact invisible (see
+    # test_a_COMPONENT_ONLY_decrease_FIRES, Sol's counterexample).
+    assert len(findings) == 2, findings
+    joined = "\n".join(findings)
+    assert "SR-002" in joined and "CMP-001" in joined
+    assert "DevStg-Impl -> DevStg-Arch" in joined
+    assert "Standing" in joined, "the finding must name the cell that moved"
+
+
+def test_a_COMPONENT_ONLY_decrease_FIRES(repo):
+    """SOL'S COUNTEREXAMPLE (ROUND-SOL-RAW 3), and the reason the test above is
+    not the coverage it looks like.
+
+    `test_a_TWO_RUNG_decrease_that_merely_ENDS_at_Arch_is_NOT_exempt` moves the
+    component AND adds an SR in the same edit, and the finding it asserts on
+    names SR-002 — the SR is the only reason a finding exists at all. Take the
+    SR away and the rule went silent on a three-rung drop, because the change
+    detection walked SR/LLR/TC only, keyed on `Status`, and the edit here is a
+    CMP row's `Standing`: not that registry, and not that cell.
+
+    Driven before the fix: `was=DevStg-Impl`, `now=DevStg-Arch`,
+    `changed_rows=[]`, `findings=[]`. A non-exempt three-rung decrease with
+    nothing declared and nothing reported.
+
+    The frame registries carry no `Phase` cell — the boundary and partition
+    rungs are repo-global, which is exactly why they can drop every phase at
+    once — so the finding cannot ask for a phase tag. It reports the decrease
+    and names the row that caused it."""
+    req = repo / "docs" / "requirements"
+    cmp_h = "CMP-ID,Name,Status,Standing\n"
+    (req / "components.csv").write_text(
+        cmp_h + "CMP-001,Core,Approved,\n", encoding="utf-8", newline="\n"
+    )
+    srs, llrs, tcs = _settled("SR-001", "1")
+    _write(repo, srs, llrs, tcs)
+    _commit(repo)
+    assert _stage(repo) == ladder.STAGE_IMPL
+
+    # THE WHOLE EDIT: one component cell, and no spine row touched at all.
+    (req / "components.csv").write_text(
+        cmp_h + "CMP-001,Core,Approved,has-gap\n", encoding="utf-8", newline="\n"
+    )
+    assert _stage(repo) == ladder.STAGE_ARCH
+
+    findings = DS.phase_rule_findings(repo)
     assert len(findings) == 1, findings
-    assert "SR-002" in findings[0]
+    assert "CMP-001" in findings[0]
     assert "DevStg-Impl -> DevStg-Arch" in findings[0]
+
+
+def test_a_BOUNDARY_ONLY_decrease_FIRES(repo):
+    """The same hole at the other frame registry: a crossing re-drafted after
+    the frame settled drops every phase to DevStg-Boundary, and no spine row
+    moves. Included because the two rungs share one applies-when shape, so a fix
+    that closed only the components half would leave the same defect one rung
+    down."""
+    req = repo / "docs" / "requirements"
+    ext_h = "B-ID,Entity,Direction,Carries,Status\n"
+    (req / "external.csv").write_text(
+        ext_h + "B-01,EXT-001,in,A crossing,Approved\n", encoding="utf-8", newline="\n"
+    )
+    srs, llrs, tcs = _settled("SR-001", "1")
+    _write(repo, srs, llrs, tcs)
+    _commit(repo)
+    assert _stage(repo) == ladder.STAGE_IMPL
+
+    (req / "external.csv").write_text(
+        ext_h + "B-01,EXT-001,in,A crossing,Drafted\n", encoding="utf-8", newline="\n"
+    )
+    # The raw rung is DevStg-Boundary; the EFFECTIVE value is the floored one,
+    # and the decrease the rule reads is the effective one.
+    assert _stage(repo) == ladder.STAGE_REQS
+
+    findings = DS.phase_rule_findings(repo)
+    assert len(findings) == 1, findings
+    assert "B-01" in findings[0]
 
 
 def test_a_REDRAFTED_child_in_the_standing_phase_FIRES(repo):

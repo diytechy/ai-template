@@ -225,17 +225,43 @@ def read(root):
 
 
 # --- THE PHASE RULE (ruled plan §4 + owner answer §6.1/§6.2) ------------------
-# The spine registries this rule reads on the BEFORE side, as
-# `(declared-path, id-column, spine key)`. Declared here rather than re-derived
-# from `kitstage.DECLARED_INPUTS` because that list is the FINGERPRINT's input
-# set — it deliberately includes the frame registries and the dials, which this
-# rule holds CONSTANT (see `_before_spine`). Two lists with two jobs beat one
-# list quietly serving both.
-_SPINE_REGISTRIES = (
-    ("docs/requirements/system-requirements", "SR-ID", "srs"),
-    ("docs/requirements/low-level-requirements", "LLR-ID", "llrs"),
-    ("docs/test/test-cases", "TC-ID", "tcs"),
+# EVERY ROW THIS RULE CAN ATTRIBUTE A DECREASE TO, as
+# `(id-column, spine key, the cells the DERIVATION reads)`.
+#
+# WIDENED AT THE WI-498 CLOSE (ROUND-SOL-RAW 3), and the old shape is worth
+# stating because it looked complete. This was three SR/LLR/TC entries compared
+# on `Status` alone — so an edit that lowered the effective stage through any
+# OTHER input produced `changed_rows=[]` and the rule went silent on a
+# non-exempt decrease. Sol drove it: a settled DevStg-Impl spine with
+# `CMP-001 Standing=""` changed only to `Standing="has-gap"` gave
+# `was=DevStg-Impl`, `now=DevStg-Arch`, `changed_rows=[]`, `findings=[]` — a
+# three-rung drop, undeclared and unreported. The kit's own Impl->Arch test did
+# not catch it because that test moves the component AND adds an SR, and the SR
+# is the only reason its finding exists.
+#
+# Two independent blind spots, both closed here: the frame REGISTRIES were not
+# walked at all, and the cell set was `Status` only, while the derivation also
+# reads a CMP's `Standing` (a lifecycle fact that holds rung 3 on its own), an
+# SR's `SN-Refs` (the coverage rung) and `Verification` (the LLR exemption), and
+# the child rows' parent refs (the decomposition rungs). A rule that reads a
+# narrower input set than the derivation it polices can always be walked past.
+#
+# The BEFORE side already carried these rows — `_spine_at` materializes the
+# whole declared input set at `rev` — so this is an attribution fix, not a new
+# read.
+_ATTRIBUTED_ROWS = (
+    ("SR-ID", "srs", ("Status", "SN-Refs", "Verification")),
+    ("LLR-ID", "llrs", ("Status", "SR-Refs")),
+    ("TC-ID", "tcs", ("Status", "Verifies")),
+    ("B-ID", "bifs", ("Status",)),
+    ("CMP-ID", "cmps", ("Status", "Standing")),
 )
+
+# The two of those that carry no `Phase` cell. The boundary and partition rungs
+# are REPO-GLOBAL — which is precisely how they drop every phase at once — so a
+# decrease attributed to one of them cannot be answered by tagging a phase, and
+# its finding says so rather than asking for something the row cannot carry.
+_PHASELESS_KEYS = frozenset({"bifs", "cmps"})
 
 # THE EXEMPTION, and it is exactly one permutation (owner answer §6.2): a
 # decrease landing precisely on DevStg-LLReqs -> DevStg-Arch is the PERMITTED
@@ -289,7 +315,7 @@ def _by_id(spine):
     """`{spine-key: {id: row}}` — the before-side lookup `_changed_rows` joins on."""
     return {
         key: {r[id_col]: r for r in spine.get(key, []) if r.get(id_col)}
-        for _declared, id_col, key in _SPINE_REGISTRIES
+        for id_col, key, _cells in _ATTRIBUTED_ROWS
     }
 
 
@@ -301,8 +327,8 @@ def _effective(spine):
 
 
 def _changed_rows(live, before_rows):
-    """Every spine row this edit ADDED or whose `Status` it MOVED, as
-    `[(id, row, before-status-or-None)]`.
+    """Every row this edit ADDED, or whose STAGE-AFFECTING CELLS it moved, as
+    `[(id, key, row, before-status-or-None)]` over `_ATTRIBUTED_ROWS`.
 
     THE TRIGGER SET IS WIDER THAN THE PLAN'S WORDS, and the measurement is why.
     Plan §4 says "a newly drafted/redrafted row"; driven on a frame-free spine
@@ -312,31 +338,51 @@ def _changed_rows(live, before_rows):
     (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly RATIFIED
     parent with no children yet (Impl -> LLReqs). Narrowing to the literal words
     would have shipped a rule that cannot fire on the two shapes that matter, so
-    the trigger is "added, or Status moved" — which CONTAINS the plan's set."""
+    the trigger is "added, or a stage-affecting cell moved" — which CONTAINS the
+    plan's set.
+
+    IT IS THE DERIVATION'S CELLS, not `Status` alone — see `_ATTRIBUTED_ROWS`
+    for what was walked past while this compared one cell in three registries."""
     out = []
-    for _declared, id_col, key in _SPINE_REGISTRIES:
+    for id_col, key, cells in _ATTRIBUTED_ROWS:
         prior = before_rows.get(key, {})
         for row in live.get(key, []):
             rid = row.get(id_col)
             if not rid:
                 continue
             was = prior.get(rid)
-            before_status = None if was is None else (was.get("Status") or "").strip()
-            now_status = (row.get("Status") or "").strip()
-            if was is None or before_status.lower() != now_status.lower():
-                out.append((rid, row, before_status))
+            if was is None:
+                out.append((rid, key, row, None))
+                continue
+            moved = [
+                "{} {} -> {}".format(
+                    c,
+                    (was.get(c) or "").strip() or "(blank)",
+                    (row.get(c) or "").strip() or "(blank)",
+                )
+                for c in cells
+                if (was.get(c) or "").strip().lower()
+                != (row.get(c) or "").strip().lower()
+            ]
+            if moved:
+                out.append((rid, key, row, "; ".join(moved)))
     return out
 
 
 def phase_rule_findings(root):
     """The authoring-time decrease rule (plan §4, owner answer §6.1).
 
-    **A spine edit that LOWERS the effective stage must surface as a phase
-    change.** When the effective stage decreased, every row this edit added or
-    re-statused must carry a `Phase` tag that is NOT the phase the settled work
-    was standing in — a NEW (higher) phase, or an already-open LOWER one. Both
-    readings of "the scope moved" satisfy it; quietly adding regressing work to
-    the phase you are standing in does not.
+    **An edit that LOWERS the effective stage must surface as a phase change.**
+    When the effective stage decreased, every row this edit added or moved a
+    stage-affecting cell on must carry a `Phase` tag that is NOT the phase the
+    settled work was standing in — a NEW (higher) phase, or an already-open
+    LOWER one. Both readings of "the scope moved" satisfy it; quietly adding
+    regressing work to the phase you are standing in does not.
+
+    THE ATTRIBUTED SET IS EVERY STAGE-AFFECTING INPUT, not the spine tiers
+    alone (`_ATTRIBUTED_ROWS`, widened at the WI-498 close). A frame row has no
+    phase to tag, so its finding reports the decrease and names the cause
+    instead of demanding a cell the row cannot carry.
 
     WHY THIS SHAPE AND NOT A STORED COUNTER (plan §4, alternative (ii) rejected):
     phase stays a pure function of the registries. The derived `phase=` still
@@ -385,7 +431,30 @@ def phase_rule_findings(root):
     standing = max(prior_phases) if prior_phases else None
 
     findings = []
-    for rid, row, before_status in sorted(_changed_rows(live, before_rows)):
+    for rid, key, row, changed in sorted(
+        _changed_rows(live, before_rows), key=lambda t: (t[0], t[1])
+    ):
+        moved = (
+            "The row is new."
+            if changed is None
+            else "Its {} moved ({}).".format(
+                "cells" if ";" in changed else "cell", changed
+            )
+        )
+        if key in _PHASELESS_KEYS:
+            # A FRAME row. The boundary and partition rungs are repo-global, so
+            # there is no phase to tag and no per-phase remedy to offer: the
+            # finding reports the decrease and names its cause. This arm is the
+            # one that was missing entirely — the registries were not walked.
+            findings.append(
+                "{} lowers the effective stage ({} -> {}). {} It is a FRAME row, "
+                "so it carries no phase and the decrease cannot be answered by "
+                "tagging one: the boundary and partition rungs are repo-global "
+                "and drop every phase at once. A stage decrease is a scope "
+                "change and must surface as one — record it, or restore the "
+                "row.".format(rid, was, now, moved)
+            )
+            continue
         phase = spine_rules.phase_num(row)
         if standing is None or phase != standing:
             continue
@@ -399,13 +468,7 @@ def phase_rule_findings(root):
                 was,
                 now,
                 phase,
-                (
-                    "The row is new."
-                    if before_status is None
-                    else "Its status moved {} -> {}.".format(
-                        before_status or "(blank)", (row.get("Status") or "").strip()
-                    )
-                ),
+                moved,
                 standing + 1,
             )
         )
