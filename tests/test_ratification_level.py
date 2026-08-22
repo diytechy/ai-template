@@ -33,7 +33,9 @@ Three things this module pins, each because a cut got it wrong:
     else int-shaped is.
 """
 
+import ast
 import inspect
+import textwrap
 from pathlib import Path as _Path
 
 import pytest
@@ -757,24 +759,97 @@ def test_NO_status_combination_reaches_the_RELEASE_rung():
     assert dg.STAGE_IMPL in reached
 
 
+def _spine_stage_ast():
+    """`spine_stage`'s `FunctionDef` node, de-indented so it parses standalone."""
+    return ast.parse(textwrap.dedent(inspect.getsource(dg.spine_stage))).body[0]
+
+
+def _returns_provably_below_release(func):
+    """Every `Return` in `func`, classified. Returns the list of UNPROVEN ones —
+    each `(lineno, rendered source)` — where "proven" means the returned
+    expression is a bare `Name` bound at `spine_rules` module level to a rung
+    string that is NOT the top rung.
+
+    FAIL-CLOSED BY CONSTRUCTION, which is the whole point. The old pin asked
+    "does the text `return STAGE_RELEASE` appear?" — an allowlist of one
+    spelling, so every other spelling passed. This asks the complementary
+    question: can each return be PROVEN to be a rung below Release? Anything
+    that cannot be — a literal, a subscript (`STAGE_ORDER[-1]`), an attribute
+    (`_ladder.STAGE_RELEASE`), a call (`_top()`), a conditional — is reported,
+    because none of those can be settled by reading this one function.
+
+    That deliberately reds on a legitimate refactor that returns a computed
+    rung. It should: the rung is evidence-gated with NO producer, so a
+    `spine_stage` that computes its answer is exactly the change a human must
+    look at. Widening this helper is an act, the same as deleting it."""
+    module = vars(dg)
+    unproven = []
+    for node in ast.walk(func):
+        if not isinstance(node, ast.Return):
+            continue
+        value = node.value
+        if isinstance(value, ast.Name):
+            bound = module.get(value.id, _MISSING)
+            if isinstance(bound, str) and bound in kit_ladder.STAGE_ORDER:
+                if bound != dg.STAGE_RELEASE:
+                    continue  # proven: a named rung, below the top one
+        unproven.append((node.lineno, ast.unparse(value) if value else "<bare>"))
+    return unproven
+
+
+_MISSING = object()
+
+
 def test_the_RELEASE_rung_has_no_PRODUCER_in_the_source():
     """The companion to the exhaustive pin above, and it catches what enumeration
-    cannot: a `return STAGE_RELEASE` behind a condition no fixture happens to
-    build. The guard is structural — the rung has no producer at all — so the
-    test is structural too.
+    cannot: a producer behind a condition no fixture happens to build. The guard
+    is structural — the rung has no producer at all — so the test is structural
+    too.
 
     THIS IS THE OI-30 D2 GUARD ON THE STAGE AXIS. D2 ruled that a Status cell may
     never claim the test evidence passed; on the bar axis that needed a ceiling
     flag (`_RELEASE_CEILING`, which retired with the bar axis and `docs/gate` at
     WI-498 slice 5), and here it needs nothing, because the value is simply not
-    produced. Deleting this test is how the harness driver lands — an act."""
-    source = inspect.getsource(dg.spine_stage)
-    body = "\n".join(
-        line for line in source.splitlines() if not line.strip().startswith("#")
+    produced. Deleting this test is how the harness driver lands — an act.
+
+    REBUILT AT THE WI-498 PROGRAM CLOSE, because BOTH reviewers defeated the
+    version that shipped, with two DIFFERENT mutants, and both mutants left the
+    whole ladder suite green:
+
+      * a literal `return "DevStg-Release"` — the name-grep sees no name;
+      * `return _ladder.STAGE_ORDER[-1]` behind a new `EvidencePassed` field —
+        no name, and the field is outside the closed `Status` enum the
+        exhaustive arm iterates, so neither pin could see it.
+
+    The program's own recorded lesson, banked three times in its fragment, is
+    "grep the VALUE, not the constant name" — and the pin it shipped grepped
+    the name. So this now asserts on the VALUE, and then stops grepping
+    altogether: `_returns_provably_below_release` walks the AST and demands
+    every return be provably a rung below the top. Both arms below are driven
+    against both mutants at the close (see the fragment)."""
+    func = _spine_stage_ast()
+    # ARM 1 — THE VALUE, not the constant name. Comments and the docstring name
+    # the rung legitimately and repeatedly; `ast.unparse` over the body MINUS
+    # the docstring drops both, and what is left is code. The rendered value
+    # must not appear in it at all — which catches a literal assigned to a
+    # variable and returned later, before the AST arm has to reason about the
+    # binding.
+    body_nodes = func.body[1:] if ast.get_docstring(func) else func.body
+    assert body_nodes, "spine_stage parsed to an empty body — the pin read nothing"
+    code_only = "\n".join(ast.unparse(n) for n in body_nodes)
+    assert dg.STAGE_RELEASE not in code_only, (
+        "the VALUE {!r} is produced in spine_stage's code — the rung is "
+        "evidence-gated and has no producer:\n{}".format(dg.STAGE_RELEASE, code_only)
     )
-    # the docstring names the rung repeatedly; only RETURNS are the question
-    assert "return STAGE_RELEASE" not in body
-    assert "STAGE_RELEASE" not in body.split('"""')[-1]
+    # ARM 2 — every return proven, rather than one spelling forbidden.
+    unproven = _returns_provably_below_release(func)
+    assert not unproven, (
+        "spine_stage has return(s) that cannot be proven to be a rung below "
+        "{}: {}. The rung is evidence-gated with no producer; a computed "
+        "return is the exact change that needs a human.".format(
+            dg.STAGE_RELEASE, unproven
+        )
+    )
 
 
 def test_a_MISSING_child_puts_the_spine_at_the_CHILD_S_rung():
