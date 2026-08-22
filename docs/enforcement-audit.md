@@ -147,3 +147,19 @@ records where each one bites.
    amending it"), which WI-190's plan rubric imports. Recorded as a **stated
    reason**: Reviewer is the strongest honest enforcer for contract-prose
    semantics.
+5. **`gen_arch_map.module_contracts`'s `Contracts:` harvester is fooled by a
+   negative statement naming the id it denies.** The harvester's per-line
+   match is a naive `"Contracts" in line` substring test: a docstring line
+   that explains a module deliberately carries NO `Contracts:` declaration,
+   while naming the interface id its absence concerns (e.g. "No `Contracts:`
+   line, deliberately: the integrator seam this extends is IF-080"), reads to
+   the harvester as a DECLARATION of that id. The failure mode is a false
+   QUIET rather than a false red — the id silently stops WARNing as
+   undeclared, so a genuinely-undeclared interface can hide behind a module
+   that only discusses it. Found when a module's own such line masked
+   `IF-080` from `check_trajectory`'s undeclared-interface WARN before the
+   line was later removed; nothing depended on the miss being wrong, but the
+   grammar gap is unfixed. Recorded as a **stated reason** — the fix is a
+   position-aware match (the declaration must open the line, not merely
+   appear in it), left for whoever next touches `gen_arch_map.py`'s
+   `Contracts:` grammar.
