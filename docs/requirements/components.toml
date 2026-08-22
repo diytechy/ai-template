@@ -2,26 +2,26 @@
 name = "W1 Registry & conformance"
 category = "software"
 knowledge = "registry-hygiene"
-status = "Drafted"
+status = "Approved"
 notes = """The spine and everything that decides whether it holds: spine_carrier, trace, trace_text, spine_rules, check_trajectory, plan_coverage, migrate_carrier, wi_convert, gen_arch_map. The shared helper package kitlib (config.py/git.py/registry.py/__init__.py via LLR-181, ladder.py via LLR-184, stage.py via LLR-185) is owned here alone, single-tagged CMP-006 - the closest-fit reason is registry.py's bulk within LLR-181's module set. It is still imported from every component; that consumption is recorded on a declared shared-kernel surface (docs/kernel-modules-allow) rather than by a multi-tag - a single `Component` cell can no longer silence a genuine cross-component seam finding. kitlib/station.py (LLR-182) is the one package module NOT owned here: it stays CMP-008, its one cross-component edge declared and policed as IF-093 rather than folded into the kernel surface. gen_arch_map also carries a CMP-009 tag through LLR-080, the one LLR row whose modules straddle this cut - its single import edge stays POLICED (IF-117 covers it), so no seam is suppressed."""
 
 [component.CMP-007]
 name = "W2 Gatekeeper"
 category = "software"
-status = "Drafted"
+status = "Approved"
 notes = """Every verdict a hook, CI job or gate run consumes: check, check_privacy, subagent_gate, the 8 check_* lints, and the shipped pre-commit/pre-push hooks."""
 
 [component.CMP-008]
 name = "W3 Autonomy"
 category = "software"
 knowledge = """docs/knowledge/agent-routing;docs/knowledge/effort-tiering;docs/knowledge/prompt-image-token-efficiency"""
-status = "Drafted"
+status = "Approved"
 notes = """The unattended coordinator end to end: the agent_* family plus adjudicate_brief, the 5 plan_* round modules, dispatch, handback, intake, integrate, lane, prompts, schedule, score_reviews, spec_move, trunk_step."""
 
 [component.CMP-009]
 name = "W4 Human & adopter surfaces"
 category = "software"
 knowledge = "downstream-resync"
-status = "Drafted"
+status = "Approved"
 notes = """Everything a person or an adopting repo reads or runs: bootstrap, run_menu, the 7 remaining gen_*, the 6 traj_* dashboard modules, and the onboard/dev-setup templates."""
 

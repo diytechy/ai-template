@@ -435,17 +435,23 @@ def _approved_offspine(tmp_path, rel, id_col, cell, live_value):
     """A seeded tree in which the FIRST row of `rel` reads approved-or-above on
     its own maturity cell, on BOTH sides of the comparison.
 
-    The flip happens BEFORE the seed deliberately: every shipped IF and CMP row
-    reads `Drafted` today, so a fixture that approved nothing would assert
-    against a predicate that is False for the honest reason, and pass while
-    proving nothing."""
+    The flip happens BEFORE the seed deliberately, and only where the registry
+    still carries a non-claiming row to flip: when this fixture was written
+    every shipped IF and CMP row read `Drafted`, so a fixture that approved
+    nothing would have asserted against a predicate that is False for the
+    honest reason. The owner approved all four CMP rows on 2026-08-22, so for
+    CMP the live registry ALREADY carries claiming rows and there is nothing
+    to flip — the closing `assert claiming` keeps the anti-vacuity teeth
+    either way."""
     root = _tree(tmp_path)
-    _rewrite(
-        root,
-        rel,
-        '{} = "{}"'.format(cell.lower(), live_value[0]),
-        '{} = "{}"'.format(cell.lower(), live_value[1]),
-    )
+    old = '{} = "{}"'.format(cell.lower(), live_value[0])
+    if old.encode("utf-8") in (root / rel).read_bytes():
+        _rewrite(
+            root,
+            rel,
+            old,
+            '{} = "{}"'.format(cell.lower(), live_value[1]),
+        )
     SNAP.copy_live(root, seed=True)
     rows = load_script("spine_carrier").load(root / rel, id_col, keep_examples=False)
     claiming = [r for r in rows if SNAP._claims_approval(r)]
