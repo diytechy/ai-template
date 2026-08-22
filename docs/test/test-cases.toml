@@ -1757,7 +1757,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-180 (parent SR-180)"
 automated = "Yes"
 evidence = """tests/test_check_doc_refs.py::test_llr_symbol_anchor_reds_on_a_planted_defect; tests/test_check_doc_refs.py::test_llr_symbol_anchor_needs_only_one_resolving_token; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_a_non_python_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory; tests/test_check_doc_refs.py::test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell; tests/test_check_doc_refs.py::test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long; tests/test_check_doc_refs.py::test_llr_symbol_anchor_sees_private_names_and_constants; tests/test_check_doc_refs.py::test_llr_symbol_anchor_does_not_double_report_a_missing_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_placeholder_rows; tests/test_gen_arch_map.py::test_module_bindings_covers_every_rendered_public_item; tests/test_gen_arch_map.py::test_module_bindings_sees_what_the_rendered_map_cannot; tests/test_gen_arch_map.py::test_module_bindings_stops_at_module_scope"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-176]
@@ -1768,7 +1768,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-181 (parent SR-166)"
 automated = "Yes"
 evidence = """tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-177]
@@ -1779,7 +1779,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-182 (parent SR-144)"
 automated = "Yes"
 evidence = """tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_kitlib_station.py::test_outcome_of_names_one_outcome_or_none"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-179]
@@ -1790,7 +1790,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-184 (parent SR-139)"
 automated = "Yes"
 evidence = """tests/test_kitlib_ladder.py::test_the_ladder_is_the_ruled_EIGHT_RUNGS_in_the_ruled_ORDER; tests/test_kitlib_ladder.py::test_stage_ord_is_the_position_and_RAISES_on_an_unknown_label; tests/test_kitlib_ladder.py::test_the_module_imports_NOTHING; tests/test_kitlib_ladder.py::test_every_reader_resolves_to_this_one_object"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-178]
@@ -1801,7 +1801,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-183 (parent SR-161)"
 automated = "Yes"
 evidence = """tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-180]
@@ -1812,7 +1812,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-185 (parent SR-139)"
 automated = "Yes"
 evidence = """tests/test_kitlib_stage.py::test_DevStg_Below_participates_in_ordering_without_raising; tests/test_kitlib_stage.py::test_a_hyphenated_label_is_REFUSED_not_truncated_to_a_valid_rung; tests/test_kitlib_stage.py::test_a_token_that_is_not_a_rung_is_refused_by_the_stage_reader; tests/test_kitlib_stage.py::test_a_phase_with_nothing_settled_does_not_lower_the_fold; tests/test_kitlib_stage.py::test_an_empty_fold_is_the_FLOOR_and_never_raises; tests/test_kitlib_stage.py::test_the_fingerprint_is_INVARIANT_under_CRLF_working_tree_churn; tests/test_kitlib_stage.py::test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process; tests/test_kitlib_stage.py::test_the_fingerprint_FAST_PATH_actually_skips_the_derivation; tests/test_kitlib_stage.py::test_READERS_NEVER_WRITE"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-181]
@@ -1823,5 +1823,5 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-186 (parent SR-139)"
 automated = "Yes"
 evidence = """tests/test_derive_stage.py::test_ONE_drafted_row_does_not_drop_the_effective_stage; tests/test_derive_stage.py::test_a_draft_that_OPENS_A_NEW_PHASE_does_not_drop_it_either; tests/test_derive_stage.py::test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them; tests/test_derive_stage.py::test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases; tests/test_derive_stage.py::test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value; tests/test_derive_stage.py::test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries; tests/test_derive_stage.py::test_the_check_py_STEP_goes_red_on_a_stale_cache; tests/test_derive_stage.py::test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder"""
-status = "Drafted"
+status = "Approved"
 phase = 5

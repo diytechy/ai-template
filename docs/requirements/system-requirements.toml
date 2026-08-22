@@ -939,6 +939,6 @@ Stated so it cannot be read in: nothing here obliges source code to carry a back
 acceptance_criteria = """A design-tier row naming a realization symbol that resolves in one of the implementation units the same row names is discharged; a row whose named symbols all fail to resolve is reported and gates at the declared release bar; a named symbol that fails to resolve beside a sibling on the same row that resolves is counted and never gates, so tightening the cell stays possible without reopening the gate. The unit cell is read as a union, never as a positional pairing with the symbol cell: a row naming several units is discharged by one symbol resolving in any one of them. A row naming only units the declared stack profile carries no resolution rule for is reported as skipped-with-reason and is not counted as discharged, so a row the harness cannot judge never reads as a pass; an example placeholder row is out of scope, so a freshly generated scaffold is silent here. The resolution rule is read off the declared stack profile rather than restated in this row; for the current profile it is a name bound at module scope, or defined at class scope, in a source module of that profile's language."""
 priority = "M"
 verification = "Test"
-status = "Drafted"
+status = "Approved"
 phase = 5
 aspect = "trajectory"

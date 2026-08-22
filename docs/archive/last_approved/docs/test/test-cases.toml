@@ -531,9 +531,9 @@ verifies = ["SR-049", "LLR-050"]
 level = "Unit"
 method = """derive the gate from fixture states across every per-artifact rule and guard the cache; --print reports the derived current phase"""
 tier = "Full"
-expected = """derive_gate computes the correct gate per artifact state (draft drop, undecomposed DevStg-Reqs, decomposed-unverified DevStg-Tests - including a Modified SR, whose phase reads DevStg-Tests with children counted-but-never-capping - and verified DevStg-Impl) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
+expected = """spine_rules computes the correct gate per artifact state (draft drop, undecomposed DevStg-Reqs, decomposed-unverified DevStg-Tests - including a Modified SR, whose phase reads DevStg-Tests with children counted-but-never-capping - and verified DevStg-Impl) and --check catches drift; the compared basis line carries modified=N beside drafts=N; --print shows the derived current phase (the meta reads phase=4)"""
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_spine_rules.py"
 status = "Approved"
 phase = 1
 
@@ -1378,11 +1378,11 @@ phase = 1
 [test.TC-141]
 verifies = ["SR-049", "LLR-147"]
 level = "Unit"
-method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (the runnable value floors to DevStg-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevStg-Impl); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevStg-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and derive_gate.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+method = """Fixture-drive the SN-coverage rung: an uncovered ratified SN caps raw at DevStg-Below (the runnable value floors to DevStg-Reqs) with uncovered=1 on the basis line and drafts=0; citing the need from an SR's SN-Refs restores the prior level (uncovered=0, DevStg-Impl); a Draft SN keeps riding the draft rung with uncovered=0 (the double-counting seam - one fact, one rung); -000 rows on both sides of the join are ignored, so an example SR row cannot fake coverage of a real need; the ex-draft counterfactual rebuilds the cited set over the non-draft subset, so a need answered only by a Draft SR reads DevStg-Below there too; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_spine_rules.py"
 status = "Approved"
 phase = 4
 
@@ -1393,7 +1393,7 @@ method = """Fixture-drive --next-phase: on a spine whose non-draft max phase is 
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_derive_gate.py"
+evidence = "tests/test_derive_stage.py"
 status = "Approved"
 phase = 4
 
@@ -1757,5 +1757,71 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-180 (parent SR-180)"
 automated = "Yes"
 evidence = """tests/test_check_doc_refs.py::test_llr_symbol_anchor_reds_on_a_planted_defect; tests/test_check_doc_refs.py::test_llr_symbol_anchor_needs_only_one_resolving_token; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_a_non_python_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_reports_the_non_python_skip_as_an_advisory; tests/test_check_doc_refs.py::test_llr_symbol_anchor_binds_through_the_py_half_of_a_mixed_module_cell; tests/test_check_doc_refs.py::test_the_non_python_advisory_folds_to_one_line_when_the_list_is_long; tests/test_check_doc_refs.py::test_llr_symbol_anchor_sees_private_names_and_constants; tests/test_check_doc_refs.py::test_llr_symbol_anchor_does_not_double_report_a_missing_module; tests/test_check_doc_refs.py::test_llr_symbol_anchor_skips_placeholder_rows; tests/test_gen_arch_map.py::test_module_bindings_covers_every_rendered_public_item; tests/test_gen_arch_map.py::test_module_bindings_sees_what_the_rendered_map_cannot; tests/test_gen_arch_map.py::test_module_bindings_stops_at_module_scope"""
-status = "Drafted"
+status = "Approved"
+phase = 5
+
+[test.TC-176]
+verifies = ["SR-166", "LLR-181"]
+level = "Integration"
+method = """Bootstrap a real scaffold and assert the copied scripts/kitlib/ holds exactly the kit's module set, then import every module of it from the scaffold's own scripts/ directory and call through one of them, so the file list is backed by a working import rather than trusted as a proxy. Driven RED on a planted defect: deleting one kitlib MAPPING row makes this case fail while the top-level sibling-import guard stays green, which is the coverage gap that justifies the case. Separately, assert bootstrap.py's own sibling imports are exactly {kitlib} and that no kitlib module imports a non-kitlib sibling."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-181 (parent SR-166)"
+automated = "Yes"
+evidence = """tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_bootstrap_imports_only_the_common_package; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
+status = "Approved"
+phase = 5
+
+[test.TC-177]
+verifies = ["SR-144", "LLR-182"]
+level = "Unit"
+method = """Two halves, because the row makes two claims. THE VOCABULARY: call outcome_of over each declared status directory and assert it answers that directory's outcome; over the empty set and over an undeclared directory and assert None; over two directories naming different outcomes and assert None, since resolving that silently once let alphabetical precedence pick the answer. THE LAYER: build the AST import graph of the shipped scripts INCLUDING imports written inside function bodies, and assert no module whose name marks it a view imports a lifecycle service. The graph walker carries its own self-test - a known deferred edge is pinned present - because a walker that stopped descending into function bodies would make every cycle vanish and report the opposite of the truth."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-182 (parent SR-144)"
+automated = "Yes"
+evidence = """tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_kitlib_station.py::test_outcome_of_names_one_outcome_or_none"""
+status = "Approved"
+phase = 5
+
+[test.TC-179]
+verifies = ["SR-139", "LLR-184"]
+level = "Unit"
+method = """Three claims, driven separately. THE SHAPE: assert STAGE_ORDER whole against the ruled eight-rung order rather than spot-checking it, since an insertion in the wrong place is the failure the vocabulary exists to surface; assert STAGE_OF equals the order's length so the size stays derived; assert the description map's key set equals the rung set in BOTH directions, because a missing entry does not crash a renderer - it silently drops the stage line. THE ORDERING CONTRACT: stage_ord answers each rung's position and RAISES on the unknown-label cases including a retired G-tag and a bar spelling; and the labels are asserted NOT to alphabetize, which is what makes ordering operators wrong by construction rather than only by rule. THE IMPORT CLEANLINESS: parse the module's own source and assert it contains no import statement of any kind. Separately, assert by IDENTITY that spine_rules, agent_common and traj_status resolve to these objects - the warrant for the equality pins that retired, stated as `is` because a value battery over one shared object is vacuous agreement."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-184 (parent SR-139)"
+automated = "Yes"
+evidence = """tests/test_kitlib_ladder.py::test_the_ladder_is_the_ruled_EIGHT_RUNGS_in_the_ruled_ORDER; tests/test_kitlib_ladder.py::test_stage_ord_is_the_position_and_RAISES_on_an_unknown_label; tests/test_kitlib_ladder.py::test_the_module_imports_NOTHING; tests/test_kitlib_ladder.py::test_every_reader_resolves_to_this_one_object"""
+status = "Approved"
+phase = 5
+
+[test.TC-178]
+verifies = ["SR-161", "LLR-183"]
+level = "Unit"
+method = """Four halves, one per claim the row makes. RESOLUTION: build a spine whose SR and LLR rows carry a Hat-Refs naming a hat the roster declares and one naming a hat it does not, and assert the second is reported and joins the --strict failure set under its own class while the first is silent. VACUITY: delete the roster and assert the same tree reports nothing at all, then leave a roster that will not parse and assert the same - absence is opt-out for the layer, and a rule that reddened every row on a malformed roster would punish the wrong file. COVERAGE NEVER GATES: assert a tree whose rows carry no Hat-Refs at all exits zero under --strict and reports exactly one coverage advisory. THE DERIVED SET: assert effective_hats returns the union of a row's own refs with its SR parents', that a parent's change moves the child's answer with no child cell edited, and that a dangling SR-Refs contributes nothing rather than raising. Plus the anti-drift pin the second reader needs: assert trace's roster path equals hats.ROSTER_REL, since a test may import both modules where the shipped code may not."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-183 (parent SR-161)"
+automated = "Yes"
+evidence = """tests/test_trace_hats.py::test_an_undeclared_hat_name_is_a_finding; tests/test_trace_hats.py::test_an_undeclared_hat_reds_a_real_run_under_strict; tests/test_trace_hats.py::test_the_rule_is_vacuous_without_a_roster; tests/test_trace_hats.py::test_an_unparseable_roster_is_vacuous_not_loud; tests/test_trace_hats.py::test_coverage_is_one_advisory_and_never_a_finding; tests/test_trace_hats.py::test_effective_hats_unions_the_parents; tests/test_trace_hats.py::test_a_parent_re_ruling_moves_the_child_with_no_child_cell_edited; tests/test_trace_hats.py::test_a_dangling_parent_contributes_nothing_rather_than_raising; tests/test_trace_hats.py::test_the_roster_path_matches_the_hats_module"""
+status = "Approved"
+phase = 5
+
+[test.TC-180]
+verifies = ["SR-139", "LLR-185"]
+level = "Unit"
+method = """The carrier's contract, driven claim by claim, including five of the nine corner cases the design's deep check found. ORDERING: the sentinel orders below every rung here while the ladder's own comparison still RAISES on it, and both refuse an unknown label. TRUNCATION: a hyphenated label whose PREFIX is a valid rung is refused, not truncated - the defect in the reader this replaces, which returned a confident wrong rung. CROSS-LADDER: a token that is not one of the eight rungs is refused, which covers the bar vocabulary's non-shared members and the harness's all, with the three shared spellings explicitly recorded as beyond any value-level guard. THE FOLD: a phase carrying the sentinel does not lower it, the fold is a min over the phases that earned something, an empty fold is the floor rather than a raise, and a sub-floor reading is floored and says so. THE FINGERPRINT: it is invariant under CRLF churn but still moves on a real edit, on a carrier change, and on an input going absent. THE READER: it returns fresh values when an input moves mid-process, the recorded fast path is counted to prove it actually skips the derivation, it never writes the file on any path, and a hand-edited record raises rather than healing silently."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-185 (parent SR-139)"
+automated = "Yes"
+evidence = """tests/test_kitlib_stage.py::test_DevStg_Below_participates_in_ordering_without_raising; tests/test_kitlib_stage.py::test_a_hyphenated_label_is_REFUSED_not_truncated_to_a_valid_rung; tests/test_kitlib_stage.py::test_a_token_that_is_not_a_rung_is_refused_by_the_stage_reader; tests/test_kitlib_stage.py::test_a_phase_with_nothing_settled_does_not_lower_the_fold; tests/test_kitlib_stage.py::test_an_empty_fold_is_the_FLOOR_and_never_raises; tests/test_kitlib_stage.py::test_the_fingerprint_is_INVARIANT_under_CRLF_working_tree_churn; tests/test_kitlib_stage.py::test_the_reader_returns_FRESH_values_when_an_input_changes_mid_process; tests/test_kitlib_stage.py::test_the_fingerprint_FAST_PATH_actually_skips_the_derivation; tests/test_kitlib_stage.py::test_READERS_NEVER_WRITE"""
+status = "Approved"
+phase = 5
+
+[test.TC-181]
+verifies = ["SR-139", "LLR-186"]
+level = "Integration"
+method = """The remaining four corner cases, driven over real registry rows in a bootstrapped scaffold, plus the producer's own freshness contract. THE DRAFT DROP: derive a settled spine, add one ordinary Drafted requirement, and assert the effective stage did NOT move while the live reading did and says so beside it; repeat with the draft opening a NEW phase, which is the shape the defect actually takes. PER-PHASE: a two-phase spine reports a stage per phase, with the global defined as the min over those that earned one, and the repo-global need-coverage rung is asserted NOT to read every other phase's needs as uncovered. THE FRESH SCAFFOLD: a bootstrapped repo reads the floor with the honest ord-0 value recorded beside it, never raising and never selecting nothing. THE BRANCH LANE: with the claimed-lane marker present and the registries edited, the reader derives from the branch's own rows rather than the committed record, and leaves that record byte-identical. Then the producer: write/--check round-trips, --check reds on drift, the check.py STEP itself is driven red against a planted defect so the wiring cannot be vacuous, a freshly scaffolded repo is green on the placeholder, and the written file carries no CR bytes."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-186 (parent SR-139)"
+automated = "Yes"
+evidence = """tests/test_derive_stage.py::test_ONE_drafted_row_does_not_drop_the_effective_stage; tests/test_derive_stage.py::test_a_draft_that_OPENS_A_NEW_PHASE_does_not_drop_it_either; tests/test_derive_stage.py::test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them; tests/test_derive_stage.py::test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases; tests/test_derive_stage.py::test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value; tests/test_derive_stage.py::test_on_a_CLAIMED_BRANCH_the_reader_derives_from_the_branch_s_own_registries; tests/test_derive_stage.py::test_the_check_py_STEP_goes_red_on_a_stale_cache; tests/test_derive_stage.py::test_a_freshly_scaffolded_repo_is_GREEN_on_the_placeholder"""
+status = "Approved"
 phase = 5
