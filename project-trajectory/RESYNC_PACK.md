@@ -2945,14 +2945,17 @@ plus an unrelated addition (§4's warning, in force here):**
    below for what happens if you skip this entirely (a warning per run, not a
    failure).
 4. **Regenerate `docs/stage`:** `python scripts/derive_stage.py`. Commit it.
-   **This step is AFTER the dial re-key on purpose.** `docs/process.toml` is one
-   of the declared derivation inputs (`kitlib/stage.py DECLARED_INPUTS` — it is
-   listed deliberately over-inclusively, because an over-inclusive fingerprint
-   costs a spurious re-derivation while an under-inclusive one costs a stale
-   read). So rewriting the dial CHANGES THE FINGERPRINT: regenerate first and
-   step 3 immediately re-stales the file you just committed, and step 6 fails
-   `derived-stage` with a correct complaint. If you have already done them in
-   the other order, just run `derive_stage.py` again — nothing is lost.
+   **The order against step 3 does not matter**, and the reason is the part
+   worth carrying away: `docs/process.toml` is **NOT** a declared derivation
+   input (`kitlib/stage.py DECLARED_INPUTS`, owner ruling 2026-08-21). Dials
+   govern **who may ratify**, not **what stage is derived**, so re-keying the
+   dial cannot move the fingerprint and cannot stale this file. The declared
+   inputs are the six spine and frame registries, and nothing else. If you ever
+   extend that list in your own repo, add the file in the same change that
+   teaches the derivation to READ it — an input that is read but undeclared is
+   the expensive direction: the fingerprint stops covering it, every consumer
+   returns the recorded stage permanently, and `--check` stays green while it
+   happens.
 5. **Grep your own surfaces** for `derive_gate`, `docs/gate` and `--gate-policy`
    prose. Your history — logs, archives, closed work items, attestation records
    — is NOT swept: it is a record of what happened and rewriting it makes it a

@@ -28,20 +28,24 @@ HOOK = ".githooks/pre-commit"
 
 
 def set_dial(scaffold, section, key, value):
-    """Write a policy dial AND regenerate `docs/stage` — the pair a real repo
-    performs, so a hook test reds on the thing under test and not on setup.
+    """Write a policy dial. Nothing else — and the "nothing else" is the record.
 
-    `docs/process.toml` is a DECLARED derivation input (`kitlib/stage.py`
-    DECLARED_INPUTS), so writing ANY dial changes the stage fingerprint and the
-    commit floor's `derived-stage` step then correctly reports the committed
-    record as stale. That is deliberate (WI-498 slice 1: the fingerprint catches
-    staleness a value comparison cannot), and it is why the re-sync recipe
-    re-keys the dial BEFORE regenerating. Fixtures that write a dial and then run
-    the hook must do the same or they fail two steps early, with the real
-    assertion never reached — which is exactly how these tests failed at the
-    slice-5 close, silently, in a module the smoke tier does not carry."""
+    This helper used to regenerate `docs/stage` too, on a stated lesson that was
+    true when written and is now FALSE: `docs/process.toml` was a declared
+    derivation input, so writing any dial moved the stage fingerprint and the
+    commit floor's `derived-stage` step reported the committed record stale
+    two steps before the real assertion was reached.
+
+    The owner's 2026-08-21 ruling removed `process.toml` from
+    `kitlib/stage.py DECLARED_INPUTS` — dials govern who may ratify, not what
+    stage is derived — so writing a dial no longer touches the fingerprint and
+    the regeneration had become a no-op performed for a reason that no longer
+    existed. The ruling's sweep reached the code and missed this docstring and
+    the RESYNC recipe (found at the WI-498 close, ROUND-OPUS 3).
+
+    Kept as a named helper rather than inlined so the correction has a home at
+    the site that carried the false lesson."""
     set_process_key(scaffold, section, key, value)
-    run_py(["scripts/derive_stage.py", "--root", "."], cwd=scaffold)
 
 
 def test_bootstrap_copies_pre_commit_hook(scaffold):
