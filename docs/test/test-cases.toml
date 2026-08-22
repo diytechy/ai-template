@@ -1858,3 +1858,35 @@ automated = "Yes"
 evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
 status = "Approved"
 phase = 5
+[test.TC-185]
+verifies = ["SR-151", "LLR-190"]
+level = "Integration"
+method = """Read the declared moment-to-tier table out of the toolchain declaration and hold BOTH workflows to their own: for every declared trigger the shipped reference workflow must carry a step whose guard selects that moment and whose command invokes the documented harness entry point at the tier the table assigns; a workflow guard with no row in the translation table is a failure rather than a shrug; a step invoking anything outside the allowed-invocation set is a failure; and the declared OS x Python matrix cells appear in the shipped workflow. This repo's own workflow is held to this repo's own, deliberately different declaration, so a quiet downgrade of the meta-repo's CI is a reviewed edit too."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-190 (parent SR-151)"
+automated = "Yes"
+evidence = """tests/test_ci_tier_declaration.py"""
+status = "Approved"
+phase = 5
+
+[test.TC-186]
+verifies = ["SR-152", "LLR-191"]
+level = "Integration"
+method = """Two carriers, both driven. THE SHIPPED WORKFLOW: no continue-on-error and no conditional skip guards a required harness step, and the harness invocation and its tier are named in the step log. THE DURABLE RECORD: a green harness run writes a record that the reader then finds HOLDS; a red run writes nothing at all and, when a record already exists, leaves it byte-identical; a partial (smoke) tier is refused by the writer before anything runs; a dry run invokes the harness not at all and writes nothing; the check mode reports the verdict and exits nonzero when the record does not hold; the driver's command names the documented harness entry point and never a test command; and the binding the writer records is the one the reader recomputes, so a freshly written record can never read stale."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-191 (parent SR-152)"
+automated = "Yes"
+evidence = """tests/test_ci_tier_declaration.py; tests/test_test_evidence.py::test_a_GREEN_run_writes_a_record_that_HOLDS; tests/test_test_evidence.py::test_a_RED_run_writes_NOTHING; tests/test_test_evidence.py::test_a_RED_run_does_not_overwrite_an_existing_record; tests/test_test_evidence.py::test_the_writer_refuses_a_PARTIAL_tier; tests/test_test_evidence.py::test_dry_run_runs_nothing_and_writes_nothing; tests/test_test_evidence.py::test_check_reports_the_verdict_and_exits_nonzero_when_it_does_not_hold; tests/test_test_evidence.py::test_the_producer_names_the_documented_harness_entry_point; tests/test_test_evidence.py::test_the_binding_written_is_the_one_the_reader_recomputes; tests/test_test_evidence.py::test_the_shipped_harness_the_driver_names_actually_exists; tests/test_test_evidence.py::test_an_UNDECLARED_source_surface_binds_to_nothing_and_is_refused"""
+status = "Approved"
+phase = 5
+
+[test.TC-187]
+verifies = ["SR-152", "LLR-192"]
+level = "Unit"
+method = """The trust model, arm by arm. THE RECORD round-trips through its own parser, and a file that is not a record reads as absent instead of raising. THE VERDICT holds only for a present record stating the pass outcome at a whole-suite tier with the binding this tree computes: no record, a non-pass outcome and a smoke tier are each refused by name. THE BINDING IS VALUE-BOUND, driven over five independent edits that must each make it STALE - a product source edit, a test edit, a new source file, an edit to the declared bar itself, and a newly authored test case - while build residue must NOT invalidate it and an undeclared source surface is refused rather than bound to nothing. THE LOUDNESS: with no record the stage fingerprint does not fold the source tree at all, and with one present a source edit MUST move it, which is what stops a recorded Release rung from riding a cache no consumer re-checks. THE RUNG, end to end: a settled spine reads Impl, the same spine with a holding record reads Release, an unsettled spine cannot be lifted by evidence at all, and a source edit after the run drops the rung back."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-192 (parent SR-152)"
+automated = "Yes"
+evidence = """tests/test_test_evidence.py::test_the_record_round_trips_through_its_own_parser; tests/test_test_evidence.py::test_a_file_that_is_not_a_record_reads_as_ABSENT_and_never_raises; tests/test_test_evidence.py::test_no_record_means_the_claim_does_not_hold; tests/test_test_evidence.py::test_a_matching_record_HOLDS; tests/test_test_evidence.py::test_a_SMOKE_tier_record_is_refused_by_the_READER; tests/test_test_evidence.py::test_an_outcome_other_than_pass_is_refused; tests/test_test_evidence.py::test_the_claim_is_bound_to_the_TREE_it_was_measured_on; tests/test_test_evidence.py::test_build_residue_is_NOT_part_of_the_binding; tests/test_test_evidence.py::test_the_STAGE_fingerprint_moves_with_the_SOURCE_only_while_a_record_exists; tests/test_test_evidence.py::test_the_evidence_file_is_a_declared_stage_input; tests/test_test_evidence.py::test_the_binding_does_not_fold_the_record_itself; tests/test_test_evidence.py::test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict; tests/test_test_evidence.py::test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine; tests/test_test_evidence.py::test_the_derivation_reaches_RELEASE_end_to_end; tests/test_ratification_level.py::test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT"""
+status = "Approved"
+phase = 5

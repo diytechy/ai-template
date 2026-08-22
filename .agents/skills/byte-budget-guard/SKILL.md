@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,941 | 2026-08-21 | −7: WI-498 slice 5 — the two-axis sentence becomes one axis; the harness line says at-or-above the derived stage |
 | `CLAUDE.md` | **8,500** | 7,238 | 2026-08-22 | +90: the human-hold sentence points at the dial instead of paraphrasing it (owner dial change) |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,925 | 2026-08-22 | +0: the CLAUDE.md row re-stamp after the owner dial-change sweep |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,877 | 2026-08-22 | −98: WI-500 re-stamped both watched rows (PROCESS.md, PROCESS_OPTIONS.md); the superseded reasons went with them |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~15%. Those two are what you hit first, and the DOC is
@@ -46,8 +46,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 84,803 | 2026-08-21 | **+279** FLAGGED: WI-498 slice 5 — §4 re-teaches ONE axis (the bar retires; the dial becomes a rung). Depth it no longer has room for moved to PROCESS_OPTIONS |
-| `project-trajectory/PROCESS_OPTIONS.md` | 177,292 | 2026-08-21 | **+867** FLAGGED: WI-498 slice 5 — the phase-anchor passage taught the retired grammar as current; it now teaches `[<phase>]-[DevStg-<Rung>]` and the trap that an anchor records the rung the phase stands at once it CLOSES. Absorbs the depth §4 shed |
+| `project-trajectory/PROCESS.md` | 84,881 | 2026-08-22 | **+78** FLAGGED: WI-500 — the top rung stops being "derived by nothing" and names its one input, the harness-written `docs/test/evidence` record |
+| `project-trajectory/PROCESS_OPTIONS.md` | 177,704 | 2026-08-22 | **+412** FLAGGED: WI-500 — the per-artifact stage passage said the carrier had not landed; it now teaches the producer, the value binding and the refused partial tier |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

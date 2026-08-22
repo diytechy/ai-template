@@ -538,8 +538,9 @@ human_ratification_through` names the highest rung a human still ratifies, and
 holds every rung at or **below** it — the same ladder read from each end. A
 sign-off record names the rung whose boundary was **just** signed and therefore
 the rung the project has **entered**. **`DevStg-Release` has no signed boundary
-and is derived by nothing** — leaving `DevStg-Impl` means the declared tests
-PASS, which no cell may claim and no machine here yet computes.
+and no cell can reach it** — leaving `DevStg-Impl` means the declared tests PASS,
+so its one input is the harness-written `docs/test/evidence` record
+(`record_test_evidence.py`), bound by value to the tree it measured.
 
 **Requirements come before architecture**, because architecture is a *response*
 to requirements: a scope is partitioned in whatever way best satisfies its

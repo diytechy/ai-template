@@ -41,10 +41,11 @@ rung anything still holds open, so the answer is "what is in work":
                         LLR-exempt: Analysis / Inspection / Attest).
   5 `DevStg-Tests`      an SR with no TC, or a Drafted LLR/TC.
   6 `DevStg-Impl`       everything above is settled. THE FALL-THROUGH LANDS HERE.
-  7 `DevStg-Release`    RETURNED BY NOTHING (slice 3). Leaving Impl means the
-                        declared tests PASS, which no Status cell may claim and
-                        no machine here computes; the rung waits on a
-                        test-evidence carrier rather than being approximated.
+  7 `DevStg-Release`    RETURNED BY NO CELL, EVER. Leaving Impl means the
+                        declared tests PASS, so the rung's one input is the
+                        `evidence_passed` verdict over the harness-written
+                        `docs/test/evidence` record (WI-500) — a value bound to
+                        the tree it was measured on, never an approximation.
 
 The two INSERTED frame rungs (1 and 3) read REPO-WIDE registries even when this
 is called with one phase's rows, so a per-phase caller must treat them as
@@ -207,15 +208,16 @@ def is_founded(row):
     calls for EXIST. Armed for the spine at D-9 step 8, as it armed for CMP at
     the registry status unification — the word becomes legal, no live cell moves
     to it. What matters HERE is that it reads ABOVE `Approved`: `SPINE_MATURITY`
-    maps it to FOUNDED (never caps) and `spine_stage`'s Impl->Release
-    discriminator accepts it, so arming a word cannot LOWER the derived gate —
-    the rule the step-5 rename ran under. The DISCHARGE is computed per tier
-    elsewhere (migration plan C4); this reads the cell, like its two siblings.
+    maps it to FOUNDED (never caps), so arming a word cannot LOWER the derived
+    gate — the rule the step-5 rename ran under. The DISCHARGE is computed per
+    tier elsewhere (migration plan C4); this reads the cell, like its siblings.
     Duplicated from trace.py per F5; pinned equal by test_rule_sync.
 
     NO CALLER IN THIS MODULE SINCE WI-498 SLICE 3, and neither has `is_approved`:
     the Impl->Release discriminator was the last one, and it retired when Release
-    stopped being derivable from a cell. Both stay because what they are is a
+    stopped being derivable from a cell — WI-500 did not bring it back, because
+    the rung's new input is a harness verdict, not a row. Both stay because what
+    they are is a
     SHARED VOCABULARY pinned equal to trace.py's copies (test_rule_sync), not a
     private helper of a rung — deleting the mirror of a live predicate to satisfy
     a dead-code reading would take the pin with it. Slice 5 retired the bar axis
@@ -613,6 +615,7 @@ def spine_stage(
     have_bifs=False,
     have_cmps=False,
     cited_srs=None,
+    evidence_passed=False,
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
     the one a human-ratification level is compared against. Returns a
@@ -632,7 +635,9 @@ def spine_stage(
                         and non-Drafted: the tests are LAID, and making them pass
                         is the work in progress. THE TERMINAL RUNG of this
                         function.
-      DevStg-Release    NOT RETURNED HERE — evidence-gated, see below
+      DevStg-Release    ...and the HARNESS-PRODUCED test-evidence record holds
+                        for this exact tree: every declared test case passed.
+                        Reached ONLY through `evidence_passed`, see below
 
     THE `Modified` ARM OF THE Reqs RUNG RETIRED AT D-9 STEP 7 — no cell records
     "amended after attestation" any more, and the successor (the snapshot
@@ -651,23 +656,26 @@ def spine_stage(
     is a shared VOCABULARY, pinned by `test_rule_sync` and read by
     `baseline_snapshot`, not because a rung consults it.
 
-    DevStg-Release IS UNREACHABLE FROM THIS FUNCTION, DELIBERATELY (WI-498
-    slice 3, ruled plan §5 item 3). No combination of Status cells returns it,
-    and that is the honest state rather than a gap: leaving the Impl rung means
-    "all the declared test cases PASS", and this repo has no machine reading of
-    that. The evidence carrier is its own future row; until it lands, the top of
-    the ladder is a rung nothing derives, and a reader seeing DevStg-Impl on a
-    finished-looking spine is being told the truth.
+    DevStg-Release IS REACHED FROM EXACTLY ONE INPUT, AND IT IS NOT A CELL
+    (WI-500; WI-498 slice 3 left the rung deliberately unreachable and named this
+    row as the only thing that could change that). `evidence_passed` is the
+    verdict of `kitlib.stage.evidence_verdict` over the committed, HARNESS-WRITTEN
+    `docs/test/evidence` record: the declared suite ran, every case passed, and
+    the record is still bound BY VALUE to this exact tree. No combination of
+    Status cells reaches the rung, the parameter defaults False so every caller
+    that does not supply harness evidence gets the honest Impl reading, and a
+    caller CANNOT synthesize it from rows — the only production supplier is
+    `derive_stage`, reading the file.
 
     THIS DISCHARGES THE OLD Impl->Release CAVEAT AND CARRIES OI-30 D2's GUARD
     ACROSS. That caveat read: "DevStg-Impl ends when every SR reads `Approved`,
     which is a registry CELL, not a harness run ... nothing here should be read
     as proof the tests passed." The swap it owed is made — not by finding a
-    better cell, but by ruling that NO cell may make the claim. D2's ceiling
-    said the same thing on the bar axis by capping `sr_bar`; on this axis the
-    guard needs no ceiling flag, because the top rung simply has no producer.
-    **A Status cell can never claim the evidence passed** — that sentence used
-    to live at the ceiling and lives here now.
+    better cell, but by ruling that NO cell may make the claim, and then by
+    building the non-cell reading the ruling implied. D2's ceiling said the same
+    thing on the bar axis by capping `sr_bar`; here the guard is structural in a
+    stronger way: **a Status cell can never claim the evidence passed**, because
+    the rung's one producer is a parameter no row can set.
 
     WHICH RUNG OWNS A MISSING ARTIFACT: the rung the artifact belongs to, not its
     parent. An SR with no LLR yet is DevStg-LLReqs, because what is being written
@@ -747,8 +755,13 @@ def spine_stage(
     # than being re-polarized: an unmigrated `Modified` row still reads Impl,
     # by falling here rather than by being singled out.
     #
-    # Release is NOT the else-branch of anything. See the docstring: it is
-    # returned by nothing until the test-evidence carrier exists.
+    # Release is STILL NOT the else-branch of anything (WI-500). It is the
+    # affirmative branch of one input, and that input is a harness verdict rather
+    # than a cell: the fall-through below remains Impl, so every caller that
+    # cannot show evidence gets the honest answer without having to know this
+    # parameter exists.
+    if evidence_passed:
+        return STAGE_RELEASE
     return STAGE_IMPL
 
 

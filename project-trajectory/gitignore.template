@@ -15,6 +15,10 @@ __pycache__/
 # not these (process.md §3 "Reviewability").
 docs/test/report.md
 docs/test/report.html
+# NOT ignored, and never glob this directory: docs/test/evidence is the COMMITTED
+# test-evidence record (scripts/record_test_evidence.py) that the DevStg-Release
+# rung is derived from. Ignoring it would make the top rung unreachable and, worse,
+# would make it reachable only on the machine that ran the suite.
 
 # Performance comparator artifacts (process.md §9). perf-report.md is a
 # regenerated composite; perf-metrics.json is the product-emitted raw

@@ -71,7 +71,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import ladder
+from . import evidence, ladder
 
 # --- THE FILE -----------------------------------------------------------------
 STAGE_FILE = "docs/stage"
@@ -150,6 +150,13 @@ DECLARED_INPUTS = (
     # reaches the stage. Dials govern who may ratify, not what stage is derived.
     # If a dial ever DOES enter the derivation, add its file here in the same
     # change that reads it.
+    #
+    # THE TEST-EVIDENCE CARRIER (WI-500) — the promised one-list edit, made. The
+    # derivation now reads it (`DevStg-Release` is returned only when the record
+    # holds), so a record appearing, changing or vanishing moves the fingerprint
+    # exactly as a registry edit does. Its suffix tuple is `("",)` because the
+    # file has no carrier variants: the declared path IS the file.
+    (evidence.EVIDENCE_FILE, ("",)),
 )
 
 
@@ -223,16 +230,19 @@ def _digest(path, memo):
     return value
 
 
-def fingerprint(root, memo=_DEFAULT):
-    """`sha256:<hex>` over the LF-normalized content of the declared inputs.
+def _fold_inputs(root, memo, fold, skip=()):
+    """Fold the declared inputs into `fold`, skipping the declared names in
+    `skip`; answers `{declared: resolved-or-None}` so a caller can see what was
+    present without walking the list twice.
 
     The fold covers the DECLARED name, the carrier actually resolved, and the
     content digest of each input in declared order — so a registry migrating from
     CSV to TOML, or vanishing, moves the fingerprint exactly as an edit does."""
-    if memo is _DEFAULT:
-        memo = _DIGEST_MEMO
-    fold = hashlib.sha256()
+    resolved_map = {}
     for declared, resolved in input_paths(root):
+        resolved_map[declared] = resolved
+        if declared in skip:
+            continue
         fold.update(declared.encode("utf-8"))
         fold.update(b"\0")
         if resolved is None:
@@ -242,7 +252,100 @@ def fingerprint(root, memo=_DEFAULT):
             fold.update(b"\0")
             fold.update(_digest(resolved, memo).encode("ascii"))
         fold.update(b"\n")
+    return resolved_map
+
+
+def fingerprint(root, memo=_DEFAULT):
+    """`sha256:<hex>` over the LF-normalized content of the declared inputs —
+    AND, when a test-evidence record is present, over the declared source surface
+    that record's claim is bound to.
+
+    WHY THE SOURCE SURFACE JOINS THE FOLD, AND ONLY THEN (WI-500). Without it the
+    silent-ride the whole unification exists to prevent is reachable: a committed
+    `docs/stage` reading `DevStg-Release`, a product edited afterwards, and an
+    evidence file whose BYTES never moved — so the fingerprint matched, the
+    recorded rung was returned, and no consumer ever asked whether the evidence
+    still held. Folding the source digest makes a code edit move this value, so
+    `read_stage` derives fresh (and derives Impl, because the binding no longer
+    matches) and `derive_stage --check` reds on the committed copy.
+
+    THE COST IS PAID ONLY BY A REPO THAT MAKES THE CLAIM. With no evidence file —
+    every adopter below the Release rung, and every fresh scaffold — the extra
+    fold is skipped entirely and this is byte-for-byte the pre-WI-500 value over
+    the pre-WI-500 inputs plus one `(absent)` row."""
+    if memo is _DEFAULT:
+        memo = _DIGEST_MEMO
+    fold = hashlib.sha256()
+    resolved = _fold_inputs(root, memo, fold)
+    if resolved.get(evidence.EVIDENCE_FILE) is not None:
+        evidence.fold_sources(root, lambda p: _digest(p, memo), fold)
     return "sha256:" + fold.hexdigest()
+
+
+# --- THE TEST-EVIDENCE VERDICT ------------------------------------------------
+def evidence_binding(root, memo=_DEFAULT):
+    """`sha256:<hex>` — the value a test-evidence record must carry to still hold
+    for the tree at `root`: the declared spine inputs (MINUS the evidence file
+    itself, which would otherwise have to contain its own digest) folded together
+    with the declared product source and test surface.
+
+    Both halves are load-bearing and each covers what the other cannot. Without
+    the spine half, a test case authored after the run would ride a green that
+    never executed it; without the source half, any code edit would."""
+    if memo is _DEFAULT:
+        memo = _DIGEST_MEMO
+    fold = hashlib.sha256()
+    _fold_inputs(root, memo, fold, skip=(evidence.EVIDENCE_FILE,))
+    count = evidence.fold_sources(root, lambda p: _digest(p, memo), fold)
+    fold.update("sources={}".format(count).encode("ascii"))
+    return "sha256:" + fold.hexdigest()
+
+
+def evidence_verdict(root, memo=_DEFAULT):
+    """`(holds, reason)` for the committed test-evidence record.
+
+    `holds` is True only when a record exists, records the `pass` outcome at a
+    whole-suite tier, and carries the binding this tree currently computes.
+    `reason` names the single failing condition, so the ONE place the rung is
+    decided is also the one place that can explain itself — a caller printing the
+    reason and a caller acting on the boolean cannot come to disagree.
+
+    EVERY FAILURE IS THE SAME ANSWER, DELIBERATELY: no record, an unreadable one,
+    a partial tier, a stale binding — all of them mean the claim "every declared
+    test case passes on THIS tree" is unsupported, and the honest rung is the one
+    below. The loudness lives in `fingerprint` above, which makes a stale record
+    red the freshness check rather than letting it sit quietly unread."""
+    record = evidence.read(root)
+    if record is None:
+        return False, "no test-evidence record at {}".format(evidence.EVIDENCE_FILE)
+    if record.get("outcome") != evidence.PASS:
+        return False, "the record's outcome is {!r}, not {!r}".format(
+            record.get("outcome"), evidence.PASS
+        )
+    tier = record.get("tier")
+    if tier not in evidence.WHOLE_SUITE_TIERS:
+        return False, (
+            "the record was driven at tier {!r}, which is not a whole-suite tier "
+            "({}) — a partial tier cannot carry the claim".format(
+                tier, ", ".join(evidence.WHOLE_SUITE_TIERS)
+            )
+        )
+    current = evidence_binding(root, memo)
+    if record.get("binding") != current:
+        return False, (
+            "STALE — the record is bound to a tree that no longer exists "
+            "(recorded {}, now {}). Re-run the suite through "
+            "scripts/record_test_evidence.py; never edit the binding.".format(
+                record.get("binding"), current
+            )
+        )
+    return True, "the declared suite passed at {} on this exact tree".format(tier)
+
+
+def evidence_passed(root, memo=_DEFAULT):
+    """The boolean half of `evidence_verdict` — the ONE input that makes
+    `DevStg-Release` derivable."""
+    return evidence_verdict(root, memo)[0]
 
 
 # --- ORDERING, AND THE GUARD --------------------------------------------------

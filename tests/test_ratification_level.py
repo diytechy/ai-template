@@ -768,7 +768,8 @@ def _returns_provably_below_release(func):
     """Every `Return` in `func`, classified. Returns the list of UNPROVEN ones —
     each `(lineno, rendered source)` — where "proven" means the returned
     expression is a bare `Name` bound at `spine_rules` module level to a rung
-    string that is NOT the top rung.
+    string that is NOT the top rung, OR is the single sanctioned `STAGE_RELEASE`
+    return guarded by the `evidence_passed` parameter (see the caller).
 
     FAIL-CLOSED BY CONSTRUCTION, which is the whole point. The old pin asked
     "does the text `return STAGE_RELEASE` appear?" — an allowlist of one
@@ -783,7 +784,7 @@ def _returns_provably_below_release(func):
     `spine_stage` that computes its answer is exactly the change a human must
     look at. Widening this helper is an act, the same as deleting it."""
     module = vars(dg)
-    unproven = []
+    unproven, release = [], []
     for node in ast.walk(func):
         if not isinstance(node, ast.Return):
             continue
@@ -793,24 +794,70 @@ def _returns_provably_below_release(func):
             if isinstance(bound, str) and bound in kit_ladder.STAGE_ORDER:
                 if bound != dg.STAGE_RELEASE:
                     continue  # proven: a named rung, below the top one
+                release.append(node)
+                continue
         unproven.append((node.lineno, ast.unparse(value) if value else "<bare>"))
-    return unproven
+    return unproven, release
+
+
+# The ONE parameter that may produce the top rung (WI-500). Spelled here so the
+# pin below fails on a rename rather than on the rung, and so the sanctioned
+# guard cannot silently become some other expression.
+EVIDENCE_PARAM = "evidence_passed"
+
+
+def _guarded_by_the_evidence_parameter(func, node):
+    """True when `node` is returned only under `if <EVIDENCE_PARAM>:`.
+
+    THE GUARD MUST BE THE BARE PARAMETER, not any truthy expression. A condition
+    computed from the rows — `if all(is_founded(r) for r in srs)` — would be a
+    Status cell claiming the evidence passed by the back door, which is exactly
+    what OI-30 D2 forbids and what this pin exists to make unrepresentable."""
+    for parent in ast.walk(func):
+        if not isinstance(parent, ast.If):
+            continue
+        if not (isinstance(parent.test, ast.Name) and parent.test.id == EVIDENCE_PARAM):
+            continue
+        if any(node is child for child in ast.walk(parent)) and not any(
+            node is child
+            for child in ast.walk(ast.Module(body=parent.orelse, type_ignores=[]))
+        ):
+            return True
+    return False
 
 
 _MISSING = object()
 
 
-def test_the_RELEASE_rung_has_no_PRODUCER_in_the_source():
+def test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT():
     """The companion to the exhaustive pin above, and it catches what enumeration
     cannot: a producer behind a condition no fixture happens to build. The guard
-    is structural — the rung has no producer at all — so the test is structural
-    too.
+    is structural, so the test is structural too.
 
     THIS IS THE OI-30 D2 GUARD ON THE STAGE AXIS. D2 ruled that a Status cell may
     never claim the test evidence passed; on the bar axis that needed a ceiling
     flag (`_RELEASE_CEILING`, which retired with the bar axis and `docs/gate` at
-    WI-498 slice 5), and here it needs nothing, because the value is simply not
-    produced. Deleting this test is how the harness driver lands — an act.
+    WI-498 slice 5).
+
+    RETIRED-AND-REPLACED AT WI-500, DELIBERATELY — the act its predecessor named.
+    That test asserted the rung had NO producer at all, and its own docstring said
+    "deleting this test is how the harness driver lands: an act, not a drift". The
+    driver landed (`scripts/record_test_evidence.py` writes `docs/test/evidence`;
+    `kitlib.stage.evidence_verdict` reads it), so the claim this file pins moves
+    from "nothing produces it" to the one that is now true and is the ONLY one
+    worth pinning: **exactly one thing produces it, and that thing is not a cell.**
+    The three properties below are what the deletion would have thrown away, and
+    each is kept:
+
+      * ARM 1 — the VALUE is still absent from the code, so `return
+        "DevStg-Release"` is still caught (Opus's mutant);
+      * ARM 2 — every OTHER return is still provably a rung below the top, so
+        `return _ladder.STAGE_ORDER[-1]` is still caught (Sol's mutant), and only
+        ONE Release return may exist;
+      * ARM 3 — new, and the reason the retirement is safe: that one return must
+        be guarded by the bare `evidence_passed` PARAMETER. A guard computed from
+        the rows would be a Status cell reaching the top rung by the back door,
+        which is the thing D2 actually forbids.
 
     REBUILT AT THE WI-498 PROGRAM CLOSE, because BOTH reviewers defeated the
     version that shipped, with two DIFFERENT mutants, and both mutants left the
@@ -842,13 +889,32 @@ def test_the_RELEASE_rung_has_no_PRODUCER_in_the_source():
         "evidence-gated and has no producer:\n{}".format(dg.STAGE_RELEASE, code_only)
     )
     # ARM 2 — every return proven, rather than one spelling forbidden.
-    unproven = _returns_provably_below_release(func)
+    unproven, release = _returns_provably_below_release(func)
     assert not unproven, (
         "spine_stage has return(s) that cannot be proven to be a rung below "
-        "{}: {}. The rung is evidence-gated with no producer; a computed "
-        "return is the exact change that needs a human.".format(
-            dg.STAGE_RELEASE, unproven
-        )
+        "{}: {}. The rung is evidence-gated; a computed return is the exact "
+        "change that needs a human.".format(dg.STAGE_RELEASE, unproven)
+    )
+    # ARM 3 — exactly one Release producer, and it is the harness verdict.
+    assert len(release) == 1, (
+        "spine_stage must produce {} from EXACTLY ONE return (found {}) — the "
+        "rung has one input, and a second producer is a second definition of "
+        "'the tests passed'".format(dg.STAGE_RELEASE, len(release))
+    )
+    assert _guarded_by_the_evidence_parameter(func, release[0]), (
+        "the {} return at line {} is not guarded by the bare `{}` parameter. "
+        "Only a HARNESS verdict may reach the top rung: a guard computed from "
+        "the rows is a Status cell claiming the evidence passed, which OI-30 D2 "
+        "forbids.".format(dg.STAGE_RELEASE, release[0].lineno, EVIDENCE_PARAM)
+    )
+    # ...and it really is a PARAMETER of the function, not a module global some
+    # other code could set.
+    args = func.args
+    names = [a.arg for a in args.args + args.posonlyargs + args.kwonlyargs]
+    assert EVIDENCE_PARAM in names, (
+        "`{}` is not a parameter of spine_stage — the one input to the top rung "
+        "must be passed in by the caller that read the evidence, never resolved "
+        "from module state".format(EVIDENCE_PARAM)
     )
 
 

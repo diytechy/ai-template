@@ -61,7 +61,7 @@ What it creates in the destination:
     docs/knowledge/README.md                  <- knowledge/README.template.md
     docs/rubrics/README.md, docs/rubrics/rubric-000.md <- rubrics/*.template.md  (critique rubrics)
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
-    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, check.py, check_flows.py, check_docs.py, check_perf.py,
+    scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
     scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
@@ -1869,6 +1869,13 @@ MAPPING = [
     # that needs the registry carrier and cannot live in the package; it imports
     # this one, so the same must-be-whole rule applies.
     ("scripts/kitlib/stage.py", "scripts/kitlib/stage.py"),
+    # WI-500 added `evidence`: the `docs/test/evidence` record's format and the
+    # declared source surface its claim is bound to. `kitlib/stage.py` above
+    # imports it (the Release rung's one input is its verdict) and
+    # `record_test_evidence.py` below writes through it, so the same
+    # must-be-whole rule applies — a scaffold missing it ImportErrors on the
+    # first stage read, not on some later Release-only path.
+    ("scripts/kitlib/evidence.py", "scripts/kitlib/evidence.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied
@@ -1891,6 +1898,11 @@ MAPPING = [
     # disagree about what a Drafted row is — and `kitlib.stage` for the carrier;
     # both are in this list, and all three must ship together.
     ("scripts/derive_stage.py", "scripts/derive_stage.py"),
+    # The test-evidence PRODUCER (WI-500): the only sanctioned writer of
+    # `docs/test/evidence`, and therefore the only way an adopter can reach
+    # `DevStg-Release`. Shipped for that reason — a rung whose producer stayed in
+    # the kit repo would be a rung no adopter could ever earn.
+    ("scripts/record_test_evidence.py", "scripts/record_test_evidence.py"),
     ("scripts/check.py", "scripts/check.py"),
     ("scripts/check_flows.py", "scripts/check_flows.py"),
     ("scripts/check_docs.py", "scripts/check_docs.py"),

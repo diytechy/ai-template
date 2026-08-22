@@ -196,7 +196,7 @@ two scripts disagreeing about the gate.
 | Value | Predicate | Stage effect | Rule effect |
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
-| `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3, where `spine_stage` returns **DevStg-Release for nothing at all** — a Status cell can never claim the evidence passed, so the top rung waits on a test-evidence carrier. |
+| `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
 | `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-ratification level (`agent_common.human_holds`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
@@ -493,7 +493,12 @@ differ. `per-phase` / `per-phase-live` break both out per phase, with
 
 `fingerprint` is a SHA-256 over the LF-normalized content of the declared
 derivation inputs (`DECLARED_INPUTS` in
-[`scripts/kitlib/stage.py`](../project-trajectory/scripts/kitlib/stage.py)). A reader recomputes it
+[`scripts/kitlib/stage.py`](../project-trajectory/scripts/kitlib/stage.py)) — the
+six spine registries and, since WI-500, `docs/test/evidence`. **When that record
+is PRESENT the fold also covers the declared `[paths]` source and test trees**,
+because otherwise a recorded `DevStg-Release` would ride an unchanged evidence
+file over an edited tree with the fingerprint still matching; a repo with no
+record pays none of that walk. A reader recomputes it
 and trusts the recorded values ONLY on a match, deriving fresh in memory
 otherwise — so no **selection or ratification** consumer can read a stale stage,
 on any lane. **The display surfaces are the named exception**, by design:

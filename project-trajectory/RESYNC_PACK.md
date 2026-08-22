@@ -3110,6 +3110,55 @@ nothing above disarms the rung — write one real row and the rung caps again.
 **A repo that already filled either registry is unaffected**, and the kit's own
 repo derived the identical rung before and after.
 
+### `DevStg-Release` becomes REACHABLE — the test-evidence carrier [since c3c9b36a]
+
+*(Anchored at the preceding commit: an entry cannot know its own SHA.)*
+
+**Read this one if you want the top rung. Nothing here changes any repo that
+does not: with no evidence record present, the derivation, the fingerprint and
+the cost are all exactly what they were.**
+
+The previous entry above left `DevStg-Release` **returned by nothing**,
+deliberately — leaving `DevStg-Impl` means "every declared test case PASSES",
+and no Status cell may ever claim that. The producer has now landed, so the rung
+has exactly one input and it is a harness verdict.
+
+**Two new kit files**, both copied by `bootstrap.py` and both needed as a set:
+
+| file | what it is |
+|---|---|
+| `scripts/kitlib/evidence.py` | the `docs/test/evidence` record's format and the declared source surface its claim binds to |
+| `scripts/record_test_evidence.py` | the **only** sanctioned producer of that record |
+
+**How you earn the rung:**
+
+```
+python scripts/record_test_evidence.py --tier full   # runs check.py; writes only on exit 0
+python scripts/derive_stage.py                       # the rung follows
+git add docs/test/evidence docs/stage && git commit  # a reviewable ratifying act
+```
+
+**The record is bound BY VALUE to the tree it was measured on.** Its `binding`
+field is a SHA-256 over your spine registries plus the declared `[paths] src`
+and `tests` trees (and `docs/stack.ini` itself, which declares the bar). Move a
+byte on either side and the record stops holding, the rung drops back to
+`DevStg-Impl`, and `derive_stage --check` reds until you re-run the suite or
+delete the record. **Never edit `binding` to clear a red** — that is the one
+thing this mechanism exists to make visible. A `smoke` tier is refused by the
+writer and by the reader: a declared subset cannot carry a whole-suite claim.
+
+**What you must do if you do NOT want the rung:** nothing. The evidence file is a
+declared stage input, so `docs/stage`'s `fingerprint` changes shape once — re-run
+`python scripts/derive_stage.py` and commit the result at your next re-sync, as
+usual. Your derived rung will not move.
+
+**Two things this does not do**, stated so you do not expect them: it is not a
+signature (a determined author can compute a valid binding by hand — it defeats a
+green that outlived its tree, not forgery), and hosted CI does **not** write the
+record. A runner committing back would need write credentials and a bot identity;
+your CI needs no new step, because a stale record already reds the freshness
+check wherever `derive_stage --check` runs.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

@@ -175,8 +175,14 @@ yet — a fold value, never a rung a repo sits at (§4):
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
-  from test evidence, and until that carrier lands `spine_stage` returns the top
-  rung for nothing at all. An LLR/TC caps only when `Drafted`; once present its
+  from test evidence. The carrier landed at WI-500 — `record_test_evidence.py`
+  runs the declared bar and writes `docs/test/evidence` only on a green, and that
+  record's verdict is `spine_stage`'s ONE input to the top rung. It is bound by
+  VALUE to the tree measured (the spine registries plus the declared source and
+  test trees), so a byte moved on either side drops the rung back to
+  `DevStg-Impl` and reds `derive_stage --check`; a partial (`smoke`) tier is
+  refused at the writer and again at the reader. An LLR/TC caps only when
+  `Drafted`; once present its
   own Status doesn't gate — the SR's does.
 - **SN** — maturity is the **same field**: `status = "Drafted"` on a
   `[need.SN-###]` table in `stakeholder-needs.toml` is DevStg-Below, anything

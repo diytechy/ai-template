@@ -142,7 +142,7 @@ def _settled_off_spine(rows, table):
     ]
 
 
-def _stage_map(spine, settled):
+def _stage_map(spine, settled, evidence_passed=False):
     """`(global-stage, {phase: stage})` over the live rows or the settled subset.
 
     A phase whose rows are ALL drafts disappears from the settled subset and is
@@ -171,6 +171,12 @@ def _stage_map(spine, settled):
         cmps=cmps,
         have_bifs=spine["have_bifs"],
         have_cmps=spine["have_cmps"],
+        # THE TEST-EVIDENCE VERDICT TRAVELS WITH THE FRAME (WI-500), for the same
+        # reason the need/boundary/component rows do: it is a REPO-WIDE fact, and
+        # a per-phase call must see the same one the global call did. A phase
+        # whose own rows are all settled reads Release exactly when the repo's
+        # suite is green on this tree — never on its own say-so.
+        evidence_passed=evidence_passed,
     )
     overall = spine_rules.spine_stage(srs, llrs, tcs, **frame)
     groups = _phase_groups(srs, llrs, tcs)
@@ -191,8 +197,13 @@ def derive(root):
     calls on a fingerprint miss, and the value `--check` compares."""
     docs = Path(root) / "docs"
     spine = spine_rules.load_spine(docs)
-    live, live_per_phase = _stage_map(spine, settled=False)
-    _, settled_per_phase = _stage_map(spine, settled=True)
+    # THE ONE READ OF THE EVIDENCE CARRIER (WI-500). It is a property of the TREE,
+    # not of the rows, so it is established once here and handed to both folds —
+    # the live reading and the settled one answer the same question about the same
+    # suite, and a mid-derivation change cannot make them disagree.
+    passed = kitstage.evidence_passed(root)
+    live, live_per_phase = _stage_map(spine, settled=False, evidence_passed=passed)
+    _, settled_per_phase = _stage_map(spine, settled=True, evidence_passed=passed)
 
     effective, floored = kitstage.effective_stage(settled_per_phase)
     earned = [v for v in settled_per_phase.values() if v != kitstage.BELOW]
@@ -321,7 +332,15 @@ def _by_id(spine):
 
 def _effective(spine):
     """The headline value for a spine dict — the settled, per-phase, floored fold,
-    i.e. exactly what `derive()` puts in the `stage` field."""
+    i.e. exactly what `derive()` puts in the `stage` field.
+
+    THE TEST-EVIDENCE VERDICT IS DELIBERATELY LEFT AT ITS DEFAULT (False) HERE,
+    on BOTH sides of the phase rule's before/after comparison (WI-500). The rule
+    polices SPINE AUTHORING — an edit that lowers the reading must surface as a
+    phase change — and evidence is not an authored row: a suite that went red, or
+    a record that went stale, would otherwise read as an un-phased authoring
+    decrease and demand a phase tag nobody can supply. Symmetric omission keeps
+    the comparison about the rows, which is what the rule is for."""
     _live, settled_per_phase = _stage_map(spine, settled=True)
     return kitstage.effective_stage(settled_per_phase)[0]
 
