@@ -1326,10 +1326,12 @@ Gates, real output on this box (the recovery sitting, on the landed tree):
   604.32 s** — all three in `tests/test_pre_commit_hook.py`, a `SLOW_MODULES`
   member the commit bar never runs, which is how two sittings ended claiming
   LANDED over them. Same 2,830 collected both times; the three are now green
-  rather than gone. (Measured on the pre-commit tree; the doc edits that followed
-  it are the banked SR-148 finding and two prose corrections, no code — a
-  committed-tree reading is pasted in the follow-up commit, as slices 2 and 4
-  each did.)
+  rather than gone. Re-run on the COMMITTED tree afterwards (the reading above
+  predates the banked SR-148 finding and two prose corrections — no code):
+  **2830 passed, 14 skipped in 615.12 s**. The 486.84 / 615.12 s spread on one
+  box across two runs of an identical suite is worth leaving in beside the smoke
+  numbers: it is the same one-machine-is-one-data-point caveat, at the tier where
+  the program has been reporting wall clocks all along.
 - `python -m pytest -q -n auto -m smoke` → **1365 passed, 5 skipped**; two
   readings on the final tree, **74.98 / 60.28 s**, and the SPREAD is the honest
   figure rather than the better of them.
