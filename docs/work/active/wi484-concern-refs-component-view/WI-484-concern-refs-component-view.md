@@ -12,25 +12,41 @@ priority = 2
 
 ## Context
 
-**SLICE 1 LANDED (2026-08-20) — the row is ACTIVE, not complete.** Phases 0 and
-1 shipped whole; phase 2 is partially done; phases 3, 4 and 5 are untouched.
-What is still owed, in the order it should be taken:
+**SLICES 1 AND 2 LANDED (2026-08-20, 2026-08-22) — the row is ACTIVE, not
+complete.** Phases 0 and 1 shipped whole; phase 2's backfill is DONE and its
+writer is still owed; phases 3, 4 and 5 are untouched. What is still owed, in
+the order it should be taken:
 
-1. **Phase 2's judgement backfill — the expensive half, and the brief always
-   said so.** Slice 1 migrated only the population that states its own
-   derivation in the ruled label form: **17 SR rows** carrying
-   `Hat-derived (hat.X)`, lifted into `hat_refs` with the prose left in place.
-   **56 SRs and 164 of 165 LLRs record nothing** (`LLR-183` is the one design
-   row filled, by its own author). **Do not let a regex finish this.** Measured
-   at the slice: a `hat.` regex over `rationale` matches **19** rows, and two of
-   the extra two are wrong in opposite ways — `SR-015` names `hat.PERFORMANCE`
-   in order to REFUSE it as a basis, and `SR-040` carries an attribution left
-   struck under OI-38. A syntax-only backfill would have written two false
-   attributions into a cell whose whole purpose is being trustworthy.
-2. **Phase 2's writer.** Nothing composes the cell yet: `hats.applicable` +
-   `plan_briefs.hat_surface` still only RENDER the questions into a brief. The
-   decomposition session writing the names it was just handed is the cheap half
-   and is not built.
+1. ~~**Phase 2's judgement backfill.**~~ **DONE, slice 2 (2026-08-22)** — record:
+   `docs/log.d/2026-08-22-wi484-hatrefs-backfill.md`. **55 SR cells and 8 LLR
+   own refs** written by per-row judgement, against one stated rule (attribute a
+   hat only where THAT hat's own `listens_for` names a failure the row prevents
+   — not "which lens could be held up to it", which with nine `always` hats
+   fills every cell and means nothing). `hat_refs` now stands on 72 of 74 SRs
+   and 9 of 171 LLRs; coverage moved **184 → 4 of 245** uncovered by effective
+   set, and unattributed hats **5 → 1**. The two known poison rows were read
+   individually and BOTH STAY EMPTY: `SR-015`'s refusal of `hat.PERFORMANCE`
+   is argued and correct, and no other hat bears once the checker splits to
+   `SR-157`; `SR-040`'s struck lenses are not resurrected because the row itself
+   records that their subject is gone. The four remaining uncovered rows are
+   exactly those two plus their sole children (`LLR-015`, `LLR-037`), which is
+   the derivation reporting correctly. `SAFETY` is the one hat nothing is
+   attributable to — evidence for the open owner call in `hats.toml`'s header,
+   not a hole. 160 of the 162 LLRs with no own cell are covered by INHERITANCE
+   and need none.
+2. **Phase 2's writer — STILL OWED, and slice 2 named its blocker.** Nothing
+   composes the cell yet: `hats.applicable` + `plan_briefs.hat_surface` still
+   only RENDER the questions into a brief. The blocker is a mismatch, not a size
+   judgement: `{{HAT_QUESTIONS}}` has exactly ONE consumer,
+   `prompts/dual-plan-planner.template.md`, whose output contract is a Plan-WI
+   table (`Plan-WI | Title | Covers | Interfaces | Predecessors`) directing every
+   perspective's answer into `## Notes` — **that brief mints no spine row at
+   all**, so a write instruction appended to `hats.brief_block` would ship every
+   adopter an instruction its own output contract makes unfollowable. The session
+   that mints SR/LLR rows reads the `spine-authoring` skill instead, a different
+   surface with a three-way per-agent fan-out under `--check-agents`. Widening
+   the Plan-WI output contract vs stating the obligation at the spine-authoring
+   tier is the decision this item owes.
 3. **Phase 2's duplication.** The 17 migrated rows now state the attribution
    TWICE — once in `hat_refs`, once in the `Rationale` prose it came from.
    Deleting the prose touches a **ratified** cell on Approved rows, so it is
@@ -56,9 +72,14 @@ What is still owed, in the order it should be taken:
 6. **Phase 5 — the amend-without-flip guard.** Untouched. The mechanism the
    brief names is in place and ready (`split_changed_cells` /
    `spine_cell_class`), and `Hat-Refs` is now classified `traced` at both tiers,
-   which is the precondition. Note the interaction to resolve when it is built:
-   the guard wants a row whose normative cells moved while `hat_refs` did not to
-   be a finding, but 220 of 237 rows have no `hat_refs` to move.
+   which is the precondition. The interaction slice 1 flagged is now GONE — the
+   backfill leaves only 4 of 245 rows with no effective set, so the guard has
+   something to compare on nearly every row. Slice 2 replaced it with a sharper
+   one, measured: `backlog_staleness_findings` blames the SR registry by LINE, so
+   writing an INFORMATIVE cell re-dated five open WIs' cited rows and raised
+   seven warns. A `blame` line time cannot tell a normative cell from a traced
+   one; the guard must key off `split_changed_cells`' class split, which is the
+   whole reason `Hat-Refs` was classified rather than left residual.
 
 **What phase 0 RULED, since it was delegated to the execution:** the field is
 `hat_refs` / column `Hat-Refs` — the owner's vocabulary (hats, not concerns)

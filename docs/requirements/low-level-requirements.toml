@@ -221,6 +221,7 @@ phase = 1
 
 [design.LLR-021]
 sr_refs = ["SR-019", "SR-020"]
+hat_refs = ["CROSS-PLATFORM"]
 title = "Hook python probe"
 module = "project-trajectory/hooks/pre-push"
 code_symbol = "python3 probe"
@@ -775,6 +776,7 @@ phase = 1
 
 [design.LLR-079]
 sr_refs = ["SR-070"]
+hat_refs = ["UX-ENGINEER"]
 title = "Deterministic responsive dashboard freshness"
 module = "project-trajectory/scripts/gen_trajectory.py;project-trajectory/scripts/traj_parse.py"
 code_symbol = "main/_asof/ASOF_RE"
@@ -874,6 +876,7 @@ phase = 2
 
 [design.LLR-088]
 sr_refs = ["SR-169"]
+hat_refs = ["ACCESSIBILITY"]
 title = "One-layer hierarchy navigation"
 module = "project-trajectory/scripts/traj_render.py"
 code_symbol = "DRILL_SCRIPT"
@@ -1012,6 +1015,7 @@ phase = 3
 
 [design.LLR-105]
 sr_refs = ["SR-054"]
+hat_refs = ["ACCESSIBILITY"]
 title = "Interactive-control contrast in both themes (T5 core)"
 module = "project-trajectory/scripts/traj_render.py"
 code_symbol = "_ring_ink/_ring_style/_cedge_marker"
@@ -1167,6 +1171,7 @@ phase = 3
 
 [design.LLR-118]
 sr_refs = ["SR-049"]
+hat_refs = ["UX-DESIGNER"]
 title = "Generated owner decision surface (registry + attestation depth)"
 module = "project-trajectory/scripts/gen_open_items.py"
 code_symbol = "render/_attestation_cards/word_diff/mask_local"
@@ -1623,6 +1628,7 @@ phase = 5
 
 [design.LLR-161]
 sr_refs = ["SR-144"]
+hat_refs = ["INTEGRITY-RECOVERABILITY"]
 title = "The close ritual and the disposition it owes"
 module = "project-trajectory/scripts/handback.py"
 code_symbol = "close_partial/render_report/report_path/_restore/_split_lines"
@@ -1659,6 +1665,7 @@ phase = 5
 
 [design.LLR-164]
 sr_refs = ["SR-146"]
+hat_refs = ["CROSS-PLATFORM"]
 title = "The generated prompt catalogue and its freshness gate"
 module = "project-trajectory/scripts/gen_prompt_catalog.py"
 code_symbol = "render/main"
@@ -1813,6 +1820,7 @@ phase = 5
 
 [design.LLR-177]
 sr_refs = ["SR-176"]
+hat_refs = ["SECURITY"]
 title = "Transcript redaction: matched values never land in tracked history"
 module = "project-trajectory/scripts/agent_common.py"
 code_symbol = "redact_secrets/write_session_log/_SECRET_RES"
