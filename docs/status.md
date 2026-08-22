@@ -46,8 +46,10 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   FULLY APPROVED (2026-08-22, the owner's written act; drafts ZERO; the
   close's five false blessed cells re-authored and re-seeded under a named
   `--approves` warrant, the correction recorded beside the original
-  sentence) — the ladder rests at Arch on the four `Drafted` CMP rows
-  alone, an off-spine approval the owner may take separately. **ALL owner
+  sentence). The component registry is APPROVED too (2026-08-22, the
+  owner's ruling after reading the four rows in full) — EVERY registry is
+  now fully approved, and the ladder reads `DevStg-LLReqs`: what holds it
+  there is the nine undecomposed SRs, the declared orphans debt. **ALL owner
   briefs are RULED** (OI-55..59 on 2026-08-22; execution rows queued) —
   the open-items surface carries no pending row — and the grind over the
   queued execution rows runs in series (owner directive 2026-08-22), the
