@@ -868,11 +868,28 @@ Seed the initial snapshot file for the last approved folder.
 
 ---After approval lands -----
 
+Move complete work items to archive (split them) so that work item history does not polute history
+
 Should generated items have a header that emphasizes that they should not be referenced by LLM agents since they are generated artifacts and could be stale?
 
 Should all archive documents have the same header?
 
 I want to make sure LLM agents do not churn on documentation that could be very old.
 
+Open-items should have method to "check" or select box / option.  Then how can the agent-resume read this new state back to close open options?  It should also have a surface where the user can write comments.
+
+Need to review prose templates handed to adjudicator vs working session. Need to verify if session / adjudicator can survive through work items / resume from standing and automatically restart when session context exceeds 66&
+
+Note some work items are very small, how can WI grouping be encouraged?
+
+update claude.md or agents.md to permit changes that minimize the entire code base, instead of making two duplicate code configurations where 0->B, and 0->D, consolodate where possible so that 0->A->B and 0->A->D.
+
+If the template is a bundle, doesn't bootstrap.py need to ship with the bundle even if it just run for the first time a repo is initialized?
+
+Update claude.md, agents.md, process.md to focus on consolodation of behavior where applicable.  If there are 3 outputs that have outputs A, B, and C, where B is just an overlap of A and C, how can those be modified to better minimize overlap?  Right now I think there are prose in this repository to minimized changes, but that emphasizes changes within the current scope, and that scope may be quite limitteed.  The goal should be to minimize the size of the code (individual calls?, lines don't matter but I don't want to duplicate behavior where it's not necessary.)
+
+Note: This really points to an architectural remapping excersize, what does research say about how to formulate light arcitecture with LLMs with the intent of serving outputs while trying to minimize the internal signal overlap and duplication?
+
 
 ***********************************
+N
