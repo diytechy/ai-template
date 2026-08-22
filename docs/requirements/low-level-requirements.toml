@@ -2009,3 +2009,27 @@ test_refs = "TC-187"
 status = "Approved"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-193]
+sr_refs = ["SR-160"]
+title = "Root launcher interpreter selection: the loop-resume half's probe-then-floor, the front door's own robustness"
+module = "agent-resume.sh"
+code_symbol = "pick_py"
+detail = """pick_py probes each candidate interpreter twice, because 'found' and 'usable' are different questions: first that it RUNS at all (a Windows python3 on PATH is often the Microsoft-Store alias stub, which exists and executes nothing), then that its sys.version_info clears the 3.11 floor every kit script's tomllib import needs. Both .venv layouts are tried first (bin/ POSIX, Scripts/ a Windows-created venv), then python3, then python on PATH, so the pinned toolchain a contributor built wins over whatever ambient interpreter PATH happens to resolve. A refusal names every rejected candidate and why (PYWHY), never a bare 'not found', so the front door reports clearly instead of dying deep inside the engine at an obscure import. agent-resume.cmd's :pickpy label runs the identical two-stage probe for cmd.exe (.venv\\Scripts\\python.exe, .venv\\bin\\python, then python, then the py launcher), and agent-resume.command carries no probe of its own - its whole body delegates (exec ./agent-resume.sh) - so the policy reaches it by inheritance, not by a second copy. Together the three root files realize, on Windows/macOS/Linux alike, the loop-resume half of SN-034's two universal contributor actions as one action from the repository's front door. NOT DISCHARGED, stated rather than left to be discovered: SN-034 names TWO universal actions, and only this one - resuming the loop - has a root launcher today. The environment-preparation half's scripts (onboard.sh, dev-setup.sh) materialize under scripts/, not at the repository root SR-160's acceptance names (bootstrap.py's MAPPING; README.md's own 'Still owed' ledger states the gap in this repo's delivery). This row cites what exists rather than a module that does not, and the residual is recorded as a finding, not fabricated as a citation."""
+rationale = """Realizes the acceptance clause 'does not crash cryptically' the parent states for a launcher with no working interpreter: an ambient below-floor python can boot silently past a working project .venv and die deep inside the engine at an obscure import, a failure mode invisible to any check that only reads launcher TEXT rather than running one. Two probes are the whole fix, because a launcher that only asks 'does this run' cannot distinguish a working-but-old interpreter from a working one; asking sys.version_info makes the floor an observable rather than an assumption. The residual is left unminted rather than described in the abstract, because SR-160's evidence discipline is that a cited module and symbol must exist to be read - inventing a plausible-sounding root onboarding launcher would be the exact defect the discipline exists to prevent, and the gap is real, load-bearing, and already named in this repo's own README."""
+test_refs = "(see TC-188)"
+status = "Drafted"
+component = "CMP-009"
+phase = 5
+
+[design.LLR-194]
+sr_refs = ["SR-164"]
+title = "The scope obligation's seam: the schema tier's required-field and closed-vocabulary check, not yet extended to SN"
+module = "project-trajectory/scripts/trace.py"
+code_symbol = "schema_findings/REQUIRED_FIELDS/ENUM_FIELDS"
+detail = """schema_findings already walks the real (non-placeholder) rows of one labelled table and reports the exact two failure classes SR-164 asks of scope: a column listed in REQUIRED_FIELDS[label] left empty names the row and the column, and a value present but outside ENUM_FIELDS[label]'s closed set names the row, the offending value and the allowed set. This is the mechanized shape SN-039's own acceptance text designates as scope's future home - 'the scope field enters the registry schema in the scheduled schema batch' - rather than a bespoke one-off column check. NOT DISCHARGED, stated rather than left to be discovered: SN carries no entry in REQUIRED_FIELDS or ENUM_FIELDS today, no dict, checker branch, or test anywhere in the shipped scripts names 'scope', and the whole-registry schema tier does not run over the needs registry at all. This row records the seam the scheduled batch is to ride, not machinery that discharges the obligation; a module or symbol implementing scope-checking does not exist to cite."""
+rationale = """Citing the general required-field/closed-vocabulary mechanism rather than a fabricated scope-specific one is not a paraphrase of the parent - it identifies WHERE the scheduled schema-batch work lands and WHY it is cheap: the exact checking shape SR-164 wants already exists, generically, proven over six other tables (SR, LLR, TC, IF, CMP and the depth-0 frame's three), so adding scope is one REQUIRED_FIELDS/ENUM_FIELDS entry and one registry column, not a new checker. Recording that now is what keeps this SR from reading need-less on the day the column finally lands, and naming the seam honestly - rather than inventing a scope_findings function that does not exist - is what SR-164's own evidence discipline demands."""
+test_refs = "(see TC-189)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5
