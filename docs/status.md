@@ -123,18 +123,18 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   rather than amendments, deliberately, so that no `Approved` ratified cell was
   rewritten on a session's own authority; `IF-089` moved its `this_project`
   endpoint with the derivation and stays a policed CMP-008 to CMP-006 seam.
-- **The `wi484-concern-refs-component-view` lane is OPEN with slice 1 landed**
-  (2026-08-20): the perspective record is a **cell** now, not a prose label —
-  `Hat-Refs` on the SR and LLR tiers, values resolving against the hats roster,
-  an undeclared name a hard finding and coverage warn-only forever. An LLR's
-  effective set is DERIVED from its parents, never copied, so re-ruling one
-  requirement corrects no child cell. `PROCESS.md` and the `spine-authoring`
-  skill no longer teach the retired prose label, and the change ships to
-  adopters as a `RESYNC_PACK.md` entry. The row's spec Context lists the six
-  items still owed; the next is **phase 2's judgement backfill** — 56 SRs and
-  164 LLRs record nothing, and the slice's own measurement is why a regex must
-  not finish it (a `hat.` sweep matches two rows that a human must exclude: one
-  names a hat to REFUSE it, one carries a struck attribution). **Phase 4 is
+- **The `wi484-concern-refs-component-view` lane is OPEN with slice 2 landed**
+  (2026-08-22): **phase 2's judgement backfill is DONE** — 55 SRs filled under
+  one stated rule (a hat is attributed only where its own `listens_for` names a
+  failure the row prevents), 8 LLRs carry own refs beyond their parents, and
+  effective-set coverage moved 184 → 4 uncovered of 245 (the 4 being exactly
+  the two calibration rows read and left empty — `SR-015` refuses its hat,
+  `SR-040`'s attribution stays struck — plus their sole children). The row's
+  spec Context lists what is still owed; the next is **phase 3, the generated
+  component view** (`gen_components.py` + `components.derived.toml` + freshness
+  wiring, `detail_doc` retires), and phase 2's writer stays owed on a NAMED
+  design fork recorded in the spec (widen the Plan-WI output contract vs state
+  the rule at the spine-authoring tier). **Phase 4 is
   blocked on a mechanism, not a decision:** `hats.py` refuses any unknown roster
   key and has no optional-key concept, so `knowledge` cannot be added to
   `hats.toml` without first minting one — and that file is declared owner text.
