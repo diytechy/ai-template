@@ -222,8 +222,14 @@ def test_process_tab_renders_three_panels_from_live_data(tmp_path):
     # handback outcome and the surface arm, asserted by the station tests).
     assert "The resume loop" not in text
     assert "Page the human" not in text
-    # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done)
-    assert "commit bar" in text and "gate bar" in text
+    # panel 3 states the two bars and joins the WI registry (4 WIs, 1 done).
+    # "rung bar", not "gate bar": the dashboard is the kit's highest-traffic
+    # surface and was still teaching the deleted axis and the deprecated
+    # `--gate` spelling (ROUND-OPUS 9) — invisible to check_vocab, which
+    # refuses retired TAGS and exempts generated files, so this assertion was
+    # the only thing holding the string and it was holding the wrong one.
+    assert "commit bar" in text and "rung bar" in text
+    assert "gate bar" not in text, "the deleted bar axis is back on the dashboard"
     assert "4 work items · 1 done." in text
     # still fully offline with the new tab present
     low = text.lower()

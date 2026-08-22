@@ -31,8 +31,14 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   [plans/2026-08-21-stage-unification-plan.md](plans/2026-08-21-stage-unification-plan.md)
   (v1 FINAL, the owner's four answers in its §6): `docs/gate` and the whole bar
   axis are deleted, `docs/stage` is the one derived value, and the ratification
-  dial takes a rung. All six slices are now LANDED and green. The lane row stays
-  OPEN for its CLOSE. Three of its four owed items are DONE (2026-08-21, the
+  dial takes a rung. All six slices are now LANDED and green, and **the
+  program close's adversarial round is TAKEN AND ITERATED** (2026-08-22,
+  internal Opus + cross-family Sol): all 17 worklist items dispositioned, the
+  three trust-bearing fixes proven against the reviewers' own executed attacks
+  — including both Release-producer mutants, which the shipped pins PASSED and
+  the rebuilt ones fail. Resume state:
+  [reviews/2026-08-22-wi498-program-close/RESUME.md](reviews/2026-08-22-wi498-program-close/RESUME.md).
+  The lane row stays OPEN for its CLOSE. Three of its four owed items are DONE (2026-08-21, the
   owner's answers): the superseded product-floor row is closed complete with
   the supersession recorded; `docs/process.toml` is dropped from
   `DECLARED_INPUTS` (dials govern who may ratify, not what stage derives —
@@ -42,7 +48,13 @@ homes: [log.md](log.md) (sessions, verdicts, **Decisions**),
   cross-check row are queued in the frontier below, sanctioned by the
   `DevStg-Needs` dial). The spine is FULLY APPROVED (2026-08-22, the
   owner's written act: 15 drafts approved, 4 amendments blessed, baseline
-  re-seeded, drafts ZERO) — the ladder now rests at Arch on the four
+  re-seeded, drafts ZERO) — **but the four blessed amendments were NOT the
+  mechanical re-point the act's record called them**: three carried prose
+  cells, and the close found five ratified cells left asserting a CLI, a regen
+  step and a carrier that do not exist. They are re-authored against the live
+  code and the baseline re-seeded under a named `--approves` warrant; the
+  approval fragment carries the correction beside its original sentence. The
+  ladder now rests at Arch on the four
   `Drafted` CMP rows alone, an off-spine approval the owner may take
   separately. Five fresh owner briefs sit on the open-items surface
   (2026-08-22, from the owner's own concern list, each with a

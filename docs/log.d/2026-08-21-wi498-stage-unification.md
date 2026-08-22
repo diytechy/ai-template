@@ -1408,6 +1408,175 @@ new decision a session is owed; the WI-473 disposition and the Approved spine
 cells are the program close's and are itemized in the lane spec; and the smoke
 wall clock remains OI-52's.
 
+### The program-close iterate (opus worker)
+
+The adversarial round's consolidated worklist (W-1..W-17,
+`docs/reviews/2026-08-22-wi498-program-close/`), executed in one pass. Two
+independent reviewers ran the range `f23e6002..d3f119ea`: ROUND-SOL-RAW
+(1 CRITICAL / 9 MAJOR / 1 MINOR) and ROUND-OPUS (0 CRITICAL / 7 MAJOR /
+7 MINOR, mutation-verified). **Findings are claims**: each was confirmed
+against the tree before anything moved, and the one that refuted on
+inspection is recorded REFUTED rather than "fixed".
+
+**Dispositions.**
+
+| # | Finding | Disposition |
+| --- | --- | --- |
+| W-1 | A stale committed `docs/stage` survives a commit | **FIXED** `3c030ef7` |
+| W-2 | Both Release-unreachability pins are evadable | **FIXED** `b34c15fe` |
+| W-3 | Five blessed prose cells are FALSE; the record called them mechanical | **FIXED** `092cf56c` |
+| W-4 | The `DECLARED_INPUTS` ruling never reached the adopter recipe | **FIXED** `78447926` |
+| W-5 | The shipped scaffold parks at `DevStg-Boundary` forever | **FIXED** `e3954548` (KICKOFF half **REFUTED**) |
+| W-6 | A component-only multi-rung drop bypasses the phase rule | **FIXED** `8fa694cc` |
+| W-7 | The dual-carrier fingerprint hole | **FIXED** `8885a30a` |
+| W-8 | Nothing guards the INVERSE input defect | **FIXED** `8885a30a` |
+| W-9 | The stale-row census undercounts | **FIXED** `3ecde26c` — census rebuilt, WI-501 re-scoped |
+| W-10 | The reader-contract sentence overclaims | **FIXED** `3c27291c` |
+| W-11 | Non-reproducible signed totals | **FIXED** `3c27291c` |
+| W-12 | Two disagreeing translations of the retired tags | **FIXED** `3c27291c` |
+| W-13 | The archive edits | **ADJUDICATED** — Sol's restore DECLINED, verdict re-verified mechanically |
+| W-14 | The deleted axis still taught on live surfaces | **FIXED** `3c27291c` |
+| W-15 | `Implements: SR-139` on the phase rule is a mis-trace | **FIXED** `3ecde26c` |
+| W-16 | The staleness message states the wrong cause | **FIXED** `3c27291c` |
+| W-17 | The mutable dated ratify brief | **QUEUED as WI-503** (assessed not small) |
+
+#### The Group-1 proofs, driven
+
+Each trust-bearing fix was proven against the reviews' own executed attack, by
+checking the pre-fix file out to a scratch copy and running the new test against
+it.
+
+**W-1** — Sol's scenario reproduced exactly before the fix: stage a registry
+edit, run `derive_stage.py`, skip the `git add`, and
+`check.py --run-steps staged-divergence` printed `WARN` and **exited 0** with
+`docs/stage` named. The commit would carry the edited registry beside the OLD
+derived stage. `test_the_PLAN_STEP_refuses_a_regenerated_but_unstaged_derived_stage`
+FAILS against `HEAD`'s `check.py` (`assert 0 != 0`) and passes with the fix;
+its companion proves the refusal is a decision, not a step that reds on every
+tree. Driven through `--run-steps`, never the bare flag: the defect was in the
+WIRING, and a test of the flag alone stayed green through the whole defect —
+the old positive case asserted the promotion was *reachable*, never *taken*.
+
+**W-2** — the full matrix, both reviewers' mutants injected into `spine_stage`
+one at a time and removed:
+
+| | Opus's mutant (`return "DevStg-Release"`) | Sol's mutant (`return _ladder.STAGE_ORDER[-1]` behind an out-of-enum `EvidencePassed`) | clean tree |
+| --- | --- | --- | --- |
+| the pins as shipped | **PASS** (6 passed) | **PASS** (6 passed) | pass |
+| the pins now | **FAIL** | **FAIL** (names `(100, '_ladder.STAGE_ORDER[-1]')`) | pass |
+
+Opus's mutant also left `test_stage_ladder` + `test_kitlib_ladder` +
+`test_spine_rules` + `test_derive_stage` green at **50 passed**, which is what
+made it a live reachable producer behind a guard set that could not see it.
+
+**W-3** — the re-authoring rode the honest path rather than a hand edit, and
+the machinery supplied the confirmation. `intake.py snapshot` **REFUSED** the
+bare refresh and named exactly five cells — LLR-124 `Detail`, LLR-142
+`Rationale`, SR-140 `Rationale`, TC-050 `Expected`, TC-141 `Method` — no more
+and no fewer, which is the independent evidence that only those five moved. The
+re-seed then named its warrant (`--approves`, recorded in the snapshot's new
+`README.md` stamp), and `trace.py --ratify modified` regenerated to *"No spine
+row differs from its `docs/archive/last_approved` copy"*. True semantics were
+read out of the live code first: `REGEN_STEPS` is `okf, derived-stage,
+trajectory, status, open-items`; `spine_rules` has no CLI, no `--check`, no
+`--print`, no basis line; the meta's phase reads **5**, not 4. Both records
+that disagreed with the diff are corrected in place — the slice-5 restraint
+bullet above, and the approval fragment's "mechanical" sentence.
+
+#### What the census actually found (W-9)
+
+Rebuilt **by value** across all eight carriers rather than from row names:
+**22 rows carrying 37 dirty cells, 18 of them `Approved`** — against a banked
+count of "six, plus SR-148 as a seventh". Neither reviewer's list was complete
+either. Nine rows both missed: **SR-049** (four dirty cells), SN-029, LLR-147,
+LLR-155, LLR-156, LLR-186, IF-040, PB-001, REL-002 — plus LLR-142's `detail`
+and TC-050's `method`, still-dirty siblings of two cells repaired here. The
+blind spot repeated in a **fifth** shape: this census keyed on the SR/LLR tiers,
+so TC, IF, PB, CMP and EXT were never walked. WI-501 now carries the whole
+population; PB-004 and IF-081 were repaired inline.
+
+#### Observations recorded, not acted on
+
+- **A one-commit lag is structural at any approval commit.**
+  `docs/open-items.html` renders "the reviewed commit that last moved an
+  approval", derived from git — so the value does not exist until that commit
+  does, and the artifact is necessarily stale for exactly one commit after a
+  re-seed (`e0644327` is that re-stamp). Not introduced here; closing it needs
+  a two-phase commit or a stamp that names something else.
+- **W-1's promotion has a real workflow cost, and this session paid it.** With
+  the step strict, no commit can be made while ANY declared generated artifact
+  is dirty-and-unstaged, so a partial commit must stage or revert it. That
+  forced the commit ORDER here (the registry work and its regenerated artifacts
+  had to land together). OI-31's ruling anticipated exactly this trade for
+  option (a); it applies to the promoted (b) as well, and the RESYNC entry says
+  so plainly.
+- **The banked "latent collection-order imports" finding now has a concrete
+  repro.** `tests/test_derive_stage.py` does `from kitlib import ...` at module
+  scope but only gets `scripts/` on `sys.path` via `conftest.load_script`, which
+  runs after. Collected in a set where no earlier module seeded the path, it
+  raises `ModuleNotFoundError: No module named 'kitlib'`. Pre-existing and
+  unrelated to this worklist; it is no longer "latent".
+- **`check_vocab`'s remediation text carries the same by-spelling trap W-12
+  fixed** — it suggests `G2 → DevStg-Tests`. Out of W-12's scope (which named
+  `RETIRED_STAGE_ALIASES`), recorded so it is not rediscovered as new.
+- **Two "gate bar" strings survive in `PROJECT_STATE.html`** after W-14 (4 → 2).
+  Both are an open-item BRIEF's own option prose, which is a record and
+  deliberately out of scope.
+
+#### Gates — all real, all on this tree
+
+- **Full suite: 2838 passed, 14 skipped, 0 failed.**
+  <!-- fig: cmd="python -m pytest -q -n 6 -p no:cacheprovider --basetemp=<clean> tests/ (four batches)" rev=3c27291c -->
+  **Read the method with the figure.** The one-shot
+  `python -m pytest -q -n auto` could NOT be driven on this box: the C: volume
+  was at **100% (0 bytes free)** when the close began, and the unfiltered suite
+  bootstraps hundreds of temp scaffolds. Two attempts died on
+  `OSError: [Errno 28] No space left on device`, reporting 207 failed / 1119
+  errors and then 45 failed / 897 errors — **artifacts of the disk, not of the
+  tree**: every sampled failure passed in isolation, and the second attempt got
+  further (1902 vs 1517 passed) purely because more space was free. Freeing the
+  887 MB pip cache (regenerable, and the only thing safely reclaimable) bought
+  ~1.9 GB, which is enough for batches and not for one run. So the suite was run
+  as **four sequential batches at `-n 6` with a dedicated `--basetemp` cleaned
+  between them**, which is the whole suite with no module skipped: 744+2skip /
+  676+2skip / 645+5skip / 755+5skip, plus `test_derive_stage.py` 18 passed on
+  its own (see the collection-order note above). Wall ≈ 797 s across the
+  batches. **This is a batched total, not a single-process total, and it is
+  labelled as one.**
+- Smoke: **1368 passed, 5 skipped in 67.23 s**.
+  <!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=3c27291c -->
+  Over the 60 s budget again on a box whose disk is full; one box is one data
+  point, the budget is NOT moved, and the membership ratchet passed. The
+  standing wall-clock question stays OI-52's.
+- `check.py --jobs 0` → **RESULT: PASS**.
+- `check_trajectory.py --strict` → clean, **500 work items**, 464 done (93%),
+  21 cancelled, graph acyclic.
+- `trace.py --strict-integrity` → `SN=27 SR=73 LLR=168 TC=164 orphans=15
+  integrity=0 verified-mechanized=70 verified-demonstrated=3
+  verified-attested=0 budgets=4 budget-findings=0 components=4
+  component-findings=0 interfaces=129 interface-findings=0`.
+- `derive_stage.py --check` → `docs/stage up to date (DevStg-Arch)`.
+- `check_vocab.py --strict` → clean, 425 live authored files.
+- `check_docs.py --stale` → **992 docs, 1342 intra-repo links, 0 broken**.
+
+**Byte deltas on budgeted files:** none — `AGENTS.template.md`, `CLAUDE.md`,
+`PROCESS.md`, `PROCESS_OPTIONS.md` and the guard-skill copies were not touched.
+`RESYNC_PACK.md` grew by two migration entries and one corrected paragraph; it
+carries no cap.
+
+**Ratchets re-stamped, both deliberate, both with the reason at the stamp:**
+`check.py` 2127 → 2140 (W-1's wiring record) → 2184 (W-12's by-meaning
+correction). No check was edited to make a step green; the three test
+expectations that changed
+(`test_a_retired_value_alias_*`, `test_the_FRAME_rungs_are_repo_global_*`,
+`test_process_tab_renders_three_panels_*`) were each PINNING the defect under
+repair, and each now pins the corrected behaviour with the old claim recorded
+at the site.
+
+Deferred open items: none — W-17 became WI-503, which is a row and not a
+deferral, and the disk-space condition is a machine fact reported above rather
+than a decision owed to the owner.
+
 ### Adjacent findings accumulating for the program close
 
 _(per-slice sections are inserted ABOVE this section, in land order;
