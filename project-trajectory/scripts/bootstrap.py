@@ -2054,6 +2054,13 @@ MAPPING = [
     # run the walk-away loop; agent_loop.py imports it lazily (the worker
     # prompt's advisory context block).
     ("scripts/intake.py", "scripts/intake.py"),
+    # The registry-gap census (WI-483 slice 2): the read model that answers
+    # "which gaps do the registries name right now?" off trace.analyze. It used
+    # to live inside dispatch.py, which made intake.py import the scheduling
+    # composer back — a cycle edge. dispatch.py, intake.py and
+    # adjudicate_brief.py all import it, and the first two unguarded, so a
+    # scaffold without it cannot run the walk-away loop.
+    ("scripts/census.py", "scripts/census.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

@@ -53,12 +53,15 @@ CANCELLED has no function here on purpose. It is a JUDGEMENT — this will never
 be built, and here is why — so the lane that makes it writes the move and the
 report itself; only `integrate.branch_outcomes` needs to read it back.
 
-A sibling of `integrate.py`: this module imports it (for the lane worktree, the
-claim read and the sha helpers), and `integrate.branch_outcomes` imports back —
-a function-local import at `integrate.py:2186`, so the cycle is deferred to call
-time rather than absent. Stated plainly because this header claimed "never the
-reverse" while that import stood; breaking the cycle is WI-483's. `dispatch.py`
-calls both — it decides which outcome a cycle reached, and the writes live here.
+A sibling of `integrate.py`, and the dependency runs ONE WAY: this module
+imports it (for the lane worktree, the claim read and the sha helpers) and it
+does not import back. That sentence was FALSE for as long as it stood in this
+header — `integrate._partial_report_refusal` carried a function-local `import
+handback` to reach the report's path and refusal, so the header's "never the
+reverse" described an intention rather than the code. WI-483 slice 2 made it
+true by moving the report's SHAPE down to `kitlib/station.py`, below both
+modules, rather than by softening the sentence. `dispatch.py` calls both — it
+decides which outcome a cycle reached, and the writes live here.
 
 No `Contracts:` line, deliberately: the integrator seam this extends is IF-080,
 whose row already sits in the interface registry with NO script declaring it —
@@ -70,12 +73,12 @@ that drift instead of recording it.
 
 from __future__ import annotations
 
-import re
 import subprocess
 
 import agent_common as ac
 import integrate
 import spec_move
+from kitlib import station
 
 # Where a quarantined red close's failing diff lands. Under `docs/work/` because
 # that is where the work item's own record lives, and as a `.patch` because no
@@ -84,45 +87,33 @@ import spec_move
 # inert by its extension, not by a rule someone has to keep.
 ARTEFACTS = integrate.WORK + "/handback"
 
-# THE PER-CLOSE REPORT'S HOME, and the one constraint that fixes it.
-# `agent_common.spec_files` is `work_dir.rglob("WI-*.md")` filtered only on "not
-# directly in work_dir" — so a report at `docs/work/handbacks/WI-413-x.md` WOULD
-# be walked, `parse_spec_status("handbacks")` would raise, and `read_spec_rows`
-# would SILENTLY SKIP it, while `intake.next_wi_id` counted its id as taken.
-# That is the invisible-spec trap that earned `draft/` its declaration. Putting
-# the reports outside `docs/work/` entirely avoids the question.
-REPORTS = "docs/handbacks"
-
-# The claimed outcomes a lane may assert. `complete` is here for completeness of
-# the vocabulary — a clean finish needs no report and never reaches this module —
-# so that the report schema names every state rather than only the sad ones.
-CLAIMED_OUTCOMES = ("complete", "partial", "cancelled")
-
-# The review tier a close SUGGESTS for its disposition — a TYPED field, which is
-# the whole point. Before LLR-161 this rode as the magic substring `NEEDS-HUMAN`
-# inside a free-prose reason, and `tier_signal` case-folded a search for it: so
-# `NEEDS_HUMAN`, `needs human`, or a typo silently downgraded the judgement, with
-# no constant, no validation and no refusal on a miss. Prose that carries control
-# flow must be a typed field.
-SUGGESTED_TIERS = ("quick", "medium", "strong")
-
-# WHO DECIDES THE KEEP/DISCARD SPLIT, and the reason this is a field rather than
-# an assumption. A `partial` close merges its work-so-far onto trunk, and on
-# 2026-08-03 that merged code a lane had REJECTED, because nothing had asked
-# which commits should survive. The rung that answers it has to hold for BOTH
-# closers, and they know different things:
+# --- the per-close report's shape: RE-EXPORTED from the read model -------------
 #
-#   "lane"        the closing party judged its own work and says which commits
-#                 to keep. `keep_commits` / `discard_commits` are authoritative.
-#   "adjudicator" the closer COULD NOT judge — the dispatcher closing a lane
-#                 whose worker exited or crashed has no view of the work at all.
-#                 The split is explicitly OWED, and the disposition row minted
-#                 for this close is what owes it.
+# WI-483 slice 2 moved the report's PATH, FORMAT, READ and REFUSAL down into
+# `kitlib/station.py`, beside the terminal-outcome vocabulary they belong to:
+# `SR-144` says every lane close is a terminal state WITH AN IMMUTABLE RECORD,
+# and the two clauses had been living in two modules. The cost of the split was
+# an import edge in the wrong direction — the merge coordinator refuses a
+# `partial` merge whose report is silent about the keep/discard split, so
+# `integrate` reached UP into this module for `report_path`/`report_refusal`,
+# a deferred function-body import that was a back edge of the five-module
+# strongly connected component the 2026-08-19 review recorded (H-02).
 #
-# What is refused is a report that declares NEITHER: silence about the split is
-# how the incident happened, and "I could not judge" is a different statement
-# from saying nothing. Both are actionable; only silence is not.
-SPLIT_DECIDERS = ("lane", "adjudicator")
+# WHAT STAYED: the WRITES. `close_partial` and `quarantine` are effects on a
+# worktree and a git tree, and effects live at the edge. What left is the
+# decision half — a path from two strings, text from a dict, and "is this report
+# actionable?" — which is testable without a repository.
+#
+# These aliases are the no-caller-moves half, the same shape `integrate` used
+# for the outcome vocabulary after slice 1.
+REPORTS = station.REPORTS
+CLAIMED_OUTCOMES = station.CLAIMED_OUTCOMES
+SUGGESTED_TIERS = station.SUGGESTED_TIERS
+SPLIT_DECIDERS = station.SPLIT_DECIDERS
+report_path = station.report_path
+render_report = station.render_report
+read_report = station.read_report
+report_refusal = station.report_refusal
 
 # R3's outcome vocabulary, stated ONCE and imported by intake for the
 # disposition row's title. `re-queue` retired with LLR-161: a terminal row is
@@ -231,158 +222,7 @@ def _revert(wt, base, branch, changed):
     return None
 
 
-# --- the per-close report ------------------------------------------------------
-
-
-def report_path(branch, wi_id):
-    """The repo-relative path of one close's report.
-
-    `<wi>-<branch>.md`, and that pair is the EVENT IDENTITY the old contract
-    lacked. It is well-defined because a WI is claimed on exactly one branch at
-    a time and `partial/` is terminal, so the same (wi, branch) pair cannot
-    close twice; and it is STABLE, which is what lets a disposition's dedup be
-    "does a disposition citing this report exist?" — a positive-provenance
-    question — instead of the five reconstructions that leaked."""
-    return "{}/{}-{}.md".format(REPORTS, wi_id, branch)
-
-
-def render_report(wi_id, branch, claimed_outcome, reason, span, fields=None):
-    """The report TEXT: TOML frontmatter carrying every typed field, then the
-    prose sections a human reads.
-
-    Typed, not prose, for the fields anything downstream keys off — the
-    disposition's review tier reads `suggested_tier`, not a substring of
-    `reason`. `keep_commits` / `discard_commits` exist because a green handback
-    once merged REJECTED code onto trunk as-is (2026-08-03, live): under this
-    contract a `partial` close must say which commits are keep and which are
-    discard, and the integrator refuses one that does not. The revert decision
-    becomes the adjudicator's explicit call instead of a hand cleanup.
-    """
-    fields = dict(fields or {})
-    tier = fields.pop("suggested_tier", "medium")
-    if tier not in SUGGESTED_TIERS:
-        tier = "medium"
-    keep = fields.pop("keep_commits", [])
-    discard = fields.pop("discard_commits", [])
-    decider = fields.pop(
-        "split_decided_by", "lane" if (keep or discard) else "adjudicator"
-    )
-    if decider not in SPLIT_DECIDERS:
-        decider = "adjudicator"
-    delivered = fields.pop("delivered", "")
-    not_delivered = fields.pop("not_delivered", "")
-    front = [
-        "+++",
-        'wi = "{}"'.format(wi_id),
-        'branch = "{}"'.format(branch),
-        'claimed_outcome = "{}"'.format(claimed_outcome),
-        "reason = {}".format(_toml_str(reason)),
-        'commit_range = "{}"'.format(span),
-        'suggested_tier = "{}"'.format(tier),
-        "keep_commits = [{}]".format(", ".join(_toml_str(c) for c in keep)),
-        "discard_commits = [{}]".format(", ".join(_toml_str(c) for c in discard)),
-        'split_decided_by = "{}"'.format(decider),
-        "+++",
-    ]
-    body = [
-        "",
-        "## What happened",
-        "",
-        "Lane `{}` closed `{}` as **{}**: {}".format(
-            branch, wi_id, claimed_outcome, reason
-        ),
-        "",
-        "The work so far is in trunk, not on a branch — the lane merges like any",
-        "other. Read it with `git log --oneline {span}` / `git diff {span}`.".format(
-            span=span
-        ),
-        "",
-        "## Delivered",
-        "",
-        delivered or "_(the close named nothing as delivered)_",
-        "",
-        "## Not delivered",
-        "",
-        not_delivered or "_(the close named nothing as outstanding)_",
-        "",
-        "## Keep / discard",
-        "",
-        _split_lines(keep, discard, decider),
-        "",
-    ]
-    return "\n".join(front + body)
-
-
-def _toml_str(value):
-    """A TOML basic string — the reason is free prose and may carry quotes."""
-    text = str(value).replace("\\", "\\\\").replace('"', '\\"')
-    text = text.replace("\n", " ").replace("\r", " ")
-    return '"{}"'.format(text)
-
-
-def _split_lines(keep, discard, decider):
-    lines = []
-    for label, commits in (("keep", keep), ("discard", discard)):
-        lines.append("- **{}**: {}".format(label, ", ".join(commits) or "(none)"))
-    lines.append("- **decided by**: {}".format(decider))
-    if decider == "adjudicator":
-        lines.append("")
-        lines.append(
-            "The closing party could not judge this work — a dispatcher closing "
-            "a lane whose worker exited or crashed has no view of it. The split "
-            "is therefore OWED, and the disposition row minted for this close is "
-            "what owes it: read the commit range, decide which commits survive, "
-            "and mint a corrective successor for anything that should not."
-        )
-    return "\n".join(lines)
-
-
-_FRONT_RE = re.compile(r"\+\+\+\n(.*?)\n\+\+\+", re.S)
-
-
-def read_report(path):
-    """One report's frontmatter as a dict, or None when it is unreadable or
-    carries no `+++` block. Read with the same TOML parser every spec uses."""
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return None
-    match = _FRONT_RE.search(text)
-    if match is None:
-        return None
-    data = ac.read_toml_text(match.group(1))
-    return data if isinstance(data, dict) else None
-
-
-def report_refusal(meta):
-    """Why a report is not actionable, or None.
-
-    The integrator's rung: a `partial` close whose report omits the keep/discard
-    split refuses the MERGE. That is deliberately strict — the alternative is
-    the live defect this contract closes, where a close merged rejected code
-    onto trunk because nobody had said which commits were which."""
-    if not isinstance(meta, dict):
-        return "the close report is missing or has no +++ frontmatter"
-    outcome = str(meta.get("claimed_outcome") or "").strip()
-    if outcome not in CLAIMED_OUTCOMES:
-        return "the close report claims outcome {!r}, not one of {}".format(
-            outcome, "/".join(CLAIMED_OUTCOMES)
-        )
-    if outcome == "partial":
-        decider = str(meta.get("split_decided_by") or "").strip()
-        declared = bool(meta.get("keep_commits") or meta.get("discard_commits"))
-        if not declared and decider not in SPLIT_DECIDERS:
-            return (
-                "the `partial` close report is SILENT about the keep/discard "
-                "split — no keep_commits, no discard_commits, and no "
-                "split_decided_by. A close that says nothing about which of its "
-                "commits should survive leaves the revert decision to a hand "
-                "cleanup, which is exactly how a rejected diff once merged onto "
-                'trunk as-is. Declaring split_decided_by = "adjudicator" is a '
-                "valid answer — the disposition row then owes it; saying "
-                "nothing is not"
-            )
-    return None
+# --- the close itself: the writes that stay here -------------------------------
 
 
 def _lane(root, branch):

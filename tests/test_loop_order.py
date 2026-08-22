@@ -9,21 +9,26 @@ module pins the three rungs that were not already built:
   1. **Judgement first** (`dispatch._judgement_first`): an `adjudication` row
      outranks everything ready, including a spine batch — and the ruled §A1
      rank table is NOT renumbered to achieve it.
-  6. **The red-TC census** (`dispatch.red_tc_census` + `intake._red_tc_draft`):
+  6. **The red-TC census** (`census.red_tc_census` + `intake._red_tc_draft`):
      a TC left red under a CLOSED implementation is a contradiction, routed to
      an adjudicator with an estimated tier rather than minted at a default one.
   3. **Queue-conflict vetting** (`check_trajectory.queue_conflict_findings`):
      the cheap mechanical half — two open rows that overlap are made VISIBLE,
      never blocked.
 
-The census/parse grammar gets its own pin because it is a string contract
-BETWEEN TWO MODULES, which is exactly the kind of seam that rots silently.
+The census/parse grammar gets its own pin because it is a string contract on a
+seam that rots silently. WI-483 slice 2 moved BOTH halves out of the dispatcher
+into `census.py`, so the formatter and the parser are now in one module — the
+round-trip pin stays because the SEAM is still a seam (the mint reads lines the
+census wrote), and it now also asserts the dispatcher's re-export, which is what
+keeps every existing caller of `dispatch.parse_red_tc` honest.
 """
 
 import pytest
 from conftest import load_script, wi_registry_header, wi_row, write_wi_registry
 
 dsp = load_script("dispatch")
+cns = load_script("census")
 intake = load_script("intake")
 sched = load_script("schedule")
 ct = load_script("check_trajectory")
@@ -194,9 +199,14 @@ def test_the_red_tc_line_grammar_round_trips():
     # so the formatter and the parser are pinned against each other. The
     # alternative (intake re-splitting the prose) is prose carrying control
     # flow, which is exactly the `NEEDS-HUMAN` defect SR-145 removed.
-    line = dsp._red_tc_line("TC-042", "failed", ["SR-007", "LLR-009"])
+    line = cns._red_tc_line("TC-042", "failed", ["SR-007", "LLR-009"])
+    assert cns.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
+    assert line.startswith(cns.RED_TC_PREFIX)
+    # ...and the dispatcher still answers to the names it always did, so the
+    # move cost no caller a change (WI-483 slice 2's re-export shim).
     assert dsp.parse_red_tc(line) == ("TC-042", ["SR-007", "LLR-009"])
-    assert line.startswith(dsp.RED_TC_PREFIX)
+    assert dsp.RED_TC_PREFIX == cns.RED_TC_PREFIX
+    assert callable(dsp.gap_census) and callable(dsp.red_tc_census)
 
 
 def test_parse_red_tc_returns_None_for_every_other_census_line():
@@ -209,7 +219,7 @@ def test_parse_red_tc_returns_None_for_every_other_census_line():
 
 
 def test_the_red_tc_census_rides_the_gap_census_seam(tmp_path):
-    # The dispatcher hands ONE list of strings to intake; the new class travels
+    # The census hands ONE list of strings to intake; the new class travels
     # on it rather than growing the seam a second shape.
     _spine(tmp_path, tc_status="Failed")
     assert any(dsp.parse_red_tc(line) for line in dsp.gap_census(tmp_path))

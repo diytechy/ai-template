@@ -128,7 +128,15 @@ from pathlib import Path
 import agent_common as ac
 import score_reviews
 import spec_move
-from kitlib.station import BAR_GREEN, OUTCOME_DIRS, Outcome, outcome_of
+from kitlib.station import (
+    BAR_GREEN,
+    OUTCOME_DIRS,
+    Outcome,
+    outcome_of,
+    read_toml_block,
+    report_path,
+    report_refusal,
+)
 
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
@@ -2205,18 +2213,19 @@ def _partial_report_refusal(root, branch, outcomes):
     instead of a hand cleanup someone has to notice is owed.
 
     Read off the BRANCH's tree, like `branch_outcomes`, so the report and the
-    move it describes are one fact read once."""
-    import handback
+    move it describes are one fact read once.
 
+    The report's path, its frontmatter parse and the refusal itself all come
+    from `kitlib.station`, the read model this rung's vocabulary already lives
+    in. Until WI-483 slice 2 they came from `handback` through a deferred
+    `import handback` right here — a back edge of the runtime scripts' cycle,
+    for a path built from two strings and a rule over a dict. The WRITES stay in
+    `handback`, which is what this module is not allowed to reach into."""
     for wi_id in sorted(w for w, o in (outcomes or {}).items() if o == Outcome.PARTIAL):
-        rel = handback.report_path(branch, wi_id)
+        rel = report_path(branch, wi_id)
         code, text = ac.git(root, "show", "{}:{}".format(branch, rel))
-        meta = None
-        if code == 0:
-            match = re.search(r"\+\+\+\n(.*?)\n\+\+\+", text, re.S)
-            if match is not None:
-                meta = ac.read_toml_text(match.group(1))
-        refusal = handback.report_refusal(meta)
+        meta = read_toml_block(text) if code == 0 else None
+        refusal = report_refusal(meta)
         if refusal:
             return "{} closed {} as `partial` but {} ({}); nothing was merged".format(
                 branch, wi_id, refusal, rel

@@ -20,10 +20,15 @@ the same ratchet convention:
 - A cycle that SHRANK or disappeared: re-stamp the baseline downward — or delete
   the entry — in the same commit, so the ratchet only ever tightens.
 
-WHY A BASELINE AND NOT "ASSERT NO CYCLES". Because there IS a cycle, today, and
-a test that fails from the day it lands teaches people to skip it. The baseline
-is a debt statement with a live owner (`WI-483`), not an approval: every entry
-below is architectural debt this program is paid to remove.
+WHY A BASELINE AND NOT "ASSERT NO CYCLES". Because there WAS a cycle when this
+file landed, and a test that fails from the day it lands teaches people to skip
+it. The baseline was a debt statement with a live owner (`WI-483`), not an
+approval: every entry was architectural debt that program is paid to remove. It
+is now EMPTY — WI-483 slices 1 and 2 removed all seven modules — and because the
+ratchet compares for equality, an empty baseline is the strongest form of the
+same test: any new cycle anywhere reds. The shape stays a list rather than
+becoming `assert not cycles` so that a future component, if one is ever
+deliberately accepted, is recorded with a size that can only shrink.
 
 THE SELF-TEST MATTERS AS MUCH AS THE RATCHET. A walker that quietly stopped
 descending into function bodies would make every cycle here vanish and this
@@ -56,18 +61,32 @@ LIFECYCLE = frozenset({"dispatch", "handback", "intake", "integrate", "lane"})
 # Each entry is one strongly connected component of more than one module, as
 # sorted module names. Re-stamp DOWNWARD only; the reason goes in the log.
 CYCLES = [
-    # repo review 2026-08-19 H-02 recorded this at SEVEN modules:
+    # EMPTY, and that is the whole point of this list being a ratchet.
+    #
+    # repo review 2026-08-19 H-02 recorded SEVEN modules in one component:
     #   dispatch, gen_trajectory, handback, intake, integrate, lane, traj_panels
     # WI-483 slice 1 removed `traj_panels` and `gen_trajectory` by moving the
     # lane-close terminal-outcome vocabulary out of `integrate` and into
-    # `kitlib.station`, a dependency-neutral read model. `traj_panels`' only
-    # edge into the component was that constants import, and `gen_trajectory`'s
-    # only route in was through `traj_panels`, so cutting one edge dropped two
-    # modules. The five that remain are the lifecycle core proper, and their
-    # back edges (`intake -> dispatch`, `integrate -> handback`,
-    # `integrate -> intake`) are all deferred function-body imports — WI-483's
-    # remaining slices.
-    ("dispatch", "handback", "intake", "integrate", "lane"),
+    # `kitlib.station`, a dependency-neutral read model, leaving the five-module
+    # lifecycle core. WI-483 slice 2 cut TWO of that core's three back edges and
+    # the component fell apart entirely:
+    #   `intake -> dispatch`    the registry-gap census moved OUT of the
+    #                           scheduling composer into the sibling `census.py`,
+    #                           below all three of its readers.
+    #   `integrate -> handback` the per-close report's path/format/read/refusal
+    #                           moved down into `kitlib.station` beside the
+    #                           terminal-outcome vocabulary they describe; the
+    #                           WRITES stayed in `handback`.
+    # The third back edge, `integrate -> intake` (the post-merge mint at the
+    # held slot), SURVIVES — it just no longer closes anything, because with
+    # `intake -> dispatch` gone `intake` reaches nothing above it. It remains a
+    # layering inversion WI-483 still owes (program shape item 4: `dispatch` as
+    # the sole composer), and this file's `test_a_view_never_imports_a_lifecycle_
+    # service` is the only rule policing direction today.
+    #
+    # AN EMPTY LIST IS NOW A REAL ASSERTION: `test_no_new_import_cycle` compares
+    # for EQUALITY, so any new cycle anywhere under `scripts/` reds here. Do not
+    # add an entry back to get green — decompose.
 ]
 
 # --- the cycle DENSITY baseline (2026-08-21 review, M-12 / Sol 4) ------------
@@ -89,7 +108,14 @@ CYCLES = [
 #   deferred:     intake->dispatch, integrate->handback, integrate->intake
 # Asserted `<=`, and re-stamped DOWNWARD only — cutting one is the work; the
 # stamp follows the cut in the same commit, with the reason in the log.
-MAX_INTRA_CYCLE_EDGES = 9
+#
+# RE-STAMPED 9 -> 0 at WI-483 slice 2 (2026-08-22): with `CYCLES` empty there is
+# no component left for an edge to be inside, so the density this number
+# measures is vacuously zero. The count is kept rather than deleted because it
+# is the half of the ratchet that survives a component REAPPEARING at a
+# different size — `CYCLES` is a partition and cannot see density, which is the
+# hole the 2026-08-21 review proved by mutation.
+MAX_INTRA_CYCLE_EDGES = 0
 
 
 def _module_name(path):
@@ -227,15 +253,22 @@ def strongly_connected(graph):
 def test_the_graph_sees_imports_inside_function_bodies():
     """The instrument's own self-test, and the reason this file can be trusted.
 
-    `integrate.py` imports `handback` INSIDE a function. If the walker ever
-    stops descending into function bodies, every deferred edge disappears, the
-    cycle baseline below goes green for free, and the file reports the opposite
-    of the truth. Pin the known deferred edge so that failure is loud.
+    `integrate.py` imports `intake` INSIDE a function — the post-merge mint at
+    the held slot. If the walker ever stops descending into function bodies,
+    every deferred edge disappears, the cycle baseline below goes green for
+    free, and the file reports the opposite of the truth. Pin a known deferred
+    edge so that failure is loud.
+
+    THE PIN MOVED at WI-483 slice 2, and the move is itself the record: it used
+    to name `integrate -> handback`, which is one of the two back edges that
+    slice CUT. A self-test pinned to an edge the program is paid to remove
+    cannot survive the program; this one names the edge that is still there and
+    still owed (program shape item 4), so it will move exactly once more.
     """
     graph = import_graph()
-    assert graph["integrate"].get("handback") == "function", (
+    assert graph["integrate"].get("intake") == "function", (
         "the import walker no longer sees imports inside function bodies "
-        "(or integrate's deferred handback import moved). Every cycle "
+        "(or integrate's deferred intake import moved). Every cycle "
         "measured here would silently vanish; fix the walker, do not "
         "re-stamp CYCLES."
     )
@@ -243,11 +276,15 @@ def test_the_graph_sees_imports_inside_function_bodies():
         1 for edges in graph.values() for kind in edges.values() if kind == "function"
     )
     # A STAMPED WINDOW, not a floor of 3 (2026-08-21 review, m-30). The tree
-    # carries 20 deferred edges; a `>= 3` corroborator would survive an 85%
+    # carries ~20 deferred edges; a `>= 3` corroborator would survive an 85%
     # loss of detection, which is not a sensor. The window is wide enough that
     # ordinary work does not touch it and narrow enough that a walker
-    # regression cannot hide: measured 20 at 2026-08-21, re-stamp deliberately
-    # with the reason in the log when the number legitimately moves.
+    # regression cannot hide: measured 20 at 2026-08-21, 21 immediately before
+    # WI-483 slice 2 and 19 after it (that slice cut the two deferred back edges
+    # plus `adjudicate_brief -> dispatch`, and its extraction added one deferred
+    # edge back for the census's new home). The WINDOW itself is unmoved —
+    # re-stamp it deliberately, with the reason in the log, only when the number
+    # legitimately leaves it.
     assert 14 <= deferred <= 26, (
         "deferred function-body imports read {}, outside the stamped window "
         "14..26 (measured 20 at 2026-08-21). A COLLAPSE means the walker "

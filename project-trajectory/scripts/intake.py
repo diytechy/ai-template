@@ -30,7 +30,7 @@ Three triggers, plus the drafts-not-mints arm:
       both ends: `handback.hand_back` refuses to return an adjudication row,
       and this intake refuses to mint a disposition FOR one.
   (c) **the dispatcher's empty-frontier gap census** — the finding strings
-      `dispatch.gap_census` hands over become concrete gap-closure rows with
+      `census.gap_census` hands over become concrete gap-closure rows with
       derived descriptions, deduped against open rows so the ladder cannot
       mint the same gap forever.
   (d) **drafts-not-mints** — an adjudication row files follow-ups as a
@@ -84,6 +84,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 
 import agent_common as ac
 import baseline_snapshot
+import census
 import check_trajectory
 import schedule
 import trace
@@ -1078,17 +1079,15 @@ def _census_specref(root, line):
     return _live_registry(root, _SR_CSV)
 
 
-def _census_drafts(root, census):
+def _census_drafts(root, lines):
     # Dedup against EVERY row, open or terminal: a gap row that closed without
     # clearing its gap must not re-mint on the next idle tick (the walk-away
     # loop would otherwise mint the same gap forever) — re-opening a gap whose
     # row failed is a judgement, so it stays a human trunk commit.
-    import dispatch
-
     titles = _existing_titles(root)
     drafts = []
-    for line in census:
-        red = dispatch.parse_red_tc(line)
+    for line in lines:
+        red = census.parse_red_tc(line)
         if red is not None:
             draft = _red_tc_draft(root, line, red[1])
         else:
@@ -1127,7 +1126,7 @@ def _red_tc_draft(root, line, targets):
 
     The tier is ESTIMATED rather than defaulted (§4 rung 1's "estimator"): the
     breadth of the contradiction is what makes it expensive to judge, and that
-    is countable — `targets` comes from `dispatch.parse_red_tc`, the one reader
+    is countable — `targets` comes from `census.parse_red_tc`, the one reader
     of the census grammar, never from re-splitting this line's prose.
 
     NO `planmode` CELL, and the reason is a defect this row shipped with for
@@ -1370,11 +1369,11 @@ def intake_after_merge(root, before, after, outcomes=None, branch=""):
     return _mint(root, drafts, label)
 
 
-def mint_gap_rows(root, census):
+def mint_gap_rows(root, lines):
     """THE DISPATCHER'S RUNG-1 ARM (trigger c): the gap census, minted as
     concrete gap-closure rows. `([(wi_id, relpath)], refusal)`; an empty
     answer with a non-empty census means every gap already has an open row."""
-    return _mint(root, _census_drafts(root, census), "empty-frontier gap census")
+    return _mint(root, _census_drafts(root, lines), "empty-frontier gap census")
 
 
 # --- CLI: the recovery / by-hand path ------------------------------------------
@@ -1784,20 +1783,18 @@ def _cmd_adjudicate(args):
 
 
 def _cmd_census(args):
-    """Rung 1 by hand: derive the gap census (via dispatch.gap_census) and
+    """Rung 1 by hand: derive the gap census (via census.gap_census) and
     mint the gap-closure rows."""
-    import dispatch
-
     root = Path(args.root).resolve()
-    census = dispatch.gap_census(root)
-    if not census:
+    lines = census.gap_census(root)
+    if not lines:
         _say("the registries name no gaps - nothing to mint.")
         return 0
-    minted, refusal = mint_gap_rows(root, census)
+    minted, refusal = mint_gap_rows(root, lines)
     return _cli_result(
         refusal,
         "census named {} gap(s); minted {} row(s) (the rest have open rows).".format(
-            len(census), len(minted)
+            len(lines), len(minted)
         ),
     )
 
@@ -1886,10 +1883,10 @@ def main(argv=None):
     sweep.add_argument("--before", help="pre-merge trunk sha (trigger a)")
     sweep.add_argument("--after", help="post-merge trunk sha (trigger a)")
     sweep.set_defaults(func=_cmd_sweep)
-    census = sub.add_parser(
+    census_cmd = sub.add_parser(
         "census", help="derive the gap census and mint gap-closure rows"
     )
-    census.set_defaults(func=_cmd_census)
+    census_cmd.set_defaults(func=_cmd_census)
     adj = sub.add_parser(
         "adjudicate",
         help="recommend re-verify for spine rows judged no-scope-moved — "

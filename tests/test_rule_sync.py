@@ -241,15 +241,18 @@ def test_no_declared_status_vocabulary_still_lists_a_RETIRED_word():
     # bare frozenset with no `status` token on its line. Both were live readers
     # of `Modified` until step 7, so both are pinned by value here; that is the
     # whole reason this test exists beside the grep rather than inside it.
-    dispatch = load_script("dispatch")
+    # `_TC_NOT_RED` left `dispatch` with the whole registry-gap census at
+    # WI-483 slice 2 (it now lives in `census.py`, below the census's three
+    # readers); the pin follows the set, not the module it used to sit in.
+    census = load_script("census")
     lowered = {v.lower() for v in TRACE.STATUS_VALUES}
     assert set(GATE.SPINE_MATURITY) == lowered
-    assert dispatch._TC_NOT_RED == lowered
+    assert census._TC_NOT_RED == lowered
     for word in _RETIRED_STATUS_WORDS:
         assert word.title() not in TRACE.STATUS_VALUES
         assert word not in snap._APPROVAL_CLAIMED
         assert word not in GATE.SPINE_MATURITY
-        assert word not in dispatch._TC_NOT_RED
+        assert word not in census._TC_NOT_RED
 
 
 def test_status_enum_is_declared_for_every_spine_tier():

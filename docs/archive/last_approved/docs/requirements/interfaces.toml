@@ -1149,7 +1149,7 @@ notes = """sink — the banner renders what the generator family derives; neares
 
 [interface.IF-089]
 direction = "Consumes"
-this_project = "scripts/dispatch"
+this_project = "scripts/census"
 counterpart = "scripts/trace"
 contract = """the empty-frontier gap census (docs/concurrency-v2.md §A4 ladder rung 1 / §A5.2): gap_census calls trace.load_registries + trace.analyze (phase unfiltered, require_verified on) and reports findings.orphans + findings.status_findings + the draft SN ids — the registry gaps trace already names, reused not re-derived. The list is the intake mint helper's handoff (it mints concrete gap-closure rows from it; the dispatcher itself never mints — no silent planner mints)."""
 signal = "variable"
@@ -1158,7 +1158,7 @@ owner = "LLR-001"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it"""
+notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it. The endpoint is the census module rather than the dispatcher because the derivation has three readers and two of them sit below the dispatcher; the crossing, the component pair and the contract are the same ones the seam always carried"""
 
 [interface.IF-090]
 direction = "Provides"

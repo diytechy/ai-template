@@ -293,7 +293,7 @@ def red_tc_values(root, row):
     """`({tcs, spine}, None)` for the idle-frontier census's unverified test
     cases, or `(None, reason)`.
 
-    THE CENSUS IS RE-RUN LIVE, not remembered. `dispatch.red_tc_census` is the
+    THE CENSUS IS RE-RUN LIVE, not remembered. `census.red_tc_census` is the
     same producer that minted the row, so re-running it at composition time
     gives the judge the state of the world it is actually ruling on — a row
     whose gap closed between mint and claim refuses here rather than briefing a
@@ -314,19 +314,19 @@ def red_tc_values(root, row):
     is not "refuse when there is nothing", it is "refuse when any part of the
     evidence is missing"."""
     try:
-        import dispatch
+        import census
     except Exception as exc:  # a stripped-down copy without the sibling
         return None, "the census producer is unavailable ({})".format(exc)
-    census = dispatch.red_tc_census(root)
-    if not census:
+    lines_in = census.red_tc_census(root)
+    if not lines_in:
         return None, "the red-TC census is now empty — there is nothing to judge"
     tc_rows = {
         r.get("TC-ID"): r for r in spine_carrier.load(Path(root) / TC_REGISTRY, "TC-ID")
     }
     lines = []
     targets = set()
-    for line in census:
-        parsed = dispatch.parse_red_tc(line)
+    for line in lines_in:
+        parsed = census.parse_red_tc(line)
         if parsed is None:
             return None, "a census line did not parse: {!r}".format(line)
         tc_id, tc_targets = parsed

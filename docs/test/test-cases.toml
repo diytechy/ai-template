@@ -1836,3 +1836,25 @@ automated = "Yes"
 evidence = """tests/test_external_frame.py::test_a_clean_frame_produces_no_finding; tests/test_external_frame.py::test_a_crossing_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_a_relationship_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING; tests/test_external_frame.py::test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass; tests/test_external_frame.py::test_a_frame_declaring_NOTHING_stays_vacuous; tests/test_external_frame.py::test_the_frame_rules_are_VACUOUS_without_the_registry; tests/test_external_frame.py::test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding; tests/test_external_frame.py::test_an_SR_naming_a_DECLARED_crossing_is_clean; tests/test_external_frame.py::test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error; tests/test_external_frame.py::test_the_realization_gap_is_REPORTED_and_never_gated; tests/test_external_frame.py::test_the_SR_boundary_rule_is_vacuous_without_a_frame; tests/test_trace.py::test_signal_refuses_an_unknown_value_as_a_warn"""
 status = "Drafted"
 phase = 5
+
+[test.TC-183]
+verifies = ["SR-148", "LLR-188"]
+level = "Integration"
+method = """Two claims, because the row makes two. THE BEHAVIOUR, unchanged by the move and driven at its new home: a red test case is named only under a citer recorded done, the three exempt statuses and the mixed-target case each answer empty, the line grammar round-trips through its own parser and matches nothing else, and the gap census names unverified requirements, orphan rows and draft needs mechanically while answering empty on a repo with no registries. THE SITING: build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert the strongly connected component census is empty and that no render module reaches a lifecycle service, then assert the dispatcher still answers to every former census name so the extraction cost no caller a change."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-188 (parent SR-148)"
+automated = "Yes"
+evidence = """tests/test_loop_order.py::test_a_red_tc_under_a_closed_row_is_named; tests/test_loop_order.py::test_the_three_exempt_statuses_are_never_red; tests/test_loop_order.py::test_an_OPEN_row_never_makes_a_tc_red; tests/test_loop_order.py::test_a_partial_close_never_makes_a_tc_red; tests/test_loop_order.py::test_a_tc_verifying_a_MIX_of_claimed_and_unclaimed_is_not_red; tests/test_loop_order.py::test_the_red_tc_line_grammar_round_trips; tests/test_loop_order.py::test_parse_red_tc_returns_None_for_every_other_census_line; tests/test_loop_order.py::test_the_red_tc_census_rides_the_gap_census_seam; tests/test_dispatch_admission.py::test_gap_census_names_the_three_gap_classes_mechanically; tests/test_dispatch_admission.py::test_gap_census_is_empty_on_a_repo_with_no_registries; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service"""
+status = "Approved"
+phase = 5
+
+[test.TC-184]
+verifies = ["SR-144", "LLR-189"]
+level = "Unit"
+method = """Two claims. THE REPORT CONTRACT, driven at its new home and through the writer's re-exports so both surfaces are asserted: a rendered report round-trips through the frontmatter reader; a report claiming an outcome outside the declared set is refused; a partial report silent about the keep and discard split is refused while one declaring either commit list, or naming the adjudicator as the decider, is accepted; a missing report file makes the merge slot's rung refuse rather than merge. THE SITING: build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert the merge coordinator no longer imports the closing module at all, and that the strongly connected component census is empty."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-189 (parent SR-144)"
+automated = "Yes"
+evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
+status = "Approved"
+phase = 5
