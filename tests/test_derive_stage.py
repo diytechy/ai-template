@@ -67,11 +67,23 @@ def _no_frame(scaffold):
 
     Not a convenience: it is the shape of a project that adopts neither registry,
     which the rungs' declared applies-when explicitly serves ("a project that
-    never declares a boundary is NOT held at DevStg-Boundary forever"). It is
-    needed here because those two rungs are REPO-GLOBAL and sit BELOW every spine
-    rung, so a scaffold's blank-but-present `external.toml` pins every phase at
-    DevStg-Boundary and no spine-rung difference is observable at all. The frame
-    rungs get their own test below rather than being silently absent."""
+    never declares a boundary is NOT held at DevStg-Boundary forever"). The frame
+    rungs get their own test below rather than being silently absent.
+
+    THE SECOND HALF OF THIS DOCSTRING USED TO RECORD A DEFECT AS A FIXTURE NEED,
+    and it is worth keeping the correction visible. It read: "needed here because
+    those two rungs are REPO-GLOBAL and sit BELOW every spine rung, so a
+    scaffold's blank-but-present `external.toml` pins every phase at
+    DevStg-Boundary and no spine-rung difference is observable at all." That was
+    an accurate description of a defect that shipped to every adopter — the
+    untouched, placeholder-only frame registries the scaffold installs held every
+    repo at DevStg-Boundary forever — and deleting the files here is what kept
+    the kit's own tests from ever seeing it (ROUND-SOL-RAW 2). `spine_rules`
+    now reads a placeholder-only registry as NOT ADOPTED, so the deletion is no
+    longer load-bearing; it stays because "adopts neither registry" is still a
+    shape worth driving, and it is now driven ALONGSIDE the unmodified scaffold
+    rather than instead of it (see
+    `test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine`)."""
     for name in ("external", "components"):
         for suffix in (".toml", ".csv"):
             path = scaffold / "docs" / "requirements" / (name + suffix)
@@ -203,12 +215,28 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
     rather than discovering later.
 
     It also drives the settled reading of those rows: a DRAFTED component is
-    excluded from the settled subset exactly as a drafted requirement is."""
+    excluded from the settled subset exactly as a drafted requirement is.
+
+    THE PREMISE WAS REPAIRED AT THE WI-498 CLOSE. This test used to lean on the
+    scaffold's UNTOUCHED `external.toml` — "blank-but-present … a declared frame
+    with no crossing typed is honestly incomplete" — which was the defect
+    ROUND-SOL-RAW 2 measured, not a premise: the placeholder-only file the
+    bootstrap ships is a frame nobody has adopted, and reading it as "declared
+    and empty" pinned every adopting repo at DevStg-Boundary forever. The claim
+    under test is unchanged and still worth pinning; it is now driven through a
+    REAL declared crossing, which is what an adopted frame actually looks like."""
     make_minimal_project(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
     _write(scaffold, srs=srs, llrs=llrs, tcs=tcs)
-    # the scaffold ships a blank-but-present external.toml: a declared frame with
-    # no crossing typed is honestly incomplete
+    # An ADOPTED frame: one real crossing, declared and not yet ratified.
+    ext = scaffold / "docs" / "requirements" / "external.toml"
+    ext.write_text(
+        ext.read_text(encoding="utf-8")
+        + '\n[boundary.B-01]\nentity = "EXT-000"\ndirection = "in"\n'
+        'carries = "A real crossing, declared and not yet ratified."\n'
+        'status = "Drafted"\n',
+        encoding="utf-8",
+    )
     framed = DS.derive(scaffold)
     assert framed["per-phase"]["1"] == ladder.STAGE_BOUNDARY
     assert framed["stage"] == kitstage.FLOOR and framed["floored"] is True
@@ -238,6 +266,70 @@ def test_a_fresh_scaffold_reads_a_DEFINED_non_raising_selection_value(scaffold):
     assert got["per-phase"] == {}
     # ... and the value is orderable, which is what selection will need
     assert kitstage.order(got["stage"]) == ladder.stage_ord(kitstage.FLOOR)
+
+
+def test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine(scaffold):
+    """THE ACCEPTANCE TEST THE KIT DID NOT HAVE, and its absence is why a defect
+    shipped to every adopter (ROUND-SOL-RAW 2, MAJOR).
+
+    Every other rung test in this module calls `_no_frame` first, DELETING the
+    two frame registries `bootstrap.py` installs. That is a legitimate shape —
+    a project that adopts neither registry — but it was the ONLY shape driven,
+    so the shape the kit actually SHIPS was never asserted on. On that shape a
+    completely settled spine could not leave DevStg-Boundary: the placeholder
+    `-000` rows filter out, the row list comes back empty, and an
+    empty-but-present registry caps the rung. Measured on a real bootstrap
+    before the fix: `settled-stage = DevStg-Boundary` with every SN/SR/LLR/TC
+    row `Founded` — so `format`, `lint` and `tests+coverage` were unreachable
+    from the derived value in every adopting repo, permanently.
+
+    So: NO deletions, no edits to anything `bootstrap.py` wrote outside the
+    spine. Fill the spine, ratify it, and the ladder must climb.
+    """
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    # The state under test: the scaffold's own frame registries, exactly as
+    # bootstrap wrote them. Asserted rather than assumed — if a future bootstrap
+    # stops shipping them, this test must stop claiming to cover this shape.
+    external = req / "external.toml"
+    components = req / "components.toml"
+    assert external.exists() and components.exists(), (
+        "bootstrap no longer ships the frame registries — this test's premise "
+        "is gone and the test must be re-aimed, not deleted"
+    )
+    shipped = (
+        external.read_text(encoding="utf-8"),
+        components.read_text(encoding="utf-8"),
+    )
+    # A fully settled spine: every tier Founded (settled AND demonstrated).
+    _write(
+        scaffold,
+        srs=_sr("SR-001", status="Founded"),
+        llrs=_llr("LLR-001", "SR-001", status="Founded"),
+        tcs=_tc("TC-001", "SR-001;LLR-001", status="Founded"),
+    )
+    got = DS.derive(scaffold)
+    assert got["settled-stage"] == ladder.STAGE_IMPL, (
+        "a settled spine on the scaffold the kit SHIPS must reach Impl; it read "
+        + str(got["settled-stage"])
+    )
+    assert got["stage"] == ladder.STAGE_IMPL
+    # ...and it got there without the test touching the frame files.
+    assert (
+        external.read_text(encoding="utf-8"),
+        components.read_text(encoding="utf-8"),
+    ) == shipped, "the frame registries were modified — the premise is void"
+    # The rungs are NOT disarmed: writing one real row into the shipped file is
+    # an adoption act, and a Drafted crossing correctly caps the ladder again.
+    external.write_text(
+        shipped[0] + '\n[boundary.B-01]\nentity = "EXT-000"\ndirection = "in"\n'
+        'carries = "A real crossing."\nstatus = "Drafted"\n',
+        encoding="utf-8",
+    )
+    assert DS.derive(scaffold)["settled-stage"] == ladder.STAGE_BOUNDARY, (
+        "a real Drafted crossing must still hold the boundary rung — the fix "
+        "must read placeholders as unadopted, not switch the rung off"
+    )
 
 
 def test_an_ALL_DRAFT_spine_also_lands_on_the_floor(scaffold):

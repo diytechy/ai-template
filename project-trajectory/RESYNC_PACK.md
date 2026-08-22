@@ -3041,6 +3041,72 @@ the text-file list, so that exemption never actually fired), and `docs/log.d/`,
 words; the phase-anchor grammar and the batch cadence are taught in
 `PROCESS_OPTIONS.md` under "Trajectory / work-items layer".
 
+### A regenerated-but-unstaged artifact now REFUSES the commit [since 3c030ef7]
+
+**What changes for you: a commit that used to warn now fails.** The
+`staged-divergence` step — which asks which declared `[generated]` artifact is
+modified in your working tree but absent from the INDEX, i.e. which one you
+regenerated and did not `git add` — shipped warn-first under OI-31's ruling,
+with the promotion named as its own later act "once it has run clean for a
+program". This is that promotion. The step's plan entry now runs `--strict`, so
+the pre-commit floor and CI both exit non-zero on a finding.
+
+**Why it was promoted.** Because warn-first was still admitting the exact
+false green it was built to report. Every freshness step (`derived-stage`,
+`trajectory-map`, `status-map`, `open-items`, `okf`, `ratify-fresh`, …)
+resolves its artifact from the FILESYSTEM, so their honest claim is "the
+artifact on disk matches its regeneration" — not "the artifact you are about to
+commit does". Stage a registry edit, run `derive_stage.py`, forget the
+`git add`, and the whole floor is green over a commit that carries the OLD
+derived stage. What your bar vouches for is now the tree being COMMITTED.
+
+**What you must do:** nothing, if you already stage what you regenerate. The
+one workflow that changes is the DELIBERATELY partial commit: while any
+declared generated artifact is dirty-and-unstaged, no commit will pass. Stage it
+or revert it. `python scripts/check.py --staged-divergence` (without `--strict`)
+is still the read-only detector to run mid-work.
+
+**What this still does NOT catch**, stated so the promotion is not read as a
+guarantee: an artifact that was STAGED WHILE STALE. The freshness gates read the
+working tree, so a stale blob added to the index passes them and passes this.
+That case needs the gates themselves to read the staged tree — OI-31 option (a),
+recorded as the destination and still not taken.
+
+### Placeholder-only frame registries read as NOT ADOPTED [since 3c030ef7]
+
+**Read this one if your repo has never filled `external.toml` or
+`components.toml`: your derived stage is about to go UP, correctly.**
+
+`bootstrap.py` installs both frame registries carrying only the templates'
+`-000` example rows. Both templates promise those rows are inert ("`trace.py`
+ignores any id ending `-000`, so they are inert until deleted"; "this `-000` row
+is inert and never blocks a gate"). They were not inert. The example rows filter
+out, the row list comes back empty, and an empty-but-present registry CAPS its
+rung — and because `DevStg-Boundary` and `DevStg-Arch` are repo-global and sit
+below every spine rung, the untouched scaffold pinned every adopting repo at
+`DevStg-Boundary` permanently. Measured on a real bootstrap: a spine with every
+SN/SR/LLR/TC row `Founded` still derived `settled-stage = DevStg-Boundary`, so
+`format`, `lint` and `tests+coverage` could never be selected from the derived
+value.
+
+**The rule now**, and the middle case is the whole change:
+
+| your `external.toml` / `components.toml` | reading |
+|---|---|
+| absent | not adopted — rung skipped (unchanged) |
+| present, **only `-000` example rows** | **not adopted — rung skipped (NEW)** |
+| present with real rows, or emptied by hand | adopted — the rung applies (unchanged) |
+
+Deleting the `-000` rows is an adopter ACT and keeps the tier, which is why an
+emptied file still caps: the discriminator is "did anything but placeholders
+ever get written here", not "is the row list empty".
+
+**What you must do:** re-run `python scripts/derive_stage.py` and commit the
+result. If your repo genuinely intends to declare a frame it has not typed yet,
+nothing above disarms the rung — write one real row and the rung caps again.
+**A repo that already filled either registry is unaffected**, and the kit's own
+repo derived the identical rung before and after.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

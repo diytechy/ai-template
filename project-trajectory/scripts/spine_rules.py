@@ -476,6 +476,54 @@ def _decomposed_sr_ids(llrs, tcs):
     )
 
 
+def _frame_rows(docs, filename, id_key):
+    """`(real_rows, applies)` for one off-spine frame registry.
+
+    `applies` is the rungs' APPLIES-WHEN, and it answers "has this project
+    ADOPTED this tier?" rather than the narrower "does the file exist?" — which
+    is the correction WI-498's close made (ROUND-SOL-RAW 2). Three states, and
+    the middle one is the whole point:
+
+      * **no file** — not adopted. `applies` False, the rung is skipped, and a
+        project that never declares a boundary is not held at DevStg-Boundary
+        forever. Unchanged.
+      * **the file as `bootstrap.py` SHIPS IT — `-000` example rows and nothing
+        else** — not adopted either, and this is the state that was being read
+        as "adopted but empty". `trace.py` ignores every id ending `-000` and
+        BOTH shipped templates promise in their own prose that the example rows
+        are "inert until deleted" / "never blocks a gate". They were not inert:
+        the placeholder rows filter out, the row list comes back empty, and an
+        empty-but-present registry caps the rung. Because both rungs are
+        repo-global and sit BELOW every spine rung, that pinned EVERY adopting
+        repo at DevStg-Boundary permanently — measured on a real bootstrap: a
+        spine with every SN/SR/LLR/TC row `Founded` still read
+        `settled-stage = DevStg-Boundary`, so `format`, `lint` and
+        `tests+coverage` could never be selected from the derived value. The
+        kit's own acceptance tests only ever saw the rungs work because their
+        `_no_frame` helper DELETES both files first, and that helper's docstring
+        had recorded the symptom without it being read as a defect.
+      * **a file with rows of its own** (or one an adopter deliberately
+        EMPTIED, having deleted the examples) — adopted. `applies` True and the
+        rung reads it, including the honest "declared no crossing yet" cap.
+
+    The discriminator is therefore "did anything but placeholders ever get
+    written here", not "is the row list empty": deleting the `-000` rows is an
+    adopter ACT and keeps the tier, which is why an emptied file still caps."""
+    path = spine_carrier.resolve(
+        docs / "requirements" / filename, spine_carrier.CARRIERS
+    )
+    if path is None:
+        return [], False
+    loaded = [
+        r
+        for r in spine_carrier.load(docs / "requirements" / filename, id_key)
+        if r.get(id_key)
+    ]
+    real = [r for r in loaded if not is_example(r[id_key])]
+    placeholder_only = bool(loaded) and not real
+    return real, not placeholder_only
+
+
 def boundary_incomplete(bifs, have_registry):
     """Rung 1's predicate — is the BOUNDARY INVENTORY still in work?
 
@@ -763,37 +811,12 @@ def load_spine(docs):
         sn_draft = sn_draft_ids(text)
 
     # THE TWO OFF-SPINE REGISTRIES THE LADDER'S INSERTED RUNGS READ (OI-21). Both
-    # are resolved through the carrier and both are APPLIES-WHEN: `have_*` is the
-    # file's existence, and a project that adopts neither registry simply never
-    # sits at DevStg-Boundary or DevStg-Arch. They feed the STAGE axis only —
-    # `_raw_level` is untouched, so the runnable bar is computed from exactly the
-    # rows it always was.
-    ext_path = spine_carrier.resolve(
-        docs / "requirements" / "external.toml", spine_carrier.CARRIERS
-    )
-    cmp_path = spine_carrier.resolve(
-        docs / "requirements" / "components.toml", spine_carrier.CARRIERS
-    )
-    bifs = (
-        [
-            r
-            for r in spine_carrier.load(docs / "requirements" / "external.toml", "B-ID")
-            if r.get("B-ID") and not is_example(r["B-ID"])
-        ]
-        if ext_path is not None
-        else []
-    )
-    cmps = (
-        [
-            r
-            for r in spine_carrier.load(
-                docs / "requirements" / "components.toml", "CMP-ID"
-            )
-            if r.get("CMP-ID") and not is_example(r["CMP-ID"])
-        ]
-        if cmp_path is not None
-        else []
-    )
+    # are resolved through the carrier and both are APPLIES-WHEN — a project that
+    # adopts neither registry simply never sits at DevStg-Boundary or
+    # DevStg-Arch. They feed the STAGE axis only — `_raw_level` is untouched, so
+    # the runnable bar is computed from exactly the rows it always was.
+    bifs, have_bifs = _frame_rows(docs, "external.toml", "B-ID")
+    cmps, have_cmps = _frame_rows(docs, "components.toml", "CMP-ID")
     return {
         "srs": srs,
         "llrs": llrs,
@@ -802,6 +825,6 @@ def load_spine(docs):
         "sn_draft": sn_draft,
         "bifs": bifs,
         "cmps": cmps,
-        "have_bifs": ext_path is not None,
-        "have_cmps": cmp_path is not None,
+        "have_bifs": have_bifs,
+        "have_cmps": have_cmps,
     }
