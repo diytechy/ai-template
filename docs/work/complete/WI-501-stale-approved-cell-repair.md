@@ -1,7 +1,7 @@
 +++
 id = "WI-501"
 title = "The stale-Approved-cell repair batch: the CodeSymbol dozen plus the seven post-unification prose rows, one commit, per-row dossier (OI-53 ruled (b), 2026-08-22)"
-specref = "docs/requirements/open-items.toml#OI-53"
+specref = ""
 workstream = "requirements"
 sr_refs = []
 needs = []
