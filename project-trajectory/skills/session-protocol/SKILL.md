@@ -76,23 +76,30 @@ Run the real checks and paste the real output — never a green you didn't produ
 
 ```
 python -m pytest -q -n auto -m smoke
+python scripts/check_smoke_budget.py --mode enforce
 python project-trajectory/scripts/check_docs.py --root . --stale
 ```
 
-Both must pass before **each** commit — this is the **commit bar**. `-m smoke`
-is the fast per-commit tier, re-tiered to a **budget** by WI-281: it must run
-**≤ 60 s** wall (measured 2026-08-11 on a 24-core box: ~17 s / ~900 tests vs
-~6 min / ~2200 for the full suite, both `-n auto`) so it stays a real smoke
-test — "is it basically alive?", not a re-run of most of the suite. Tiering is
+All three must pass before **each** commit — this is the **commit bar**, and it
+means results AND seconds, not results alone (OI-52 ruling (a), 2026-08-23):
+`-m smoke` is the fast per-commit tier; `check_smoke_budget.py --mode enforce`
+is what makes the seconds a real bar rather than a claim a worker could read
+"passed" over — it FAILS the commit when the tier's wall time breaches the
+budget, instead of only being caught later in CI. The budget, re-tiered to fit
+by WI-281 and re-tiered again + re-measured 2026-08-23 (WI-496, after the tier
+crept back to 0.9-1.1x its ceiling): **≤ 60 s** wall, declared in
+`docs/stack.ini` `[smoke-budget]` (27.27 / 28.16 / 27.86 s over three warm
+runs on a 24-core box at the WI-496 re-tier) so it stays a real smoke test —
+"is it basically alive?", not a re-run of most of the suite. Tiering is
 opt-out: smoke drops the **subprocess/scaffold-heavy** modules
 (`tests/conftest.py` `SLOW_MODULES` — the hook/gate/scaffold/heavy-script runs
 the commit hook and the gate re-exercise anyway), so a **new (in-process) test
 is in the bar by default**. The runtime is its own budget item — declared
-seconds + a deterministic membership ratchet — in `docs/stack.ini`
-`[smoke-budget]` + `tests/test_smoke_budget.py` (it bites if the tier grows back
-toward the full suite; re-stamp deliberately, reason in the log). Run the
-**full** unfiltered suite (`pytest -q -n auto`) before claiming a slice/phase
-done, at close, and after a broad script change. The
+seconds (enforced locally now, not only in CI) + a deterministic membership
+ratchet — in `docs/stack.ini` `[smoke-budget]` + `tests/test_smoke_budget.py`
+(it bites if the tier grows back toward the full suite; re-stamp deliberately,
+reason in the log). Run the **full** unfiltered suite (`pytest -q -n auto`)
+before claiming a slice/phase done, at close, and after a broad script change. The
 full `check.py --gate <gate>` is the **gate bar** (unfiltered suite + coverage):
 it belongs to gate advancement, phase close, and CI, not to each
 mid-phase slice; `--jobs 0` runs its independent steps concurrently. A per-WI

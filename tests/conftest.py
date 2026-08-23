@@ -211,6 +211,29 @@ SLOW_MODULES = frozenset(
         # 60 s commit bar for a surface that changes about once a year. Nothing is
         # weakened: it runs in full at slice/phase close and in CI.
         "test_launcher_interpreter",  # launchers driven against fake interpreters
+        # WI-496 (OI-52 ruling (a), the re-tier owed before enforcement): the
+        # ratchet had been re-stamped up on GROWTH readings alone for a month
+        # (1378 -> 1409 -> 1416) while the WALL-CLOCK side quietly crept back to
+        # 0.9-1.1x its 60 s budget (check_smoke_budget.py's 2026-08-21
+        # re-argument) — the same inversion WI-281 first cut, regrown by five
+        # modules that took the `scaffold` fixture (a real bootstrap.py
+        # subprocess) or a real per-test git repo and were filed as ordinary
+        # in-process growth instead. Measured this box (3.11.9, `-n auto`,
+        # `python -m pytest -q -n auto -m smoke --durations=0`, warm): these
+        # five modules summed to 157.0 s of the tier's 304.5 s total PER-TEST
+        # duration (51.5%) while the wall clock sat at 58.77 s — 0.98x budget,
+        # one bad scheduling tick from a red honest commit. Every one is the
+        # SAME heavy class already filed above (subprocess-driving a real
+        # script over a real scaffold/repo, exercised again wholesale at
+        # slice/phase close + CI), just not named "end-to-end":
+        "test_external_frame",  # 33 tests, 50.5 s: every finding case takes `scaffold` + trace.py/check subprocesses
+        "test_baseline_snapshot",  # 40 tests, 31.3 s: `scaffold` + repeated trace.py/intake.py run_py subprocesses
+        "test_selection_at_or_above",  # 16 tests, 26.8 s: `scaffold` + derive_stage.py/check.py subprocesses
+        "test_adjudicate_brief",  # 48 tests, 24.9 s: real git repos + agent_loop.py driven as a subprocess (test_agent_loop_review's class)
+        "test_intake",  # 26 tests, 23.5 s: a real `git init`/commit repo built per test (test_handback's class)
+        # Nothing here is deleted or weakened: all five still run in full at
+        # slice/phase close and in CI. Re-stamped seconds/max-tests together
+        # below with the reason (docs/log.d/2026-08-23-wi496-smoke-retier.md).
     }
 )
 

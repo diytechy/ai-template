@@ -30,11 +30,11 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,513 | 2026-08-22 | +275: WI-507 — a consolidation-across-the-codebase bullet beside edit-conservatively |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,841 | 2026-08-22 | −36: WI-507 re-stamped the AGENTS.template.md/CLAUDE.md/PROCESS.md rows for the consolidation-doctrine edit |
+| `CLAUDE.md` | **8,500** | 7,831 | 2026-08-23 | +318: WI-496 — the smoke bar wires `check_smoke_budget.py --mode enforce` and states the re-tiered figures |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,834 | 2026-08-23 | -7: WI-496 re-stamped the CLAUDE.md row (and this one) for the smoke-enforce edit |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
-each); `CLAUDE.md` holds ~15%. Those two are what you hit first, and the DOC is
+each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
 what gives — a cap is load-bearing (AGENTS reserves ≥2k for the adopter's own
 section under Gemini's truncation) and is not to be raised. Adding a sentence
 means cutting one, in the same edit. Each `Baseline` is pinned to its file's
