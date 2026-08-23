@@ -92,6 +92,14 @@ import wi_convert
 
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
+# Terminal history's home since WI-504 (OI-55 ruled (a)): `complete/`,
+# `cancelled/` and `partial/` moved out of the active workspace, one directory
+# deeper, under the archive. A closed spec this module needs to find — for a
+# disposition draft, a spot-check, or the by-hand recovery sweep — may now be
+# in either root (a legacy repo mid-migration, or simply because the two
+# terminal directories share their status-dir NAMES) so every terminal-folder
+# read goes through `_terminal_hits` rather than a bare `WORK` glob.
+ARCHIVE_WORK = "docs/archive/work"
 
 # --- the WI `bar:` vocabulary (OI-21 contract break 3) -------------------------
 # The bar a work item is held to, in the stage-ladder vocabulary. A WI's `bar:`
@@ -225,9 +233,14 @@ def next_wi_id(root):
     mint with no record of what has been allocated is the one operation that
     must not proceed on a guess."""
     top = 0
-    work = Path(root) / WORK
-    if work.is_dir():
-        for path in work.rglob("WI-*.md"):
+    # Both roots (WI-504): a filename swept for "is this id taken" must be
+    # found wherever a spec might carry it, and terminal specs now live under
+    # the archive, one directory deeper than the active workspace.
+    for base in (WORK, ARCHIVE_WORK):
+        tree = Path(root) / base
+        if not tree.is_dir():
+            continue
+        for path in tree.rglob("WI-*.md"):
             matched = _WI_FILE_RE.match(path.name)
             if matched:
                 top = max(top, int(matched.group(1)))
@@ -609,6 +622,19 @@ def _amendment_drafts(root, before, after):
 # --- trigger (b): a merged handback mints the disposition row ------------------
 
 
+def _terminal_hits(root, status_dir, pattern):
+    """Every match for `pattern` under `status_dir`, unioned across the active
+    workspace and its archive sibling (WI-504) — a terminal spec's status
+    directory name is the same in both, so a caller that means "the `partial/`
+    population" gets it whole regardless of which root a given close landed
+    in."""
+    root = Path(root)
+    hits = []
+    for base in (WORK, ARCHIVE_WORK):
+        hits.extend((root / base / status_dir).glob(pattern))
+    return sorted(hits)
+
+
 def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
     """The closed spec's `(relpath, frontmatter)` on the post-merge trunk —
     searched across the terminal directories the CALLER names. None when it
@@ -619,7 +645,7 @@ def _closed_spec(root, wi_id, dirs=("partial", "cancelled")):
     one. The spot-check arm passes `("complete",)` explicitly, so which
     directory a caller means is always written down."""
     for status_dir in dirs:
-        hits = sorted((Path(root) / WORK / status_dir).glob(wi_id + "-*.md"))
+        hits = _terminal_hits(root, status_dir, wi_id + "-*.md")
         for hit in hits:
             try:
                 text = hit.read_text(encoding="utf-8")
@@ -1017,7 +1043,7 @@ def _disposition_drafts(root, outcomes):
     """Trigger (d): drafts from every MERGED adjudication row's spec body."""
     drafts = []
     for wi_id in _merged_ids(outcomes):
-        hits = sorted((Path(root) / WORK / "complete").glob(wi_id + "-*.md"))
+        hits = _terminal_hits(root, "complete", wi_id + "-*.md")
         for hit in hits:
             relpath = hit.relative_to(Path(root)).as_posix()
             try:
@@ -1399,10 +1425,7 @@ def _cmd_sweep(args):
     # only thing that differs is the folder -> outcome name, which
     # `integrate.OUTCOME_DIRS` already states once.
     for status_dir, outcome in sorted(SWEEP_OUTCOMES.items()):
-        directory = root / WORK / status_dir
-        if not directory.is_dir():
-            continue
-        for path in sorted(directory.glob("WI-*.md")):
+        for path in _terminal_hits(root, status_dir, "WI-*.md"):
             matched = _WI_FILE_RE.match(path.name)
             if matched:
                 outcomes["WI-" + matched.group(1)] = outcome

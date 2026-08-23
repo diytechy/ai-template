@@ -97,13 +97,13 @@ test-by-test). `trace --strict` rc 0 · `check_trajectory --strict` rc 0 ·
 `check_docs --stale` 0 broken · `check.py --jobs 0` **PASS** with `open-items`
 visibly passing · every generated surface fresh · `ruff format` clean. The four
 advisory reds are byte-identical to a measured HEAD baseline. See
-[log.md](../../log.md)'s 2026-08-11 entry for the figures and the three findings
+[log.md](../../../log.md)'s 2026-08-11 entry for the figures and the three findings
 filed rather than fixed.
 
 ## Context
 
 Owner-approved 2026-08-11 as the first slice of the batch-2 sweep recorded in
-[repo-lock.md](../../repo-lock.md) §8.1, unblocked by D-5's execution the same
+[repo-lock.md](../../../repo-lock.md) §8.1, unblocked by D-5's execution the same
 day. §8.1's measurement of the reader set is an input to be re-verified, not a
 premise: it names three readers for `open-items.csv` and five for `agents.csv`,
 and it asserts `intake` writes the open-items registry.

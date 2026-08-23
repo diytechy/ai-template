@@ -92,6 +92,16 @@ def write_spec(root, where, wid, slug="thing", **kw):
     return path
 
 
+def write_archived_spec(root, where, wid, slug="thing", **kw):
+    """Write `docs/archive/work/<where>/<wid>-<slug>.md` under `root` — the
+    terminal-history home since WI-504 (OI-55 ruled (a)); return its path.
+    `write_spec`'s twin, one directory deeper."""
+    path = root / "docs" / "archive" / "work" / where / "{}-{}.md".format(wid, slug)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(spec_text(wid, **kw), encoding="utf-8", newline="\n")
+    return path
+
+
 def write_csv(root, rows):
     """Write `docs/requirements/work-items.csv` from `[{column: cell}]`."""
     path = root / "docs" / "requirements" / "work-items.csv"
@@ -313,6 +323,27 @@ def test_each_terminal_state_is_its_own_directory(tmp_path):
         assert [(r["WI-ID"], r["Status"]) for r in rows] == [
             ("WI-001", "cancelled"),
             ("WI-002", "done"),
+        ], name
+
+
+def test_terminal_history_reads_from_its_archive_home(tmp_path):
+    """WI-504 (OI-55 ruled (a)): a spec under `docs/archive/work/<status>/`
+    reads exactly like one under `docs/work/<status>/` — the registry is ONE
+    logical set of rows split across two directory trees, so a terminal row
+    relocated one directory deeper is neither lost nor duplicated, and a repo
+    with an open row still in `docs/work/` and terminal history already moved
+    reads BOTH halves as a single ordered registry."""
+    write_spec(tmp_path, "queued", "WI-001", order=0)
+    write_archived_spec(
+        tmp_path, "cancelled", "WI-002", order=1, deliverable="why it never will"
+    )
+    write_archived_spec(tmp_path, "complete", "WI-003", order=2, deliverable="shipped")
+    for name, mod in MODULES:
+        rows = mod.read_spec_rows(tmp_path / "docs" / "work")
+        assert [(r["WI-ID"], r["Status"]) for r in rows] == [
+            ("WI-001", "queued"),
+            ("WI-002", "cancelled"),
+            ("WI-003", "done"),
         ], name
 
 

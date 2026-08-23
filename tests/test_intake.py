@@ -365,6 +365,32 @@ def test_a_merged_handback_mints_the_disposition_row(tmp_path):
     )
 
 
+def test_a_merged_handback_mints_from_the_archive_home_too(tmp_path):
+    """WI-504 (OI-55 ruled (a)): the closed spec `_closed_spec` finds may now
+    be under `docs/archive/work/partial/` — one directory deeper than the
+    pre-migration `docs/work/partial/` `close_repo` fixture writes to — and
+    the disposition mint must find it there exactly the same way."""
+    root = git_repo(tmp_path)
+    write_sr(root)
+    path = root / "docs" / "archive" / "work" / "partial" / "WI-005-returned.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        spec_text("WI-005", specref="seed.txt", safety_class="ordinary"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    write_close_report(root, "WI-005", "wi-005", tier="strong")
+    _commit(root, "the early close landed", when=T_CODE)
+    before = after = _rev(root)
+    minted, refusal = intake.intake_after_merge(
+        root, before, after, {"WI-005": "partial"}, "wi-005"
+    )
+    assert refusal is None, refusal
+    assert len(minted) == 1
+    row = queued_rows(root)[minted[0][0]]
+    assert row["SpecRef"] == "docs/archive/work/partial/WI-005-returned.md"
+
+
 def test_a_handed_back_adjudication_row_mints_no_second_disposition(tmp_path):
     # The no-recursion invariant at the INTAKE end: a disposition row that
     # somehow lands handed back must not spawn another disposition row.

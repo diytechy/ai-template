@@ -1169,17 +1169,20 @@ def test_a_claim_dir_with_no_matching_branch_is_ignored(tmp_path):
 # --- 2b. the OUTCOME is the folder (WI-387, §A3) ------------------------------
 
 
-def _close_to(root, branch, directory, wi="WI-401", slug="widget"):
+def _close_to(root, branch, directory, wi="WI-401", slug="widget", archive=False):
     """Move `branch`'s claimed spec into `directory` on the branch — the move
-    that both finishes the lane and states its outcome."""
+    that both finishes the lane and states its outcome. `archive=True` closes
+    into `docs/archive/work/<directory>/` (WI-504, OI-55 ruled (a)): the
+    terminal home since 2026-08-22, one directory deeper."""
     _git(root, "checkout", "-q", branch)
-    dest = root / "docs" / "work" / directory
+    work_root = "docs/archive/work" if archive else "docs/work"
+    dest = root / work_root.replace("/", os.sep) / directory
     dest.mkdir(parents=True, exist_ok=True)
     _git(
         root,
         "mv",
         "docs/work/active/{}/{}-{}.md".format(branch, wi, slug),
-        "docs/work/{}/{}-{}.md".format(directory, wi, slug),
+        "{}/{}/{}-{}.md".format(work_root, directory, wi, slug),
     )
     _commit(root, "close: {} -> {}".format(wi, directory), when=T_VERDICT)
     _git(root, "checkout", "-q", "main")
@@ -1199,6 +1202,26 @@ def test_the_outcome_is_read_off_the_folder_the_specs_landed_in(tmp_path):
         root = claim_repo(home)
         assert integ.claim(root, "WI-401", "wi-401") == 0
         _close_to(root, "wi-401", directory)
+        assert integ.finished_branches(root) == ["wi-401"]
+        assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": outcome}, [])
+
+
+def test_the_outcome_is_read_off_the_archive_home_too(tmp_path):
+    """WI-504 (OI-55 ruled (a)): a close that lands its terminal move under
+    `docs/archive/work/<outcome>/` — the new home, one directory deeper —
+    reads exactly like the pre-migration `docs/work/<outcome>/` close.
+    `branch_outcomes` indexes the outcome directory per-prefix rather than at
+    a fixed offset, which is exactly what this drives."""
+    for directory, outcome in (
+        ("complete", "merged"),
+        ("cancelled", "cancelled"),
+        ("partial", "partial"),
+    ):
+        home = tmp_path / ("archive-" + directory)
+        home.mkdir()
+        root = claim_repo(home)
+        assert integ.claim(root, "WI-401", "wi-401") == 0
+        _close_to(root, "wi-401", directory, archive=True)
         assert integ.finished_branches(root) == ["wi-401"]
         assert integ.branch_outcomes(root, "wi-401") == ({"WI-401": outcome}, [])
 
@@ -2839,9 +2862,11 @@ def scaffolded_closed_branch(tmp_path):
     (repo / "src" / "demo.py").write_text(E2E_DEMO_SRC, encoding="utf-8", newline="\n")
     _commit(repo, "feat: subtract, verifying SR-001", when=T_CODE)
     # The closing move edits the spec the way a real close does: the file
-    # lands in complete/ with its SpecRef cleared (R-F), not byte-moved.
+    # lands in complete/ with its SpecRef cleared (R-F), not byte-moved. The
+    # terminal home is the archive since WI-504 (OI-55 ruled (a)) — one
+    # directory deeper than the active workspace `active/` sits in.
     src = repo / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md"
-    dst = repo / "docs" / "work" / "complete" / "WI-401-widget.md"
+    dst = repo / "docs" / "archive" / "work" / "complete" / "WI-401-widget.md"
     dst.write_text(
         src.read_text(encoding="utf-8").replace('specref = "docs/log.md"\n', ""),
         encoding="utf-8",
@@ -2899,7 +2924,7 @@ def test_claim_build_and_integrate_end_to_end(tmp_path):
     assert "wi-401" not in _branches(repo)
     tracked = _git(repo, "ls-tree", "-r", "--name-only", "HEAD").split()
     assert not [p for p in tracked if p.startswith("docs/work/active/wi-401/")], tracked
-    assert "docs/work/complete/WI-401-widget.md" in tracked
+    assert "docs/archive/work/complete/WI-401-widget.md" in tracked
     # No integrator-owned worktree exists to tear down any more: the trunk is
     # the only registration left, and the lane the refresh used was GC'd by the
     # §5.6 unload rather than by a teardown of its own. (Trunk's side of this

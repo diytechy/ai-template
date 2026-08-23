@@ -13,7 +13,7 @@ priority = 3
 ## Deliverable
 
 **All 31 class-A findings of the audit
-([plans/2026-08-17-shipped-docs-staleness-audit.md](../../plans/2026-08-17-shipped-docs-staleness-audit.md),
+([plans/2026-08-17-shipped-docs-staleness-audit.md](../../../plans/2026-08-17-shipped-docs-staleness-audit.md),
 the spec-of-record while this row was open) closed; the edge-SN block was
 RULED at dispatch ("edge is dropped", 2026-08-17) and its three sites
 executed; zero class-B holds touched.** Per surface: `EXAMPLE.md` §1–§4 + §9

@@ -311,6 +311,6 @@ sites rather than by pattern, and why the constraint/provenance split came back
 different from the heuristic that scoped it.
 
 **Where the history still lives, undisturbed:**
-[`docs/archive/repo-lock-decisions-2026-08.md`](../../archive/repo-lock-decisions-2026-08.md),
-and every `D-n` still resolves in [`docs/repo-lock.md`](../../repo-lock.md).
+[`docs/archive/repo-lock-decisions-2026-08.md`](../../repo-lock-decisions-2026-08.md),
+and every `D-n` still resolves in [`docs/repo-lock.md`](../../../repo-lock.md).
 Nothing was made unfindable — it was made un-sprinkled.

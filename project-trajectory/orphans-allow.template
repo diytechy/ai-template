@@ -25,6 +25,13 @@
 # graph exists to check. Their links are still validated like any other doc.
 docs/work/*
 
+# The registry's TERMINAL history (WI-504, OI-55 ruled (a)): `complete/`,
+# `cancelled/` and `partial/` moved out of the active workspace, one directory
+# deeper, so agents listing docs/work/ meet only rows still in flight. Same
+# orphan class as docs/work/* above, same reason — status is still the
+# directory, `kitlib.registry` still reads it as one registry.
+docs/archive/work/*
+
 # The log's fragment drop-box: a work branch's `docs/log.md` entry, parked under
 # its own unique name until `scripts/trunk_step.py` compiles it into the log on
 # the trunk. Transient by construction and never a navigation node — the entry

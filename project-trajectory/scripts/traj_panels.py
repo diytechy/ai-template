@@ -738,7 +738,13 @@ def _station_svg(root):
                 name,
                 name,
                 ("specs → " + " ".join(d + "/" for d in dirs),),
-                home("docs/work/" + target),
+                # WI-504 (OI-55 ruled (a)): the three terminal dirs are the
+                # ONLY status dirs `_outcome_cards` ever names (it is derived
+                # from `station.OUTCOME_DIRS`, which holds no open state), and
+                # they now live under the archive, one directory deeper — the
+                # card should link a viewer to where the specs actually are,
+                # not to the tombstone README left behind at the old path.
+                home("docs/archive/work/" + target),
                 R,
                 y,
                 ow,

@@ -84,7 +84,7 @@ spine-class row.
 
 The row stays QUEUED, not complete: the mechanism is built and proven, and the
 ruling that makes it reach the three checks the finding is about is the owner's.
-Design record: [../../plans/2026-08-20-product-regression-floor.md](../../plans/2026-08-20-product-regression-floor.md).
+Design record: [../../plans/2026-08-20-product-regression-floor.md](../../../plans/2026-08-20-product-regression-floor.md).
 
 **Shipped.** `check.py` gains `product_floor()` (reads `ex-draft=` off the
 `# basis:` line), `floor_plan()` (the product-layer steps the dropped bar would

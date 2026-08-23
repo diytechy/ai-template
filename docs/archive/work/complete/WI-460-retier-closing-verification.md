@@ -27,7 +27,7 @@ clauses resolved; `unanchored_findings` wired), **one confirmed in half and
 fixed in that half** (`_claims_approval` is tier-aware; the SN exclusion is
 design §B7), **one dispositioned as a recorded decision** (F4 — the wave is a
 full re-read, not a diff). Verdict on the record at
-[`docs/reviews/wi451-retier/ROUND-2-SOL.md`](../../reviews/wi451-retier/ROUND-2-SOL.md);
+[`docs/reviews/wi451-retier/ROUND-2-SOL.md`](../../../reviews/wi451-retier/ROUND-2-SOL.md);
 per-finding reasoning in log `2026-08-15j`. Wiring F2's fix found one further
 defect the round had not seen — the vacuum was keyed on a directory
 `bootstrap.py` scaffolds README-only, which would have reported eight missing
@@ -40,7 +40,7 @@ any direction.**
 ## Context
 
 The third and last of the three rows that finish the re-tier. Full statement:
-[the completion analysis](../../plans/2026-08-15-retier-completion.md) §3.
+[the completion analysis](../../../plans/2026-08-15-retier-completion.md) §3.
 
 **Blocked on `WI-458` and `WI-459`.** Both move rows. A review round is spent by
 the next commit, so taking either review before the state settles wastes it —
@@ -107,7 +107,7 @@ have been a valid result; this one did not, and said so.
 **CHANGES-REQUESTED, 7 MAJOR.** Cross-family per the routing policy: **GPT-5.6
 Sol via `codex`, read-only sandbox**, on the settled tree. The verdict is on the
 record verbatim at
-[`docs/reviews/wi451-retier/ROUND-2-SOL.md`](../../reviews/wi451-retier/ROUND-2-SOL.md).
+[`docs/reviews/wi451-retier/ROUND-2-SOL.md`](../../../reviews/wi451-retier/ROUND-2-SOL.md).
 Every finding was **re-verified by the author before acceptance**, as this row
 required:
 
@@ -151,5 +151,5 @@ its reason recorded, and the silent-SKIP class is guarded.
 
 **What stands between here and done is the sitting itself** — `OI-30`'s three
 calls and the ratification wave, in the sequence set out in
-[`docs/plans/2026-08-15-review-package.md`](../../plans/2026-08-15-review-package.md)
+[`docs/plans/2026-08-15-review-package.md`](../../../plans/2026-08-15-review-package.md)
 §5. Nothing further is queued behind this row.

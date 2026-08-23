@@ -39,6 +39,8 @@ __all__ = [
     "SPEC_HANDBACK",
     "SPEC_CONTEXT",
     "spec_work_dir",
+    "spec_archive_dir",
+    "spec_roots",
     "spec_files",
     "parse_spec_frontmatter",
     "parse_spec_status",
@@ -167,15 +169,47 @@ def spec_work_dir(csv_path):
     return Path(csv_path).parent.parent / "work"
 
 
+def spec_archive_dir(work_dir):
+    """`docs/work`'s archive sibling, `docs/archive/work` (WI-504): terminal
+    history (`complete/`, `cancelled/`, `partial/`) lives there, one directory
+    deeper than the active workspace. Derived from `work_dir` the same way
+    `spec_work_dir` derives `work_dir` from the CSV path — one fact, not a
+    second constant a caller could let drift."""
+    work_dir = Path(work_dir)
+    return work_dir.parent / "archive" / "work"
+
+
+def spec_roots(work_dir):
+    """`work_dir` plus its archive sibling — BOTH homes a spec may live in
+    while WI-504's relocation is honoured everywhere it must be: the active
+    workspace (`draft/queued/active/deferred`, and — until a repo's own move
+    commit lands — terminal directories not yet relocated) and the archive
+    (`complete/cancelled/partial`, the new terminal home). Order is stable
+    (`work_dir` first) so an id or ordering tie breaks the same way it always
+    has."""
+    work_dir = Path(work_dir)
+    archive_dir = spec_archive_dir(work_dir)
+    return (work_dir,) if archive_dir == work_dir else (work_dir, archive_dir)
+
+
+def _spec_files_under(root):
+    root = Path(root)
+    if not root.is_dir():
+        return []
+    return [p for p in root.rglob("WI-*.md") if p.parent != root]
+
+
 def spec_files(work_dir):
     """Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when
     the folder is absent or holds none. An empty answer is what leaves the CSV
     authoritative, so a stray file sitting DIRECTLY in `work_dir` — which has no
-    status directory above it — deliberately does not count as a registry."""
-    work_dir = Path(work_dir)
-    if not work_dir.is_dir():
-        return []
-    return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
+    status directory above it — deliberately does not count as a registry.
+
+    Single-root: this is the primitive `read_spec_rows` below builds the
+    both-roots union on top of, and the narrower thing a caller that already
+    knows which one tree it means (a branch's own claimed set, a status-dir
+    census) still wants undiluted."""
+    return sorted(_spec_files_under(work_dir))
 
 
 def parse_spec_frontmatter(text, relpath):
@@ -279,6 +313,16 @@ def read_spec_rows(work_dir, on_error=None):
     """The spec folder's rows in REGISTRY order — by the explicit `order` key,
     then by numeric id, which is the order the converter reproduces.
 
+    Reads BOTH `work_dir` and its archive sibling (`spec_roots`, WI-504): the
+    registry is one logical set of rows split across two directory trees — the
+    active workspace and the terminal-history archive — and every consumer of
+    this function (the scheduler's done-set, the dashboard, the R-A/R-F close
+    rules, `intake`'s dedup) wants the UNION, never one half. A relpath is
+    computed against whichever root actually holds the file, so `parse_spec_row`
+    sees the same `<status>/WI-###-slug.md` shape either way and cannot tell
+    which tree it came from — status is the directory, and both trees use the
+    identical directory names for it.
+
     A malformed spec is reported to `on_error` (a callable taking one message)
     and skipped; with no sink it is skipped SILENTLY. That mirrors the split this
     kit already draws over the CSV — a broken registry is the validator's job to
@@ -286,15 +330,18 @@ def read_spec_rows(work_dir, on_error=None):
     newlines, so a spec checked out CRLF parses identically to one checked out
     LF (the WI-337 lesson: line endings are a property of the checkout)."""
     parsed = []
-    for path in spec_files(work_dir):
-        relpath = path.relative_to(work_dir).as_posix()
-        try:
-            row, order = parse_spec_row(path.read_text(encoding="utf-8"), relpath)
-        except (ValueError, OSError, UnicodeDecodeError) as exc:
-            if on_error is not None:
-                on_error(str(exc))
-            continue
-        parsed.append((order is None, order or 0, spec_id_number(row["WI-ID"]), row))
+    for root in spec_roots(work_dir):
+        for path in sorted(_spec_files_under(root)):
+            relpath = path.relative_to(root).as_posix()
+            try:
+                row, order = parse_spec_row(path.read_text(encoding="utf-8"), relpath)
+            except (ValueError, OSError, UnicodeDecodeError) as exc:
+                if on_error is not None:
+                    on_error(str(exc))
+                continue
+            parsed.append(
+                (order is None, order or 0, spec_id_number(row["WI-ID"]), row)
+            )
     parsed.sort(key=lambda item: item[:3])
     return [item[-1] for item in parsed]
 

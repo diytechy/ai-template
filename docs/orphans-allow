@@ -31,6 +31,18 @@
 # its 454 orphan warnings were the registry itself.)
 docs/work/*
 
+# The registry's TERMINAL history (WI-504, OI-55 ruled 2026-08-22 (a)):
+# `complete/`, `cancelled/` and `partial/` relocated whole from docs/work/ to
+# docs/archive/work/, one directory deeper, so the active workspace holds only
+# rows still in flight. Same registry-entry-not-navigation-node class and
+# reason as docs/work/* above — status is still the directory, `kitlib.registry`
+# still reads it as one registry (`spec_roots`). Re-pointed here deliberately,
+# not left to rot as a dead glob: `docs/work/{complete,cancelled,partial}/*`
+# now match nothing (the 494 specs + 1 .gitkeep moved whole; the three
+# directories hold only a tombstone README apiece) and are retired rather than
+# kept as noise.
+docs/archive/work/*
+
 # review evidence — the per-round Reviewer/Critique/Grounding artifacts and the
 # top-level whole-repo reviews; kept as the audit trail, referenced from log.md.
 docs/reviews/*

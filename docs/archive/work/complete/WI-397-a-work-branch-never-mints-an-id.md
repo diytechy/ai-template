@@ -40,7 +40,7 @@ copy `check_dupes` convicted in `_abandoned_claim`), and `_merge_refusal` (the
 slot's whole ladder lifted out of `integrate_one`, which the new rung had pushed
 to C901 11 — extraction over a bigger number, the `_drop_abandoned` precedent).
 
-The ruling itself is recorded in [log.md](../../log.md)'s Decisions naming this
+The ruling itself is recorded in [log.md](../../../log.md)'s Decisions naming this
 row as its executor. That entry is written **on the trunk**, not by this branch:
 `## Decisions log` is one of `trunk_step.RESERVED_HEADINGS`, so a log fragment
 may not claim it — the log's shape is not a work branch's to redefine, and every

@@ -221,6 +221,13 @@ WI_CSV = "docs/requirements/work-items.csv"
 # because the git plumbing below passes it as a PATHSPEC; the reader derives
 # the same folder from the CSV path via `spec_work_dir`.
 WI_WORK = "docs/work"
+# Terminal history's home since WI-504 (OI-55 ruled (a)): `complete/`,
+# `cancelled/`, `partial/` moved one directory deeper, under the archive. HEAD
+# tree reads that must recognise a terminal status (`_head_spec_status_map`)
+# scan both prefixes; the CSV-era readers above stay unchanged because they
+# already delegate to `kitlib.registry.read_spec_rows`, which unions the two
+# roots itself (`spec_roots`).
+WI_ARCHIVE_WORK = "docs/archive/work"
 SR_CSV = "docs/requirements/system-requirements.toml"
 TC_CSV = "docs/test/test-cases.toml"
 IF_CSV = "docs/requirements/interfaces.toml"
@@ -3276,14 +3283,17 @@ def _head_spec_status_map(root):
     collapse `done` and `cancelled` behind a frontmatter key no tree listing can
     read, so a HEAD-cancelled item read `done`. Each terminal now has its own
     directory, so paths alone answer shipped-or-cancelled exactly.)"""
-    out = _git(root, ["ls-tree", "-r", "--name-only", "HEAD", "--", WI_WORK])
+    out = _git(
+        root, ["ls-tree", "-r", "--name-only", "HEAD", "--", WI_WORK, WI_ARCHIVE_WORK]
+    )
     if not out or not out.strip():
         return None
-    prefix = WI_WORK + "/"
+    prefixes = (WI_WORK + "/", WI_ARCHIVE_WORK + "/")
     statuses = {}
     for name in out.splitlines():
         name = name.strip()
-        if not name.startswith(prefix) or not name.endswith(".md"):
+        prefix = next((p for p in prefixes if name.startswith(p)), None)
+        if prefix is None or not name.endswith(".md"):
             continue
         parts = name[len(prefix) :].split("/")
         status = SPEC_STATUS_DIRS.get(parts[0]) if len(parts) > 1 else None
@@ -3354,7 +3364,10 @@ def _staged_spec_registry(root, staged_names, work_dir):
     editing B's SR-Refs; it would judge A against B's *new* refs. That is a
     narrower blind spot than a silent no-op, which is what "paths alone" would
     otherwise buy here."""
-    changed = _git(root, ["diff", "--cached", "--name-status", "--", WI_WORK])
+    changed = _git(
+        root,
+        ["diff", "--cached", "--name-status", "--", WI_WORK, WI_ARCHIVE_WORK],
+    )
     if changed is None or not changed.strip():
         return None
     cur_map = _wi_status_map(read_spec_rows(work_dir))

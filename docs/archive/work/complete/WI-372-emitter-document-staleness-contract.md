@@ -62,7 +62,7 @@ added (proven by AST comparison with docstrings stripped, base → tip).
 
 **Where the re-open evidence actually is.** The filing above says the evidence
 "stays in WI-367-REVIEW-A if it re-opens". It does not.
-[WI-367-REVIEW-A](../../reviews/WI-367-REVIEW-A.md) carries three findings — the
+[WI-367-REVIEW-A](../../../reviews/WI-367-REVIEW-A.md) carries three findings — the
 port-fan 7.90 px figure, the sw-0 / layer-count record figures, and the
 `_path_xs` Q gap — and no version of that file mentions
 `_every_emitter_document` (one commit, `c8750e7`; caught in review round 1).

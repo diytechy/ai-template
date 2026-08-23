@@ -1415,7 +1415,7 @@ why (one bullet each; cite ids)._
   **The 3 `external:` rows stand** (`IF-032` git, `IF-036` upstream docs,
   `IF-041` agent CLI).
   **The 27 mis-authored rows: FILED, not edited** —
-  [`WI-469`](work/complete/WI-469-consumes-names-the-medium.md)
+  [`WI-469`](archive/work/complete/WI-469-consumes-names-the-medium.md)
   (queued) carries the owner's correction (*"the file itself is the actual
   interface"*), the two sub-shapes (low fan-out names the consumer;
   published-contract/high-fan-out ties back to `B-05` per
@@ -23130,7 +23130,7 @@ attended-serial.
   pinned by its own test; a synthetic bite test proves the exemption is the
   marker's in both directions. `check_doc_refs.py` untouched — reasons are
   opaque text consulted only when the path is absent. Spec archived:
-  [WI-369](work/complete/WI-369-lifecycle-absences-red-the-bar-while-claimed.md).
+  [WI-369](archive/work/complete/WI-369-lifecycle-absences-red-the-bar-while-claimed.md).
 - **Deviations from spec:** none.
 - **Suite:** full `pytest -q -n auto` (posix-shell gate satisfied):
   1669 passed / 11 skipped / 1 failed — the sole failure the standing
@@ -23164,7 +23164,7 @@ Latent until now because the grind sessions committed attended-serial
   `_run_trunk_step` and `_run_bar` (§4's "required checks on the composed
   tree" applied to the checker itself; discovery mirrors the shipped hook's
   scripts-dir probe). Spec archived:
-  [WI-368](work/complete/WI-368-the-integrator-runs-the-invokers-harness.md).
+  [WI-368](archive/work/complete/WI-368-the-integrator-runs-the-invokers-harness.md).
 - **Tests:** tests/test_integrate.py §4b — the three resolution shapes plus
   a seam test non-vacuous against the pre-fix wiring (the invoker's copy
   exits 3, the composed copy writes a sentinel).
@@ -23407,7 +23407,7 @@ last moment the debt is a one-line trunk commit.
   specs carry a resolving ref, the e2e close clears it). Review round 1
   caught the first cut's `.exists()` under-refusing on bare-fragment and
   directory refs — fixed and re-reviewed in round 2. Spec archived:
-  [WI-370](work/complete/WI-370-claim-refuses-a-spec-without-a-specref.md).
+  [WI-370](archive/work/complete/WI-370-claim-refuses-a-spec-without-a-specref.md).
 - **Deviations from spec:** none in scope; the rung was extracted to its
   own helper after the C901 census flagged the inline form (complexity 11)
   — extraction over baseline stamp.
@@ -23431,7 +23431,7 @@ builders lost their first BEFORE set and re-shot from a worktree).
   survive; the listing prints only PNGs; the
   [README](../scripts/dashboard-shots/README.md) states the contract.
   Spec archived:
-  [WI-371](work/complete/WI-371-shoot-mjs-deletes-session-baselines.md).
+  [WI-371](archive/work/complete/WI-371-shoot-mjs-deletes-session-baselines.md).
 - **Deviations from spec:** none (the spec's first option, as recommended
   there). No pytest coverage, deliberately: meta-only Node dev tooling
   with no test harness — verified live (a planted `shots/before/` marker
@@ -27615,7 +27615,7 @@ This close's own spec move to `complete/` was performed with the new CLI.
   the trunk_step pairing), size stamps (integrate.py 1890→1946 reviewed bump;
   bootstrap.py 2250→2257 registration), arch map + gate + dashboard
   regenerated; the WI spec closed to
-  [`docs/work/complete/`](work/complete/WI-393-rehome-the-link-aware-archival-ritual.md)
+  [`docs/work/complete/`](archive/work/complete/WI-393-rehome-the-link-aware-archival-ritual.md)
   with `specref` cleared (R-F; its `docs/specs/README.md#lifecycle` ref was
   the shared lifecycle doc, not a per-WI spec-of-record, so nothing archives).
 - **Red-then-green (watched):** `tests/test_spec_move.py` failed at collection
@@ -30239,7 +30239,7 @@ The row's premise held: every one of the dead symbols made its module *smaller*
 when its caller left, which is what the module-size ratchet reads as an
 improvement — so **13 distinct dead ideas** sat under a fully green harness. The
 full classification is in the WI's Deliverable
-([`docs/work/complete/WI-422-dead-symbol-sweep.md`](work/complete/WI-422-dead-symbol-sweep.md));
+([`docs/work/complete/WI-422-dead-symbol-sweep.md`](archive/work/complete/WI-422-dead-symbol-sweep.md));
 what belongs here is the method's one real lesson and the two findings.
 
 **The method needed three passes, and the first two were wrong in opposite
@@ -30379,7 +30379,7 @@ generated artifact carries a `--check` freshness contract"), and a universal is
 false at one counterexample. Both are wired now, as built-in `check.py` steps
 `prompt-catalog` and `skills-index` plus the pre-commit floor; the full
 ten-row `[generated]`-vs-wiring table is in the WI's Deliverable
-([`docs/work/complete/WI-427-wire-the-two-unwired-freshness-checks.md`](work/complete/WI-427-wire-the-two-unwired-freshness-checks.md)).
+([`docs/work/complete/WI-427-wire-the-two-unwired-freshness-checks.md`](archive/work/complete/WI-427-wire-the-two-unwired-freshness-checks.md)).
 **The census claim held: there was no third gap.**
 
 **The gate set was decided on what the artifacts MEAN, and the deciding evidence
@@ -30551,7 +30551,7 @@ children in this schema. This builds the computation `Founded` will consume,
 against today's data. **Ratification is owed with the ladder migration** — no
 `Status` value and nothing in the `Draft`/`Verified`/`Modified` vocabulary is
 touched here; Q11 still holds that. Full account:
-[docs/work/complete/WI-429](work/complete/WI-429-llr-codesymbol-discharge-test.md).
+[docs/work/complete/WI-429](archive/work/complete/WI-429-llr-codesymbol-discharge-test.md).
 
 **Data first, check second — and the census is what decided the rule.** Read
 through `spine_carrier`, all 149 live LLR rows. `CodeSymbol` has **no enforced
@@ -32019,7 +32019,7 @@ pass's tests did not bind: a How route reached `y=-9.1` outside a y=0 viewBox,
 incoming paths visually fused at one centre port, duplicate marker ids hid
 arrowheads, and curved lane transitions formed acute roadmap cusps. The finding
 and its rendered baselines are recorded in
-[WI-435](work/complete/WI-435-orthogonal-bounded-drill-wires.md).
+[WI-435](archive/work/complete/WI-435-orthogonal-bounded-drill-wires.md).
 
 **What changed.** [The generated dashboard](../PROJECT_STATE.html) now draws
 When/How drill dependencies as obstacle-checked orthogonal paths, exposes one
@@ -32089,7 +32089,7 @@ home for architecture. Measured before deciding: the full shed takes 41 tests
 red, 30 of them the dashboard failing to render. The columns are held and their
 deletion bound to WI-455; a `direction` name collision (D-3) rides with them and
 closes itself when WI-455 lands. The full argument and the evidence are in
-[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s
+[WI-442](archive/work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s
 Deliverable — not repeated here. **Sitting 3 owes the sequencing call.**
 
 **FINDING — two checks would have become tautologies if copied forward.** The
@@ -32137,7 +32137,7 @@ every shipped doc still declaring the retired column, and a missing
 reported stage. All fixed and pinned. The full accounting, including what the
 review refused to substantiate and the one point answered rather than fixed
 (`trace.py`'s bump-vs-decompose choice), is in
-[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
+[WI-442](archive/work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
 
 **Byte deltas.** `AGENTS.template.md` 9,994 → 9,994 (unchanged; 6 bytes of
 headroom under 10,000). `PROCESS.md` 73,420 → **73,604 (+184)**: §8's
@@ -32149,7 +32149,7 @@ dead column. Baseline re-stamped in both `byte-budget-guard` copies.
 
 **Deviations from spec.** One clause held (`direction`/`counterpart`, above) and
 one id-shape deviation (`B-##`, above). Both are recorded in
-[WI-442](work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
+[WI-442](archive/work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)'s Deliverable.
 No byte-budgeted file was touched.
 
 ## 2026-08-14 — WI-454: SN-033's need-form checker lands warn-first, while the tier is clean
@@ -32177,7 +32177,7 @@ dirty the tier is the one that reports.
   (Draft, CMP-007) → TC-164 (Draft, Smoke) with IF-121 (Provides, the CLI
   contract incl. the never-strict posture) + IF-122 (Consumes, the carrier
   read), all Draft/Planned — **no re-attest window**. Spec closed to
-  [`work/complete/`](work/complete/WI-454-sn-033-need-form-checker.md).
+  [`work/complete/`](archive/work/complete/WI-454-sn-033-need-form-checker.md).
 - **The §6 item-16 rider, executed.** Its *SN comment block* stray rides this
   registry touch per §6.0: the OI-18 dissolution deleted the Edge-case rows
   and left the header prose declaring an empty section — the comment block in

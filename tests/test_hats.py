@@ -413,11 +413,17 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
 def _real_work_item_contexts():
     """The context of every REAL work-item row in this repo's registry — the
     population the roster's conditions actually run against. Parsed from the
-    `+++` TOML front matter of every spec under docs/work/."""
+    `+++` TOML front matter of every spec under docs/work/ AND its archive
+    sibling docs/archive/work/ (WI-504, OI-55 ruled (a) — terminal history
+    relocated there 2026-08-22, one directory deeper; both roots are ONE
+    registry, so a census over "the real registry" reads both)."""
     import tomllib
 
     contexts = {}
-    for spec in sorted((ROOT / "docs" / "work").rglob("*.md")):
+    specs = sorted((ROOT / "docs" / "work").rglob("*.md")) + sorted(
+        (ROOT / "docs" / "archive" / "work").rglob("*.md")
+    )
+    for spec in specs:
         lines = spec.read_text(encoding="utf-8").split("\n")
         if not lines or lines[0].strip() != "+++":
             continue

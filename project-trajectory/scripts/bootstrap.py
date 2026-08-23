@@ -50,10 +50,14 @@ What it creates in the destination:
     docs/work/README.md                        <- work/README.template.md  (the
                                                 location->status contract, stated
                                                 inside the registry: a terminal row
-                                                STAYS; docs/work/archive/ never exists)
+                                                is still a DAG predecessor, so it
+                                                lives on in docs/archive/work/,
+                                                never deleted; docs/work/archive/
+                                                never exists)
     docs/orphans-allow                         <- orphans-allow.template  (declares
-                                                docs/work/* an expected-live-orphan
-                                                class: registry entries, not pages)
+                                                docs/work/* and docs/archive/work/*
+                                                expected-live-orphan classes:
+                                                registry entries, not pages)
     docs/log.d/.gitkeep                        (the log's fragment drop-box: a work
                                                 branch writes docs/log.d/<WI-id>-<slug>.md,
                                                 the serial trunk step compiles them)
@@ -111,8 +115,10 @@ What it creates in the destination:
     .gitignore                                 <- gitignore.template
     .gitattributes                             <- gitattributes.template (eol=lf hook pin)
     .github/workflows/check.yml                <- ci/check.yml
-    src/, tests/, docs/work/{draft,active,deferred,cancelled,partial,complete}/
-                                               (empty, with .gitkeep)
+    src/, tests/, docs/work/{draft,active,deferred}/,
+    docs/archive/work/{partial,cancelled,complete}/
+                                               (empty, with .gitkeep; the terminal
+                                               three live under the archive — WI-504)
 
 The agent guide lives once, in `AGENTS.md` (the cross-tool standard). `CLAUDE.md`
 and `GEMINI.md` ship as thin stubs that point back at it, because Claude Code and
@@ -2127,13 +2133,19 @@ GITKEEP_DIRS = [
     "docs/work/draft",
     "docs/work/active",
     "docs/work/deferred",
-    "docs/work/cancelled",
-    # SR-144's third terminal, scaffolded for the same visibility reason: a lane
-    # that stopped early closes HERE, not back into `queued/` with a blockref,
-    # and an empty `partial/` beside the other two terminals is what tells a
-    # reader "stopped early" is a state the process has a name for.
-    "docs/work/partial",
-    "docs/work/complete",
+    # The three TERMINAL states live under the archive, not the active
+    # workspace (WI-504, OI-55 ruled (a)): `docs/work/` holds only rows still
+    # in flight, so an agent listing the registry never wades through history
+    # to find the frontier. Status stays directory-encoded — `kitlib.registry`
+    # reads both `docs/work/` and `docs/archive/work/` as one registry
+    # (`spec_roots`) — only the terminal three moved one directory deeper.
+    # `docs/archive/work/cancelled` beside `.../complete` is what says a
+    # terminal state has two outcomes and the folder names which; SR-144's
+    # third terminal, `.../partial`, is what tells a reader "stopped early" is
+    # a state the process has a name for.
+    "docs/archive/work/partial",
+    "docs/archive/work/cancelled",
+    "docs/archive/work/complete",
     # SR-144's per-close reports: one immutable document per non-merged-clean
     # lane close. OUTSIDE docs/work/ deliberately — `spec_files` is an rglob for
     # `WI-*.md` filtered only on "not directly in work_dir", so a report living

@@ -26,9 +26,9 @@ interface-findings=0 component-findings=0 form-findings=2` (the two recorded
 The re-tier merged as `partial` 2026-08-15. This row is the first of the three
 that finish it — the **authoring calls**, all judgement, none mechanical. The
 full statement of each, with evidence and the interface rows it moves, is
-[the completion analysis](../../plans/2026-08-15-retier-completion.md) §2; the
+[the completion analysis](../../../plans/2026-08-15-retier-completion.md) §2; the
 needs of M3 are SN-026, SN-029 and SN-037. The originating detail is the lane ledger
-[2026-08-14-wi451-slice2-ledger.md](../../plans/2026-08-14-wi451-slice2-ledger.md)
+[2026-08-14-wi451-slice2-ledger.md](../../../plans/2026-08-14-wi451-slice2-ledger.md)
 lines 330–334.
 
 **These are a deliverable of the campaign, not a failure of it** (owner, log
@@ -109,5 +109,5 @@ full unfiltered suite green ✓.
 charge-through instruction, and overturnable at the review sitting.
 
 Reasoning, the shed-clause map, the forwarding record, the two attestation
-overrides and the X1/X2 verdicts: [`docs/log.md`](../../log.md), entry
+overrides and the X1/X2 verdicts: [`docs/log.md`](../../../log.md), entry
 `2026-08-15b`.

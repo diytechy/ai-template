@@ -646,7 +646,7 @@ the staleness mid-slice.**
 
 ### 5.1 WI-390 — concurrency-v2 program close
 
-[`../work/queued/WI-390-concurrency-v2-program-close.md`](../../work/complete/WI-390-concurrency-v2-program-close.md)
+[`../work/queued/WI-390-concurrency-v2-program-close.md`](../work/complete/WI-390-concurrency-v2-program-close.md)
 · `safety_class = "spine"` · `buildtier = medium` · **no `priority` key** (worth
 ruling if it is meant to sort last).
 
@@ -680,7 +680,7 @@ own row.
 
 ### 5.2 WI-442 — OI-28 seeds landed on the spine
 
-[`../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md`](../../work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)
+[`../work/queued/WI-442-oi-28-seeds-landed-on-the-spine.md`](../work/complete/WI-442-oi-28-seeds-landed-on-the-spine.md)
 · priority 2 · spine · `needs = ["WI-441"]` (complete) · `sr_refs = []`.
 **This is the highest-impact staleness in the queue.**
 
@@ -746,7 +746,7 @@ order; and rule whether a MAPPING addition is an IF-row edit.
 
 ### 5.4 WI-451 — SR-tier boundary conformance pass
 
-[`../work/queued/WI-451-sr-boundary-conformance-pass.md`](../../work/partial/WI-451-sr-boundary-conformance-pass.md)
+[`../work/queued/WI-451-sr-boundary-conformance-pass.md`](../work/partial/WI-451-sr-boundary-conformance-pass.md)
 · priority 2 · `buildtier = strong` · spine · `needs = []`. **The central row this
 sitting unblocks — and its central numbers are superseded.**
 
@@ -777,7 +777,7 @@ sitting unblocks — and its central numbers are superseded.**
 
 ### 5.5 WI-452 — LLR-165 resync-helper resurface
 
-[`../work/queued/WI-452-llr-165-resync-helper.md`](../../work/complete/WI-452-llr-165-resync-helper.md)
+[`../work/queued/WI-452-llr-165-resync-helper.md`](../work/complete/WI-452-llr-165-resync-helper.md)
 · priority 3 · medium · `safety_class = ordinary` · workstream `docs` ·
 `sr_refs = ["SR-147"]` — the only queued row carrying an SR ref.
 

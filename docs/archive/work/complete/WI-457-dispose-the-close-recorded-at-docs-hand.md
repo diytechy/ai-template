@@ -49,13 +49,13 @@ Outcomes (R3): cancel / defer / draft a successor / surface an open item. Contin
 
 **Disposed 2026-08-15; closed DONE. The lane's `partial` claim is CONFIRMED —
 no override, no cancellation, no deferral, no new open item.** Reasoning:
-[`docs/log.md`](../../log.md), entry `2026-08-15f`. **Provisional** under the
+[`docs/log.md`](../../../log.md), entry `2026-08-15f`. **Provisional** under the
 owner's 2026-08-15 charge-through and overturnable at the review sitting.
 
 ### The claim, judged rather than assumed
 
 The report at
-[`docs/handbacks/WI-451-wi451-sr-retier-campaign.md`](../../handbacks/WI-451-wi451-sr-retier-campaign.md)
+[`docs/handbacks/WI-451-wi451-sr-retier-campaign.md`](../../../handbacks/WI-451-wi451-sr-retier-campaign.md)
 claims `partial`. A disposition judges that claim, and there are three ways it
 could have been wrong: the lane could have under-claimed (delivered everything
 and closed `partial`), over-claimed (`partial` where `cancelled` was honest), or
@@ -89,7 +89,7 @@ named.
 
 Continuing work rides successors, never a revival of `WI-451`. All three were
 minted from the completion analysis
-([`docs/plans/2026-08-15-retier-completion.md`](../../plans/2026-08-15-retier-completion.md))
+([`docs/plans/2026-08-15-retier-completion.md`](../../../plans/2026-08-15-retier-completion.md))
 **before** this disposition was written, which is why no successor is drafted in
 this section: it would mint a fourth row for work already claimed.
 

@@ -2261,6 +2261,70 @@ not "that bar must next be cleared".
 freshness-gated** — the phase-drop and tier-signal detectors read its committed
 history, and it retires in a later entry, not this one.
 
+### Terminal WI history moves to `docs/archive/work/` (WI-504, OI-55 ruled (a)) [since d6818b0b]
+
+`docs/work/{complete,cancelled,partial}/` relocate WHOLE to
+`docs/archive/work/{complete,cancelled,partial}/`, one directory deeper — so
+`docs/work/` holds only rows still in flight (`draft/`, `queued/`, `active/`,
+`deferred/`) and an agent listing the registry meets the frontier, not hundreds
+of closed rows. Status stays directory-encoded; nothing about a closed row's
+STANDING changed, only its parent directory. `docs/handbacks/` (the per-close
+report home) did **not** move — it was never nested under `docs/work/` to begin
+with (SR-144's own reasoning: a report living there would be walked by
+`spec_files`, raise on its undeclared directory, and be silently skipped by
+every reader while its id counted as taken by the mint).
+
+**Readers are taught first, so both roots are honest.**
+`kitlib.registry.read_spec_rows` (and, through it, every consumer —
+`schedule.py`'s done-set, `check_trajectory.py`'s registry, `agent_common.py`,
+`intake.py`'s dedup) unions `docs/work/` and its `spec_roots` archive sibling
+into ONE registry; a repo that has not yet moved its own terminal population
+still reads correctly, because the union degrades to "whichever root actually
+holds the file." Take the updated `scripts/kitlib/registry.py`,
+`scripts/check_trajectory.py` (`_head_spec_status_map` now scans both prefixes
+so a close INTO the archive is still visible to the staged-registry ratchets),
+`scripts/integrate.py` (`branch_outcomes` reads both prefixes, and
+`docs/archive/work/` joins `_ADJUDICATION_SURFACES`), and `scripts/intake.py`
+(`_terminal_hits` — the by-hand recovery sweep, the disposition-mint arm, the
+spot-check arm, and the id-mint's filename sweep all read both roots now).
+
+**Migration recipe, one commit:**
+
+```
+mkdir -p docs/archive/work
+git mv docs/work/complete   docs/archive/work/complete
+git mv docs/work/cancelled  docs/archive/work/cancelled
+git mv docs/work/partial    docs/archive/work/partial
+```
+
+Then, in the same commit: (1) run the link sweep — every committed doc that
+links INTO a moved spec (a log fragment, a review, a README) needs its target
+re-pointed one directory deeper; `scripts/spec_move.py`'s
+`_rebase_moved_spec_links` / `_relink_inbound_links` primitives do this given
+the `(old, new)` path pairs the `git mv`s above produce — and re-run
+`check_docs.py --stale` until it is clean; (2) drop a short tombstone
+`README.md` into each now-empty `docs/work/{complete,cancelled,partial}/`
+pointing at the new home, so a link written against the old path resolves to an
+explanation instead of a 404; (3) re-point `docs/orphans-allow`'s
+`docs/work/*`-adjacent entry to also cover `docs/archive/work/*` (both stay
+declared — the old glob still covers the four open-state directories); (4) if
+your repo carries `check_vocab.py`'s `EXEMPT_GLOBS`, the generic
+`docs/archive/*` row already covers the new home, so any repo-local
+`docs/work/{complete,cancelled,partial}/*` rows are now dead and should be
+deleted rather than left pointing at directories that hold only a tombstone.
+**Do not rewrite old paths inside `docs/log.md` / `docs/log.d/*` / review
+records** — those are historical citations of where a thing lived when the
+record was written, not a live index.
+
+**Take:** the updated `scripts/kitlib/registry.py`, `scripts/check_trajectory.py`,
+`scripts/integrate.py`, `scripts/intake.py`, `scripts/check.py` (the
+doc-navigability `--ignore` list gains `docs/archive/work/*`, mirroring the
+existing `docs/work/*` row — a closed spec's body is DATA, not navigable
+prose, wherever it lives), `scripts/bootstrap.py` (a **fresh** scaffold ships
+the new shape directly — `docs/work/{draft,active,deferred}/` plus
+`docs/archive/work/{partial,cancelled,complete}/`, no migration needed), and
+`orphans-allow.template` / `work/README.template.md` / `work/WI-000.template.md`.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

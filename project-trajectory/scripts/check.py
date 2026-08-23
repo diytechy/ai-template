@@ -809,6 +809,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
                 # R-A/R-E) is check_trajectory's job, not this checker's.
                 "--ignore",
                 "docs/work/*",
+                # Terminal history's home since WI-504 (OI-55 ruled (a)):
+                # closed/cancelled/partial specs moved out of docs/work/ to
+                # docs/archive/work/, one directory deeper — same DATA-not-
+                # navigable-prose posture, same reason, new prefix.
+                "--ignore",
+                "docs/archive/work/*",
                 # SR-144's per-close reports: same posture, same reason (an
                 # immutable generated record, not navigable prose).
                 "--ignore",

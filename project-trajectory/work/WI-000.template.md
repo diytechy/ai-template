@@ -32,9 +32,14 @@ the narrative is the body.
 | `docs/work/queued/WI-###-<slug>.md` | `queued` — filed, unclaimed |
 | `docs/work/active/<branch>/WI-###-<slug>.md` | `active` — claimed by that branch |
 | `docs/work/deferred/WI-###-<slug>.md` | `deferred` — parked with its reason |
-| `docs/work/complete/WI-###-<slug>.md` | `done` — it shipped |
-| `docs/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
-| `docs/work/partial/WI-###-<slug>.md` | `partial` — a lane stopped early; terminal, and the per-close report under `docs/handbacks/` is the event's identity |
+| `docs/archive/work/complete/WI-###-<slug>.md` | `done` — it shipped |
+| `docs/archive/work/cancelled/WI-###-<slug>.md` | `cancelled` — it never will |
+| `docs/archive/work/partial/WI-###-<slug>.md` | `partial` — a lane stopped early; terminal, and the per-close report under `docs/handbacks/` is the event's identity |
+
+The three terminal directories live under `docs/archive/`, one level deeper than
+the active workspace (WI-504): a closed row is still live registry data — every
+reader treats `docs/work/` and `docs/archive/work/` as one registry — it has
+just left the frontier an agent scans to find what is still open.
 
 Three consequences worth stating, because they are the reason for the shape:
 

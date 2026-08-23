@@ -226,7 +226,8 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
   join of `docs/stage`'s `per-phase-live=` labels against phase-anchor WI titles
   — so a reformatted `P1`/`v2` cell went silently vacuous there, disarming the
   warn without telling anyone. (Legacy `[v3]`-style title anchors in
-  `docs/work/complete/` are history — never rewritten; the rule bites live
+  `docs/archive/work/complete/` (WI-504 relocated the terminal directories
+  under the archive, 2026-08-22) are history — never rewritten; the rule bites live
   registry cells only. The anchor's own vocabulary changed at WI-498 slice 4:
   a new title takes `[<phase>]-[DevStg-<Rung>]`, and the retired
   `[g1|g2|reqs|tests]` spellings are translated on read — `reqs`/`g1` to

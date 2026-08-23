@@ -141,6 +141,11 @@ from kitlib.station import (
 SCRIPTS = Path(__file__).resolve().parent
 WORK = "docs/work"
 ACTIVE = WORK + "/active"
+# Terminal history's home since WI-504 (OI-55 ruled (a)): a lane closes into
+# `docs/archive/work/<outcome>/` now, one directory deeper than `docs/work/`
+# itself — `branch_outcomes` below reads BOTH prefixes so a branch that closed
+# before or after the relocation is read identically.
+ARCHIVE_WORK = "docs/archive/work"
 
 # THE THREE TERMINAL OUTCOMES (§A3 as amended by SR-144) live in
 # `kitlib.station` and are re-exported here, unchanged, for every caller that
@@ -934,12 +939,21 @@ def branch_outcomes(root, branch):
     That last rule is `kitlib.station.outcome_of` (WI-483): reading the branch
     tree is an EFFECT and stays here, deciding what the read means is a pure
     function over a set of directory names and is testable without a repo.
+
+    Reads BOTH `WORK` and `ARCHIVE_WORK` (WI-504): a close lands its terminal
+    move under the archive now, one directory deeper, so the outcome-dir index
+    into `path.split("/")` differs per prefix (`docs/work/<outcome>/...` vs
+    `docs/archive/work/<outcome>/...`) — stated once per prefix rather than
+    inferred, so a spec that happens to land in BOTH trees (never legitimate)
+    still resolves to `unresolved` exactly like landing in two dirs of one
+    tree always has.
     """
     landed = {}
-    for path in _branch_tree_paths(root, branch, WORK) or []:
-        parts = path.split("/")
-        if len(parts) > 3 and parts[2] in OUTCOME_DIRS:
-            landed.setdefault(parts[-1], set()).add(parts[2])
+    for prefix, depth in ((WORK, 2), (ARCHIVE_WORK, 3)):
+        for path in _branch_tree_paths(root, branch, prefix) or []:
+            parts = path.split("/")
+            if len(parts) > depth + 1 and parts[depth] in OUTCOME_DIRS:
+                landed.setdefault(parts[-1], set()).add(parts[depth])
     outcomes, unresolved = {}, []
     for wi_id, name in _claimed_specs(root, branch):
         outcome = outcome_of(landed.get(name) or ())
@@ -1507,6 +1521,11 @@ def _normalize_bar(value):
 # allowlist, failing lanes toward the full bar for no reason.)
 _ADJUDICATION_SURFACES = (
     "docs/work/",
+    # WI-504 (OI-55 ruled (a)): a disposition's terminal close now moves the
+    # spec under the archive, one directory deeper — without this row that
+    # exact move (spec moves are named above as a ruled disposition outcome)
+    # would fail an adjudication lane off the no-bar path.
+    "docs/archive/work/",
     "docs/log.d/",
     "docs/reviews/",
     # BOTH carrier paths per spine tier: this is a pathspec

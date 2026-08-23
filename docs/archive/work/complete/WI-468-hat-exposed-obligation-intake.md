@@ -14,7 +14,7 @@ priority = 3
 
 **The four intake proposals delivered; nothing minted; every disposition
 rides the sitting.** The option set is
-[plans/2026-08-17-wi468-obligation-intake-options.md](../../plans/2026-08-17-wi468-obligation-intake-options.md)
+[plans/2026-08-17-wi468-obligation-intake-options.md](../../../plans/2026-08-17-wi468-obligation-intake-options.md)
 — one section per candidate: measured grounding (named files/functions),
 the amendment / hat-derived-SR / new-SN / refuse options each with cost,
 the honest refusal case, and a recommendation. The owner steer (no new

@@ -488,11 +488,12 @@ def test_harness_wires_stale_into_doc_navigability():
     # lying-map heuristic runs inside the harness.
     src = (SCRIPTS / "check.py").read_text(encoding="utf-8")
     i = src.index("check_docs.py")
-    # 1000, not 600: the arg list carries the docs/work scoping comment (Phase
-    # 2c) and now the docs/handbacks one too (SR-144) between the ignores and
-    # --stale. The window is a readability bound on the search, not a claim
-    # about the file — widen it when a reason is added, never drop it.
-    assert "--stale" in src[i : i + 1000]
+    # 1300, not 1000: the arg list carries the docs/work scoping comment (Phase
+    # 2c), the docs/archive/work one (WI-504, OI-55 ruled (a)) and the
+    # docs/handbacks one (SR-144) between the ignores and --stale. The window
+    # is a readability bound on the search, not a claim about the file —
+    # widen it when a reason is added, never drop it.
+    assert "--stale" in src[i : i + 1300]
 
 
 def test_harness_runs_doc_navigability_at_g1(scaffold):
@@ -1144,6 +1145,11 @@ def test_meta_repo_has_zero_unexplained_orphans():
             # in check.py's doc-navigability step (Phase 2c flip).
             "--ignore",
             "docs/work/*",
+            # ...and its terminal history, one directory deeper under the
+            # archive since WI-504 (OI-55 ruled (a)) — same scope, same
+            # reason, the new prefix the harness ignores alongside it.
+            "--ignore",
+            "docs/archive/work/*",
             "--strict-orphans",
         ],
         cwd=ROOT,

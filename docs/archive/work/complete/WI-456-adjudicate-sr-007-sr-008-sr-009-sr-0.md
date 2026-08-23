@@ -117,7 +117,7 @@ Advisory registry joins (WI-388; never gating):
 > log `2026-08-15f` rather than patched inline.
 
 **Adjudicated 2026-08-15; closed DONE.** Reasoning and the tally:
-[`docs/log.md`](../../log.md), entry `2026-08-15f`. **Provisional** under the
+[`docs/log.md`](../../../log.md), entry `2026-08-15f`. **Provisional** under the
 owner's 2026-08-15 charge-through and overturnable at the review sitting.
 **NO Status cell is flipped by this row, in either direction** — none needs to
 be, which is itself the finding.

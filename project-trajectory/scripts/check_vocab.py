@@ -192,14 +192,23 @@ EXEMPT_GLOBS = (
     # it the moment the anchor grammar joined the refused set — three of its own
     # slice records tripped it, correctly, for quoting what they translated).
     "docs/log.d/*",
-    # history: a partial close's spec, whose immutable report is the close event
-    "docs/work/partial/*",
     # citations: a rubric records the anchor it was AUTHORED at (D-4 — a WI title
     # is a citation, and a citation names the thing as it was called)
     "docs/rubrics/*",
     # attestation quotes: registry cells quoted byte-for-byte at a pinned baseline
     "docs/ratify/*",
-    # history: closed and cancelled work-item specs (D-4 — a WI title is a citation)
+    # history: a partial close's spec, whose immutable report is the close event.
+    # WI-504 (OI-55 ruled (a)) relocated the live population to
+    # docs/archive/work/partial/* — already covered by the generic
+    # "docs/archive/*" row above — but this row STAYS: it is what keeps a
+    # citation of the PRE-migration path exempt (a downstream repo mid-move, or
+    # this repo's own history quoting where a row used to live), the same
+    # never-rewrite-history posture the sibling two rows below keep.
+    "docs/work/partial/*",
+    # history: closed and cancelled work-item specs (D-4 — a WI title is a
+    # citation). Same WI-504 note as `docs/work/partial/*` immediately above —
+    # the live population moved to docs/archive/work/*, this row stays to keep
+    # a pre-migration citation exempt.
     "docs/work/complete/*",
     "docs/work/cancelled/*",
     # history: dated session transcripts and review records

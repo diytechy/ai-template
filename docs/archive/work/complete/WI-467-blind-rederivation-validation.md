@@ -23,16 +23,16 @@ skipped.
 
 **What ran, read off the artifacts rather than trusted from the commit
 messages.** Two independently-derived, axis-diverse capability breakdowns —
-[`plans/2026-08-16-blind-derivation-a.md`](../../plans/2026-08-16-blind-derivation-a.md)
+[`plans/2026-08-16-blind-derivation-a.md`](../../../plans/2026-08-16-blind-derivation-a.md)
 (actor/crossing axis, 21 top-level + 56 sub-rows) and
-[`-b.md`](../../plans/2026-08-16-blind-derivation-b.md) (lifecycle/value-flow
+[`-b.md`](../../../plans/2026-08-16-blind-derivation-b.md) (lifecycle/value-flow
 axis, 24 top-level + 49 sub-rows), each reading only the README vision +
 `stakeholder-needs.toml` + `external.toml`, each covering 27/27 SNs — plus a
 third, hat-aware variant,
-[`-c-hats.md`](../../plans/2026-08-16-blind-derivation-c-hats.md) (80 rows
+[`-c-hats.md`](../../../plans/2026-08-16-blind-derivation-c-hats.md) (80 rows
 across 13 hats), owner-approved as an extension ("might expose some other
 items anyways"). The alignment pass,
-[`plans/2026-08-16-derivation-alignment.md`](../../plans/2026-08-16-derivation-alignment.md),
+[`plans/2026-08-16-derivation-alignment.md`](../../../plans/2026-08-16-derivation-alignment.md),
 is the mechanical join the spec asks for: 71 distinct obligation clusters
 across A∪B, 59 convergent (83%), 0 flat contradictions (5 divergences of
 placement/strength), 7 tensions hit by both teams independently; 63 legacy

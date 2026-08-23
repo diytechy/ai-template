@@ -12,7 +12,7 @@ safety_class = "ordinary"
 Two of the four adjudicator briefs are ROUTED and wired end to end; two are
 left on the worker assignment with the derivation each is missing named in
 `adjudicate_brief.py`'s header. The seam is
-[`project-trajectory/scripts/adjudicate_brief.py`](../../../project-trajectory/scripts/adjudicate_brief.py)
+[`project-trajectory/scripts/adjudicate_brief.py`](../../../../project-trajectory/scripts/adjudicate_brief.py)
 (new) plus `agent_loop.session_body`, the one fork BOTH routing arms take —
 managed and single-model, because which brief a claimed row gets is a property
 of the ROW, not of whether a routing registry happens to be configured.

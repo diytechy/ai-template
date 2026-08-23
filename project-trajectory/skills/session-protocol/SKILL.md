@@ -104,9 +104,10 @@ cadence"). New behavior needs new tests
 ## 4. Record the work
 
 - Close the WI by MOVING its spec file to the terminal directory its outcome
-  names — `docs/work/complete/` when it shipped, `docs/work/cancelled/` when it
-  never will, `docs/work/partial/` when you could not finish (that one is
-  TERMINAL too, and it owes an immutable per-close report under
+  names, under the archive (WI-504, OI-55 ruled (a)) —
+  `docs/archive/work/complete/` when it shipped, `docs/archive/work/cancelled/`
+  when it never will, `docs/archive/work/partial/` when you could not finish
+  (that one is TERMINAL too, and it owes an immutable per-close report under
   `docs/handbacks/`: the report IS the close event, and the disposition row an
   adjudicator gets keys on its path) — and filling
   its `## Deliverable` body (status is the directory, never a field — and a

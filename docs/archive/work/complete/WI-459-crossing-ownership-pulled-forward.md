@@ -101,7 +101,7 @@ Raised for the owner as `OI-29`.
 ## Close
 
 **Closed DONE 2026-08-15.** Reasoning and the full verdict text:
-[`docs/log.md`](../../log.md), entry `2026-08-15f`. **Everything here is
+[`docs/log.md`](../../../log.md), entry `2026-08-15f`. **Everything here is
 PROVISIONAL** — executed under the owner's 2026-08-15 charge-through, and
 overturnable at the review sitting. No Status, `approval` or attestation cell
 moved.

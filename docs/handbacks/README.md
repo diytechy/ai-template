@@ -2,9 +2,11 @@
 
 One immutable file per lane close that is not a clean merge (SR-144;
 [handback-contract.md](../archive/history/handback-contract.md)). `handback.close_partial`
-writes one here and moves the claimed spec to `docs/work/partial/`; the
-integrator merges the branch like any other; `intake._close_drafts` mints the
-disposition row that judges it.
+writes one here and moves the claimed spec to `docs/archive/work/partial/`
+(WI-504, OI-55 ruled (a) — the terminal directories relocated under the
+archive 2026-08-22; this report's own home, `docs/handbacks/`, did not move);
+the integrator merges the branch like any other; `intake._close_drafts` mints
+the disposition row that judges it.
 
 **The file IS the event's identity.** That is the whole design, and it is what
 dissolved a defect class rather than mitigating it: five successive dedup
@@ -40,10 +42,10 @@ via `RESYNC_PACK.md`.
 
 ---
 
-## The other half: `docs/work/partial/`
+## The other half: `docs/archive/work/partial/`
 
-The spec itself moves to [`docs/work/partial/`](../work/partial/), which is
-**TERMINAL**. Nothing re-claims a row from there, so nothing strands — that is
+The spec itself moves to [`docs/archive/work/partial/`](../archive/work/partial/),
+which is **TERMINAL**. Nothing re-claims a row from there, so nothing strands — that is
 what it buys over the retired shape, which put the spec back in `queued/` behind
 a `blockref` and left an owed judgement hanging on a mutable marker. Continuing
 the work means the adjudicator DRAFTS A SUCCESSOR carrying `supersedes =
