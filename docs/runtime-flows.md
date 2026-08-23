@@ -44,7 +44,7 @@ lives in [`requirements/`](requirements/) + [`test/`](test/).
 > those three rows were DEMOTED to the design tier, so the stale requirement
 > text no longer exists to disagree with the diagram, and LLR-143 now names
 > `dispatch.py`. What was owed to
-> [WI-390](work/active/wi390-concurrency-v2-program-close/WI-390-concurrency-v2-program-close.md) as spine scope
+> [WI-390](work/complete/WI-390-concurrency-v2-program-close.md) as spine scope
 > was discharged by the re-tier instead.
 >
 > **Every citation below was re-pointed onto the carrier that now holds the

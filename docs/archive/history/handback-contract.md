@@ -198,5 +198,5 @@ measurement that made the *old* fix's migration question a non-issue.
   machinery at its close, unchanged — both defects are real under either
   contract.
 - The kit's own spine (`SR`/`LLR`/`TC`) rows describing the handback contract
-  are amended in the same window as [WI-390](../../work/active/wi390-concurrency-v2-program-close/WI-390-concurrency-v2-program-close.md)'s
+  are amended in the same window as [WI-390](../../work/complete/WI-390-concurrency-v2-program-close.md)'s
   program close, per §A4's one-sitting rule.
