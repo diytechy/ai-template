@@ -12,10 +12,11 @@ priority = 2
 
 ## Context
 
-**SLICES 1–4 LANDED (2026-08-20, 2026-08-22, 2026-08-23 ×2) — the row is
-ACTIVE, not complete.** Phases 0, 1, 3 and 5 shipped whole; phase 2's backfill is
-DONE and its writer is still owed; phase 4 is untouched and blocked. What is
-still owed, in the order it should be taken:
+**SLICES 1–5 LANDED (2026-08-20, 2026-08-22, 2026-08-23 ×3) — the row is
+ACTIVE, not complete.** Phases 0, 1, 2, 3 and 5 have shipped; phase 4 is
+untouched and blocked. What is still owed, in the order it should be taken:
+item 3 (owner-adjacent), item 5 (phase 4, blocked) and item 7 (recorded, owed by
+nobody yet).
 
 1. ~~**Phase 2's judgement backfill.**~~ **DONE, slice 2 (2026-08-22)** — record:
    `docs/log.d/2026-08-22-wi484-hatrefs-backfill.md`. **55 SR cells and 8 LLR
@@ -34,19 +35,21 @@ still owed, in the order it should be taken:
    attributable to — evidence for the open owner call in `hats.toml`'s header,
    not a hole. 160 of the 162 LLRs with no own cell are covered by INHERITANCE
    and need none.
-2. **Phase 2's writer — STILL OWED, and slice 2 named its blocker.** Nothing
-   composes the cell yet: `hats.applicable` + `plan_briefs.hat_surface` still
-   only RENDER the questions into a brief. The blocker is a mismatch, not a size
-   judgement: `{{HAT_QUESTIONS}}` has exactly ONE consumer,
-   `prompts/dual-plan-planner.template.md`, whose output contract is a Plan-WI
-   table (`Plan-WI | Title | Covers | Interfaces | Predecessors`) directing every
-   perspective's answer into `## Notes` — **that brief mints no spine row at
-   all**, so a write instruction appended to `hats.brief_block` would ship every
-   adopter an instruction its own output contract makes unfollowable. The session
-   that mints SR/LLR rows reads the `spine-authoring` skill instead, a different
-   surface with a three-way per-agent fan-out under `--check-agents`. Widening
-   the Plan-WI output contract vs stating the obligation at the spine-authoring
-   tier is the decision this item owes.
+2. ~~**Phase 2's writer.**~~ **DONE, slice 5 (2026-08-23)** — record:
+   `docs/log.d/2026-08-23-wi484-writer.md`. The fork slice 2 named is RULED **(B)
+   — the obligation is stated at the spine-authoring tier**, and (A), widening
+   the Plan-WI output contract, is declined: that brief's product is a plan table
+   of proposed work items, so a row-minting instruction there is unfollowable by
+   construction, and widening it would ship every adopter a schema change to the
+   one artifact whose two independent planners' outputs must stay commensurable.
+   The `spine-authoring` skill is where the minting session already reads the
+   cell's rule (§2(c) has named `Hat-Refs` since slice 1), so the writer joins
+   its own home rather than minting a second. It teaches the backfill's rule
+   whole — the `listens_for` test, empty-is-honest with its two earning shapes,
+   and LLR-own-refs-beyond-parents at §3 — plus the four-tier statement (`SR`/
+   `LLR` in, `SN`/`TC` out) the skill's own failure-mode list demands. No code
+   changed: `hats.py list` already prints every hat's `listens_for`, so the
+   instruction is executable as written.
 3. **Phase 2's duplication.** The 17 migrated rows now state the attribution
    TWICE — once in `hat_refs`, once in the `Rationale` prose it came from.
    Deleting the prose touches an **approved** cell on Approved rows, so it is

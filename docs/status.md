@@ -130,17 +130,17 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   snapshot — WI-483 slice 3 authored its two new spine rows `Drafted` for exactly
   that reason. Whoever amended `LLR-147` owns the resolution: re-attest it and
   re-run the refresh, or revert the amendment.
-- **The `wi484-concern-refs-component-view` lane is OPEN with slice 4 landed**
-  (2026-08-23): phases 0, 1, 2's backfill, **3** and **5** are done — the
-  component view is GENERATED (`components.derived.toml`, freshness-gated by the
-  `component-view` step), `detail_doc` is retired, and the amend-without-flip
-  guard now carries a `Hat-Refs` arm (warn-first, `--staged`; a row whose
-  approved cells moved while its perspective record did not). The row's spec
-  Context lists what is still owed. **The next decision is phase 2's writer**, and it is
-  a NAMED design fork recorded in the spec, not a size judgement: widen the
-  Plan-WI output contract so the composing brief can mint the cell, or state the
-  obligation at the spine-authoring tier instead. Phase 2's duplication (17 rows
-  state the attribution twice) is owner-adjacent and deliberately unTAKEN.
+- **The `wi484-concern-refs-component-view` lane is OPEN with slice 5 landed**
+  (2026-08-23): phases 0, 1, **2**, 3 and 5 are done — the component view is
+  GENERATED (`components.derived.toml`, freshness-gated by the `component-view`
+  step), `detail_doc` is retired, the amend-without-flip guard carries a
+  `Hat-Refs` arm (warn-first, `--staged`), and phase 2's writer is now the
+  `spine-authoring` skill's own rule at SR §2(c2) + LLR §3 (the fork was ruled
+  for the minting tier; the Plan-WI brief mints no spine row, so it was declined
+  as a home). The row's spec Context lists what is still owed. **What remains
+  needs the owner or a mechanism, not a next slice:** phase 2's duplication (17
+  rows state the attribution twice, in an approved `Rationale` cell) is
+  owner-adjacent and deliberately unTAKEN.
   **Phase 4 is blocked on a mechanism, not a decision:** `hats.py` refuses any unknown roster
   key and has no optional-key concept, so `knowledge` cannot be added to
   `hats.toml` without first minting one — and that file is declared owner text.

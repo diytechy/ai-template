@@ -144,6 +144,36 @@ Four questions:
   - A row derivable **only** through a hat that ships switched OFF must say so.
     An obligation whose only lens is unreachable is a roster finding, not a
     licence — the label makes it reviewable; it does not make the row wanted.
+- **(c2) Fill `Hat-Refs` as you mint the row, by the `listens_for` test — and
+  leave it EMPTY when nothing passes.** (c) is the strongest case for the cell,
+  not the whole population: a row can be attributable to a perspective without
+  having been *derived* through one. The one test, stated so a later reader can
+  falsify a cell rather than re-argue it: **attribute a hat only where THAT
+  hat's own `listens_for` names a failure THIS row prevents.** The reading it
+  displaces is "which lens could be held up to this row" — under that one a
+  roster whose hats are mostly `always` puts every name in every cell and the
+  column discriminates nothing. So read the failure classes instead of
+  recalling them: `python scripts/hats.py list` prints each hat's `asks` and
+  the `listens_for` it exists to catch, and `hats.py applicable --tag <tag> …`
+  narrows to the ones a given context must face.
+  - **An empty cell is an answer, and often the right one** — it reads *not
+    recorded*, never *no perspective applied*, so it claims nothing. Two shapes
+    earn it after you have looked: a row that names a hat in order to **refuse**
+    it as a basis (the refusal is `Rationale`'s job — writing the name into
+    `Hat-Refs` would assert the opposite), and a row whose attribution's
+    **subject is gone**, where re-pointing the cell at a deleted mechanism is
+    exactly the staleness the cell exists to make mechanical.
+  - **Calibrate against the row's own argument.** One name is the common case.
+    If a cell is heading for three, check whether the row really states three
+    failures or whether the extras are stated by sibling rows — the hat belongs
+    with the row that carries the obligation, not with every row nearby.
+  - **Coverage is warn-only forever, in both directions**, and neither advisory
+    is a quota: rows attributable to no declared perspective can be honest, and
+    a hat attributable to no row is evidence about the ROSTER — a charter this
+    project files no work in — not a hole to fill by attributing it somewhere.
+  - **Which tiers carry it:** `SR` and `LLR` only. `SN` states the need a hat is
+    a lens *on*, and `TC` records how a claim is checked; neither is a place an
+    obligation is attributed, and neither schema declares the key.
 - **(d) The advisories are detectors, not caps.** `scripts/trace.py` warns —
   never gates — on (i) an SR `Requirement` naming a concrete `.py` artifact,
   (ii) two SRs naming the same artifact token, (iii) an SN `acceptance` naming a
@@ -175,6 +205,15 @@ Four questions:
 - **A child adds detail.** If the LLR would merely re-word its parent, link
   instead. `trace.py`'s paraphrase advisory is lexical and warns forever; the
   judgement stays yours.
+- **An LLR's `Hat-Refs` holds only what its OWN decomposition raised — never a
+  copy of its parent's.** The row's EFFECTIVE set is derived (own refs unioned
+  with its `SR-Refs` parents'), so an own ref is earned only where the design
+  row bears a hat **no parent carries**: a platform quirk in the mechanism, a
+  keyboard path, an atomicity the requirement never states. Everything else is
+  the copy-down the derivation exists to prevent — it turns re-ruling one SR
+  into a sweep over its children, and the copies are what go stale. The `§2(c2)`
+  test decides the rest: most design rows correctly carry nothing, because their
+  parent already says why they exist.
 - **Acceptance criteria hold the observable condition + threshold.** True of
   every cell that states acceptance, SN `acceptance` included — the tier changes
   what the condition is *about*, never that it must be a condition. Artifact

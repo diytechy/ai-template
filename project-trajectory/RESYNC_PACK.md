@@ -3658,6 +3658,39 @@ open-items tier does not declare, rather than writing a brief that renders empty
 **If you have your OWN copy** of a TOML writer for these files, this is the
 moment to import `kitlib.spine`'s instead.
 
+### `Hat-Refs` gains its WRITE instruction, at the tier that mints the row [since 0069b6a6]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**Kit-owned file — overwrite it and move on:** `skills/spine-authoring/SKILL.md`
+(then `python project-trajectory/scripts/bootstrap.py --dest . --sync` to
+re-materialize your per-agent copies; `gen_skills_index.py --check-agents` is
+the drift gate).
+
+**What changes for you:** nothing mechanical — **no schema, checker, gate or
+brief moves**. The `Hat-Refs` entry above shipped the cell and its detectors but
+left the writing to judgement, and judgement with no stated rule fills the cell
+by pattern. The skill now carries the rule, at SR (`§2(c2)`) and LLR (`§3`):
+
+- **Attribute a hat only where THAT hat's own `listens_for` names a failure the
+  row prevents** — not "which lens could be held up to this row". The second
+  reading is the one that ruins the column: if your roster's hats are mostly
+  `applies_when = "always"`, it puts every name in every cell.
+- **An empty cell is an answer** (it reads *not recorded*, never *no perspective
+  applied*), and two shapes earn it: a row naming a hat in order to **refuse**
+  it as a basis, and a row whose attribution's subject is gone.
+- **An LLR records only what its own decomposition raised** — a restatement of
+  the derivation rule the previous entry already carries, now sited where the
+  child row is written.
+
+**Why the skill and not the planner brief.** The obvious other home was
+`prompts/dual-plan-planner.template.md`, the one consumer of the
+`{{HAT_QUESTIONS}}` block — but its output contract is a **plan table of
+proposed work items**, and it mints no spine row at all, so a write instruction
+there would be unfollowable by construction. If you have re-carried that brief
+with an output contract that DOES mint SR/LLR rows, this is the entry to read
+twice: the instruction belongs wherever your minting session actually reads.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose
