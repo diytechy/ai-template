@@ -348,10 +348,10 @@ from pathlib import Path
 # checkout, and `kitlib` is stdlib-only and import-clean of the rest of
 # `scripts/` precisely so that this one edge stays safe.
 try:
-    from kitlib import config as _kitconfig
+    from kitlib import config as _kitconfig, spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from kitlib import config as _kitconfig
+    from kitlib import config as _kitconfig, spine as _kitspine
 
 KIT = Path(__file__).resolve().parent.parent  # the project-trajectory/ folder
 
@@ -857,17 +857,15 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
 PROCESS_TOML_REL = "docs/process.toml"
 
 
-def _toml_scalar(value):
-    """A Python value as the TOML literal `set_process_key` writes. Bool and int
-    render bare; everything else renders as a basic string. Deliberately tiny —
-    stdlib has no TOML WRITER, and the only values this scaffolder sets are
-    one-word policy tokens, an ordinal and a boolean."""
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    text = str(value).replace("\\", "\\\\").replace('"', '\\"')
-    return '"{}"'.format(text)
+# A Python value as the TOML literal `set_process_key` writes. HALF OF THE SECOND
+# DECLARED DUPLICATE THIS MODULE SHED (WI-448 slice 5 — see `STACK_OI3_ROW`): the
+# body lived here, escaping the backslash and the quote and nothing else, while
+# `wi_convert` held the careful version of the same rule. That one is now
+# `kitlib.spine.toml_value` and this binds it under the module-local name, so no
+# call site moved. What this module writes (a policy token, an ordinal, a boolean)
+# renders byte-for-byte as before; a control character now escapes instead of
+# producing a file `tomllib` refuses to read back.
+_toml_scalar = _kitspine.toml_value
 
 
 def set_process_key(dest, section, key, value, dry_run=False, add_if_missing=False):
@@ -1526,16 +1524,18 @@ STACK_IN_FLIGHT = (
 # instead of spliced above a marker.
 #
 # KEYS, not a positional tuple, since the carrier moved to TOML (repo-lock
-# §8.1): a 12-cell tuple aligned to a header by position is exactly the shape
-# that silently shifts when a column is inserted, and the carrier no longer has
-# a header to align to. The key names duplicate `migrate_carrier.KEY`'s
-# open-items half, and that duplication is DECLARED, not accidental:
-# `bootstrap.py` runs BEFORE the kit is copied and can import no sibling
-# (repo-lock §8.2 names this as the standing argument for standalone), so it
-# carries its own two-line TOML emitter exactly as it already carries
-# `_toml_scalar` for `docs/process.toml`. `tests/test_rule_sync.py` pins the key
-# set against the converter so the two cannot drift apart in silence — the
-# behavioural pin D-7 requires of any new duplication of POLICY.
+# §8.1): a 12-cell tuple aligned to a header by position is the shape that
+# silently shifts when a column is inserted, and the carrier no longer has a
+# header to align to.
+#
+# THE KEYS ARE NO LONGER THIS MODULE'S (WI-448 slice 5). They were: this block
+# restated the open-items tier's key names, DECLARED as a duplicate on the
+# argument that `bootstrap.py` "runs BEFORE the kit is copied and can import no
+# sibling" (repo-lock §8.2), with a `test_rule_sync` pin holding the restatement
+# equal. D-8's inversion retired that premise, so the schema of record moved into
+# the shipped package (`kitlib.spine.REGISTRY_KEYS`) and the emitter below writes
+# THROUGH it — schema order, and an undeclared key raises rather than being
+# written. What stays here is the brief's TEXT, the only part this module owned.
 STACK_OI3_ID = "OI-3"
 STACK_OI3_ROW = (
     ("title", "Decide: the {stack} toolchain commands"),
@@ -1614,18 +1614,24 @@ def append_stack_checklist(dest, stack, dry_run):
     # included. Under CSV this had to go through `csv.writer` for the quoting
     # (and `lineterminator="\n"`, because the default is CRLF and this repo
     # stores LF); under TOML there is no row-level quoting to get wrong, so the
-    # emitter is `_toml_scalar` per cell and `_write_text_lf` for the file.
+    # emitter is the shipped package's `toml_fields` and `_write_text_lf`.
     open_items = dest / "docs" / "requirements" / "open-items.toml"
     if open_items.exists():
         existing = open_items.read_text(encoding="utf-8-sig")
         table = "[open_item.{}]".format(STACK_OI3_ID)
         if table not in existing:
-            block = "{}\n{}\n".format(
+            cells = {k: v.format(stack=stack) for k, v in STACK_OI3_ROW}
+            keys = _kitspine.REGISTRY_KEYS["OI-ID"]
+            # FAIL CLOSED on a key the tier does not declare — the failure the
+            # retired pin existed to catch, and it is silent: a cell under an
+            # unmapped key comes back as a column no consumer reads, so the brief
+            # renders EMPTY while `check_docs` S-3 reports the ask as briefed.
+            unknown = sorted(k for k in cells if k not in keys)
+            if unknown:
+                raise KeyError("OI-3 brief: undeclared key(s) {}".format(unknown))
+            block = "{}\n{}".format(
                 table,
-                "\n".join(
-                    "{} = {}".format(key, _toml_scalar(cell.format(stack=stack)))
-                    for key, cell in STACK_OI3_ROW
-                ),
+                _kitspine.toml_fields((k, cells[k]) for k in keys if k in cells),
             )
             if existing and not existing.endswith("\n"):
                 existing += "\n"

@@ -59,7 +59,11 @@ theme and says so in its own docstring:
                  registry mentions and which of them the SRs cite, plus the ref
                  split, the `-000` placeholder test, the module-path key a
                  `Module` / IF `Endpoint` cell reduces to, and the registry CSV
-                 loader those rules are written on.
+                 loader those rules are written on. Also the two ROW-WHOLE
+                 statements of the same kind (WI-448 slice 5): the per-tier
+                 SCHEMA OF RECORD every template and live registry is checked
+                 against, and the TOML value/line emitter that spells a row's
+                 cells into the carrier.
   * `evidence` — the TEST-EVIDENCE record: the `docs/test/evidence` format and
                  the declared source surface a harness claim binds to, so the
                  top rung can be derived from a verdict instead of a cell. Also
@@ -107,6 +111,17 @@ allowed to be: the derivation itself stays outside, because it needs the
 registry carrier, and this package's one asserted rule is that it imports no
 sibling. A module here that "just needed one import" would smuggle the whole
 graph into the scaffolder.
+
+WI-448 SLICE 5 CLOSED THE PROGRAM WITH A FOURTH SHAPE: a home moved DOWN to
+reach a reader the old one could not serve. Nothing was duplicated by accident —
+the schema of record and the TOML emitter each had exactly one home — but
+`bootstrap.py` may import this package and no other sibling, so a vocabulary
+living in `spine_carrier.py` or `wi_convert.py` was, from the scaffolder's side,
+a vocabulary it had to RESTATE. It did, on both counts, DECLARED as duplicates
+with `test_rule_sync` pins holding the restatements equal. The pins are gone
+because the copies are: the schema and the emitter moved into `spine`, and their
+former holders bind them. The general rule this leaves the package: what
+`bootstrap.py` must agree with belongs HERE, not in a peer.
 
 WI-448 SLICE 4 ADDED NO MODULE, AND THAT IS THE RESULT, NOT A SHORTFALL. The
 six duplicate groups the standing census still reported all joined a theme

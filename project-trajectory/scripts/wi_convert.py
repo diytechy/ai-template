@@ -38,9 +38,11 @@ a classifier that has stopped classifying.
 
 **Frontmatter is TOML between `+++` lines** (the Hugo delimiter), read back with
 stdlib `tomllib` (3.11+, so no dependency is incurred — RULING-3). `tomllib` is
-read-ONLY, so the emitter below is a small hand-rolled serializer. It writes
-basic strings with backslash, double-quote and control characters escaped, which
-is the whole of what TOML needs to round-trip an arbitrary one-line value.
+read-ONLY, so the kit hand-rolls the emitter; since WI-448 slice 5 it hand-rolls
+it ONCE, in `kitlib.spine`, and this module re-exports it under the names it
+always used. It writes basic strings with backslash, double-quote and control
+characters escaped, which is the whole of what TOML needs to round-trip an
+arbitrary one-line value.
 
 **The long `Deliverable` cell goes in the BODY**, under a `## Deliverable`
 heading, verbatim. That is not a layout preference: a Deliverable may contain
@@ -67,9 +69,10 @@ Usage:
     python scripts/wi_convert.py --to-csv --work docs/work --csv out/work-items.csv
     python scripts/wi_convert.py --verify --csv docs/requirements/work-items.csv
 
-Small CLI/console helpers below are duplicated from the sibling scripts per the
-kit's independently-copyable-script convention (the F5 rule) — this module stays
-a self-contained drop-in, never importing a shared kit module.
+The F5 rule this module's helpers were once duplicated under is RETIRED (owner
+ruling D-8, `OI-16`): the console guard, the spec-folder read side and the TOML
+emitter all live in the shipped `kitlib` package now, and this module imports
+them. It is still a drop-in — `kitlib` copies with it, as ADOPTING.md §6 says.
 
 Contracts: IF-079 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
@@ -89,6 +92,9 @@ from kitlib.config import utf8_console as _utf8_console
 # The spec-folder reader's one home (D-8/OI-16): this module owns the WRITE side
 # of the same rule and re-exports the read side rather than restating it.
 from kitlib import registry as _kitregistry
+
+# The TOML emitter's one home (WI-448 slice 5) — see the re-exports below.
+from kitlib import spine as _kitspine
 
 # The registry's column order, which IS the schema (docs/requirements/
 # work-items.csv; pinned against the shipped template by test_dogfood_sync).
@@ -224,50 +230,16 @@ class ConvertError(Exception):
 
 
 # --- the TOML emitter (tomllib is read-only) ---------------------------------
-# Escapes exactly what TOML basic strings require: the backslash, the closing
-# quote, and every control character. The named shorthands are used where TOML
-# defines them and \uXXXX covers the rest, so nothing is left to the parser's
-# discretion. Verified by re-parsing every emitted file with tomllib.
-_TOML_ESCAPES = {
-    "\\": "\\\\",
-    '"': '\\"',
-    "\b": "\\b",
-    "\t": "\\t",
-    "\n": "\\n",
-    "\f": "\\f",
-    "\r": "\\r",
-}
-
-
-def toml_string(value):
-    """`value` as a TOML basic string, escaped so tomllib reads it back exactly."""
-    out = ['"']
-    for ch in value:
-        escaped = _TOML_ESCAPES.get(ch)
-        if escaped is not None:
-            out.append(escaped)
-        elif ord(ch) < 0x20 or ord(ch) == 0x7F:
-            out.append("\\u{:04x}".format(ord(ch)))
-        else:
-            out.append(ch)
-    out.append('"')
-    return "".join(out)
-
-
-def toml_value(value):
-    """`value` as TOML: int, array of basic strings, or basic string."""
-    if isinstance(value, bool):  # guard: bool is an int subclass in Python
-        return "true" if value else "false"
-    if isinstance(value, int):
-        return str(value)
-    if isinstance(value, (list, tuple)):
-        return "[" + ", ".join(toml_string(v) for v in value) + "]"
-    return toml_string(value)
-
-
-def render_frontmatter(pairs):
-    """`key = value` lines for an ordered `(key, value)` sequence."""
-    return "".join("{} = {}\n".format(k, toml_value(v)) for k, v in pairs)
+# ONE HOME since WI-448 slice 5: `kitlib/spine.py` holds the escape table, the
+# scalar and the `key = value` line join. This module WROTE that emitter, and
+# `bootstrap.py` carried a second, less careful copy of the same rule because it
+# may import no sibling but the shipped package — so the rule moved INTO the
+# package and both modules bind it. The three names below are re-exports under
+# the spellings this module has always used, so every call site (here and in
+# four `tests/test_trajectory*.py` builders) is untouched.
+toml_string = _kitspine.toml_string
+toml_value = _kitspine.toml_value
+render_frontmatter = _kitspine.toml_fields
 
 
 # --- CSV row <-> spec file ---------------------------------------------------

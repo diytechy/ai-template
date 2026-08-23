@@ -257,6 +257,7 @@ THREE THINGS THAT DO NOT WAIT ON ANY OF IT:
 title = """D-8: the common-module doctrine - RULED, with one step that cannot be built as stated"""
 status = "ruled"
 raised = "2026-08-10"
+wi_refs = ["WI-448"]
 ruled_date = "2026-08-13"
 ruling_ref = "docs/log.md#decisions-log"
 one_line = """RULED 2026-08-12 - bootstrap contained, shared code into one common or themed library files; ONE thing owed: step 2 is unbuildable because `bootstrap.py` is not shipped to scaffolds, so INVERT it and let bootstrap import the common module"""

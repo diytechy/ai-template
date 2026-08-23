@@ -1,7 +1,7 @@
 +++
 id = "WI-448"
 title = "OI-16 execution (inversion confirmed by the owner 2026-08-13): the common-module program — shared helpers consolidate into one shipped common module (or several themed library files, per D-8's smallest-total-code direction), bootstrap.py imports FROM it, the module joins MAPPING (the single line that is the whole downstream risk surface, and the line the repo has got wrong once). Before landing: assert what has only ever been a comment — the new rule that bootstrap imports the common module and nothing else — and verify by BOOTSTRAPPING A REAL SCAFFOLD, the standing lesson from the schedule.py omission. First slice ~9 files deleting roughly 650 duplicated lines; bootstrap sheds its two declared duplicates and the test_rule_sync pins holding them equal become unnecessary (drift made unrepresentable, not detected). The module-size ratchet fires on the consolidated file and measures the wrong axis by the owner's own correction (function size and complexity, not lines) — re-stamp deliberately with the reason in the log, and file the ratchet-axis question as its own finding. Sequenced after OI-14 part A (component ownership turns import doctrine into a lookup); lands the first OI-27 migration entries for the rename-heavy surface, or the prose ADOPTING section 6 recipe if it executes first."
-specref = "docs/requirements/open-items.toml#OI-16"
+specref = ""
 workstream = "lock-program"
 sr_refs = []
 needs = ["WI-441", "~WI-447"]
@@ -9,6 +9,99 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+**The common-module program, five slices, closed 2026-08-23.** D-8's inversion is
+executed: `project-trajectory/scripts/kitlib/` is a shipped, themed package of
+nine modules, `bootstrap.py` imports it and nothing else in `scripts/` (asserted,
+not commented — `test_bootstrap_imports_only_the_common_package`), and the
+package's own import-cleanliness is asserted alongside it, because that edge is
+what makes the scaffolder safe to give a dependency at all. Every landing was
+verified by BOOTSTRAPPING A REAL SCAFFOLD, the standing lesson from the
+`schedule.py` omission, and CLI behaviour is byte-identical throughout: every
+consolidated name is re-exported from the module that used to define it.
+
+**What shipped, slice by slice** (each has a log fragment carrying its full
+account and its own `fig:` measurement):
+
+1. **2026-08-20 — the package lands.** `kitlib/{config,git,registry}.py`, four
+   `MAPPING` rows, the manifest tested in a real scaffold and driven red on a
+   deleted row. Consolidated the 270-line spec-folder reader (3 verbatim copies),
+   the declared-line reader (5 copies, carrying a false claim of equivalence) and
+   `_git_out` (3 copies).
+2. **2026-08-22 — the console guard.** 33 remaining `_utf8_console` copies
+   resolve to `kitlib.config.utf8_console`. No new module: the theme was already
+   declared. 268 of the residual redundant lines, the single largest item.
+3. **2026-08-23 — the spine POLICY pair.** Ten groups `trace.py` and
+   `spine_rules.py` each carried privately become `kitlib/spine.py`, a new themed
+   module with `LLR-197` / `TC-193`. Nine equality pins retire; an identity pin
+   and three by-value batteries replace them. Found one real copy disagreement
+   (`LLR_EXEMPT`: `tuple` vs `set`, invisible to a pin that compared `set(a) ==
+   set(b)`).
+4. **2026-08-23 — the residual groups.** All six groups the census still saw,
+   plus four copies it could not, join existing themes. **Census reaches
+   0 / 0 / 0.** Three findings recorded, including a census blind spot (a copy
+   that renames the constant it reads scores as no copy at all).
+5. **2026-08-23 — `bootstrap`'s second declared duplicate, and this close.** The
+   open-items key names and the TOML emitter the scaffolder restated are gone:
+   the SCHEMA OF RECORD moved down from `spine_carrier.py` and the TOML
+   value/line emitter down from `wi_convert.py`, both into `kitlib/spine.py`,
+   both bound by their former holders. `append_stack_checklist` now emits the
+   OI-3 brief keyed BY the shipped schema, in the schema's order, and RAISES on a
+   key the tier does not declare — drift unrepresentable rather than detected.
+   The stale premise the spec named ("bootstrap runs BEFORE the kit is copied and
+   can import no sibling") is corrected wherever it stood: the pin that rested on
+   it is deleted, and `test_profile`'s docstring is rewritten.
+
+**THE CENSUS ARC — the deferred P5 approval's basis, recorded at close as the
+Context below requires.** One instrument, `check_dupes_census.py`, baseline in
+`docs/stack.ini` `[dupes-census]`:
+
+<!-- fig: cmd="python project-trajectory/scripts/check_dupes_census.py --root ." rev="each slice's own before/after revisions; rows quoted from the five slice fragments in docs/log.d/" -->
+
+    at inception (2026-08-20)   24 group(s) / 67 copies / 757 redundant line(s)
+    after slice 1               17 / 48 / 477
+    after slice 2               15 / 15 / 194
+    after slice 3                6 /  6 /  76
+    after slice 4                0 /  0 /   0
+    after slice 5 (this close)   0 /  0 /   0
+
+**24 / 67 / 757 → 0 / 0 / 0**, and two qualifications the owner's decision should
+have with the number. **Zero is a READING, not a floor** — the check stays armed
+and warn-first (D-7), so a new duplicate re-appears as a WARN against zero.
+**Zero is zero of what the census can SEE** — it hashes function bodies over four
+lines, so it never scored the two duplicates slice 5 removed (one is data, the
+other three bodies that genuinely differed), four of slice 4's copies, or a copy
+that renames a constant it reads. The pins found what the instrument could not.
+The 39 behaviour-home pairs across 16 modules that pack §3 measured are the
+population this program drained; the residue is now the near-copies each slice
+recorded and declined for a stated reason, not an unmeasured remainder.
+
+**MAPPING's final state.** Nine `kitlib` rows —
+`__init__`, `config`, `git`, `registry`, `station`, `ladder`, `stage`,
+`evidence`, `spine` — added across slices 1 and 3 only; slices 2, 4 and 5 added
+none, which is the smallest-total-code answer D-8 asks for rather than a
+shortfall. The sitting-2 §5.3 question is answered by the verification the row
+already required: a real scaffold receives the package whole and runs, so adding
+a module obliges no IF-row edit. `test_the_common_package_ships_complete`
+bootstraps a scaffold and asserts the copied `scripts/kitlib/` holds exactly the
+kit's module set, so an omitted `MAPPING` row reds here rather than in an
+adopter's repo — the `schedule.py` class of defect is closed for this package.
+
+**Item 2's disposition: consolidated, not kept.** The route was the one the row
+named (the vocabulary reaches `kitlib` first); the "re-derive through a
+non-`kitlib` sibling" alternative is not available, because the rule slice 1
+asserted forbids exactly that import. `migrate_carrier.toml_scalar` remains a
+third TOML writer and stays deliberately — it is a different rule (multi-line
+promotion for prose cells) with one caller — as does
+`gen_release_checklist.load_csv`, whose adoption would change decode behaviour
+and therefore needs its own row. Both are recorded, not silent.
+
+**The ratchet-axis question the row filed remains open and is not this close's to
+settle.** `bootstrap.py`'s line baseline is re-stamped UP (+6) in the closing
+commit while the module lost a function body — the owner's own correction (the
+axis is function size and complexity, not file length) applies verbatim.
 
 ## Context
 
@@ -181,13 +274,11 @@ constant.
 
 1. ~~**`_utf8_console`, 33 remaining copies**~~ — **LANDED 2026-08-22** (slice 2,
    above). Was 268 of the residual redundant lines, the single largest item.
-2. **`bootstrap`'s OTHER declared duplicate** — `STACK_OI3_ROW` plus its TOML
-   row emitter, which the OI-16 blast radius names. Shedding it needs the
-   open-items key vocabulary in `kitlib` first. Note that its pin's stated
-   premise ("bootstrap runs BEFORE the kit is copied and can import no
-   sibling") is exactly what slice 1 overturned, so the comment on
-   `test_rule_sync.test_bootstraps_scaffolded_brief_uses_the_converters_own_keys`
-   is now stale and must be corrected when the duplicate goes.
+2. ~~**`bootstrap`'s OTHER declared duplicate** — `STACK_OI3_ROW` plus its TOML
+   row emitter~~ — **LANDED 2026-08-23** (slice 5; see the Deliverable above).
+   The open-items key vocabulary reached `kitlib` as the whole schema of record,
+   the emitter with it, and the stale-premise comment the item ties to the
+   duplicate's removal is corrected in both places it stood.
 3. ~~**The `spine_rules`/`trace` spine-policy pair**~~ — **LANDED 2026-08-23**
    (slice 3, below).
 4. ~~**`is_example`**, `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
@@ -207,11 +298,10 @@ constant.
    the close. Nothing to build; the slot is filled if and when a render helper
    needs a home below two consumers.
 
-**AFTER SLICE 4 THIS ROW OWES EXACTLY ONE THING: item 2.** It is not closed
-because that item is real executable work (the `STACK_OI3_ROW` duplicate and its
-TOML row emitter, the open-items key vocabulary it needs in `kitlib` first, and
-the stale-premise comment correction the spec ties to it), not because anything
-else on this list is unresolved.
+**AFTER SLICE 5 THIS ROW OWES NOTHING** — items 1, 3 and 4 landed in slices 2, 3
+and 4, item 2 in slice 5, and item 5 was recorded as not-owed work rather than
+left ambiguous. The list above is kept as the history of what each slice found
+owing; the account of what shipped is the Deliverable.
 
 **`OI-48` is RULED (d) AND EXECUTED (2026-08-21 / WI-494, 2026-08-22)**: which
 component owns the shared kernel is settled. `LLR-181`'s four-way `Component`

@@ -3628,6 +3628,36 @@ a floor — a new duplicate re-appears as a WARN — and it is blind to a copy t
 renames the constant it reads, which is how one of the four `norm_module` homes
 above stayed invisible until the others consolidated.
 
+### The registry schema of record and the TOML emitter move into `kitlib.spine` [since 23890e5d]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**No new file again** — the package is the same nine modules, and the last two
+things `bootstrap.py` restated instead of importing now live in one of them.
+What moved, all as re-exports under their existing spellings:
+
+- `spine_carrier.SPINE_TIER_KEYS` / `.OFFSPINE_KEYS` / `.REGISTRY_KEYS` — the
+  per-tier **schema of record** — are now `kitlib.spine`'s, bound on the carrier.
+  If you add a column to a registry tier, the reviewed edit is in
+  `scripts/kitlib/spine.py` from here on; the carrier still answers with the
+  same table object.
+- `wi_convert.toml_string` / `.toml_value` / `.render_frontmatter` are now
+  `kitlib.spine.toml_string` / `.toml_value` / `.toml_fields`, re-exported. The
+  TOML emitter had three homes in the kit and one of them (`bootstrap`'s) escaped
+  only the backslash and the quote, so a cell carrying a tab produced a file
+  `tomllib` refuses to read back. Two of the three are now one; the third
+  (`migrate_carrier.toml_scalar`, which promotes a long cell to a multi-line
+  string) is a different rule with one caller and stays.
+
+**If you only overwrite kit files, you need do nothing.** Every former name
+resolves and answers identically. The one behaviour that changes is the
+scaffolder's: it emits its non-Python `OI-3` brief in the schema's key order
+(byte-identical to before for every shipped stack) and **raises** on a key the
+open-items tier does not declare, rather than writing a brief that renders empty.
+
+**If you have your OWN copy** of a TOML writer for these files, this is the
+moment to import `kitlib.spine`'s instead.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

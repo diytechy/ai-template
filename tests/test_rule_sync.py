@@ -53,6 +53,8 @@ So the ruling now reads, in full:
 readers; extend either rather than reaching for a new census.
 """
 
+import pytest
+
 from conftest import KIT, ROOT, load_script, make_minimal_project, run_py
 
 TRACE = load_script("trace")
@@ -727,21 +729,83 @@ def test_the_schema_of_record_covers_every_registry_the_carrier_names():
             assert key in SPINE.REGISTRY_COLUMN, (id_col, key)
 
 
-def test_bootstraps_scaffolded_brief_uses_the_converters_own_keys():
-    # `bootstrap.py` runs BEFORE the kit is copied and can import no sibling
-    # (repo-lock §8.2), so it carries its own TOML emitter and its own copy of
-    # the open-items key names. That duplication is DECLARED; this is the
-    # behavioural pin D-7 requires of it, because the failure it prevents is
-    # silent: a scaffolded OI-3 written under a key the reader does not map
-    # comes back as a brief with no text, and `check_docs` S-3 then reports the
-    # owner ask as briefed.
+# `test_bootstraps_scaffolded_brief_uses_the_converters_own_keys` WAS HERE, and
+# it is DELETED rather than adjusted (WI-448 slice 5). It pinned bootstrap's own
+# copy of the open-items key names to the schema, on the stated premise that
+# `bootstrap.py` "runs BEFORE the kit is copied and can import no sibling"
+# (repo-lock §8.2) — the premise D-8's inversion overturned two slices earlier.
+# The scaffolder now READS the schema out of the shipped package
+# (`kitlib.spine.REGISTRY_KEYS["OI-ID"]`), emits the brief in the schema's own
+# order and RAISES on a key the tier does not declare, so the drift the pin
+# detected cannot be written at all. What it protected — a brief filed under an
+# unmapped key renders empty while `check_docs` S-3 reports the ask as briefed —
+# is now covered from both ends: the refusal is driven red below, and
+# `tests/test_profile.py::test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization`
+# bootstraps a real node scaffold and reads OI-3 back through the carrier.
+
+
+def test_the_toml_emitter_is_one_home():
+    # IDENTITY, which is the warrant for deleting the pin above: the two modules
+    # that write TOML the same way bind ONE object. `bootstrap`'s former copy
+    # escaped the backslash and the quote only, so a control character in a cell
+    # produced a file `tomllib` refuses — a value battery over the two would have
+    # passed anyway on every input the kit happens to feed them, which is the
+    # vacuous-agreement shape this suite exists to refuse.
+    BOOTSTRAP = load_script("bootstrap")
+    WI_CONVERT = load_script("wi_convert")
+    assert BOOTSTRAP._toml_scalar is KITSPINE.toml_value
+    assert WI_CONVERT.toml_value is KITSPINE.toml_value
+    assert WI_CONVERT.toml_string is KITSPINE.toml_string
+    assert WI_CONVERT.render_frontmatter is KITSPINE.toml_fields
+    # ...and the schema of record likewise, so "the scaffolder's keys" and "the
+    # carrier's keys" are one table rather than two that agree.
+    assert SPINE.REGISTRY_KEYS is KITSPINE.REGISTRY_KEYS
+    assert SPINE.SPINE_TIER_KEYS is KITSPINE.SPINE_TIER_KEYS
+    assert SPINE.OFFSPINE_KEYS is KITSPINE.OFFSPINE_KEYS
+
+
+def test_the_scaffolded_brief_is_written_through_the_schema():
+    # BY VALUE, which is the half the retired pin never checked: not only that
+    # the keys are known, but that the row the scaffolder builds is ordered by
+    # the schema and refuses an unknown key rather than writing it.
     BOOTSTRAP = load_script("bootstrap")
     keys = {key for key, _cell in BOOTSTRAP.STACK_OI3_ROW}
     assert keys, "the scaffolded brief writes no cells"
-    assert keys <= set(SPINE.REGISTRY_KEYS["OI-ID"]), sorted(
-        keys - set(SPINE.REGISTRY_KEYS["OI-ID"])
-    )
     assert BOOTSTRAP.STACK_OI3_ID.startswith("OI-")
+    schema = KITSPINE.REGISTRY_KEYS["OI-ID"]
+    # The brief's cells in the order the emitter will write them...
+    written = [k for k in schema if k in keys]
+    assert set(written) == keys, sorted(keys - set(written))
+    # ...which is the schema's order, not the literal's — a cell inserted in the
+    # wrong place in the tuple below cannot move a column in the output.
+    assert written == sorted(written, key=schema.index)
+
+
+def test_the_scaffolded_brief_refuses_a_key_the_schema_does_not_declare(tmp_path):
+    # DRIVEN RED, because a refusal nothing exercises is a claim. `check_docs`
+    # S-3 reads the brief's cells; a cell under an unmapped key comes back from
+    # the carrier as a column no consumer reads, so the ask renders as briefed
+    # with an empty brief. The scaffolder now raises instead of writing it.
+    BOOTSTRAP = load_script("bootstrap")
+    docs = tmp_path / "docs"
+    (docs / "requirements").mkdir(parents=True)
+    (docs / "requirements" / "open-items.toml").write_text("", encoding="utf-8")
+    (docs / "status.md").write_text(
+        "  - **In flight** _(driver; no approval needed)_:\n"
+        "- **Assumptions (unattended):**\n",
+        encoding="utf-8",
+    )
+    # The real row goes through untouched...
+    assert BOOTSTRAP.append_stack_checklist(tmp_path, "node", False)
+    assert "[open_item.OI-3]" in (docs / "requirements" / "open-items.toml").read_text(
+        encoding="utf-8"
+    )
+    # ...and a drifted key does not.
+    BOOTSTRAP.STACK_OI3_ROW = BOOTSTRAP.STACK_OI3_ROW + (("one-line", "drifted"),)
+    (docs / "requirements" / "open-items.toml").write_text("", encoding="utf-8")
+    with pytest.raises(KeyError) as excinfo:
+        BOOTSTRAP.append_stack_checklist(tmp_path, "node", False)
+    assert "one-line" in str(excinfo.value)
 
 
 def test_every_live_spine_column_round_trips_through_the_carrier_vocabulary():

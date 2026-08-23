@@ -33,6 +33,16 @@ statement as the rules above (what one cell MEANS), asked by `gen_okf.py`,
 `plan_coverage.py`, `plan_artifacts.py`, `schedule.py`, `check_trajectory.py`,
 `gen_arch_map.py` and `gen_release_checklist.py` rather than only by the pair.
 
+WI-448 SLICE 5 ADDED THE ROW-WHOLE STATEMENTS THE SCAFFOLDER ALSO HAD TO MAKE.
+The per-tier SCHEMA OF RECORD (`REGISTRY_KEYS`) moved down from
+`spine_carrier.py`, which now binds it, and the TOML value/line emitter moved
+down from `wi_convert.py`, which does the same. Both are the module's one
+sentence stated for the ROW rather than for a cell — which keys a row declares,
+and how its cells are spelled in the carrier — and both had a reader the carrier
+could not serve: `bootstrap.py` may import this package and no other sibling, so
+while they lived up there the scaffolder RESTATED them and a `test_rule_sync`
+pin held the restatement equal. It now reads them.
+
 WHAT IS DELIBERATELY NOT HERE:
 
   * `sn_draft_ids` — the tenth duplicate of the pair, and the one that CANNOT
@@ -67,6 +77,12 @@ __all__ = [
     "phase_num",
     "sn_all_ids",
     "sn_cited_ids",
+    "SPINE_TIER_KEYS",
+    "OFFSPINE_KEYS",
+    "REGISTRY_KEYS",
+    "toml_string",
+    "toml_value",
+    "toml_fields",
 ]
 
 # SR Verification methods with no code to decompose, so they need a TC but no
@@ -286,3 +302,263 @@ def sn_cited_ids(srs):
     # `LLR-197` claims the whole module, which is the right grain for a
     # vocabulary whose eleven names are one decision.
     return {x for r in srs for x in refs(r.get("SN-Refs"))}
+
+
+# ---------------------------------------------------------------------------
+# THE SCHEMA OF RECORD — which keys each registry tier declares.
+#
+# MOVED HERE FROM `spine_carrier.py` at WI-448 slice 5, unchanged. It is the
+# same KIND of statement as everything above — what one registry row's cells
+# MEAN — stated for the row as a whole instead of for one cell, and its readers
+# are the whole kit rather than the carrier: `tests/test_dogfood_sync.py` checks
+# every template and live registry against it, and the SCAFFOLDER writes a row
+# under it (`bootstrap.append_stack_checklist` files the non-Python profile's
+# `OI-3` brief). That last reader is why the move was owed rather than merely
+# tidy: `bootstrap.py` may import this package and no other sibling, so while
+# the schema lived in the carrier the scaffolder could only RESTATE the keys and
+# have a test hold the restatement equal. Now it reads them.
+
+# THE PER-TIER SCHEMA: which keys each tier declares, keyed by its id column.
+# STATED, never derived — and the reason is the one the ordered CSV header used
+# to provide for free.
+#
+# Under CSV the live file declared its own schema in a header, so a template
+# that quietly dropped a column diverged from something. TOML has no header and
+# an absent key IS an empty cell, so a column no row happens to use does not
+# exist in the file at all — and a rule that compares only the template against
+# the live registry cannot see the template DROP such a key. `permutations` is
+# exactly that today: declared by the template, used by no live SR. Deriving
+# this map from either side would re-create the hole, because the side that
+# dropped the key would also drop it from the derivation.
+#
+# So it is a third leg, and it is the DURABLE one: the schema of record that
+# both the template and the live registry are checked against
+# (tests/test_dogfood_sync.py). Adding a column to a tier is a reviewed edit
+# here first — which is the same discipline `spine_carrier.SPINE_COLUMN` (the
+# key -> column-name map, which stays with the carrier that reads columns)
+# already carries, for the same reason.
+SPINE_TIER_KEYS = {
+    # THE NEED TIER, post-unification. `status` is the ONE maturity field (the
+    # `kind`/`attestation`/`amended` trio it replaced is deleted, not renamed).
+    # `tags` is OPTIONAL — ten of twenty-seven live rows carry none, and an
+    # `always` hat reaches a need without one — but it is DECLARED, which is
+    # the whole point: the template shipped without it precisely because no
+    # schema named the tier.
+    "SN-ID": (
+        "status",
+        "tags",
+        "need",
+        "why",
+        "priority",
+        "acceptance",
+    ),
+    # `hat_refs` is OPTIONAL on both row tiers that declare it, and the absence
+    # semantics are stated here because they are the whole difference between a
+    # useful cell and a lie: an ABSENT `hat_refs` means NOT RECORDED, never "no
+    # perspective reached this row". Nothing may read a blank as a negative claim,
+    # which is why the checker's coverage arm is a warn-only count and never a
+    # finding (WI-484 / OI-32 phase 1).
+    "SR-ID": (
+        "title",
+        "sn_refs",
+        "boundary_refs",
+        "hat_refs",
+        "requirement",
+        "rationale",
+        "acceptance_criteria",
+        "permutations",
+        "priority",
+        "verification",
+        "status",
+        "phase",
+        "aspect",
+    ),
+    "LLR-ID": (
+        "sr_refs",
+        "hat_refs",
+        "title",
+        "module",
+        "code_symbol",
+        "detail",
+        "rationale",
+        "test_refs",
+        "status",
+        "component",
+        "phase",
+    ),
+    "TC-ID": (
+        "verifies",
+        "level",
+        "method",
+        "tier",
+        "parameters",
+        "expected",
+        "automated",
+        "evidence",
+        "status",
+        "phase",
+    ),
+}
+
+# The same third leg for the batch-2 registries — the SAME rule, not a second
+# one (repo-lock §8.1: "reuse that shape rather than invent a second one").
+# `tests/test_dogfood_sync.py` checks template, live registry and this schema
+# against each other for every entry of REGISTRY_KEYS, so adding a column to
+# `open-items` or `agents` is a reviewed edit HERE first, exactly as it is for a
+# spine tier.
+OFFSPINE_KEYS = {
+    "OI-ID": (
+        "title",
+        "status",
+        "raised",
+        "one_line",
+        "decision",
+        "blast_radius",
+        "options",
+        "recommendation",
+        "wi_refs",
+        "ruled_date",
+        "ruling_ref",
+    ),
+    "Id": (
+        "family",
+        "model",
+        "version",
+        "tier",
+        "cmd_template",
+        "env",
+        "notes",
+    ),
+    # WI-443 / OI-14 part B. `signal` and `rationale` are NEW (nothing in the
+    # registry typed a signal at all before this pass, and the why had nowhere
+    # in the row to go, so it squatted in `contract`); `status` is GONE.
+    # WI-442: `stability` is GONE and `approval` is the one maturity field; the
+    # two `interface_*_external` keys are the DIRECTIONAL tie-back an IF row
+    # carries ONLY when it realizes a boundary crossing (owner naming, 13m). An
+    # IF row that realizes nothing carries neither — which is how the registry
+    # says "internal seam" without a column claiming it. `direction` and
+    # `counterpart` are HELD pending WI-455 (see above).
+    "IF-ID": (
+        "direction",
+        "this_project",
+        "counterpart",
+        "contract",
+        "signal",
+        "signal_note",
+        "rationale",
+        # RENAMED from `sr_refs` at the 2026-08-15 rework (D6): the spine's
+        # `sr_refs` names a row's PARENT requirement, this one names the
+        # requirements a seam realizes or relies on, and one name for two
+        # relationships is the defect D-3 forbids.
+        "req_refs",
+        "owner",
+        "carried_by",
+        "version",
+        "status",
+        "interface_from_external",
+        "interface_to_external",
+        "component",
+        "notes",
+    ),
+    "CMP-ID": (
+        "name",
+        "category",
+        "knowledge",
+        "status",
+        "standing",
+        "superseded_by",
+        "part_of",
+        "notes",
+    ),
+    # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each
+    # gets its own schema entry for the same reason every other tier does: the
+    # three-leg drift rule (tests/test_dogfood_sync.py) compares template, live
+    # registry and THIS map per id column, so a column added to crossings
+    # cannot leak into entities.
+    "EXT-ID": ("name", "class", "description", "status", "absorbs", "notes"),
+    "B-ID": ("entity", "direction", "carries", "status", "absorbs", "notes"),
+    "REL-ID": ("from", "to", "kind", "flow", "status", "absorbs", "notes"),
+}
+REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
+
+
+# ---------------------------------------------------------------------------
+# HOW A ROW'S CELLS ARE SPELLED IN THE TOML CARRIER — the emitter, once.
+#
+# `tomllib` is read-only by design (PEP 680 omitted a writer), so the kit writes
+# its own; before WI-448 slice 5 it wrote its own THREE TIMES. Two of those were
+# the same rule with different blast radii — `wi_convert`, which writes a
+# `docs/work/` spec's `+++` frontmatter (that registry's row), and
+# `bootstrap._toml_scalar`, which writes `docs/process.toml` keys and the
+# scaffolded `OI-3` brief row. `bootstrap`'s copy escaped the backslash and the
+# quote and stopped there, so a cell carrying a TAB or any other control
+# character would have emitted a basic string `tomllib` then REFUSES — a
+# scaffold writing a file it cannot read back. The one home is the careful one;
+# the careless copy is gone rather than pinned equal to it.
+#
+# THE THIRD HOME STAYS, and the difference is real rather than tolerated:
+# `migrate_carrier.toml_scalar` promotes a long or newline-bearing cell to a
+# MULTI-LINE basic string, which is what makes the spine's prose cells readable
+# in the file at all. That is a different rule about the same syntax, with one
+# home and one caller (the one-shot CSV -> TOML conversion), and folding it in
+# here would put a line-length policy inside the emitter every writer shares.
+
+# Escapes exactly what TOML basic strings require: the backslash, the closing
+# quote, and every control character. The named shorthands are used where TOML
+# defines them and the \\uXXXX form covers the rest, so nothing is left to the
+# parser's discretion. Verified by re-parsing every emitted file with tomllib.
+_TOML_ESCAPES = {
+    "\\": "\\\\",
+    '"': '\\"',
+    "\b": "\\b",
+    "\t": "\\t",
+    "\n": "\\n",
+    "\f": "\\f",
+    "\r": "\\r",
+}
+
+
+def toml_string(value):
+    """`value` as a TOML basic string, escaped so tomllib reads it back exactly.
+
+    Contract:
+      Inputs:  value: str
+      Outputs: str — the quoted literal, escapes included
+    """
+    out = ['"']
+    for ch in value:
+        escaped = _TOML_ESCAPES.get(ch)
+        if escaped is not None:
+            out.append(escaped)
+        elif ord(ch) < 0x20 or ord(ch) == 0x7F:
+            out.append("\\u{:04x}".format(ord(ch)))
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out)
+
+
+def toml_value(value):
+    """`value` as TOML: bool, int, an array of basic strings, or a basic string.
+
+    Contract:
+      Inputs:  value: bool | int | list | tuple | anything str-able
+      Outputs: str — the TOML literal
+    """
+    if isinstance(value, bool):  # guard: bool is an int subclass in Python
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, (list, tuple)):
+        return "[" + ", ".join(toml_string(v) for v in value) + "]"
+    return toml_string(value)
+
+
+def toml_fields(pairs):
+    """One row's cells as `key = value` lines, in the order given.
+
+    Contract:
+      Inputs:  pairs: iterable of (key, value)
+      Outputs: str — the block, every line newline-terminated
+    """
+    return "".join("{} = {}\n".format(k, toml_value(v)) for k, v in pairs)

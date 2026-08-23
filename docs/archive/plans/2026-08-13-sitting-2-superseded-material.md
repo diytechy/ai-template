@@ -720,7 +720,7 @@ declaration" lands as the **SESSION entity row** in `external.toml` (decision
 
 ### 5.3 WI-448 — common-module inversion program (OI-16 / D-8)
 
-[`../work/queued/WI-448-common-module-inversion.md`](../../work/active/wi448-common-module/WI-448-common-module-inversion.md)
+[`../work/queued/WI-448-common-module-inversion.md`](../work/complete/WI-448-common-module-inversion.md)
 · priority 3 · `buildtier = strong` · spine · `needs = ["WI-441", "~WI-447"]`
 (both complete).
 

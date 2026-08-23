@@ -279,9 +279,11 @@ def test_node_is_a_first_class_stack_choice():
 
 
 def test_the_scaffolded_oi3_brief_is_an_append_not_a_reserialization(tmp_path):
-    """`bootstrap.py` runs BEFORE the kit is copied and can import no sibling,
-    so it carries its own two-line TOML emitter. Three properties, each of which
-    has its own way of going silently wrong:
+    """The scaffolder files the non-Python profile's OI-3 brief as a ROW of the
+    open-items registry, written through the shipped package's emitter and keyed
+    by the shipped schema of record (WI-448 slice 5 — it used to carry its own
+    copy of both, on the retired premise that it could import no sibling).
+    Three properties, each of which has its own way of going silently wrong:
 
       * every byte the template shipped survives — an APPEND, so the registry's
         header comment and its example row are untouched (the discipline

@@ -60,6 +60,12 @@ import re
 import io
 import tomllib
 
+# The one sibling this module imports, and it is the SHIPPED package rather than
+# a peer: `kitlib` is import-clean of the rest of `scripts/` by assertion
+# (tests/test_bootstrap.py), so binding it here keeps this module as cheap to
+# copy as it was. It holds the schema of record the block below used to state.
+from kitlib import spine as _kitspine
+
 # The tier each registry's rows live under, keyed by the registry's ID COLUMN
 # rather than by its path. A path carries a carrier suffix and therefore moves;
 # the tier is the thing that does not.
@@ -273,167 +279,22 @@ OFFSPINE_COLUMN = {
 }
 REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 
-# THE PER-TIER SCHEMA: which keys each tier declares, keyed by its id column.
-# STATED, never derived — and the reason is the one the ordered CSV header used
-# to provide for free.
-#
-# Under CSV the live file declared its own schema in a header, so a template
-# that quietly dropped a column diverged from something. TOML has no header and
-# an absent key IS an empty cell, so a column no row happens to use does not
-# exist in the file at all — and a rule that compares only the template against
-# the live registry cannot see the template DROP such a key. `permutations` is
-# exactly that today: declared by the template, used by no live SR. Deriving
-# this map from either side would re-create the hole, because the side that
-# dropped the key would also drop it from the derivation.
-#
-# So it is a third leg, and it is the DURABLE one: the schema of record that
-# both the template and the live registry are checked against
-# (tests/test_dogfood_sync.py). Adding a column to a tier is a reviewed edit
-# here first — which is the same discipline SPINE_COLUMN already carries, for
-# the same reason.
-SPINE_TIER_KEYS = {
-    # THE NEED TIER, post-unification. `status` is the ONE maturity field (the
-    # `kind`/`attestation`/`amended` trio it replaced is deleted, not renamed).
-    # `tags` is OPTIONAL — ten of twenty-seven live rows carry none, and an
-    # `always` hat reaches a need without one — but it is DECLARED, which is
-    # the whole point: the template shipped without it precisely because no
-    # schema named the tier.
-    "SN-ID": (
-        "status",
-        "tags",
-        "need",
-        "why",
-        "priority",
-        "acceptance",
-    ),
-    # `hat_refs` is OPTIONAL on both row tiers that declare it, and the absence
-    # semantics are stated here because they are the whole difference between a
-    # useful cell and a lie: an ABSENT `hat_refs` means NOT RECORDED, never "no
-    # perspective reached this row". Nothing may read a blank as a negative claim,
-    # which is why the checker's coverage arm is a warn-only count and never a
-    # finding (WI-484 / OI-32 phase 1).
-    "SR-ID": (
-        "title",
-        "sn_refs",
-        "boundary_refs",
-        "hat_refs",
-        "requirement",
-        "rationale",
-        "acceptance_criteria",
-        "permutations",
-        "priority",
-        "verification",
-        "status",
-        "phase",
-        "aspect",
-    ),
-    "LLR-ID": (
-        "sr_refs",
-        "hat_refs",
-        "title",
-        "module",
-        "code_symbol",
-        "detail",
-        "rationale",
-        "test_refs",
-        "status",
-        "component",
-        "phase",
-    ),
-    "TC-ID": (
-        "verifies",
-        "level",
-        "method",
-        "tier",
-        "parameters",
-        "expected",
-        "automated",
-        "evidence",
-        "status",
-        "phase",
-    ),
-}
-
-# The same third leg for the batch-2 registries — the SAME rule, not a second
-# one (repo-lock §8.1: "reuse that shape rather than invent a second one").
-# `tests/test_dogfood_sync.py` checks template, live registry and this schema
-# against each other for every entry of REGISTRY_KEYS, so adding a column to
-# `open-items` or `agents` is a reviewed edit HERE first, exactly as it is for a
-# spine tier.
-OFFSPINE_KEYS = {
-    "OI-ID": (
-        "title",
-        "status",
-        "raised",
-        "one_line",
-        "decision",
-        "blast_radius",
-        "options",
-        "recommendation",
-        "wi_refs",
-        "ruled_date",
-        "ruling_ref",
-    ),
-    "Id": (
-        "family",
-        "model",
-        "version",
-        "tier",
-        "cmd_template",
-        "env",
-        "notes",
-    ),
-    # WI-443 / OI-14 part B. `signal` and `rationale` are NEW (nothing in the
-    # registry typed a signal at all before this pass, and the why had nowhere
-    # in the row to go, so it squatted in `contract`); `status` is GONE.
-    # WI-442: `stability` is GONE and `approval` is the one maturity field; the
-    # two `interface_*_external` keys are the DIRECTIONAL tie-back an IF row
-    # carries ONLY when it realizes a boundary crossing (owner naming, 13m). An
-    # IF row that realizes nothing carries neither — which is how the registry
-    # says "internal seam" without a column claiming it. `direction` and
-    # `counterpart` are HELD pending WI-455 (see above).
-    "IF-ID": (
-        "direction",
-        "this_project",
-        "counterpart",
-        "contract",
-        "signal",
-        "signal_note",
-        "rationale",
-        # RENAMED from `sr_refs` at the 2026-08-15 rework (D6): the spine's
-        # `sr_refs` names a row's PARENT requirement, this one names the
-        # requirements a seam realizes or relies on, and one name for two
-        # relationships is the defect D-3 forbids.
-        "req_refs",
-        "owner",
-        "carried_by",
-        "version",
-        "status",
-        "interface_from_external",
-        "interface_to_external",
-        "component",
-        "notes",
-    ),
-    "CMP-ID": (
-        "name",
-        "category",
-        "knowledge",
-        "status",
-        "standing",
-        "superseded_by",
-        "part_of",
-        "notes",
-    ),
-    # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each
-    # gets its own schema entry for the same reason every other tier does: the
-    # three-leg drift rule (tests/test_dogfood_sync.py) compares template, live
-    # registry and THIS map per id column, so a column added to crossings
-    # cannot leak into entities.
-    "EXT-ID": ("name", "class", "description", "status", "absorbs", "notes"),
-    "B-ID": ("entity", "direction", "carries", "status", "absorbs", "notes"),
-    "REL-ID": ("from", "to", "kind", "flow", "status", "absorbs", "notes"),
-}
-REGISTRY_KEYS = dict(SPINE_TIER_KEYS, **OFFSPINE_KEYS)
+# THE PER-TIER SCHEMA — the schema of record — MOVED TO `kitlib/spine.py` at
+# WI-448 slice 5 and bound here, so the three names below still resolve exactly
+# as they always did and no consumer moved. WHY IT MOVED: the scaffolder writes
+# one open-items row (`bootstrap.append_stack_checklist`) and had been carrying
+# its own copy of that tier's key names, DECLARED as a duplicate on the premise
+# that `bootstrap.py` can import no sibling — the premise D-8's inversion
+# retired. `bootstrap.py` may import the shipped package and nothing else, so a
+# vocabulary the scaffolder must agree with has to live there; and `kitlib.spine`
+# is where it belongs on its own terms, being the module whose one sentence is
+# "what one registry row's cells MEAN". The carrier READS registries; the schema
+# is the vocabulary it reads them in, and every other reader is checked against
+# it (tests/test_dogfood_sync.py). Adding a column to a tier is still a reviewed
+# edit in ONE file — that file is now `kitlib/spine.py`.
+SPINE_TIER_KEYS = _kitspine.SPINE_TIER_KEYS
+OFFSPINE_KEYS = _kitspine.OFFSPINE_KEYS
+REGISTRY_KEYS = _kitspine.REGISTRY_KEYS
 
 
 # The row tiers moved CSV -> TOML; the need tier moved markdown -> TOML. Both
