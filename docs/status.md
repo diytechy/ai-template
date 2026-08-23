@@ -94,8 +94,8 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   now holds ONE thing. Next: rule `OI-60`, then the shed as its own slice; the
   lane has nothing else executable and stays open holding it.
 - **The `wi483-core-decomposition` lane is OPEN with the cycle, both bad edges
-  and the worst engine GONE** (slices 1–4, 2026-08-20 / 2026-08-22 /
-  2026-08-23 ×2): the
+  and every engine but one GONE** (slices 1–6, 2026-08-20 / 2026-08-22 /
+  2026-08-23 ×4): the
   seven-module component the 2026-08-19 review recorded is at **zero modules and
   zero intra-cycle edges**, `tests/test_import_layers.py` asserts an EMPTY census
   on every commit over a graph that INCLUDES function-body imports, and the
@@ -106,21 +106,23 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   `scripts/kitlib/station.py`, the registry-gap census into `scripts/census.py`,
   the pending-owner-action read model into `scripts/pending.py`, and the
   checker's cross-row coherence rules into `scripts/coherence.py`, each below
-  every module that reads it. Slices 4 and 5 took the first TWO engines:
-  `trace.analyze` is 553 → 218 lines and complexity 50 → under the limit, with
-  `Registries` frozen and `Findings` typed around it; `agent_loop.main` is
-  402 → 152 lines and 27 → under the limit, with `LoopContext` now a frozen,
-  total 29-field record and `LoopRun` its explicit mutable half. Both are OFF
-  the complexity census entirely.
-  **What remains owed on the row is items 1, 3 and 4 of its spec Context, in
-  that order:** the layering (`integrate` still reaches up into `intake` for the
-  post-merge mint, an edge that closes nothing but runs the wrong way, so
-  `dispatch` is not yet the sole composer), then the REST of the engines —
-  `agent_loop.session_bookkeeping` (325 lines / C901 31, now the kit's most
-  complex single function) with `run_iteration` (326 / 20) beside it, and
-  `check.steps` (628 lines but under the complexity limit), which needs a
-  decision about the carrier for a flat declaration rather than a technique —
-  then M-06's test-monolith splits, which ride along with them.
+  every module that reads it. Slices 4–6 took the engines: `trace.analyze` is
+  553 → 218 lines and complexity 50 → under the limit, with `Registries` frozen
+  and `Findings` typed around it; and the whole of `agent_loop.py`'s engine is
+  done — `main` 402 → 152 lines / 27 → under the limit (with `LoopContext` now a
+  frozen, total 29-field record and `LoopRun` its explicit mutable half),
+  `session_bookkeeping` 325 → 28 / **31 → under the limit**, `run_iteration`
+  326 → 120 / 20 → under the limit, and the two S8 page-the-human ladders
+  written twice collapsed to one `PageConsequence` rule. **Four complexity
+  baseline entries deleted across the three slices; that module's census is down
+  to three small ones.**
+  **What remains owed on the row is items 1, 3 (one function) and 4 of its spec
+  Context, in that order:** the layering (`integrate` still reaches up into
+  `intake` for the post-merge mint, an edge that closes nothing but runs the
+  wrong way, so `dispatch` is not yet the sole composer), then item 3's whole
+  remainder, `check.steps` (628 lines but under the complexity limit), which
+  needs a decision about the carrier for a flat declaration rather than a
+  technique — then M-06's test-monolith splits, which ride along with them.
 - **A pre-existing snapshot block is standing and is nobody's yet:**
   `intake.py snapshot` refuses in this tree on `LLR-147`'s `Detail`, which
   differs from its `docs/archive/last_approved/` copy at HEAD. Until it is

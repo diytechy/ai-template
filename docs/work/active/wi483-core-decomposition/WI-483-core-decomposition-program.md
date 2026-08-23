@@ -418,3 +418,76 @@ whose branches are about routing state, not configuration. `check.steps` still
 needs a DECISION rather than a technique.
 
 **Deferred to the owner: nothing new.**
+
+### SLICE 6 LANDED 2026-08-23 — the loop's two consequence ladders, and one page rule instead of two
+
+**Re-measured before designing, and nothing had drifted.**
+`agent_loop.session_bookkeeping` 325 lines / C901 31 (the kit's most complex
+surviving function), `run_iteration` 326 / 20, `agent_loop.py` 3,462 —
+slice 5's figures exactly, so the remaining engine pair was taken with no
+argument about which.
+
+**The boundary, in one sentence.** What a session's outcome MEANS — which
+consequence arm applies, whether a page stops the run, what a reset hint buys,
+how two verdicts compare — is a named function over routing state, several of
+them returning frozen records; the arms keep the EFFECTS (console,
+`RoutingState` mutation, telemetry commits, stop banners, the subprocess).
+Twenty module-level functions came out: the four bookkeeping arms
+(`reroute_rate_limited`, `review_bookkeeping`, `critique_bookkeeping`,
+`build_bookkeeping`) with their decisions under them, and the session's own
+stages (`wait_out_blackout`, `current_assignment_wi`, `launch_session`,
+`write_raw_stream`, `session_meta`, `after_session`). **`session_bookkeeping` is
+28 lines and `run_iteration` 120, and BOTH are OFF the complexity census** —
+their two baseline entries DELETED in the same commit. Decomposition is OUTWARD
+and a parametrized test asserts neither ladder nests a def, so the recorded C901
+trap cannot come back silently.
+
+**The duplication the split exposed, consolidated.** The two S8 page-the-human
+ladders — a review escalation and an exhausted critique budget — had been
+written out in full, thirty lines apart: the same `failure_action` read, the
+same `human-held and not keep_nondependent` stop test, the same design-check
+re-arm. They are now ONE rule, `page_consequence(fa, force_block)` returning a
+frozen `PageConsequence(stop, design_check)`, plus `apply_page_consequence` for
+the banner/exit/re-arm effect; the critique arm's declared `exhaustion = block`
+is the single declared asymmetry, passed as an argument rather than duplicated
+as a second ladder. Writing it once made an implicit ordering explicit — the
+original never reached the design-check arm on a stop path because it had
+already returned, and that is now a field.
+
+**Three typed records, and one deliberate non-record.** `PageConsequence`;
+`RoundSubstance(family_substance, margin, primary)`, because `margin` and
+`primary` are only meaningful across a PAIR and were three locals kept in step
+by hand; `LimitWait(nap, seconds, message)`, whose explicit `nap` discriminator
+exists because a zero-second wait is still a wait. The session telemetry
+projection stayed a DICT (`session_meta`): it IS `write_session_log`'s column
+set, so a record would only be splatted back into one — its key ORDER is pinned
+by a test instead, that being the property which could silently break.
+
+**Byte-identical, measured that way.** 31 driven paths — 16 legacy, 10 managed
+review (including the full escalation ladder to page-human), 5 critique
+(including budget exhaustion under both `move-on` and `block`) — diffed empty
+against HEAD's script, seven distinct exit codes covered, after the harness was
+first self-diffed against HEAD twice to establish determinism.
+
+**Ratchets: two entries DELETED, one declaration bump.** Both complexity entries
+gone; `agent_loop.py` re-stamped 3,462 -> 3,614 (+152), a reviewed bump smaller
+than slice 5's on the same module and of the same shape — the two functions shed
+651 -> 148 lines between them and what replaced them is twenty signatures plus
+the docstrings that used to be inline comment blocks.
+
+**No new module, so no topology decision.** Nothing left `agent_loop.py`: no
+MAPPING row, no `bootstrap.py` change, no RESYNC entry, no new spine row, no new
+seam, and no `Approved` cell rewritten anywhere in the diff. The nine new
+boundary tests went to `tests/test_agent_loop_policy.py`, already the home of
+the ungated `main()` seams and of slice 5's record tests. M-06 rides nothing:
+`tests/test_agent_loop.py` (1,640) is untouched and needed no split.
+
+**STILL OWED BY THIS ROW after slice 6: items 1, 3 (only `check.steps`) and 4.**
+Item 3 is struck for the whole `agent_loop.py` engine. Its entire remainder is
+`check.steps` — 628 lines of flat step declaration, UNDER the complexity limit —
+which needs a DECISION rather than a technique: its split is a question about
+the carrier for a declaration and may reasonably end in "leave it". Item 1 (the
+`integrate -> intake` layering) is unchanged and still needs its own decision
+about what `integrate.py merge` does on its own; item 4 (M-06) is unchanged.
+
+**Deferred to the owner: nothing new.**

@@ -75,8 +75,22 @@ BASELINE = {
     # len(assigned) > 1` guard wrapping a spine-only-batch `all(...)` and a
     # three-class membership test — left with session grouping (§A6.1).
     # Re-stamped DOWNWARD.
-    ("agent_loop.py", "run_iteration"): 20,
-    ("agent_loop.py", "session_bookkeeping"): 31,
+    # WI-483 slice 6 (2026-08-23): `run_iteration` (20) and
+    # `session_bookkeeping` (31 — the kit's most complex surviving function)
+    # both DELETED, under the limit. The boundary: what a session's outcome
+    # MEANS — which consequence arm applies, whether a page stops the run, what
+    # a reset hint buys — is a named function over routing state, several of
+    # them returning frozen records (`PageConsequence`, `RoundSubstance`,
+    # `LimitWait`); the arms keep the EFFECTS (console, RoutingState mutation,
+    # telemetry commits, stop banners, the subprocess). The two S8 page ladders
+    # that had been written twice — a review escalation and an exhausted
+    # critique budget — are now ONE rule (`page_consequence` +
+    # `apply_page_consequence`). Decomposition is OUTWARD, per the recorded
+    # C901 trap: a nested def is charged to its enclosing function.
+    # (The 2026-07-21 review bumps this pair once carried — H-1's
+    # unparseable-verdict fail-closed branches for session_bookkeeping — are
+    # unchanged behaviour, now living in `absorb_review_verdict` and
+    # `critique_bookkeeping`.)
     # WI-431 (batch-2 carrier, repo-lock §8.1): 17 -> 14. The CSV header parse
     # — index map, `Provider`-as-`Family` alias, five missing-column errors —
     # left for `_rows_from_csv`, because it is a property of the CSV CARRIER

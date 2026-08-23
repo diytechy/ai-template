@@ -16,6 +16,7 @@ import ast
 import dataclasses
 import datetime
 import inspect
+import re
 import sys
 import textwrap
 
@@ -615,3 +616,183 @@ def test_main_stays_a_composer():
     assert not [
         n for n in ast.walk(body) if isinstance(n, ast.FunctionDef) and n.name != "main"
     ], "no nested def in main — extract outward, not inward"
+
+
+# --- WI-483 slice 6: the per-session consequence ladders -----------------------
+# `session_bookkeeping` (325 lines / C901 31, the kit's most complex surviving
+# function) and `run_iteration` (326 / 20) split on the same boundary: what a
+# session's OUTCOME MEANS is a named function over routing state — several of
+# them returning frozen records — while the arms keep the effects. These guard
+# the boundary, not the rules already driven end-to-end through the engine in
+# tests/test_agent_loop{,_review,_critique}.py.
+
+
+def _fa(mode, keep, design_check=False):
+    """An `agent_route.failure_action` result, as the page paths read it."""
+    return {
+        "mode": mode,
+        "keep_nondependent": keep,
+        "note": "n",
+        "design_check": design_check,
+    }
+
+
+def test_page_consequence_is_the_one_rule_both_page_paths_obey():
+    al = load_script("agent_loop")
+    # SN-029: keyed on the MODE the ordinal produced, never on the retired enum.
+    assert al.page_consequence(_fa("human-held", False)).stop
+    assert not al.page_consequence(_fa("human-held", True)).stop
+    assert not al.page_consequence(_fa("loop-held", False)).stop
+    # The critique arm's declared `exhaustion = block` stops whatever the hold
+    # says — the one asymmetry between the two callers, stated as an argument
+    # rather than duplicated as a second ladder.
+    assert al.page_consequence(_fa("loop-held", True), force_block=True).stop
+
+
+def test_a_stopping_page_never_also_re_arms_the_design_check():
+    al = load_script("agent_loop")
+    # The original returned before the design-check arm on every stop path;
+    # that ordering is now a field of the record rather than a `return`'s luck.
+    stopping = al.page_consequence(_fa("human-held", False, design_check=True))
+    assert stopping.stop and not stopping.design_check
+    going = al.page_consequence(_fa("loop-held", True, design_check=True))
+    assert not going.stop and going.design_check
+
+
+def test_rate_limit_wait_naps_only_within_the_consented_ceiling():
+    al = load_script("agent_loop")
+
+    def args(wait_on_limit, fallback=3600):
+        return argparse.Namespace(
+            wait_on_limit=wait_on_limit, limit_retry_fallback=fallback
+        )
+
+    # Unrecognized reset wording -> the bounded fallback, capped at the ceiling
+    # the human already consented to.
+    unknown = al.rate_limit_wait(args(600), "in a little while")
+    assert unknown.nap and unknown.seconds == 600
+    assert "--limit-retry-fallback" in unknown.message
+    # No consent to wait at all -> no nap, whatever the hint says.
+    assert not al.rate_limit_wait(args(0), "in a little while").nap
+    assert not al.rate_limit_wait(args(0), "resets 3:45pm").nap
+
+
+def test_limit_wait_carries_an_explicit_nap_flag_not_a_falsy_second():
+    al = load_script("agent_loop")
+    # The discriminator exists so a ZERO-second wait is still a wait: `seconds`
+    # alone is falsy at 0 and would read as "do not nap".
+    assert al.LimitWait(True, 0, "m").nap
+    assert not al.LimitWait(False, 0, "").nap
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        al.LimitWait(False, 0, "").nap = True
+
+
+def test_impl_changed_paths_excludes_the_trains_own_review_bookkeeping():
+    al = load_script("agent_loop")
+
+    class St:
+        impl_range = ""
+
+    st = St()
+    # No reviewed range -> no git call at all (this module touches no repo).
+    assert al.impl_changed_paths("/nowhere", st, "t1") == []
+    st.impl_range = "aaa..bbb"
+    diff = "\n".join(
+        [
+            "src/thing.py",
+            "docs/reviews/t1/WI-1-REVIEW-A.md",
+            "docs\\reviews\\t1\\scoreboard.txt",
+            "docs/iteration/1-g3-x.log",
+            "docs/reviews/t2/other.md",
+            "   ",
+        ]
+    )
+    al_git = al.git
+    try:
+        al.git = lambda *a, **k: (0, diff)
+        # The train's OWN committed verdicts/scoreboard/telemetry are not the
+        # implementer touching a review path (the false-fire this excludes);
+        # another train's are.
+        assert al.impl_changed_paths("/nowhere", st, "t1") == [
+            "src/thing.py",
+            "docs/reviews/t2/other.md",
+        ]
+    finally:
+        al.git = al_git
+
+
+def test_round_substance_is_a_frozen_record_and_a_solo_round_has_no_winner():
+    al = load_script("agent_loop")
+
+    class St:
+        round_verdicts = [("REVIEW-A", object(), "FAM", "P-1")]
+
+    scores = iter([0.7])
+    sr = al.score_reviews
+    try:
+        al.score_reviews = type(
+            "S", (), {"substance": staticmethod(lambda *a, **k: next(scores))}
+        )
+        sub = al.round_substance(St(), "/nowhere")
+    finally:
+        al.score_reviews = sr
+    # One reviewer is no comparison: margin 0.0 and NO primary family. The
+    # record says so in fields rather than in three locals a caller must keep
+    # in step.
+    assert sub.margin == 0.0 and sub.primary is None
+    assert sub.family_substance == {"FAM": 0.7}
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        sub.margin = 1.0
+
+
+def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
+    al = load_script("agent_loop")
+    src = inspect.getsource(al.session_meta)
+    # The projection stays a dict because it IS write_session_log's column set;
+    # pin the order so a reorder is a red rather than a silently reshaped log.
+    keys = [m for m in re.findall(r'^\s{8}"([a-z-]+)":', src, re.M)]
+    assert keys == [
+        "session",
+        "stamp",
+        "date",
+        "train",
+        "base",
+        "phase",
+        "wi",
+        "model",
+        "guardrails",
+        "outcome",
+        "commits",
+        "tokens",
+        "cost-usd",
+        "wall-secs",
+        "api-secs",
+        "turns",
+        "ttft-secs",
+        "cache-read",
+        "cache-create",
+        "effort",
+        "fast",
+        "prompt-chars",
+        "prompt-template",
+        "prompt-sha",
+        "exit-code",
+    ]
+
+
+@pytest.mark.parametrize(
+    "name,ceiling",
+    [("session_bookkeeping", 40), ("run_iteration", 130)],
+)
+def test_the_session_ladders_stay_composers(name, ceiling):
+    al = load_script("agent_loop")
+    src, _ = inspect.getsourcelines(getattr(al, name))
+    # 325 and 326 lines respectively before WI-483 slice 6; the ceiling is a red
+    # for re-accretion, not a target. Neither may nest a def — the recorded C901
+    # trap is that a helper extracted INWARD is charged to its enclosing
+    # function, so the extraction raises the number it was meant to lower.
+    assert len(src) < ceiling, "{} is re-accreting; decompose OUTWARD".format(name)
+    body = ast.parse(textwrap.dedent("".join(src)))
+    assert not [
+        n for n in ast.walk(body) if isinstance(n, ast.FunctionDef) and n.name != name
+    ], "no nested def in {} — extract outward, not inward".format(name)

@@ -488,7 +488,17 @@ BASELINE = {
     # used to sit inline in `main`. The complexity ratchet — the axis this
     # program pays down — went DOWN by one whole entry. Reviewed bump, reason
     # in docs/log.d/2026-08-23-wi483-agent-loop-engine.md.
-    "agent_loop.py": 3462,
+    # +152 (3462 -> 3614) 2026-08-23, WI-483 slice 6 — the same DECLARATION
+    # shape, one slice later and smaller. `session_bookkeeping` (325 lines /
+    # C901 31 — the kit's most complex surviving function) and `run_iteration`
+    # (326 / 20) both fell OFF the complexity census; both entries are DELETED
+    # in the same commit. The two functions themselves shed 651 -> 148 lines
+    # between them, and what replaced them is twenty module-level functions
+    # plus three frozen decision records (`PageConsequence`, `RoundSubstance`,
+    # `LimitWait`) — signature lines and the docstrings that used to be inline
+    # comment blocks are the whole bump. Reviewed bump, reason in
+    # docs/log.d/2026-08-23-wi483-bookkeeping-engines.md.
+    "agent_loop.py": 3614,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now
