@@ -188,10 +188,10 @@ the How-SW containment count.
    the private presentation functions `_blocked_pending`/`_spine_pending`, and
    `gen_open_items` still imports the large facade for a state query~~ **DONE at
    slice 3, 2026-08-23** (see the slice block below).
-3. **The engine splits (program shape item 5)** — `trace.analyze` (514 lines,
-   complexity 50), `check.steps` (494), `agent_loop.main` (402/27), and the
-   `LoopContext` / `Registries` / `Findings` attribute bags. Untouched. Note the
-   standing trap when they are: ruff's C901 counts a nested def into its
+3. **The engine splits (program shape item 5)** — ~~`trace.analyze`~~ **DONE at
+   slice 4, 2026-08-23** (see the slice block below); `check.steps` and
+   `agent_loop.main` plus the `LoopContext` bag REMAIN. The standing trap is
+   confirmed rather than theoretical: ruff's C901 counts a nested def into its
    enclosing function, so a helper extracted INWARD raises the number the
    extraction was meant to lower — decompose outward.
 4. **M-06's test-monolith splits**, which ride along with each subsystem
@@ -279,3 +279,87 @@ follow it.
 **Deferred to the owner: nothing new.** The `LLR-147` snapshot block is a finding
 this slice reported to `docs/status.md`, not a decision withheld: it predates the
 slice and belongs to whoever amended that row.
+
+### SLICE 4 LANDED 2026-08-23 — the first engine, and the pair of typed bags
+
+**Re-measured before choosing, and two of the three had grown.** `trace.analyze`
+553 lines / C901 50 (the review recorded 514/50); `check.steps` 628 (was 494) but
+UNDER the complexity limit — C901 does not flag it, because it is a flat
+declaration of steps rather than branching; `agent_loop.main` unmoved at 402/27.
+Worst-offender-first therefore picked `trace.analyze` with no argument, and the
+disagreement between the two axes on `check.steps` is itself the reason the
+program pays down complexity rather than length (the owner's `OI-16` correction).
+
+**The boundary, in one sentence, because a decomposition that cannot say where
+its line is has not drawn one.** A rule that JOINS ACROSS ROWS moved to the new
+sibling `project-trajectory/scripts/coherence.py`; a rule that inspects one row's
+prose, or asks whether a CARRIER parses, stayed with the engine. Out: the
+four-tier orphan rules, `tc_citation_findings`, the PB/REPO/CMP back-link and
+membership resolutions, the knowledge-pack resolution, `PhaseScope` and the
+`--require-verified` status criterion. Stayed: the carrier sweeps, now NAMED
+(`integrity_sweep` / `placeholder_sweep` / `schema_sweep`), the per-row prose
+lints, `verification_basis` (a counter, not a rule), the renderers, the
+approval/watermark machinery and the CLI. `analyze` is what is left — the
+composer, 218 lines, under the complexity limit and OFF the census whose largest
+number it had been.
+
+**The trap was live, not theoretical.** The `in_phase` closure nested inside
+`analyze` was charged to `analyze` by C901, which is the item-3 note working
+exactly as written. It is now `coherence.PhaseScope.covers`: a frozen record with
+a method, resolved once, reusable and testable.
+
+**The bags.** `Registries` is a FROZEN dataclass, 34 declared fields, constructed
+at exactly one site — asserted, because a frozen record is only a guarantee while
+one place fills it — and the two defensive `getattr(reg, ..., [])` reads the bag
+shape had forced are gone. `Findings` is the mutable half: a plain dataclass
+whose two post-analyze fields are DECLARED with empty defaults rather than
+conjured at a call site, since their rules read git and the filesystem and
+analyze's contract is purity. `AnalysisFlags` is new and small: `census.py` had
+been importing `argparse` to forge a four-field `Namespace`, which is what a
+non-CLI caller must do when the CLI namespace IS the config type.
+
+**Byte-identical, measured that way.** Console + exit code, the whole
+`render_report` text, and `census.gap_census` all diffed empty against a stash of
+the slice's script diff. Finding ORDER is now the composer's property (SR → LLR →
+TC → SN, documented as load-bearing) and every tier returns the
+`(at_fault_id, finding)` pair `tc_citation_findings` already returned, so the
+at-fault id set is collected in one place instead of at eight append sites.
+
+**Ratchets moved DOWN, with one declaration-only bump.** `trace.analyze`'s
+complexity entry DELETED (50 → under 10); `trace.py` 5,373 → 5,316 re-stamped
+down — a net shrink despite ~75 new lines of field declarations, because 323
+lines of rules left; `coherence.py` 425 lines, under THRESHOLD and with ZERO
+complexity entries (`spine_orphan_findings` measured 15 as a straight lift and
+was split again rather than opening a baseline row). `bootstrap.py` +6, reviewed:
+one MAPPING row plus its comment, the same shape slice 3 took for `pending.py`.
+
+**TOPOLOGY DECISION (recorded here because the row is `safety_class = spine`).**
+ONE new row, not an amendment, on slice 2's rule: `LLR-201`
+(`scripts/coherence.py`, `SR-157`, `CMP-006`, `TC-197`). `CMP-006` is trace.py's
+own component, so the new module opens NO cross-component seam and mints no
+`IF-###` row — verified live through `check_trajectory --strict`, which reported
+the containment error before the row existed and is clean after it. Both rows are
+`Drafted`, following slice 3's recorded deviation for its stated cause: the
+`LLR-147` snapshot refusal still stands in this tree, it predates this slice, and
+blessing another row's drift is not a session's to do. `integrity=0` unchanged
+from HEAD.
+
+**M-06 rides nothing here.** The split needed no monolith split, and the new
+module gets its own `tests/test_trace_coherence.py` (16 tests) guarding the
+BOUNDARY rather than re-asserting rules already covered through `trace` — the
+rules driven directly one tier at a time, the frozen/total record and its single
+construction site, per-instance list defaults on the mutable record, and that
+`analyze` STAYS a composer (measured span, plus "no nested def", so the 553-line
+function accreting back is a red rather than a discovery).
+
+**STILL OWED BY THIS ROW after slice 4: items 1, 3 (partly) and 4.** Item 3 is
+struck for `trace.analyze` only. `agent_loop.main` (402/27, with
+`session_bookkeeping` at 325/31, `run_iteration` at 326/20 and the `LoopContext`
+bag — the direct analogue of the two bags typed here) is the honest next engine:
+same defect, same fix, a bigger blast radius because the loop's state is
+genuinely mutable across an iteration. `check.steps` needs a DECISION rather than
+a technique — 628 lines of flat step declaration, under the complexity limit, so
+its split is a question about the carrier for a declaration and may reasonably
+end in "leave it".
+
+**Deferred to the owner: nothing new.**

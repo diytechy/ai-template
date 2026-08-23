@@ -704,7 +704,19 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 5373,  # RE-STAMPED DOWN -87 (5460 -> 5373) 2026-08-23, WI-448
+    "trace.py": 5316,  # RE-STAMPED DOWN -57 (5373 -> 5316) 2026-08-23, WI-483
+    # slice 4 (program shape item 5, the engine splits): the cross-row join
+    # rules left for the new sibling `scripts/coherence.py` (425 lines, under
+    # THRESHOLD, no entry of its own) — the four-tier orphan rules,
+    # `tc_citation_findings`, the PB/REPO/CMP back-link and membership
+    # resolutions, the knowledge-pack resolution, the `PhaseScope` delivery
+    # filter and the `--require-verified` status criterion. This is the escape
+    # hatch the docstring names, and it is a NET shrink DESPITE the slice also
+    # typing two attribute bags: `Registries` became a frozen dataclass and
+    # `Findings` a mutable one, which costs ~75 declaration lines this file
+    # counts and buys the guarantee that a field cannot spring into existence at
+    # a call site (the two `getattr(reg, ..., [])` defensive reads are gone).
+    # Earlier: -87 (5460 -> 5373) 2026-08-23, WI-448
     # slice 3: the spine ROW vocabulary this module duplicated against
     # spine_rules.py — `load_csv`, `is_approved`, `is_founded`, `LLR_EXEMPT` +
     # `llr_exempt`, `phase_num`, `sn_all_ids`, `sn_cited_ids` — moved to the one
@@ -1409,7 +1421,13 @@ BASELINE = {
     # 2859 was already the effective baseline, and the composed-sum accounting
     # below already threads the WI-439-review-fix (+15) and WI-446 (+20) deltas
     # through the 2026-08-18 merge math, so no history is lost by the merge.
-    "bootstrap.py": 3132,  # +6 (3126 -> 3132) 2026-08-23, WI-448 slice 5 (the
+    "bootstrap.py": 3138,  # +6 (3132 -> 3138) 2026-08-23, WI-483 slice 4:
+    # one MAPPING row for `scripts/coherence.py` plus the five comment lines
+    # saying why it ships. DECLARATION ONLY — no logic moved and no behaviour
+    # changed; the identical shape WI-483 slice 3 took for `scripts/pending.py`
+    # (+8) the day before. Reviewed bump, reason in
+    # docs/log.d/2026-08-23-wi483-engine-splits.md.
+    # Earlier: +6 (3126 -> 3132) 2026-08-23, WI-448 slice 5 (the
     # lane close): the module's SECOND declared duplicate goes. `_toml_scalar`'s
     # 11-line body becomes a binding to `kitlib.spine.toml_value` and the OI-3
     # brief is emitted through `kitlib.spine.toml_fields` keyed by the shipped

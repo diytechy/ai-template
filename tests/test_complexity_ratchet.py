@@ -245,7 +245,20 @@ BASELINE = {
     # function nothing and paid three branches back. The escape the ratchet
     # actually prefers — decomposition, not a bump — taken on the very function
     # the WI-259 note above called a follow-up.
-    ("trace.py", "analyze"): 50,
+    # `analyze` DROPPED UNDER THE LIMIT at WI-483 slice 4 (program shape item 5,
+    # the engine splits) and its entry is DELETED per the improvement rule. It
+    # was the largest number this census ever held — 50, five times the limit,
+    # 553 lines — because one function held the cross-row join rules, the
+    # carrier sweeps, the delivery filter, the status criterion and the assembly
+    # of a 37-field result. The join rules moved OUT to the new sibling
+    # `coherence.py` (and split again there, so that module earns NO entry
+    # here); the carrier sweeps became `integrity_sweep`/`placeholder_sweep`/
+    # `schema_sweep` beside it; the nested `in_phase` closure — which C901
+    # charged to `analyze` for exactly the reason this file's rule warns about —
+    # became `coherence.PhaseScope.covers`. What is left is the composer, under
+    # the limit, at 218 lines. Decomposition OUTWARD, the escape this ratchet
+    # prefers; behaviour proven identical by a before/after byte-compare of the
+    # console, `test/report.md` and the gap census.
     # WI-328/329: six measured form rules over three registries, now homed in the
     # extracted text layer. Flat and table-driven — the branches are the RULES, so
     # collapsing them would hide which rule fired from the message a reader acts on.

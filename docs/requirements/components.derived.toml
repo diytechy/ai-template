@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 182
+design_rows = 183
 seam_rows = 135
 requirements_placed = 70
 requirements_unplaced = 5
@@ -100,6 +100,7 @@ llr_refs = [
   "LLR-192",
   "LLR-194",
   "LLR-197",
+  "LLR-201",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -114,6 +115,7 @@ modules = [
   "project-trajectory/scripts/baseline_snapshot.py",
   "project-trajectory/scripts/check_doc_refs.py",
   "project-trajectory/scripts/check_trajectory.py",
+  "project-trajectory/scripts/coherence.py",
   "project-trajectory/scripts/derive_stage.py",
   "project-trajectory/scripts/gen_arch_map.py",
   "project-trajectory/scripts/kitlib/__init__.py",

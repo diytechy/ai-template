@@ -179,6 +179,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/intake.py",
         "scripts/census.py",
         "scripts/pending.py",
+        "scripts/coherence.py",
         "scripts/agent_session.py",
         "scripts/agent_common.py",
         "scripts/plan_runner.py",

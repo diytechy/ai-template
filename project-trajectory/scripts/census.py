@@ -68,15 +68,13 @@ def gap_census(root):
     and the mint dedupes so one gap can never mint twice. Returns finding
     strings; [] when the registries are complete (or absent — a scaffold with
     no spine yet has no gaps to name)."""
-    import argparse as _ap
-
     import trace as tr
 
     reg = tr.load_registries(Path(root) / "docs")
-    flags = _ap.Namespace(
-        phase="", require_verified=True, no_placeholders=False, strict_schema=False
-    )
-    findings = tr.analyze(reg, flags)
+    # The engine's config as its own record (WI-483): this used to forge an
+    # `argparse.Namespace` for four values, which is what a non-CLI caller has to
+    # do when a CLI namespace IS the config type.
+    findings = tr.analyze(reg, tr.AnalysisFlags(require_verified=True))
     census = list(findings.orphans)
     census += list(findings.status_findings)
     census += [

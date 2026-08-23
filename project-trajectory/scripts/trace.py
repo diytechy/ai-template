@@ -87,6 +87,7 @@ import datetime
 import re
 import sys
 import tomllib
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -127,6 +128,17 @@ try:
     import baseline_snapshot
     import check_trajectory
     import spine_carrier
+    from coherence import (
+        PhaseScope,
+        _repo_id,
+        budget_backlink_findings,
+        component_membership_findings,
+        delegation_findings,
+        knowledge_pack_advisories,
+        llr_module_ids,
+        spine_orphan_findings,
+        status_criterion_findings,
+    )
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -154,6 +166,17 @@ except ImportError:  # pragma: no cover - in-process fallback
     import baseline_snapshot
     import check_trajectory
     import spine_carrier
+    from coherence import (
+        PhaseScope,
+        _repo_id,
+        budget_backlink_findings,
+        component_membership_findings,
+        delegation_findings,
+        knowledge_pack_advisories,
+        llr_module_ids,
+        spine_orphan_findings,
+        status_criterion_findings,
+    )
     from trace_text import (
         EXTERNAL_ENDPOINT_PREFIX,
         ac_advisories,
@@ -1449,44 +1472,6 @@ def interface_findings(ifs, sr_ids, module_ids):
                 "check_trajectory's arch-map coverage is the full check)"
             )
     return findings, advisories
-
-
-def tc_citation_findings(tcs, spine_ids, ifs):
-    """Every TC-`Verifies` orphan rule, as ``[(at_fault_id, finding), ...]``.
-
-    The vocabulary is SR/LLR spine ids **plus** `IF-###` seam ids (WI-065). The
-    seam-TC rule (process-options.md "Intra-repo interfaces & the architecture
-    graph") asks an `Active` seam to be cited by a TC, and `check_trajectory`
-    reads that citation out of **this same cell** — so rejecting `IF-###` here
-    made the documented citation unsatisfiable: it passed one check and orphaned
-    under the other. Ruled in favour of ONE citation cell rather than a second
-    column: a TC states everything it verifies in one place, and trace already
-    loads `interfaces.csv`, so the join is free.
-
-    Two rules keep the widened vocabulary from becoming a hole: an unresolvable
-    IF token is as wrong as an unknown SR, and a seam citation **supplements**
-    the spine citation — a TC naming only seam ids no longer says which
-    requirement it discharges."""
-    if_ids = {r["IF-ID"] for r in ifs}
-    out = []
-    for r in tcs:
-        tid = r["TC-ID"]
-        verified = refs(r.get("Verifies"))
-        if not verified:
-            out.append((tid, f"TC {tid} verifies nothing"))
-        elif not spine_ids & set(verified):
-            out.append(
-                (
-                    tid,
-                    f"TC {tid} cites only seam id(s) — a seam citation "
-                    "supplements the spine citation, so name the SR and/or LLR "
-                    "this test verifies",
-                )
-            )
-        for x in verified:
-            if x not in spine_ids and x not in if_ids:
-                out.append((tid, f"TC {tid} references unknown {x}"))
-    return out
 
 
 def placeholder_findings(label, raw_rows):
@@ -3651,20 +3636,145 @@ def html_document(roots):
     return HTML_HEAD + "\n".join(body) + "\n" + HTML_TAIL
 
 
-def _repo_id(r):
-    return r.get("REPO-ID") or r.get("MOD-ID")
-
-
+@dataclass(frozen=True)
 class Registries:
     """Loaded spine + off-spine registries: raw rows (kept for the integrity/
     placeholder sweeps), example-filtered working sets for the join, and the SN
     ids/draft/prose scraped from stakeholder-needs.md. Produced by
-    load_registries; consumed by --approve, analyze, and the report render."""
+    load_registries; consumed by --approve, analyze, and the report render.
+
+    TYPED AND FROZEN at WI-483 (program shape item 5: typed immutable config +
+    explicit mutable runtime state). It was an EMPTY class populated as an
+    attribute bag, which is why `analyze` had to read two of its fields through
+    `getattr(reg, ..., [])` — the bag gave no way to know whether the loader had
+    set them. A frozen record answers that at construction: every field exists,
+    the loader fills all of them in one call, and nothing downstream may mutate
+    what LOADING produced. It is the immutable half of the pair; `Findings`
+    below is the mutable half."""
+
+    docs: Path
+    raw_srs: list
+    raw_llrs: list
+    raw_tcs: list
+    raw_pbs: list
+    raw_repos: list
+    raw_mods: list
+    raw_parts: list
+    raw_assets: list
+    raw_cmps: list
+    raw_ifs: list
+    raw_exts: list
+    raw_bifs: list
+    raw_rels: list
+    raw_sns: list
+    srs: list
+    llrs: list
+    tcs: list
+    pbs: list
+    mods: list
+    parts: list
+    assets: list
+    cmps: list
+    ifs: list
+    exts: list
+    bifs: list
+    rels: list
+    sn_ids: set
+    sn_draft: set
+    sn_meta: dict
+    sn_md: object  # Path to the resolved needs carrier, or None when absent.
+    sn_needs: list
+    sn_integrity: list
+    provenance_allow: tuple
+    hat_names: set
 
 
+@dataclass(frozen=True)
+class AnalysisFlags:
+    """The four delivery-filter/severity switches `analyze` reads, as a record
+    rather than as whatever object the caller happened to have.
+
+    WHY IT EXISTS (WI-483). `analyze(reg, args)` read `args.phase`,
+    `args.require_verified`, `args.no_placeholders` and `args.strict_schema`
+    off the argparse namespace, so a non-CLI caller had to FORGE one:
+    `census.gap_census` imported `argparse` purely to build a four-field
+    Namespace. The engine's configuration is four values, and this states them.
+    `of()` accepts either this record or any object carrying the four
+    attributes, so the CLI still passes its parsed args unchanged."""
+
+    phase: str = ""
+    require_verified: bool = False
+    no_placeholders: bool = False
+    strict_schema: bool = False
+
+    @classmethod
+    def of(cls, args):
+        """Normalize a caller's config to this record (idempotent)."""
+        if isinstance(args, cls):
+            return args
+        return cls(
+            phase=getattr(args, "phase", "") or "",
+            require_verified=bool(getattr(args, "require_verified", False)),
+            no_placeholders=bool(getattr(args, "no_placeholders", False)),
+            strict_schema=bool(getattr(args, "strict_schema", False)),
+        )
+
+
+@dataclass
 class Findings:
     """The analyze() output — every finding list + derived set the report,
-    console summary, and exit policy read. Produced by analyze()."""
+    console summary, and exit policy read. Produced by analyze().
+
+    THE MUTABLE HALF, and deliberately not frozen (WI-483). Two of its fields
+    are filled AFTER analyze returns, because the rules behind them read the
+    filesystem and git and analyze's contract is purity — that is real mutable
+    runtime state, and the honest shape for it is a declared field with an empty
+    default, not an attribute that springs into existence at the call site."""
+
+    orphans: list = field(default_factory=list)
+    orphan_ids: set = field(default_factory=set)
+    integrity: list = field(default_factory=list)
+    placeholders: list = field(default_factory=list)
+    schema: list = field(default_factory=list)
+    advisories: list = field(default_factory=list)
+    # Filled after analyze() returns: the id-watermark rules read the
+    # filesystem and git, which analyze()'s pure contract forbids.
+    watermark_advisories: list = field(default_factory=list)
+    # Filled after analyze() returns, for the same reason: the snapshot's
+    # unanchored rule reads the `docs/archive/last_approved/` tree. INTEGRITY
+    # class since migration step 7 — it is also appended to `findings.integrity`
+    # there, and kept as its own list so the console can name the rule.
+    snapshot_findings: list = field(default_factory=list)
+    provenance: list = field(default_factory=list)
+    form: list = field(default_factory=list)
+    paraphrase: list = field(default_factory=list)
+    ears: list = field(default_factory=list)
+    llr_status_advis: list = field(default_factory=list)
+    sr_artifact_advis: list = field(default_factory=list)
+    sn_artifact_advis: list = field(default_factory=list)
+    provenance_advis: list = field(default_factory=list)
+    sr_fanout_advis: list = field(default_factory=list)
+    verif_coherence_advis: list = field(default_factory=list)
+    if_this_project_advis: list = field(default_factory=list)
+    budget_findings: list = field(default_factory=list)
+    module_findings: list = field(default_factory=list)
+    component_findings: list = field(default_factory=list)
+    knowledge_advisories: list = field(default_factory=list)
+    interface_backlink_findings: list = field(default_factory=list)
+    frame_backlink_findings: list = field(default_factory=list)
+    hat_dangling: list = field(default_factory=list)
+    interface_advisories: list = field(default_factory=list)
+    status_findings: list = field(default_factory=list)
+    phase_deferred: list = field(default_factory=list)
+    phases: set = None
+    mechanized_verified: list = field(default_factory=list)
+    demonstrated_verified: list = field(default_factory=list)
+    attested_verified: list = field(default_factory=list)
+    draft_srs: list = field(default_factory=list)
+    draft_llrs: list = field(default_factory=list)
+    draft_tcs: list = field(default_factory=list)
+    n_draft: int = 0
+    area_counts: dict = field(default_factory=dict)
 
 
 def load_registries(docs):
@@ -3787,214 +3897,233 @@ def load_registries(docs):
             }
             for n in sn_needs
         ]
-    reg = Registries()
-    reg.raw_srs, reg.raw_llrs, reg.raw_tcs = raw_srs, raw_llrs, raw_tcs
-    reg.raw_pbs, reg.raw_repos, reg.raw_mods = raw_pbs, raw_repos, raw_mods
-    reg.raw_parts, reg.raw_assets = raw_parts, raw_assets
-    reg.raw_cmps, reg.raw_ifs = raw_cmps, raw_ifs
-    reg.raw_exts, reg.raw_bifs, reg.raw_rels = raw_exts, raw_bifs, raw_rels
-    reg.exts, reg.bifs, reg.rels = exts, bifs, rels
-    reg.srs, reg.llrs, reg.tcs, reg.pbs = srs, llrs, tcs, pbs
-    reg.mods, reg.parts, reg.assets = mods, parts, assets
-    reg.cmps, reg.ifs = cmps, ifs
-    reg.sn_ids, reg.sn_draft, reg.sn_meta, reg.sn_md = sn_ids, sn_draft, sn_meta, sn_md
-    reg.sn_integrity = sn_integrity
-    reg.raw_sns = sn_rows
-    reg.sn_needs = sn_needs
-    # The citation-frame advisory's reviewed exception list, read HERE rather
-    # than in analyze(): analyze is the pure pass over loaded rows, and an
-    # exception file is an input to load, not a finding.
-    reg.provenance_allow = load_provenance_allow(docs.parent)
-    # The hats ROSTER's name set, read here for the same reason the allow file is:
-    # analyze() is the pure pass over loaded rows, and a registry a cell resolves
-    # AGAINST is an input to load, not a finding (WI-484).
-    reg.hat_names = load_hat_names(docs.parent)
-    reg.docs = docs
-    return reg
+    return Registries(
+        docs=docs,
+        raw_srs=raw_srs,
+        raw_llrs=raw_llrs,
+        raw_tcs=raw_tcs,
+        raw_pbs=raw_pbs,
+        raw_repos=raw_repos,
+        raw_mods=raw_mods,
+        raw_parts=raw_parts,
+        raw_assets=raw_assets,
+        raw_cmps=raw_cmps,
+        raw_ifs=raw_ifs,
+        raw_exts=raw_exts,
+        raw_bifs=raw_bifs,
+        raw_rels=raw_rels,
+        raw_sns=sn_rows,
+        srs=srs,
+        llrs=llrs,
+        tcs=tcs,
+        pbs=pbs,
+        mods=mods,
+        parts=parts,
+        assets=assets,
+        cmps=cmps,
+        ifs=ifs,
+        exts=exts,
+        bifs=bifs,
+        rels=rels,
+        sn_ids=sn_ids,
+        sn_draft=sn_draft,
+        sn_meta=sn_meta,
+        sn_md=sn_md,
+        sn_needs=sn_needs,
+        sn_integrity=sn_integrity,
+        # The citation-frame advisory's reviewed exception list, read HERE rather
+        # than in analyze(): analyze is the pure pass over loaded rows, and an
+        # exception file is an input to load, not a finding.
+        provenance_allow=load_provenance_allow(docs.parent),
+        # The hats ROSTER's name set, read here for the same reason the allow file
+        # is: analyze() is the pure pass over loaded rows, and a registry a cell
+        # resolves AGAINST is an input to load, not a finding (WI-484).
+        hat_names=load_hat_names(docs.parent),
+    )
+
+
+def verification_basis(srs):
+    """Verification-basis audit surface (process.md §4): of the SRs the project
+    reports Approved, how was each reached? Three kinds, most-to-least runnable —
+    Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
+    Inspection/Critique rest on a human observing an outcome (demonstrated/
+    observed — repeatable, but not a runnable check); Attest rests on a named
+    human's recorded judgment (attested — trust-based). Split three ways, not
+    binary (WI-259): once non-Test methods are gate-required, folding them into
+    "mechanized" would overstate how much rests on runnable checks. Independent
+    of --require-verified so the footprint is always visible. The cell is
+    stripped once per row (M-1) before every classification. A blank or
+    unrecognized method falls to the demonstrated/observed else-bucket — the
+    conservative default, so an unknown method is never counted as a runnable
+    check (--strict-schema separately flags an out-of-vocabulary method).
+
+    Returns `(mechanized, demonstrated, attested)` id lists. Pure; extracted
+    outward from `analyze` at WI-483."""
+    mechanized_verified, demonstrated_verified, attested_verified = [], [], []
+    for r in srs:
+        if not is_approved(r):
+            continue
+        method = (r.get("Verification") or "").strip()
+        if method in MECHANIZED_METHODS:
+            mechanized_verified.append(r["SR-ID"])
+        elif method in ATTESTED_METHODS:
+            attested_verified.append(r["SR-ID"])
+        else:
+            demonstrated_verified.append(r["SR-ID"])
+    return mechanized_verified, demonstrated_verified, attested_verified
+
+
+def integrity_sweep(reg, raw):
+    """The always-on integrity floor: CSV row structure, per-tier id integrity,
+    the closed `Status` vocabulary, the SN tier's own duplicate protection, the
+    SR/LLR/TC citation triangle, and the off-spine registries' ids.
+
+    Extracted outward from `analyze` at WI-483. `raw` is the three-tier
+    `{label: rows}` map the caller also feeds the placeholder/schema sweeps, so
+    the two readings of "the raw spine" cannot drift apart.
+    """
+    docs = reg.docs
+    # CSV structure first (a misaligned row can make every later finding
+    # misleading): every registry CSV — spine, off-spine, and project-added —
+    # must have each data row parse to the header's column count. Swept by
+    # location, not by a known-file list, so a registry this script never joins
+    # (a project's own additions) is still guarded. `interfaces.csv` USED TO BE
+    # the worked example here and is now wrong twice over — the IF tier moved to
+    # `interfaces.toml` at WI-443, which this glob does not see at all, and the
+    # tier IS joined now (`raw_ifs`) — so the example is dropped rather than
+    # re-spelled: a sweep that guards CSVs cannot illustrate itself with a TOML.
+    integrity = [
+        f
+        for d in (docs / "requirements", docs / "test")
+        if d.is_dir()
+        for p in sorted(d.glob("*.csv"))
+        for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
+    ]
+    integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
+    # The closed `Status` vocabulary (D-9 step 1). INTEGRITY-class rather than
+    # schema-class on purpose: `--strict-schema` runs at DevStg-Impl only, so
+    # a Status closure routed there would never execute in the repos this rule
+    # exists for. A row carrying a word no predicate recognizes is invisible to
+    # every surface — the re-attest brief, the pending projection, the basis
+    # counters — which is a silent, not a loud, failure.
+    integrity += [
+        f for label in raw for f in enum_integrity_findings(label, raw[label])
+    ]
+    # SN is folded in SEPARATELY rather than joining `raw` above, because `raw`
+    # also feeds the id-integrity and placeholder sweeps and the need tier owns
+    # those already (`sn_integrity_findings` reads the registry as PROSE, since a
+    # bare `SN-###` token in a paragraph is part of that tier's id universe).
+    # Only the Status vocabulary was owed — and it was MISSING: `ENUM_FIELDS`
+    # declared the SN entry (2026-08-17k) while `raw` named three tiers, so
+    # `status = "Bananas"` on a need produced no finding at any bar. That is the
+    # exact defect the LLR comment above records, one tier up.
+    integrity += enum_integrity_findings("SN", reg.raw_sns)
+    # The SN tier's duplicate protection (prose registry — see
+    # sn_integrity_findings): integrity-class like a duplicated CSV id.
+    integrity += reg.sn_integrity
+    # SR/LLR citation coherence: a TC that cites an SR and an LLR
+    # together must not pair an LLR with an SR it does not decompose. Integrity-
+    # class (wrong at any stage), so it joins the --strict-integrity floor.
+    integrity += triangle_findings(reg.tcs, reg.llrs)
+    # PB ids are integrity-checked too, but PB is kept out of the placeholder/
+    # schema sweeps above: the budgets registry is optional (like interfaces.csv),
+    # so a leftover PB-000 must never block a gate the project doesn't use.
+    integrity += integrity_findings("PB", reg.raw_pbs)
+    # The coordinator repo-delegation registry (REPO-###, MULTI_REPO.md) is the
+    # same kind of optional off-spine registry — integrity-checked, but out of the
+    # placeholder/schema sweeps, so a REPO-000 placeholder never blocks it. The
+    # legacy modules.csv (MOD-###) rows are integrity-checked under their own key.
+    integrity += integrity_findings("REPO", reg.raw_repos)
+    integrity += integrity_findings("MOD", reg.raw_mods)
+    # The purchased/external parts registry (PART-###, process-options.md) is the
+    # same kind of optional off-spine registry — integrity-checked (malformed/
+    # duplicate id), but out of the placeholder/schema sweeps and with no back-link
+    # resolution (its IF-Ref points at the IF-### tier trace.py doesn't read), so a
+    # project that buys nothing keeps its PART-000 placeholder without blocking a gate.
+    integrity += integrity_findings("PART", reg.raw_parts)
+    # The binary-asset provenance registry (ASSET-###, process-options.md) is the
+    # same optional off-spine kind — integrity-checked (malformed/duplicate id),
+    # out of the placeholder/schema sweeps and with no back-link resolution, so a
+    # project with no binary assets keeps its ASSET-000 placeholder without
+    # blocking a gate.
+    integrity += integrity_findings("ASSET", reg.raw_assets)
+    # The component registry (CMP-###, process-options.md "Component layer") is
+    # the same optional off-spine kind — integrity-checked (malformed/duplicate
+    # id), out of the placeholder/schema sweeps, so a CMP-000 placeholder never
+    # blocks a gate; its PartOf/SupersededBy/membership joins are checked above.
+    integrity += integrity_findings("CMP", reg.raw_cmps)
+    # The interface-seam registry (IF-###, process.md §8) is the same optional
+    # off-spine kind — integrity-checked (malformed/duplicate id), out of the
+    # placeholder/schema sweeps, so an IF-000 placeholder never blocks a gate; its
+    # Req-Refs back-link and endpoint join are checked below.
+    integrity += integrity_findings("IF", reg.raw_ifs)
+    return integrity
+
+
+def placeholder_sweep(raw, sn_md):
+    """The `--no-placeholders` sweep: leftover `-000` example rows across the
+    three raw spine tiers plus the need registry's prose placeholders. Stated
+    unconditionally here; the caller owns the flag."""
+    return [f for label in raw for f in placeholder_findings(label, raw[label])] + [
+        f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)
+    ]
+
+
+def schema_sweep(real):
+    """The `--strict-schema` sweep over the example-filtered spine tiers. Stated
+    unconditionally here; the caller owns the flag."""
+    return [
+        f for label in real for f in schema_findings(label, real[label])
+    ] + phase_approved_findings(real)
+
+
+def aspect_counts(srs):
+    """Optional Aspect column (the ruled cross-cutting review grouping): count
+    real SRs per aspect so coverage is visible. Report-only — never a finding,
+    never an exit-code change; a registry without the column contributes
+    nothing. The VALUE set is closed and checked by --strict-schema
+    (ENUM_FIELDS); this is only the count."""
+    counts = {}
+    for r in srs:
+        area = (r.get("Aspect") or "").strip()
+        if area:
+            counts[area] = counts.get(area, 0) + 1
+    return counts
 
 
 def analyze(reg, args):
     """The whole checker pass over loaded registries: orphan rules, off-spine
     back-link/membership checks, the --require-verified status criterion
     (phase-scoped), the integrity/placeholder/schema sweeps, and the always-on
-    advisories. Pure — reads reg + args flags, returns a Findings bag. No I/O.
+    advisories. Pure — reads reg + flags, returns a Findings bag. No I/O.
+
+    THE COMPOSER, since WI-483 (program shape item 5). Each rule family above
+    states what it IS; this function states which ones RUN, on what, and where
+    each result lands in the bag. What is left here that is not a call is the
+    POLICY: the four flags (`AnalysisFlags`), the phase scope, and the reasons a
+    finding class rides one pipe rather than another.
 
     Implements: SR-157, SR-015, LLR-015
     """
+    flags = AnalysisFlags.of(args)
     srs, llrs, tcs = reg.srs, reg.llrs, reg.tcs
-    pbs, mods, parts = reg.pbs, reg.mods, reg.parts
-    assets, cmps, ifs = reg.assets, reg.cmps, reg.ifs
+    cmps, ifs = reg.cmps, reg.ifs
     exts, bifs, rels = reg.exts, reg.bifs, reg.rels
-    sn_ids, sn_draft, sn_md = reg.sn_ids, reg.sn_draft, reg.sn_md
-    raw_srs, raw_llrs, raw_tcs = reg.raw_srs, reg.raw_llrs, reg.raw_tcs
-    raw_pbs, raw_repos, raw_mods = reg.raw_pbs, reg.raw_repos, reg.raw_mods
-    raw_parts, raw_assets = reg.raw_parts, reg.raw_assets
-    raw_cmps, raw_ifs = reg.raw_cmps, reg.raw_ifs
     docs = reg.docs
     prov_allow = reg.provenance_allow
     sr_ids = {r["SR-ID"] for r in srs}
     llr_ids = {r["LLR-ID"] for r in llrs}
-    llr_sr_refs = {x for r in llrs for x in refs(r.get("SR-Refs"))}
-    tc_refs = {x for r in tcs for x in refs(r.get("Verifies"))}
-    sr_sn_refs = sn_cited_ids(srs)
 
-    # orphan_ids collects the at-fault id for each finding, so the rendered views
-    # below (outline/graph/HTML) can flag the same nodes the text list reports.
-    orphans = []
-    orphan_ids = set()
-    for r in srs:
-        sid = r["SR-ID"]
-        # A Drafted SR is being drafted requirement-first (derived-gate model §3):
-        # exempt from the child-completeness rules (no LLR / no TC) so it lives in
-        # the live spine without orphaning. Its SN linkage and every integrity
-        # rule still apply.
-        draft = is_drafted(r)
-        analytic = llr_exempt(r)
-        if not draft and not analytic and sid not in llr_sr_refs:
-            orphans.append(
-                f"SR {sid} has no LLR (and Verification not in "
-                "Analysis/Inspection/Attest)"
-            )
-            orphan_ids.add(sid)
-        if not draft and sid not in tc_refs:
-            orphans.append(f"SR {sid} has no test (TC)")
-            orphan_ids.add(sid)
-        sn_parents = refs(r.get("SN-Refs"))
-        # DevStg-Reqs's "every SR links >=1 SN", machine-checked — but only when the SN
-        # registry actually provides real ids (a project without a needs file,
-        # or one holding only -000 placeholders, has no SN tier to link yet).
-        if sn_ids and not sn_parents:
-            orphans.append(f"SR {sid} links no SN (every SR needs >=1 SN-Ref)")
-            orphan_ids.add(sid)
-        for u in sn_parents:
-            if sn_ids and u not in sn_ids:
-                orphans.append(f"SR {sid} references unknown {u}")
-                orphan_ids.add(sid)
-
-    for r in llrs:
-        lid = r["LLR-ID"]
-        parents = refs(r.get("SR-Refs"))
-        if not parents:
-            orphans.append(f"LLR {lid} has no SR parent")
-            orphan_ids.add(lid)
-        for p in parents:
-            if p not in sr_ids:
-                orphans.append(f"LLR {lid} references unknown {p}")
-                orphan_ids.add(lid)
-        # A Drafted LLR is exempt from the child-completeness (no TC) rule, like a
-        # Drafted SR — its SR parent + id integrity still apply (derived-gate §3).
-        if not is_drafted(r) and lid not in tc_refs:
-            orphans.append(f"LLR {lid} has no test (TC)")
-            orphan_ids.add(lid)
-
-    for tid, finding in tc_citation_findings(tcs, sr_ids | llr_ids, ifs):
-        orphans.append(finding)
-        orphan_ids.add(tid)
-
-    for u in sorted(sn_ids):
-        # A Drafted SN (section-as-state, §4a) is being drafted requirement-first and
-        # is exempt from the child-completeness rule, like a Drafted SR. The gate
-        # half of this rule is spine_rules's SN-coverage rung (WI-401): same
-        # cited set (sn_cited_ids), same Drafted exemption — this lists the ids,
-        # that caps the level, and neither fires twice on one fact.
-        if u not in sr_sn_refs and u not in sn_draft:
-            orphans.append(f"SN {u} has no SR")
-            orphan_ids.add(u)
-
-    # Performance budgets (process.md §9) sit off the spine but stay traceable:
-    # each row's Refs must resolve to a real SR/LLR id or an LLR Module path.
-    module_ids = {(lr.get("Module") or "").strip() for lr in llrs}
-    module_ids.discard("")
-    budget_targets = sr_ids | llr_ids | module_ids
-    budget_findings = []
-    for r in pbs:
-        pid = r["PB-ID"]
-        targets = refs(r.get("Refs"))
-        if not targets:
-            budget_findings.append(f"PB {pid} back-links nothing (Refs is empty)")
-        for x in targets:
-            if x not in budget_targets:
-                budget_findings.append(f"PB {pid} references unknown {x}")
-
-    # Coordinator module registry (MULTI_REPO.md, the multi-repo layer) sits off the
-    # spine like PB, but its DelegatedSRs stay traceable *within* the coordinator
-    # repo: each must name a real coordinator SR (delegation is at the SR tier,
-    # §3.1). The cross-boundary link (a module SN's ParentRef back to this SR) points
-    # into another repo, so no single trace.py run validates it — that reconciliation
-    # is the deferred cross-repo join. An external/reused part referenced only via the
-    # IF-### catalog may delegate nothing, so an empty back-link is allowed here.
-    module_findings = []
-    for r in mods:
-        mid = _repo_id(r)
-        for x in refs(r.get("DelegatedSRs")):
-            if x not in sr_ids:
-                module_findings.append(
-                    f"{mid.split('-')[0]} {mid} delegates unknown {x}"
-                )
-
-    # Component registry (CMP-###, process-options.md "Component layer") sits off
-    # the spine like PART/ASSET, but its two structural cells stay traceable:
-    # PartOf (nesting — tag primitives at the finest CMP, coarser membership
-    # derives) and SupersededBy (lifecycle identity across a rewrite) must name
-    # real CMP ids. And the membership join is checked from the primitive side:
-    # a `Component` tag on an LLR/IF/PART/ASSET row must resolve to a real CMP
-    # row (the IF tier joined the sweep at WI-064 — trace.py has read the IF
-    # registry since WI-056, so its tags were the one unvalidated cell). Named
-    # by TIER rather than by file: the row of record moved to `interfaces.toml`
-    # at WI-443, and "has read interfaces.csv since WI-056" would have been the
-    # kind of claim that is true only of a carrier nobody runs any more.
-    cmp_ids = {r["CMP-ID"] for r in cmps}
-    component_findings = []
-    for r in cmps:
-        cid = r["CMP-ID"]
-        for col in ("PartOf", "SupersededBy"):
-            for x in refs(r.get(col)):
-                if x not in cmp_ids:
-                    component_findings.append(f"CMP {cid} {col} references unknown {x}")
-    if cmp_ids:
-        for label, rows_, key in (
-            ("LLR", llrs, "LLR-ID"),
-            ("IF", ifs, "IF-ID"),
-            ("PART", parts, "PART-ID"),
-            ("ASSET", assets, "ASSET-ID"),
-        ):
-            for r in rows_:
-                for x in refs(r.get("Component")):
-                    if x not in cmp_ids:
-                        component_findings.append(
-                            f"{label} {r[key]} Component tag references unknown {x}"
-                        )
-
-    # Knowledge-pack refs on a CMP row's `Knowledge` cell (process-options.md
-    # "Research track & knowledge packs"): a `docs/knowledge/<label>`-shaped ref
-    # names a hand-owned pack file. Resolve those to real files — a missing pack
-    # is a warn-only advisory, NEVER a gate finding (a pack is advisory context,
-    # research-knowledge.md §3a). Skill names and URLs share the cell and are not
-    # file-checkable, so only the `docs/knowledge/` prefix is resolved; anything
-    # else is left alone. Uses `docs` (not root) so a custom --docs still resolves.
-    knowledge_advisories = []
-    kn_prefix = "docs/knowledge/"
-    for r in cmps:
-        cid = r["CMP-ID"]
-        for ref in refs(r.get("Knowledge")):
-            label = ref.replace("\\", "/")
-            if not label.startswith(kn_prefix):
-                continue
-            label = label[len(kn_prefix) :]
-            if not label:
-                continue
-            rel = label if label.endswith(".md") else label + ".md"
-            pack_root = (docs / "knowledge").resolve()
-            candidate = (pack_root / rel).resolve()
-            try:
-                candidate.relative_to(pack_root)
-                contained = True
-            except ValueError:
-                contained = False
-            if not contained or not candidate.is_file():
-                knowledge_advisories.append(
-                    f"CMP {cid} Knowledge ref '{ref}' names no pack ({kn_prefix}{rel})"
-                )
+    orphans, orphan_ids = spine_orphan_findings(
+        srs, llrs, tcs, ifs, sr_ids, llr_ids, reg.sn_ids, reg.sn_draft
+    )
+    module_ids = llr_module_ids(llrs)
+    budget_findings = budget_backlink_findings(reg.pbs, sr_ids | llr_ids | module_ids)
+    module_findings = delegation_findings(reg.mods, sr_ids)
+    component_findings = component_membership_findings(
+        cmps, llrs, ifs, reg.parts, reg.assets
+    )
+    knowledge_advisories = knowledge_pack_advisories(cmps, docs)
 
     # Interface seams (IF-###, process.md §8): Req-Refs back-links join the
     # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
@@ -4055,190 +4184,22 @@ def analyze(reg, args):
     # failure set below.
     if_this_project_advis = if_this_project_advisories(ifs, llrs)
 
-    phases = set(refs(args.phase)) if args.phase else None
-    # The foundation (minimum) phase is never phase-deferred — it is in scope for
-    # every delivery filter, which is exactly what a blank Phase bought before the
-    # phase back-fill (the phase doctrine, process.md §4). Digit-parse (`v2`/`2` ->
-    # 2 — the same parse spine_rules uses) so the minimum compares numerically; an
-    # all-blank downstream registry has no parseable phase, so the blank rule below
-    # still carries it. The `tag in phases` match stays literal (CLI label-agnostic).
-    foundation_phase = min(
-        (n for n in (phase_num(s) for s in srs) if n is not None), default=None
+    # The delivery filter and the two rules scoped by it. `verification_basis`
+    # runs unconditionally (the footprint is always visible); the status
+    # criterion is what `--require-verified` turns on.
+    scope = PhaseScope.of(srs, flags.phase)
+    mechanized_verified, demonstrated_verified, attested_verified = verification_basis(
+        srs
+    )
+    status_findings, phase_deferred = (
+        status_criterion_findings(srs, scope) if flags.require_verified else ([], [])
     )
 
-    def in_phase(r):
-        """In scope when there is no filter, the SR's Phase is blank (downstream
-        compat), its phase is listed, or it is the foundation (minimum) phase."""
-        tag = (r.get("Phase") or "").strip()
-        if phases is None or not tag or tag in phases:
-            return True
-        n = phase_num(r)
-        return n is not None and n == foundation_phase
-
-    status_findings = []
-    phase_deferred = []
-    # Verification-basis audit surface (process.md §4): of the SRs the project
-    # reports Approved, how was each reached? Three kinds, most-to-least runnable —
-    # Test rests on a runnable check (mechanized); Demonstration/Manual/Analysis/
-    # Inspection/Critique rest on a human observing an outcome (demonstrated/
-    # observed — repeatable, but not a runnable check); Attest rests on a named
-    # human's recorded judgment (attested — trust-based). Split three ways, not
-    # binary (WI-259): once non-Test methods are gate-required, folding them into
-    # "mechanized" would overstate how much rests on runnable checks. Independent
-    # of --require-verified so the footprint is always visible. The cell is
-    # stripped once per row (M-1) before every classification. A blank or
-    # unrecognized method falls to the demonstrated/observed else-bucket — the
-    # conservative default, so an unknown method is never counted as a runnable
-    # check (--strict-schema separately flags an out-of-vocabulary method).
-    mechanized_verified, demonstrated_verified, attested_verified = [], [], []
-    for r in srs:
-        if not is_approved(r):
-            continue
-        method = (r.get("Verification") or "").strip()
-        if method in MECHANIZED_METHODS:
-            mechanized_verified.append(r["SR-ID"])
-        elif method in ATTESTED_METHODS:
-            attested_verified.append(r["SR-ID"])
-        else:
-            demonstrated_verified.append(r["SR-ID"])
-    if args.require_verified:
-        for r in srs:
-            # The DevStg-Impl status bar applies to every approved SR regardless of
-            # Verification method — matching spine_rules.sr_gate, which already
-            # demands is_approved for any decomposed SR before DevStg-Impl with no
-            # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
-            # Analysis/Inspection SR left Implemented can never derive DevStg-Impl yet used
-            # to pass this Test-only check — the two scripts disagreeing about the
-            # gate is the false-green the kit exists to prevent). A Drafted SR is
-            # pre-approval (below DevStg-Reqs, derived-gate §3): it makes no approval
-            # claim yet, so the bar stands down — surfaced in the draft count so
-            # the exemption stays auditable. Pinned equivalent to sr_gate's
-            # is_approved-for-decomposed rule by test_rule_sync.
-            if is_drafted(r):
-                continue
-            if not in_phase(r):
-                phase_deferred.append(
-                    f"SR {r['SR-ID']} (Phase={r.get('Phase', '').strip()}) — "
-                    "status check deferred to its own phase"
-                )
-                continue
-            # `is_founded` JOINS THE PASS TEST AT D-9 STEP 8, mirroring
-            # `spine_rules.spine_stage`'s Impl->Release discriminator: `Founded`
-            # is `Approved` PLUS a demonstration, so a row at the top rung has
-            # more than cleared a bar that asks whether its text is blessed.
-            # Reading `is_approved` alone would have made arming the word FLAG
-            # the rows that reached it — an arming that fails what it promotes.
-            #
-            # WHAT THIS LEAVES, stated because it is not obvious: under the
-            # closed enum every live value now either stands the bar down
-            # (`Drafted`) or passes it, so this finding is UNREACHABLE-BY-CELL
-            # for a conformant repo — the `--require-verified` twin of the
-            # stage-axis gap OI-30 D2 ceilinged on the bar axis. It still fires,
-            # and must, for an OUT-OF-VOCABULARY value: a downstream repo
-            # mid-migration whose rows read `Modified` or `Implemented` is
-            # exactly the case that must not pass a DevStg-Impl gate silently.
-            # The integrity floor names that cell too; two findings on one fault
-            # is the right count here, because they answer different questions
-            # ("this word is not in the vocabulary" vs "this row is not blessed").
-            if not (is_approved(r) or is_founded(r)):
-                val = (r.get("Status") or "").strip()
-                method = (r.get("Verification") or "").strip() or "(blank)"
-                status_findings.append(
-                    f"SR {r['SR-ID']} is Verification={method} but Status="
-                    f"{val or '(blank)'} (DevStg-Impl requires Approved for every approved "
-                    "SR regardless of method — the magic Status values are matched "
-                    "case-insensitively, so this is a real mismatch, not a casing "
-                    "near-miss)"
-                )
-
-    raw = {"SR": raw_srs, "LLR": raw_llrs, "TC": raw_tcs}
+    raw = {"SR": reg.raw_srs, "LLR": reg.raw_llrs, "TC": reg.raw_tcs}
     real = {"SR": srs, "LLR": llrs, "TC": tcs}
-    # CSV structure first (a misaligned row can make every later finding
-    # misleading): every registry CSV — spine, off-spine, and project-added —
-    # must have each data row parse to the header's column count. Swept by
-    # location, not by a known-file list, so a registry this script never joins
-    # (a project's own additions) is still guarded. `interfaces.csv` USED TO BE
-    # the worked example here and is now wrong twice over — the IF tier moved to
-    # `interfaces.toml` at WI-443, which this glob does not see at all, and the
-    # tier IS joined now (`raw_ifs`) — so the example is dropped rather than
-    # re-spelled: a sweep that guards CSVs cannot illustrate itself with a TOML.
-    integrity = [
-        f
-        for d in (docs / "requirements", docs / "test")
-        if d.is_dir()
-        for p in sorted(d.glob("*.csv"))
-        for f in structure_findings(p, p.relative_to(docs.parent).as_posix())
-    ]
-    integrity += [f for label in raw for f in integrity_findings(label, raw[label])]
-    # The closed `Status` vocabulary (D-9 step 1). INTEGRITY-class rather than
-    # schema-class on purpose: `--strict-schema` runs at DevStg-Impl only, so
-    # a Status closure routed there would never execute in the repos this rule
-    # exists for. A row carrying a word no predicate recognizes is invisible to
-    # every surface — the re-attest brief, the pending projection, the basis
-    # counters — which is a silent, not a loud, failure.
-    integrity += [
-        f for label in raw for f in enum_integrity_findings(label, raw[label])
-    ]
-    # SN is folded in SEPARATELY rather than joining `raw` above, because `raw`
-    # also feeds the id-integrity and placeholder sweeps and the need tier owns
-    # those already (`sn_integrity_findings` reads the registry as PROSE, since a
-    # bare `SN-###` token in a paragraph is part of that tier's id universe).
-    # Only the Status vocabulary was owed — and it was MISSING: `ENUM_FIELDS`
-    # declared the SN entry (2026-08-17k) while `raw` named three tiers, so
-    # `status = "Bananas"` on a need produced no finding at any bar. That is the
-    # exact defect the LLR comment above records, one tier up.
-    integrity += enum_integrity_findings("SN", getattr(reg, "raw_sns", []))
-    # The SN tier's duplicate protection (prose registry — see
-    # sn_integrity_findings): integrity-class like a duplicated CSV id.
-    integrity += getattr(reg, "sn_integrity", [])
-    # SR/LLR citation coherence: a TC that cites an SR and an LLR
-    # together must not pair an LLR with an SR it does not decompose. Integrity-
-    # class (wrong at any stage), so it joins the --strict-integrity floor.
-    integrity += triangle_findings(tcs, llrs)
-    # PB ids are integrity-checked too, but PB is kept out of the placeholder/
-    # schema sweeps above: the budgets registry is optional (like interfaces.csv),
-    # so a leftover PB-000 must never block a gate the project doesn't use.
-    integrity += integrity_findings("PB", raw_pbs)
-    # The coordinator repo-delegation registry (REPO-###, MULTI_REPO.md) is the
-    # same kind of optional off-spine registry — integrity-checked, but out of the
-    # placeholder/schema sweeps, so a REPO-000 placeholder never blocks it. The
-    # legacy modules.csv (MOD-###) rows are integrity-checked under their own key.
-    integrity += integrity_findings("REPO", raw_repos)
-    integrity += integrity_findings("MOD", raw_mods)
-    # The purchased/external parts registry (PART-###, process-options.md) is the
-    # same kind of optional off-spine registry — integrity-checked (malformed/
-    # duplicate id), but out of the placeholder/schema sweeps and with no back-link
-    # resolution (its IF-Ref points at the IF-### tier trace.py doesn't read), so a
-    # project that buys nothing keeps its PART-000 placeholder without blocking a gate.
-    integrity += integrity_findings("PART", raw_parts)
-    # The binary-asset provenance registry (ASSET-###, process-options.md) is the
-    # same optional off-spine kind — integrity-checked (malformed/duplicate id),
-    # out of the placeholder/schema sweeps and with no back-link resolution, so a
-    # project with no binary assets keeps its ASSET-000 placeholder without
-    # blocking a gate.
-    integrity += integrity_findings("ASSET", raw_assets)
-    # The component registry (CMP-###, process-options.md "Component layer") is
-    # the same optional off-spine kind — integrity-checked (malformed/duplicate
-    # id), out of the placeholder/schema sweeps, so a CMP-000 placeholder never
-    # blocks a gate; its PartOf/SupersededBy/membership joins are checked above.
-    integrity += integrity_findings("CMP", raw_cmps)
-    # The interface-seam registry (IF-###, process.md §8) is the same optional
-    # off-spine kind — integrity-checked (malformed/duplicate id), out of the
-    # placeholder/schema sweeps, so an IF-000 placeholder never blocks a gate; its
-    # Req-Refs back-link and endpoint join are checked below.
-    integrity += integrity_findings("IF", raw_ifs)
-    placeholders = (
-        [f for label in raw for f in placeholder_findings(label, raw[label])]
-        + [f"SN placeholder {u} still present" for u in scan_sn_placeholders(sn_md)]
-        if args.no_placeholders
-        else []
-    )
-    schema = (
-        [f for label in real for f in schema_findings(label, real[label])]
-        + phase_approved_findings(real)
-        if args.strict_schema
-        else []
-    )
+    integrity = integrity_sweep(reg, raw)
+    placeholders = placeholder_sweep(raw, reg.sn_md) if flags.no_placeholders else []
+    schema = schema_sweep(real) if flags.strict_schema else []
     # Warn-only, always on: comparative AcceptanceCriteria terms with no pinned
     # predicate (see the module docstring). Never joins a failure set below.
     advisories = ac_advisories(srs)
@@ -4308,64 +4269,46 @@ def analyze(reg, args):
     draft_srs = [r for r in srs if is_drafted(r)]
     draft_llrs = [r for r in llrs if is_drafted(r)]
     draft_tcs = [r for r in tcs if is_drafted(r)]
-    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(sn_draft)
+    n_draft = len(draft_srs) + len(draft_llrs) + len(draft_tcs) + len(reg.sn_draft)
 
-    # Optional Aspect column (the ruled cross-cutting review grouping): count
-    # real SRs per aspect so coverage is visible. Report-only — never a finding,
-    # never an exit-code change; a registry without the column contributes
-    # nothing. The VALUE set is closed and checked by --strict-schema
-    # (ENUM_FIELDS); this is only the count.
-    area_counts = {}
-    for r in srs:
-        area = (r.get("Aspect") or "").strip()
-        if area:
-            area_counts[area] = area_counts.get(area, 0) + 1
-    findings = Findings()
-    findings.orphans = orphans
-    findings.orphan_ids = orphan_ids
-    findings.integrity = integrity
-    findings.placeholders = placeholders
-    findings.schema = schema
-    findings.advisories = advisories
-    # Filled after analyze() returns: the id-watermark rules read the
-    # filesystem and git, which analyze()'s pure contract forbids.
-    findings.watermark_advisories = []
-    # Filled after analyze() returns, for the same reason: the snapshot's
-    # unanchored rule reads the `docs/archive/last_approved/` tree. INTEGRITY
-    # class since migration step 7 — it is also appended to `findings.integrity`
-    # there, and kept as its own list so the console can name the rule.
-    findings.snapshot_findings = []
-    findings.provenance = provenance
-    findings.form = form
-    findings.paraphrase = paraphrase
-    findings.ears = ears
-    findings.llr_status_advis = llr_status_advis
-    findings.sr_artifact_advis = sr_artifact_advis
-    findings.sn_artifact_advis = sn_artifact_advis
-    findings.provenance_advis = provenance_advis
-    findings.sr_fanout_advis = sr_fanout_advis
-    findings.verif_coherence_advis = verif_coherence_advis
-    findings.if_this_project_advis = if_this_project_advis
-    findings.budget_findings = budget_findings
-    findings.module_findings = module_findings
-    findings.component_findings = component_findings
-    findings.knowledge_advisories = knowledge_advisories
-    findings.interface_backlink_findings = interface_backlink_findings
-    findings.frame_backlink_findings = frame_backlink_findings
-    findings.hat_dangling = hat_dangling
-    findings.interface_advisories = interface_advisories
-    findings.status_findings = status_findings
-    findings.phase_deferred = phase_deferred
-    findings.phases = phases
-    findings.mechanized_verified = mechanized_verified
-    findings.demonstrated_verified = demonstrated_verified
-    findings.attested_verified = attested_verified
-    findings.draft_srs = draft_srs
-    findings.draft_llrs = draft_llrs
-    findings.draft_tcs = draft_tcs
-    findings.n_draft = n_draft
-    findings.area_counts = area_counts
-    return findings
+    return Findings(
+        orphans=orphans,
+        orphan_ids=orphan_ids,
+        integrity=integrity,
+        placeholders=placeholders,
+        schema=schema,
+        advisories=advisories,
+        provenance=provenance,
+        form=form,
+        paraphrase=paraphrase,
+        ears=ears,
+        llr_status_advis=llr_status_advis,
+        sr_artifact_advis=sr_artifact_advis,
+        sn_artifact_advis=sn_artifact_advis,
+        provenance_advis=provenance_advis,
+        sr_fanout_advis=sr_fanout_advis,
+        verif_coherence_advis=verif_coherence_advis,
+        if_this_project_advis=if_this_project_advis,
+        budget_findings=budget_findings,
+        module_findings=module_findings,
+        component_findings=component_findings,
+        knowledge_advisories=knowledge_advisories,
+        interface_backlink_findings=interface_backlink_findings,
+        frame_backlink_findings=frame_backlink_findings,
+        hat_dangling=hat_dangling,
+        interface_advisories=interface_advisories,
+        status_findings=status_findings,
+        phase_deferred=phase_deferred,
+        phases=scope.phases,
+        mechanized_verified=mechanized_verified,
+        demonstrated_verified=demonstrated_verified,
+        attested_verified=attested_verified,
+        draft_srs=draft_srs,
+        draft_llrs=draft_llrs,
+        draft_tcs=draft_tcs,
+        n_draft=n_draft,
+        area_counts=aspect_counts(srs),
+    )
 
 
 def render_report(reg, findings, args, forest):

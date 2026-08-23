@@ -2157,6 +2157,12 @@ MAPPING = [
     # import it, the first two unguarded, so a scaffold without it cannot render
     # the owner surface.
     ("scripts/pending.py", "scripts/pending.py"),
+    # The checker's cross-row coherence rules (WI-483 slice 4): does every id a
+    # row cites name a row that exists, and does every row have the children its
+    # tier requires. Split out of trace.analyze, which composed the join rules,
+    # the carrier sweeps and the report in one 553-line function. trace.py
+    # imports it unguarded, so a scaffold without it cannot run the checker.
+    ("scripts/coherence.py", "scripts/coherence.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure
