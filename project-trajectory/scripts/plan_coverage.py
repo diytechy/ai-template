@@ -47,6 +47,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib import spine as _kitspine
 
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
@@ -120,16 +121,15 @@ def parse_plan(text):
     return rows
 
 
-def split_refs(cell):
-    """Ref tokens from a table cell — ids separated by `;`, `,` or whitespace.
-
-    The separator set matches `check_trajectory._split_refs` EXACTLY and the
-    two are pinned equal by `tests/test_rule_sync.py`: this function had
-    drifted to `[;,]` alone (B10 in the part-A census, 2026-08-13), so a
-    whitespace-separated pair in an LLM-authored plan cell read as ONE garbage
-    token and silently matched nothing — the same splitting defect class as
-    the SN-001/SN-002 orphan bug OI-12 records."""
-    return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
+# Ref tokens from a table cell — ids separated by `;`, `,` or whitespace. ONE
+# HOME since WI-448 slice 4 (`kitlib.spine.refs`). THIS is the copy that had
+# drifted to `[;,]` alone (B10 in the part-A census, 2026-08-13), so a
+# whitespace-separated pair in an LLM-authored plan cell read as ONE garbage
+# token and silently matched nothing — the same splitting defect class as the
+# SN-001/SN-002 orphan bug OI-12 records. A pin repaired it and then held it
+# equal to `check_trajectory._split_refs`; the shared home makes the drift
+# unrepresentable instead, and the pin retires.
+split_refs = _kitspine.refs
 
 
 def spine_ids(path, key):

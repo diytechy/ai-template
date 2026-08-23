@@ -12,9 +12,14 @@ green or false red at a gate — the exact failure class the kit exists to preve
 than detected. The block below the imports records the deletion and keeps the
 half of those batteries that was about VALUES, not sameness.
 
-What is still pinned by equality here is the policy the kit still duplicates on
-purpose: the `[checks]` enablement readers, the carrier reader/writer inverse,
-`is_example`'s third home, and the ref splitters.
+WI-448 SLICE 4 TOOK THE REST OF THE CENSUS TO ZERO. The `[checks]` reader's two
+copies, `is_example`'s third home, all six homes of the multi-ref split, all
+four of the module-path key, and the two root-relative need-row wrappers are
+gone; their equality pins are replaced by identity assertions plus the value
+batteries those pins also carried. What is still pinned by equality here is the
+policy the kit genuinely still states twice: the carrier reader/writer inverse,
+and `subagent_gate`'s separate WORD-valued dial reader, whose values can never
+be equal to the bool reader's and whose aligned DIRECTION is what is held.
 
 THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
 2026-08-10, repo-lock D-7; executed WI-426). F5 is the kit's standing ruling
@@ -572,21 +577,33 @@ def test_the_retired_enum_key_is_no_longer_shipped():
 
 
 def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
-    # THE TWIN, PINNED. `traj_parse._sn_rows`, `gen_okf.sn_rows` and
-    # `trace._sn_prose` each parse stakeholder-needs.md independently. They were
+    # THE TWIN, NOW ONE HOME. `traj_parse._sn_rows`, `gen_okf.sn_rows` and
+    # `trace._sn_prose` each parsed stakeholder-needs.md independently. They were
     # held equal by a docstring, drifted once already (one kept `-000`, one did
     # not, rendering a phantom SN-000 root in the dashboard icicle), and nothing
     # in tests/ called any of them.
     #
-    # Equality ALONE would be a vacuous green and this test would be theatre: the
-    # three were byte-identical AND all three wrong the same way, so
+    # WI-448 slice 4 retired the last two WRAPPERS: `_sn_rows` and `sn_rows`
+    # were one-line delegations composing the same relpath onto the same call,
+    # and both now BIND `spine_carrier.needs_for_root` directly. They could not
+    # move to `kitlib` — that package may import no sibling of `scripts/` — so
+    # the home is the carrier itself, the way `draft_ids_from_text` was retired
+    # at slice 3. The `==` limb below is kept as an IDENTITY assertion (the
+    # deletion's warrant); a value comparison between one object and itself is
+    # the vacuous shape this file exists to refuse.
+    #
+    # The VALUES are what the rest of this test always was, and they stay: the
+    # three copies were byte-identical AND all three wrong the same way, so
     # `a == b == c` was already True over the real registry while every
-    # edge-case row rendered its Lifecycle word as the need. So the battery pins
-    # the VALUES too, on a fixture carrying both table shapes — the same
-    # equality-plus-absolute-value discipline the rest of this module uses.
+    # edge-case row rendered its Lifecycle word as the need.
     PARSE = load_script("traj_parse")
     OKF = load_script("gen_okf")
     TR = load_script("trace")
+    # Each module's own carrier instance: `load_script` builds a fresh module
+    # object per call, so a cross-instance `is` would compare two copies of one
+    # source and fail for a reason that is about the fixture (slice 3's note).
+    assert PARSE._sn_rows is PARSE.spine_carrier.needs_for_root
+    assert OKF.sn_rows is OKF.spine_carrier.needs_for_root
 
     reg = tmp_path / "docs" / "requirements"
     reg.mkdir(parents=True)
@@ -603,7 +620,6 @@ def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
         encoding="utf-8",
     )
     rows = PARSE._sn_rows(tmp_path)
-    assert rows == OKF.sn_rows(tmp_path)
     prose = TR._sn_prose((reg / "stakeholder-needs.md").read_text(encoding="utf-8"))
     assert prose == {r["id"]: {k: v for k, v in r.items() if k != "id"} for r in rows}
 
@@ -864,21 +880,29 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     assert KITSPINE.sn_all_ids(modern) == {"SN-005", "SN-006"}
 
 
-# --- the [checks] enablement readers (WI-432) ----------------------------------
-# THREE modules now carry a local `tomllib` read of `docs/process.toml`'s
-# `[checks]` section: `check_trajectory.py` (three dials), `gen_okf.py` (one) and
-# `subagent_gate.py` (one). That duplication is the price the owner's 2026-08-11
-# overturn of WI-423 weighed and accepted — F5 keeps each of those scripts
-# independently copy-able, so none of them may import the coordinator layer that
-# already knows how to read this file.
+# --- the [checks] enablement readers (WI-432; consolidated WI-448 slice 4) -----
+# TWO of the three copies are GONE. `check_trajectory.py` (three dials) and
+# `gen_okf.py` (one) each carried a byte-identical local `tomllib` read of
+# `docs/process.toml`'s `[checks]` section, and `test_the_three_local_checks_-`
+# `readers_agree_by_value` held them equal. Both now re-export
+# `kitlib.config.process_check`.
 #
-# It is duplicated POLICY, not plumbing: each copy decides "is this check on",
-# and a copy that drifts does not fail loudly — it silently stops running a
-# check, or silently starts running one an adopter switched off. So the D-7 bar
-# applies: pin the copies BY VALUE over one table of file shapes. `subagent_gate`
-# used to deliberately disagree on a present-but-unparseable file (undeclared,
-# not ON); OI-46 ruled (1a) (2026-08-20, WI-491) retired that disagreement, so
-# the pin below now guards the aligned DIRECTION instead of the divergence.
+# THE COPIES' OWN STATED REASON FOR EXISTING DID NOT DESCRIBE THEM, and that is
+# the finding worth keeping. `check_trajectory`'s docstring argued the shared
+# package owned the declared-LINE rule but not "this module's `[checks]` POLICY
+# — which key, which fail-direction, which residual". Only the key is the
+# module's, and it is a PARAMETER; the fail-direction (present-but-broken reads
+# ON, loudly) and the residual (undeclared -> None, fall through to the legacy
+# one-word file) were hardcoded identically in both bodies. Nothing
+# module-specific was ever being encoded, so the pin was holding one decision
+# equal to itself with an extra copy in between.
+#
+# `subagent_gate.read_process_policy` STAYS ITS OWN READER and is not a third
+# copy folded in: its dial is a WORD, not a bool, and it answers a distinct
+# `UNPARSEABLE` sentinel so `decide()` can fail closed. Same file, different
+# question — so its VALUES can never be pinned equal to the other two, and what
+# is pinned below is the aligned DIRECTION that OI-46 ruled (1a) (2026-08-20,
+# WI-491) gave it.
 CT = load_script("check_trajectory")
 OKF = load_script("gen_okf")
 SGATE = load_script("subagent_gate")
@@ -911,34 +935,48 @@ def _write_toml(root, text):
     (root / "docs" / "process.toml").write_text(text, encoding="utf-8")
 
 
-def test_the_three_local_checks_readers_agree_by_value(tmp_path):
-    # The copies are pinned against the SAME table, and against the literal
-    # expectation — equality alone can be vacuous (the `_sn_fields` case proved
-    # it), so the value is pinned, not just the sameness.
+def test_the_checks_reader_is_one_home():
+    # The deletion's warrant. Both former copies ARE the shared function — not
+    # equal to it, the same object — so "the copies agree" is no longer a
+    # property that can fail.
+    import kitlib.config as KITCONFIG
+
+    assert CT._process_check is KITCONFIG.process_check
+    assert OKF._process_check is KITCONFIG.process_check
+
+
+def test_the_checks_reader_answers_by_value(tmp_path):
+    # The half of the retired equality test that was never about sameness: the
+    # literal reading of each file shape, driven on BOTH keys because the key is
+    # the only thing a caller supplies and a reader that ignored it would still
+    # pass a single-key battery.
     for i, (text, want) in enumerate(_CHECK_TOML_CASES):
         root = tmp_path / "case{}".format(i)
         _write_toml(root, text)
         got_ct = CT._process_check(root, "trajectory_check")
-        # gen_okf's copy reads a different KEY out of the same section, so drive
-        # it on its own key with the same shapes.
         _write_toml(root, text.replace("trajectory_check", "okf_export"))
         got_okf = OKF._process_check(root, "okf_export")
         assert got_ct is want, (text, got_ct, want)
         assert got_okf is want, (text, got_okf, want)
+    # A key the section does not carry is UNDECLARED, never the other key's
+    # value — the parameterization the retired copies' docstrings called policy.
+    root = tmp_path / "otherkey"
+    _write_toml(root, "[checks]\ntrajectory_check = false\n")
+    assert CT._process_check(root, "trajectory_check") is False
+    assert CT._process_check(root, "okf_export") is None
 
 
-def test_an_absent_process_toml_is_undeclared_in_all_three_copies(tmp_path):
+def test_an_absent_process_toml_is_undeclared_in_both_readers(tmp_path):
     # The migration-window hinge: no file at all must read as "nothing declared"
-    # in every copy, or a repo that never adopted process.toml loses its legacy
-    # one-word file's declaration.
+    # in the shared reader AND in subagent_gate's separate one, or a repo that
+    # never adopted process.toml loses its legacy one-word file's declaration.
     assert CT._process_check(tmp_path, "trajectory_check") is None
-    assert OKF._process_check(tmp_path, "okf_export") is None
     assert SGATE.read_process_policy(tmp_path) is None
 
 
 def test_the_subagent_copy_now_agrees_in_direction_with_its_twins(tmp_path):
     # subagent_gate's dial is a WORD, not a bool, so its VALUES can never be
-    # pinned equal to the other two -- but OI-46 ruled (1a) (2026-08-20,
+    # pinned equal to the shared reader -- but OI-46 ruled (1a) (2026-08-20,
     # WI-491) aligned its DIRECTION on a present-but-broken process.toml: it
     # now reads UNPARSEABLE (decide() -> ask, fail-closed), the same
     # loud-not-quiet posture CT/OKF express as True (ON). This replaces the
@@ -1240,52 +1278,106 @@ def test_the_carrier_value_writer_and_reader_are_the_exact_inverse():
     assert SPINE.value_to_cell(value) == original
 
 
-# --- is_example, including None (repo-lock.md §8.2, 2026-08-12 census) ---------
-def test_is_example_agrees_across_all_three_copies_including_none():
-    # spine_rules.is_example and gen_release_checklist.is_example both guard
-    # `(rid or "").endswith(...)`; trace_text.is_example (imported into
-    # trace.py's own namespace as `is_example`, so `TRACE.is_example` IS this
-    # function) did not, and crashed on None. Every current call site
-    # pre-guards (`r.get(...) and not is_example(...)`), so the crash was
-    # latent — unreached by any live path, and unpinned. Guarded here
-    # (trace_text.py) so the three genuinely agree rather than agreeing by
-    # omission of the one case that would have told them apart.
+# --- is_example / the ref split / the module key: WERE COPIES, now ONE HOME ----
+# TWO MORE EQUALITY TESTS STOOD HERE AND THEY ARE GONE (WI-448 slice 4), for the
+# reason the block at the top of this file states: a test asserting a function
+# equals itself is VACUOUS, not weaker.
+#
+#   * `test_is_example_agrees_across_all_three_copies_including_none` pinned
+#     `gen_release_checklist.is_example` — the THIRD home, the one left standing
+#     when slice 3 consolidated the pair — against `spine_rules`' and
+#     `trace_text`'s over a battery that included `None`, because one of the
+#     three used to CRASH on it. That copy is now a re-export.
+#   * `test_ref_splitting_agrees_across_plan_coverage_and_check_trajectory`
+#     pinned the two homes of the multi-ref split that had told each other
+#     apart (B10, part-A census 2026-08-13: `plan_coverage`'s copy split on
+#     `[;,]` alone, so a whitespace-separated pair in an LLM-authored plan cell
+#     read as ONE garbage token). There were SIX homes of that body; all six are
+#     now `kitlib.spine.refs`.
+#
+# `norm_module` had FOUR homes and no pin at all, which is the more interesting
+# half. The census could not see the fourth: `trace_text.py` spelled its
+# extension tuple `MODULE_EXTS` where `check_trajectory.py` and `gen_arch_map.py`
+# spelled it `_MODULE_EXTS`, and the census hashes the body AST including the
+# loaded NAME — so a copy that renamed the constant it reads scores as a
+# different function. Renaming a local is not drift, but it HID a copy from the
+# instrument, which is the same blindness class as the `set`-vs-`tuple` case
+# slice 3 recorded.
+#
+# The identity assertions below are the deletions' warrant; the value batteries
+# are the half of the retired tests that was never about sameness.
+def test_the_cell_shape_rules_are_one_home():
     RELEASE = load_script("gen_release_checklist")
     TEXT = load_script("trace_text")
-    cases = ["SR-000", "SR-123", "", None]
-    for rid in cases:
-        want = GATE.is_example(rid)
-        assert RELEASE.is_example(rid) == want, rid
-        assert TEXT.is_example(rid) == want, rid
-    # The values themselves, not just agreement — equality alone can be
-    # vacuous if all three are wrong the same way.
-    assert GATE.is_example("SR-000") is True
-    assert GATE.is_example("SR-123") is False
-    assert GATE.is_example("") is False
-    assert GATE.is_example(None) is False
+    PC = load_script("plan_coverage")
+    PA = load_script("plan_artifacts")
+    OKF = load_script("gen_okf")
+    SCHED = load_script("schedule")
+    AM = load_script("gen_arch_map")
 
+    assert RELEASE.is_example is KITSPINE.is_example
 
-def test_ref_splitting_agrees_across_plan_coverage_and_check_trajectory():
-    """B10 (part-A census, 2026-08-13): `plan_coverage.split_refs` had drifted
-    to `[;,]` alone while `check_trajectory._split_refs` splits on `[;,\\s]+` —
-    six homes for one splitting rule, two of them disagreeing on whitespace,
-    the defect class behind the SN-001/SN-002 orphan bug (OI-12). This pins the
-    pair equal over the inputs that told them apart; the remaining homes
-    consolidate under the WI-448 common-module program."""
-    pc = load_script("plan_coverage")
-    ct = load_script("check_trajectory")
-    for cell in (
-        "SR-001;SR-002",
-        "SR-001, SR-002",
-        "SR-001 SR-002",
-        "SR-001\tSR-002",
-        "SR-001;  SR-002 ,SR-003",
-        "  SR-001  ",
-        "",
-        ";;",
-        "SR-001\nSR-002",
+    for mod, name in (
+        (CT, "_split_refs"),
+        (OKF, "split_refs"),
+        (PC, "split_refs"),
+        (PA, "_split_tokens"),
+        (SCHED, "_split_refs"),
     ):
-        assert pc.split_refs(cell) == ct._split_refs(cell), repr(cell)
+        assert getattr(mod, name) is KITSPINE.refs, name
+
+    for mod, name in (
+        (CT, "_norm_module"),
+        (AM, "_norm_module"),
+        (TEXT, "norm_module"),
+    ):
+        assert getattr(mod, name) is KITSPINE.norm_module, name
+    for mod in (CT, AM):
+        assert mod._MODULE_EXTS is KITSPINE.MODULE_EXTS
+    assert TEXT.MODULE_EXTS is KITSPINE.MODULE_EXTS
+    # trace.py takes the normalizer BACK from trace_text (WI-464's direction),
+    # so the chain is asserted end to end rather than at its first link.
+    assert TRACE._norm_module is KITSPINE.norm_module
+
+
+def test_the_placeholder_test_and_the_ref_split_answer_by_value():
+    # `None` is in here deliberately: one of `is_example`'s three homes crashed
+    # on it, and every live call site pre-guards, so the crash was latent.
+    assert KITSPINE.is_example("SR-000") is True
+    assert KITSPINE.is_example("SR-123") is False
+    assert KITSPINE.is_example("") is False
+    assert KITSPINE.is_example(None) is False
+
+    # The whitespace cases are the ones B10's drifted copy got wrong.
+    assert KITSPINE.refs("SR-001;SR-002") == ["SR-001", "SR-002"]
+    assert KITSPINE.refs("SR-001, SR-002") == ["SR-001", "SR-002"]
+    assert KITSPINE.refs("SR-001 SR-002") == ["SR-001", "SR-002"]
+    assert KITSPINE.refs("SR-001\tSR-002") == ["SR-001", "SR-002"]
+    assert KITSPINE.refs("SR-001\nSR-002") == ["SR-001", "SR-002"]
+    assert KITSPINE.refs("SR-001;  SR-002 ,SR-003") == ["SR-001", "SR-002", "SR-003"]
+    assert KITSPINE.refs("  SR-001  ") == ["SR-001"]
+    assert KITSPINE.refs("") == []
+    assert KITSPINE.refs(";;") == []
+    assert KITSPINE.refs(None) == []
+
+
+def test_the_module_key_answers_by_value():
+    # The three spellings that must collapse to one key: the arch-map short
+    # form, an LLR `Module` cell's full repo path, and a package `__init__`.
+    n = KITSPINE.norm_module
+    assert n("project-trajectory/scripts/check.py") == "scripts/check"
+    assert n("scripts/check") == "scripts/check"
+    assert n("scripts/check.py") == "scripts/check"
+    assert n("scripts\\check.py") == "scripts/check"  # a Windows-authored cell
+    assert n("scripts/kitlib/__init__.py") == "scripts/kitlib"
+    assert n("  scripts/run.sh  ") == "scripts/run"
+    assert n("") == ""
+    assert n(None) == ""
+    # Every declared extension is stripped, and NOTHING ELSE is: a `.md` tail is
+    # part of the name, or a docs path would collide with a module of that name.
+    for ext in KITSPINE.MODULE_EXTS:
+        assert n("scripts/x" + ext) == "scripts/x", ext
+    assert n("docs/status.md") == "docs/status.md"
 
 
 def test_is_drifted_has_exactly_ONE_home():

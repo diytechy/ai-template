@@ -57,6 +57,9 @@ except ImportError:  # pragma: no cover - direct-path loads only
 # both mints below count from the MARK, never from `max(live)` (repo-lock D-4).
 import trace  # noqa: E402
 
+# The shipped shared-helper package: the spine ROW cell vocabulary (D-8/OI-16).
+from kitlib import spine as _kitspine  # noqa: E402
+
 WI_CSV = "docs/requirements/work-items.csv"
 # The modern header of record for a new work-item registry. Existing registries
 # are appended in THEIR declared order so legacy or extended schemas stay
@@ -112,10 +115,11 @@ def _detect_newline(path, default="\n"):
     return default
 
 
-def _split_tokens(cell):
-    """Ref tokens from a table cell: ids separated by ``;`` ``,`` or whitespace
-    (the `_split_refs` idiom); an empty cell yields ``[]``."""
-    return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
+# Ref tokens from a table cell: ids separated by ``;`` ``,`` or whitespace; an
+# empty cell yields ``[]``. ONE HOME since WI-448 slice 4
+# (`kitlib.spine.refs`) — this was one of six copies of the same body, kept
+# under its own local name so no call site below moves.
+_split_tokens = _kitspine.refs
 
 
 def parse_plan_wis(text):

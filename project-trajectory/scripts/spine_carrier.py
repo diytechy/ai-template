@@ -1010,6 +1010,22 @@ def folded_needs(path):
     return sorted(out, key=lambda r: r["id"])
 
 
+def needs_for_root(root):
+    """`folded_needs` addressed from a REPO ROOT rather than a registry path.
+
+    THE ELEVENTH DUPLICATE, retired the way `draft_ids_from_text` was (WI-448
+    slice 4). `traj_parse._sn_rows` and `gen_okf.sn_rows` were each a one-line
+    wrapper composing the same relpath onto the same call — a duplicate the
+    census scored, and one that could not move to `kitlib` because that package
+    may import no sibling of `scripts/`. So the home is here, beside the reader
+    it delegates to, and both former holders BIND this function directly under
+    their existing local names; the wrappers disappear.
+
+    `.toml` is named because `load_needs` resolves through `NEED_CARRIERS`, so
+    a repo still on the markdown carrier is found anyway."""
+    return folded_needs(root / "docs/requirements/stakeholder-needs.toml")
+
+
 def need_ids(needs):
     """Every declared need id — the UNIVERSE the draft set is carved out of."""
     return {n["id"] for n in needs}

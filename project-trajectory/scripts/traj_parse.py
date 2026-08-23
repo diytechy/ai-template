@@ -69,15 +69,13 @@ WORKSTREAM_LABELS = {
 # --- spine parsing (ported from the proven gilbert generator, kit columns) -----
 
 
-def _sn_rows(root):
-    """Full stakeholder-need rows (id, need, why, priority, acceptance) from the
-    md tables, the `-000` placeholder skipped and the rows id-sorted.
-
-    ONE HOME now: this, gen_okf.sn_rows and trace._sn_prose all
-    read `spine_carrier.folded_needs`. They were three copies pinned by a
-    docstring saying "change all three together" — and they drifted anyway (one
-    kept `-000`, one did not), rendering a phantom SN-000 root in the icicle."""
-    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
+# Full stakeholder-need rows (id, need, why, priority, acceptance) from the live
+# carrier, the `-000` placeholder skipped and the rows id-sorted. Was three
+# copies pinned by a docstring saying "change all three together" — and they
+# drifted anyway (one kept `-000`, one did not), rendering a phantom SN-000 root
+# in the icicle. WI-448 slice 4 retired the last WRAPPER too: the root-relative
+# form is the carrier's own, and this binds it directly.
+_sn_rows = spine_carrier.needs_for_root
 
 
 def read_sns(root):

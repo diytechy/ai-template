@@ -190,9 +190,11 @@ def load_rows(path):
 # surface is a fact its readers check, not a wildcard.
 try:
     from kitlib import registry as _kitregistry
+    from kitlib import spine as _kitspine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import registry as _kitregistry
+    from kitlib import spine as _kitspine
 
 WI_COLUMNS = _kitregistry.WI_COLUMNS
 SPEC_SCALARS = _kitregistry.SPEC_SCALARS
@@ -221,9 +223,9 @@ def load_registry_rows(path):
     return read_spec_rows(work_dir) if work_dir.is_dir() else []
 
 
-def _split_refs(value):
-    """Split a `;`/`,`/whitespace-separated ref cell into tokens."""
-    return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
+# Ref cells hold ids separated by ; , or whitespace; empty -> []. ONE HOME since
+# WI-448 slice 4 (`kitlib.spine.refs`), one of six copies of the same body.
+_split_refs = _kitspine.refs
 
 
 def _int(value, default=0):

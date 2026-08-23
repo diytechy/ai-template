@@ -42,12 +42,17 @@ import csv
 import json
 import re
 import sys
-import tomllib
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+
+# The shipped shared-helper package (owner ruling D-8, `OI-16`): the
+# declared-policy readers and the spine ROW vocabulary this module used to
+# spell out itself.
+from kitlib import config as _kitconfig
+from kitlib import spine as _kitspine
 
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
@@ -109,8 +114,9 @@ def read_rows(path):
         return list(csv.DictReader(fh))
 
 
-def split_refs(cell):
-    return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
+# The multi-ref cell split — ONE HOME since WI-448 slice 4
+# (`kitlib.spine.refs`), one of six copies of the same body.
+split_refs = _kitspine.refs
 
 
 ID_RE = re.compile(r"^[A-Z]+-\d+$")  # PREFIX-<digits>, the kit-wide id shape
@@ -131,35 +137,20 @@ def real_rows(rows, key, prefix):
     return sorted(out, key=lambda r: r[key].strip())
 
 
-def sn_rows(root):
-    """Every need as the core four — `spine_carrier.folded_needs`, the ONE home
-    this rule now has. Was a copy of traj_parse._sn_rows and trace._sn_prose
-    kept in sync by a docstring; they drifted."""
-    return spine_carrier.folded_needs(root / "docs/requirements/stakeholder-needs.toml")
+# Every need as the core four, addressed from the repo root. Was a copy of
+# traj_parse._sn_rows kept in sync by a docstring (they drifted); WI-448 slice 4
+# retired the wrapper itself — the carrier owns the root-relative form and both
+# former holders bind it directly.
+sn_rows = spine_carrier.needs_for_root
 
 
-def _process_check(root, key):
-    """One `[checks]` toggle out of `docs/process.toml`, or None when this file
-    has nothing to say (fall through to the legacy one-word file).
-
-    A LOCAL reader, per the F5 independently-copyable-script rule — the cost the
-    2026-08-11 overturn of WI-423 priced and accepted. Unparseable-but-present,
-    or a non-bool value, reads ON: a check that silently stops running is the
-    failure worth avoiding. `tests/test_rule_sync.py` pins this copy against
-    `check_trajectory.py`'s and `subagent_gate.py`'s by value (D-7)."""
-    path = root / "docs" / "process.toml"
-    if not path.is_file():
-        return None
-    try:
-        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
-        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        return True  # unparseable but present: fail loud, never a quiet opt-out
-    table = data.get("checks")
-    value = table.get(key) if isinstance(table, dict) else None
-    if value is None:
-        return None
-    return value if isinstance(value, bool) else True
+# One `[checks]` toggle out of `docs/process.toml`, or None when that file has
+# nothing to say (fall through to the legacy one-word dial). ONE HOME since
+# WI-448 slice 4 (`kitlib.config.process_check`): this and
+# `check_trajectory.py`'s copy were byte-identical bodies held equal by a
+# `tests/test_rule_sync.py` pin, and the `key` each reads is a PARAMETER, so
+# nothing module-specific was being encoded by keeping two.
+_process_check = _kitconfig.process_check
 
 
 def read_enabled(root):

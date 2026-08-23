@@ -93,18 +93,19 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   boundary record and completes sitting-2 decision 8's execution — so the lane
   now holds ONE thing. Next: rule `OI-60`, then the shed as its own slice; the
   lane has nothing else executable and stays open holding it.
-- **The `wi448-common-module` lane is OPEN with slices 1, 2 and 3 landed**
-  (2026-08-20 / 2026-08-22 / 2026-08-23): `scripts/kitlib/` ships,
-  `bootstrap.py` imports it, the manifest is tested in a real scaffold, the
-  console guard has exactly one home, and slice 3 gave the spine ROW vocabulary
-  one too — `kitlib/spine.py` (`LLR-197`/`TC-193`, `CMP-006`, no kernel entry
-  because every consumer is that component), retiring nine `test_rule_sync`
-  equality pins and taking the census to 6 groups / 6 copies / 76 lines. The
-  row's spec Context lists what is still owed; the next slice is item 2
-  (`bootstrap`'s `STACK_OI3_ROW` duplicate, which needs the open-items key
-  vocabulary in `kitlib` first) or item 4 (`is_example`'s third home,
-  `_process_check`, `_norm_module`, `sn_rows`, the ref splitters and
-  `wi_convert`'s registry-reader variants — the six residual census groups).
+- **The `wi448-common-module` lane is OPEN holding ONE item**, slices 1-4
+  landed (2026-08-20 / 2026-08-22 / 2026-08-23 x2): `scripts/kitlib/` ships,
+  `bootstrap.py` imports it, the manifest is tested in a real scaffold, and the
+  duplication census reads **0 groups / 0 copies / 0 lines** — slice 4 gave the
+  residual six groups their themed homes (plus four copies the census could not
+  see) and no new `kitlib` module was needed. Next and last: **item 2**,
+  `bootstrap`'s `STACK_OI3_ROW` duplicate plus its TOML row emitter, which needs
+  the open-items key vocabulary in `kitlib` first and carries the stale-premise
+  comment on
+  `test_rule_sync.test_bootstraps_scaffolded_brief_uses_the_converters_own_keys`
+  with it. Item 5's `views` slot is NOT owed work — it is a named theme
+  deliberately left uncreated, per the roster's own rule that an empty module is
+  a worse statement than an absent one.
   **`OI-48` is RULED (d) (2026-08-21) AND EXECUTED
   (2026-08-22)**:
   `LLR-181`'s four-way tag collapses to `CMP-006` alone (the

@@ -202,14 +202,39 @@ def _fmt(value):
     return "(none)" if value is None else str(value)
 
 
+def render_fields(record, fields, fmt):
+    """`k = v` lines for `fields`, in declared order, each value through `fmt`.
+
+    THE FORMAT `docs/stage` AND `docs/test/evidence` SHARE, stated once (WI-448
+    slice 4). Both files are a `#` header, a block of `key = value` lines, and an
+    informational stamp that is never compared; both render the parsed cache
+    through the same function that wrote it so a round-trip cannot be reported
+    stale by a formatting difference. Their FIELDS differ and so does their
+    value formatter — `stage` renders bools as `yes`/`no` and dicts as
+    `k=v;k=v` — so those two are ARGUMENTS and the line-joining rule is the
+    shared part. The two `field_block` bodies were byte-identical and read as
+    one duplicate group in the census while binding different module-level
+    names, which is a duplicate a reader cannot see by diffing the functions.
+
+    A key that is ABSENT renders `(absent)`, which a present-but-empty field
+    never produces: collapsing the two into `(none)` would make a cache missing
+    a field compare EQUAL to a derivation that legitimately has none.
+
+    Contract:
+      Inputs:  record: mapping; fields: ordered field names; fmt: value -> str
+      Outputs: str — the newline-joined block (no trailing newline)
+    """
+    return "\n".join(
+        "{} = {}".format(k, fmt(record[k]) if k in record else "(absent)")
+        for k in fields
+    )
+
+
 def field_block(record):
     """The compared field lines. One renderer for both sides of any comparison,
     the `stage.field_block` contract; an absent key renders `(absent)`, which a
     present-but-empty field never produces."""
-    return "\n".join(
-        "{} = {}".format(k, _fmt(record[k]) if k in record else "(absent)")
-        for k in FIELDS
-    )
+    return render_fields(record, FIELDS, _fmt)
 
 
 def render(record, date):

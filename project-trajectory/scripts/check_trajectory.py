@@ -162,7 +162,6 @@ import difflib
 import re
 import subprocess
 import sys
-import tomllib
 from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8);
@@ -181,12 +180,14 @@ try:
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 
 # Sibling: the spine's registry carrier. Run as a
@@ -338,33 +339,17 @@ BACKLOG_REAFFIRM_HINT = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
-def _process_check(root, key):
-    """One `[checks]` toggle out of `docs/process.toml`, or None when this file
-    has nothing to say (fall through to the legacy one-word file).
-
-    STILL A LOCAL reader after WI-448 moved `_first_declared_line` into
-    `kitlib.config`, and the distinction is the point: the shared package owns
-    the declared-LINE rule, not this module's `[checks]` POLICY — which key,
-    which fail-direction, which residual. Folding the policy in would put one
-    checker's decision in a library every checker imports. `tests/test_rule_sync.py`
-    pins this copy against `gen_okf.py`'s and `subagent_gate.py`'s by value (D-7);
-    that pin stays load-bearing, unlike the line-reader pins WI-448 retired. A
-    file that exists but does not parse, or a key that is not a bool, reads ON:
-    a check that silently stops running is the failure worth avoiding, so the
-    residual is loud rather than permissive."""
-    path = root / "docs" / "process.toml"
-    if not path.is_file():
-        return None
-    try:
-        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
-        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
-        return True  # unparseable but present: fail loud, never a quiet opt-out
-    table = data.get("checks")
-    value = table.get(key) if isinstance(table, dict) else None
-    if value is None:
-        return None
-    return value if isinstance(value, bool) else True
+# One `[checks]` toggle out of `docs/process.toml`, or None when that file has
+# nothing to say (fall through to the legacy one-word dial). ONE HOME since
+# WI-448 slice 4, and the copy's own stated reason for existing did not describe
+# it: this docstring used to argue that the shared package owned the declared-
+# LINE rule but not "this module's `[checks]` POLICY — which key, which
+# fail-direction, which residual". Only the key is this module's, and it is a
+# PARAMETER; the fail-direction and the residual were hardcoded identically in
+# `gen_okf.py`'s copy, so nothing module-specific was being encoded and the
+# `tests/test_rule_sync.py` equality pin was holding two identical bodies equal.
+# Kept under its own long-standing private name so no call site below moves.
+_process_check = _kitconfig.process_check
 
 
 def read_trajectory_enabled(root):
@@ -411,9 +396,10 @@ def read_components_check_enabled(root):
     ).lower() != "off"
 
 
-def _split_refs(cell):
-    """Ref cells hold ids separated by ; , or whitespace; empty -> []."""
-    return [t for t in re.split(r"[;,\s]+", (cell or "").strip()) if t]
+# Ref cells hold ids separated by ; , or whitespace; empty -> []. ONE HOME since
+# WI-448 slice 4 (`kitlib.spine.refs`); this was one of SIX copies of the split,
+# one of which had drifted to `[;,]` alone.
+_split_refs = _kitspine.refs
 
 
 def read_rows(path):
@@ -797,26 +783,14 @@ def load_known_srs(root):
 
 
 # Source-file extensions stripped when normalizing a module path, so the arch-map
-# name (`scripts/check`) and an IF endpoint written with the full repo path
-# (`project-trajectory/scripts/check.py`) collapse to one key. Kept in sync with
-# trace.py._MODULE_EXTS (a small stable helper duplicated per the F5 convention —
-# check_trajectory must stay import-free of the joined-spine engine).
-_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
-
-
-def _norm_module(path):
-    """A module path reduced to a naming-convention-neutral key: strip a leading
-    `project-trajectory/`, any source extension, and `/__init__`."""
-    p = (path or "").strip().replace("\\", "/")
-    if p.startswith("project-trajectory/"):
-        p = p[len("project-trajectory/") :]
-    for ext in _MODULE_EXTS:
-        if p.endswith(ext):
-            p = p[: -len(ext)]
-            break
-    if p.endswith("/__init__"):
-        p = p[: -len("/__init__")]
-    return p
+# name (`scripts/check`), an LLR `Module` cell and an IF endpoint written with
+# the full repo path (`project-trajectory/scripts/check.py`) collapse to one key.
+# ONE HOME since WI-448 slice 4 (`kitlib.spine`), which also retired the false
+# claim this comment carried: it promised the tuple was "kept in sync with
+# trace.py._MODULE_EXTS", and `trace.py` has no such name — the sync partner
+# named here did not exist. The real second copy was `gen_arch_map.py`'s.
+_MODULE_EXTS = _kitspine.MODULE_EXTS
+_norm_module = _kitspine.norm_module
 
 
 def load_ifs(rows):

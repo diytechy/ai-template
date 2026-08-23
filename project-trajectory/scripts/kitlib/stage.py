@@ -510,11 +510,14 @@ def field_block(record):
 
     A key that is ABSENT renders `(absent)`, which a present-but-empty field
     never produces. Collapsing the two into `(none)` would make a cache missing a
-    field compare EQUAL to a derivation that legitimately has none."""
-    return "\n".join(
-        "{} = {}".format(k, _fmt(record[k]) if k in record else "(absent)")
-        for k in FIELDS
-    )
+    field compare EQUAL to a derivation that legitimately has none.
+
+    THE LINE-JOINING RULE IS `evidence.render_fields` (WI-448 slice 4) — the
+    same block format `docs/test/evidence` carries. What differs is this
+    module's FIELDS and its `_fmt` (bools as `yes`/`no`, dicts as `k=v;k=v`), so
+    those are what it passes; the two former bodies were byte-identical and read
+    as one census group while binding different module-level names."""
+    return evidence.render_fields(record, FIELDS, _fmt)
 
 
 def render(record, as_of, date):

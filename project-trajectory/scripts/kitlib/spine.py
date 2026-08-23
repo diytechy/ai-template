@@ -25,6 +25,14 @@ largest module instead of the smallest sensible new one. This module is the
 `ladder.py` shape one tier over: a CLOSED VOCABULARY as near-pure data, below
 every axis that reads it.
 
+WI-448 SLICE 4 ADDED THE CELL-SHAPE RULES THE PAIR'S NEIGHBOURS ALSO ASKED.
+`refs` (the multi-ref cell split) had six homes and `is_example` a third one
+outside the pair; `norm_module` — what an IF `Endpoint`, an LLR `Module` cell
+and an arch-map node name all reduce to — had two. They are the same KIND of
+statement as the rules above (what one cell MEANS), asked by `gen_okf.py`,
+`plan_coverage.py`, `plan_artifacts.py`, `schedule.py`, `check_trajectory.py`,
+`gen_arch_map.py` and `gen_release_checklist.py` rather than only by the pair.
+
 WHAT IS DELIBERATELY NOT HERE:
 
   * `sn_draft_ids` — the tenth duplicate of the pair, and the one that CANNOT
@@ -47,7 +55,9 @@ import re
 
 __all__ = [
     "LLR_EXEMPT",
+    "MODULE_EXTS",
     "load_csv",
+    "norm_module",
     "refs",
     "is_example",
     "is_drafted",
@@ -93,8 +103,61 @@ def load_csv(path):
 
 
 def refs(value):
-    """Split a multi-ref cell (';', ',' or whitespace separated) into ids."""
+    """Split a multi-ref cell (';', ',' or whitespace separated) into ids.
+
+    SIX HOMES BEFORE WI-448 SLICE 4, and one of them had drifted: this exact
+    body stood in `check_trajectory._split_refs`, `gen_okf.split_refs`,
+    `plan_coverage.split_refs`, `plan_artifacts._split_tokens`,
+    `schedule._split_refs` and here. `plan_coverage`'s copy had split on `[;,]`
+    alone (B10, part-A census 2026-08-13), so a whitespace-separated pair in an
+    LLM-authored plan cell read as ONE garbage token and matched nothing — the
+    same splitting defect class as the SN-001/SN-002 orphan bug OI-12 records.
+    A pin repaired that copy; this module retires the copies instead."""
     return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
+
+
+# Source-file extensions stripped when normalizing a module path, so an IF
+# endpoint written with the full repo path
+# (`project-trajectory/scripts/check.py`), an LLR `Module` cell and an arch-map
+# node name (`scripts/check`) all collapse to one key.
+MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+
+
+def norm_module(path):
+    """A module path reduced to a naming-convention-neutral key: strip a leading
+    `project-trajectory/`, any source extension, and a trailing `/__init__`.
+
+    A CELL RULE, which is why it is here rather than in a module-identity home
+    of its own. Every call site normalizes a registry cell or a path it is about
+    to compare against one — an IF row's `Endpoint`/`ThisProject`/`Counterpart`,
+    an LLR row's `Module`, or the source file those cells are claiming. THREE
+    modules asked it — `check_trajectory.py`, which enforces those rows,
+    `gen_arch_map.py`, which draws them, and `trace_text.py`, whose endpoint
+    predicate WI-464 had already pulled out of `trace.py` — and
+    `check_trajectory`'s copy carried a comment promising it was "kept in sync
+    with `trace.py._MODULE_EXTS`", a home that DOES NOT EXIST, so the promise
+    named nobody while its real partners went unmentioned. That is the
+    declared-line pattern again: a prose claim of equivalence with no referent.
+
+    The `MODULE_EXTS` spelling above is `trace_text.py`'s, not the two private
+    `_MODULE_EXTS` ones, and that is deliberate: the census hashes a body's AST
+    including the NAME it loads, so the third copy scored as a different
+    function for as long as it spelled the constant differently.
+
+    Contract:
+      Inputs:  path: str | None — a module path in any of the three spellings
+      Outputs: str — the normalized key ('' for an empty/None input)
+    """
+    p = (path or "").strip().replace("\\", "/")
+    if p.startswith("project-trajectory/"):
+        p = p[len("project-trajectory/") :]
+    for ext in MODULE_EXTS:
+        if p.endswith(ext):
+            p = p[: -len(ext)]
+            break
+    if p.endswith("/__init__"):
+        p = p[: -len("/__init__")]
+    return p
 
 
 def is_example(rid):

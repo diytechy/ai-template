@@ -76,9 +76,10 @@ is_drafted = _spine.is_drafted
 # module-naming conventions in play align: an LLR `Module` cell carries the full
 # repo path with extension (`project-trajectory/scripts/check.py`) while the
 # arch-map / an IF endpoint may use the shorter map form (`scripts/check`).
-# Normalization strips a leading `project-trajectory/` segment and any one of
-# these tails so both collapse to the same key.
-MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+# ONE HOME since WI-448 slice 4 — `kitlib.spine`, alongside the other cell rules
+# this module already re-exports; the name stays because `trace.py` imports it
+# back from here.
+MODULE_EXTS = _spine.MODULE_EXTS
 
 # The ONE declared way an IF row says "this endpoint is deliberately outside this
 # tree" (2026-08-15 interface rework, plan step 2). A controlled PREFIX on the
@@ -97,28 +98,26 @@ MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
 EXTERNAL_ENDPOINT_PREFIX = "external:"
 
 # MODULE_EXTS, EXTERNAL_ENDPOINT_PREFIX and `norm_module` MOVED HERE FROM trace.py
-# at re-tier v2 S5 (WI-464), unchanged: `if_this_project_advisories` below asks the
-# same endpoint-vs-module question and is a PURE predicate, so the choice was a
+# at re-tier v2 S5 (WI-464): `if_this_project_advisories` below asks the same
+# endpoint-vs-module question and is a PURE predicate, so the choice was a
 # fourth copy of the normalizer or ONE home in the lower layer. trace.py imports
-# all three back — the same direction it already imports `refs`/`is_example`, so no
-# cycle — and keeps `_norm_module` as a local alias, leaving its call sites
-# untouched. (check_trajectory.py and gen_arch_map.py still carry their own
-# copies; consolidating those is the WI-448 common-module program, not this WI.)
+# all three back — the same direction it already imports `refs`/`is_example`, so
+# no cycle — and keeps `_norm_module` as a local alias, leaving its call sites
+# untouched. WI-448 slice 4 finished the job that WI comment deferred:
+# check_trajectory.py's and gen_arch_map.py's copies are gone, and the two names
+# below now re-export `kitlib.spine` like the rest of this block.
+#
+# THE FOURTH COPY WAS INVISIBLE TO THE CENSUS, and the reason is worth keeping:
+# this module spelled the constant `MODULE_EXTS` where the other two spelled it
+# `_MODULE_EXTS`, and the census hashes the body AST including the loaded NAME —
+# so a copy that renamed the constant it reads scores as a different function.
+# The group only appeared once the shared home settled on one spelling.
 
 
-def norm_module(path):
-    """A module path reduced to a naming-convention-neutral key (see MODULE_EXTS):
-    strip a leading `project-trajectory/`, any source extension, and `/__init__`."""
-    p = (path or "").strip().replace("\\", "/")
-    if p.startswith("project-trajectory/"):
-        p = p[len("project-trajectory/") :]
-    for ext in MODULE_EXTS:
-        if p.endswith(ext):
-            p = p[: -len(ext)]
-            break
-    if p.endswith("/__init__"):
-        p = p[: -len("/__init__")]
-    return p
+# A module path reduced to a naming-convention-neutral key (see MODULE_EXTS):
+# strip a leading `project-trajectory/`, any source extension, and `/__init__`.
+# ONE HOME since WI-448 slice 4 (`kitlib.spine.norm_module`).
+norm_module = _spine.norm_module
 
 
 # Comparative/absolute terms that demand a predicate. Matched on word

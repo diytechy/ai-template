@@ -1,4 +1,10 @@
-"""Declared-policy files and console encoding — the kit's one declared-line rule.
+"""Declared-policy files and console encoding — the kit's declared-policy readers.
+
+TWO READERS, ONE THEME: `first_declared_line` (and its two adapters) for the
+one-word `docs/<dial>` files, and `process_check` for a `[checks]` toggle in
+`docs/process.toml`. They are the two halves of the SN-028 dual-read window —
+the same question asked of the legacy file and of the TOML that supersedes it —
+so a caller resolving a dial reaches for exactly one module.
 
 THE BEHAVIOUR THAT HAD FIVE HOMES (census 2026-08-12, `repo-lock.md` §8.2;
 confirmed independently by the 2026-08-19 review, H-09). A declared-policy file
@@ -26,10 +32,12 @@ copies can no longer disagree, so drift is UNREPRESENTABLE rather than detected.
 """
 
 import sys
+import tomllib
 from pathlib import Path
 
 __all__ = [
     "first_declared_line",
+    "process_check",
     "read_declared",
     "read_declared_lower",
     "utf8_console",
@@ -62,6 +70,49 @@ def first_declared_line(path):
         if line and not line.startswith("#"):
             return line
     return None
+
+
+def process_check(root, key):
+    """One `[checks]` toggle out of `docs/process.toml`, or None when that file
+    has nothing to say about `key` (the caller falls through to its legacy
+    one-word file — the SN-028 dual-read window).
+
+    THE SECOND BEHAVIOUR THIS MODULE COLLECTS, and the copies' own stated reason
+    for staying apart did not describe them. `check_trajectory._process_check`
+    and `gen_okf._process_check` each argued that the `[checks]` POLICY — "which
+    key, which fail-direction, which residual" — was the caller's and not a
+    library's. Only the first of those three is the caller's, and it is a
+    PARAMETER; the fail-direction and the residual were hardcoded identically in
+    both bodies, so nothing module-specific was ever being encoded. What the
+    duplication actually bought was a `tests/test_rule_sync.py` pin holding two
+    identical bodies equal (WI-448 slice 4 retires it).
+
+    `subagent_gate.read_process_policy` is deliberately NOT a third copy folded
+    in here: its dial is a WORD, not a bool, and it answers a distinct
+    `UNPARSEABLE` sentinel so `decide()` can fail closed. Same file, different
+    question.
+
+    A file that exists but does not parse, or a key whose value is not a bool,
+    reads ON: a check that silently stops running is the failure worth avoiding,
+    so the residual is loud rather than permissive.
+
+    Contract:
+      Inputs:  root: path-like repo root; key: the `[checks]` key to read
+      Outputs: bool | None — the declared toggle; None if undeclared
+    """
+    path = Path(root) / "docs" / "process.toml"
+    if not path.is_file():
+        return None
+    try:
+        # utf-8-sig: a BOM is not legal TOML but is invisible to a shell read.
+        data = tomllib.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+        return True  # unparseable but present: fail loud, never a quiet opt-out
+    table = data.get("checks")
+    value = table.get(key) if isinstance(table, dict) else None
+    if value is None:
+        return None
+    return value if isinstance(value, bool) else True
 
 
 def read_declared(path, default):

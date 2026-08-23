@@ -110,6 +110,9 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
+# The spine ROW cell vocabulary — what a Module / Endpoint cell reduces to.
+from kitlib import spine as _kitspine
+
 # Sibling: the registry CARRIER. Run as a subprocess this script's own dir is
 # sys.path[0] so a plain import resolves; the guard covers an in-process import
 # (a test) whose sys.path does not yet carry scripts/ — the sanctioned-sibling
@@ -171,9 +174,11 @@ CONTRACTS_RE = re.compile(r"\bIF-\d+\b")
 IF_ID_RE = re.compile(r"IF-\d+")
 # Source-file extensions stripped when normalizing a module path, so a diagram
 # node (`scripts/check`) and an IF endpoint written with the full repo path
-# (`project-trajectory/scripts/check.py`) collapse to one key. Kept in sync with
-# trace.py / check_trajectory (a small stable helper duplicated per the F5 rule).
-_MODULE_EXTS = (".py", ".sh", ".ps1", ".ts", ".js", ".go", ".rs", ".cmd")
+# (`project-trajectory/scripts/check.py`) collapse to one key. ONE HOME since
+# WI-448 slice 4 (`kitlib.spine`): this and `check_trajectory.py`'s copy were
+# the real pair, and the retired comment here claimed sync with `trace.py` too,
+# which has never carried the name.
+_MODULE_EXTS = _kitspine.MODULE_EXTS
 # The file types `--backlink-coverage` reads (OI-42's declared extension list):
 # `_MODULE_EXTS` — the kit's existing answer to "what is a source module" —
 # extended with the families that list half-covers. Overridable per repo with
@@ -404,20 +409,12 @@ def module_contracts(tree, source_lines):
     return sorted(ids)
 
 
-def _norm_module(path):
-    """A module path reduced to a naming-convention-neutral key (strip a leading
-    `project-trajectory/`, any source extension, `/__init__`) so an IF endpoint
-    and a diagram node match regardless of which form the author used."""
-    p = (path or "").strip().replace("\\", "/")
-    if p.startswith("project-trajectory/"):
-        p = p[len("project-trajectory/") :]
-    for ext in _MODULE_EXTS:
-        if p.endswith(ext):
-            p = p[: -len(ext)]
-            break
-    if p.endswith("/__init__"):
-        p = p[: -len("/__init__")]
-    return p
+# A module path reduced to a naming-convention-neutral key (strip a leading
+# `project-trajectory/`, any source extension, `/__init__`) so an IF endpoint
+# and a diagram node match regardless of which form the author used. ONE HOME
+# since WI-448 slice 4 (`kitlib.spine.norm_module`), kept under this module's
+# own private name so no call site below moves.
+_norm_module = _kitspine.norm_module
 
 
 def internal_imports(tree, internal_names):

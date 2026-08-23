@@ -124,6 +124,59 @@ groups 15 -> 6, redundant copies 15 -> 6, redundant lines 202 -> 76. The
 `[dupes-census]` baseline is re-stamped down to match, and `trace.py`'s
 module-size ratchet down 5460 -> 5373.
 
+### SLICE 4 LANDED 2026-08-23 — item 4, the residual groups; census 0/0/0
+
+**Landed.** All six groups the standing census reported, plus four copies it
+could not see, take existing themed homes — **no new `kitlib` module, no
+`MAPPING` change**, which is the smallest-total-code answer D-8 asks for and the
+answer slice 2 gave for the console guard. `_process_check` (2 homes) joins
+`kitlib/config.py`, the theme that already owns declared-policy files. The
+multi-ref cell split (6 homes), the `-000` placeholder test (`is_example`'s
+third home, the one slice 3 left standing) and the module-path key
+`norm_module`/`MODULE_EXTS` (4 homes) join `kitlib/spine.py`, the theme that
+already owns what a registry row's cells MEAN. The shared `k = v` block
+renderer joins `kitlib/evidence.py` as `render_fields`, taking the differing
+`FIELDS` and `_fmt` as arguments (`stage.py` already imports `evidence.py`, so
+the direction is unchanged). `wi_convert`'s two spec-folder readers re-export
+`kitlib/registry.py`'s — the WI-504 both-roots union is untouched, because that
+is a READER concern and `wi_convert` is the WRITER. The two root-relative
+need-row wrappers could NOT enter `kitlib` (they delegate to `spine_carrier`, a
+sibling this package may not import) and are retired the way slice 3 retired
+`sn_draft_ids`: the carrier grows `needs_for_root` and both modules bind it
+directly. CLI behaviour is byte-identical; every former name is re-exported
+under its original spelling.
+
+**Six `test_rule_sync` equality pins retire** with the reasoning recorded in
+their place; four replacements land — two IDENTITY pins (the deletions' warrant)
+and two by-VALUE batteries, including a NEW one for the module key, which had
+four homes and no pin at all.
+
+**THREE FINDINGS, all recorded in the log fragment.** (a) A copy's stated reason
+for existing did not describe the copy: `_process_check`'s docstring claimed the
+`[checks]` POLICY — "which key, which fail-direction, which residual" — was the
+module's, but the key is a PARAMETER and the other two were hardcoded
+identically in both bodies. (b) `check_trajectory._MODULE_EXTS` promised it was
+"kept in sync with `trace.py._MODULE_EXTS`", a name `trace.py` has never
+carried — a sync claim with no referent, while its real second copy went
+unmentioned. (c) THE CENSUS IS BLIND to a copy that renames the constant it
+reads: `norm_module`'s fourth home spelled the tuple `MODULE_EXTS` where two
+others spelled it `_MODULE_EXTS`, and the census hashes the body AST including
+the loaded NAME, so three homes scored as two. Not fixed — widening the hash to
+ignore loaded names would group functions that genuinely read different tables.
+
+**Measured** (`check_dupes_census.py`, both revisions; `fig:` marker in
+`docs/log.d/2026-08-23-wi448-residual-groups.md`): duplicated function-body
+groups 6 -> 0, redundant copies 6 -> 0, redundant lines 76 -> 0. The
+`[dupes-census]` baseline is re-stamped down to `0/0/0` — empty for the first
+time since OI-58 armed it, and a READING rather than a floor: the check stays
+armed and warn-first, so a future duplicate re-appears as a WARN against zero.
+`check_trajectory.py`'s module-size ratchet is re-stamped down 4791 -> 4765.
+
+**Deferred deliberately:** item 2 did not ride. Every home this slice touched is
+a cell-shape or declared-policy-file theme; the open-items key vocabulary landed
+nowhere near it, and taking it would have meant inventing a theme to carry one
+constant.
+
 **STILL OWED BY THIS ROW — the reason it is not closed:**
 
 1. ~~**`_utf8_console`, 33 remaining copies**~~ — **LANDED 2026-08-22** (slice 2,
@@ -137,16 +190,28 @@ module-size ratchet down 5460 -> 5373.
    is now stale and must be corrected when the duplicate goes.
 3. ~~**The `spine_rules`/`trace` spine-policy pair**~~ — **LANDED 2026-08-23**
    (slice 3, below).
-4. **`is_example`** (the 3-home behaviour whose copies disagreed, one crashing
-   on `None`), `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
+4. ~~**`is_example`**, `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
    `_split_tokens`/`split_refs` x2, and `wi_convert`'s `spec_paths` /
-   `work_dir_for` variants of the registry reader.
-5. **The `views` theme slot**, named by the adopted shape and deliberately not
-   created empty. `station` LANDED 2026-08-20 — not from this row, but from the
-   successor decomposition program, which needed the lane-close terminal-outcome
-   vocabulary somewhere below both its readers to cut a view-into-coordinator
-   import. It took its OWN single-component design row rather than joining this
-   package's four-way tag.
+   `work_dir_for` variants~~ — **LANDED 2026-08-23** (slice 4, above). Census
+   0/0/0.
+5. ~~**The `views` theme slot**~~ — **NOT OWED WORK, and the honest reading is
+   recorded rather than the slot left ambiguous.** This item records two facts,
+   neither of which is a deliverable. `station` LANDED 2026-08-20 from the
+   successor decomposition program (WI-483), which needed the lane-close
+   terminal-outcome vocabulary below both its readers to cut a
+   view-into-coordinator import; it took its own single-component design row
+   rather than joining this package's tag, and nothing about it is outstanding
+   here. `views` is a theme the adopted H-09 shape NAMES and the package roster
+   deliberately leaves uncreated, on its own stated rule that an empty module is
+   a worse statement than an absent one. Creating it would be the defect, not
+   the close. Nothing to build; the slot is filled if and when a render helper
+   needs a home below two consumers.
+
+**AFTER SLICE 4 THIS ROW OWES EXACTLY ONE THING: item 2.** It is not closed
+because that item is real executable work (the `STACK_OI3_ROW` duplicate and its
+TOML row emitter, the open-items key vocabulary it needs in `kitlib` first, and
+the stale-premise comment correction the spec ties to it), not because anything
+else on this list is unresolved.
 
 **`OI-48` is RULED (d) AND EXECUTED (2026-08-21 / WI-494, 2026-08-22)**: which
 component owns the shared kernel is settled. `LLR-181`'s four-way `Component`

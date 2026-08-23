@@ -3578,6 +3578,58 @@ joins the `gen_trajectory.py` sibling set that copies together.
 
 ---
 
+### The residual shared helpers reach their themed homes; `kitlib` gains no module [since 77d67c38]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**No new file, and that is the whole shape of this one.** The last six duplicate
+groups the kit's own census reported all joined a `scripts/kitlib/` module that
+already existed, so the package is still the same nine files you already copy
+whole. What moved:
+
+- `kitlib.config.process_check(root, key)` is NEW — the `docs/process.toml`
+  `[checks]` toggle reader that `check_trajectory.py` and `gen_okf.py` each
+  carried privately. Both still expose `_process_check` under that name.
+- `kitlib.spine` gains `norm_module(path)` and `MODULE_EXTS` — the
+  naming-neutral key an LLR `Module` cell, an IF `Endpoint` and an arch-map node
+  all reduce to. `check_trajectory._norm_module`, `gen_arch_map._norm_module`
+  and `trace_text.norm_module` are re-exports now, as are
+  `trace_text.MODULE_EXTS` and the two `_MODULE_EXTS` spellings.
+- `kitlib.spine.refs` absorbs the multi-ref cell split from five more modules
+  (`check_trajectory._split_refs`, `gen_okf.split_refs`,
+  `plan_coverage.split_refs`, `plan_artifacts._split_tokens`,
+  `schedule._split_refs`), and `kitlib.spine.is_example` absorbs
+  `gen_release_checklist.is_example`.
+- `kitlib.evidence.render_fields(record, fields, fmt)` is NEW — the `k = v`
+  block renderer `kitlib.stage` shares with it.
+- `wi_convert.work_dir_for` / `.spec_paths` now re-export
+  `kitlib.registry.spec_work_dir` / `.spec_files`.
+- `spine_carrier.needs_for_root(root)` is NEW — the root-relative need-row read
+  `traj_parse._sn_rows` and `gen_okf.sn_rows` each wrapped. It lives on the
+  carrier rather than in `kitlib` because `kitlib` may import no sibling of
+  `scripts/`.
+
+**If you only overwrite kit files, you need do nothing.** Every former name
+still resolves, under the same spelling, and answers identically — these are
+re-exports, not renames. No call signature, derived value, registry cell or dial
+changed.
+
+**If you have your OWN copy of any of these** — a report script with its own
+`;`-or-whitespace ref split, a tool that strips `.py` off a `Module` cell by
+hand, a checker that re-reads `[checks]` — this is the moment to import instead.
+The ref splitter is the one this kit watched drift in the wild: a copy that
+split on `[;,]` alone read a whitespace-separated pair as one garbage token and
+matched nothing, silently.
+
+**Two things worth knowing about the census that found these**
+(`scripts/check_dupes_census.py`, warn-only, baseline in `docs/stack.ini`
+`[dupes-census]`): it is stamped at `0 / 0 / 0` here, which is a READING and not
+a floor — a new duplicate re-appears as a WARN — and it is blind to a copy that
+renames the constant it reads, which is how one of the four `norm_module` homes
+above stayed invisible until the others consolidated.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

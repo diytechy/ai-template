@@ -86,6 +86,10 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
+# The spec-folder reader's one home (D-8/OI-16): this module owns the WRITE side
+# of the same rule and re-exports the read side rather than restating it.
+from kitlib import registry as _kitregistry
+
 # The registry's column order, which IS the schema (docs/requirements/
 # work-items.csv; pinned against the shipped template by test_dogfood_sync).
 # Reconstructing this header exactly is half of what "lossless" means.
@@ -485,21 +489,20 @@ def _text(value, key, where):
 # reading, which is the one migration failure with no visible symptom.
 
 
-def work_dir_for(csv_path):
-    """The `docs/work` folder that pairs with the registry CSV at `csv_path` —
-    its `docs/` directory plus `work`, derived from the one path the caller
-    already declares rather than a second constant that could disagree."""
-    return Path(csv_path).parent.parent / "work"
-
-
-def spec_paths(work_dir):
-    """Every `<status>/WI-*.md` spec under `work_dir`, sorted by path; `[]` when
-    the folder is absent or holds none. A file sitting DIRECTLY in `work_dir` has
-    no status directory above it, so it is deliberately not a spec."""
-    work_dir = Path(work_dir)
-    if not work_dir.is_dir():
-        return []
-    return sorted(p for p in work_dir.rglob("WI-*.md") if p.parent != work_dir)
+# The `docs/work` folder that pairs with the registry CSV at `csv_path`, and
+# every `<status>/WI-*.md` spec under it (sorted; `[]` when the folder is absent
+# or holds none — a file sitting DIRECTLY in `work_dir` has no status directory
+# above it, so it is deliberately not a spec).
+#
+# ONE HOME since WI-448 slice 4: `kitlib/registry.py` IS the spec-folder
+# reader, and these two were the READ side of the same rule stated a second
+# time for the write side. The re-export keeps this module's names, so the
+# writer still declares the rule it files under — it just no longer restates
+# it. NOT folded: `registry.spec_roots`/`read_spec_rows`' both-roots union
+# (WI-504), which is a READER concern; a WRITER files into the active
+# workspace, never into the archive.
+work_dir_for = _kitregistry.spec_work_dir
+spec_paths = _kitregistry.spec_files
 
 
 # --- file-level operations ---------------------------------------------------

@@ -45,6 +45,9 @@ from pathlib import Path
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
 
+# The spine ROW vocabulary — the `-000` placeholder test.
+from kitlib import spine as _kitspine
+
 # Sibling: the spine's registry CARRIER — the one home for
 # the TOML tier tables, the key->column vocabulary and both readers. Run as a
 # subprocess this script's own dir is sys.path[0] so a plain import resolves;
@@ -66,8 +69,11 @@ def load_csv(path):
         return list(csv.DictReader(f))
 
 
-def is_example(rid):
-    return (rid or "").endswith("-000")
+# The `-000` placeholder-row convention. THE THIRD HOME, retired at WI-448
+# slice 4: `kitlib.spine.is_example` is the one the pair already shares, and
+# `tests/test_rule_sync.py` had to pin this copy against it by value — including
+# a `None` case, because one of the three copies used to crash on it.
+is_example = _kitspine.is_example
 
 
 def read_stakeholder_needs(md_path):

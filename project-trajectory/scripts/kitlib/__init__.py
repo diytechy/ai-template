@@ -35,8 +35,9 @@ becomes a second junk drawer nobody can decompose later. Each module owns one
 theme and says so in its own docstring:
 
   * `config`   — declared-policy files and console encoding: the one-line
-                 declared reader all five former copies applied, and the
-                 UTF-8 console guard.
+                 declared reader all five former copies applied, the
+                 `docs/process.toml` `[checks]` toggle reader that was its
+                 TOML-era twin, and the UTF-8 console guard.
   * `registry` — the `docs/work/` spec-folder work-item reader: the row shape,
                  the frontmatter/status/body parse, and the ordered read.
   * `git`      — the best-effort-off-git subprocess pattern.
@@ -56,11 +57,14 @@ theme and says so in its own docstring:
                  `Verification` methods decompose to a TC but no LLR, what a
                  free-form `Phase` cell parses to, which `SN-###` ids a needs
                  registry mentions and which of them the SRs cite, plus the ref
-                 split, the `-000` placeholder test and the registry CSV loader
-                 those rules are written on.
+                 split, the `-000` placeholder test, the module-path key a
+                 `Module` / IF `Endpoint` cell reduces to, and the registry CSV
+                 loader those rules are written on.
   * `evidence` — the TEST-EVIDENCE record: the `docs/test/evidence` format and
                  the declared source surface a harness claim binds to, so the
-                 top rung can be derived from a verdict instead of a cell.
+                 top rung can be derived from a verdict instead of a cell. Also
+                 the `k = v` block renderer `stage` shares with it — the two
+                 files are one format with different fields.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
                  the bar-attestation trailer label, and the "exactly one
@@ -103,6 +107,13 @@ allowed to be: the derivation itself stays outside, because it needs the
 registry carrier, and this package's one asserted rule is that it imports no
 sibling. A module here that "just needed one import" would smuggle the whole
 graph into the scaffolder.
+
+WI-448 SLICE 4 ADDED NO MODULE, AND THAT IS THE RESULT, NOT A SHORTFALL. The
+six duplicate groups the standing census still reported all joined a theme
+already on this roster (`config`, `spine`, `evidence`, `registry`), taking the
+census to zero. A new module is warranted when a behaviour's theme is NOT here;
+inventing one to hold a constant that fits an existing theme is how a roster
+becomes a directory listing.
 
 One further theme slot is NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
 CREATED, because an empty module is a worse statement than an absent one:
