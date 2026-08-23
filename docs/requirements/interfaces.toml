@@ -15,12 +15,34 @@
 #                    the interface directional; whether anything actually
 #                    travels one way is a separate and often empty property.
 #                    `traj_views` orients the dashboard's seam graph from this
-#                    field, and `check_trajectory._declared_seam_pairs` reads it
-#                    to silence `cross_component_findings` — an internal import
-#                    edge whose endpoints sit in different components must be
-#                    covered by a row here, and that is an error under `--strict`
-#                    at DevStg-Tests and above. Who is ANSWERABLE is `owner`, and
-#                    only `owner`.
+#                    field, `check_trajectory.interface_findings` credits the
+#                    producing and consuming module from it, and `gen_arch_map`
+#                    points the map's dotted seam edges with it. What does NOT
+#                    read it, though this header said so until 2026-08-23:
+#                    `check_trajectory._declared_seam_pairs`, which stores every
+#                    endpoint pair BOTH ways — a seam is one declared
+#                    relationship whichever side authored the row. That reader
+#                    still silences `cross_component_findings` (an internal
+#                    import edge whose endpoints sit in different components must
+#                    be covered by a row here, an error under `--strict` at
+#                    DevStg-Tests and above), it just does not need the flow to
+#                    do it. Who is ANSWERABLE is `owner`, and only `owner`.
+#
+#                    STILL HERE, AND WHY — the removal evidence this header owns
+#                    (OI-60 ruled (a), 2026-08-23). The column is ruled dead, but
+#                    its death is ORDERED behind the counterpart-to-consumers
+#                    rename rather than parallel to it. Measured over the live
+#                    registry before any cell was touched: `direction` is
+#                    derivable from `owner`→`module` on 90 of the 91 design-owned
+#                    rows and on NONE of the 44 requirement-owned ones, because a
+#                    requirement carries no module. Dropping it today would
+#                    silently reverse those rows in all three readers above.
+#                    Once `counterpart` becomes a consumers list, this side is
+#                    the provider on EVERY row and the fact is free — that is the
+#                    moment the column goes. One more reason it is not one fact
+#                    today: 19 `Consumes` rows name an `external:` counterpart
+#                    (16 of them the downstream adopter), where the cell reads as
+#                    what the FAR side does rather than what this side does.
 #
 #   this_project     This side's endpoint, and
 #   counterpart      the far side's. Both are validated against the tree,
@@ -55,6 +77,22 @@
 #                    exists for the owner-side endpoint; fall back to the SR only
 #                    while none does. This is NOT `req_refs`: `req_refs` lists
 #                    who uses the seam, `owner` names who answers for it.
+#
+#                    WHICH SIDE OWNS A `Consumes` ROW — RULED (owner, 2026-08-22),
+#                    recorded here 2026-08-23 so no author re-derives it from a
+#                    log: `owner` names the PROVIDER of the medium that is
+#                    consumed, never the module that merely holds the consuming
+#                    code; the consumer side carries the VERIFIED readers —
+#                    modules measured to read the medium, not every module that
+#                    might. The two readings point ~20 rows at different owners,
+#                    and the provider reading is the one that keeps ONE row per
+#                    medium instead of one row per reader. On a `Provides` row
+#                    nothing changes: this side is the provider already. The
+#                    corollary an author feels: when the medium is a FILE and no
+#                    design row decomposes that file, there is no design row to
+#                    prefer, so the owner legitimately falls back to the
+#                    requirement stating the file's own invariant — `IF-031` is
+#                    the worked example, corrected to `SR-015` on 2026-08-23.
 #
 #   carried_by       OPTIONAL interface composition: a constituent naming the
 #                    bundle that carries it (`carried_by = "IF-###"`). Several
@@ -534,9 +572,10 @@ counterpart = "docs/requirements/performance-budgets.csv"
 contract = """reads the PB-### budgets registry and a measured-metrics JSON, comparing each in-tier metric to its budget/baseline"""
 signal = "variable"
 req_refs = ["SR-167", "SR-006", "SR-015"]
-owner = "LLR-014"
+owner = "SR-015"
 version = "v1"
 status = "Drafted"
+notes = """owner = SR-015, not LLR-014: on a Consumes row the owner is the party answerable for the medium that is consumed, and the medium here is the PB-### budgets registry, not the comparator that reads it. LLR-014 is check_perf.py - the module holding the CONSUMING code, which is the reading this registry does not use. No design row exists whose module is the budgets registry (nothing decomposes the file itself), so the owner falls back to the requirement that states the registry's own invariant, and SR-015 is already among this row's req_refs. Cost of the correction, stated: the row leaves the derivability advisory's population, because a requirement carries no Module cell to join against - the same gap the twelve SR-owned Provides rows have, and the reason the report on them exists."""
 
 [interface.IF-032]
 direction = "Consumes"

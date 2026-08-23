@@ -12,6 +12,57 @@ priority = 3
 
 ## Context
 
+### Slice 6, 2026-08-23 — `OI-60` is RULED (a); item 1's two free corrections land, the `direction` shed is held on a second measurement, and the twelve-row report ships.
+
+The lane stays ACTIVE and still holds exactly one thing — item 1 — but it is no
+longer BLOCKED. `OI-60` is ruled (a) (owner, in session), so what remains needs no
+further owner act: **the counterpart-to-consumers rename, then the `direction`
+shed immediately behind it.** Both are agent-executable now. The lane does NOT
+close.
+
+**Landed.** The two free corrections (a)'s ruling folded in: `IF-031`'s owner
+moved `LLR-014` → `SR-015` — the one row in 135 authored under the reading that
+was not ruled, re-pointed to the requirement stating the consumed medium's own
+invariant, with the cost of the move stated on the row — and the ruled
+owner-as-provider reading written into `interfaces.toml`'s header where an author
+meets it rather than in a log they must find. The header's `direction` block also
+loses a false claim it had carried: `_declared_seam_pairs` does NOT read the
+column (it stores every endpoint pair both ways), so the column's live reader set
+is three, not two — `interface_findings`' producer/consumer credit, `traj_views`'
+seam arrows, `gen_arch_map`'s dotted edges.
+
+**HELD, measured before any cell was touched — the `direction` shed.** The ruling
+expected the shed to land today on the premise that "its two readers derive the
+same fact from owner-side versus consumer-side". Measured: `direction` is
+derivable from `owner`→`module` on **90 of 91** design-owned rows (`IF-031` the
+lone disagreement, and the correction above resolves it) and on **0 of 44**
+requirement-owned rows — a requirement carries no module, which is `OI-60`'s own
+finding applied to the other column. Deleting it today loses 44 rows' orientation
+and silently reverses the 32 requirement-owned `Consumes` seams in all three
+readers. The premise becomes true only AFTER (a)'s other clause: once
+`counterpart` is a consumers list, this side is the provider on every row and the
+fact is free. **(a)'s two clauses are ordered, not parallel** — rename first, shed
+second — so the destructive half was not run without the enabling half, and
+nothing was normalized to make the column look shed-able. A third measurement
+lands with it: 19 `Consumes` rows name an `external:` counterpart (16 the
+downstream adopter), where the cell reads as what the FAR side does — so the
+surviving column is not one fact across the population either.
+
+**Shipped: the owner's decision surface.**
+[`docs/plans/2026-08-23-sr-owned-provides-report.md`](../../../plans/2026-08-23-sr-owned-provides-report.md)
+— all twelve rows in prose, each with its contract, provider module, consumers,
+owner SR's full requirement text and rationale, the candidate design rows in that
+module (3–15 each), and what a re-point would decide. Its finding: four rows are
+adopter-facing (`IF-013`/`IF-014`/`IF-015`/`IF-081`), where SR ownership is
+arguably CORRECT rather than a fallback; eight are internal, of which three are
+ordinary re-points and two are entangled with their module's own open
+decomposition question. The `WI-495` dossier's KEEP reads on `IF-013`/`IF-044`
+stand and are cross-referenced. A second population is named so it is not
+discovered later: **32 requirement-owned `Consumes` rows** have the same gap and
+will need the same judgement when the rename runs.
+
+**Item 1 below stays OWED — unblocked, scoped, and next.**
+
 ### Slice 5, 2026-08-23 — item 3 CLOSES: the `external.toml` context view lands. The lane's ONLY remainder is item 1, blocked on `OI-60`.
 
 The lane stays ACTIVE, and it now holds exactly one thing. The depth-0 frame is
