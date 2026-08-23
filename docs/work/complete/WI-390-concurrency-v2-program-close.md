@@ -81,7 +81,7 @@ authorising act in the tree — the expected refusal. Re-run as
 
 - **The `gen_arch_map.module_contracts` Contracts-grammar false-quiet**
   (slice 1): given a durable home outside this spec —
-  [`docs/enforcement-audit.md`](../../../enforcement-audit.md), "Findings from
+  [`docs/enforcement-audit.md`](../../enforcement-audit.md), "Findings from
   this audit" item 5.
 - **The two provide-only-leaf advisories** (`scripts/lane`, `scripts/handback`
   "declares no Consumes seam"): already durable outside this spec —
