@@ -72,10 +72,11 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   rows are adjudicated (two tied to `B-05`, three keep no tie-back with a
   recorded reason each) and the one live derivability fire (`IF-128`) is
   closed (2026-08-20 slice). The 26 SR-owned file-as-endpoint `Consumes` rows
-  are now re-authored (2026-08-20), which UNBLOCKS the `Contract`-cell half's
-  **49 held provenance citations** (`OI-36` ruled 2026-08-19) — the hold's
-  standing record is [provenance-allow](provenance-allow)'s header, the
-  surface to re-open if the chain outlives the lane. `SR-162`'s fold-in is
+  are now re-authored (2026-08-20), and the `Contract`-cell half's held
+  provenance citations (`OI-36` ruled 2026-08-19) are **SWEPT** — both
+  advisory arms report zero, and [provenance-allow](provenance-allow)'s
+  header now records that hold as expired-and-executed rather than pending.
+  `SR-162`'s fold-in is
   DONE (2026-08-22): `LLR-187` + `TC-182` mint `Drafted` over the delivered
   boundary-resolution machinery, so the lane's own `sr_refs` resolves and the
   orphan set drops by one. The D-3 `direction`/`this_project` shed STOPPED at
@@ -86,9 +87,9 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   `Provides` rows and `counterpart` is tri-modal on `Consumes` rows, so the
   shed is a registry-wide schema change with a template/resync tail rather
   than the ~20-row cell pass its blast radius assumed. Nothing in
-  `interfaces.toml` was touched. Next: rule `OI-60`, then the shed as its own
-  slice; the held provenance citations and the context view are unaffected
-  and executable now.
+  `interfaces.toml`'s columns were touched. Next: rule `OI-60`, then the shed
+  as its own slice; the `external.toml` context view is blocked by nothing and
+  is the lane's one remaining executable item.
 - **The `wi448-common-module` lane is OPEN with slices 1, 2 and 3 landed**
   (2026-08-20 / 2026-08-22 / 2026-08-23): `scripts/kitlib/` ships,
   `bootstrap.py` imports it, the manifest is tested in a real scaffold, the

@@ -12,6 +12,45 @@ priority = 3
 
 ## Context
 
+### Slice 4, 2026-08-23 — item 2 CLOSES: the held `Contract` citations are swept and the hold expires.
+
+The lane stays ACTIVE on items 1 and 3. `OI-36` (ruled 2026-08-19, option (b))
+held its population on ONE condition — `WI-469` — and `WI-469` landed, so the
+ruled pass ran.
+
+**Population, re-measured before editing: 48, not the 49 recorded below** (45
+`Contract names WI-###` + 3 `Contract cites decision`, over 35 rows). One
+citation left with `WI-469`'s re-authoring of the `Consumes` rows. That drift is
+exactly what pinning the hold on a read surface was for, so the number is
+recorded rather than reconciled away.
+
+Both advisory arms now report **ZERO** (48 → 0; the whole run's advisory WARNs
+125 → 75). **24 rows took a plain deletion** — the citation was a parenthetical
+tag or a whole provenance sentence, and the cell still states what crosses.
+**11 needed a REWRITE** (`IF-015`, `IF-024`, `IF-029`, `IF-044`, `IF-052`,
+`IF-056`, `IF-066`, `IF-071`, `IF-074`, `IF-091`, `IF-121` — the citation was
+carrying contract content, so the cell re-states the fact plainly). The two
+retired `CMP-00x` ids died with the sentences carrying them, as the hold
+intended: `IF-056`'s `Declared at WI-064 … CMP-002 -> CMP-001` and `IF-077`'s
+`Declared at WI-354 … CMP-001 -> CMP-003` are gone whole.
+
+`docs/provenance-allow`'s header records the hold as **EXPIRED 2026-08-23,
+EXECUTED** rather than deleting the clause — the population count and its drift
+are the only measurement that pin ever produced. No entry line moved (the file
+has had none since 2026-08-20, and this detector takes no `allow` parameter), so
+every consumer reads what it read before. Approval authority verified rather
+than assumed: all 35 rows are `Drafted`, `human_approves` governs a `status`
+writer and not a `contract` cell, and no snapshot was refreshed — nothing was
+stopped on and no human warrant is owed.
+
+Two citation-SHAPED phrases the detector does not match were left standing as
+findings, not fixed inline: `IF-090`'s "enact ruled decision 2" and `IF-094`'s
+"the ruled A1/A8 tables". The `WI-390`-banked `IF-055`/`IF-080` hits are NOT in
+this population and stay banked.
+
+**Item 2 below is STRUCK.** Item 1 stays blocked on `OI-60` (pending, the
+owner's); item 3 is unblocked and unstarted.
+
 ### Slice 3, 2026-08-22 — the `SR-162` fold-in LANDS; the D-3 shed STOPS at a measurement.
 
 The lane stays ACTIVE. One of the two things this slice was scoped for landed;
@@ -99,15 +138,14 @@ ordering, not by preference:**
    `Consumes` row — the-module-that-holds-the-code, or the provider — leaves
    ~20 rows unpointed either way, and the shed cannot be designed until it is
    settled.
-2. **The 49 held `Contract`-cell provenance citations.** Re-measured this
-   session and UNCHANGED at exactly 49 (46 `Contract names WI-###` + 3
-   `Contract cites decision`). The hold and its `WI-469` blocker are recorded in
-   `docs/provenance-allow`'s header, which stays the surface to re-open if the
-   chain outlives this lane. Two retired `CMP-00x` ids survive inside `IF-056`'s
-   and `IF-077`'s held clauses; they were deliberately left, because the whole
-   sentence carrying them is what the hold's pass deletes, and correcting a
-   number inside a sentence already scheduled for removal is two passes for one
-   fix.
+2. ~~**The 49 held `Contract`-cell provenance citations.**~~ **DONE — slice 4,
+   2026-08-23.** Re-measured at slice 2 and UNCHANGED at exactly 49 (46
+   `Contract names WI-###` + 3 `Contract cites decision`); measured at 48 when
+   the pass executed, one having left with `WI-469`. The hold and its `WI-469`
+   blocker were recorded in `docs/provenance-allow`'s header, which now records
+   the hold as expired-and-executed. The two retired `CMP-00x` ids inside
+   `IF-056`'s and `IF-077`'s held clauses died with the sentences carrying them,
+   which is why they were deliberately left rather than corrected separately.
 3. **The `external.toml` context view** — entities/crossings/relationships
    rendered into the dashboard. The spec's own *"may land as its own slice"*,
    still unbuilt, and not blocked by anything.

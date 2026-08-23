@@ -36,35 +36,37 @@
 # row its question sits in; when that ruling's execution lands, the token leaves
 # the cell and the entry goes with it (a dead entry fails tests/test_trace.py).
 #
-# THE HELD POPULATION THIS FILE CANNOT LIST — the IF `Contract` cells, ruled
-# 2026-08-19 (OI-36, option (b)). 49 findings from a DIFFERENT detector
-# (`trace.if_contract_advisories`: 46 `Contract names WI-###`, 3 `Contract cites
-# decision`) are deliberately NOT swept under the provenance rule, and they get
-# no entries below because that detector takes no `allow` parameter at all — an
-# entry naming them would declare nothing and silence nothing. The hold is
-# recorded HERE, on the surface a reader meets, rather than in a log fragment,
-# which was the whole finding: the exclusion had been resting on one sentence
-# that nothing pinned, so a population of 49 could grow or shrink with no
-# artifact changing and no one told.
+# THE HELD POPULATION THIS FILE COULD NOT LIST — EXPIRED 2026-08-23, EXECUTED.
+# The hold recorded here from 2026-08-19 (OI-36, option (b)) covered the IF
+# `Contract` cells: findings from a DIFFERENT detector
+# (`trace.if_contract_advisories`: `Contract names WI-###` and `Contract cites
+# decision`), which get no entries below because that detector takes no `allow`
+# parameter at all — an entry naming them would declare nothing and silence
+# nothing. The hold was bounded by two work items and by nothing else: WI-455's
+# interface lane rewrites those cells for other reasons, and its remainder was
+# blocked behind WI-469 (`Consumes` rows that name the medium). WI-469 landed,
+# so the pass ran as WI-455 slice 4 — the provenance clause deleted from each
+# live cell, or the cell re-stated plainly where the citation was carrying the
+# contract. The detector now reports ZERO on both arms; it stays warn-only, so
+# a new citation re-opens the question by reporting rather than by an entry
+# here. Recording the expiry rather than deleting the clause is the point of
+# stating the hold on the surface a reader meets: the population was measured
+# at 49 when the hold was written and at 48 when it executed (one citation left
+# with WI-469's re-authoring), and only a pinned surface can show that.
 #
-# WHAT THE HOLD IS WAITING ON, named so it can expire rather than drift: WI-455's
-# interface lane rewrites those `Contract` cells for other reasons, and its
-# remainder is itself blocked behind WI-469 (`Consumes` rows that name the
-# medium). Sweeping the 49 now would drive a prose campaign through 46 cells that
-# lane is about to re-author — one pass instead of two is the entire argument. If
-# WI-469 is abandoned or the chain outlives the interface lane, this clause is the
-# thing to re-open: the hold is bounded by those two work items and by nothing
-# else. The eight citation FRAMES that were the other half of OI-36 are swept, so
-# the frame detector reports zero and this file's entries are the only exceptions.
+# The eight citation FRAMES that were the other half of OI-36 were swept
+# 2026-08-19, so the frame detector reports zero and this file's entries are the
+# only exceptions.
 
 # NO ACTIVE ENTRIES. Every question this file held open has been ruled AND
 # executed, so each marker left its cell and its entry went with it — the
 # intended end state for an entry here, not an accident, and the retirement
 # records below are the standing account of what each one covered. An empty list
-# is NOT a clean bill of health for the citation-frame rule: the IF `Contract`
-# hold stated in the header covers a population no entry here can name, and the
-# next knowingly-unsatisfied rule adds its line back, carrying the `OI-###` the
-# grammar above requires.
+# is NOT a clean bill of health for the citation-frame rule: it says only that
+# no rule is KNOWINGLY unsatisfied today, and the next one that is adds its line
+# back, carrying the `OI-###` the grammar above requires. The IF `Contract`
+# hold that the header used to except from this list is executed as of
+# 2026-08-23 and excepts nothing any more.
 
 # RETIRED ENTRIES, recorded rather than silently dropped (2026-08-18):
 #
