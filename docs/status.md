@@ -172,7 +172,10 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md); and the three
   unruled residues + §8 dead-symbol table in
   [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md) (its §7
-  items 2/4/5 need a destination before that file can archive).
+  items 2/4/5 need a destination before that file can archive); and
+  PROCESS.md §4 still describing the approval dial as "an ordinal `0`–`4`" —
+  staleness predating the vocabulary campaign (the rung-string rekey
+  superseded it), surfaced 2026-08-23 and left for its own row.
 - **Conventions:** spec-of-record [specs/README.md](specs/README.md) · rubrics
   [rubrics/README.md](rubrics/README.md) · partial-close reports
   [handbacks/](handbacks/README.md).
