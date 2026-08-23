@@ -12,10 +12,10 @@ priority = 2
 
 ## Context
 
-**SLICES 1, 2 AND 3 LANDED (2026-08-20, 2026-08-22, 2026-08-23) — the row is
-ACTIVE, not complete.** Phases 0, 1 and 3 shipped whole; phase 2's backfill is
-DONE and its writer is still owed; phases 4 and 5 are untouched. What is still
-owed, in the order it should be taken:
+**SLICES 1–4 LANDED (2026-08-20, 2026-08-22, 2026-08-23 ×2) — the row is
+ACTIVE, not complete.** Phases 0, 1, 3 and 5 shipped whole; phase 2's backfill is
+DONE and its writer is still owed; phase 4 is untouched and blocked. What is
+still owed, in the order it should be taken:
 
 1. ~~**Phase 2's judgement backfill.**~~ **DONE, slice 2 (2026-08-22)** — record:
    `docs/log.d/2026-08-22-wi484-hatrefs-backfill.md`. **55 SR cells and 8 LLR
@@ -80,17 +80,37 @@ owed, in the order it should be taken:
    requires an `OPTIONAL_KEYS` concept minted first. `hats.toml` is also
    declared OWNER TEXT in its own header, so filling the values is not an
    agent's act.
-6. **Phase 5 — the amend-without-flip guard.** Untouched. The mechanism the
-   brief names is in place and ready (`split_changed_cells` /
-   `spine_cell_class`), and `Hat-Refs` is now classified `traced` at both tiers,
-   which is the precondition. The interaction slice 1 flagged is now GONE — the
-   backfill leaves only 4 of 245 rows with no effective set, so the guard has
-   something to compare on nearly every row. Slice 2 replaced it with a sharper
-   one, measured: `backlog_staleness_findings` blames the SR registry by LINE, so
-   writing an INFORMATIVE cell re-dated five open WIs' cited rows and raised
-   seven warns. A `blame` line time cannot tell a normative cell from a traced
-   one; the guard must key off `split_changed_cells`' class split, which is the
-   whole reason `Hat-Refs` was classified rather than left residual.
+6. ~~**Phase 5 — the amend-without-flip guard.**~~ **DONE, slice 4
+   (2026-08-23)** — record: `docs/log.d/2026-08-23-wi484-amend-guard.md`.
+   `staged_hat_refs_findings` is an ARM of the existing guard, not a new rule:
+   it reads the one amendment set `staged_spine_amendments` already computes and
+   fires on `approved` non-empty + `Hat-Refs` absent from `traced`, warn-first,
+   `--staged` only, never an exit code. The comparison is by CELL CLASS, which
+   is the whole design — it is silent on the phase-2 backfill's own edit shape.
+   Baseline: HEAD vs the index over rows approved on both sides, the guard's own
+   population; `docs/archive/last_approved` was considered and declined (it would
+   make the finding STAND until answered, but the ruled home and OI-33's timing
+   argument both point at the commit) — that promotion is the next rung, on
+   evidence that the warn is ignored. Two honest vacuities: a row minted in the
+   same commit has no baseline, and a row below approval has blessed nothing to
+   amend. Measured: over the last 100 commits, 70 approved-cell amendments and
+   **46** firings (the other 24 are test-case rows, a tier with no such column).
+   Spine acts, both `Drafted` on the standing precedent: `LLR-202`, `TC-198`.
+
+7. **The staleness-granularity follow-up, RECORDED here rather than fixed** (it
+   is item 5's successor, and slice 4 is why it is stated this precisely).
+   `backlog_staleness_findings` blames the SR registry by LINE, so writing an
+   INFORMATIVE cell re-dates the row: at slice 4 one such warn was still live
+   (`WI-508: cites SR-163`, whose newest blamed line is its `hat_refs`). The
+   obvious fix — blame only approved-class lines — is the WRONG filter, not
+   merely an expensive one: it would also silence a re-pointed
+   `SN-Refs`/`Boundary-Refs`, which are traced but SCOPE-bearing and are exactly
+   what a citing WI must re-validate against. The exact alternative (recompute
+   the clock through `split_changed_cells` over a rev range) trades the check's
+   bounded cost and inherits the approved-only population. Which traced cells
+   are staleness-bearing is a new classification — a ruling, not a patch. The
+   limitation is STATED in the docstring with its measured instance, on the
+   WI-362 precedent; building the detection is owed by nobody yet.
 
 **What phase 0 RULED, since it was delegated to the execution:** the field is
 `hat_refs` / column `Hat-Refs` — the owner's vocabulary (hats, not concerns)

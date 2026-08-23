@@ -193,12 +193,18 @@ def test_staged_is_a_no_op_outside_git(tmp_path):
 
 _SPINE_SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,"
-    "Permutations,Priority,Verification,Status,Phase,Aspect\n"
+    "Permutations,Priority,Verification,Status,Phase,Aspect,Hat-Refs\n"
 )
 
 
-def _sr_row(req="the original attested text", status="Approved"):
-    return 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,{},1,\n'.format(req, status)
+def _sr_row(req="the original attested text", status="Approved", hats="hat.MAINTAINER"):
+    # `Hat-Refs` is carried by the fixture rather than by a second header
+    # because WI-484 phase 5's arm reads it on the SAME rows the WI-316 warn
+    # scans — two fixtures would let the two guards drift apart in the tests
+    # exactly where they must not in the code.
+    return 'SR-001,Adder,SN-001,"{}","why","ac",,C,Test,{},1,,{}\n'.format(
+        req, status, hats
+    )
 
 
 def _init_spine_repo(root):
@@ -343,7 +349,7 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     csv_path.write_text(
         _SPINE_SR_HEADER
         + _sr_row()
-        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,\n',
+        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,hat.MAINTAINER\n',
         encoding="utf-8",
     )
     run_git("add", "-A")
@@ -361,7 +367,7 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
 
 _SPINE_LLR_HEADER = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,Rationale,TestRefs,"
-    "Status,Component,Phase\n"
+    "Status,Component,Phase,Hat-Refs\n"
 )
 _SPINE_TC_HEADER = (
     "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,"
@@ -386,6 +392,7 @@ def _write_child_registries(root, llr_cells, tc_cells):
             "Status": "Approved",
             "Component": "CMP-001",
             "Phase": "1",
+            "Hat-Refs": "hat.MAINTAINER",
         },
         **llr_cells,
     )
@@ -443,7 +450,7 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
         + 'SR-001,Adder,SN-009,"the original attested text","why","ac",,C,'
-        "Test,Approved,4,unattended-loop\n",
+        "Test,Approved,4,unattended-loop,hat.MAINTAINER\n",
         encoding="utf-8",
     )
     _write_child_registries(
@@ -661,6 +668,122 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     run_git("commit", "-m", "amend the Requirement")
     ranged2 = ct.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD")
     assert list(ranged2[0]["approved"]) == ["Requirement"]
+
+
+# --- WI-484 phase 5: the Hat-Refs arm (OI-33's surviving residue) --------------
+#
+# A row whose APPROVED cells move while its `Hat-Refs` cell does not has been
+# amended without re-examining which perspectives bear on it — and the component
+# and knowledge views are DERIVED from that cell, so the derived artifact stays
+# perfectly fresh while answering from the old lenses. Warn-first, same home and
+# same amendment set as the WI-316 guard, comparison by CELL CLASS.
+
+
+def test_amending_approved_cells_without_moving_hat_refs_warns(tmp_path):
+    # The fire case. `Requirement` moves, `Hat-Refs` does not.
+    run_git = _init_spine_repo(tmp_path)
+    _amend_sr(tmp_path, "the AMENDED text", "Approved")
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    found = ct.staged_hat_refs_findings(tmp_path)
+    assert len(found) == 1, found
+    assert "SR-001: approved cell(s) Requirement amended while Hat-Refs" in found[0]
+    # Both arms of the guard fire on this row — the second arm is an ADDITION,
+    # not a re-spelling of the first.
+    assert ct.staged_spine_findings(tmp_path)
+    proc = run_traj(tmp_path, "--staged")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "perspective record did not" in proc.stderr
+
+
+def test_hat_refs_arm_is_silent_when_only_traced_cells_move(tmp_path):
+    # THE REGRESSION CASE, and it is a MEASURED one: WI-484's phase-2 backfill
+    # wrote `Hat-Refs` on 55 SR rows and raised seven warns on a neighbouring
+    # check that blames the registry by LINE, because a blame time cannot tell
+    # an approved cell from a traced one. This arm must be silent on exactly
+    # that edit — writing the informative cell itself, and any other traced-only
+    # move — or it would re-create the defect it was designed against.
+    run_git = _init_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row(hats="hat.MAINTAINER;hat.SECURITY"),
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    assert ct.staged_hat_refs_findings(tmp_path) == []
+    assert ct.staged_spine_findings(tmp_path) == []
+    # ...and the same for a traced cell that is NOT Hat-Refs: an SN-Refs
+    # re-point moves no approved cell, so there is no substance to have
+    # outrun the perspective record.
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row().replace("SN-001", "SN-009"), encoding="utf-8"
+    )
+    run_git("add", "-A")
+    assert ct.staged_hat_refs_findings(tmp_path) == []
+
+
+def test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment(tmp_path):
+    # The discharged case: substance and perspective record move together, which
+    # is the behaviour the warn asks for. The WI-316 arm still fires (the prose
+    # amendment still owes a human read) — the two arms answer different
+    # questions and must not be collapsed.
+    run_git = _init_spine_repo(tmp_path)
+    (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
+        _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved", "hat.SECURITY"),
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    assert ct.staged_hat_refs_findings(tmp_path) == []
+    assert ct.staged_spine_findings(tmp_path)
+
+
+def test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline(tmp_path):
+    # HONEST VACUITY, both shapes, inherited from the amendment set rather than
+    # re-litigated: a row minted in this very commit has nothing to compare, and
+    # a row below approval has blessed nothing to amend behind a human's back.
+    # Neither is coverage, and neither is a hole this arm can close.
+    run_git = _init_spine_repo(tmp_path)
+    csv_path = tmp_path / "docs" / "requirements" / "system-requirements.csv"
+    csv_path.write_text(
+        _SPINE_SR_HEADER
+        + _sr_row()
+        + 'SR-002,New req,SN-001,"fresh","why","ac",,C,Test,Approved,1,,\n',
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    assert ct.staged_hat_refs_findings(tmp_path) == []  # no baseline: not guarded
+
+    # A Drafted row amended under Drafted: below approval on both sides.
+    run_git("commit", "-m", "mint SR-002")
+    csv_path.write_text(
+        _SPINE_SR_HEADER
+        + _sr_row()
+        + 'SR-002,New req,SN-001,"rewritten","why","ac",,C,Test,Drafted,1,,\n',
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    assert [f for f in ct.staged_hat_refs_findings(tmp_path) if "SR-002" in f] == []
+
+
+def test_hat_refs_arm_is_silent_on_a_tier_that_carries_no_such_column(tmp_path):
+    # STRUCTURAL SCOPE, not an allowlist. `Hat-Refs` is classified at the SR and
+    # LLR tiers; the TC tier has no such column, and an absent column classes
+    # `approved` under the fail-safe residual — so without this scoping every
+    # amended test case would warn about a cell its registry does not have.
+    # Driven in one commit against an LLR that DOES fire, so the test cannot
+    # pass by the arm being silent everywhere.
+    run_git = _init_full_spine_repo(tmp_path)
+    _write_child_registries(
+        tmp_path,
+        {"Detail": "the AMENDED detail"},
+        {"Method": "a different method"},
+    )
+    run_git("add", "-A")
+    ct = load_script("check_trajectory")
+    found = ct.staged_hat_refs_findings(tmp_path)
+    assert [f.split(":")[0] for f in found] == ["LLR-001"], found
 
 
 # --- the carrier cutover ------------------------------------------------------

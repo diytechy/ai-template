@@ -3282,6 +3282,26 @@ def backlog_staleness_findings(root, wis):
     2026-07-29: state it in the warn, do not build rename detection) — pinned by
     tests/test_wi_folder_loaders.py so changing it has to be deliberate.
 
+    THE SOURCE CLOCK IS LINE-GRANULAR, WHICH THE CELL-CLASS SPLIT IS NOT, and
+    that is a second stated limitation rather than a bug to be quietly widened.
+    `_blame_row_times` takes the NEWEST commit over a row's lines; a `git blame`
+    line time cannot tell an approved cell from a traced one, so writing an
+    INFORMATIVE cell re-dates the row and warns every WI that cites it.
+    MEASURED (WI-484 phase 2, 2026-08-22): the `hat_refs` backfill wrote 55 SR
+    cells and raised seven such warns; at phase 5 one survived — `SR-163`, whose
+    newest line is its `hat_refs = [...]`. Two fixes were examined and NEITHER
+    is small (recorded so the next reader does not re-derive them):
+    line-attribution of the blame to approved-class keys needs a quote-state
+    parser for multi-line TOML values AND would silence a re-pointed
+    `SN-Refs`/`Boundary-Refs`, which is traced but scope-BEARING — the exact
+    change a citing WI most needs to re-validate against; and recomputing the
+    clock through `split_changed_cells` over a rev range is exact but replaces
+    this check's bounded cost (≤2 blames) with git work per open WI and
+    inherits the amendment scan's approved-only population. Which traced cells
+    are staleness-bearing is a new classification, i.e. a ruling, not a patch.
+    Stated here on the WI-362 precedent (owner ruling 2026-07-29: name the blind
+    spot, do not build the detection).
+
     NEVER joins the exit code — not even under `--strict` (a warn-tier checker
     feature mints no SR and gates nothing, WI-129/132; the caller prints these and
     keeps them out of `errors`). Best-effort and silent off-git: no git, an
@@ -3720,9 +3740,22 @@ def spine_cell_class(csv_path, column):
 
     Implements: SR-178, LLR-158
     """
+    return "traced" if column in traced_cells(csv_path) else "approved"
+
+
+def traced_cells(csv_path):
+    """The §A5.1 traced column set declared for this registry, carrier-suffix
+    insensitive — `frozenset()` for a registry that declares none.
+
+    Extracted from `spine_cell_class` (its own body, unchanged) because a second
+    caller needs the SET rather than one column's class: the Hat-Refs arm below
+    asks whether this TIER carries the column at all, which a per-column class
+    cannot answer (an absent column classes `approved`, the fail-safe residual,
+    and would make every TC amendment warn about a cell that tier does not
+    have)."""
     key = spine_carrier.stem(csv_path)
     traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
-    return "traced" if column in traced.get(key, ()) else "approved"
+    return traced.get(key, frozenset())
 
 
 # --- the §A5.1 cell comparison ------------------------------------------------
@@ -3920,6 +3953,79 @@ def staged_spine_findings(root):
         )
         for a in staged_spine_amendments(root)
         if a["approved"]
+    ]
+
+
+# The perspective cell the arm below watches. ONE NAME, stated once: the column
+# is `Hat-Refs` at both tiers that carry it (WI-484 phase 0's ruling), and the
+# arm reads `traced_cells` rather than this constant to decide WHICH tiers those
+# are, so adding the column to a third registry extends the guard with it.
+HAT_REFS_CELL = "Hat-Refs"
+
+
+def staged_hat_refs_findings(root):
+    """THE AMEND-WITHOUT-FLIP GUARD'S SECOND ARM (OI-32 phase 5, OI-33's
+    surviving residue) — warn-first, `--staged` only, never an exit code.
+
+    A row whose APPROVED cells moved while its `Hat-Refs` cell did not has been
+    amended without re-examining which perspectives bear on it. The component
+    view is DERIVED from these cells (OI-32 ruled (d)), and a derived view is
+    only as true as its rows: a generated artifact can be perfectly FRESH and
+    still carry a wrong answer, because freshness compares the artifact to its
+    regeneration and never asks whether the source was right. This is the one
+    thing generation cannot do.
+
+    THE COMPARISON IS BY CELL CLASS, NOT BY FILE OR LINE, and that is the whole
+    design. The measured instance is `backlog_staleness_findings`, which blames
+    the SR registry by LINE: the phase-2 backfill wrote an INFORMATIVE cell on
+    55 rows, re-dated five open WIs' cited rows and raised seven warns, because
+    a `git blame` line time cannot tell an approved cell from a traced one.
+    `split_changed_cells` can, so this arm reads it — which is why `Hat-Refs`
+    was CLASSIFIED traced at both tiers rather than left to the residual.
+
+    THE BASELINE IS THE ONE THE GUARD IT JOINS ALREADY USES: HEAD versus the
+    index, via `staged_spine_amendments`, over rows reading the same
+    approved-text Status on both sides. Two consequences, both deliberate and
+    both HONEST VACUITY rather than coverage:
+
+      * A row with NO baseline is not guarded. A row absent from HEAD (newly
+        minted, this commit) has nothing to compare, and a row below approval
+        has blessed nothing to amend behind a human's back — the same population
+        rule `staged_spine_amendments` documents, inherited rather than
+        re-litigated here.
+      * A TIER with no `Hat-Refs` column is silent structurally (the TC tier
+        today), not by an allowlist.
+
+    NOT THE `last_approved` SNAPSHOT, and the trade is worth recording: that
+    baseline would make the finding STAND until answered, where this one is a
+    single warn at the commit that earns it. It was declined on OI-33's own
+    timing argument — the party who knows whether the perspectives moved is the
+    one making the change, at the moment they make it — and on the ruling's
+    words, "same shape, same home, warn-first". The standing half of the same
+    question is already carried for APPROVED cells by snapshot drift; if this
+    warn is measured to be ignored, promoting it to a drift-tier finding is the
+    next rung, on evidence.
+
+    AN EMPTY `Hat-Refs` CELL STILL FIRES. A cell that was never filled and a
+    cell deliberately left empty (`SR-015`, `SR-040` — both argued and correct)
+    are indistinguishable to a reader, and the guard's question is whether the
+    set was RE-EXAMINED, which an unchanged empty cell does not answer.
+
+    Implements: SR-161, LLR-202
+    """
+    return [
+        "{}: approved cell(s) {} amended while {} stayed put — the row's "
+        "substance moved and its perspective record did not, so the derived "
+        "component/knowledge view keeps answering from the old lenses "
+        "(process.md §7; OI-32 phase 5). Re-read the row's hats and either "
+        "update {} in this commit or leave it deliberately — an unchanged cell "
+        "cannot say which".format(
+            a["id"], ", ".join(sorted(a["approved"])), HAT_REFS_CELL, HAT_REFS_CELL
+        )
+        for a in staged_spine_amendments(root)
+        if a["approved"]
+        and HAT_REFS_CELL in traced_cells(a["registry"])
+        and HAT_REFS_CELL not in a["traced"]
     ]
 
 
@@ -4536,11 +4642,14 @@ def main():
         return 0
 
     # --staged is the commit-time no-validation-delta warn only: never blocks,
-    # never re-runs the full validation (the trajectory step already did). Three
-    # warns: the follow-up-on-a-done-SR ratchet, the critique-loop ratchet
-    # (a WI closing under a CHANGES-REQUESTED critique without hardening the
-    # chain), the WI-316 amend-without-flip warn (attested spine prose
-    # changed without a fresh blessing), and the WI-352 close-time
+    # never re-runs the full validation (the trajectory step already did). The
+    # warns, in the order they print (the count is deliberately not stated — it
+    # went stale twice): the follow-up-on-a-done-SR ratchet, the critique-loop
+    # ratchet (a WI closing under a CHANGES-REQUESTED critique without hardening
+    # the chain), the WI-316 amend-without-flip warn (attested spine prose
+    # changed without a fresh blessing) and its WI-484 Hat-Refs arm (the
+    # substance moved, the perspective record did not), the mirror invariant
+    # below, and the WI-352 close-time
     # completion warn (the row flips to `done` while its spec still has unticked
     # Done-when boxes — the only moment that disagreement is cheaply fixable,
     # since archival leaves nothing but a cosmetic edit).
@@ -4549,6 +4658,12 @@ def main():
             staged_findings(root)
             + critique_ratchet_findings(root)
             + staged_spine_findings(root)
+            # ...and its second arm (WI-484 phase 5, OI-33's residue): the same
+            # amendment set read for a row whose PERSPECTIVE cell stayed put
+            # while its substance moved. Silent on a traced-only edit, which is
+            # the regression the phase-2 backfill measured on a line-blamed
+            # neighbour check.
+            + staged_hat_refs_findings(root)
             # The MIRROR INVARIANT (snapshot design §F3): a commit that touches
             # the `last_approved` snapshot must leave every touched file
             # byte-identical to its live counterpart. This is the replacement
