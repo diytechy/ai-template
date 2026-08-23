@@ -58,6 +58,15 @@ _REAL_ROOT_INPUTS = (
     "docs/requirements/interfaces.toml",
     "docs/requirements/system-requirements.toml",
     "docs/work",  # the folder WI registry (check_trajectory.read_registry_rows)
+    # WI-509: read_registry_rows unions docs/work with its terminal sibling
+    # (kitlib.registry.spec_roots, since the WI-504/OI-55 archive split) so a
+    # snapshot missing this one silently under-counted every closed WI - a gap
+    # invisible while the live open-WI population stayed diverse enough to
+    # clear this test's own >3-phases-or->3-workstreams threshold, and no
+    # longer: a routine WI close thinned the open set below it and reddened
+    # `when_view` to None on a `root` that was already wrong, not on new
+    # rendering logic.
+    "docs/archive/work",
 )
 
 

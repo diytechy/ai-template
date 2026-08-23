@@ -54,8 +54,9 @@ header; the file's own header explains the shape and why it is checked (the git
 hooks read the privacy dials in pure sh, so a Python-less box still fails
 closed). It is **kit-owned**: a re-sync takes the kit's copy and the repo
 re-applies its values. A repo carrying the retired one-word files under `docs/`
-converts with `python scripts/bootstrap.py --migrate-config --dest .` — running
-with both homes live is refused, not resolved by precedence. Three kinds of
+converts with, from your kept kit checkout,
+`python project-trajectory/scripts/bootstrap.py --migrate-config --dest .` —
+running with both homes live is refused, not resolved by precedence. Three kinds of
 declared file stay outside it: the adopter-owned toolchain `docs/stack.ini`, the
 presence-as-semantics markers (`docs/work/pause`, `docs/agents-enabled`), and
 the generated `docs/stage`. The six per-checker enablement toggles are **in** it,

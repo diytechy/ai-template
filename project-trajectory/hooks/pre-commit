@@ -94,8 +94,8 @@ mixed_config_refusal() {
   [ -f "$REPO_ROOT/docs/privacy-check" ] || return 1
   echo "$1: docs/process.toml AND the legacy docs/privacy-check both declare" >&2
   echo "  the privacy policy. REFUSING — a mixed config is where two readers" >&2
-  echo "  disagree about the same gate. Run:" >&2
-  echo "    python scripts/bootstrap.py --migrate-config --dest ." >&2
+  echo "  disagree about the same gate. From your kept kit checkout, run:" >&2
+  echo "    python project-trajectory/scripts/bootstrap.py --migrate-config --dest ." >&2
   return 0
 }
 

@@ -640,7 +640,8 @@ def approval_through(docs):
                 print(
                     "agent_common: [attestation] {} is RETIRED - reading it "
                     "as `human_approval_through` (WI-499). Run `python "
-                    "scripts/bootstrap.py --migrate-config` to rewrite the "
+                    "project-trajectory/scripts/bootstrap.py --migrate-config "
+                    "--dest .` from your kept kit checkout to rewrite the "
                     "key.".format(LEGACY_ATTESTATION_KEY),
                     file=sys.stderr,
                 )
@@ -656,7 +657,8 @@ def approval_through(docs):
                     # whole job is to be read and acted on.
                     "agent_common: [attestation] {} = {} is the RETIRED 0-4 "
                     "ordinal{} - reading it as `{}` (WI-493{}). Run `python "
-                    "scripts/bootstrap.py --migrate-config` to rewrite "
+                    "project-trajectory/scripts/bootstrap.py --migrate-config "
+                    "--dest .` from your kept kit checkout to rewrite "
                     "it.".format(
                         LEGACY_ATTESTATION_KEY
                         if used_legacy_key
@@ -1080,9 +1082,10 @@ def config_conflicts(docs):
         if _legacy_present(docs, legacy_name):
             out.append(
                 "policy '{}' is declared TWICE - docs/{} [{}] {} and the legacy "
-                "docs/{}. Run `python scripts/bootstrap.py --migrate-config "
-                "--dest .` to fold the legacy file in and delete it; a mixed "
-                "config is refused, never resolved by precedence.".format(
+                "docs/{}. Run `python project-trajectory/scripts/bootstrap.py "
+                "--migrate-config --dest .` from your kept kit checkout to fold "
+                "the legacy file in and delete it; a mixed config is refused, "
+                "never resolved by precedence.".format(
                     legacy_name, PROCESS_TOML, section, key, legacy_name
                 )
             )

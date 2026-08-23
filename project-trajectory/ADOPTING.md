@@ -14,6 +14,20 @@ retro-documented wholesale.
 ## 1. Scaffold into the existing repo
 
 From the kit folder: `python scripts/bootstrap.py --dest /path/to/repo`.
+
+**Where the machinery lives.** `bootstrap.py` never copies *itself* into the
+scaffold (OI-59, ruled (a)+(c)): the kit folder is the **tool**, your scaffolded
+repo is the **product**, and the tool stays where it is. Keep the kit checkout
+around (conventionally as `project-trajectory/`, alongside or inside your
+repo) — every later resync or config migration (`--migrate-config`, `--sync`)
+runs `bootstrap.py` from *there*, never from a path inside your own repo, which
+never receives a copy. Deleting the kit folder after init is a legitimate
+choice, but it **forfeits resync and migration** by design, the same way
+deleting any other build tool would; nothing in your scaffolded repo re-vendors
+it for you. A second installer copy inside the scaffold was considered and
+declined (OI-59 option (b)) — two installers drift, which is the class of bug
+this invariant exists to prevent.
+
 On a non-Python repo, declare it: `--stack node|go|rust|powershell` skips the
 dead `pytest.ini` and appends the §2 rewiring checklist to `docs/status.md` as
 Open-items bullets, so the remaining hand-edits are visible work items.

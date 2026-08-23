@@ -104,8 +104,8 @@ process_declares() {
 # disagree about whether the privacy gate is on.
 if process_declares "$PROCESS_TOML" privacy_check && [ -f "$PRIVACY_FILE" ]; then
   echo "pre-push: docs/process.toml AND the legacy docs/privacy-check both" >&2
-  echo "  declare the privacy policy. REFUSING — run:" >&2
-  echo "    python scripts/bootstrap.py --migrate-config --dest ." >&2
+  echo "  declare the privacy policy. REFUSING — from your kept kit checkout, run:" >&2
+  echo "    python project-trajectory/scripts/bootstrap.py --migrate-config --dest ." >&2
   exit 1
 fi
 

@@ -56,7 +56,8 @@
 #   [checks] header for the expiry.)
 #
 # MIGRATION: a repo that still carries the legacy one-word files is converted
-# automatically by `python scripts/bootstrap.py --migrate-config --dest .`
+# automatically by, from your kept kit checkout,
+# `python project-trajectory/scripts/bootstrap.py --migrate-config --dest .`
 # (bootstrap and the downstream re-sync run it for you). Running with BOTH
 # sources live is REFUSED, not silently resolved — a mixed config is exactly
 # the state where two readers disagree about the same policy.
@@ -104,8 +105,10 @@
 #   DevStg-Release    everything (the most conservative setting)
 #
 # IT WAS A 0-4 ORDINAL UNTIL WI-493 (OI-21 shape (ii)). A repo that still
-# carries the number is READ, TRANSLATED AND WARNED — not refused — and
-# `python scripts/bootstrap.py --migrate-config --dest .` rewrites it. The old
+# carries the number is READ, TRANSLATED AND WARNED — not refused — and,
+# from your kept kit checkout,
+# `python project-trajectory/scripts/bootstrap.py --migrate-config --dest .`
+# rewrites it. The old
 # notches map 0 -> DevStg-Below, 1 -> DevStg-Boundary, 2 -> DevStg-Arch,
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.

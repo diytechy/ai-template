@@ -810,10 +810,14 @@ load-bearing: one `key = value` per line under a bare `[section]` header, no dot
 keys, no inline tables, no multi-line strings — checked, not merely conventional.
 
 To adopt: re-sync the three hooks + the scripts, take `process.toml.template` →
-`docs/process.toml`, then run
-**`python scripts/bootstrap.py --migrate-config --dest .`**. It folds every legacy
+`docs/process.toml`, then, **from your kept kit checkout** (not your own repo —
+`bootstrap.py` is kit-side and is never scaffolded into an adopting repo, unlike
+every other `scripts/…` command in this pack), run
+**`python project-trajectory/scripts/bootstrap.py --migrate-config --dest .`**.
+It folds every legacy
 file it finds into the matching key, **deletes that file**, and is idempotent — and
-a full `bootstrap.py --dest .` scaffold pass runs it for you. Two dials change
+a full `bootstrap.py --dest .` scaffold pass (also run from the kit checkout)
+runs it for you. Two dials change
 *type*, not meaning: the reviewer count becomes an integer (`review_rounds = 1`)
 and the toggles become booleans (`privacy_check = false`, `secrets_scan = true` —
 the legacy `off` word reads as `false`). **Running with both homes live is REFUSED,
@@ -1097,7 +1101,8 @@ convert at your own pace.
    new row names the **rung range** it certifies.
 6. **`--sync` any materialized per-agent skills** — `gate-advance` is a full
    rewrite onto the ladder, and `registry-hygiene` / `session-protocol` took
-   passes. `python scripts/bootstrap.py --dest . --sync`.
+   passes. From your kept kit checkout:
+   `python project-trajectory/scripts/bootstrap.py --dest . --sync`.
 
 **Then run `python scripts/check_vocab.py --root .`** and work the list. It is
 **warn-first** at the requirements bar and promotes to ERROR from `DevStg-Tests`
@@ -3427,6 +3432,28 @@ one line in `docs/archive/README.md` and enforced no further, by ruling.
 3. **No new check to wire.** OI-56 declined the enforcement half — nothing in
    `check.py`/`check_docs.py` gates the banner's presence, so there is no gate
    to add to your CI.
+
+---
+
+### The kit-path invariant: every `bootstrap.py` invocation in a shipped surface must be kit-relative (OI-59 ruled (a)+(c)) [since a296b4ff]
+
+*(Anchored at the preceding commit; the change lands in the commit that
+follows it.)* **What changed.** `bootstrap.py` stays out of its own `MAPPING` (unchanged —
+the bundle IS the kit folder), but every place the kit tells a reader to *run*
+it now spells the kit-relative path, `project-trajectory/scripts/bootstrap.py`,
+rather than a bare `scripts/bootstrap.py` that resolves, from inside an
+adopter's own repo, to a file that repo was never given. `tests/test_kit_path_invariant.py`
+(kit-side, not scaffolded) pins this by sweeping every `bootstrap.py` `MAPPING`
+source plus `RESYNC_PACK.md` for a bare invocation.
+
+**What you must do.** Overwrite the corrected sources on re-sync as usual (the
+three hooks, `scripts/agent_common.py`, `process.toml.template`) — no action
+beyond the normal file-class rules in §2. If you kept a local edit to one of
+their remediation messages, re-apply it over the corrected wording rather than
+the bare form: your own copy of `docs/process.toml` (regenerated from
+`process.toml.template`, a hand-edited-but-kit-owned file per §2.2) carries the
+same bare-path text if it predates this re-sync and is worth fixing the same
+way in the same commit.
 
 ---
 
