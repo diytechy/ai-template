@@ -259,3 +259,98 @@ def test_pause_projection_is_deterministic(tmp_path):
     _init(tmp_path)
     _pause(tmp_path, 'reason = "draining"\nsince = "2026-07-29"\n')
     assert _block(tmp_path) == _block(tmp_path)
+
+
+# --- the read model and its siting (WI-483 slice 3) -------------------------
+#
+# Everything above asserts on `pending_block` through the `gen_trajectory`
+# facade, deliberately unchanged by the extraction: that is the
+# characterization, and it still passes byte-for-byte. What follows asserts the
+# two things the extraction ADDED — a typed model with a discriminating field,
+# and a home below every reader — so neither can quietly regress to the private
+# names in a render facade that the 2026-08-19 review found (H-02, M-02).
+
+
+def test_the_typed_model_kinds_every_pending_item(tmp_path):
+    # `kind` is a FIELD, so a caller filtering by source never parses prose.
+    pending = load_script("pending")
+    _init(
+        tmp_path,
+        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
+    )
+    _pause(tmp_path, 'reason = "draining"\n')
+    items = pending.pending_items(tmp_path)
+    assert [i.kind for i in items] == [pending.BLOCKED, pending.PAUSE]
+    assert all(i.line for i in items)
+
+
+def test_owner_cards_is_pending_items_minus_the_pause(tmp_path):
+    # The dispatcher's drained-queue arm: a paused station has its own earlier
+    # exit, so the pause must never inflate the approvals-waiting count — and
+    # the exclusion is DECLARED in the read model, not re-derived at the banner.
+    pending = load_script("pending")
+    _init(
+        tmp_path,
+        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
+    )
+    _pause(tmp_path, 'reason = "draining"\n')
+    assert len(pending.pending_items(tmp_path)) == 2
+    cards = pending.owner_cards(tmp_path)
+    assert [c.kind for c in cards] == [pending.BLOCKED]
+
+
+def test_the_block_renders_exactly_the_model(tmp_path):
+    # One derivation, one rendering: every item's line appears in the block, so
+    # the banner's count and the owner surface can never disagree.
+    pending = load_script("pending")
+    _init(
+        tmp_path,
+        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
+    )
+    block = pending.pending_block(tmp_path)
+    for item in pending.pending_items(tmp_path):
+        assert item.line in block
+
+
+def test_the_dashboard_still_answers_to_the_former_private_names(tmp_path):
+    # The re-export shim, which is what keeps the extraction free for callers:
+    # the facade's `_blocked_pending` / `_spine_pending` / `_pause_pending` and
+    # `PAUSE_MALFORMED` still resolve, and to the SAME objects.
+    gt = load_script("gen_trajectory")
+    pending = load_script("pending")
+    # `load_script` loads a FRESH module object per call, so identity would
+    # compare two copies; the claim is that the facade name resolves to the
+    # read model's function, which is what the module+qualname pair says.
+    for facade_name, model_name in (
+        ("_blocked_pending", "blocked_pending"),
+        ("_spine_pending", "spine_pending"),
+        ("_pause_pending", "pause_pending"),
+        ("pending_block", "pending_block"),
+    ):
+        fn = getattr(gt, facade_name)
+        assert (fn.__module__, fn.__qualname__) == ("pending", model_name)
+    assert gt.PAUSE_MALFORMED == pending.PAUSE_MALFORMED
+
+
+def test_the_dispatcher_reads_the_model_not_the_render_facade(tmp_path):
+    # THE EDGE, asserted at the behaviour rather than only in the import
+    # census: the banner's card count is the read model's `owner_cards`, so a
+    # future rewrite cannot go back to two private names in a render module
+    # without this failing.
+    drv = load_script("dispatch")
+    pending = load_script("pending")
+    _init(
+        tmp_path,
+        [("queued", "WI-900", "blocked-one", 'blockref = "docs/x.md"\n', "")],
+    )
+    _pause(tmp_path, 'reason = "draining"\n')
+    assert drv._pending_cards(tmp_path) == pending.owner_cards(tmp_path)
+
+
+def test_the_owner_surface_reads_the_model_not_the_render_facade(tmp_path):
+    # The other documented bad edge: gen_open_items reused `pending_block` by
+    # importing the ~1,000-line facade. Same text, one module down.
+    goi = load_script("gen_open_items")
+    pending = load_script("pending")
+    _init(tmp_path)
+    assert goi.pending_block_text(tmp_path) == pending.pending_block(tmp_path)

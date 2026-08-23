@@ -1365,8 +1365,8 @@ phase = 4
 [design.LLR-139]
 sr_refs = ["SR-168"]
 title = "Pause surfaced in the pending block"
-module = "project-trajectory/scripts/traj_status.py"
-code_symbol = "_pause_pending/pending_block"
+module = "project-trajectory/scripts/pending.py"
+code_symbol = "pause_pending/pending_block"
 detail = "Renders zero-or-one 'Paused since <since> - <reason>' bullet in the committed-tree-pure pending region from docs/work/pause - declared since verbatim, no clock, the since clause omitted when empty, fail-closed text on malformation pinned equal to the reader's placeholder. The bullet clears when the pause file is deleted; the pending surface is part of the adopted toolkit's generated project-state view (REL-002 output), not a system output."
 rationale = "An open pause is a visible accruing cost, never a forgotten one."
 test_refs = "(see TC-136)"
@@ -1974,6 +1974,18 @@ test_refs = "TC-184"
 status = "Approved"
 component = "CMP-008"
 phase = 5
+[design.LLR-198]
+sr_refs = ["SR-168"]
+title = "The pending-owner-action read model, sited below every module that reads it"
+module = "project-trajectory/scripts/pending.py;project-trajectory/scripts/traj_status.py"
+code_symbol = "PendingItem/pending_items/owner_cards/blocked_pending/spine_pending/pending_block"
+detail = """The state view's what-does-the-owner-still-owe derivation, in one module that renders no page and decides nothing about lanes. Three sources, all committed-tree-pure and clock-free: blocked_pending names every queued work item carrying a blockref together with the attestation page it waits on; spine_pending names every Drafted SR (a first approval is owed) and every SR whose text has drifted from its copy under docs/archive/last_approved (a re-attest is owed), one pointer line each naming the on-demand brief that carries the depth; pause_pending names the tracked docs/work/pause, fail-closed on a file it cannot read. pending_items joins the three into the TYPED model - one PendingItem per action carrying its kind and its rendered bullet - and the two shapes above it are declared once here rather than re-assembled per caller: pending_block is the model rendered, the byte-compared content of the generated owner surface's pending region, and owner_cards is the model minus the pause, which is what a drained-queue banner counts. THE SITING IS THE ROW: three modules read this derivation - the dashboard that renders the status snapshot, the generated owner surface, and the dispatcher's exit banner - and only the first is inside the render family, so a derivation defined there forced the other two to import the gen_trajectory facade for a state query and the dispatcher to reach in for two private names. traj_status.py re-exports all four under their former names, so no caller moved to gain the layer and the generated surfaces are byte-identical - which is why the split sibling is named in this row's Module cell beside the read model: the shim is part of what this row delivers, not a leftover."""
+rationale = """A derivation every layer reads must sit below all of them, and this one did not: it lived inside a render module of the traj_* family, reachable only through a re-export facade of about a thousand lines. The repository review recorded the consequence twice - a large facade imported for a state query, and private names used as a cross-module API - and the second was DOCUMENTED as an interface row rather than removed, which is the failure mode this kit's own doctrine names: a seam registry records crossings, it does not license them. Extracting the derivation cut both edges at their cause and left the facade with no importers at all, which is now asserted rather than described. The typed item is what makes the banner's exclusion of the pause a declared filter over a kind field instead of a second opinion about what is pending: the ruled amendment requires that the banner and the owner surface can never disagree, and one read model with one filter is that requirement held by construction rather than by three callers agreeing to be careful. A generic shared module was refused for the same reason it is refused everywhere here, and the package of stdlib-only shared helpers by a hard rule rather than by taste - every module there must stay import-clean of the rest of the scripts directory so the scaffolder can import it, while this module reads the work registry through the validator's loaders and the spine through its sibling parser."""
+test_refs = "TC-194"
+status = "Drafted"
+component = "CMP-009"
+phase = 5
+
 [design.LLR-190]
 sr_refs = ["SR-151"]
 title = "The moment-to-tier declaration as the shipped workflow's one home, pinned both ways"

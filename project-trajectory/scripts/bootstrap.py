@@ -2141,6 +2141,14 @@ MAPPING = [
     # adjudicate_brief.py all import it, and the first two unguarded, so a
     # scaffold without it cannot run the walk-away loop.
     ("scripts/census.py", "scripts/census.py"),
+    # The pending-owner-action read model (WI-483 slice 3): the other half of
+    # the same question the census asks — what the OWNER owes, rather than what
+    # the registries lack. It used to live in traj_status.py, which made the
+    # dispatcher and gen_open_items.py import the gen_trajectory render facade
+    # for a state query. traj_status.py, gen_open_items.py and dispatch.py all
+    # import it, the first two unguarded, so a scaffold without it cannot render
+    # the owner surface.
+    ("scripts/pending.py", "scripts/pending.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure

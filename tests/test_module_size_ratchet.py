@@ -1409,7 +1409,16 @@ BASELINE = {
     # 2859 was already the effective baseline, and the composed-sum accounting
     # below already threads the WI-439-review-fix (+15) and WI-446 (+20) deltas
     # through the 2026-08-18 merge math, so no history is lost by the merge.
-    "bootstrap.py": 3116,  # +7 (3109 -> 3116) 2026-08-23, WI-448 slice 3:
+    "bootstrap.py": 3124,  # +8 (3116 -> 3124) 2026-08-23, WI-483 slice 3:
+    # one MAPPING row for `scripts/pending.py` plus the seven comment lines
+    # saying why it ships (traj_status.py, gen_open_items.py and dispatch.py
+    # all import it, the first two unguarded, so a scaffold without it cannot
+    # render the owner surface at all — the `schedule.py` omission class).
+    # Declaration only; no code moved into this file or out of it, and the
+    # axis complaint recorded below applies unchanged: this is a manifest
+    # growing, which is what a manifest does. Reviewed bump, reason in
+    # docs/log.d/2026-08-23-wi483-bad-edges.md.
+    # Earlier: +7 (3109 -> 3116) 2026-08-23, WI-448 slice 3:
     # one MAPPING row for `scripts/kitlib/spine.py` plus the six comment lines
     # saying why it ships (trace.py, trace_text.py and spine_rules.py are all
     # in this list and all resolve the row vocabulary through it now, so the

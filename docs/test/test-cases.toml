@@ -1858,6 +1858,17 @@ automated = "Yes"
 evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
 status = "Approved"
 phase = 5
+[test.TC-194]
+verifies = ["SR-168", "LLR-198", "IF-138"]
+level = "Integration"
+method = """Two claims, because the row makes two. THE BEHAVIOUR, unchanged by the move and still driven through the facade that used to own it: a blocked row projects its pointer, a Drafted or drifted SR projects the brief that carries the depth, a tracked pause projects one bullet and a malformed one still projects fail-closed, and the whole block is deterministic over two reads. THE MODEL AND THE SITING: assert every item carries a kind field, that owner_cards is exactly pending_items minus the pause, that every item's line appears in the rendered block, that the dispatcher's card read and the generated owner surface's block text each equal the read model's own answer, and that the facade still resolves all four former names to the read model's functions; then build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert that nothing imports the dashboard facade at all. IF-138, the loader seam this module carries, rides the blocked-row arms: they drive the derivation end to end through the validator's work-registry loaders over real temp repositories, so a loader that stopped answering would red here rather than silently projecting an empty owner queue."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-198 (parent SR-168)"
+automated = "Yes"
+evidence = """tests/test_gen_trajectory_pending.py::test_the_typed_model_kinds_every_pending_item; tests/test_gen_trajectory_pending.py::test_owner_cards_is_pending_items_minus_the_pause; tests/test_gen_trajectory_pending.py::test_the_block_renders_exactly_the_model; tests/test_gen_trajectory_pending.py::test_the_dashboard_still_answers_to_the_former_private_names; tests/test_gen_trajectory_pending.py::test_the_dispatcher_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_the_owner_surface_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_pause_projection_is_deterministic; tests/test_gen_trajectory_pending.py::test_malformed_pause_still_projects_fail_closed; tests/test_import_layers.py::test_a_facade_is_an_entry_point_and_nothing_imports_it; tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service"""
+status = "Drafted"
+phase = 5
+
 [test.TC-185]
 verifies = ["SR-151", "LLR-190"]
 level = "Integration"

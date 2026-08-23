@@ -239,11 +239,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # (`fragment_scope_findings`) and the measured all-clear counts above it, and
     # 1158 -> 1150 when WI-448's second slice deleted this module's local
     # `_utf8_console` copy in favour of the one shipped home (`kitlib.config`) —
-    # a pure subtraction above the site, which is the direction this pin likes.
+    # a pure subtraction above the site, which is the direction this pin likes,
+    # and 1150 -> 1156 when WI-483 slice 3 re-pointed `pending_block_text` off
+    # the `gen_trajectory` facade onto the `pending` read model and its
+    # docstring recorded why (six comment lines above the site; no executable
+    # line moved into or out of the region between).
     # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 1150)], sites
+    assert sites == [("gen_open_items.py", 1156)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

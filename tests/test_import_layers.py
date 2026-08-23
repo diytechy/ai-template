@@ -352,6 +352,45 @@ def test_no_new_edge_inside_an_existing_cycle():
     )
 
 
+# --- the facade rule (WI-483 slice 3) ---------------------------------------
+#
+# `gen_trajectory` is a CLI ENTRY POINT that re-exports ~60 names from the
+# `traj_*` family. Until this slice it was also the way two modules outside the
+# dashboard reached a state query: `dispatch._pending_cards` imported it for the
+# PRIVATE `_blocked_pending`/`_spine_pending` (documented as IF-088 rather than
+# removed), and `gen_open_items.pending_block_text` imported it for
+# `pending_block`. Both are the 2026-08-19 review's bad edges — H-02's "imports
+# the large facade for a state query" and M-02's "private names as cross-module
+# APIs" — and both are gone: the derivation is `pending.py`, below all three of
+# its readers.
+#
+# Zero importers is the strongest form of the rule and it is the state today, so
+# it is asserted as EQUALITY rather than as a ceiling, exactly like `CYCLES`. If
+# a module ever genuinely needs something the facade owns, the answer is the
+# same one that produced this test: the value belongs in the module that derives
+# it, not in the re-export layer above it.
+FACADES = frozenset({"gen_trajectory"})
+
+
+def test_a_facade_is_an_entry_point_and_nothing_imports_it():
+    """A re-export layer is for a CLI, never for reaching a sibling's state."""
+    graph = import_graph()
+    offenders = sorted(
+        "{} -> {} [{}]".format(module, target, kind)
+        for module, edges in graph.items()
+        for target, kind in edges.items()
+        if target in FACADES
+    )
+    assert not offenders, (
+        "a module imports the dashboard facade: {}\n"
+        "`gen_trajectory` re-exports the traj_* family for its own CLI; an "
+        "importer is reaching THROUGH a ~1,000-line render layer for something "
+        "a sibling derives. Import that sibling — or, if the derivation has "
+        "readers outside the render family, move it below them the way "
+        "`pending.py` and `census.py` were.".format(offenders)
+    )
+
+
 def test_a_view_never_imports_a_lifecycle_service():
     """The layer rule WI-483 slice 1 established, asserted rather than written.
 

@@ -32,13 +32,13 @@ WHAT IT RENDERS, in the order an owner needs it:
      entirely in a child. A diff says what moved; an attestation asks whether the
      evidence still verifies what the row now SAYS, and the second question needs
      the cells the first one omits (owner, 2026-07-27).
-  3. PENDING OWNER ACTIONS — the pointer projection `gen_trajectory` already
+  3. PENDING OWNER ACTIONS — the pointer projection `pending.py` already
      derives (blocked rows, the spine pointers, the tracked pause), reused
      verbatim rather than recomputed.
 
 ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reattest_model`, and the pending projection lives in
-`gen_trajectory.pending_block`. This module imports both and RENDERS. It owns no
+`pending.pending_block`. This module imports both and RENDERS. It owns no
 second opinion about what is pending or what changed — if this view and the
 `--approve` brief ever disagree, the brief is authoritative and this is the bug.
 
@@ -69,7 +69,7 @@ from kitlib.config import utf8_console as _utf8_console
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import gen_trajectory as gt  # noqa: E402  (path set above)
+import pending  # noqa: E402  (path set above)
 import spine_carrier  # noqa: E402
 import baseline_snapshot  # noqa: E402
 import trace as tr  # noqa: E402
@@ -785,9 +785,15 @@ def render(root):
 
 
 def pending_block_text(root):
-    """The pending-projection markdown item text, reused from gen_trajectory
-    rather than recomputed — one home for "what is pending"."""
-    return gt.pending_block(root)
+    """The pending-projection markdown item text, reused from the `pending.py`
+    read model rather than recomputed — one home for "what is pending".
+
+    THE IMPORT SHRANK AT WI-483 SLICE 3 without the seam moving: this used to
+    reach the same derivation through `gen_trajectory`, the ~1,000-line render
+    facade, which is the 2026-08-19 review's "imports the large facade for a
+    state query" (H-02). A view asking another view's family for state was the
+    edge; the derivation now sits below both."""
+    return pending.pending_block(root)
 
 
 # --- The deferral arms (OI-41, ruled 2026-08-20) ------------------------------

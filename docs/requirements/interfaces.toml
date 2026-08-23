@@ -1090,7 +1090,7 @@ notes = """sink — wI-280 slice 11: the import moved with the views; the seam i
 direction = "Consumes"
 this_project = "scripts/traj_status"
 counterpart = "scripts/check_trajectory"
-contract = """IF-056's derivation-loader seam, as HELD by the split sibling that now carries the import: traj_status.py derives the status snapshot + the pending-owner-actions projection through the validator's loaders (read_rows/read_registry_rows/load_wis/load_ifs). Contract: IF-056's."""
+contract = """IF-056's derivation-loader seam, as HELD by the split sibling that now carries the import: traj_status.py derives the status snapshot through the validator's loaders (read_rows/read_registry_rows/load_wis/load_ifs). Contract: IF-056's. The pending-owner-actions projection is no longer this module's and took its own loader read with it; pending.py holds that endpoint as IF-138, the same IF-056 shape."""
 signal = "variable"
 signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
 req_refs = ["SR-070", "SR-159"]
@@ -1139,15 +1139,15 @@ status = "Drafted"
 [interface.IF-088]
 direction = "Consumes"
 this_project = "scripts/dispatch"
-counterpart = "scripts/gen_trajectory"
-contract = """the dispatcher's exit-banner pending read (docs/concurrency-v2.md §A4, the 2026-08-01 amendment): _pending_cards imports the gen_trajectory FACADE (the gen_open_items shape) and reuses _blocked_pending + _spine_pending — the SAME pending_block(root) derivation the dashboard and open-items.html render — so the queue-drained / approvals-waiting banners can never disagree with the owner surfaces about what is blocking. Deferred import, paid only at an exit banner; the tracked-pause card is excluded (the pause has its own earlier exit) and the coordinator's git-trailer reads stay for in-flight lanes only."""
+counterpart = "scripts/pending"
+contract = """the dispatcher's exit-banner pending read (docs/concurrency-v2.md §A4, the 2026-08-01 amendment): _pending_cards calls pending.owner_cards(root) - the pending_items(root) read model the dashboard and open-items.html also render, minus the tracked-pause kind, whose pause has its own earlier exit - so the queue-drained / approvals-waiting banners can never disagree with the owner surfaces about what is blocking. Deferred import, paid only at an exit banner."""
 signal = "variable"
 req_refs = ["SR-148"]
-owner = "LLR-035"
+owner = "LLR-198"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """sink — the banner renders what the generator family derives; nearest seam IF-084 is the same derivation held by traj_status for the RENDER side, this is the dispatcher's read of it"""
+notes = """sink — the banner renders what the read model derives, and the counterpart is the read model rather than the dashboard facade that used to re-export it: a scheduling composer reaching through a render family for two private functions is a crossing a seam registry can only record, never make sound, so the derivation sits below all three of its readers instead. The crossing itself, the CMP-008 to CMP-009 pair and the never-disagree contract are unchanged by that siting"""
 
 [interface.IF-089]
 direction = "Consumes"
@@ -1606,7 +1606,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 
 [interface.IF-125]
 direction = "Consumes"
-this_project = "scripts/traj_status"
+this_project = "scripts/pending"
 counterpart = "scripts/baseline_snapshot"
 contract = """reads the approval baseline through IF-123 so the generated status and dashboard surface reports pending amendments against what was blessed, not against HEAD. Consumes the READ half only - load_all, rows_for, is_drifted and the SNAPSHOT_DIR constant - and never copy_live. Vacuous by absence: with no snapshot the surface reports nothing approved, never everything drifted."""
 signal = "variable"
@@ -1616,7 +1616,7 @@ owner = "LLR-173"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
-notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). The endpoint is the pending read model rather than the dashboard sibling, because the drift arm that performs this read lives there — an endpoint names the module that makes the call, not the one that renders its answer. Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
 
 [interface.IF-126]
 direction = "Consumes"
@@ -1771,3 +1771,17 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """A program-close connectivity mint, same posture as IF-080: handback.py's own docstring says declaring this seam from the sibling would paper over the drift, since it belongs to the module that runs it."""
+
+[interface.IF-138]
+direction = "Consumes"
+this_project = "scripts/pending"
+counterpart = "scripts/check_trajectory"
+contract = """IF-056's derivation-loader seam, as HELD by the read model that now carries the import: pending.py derives the blocked-work-item half of the pending-owner-action projection through the validator's loaders (read_registry_rows/load_wis + the WI registry path constant), so what the owner surfaces call blocked is the same derivation validation uses and the two can never disagree. Contract: IF-056's."""
+signal = "variable"
+signal_note = """typed at mint: the Contract names a typed outcome plus the unbounded rendered pointer line built from it, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-168"]
+owner = "LLR-049"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """sink - a read model: it provides nothing across a component boundary, its three readers are all inside CMP-008/CMP-009 and the one that crosses is declared as IF-088. A separate row rather than a clause on IF-084 because both modules now perform the loader read for their own derivation, and a seam is held by the module that carries the import - the IF-082/IF-083/IF-084 split-sibling idiom, applied again"""

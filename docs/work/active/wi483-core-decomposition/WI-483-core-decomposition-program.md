@@ -184,11 +184,10 @@ the How-SW containment count.
    that CLI. Nothing polices the direction today except this file's
    view-never-imports-a-lifecycle-service rule, which `integrate` is not subject
    to.
-2. **`IF-088` and `gen_open_items`** — `dispatch._pending_cards` still calls the
-   private presentation functions `_blocked_pending`/`_spine_pending`, and
-   `gen_open_items` still imports the large facade for a state query. Both are
-   documented bad edges rather than broken ones; neither is inside the SCC, so
-   neither was on this slice's critical path.
+2. **`IF-088` and `gen_open_items`** — ~~`dispatch._pending_cards` still calls
+   the private presentation functions `_blocked_pending`/`_spine_pending`, and
+   `gen_open_items` still imports the large facade for a state query~~ **DONE at
+   slice 3, 2026-08-23** (see the slice block below).
 3. **The engine splits (program shape item 5)** — `trace.analyze` (514 lines,
    complexity 50), `check.steps` (494), `agent_loop.main` (402/27), and the
    `LoopContext` / `Registries` / `Findings` attribute bags. Untouched. Note the
@@ -209,3 +208,74 @@ by slice 1's topology decision but not widened by it, and it has since been rule
 and executed; slice 2 needed no ruling because it was built to need none — the
 two new spine rows are authored, not amended, so no `Approved` approved cell was
 rewritten and no approval act had to be cited.
+
+### SLICE 3 LANDED 2026-08-23 — the two documented bad edges, and a facade with no importers
+
+**The per-edge census, read before either cut was designed.** Both of item 2's
+edges pointed at the SAME target — `gen_trajectory`, a CLI entry point that
+re-exports the `traj_*` family — and both were reaching THROUGH it at code
+living in `traj_status.py`:
+
+- **`dispatch -> gen_trajectory`** (deferred, one call site). What crossed was
+  two PRIVATE functions, `_blocked_pending` and `_spine_pending`, re-assembled
+  at the dispatcher into "the cards, minus the pause" — and both consumers of
+  that then took `len()` of it. The composer wanted a COUNT and imported a
+  render family to get one. `IF-088`'s Contract cell spelled the arrangement
+  out, which is a seam registry RECORDING a crossing rather than licensing it.
+- **`gen_open_items -> gen_trajectory`** (module-level, one call site).
+  `pending_block(root)`, the whole rendered pending region, reused verbatim so
+  the owner surface grows no second opinion. The reuse was right and is
+  unchanged; the route was wrong.
+
+Those two were the facade's ONLY importers.
+
+**The cut.** A new sibling `project-trajectory/scripts/pending.py` — the sibling
+of `census.py`, answering the other half of the same question (*what does the
+OWNER hold?* rather than *what do the registries lack?*). The three sources moved
+verbatim out of `traj_status.py`; above them the slice added `pending_items`, the
+TYPED read model (one `PendingItem(kind, line)` per action, `kind` a FIELD so the
+one discriminating caller parses no prose), and `owner_cards`, that model minus
+the pause — the WI-381 amendment's never-disagree requirement held by
+construction rather than by three callers agreeing to be careful. `traj_status`
+re-exports all four former names, `gen_open_items` and `dispatch` call the model
+directly, and both generated surfaces are byte-identical (`--check` clean).
+`gen_trajectory` now has ZERO importers, asserted as an equality ratchet
+(`test_a_facade_is_an_entry_point_and_nothing_imports_it`) for the same reason
+`CYCLES` is: zero is the state today and equality is the strongest form of it.
+Census: 72 -> 73 modules, 204 -> 207 edges (one new module brings its own three
+dependency edges; the count this slice moves is the facade's importers, 2 -> 0),
+deferred edges unmoved at 19, `CYCLES` and `MAX_INTRA_CYCLE_EDGES` already at
+their floor and untouched.
+
+**TOPOLOGY DECISION (recorded here because the row is `safety_class = spine`).**
+`IF-088` is RE-POINTED, not retired: the crossing is real and still happens, so
+deleting the row would have removed a true seam along with the bad route. Its
+`counterpart` moves to `scripts/pending`, its `owner` follows the counterpart to
+the new `LLR-198` (the `IF-089` shape), and the CMP-008 to CMP-009 pair is
+unchanged and still policed. `IF-125` follows the drift arm down to `pending`;
+`IF-084` drops the clause for the projection that left it and `IF-138` is minted
+for the loader read that went with it. `LLR-139`'s traced `Module`/`CodeSymbol`
+cells follow their two functions. `LLR-198`'s Module cell names `pending.py` AND
+`traj_status.py` — the shim is part of the deliverable, and `LLR-139` had been
+the ONLY row whose Module cell tagged `traj_status`, so moving that cell alone
+left the module uncontained.
+
+**DEVIATION FROM SLICE 2's PRECEDENT, on cause rather than taste.** Slice 2
+authored its new rows `Approved` and let `intake.py snapshot` record the approval
+in the same act. That refresh is REFUSED in this tree, and not by anything this
+slice did: `baseline_snapshot.refresh_refusal` blocks on `LLR-147`'s `Detail`,
+already drifted from its snapshot copy at HEAD (verified by stashing this slice's
+whole diff and re-running the refusal). Blessing another row's drift is not a
+session's to do. So `LLR-198`/`TC-194` are `Drafted`: no approval act is claimed,
+no approved cell is rewritten anywhere in the diff, and `integrity=0` is
+unchanged from HEAD rather than gaining the two approval-record findings
+`Approved` rows would have added.
+
+**STILL OWED BY THIS ROW after slice 3: items 1, 3 and 4 above, unchanged.**
+Item 2 is struck. Item 1 (the `integrate -> intake` layering) is next and needs
+its own decision about what `integrate.py merge` does on its own; items 3 and 4
+follow it.
+
+**Deferred to the owner: nothing new.** The `LLR-147` snapshot block is a finding
+this slice reported to `docs/status.md`, not a decision withheld: it predates the
+slice and belongs to whoever amended that row.

@@ -73,9 +73,10 @@ Contracts: IF-015, IF-088, IF-136, IF-137 — the interface seams this
 module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml). IF-015 is the plain-launch drive mode,
 agent_loop.py's seam (this module is its implementation, invoked only via
-agent_loop or in-process). IF-088 is the exit-banner pending read —
-gen_trajectory's pending_block internals, the one derivation the owner
-surfaces share. IF-089, the empty-frontier gap census's read of trace's
+agent_loop or in-process). IF-088 is the exit-banner pending read — the
+`pending.py` read model, the one derivation the owner surfaces share; its
+counterpart moved off the gen_trajectory facade with the derivation at WI-483
+slice 3. IF-089, the empty-frontier gap census's read of trace's
 registry analysis, LEFT with the census itself: the derivation now lives in
 the sibling census.py, below the three modules that read it, and this module
 calls it at ladder rung 1 like any other caller. IF-136 and IF-137 are the
@@ -758,30 +759,32 @@ def _budget_exit(args, state):
 
 
 def _pending_cards(root):
-    """The pending owner cards, from the SAME pending_block(root) read the
+    """The pending owner cards, from the SAME `pending_block(root)` read the
     dashboard and open-items.html share (the WI-381 amendment, ruled
-    2026-08-01: gen_open_items reuses gen_trajectory.pending_block verbatim,
-    and the dispatcher's exit banner must derive from that one read so
+    2026-08-01: gen_open_items renders `pending.pending_block` verbatim, and
+    the dispatcher's exit banner must derive from that one read so
     agent-resume and the owner surfaces can never disagree about what is
     blocking). Blocked rows with a BlockRef plus Drafted/drifted spine rows;
     the tracked-pause card is excluded because a pause has its own earlier
     exit, and the coordinator's git-trailer reads stay for in-flight lanes
     only.
 
-    IMPORT JUDGMENT, recorded (the spec asked): the deferred import below is
-    the FACADE, `gen_trajectory` — the same import shape gen_open_items uses —
-    rather than its traj_status internals or an agent_common F5 pin. No
-    forbidden seam is crossed: the F5 independently-copyable rule pins the
-    three registry LOADERS (schedule/check_trajectory/agent_common), not
-    sibling imports generally, and bootstrap ships gen_trajectory + the traj_*
-    family together as one set (a scaffold missing one ImportErrors on the
-    first render), so the dispatcher can no more miss it than the dashboard
-    can. Deferred so the tick loop pays the render family's import only at
-    an exit banner."""
-    import gen_trajectory as gt
+    THE IMPORT MOVED AT WI-483 SLICE 3, and the move is the point. It used to
+    be the FACADE — `import gen_trajectory`, reaching in for the private
+    `_blocked_pending` and `_spine_pending` — which the 2026-08-19 review
+    recorded twice over: a ~1,000-line render family imported for a state
+    query, through private names used as a cross-module API (H-02, M-02). The
+    old judgment note argued the facade crossed no *forbidden* seam, which was
+    true and beside the point: a scheduling composer does not depend on a
+    dashboard to learn what the owner owes. The derivation now sits in
+    `pending.py`, below all three of its readers, and this asks it in its own
+    vocabulary — `owner_cards`, which is `pending_items` minus the pause,
+    declared once there rather than re-assembled here from two of the three
+    sources. Still deferred, so the tick loop pays the read only at an exit
+    banner."""
+    import pending
 
-    blocked_lines, _ids = gt._blocked_pending(root)
-    return blocked_lines + gt._spine_pending(root)
+    return pending.owner_cards(root)
 
 
 def _surface_banner(root, surfaced):
