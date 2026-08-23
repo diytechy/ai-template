@@ -363,3 +363,58 @@ its split is a question about the carrier for a declaration and may reasonably
 end in "leave it".
 
 **Deferred to the owner: nothing new.**
+
+### SLICE 5 LANDED 2026-08-23 — the second engine (`agent_loop.main`), and the loop's bag typed
+
+**Re-measured before designing, and nothing had drifted.** `agent_loop.main` 402
+lines / C901 27, `session_bookkeeping` 325 / 31, `run_iteration` 326 / 20,
+`agent_loop.py` 3,240 lines — slice 4's figures exactly, so worst-offender-first
+picked `main` and its bag with no argument.
+
+**The boundary, in one sentence.** Everything that RESOLVES what this run is —
+the effective root, the five phase maps, the enable-list, the declared dials, the
+reviewer/knob integers — is a pure function returning a typed record; `main`
+keeps the EFFECTS (console, coordinator lock, subprocess, banner) and the mode
+decisions between them. Thirteen module-level functions came out (`_resolve_root`,
+`_parse_session_maps`, `resolve_routing_setup`, `resolve_session_setup`,
+`resolve_session_policies`, `possible_session_models`, `_clamped_review_rounds`,
+`_int_env`, `build_routing_state`, `_live_console`, `is_drive_launch`,
+`warn_on_inert_or_malformed_policies`, `announce_critique_budget`,
+`_dual_plan_entry`, `run_loop`); what is left is the sequence a reader needs in
+one place — parse, resolve, refuse-or-continue, lock, mode, context, run. `main`
+is **152 lines and OFF the complexity census** (its entry DELETED, 27 → under 10).
+Decomposition is OUTWARD and a test asserts `main` nests no def, so the recorded
+C901 trap cannot come back silently.
+
+**The bag, typed — and it was hiding a defaulted read.** `LoopContext` is now a
+FROZEN, TOTAL dataclass of 29 fields built at exactly one site, with `LoopRun`
+(`routing` / `state` / `warned_no_core`) as the explicit mutable half. Declaring
+it exposed what the attribute bag concealed: `session_hold` had NO reader
+(dropped), and `human_held`/`keep_nondependent` were read as
+`getattr(ctx, ..., <default>)` — a forgotten field would have silently become
+"human-held, don't keep going". Both reads are now direct and an AST test forbids
+`getattr(ctx, ...)` returning. Behaviour is byte-identical across 18 driven paths
+(DONE / BLOCKED / budget / stall / six preflight refusals / malformed dials /
+interactive / managed routing / `--help`), diffed against HEAD's script.
+
+**Ratchets: one entry DELETED, one declaration bump.** `main`'s complexity entry
+is gone; `agent_loop.py` re-stamped 3,240 → 3,455 (+215), a reviewed bump whose
+bulk is 54 bare field declarations plus the comments that moved out of `main` —
+the `bootstrap.py` shape the size ratchet's own header records as the owner's
+`OI-16` counterexample.
+
+**No new module, so no topology decision.** Nothing left `agent_loop.py`, so no
+MAPPING row, no `bootstrap.py` change, no RESYNC entry, no new spine row and no
+new seam — and no `Approved` cell was rewritten anywhere in the diff. The eight
+boundary tests went to `tests/test_agent_loop_policy.py`, already the declared
+home of "the ungated Slice D/E `main()` seams" (WI-277).
+
+**STILL OWED BY THIS ROW after slice 5: items 1, 3 (partly) and 4.** Item 3 is
+struck for `trace.analyze` and `agent_loop.main`. What remains of it:
+`session_bookkeeping` (325 / 31 — now the kit's most complex single function) and
+`run_iteration` (326 / 20), which this slice deliberately did NOT take because the
+main/bag split left them no better home: both are per-session consequence ladders
+whose branches are about routing state, not configuration. `check.steps` still
+needs a DECISION rather than a technique.
+
+**Deferred to the owner: nothing new.**

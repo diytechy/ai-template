@@ -138,6 +138,7 @@ import shutil
 import subprocess
 import sys
 import time
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Sibling: the spine's registry CARRIER — one home for the
@@ -1906,11 +1907,75 @@ def print_run_banner(
         )
 
 
+@dataclass
+class LoopRun:
+    """The loop's MUTABLE half: the state an iteration is allowed to change.
+    Declared separately from `LoopContext` (WI-483 slice 5) so "what a session
+    may write" is a three-field record rather than a convention.
+
+    - `state` is the lane run-state a worker reports through (always RUNNING
+      until its committed evidence says otherwise — see worker_endstate).
+    - `warned_no_core` is the once-per-run guardrails-core warning ledger,
+      appended to by route_session.
+    - `routing` is the S8 managed-routing / critique / stall cluster
+      (RoutingState), which mutates across iterations by design.
+    """
+
+    # (An unquoted annotation, deliberately: a STRING annotation sends
+    # dataclasses' KW_ONLY probe through sys.modules, which the test harness's
+    # load_script import does not populate.)
+    routing: RoutingState
+    state: str = "RUNNING"
+    warned_no_core: list = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class LoopContext:
-    """Everything one iteration reads, built once at loop start; the
-    per-iteration behavior lives in run_iteration (WI-080 Slice E). A plain
-    attribute bag — no logic — so a moved body reads ctx.<name> where it
-    used to read the loop-local."""
+    """Everything one iteration reads, resolved ONCE at loop start; the
+    per-iteration behavior lives in run_iteration (WI-080 Slice E).
+
+    FROZEN and TOTAL (WI-483 slice 5, program shape item 5 — "typed immutable
+    config + explicit mutable runtime state"). This was an empty class
+    populated as an attribute bag, which hid three things a declaration makes
+    plain: that nothing in the loop ever re-resolves a dial mid-run; that
+    `session_hold` was carried for no reader at all (dropped); and that
+    `human_held` / `keep_nondependent` were read through
+    `getattr(ctx, ..., <default>)`, so a field the constructor forgot would
+    have silently become "human-held, don't keep going" instead of failing.
+    A total record cannot be missing a field, so those two reads are now
+    direct. Everything a session may WRITE lives behind `.run`, the one
+    mutable field.
+    """
+
+    args: argparse.Namespace
+    root: Path
+    docs: Path
+    lane: Path
+    status_path: Path
+    worker: dict
+    managed: bool
+    registry: dict
+    enabled: list
+    template: str
+    model_map: dict
+    cmd_map: dict
+    prompt_templates: dict
+    tier_map: dict
+    prefer_map: dict
+    weight_map: dict
+    guardrails_policy: str
+    human_held: bool
+    keep_nondependent: bool
+    start_dirty: list
+    raw_dir: Path
+    iter_dir: Path
+    draw_iter_dirs: list
+    tag: str
+    use_live: bool
+    reviews_dir: Path
+    scoreboard: Path
+    rp_int: int
+    run: LoopRun
 
 
 def route_session(ctx, i, current_wi, session, resume_reconcile, now):
@@ -1934,9 +1999,9 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     tier_map = ctx.tier_map
     prefer_map = ctx.prefer_map
     guardrails_policy = ctx.guardrails_policy
-    warned_no_core = ctx.warned_no_core
+    warned_no_core = ctx.run.warned_no_core
     reviews_dir = ctx.reviews_dir
-    st = ctx.st
+    st = ctx.run.routing
     is_review = False
     is_critique = False
     verdict_path = None
@@ -2163,11 +2228,11 @@ def session_bookkeeping(
     worker = ctx.worker
     managed = ctx.managed
     registry = ctx.registry
-    human_held = getattr(ctx, "human_held", True)
-    keep_going = getattr(ctx, "keep_nondependent", False)
+    human_held = ctx.human_held
+    keep_going = ctx.keep_nondependent
     scoreboard = ctx.scoreboard
     rp_int = ctx.rp_int
-    st = ctx.st
+    st = ctx.run.routing
     phase = plan["phase"]
     is_review = plan["is_review"]
     is_critique = plan["is_critique"]
@@ -2498,7 +2563,7 @@ def run_iteration(ctx, i):
     tag = ctx.tag
     use_live = ctx.use_live
     rp_int = ctx.rp_int
-    st = ctx.st
+    st = ctx.run.routing
     # WI-148: a declared docs/blackout window pauses NEW sessions on UTC
     # weekdays. The in-flight session already wrapped normally (the pause
     # semantic), so here we simply wait the window out and then let this
@@ -2654,13 +2719,13 @@ def run_iteration(ctx, i):
         commits = "{}..{}".format(before or "(root)", after or "?")
     # A worker has no lane run-state (spec §10): its state is always RUNNING
     # until its committed evidence says otherwise (worker_endstate).
-    ctx.state = "RUNNING"
+    ctx.run.state = "RUNNING"
 
     # (outcome, errored) via the session-outcome ladder — full semantics
     # (including the "failed before it could work" error rule) live in
     # classify_outcome's docstring (single-source, WI-080 Slice D).
     outcome, errored = classify_outcome(
-        reset_hint, timed_out, ctx.state, before != after, data, code
+        reset_hint, timed_out, ctx.run.state, before != after, data, code
     )
 
     meta = {
@@ -2831,13 +2896,18 @@ def _drive_entry(root, args):
     return dispatch.run(root, args)
 
 
-# Implements: SR-154, LLR-045, SR-155, LLR-132
-def main():
-    _utf8_console()
-    args = parse_args()
+# --- loop startup: resolve the run, then run it --------------------------------
+# The boundary (WI-483 slice 5): everything that RESOLVES what this run is —
+# the effective root, the phase maps, the enable-list, the declared dials — is a
+# pure function returning a typed record, and `main` is left with the EFFECTS
+# (console, coordinator lock, subprocess) and the mode decisions between them.
 
-    # A worker runs in its leased linked worktree: --worktree IS the effective
-    # root (branch guard, sessions, policy reads all resolve there). WI-181.
+
+def _resolve_root(args):
+    """The effective root. A worker runs in its leased linked worktree, so
+    --worktree IS the root: the branch guard, sessions and policy reads all
+    resolve there (WI-181). Returns (root, None), or (None, EXIT_PREFLIGHT)
+    when a named worktree does not exist."""
     if args.worktree:
         root = Path(args.worktree).resolve()
         if not root.is_dir():
@@ -2845,60 +2915,69 @@ def main():
                 "agent_loop: --worktree {} does not exist".format(root),
                 file=sys.stderr,
             )
-            return EXIT_PREFLIGHT
-    else:
-        root = Path(args.root).resolve()
-    docs = root / "docs"
+            return None, EXIT_PREFLIGHT
+        return root, None
+    return Path(args.root).resolve(), None
 
-    # The session dials, resolved ONCE from the single declared home
-    # (docs/stack.ini [agent-loop], IF-068 / WI-274 part B) so they need not be
-    # duplicated across the three agent-resume launchers — precedence CLI flag >
-    # AGENT_* env > declared file > built-in default. (The jobs dial retired
-    # with the parallel dispatcher at concurrency-restructure Phase 5.)
-    args.model, args.model_map = resolve_coordinator_dials(args, docs)
 
-    # A plain launch (no role) is the DRIVE mode (WI-374): the serial
-    # claim->build->integrate front end, restored after the parallel
-    # dispatcher's Phase 5 deletion took the scheduling front half with it.
-    # The loop itself lives in the sibling dispatch.py — ordering only, no new
-    # authority; every refusal stays where it already lives. It takes the
-    # same per-checkout coordinator lock the explicit roles take below (the
-    # worker subprocesses it spawns lock their own worktrees).
-    if not (args.wi or args.train or args.interactive or args.dual_plan):
-        return _drive_entry(root, args)
-    template = (
-        args.agent_cmd
-        if args.agent_cmd is not None
-        else os.environ.get("AGENT_CMD", "")
-    )
+def is_drive_launch(args):
+    """A plain launch (no role flag) is the DRIVE mode (WI-374): the serial
+    claim->build->integrate front end, restored after the parallel dispatcher's
+    Phase 5 deletion took the scheduling front half with it. Any explicit role
+    opts out of it."""
+    return not (args.wi or args.train or args.interactive or args.dual_plan)
+
+
+def _parse_session_maps(args):
+    """The five "KEY=value" phase maps. They share a syntax and a failure mode,
+    so they are parsed as one act: model / command-template / prompt-template
+    FILE / tier / preferred registry id, each keyed by phase. Returns
+    (maps, None) or (None, EXIT_PREFLIGHT)."""
     try:
-        model_map = parse_map(args.model_map)
-        cmd_map = parse_map(args.cmd_map)  # same "KEY=value" syntax
-        prompt_map = parse_map(args.prompt_map)  # phase -> prompt-template FILE
-        tier_map = parse_map(args.tier_map)  # phase -> tier
-        prefer_map = parse_map(args.prefer_map)  # phase -> registry id
+        return (
+            parse_map(args.model_map),
+            parse_map(args.cmd_map),
+            parse_map(args.prompt_map),
+            parse_map(args.tier_map),
+            parse_map(args.prefer_map),
+        ), None
     except ValueError as exc:
         print("agent_loop: {}".format(exc), file=sys.stderr)
-        return EXIT_PREFLIGHT
+        return None, EXIT_PREFLIGHT
 
-    # The S8 routing layer (process-options.md "Unattended operation" ->
-    # routing/escalation). The enable-list's PRESENCE turns managed routing +
-    # loop-side reviewer dispatch on; ABSENT files keep exactly today's single
-    # AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
-    # model swap — consent = the enabled set + the declared rules).
+
+@dataclass(frozen=True)
+class RoutingSetup:
+    """What docs/agents.toml + docs/agents-enabled resolve to for this run."""
+
+    registry: dict
+    managed: bool
+    enabled: list
+    weight_map: dict
+    reg_errors: list
+    enable_errors: list
+
+
+def resolve_routing_setup(docs):
+    """The S8 routing layer (process-options.md "Unattended operation" ->
+    routing/escalation). The enable-list's PRESENCE turns managed routing +
+    loop-side reviewer dispatch on; ABSENT files keep exactly today's single
+    AGENT_CMD/AGENT_MODEL behavior, so a fresh scaffold pays nothing (no silent
+    model swap — consent = the enabled set + the declared rules).
+
+    Presence, not resolvability, is the switch: an unresolvable token must fail
+    preflight rather than silently fall back to the legacy path. Malformed
+    per-phase draw-weight annotations (WI-236), unresolvable tokens and
+    conflicting weight redeclarations therefore all come back as errors under
+    the agents-enabled heading — the file is the consent surface, never
+    silently ignored."""
     registry, reg_errors = agent_route.load_registry(docs / "agents.toml")
-    # Parse the enable-list WITH its optional per-phase draw-weight annotations
-    # (WI-236); a malformed annotation is a preflight failure naming the line
-    # (the file is the consent surface — never silently ignored).
     enabled_entries, annot_errors = agent_route.load_enabled_entries(
         docs / "agents-enabled"
     )
     raw_enabled = [token for token, _weights in enabled_entries]
-    # The enable-list's PRESENCE (not its resolvability) turns managed routing on
-    # — an unresolvable token must fail preflight, not silently fall to legacy.
-    managed = bool(raw_enabled)
     # Version-less tokens resolve to concrete pair-row ids (exact-id, else newest
-    # in the Family-Model line); unresolvable tokens become preflight failures.
+    # in the Family-Model line).
     tag_rank = agent_route.load_tag_rank(docs / "agents.toml")
     enabled, resolve_errors = agent_route.resolve_enabled(
         raw_enabled, registry, tag_rank
@@ -2908,10 +2987,49 @@ def main():
     weight_map, weight_errors = agent_route.resolved_weights(
         enabled_entries, registry, tag_rank
     )
-    # Malformed annotations + unresolvable tokens + weight conflicts all surface
-    # as preflight failures under the agents-enabled heading (the consent surface).
-    enable_errors = annot_errors + resolve_errors + weight_errors
+    return RoutingSetup(
+        registry=registry,
+        managed=bool(raw_enabled),
+        enabled=enabled,
+        weight_map=weight_map,
+        reg_errors=reg_errors,
+        enable_errors=annot_errors + resolve_errors + weight_errors,
+    )
 
+
+@dataclass(frozen=True)
+class SessionSetup:
+    """Everything the CLI flags + the declared routing files resolve to for one
+    run: the phase maps, the resolved enable-list, the prompt templates that
+    passed preflight, and the worker assignment."""
+
+    template: str
+    model_map: dict
+    cmd_map: dict
+    prompt_map: dict
+    tier_map: dict
+    prefer_map: dict
+    prompt_templates: dict
+    routing: RoutingSetup
+    worker: dict
+
+
+def resolve_session_setup(args, root):
+    """Resolve the run, or refuse it. Returns (setup, None), or (None, code)
+    when a map is malformed, a preflight check fails, or the worker assignment
+    is not a legal one — the three refusals that used to be inline arms of
+    `main`. Every refusal prints exactly what it printed before."""
+    docs = root / "docs"
+    template = (
+        args.agent_cmd
+        if args.agent_cmd is not None
+        else os.environ.get("AGENT_CMD", "")
+    )
+    maps, code = _parse_session_maps(args)
+    if code is not None:
+        return None, code
+    model_map, cmd_map, prompt_map, tier_map, prefer_map = maps
+    routing = resolve_routing_setup(docs)
     failures, prompt_templates = map_preflight(
         root,
         template,
@@ -2920,86 +3038,308 @@ def main():
         prompt_map,
         tier_map,
         prefer_map,
-        managed,
-        registry,
-        enabled,
-        reg_errors,
-        enable_errors,
+        routing.managed,
+        routing.registry,
+        routing.enabled,
+        routing.reg_errors,
+        routing.enable_errors,
     )
     if failures:
         print("agent_loop: preflight failed —", file=sys.stderr)
         for f in failures:
             print("  - " + f, file=sys.stderr)
-        return EXIT_PREFLIGHT
-
-    # The one coordination surface is docs/ (WI-210: the --track lane
-    # redirection is retired; the repo-singular policy files live here too).
+        return None, EXIT_PREFLIGHT
     worker, err = build_worker_assignment(args, root)
     if err is not None:
-        return err
-    lane = docs
-    lane.mkdir(parents=True, exist_ok=True)
-    status_path = lane / "status.md"
+        return None, err
+    return (
+        SessionSetup(
+            template=template,
+            model_map=model_map,
+            cmd_map=cmd_map,
+            prompt_map=prompt_map,
+            tier_map=tier_map,
+            prefer_map=prefer_map,
+            prompt_templates=prompt_templates,
+            routing=routing,
+            worker=worker,
+        ),
+        None,
+    )
 
-    # SN-028: the four dials now read through the one policy home
-    # (docs/process.toml, legacy one-word file as the migration fallback). The
-    # four LOCALS stay — `print_run_banner` takes them positionally — so this
-    # is a reader swap, not a signature change. SN-029: the three-value
-    # gate-authority enum retires for an ORDINAL comparison — is the tier the
-    # spine is in process at still the human's to approve? `human_holds` makes
-    # it once; `keep_nondependent` is the orthogonal dial the enum bundled.
-    # WI-437 (OI-25): the derived label is `session_hold` — WHO HOLDS this run.
+
+@dataclass(frozen=True)
+class SessionPolicies:
+    """The declared dials this run reads, resolved once through the one policy
+    home (docs/process.toml, legacy one-word file as the SN-028 migration
+    fallback). SN-029: the three-value gate-authority enum retired for an
+    ORDINAL comparison — is the tier the spine is in process at still the
+    human's to approve? `human_held` answers it once; `keep_nondependent` is
+    the orthogonal dial the enum bundled. WI-437 (OI-25): `session_hold` is the
+    derived label — WHO HOLDS this run."""
+
+    human_held: bool
+    keep_nondependent: bool
+    session_hold: str
+    push: str
+    review: str
+    guardrails: str
+    blackout: str
+
+
+def resolve_session_policies(root, docs):
     human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))
-    keep_going = agent_common.keep_nondependent(docs)
+    # Spelled as its own statement, not folded into the constructor call below:
+    # the WI-437 / OI-25 one-name-one-meaning rule reads this module's SOURCE for
+    # the exact `session_hold = <the two derived values>` form, so that the
+    # derived hold can be checked to mean one thing across every module that
+    # derives it (the rule also forbids the retired enum's name appearing here at
+    # all, which is why this comment does not spell the test module either).
     session_hold = "human-held" if human_held else "loop-held"
-    push_policy = declared_policy(docs, "push-policy", "human")
-    review_policy = declared_policy(docs, "review-policy", "1")
-    _, branch = git(root, "branch", "--show-current")
+    return SessionPolicies(
+        human_held=human_held,
+        keep_nondependent=agent_common.keep_nondependent(docs),
+        session_hold=session_hold,
+        push=declared_policy(docs, "push-policy", "human"),
+        review=declared_policy(docs, "review-policy", "1"),
+        guardrails=declared_policy(docs, "guardrails-policy", "off"),
+        blackout=declared_policy(docs, "blackout", ""),
+    )
 
-    guardrails_policy = declared_policy(docs, "guardrails-policy", "off")
-    # Surface a stale/typo'd policy token before the run: if it names a substring
-    # that matches none of the models this run could use, the guard is inert.
-    possible_models = {m for m in [args.model, *model_map.values()] if m}
-    if managed:
-        # Under managed routing sessions run the ENABLED registry rows' models,
-        # not the env maps — compute the inert check against what will actually
-        # run, or the warning is spurious/silent in exactly the managed mode it
-        # matters for (repo-review 2026-07-21 L-20).
-        possible_models |= {
-            (registry[mid].model or mid) for mid in enabled if mid in registry
+
+def possible_session_models(args, model_map, routing):
+    """Every model this run could actually launch. Under managed routing that
+    is the ENABLED registry rows' models, not the env maps — compute the inert
+    check against what will actually run, or the warning is spurious/silent in
+    exactly the managed mode it matters for (repo-review 2026-07-21 L-20)."""
+    models = {m for m in [args.model, *model_map.values()] if m}
+    if routing.managed:
+        models |= {
+            (routing.registry[mid].model or mid)
+            for mid in routing.enabled
+            if mid in routing.registry
         }
-    if guardrails_inert(guardrails_policy, possible_models):
+    return models
+
+
+def warn_on_inert_or_malformed_policies(policies, possible_models):
+    """Surface a stale/typo'd or malformed declared policy BEFORE the run.
+
+    A guardrails token naming a substring that matches none of the models this
+    run could use guards nothing. A malformed blackout window or reviewer dial
+    must not silently disable itself either — both are consent surfaces like
+    agents-enabled (repo-review 2026-07-21 M-20). Behavior is unchanged for
+    compat (blackout off / review-policy lenient-parse); the SILENCE was the
+    defect."""
+    if guardrails_inert(policies.guardrails, possible_models):
         print(
             "agent_loop: WARNING - guardrails-policy {!r} would guard none of "
             "the configured models ({}); the guard is inert — fix the token or "
             'the model map (process-options.md "Tier-conditional guardrails").'.format(
-                guardrails_policy, ", ".join(sorted(possible_models)) or "none"
+                policies.guardrails, ", ".join(sorted(possible_models)) or "none"
             ),
             file=sys.stderr,
         )
-    # A malformed declared policy must not silently disable itself — blackout
-    # and review-policy are consent surfaces like agents-enabled (repo-review
-    # 2026-07-21 M-20). Behavior is unchanged for compat (blackout off /
-    # review-policy lenient-parse); the SILENCE was the defect.
-    blackout_line = declared_policy(docs, "blackout", "")
-    if blackout_line and parse_blackout(blackout_line) is None:
+    if policies.blackout and parse_blackout(policies.blackout) is None:
         print(
             "agent_loop: WARNING - the blackout window {!r} (docs/process.toml "
             "[policies] blackout) is malformed (expected "
             "HH:MM-HH:MM); the blackout window is DISABLED this run.".format(
-                blackout_line
+                policies.blackout
             ),
             file=sys.stderr,
         )
-    if (review_policy or "").strip() not in ("0", "1", "2"):
+    if (policies.review or "").strip() not in ("0", "1", "2"):
         print(
             "agent_loop: WARNING - the reviewer dial {!r} (docs/process.toml "
             "[policies] review_rounds) is not 0|1|2; "
             "parsed leniently (unparseable -> 1, out-of-range clamped).".format(
-                review_policy
+                policies.review
             ),
             file=sys.stderr,
         )
+
+
+def _dual_plan_entry(root, docs, args, setup, policies):
+    """The dual-plan round is its own early path (WI-199): one round, then
+    exit — never the resume loop. The trigger lives in the REGISTRY
+    (PlanMode=dual), the flag only names the WI; a non-dual row is refused so
+    the flag can't conscript an ordinary WI into the round."""
+    import plan_round as _plan_round
+
+    wid = args.dual_plan.strip()
+    rows = load_wi_registry(root)
+    row = rows.get(wid)
+    if row is None:
+        print(
+            "agent_loop: --dual-plan {}: no such WI in the registry".format(wid),
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
+    if wi_plan_mode(row) != PLAN_MODE_DUAL:
+        print(
+            "agent_loop: --dual-plan {}: its registry row does not declare "
+            "PlanMode=dual (the trigger is declared at filing, never by "
+            "flag)".format(wid),
+            file=sys.stderr,
+        )
+        return EXIT_PREFLIGHT
+    outcome, detail = run_dual_plan_round(
+        root,
+        wid,
+        row,
+        setup.template,
+        args.model,
+        args.session_timeout or None,
+        setup.prompt_map,
+    )
+    if outcome == "SELECTED":
+        print("agent_loop: dual-plan {}: {}".format(wid, detail))
+        return EXIT_DONE
+    action = _plan_round.page_action(policies.human_held, policies.keep_nondependent)
+    print(
+        "agent_loop: dual-plan {} PAGED: {} (session-hold {} -> {})".format(
+            wid, detail, policies.session_hold, action
+        ),
+        file=sys.stderr,
+    )
+    if action == "stop-needs-human":
+        stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
+        return EXIT_NEEDS_HUMAN
+    # Every other action honors the pause-free invariant (WI-204, WI-209):
+    # an attention-only outcome lands on EXIT_STALL, never a NEEDS-HUMAN
+    # gate. The PAGE evidence is on disk under docs/plans/DP-*; relaunching
+    # re-runs the round. (page_action's non-stop-needs-human strings are
+    # intent labels.)
+    stop_banner(
+        docs / "status.md",
+        "dual-plan round paged — attention (no human hold on this tier)",
+        detail,
+    )
+    return EXIT_STALL
+
+
+def _live_console(args, docs):
+    """Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
+    silences it; otherwise --live-status (or `[checks] live_status = true`)
+    upgrades the scroll to one in-place line per workstream — but only when
+    stdout is a TTY with VT enabled, so a pipe / CI log keeps the append-only
+    scroll (never-breaking). Decided once: the TTY/VT facts don't change
+    mid-run. `declared_policy` reads docs/process.toml first and falls back to
+    the legacy docs/live-status for the SN-028 migration window."""
+    live_status_on = (
+        args.live_status
+        or declared_policy(docs, "live-status", "false").lower() == "true"
+    )
+    return live_status_on and _stdout_is_tty() and _enable_windows_vt()
+
+
+def _clamped_review_rounds(review_policy):
+    """The reviewer dial as an int: unparseable -> 1, out-of-range clamped —
+    the lenient parse the startup warning announces."""
+    try:
+        rp_int = int(review_policy)
+    except ValueError:
+        rp_int = 1
+    return max(0, min(2, rp_int))
+
+
+def _int_env(name, default, minimum=None):
+    """An S8 knob read from the environment: a non-integer — or a value below
+    the knob's floor — falls back to the built-in default rather than wedging
+    the run (the S8-knob idiom)."""
+    try:
+        value = int(os.environ.get(name, default))
+    except ValueError:
+        return default
+    if minimum is not None and value < minimum:
+        return default
+    return value
+
+
+def build_routing_state(docs, rp_int, managed):
+    """The S8 managed-routing / WI-068 critique / stall-guard cluster — one
+    RoutingState holding what were ~24 mutable locals of `main` (WI-080 Slice
+    C). All no-ops when the enable-list is absent, so the legacy path is
+    byte-for-byte unchanged."""
+    return RoutingState(
+        rp_int,
+        _int_env("AGENT_COOLDOWN_SECONDS", DEFAULT_COOLDOWN_SECONDS),
+        load_critique_srs(docs) if managed else set(),
+        _int_env("AGENT_CRITIQUE_MAX", 3, minimum=1),
+        agent_route.load_constants(),
+    )
+
+
+def announce_critique_budget(managed, st):
+    """One line when this run can schedule critique rounds at all."""
+    if managed and st.critique_srs:
+        print(
+            "critique: {} Critique-verified SR(s) present -> a build touching one "
+            "schedules a rubric-anchored CRITIQUE round (budget {} per scope)".format(
+                len(st.critique_srs), st.critique_max
+            )
+        )
+
+
+def run_loop(ctx):
+    """Iterate until an iteration returns an exit code, or until the declared
+    budget runs out — which is itself an exit with a banner, never a silent
+    stop."""
+    for i in range(1, ctx.args.max_iterations + 1):
+        code = run_iteration(ctx, i)
+        if code is not None:
+            return code
+    stop_banner(
+        ctx.status_path,
+        "iteration budget exhausted",
+        "{} session(s) run and {} is still {} — raise "
+        "--max-iterations deliberately if the run should continue.".format(
+            ctx.args.max_iterations, ctx.lane / "run-state", ctx.run.state
+        ),
+    )
+    return EXIT_BUDGET
+
+
+# Implements: SR-154, LLR-045, SR-155, LLR-132
+def main():
+    _utf8_console()
+    args = parse_args()
+    root, code = _resolve_root(args)
+    if code is not None:
+        return code
+    docs = root / "docs"
+
+    # The session dials, resolved ONCE from the single declared home
+    # (docs/stack.ini [agent-loop], IF-068 / WI-274 part B) so they need not be
+    # duplicated across the three agent-resume launchers — precedence CLI flag >
+    # AGENT_* env > declared file > built-in default. (The jobs dial retired
+    # with the parallel dispatcher at concurrency-restructure Phase 5.)
+    args.model, args.model_map = resolve_coordinator_dials(args, docs)
+
+    # The drive mode's loop lives in the sibling dispatch.py — ordering only, no
+    # new authority; every refusal stays where it already lives. It takes the
+    # same per-checkout coordinator lock the explicit roles take below (the
+    # worker subprocesses it spawns lock their own worktrees).
+    if is_drive_launch(args):
+        return _drive_entry(root, args)
+
+    setup, code = resolve_session_setup(args, root)
+    if code is not None:
+        return code
+
+    # The one coordination surface is docs/ (WI-210: the --track lane
+    # redirection is retired; the repo-singular policy files live here too).
+    lane = docs
+    lane.mkdir(parents=True, exist_ok=True)
+    status_path = lane / "status.md"
+
+    policies = resolve_session_policies(root, docs)
+    _, branch = git(root, "branch", "--show-current")
+    warn_on_inert_or_malformed_policies(
+        policies,
+        possible_session_models(args, setup.model_map, setup.routing),
+    )
     warned_no_core = []
 
     # WI-076: snapshot the working tree BEFORE the coordinator creates its own
@@ -3022,146 +3362,38 @@ def main():
         return run_interactive(
             args,
             root,
-            model_map,
-            cmd_map,
-            template,
-            guardrails_policy,
+            setup.model_map,
+            setup.cmd_map,
+            setup.template,
+            policies.guardrails,
             warned_no_core,
         )
 
     if args.dual_plan:
-        # The dual-plan round is its own early path (WI-199): one round, then
-        # exit — never the resume loop. The trigger lives in the REGISTRY
-        # (PlanMode=dual), the flag only names the WI; a non-dual row is
-        # refused so the flag can't conscript an ordinary WI into the round.
-        import plan_round as _plan_round
-
-        wid = args.dual_plan.strip()
-        rows = load_wi_registry(root)
-        row = rows.get(wid)
-        if row is None:
-            print(
-                "agent_loop: --dual-plan {}: no such WI in the registry".format(wid),
-                file=sys.stderr,
-            )
-            return EXIT_PREFLIGHT
-        if wi_plan_mode(row) != PLAN_MODE_DUAL:
-            print(
-                "agent_loop: --dual-plan {}: its registry row does not declare "
-                "PlanMode=dual (the trigger is declared at filing, never by "
-                "flag)".format(wid),
-                file=sys.stderr,
-            )
-            return EXIT_PREFLIGHT
-        outcome, detail = run_dual_plan_round(
-            root,
-            wid,
-            row,
-            template,
-            args.model,
-            args.session_timeout or None,
-            prompt_map,
-        )
-        if outcome == "SELECTED":
-            print("agent_loop: dual-plan {}: {}".format(wid, detail))
-            return EXIT_DONE
-        action = _plan_round.page_action(human_held, keep_going)
-        print(
-            "agent_loop: dual-plan {} PAGED: {} (session-hold {} -> {})".format(
-                wid, detail, session_hold, action
-            ),
-            file=sys.stderr,
-        )
-        if action == "stop-needs-human":
-            stop_banner(docs / "status.md", "NEEDS-HUMAN", detail)
-            return EXIT_NEEDS_HUMAN
-        # Every other action honors the pause-free invariant (WI-204, WI-209):
-        # an attention-only outcome lands on EXIT_STALL, never a NEEDS-HUMAN
-        # gate. The PAGE evidence is on disk under docs/plans/DP-*; relaunching
-        # re-runs the round. (page_action's non-stop-needs-human strings are
-        # intent labels.)
-        stop_banner(
-            docs / "status.md",
-            "dual-plan round paged — attention (no human hold on this tier)",
-            detail,
-        )
-        return EXIT_STALL
+        return _dual_plan_entry(root, docs, args, setup, policies)
 
     print_run_banner(
         root,
         branch,
-        worker,
-        session_hold,
-        push_policy,
-        review_policy,
-        managed,
-        enabled,
-        registry,
-        guardrails_policy,
-        template,
-        cmd_map,
-        prompt_map,
+        setup.worker,
+        policies.session_hold,
+        policies.push,
+        policies.review,
+        setup.routing.managed,
+        setup.routing.enabled,
+        setup.routing.registry,
+        policies.guardrails,
+        setup.template,
+        setup.cmd_map,
+        setup.prompt_map,
         docs,
     )
 
-    raw_dir = root / "out" / "run-logs"
     iter_dir = lane / "iteration"
-    tag = "{}-".format(worker["train"])
-    # Console rendering (WI-125 scroll / WI-136 live line). --no-session-echo
-    # silences it; otherwise --live-status (or `[checks] live_status = true`)
-    # upgrades the scroll to one in-place line per workstream — but only when
-    # stdout is a TTY with VT enabled, so a pipe / CI log keeps the append-only
-    # scroll (never-breaking). Decided once: the TTY/VT facts don't change
-    # mid-run. `declared_policy` reads docs/process.toml first and falls back to
-    # the legacy docs/live-status for the SN-028 migration window.
-    live_status_on = (
-        args.live_status
-        or declared_policy(docs, "live-status", "false").lower() == "true"
-    )
-    use_live = live_status_on and _stdout_is_tty() and _enable_windows_vt()
-    # A worker has no lane run-state (spec §10) — its state is always RUNNING
-    # until its committed evidence says otherwise (worker_endstate below).
-    state = "RUNNING"
-
-    # --- managed-routing / critique / stall state (S8 + WI-068 + the stall
-    # guard) — one RoutingState now holds what were ~24 mutable locals here
-    # (WI-080 Slice C). All no-ops when the enable-list is absent, so the legacy
-    # path is byte-for-byte unchanged. The parse/env blocks that feed the
-    # constructor stay exactly as before. ----------------------------------------
-    try:
-        rp_int = int(review_policy)
-    except ValueError:
-        rp_int = 1
-    rp_int = max(0, min(2, rp_int))
-    try:
-        cooldown_seconds = int(
-            os.environ.get("AGENT_COOLDOWN_SECONDS", DEFAULT_COOLDOWN_SECONDS)
-        )
-    except ValueError:
-        cooldown_seconds = DEFAULT_COOLDOWN_SECONDS
-    route_constants = agent_route.load_constants()
-    # Worker review evidence is train-scoped and collision-safe (LLR-061): two
-    # parallel workers' committed verdicts/scoreboards must never collide at
-    # integration, so each train gets its own reviews/<train>/ directory.
-    reviews_dir = docs / "reviews" / worker["train"]
-    scoreboard = reviews_dir / "scoreboard.txt"
-    critique_srs = load_critique_srs(docs) if managed else set()
-    try:
-        critique_max = int(os.environ.get("AGENT_CRITIQUE_MAX", "3"))
-    except ValueError:
-        critique_max = 3
-    if critique_max < 1:  # a budget is >= 1; a bad value falls back (S8-knob idiom)
-        critique_max = 3
-    st = RoutingState(
-        rp_int, cooldown_seconds, critique_srs, critique_max, route_constants
-    )
-    if managed and st.critique_srs:
-        print(
-            "critique: {} Critique-verified SR(s) present -> a build touching one "
-            "schedules a rubric-anchored CRITIQUE round (budget {} per scope)".format(
-                len(st.critique_srs), st.critique_max
-            )
-        )
+    reviews_dir = docs / "reviews" / setup.worker["train"]
+    rp_int = _clamped_review_rounds(policies.review)
+    st = build_routing_state(docs, rp_int, setup.routing.managed)
+    announce_critique_budget(setup.routing.managed, st)
 
     # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
     # start_dirty was snapshotted before the lock (above). A non-empty tree here
@@ -3180,60 +3412,50 @@ def main():
             file=sys.stderr,
         )
 
-    ctx = LoopContext()
-    ctx.args = args
-    ctx.root = root
-    ctx.docs = docs
-    ctx.lane = lane
-    ctx.status_path = status_path
-    ctx.worker = worker
-    ctx.managed = managed
-    ctx.registry = registry
-    ctx.enabled = enabled
-    ctx.template = template
-    ctx.model_map = model_map
-    ctx.cmd_map = cmd_map
-    ctx.prompt_templates = prompt_templates
-    ctx.tier_map = tier_map
-    ctx.prefer_map = prefer_map
-    ctx.weight_map = weight_map
-    ctx.session_hold = session_hold
-    ctx.human_held = human_held
-    ctx.keep_nondependent = keep_going
-    ctx.guardrails_policy = guardrails_policy
-    ctx.warned_no_core = warned_no_core
-    ctx.start_dirty = start_dirty
-    ctx.raw_dir = raw_dir
-    ctx.iter_dir = iter_dir
-    # The weighted-rotation DRAW reads the durable CROSS-train aggregate (the
-    # primary worktree's committed docs/iteration) unioned with this worker's
-    # local in-flight logs — NOT the train-local iter_dir alone, whose freshly
-    # minted history would reset every train's draw to slot 0 (WI-263, M-31).
-    # The primary-worktree path is stable for the run, so resolve it once here;
-    # the dirs are re-globbed per draw as sibling trains integrate.
-    ctx.draw_iter_dirs = draw_iter_dirs(root, iter_dir)
-    ctx.tag = tag
-    ctx.use_live = use_live
-    ctx.reviews_dir = reviews_dir
-    ctx.scoreboard = scoreboard
-    ctx.rp_int = rp_int
-    ctx.st = st
-    ctx.state = state
-
-    for i in range(1, args.max_iterations + 1):
-        code = run_iteration(ctx, i)
-        if code is not None:
-            return code
-
-    stop_banner(
-        status_path,
-        "iteration budget exhausted",
-        "{} session(s) run and {} is still {} — raise "
-        "--max-iterations deliberately if the run should continue.".format(
-            args.max_iterations, lane / "run-state", ctx.state
-        ),
+    return run_loop(
+        LoopContext(
+            args=args,
+            root=root,
+            docs=docs,
+            lane=lane,
+            status_path=status_path,
+            worker=setup.worker,
+            managed=setup.routing.managed,
+            registry=setup.routing.registry,
+            enabled=setup.routing.enabled,
+            template=setup.template,
+            model_map=setup.model_map,
+            cmd_map=setup.cmd_map,
+            prompt_templates=setup.prompt_templates,
+            tier_map=setup.tier_map,
+            prefer_map=setup.prefer_map,
+            weight_map=setup.routing.weight_map,
+            guardrails_policy=policies.guardrails,
+            human_held=policies.human_held,
+            keep_nondependent=policies.keep_nondependent,
+            start_dirty=start_dirty,
+            raw_dir=root / "out" / "run-logs",
+            iter_dir=iter_dir,
+            # The weighted-rotation DRAW reads the durable CROSS-train aggregate
+            # (the primary worktree's committed docs/iteration) unioned with this
+            # worker's local in-flight logs — NOT the train-local iter_dir alone,
+            # whose freshly minted history would reset every train's draw to slot
+            # 0 (WI-263, M-31). The primary-worktree path is stable for the run,
+            # so resolve it once here; the dirs are re-globbed per draw as sibling
+            # trains integrate.
+            draw_iter_dirs=draw_iter_dirs(root, iter_dir),
+            tag="{}-".format(setup.worker["train"]),
+            use_live=_live_console(args, docs),
+            # Worker review evidence is train-scoped and collision-safe
+            # (LLR-061): two parallel workers' committed verdicts/scoreboards
+            # must never collide at integration, so each train gets its own
+            # reviews/<train>/ directory.
+            reviews_dir=reviews_dir,
+            scoreboard=reviews_dir / "scoreboard.txt",
+            rp_int=rp_int,
+            run=LoopRun(routing=st, warned_no_core=warned_no_core),
+        )
     )
-    return EXIT_BUDGET
 
 
 if __name__ == "__main__":

@@ -12,8 +12,12 @@ directly, which is also why this module carries NO module-wide gate.
 """
 
 import argparse
+import ast
+import dataclasses
 import datetime
+import inspect
 import sys
+import textwrap
 
 import pytest
 from conftest import load_script
@@ -480,3 +484,134 @@ def test_parse_args_defaults(monkeypatch):
     assert args.max_iterations == 40
     assert args.stall_limit == 3
     assert args.pause == 10
+
+
+# --- WI-483 slice 5: the loop-startup split, and the two typed records --------
+# `main` was 402 lines / C901 27, resolving its whole configuration inline; the
+# resolution is now pure functions returning frozen records and `main` keeps the
+# effects. These guard the BOUNDARY — that the records stay total and frozen,
+# that the S8 knob idiom survives extraction, and that `main` stays a composer —
+# rather than re-asserting rules already covered end-to-end through the engine.
+
+
+def test_int_env_falls_back_on_junk_and_below_floor(monkeypatch):
+    al = load_script("agent_loop")
+    monkeypatch.delenv("AL_KNOB", raising=False)
+    assert al._int_env("AL_KNOB", 7) == 7  # absent -> the built-in default
+    monkeypatch.setenv("AL_KNOB", "12")
+    assert al._int_env("AL_KNOB", 7) == 12
+    monkeypatch.setenv("AL_KNOB", "not-a-number")
+    assert al._int_env("AL_KNOB", 7) == 7
+    monkeypatch.setenv("AL_KNOB", "0")
+    # A budget is >= 1; below the floor falls back rather than wedging the run.
+    assert al._int_env("AL_KNOB", 3, minimum=1) == 3
+    assert al._int_env("AL_KNOB", 3) == 0  # no floor declared -> honored
+
+
+def test_clamped_review_rounds_is_lenient_then_clamped():
+    al = load_script("agent_loop")
+    assert al._clamped_review_rounds("2") == 2
+    assert al._clamped_review_rounds("banana") == 1  # unparseable -> 1
+    assert al._clamped_review_rounds("7") == 2  # out of range -> clamped
+    assert al._clamped_review_rounds("-3") == 0
+
+
+def test_is_drive_launch_only_when_no_role_flag():
+    al = load_script("agent_loop")
+
+    def args(**over):
+        base = dict(wi=None, train=None, interactive=False, dual_plan=None)
+        base.update(over)
+        return argparse.Namespace(**base)
+
+    assert al.is_drive_launch(args())
+    for flag in ("wi", "train", "dual_plan"):
+        assert not al.is_drive_launch(args(**{flag: "WI-1"}))
+    assert not al.is_drive_launch(args(interactive=True))
+
+
+def test_possible_session_models_reads_the_enabled_rows_under_managed():
+    al = load_script("agent_loop")
+    ar = load_script("agent_route")
+    args = argparse.Namespace(model="cli-model")
+    legacy = al.RoutingSetup(
+        registry={},
+        managed=False,
+        enabled=[],
+        weight_map={},
+        reg_errors=[],
+        enable_errors=[],
+    )
+    assert al.possible_session_models(args, {"BUILD": "mapped"}, legacy) == {
+        "cli-model",
+        "mapped",
+    }
+    row = ar.Model("P-B-1", "P", "rowmodel", "1", "medium", "")
+    managed = al.RoutingSetup(
+        registry={"P-B-1": row},
+        managed=True,
+        enabled=["P-B-1"],
+        weight_map={},
+        reg_errors=[],
+        enable_errors=[],
+    )
+    # Under managed routing the ENABLED rows' models join the set — the inert
+    # check must be computed against what will actually run (L-20).
+    assert "rowmodel" in al.possible_session_models(args, {}, managed)
+
+
+def test_loop_context_is_frozen_and_total():
+    al = load_script("agent_loop")
+    fields = {f.name: f for f in dataclasses.fields(al.LoopContext)}
+    # TOTAL: no field carries a default, so a forgotten one is a TypeError at
+    # the single construction site rather than a silent getattr fallback.
+    assert all(
+        f.default is dataclasses.MISSING and f.default_factory is dataclasses.MISSING
+        for f in fields.values()
+    ), "LoopContext fields must not carry defaults"
+    assert "human_held" in fields and "keep_nondependent" in fields
+    ctx = al.LoopContext(**{name: None for name in fields})
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        ctx.root = "elsewhere"
+
+
+def test_loop_run_is_the_mutable_half_with_per_instance_defaults():
+    al = load_script("agent_loop")
+    a = al.LoopRun(routing=None)
+    b = al.LoopRun(routing=None)
+    assert a.state == "RUNNING"
+    a.state = "DONE"  # the mutable half: an iteration may write it
+    a.warned_no_core.append("core")
+    assert b.state == "RUNNING" and b.warned_no_core == []
+
+
+def test_no_defensive_getattr_reads_survive_on_the_context():
+    al = load_script("agent_loop")
+    tree = ast.parse(inspect.getsource(al))
+    reads = [
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call)
+        and isinstance(n.func, ast.Name)
+        and n.func.id == "getattr"
+        and n.args
+        and isinstance(n.args[0], ast.Name)
+        and n.args[0].id == "ctx"
+    ]
+    assert not reads, (
+        "a total frozen record cannot be missing a field — a getattr(ctx, ..., "
+        "default) read silently substitutes a policy value instead of failing"
+    )
+
+
+def test_main_stays_a_composer():
+    al = load_script("agent_loop")
+    src, _ = inspect.getsourcelines(al.main)
+    # 402 lines at WI-483 slice 5; the ceiling is a red for re-accretion, not a
+    # target. `main` also nests no def — the C901 trap the program records is
+    # that a helper extracted INWARD is charged to its enclosing function.
+    assert len(src) < 200, "main is re-accreting; decompose OUTWARD"
+    body = ast.parse(textwrap.dedent("".join(src)))
+    assert not [
+        n for n in ast.walk(body) if isinstance(n, ast.FunctionDef) and n.name != "main"
+    ], "no nested def in main — extract outward, not inward"

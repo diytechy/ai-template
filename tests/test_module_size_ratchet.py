@@ -477,7 +477,18 @@ BASELINE = {
     # so the single event the ruling wanted surfaced was the one the count
     # could not distinguish. Reviewed bump, reason in
     # docs/log.d/2026-08-20-program-grind.md.
-    "agent_loop.py": 3240,
+    # +222 (3240 -> 3462) 2026-08-23, WI-483 slice 5 — a DECLARATION bump on a
+    # module that got structurally simpler, the `bootstrap.py` shape this
+    # file's own header records as the owner's OI-16 counterexample. `main`
+    # fell 402 -> 152 lines and OFF the complexity census (27 -> under 10); what
+    # replaced it is five typed records (`LoopContext` frozen and total,
+    # `LoopRun` its mutable half, plus `RoutingSetup`/`SessionSetup`/
+    # `SessionPolicies`) whose 60-odd bare field declarations are the bump's
+    # bulk, and thirteen extracted startup functions carrying the comments that
+    # used to sit inline in `main`. The complexity ratchet — the axis this
+    # program pays down — went DOWN by one whole entry. Reviewed bump, reason
+    # in docs/log.d/2026-08-23-wi483-agent-loop-engine.md.
+    "agent_loop.py": 3462,
     # +30 (2206 -> 2236), WI-065: `tc_citation_findings` — the TC-`Verifies`
     # rules lifted out of `analyze` so the cell could accept `IF-###` seam ids.
     # Most of the bump is that helper's docstring, which is where the RULING now

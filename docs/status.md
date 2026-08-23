@@ -106,18 +106,21 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   `scripts/kitlib/station.py`, the registry-gap census into `scripts/census.py`,
   the pending-owner-action read model into `scripts/pending.py`, and the
   checker's cross-row coherence rules into `scripts/coherence.py`, each below
-  every module that reads it. Slice 4 also took the FIRST engine: `trace.analyze`
-  is 553 → 218 lines and complexity 50 → under the limit, off the ratchet census
-  entirely, with `Registries` frozen and `Findings` typed around it.
+  every module that reads it. Slices 4 and 5 took the first TWO engines:
+  `trace.analyze` is 553 → 218 lines and complexity 50 → under the limit, with
+  `Registries` frozen and `Findings` typed around it; `agent_loop.main` is
+  402 → 152 lines and 27 → under the limit, with `LoopContext` now a frozen,
+  total 29-field record and `LoopRun` its explicit mutable half. Both are OFF
+  the complexity census entirely.
   **What remains owed on the row is items 1, 3 and 4 of its spec Context, in
   that order:** the layering (`integrate` still reaches up into `intake` for the
   post-merge mint, an edge that closes nothing but runs the wrong way, so
-  `dispatch` is not yet the sole composer), then the TWO REMAINING engines —
-  `agent_loop.main` (402 lines / C901 27, with `session_bookkeeping` at 31 and
-  the `LoopContext` bag beside it) is the honest next one, and `check.steps` (628
-  lines but under the complexity limit) needs a decision about the carrier for a
-  flat declaration rather than a technique — then M-06's test-monolith splits,
-  which ride along with them.
+  `dispatch` is not yet the sole composer), then the REST of the engines —
+  `agent_loop.session_bookkeeping` (325 lines / C901 31, now the kit's most
+  complex single function) with `run_iteration` (326 / 20) beside it, and
+  `check.steps` (628 lines but under the complexity limit), which needs a
+  decision about the carrier for a flat declaration rather than a technique —
+  then M-06's test-monolith splits, which ride along with them.
 - **A pre-existing snapshot block is standing and is nobody's yet:**
   `intake.py snapshot` refuses in this tree on `LLR-147`'s `Detail`, which
   differs from its `docs/archive/last_approved/` copy at HEAD. Until it is

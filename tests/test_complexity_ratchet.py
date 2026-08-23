@@ -41,14 +41,20 @@ BASELINE = {
     # concurrency-restructure Phase 5.)
     # Repo-review 2026-07-21 reviewed bumps (each +1..+3, all fail-closed
     # guards from that review's fix pass — reasons at the marked call sites):
-    # agent_loop main gained the M-20 malformed-policy warnings;
     # route_session the M-22 verdict-pre-plant unlinks; session_bookkeeping
     # the H-1 unparseable-verdict fail-closed branches; load_registry the H-4
     # Model-slug refusal; run_session the H-2 interrupt kill-tree handler;
     # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
     # the L-29 unfileable-plan PAGE guard.
     ("agent_loop.py", "critique_brief"): 11,
-    ("agent_loop.py", "main"): 27,
+    # WI-483 slice 5 (2026-08-23): `main` DELETED, 27 -> under the limit. The
+    # loop's whole startup resolution — the effective root, the five phase maps,
+    # the enable-list, the declared dials, the dual-plan round, the iteration
+    # budget — left for pure functions returning frozen records, and `main` kept
+    # the effects (console, coordinator lock, subprocess) plus the mode
+    # decisions between them. 402 lines -> 152. The M-20 malformed-policy
+    # warnings this entry was last bumped for now live in
+    # `warn_on_inert_or_malformed_policies`, unchanged.
     ("agent_loop.py", "map_preflight"): 19,
     # SN-026 (2026-08-08): 13 -> 12. The ADJUDICATE arm would have taken this
     # to 16; instead the four JUDGING phases (review, critique, adjudicate,
