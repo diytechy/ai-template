@@ -275,6 +275,9 @@ def _ratify_repo(tmp_path):
 
 
 def _brief(tmp_path, *extra):
+    # WI-503: the live surface is the fixed name CURRENT.md — `--check`'s
+    # default out-path (no --out given) resolves to this same file, so the
+    # fixture writes here rather than to an arbitrary name.
     return run_py(
         [
             SCRIPTS / "trace.py",
@@ -283,7 +286,7 @@ def _brief(tmp_path, *extra):
             "--ratify",
             "modified",
             "--out",
-            tmp_path / "docs" / "ratify" / "brief.md",
+            tmp_path / "docs" / "ratify" / "CURRENT.md",
             *extra,
         ],
         cwd=tmp_path,
@@ -338,7 +341,7 @@ def test_the_brief_states_what_the_stamp_IS_and_names_approval_provenance(tmp_pa
     provenance a reader was being promised is derived beside it."""
     _ratify_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
-    out = (tmp_path / "docs" / "ratify" / "brief.md").read_text(encoding="utf-8")
+    out = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     assert "the commit that last wrote this record" in out, out
     assert "reviewed commit that last moved an approval" not in out
     assert "_Approval provenance:" in out, out
@@ -438,14 +441,129 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     assert "No spine row differs from its" in after.stdout
 
 
-def test_the_newest_brief_is_chosen_by_stamped_name(tmp_path):
-    """Briefs are date-stamped per sitting, so the live one is derived rather
-    than configured — and by NAME, not mtime, because a checkout rewrites mtimes
-    and this check exists precisely not to trust the working tree."""
+def test_current_brief_is_the_fixed_CURRENT_name_not_the_newest_dated_one(tmp_path):
+    """WI-503: the live surface is CURRENT.md, a fixed name — not "newest
+    dated file by filename" (the retired `newest_ratify_brief` rule). A dated
+    brief sitting beside it, even a lexicographically later one, is history
+    and must never be picked up as the live surface."""
     tr = load_script("trace")
     ratify = tmp_path / "docs" / "ratify"
     ratify.mkdir(parents=True)
-    for name in ("2026-01-01-reattest.md", "2026-07-27-reattest.md", "README.md"):
+    for name in ("2026-01-01-reattest.md", "2099-07-27-reattest.md", "README.md"):
         (ratify / name).write_text("x\n", encoding="utf-8")
-    assert tr.newest_ratify_brief(tmp_path).name == "2026-07-27-reattest.md"
-    assert tr.newest_ratify_brief(tmp_path / "nowhere") is None
+    assert tr.current_ratify_brief(tmp_path) is None
+    (ratify / "CURRENT.md").write_text("live\n", encoding="utf-8")
+    assert tr.current_ratify_brief(tmp_path).name == "CURRENT.md"
+    assert tr.current_ratify_brief(tmp_path / "nowhere") is None
+
+
+def test_check_with_no_out_defaults_to_CURRENT_md_never_a_dated_file(tmp_path):
+    """WI-503 Done-when: `--ratify modified --check` with no --out compares
+    against CURRENT.md, never against a dated brief that happens to sit in
+    the same directory — the exact regression `newest_ratify_brief` invited
+    (a dated file kept being read/compared as though it were live)."""
+    _ratify_repo(tmp_path)
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True, exist_ok=True)
+    # A dated file that would have been "newest by name" under the old rule —
+    # deliberately STALE (empty), so a check that mistakenly targeted it would
+    # report STALE while CURRENT.md, once written, is current.
+    (ratify / "2099-01-01-decoy.md").write_text("stale decoy\n", encoding="utf-8")
+    assert _brief(tmp_path).returncode == 0  # writes CURRENT.md
+    proc = _check(tmp_path)  # no --out: must resolve to CURRENT.md
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "is current" in proc.stderr, proc.stderr
+    # The decoy is untouched — regeneration never writes a dated file.
+    assert (ratify / "2099-01-01-decoy.md").read_text(
+        encoding="utf-8"
+    ) == "stale decoy\n"
+
+
+# --- WI-503: `--mint-ratify-brief` — the one sanctioned dated-brief writer ----
+
+
+def test_mint_copies_CURRENT_to_a_dated_immutable_file(tmp_path):
+    tr = load_script("trace")
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True)
+    (ratify / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
+    dest = tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+    assert dest == ratify / "2026-08-22-wi503.md"
+    assert dest.read_text(encoding="utf-8") == "the live brief\n"
+    # CURRENT.md is untouched by the mint.
+    assert (ratify / "CURRENT.md").read_text(encoding="utf-8") == "the live brief\n"
+
+
+def test_mint_refuses_without_a_CURRENT_brief(tmp_path):
+    tr = load_script("trace")
+    (tmp_path / "docs" / "ratify").mkdir(parents=True)
+    try:
+        tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "CURRENT.md" in str(exc)
+
+
+def test_mint_refuses_to_overwrite_an_existing_dated_brief(tmp_path):
+    """The immutability guarantee lives here too, not only in the commit-time
+    enforcer: minting twice at the same date+slug must not silently rewrite
+    the first mint."""
+    tr = load_script("trace")
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True)
+    (ratify / "CURRENT.md").write_text("v1\n", encoding="utf-8")
+    tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+    (ratify / "CURRENT.md").write_text("v2\n", encoding="utf-8")
+    try:
+        tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert "already exists" in str(exc)
+    # The original mint is unchanged.
+    assert (ratify / "2026-08-22-wi503.md").read_text(encoding="utf-8") == "v1\n"
+
+
+def test_mint_refuses_a_slug_with_a_bad_character(tmp_path):
+    tr = load_script("trace")
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True)
+    (ratify / "CURRENT.md").write_text("v1\n", encoding="utf-8")
+    for bad in ("", "  ", "wi 503", "wi/503", "../escape"):
+        try:
+            tr.mint_ratify_brief(tmp_path, bad, date="2026-08-22")
+            assert False, "expected ValueError for slug {!r}".format(bad)
+        except ValueError:
+            pass
+
+
+def test_mint_cli_writes_and_reports(tmp_path):
+    ratify = tmp_path / "docs" / "ratify"
+    ratify.mkdir(parents=True)
+    (ratify / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
+    proc = run_py(
+        [
+            SCRIPTS / "trace.py",
+            "--root",
+            tmp_path,
+            "--mint-ratify-brief",
+            "wi503",
+            "--mint-date",
+            "2026-08-22",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "minted" in proc.stdout
+    assert (ratify / "2026-08-22-wi503.md").read_text(
+        encoding="utf-8"
+    ) == "the live brief\n"
+
+
+def test_mint_cli_refuses_without_CURRENT_and_exits_nonzero(tmp_path):
+    (tmp_path / "docs" / "ratify").mkdir(parents=True)
+    proc = run_py(
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--mint-ratify-brief", "wi503"],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "CURRENT.md" in (proc.stdout + proc.stderr)

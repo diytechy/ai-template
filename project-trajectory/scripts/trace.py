@@ -66,7 +66,11 @@ closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
 `modified` (WI-316) emits the re-attestation brief instead — per-cell
 before/after for every row owing a human act, against its copy in the
-`docs/archive/last_approved/` snapshot (`baseline_snapshot.py`). Warn-only
+`docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
+to `docs/ratify/CURRENT.md`, the one file this path ever rewrites. `--mint-
+ratify-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
+`docs/ratify/<date>-SLUG.md` — the only sanctioned writer of a dated brief;
+`check.py --ratify-immutable` refuses any other commit that touches one. Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Approved while every
 citing TC is Approved (WI-129), a missing knowledge pack, and an interface
@@ -79,6 +83,7 @@ Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (
 
 import argparse
 import csv
+import datetime
 import re
 import sys
 import tomllib
@@ -3247,19 +3252,27 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     return model
 
 
-def newest_ratify_brief(root):
-    """The live re-attestation brief — the newest `docs/ratify/*.md` — or None.
+# WI-503: the brief SPLITS into an undated live surface and immutable dated
+# history. `docs/ratify/CURRENT.md` is the one file a regeneration ever
+# touches — a FIXED name, not derived by "newest by filename" the way the
+# pre-split brief was. That derivation existed because every sitting picked a
+# fresh date-stamped filename and a regeneration had to find whichever one was
+# newest to rewrite it IN PLACE — which is exactly the defect: a dated file,
+# named and read as the record of one sitting, kept being rewritten until a
+# newer date appeared (measured: `docs/ratify/2026-08-13-wi444.md`, ten
+# rewrites, none of them about WI-444). Under the split there is nothing to
+# search for — the live surface has one name — and a dated brief is written
+# exactly once, by `--mint-ratify-brief`, never touched again by this path.
+CURRENT_RATIFY_BRIEF = "CURRENT.md"
 
-    DERIVED rather than configured: briefs are date-stamped per sitting, so a
-    fixed path in `docs/stack.ini` would have to be edited at every sitting and
-    would silently gate the wrong file when it was not. Newest by NAME, which is
-    the stamped date, not by mtime — a checkout re-writes mtimes and the whole
-    point of this check is not to trust the working tree's incidentals."""
-    ratify = root / "docs" / "ratify"
-    if not ratify.is_dir():
-        return None
-    briefs = sorted(p for p in ratify.glob("*.md") if p.name.lower() != "readme.md")
-    return briefs[-1] if briefs else None
+
+def current_ratify_brief(root):
+    """The live re-attestation brief — `docs/ratify/CURRENT.md` — or None when
+    it does not exist. The fixed counterpart of the retired
+    `newest_ratify_brief`; see `CURRENT_RATIFY_BRIEF` for why a fixed name
+    replaced a derived one."""
+    path = Path(root) / "docs" / "ratify" / CURRENT_RATIFY_BRIEF
+    return path if path.is_file() else None
 
 
 # --- WI-325: the re-attestation brief gets the freshness gate everything else has
@@ -5077,6 +5090,65 @@ def _cmd_correct_mark(root, space, new_value_text, ruling_id):
     return 0
 
 
+def mint_ratify_brief(root, slug, date=None):
+    """`--mint-ratify-brief SLUG` (WI-503): copy `docs/ratify/CURRENT.md` to a
+    dated, IMMUTABLE `docs/ratify/<date>-<slug>.md` — the one act the
+    immutability enforcer (`check.py --ratify-immutable`) ever permits,
+    because it only ever CREATES a fresh filename; it never rewrites one that
+    already exists. Home chosen here rather than a new script or a
+    intake.py flag: the mint is a plain file copy over machinery trace.py
+    already owns (`current_ratify_brief`, the CURRENT.md path), so this is
+    the smallest-total-code seam — a sibling script would duplicate that path
+    knowledge, and intake.py's writers are all registry-shaped, not a byte
+    copy of a rendered view.
+
+    `date` is a testability seam (ISO `YYYY-MM-DD`); the CLI leaves it None,
+    which defaults to today.
+
+    Returns the minted `Path`. Raises `ValueError` on every refusal — no
+    `CURRENT.md` to mint from, a slug that is empty or carries a character
+    other than `[A-Za-z0-9-]`, or a destination that already exists (minting
+    twice at the same date+slug would be exactly the in-place rewrite this
+    split exists to stop)."""
+    slug = (slug or "").strip()
+    if not slug or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]*", slug):
+        raise ValueError(
+            "trace: --mint-ratify-brief SLUG must be non-empty and contain "
+            "only letters, digits and '-', got {!r}".format(slug)
+        )
+    root = Path(root)
+    current = current_ratify_brief(root)
+    if current is None:
+        raise ValueError(
+            "trace: no docs/ratify/{} to mint from — regenerate it first "
+            "with `trace.py --ratify modified --out docs/ratify/{}`".format(
+                CURRENT_RATIFY_BRIEF, CURRENT_RATIFY_BRIEF
+            )
+        )
+    stamp = date or datetime.date.today().isoformat()
+    dest = root / "docs" / "ratify" / "{}-{}.md".format(stamp, slug)
+    if dest.exists():
+        raise ValueError(
+            "trace: {} already exists — a dated brief is IMMUTABLE once "
+            "minted; choose a different slug or wait for the date to roll "
+            "over".format(dest)
+        )
+    dest.write_bytes(current.read_bytes())
+    return dest
+
+
+def _cmd_mint_ratify_brief(root, slug, date):
+    """`--mint-ratify-brief`'s CLI body: report and exit rather than raise, the
+    same shape `_cmd_correct_mark` uses."""
+    try:
+        dest = mint_ratify_brief(root, slug, date)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print("trace: minted re-attestation brief -> {}".format(dest))
+    return 0
+
+
 def _writer_mode(args):
     """`None` when neither writer flag is set, else the exit code of the one
     that is. Split out of `main()` so the two mutually-exclusive early-return
@@ -5086,6 +5158,8 @@ def _writer_mode(args):
         return _cmd_bump_ids(args.root)
     if args.correct_mark:
         return _cmd_correct_mark(args.root, *args.correct_mark)
+    if args.mint_ratify_brief:
+        return _cmd_mint_ratify_brief(args.root, args.mint_ratify_brief, args.mint_date)
     return None
 
 
@@ -5111,6 +5185,23 @@ def main():
         "recording RULING (e.g. OI-47) in the header — the only other way a "
         "mark may rise besides allocation (OI-47 (e)); refuses to replay a "
         "space that already carries a recorded correction",
+    )
+    ap.add_argument(
+        "--mint-ratify-brief",
+        metavar="SLUG",
+        default=None,
+        help="WI-503: copy docs/ratify/CURRENT.md to a dated, IMMUTABLE "
+        "docs/ratify/<date>-SLUG.md and exit — the only sanctioned writer of "
+        "a dated brief (check.py --ratify-immutable refuses any OTHER commit "
+        "that modifies one). Refuses when CURRENT.md is absent or the "
+        "destination already exists; --mint-date overrides today's date",
+    )
+    ap.add_argument(
+        "--mint-date",
+        metavar="YYYY-MM-DD",
+        default=None,
+        help="with --mint-ratify-brief: use this date instead of today (testing/"
+        "backfill; the mint itself does not validate the calendar)",
     )
     ap.add_argument(
         "--strict-integrity",
@@ -5164,8 +5255,8 @@ def main():
         "--check",
         action="store_true",
         help="with --ratify modified: FRESHNESS mode. Re-render the brief and "
-        "compare it against the committed file (--out, else the newest "
-        "docs/ratify/*.md), exiting nonzero when they differ. A plain "
+        "compare it against the committed file (--out, else "
+        "docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain "
         "regenerate-and-compare — the baseline is a directory of files, so "
         "there is nothing a re-render could move (WI-325's blocker dissolved "
         "with the git-derived baseline). Silent no-op when there is no brief, "
@@ -5195,14 +5286,19 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
 
-    # --bump-ids and --correct-mark are WRITERS, not checkers: they act and exit
-    # before any pass runs, so neither depends on the tree already being clean.
+    # --bump-ids, --correct-mark and --mint-ratify-brief are WRITERS, not
+    # checkers: they act and exit before any pass runs, so none depends on the
+    # tree already being clean.
     # Folded into one call rather than two `if`s at this level, which is
     # main()'s own complexity ceiling (`resolve_plan`/`floor_notice`'s WI-473
     # precedent: lift a branch OUT rather than let a dispatcher grow past it).
     writer_code = _writer_mode(args)
     if writer_code is not None:
-        return writer_code
+        # `main()` is called bare at the bottom of this module (like the
+        # --ratify --check path above), so a plain `return` sets no process
+        # exit status — a WRITER's failure (e.g. --mint-ratify-brief refusing
+        # a bad slug) must `sys.exit` or the CLI reports success regardless.
+        sys.exit(writer_code)
 
     reg = load_registries(docs)
 
@@ -5227,8 +5323,8 @@ def main():
                 Path(args.out)
                 if args.out
                 else (
-                    newest_ratify_brief(Path(args.root))
-                    or Path(args.root) / "docs" / "ratify" / "(none)"
+                    current_ratify_brief(Path(args.root))
+                    or Path(args.root) / "docs" / "ratify" / CURRENT_RATIFY_BRIEF
                 ),
             )
             print("trace: ratify-check — {}".format(message), file=sys.stderr)

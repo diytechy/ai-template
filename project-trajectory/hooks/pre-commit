@@ -243,6 +243,14 @@ fi
 #                        `gen_prompt_catalog.py`. Both steps are no-ops where the
 #                        kit-only generator isn't beside check.py, so a
 #                        non-adopter pays nothing.
+#      - ratify-immutable  refuses a STAGED change (other than a brand-new add)
+#                        to an existing docs/ratify/<date>-*.md (WI-503): a
+#                        dated re-attestation brief is the record of what a
+#                        human was shown at a sitting, and rewriting it in
+#                        place is the defect the CURRENT.md/dated split fixes.
+#                        Mint a new one with `trace.py --mint-ratify-brief
+#                        SLUG`; regenerate the live surface at
+#                        docs/ratify/CURRENT.md. Fail-closed, no warn mode.
 #      - staged-divergence  the one step here that is NOT a freshness check, and
 #                        it exists because every step above reads the WORKING
 #                        TREE: it asks which declared generated artifact is
@@ -270,7 +278,7 @@ fi
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,ratify-fresh,staged-divergence
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,ratify-fresh,ratify-immutable,staged-divergence
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

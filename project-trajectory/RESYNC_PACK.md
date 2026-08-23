@@ -3161,6 +3161,50 @@ check wherever `derive_stage --check` runs.
 
 ---
 
+### `docs/ratify/` splits: a regenerated `CURRENT.md` plus immutable dated briefs [since d08b5bd2]
+
+*(Anchored at the preceding commit: an entry cannot know its own SHA.)*
+
+**The defect this fixes.** `trace.py --ratify modified --check` used to gate
+whichever `docs/ratify/*.md` file was **newest by filename** — so a
+regeneration rewrote a DATED file (named and read as the record of one
+sitting) in place, sometimes many times, none of the rewrites about the WI the
+file was named for (measured: one file, ten rewrites).
+
+**What changed.**
+
+- The live surface is now the fixed name **`docs/ratify/CURRENT.md`**.
+  `trace.py --ratify modified --out docs/ratify/CURRENT.md` is the one command
+  that ever writes it; `--ratify modified --check` (no `--out`) now compares
+  against `CURRENT.md`, not "whatever is newest".
+- A dated brief — `docs/ratify/<date>-<slug>.md` — is now **minted**, never
+  hand-written with `--out`: `trace.py --mint-ratify-brief SLUG` copies
+  `CURRENT.md` to a dated name and refuses to overwrite one that already
+  exists (`--mint-date` overrides the calendar date for backfill/testing).
+- A new harness step, **`ratify-immutable`** (`check.py --ratify-immutable`,
+  wired into `steps()`, `BUILTIN_STEP_NAMES`, and the shipped
+  `hooks/pre-commit`'s batched floor), refuses any STAGED commit that modifies
+  or deletes an already-committed `docs/ratify/<date>-*.md` — a plain ADD of a
+  brand-new name (what the mint produces) is the only change it permits.
+  Fail-closed, no warn mode, no `--strict` switch: unlike its sibling
+  `staged-divergence`, there is no honest partial-compliance state for "a
+  historical sign-off record just got rewritten".
+- `docs/stack.ini`'s `[generated]` row (`docs/ratify/ = ratify`) is unchanged —
+  it was already a directory PREFIX, so it already covers both the one
+  regenerated file and the N immutable ones without edit; its comment block
+  now states the split explicitly.
+
+**What you must do.** If you (or a job) ever passed `--out
+docs/ratify/<date>-something.md` directly to `--ratify modified`, stop:
+write to `docs/ratify/CURRENT.md` and mint the dated copy as a second step.
+Any EXISTING dated brief in your repo is untouched and stays exactly as
+committed — the split changes nothing about history, only how the next one is
+produced. `newest_ratify_brief` (the "pick the newest filename" helper) is
+RENAMED to `current_ratify_brief` and now reads the fixed `CURRENT.md` path;
+a script that imported the old name in-process needs the new one.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

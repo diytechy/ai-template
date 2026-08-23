@@ -109,8 +109,15 @@ the derived rung follows from it:
   what marks it is the DIFFERENCE from its copy in
   `docs/archive/last_approved/`, and the pending-owner-actions projection
   carries one line per drifted SR. Read the before/after first — `python
-  scripts/trace.py --ratify modified [--out docs/ratify/<date>-reattest.md]`
-  (the scope word is a CLI name, not a Status value). Blessing the amendment
+  scripts/trace.py --ratify modified --out docs/ratify/CURRENT.md` (the scope
+  word is a CLI name, not a Status value). `CURRENT.md` is the ONE file this
+  regenerates — never a dated name: `docs/ratify/<date>-*.md` files are
+  IMMUTABLE once committed (WI-503; `check.py`'s `ratify-immutable` step
+  refuses any other change to one), because they are the record of what a
+  human actually read at a sitting. Once you have read and blessed
+  `CURRENT.md`, mint that sitting's dated copy — `python
+  scripts/trace.py --mint-ratify-brief <slug>` — and commit it alongside the
+  ratifying `Status`/snapshot change. Blessing the amendment
   is `python scripts/intake.py snapshot` in the reviewed commit: the copy IS
   the signature now, so without it the record of what was blessed does not
   move. If the amendment invalidated the evidence, that is the harness's
@@ -136,7 +143,10 @@ decomposition, not a row list. **Generate it, never hand-copy:**
 (scope is a phase tag or an `SR-###` list) emits the tree with each SR's
 Requirement/AC, LLR Detail, TC Method/Expected, and any cited rubric — then link
 that file from the `## OI-N` brief. `check_trajectory.py` warns (never fails)
-when a `[phase]-[reqs|tests]` ratification brief carries no such link.
+when a `[phase]-[reqs|tests]` ratification brief carries no such link. **This
+view, once committed under `docs/ratify/`, is immutable too** (the enforcer
+does not distinguish it from a re-attestation brief) — a phase that needs a
+fresh view after committing one picks a new filename rather than overwriting.
 
 This preserves the reviewed-commit discipline while making the marker computed.
 It **composes with the ratification levels**: level 4 = the human ratifies each

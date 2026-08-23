@@ -895,7 +895,13 @@ python project-trajectory/scripts/check_coverage.py --tier full --skip-tiers smo
 
 # the ratification hierarchy for a batch, and the re-attest brief
 python project-trajectory/scripts/trace.py --ratify SR-052,SR-053
-python project-trajectory/scripts/trace.py --ratify modified
+python project-trajectory/scripts/trace.py --ratify modified --out docs/ratify/CURRENT.md
+python project-trajectory/scripts/trace.py --ratify modified --check   # freshness gate (ratify-fresh)
+
+# mint the sitting's dated, IMMUTABLE record from CURRENT.md (WI-503) — the
+# only sanctioned writer of a docs/ratify/<date>-*.md; check.py's
+# ratify-immutable step refuses any other commit that touches one
+python project-trajectory/scripts/trace.py --mint-ratify-brief wi052-wi053
 
 # expand an SR's Permutations cell into concrete cases
 python project-trajectory/scripts/gen_cases.py --spec "size=range[0..2GiB]; enc=set{utf8,utf16}"
