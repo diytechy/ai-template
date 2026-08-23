@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-18; not current guidance.
+
 # Retired gate vocabulary — the `G*` tags
 
 **History, not a working surface.** The `G0` / `G1` / `G2` / `G3` / `G-Release` /

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # SN / SR prose legibility rewrite — a sitting-ready proposal
 
 **Status: PROPOSAL. Nothing here is executed.** No registry row was edited to

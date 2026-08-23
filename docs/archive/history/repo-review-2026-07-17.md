@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Deep repository review — 2026-07-17
 
 Scope: the full active repository — portable kit scripts/templates, the

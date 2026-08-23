@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-04; not current guidance.
+
 # Scratch Notes
 
 Brainstorming and open questions feeding `IMPROVEMENT_PLAN.md` — rough notes,

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-16; not current guidance.
+
 # Resume brief — the SR re-tier, the interface model, and the hardware crosscheck
 
 > **ARCHIVED 2026-08-16 — DO NOT RESUME FROM THIS FILE.** §0's worktree table

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # DP-001 verdict — arbiter select-and-port (2026-07-16)
 
 **VERDICT: SELECT plan-B-rev ports=0** — the two position-swapped arbiter runs

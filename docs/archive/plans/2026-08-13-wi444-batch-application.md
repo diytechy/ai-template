@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # WI-444 — application record for the prepared SN/SR prose batch
 
 **Source of the applied text:** [`2026-08-10-sn-sr-prose-rewrite.md`](2026-08-10-sn-sr-prose-rewrite.md)

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Deep repository review — 2026-07-22
 
 This is an as-found review of the live repository on branch

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-21; not current guidance.
+
 # Deep repository review — 2026-07-12 (second pass, "b")
 
 Scope: the full repository — kit scripts, templates, process docs, the meta-repo's

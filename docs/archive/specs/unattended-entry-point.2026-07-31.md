@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-31; not current guidance.
+
 # Effort — the unattended entry point
 
 > **ARCHIVED 2026-07-31 — effort complete.** This was the spec-of-record for

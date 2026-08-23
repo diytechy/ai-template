@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-23; not current guidance.
+
 # WI-441 part A — the analysis data pack
 
 **Status:** analysis input, **not a decision**. Produced for

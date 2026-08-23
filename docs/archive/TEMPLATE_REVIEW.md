@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-04; not current guidance.
+
 # Template Repository Review
 
 Date: 2026-06-26

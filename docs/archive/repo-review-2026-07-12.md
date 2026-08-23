@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-12; not current guidance.
+
 # Deep repository review — 2026-07-12
 
 > **ARCHIVED 2026-07-12 — review complete, confident fixes landed (WI-077,

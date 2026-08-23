@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Axes & Workstreams — how to organize *what* / *why* / *how* / *when* without duplication
 
 **Author:** Claude (Opus 4.8), design note from a working session ·

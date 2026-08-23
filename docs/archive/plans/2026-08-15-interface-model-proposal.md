@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-16; not current guidance.
+
 # The interface model — PROPOSAL, NOT RULED
 
 **Status: a scratchboard.** Nothing here is decided, nothing here has been

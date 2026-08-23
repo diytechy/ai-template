@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-04; not current guidance.
+
 # ai-template — Downstream Adoption Field Report
 
 **From:** Finance-Auditor boot (kit `605252d`), 2026-07-04

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 ```
 PER-ANCHOR:
 - [G1] even: both factor into single-session, testable units; A embeds checkable done-conditions in each row (A-P4 clean/bounce-then-clean/bounce-then-page, A-P5 "through the validator"), B carries them in assumption notes (B-P2's budget/telemetry scope) — neither row is unbuildable.

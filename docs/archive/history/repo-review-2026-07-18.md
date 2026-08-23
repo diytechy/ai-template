@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Deep Repository Review — 2026-07-18
 
 **Review target:** `cfd24c4` on `dualplan-routing-fix`  

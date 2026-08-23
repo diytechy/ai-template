@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-29; not current guidance.
+
 > **Archived 2026-07-29** at the WI-158 retirement (owner ruling, handoff-2026-07-28c §3 dispositions); attributed to WI-158.
 
 # Design spec — Research track + durable knowledge layer

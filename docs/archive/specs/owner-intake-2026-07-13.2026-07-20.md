@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-20; not current guidance.
+
 # Owner intake 2026-07-13 — six items: triage, dedupe, WIs
 
 > **ARCHIVED 2026-07-20 — WI-251 spec-lifecycle sweep.** Spec-of-record for **WI-134, WI-135, WI-136, WI-137, WI-141, WI-142, WI-143, WI-144** (all `done`; deliverables in `docs/requirements/work-items.csv`, session records in `docs/log.md`). Absorb-verified before archiving: every durable decision has a live spine/architecture/process home (dispositions in the log, 2026-07-20 entry).

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-12; not current guidance.
+
 # Campaign binning · parallel tests · dirty-tree resume hardening — PLAN
 
 > **ARCHIVED 2026-07-11 — batch complete.** This was the spec-of-record for

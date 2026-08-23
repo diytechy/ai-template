@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Plan coverage report
 
 Goal: goal.md - 7 clause(s): C1 C2 C3 C4 C5 C6 C7

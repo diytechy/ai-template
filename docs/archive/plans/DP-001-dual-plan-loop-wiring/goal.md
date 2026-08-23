@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # DP-001 goal brief — wire the dual-plan decomposition round into the unattended coordinator
 
 **Round:** DP-001 (the WI-190 dogfood run, 2026-07-16). **Owner prompt (verbatim):**

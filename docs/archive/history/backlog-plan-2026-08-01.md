@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Backlog drain plan — 2026-08-01 (Part 2 of the wrap-up)
 
 The owner-approved plan for closing the remaining concurrency-v2 backlog once

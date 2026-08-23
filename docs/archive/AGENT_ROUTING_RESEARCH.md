@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-11; not current guidance.
+
 # Agent routing & heterogeneous review — research notes (S8 input)
 
 **Provenance:** three research passes run 2026-07-10 (owner-directed) as input

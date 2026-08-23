@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-11; not current guidance.
+
 # Owner-feedback batch — gate cadence · campaign language · owner scratchpad · archive scan-scope · How-SW containment — PLAN
 
 > **ARCHIVED 2026-07-11 — batch complete.** This was the spec-of-record for

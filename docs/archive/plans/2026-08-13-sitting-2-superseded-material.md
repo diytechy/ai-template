@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-23; not current guidance.
+
 # Sitting 2 — superseded & ruled material (archived 2026-08-13)
 
 Moved out of

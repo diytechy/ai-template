@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-20; not current guidance.
+
 # Design spec — Derived gate model (replace the monolithic declared gate)
 
 > **ARCHIVED 2026-07-20 — WI-251 spec-lifecycle sweep.** Spec-of-record for **WI-089, WI-090, WI-091, WI-092, WI-093, WI-094, WI-095, WI-096, WI-116, WI-117** (all `done`; deliverables in `docs/requirements/work-items.csv`, session records in `docs/log.md`). Absorb-verified before archiving: every durable decision has a live spine/architecture/process home (dispositions in the log, 2026-07-20 entry).

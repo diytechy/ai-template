@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Part A — the ranked shortlist and the provisional ruling (WI-441)
 
 Coordinator record, 2026-08-13, under the owner's confirmed execution mode for

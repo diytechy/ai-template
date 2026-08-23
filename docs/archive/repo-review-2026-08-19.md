@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-19; not current guidance.
+
 # Repository Review — 2026-08-19
 
 Review target: `ai-template` at commit `2b867c0f` on branch

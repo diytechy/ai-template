@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-10; not current guidance.
+
 # Kit Improvement Plan
 
 Derived from `docs/archive/TEMPLATE_REVIEW.md` (resolved 2026-06-28) plus follow-on design

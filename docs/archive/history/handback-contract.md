@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-23; not current guidance.
+
 # The handback contract — the context an owner ruling needs (2026-08-03)
 
 Written at the owner's request, mid-grind, after three REVIEW-A rounds on

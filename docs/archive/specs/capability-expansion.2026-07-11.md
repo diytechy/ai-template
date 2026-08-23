@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-11; not current guidance.
+
 # Capability expansion — run menu · critique loop · registry robustness · OKF tab — PLAN
 
 > **ARCHIVED 2026-07-11 — campaign complete.** This was the spec-of-record for

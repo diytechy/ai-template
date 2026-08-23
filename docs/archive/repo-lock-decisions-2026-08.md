@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # The lock program — archived decision record, August 2026
 
 **What this is.** The full reasoning behind the lock program's **executed**

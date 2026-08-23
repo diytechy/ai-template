@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-16; not current guidance.
+
 # Archived plans — the 2026-08 sitting-preparation set
 
 Moved here 2026-08-13 when the live decision surface was consolidated into the

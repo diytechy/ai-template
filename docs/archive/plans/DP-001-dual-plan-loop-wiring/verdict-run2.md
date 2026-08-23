@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 ```
 PER-ANCHOR:
 - [G1] B: B's P1 is a pure, standalone-unit-tested state machine and P2/P3/P4/P5 each name a fixture-based done-condition in the row itself; A's P3/P4 split is sound but leans on the Notes to state its checkable conditions rather than the rows.

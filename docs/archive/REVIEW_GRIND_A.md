@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-10; not current guidance.
+
 # Grind Review A — Adversarial Correctness (Reviewer A)
 
 > **RESOLVED 2026-07-10 (review triage, WI-1.53).** All 7 findings fixed:

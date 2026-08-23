@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-29; not current guidance.
+
 # Thread 52 — Adversarial Review Findings (to triage)
 
 **Reviewer:** Claude (Opus 4.8), self-review · **Date:** 2026-07-08 ·

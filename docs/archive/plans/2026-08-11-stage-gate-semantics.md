@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Stage vs gate — the semantics (RULED, SHIPPED, then SUPERSEDED in part)
 
 **Status: RULED 2026-08-12, SHIPPED — and its ladder superseded 2026-08-13 by

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 | Plan-WI | Title | Covers | Interfaces | Predecessors |
 |---|---|---|---|---|
 | P1 | Dual-plan round state machine: a pure, side-effect-free library modeling the round lifecycle (plan → coverage → cross-critique → revision → coverage → arbiter ×2 position-swapped → verdict) with typed step outcomes, the hard caps (one cross-critique round, one revision each, one coverage bounce), verdict-disagreement/cap-exhaustion → page dispositions, and a declared round-budget ledger whose exhaustion maps to the `docs/gate-policy` failure semantics. Unit-tested against injected fake step results. | C5;C7 | Proposed: a new pure round-lifecycle library provided to `scripts/agent_loop`; nearest is IF-053 (right contract shape — a side-effect-free library the dispatcher consumes, never touching git) but wrong provider module and wrong contract (frontier/classification, not round lifecycle) | |

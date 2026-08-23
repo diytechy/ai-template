@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # The `Status` ladder migration — a measured checklist
 
 **What this is.** The execution checklist for **D-9** ([`repo-lock.md`](../../repo-lock.md)

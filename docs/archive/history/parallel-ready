@@ -1,3 +1,4 @@
+# ARCHIVE — design history as of 2026-08-13; not current guidance.
 # Parallel-dispatch migration sign-off (parallel-wi-dispatch.md §14.9-10).
 # The detailed row-by-row and edge-by-edge reasoning is in docs/log.md.
 SafetyClass audit signed; soft-edge audit signed; audit commit WI-208

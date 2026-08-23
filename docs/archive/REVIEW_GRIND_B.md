@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-10; not current guidance.
+
 # Grind Review B — Process / Traceability / Prose (WI-1.47…1.52 batch)
 
 > **RESOLVED 2026-07-10 (review triage, WI-1.53).** All 4 findings fixed:

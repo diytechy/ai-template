@@ -1,4 +1,17 @@
+> **ARCHIVE** — design history as of 2026-08-23; not current guidance.
+
 # Archive
+
+**Convention (OI-56 ruled (a), WI-505):** every file under `docs/archive/**`
+carries a one-time `ARCHIVE — design history as of <date>; not current
+guidance.` banner at the top — an addition, never a content edit, and no
+live-surface pointer (the owner declined that: it rots). Two classes are
+exempt because a banner would break what reads them mechanically rather than
+a human: the registry-parsed specs under `work/` (`kitlib.registry` requires
+the `+++` frontmatter fence as line 0 and the body to start with `##
+Deliverable`) and the byte-compared snapshot under `last_approved/`
+(`baseline_snapshot` drift detection). The convention is enforced by nothing
+else — this line is the whole of it, by ruling.
 
 The kit's **design history** — kept for traceability, no longer working
 surfaces. The go-forward homes are `docs/status.md` (what's next),

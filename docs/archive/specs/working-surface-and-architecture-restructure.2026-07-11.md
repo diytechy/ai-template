@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-11; not current guidance.
+
 # Working-surface SSOT + architecture-connectivity restructure — PLAN
 
 > **ARCHIVED 2026-07-11 — campaign complete.** This was the spec-of-record for

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-17; not current guidance.
+
 # Agent roles & the coordinator loop — the dynamic layer
 
 **Author:** Claude (Opus 4.8 / Fable 5), design note from a working session ·

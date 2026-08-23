@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 | Plan-WI | Title | Covers | Interfaces | Predecessors |
 |---|---|---|---|---|
 | P1 | Add redacted three-hat prompt-map assembly | C2 | IF-041 |  |

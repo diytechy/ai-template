@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-23; not current guidance.
+
 # The DevStg-Boundary draft — the kit's depth-0 frame, for sitting 2
 
 **Status: DRAFT FOR RULING — with TWO parts already ruled.** §1a carries the

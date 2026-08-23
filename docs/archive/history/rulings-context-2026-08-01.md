@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # R3 and R4 — the context the two open rulings need (2026-08-01)
 
 Written at the owner's request after the first ruling pass: R1 (id minting)

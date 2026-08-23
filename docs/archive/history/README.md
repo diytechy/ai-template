@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Archived history — handoffs, root reviews, and spent root plans
 
 Moved out of the `docs/` root 2026-08-13w (the post-sitting-2 cleanup), on the

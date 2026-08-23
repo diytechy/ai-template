@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Deep repository review (third sitting) — 2026-07-17c
 
 Scope: the full active repository as of `36d945e` (branch `dualplan-routing-fix`)

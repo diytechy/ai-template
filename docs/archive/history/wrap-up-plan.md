@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Wrap-up plan — closing out the template
 
 **Purpose.** A resumption guide for finishing this repo's open work in a later

@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-10; not current guidance.
+
 # Integration Plan — ClaudeGuardChecks findings → ai-template kit
 
 **Date:** 2026-07-10 · **Status:** ✅ **LANDED (Phases 1–5) + archived** — the

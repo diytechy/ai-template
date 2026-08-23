@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # The sitting pack — run the whole re-attest sitting from this one document
 
 Assembled by the coordinator during the 2026-08-13 pre-absence charge-through;

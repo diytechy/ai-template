@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Handoff — the 2026-08-08 mechanized-loop program
 
 **Status:** the program is BUILT, TESTED and COMMITTED. What is open is

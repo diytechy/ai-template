@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-29; not current guidance.
+
 # WI-229 oversized-SR migration and ratification
 
 **State:** ATTESTED 2026-07-19 — stage 3 may proceed (record below).

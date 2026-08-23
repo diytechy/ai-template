@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Handoff — the 2026-08-13 pre-absence charge-through
 
 **Boot order for a fresh session:** this file → `docs/status.md` START HERE →

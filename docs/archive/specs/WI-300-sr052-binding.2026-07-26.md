@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-07-26; not current guidance.
+
 # WI-300 remainder — bind A1 / A3 / A4 so SR-052 can flip
 
 **Status: CLOSED 2026-07-26** — delivered by **WI-313**: A1 → LLR-112/TC-117,

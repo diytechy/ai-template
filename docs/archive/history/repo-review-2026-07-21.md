@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Deep repo review — 2026-07-21
 
 Full-repository critical review (code quality, architecture, documentation &

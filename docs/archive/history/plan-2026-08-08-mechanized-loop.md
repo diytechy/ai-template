@@ -1,3 +1,5 @@
+> **ARCHIVE** — design history as of 2026-08-13; not current guidance.
+
 # Plan — SN build-out for the fully mechanized loop (2026-08-08)
 
 Owner-directed planning pass over the six new stakeholder needs (A–F) plus the
