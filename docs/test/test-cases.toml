@@ -1923,3 +1923,25 @@ automated = "Yes"
 evidence = "tests/test_check_dupes_census.py"
 status = "Approved"
 phase = 5
+
+[test.TC-191]
+verifies = ["SR-177", "LLR-196"]
+level = "Integration"
+method = """Runs the real folding path rather than reading it: `tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run` calls `agent_common.regenerate_index` on a synthetic `docs/` tree and asserts the generated table exists (the row-per-session fold LLR-196 cites); `tests/test_agent_loop.py::test_done_exit_writes_logs_and_index` and `::test_stream_json_echo_and_result_parse` drive a live fake-CLI session end to end and assert the exact telemetry columns (`wall-secs`, `api-secs`, `turns`, `tokens`, `cache-read`, `cache-create`) land in the log header `regenerate_index`/`per_turn_pace`/`per_turn_context` read. No test here exercises a lanes-configured-vs-occupied or work-per-wall-hour GROUPING, because LLR-196 states plainly that grouping does not exist yet — this case verifies the inputs the future grouping pass would consume, not the report SR-177 ultimately asks for."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-196 (parent SR-177) for the telemetry INPUT half only; the utilisation report itself remains the stated build gap"
+automated = "Yes"
+evidence = """tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run; tests/test_agent_loop.py::test_done_exit_writes_logs_and_index; tests/test_agent_loop.py::test_stream_json_echo_and_result_parse"""
+status = "Drafted"
+phase = 5
+
+[test.TC-192]
+verifies = ["SR-146", "LLR-164"]
+level = "Unit"
+method = """`gen_prompt_catalog.render` is exercised directly rather than read: `test_the_catalogue_lists_every_shipped_prompt_with_its_digest` asserts every `prompts.KIT_PROMPTS` key and every `prompts.catalog_rows()` digest appears in the rendered text (the PURE-render claim, since it reads only the shipped templates); `test_the_catalogue_on_disk_is_FRESH` runs `catalog.main(["--check"])` and asserts exit 0 against the committed file (the freshness gate LLR-164 names); `test_a_template_edit_moves_its_digest_and_so_the_catalogue` asserts a real text edit moves the digest while a bare line-ending difference does not (the CRLF-vs-stale-catalogue claim `--check` exists to avoid); `tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes` drives the wired `[step:]` enforcer end to end — edits a template, asserts the commit-floor step reds, then runs `gen_prompt_catalog.py` and asserts it goes green — over a bootstrapped scaffold, not the source tree alone."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-164 (parent SR-146)"
+automated = "Yes"
+evidence = """tests/test_routing_and_prompts.py::test_the_catalogue_lists_every_shipped_prompt_with_its_digest; tests/test_routing_and_prompts.py::test_the_catalogue_on_disk_is_FRESH; tests/test_routing_and_prompts.py::test_a_template_edit_moves_its_digest_and_so_the_catalogue; tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes"""
+status = "Drafted"
+phase = 5

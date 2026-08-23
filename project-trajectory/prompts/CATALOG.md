@@ -24,7 +24,7 @@ is a refusal rather than a silently empty instruction.
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:ae826fef3e73` | `{brief}`, `{verdict}` |
 | `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:684609719ede` | `{verdict}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:56d04331b3be` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:9dfaf4ea9a70` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

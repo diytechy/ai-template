@@ -2325,6 +2325,25 @@ the new shape directly — `docs/work/{draft,active,deferred}/` plus
 `docs/archive/work/{partial,cancelled,complete}/`, no migration needed), and
 `orphans-allow.template` / `work/README.template.md` / `work/WI-000.template.md`.
 
+### The worker brief gains a standing-state clause [since 7507c569]
+
+`prompts/worker.template.md` (kit-owned, no override) gains one Rules bullet:
+before spending effort on heavy verification, the worker session starts its
+`docs/log.d/<WI-id>-<slug>.md` fragment and lands the spec's own
+`## Context`/`## Deliverable` edits in a commit, and keeps both current as the
+session continues rather than writing them once at the end. This is prose
+only — no new slot, no loop-side change — because the relaunch half already
+works off committed branch state: `worker_prompt`'s `diff_block` recomputes
+the branch's own accepted-not-yet-reviewed commits fresh at every launch, so a
+session killed mid-verification already hands the next one its own diff; the
+only gap was that nothing told the worker to make that diff resumable *before*
+the long stretch of verification that might kill it. **Take:** the updated
+`prompts/worker.template.md` (your repo's copy is kit-owned and gets
+overwritten on re-sync the same way the reviewer/critique briefs are — a
+locally forked worker brief must reapply this clause by hand) and the
+regenerated `prompts/CATALOG.md` (`gen_prompt_catalog.py`, `--check` fails
+until you do).
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

@@ -1671,7 +1671,7 @@ module = "project-trajectory/scripts/gen_prompt_catalog.py"
 code_symbol = "render/main"
 detail = """`render` is PURE — it takes no arguments and reads only the shipped templates — so `--check` and the write path cannot disagree about what "current" means. `--check` compares on NORMALIZED line endings, for the same reason the digest is taken that way: a CRLF checkout is not a stale catalogue. The file is declared in `docs/stack.ini [generated]` as kind `promptcatalog`, so the trunk lane owns it and a work branch never commits it."""
 rationale = """A generated artifact nobody re-generates is a document that lies, and a lying catalogue is worse than none: it invites the operator to conclude the wrong thing about the session they are debugging. Same contract `gen_arch_map --check` and `gen_skills_index --check` hold."""
-test_refs = "TC-157"
+test_refs = "TC-192"
 status = "Approved"
 component = "CMP-009"
 phase = 5
@@ -2044,4 +2044,16 @@ rationale = """The always-0 exit is the part that could silently regress toward 
 test_refs = "(see TC-190)"
 status = "Approved"
 component = "CMP-007"
+phase = 5
+
+[design.LLR-196]
+sr_refs = ["SR-177"]
+title = "The per-session telemetry a fan-out utilisation report would aggregate, not yet aggregated"
+module = "project-trajectory/scripts/agent_common.py"
+code_symbol = "regenerate_index/per_turn_pace/per_turn_context"
+detail = """Every session the coordinator launches already carries the columns a utilisation report would consume: `write_session_log` stamps `# wall-secs:`/`# api-secs:`/`# turns:`/`# tokens:`/`# cache-read:`/`# cache-create:` headers on its `docs/iteration/*.log` (wall measured by the coordinator's own clock, the rest parsed from the CLI's `type: result` JSON event — `agent_loop.parse_json_result`/the `meta` dict at its session-close path), and `regenerate_index` folds every log's header into one row per session in the generated `docs/iteration_index.md`, with `per_turn_pace`/`per_turn_context` already deriving the like-for-like speed and context-volume numbers SR-177's own rationale calls out as the existing telemetry to derive from. NOT DISCHARGED, stated rather than left to be discovered: nothing GROUPS these per-session rows by RUN or by LANE — `docs/iteration_index.md` is a flat session table, not a utilisation report — and nothing joins the `lanes` value `agent_loop` resolves at boot (CLI `--lanes` / `AGENT_LANES` / `docs/stack.ini [agent-loop] lanes`) against how many trains actually ran concurrently, so "lanes configured" versus "lanes occupied" and "work items integrated per wall-hour" are both unmeasured today. This row cites the real, already-collected columns and the real folding function the report would extend, rather than a fabricated aggregator that does not exist."""
+rationale = """SR-177's own rationale already states the aggregation is the row's whole build gap; repeating that here without citing what exists would leave a reader to wonder whether even the inputs are real. They are: the per-session telemetry columns are shipped, tested, and committed on every session today, so the fan-out utilisation report SR-177 wants is a GROUPING pass over data already on disk, not a new instrumentation project — which is the concrete argument for `C`, not `B`, priority: the report is cheap precisely because this seam already carries what it needs. Citing the seam honestly, with the grouping gap stated rather than silently assumed solved, is what keeps this row from reading as discharged the day someone reads `docs/iteration_index.md` and mistakes a session table for a utilisation report."""
+test_refs = "(see TC-191)"
+status = "Drafted"
+component = "CMP-008"
 phase = 5

@@ -97,6 +97,19 @@ def test_the_three_engine_briefs_load_and_carry_their_load_bearing_clauses():
     assert "{brief}" in critique and "{verdict}" in critique
 
 
+def test_the_worker_brief_carries_the_standing_state_ritual():
+    # WI-506 (OI-57 ruled (b)): the worker gains a standing-state contract —
+    # write the log.d fragment + the spec's own Context/Deliverable edits
+    # BEFORE heavy verification, so a session killed or reaped mid-verification
+    # leaves a resumable record rather than silent, uncommitted residue. Pinned
+    # here the same way the reviewer/critique load-bearing clauses are, so an
+    # edit that quietly drops the instruction reds a test instead of a review.
+    worker = pr.load(pr.WORKER)
+    assert "Standing-state discipline" in worker
+    assert "before spending effort on heavy verification" in worker
+    assert "not a one-shot write at the end" in worker
+
+
 def test_the_worker_brief_never_leaks_into_a_judge_brief():
     # The negative assertion the review/critique suites make from the other
     # side: no shared preamble may put the worker's framing in a judge's brief.
