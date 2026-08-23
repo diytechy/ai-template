@@ -1012,6 +1012,157 @@ def backlink_coverage(src_roots, row_ids, exts=BACKLINK_EXTS):
     return covered, uncovered, (100.0 * len(covered) / total if total else 0.0)
 
 
+# --- ENCLOSING-SYMBOL RESOLUTION (WI-502; OI-53 ruled (d)) -------------------
+# The declaration grammar above (`backlink_ids`) answers "does this LINE
+# declare an id"; this answers "which def/class TEXTUALLY CONTAINS that line" —
+# the question check_trajectory's CodeSymbol crosscheck needs to compare a
+# tag's real site against the registry row's `CodeSymbol`/`Module` claim. AST,
+# Python-only (unlike the language-agnostic `scan_backlinks` above): resolving
+# an enclosing symbol needs a parser, so this half of the shared grammar stops
+# at `.py`. ONE HOME (WI-486): check_trajectory imports `implements_report`
+# rather than re-walking the tree — a second AST symbol walk in a second module
+# is exactly the D-6/F5 hazard `module_bindings` above already argues against.
+def _scope_index(tree):
+    """`[(start_line, end_line, dotted_qualname)]` for every def/class in
+    `tree`, at any nesting depth (unlike `module_bindings`, which is
+    module-scope-only by design for the rendered map's public-API view). A
+    method's range nests inside its class's, so picking the entry with the
+    LARGEST `start_line` that still contains a target line is the innermost
+    (most specific) enclosing scope."""
+    scopes = []
+
+    def walk(node, prefix):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                qualname = prefix + child.name
+                scopes.append(
+                    (child.lineno, getattr(child, "end_lineno", child.lineno), qualname)
+                )
+                walk(child, qualname + ".")
+            else:
+                walk(child, prefix)
+
+    walk(tree, "")
+    return scopes
+
+
+def _top_level_targets(tree):
+    """`[(start_line, name)]` for every module-scope NAME BINDING in
+    `tree.body` — a def, a class, or a (possibly annotated) assignment to a
+    bare name, tuple/list-unpack targets contributing each element. Sorted by
+    line.
+
+    A registry `CodeSymbol` cell routinely names a module-level CONSTANT
+    (`STATUS_FILL`, `HTML_TEMPLATE`), and the kit's own convention for tagging
+    one is a comment ending in `Implements: ...` sitting directly ABOVE the
+    assignment — outside any AST node's own line range, the same shape
+    `implements()`'s 4-line docstring lookback already reads for a `def`.
+    `enclosing_symbol` below is this file's other consumer of that shape: the
+    nearest FOLLOWING top-level statement is what a bare comment line
+    describes, so a declaration line with no containing def/class resolves to
+    that statement's bound name rather than falling all the way to bare
+    module scope."""
+
+    def names(target):
+        if isinstance(target, ast.Name):
+            return [target.id]
+        if isinstance(target, (ast.Tuple, ast.List)):
+            out = []
+            for elt in target.elts:
+                out.extend(names(elt))
+            return out
+        return []
+
+    out = []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.append((node.lineno, node.name))
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                out.extend((node.lineno, n) for n in names(t))
+        elif isinstance(node, ast.AnnAssign):
+            out.extend((node.lineno, n) for n in names(node.target))
+    return sorted(out)
+
+
+def enclosing_symbol(scopes, top_level, lineno):
+    """The symbol a declaration at `lineno` belongs to: the dotted qualname of
+    the innermost `scopes` (a `_scope_index` result) entry containing it when
+    one does; failing that, the name bound by the nearest FOLLOWING entry in
+    `top_level` (a `_top_level_targets` result) — a comment directly above a
+    module-level constant or def; failing that, `""` for true module scope
+    (the front-matter docstring, or a declaration nothing follows) — the
+    value `backlink_ids`' caller compares against a `CodeSymbol` cell's
+    "module-only" (empty-cell) claim."""
+    best, best_start = "", -1
+    for start, end, qualname in scopes:
+        if start <= lineno <= end and start > best_start:
+            best, best_start = qualname, start
+    if best:
+        return best
+    # The WINDOW is small and deliberate: `implements()` already reads at most
+    # 4 lines above a `def` as its docstring-free lookback, so a comment more
+    # than 4 lines ahead of the next top-level statement is not "directly
+    # above" it — it is prose somewhere in a longer block (a module
+    # docstring's closing paragraph, say), and reads as true module scope
+    # rather than borrowing a distant statement's name.
+    for start, name in top_level:
+        if start > lineno:
+            return name if start - lineno <= 4 else ""
+    return ""
+
+
+def declaration_sites(path):
+    """`[(lineno, [spine ids], enclosing_symbol)]` for every literal
+    `Implements:` declaration line in one `.py` file — `backlink_ids`'
+    grammar, AST-scoped to name what encloses each declaration. `[]` for a
+    file that fails to parse or decode (surface, don't crash, the
+    `scan_module`/`scan_inventory` posture)."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError):
+        return []
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return []
+    scopes = _scope_index(tree)
+    top_level = _top_level_targets(tree)
+    sites = []
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        ids = backlink_ids(line)
+        if ids:
+            sites.append((lineno, ids, enclosing_symbol(scopes, top_level, lineno)))
+    return sites
+
+
+def implements_report(src_roots):
+    """`(sites, known_names)` over every `.py` file under `src_roots`:
+    `sites` is `{rel_path: [(lineno, ids, enclosing_symbol), ...]}` from
+    `declaration_sites`; `known_names` is the set of every name `_scope_index`
+    or `_top_level_targets` found anywhere in the surface (dotted def/class
+    qualnames plus bare module-level constants) — a real symbol exists in
+    this set wherever it lives, so a `CodeSymbol` cell naming something
+    outside it is naming a function-local variable or a symbol that is gone,
+    not a stale-but-real one. The one AST walk check_trajectory's CodeSymbol
+    crosscheck consumes (WI-502; the `scan_inventory` idiom above)."""
+    sites = {}
+    known = set()
+    for _root, base, path in _walk_roots(src_roots, "*.py"):
+        rel = path.relative_to(base).as_posix()
+        found = declaration_sites(path)
+        if found:
+            sites[rel] = found
+        try:
+            text = path.read_text(encoding="utf-8")
+            tree = ast.parse(text)
+        except (UnicodeDecodeError, OSError, SyntaxError):
+            continue
+        known.update(qualname for _s, _e, qualname in _scope_index(tree))
+        known.update(name for _start, name in _top_level_targets(tree))
+    return sites, known
+
+
 def read_backlink_min(root):
     """`[checks] backlink_coverage_min` from `docs/process.toml` — the declared
     minimum reverse-coverage percentage. 0 (report the number, gate nothing) is

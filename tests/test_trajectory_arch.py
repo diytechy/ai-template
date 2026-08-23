@@ -1073,6 +1073,97 @@ def test_undecodable_module_is_skipped_without_a_crash(tmp_path):
     assert strict.returncode == 0, strict.stdout + strict.stderr
 
 
+# --- WI-502 (OI-53 ruled (d)): Implements-tag vs CodeSymbol crosscheck --------
+# The 2026-08-21 closing review's manual method, mechanized: resolve every
+# `Implements:` tag's ENCLOSING def/class (gen_arch_map.implements_report, the
+# shared AST grammar) and compare it against its row's CodeSymbol/Module by
+# CONTAINMENT. WARN-FIRST FOREVER — codesymbol_crosscheck_findings is called
+# in-process (no subprocess/CLI), the fast in-process posture the WI asks the
+# new tests to keep.
+
+
+def write_symbol_llrs(root, rows):
+    """`rows` = [(llr_id, module_cell, code_symbol_cell)] written as the LLR
+    csv carrier `write_tagged_llrs` already uses — same header, Component left
+    blank (this crosscheck never joins on it)."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    body = "".join(
+        "{},SR-001,T,{},{},d,(see TC),Approved,\n".format(lid, mod, sym)
+        for lid, mod, sym in rows
+    )
+    (req / "low-level-requirements.csv").write_text(
+        TAGGED_LLR_HDR + body, encoding="utf-8"
+    )
+
+
+MOD_A_SRC = (
+    '"""M."""\n\n\n'
+    "class ClassA:\n"
+    "    def method_a(self):\n"
+    '        """go.\n\n'
+    "        Implements: LLR-900, LLR-901\n"
+    '        """\n'
+    "        return 1\n\n\n"
+    "class ClassB:\n"
+    "    def method_b(self):\n"
+    "        return 2\n"
+)
+
+
+def test_codesymbol_crosscheck_reports_a_planted_mismatch(tmp_path):
+    # LLR-900's CodeSymbol names a real class (ClassB) that is NOT where the
+    # tag sits (ClassA.method_a) — a genuine, resolvable mismatch, the kit's
+    # own WI-501 CodeSymbol-dozen shape.
+    write_src_profile(tmp_path, [])
+    write_module(tmp_path, "mod_a.py", MOD_A_SRC)
+    write_symbol_llrs(tmp_path, [("LLR-900", "scripts/mod_a.py", "ClassB")])
+    findings = check_trajectory.codesymbol_crosscheck_findings(tmp_path)
+    assert len(findings) == 1, findings
+    assert "LLR-900" in findings[0]
+    assert "ClassA.method_a" in findings[0]
+    assert "ClassB" in findings[0]
+
+
+def test_codesymbol_crosscheck_containment_case_is_silent(tmp_path):
+    # LLR-901's CodeSymbol names the CLASS (ClassA) rather than the full
+    # `ClassA.method_a` path — containment (a tag inside `RoutingState.
+    # note_session` satisfies a cell naming `RoutingState`) is satisfied, so
+    # this is not a finding.
+    write_src_profile(tmp_path, [])
+    write_module(tmp_path, "mod_a.py", MOD_A_SRC)
+    write_symbol_llrs(tmp_path, [("LLR-901", "scripts/mod_a.py", "ClassA")])
+    findings = check_trajectory.codesymbol_crosscheck_findings(tmp_path)
+    assert findings == []
+
+
+def test_codesymbol_crosscheck_function_local_name_is_unresolvable(tmp_path):
+    # LLR-902's CodeSymbol names `a_local_var` — a real identifier in the
+    # file, but a FUNCTION-LOCAL variable, never a def/class or a module-level
+    # binding. It must report as unresolvable rather than silently reading as
+    # a match (the false-quiet shape docs/enforcement-audit.md item 5 names
+    # for a neighboring grammar, that this rule does not inherit).
+    write_src_profile(tmp_path, [])
+    write_module(
+        tmp_path,
+        "mod_b.py",
+        '"""M.\n\nImplements: LLR-902\n"""\n\n'
+        "def helper():\n    a_local_var = 5\n    return a_local_var\n",
+    )
+    write_symbol_llrs(tmp_path, [("LLR-902", "scripts/mod_b.py", "a_local_var")])
+    findings = check_trajectory.codesymbol_crosscheck_findings(tmp_path)
+    assert len(findings) == 1, findings
+    assert "LLR-902" in findings[0]
+    assert "unresolvable" in findings[0]
+
+
+def test_codesymbol_crosscheck_vacuous_in_files_mode(tmp_path):
+    # No AST, no containment question to ask.
+    write_src_profile(tmp_path, ["mod_a.py"], mode="files")
+    write_symbol_llrs(tmp_path, [("LLR-900", "scripts/mod_a.py", "ClassB")])
+    assert check_trajectory.codesymbol_crosscheck_findings(tmp_path) == []
+
+
 # --- WI-093: the phase-anchor archetype + phase-drop detector ------------------
 # The derived-gate model (docs/archive/specs/derived-gate-model.2026-07-20.md
 # §7/§9.3): a phase's pre-dev batch is a WI whose Title carries a phase-anchor

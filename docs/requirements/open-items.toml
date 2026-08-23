@@ -2114,6 +2114,7 @@ UPDATE (2026-08-21, after the owner's dial change): the owner set `human_ratific
 The original recommendation, kept for the record:
 
 (a) FOR THE DOZEN, with (d) as its own small row afterwards. The batch is one kind of defect found by one pass, and a sitting that re-blesses them together costs less owner attention than a repair row's review round would - while keeping the rule this repo has already declined to bend twice. (d) is worth filing separately because the honest answer to "is that all of them?" today is "that is what one reviewer found by reading 165 rows", and the next campaign should inherit a measurement rather than a memory. (b) is a legitimate answer if the owner judges `CodeSymbol` too mechanical a cell to be worth a sitting - it is a traced cell, and the drift detector agrees - but that is precisely the judgment being asked for."""
+wi_refs = ["WI-501", "WI-502"]
 
 [open_item.OI-54]
 title = """Which reading of `owner` governs a Consumes interface row - the module that holds the code, or the provider of the consumed thing?"""

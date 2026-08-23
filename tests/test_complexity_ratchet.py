@@ -159,6 +159,14 @@ BASELINE = {
     # than one shared helper, so a third follows the established idiom
     # instead of inventing a fourth shape for one caller.
     ("check_trajectory.py", "main"): 24,
+    # WI-502 (OI-53 ruled (d)): the Implements-tag vs CodeSymbol crosscheck.
+    # `codesymbol_crosscheck_findings` is a nested walk (file -> tag site ->
+    # id) over a live registry join; the actual containment/mismatch/
+    # unresolvable rule is already split out to `_codesymbol_site_finding`
+    # (a plain sequential function, well under the bound) so this entry is
+    # the walk's own irreducible branching, not an un-decomposed rule.
+    # Reviewed bump, reason in docs/log.d/2026-08-23-wi502-codesymbol-crosscheck.md.
+    ("check_trajectory.py", "codesymbol_crosscheck_findings"): 13,
     (
         "check_trajectory.py",
         "committed_snapshot_findings",
