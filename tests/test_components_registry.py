@@ -14,9 +14,7 @@ and leaves skill names and URLs in the same cell alone.
 
 from conftest import make_minimal_project, run_py, record_ids
 
-CMP_HEADER = (
-    "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
-)
+CMP_HEADER = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,Notes\n"
 # The TOML carrier since WI-443 (OI-14 part B). `superseded_by` and `part_of`
 # are typed arrays; an EMPTY cell is an ABSENT KEY, never `""` — writing the
 # empty string is itself a refusal (`spine_carrier.empty_value_findings`).

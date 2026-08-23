@@ -398,6 +398,14 @@ def _status_block(root):
     )
 
 
+def _components(root):
+    return (
+        spine_carrier.resolve(Path(root) / "docs/requirements/components.toml")
+        is not None
+        or (Path(root) / "docs/requirements/components.derived.toml").exists()
+    )
+
+
 def _open_items(root):
     return (
         spine_carrier.resolve(Path(root) / "docs/requirements/open-items.toml")
@@ -426,6 +434,10 @@ def _open_items(root):
 #   trajectory   the dashboard highlights the current stage from `docs/stage`.
 #   status       the snapshot projects the derived stage + spine counts.
 #   open-items   reads the registry + git; nothing reads it back.
+#   component-view reads the CMP/LLR/SR/IF registries; nothing reads it back
+#                (it is a LEAF, like open-items, so its position is free — it
+#                sits last because it was added last, not because anything
+#                downstream of it exists).
 REGEN_STEPS = (
     (
         "okf",
@@ -456,6 +468,12 @@ REGEN_STEPS = (
         _open_items,
         _cmd("gen_open_items.py"),
         "neither docs/requirements/open-items.{toml,csv} nor docs/open-items.html",
+    ),
+    (
+        "component-view",
+        _components,
+        _cmd("gen_components.py"),
+        "neither docs/requirements/components.{toml,csv} nor the derived view",
     ),
 )
 

@@ -264,6 +264,11 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         "trajectory-map",
         "status-map",
         "open-items",
+        # WI-484 phase 3: the generated component view joins the set for the
+        # same reason its siblings are in it — it is a trunk-owned generated
+        # artifact a work branch must never commit, so a branch does not answer
+        # for its freshness.
+        "component-view",
         "okf",
         "approval-fresh",
     }

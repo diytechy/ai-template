@@ -3496,6 +3496,57 @@ which is the whole reason this consolidation happened.
 
 ---
 
+### The component view is GENERATED and `DetailDoc` retires (OI-32 ruled (d)) [since f1cc0b44]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**What changed.** A new shipped generator, `scripts/gen_components.py`, derives
+`docs/requirements/components.derived.toml` from four registries you already
+keep: `components.toml` declares WHICH components exist, the LLR tier's
+`Component` cell carries membership, the SR tier is reached through it, and
+`interfaces.toml` supplies the seams. Per component the view lists the design
+rows that belong to it, the requirements those rows decompose (marking the ones
+shared with another component), the perspectives that bear on it, its modules,
+and its seams split internal from boundary; a repo-wide `[unplaced]` table names
+every requirement and seam that reaches no component, so nothing is silently
+dropped. It carries **no** approval or maturity cell, ever — the hand-authored
+row still declares the component, and a generated file that flipped an approval
+would route around your `human_approval_through` dial.
+
+With it, the CMP **`DetailDoc` column retires**: it named a prose home the kit
+never created and no script ever read, and the derived view is the home it was
+pointing at. The column is gone from `registries/components.template.toml`, from
+`spine_carrier.OFFSPINE_KEYS`/`OFFSPINE_COLUMN` and from `migrate_carrier.KEY`.
+
+**What you must do.**
+
+1. **Copy the new generator in** (`scripts/gen_components.py`) alongside the
+   overwritten `scripts/check.py`, `scripts/trunk_step.py`,
+   `scripts/spine_carrier.py`, `scripts/migrate_carrier.py`, `scripts/bootstrap.py`
+   and `registries/components.template.toml`, and the shipped
+   `hooks/pre-commit`.
+2. **Declare the artifact**, in your own `docs/stack.ini` `[generated]` section
+   — it is YOUR file, so the kit cannot write this row for you:
+   `docs/requirements/components.derived.toml = components`. The `component-view`
+   check.py step and the hook floor already name it once the scripts are
+   overwritten; leaving the row out means the step still runs but
+   `staged-divergence` and the trunk's regen ownership rule will not know the
+   artifact is generated.
+3. **Generate it once and commit it:** `python scripts/gen_components.py`.
+   Vacuous — exit 0, nothing written — if your `components.toml` holds only the
+   inert `CMP-000` row, so a repo that never adopted the component layer pays
+   nothing and needs neither step 2 nor this one.
+4. **If any CMP row of yours carries `detail_doc`,** the key now fails your
+   schema check rather than being silently absorbed (the same retirement shape
+   the IF tier's `Status` took). Move whatever that document held into the rows
+   the view derives from — the design rows' `Detail`, the seam's `Contract`, a
+   `docs/knowledge/` pack for durable findings — and delete the cell. If the
+   document is genuinely mechanism prose that no row can hold, keep the file and
+   link it from the component's `Notes`; the view deliberately shows no
+   internals.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

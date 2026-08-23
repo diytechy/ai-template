@@ -270,7 +270,6 @@ OFFSPINE_COLUMN = {
     "knowledge": "Knowledge",
     "standing": "Standing",
     "part_of": "PartOf",
-    "detail_doc": "DetailDoc",
 }
 REGISTRY_COLUMN = dict(SPINE_COLUMN, **OFFSPINE_COLUMN)
 
@@ -423,7 +422,6 @@ OFFSPINE_KEYS = {
         "standing",
         "superseded_by",
         "part_of",
-        "detail_doc",
         "notes",
     ),
     # WI-442 — the depth-0 frame's three tiers, all on `external.toml`. Each

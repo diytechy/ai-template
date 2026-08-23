@@ -551,9 +551,8 @@ def context_repo(tmp_path):
         newline="\n",
     )
     (req / "components.csv").write_text(
-        "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,"
-        "Notes\n"
-        "CMP-001,Widget core,software,docs/knowledge/widgetry,built,,,,\n",
+        "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,Notes\n"
+        "CMP-001,Widget core,software,docs/knowledge/widgetry,built,,,\n",
         encoding="utf-8",
         newline="\n",
     )

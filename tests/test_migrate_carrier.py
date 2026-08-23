@@ -164,7 +164,6 @@ CMP_HEADER = [
     "State",
     "SupersededBy",
     "PartOf",
-    "DetailDoc",
     "Notes",
 ]
 CMP_ROW = {
@@ -175,7 +174,6 @@ CMP_ROW = {
     "State": "planned",
     "SupersededBy": "",
     "PartOf": "",
-    "DetailDoc": "",
     "Notes": "the spine and everything that decides whether it holds",
 }
 

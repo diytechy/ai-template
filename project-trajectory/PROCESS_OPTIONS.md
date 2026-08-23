@@ -2284,8 +2284,7 @@ row or generated view: link the id instead. When a finding hardens into a rule,
 constraint, or requirement, promote it through §5 change intake; the pack keeps
 the why and trail while the spine keeps the what. Packs are advisory and never
 gate. A component associates durable module knowledge through its `Knowledge`
-refs and optional `DetailDoc`; `trace.py` resolves `docs/knowledge/`-shaped refs
-warn-first.
+refs; `trace.py` resolves `docs/knowledge/`-shaped refs warn-first.
 
 **A research track** is an ordinary `WI-###` row with `Workstream=research`.
 Its Done-when names the questions to answer, and its deliverable is a knowledge
@@ -2330,13 +2329,22 @@ an LLR *is* the WHAT being rewritten. The registry is optional and off-spine
 a repo that never names a component pays nothing.
 
 **The row is deliberately slim** —
-`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,DetailDoc,Notes`
+`CMP-ID,Name,Category,Knowledge,Status,Standing,SupersededBy,PartOf,Notes`
 — and holds **only what a tag can't**: the knowledge refs (`;`-joined skill
 names, `docs/knowledge/` labels, URLs), maturity
 (`Status ∈ Drafted|Approved|Founded`, the one spine vocabulary) and lifecycle
 (`Standing ∈ active|has-gap|deprecated`; omit = active), with `SupersededBy`
-naming the successor so identity survives a rewrite, nesting (`PartOf`), and an
-optional `DetailDoc`. `Category` is an open value set (`software`, `physical`).
+naming the successor so identity survives a rewrite, and nesting (`PartOf`).
+`Category` is an open value set (`software`, `physical`). **What the component
+DOES is not authored here at all** — `gen_components.py` derives it into
+`docs/requirements/components.derived.toml` (the requirements it is obliged to
+meet, the design rows that carry them, the perspectives that bear on it, its
+modules, and its internal/boundary seams), freshness-gated like every other
+generated artifact. That view retired the `DetailDoc` column, which named a
+prose home no kit ever created and no script ever read; a generated view is
+stale-*detectable*, where a prose file's staleness is undetectable by
+construction. It carries **no** approval cell — maturity stays on the
+hand-authored row (OI-30 D3).
 
 When findings need to outlive the session that produced them, use the
 "Research track & knowledge packs" layer above; the CMP `Knowledge` cell is the

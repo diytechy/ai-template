@@ -67,7 +67,7 @@ What it creates in the destination:
     docs/test/test-cases.toml                  <- registries/test-cases.template.toml
     scripts/trace.py, trace_text.py, spine_rules.py, derive_stage.py, record_test_evidence.py, check.py, check_flows.py, check_docs.py, check_perf.py,
     scripts/check_stubs.py, check_coverage.py, check_doc_refs.py, check_figures.py, check_need_form.py, check_privacy.py, check_vendored.py, check_trajectory.py,
-    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py
+    scripts/subagent_gate.py, gen_arch_map.py, gen_release_checklist.py, gen_cases.py, gen_trajectory.py, gen_open_items.py, gen_okf.py, gen_components.py
     scripts/traj_graph.py, traj_parse.py, traj_render.py, traj_views.py, traj_panels.py, traj_status.py
                                                (the WI-280 gen_trajectory.py split — copied with it, always)
     scripts/plan_coverage.py, plan_round.py, plan_briefs.py, plan_coverage_step.py, plan_artifacts.py
@@ -2020,6 +2020,7 @@ MAPPING = [
     ("scripts/traj_status.py", "scripts/traj_status.py"),
     ("scripts/traj_panels.py", "scripts/traj_panels.py"),
     ("scripts/gen_open_items.py", "scripts/gen_open_items.py"),
+    ("scripts/gen_components.py", "scripts/gen_components.py"),
     ("scripts/gen_okf.py", "scripts/gen_okf.py"),
     ("scripts/plan_coverage.py", "scripts/plan_coverage.py"),
     ("scripts/plan_round.py", "scripts/plan_round.py"),

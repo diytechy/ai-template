@@ -187,7 +187,6 @@ def _csv_body_to_toml(header, table, body):
         "State": "state",
         "SupersededBy": "superseded_by",
         "PartOf": "part_of",
-        "DetailDoc": "detail_doc",
     }
     id_col = header.split(",", 1)[0]
     out = []
@@ -632,7 +631,7 @@ def test_seam_tc_promotion_shares_the_one_module_vacuity(tmp_path):
 # finding — WARN plain, ERROR under --strict (DevStg-Tests+). Opt-out docs/components-check;
 # vacuous below the bound or with no arch-map inventory (the bound is the rule).
 
-CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,DetailDoc,Notes\n"
+CMP_HDR = "CMP-ID,Name,Category,Knowledge,State,SupersededBy,PartOf,Notes\n"
 TAGGED_LLR_HDR = (
     "LLR-ID,SR-Refs,Title,Module,CodeSymbol,Detail,TestRefs,Status,Component\n"
 )

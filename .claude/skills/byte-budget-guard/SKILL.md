@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,827 | 2026-08-23 | -4: WI-499 — the `human_ratification_through` mention in the repo-map paragraph re-keys to `human_approval_through` |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,835 | 2026-08-23 | +10: WI-509 re-stamped the PROCESS_OPTIONS.md watched row below plus this row's own baseline |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,827 | 2026-08-23 | -8: WI-484 phase 3 re-stamped the PROCESS_OPTIONS.md watched row below plus this row's own baseline |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
@@ -47,7 +47,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
 | `project-trajectory/PROCESS.md` | 85,889 | 2026-08-22 | **+1,008** FLAGGED: WI-507 — §3 gains the consolidation doctrine (the 0→A→B rule, restructure on output overlap, vendored antidote as its per-fix companion) |
-| `project-trajectory/PROCESS_OPTIONS.md` | 177,715 | 2026-08-23 | **+11** FLAGGED: WI-509 — the two bare `scripts/bootstrap.py` migration commands in the config-migration paragraphs now spell the kit-relative path |
+| `project-trajectory/PROCESS_OPTIONS.md` | 178,307 | 2026-08-23 | **+592** FLAGGED: WI-484 phase 3 - the Component layer records the GENERATED view (`components.derived.toml`) that retired `DetailDoc` |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

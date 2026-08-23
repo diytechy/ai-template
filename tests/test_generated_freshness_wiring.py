@@ -42,6 +42,7 @@ WIRED = {
     "approve": "approval-fresh",
     "skillsindex": "skills-index",
     "promptcatalog": "prompt-catalog",
+    "components": "component-view",
 }
 
 # The kinds whose enforcer is NOT a check.py step, each named with its reason.

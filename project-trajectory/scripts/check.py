@@ -230,6 +230,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "trajectory-map",
         "status-map",
         "open-items",
+        "component-view",
         "okf",
         "approval-fresh",
         "skills-sync",
@@ -953,6 +954,23 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
+        # Component-view freshness (WI-484 phase 3, OI-32 ruled option (d)):
+        # docs/requirements/components.derived.toml is generated from the CMP
+        # registry joined with the LLR/SR/IF rows — the view that replaced the
+        # never-built `DetailDoc` prose home, whose whole argument was that a
+        # generated view is stale-DETECTABLE where a prose file's staleness is
+        # undetectable by construction. That argument is only true while this
+        # step exists, which is why it lands in the same change as the
+        # `[generated]` row it enforces. Same contract as its siblings; vacuous —
+        # exit 0 — for a repo that declares no component and carries no view, so
+        # a scaffold and a non-adopter pay nothing.
+        (
+            "component-view",
+            (),
+            [sys.executable, str(_SCRIPTS / "gen_components.py"), "--check"],
+            _kitladder.STAGE_IMPL,
+            "process",
+        ),
         # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
         # export of the spine registries (never a parallel source of truth) —
         # gen_okf.py --check regenerates in memory and byte-compares like
@@ -1431,7 +1449,8 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-stage trajectory-map status-map open-items okf approval-fresh".split()
+    "derived-stage trajectory-map status-map open-items component-view okf "
+    "approval-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed

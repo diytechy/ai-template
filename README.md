@@ -273,6 +273,7 @@ Each is regenerated from the registries or source and freshness-gated
 | `docs/test/report.md` / `.html` | `trace.py` | The traceability matrix: counts, the `SN→SR→LLR→TC` outline, orphans and draft rows colored. |
 | root `PROJECT_STATE.html` | `gen_trajectory.py` | The offline dashboard: spine icicle, WI DAG, module map, an OKF knowledge-graph tab (when `docs/okf/` exists), definition/execution meters, a git-derived as-of stamp. |
 | `docs/okf/` | `gen_okf.py` | The same graph exported as an Open Knowledge Format bundle — consumed by the dashboard's Knowledge tab. |
+| `docs/requirements/components.derived.toml` | `gen_components.py` | The component view: per component, the design rows that belong to it, the requirements they reach, the perspectives that bear, its modules and its internal/boundary seams — derived, so it cannot rot (the hand-authored `components.toml` still declares the component itself). |
 | `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for DevStg-Release. |
 
 ## Quick start — bootstrap a new project

@@ -18,9 +18,11 @@ constraint, or requirement, promote it through the change-intake flow in
 [`process.md`](../process.md) so the requirement spine remains authoritative;
 keep the rationale and evidence trail in the pack.
 
-A durable module description is the component row plus its `Knowledge` and
-`DetailDoc` references. Do not create a parallel component specification inside
-this directory. The optional research-track workflow is described in
+A durable module description is the component row plus its `Knowledge`
+references, alongside the generated component view
+(`docs/requirements/components.derived.toml`). Do not create a parallel
+component specification inside this directory. The optional research-track
+workflow is described in
 [`process-options.md`](../process-options.md).
 
 ## Pack index

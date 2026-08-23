@@ -82,7 +82,6 @@ name = "Adder"
 category = "core"
 knowledge = "docs/knowledge/missing-pack"
 status = "Approved"
-detail_doc = "docs/cmp/adder.md"
 notes = "demo component"
 """
 

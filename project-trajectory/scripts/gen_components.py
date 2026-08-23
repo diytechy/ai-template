@@ -1,0 +1,334 @@
+#!/usr/bin/env python3
+"""The component view, GENERATED (WI-484 phase 3; OI-32 ruled option (d)).
+
+One living answer to "what is this component obliged to do", derived from rows
+that already have to be correct for the gate to pass — never hand-maintained,
+so it cannot rot the way a prose detail document rots. It replaces the CMP
+`DetailDoc` column, which shipped inert since it was minted, named a directory
+the kit never created, and was read by no script: the generated view is the home
+that column was pointing at, so the column retires with this file.
+
+  docs/requirements/components.toml              WHICH components exist (hand)
+  docs/requirements/low-level-requirements.toml  membership + the SR reach
+  docs/requirements/system-requirements.toml     the requirement tier + hats
+  docs/requirements/interfaces.toml              the seams
+  -> docs/requirements/components.derived.toml   this view
+
+THE SPLIT, and it is the ruling's: the hand file DECLARES a component (that it
+exists, its name, its category, its knowledge refs, its approval); this file
+DESCRIBES it. A GENERATED FILE NEVER CARRIES AN APPROVAL (OI-30 D3) — machine
+flipping an approval routes around the very dial `human_approval_through`
+governs — so no maturity, standing or approval cell appears here, and nothing
+here may be cited as evidence that a human blessed anything.
+
+WHAT IT DOES NOT SHOW, stated because the owner's own ruling states it: NOT
+INTERNALS. A requirement list says what a component is obliged to do and nothing
+about how its parts fit together. That is the ruled trade — the artifact that
+stays true beats the artifact that shows mechanism and drifts — and a reader who
+needs mechanism reads the design rows themselves, which this view names.
+
+THE THREE COVERAGE EDGES, each answered EXPLICITLY here rather than papered
+over (the brief demanded that; a generator that silently drops rows is
+indistinguishable from one with a bug):
+
+  * AN SR THAT REACHES NO COMPONENT IS LISTED, ONCE, in `[unplaced]`. An SR
+    carries no `Component` cell — membership is a primitive-tier tag — so its
+    components are derived through its LLR children, and an SR with no child has
+    none. Some of those are decompositions not yet written; some are CONSTRAINTS
+    OVER EVERY COMPONENT (a stdlib rule, a cross-OS rule) that name no object and
+    correctly belong to no component. THIS VIEW DOES NOT DISTINGUISH THE TWO,
+    because nothing in the registries does, and inventing a per-repo list of
+    "never will have children" inside shipped kit machinery would ship an
+    adopter a judgement about rows in a repo they cannot read. Both are named
+    and counted, and the reading is stated in the emitted header.
+  * AN SR REACHING MORE THAN ONE COMPONENT APPEARS IN EVERY ONE OF THEM, and
+    additionally in that component's `sr_shared_refs`. The view must not imply
+    exclusive ownership: a requirement legitimately lives inside two components,
+    and the shared list is what makes that visible rather than looking like a
+    duplicate.
+  * SEAMS ENTER THE VIEW — they are the one input that shows a component's EDGES
+    rather than only its obligations. An IF row is placed by its `Component` tag
+    UNIONED with the components its two endpoints resolve into (endpoint ->
+    `LLR.Module` -> `Component`, through the same best-effort normalizer
+    `trace.interface_findings` already joins on). The union is deliberate: the
+    tag names the row's owning component while the endpoints span the pair, and
+    a seam between two components is a boundary of BOTH. Classification is the
+    components template's own: both endpoints inside -> `seam_internal_refs`,
+    otherwise -> `seam_boundary_refs`. A row neither tagged nor resolvable is
+    listed in `[unplaced]` rather than dropped.
+
+Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
+`--check` byte-compare is stable in any clone.
+
+Contracts: IF-139, IF-140, IF-141, IF-142, IF-143 — the interface seams this
+module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# The console guard's one home is the shipped package (WI-448 / D-8).
+from kitlib.config import utf8_console as _utf8_console
+from kitlib.spine import is_example, refs
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import spine_carrier  # noqa: E402  (path set above)
+import trace as tr  # noqa: E402
+import trace_text  # noqa: E402
+
+CMP_REL = "docs/requirements/components.toml"
+SR_REL = "docs/requirements/system-requirements.toml"
+LLR_REL = "docs/requirements/low-level-requirements.toml"
+IF_REL = "docs/requirements/interfaces.toml"
+OUT_REL = "docs/requirements/components.derived.toml"
+
+# The generated-but-LIVE staleness form (WI-505 / OI-56 ruled (a)): a generated
+# artifact says who wrote it, that it is not hand-editable, what to cite
+# INSTEAD, and the one command that re-derives it.
+BANNER = (
+    "# GENERATED by scripts/gen_components.py — do not hand-edit; cite the spine\n"
+    "# registries (docs/requirements/*.toml), not this rendering.\n"
+    "# Regenerate: python scripts/gen_components.py\n"
+    "#\n"
+    "# The component view: what each component is OBLIGED to do, derived from the\n"
+    "# rows that already carry the obligation. It shows no internals, by design —\n"
+    "# for mechanism, read the design rows named here.\n"
+    "#\n"
+    "# NO APPROVAL CELL APPEARS HERE, EVER: maturity lives on the\n"
+    "# hand-authored components.toml row, and nothing in this file is evidence\n"
+    "# that a human blessed anything.\n"
+    "#\n"
+    "# An `[unplaced] sr_refs` entry reaches no component because it has no design\n"
+    "# child — either a decomposition not yet written, or a constraint over EVERY\n"
+    "# component that names no single object. This view does not distinguish the\n"
+    "# two: no registry cell does, and the distinction is a judgement about a\n"
+    "# specific repo's rows.\n"
+)
+
+
+def _load(root):
+    """The four registries this view joins, each through the carrier resolver so
+    a repo that has not migrated off CSV still renders."""
+    root = Path(root)
+    return (
+        spine_carrier.load(root / CMP_REL, "CMP-ID", keep_examples=False),
+        spine_carrier.load(root / SR_REL, "SR-ID", keep_examples=False),
+        spine_carrier.load(root / LLR_REL, "LLR-ID", keep_examples=False),
+        spine_carrier.load(root / IF_REL, "IF-ID", keep_examples=False),
+    )
+
+
+def module_components(llrs):
+    """`{normalized module path: {CMP ids}}` from the design tier's own cells.
+
+    The join key is `trace_text.norm_module`, the SAME normalizer
+    `trace.interface_findings` uses to test an IF endpoint against the LLR module
+    inventory — the two naming conventions (`scripts/x` on a seam,
+    `project-trajectory/scripts/x.py` on a design row) are reconciled in one
+    place, and a second reconciliation here would be a second answer waiting to
+    disagree."""
+    out = {}
+    for row in llrs:
+        comps = set(refs(row.get("Component")))
+        if not comps:
+            continue
+        for module in refs(row.get("Module")):
+            key = trace_text.norm_module(module)
+            if key:
+                out.setdefault(key, set()).update(comps)
+    return out
+
+
+def seam_placement(row, mod_comps):
+    """One IF row as `(placed, internal)` — the components it touches, and the
+    subset it is INTERNAL to.
+
+    Placement is the declared `Component` tag UNIONED with whatever its endpoints
+    resolve into; internality needs endpoint evidence on BOTH sides, so a row
+    placed only by its tag is a boundary (we have no evidence the far side is
+    inside). Empty `placed` means the row is unplaceable — reported, never
+    dropped."""
+    ends = [
+        set(mod_comps.get(trace_text.norm_module((row.get(col) or "").strip()), ()))
+        for col in ("ThisProject", "Counterpart")
+    ]
+    placed = set(refs(row.get("Component"))) | ends[0] | ends[1]
+    internal = {c for c in placed if c in ends[0] and c in ends[1]}
+    return placed, internal
+
+
+def _blank(name):
+    return {
+        "name": name,
+        "modules": set(),
+        "llr_refs": set(),
+        "sr_refs": set(),
+        "sr_shared_refs": set(),
+        "hat_refs": set(),
+        "seam_internal_refs": set(),
+        "seam_boundary_refs": set(),
+    }
+
+
+def _add_members(view, srs, llrs):
+    """Fold the design tier into `view` and return `{SR id: {CMP ids}}`.
+
+    An LLR tagged into a component nothing declares is NOT invented here as a
+    section: that dangling tag is trace.py's finding to report, and a view that
+    materialized the id would hide it behind a plausible-looking heading."""
+    sr_by_id = {r["SR-ID"]: r for r in srs}
+    sr_components = {}
+    for row in llrs:
+        hats = tr.effective_hats(row, sr_by_id)
+        parents = [x for x in refs(row.get("SR-Refs")) if x in sr_by_id]
+        for cid in refs(row.get("Component")):
+            if cid not in view:
+                continue
+            view[cid]["llr_refs"].add(row["LLR-ID"])
+            view[cid]["hat_refs"].update(hats)
+            view[cid]["modules"].update(refs(row.get("Module")))
+            view[cid]["sr_refs"].update(parents)
+            for pid in parents:
+                sr_components.setdefault(pid, set()).add(cid)
+    for pid, comps in sr_components.items():
+        for cid in comps if len(comps) > 1 else ():
+            view[cid]["sr_shared_refs"].add(pid)
+    return sr_components
+
+
+def _add_seams(view, ifs, mod_comps):
+    """Fold the seam tier into `view` and return the ids it could not place."""
+    unplaced = []
+    for row in ifs:
+        placed, internal = seam_placement(row, mod_comps)
+        placed &= set(view)
+        if not placed:
+            unplaced.append(row["IF-ID"])
+        for cid in placed:
+            key = "seam_internal_refs" if cid in internal else "seam_boundary_refs"
+            view[cid][key].add(row["IF-ID"])
+    return unplaced
+
+
+def build(cmps, srs, llrs, ifs):
+    """The whole view as plain data: `(per_component, unplaced)`.
+
+    Separated from `render` so the derivation is testable without parsing TOML
+    back out of a string."""
+    view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
+    sr_components = _add_members(view, srs, llrs)
+    unplaced_seams = _add_seams(view, ifs, module_components(llrs))
+    unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
+    return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
+
+
+def _array(name, values):
+    """One TOML array, one element per line — so a `git diff` of this file names
+    the row that entered or left rather than re-wrapping a paragraph."""
+    if not values:
+        return "{} = []\n".format(name)
+    body = "".join('  "{}",\n'.format(v) for v in values)
+    return "{} = [\n{}]\n".format(name, body)
+
+
+def render(root):
+    """The whole file as text. Deterministic: every collection is sorted and
+    nothing reads a clock or the environment."""
+    cmps, srs, llrs, ifs = _load(root)
+    view, unplaced = build(cmps, srs, llrs, ifs)
+    out = [BANNER]
+    out.append(
+        "\n[derived]\n"
+        + "components = {}\n".format(len(view))
+        + "design_rows = {}\n".format(sum(len(v["llr_refs"]) for v in view.values()))
+        + "seam_rows = {}\n".format(len(ifs))
+        + "requirements_placed = {}\n".format(len(srs) - len(unplaced["sr_refs"]))
+        + "requirements_unplaced = {}\n".format(len(unplaced["sr_refs"]))
+        + "seams_unplaced = {}\n".format(len(unplaced["seam_refs"]))
+    )
+    for cid in sorted(view):
+        row = view[cid]
+        out.append("\n[component_view.{}]\n".format(cid))
+        out.append('name = "{}"\n'.format(row["name"].replace('"', "'")))
+        for key in (
+            "sr_refs",
+            "sr_shared_refs",
+            "llr_refs",
+            "hat_refs",
+            "modules",
+            "seam_internal_refs",
+            "seam_boundary_refs",
+        ):
+            out.append(_array(key, sorted(row[key])))
+    out.append("\n[unplaced]\n")
+    out.append(_array("sr_refs", unplaced["sr_refs"]))
+    out.append(_array("seam_refs", unplaced["seam_refs"]))
+    return "".join(out)
+
+
+def _has_components(root):
+    """True when a real (non-`-000`) CMP row exists. The whole layer is optional
+    and off-spine, so a repo that never names a component pays nothing."""
+    rows = spine_carrier.load(Path(root) / CMP_REL, "CMP-ID", keep_examples=True)
+    return any(not is_example(r["CMP-ID"]) for r in rows)
+
+
+def main(argv=None):
+    _utf8_console()
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--root", default=".", help="repo root (default: cwd)")
+    ap.add_argument(
+        "--out", default=None, help="output path (default {})".format(OUT_REL)
+    )
+    ap.add_argument(
+        "--check",
+        action="store_true",
+        help="exit 1 when the view is stale, writing nothing (the freshness gate)",
+    )
+    args = ap.parse_args(argv)
+    root = Path(args.root).resolve()
+    out = Path(args.out) if args.out else root / OUT_REL
+    # Vacuous — exit 0, write nothing — for a repo that declares no component and
+    # carries no view: a fresh scaffold ships only the inert CMP-000 row, and the
+    # gate must not red it over an optional layer it never opted into.
+    if not _has_components(root) and not out.is_file():
+        print(
+            "gen_components: no real CMP row in {} and no {} — nothing to "
+            "derive (vacuous).".format(CMP_REL, OUT_REL)
+        )
+        return 0
+    fresh = render(root)
+    if args.check:
+        if not out.is_file():
+            print(
+                "gen_components: {} missing — run "
+                "`python scripts/gen_components.py`".format(OUT_REL)
+            )
+            return 1
+        if out.read_text(encoding="utf-8").replace("\r\n", "\n") != fresh:
+            print(
+                "gen_components: {} STALE — run "
+                "`python scripts/gen_components.py`".format(OUT_REL)
+            )
+            return 1
+        print("gen_components: component view up to date.")
+        return 0
+    if out.is_file() and out.read_text(encoding="utf-8").replace("\r\n", "\n") == fresh:
+        print("gen_components: already up to date -> {}".format(out))
+        return 0
+    out.parent.mkdir(parents=True, exist_ok=True)
+    # Explicit LF: `write_text` newline-translates, and a CRLF copy would fail
+    # `--check` immediately after being generated (the 122-REVIEW-A defect).
+    with out.open("w", encoding="utf-8", newline="\n") as fh:
+        fh.write(fresh)
+    print("gen_components: wrote {}".format(out))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

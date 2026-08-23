@@ -1785,3 +1785,68 @@ version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink - a read model: it provides nothing across a component boundary, its three readers are all inside CMP-008/CMP-009 and the one that crosses is declared as IF-088. A separate row rather than a clause on IF-084 because both modules now perform the loader read for their own derivation, and a seam is held by the module that carries the import - the IF-082/IF-083/IF-084 split-sibling idiom, applied again"""
+
+[interface.IF-139]
+direction = "Provides"
+this_project = "scripts/gen_components"
+counterpart = "scripts/check"
+contract = """gen_components.py CLI: --check exits 1 when docs/requirements/components.derived.toml is stale or missing and 0 when it matches a fresh render; vacuous (exit 0, nothing written) for a repo with no real CMP row and no view on disk"""
+signal = "variable"
+signal_note = """typed at mint: the Contract names a typed outcome plus the unbounded STALE line built from the artifact path, and any unbounded part makes the whole crossing variable (B1)"""
+req_refs = ["SR-070"]
+owner = "LLR-199"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-140]
+direction = "Provides"
+this_project = "scripts/gen_components"
+counterpart = "docs/requirements/components.derived.toml"
+contract = """the derived component view itself: a TOML document carrying one census table, one component_view table per declared component (name, sr_refs, sr_shared_refs, llr_refs, hat_refs, modules, seam_internal_refs, seam_boundary_refs) and one unplaced table naming the requirements and seams that reach no component. Deterministic, LF, no clock; NO maturity or approval cell, ever (OI-30 D3)"""
+signal = "variable"
+req_refs = ["SR-070"]
+owner = "LLR-199"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-141]
+direction = "Consumes"
+this_project = "scripts/gen_components"
+counterpart = "scripts/trace"
+contract = """consumes trace.effective_hats(row, sr_by_id) -> sorted hat names: one member design row's perspective set, its own refs unioned with those of its SR parents"""
+rationale = """The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit."""
+signal = "variable"
+req_refs = ["SR-161"]
+owner = "LLR-183"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace is CMP-006. The IF-075 shape (gen_open_items -> trace), applied again"""
+
+[interface.IF-142]
+direction = "Consumes"
+this_project = "scripts/gen_components"
+counterpart = "scripts/spine_carrier"
+contract = """reads all four source registries through the CARRIER (IF-102) - components, system-requirements, low-level-requirements and interfaces - so each answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load with keep_examples off, so a scaffold's inert -000 rows never enter the view"""
+signal = "variable"
+req_refs = ["SR-147"]
+owner = "LLR-166"
+carried_by = "IF-102"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The IF-106/IF-118 shape, applied again"""
+
+[interface.IF-143]
+direction = "Consumes"
+this_project = "scripts/gen_components"
+counterpart = "scripts/trace_text"
+contract = """consumes trace_text.norm_module to reconcile the two module-naming conventions - scripts/x on a seam endpoint, project-trajectory/scripts/x.py on a design row - when placing an interface row into a component. The SAME normalizer trace.interface_findings joins on: a second reconciliation would be a second answer waiting to disagree with the advisory that already reports an unresolvable endpoint"""
+signal = "variable"
+req_refs = ["SR-159"]
+owner = "SR-157"
+carried_by = "IF-076"
+version = "v1"
+status = "Drafted"
+component = "CMP-009"
+notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace_text is CMP-006"""

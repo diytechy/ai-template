@@ -12,10 +12,10 @@ priority = 2
 
 ## Context
 
-**SLICES 1 AND 2 LANDED (2026-08-20, 2026-08-22) — the row is ACTIVE, not
-complete.** Phases 0 and 1 shipped whole; phase 2's backfill is DONE and its
-writer is still owed; phases 3, 4 and 5 are untouched. What is still owed, in
-the order it should be taken:
+**SLICES 1, 2 AND 3 LANDED (2026-08-20, 2026-08-22, 2026-08-23) — the row is
+ACTIVE, not complete.** Phases 0, 1 and 3 shipped whole; phase 2's backfill is
+DONE and its writer is still owed; phases 4 and 5 are untouched. What is still
+owed, in the order it should be taken:
 
 1. ~~**Phase 2's judgement backfill.**~~ **DONE, slice 2 (2026-08-22)** — record:
    `docs/log.d/2026-08-22-wi484-hatrefs-backfill.md`. **55 SR cells and 8 LLR
@@ -52,15 +52,26 @@ the order it should be taken:
    Deleting the prose touches an **approved** cell on Approved rows, so it is
    owner-adjacent and deliberately not taken here; the cell is the record and
    the prose is now commentary.
-4. **Phase 3 — the generated component view.** `gen_components.py`,
-   `docs/requirements/components.derived.toml`, its `[generated]` row, its
-   `check.py` freshness step and its `WIRED` entry in
-   `tests/test_generated_freshness_wiring.py` (that test fails both ways, so the
-   four land together), plus `detail_doc`'s retirement. **Untouched.** The
-   coverage edges the brief demands explicit answers for — the 12 childless SRs
-   (3 of which never will have children), the 6 multi-component SRs, and whether
-   the 57-of-125 tagged IF rows enter the view — are all Phase 3's and are all
-   still unanswered.
+4. ~~**Phase 3 — the generated component view.**~~ **DONE, slice 3
+   (2026-08-23)** — record: `docs/log.d/2026-08-23-wi484-component-view.md`.
+   `gen_components.py`, `docs/requirements/components.derived.toml`, its
+   `[generated]` row, its `component-view` freshness step and its `WIRED` entry
+   landed together (the wiring test was driven RED in both directions first),
+   plus a `trunk_step.REGEN_STEPS` entry and the adopter surface. `detail_doc`
+   is RETIRED: no live CMP row carried it, so nothing needed migrating; the
+   column is gone from the template, both carrier maps, `PROCESS_OPTIONS.md` and
+   the test fixtures. The three coverage edges were RE-MEASURED (the brief's
+   counts had all moved) and answered IN THE OUTPUT: the **5** childless SRs
+   (not 12, and all five now `Approved`) are one counted repo-wide `[unplaced]`
+   list, with the view deliberately NOT distinguishing "not yet decomposed" from
+   "constraint over everything" because no registry cell does and a per-repo
+   list of never-members has no place in shipped machinery; the **7**
+   multi-component SRs (not 6) appear in EVERY component they reach and in each
+   one's `sr_shared_refs`; seams DO enter the view, with all **130** placed
+   (**62** by tag, 68 by endpoint resolution through `trace_text.norm_module`)
+   and an unplaceable one named rather than dropped. Spine acts, all `Drafted`
+   on the standing precedent: `LLR-199`, `TC-195`, `IF-139`–`IF-143`.
+
 5. **Phase 4 — knowledge derived from concerns — has a blocker the brief did not
    know about.** `hats.py` enforces a STRICT unknown-key refusal
    (`REQUIRED_KEYS`, and `hats.py` raises on any extra key), and it has no
@@ -101,19 +112,19 @@ six phases (the brief is the row's recommendation cell; read it whole first):
 - **Phase 1** adds the field on SR and LLR rows to say which hats bear on the
   row; an LLR's EFFECTIVE set is DERIVED (own refs + inherited), never copied.
 - **Phase 2** decides who writes it and runs the backfill over the live rows.
-- **Phase 3** generates `docs/requirements/components.derived.toml` via a
-  `gen_components.py`, declared in `docs/stack.ini` `[generated]`;
-  `detail_doc` retires.
+- ~~**Phase 3**~~ **DONE** — generates `docs/requirements/components.derived.toml`
+  via `gen_components.py`, declared in `docs/stack.ini` `[generated]`;
+  `detail_doc` retired with it.
 - **Phase 4** derives knowledge packs from concerns via a `knowledge` field on
   `hats.toml`.
 - **Phase 5** is OI-33's surviving residue: the amend-without-flip-style guard
   — a row whose normative cells move while its concern refs do not is a
   finding.
 
-Coverage edges the brief says the execution must answer explicitly rather
-than paper over: 12 SRs have no LLR (SR-034, SR-114, SR-036 never will);
-6 SRs span more than one component; 57 of 125 IF rows carry a component tag.
-Standing constraint from OI-30 D3: a GENERATED file never carries an approval
+Coverage edges the brief said the execution must answer explicitly rather than
+paper over — ANSWERED at slice 3 against re-measured counts (5 childless SRs, 7
+multi-component, 62 of 130 tagged IF rows); see item 4 above. Standing
+constraint from OI-30 D3, honoured: a GENERATED file never carries an approval
 (`human_approval_through`).
 
 **Sequencing, the owner's own note (2026-08-20):** the new field is NOT
