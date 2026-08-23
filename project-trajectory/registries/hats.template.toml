@@ -48,6 +48,21 @@
 #                  failure is refused as ceremony — if you cannot say what goes
 #                  wrong when nobody wears it, delete the row.
 #
+# ONE OPTIONAL KEY, beyond the three required ones (`scripts/hats.py`
+# OPTIONAL_KEYS): a row may ALSO carry `knowledge`, a list of repo-relative
+# paths or pack names the hat's perspective draws on, e.g.
+#
+#     knowledge = ["docs/knowledge/security-review.md"]
+#
+# Omitting it is fine on every row — it does not become mandatory by being
+# declared here, that is the point of the separate set. If present it must be
+# a non-empty list of non-empty strings; `hats.py` refuses a bare string, an
+# empty list, or a non-string entry, naming `knowledge` in the refusal. Any
+# OTHER key stays refused as unknown — this does not loosen the strict
+# posture, it names the one exception to it. Nothing in this shipped template
+# declares `knowledge` on any row: filling it in is the same owner-editing act
+# as everything else here, once you have knowledge packs worth citing.
+#
 # ABSENCE IS OPT-OUT, MALFORMED IS A REFUSAL. Delete this file and every
 # composer proceeds without hats; leave it here broken and the composer
 # refuses loudly rather than quietly decomposing with no perspective at all.

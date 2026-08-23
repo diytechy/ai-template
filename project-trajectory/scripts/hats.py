@@ -161,6 +161,55 @@ TABLE = "hat"
 # to refuse ceremony is to make its absence unparseable.
 REQUIRED_KEYS = ("applies_when", "asks", "listens_for")
 
+# Keys a hat row MAY carry, beyond the three required ones. Declaring one here
+# does two things at once: it is no longer an "unknown key" refusal (the strict
+# posture is otherwise unchanged — a key in neither set still refuses loudly),
+# and its presence is validated by `OPTIONAL_KEY_VALIDATORS` below. ABSENT stays
+# fine on every row — an optional key never becomes mandatory by being declared,
+# which is the whole point of this set existing rather than widening
+# REQUIRED_KEYS (WI-511, unblocking WI-484 phase 4 / OI-32 (d)).
+#
+# `knowledge` — the knowledge packs this hat's perspective draws on: a list of
+# repo-relative paths or pack names (`docs/knowledge/...` by convention, not
+# enforced), e.g. `knowledge = ["docs/knowledge/security-review.md"]`. Minimal
+# shape deliberately: a list of non-empty strings, nothing richer, because
+# nothing downstream yet reads more than "which packs does this hat cite."
+OPTIONAL_KEYS = ("knowledge",)
+
+
+def _validate_knowledge(value, where):
+    """`knowledge` is a non-empty list of non-empty strings, or absent
+    entirely — never present-and-empty (that is indistinguishable from a typo
+    that dropped the intended entries) and never a bare string (a common typo
+    for a one-item list, and silently accepting it would iterate its
+    characters everywhere else a list is expected)."""
+    if not isinstance(value, list) or isinstance(value, str):
+        raise HatsError(
+            "{}: `knowledge` must be a list of non-empty strings (got {!r})".format(
+                where, value
+            )
+        )
+    if not value:
+        raise HatsError(
+            "{}: `knowledge` is present but empty — omit the key rather than "
+            "declaring a list with nothing in it".format(where)
+        )
+    cleaned = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise HatsError(
+                "{}: `knowledge` entries must be non-empty strings (got {!r})".format(
+                    where, item
+                )
+            )
+        cleaned.append(item.strip())
+    return cleaned
+
+
+# One validator per optional key, keyed the same way REQUIRED_KEYS' loop reads
+# them — the row-level split (`_hat_from_row`) is the only caller.
+OPTIONAL_KEY_VALIDATORS = {"knowledge": _validate_knowledge}
+
 # The context fields `applies_when` may name, split by the operators they admit.
 SCALAR_FIELDS = ("scope", "kind")
 LIST_FIELDS = ("tags",)
@@ -241,11 +290,17 @@ def _hat_from_row(name, row, where):
     than one nested loop."""
     if not isinstance(row, dict):
         raise HatsError("{} is not a table".format(where))
-    unknown = sorted(k for k in row if k not in REQUIRED_KEYS)
+    unknown = sorted(
+        k for k in row if k not in REQUIRED_KEYS and k not in OPTIONAL_KEYS
+    )
     if unknown:
         raise HatsError(
-            "{} declares unknown key(s) {} — a hat carries {}".format(
-                where, ", ".join(unknown), ", ".join(REQUIRED_KEYS)
+            "{} declares unknown key(s) {} — a hat carries {} (plus the "
+            "optional {} where present)".format(
+                where,
+                ", ".join(unknown),
+                ", ".join(REQUIRED_KEYS),
+                ", ".join(OPTIONAL_KEYS),
             )
         )
     hat = {"name": name}
@@ -264,6 +319,12 @@ def _hat_from_row(name, row, where):
         # (review finding). Inline text cannot mint a heading.
         hat[key] = " ".join(value.split())
     hat["condition"] = parse_condition(hat["applies_when"], where)
+    # Optional keys: ABSENT stays absent (never defaulted to "" or []), so a
+    # row that never mentions `knowledge` yields a hat dict with no such key —
+    # the same "declared vs not" honesty REQUIRED_KEYS gives, one tier down.
+    for key in OPTIONAL_KEYS:
+        if key in row:
+            hat[key] = OPTIONAL_KEY_VALIDATORS[key](row[key], where)
     return hat
 
 
@@ -439,6 +500,8 @@ def brief_block(hats):
     for hat in hats:
         out.append("- **{}** — {}".format(hat["name"], hat["asks"]))
         out.append("  - listens for: {}".format(hat["listens_for"]))
+        if "knowledge" in hat:
+            out.append("  - knowledge: {}".format(", ".join(hat["knowledge"])))
     return "\n".join(out)
 
 
@@ -770,6 +833,8 @@ def _cmd_list(args):
                 hat["name"], hat["applies_when"], hat["asks"], hat["listens_for"]
             )
         )
+        if "knowledge" in hat:
+            print("  knowledge: {}".format(", ".join(hat["knowledge"])))
     return 0
 
 

@@ -141,9 +141,12 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   needs the owner or a mechanism, not a next slice:** phase 2's duplication (17
   rows state the attribution twice, in an approved `Rationale` cell) is
   owner-adjacent and deliberately unTAKEN.
-  **Phase 4 is blocked on a mechanism, not a decision:** `hats.py` refuses any unknown roster
-  key and has no optional-key concept, so `knowledge` cannot be added to
-  `hats.toml` without first minting one — and that file is declared owner text.
+  **Phase 4's mechanism blocker is RESOLVED (2026-08-23):** `hats.py`
+  now declares an `OPTIONAL_KEYS` concept (`knowledge`, validated when
+  present, absent everywhere and fine), so the roster key can be added
+  without becoming mandatory on all 16 rows. What phase 4 still awaits is the
+  owner's own act, not a next slice: filling `knowledge` values into
+  `hats.toml`, which is declared owner text and was deliberately left empty.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the

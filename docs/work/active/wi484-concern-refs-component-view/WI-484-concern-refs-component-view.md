@@ -13,10 +13,11 @@ priority = 2
 ## Context
 
 **SLICES 1–5 LANDED (2026-08-20, 2026-08-22, 2026-08-23 ×3) — the row is
-ACTIVE, not complete.** Phases 0, 1, 2, 3 and 5 have shipped; phase 4 is
-untouched and blocked. What is still owed, in the order it should be taken:
-item 3 (owner-adjacent), item 5 (phase 4, blocked) and item 7 (recorded, owed by
-nobody yet).
+ACTIVE, not complete.** Phases 0, 1, 2, 3 and 5 have shipped; phase 4's
+BLOCKER is resolved (WI-511, 2026-08-23) but the phase itself still awaits the
+owner's `hats.toml` value pass. What is still owed, in the order it should be
+taken: item 3 (owner-adjacent), item 5 (phase 4, now waiting on the owner
+rather than a mechanism) and item 7 (recorded, owed by nobody yet).
 
 1. ~~**Phase 2's judgement backfill.**~~ **DONE, slice 2 (2026-08-22)** — record:
    `docs/log.d/2026-08-22-wi484-hatrefs-backfill.md`. **55 SR cells and 8 LLR
@@ -76,13 +77,25 @@ nobody yet).
    on the standing precedent: `LLR-199`, `TC-195`, `IF-139`–`IF-143`.
 
 5. **Phase 4 — knowledge derived from concerns — has a blocker the brief did not
-   know about.** `hats.py` enforces a STRICT unknown-key refusal
-   (`REQUIRED_KEYS`, and `hats.py` raises on any extra key), and it has no
+   know about.** `hats.py` enforced a STRICT unknown-key refusal
+   (`REQUIRED_KEYS`, and `hats.py` raised on any extra key), and had no
    notion of an optional key: adding `knowledge` to the roster therefore either
    makes it MANDATORY on all 16 live rows and all 16 shipped-template rows, or
    requires an `OPTIONAL_KEYS` concept minted first. `hats.toml` is also
    declared OWNER TEXT in its own header, so filling the values is not an
    agent's act.
+
+   **The mechanism half is DONE (WI-511, 2026-08-23)** — record:
+   `docs/log.d/2026-08-23-wi511-hats-optional-keys.md`. `hats.py` now declares
+   `OPTIONAL_KEYS = ("knowledge",)`: a key in that set is no longer refused as
+   unknown, its presence is validated (a non-empty list of non-empty
+   strings), and its absence stays fine on every row — the strict posture
+   otherwise unchanged. `hats.template.toml` carries the key's documentation,
+   with no row filling it in. **What remains is the owner's own act, not a
+   next slice:** filling `knowledge` values into THIS repo's
+   `docs/requirements/hats.toml` is owner text and was deliberately not done
+   here (WI-511's own scope excluded it) — phase 4 is unblocked down to that
+   value-filling pass.
 6. ~~**Phase 5 — the amend-without-flip guard.**~~ **DONE, slice 4
    (2026-08-23)** — record: `docs/log.d/2026-08-23-wi484-amend-guard.md`.
    `staged_hat_refs_findings` is an ARM of the existing guard, not a new rule:

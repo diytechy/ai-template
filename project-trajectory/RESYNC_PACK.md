@@ -3691,6 +3691,33 @@ there would be unfollowable by construction. If you have re-carried that brief
 with an output contract that DOES mint SR/LLR rows, this is the entry to read
 twice: the instruction belongs wherever your minting session actually reads.
 
+### The hats roster gains an OPTIONAL-key concept: `knowledge` [since 46dcac8a]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**What changed.** `scripts/hats.py` refused any row key beyond the three
+required ones (`applies_when`, `asks`, `listens_for`) with no notion of an
+optional one — so a new field like `knowledge` (knowledge packs derived from a
+hat's concern, WI-484 phase 4 / OI-32 (d)) could only be added by making it
+MANDATORY on every row. It now declares `OPTIONAL_KEYS = ("knowledge",)`: a key
+in that set is no longer an "unknown key" refusal, its presence is validated
+(a non-empty list of non-empty strings; a bare string, an empty list, or a
+non-string entry is refused BY NAME), and its ABSENCE stays fine on every row —
+the strict posture is unchanged for every key not in either set. `hats.py
+list`/`applicable` print the field where a row carries it and say nothing where
+it does not.
+
+**Take:** the overwritten `scripts/hats.py` and `registries/hats.template.toml`
+(the template gained a commented explanation of the key, no row filling it in —
+your `docs/requirements/hats.toml` is owner text and this pack does not touch
+its values). Nothing else moves: no schema-breaking change, no new required
+field, no checker or gate reads `knowledge` yet.
+
+**What you must do.** Nothing mechanical unless you want the field: your live
+roster keeps parsing exactly as before. If you want to cite knowledge packs
+from a hat, add `knowledge = ["docs/knowledge/…"]` to that hat's row yourself —
+this pack does not fill values into owner text.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

@@ -395,6 +395,29 @@ def test_the_mint_does_not_reissue_a_deleted_id(tmp_path):
     assert INTAKE.next_wi_id(root) == "WI-006"  # NOT WI-005
 
 
+def test_live_wi_ids_are_counted_under_the_archive_sibling_too(tmp_path):
+    """WI-511's own commit-bar hazard, driven: WI-504 relocated terminal WI
+    history one directory deeper, to `docs/archive/work/<disposition>/`, and
+    `docs/work/README.md`'s own rule is that both roots are ONE registry. A
+    spec minted and closed to the archive in the SAME commit (the pattern
+    `docs/log.d/2026-08-23-wi511-hats-optional-keys.md` records) must be
+    counted as a live id, or the watermark-raise integrity check refuses a
+    perfectly justified mark with no way to satisfy it short of a second
+    commit."""
+    root = _wi_repo(tmp_path, existing=(5,))
+    archive = root / "docs" / "archive" / "work" / "complete"
+    archive.mkdir(parents=True)
+    (archive / "WI-006-y.md").write_text('+++\nid = "WI-006"\n+++\n', encoding="utf-8")
+    assert TRACE.live_max_ids(root)["WI"] == 6
+    # And the integrity rule this unblocks: a mark raised to exactly that
+    # live id, with nothing under the ACTIVE workspace to justify it, passes.
+    marks = TRACE.read_watermark(root)
+    marks["WI"] = 6
+    (root / TRACE.WATERMARK).write_text(TRACE.render_watermark(marks), encoding="utf-8")
+    findings = TRACE.watermark_findings(root, previous={"WI": 5})
+    assert findings == []
+
+
 def _marked(tmp_path):
     """A bare tree carrying only the watermark every real repo ships."""
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)

@@ -117,6 +117,83 @@ def test_a_malformed_roster_refuses_loudly(tmp_path, text, expect):
         hats.load(_write(tmp_path, text))
 
 
+# --- the optional `knowledge` key (WI-511, unblocking WI-484 phase 4) --------
+def test_an_optional_key_absent_is_fine(tmp_path):
+    """A row that never mentions `knowledge` loads cleanly and carries no such
+    key at all — absence is not defaulted to "" or [], the same honesty
+    REQUIRED_KEYS gives one tier down."""
+    text = '[hat.SECURITY]\napplies_when = "always"\nasks = "q"\nlistens_for = "f"\n'
+    (hat,) = hats.load(_write(tmp_path, text))
+    assert "knowledge" not in hat
+
+
+def test_an_optional_key_present_and_well_formed_is_parsed_and_surfaced(tmp_path):
+    text = (
+        '[hat.SECURITY]\napplies_when = "always"\nasks = "q"\n'
+        'listens_for = "f"\n'
+        'knowledge = ["docs/knowledge/security-review.md", " docs/knowledge/x.md "]\n'
+    )
+    (hat,) = hats.load(_write(tmp_path, text))
+    assert hat["knowledge"] == [
+        "docs/knowledge/security-review.md",
+        "docs/knowledge/x.md",
+    ]
+    # Surfaced on `list` and `applicable`.
+    block = hats.brief_block([hat])
+    assert "knowledge: docs/knowledge/security-review.md, docs/knowledge/x.md" in block
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        '"docs/knowledge/x.md"',  # a bare string, not a list
+        "[]",  # present-and-empty
+        "[123]",  # non-string entry
+        '[""]',  # blank entry
+        '["  "]',  # whitespace-only entry
+    ],
+)
+def test_an_optional_key_present_and_malformed_is_refused_naming_the_key(
+    tmp_path, value
+):
+    text = (
+        '[hat.SECURITY]\napplies_when = "always"\nasks = "q"\n'
+        'listens_for = "f"\nknowledge = {}\n'
+    ).format(value)
+    with pytest.raises(hats.HatsError, match="`knowledge`"):
+        hats.load(_write(tmp_path, text))
+
+
+def test_an_unrelated_unknown_key_is_still_refused_even_though_one_now_exists(
+    tmp_path,
+):
+    """The point of a DECLARED optional set, not a loosened check: a key that
+    is not `knowledge` and not one of the three required ones still refuses,
+    naming both the required and the (one) optional key it could have been."""
+    text = (
+        '[hat.SECURITY]\napplies_when = "always"\nasks = "q"\n'
+        'listens_for = "f"\nnotes = "extra"\n'
+    )
+    with pytest.raises(hats.HatsError, match=r"unknown key\(s\) notes"):
+        hats.load(_write(tmp_path, text))
+
+
+def test_the_cli_list_command_prints_knowledge_only_where_present(tmp_path, capsys):
+    text = (
+        '[hat.SECURITY]\napplies_when = "always"\nasks = "q"\nlistens_for = "f"\n'
+        'knowledge = ["docs/knowledge/x.md"]\n\n'
+        '[hat.MAINTAINER]\napplies_when = "always"\nasks = "q2"\n'
+        'listens_for = "f2"\n'
+    )
+    _write(tmp_path, text)
+    hats.main(["--root", str(tmp_path), "list"])
+    out = capsys.readouterr().out
+    assert "knowledge: docs/knowledge/x.md" in out
+    # MAINTAINER carries no knowledge line at all.
+    maintainer_block = out.split("MAINTAINER")[1]
+    assert "knowledge:" not in maintainer_block
+
+
 def test_a_hat_naming_no_failure_class_is_refused_as_ceremony(tmp_path):
     """The `listens_for` requirement is the guardrail OI-19 asked for, applied
     to the roster itself: if you cannot say what goes wrong when nobody wears

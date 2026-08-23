@@ -725,7 +725,14 @@ BASELINE = {
     # whichever id scan globbed the old suffix, and nothing generic catches it
     # (a scan that finds no registry reads zero rather than refusing). A third
     # occurrence should build that guard instead of adding a fourth reader.
-    "trace.py": 5316,  # RE-STAMPED DOWN -57 (5373 -> 5316) 2026-08-23, WI-483
+    "trace.py": 5322,  # Reviewed bump, reason in the log. +6 (5316 -> 5322)
+    # 2026-08-23, WI-511: `_wi_ids` now scans `kitlib.registry.spec_roots`
+    # (docs/work AND its docs/archive/work sibling, WI-504's relocated
+    # terminal history) instead of hardcoding `docs / "work"` — a spec minted
+    # and closed to the archive in one commit was an id the watermark's own
+    # live-id justification could not see, refusing an honestly-justified
+    # mark rise with no way to satisfy it short of a second commit.
+    # RE-STAMPED DOWN -57 (5373 -> 5316) 2026-08-23, WI-483
     # slice 4 (program shape item 5, the engine splits): the cross-row join
     # rules left for the new sibling `scripts/coherence.py` (425 lines, under
     # THRESHOLD, no entry of its own) — the four-tier orphan rules,

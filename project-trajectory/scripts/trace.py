@@ -107,10 +107,12 @@ from kitlib.config import utf8_console as _utf8_console
 # instead, so the drift is unrepresentable rather than detected.
 try:
     from kitlib import git as _kitgit
+    from kitlib import registry as _registry
     from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import git as _kitgit
+    from kitlib import registry as _registry
     from kitlib import spine as _spine
 
 # Sibling: the spine-row TEXT layer (WI-329). Run as a subprocess this script's
@@ -815,16 +817,20 @@ def _sn_ids(docs):
 
 
 def _wi_ids(docs):
-    """`("WI", number)` per spec FILENAME under docs/work — filenames, never row
-    contents, because `read_spec_rows` drops a malformed spec silently while its
-    id stays taken."""
-    work = docs / "work"
-    if not work.is_dir():
-        return
-    for path in work.rglob("WI-*.md"):
-        match = re.match(r"^WI-(\d+)-", path.name)
-        if match:
-            yield "WI", int(match.group(1))
+    """`("WI", number)` per spec FILENAME under docs/work AND its archive
+    sibling `docs/archive/work` (WI-504 relocated terminal history one
+    directory deeper; `kitlib.registry.spec_roots` is the one home for "both
+    are the same registry") — filenames, never row contents, because
+    `read_spec_rows` drops a malformed spec silently while its id stays
+    taken. Scanning only the active workspace would let a mark for an id
+    minted and closed to the archive in one commit read as unjustified."""
+    for work in _registry.spec_roots(docs / "work"):
+        if not work.is_dir():
+            continue
+        for path in work.rglob("WI-*.md"):
+            match = re.match(r"^WI-(\d+)-", path.name)
+            if match:
+                yield "WI", int(match.group(1))
 
 
 def _dp_ids(docs):
