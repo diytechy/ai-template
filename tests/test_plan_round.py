@@ -166,9 +166,9 @@ def test_recording_into_a_closed_round_is_a_cap_error():
         pr.record(state, pr.STEP_PLAN, plan="A", ok=True)
 
 
-def test_page_action_maps_the_ratification_level_and_fails_safe():
+def test_page_action_maps_the_approval_level_and_fails_safe():
     """SN-029: keyed on the two independent bits the retired enum bundled.
-    `attended` was (human-held, stop), `single-ratify` (human-held, keep
+    `attended` was (human-held, stop), `single-approve` (human-held, keep
     going), `autonomous` (loop-held) — and the fourth cell, which the enum
     could not name at all, resolves the same way its sibling does."""
     assert pr.page_action(True, False) == "stop-needs-human"

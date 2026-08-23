@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Need-form check: stakeholder-need cells stay in stakeholder language.
 
-SN-033 (ratified 2026-08-13) commissions this check by its own acceptance text:
+SN-033 (approved 2026-08-13) commissions this check by its own acceptance text:
 "A declared check reports the row and phrase when a need cell contains an
 internal path, implementation-only identifier or process citation; a reviewed
 exception list distinguishes names that are themselves user-facing interfaces."
@@ -47,7 +47,7 @@ THE THREE TOKEN CLASSES, from SN-033's acceptance verbatim:
     is judged or reported, so its reviewed exception matches.
   - **implementation-only identifier** — a code-suffixed filename
     (`trace.py`, `stack.ini`), an underscore-joined identifier
-    (`human_ratification_through`), or a `--flag` token.
+    (`human_approval_through`), or a `--flag` token.
   - **process citation** — a sub-stakeholder registry id (`SR-137`, `WI-454`,
     ...) or a `§`-section reference. A stakeholder should not need the process
     docs to recognize the outcome they asked for. `SN-###` is deliberately NOT
@@ -120,7 +120,7 @@ CLASSES = (
         # the kit's own path alphabet. A single-slash, dot-free token is then
         # judged by _looks_like_path below: "subjective/perceptual" and
         # "requirement/test" are English either/or pairs that resolve to
-        # nothing on disk (both live in the ratified registry), while
+        # nothing on disk (both live in the approved registry), while
         # `docs/archive` names a real directory and reports. The residual,
         # documented miss is a one-level dot-free path whose target no longer
         # exists in the scanned tree.

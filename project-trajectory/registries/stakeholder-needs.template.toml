@@ -26,11 +26,11 @@
 #   Drafted   still being drafted — DevStg-Below. trace.py exempts it from the
 #             "every SN needs an SR" rule, so it can sit in the live registry
 #             before its SR decomposition exists. Do not park real needs here.
-#   Approved  a ratified need (the steady state). RATIFY by changing `status`
+#   Approved  an approved need (the steady state). APPROVE by changing `status`
 #             to "Approved" in a reviewed commit; that commit is the sign-off
-#             and its date is the ratification date.
+#             and its date is the approval date.
 #
-# There is NO third value for "ratified text that has since been AMENDED". A
+# There is NO third value for "approved text that has since been AMENDED". A
 # transitional `Modified` carried that until 2026-08-20, exactly as long as its
 # own note here said it would: it retired once approved text was snapshotted to
 # `docs/archive/last_approved/` and the DIFF answered the same question, for
@@ -42,7 +42,7 @@
 #
 # This retires the older carrier's "section-as-state", where draft-ness was
 # "appears under a heading containing the word draft" — a rule a prose MENTION
-# of an id could trip, silently re-drafting an already-ratified need.
+# of an id could trip, silently re-drafting an already-approved need.
 #
 # COVER THE WHOLE LIFECYCLE, NOT JUST STEADY STATE. For each need ask: when in
 # the running product's life must this hold? — Provision (before it runs:
@@ -83,5 +83,5 @@ tags = ["EXAMPLE-domain"]
 #
 # --- DRAFT NEEDS --------------------------------------------------------------
 #
-# Draft new needs with `status = "Drafted"`, then ratify them to "Approved".
+# Draft new needs with `status = "Drafted"`, then approve them to "Approved".
 # Empty is the normal steady state.

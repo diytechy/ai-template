@@ -130,7 +130,7 @@ None. Required fields present; Verification/Tier in vocabulary.
 
 ## Status findings (--require-verified)
 
-None. Every in-scope ratified SR is Approved (any method).
+None. Every in-scope approved SR is Approved (any method).
 
 ===STDOUT===
 WARNING (advisory): id-watermark monotonicity NOT checked — no committed docs/id-watermark to compare against (first commit, shallow clone, or off a work tree); the live-id and complete-space rules still ran

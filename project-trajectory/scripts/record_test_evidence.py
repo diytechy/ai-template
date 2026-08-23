@@ -30,7 +30,7 @@ consumer must not have to trust its writer.
 
 WHY THE RECORD IS COMMITTED, AND WHY CI DOES NOT WRITE IT. The rung is a
 statement the repository makes about itself, so its evidence has to be reviewable
-history like every other ratifying act in this kit — a value in a run log
+history like every other approving act in this kit — a value in a run log
 evaporates, and a hosted runner committing back would need write credentials, a
 bot identity, and a lane no reviewer signs. So the human (or the agent under the
 usual gates) runs this, reads the record, and commits it. CI's half needs no new

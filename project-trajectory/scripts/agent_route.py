@@ -953,9 +953,9 @@ def failure_action(human_held, keep_nondependent=False):
     In every mode the causing WI and its hard-edge dependents PAUSE; what
     differs is what happens AROUND that — and those are two genuinely separate
     questions, which is why the enum needed three values to express two bits.
-    Is the tier in process still the human's to ratify (`human_held`), and may
+    Is the tier in process still the human's to approve (`human_held`), and may
     other work keep running meanwhile (`keep_nondependent`)? The old
-    `single-ratify` and `autonomous` differed only in the design-check leg while
+    `single-approve` and `autonomous` differed only in the design-check leg while
     sharing the second answer; splitting them makes each dial mean one thing.
 
     Redesign re-enters the change-intake flow (process.md §5 — linked, not
@@ -970,7 +970,7 @@ def failure_action(human_held, keep_nondependent=False):
             "keep_nondependent": bool(keep_nondependent),
             "design_check": False,
             "note": (
-                "human-held tier: surface the block for ratification"
+                "human-held tier: surface the block for approval"
                 + (
                     "; keep working non-dependent work items to completion"
                     if keep_nondependent

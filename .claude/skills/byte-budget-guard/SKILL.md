@@ -30,8 +30,8 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,831 | 2026-08-23 | +318: WI-496 — the smoke bar wires `check_smoke_budget.py --mode enforce` and states the re-tiered figures |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,834 | 2026-08-23 | -7: WI-496 re-stamped the CLAUDE.md row (and this one) for the smoke-enforce edit |
+| `CLAUDE.md` | **8,500** | 7,827 | 2026-08-23 | -4: WI-499 — the `human_ratification_through` mention in the repo-map paragraph re-keys to `human_approval_through` |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,825 | 2026-08-23 | -9: WI-499 re-stamped both rows above for the vocabulary rename |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is

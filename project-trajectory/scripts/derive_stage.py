@@ -354,7 +354,7 @@ def _changed_rows(live, before_rows):
     (slice 3), a newly DRAFTED row cannot decrease the effective stage AT ALL —
     slice 1 excludes drafts from the settled fold, so that half of the phrase is
     inert by construction. What actually decreases it is a redrafted child
-    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly RATIFIED
+    (Impl -> LLReqs for an LLR, Impl -> Tests for a TC) and a newly APPROVED
     parent with no children yet (Impl -> LLReqs). Narrowing to the literal words
     would have shipped a rule that cannot fire on the two shapes that matter, so
     the trigger is "added, or a stage-affecting cell moved" — which CONTAINS the
@@ -427,12 +427,12 @@ def phase_rule_findings(root):
 
     RE-POINTED AT WI-501 (OI-53 (b), 2026-08-22). This carried
     `Implements: SR-139` until the WI-498 close, which was a mis-trace: SR-139
-    is "Ratification as an ordinal over a derived spine stage" — it governs the
-    `human_ratification_through` dial — while this rule's obligation is "a
+    is "Approval as an ordinal over a derived spine stage" — it governs the
+    `human_approval_through` dial — while this rule's obligation is "a
     spine edit that LOWERS the effective stage must surface as a phase change"
     (ruled plan §4, owner answer §6.1). Unrelated obligations at different
     tiers, so `backlink-coverage` was crediting a requirement about
-    ratification authority with a realization edge from a function that does
+    approval authority with a realization edge from a function that does
     not realize it — inflating its coverage with a false edge while leaving
     this rule rowless (ROUND-OPUS 12). WI-501 removed the false edge and
     minted SR-181, which states this obligation directly; the declaration
@@ -549,7 +549,7 @@ def main():
     if args.next_phase:
         # The one derived answer to "a confirmed scope change opens a new phase —
         # what number does it take?" (owner ruling 2026-08-01, WI-402: a phase
-        # increments on an adjudication-confirmed scope change or a ratified
+        # increments on an adjudication-confirmed scope change or an approved
         # draft-SN batch, NEVER on a raw derived-value drop — a spurious window
         # must not burn a phase number). Printed bare so the intake mint helper
         # (WI-388) can int() the output. A Drafted row's phase is not yet scope,

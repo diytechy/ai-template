@@ -80,7 +80,7 @@ def gap_census(root):
     census = list(findings.orphans)
     census += list(findings.status_findings)
     census += [
-        "SN {} is a draft need (unratified)".format(s) for s in sorted(reg.sn_draft)
+        "SN {} is a draft need (unapproved)".format(s) for s in sorted(reg.sn_draft)
     ]
     census += red_tc_census(root, reg)
     return census

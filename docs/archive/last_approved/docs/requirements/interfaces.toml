@@ -76,7 +76,7 @@
 #                    here may be machine-flipped only when this registry's stage
 #                    rung — DevStg-Arch, the rung `spine_rules.arch_incomplete`
 #                    gates on the architecture tier — is not human-held under the
-#                    `[attestation] human_ratification_through` dial. The
+#                    `[attestation] human_approval_through` dial. The
 #                    predicate is `agent_common.human_approves(docs,
 #                    "interfaces")`. At this repo's dial of 4 that means every
 #                    cell here is the OWNER'S to flip, in a reviewed
@@ -397,7 +397,7 @@ owner = "LLR-070"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - a pure library: consumes nothing, the coordinator feeds results in; nearest existing seam is IF-053 (schedule.py, the same side-effect-free-library-to-dispatcher shape) but wrong provider module and wrong contract (frontier/classification, not round lifecycle), and ratified out of Proposed once it was implemented and consumed"""
+notes = """source - a pure library: consumes nothing, the coordinator feeds results in; nearest existing seam is IF-053 (schedule.py, the same side-effect-free-library-to-dispatcher shape) but wrong provider module and wrong contract (frontier/classification, not round lifecycle), and approved out of Proposed once it was implemented and consumed"""
 
 [interface.IF-059]
 direction = "Consumes"
@@ -411,7 +411,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
-notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly), and ratified out of Proposed once it was implemented and consumed. Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
+notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly), and approved out of Proposed once it was implemented and consumed. Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-060]
 direction = "Consumes"
@@ -424,7 +424,7 @@ owner = "LLR-069"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's counterpart is the external agent CLI, not a kit script), and ratified out of Proposed once it was implemented and consumed"""
+notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's counterpart is the external agent CLI, not a kit script), and approved out of Proposed once it was implemented and consumed"""
 
 [interface.IF-061]
 direction = "Provides"
@@ -438,7 +438,7 @@ owner = "LLR-074"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts, and ratified out of Proposed once it was implemented and consumed"""
+notes = """source - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts, and approved out of Proposed once it was implemented and consumed"""
 
 [interface.IF-057]
 direction = "Consumes"
@@ -962,7 +962,7 @@ notes = "built and consumed together; published contract, not a single consumer 
 direction = "Provides"
 this_project = "scripts/gen_open_items"
 counterpart = "docs/open-items.html"
-contract = """the generated owner surface (WI-322): the ONLY document a human reads for pending decisions plus every Draft/Modified spine row's per-cell before/after. Contract of the emitted file: it carries an attestation-baseline stamp that --check re-reads (so a --since render is reproducible by the freshness gate), and a machine-local advisory region between explicit markers that --check MASKS before comparing (refs/llm/* facts do not transport with clone/push - the M-10/WI-266 rule inherited from the markdown block it replaces). The depth itself is computed by trace.reattest_model and the pending pointers by gen_trajectory.pending_block; this module renders, and if it ever disagrees with `trace.py --ratify` the brief is authoritative."""
+contract = """the generated owner surface (WI-322): the ONLY document a human reads for pending decisions plus every Draft/Modified spine row's per-cell before/after. Contract of the emitted file: it carries an attestation-baseline stamp that --check re-reads (so a --since render is reproducible by the freshness gate), and a machine-local advisory region between explicit markers that --check MASKS before comparing (refs/llm/* facts do not transport with clone/push - the M-10/WI-266 rule inherited from the markdown block it replaces). The depth itself is computed by trace.reattest_model and the pending pointers by gen_trajectory.pending_block; this module renders, and if it ever disagrees with `trace.py --approve` the brief is authoritative."""
 signal = "variable"
 req_refs = ["SR-026"]
 owner = "LLR-118"
@@ -1140,7 +1140,7 @@ status = "Drafted"
 direction = "Consumes"
 this_project = "scripts/dispatch"
 counterpart = "scripts/gen_trajectory"
-contract = """the dispatcher's exit-banner pending read (docs/concurrency-v2.md §A4, the 2026-08-01 amendment): _pending_cards imports the gen_trajectory FACADE (the gen_open_items shape) and reuses _blocked_pending + _spine_pending — the SAME pending_block(root) derivation the dashboard and open-items.html render — so the queue-drained / ratifications-waiting banners can never disagree with the owner surfaces about what is blocking. Deferred import, paid only at an exit banner; the tracked-pause card is excluded (the pause has its own earlier exit) and the coordinator's git-trailer reads stay for in-flight lanes only."""
+contract = """the dispatcher's exit-banner pending read (docs/concurrency-v2.md §A4, the 2026-08-01 amendment): _pending_cards imports the gen_trajectory FACADE (the gen_open_items shape) and reuses _blocked_pending + _spine_pending — the SAME pending_block(root) derivation the dashboard and open-items.html render — so the queue-drained / approvals-waiting banners can never disagree with the owner surfaces about what is blocking. Deferred import, paid only at an exit banner; the tracked-pause card is excluded (the pause has its own earlier exit) and the coordinator's git-trailer reads stay for in-flight lanes only."""
 signal = "variable"
 req_refs = ["SR-148"]
 owner = "LLR-035"
@@ -1178,7 +1178,7 @@ component = "CMP-008"
 direction = "Consumes"
 this_project = "scripts/intake"
 counterpart = "scripts/check_trajectory"
-contract = """reads the WI-380 amendment seam as-is - staged_spine_amendments(root, before, after) per-row {ratified, traced} cell dicts with before/after over a rev pair - plus SPINE_CSVS for the flip's registry walk; only the routed traced subset (SN-Refs, Verifies, LLR SR-Refs per the WI-388 ruling) mints, the rest stays silent by ruling"""
+contract = """reads the WI-380 amendment seam as-is - staged_spine_amendments(root, before, after) per-row {approved, traced} cell dicts with before/after over a rev pair - plus SPINE_CSVS for the flip's registry walk; only the routed traced subset (SN-Refs, Verifies, LLR SR-Refs per the WI-388 ruling) mints, the rest stays silent by ruling"""
 signal = "variable"
 req_refs = ["SR-174"]
 owner = "LLR-158"
@@ -1506,7 +1506,7 @@ owner = "LLR-180"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
-notes = """the cross-component edge CMP-007 -> CMP-006, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the duplicated-derivation hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py. THE OWNER-SIDE CELL NOW HOLDS A DESIGN ROW, and the standing no-design-row note it used to carry is withdrawn rather than merely deleted: LLR-180 names module_bindings beside symbol_findings, so the providing endpoint of this seam is answerable by a design row for the first time (LLR-023 answers only for the rendered arch-map splice/drift — exactly the artifact this contract DISCLAIMS — and LLR-080 for sw_graph/build_html;build_module_map, which is why neither could take it). The requirement side moved with it: SR-180 states the discharge obligation this seam realizes, which SR-147 never did (it states one machine-parseable carrier, not a symbol-binding oracle) and SR-158 never did (its acceptance names the verdict shape alone — the doc-refs step: dangling gates, untraced counted). Both new rows are Drafted and await ratification; the pointers here are traced cells and move ahead of that."""
+notes = """the cross-component edge CMP-007 -> CMP-006, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the duplicated-derivation hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py. THE OWNER-SIDE CELL NOW HOLDS A DESIGN ROW, and the standing no-design-row note it used to carry is withdrawn rather than merely deleted: LLR-180 names module_bindings beside symbol_findings, so the providing endpoint of this seam is answerable by a design row for the first time (LLR-023 answers only for the rendered arch-map splice/drift — exactly the artifact this contract DISCLAIMS — and LLR-080 for sw_graph/build_html;build_module_map, which is why neither could take it). The requirement side moved with it: SR-180 states the discharge obligation this seam realizes, which SR-147 never did (it states one machine-parseable carrier, not a symbol-binding oracle) and SR-158 never did (its acceptance names the verdict shape alone — the doc-refs step: dangling gates, untraced counted). Both new rows are Drafted and await approval; the pointers here are traced cells and move ahead of that."""
 
 [interface.IF-118]
 direction = "Consumes"
@@ -1581,7 +1581,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 direction = "Provides"
 this_project = "scripts/baseline_snapshot"
 counterpart = "scripts/intake"
-contract = """baseline_snapshot.py: the `last_approved` baseline. copy_live(root, seed=False) -> paths written; byte-for-byte mirror of SNAPSHOTTED into docs/archive/last_approved/; stale carriers deleted; SystemExit without seed=True. load_all(root) -> {(stem, id col): {id: row}}; None when absent; RAISES on an unparseable file; rows_for collapses that None to {}. exists(root) -> bool; stamp(root) -> (rev, date); is_drifted / drifted_cells -> ratified cells only; unanchored_findings -> advisory strings."""
+contract = """baseline_snapshot.py: the `last_approved` baseline. copy_live(root, seed=False) -> paths written; byte-for-byte mirror of SNAPSHOTTED into docs/archive/last_approved/; stale carriers deleted; SystemExit without seed=True. load_all(root) -> {(stem, id col): {id: row}}; None when absent; RAISES on an unparseable file; rows_for collapses that None to {}. exists(root) -> bool; stamp(root) -> (rev, date); is_drifted / drifted_cells -> approved cells only; unanchored_findings -> advisory strings."""
 signal = "variable"
 signal_note = """typed at mint: the Contract names typed outcomes plus unbounded content (the finding strings, the copied registry text), and any unbounded part makes the whole crossing variable (B1)"""
 req_refs = ["SR-140"]
@@ -1636,7 +1636,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 direction = "Consumes"
 this_project = "scripts/adjudicate_brief"
 counterpart = "scripts/trace"
-contract = """reads the re-attestation MODEL through trace: consumes trace.load_registries and trace.reattest_model, so the adjudication brief is composed from the same rows, the same snapshot baseline and the same ratified/traced split that `trace.py --ratify` renders. Imported LAZILY. An EMPTY model is a refusal, not an empty brief: no spine row differing from its snapshot copy and none awaiting a first approval means there is nothing to judge, and the caller is told so by name."""
+contract = """reads the re-attestation MODEL through trace: consumes trace.load_registries and trace.reattest_model, so the adjudication brief is composed from the same rows, the same snapshot baseline and the same approved/traced split that `trace.py --approve` renders. Imported LAZILY. An EMPTY model is a refusal, not an empty brief: no spine row differing from its snapshot copy and none awaiting a first approval means there is nothing to judge, and the caller is told so by name."""
 signal = "variable"
 signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content (the composed brief), and any unbounded part makes the whole crossing variable (B1)"""
 req_refs = ["SR-140"]
@@ -1663,13 +1663,13 @@ notes = """intra-component (both endpoints are CMP-006), so the cross-component 
 direction = "Consumes"
 this_project = "scripts/baseline_snapshot"
 counterpart = "scripts/check_trajectory"
-contract = """reads the ONE cell-comparison basis (LLR-158): consumes check_trajectory.split_changed_cells(rel, id_col, before, live_row) -> {"ratified": {cell: (before, after)}, "traced": {...}}, the drift basis for is_drifted and drifted_cells, which arm on the RATIFIED half alone. The id column and Status are excluded structurally by the callee. The import runs THIS way only: there is no back-import from check_trajectory into baseline_snapshot."""
+contract = """reads the ONE cell-comparison basis (LLR-158): consumes check_trajectory.split_changed_cells(rel, id_col, before, live_row) -> {"approved": {cell: (before, after)}, "traced": {...}}, the drift basis for is_drifted and drifted_cells, which arm on the APPROVED half alone. The id column and Status are excluded structurally by the callee. The import runs THIS way only: there is no back-import from check_trajectory into baseline_snapshot."""
 signal = "discrete"
 req_refs = ["SR-140"]
 owner = "LLR-158"
 version = "v1"
 status = "Drafted"
-notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is ratified. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it."""
+notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is approved. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it."""
 
 [interface.IF-131]
 direction = "Consumes"

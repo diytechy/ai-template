@@ -70,11 +70,11 @@ follow-up-on-a-done-SR ratchet, the **critique-loop ratchet** (WI-068) — a WI
 closing on a `Verification=Critique` SR while the latest `docs/reviews/*-CRITIQUE.md`
 verdict is CHANGES-REQUESTED, without the staged set touching the TC registry, the
 tests dir, or a `docs/rubrics/` file (harden the TC or add a rubric anchor) — and
-the **amend-without-flip** warn (WI-316): a staged diff changing the **ratified**
+the **amend-without-flip** warn (WI-316): a staged diff changing the **approved**
 cells of an `Approved` spine row without re-blessing it in the same commit
 (process.md §7), the write-time discipline commit-message prose never had.
-*Ratified*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
-WI-380) rules traceability **traced, not ratified**, so a `Module`/`CodeSymbol`/
+*Approved*, not every cell — the §A5.1 cell split (owner ruling 2026-07-31;
+WI-380) rules traceability **traced, not approved**, so a `Module`/`CodeSymbol`/
 `TestRefs`/`SN-Refs`/`Verifies` pointer following code that moved does **not**
 arm the marker. The traced half is not discarded: it is carried structurally by
 `staged_spine_amendments`, which returns both halves per amended row.
@@ -1708,7 +1708,7 @@ def _cross_component_scan(root):
 
 
 def cross_component_findings(root):
-    """The cross-CMP-edge-without-IF rule (WI-064; the AXES ratified model's
+    """The cross-CMP-edge-without-IF rule (WI-064; the AXES approved model's
     "Enforceability" ruling, process-options.md "Component layer"): an internal
     import edge whose endpoints belong to *different* CMP-### components must be
     covered by a declared IF-### row — an undeclared cross-component coupling is
@@ -1879,7 +1879,7 @@ def spec_interface_findings(root):
     field with two values, and neither means what `Experimental` meant ("proposed
     and not yet pinned by a second consumer"). Re-keying onto `approval ==
     "draft"` was the obvious move and is the WRONG one: it silently changes the
-    predicate to "not yet ratified", which on this repo's registry arms 113 of
+    predicate to "not yet approved", which on this repo's registry arms 113 of
     113 rows instead of 5, and it does so at a severity that ERRORS under
     --strict. A rule whose blast radius multiplies twentyfold while its sentence
     stays the same is not the same rule.
@@ -1948,7 +1948,7 @@ def spec_interface_findings(root):
 # in both rows — which is precisely the trap the stage/bar spelling overlap sets:
 #
 #   `[p]-[reqs]` / `[p]-[g1]`  requirement structuring: the phase's SRs are  check_vocab: allow
-#                              authored AND ratified. `spine_stage` clears its
+#                              authored AND approved. `spine_stage` clears its
 #                              `any(is_drafted(sr))` test from there on, so what
 #                              the phase then stands at is DevStg-LLReqs — NOT
 #                              DevStg-Reqs, which is the rung it has just LEFT.
@@ -2007,7 +2007,7 @@ def phase_stages(root):
     visible on the live reading even though it no longer moves the effective one.)
 
     THE IMPORT IS LAZY AND DEGRADES TO VACUOUS. This module runs in the shipped
-    pre-commit hook, and the `ratify-fresh` lesson (130-REVIEW-A) is that a hook
+    pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that a hook
     which hard-requires a sibling an adopter's tree may not have blocks every
     commit. A fixture that copies `check_trajectory.py` alone therefore loses the
     drop half only — the same vacuity an absent `docs/gate` produced before."""
@@ -2155,7 +2155,7 @@ def phase_findings(root, wis):
 # bootstrap.py MAPPING, so they always ship and re-sync together.
 #
 # The import is LAZY and degrades to None rather than raising: this module runs in
-# the SHIPPED pre-commit hook, and the `ratify-fresh` lesson (130-REVIEW-A) is that
+# the SHIPPED pre-commit hook, and the `approval-fresh` lesson (130-REVIEW-A) is that
 # a hook which hard-requires a file an adopter's tree may not have blocks every
 # commit. Missing check_docs therefore costs the anchor half only — the path half
 # is unchanged. Vacuity here is a real risk, so it is pinned by a test that drives
@@ -3141,7 +3141,7 @@ def knowledge_pack_findings(root, wis):
 def backlog_staleness_findings(root, wis):
     """WI-205 — the backlog-staleness warn (warn-only, the WI-129 checker stance).
 
-    Ratifying amended SN/SR/LLR/TC content never touches the open WI rows that
+    Approving amended SN/SR/LLR/TC content never touches the open WI rows that
     cite it, so an incomplete backlog can silently drift out of sync with the
     requirement state it was filed against. For each open WI (queued/active/
     blocked — `deferred` and `done` are exempt) this compares when its registry
@@ -3475,7 +3475,7 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
     Each side resolves independently, and that is the point rather than a
     convenience: across the cutover commit the old side is CSV and the new side
     is TOML, so this scan compares the two carriers CELL FOR CELL and reports
-    any row whose ratified text did not survive. The carrier change is then not
+    any row whose approved text did not survive. The carrier change is then not
     exempt from the amendment guard — it is checked by it, independently of the
     converter's own round-trip proof. A silent-no-op degrade (`{}`) is kept for
     a side that has neither carrier, which is the pre-registry history case."""
@@ -3491,16 +3491,16 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 
 
 # The §A5.1 cell split (OWNER RULING 2026-07-31, docs/concurrency-v2.md; WI-380).
-# Only what is RATIFIED arms the re-attest warn. Traceability is TRACED, not
-# ratified: re-pointing an LLR at the module the code moved to amends no
+# Only what is APPROVED arms the re-attest warn. Traceability is TRACED, not
+# approved: re-pointing an LLR at the module the code moved to amends no
 # attested prose. WI-280 paid for the conflation — 19 `Module` cells followed
 # moved code -> 11 owning SRs flipped off `Approved` -> the gate dropped DevStg-Impl->DevStg-Tests -> a
-# ratify brief and four review rounds, for a change that altered no requirement.
+# approve brief and four review rounds, for a change that altered no requirement.
 #
 # BOTH halves are declared per registry, and the RESIDUAL RULE FAILS SAFE: a
-# column in neither set is treated as RATIFIED. A column added to a registry
+# column in neither set is treated as APPROVED. A column added to a registry
 # after this table was written can therefore only ever be too loud — a spurious
-# window someone sees and dismisses — never silently un-ratified, which would
+# window someone sees and dismisses — never silently un-approved, which would
 # be a MISSED window nobody sees. `tests/test_trajectory_staged.py` pins both
 # halves of that: the unknown-column behaviour, and that every column of the
 # live and shipped-template headers is classified here (so a new column cannot
@@ -3512,16 +3512,16 @@ def _spine_rows_at(root, rev_prefix, rel_path, id_col):
 # prose either side, and whether a re-point moved SCOPE is exactly the judgement
 # the adjudication kind exists to make. So a changed `Boundary-Refs` ROUTES to
 # adjudication (intake.ROUTED_TRACED_CELLS) beside `SN-Refs`; it never arms a
-# re-attest window directly. Classifying it ratified instead would arm a window
+# re-attest window directly. Classifying it approved instead would arm a window
 # on every row of the re-tier campaign, which is the noise that gets a window
 # ignored — and the campaign's re-statements touch `Requirement` anyway, which
-# IS ratified, so nothing escapes attestation by this choice.
+# IS approved, so nothing escapes attestation by this choice.
 #
 # `Hat-Refs` (SR and LLR) joins the TRACED half at WI-484, and the classification
 # is the load-bearing half of shipping the cell rather than a footnote. Three
 # reasons, in the order that decides it: (1) it is the same SHAPE of pointer as
 # `SN-Refs`/`Boundary-Refs` — which declared row in another registry bears on this
-# one — carrying no prose either side; (2) the residual would classify it RATIFIED,
+# one — carrying no prose either side; (2) the residual would classify it APPROVED,
 # so the phase-2 backfill would arm a re-attest window on every row it touched,
 # which is precisely the 148-row noise `Boundary-Refs` was classified out of; and
 # (3) the owner's own sequencing note prices this ruling — the cell "is NOT
@@ -3559,11 +3559,11 @@ SPINE_TRACED_CELLS = {
         {"Verifies", "Evidence", "Automated", "Phase"}
     ),
 }
-# The ratified half. (The SR tier's `SupersededBy` column — ratified by ruling
+# The approved half. (The SR tier's `SupersededBy` column — approved by ruling
 # at WI-388 — retired with the supersession tombstone class, D-4 ruling
 # 2026-08-14b; the CMP registry's own SupersededBy is a separate, still-owed
 # item.)
-SPINE_RATIFIED_CELLS = {
+SPINE_APPROVED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
         {
             "Title",
@@ -3585,17 +3585,17 @@ SPINE_RATIFIED_CELLS = {
 
 
 def spine_cell_class(csv_path, column):
-    """`"traced"` for a column §A5.1 rules traceability, else `"ratified"`.
+    """`"traced"` for a column §A5.1 rules traceability, else `"approved"`.
 
     The residual is deliberate and fails SAFE: an unclassified column — one
-    added to a registry after the ruling — reads as ratified and keeps arming
+    added to a registry after the ruling — reads as approved and keeps arming
     the warn. See SPINE_TRACED_CELLS.
 
     KEYED BY THE REGISTRY, NOT BY ITS FILENAME. The two tables above are keyed
     on paths that carry a carrier SUFFIX, and the callers do not agree on which
     one: a staged-diff scan names whichever file git reported, while a live read
     names the constant. Under the CSV carrier a `.toml`-keyed lookup misses, and
-    a miss here does not red — every column reads `ratified`, so a traced-only
+    a miss here does not red — every column reads `approved`, so a traced-only
     edit arms a re-attest window that was ruled not to. `stem` drops the suffix,
     which is what `spine_carrier` exists to make possible.
 
@@ -3603,7 +3603,7 @@ def spine_cell_class(csv_path, column):
     """
     key = spine_carrier.stem(csv_path)
     traced = {spine_carrier.stem(k): v for k, v in SPINE_TRACED_CELLS.items()}
-    return "traced" if column in traced.get(key, ()) else "ratified"
+    return "traced" if column in traced.get(key, ()) else "approved"
 
 
 # --- the §A5.1 cell comparison ------------------------------------------------
@@ -3617,13 +3617,13 @@ def spine_cell_class(csv_path, column):
 # separator that cannot occur in a cell, and no second exclusion list.
 #
 # `split_changed_cells` below is what survived, and it is the better half: it
-# answered the same question the digest did — which cells moved, ratified or
+# answered the same question the digest did — which cells moved, approved or
 # traced — while also returning the before/after pairs a brief has to render
 # anyway. It is PUBLIC because `baseline_snapshot.is_drifted` reads it as the
 # drift basis, so the snapshot comparison and the amend-without-flip warn can
 # never disagree about what "normative" means.
 
-# The Status values whose ROW TEXT is ratified — the population the
+# The Status values whose ROW TEXT is approved — the population the
 # amend-without-flip guard scans. ONE MEMBER SINCE D-9 STEP 5, and it is a
 # CONTRACTION OF SPELLING, NOT OF SCOPE: the set used to hold `verified` and
 # `planned` because the pair split one rung ("text blessed, evidence
@@ -3638,18 +3638,18 @@ def spine_cell_class(csv_path, column):
 # (`Modified` used to be listed here as excluded-because-the-marker-is-already-set;
 # it retired at D-9 step 7 and the exclusion retired with it.)
 # Implements: SR-178, LLR-158
-_RATIFIED_TEXT = frozenset({"approved"})
+_APPROVED_TEXT = frozenset({"approved"})
 
 
 def split_changed_cells(csv_path, id_col, head, row):
     """One row's changed cells, split into the §A5.1 halves with their
-    before/after: `{"ratified": {cell: (before, after)}, "traced": {...}}`.
+    before/after: `{"approved": {cell: (before, after)}, "traced": {...}}`.
     The id column and `Status` are not content (the id is the join key; Status
     is the flip the caller is asking about), so neither is compared.
 
     Implements: SR-178, LLR-158
     """
-    changed = {"ratified": {}, "traced": {}}
+    changed = {"approved": {}, "traced": {}}
     for key in set(head) | set(row):
         if key in (id_col, "Status"):
             continue
@@ -3666,7 +3666,7 @@ def _spine_revs(root, base, head, touches=()):
     The prefixes are `git show` arguments: `"HEAD:"`, `"abc123:"`, or `":"` for
     the INDEX. `head=None` means the index — the `--staged` hook case, and the
     default. Any other value is a commit-ish, which is what §A5.2's trigger
-    needs: adjudication is minted from *a trunk commit that changed a ratified
+    needs: adjudication is minted from *a trunk commit that changed an approved
     cell*, and a commit is not the index.
 
     `touches` is the caller's applicability test — the registry paths at least
@@ -3698,12 +3698,12 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     """The structured amendment set behind the amend-without-flip warn (WI-316,
     narrowed by WI-380) — the seam adjudication (WI-388) consumes.
 
-    One record per RATIFIED-TEXT spine row (`_RATIFIED_TEXT` — `Approved`, into
+    One record per APPROVED-TEXT spine row (`_APPROVED_TEXT` — `Approved`, into
     which `Verified` and `Planned` both folded at D-9 step 5) amended between the
     two trees without its status moving, each cell sorted into the §A5.1 halves with its before/after:
 
         {"registry": <csv path>, "id": <row id>,
-         "ratified": {cell: (before, after)}, "traced": {cell: (before, after)}}
+         "approved": {cell: (before, after)}, "traced": {cell: (before, after)}}
 
     WHICH TWO TREES is a parameter, and WI-388 needs it to be: `head=None` (the
     default) compares the INDEX against `base`, which is the hook's `--staged`
@@ -3712,7 +3712,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     the post-commit question the dispatcher actually has to ask. Both arms are
     tested.
 
-    A record may carry a traced change with NO ratified change. Only the
+    A record may carry a traced change with NO approved change. Only the
     `SN-Refs`/`Verifies`/`SR-Refs` subset of those is the WI-388 case (§A5.1
     routes a re-point of what a requirement answers to, what a test claims to
     cover, or which SR owns an LLR — the last ruled traced at WI-388 — to
@@ -3738,7 +3738,7 @@ def staged_spine_amendments(root, base="HEAD", head=None):
     # sanctioned amend path is flipping the AMENDED row itself in the same
     # commit — a Status that moved is exempted below. The retired chain
     # reading's owning-SR exemption (a parent flip sanctioning a silent
-    # child amendment) is gone with the doctrine: a child whose ratified
+    # child amendment) is gone with the doctrine: a child whose approved
     # cells change while its own Status still claims approval warns,
     # whatever its parent does.
 
@@ -3763,26 +3763,26 @@ def staged_spine_amendments(root, base="HEAD", head=None):
                 continue
             head_status = (head.get("Status") or "").strip().lower()
             cur_status = (row.get("Status") or "").strip().lower()
-            # RATIFIED-TEXT STATES, both sides, and the SAME one. Since D-9
+            # APPROVED-TEXT STATES, both sides, and the SAME one. Since D-9
             # step 5 that is the single value `Approved`; before the fold it was
             # `Verified` OR `Planned`, and requiring the SAME one on both sides
             # is what kept a legitimate rung move from reading as an amendment.
             # A status that MOVED between the two sides is still exempt,
             # unchanged: that is a deliberate call this does not second-guess.
-            if head_status != cur_status or head_status not in _RATIFIED_TEXT:
+            if head_status != cur_status or head_status not in _APPROVED_TEXT:
                 continue
             changed = split_changed_cells(csv_path, id_col, head, row)
-            if changed["ratified"] or changed["traced"]:
+            if changed["approved"] or changed["traced"]:
                 out.append(dict(changed, registry=registry, id=rid))
     return out
 
 
 def staged_spine_findings(root):
     """The amend-without-flip warn (WI-316; warn-first, `--staged` only), scoped
-    by WI-380 to RATIFIED cells only.
+    by WI-380 to APPROVED cells only.
 
-    A staged diff that changes the ratified cells of a spine row whose Status
-    reads the same ratified-text value (`Approved`, since D-9 step 5) in both
+    A staged diff that changes the approved cells of a spine row whose Status
+    reads the same approved-text value (`Approved`, since D-9 step 5) in both
     HEAD and the stage has amended attested prose without re-blessing it — the
     write-time discipline the old RE-ATTESTATION-PENDING commit-message prose
     never had. One warning per amended row, naming the changed cells. A row
@@ -3791,16 +3791,16 @@ def staged_spine_findings(root):
     Index-vs-HEAD by construction — this is the hook's question, so it takes no
     rev arguments; the post-commit view is `staged_spine_amendments`'s."""
     return [
-        "{}: ratified cell(s) {} amended while Status stays put — a "
+        "{}: approved cell(s) {} amended while Status stays put — a "
         "post-attestation amendment owes a fresh human read (process.md §7). "
         "Since D-9 step 7 there is no marker to set: either re-attest it in "
         "this commit and run `intake.py snapshot` in the same commit, or the "
         "change rides as SNAPSHOT DRIFT until the next sitting — visible on the "
         "re-attest brief and open-items.html, but not blessed".format(
-            a["id"], ", ".join(sorted(a["ratified"]))
+            a["id"], ", ".join(sorted(a["approved"]))
         )
         for a in staged_spine_amendments(root)
-        if a["ratified"]
+        if a["approved"]
     ]
 
 
@@ -4060,31 +4060,36 @@ OPEN_ITEMS_REL = "docs/requirements/open-items.toml"
 # Kept a SEPARATE pattern from PHASE_ANCHOR_RE because that one is anchored to the
 # start of a Title and this one matches mid-cell; the accepted TOKEN SET is the
 # same, and is held equal to it by a test rather than by this comment.
-RATIFY_ANCHOR_RE = re.compile(
+APPROVAL_ANCHOR_RE = re.compile(
     r"\[[^\]\[]+\]-\[(?:g[12]|reqs|tests|DevStg-[A-Za-z]+)\]", re.IGNORECASE
 )
-# The brief satisfies the rule only by naming a ratification/hierarchy VIEW — a
-# bare `trace.py --ratify` command mention no longer counts (WI-146 REVIEW-A): a
+# The brief satisfies the rule only by naming an approval/hierarchy VIEW — a
+# bare `trace.py --approve` command mention no longer counts (WI-146 REVIEW-A): a
 # command can be unexecuted or wrong-scope, so it is not proof the generated view
 # exists and is carried in the brief. WI-322 moved briefs from markdown sections
 # to registry ROWS, so the proof is a path/link token in the cell rather than a
 # markdown link — the rule is the same, its evidence shape follows the source.
-RATIFY_VIEW_RE = re.compile(
-    r"(?:ratif|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|hierarch)[^)]*\)",
+# `ratif` stays in the token set deliberately (WI-499): the generated view still
+# lives under `docs/ratify/` — the directory kept its name as a record home even
+# though the retired-vocabulary rename covers everything else — so a real link
+# still reads `docs/ratify/CURRENT.md` / `docs/ratify/<date>-*.md`. `approv` is
+# matched too, for a link authored against the word the kit uses everywhere else.
+APPROVAL_VIEW_RE = re.compile(
+    r"(?:ratif|approv|hierarch)\w*[^\s]*\.(?:md|html|csv)|\]\([^)]*(?:ratif|approv|hierarch)[^)]*\)",
     re.IGNORECASE,
 )
 
 
-def ratify_brief_findings(root):
+def approval_brief_findings(root):
     """Warn-first brief lint (WI-146b): an open-items row whose decision is a
-    phase-anchor ratification should point at the batch-scoped ratification
-    hierarchy view (`trace.py --ratify <phase>`) instead of hand-copying registry
+    phase-anchor approval should point at the batch-scoped approval
+    hierarchy view (`trace.py --approve <phase>`) instead of hand-copying registry
     rows. WARN only — never a gate fail (the house stance for prose surfaces,
     WI-129/132).
 
     Reads `docs/requirements/open-items.toml` since WI-322 retired the markdown
     surface; the brief text is the row's prose cells. Vacuous when the registry
-    is absent or carries no ratification brief, so a repo without the surface
+    is absent or carries no approval brief, so a repo without the surface
     pays nothing."""
     path = root / OPEN_ITEMS_REL
     if spine_carrier.resolve(path) is None:
@@ -4100,14 +4105,17 @@ def ratify_brief_findings(root):
             (row.get(k) or "")
             for k in ("OneLine", "Decision", "BlastRadius", "Options", "Recommendation")
         )
-        is_ratification = RATIFY_ANCHOR_RE.search(body) and re.search(
-            r"ratif", body, re.IGNORECASE
+        # `approv` (not `ratif`, WI-499): live prose no longer uses the retired
+        # spelling, so a freshly-authored row's own text is the "this decision
+        # is about a human approval" signal now.
+        is_approval = APPROVAL_ANCHOR_RE.search(body) and re.search(
+            r"approv", body, re.IGNORECASE
         )
-        if not is_ratification or RATIFY_VIEW_RE.search(body):
+        if not is_approval or APPROVAL_VIEW_RE.search(body):
             continue
         out.append(
-            "{}: a phase-anchor ratification brief should name the batch-scoped "
-            "hierarchy view (generate it with `trace.py --ratify <phase>`) instead "
+            "{}: a phase-anchor approval brief should name the batch-scoped "
+            "hierarchy view (generate it with `trace.py --approve <phase>`) instead "
             "of hand-copying registry rows ({})".format(oid, OPEN_ITEMS_REL)
         )
     return out
@@ -4457,10 +4465,10 @@ def main():
     ):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
-    # Ratification-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
-    # check: a `[phase]-[g1|g2]` ratification brief should link the generated
-    # batch-scoped hierarchy view. Vacuous without a ratification brief.
-    for w in ratify_brief_findings(root):
+    # Approval-brief hierarchy-view lint (WI-146b) — warn-first prose-surface
+    # check: a `[phase]-[g1|g2]` approval brief should link the generated
+    # batch-scoped hierarchy view. Vacuous without an approval brief.
+    for w in approval_brief_findings(root):
         print("check_trajectory: WARN - {}".format(w), file=sys.stderr)
 
     # How-SW top-view right-sizing (WI-073/FB5) — WARN plain, ERROR under --strict

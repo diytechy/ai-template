@@ -131,9 +131,9 @@ argument *for* the hand-built SVG, not against it.
 **Stripping mermaid from the runtime-flow docs** is the mirror image: `PROCESS.md:272-275`
 requires "always one [`sequenceDiagram`] for any concurrent / asynchronous /
 non-blocking behavior", and the mermaid runtime-flow contract is backed by a full
-ratified chain **SN-010 → SR-013 → LLR-013 → TC-013** plus IF-003/IF-029, wired at
+approved chain **SN-010 → SR-013 → LLR-013 → TC-013** plus IF-003/IF-029, wired at
 DevStg-Tests/DevStg-Impl as `check.py`'s `design-flows` step. Retiring that is a spine amendment
-needing a ratification window, not a doc edit.
+needing an approval window, not a doc edit.
 
 ### The real defect, which nobody filed
 
@@ -290,7 +290,7 @@ be a **new field on the basis line**, not a reinterpretation of the gate value.
 > the depth.
 >
 > *Met when* the depth is derived from the same states the gate reads, when a
-> change to a ratified need's meaning drops it to its floor without human action,
+> change to an approved need's meaning drops it to its floor without human action,
 > and when a demanded sitting is raised and cleared as its own auditable act.
 
 **Your "level 4" question, answered:** it is a *volatile request*, not a
@@ -310,8 +310,8 @@ comparison baseline is *the newest commit where the derived gate was at or above
 
 1. `spine_rules.py` **shall** compute an attestation depth on 0..3 from the same spine states it reads for the gate.
 2. `spine_rules.py` **shall** record that depth in the `docs/gate` basis line. *(split from 1)*
-3. `spine_rules.py` **shall** compute a depth of 0 when a ratified need's content differs from its content at the baseline commit.
-4. `check_trajectory.py` **shall** report a ratified need whose ratified cells changed while its downstream rows kept `Verified`.
+3. `spine_rules.py` **shall** compute a depth of 0 when an approved need's content differs from its content at the baseline commit.
+4. `check_trajectory.py` **shall** report an approved need whose approved cells changed while its downstream rows kept `Verified`.
 5. `dispatch.py` **shall** drain its lanes and exit zero with a banner naming the requested review when `docs/work/attest` is present. <!-- path-ok: proposed or upstream path -->
 6. `agent_common.py` **shall** read `docs/work/attest` as a declared request whose presence is its state. <!-- path-ok: proposed or upstream path -->
 
@@ -472,7 +472,7 @@ no gaps), so SN-028..032 are free.
 > ⚠ **Do not write the tokens `SN-031`/`SN-032` into
 > `docs/requirements/stakeholder-needs.md`.** One draft or uncited SN token drops
 > the derived gate **DevStg-Tests → DevStg-Reqs**, and at DevStg-Reqs the traceability, design-flows,
-> trajectory `--strict` and ratify-fresh steps all leave the required plan. The
+> trajectory `--strict` and approval-fresh steps all leave the required plan. The
 > reservation's home is **this document plus the WI spec** until real content
 > exists. A named step in §5 owns retiring it.
 
@@ -589,7 +589,7 @@ depends on §7 Q1.
 
 **S10 · Close the window: one re-attest sitting.** Everything above is arranged so a
 single sitting covers the original 21 Modified rows *plus* everything this
-restructure touched. Generate with `trace.py --ratify modified --out`. Also: retire
+restructure touched. Generate with `trace.py --approve modified --out`. Also: retire
 the SN-031/SN-032 reservation from this doc into real content or an explicit
 carry-forward. **Do not close earlier.**
 
@@ -597,7 +597,7 @@ carry-forward. **Do not close earlier.**
 
 ## 6 · What the waiver does and does not switch off
 
-The waiver means **not running the full DevStg-Reqs/DevStg-Tests/DevStg-Impl ratification ceremony** for each
+The waiver means **not running the full DevStg-Reqs/DevStg-Tests/DevStg-Impl approval ceremony** for each
 step of a change to the infrastructure that implements those gates. It does **not**
 stop:
 
@@ -626,7 +626,7 @@ checks are off and land a red.
 1. **The diagram question is RESOLVED** (§2): the file was `PROCESS.md:587`, it has **zero overlap** with the dashboard, and the recommendation is to **leave it alone**. What remains optional is the *separate* finding — the station-cycle 3× duplication and the four rows describing the deleted render. Take S9 or drop it; nothing else depends on it.
 2. **"Ratio pool"** — proportional single-selection (ships today) or N concurrent sessions merged (major build)?
 3. **The handback contract ruling** (S6) — five open questions, none answered. *Blocks C.1 step 1 and C.2.*
-4. **Does "never revive" retire R3's ratified re-queue outcome?** `check_trajectory`'s own remedy text currently *recommends* revival, and this repo has a revival precedent (`b5ea0647`). Downstream repos that have reopened a WI would red without a warn-first window.
+4. **Does "never revive" retire R3's approved re-queue outcome?** `check_trajectory`'s own remedy text currently *recommends* revival, and this repo has a revival precedent (`b5ea0647`). Downstream repos that have reopened a WI would red without a warn-first window.
 5. **"Conflict" in C.3** takes one of three definitions, one of which reverses a standing ruling.
 6. **Scope collision with WI-390** — `handback-contract.md` §11 says WI-390 will amend the same rows in the same window. Absorb it, or sequence into its sitting? Doing neither means two batches amending the same rows.
 

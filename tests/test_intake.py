@@ -5,7 +5,7 @@ created ONLY by a human trunk commit or this helper — lanes never mint. The
 helper has three triggers, all trunk-side, serial by construction, plus the
 drafts-not-mints arm:
 
-  (a) a ratified-cell (or routed traced-cell) diff on the merged commit, via
+  (a) an approved-cell (or routed traced-cell) diff on the merged commit, via
       `check_trajectory.staged_spine_amendments(root, before, after)` — mints
       ONE adjudication row whose title + `## Context` list each changed row,
       cell and before/after;
@@ -196,10 +196,10 @@ def amended_repo(tmp_path, amend):
     return root, before, _rev(root)
 
 
-# --- trigger (a): the ratified-cell diff on the merged commit ------------------
+# --- trigger (a): the approved-cell diff on the merged commit ------------------
 
 
-def test_a_ratified_cell_diff_mints_one_adjudication_row(tmp_path):
+def test_a_approved_cell_diff_mints_one_adjudication_row(tmp_path):
     root, before, after = amended_repo(
         tmp_path, lambda r: write_sr(r, requirement="the AMENDED text")
     )
@@ -655,7 +655,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
     (root / "docs" / "work" / "queued").mkdir(parents=True)
     census = [
         "SR-001 is not Approved (Status=Drafted)",
-        "SN SN-002 is a draft need (unratified)",
+        "SN SN-002 is a draft need (unapproved)",
     ]
     minted, refusal = intake.mint_gap_rows(root, census)
     assert refusal is None, refusal
@@ -676,7 +676,7 @@ def test_the_census_mints_gap_rows_and_dedupes_on_rerun(tmp_path):
 
 def _policy_repo(tmp_path, dial):
     """A repo with one Drafted SR, one Approved SR, one Drafted LLR, and the
-    declared ratification `dial` — the state an adjudication row's cheap
+    declared approval `dial` — the state an adjudication row's cheap
     outcome acts on.
 
     `dial` IS A `DevStg-*` RUNG SINCE WI-493, not the retired 0-4 ordinal. The
@@ -720,7 +720,7 @@ FIXTURE_STAGE = kit_ladder.STAGE_TESTS
 
 
 def _declare_dial(root, dial):
-    """Declare BOTH halves of SN-029's comparison: the human-ratification dial
+    """Declare BOTH halves of SN-029's comparison: the human-approval dial
     in docs/process.toml, and the spine stage the derived record reports.
 
     The stage is RECORDED rather than derived from a real spine, because what is
@@ -742,7 +742,7 @@ def _declare_dial(root, dial):
     `fingerprint` are written: `parse` addresses fields BY NAME and leaves an
     absent one absent, so a fixture states what it is declaring and nothing
     else."""
-    set_process_key(root, "attestation", "human_ratification_through", dial)
+    set_process_key(root, "attestation", "human_approval_through", dial)
     path = root / kit_stage.STAGE_FILE
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="\n") as fh:
@@ -757,7 +757,7 @@ def _declare_dial(root, dial):
 
 def test_under_attended_adjudication_recommends_and_never_flips(tmp_path, capsys):
     # Ruled decision 2: under `attended` the flip is a Status change that
-    # RECOVERS THE GATE — a ratification, and ratification is the human's act.
+    # RECOVERS THE GATE — an approval, and approval is the human's act.
     # The helper prepares the brief and touches NOTHING.
     root = _policy_repo(tmp_path, kit_ladder.STAGE_RELEASE)
     before = (root / "docs" / "requirements" / "system-requirements.csv").read_bytes()
@@ -776,7 +776,7 @@ def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path)
     """D-9 STEP 7, and this test replaces a capability rather than losing one.
 
     It used to prove the other arm of ruled decision 2: below the human's
-    ratification dial a recorded LLM verdict carries ratification authority, so
+    approval dial a recorded LLM verdict carries approval authority, so
     the helper enacted `Modified` -> `Approved`. Step 7 retired `Modified`, the
     ONE state that act ever moved from, and the guard it left behind — a silent
     `continue` over every other status — resolved into an explicit refusal.
@@ -786,7 +786,7 @@ def test_below_the_human_dial_a_NON_FLIPPABLE_row_is_NAMED_not_skipped(tmp_path)
     status quoted, and NOTHING is written. Fail-closed matters more than the
     lost arm — the alternative resolutions (write to a `Drafted` row, or
     re-bless a drifted `Approved` one) are both WIDER than the silent skip they
-    would replace, and widening mechanical ratification authority is an owner
+    would replace, and widening mechanical approval authority is an owner
     ruling, not a migration step's to take. The writer's own properties did not
     move with the guard and are proved directly below.
 
@@ -919,7 +919,7 @@ def test_the_flip_is_toml_STRING_aware_not_line_aware(tmp_path):
 
     A physical-line rewrite edited a `status = ...` line INSIDE a multi-line
     requirement string, left the row's real status where it was, and returned
-    True — so the tool reported a ratification it had not made while silently
+    True — so the tool reported an approval it had not made while silently
     rewriting attested requirement text. Two damages from one defect: a false
     record, and a corrupted registry cell.
     """
@@ -962,7 +962,7 @@ def test_a_row_with_no_status_key_at_all_REFUSES(tmp_path):
 
 def test_a_crlf_registry_keeps_its_line_endings_through_a_flip(tmp_path):
     """The review's MAJOR 6: the writer advertises "every other byte unchanged",
-    and a wholesale CRLF -> LF conversion makes a one-word ratification a
+    and a wholesale CRLF -> LF conversion makes a one-word approval a
     whole-file diff — on the registry whose diffs the amendment guard reads."""
     root = _policy_repo(tmp_path, kit_stage.BELOW)
     sr_toml = _write(root, SR_TOML, newline="\r\n")
@@ -991,7 +991,7 @@ def test_an_lf_registry_is_not_given_crlf_either(tmp_path):
 def test_a_toml_row_with_no_status_line_refuses_rather_than_claiming_a_flip(tmp_path):
     # The mutation that proves the writer can still fail: a located row whose
     # status line the rewrite cannot find must REFUSE, because reporting a flip
-    # that was never written is a ratification the registry does not carry.
+    # that was never written is an approval the registry does not carry.
     root = _policy_repo(tmp_path, kit_stage.BELOW)
     # Plant the defect: the writer is asked for a row whose status LINE is not
     # in the file. It used to be planted by locating the row first and deleting
@@ -1012,7 +1012,7 @@ def test_an_unknown_row_id_refuses_the_flip(tmp_path):
 
 
 def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
-    # Fail toward the human, never toward a machine ratification. Every input
+    # Fail toward the human, never toward a machine approval. Every input
     # this rung can fail on resolves the same way: an out-of-vocabulary dial, a
     # stage record with no stage field (a repo that predates the carrier), and
     # an unparseable one all read as HUMAN-HELD.
@@ -1041,6 +1041,6 @@ def test_an_unreadable_dial_or_stage_fails_toward_recommend(tmp_path):
     # rung is named rather than read back through `spine_stage_of` because the
     # write above moves the fingerprint, which would send the reader off to
     # re-derive — a different question than the one under test.
-    set_process_key(middle, "attestation", "human_ratification_through", "four")
-    assert ac.ratification_through(docs) == kit_ladder.STAGE_RELEASE
+    set_process_key(middle, "attestation", "human_approval_through", "four")
+    assert ac.approval_through(docs) == kit_ladder.STAGE_RELEASE
     assert ac.human_holds(docs, FIXTURE_STAGE) is True, "a wrong-typed dial holds"

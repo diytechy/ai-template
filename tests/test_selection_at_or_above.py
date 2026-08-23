@@ -62,7 +62,7 @@ def _mature_frame_free(root):
     (rung 1) and `arch_incomplete` (rung 3) — and each applies only when its
     registry FILE exists (a project that never declares a boundary is not held at
     DevStg-Boundary forever). A scaffold ships `external.toml` and
-    `components.toml` carrying no ratified crossing or component, which is
+    `components.toml` carrying no approved crossing or component, which is
     honestly "the frame is in work", so a scaffold with a perfectly decomposed
     spine still reads DevStg-Boundary and floors to DevStg-Reqs.
 

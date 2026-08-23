@@ -289,14 +289,14 @@ def test_constants_overridable_from_env():
     assert c["margin"] == route.DEFAULT_CONSTANTS["margin"]  # bad value ignored
 
 
-def test_failure_action_keyed_to_the_ratification_level():
+def test_failure_action_keyed_to_the_approval_level():
     """SN-029: the page-escalation is keyed to the ORDINAL comparison, not the
     retired three-value enum — and to the orthogonal dial the enum bundled with
     it. Every mode still pauses the causing WI and its hard-edge dependents;
     what differs is what happens around that.
 
     The three old values collapse to (human_held, keep_nondependent):
-    `attended` = (True, False), `single-ratify` = (True, True), `autonomous` =
+    `attended` = (True, False), `single-approve` = (True, True), `autonomous` =
     (False, *). The fourth cell was unreachable under the enum."""
     held_alone = route.failure_action(True)
     assert held_alone["mode"] == "human-held"

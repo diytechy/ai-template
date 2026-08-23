@@ -1076,7 +1076,7 @@ def make_minimal_project(root):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     # The derived STAGE: this is a full DevStg-Impl chain, so docs/stage is
     # regenerated from the artifact states — the scaffold shipped a placeholder,
-    # and ratifying artifacts up to a settled spine is what advances the derived
+    # and approving artifacts up to a settled spine is what advances the derived
     # rung. Keeps the `derived-stage` freshness step green.
     #
     # It ran `derive_gate.py` until WI-498 slice 5 retired `docs/gate` along with

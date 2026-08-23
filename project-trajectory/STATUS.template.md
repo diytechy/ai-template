@@ -2,14 +2,14 @@
 
 The **working surface** for the gated process (see [process.md](process.md)):
 this whole file holds only what the agent or human must perform **next**. Keep
-every section short and current; history — sign-offs, verdicts, ratified
+every section short and current; history — sign-offs, verdicts, approved
 decisions, session notes — appends to the log this header points at, never here.
 
 - **History:** [log.md](log.md) _(append-only; see process.md §5)_
 - **Owner decision surface:** [requirements/open-items.toml](requirements/open-items.toml)
   _(rendered to `docs/open-items.html` by `scripts/gen_open_items.py` — one row per
   pending Needs-\<human> decision, with blast radius, options and recommendation,
-  plus the before/after of every spine row owing a ratification or re-attest. The
+  plus the before/after of every spine row owing an approval or re-attest. The
   bullet here stays a one-liner. A ruling appends to the log's Decisions and the
   row's `Status` leaves `pending`.)_
 - **Work plan:** [plan.md](plan.md) _(the sequenced session blocks the
@@ -44,7 +44,7 @@ decisions, session notes — appends to the log this header points at, never her
   end every bullet with a link to the artifact it concerns; keep the two
   sub-lists below. Any deferrals/decisions list follows the same bullet
   discipline.)_
-  - **Needs <human>** _(state the decision wanted, per item — **gate/ratification
+  - **Needs <human>** _(state the decision wanted, per item — **gate/approval
     blockers first**; keep each a one-liner and put the depth in the
     [open-items registry](requirements/open-items.toml), which
     `scripts/gen_open_items.py` renders to `docs/open-items.html`)_:
@@ -55,7 +55,7 @@ decisions, session notes — appends to the log this header points at, never her
       [system-requirements.toml](requirements/system-requirements.toml)
 - **Assumptions (unattended):** _(decisions taken without sign-off while running
   unattended — each to confirm or revert at the next gate; see AGENTS.md "Ask,
-  don't assume". Once ratified, move the entry to the log's Decisions log.)_
+  don't assume". Once approved, move the entry to the log's Decisions log.)_
 - **Next action:** _(what happens next + who must approve)_
 
 ## Scope (restated from the brief)

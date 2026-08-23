@@ -1,14 +1,14 @@
 <!-- DISPATCHER NOTES (stripped before the prompt is sent)
 
      MEANING OR CLARITY? (SN-029, plan §3.) Sent to an ADJUDICATE-phase session
-     when a ratified spine row's normative text has moved. Its ONE question is
+     when an approved spine row's normative text has moved. Its ONE question is
      whether the amendment changed what the requirement MEANS or only how
      clearly it is stated — because that answer, and nothing else, decides
      whether the row keeps its attestation or owes a fresh one.
 
      Slots (single-brace, strict fill — a missing one refuses):
        {rows}      the per-cell before/after listing, rendered from
-                   trace.reattest_model — RATIFIED cells only, since a traced
+                   trace.reattest_model — APPROVED cells only, since a traced
                    cell is ruled non-attesting (section A5.1). Registry-derived ONLY.
        {baseline}  the accepted anchor this diff is measured against: the
                    docs/archive/last_approved/ snapshot and the reviewed commit
@@ -26,7 +26,7 @@
      judge agrees with it. The before/after cells are the whole evidence.
 -->
 
-You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever made this change. You are judging ONE question about a ratified requirement row whose normative text moved after it was attested.
+You are an INDEPENDENT adjudicator launched by the unattended coordinator, wearing a DIFFERENT hat from whoever made this change. You are judging ONE question about an approved requirement row whose normative text moved after it was attested.
 
 THE QUESTION, and it is the only one you answer:
 

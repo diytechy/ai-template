@@ -1,10 +1,10 @@
-"""The human-ratification DIAL, and the two axes it compares (SN-029, OI-21,
+"""The human-approval DIAL, and the two axes it compares (SN-029, OI-21,
 WI-493).
 
 `human_holds(docs, stage)` is the one comparison every consumer in the loop
 makes — the dispatcher's admission table, the adjudication flip arm, the
 page-escalation, the dual-plan round. Getting it wrong in the permissive
-direction means a machine ratifying something a human meant to hold, which is
+direction means a machine approving something a human meant to hold, which is
 the one failure this kit's whole discipline exists to prevent. So the input
 matrix is driven here rather than reasoned about at four call sites.
 
@@ -17,7 +17,7 @@ Three things this module pins, each because a cut got it wrong:
     a declared `agent_common.DIAL_HOLDS` table; WI-493 executed shape (ii) and
     RE-KEYED the dial itself to a `DevStg-*` rung, so the table retired with the
     second vocabulary it existed to bridge. The dial names the HIGHEST rung a
-    human still ratifies and every rung AT OR BELOW it is held — the mirror of
+    human still approves and every rung AT OR BELOW it is held — the mirror of
     check selection's at-or-above rule.
   * **THE DIAL MOVED, AND EVERY PRE-EXISTING ANSWER SURVIVED IT.** The retired
     0-4 ordinal's five settings hold precisely the same rung sets under the
@@ -56,7 +56,7 @@ BELOW = kit_stage.BELOW
 
 def _docs(tmp_path, dial=None, **extra):
     for key, value in (
-        {} if dial is None else {"human_ratification_through": dial}
+        {} if dial is None else {"human_approval_through": dial}
     ).items():
         set_process_key(tmp_path, "attestation", key, value)
     for key, value in extra.items():
@@ -71,7 +71,7 @@ def _docs(tmp_path, dial=None, **extra):
 
 # THE AT-OR-BELOW RULE, STATED AS A TABLE — the dial's meaning written out rather
 # than recomputed with the arithmetic under test. Each row is a legal dial value
-# and the rungs a human still ratifies at it, in LADDER ORDER.
+# and the rungs a human still approves at it, in LADDER ORDER.
 #
 # `DevStg-Below` is the sentinel for "nothing is human-held", not a rung; it is
 # the value the retired ordinal spelled `0`, and setting the dial below the
@@ -122,7 +122,7 @@ LADDER = {
 # be the code under test asserting about itself.
 #
 # The hand-reasoned property the old table carried: Boundary rides Needs and Arch
-# rides Reqs. The two rungs OI-21 inserted are not RATIFIABLE tiers (the ordinal
+# rides Reqs. The two rungs OI-21 inserted are not APPROVABLE tiers (the ordinal
 # named SN/SR/LLR/TC), so each was held with the rung BELOW it — attaching them
 # to the rung above would have let a level-1 repo do its boundary work unattended,
 # and the wrong-answer direction that matters here is always "less human". Under
@@ -164,7 +164,7 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
     """THE RE-KEY'S EQUIVALENCE, PERMUTATION BY PERMUTATION (WI-493).
 
     The template's own words for the retired ordinal: 0 = nothing; 1 = the human
-    ratifies SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
+    approves SNs; 2 = ...and SRs; 3 = ...and LLRs; 4 = ...and TCs. Cumulative
     counts, with the two inserted rungs riding the tier below them.
 
     Both ROADS to a retired level are driven, because they are different code:
@@ -181,13 +181,13 @@ def test_each_RETIRED_level_holds_exactly_what_DIAL_HOLDS_held(tmp_path, level):
         assert held == expected, (level, dial)
 
 
-def test_the_four_RATIFIABLE_rungs_answer_exactly_as_they_did_before_the_ladder(
+def test_the_four_APPROVABLE_rungs_answer_exactly_as_they_did_before_the_ladder(
     tmp_path,
 ):
     """The migration's own invariant, stated as a table rather than trusted.
 
     OI-21 MAPPED the dial onto the eight rungs and WI-493 RE-KEYED it to them. So
-    for the four rungs that were always ratification tiers, every retired level
+    for the four rungs that were always approval tiers, every retired level
     must answer today what it answered under the six-integer ladder: level 1
     holds needs; 2 adds requirements; 3 adds LLRs; 4 adds tests.
 
@@ -217,7 +217,7 @@ def test_the_top_two_rungs_are_held_by_the_TOP_OF_THE_RETIRED_DIAL_ALONE(
     `DevStg-Impl` and `DevStg-Release` cover PRECISELY the states a bar-advance
     row runs in. With the top rung reading as not-held, the SHIPPED DEFAULT
     (documented as "every tier human-held; the most conservative setting") let
-    the loop dispatch and self-ratify the final bar. Below the top, the retired
+    the loop dispatch and self-approve the final bar. Below the top, the retired
     ordinal was about which SPINE tier is being worked, and neither of these two
     is one — so no setting under it reached them.
 
@@ -274,14 +274,14 @@ def test_BOTH_shipped_homes_declare_the_dial_as_a_RUNG_STRING():
         declared = [
             line.split("=", 1)[1].strip()
             for line in path.read_text(encoding="utf-8").splitlines()
-            if line.split("#", 1)[0].strip().startswith("human_ratification_through")
+            if line.split("#", 1)[0].strip().startswith("human_approval_through")
         ]
         assert len(declared) == 1, (rel, declared)
         if expect is None:
             assert declared[0] in rungs, (rel, declared)
         else:
             assert declared == [expect], (rel, declared)
-    assert ac.RATIFICATION_FALLBACK == dg.STAGE_RELEASE
+    assert ac.APPROVAL_FALLBACK == dg.STAGE_RELEASE
 
 
 # --- the failure directions ----------------------------------------------------
@@ -298,7 +298,7 @@ def test_an_unreadable_stage_is_human_held(tmp_path):
     Note the deliberate asymmetry with `spine_rules.stage_ord`, which RAISES on an
     unknown label. There the question is "where is this on the ladder" and a
     silent default hides that the ladder moved; here the question is "who
-    ratifies" and the only safe answer to "I do not recognize this" is "the
+    approves" and the only safe answer to "I do not recognize this" is "the
     human"."""
     docs = _docs(tmp_path, dg.STAGE_ARCH)
     for stage in (None, 2, 0, 2.0, object(), "DevStg-Nonsense", ""):
@@ -325,7 +325,7 @@ def test_every_legal_dial_reads_back_as_ITSELF(tmp_path, dial):
     # The reader's identity arm, and the reason the malformed table below means
     # anything: a fallback that fired on everything would satisfy every
     # conservative-direction test in this module while making the dial inert.
-    assert ac.ratification_through(_docs(tmp_path, dial)) == dial
+    assert ac.approval_through(_docs(tmp_path, dial)) == dial
     assert ac.config_conflicts(_docs(tmp_path, dial)) == []
 
 
@@ -352,8 +352,8 @@ def test_every_malformed_dial_falls_back_to_the_conservative_end(tmp_path, value
     # in the new type, and it is refused rather than read, because the migration
     # window is exactly as wide as the migration and no wider.
     assert (
-        ac.ratification_through(_docs(tmp_path, value))
-        == ac.RATIFICATION_FALLBACK
+        ac.approval_through(_docs(tmp_path, value))
+        == ac.APPROVAL_FALLBACK
         == dg.STAGE_RELEASE
     )
 
@@ -370,7 +370,7 @@ def test_a_malformed_dial_is_REFUSED_not_silently_defaulted(tmp_path, value):
     # as a type error and once as an unknown rung) and read as two defects.
     conflicts = ac.config_conflicts(_docs(tmp_path, value))
     assert len(conflicts) == 1, conflicts
-    assert "human_ratification_through" in conflicts[0]
+    assert "human_approval_through" in conflicts[0]
     # ...and it never reads as a value the migration window HONOURS. An
     # out-of-range int is refused BY A MESSAGE THAT NAMES THE MIGRATION (the
     # only person who meets it is someone whose 0-4 dial was already out of
@@ -428,7 +428,7 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
         docs = tmp_path / "raw{}".format(i) / "docs"
         docs.mkdir(parents=True)
         (docs / "process.toml").write_text(
-            "[attestation]\nhuman_ratification_through = {}\n".format(literal),
+            "[attestation]\nhuman_approval_through = {}\n".format(literal),
             encoding="utf-8",
         )
         found = ac.config_conflicts(docs)  # MUST NOT RAISE — that is the claim
@@ -437,8 +437,8 @@ def test_a_wrong_TYPED_dial_is_refused_too(tmp_path):
         # read an inline table), and two findings for two genuinely different
         # problems is right. What must not happen is zero findings, or a raise.
         assert found, literal
-        assert any("human_ratification_through" in f for f in found), (literal, found)
-        assert ac.ratification_through(docs) == dg.STAGE_RELEASE, literal
+        assert any("human_approval_through" in f for f in found), (literal, found)
+        assert ac.approval_through(docs) == dg.STAGE_RELEASE, literal
 
 
 def test_an_unknown_RUNG_is_refused_by_the_VOCABULARY_arm(tmp_path):
@@ -459,7 +459,7 @@ def test_an_absent_dial_holds_everything_and_says_nothing(tmp_path):
     # Absence is not a defect: a repo that never declared a dial gets the
     # conservative end, silently, because there is nothing to correct.
     docs = _docs(tmp_path)
-    assert ac.ratification_through(docs) == ac.RATIFICATION_FALLBACK == dg.STAGE_RELEASE
+    assert ac.approval_through(docs) == ac.APPROVAL_FALLBACK == dg.STAGE_RELEASE
     assert ac.config_conflicts(docs) == []
 
 
@@ -497,10 +497,10 @@ def test_the_dial_VOCABULARY_is_the_LADDER_plus_the_BELOW_sentinel():
     assert ac.LADDER_RUNGS is kit_ladder.LADDER_RUNGS
     assert dg.STAGE_ORDER is kit_ladder.STAGE_ORDER
     assert dg.stage_ord is kit_ladder.stage_ord
-    assert ac.RATIFICATION_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
+    assert ac.APPROVAL_DIAL_RUNGS == set(dg.STAGE_ORDER) | {BELOW}
     assert BELOW not in ac.LADDER_RUNGS  # the sentinel is not a rung
-    key = ("attestation", "human_ratification_through")
-    assert ac.PROCESS_KEY_VOCAB[key] is ac.RATIFICATION_RUNGS
+    key = ("attestation", "human_approval_through")
+    assert ac.PROCESS_KEY_VOCAB[key] is ac.APPROVAL_DIAL_RUNGS
     # ...and the retired table is GONE rather than renamed: a reader who finds it
     # has found a revert, not a rename.
     assert not hasattr(ac, "DIAL_HOLDS")
@@ -515,7 +515,7 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
 ):
     """THE MIGRATION WINDOW (WI-493), and every clause of it is load-bearing.
 
-    An adopter's committed `human_ratification_through = 4` must not stop their
+    An adopter's committed `human_approval_through = 4` must not stop their
     loop dead on a kit upgrade over a spelling the kit knows how to read — so the
     reader TRANSLATES. But a dial nobody re-keyed is still a dial nobody
     re-keyed, so it WARNS, naming the command that fixes it. And
@@ -537,23 +537,23 @@ def test_a_legacy_ORDINAL_is_translated_and_WARNED_but_never_REFUSED(
     assert ac.LEGACY_DIAL_ORDINALS[level] == expected
     docs = _docs(tmp_path, level)
     capsys.readouterr()
-    assert ac.ratification_through(docs) == expected
+    assert ac.approval_through(docs) == expected
     err = capsys.readouterr().err
-    assert "human_ratification_through" in err and str(level) in err
+    assert "human_approval_through" in err and str(level) in err
     assert expected in err
     assert "--migrate-config" in err, err
     # NOT a conflict — the whole point of the window.
     assert ac.config_conflicts(docs) == []
     # ...and the window is derived from the translation table itself, so the two
     # can never come to disagree about which old values are honoured.
-    key = ("attestation", "human_ratification_through")
+    key = ("attestation", "human_approval_through")
     assert ac.PROCESS_KEY_LEGACY_VALUES[key] == frozenset(ac.LEGACY_DIAL_ORDINALS)
     assert ac.PROCESS_KEY_LEGACY_VALUES[key] == {0, 1, 2, 3, 4}
 
 
 def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     """`True == 1` in Python, so a bare `value in {0, 1, 2, 3, 4}` answers True
-    for `True` — and a `human_ratification_through = true` that took the window's
+    for `True` — and a `human_approval_through = true` that took the window's
     SILENT PASS would be a wrong-typed dial reading as the retired level 1 with
     no diagnostic at all. That is the precise failure the type check exists to
     stop, arriving through the door the migration opened.
@@ -562,7 +562,7 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     one input that distinguishes the two. Driven at the helper AND end to end,
     because a validator that stopped consulting the helper would still pass a
     unit test of it."""
-    window = ac.PROCESS_KEY_LEGACY_VALUES[("attestation", "human_ratification_through")]
+    window = ac.PROCESS_KEY_LEGACY_VALUES[("attestation", "human_approval_through")]
     assert ac._in_legacy_window(1, window) is True
     assert ac._in_legacy_window(0, window) is True
     assert ac._in_legacy_window(True, window) is False
@@ -574,8 +574,8 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     conflicts = ac.config_conflicts(docs)
     assert len(conflicts) == 1, conflicts
     assert "is a bool, expected str" in conflicts[0]
-    assert ac.ratification_through(docs) == dg.STAGE_RELEASE
-    assert ac.ratification_through(docs) != dg.STAGE_BOUNDARY
+    assert ac.approval_through(docs) == dg.STAGE_RELEASE
+    assert ac.approval_through(docs) != dg.STAGE_BOUNDARY
 
 
 # --- the legacy translation ----------------------------------------------------
@@ -585,13 +585,13 @@ def test_the_legacy_window_REFUSES_a_BOOL_because_True_equals_one(tmp_path):
     "word,rung,keep",
     [
         ("attended", dg.STAGE_RELEASE, False),
-        ("single-ratify", BELOW, True),
+        ("single-approve", BELOW, True),
         ("autonomous", BELOW, True),
     ],
 )
 def test_an_unmigrated_legacy_file_reads_as_all_three_dials(tmp_path, word, rung, keep):
     # An un-migrated repo keeps working, and keeps working as the WHOLE posture
-    # rather than as one dial with two facts dropped. `single-ratify` is the one
+    # rather than as one dial with two facts dropped. `single-approve` is the one
     # that proves it: translated to a hold setting alone it silently acquired a
     # per-tier hold it never had.
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
@@ -599,7 +599,7 @@ def test_an_unmigrated_legacy_file_reads_as_all_three_dials(tmp_path, word, rung
         word + "\n", encoding="utf-8", newline="\n"
     )
     docs = tmp_path / "docs"
-    assert ac.ratification_through(docs) == rung
+    assert ac.approval_through(docs) == rung
     assert ac.keep_nondependent(docs) is keep
 
 
@@ -608,7 +608,7 @@ def test_an_unknown_legacy_word_falls_back_conservatively(tmp_path):
     (tmp_path / "docs" / "gate-policy").write_text(
         "semi-attended\n", encoding="utf-8", newline="\n"
     )
-    assert ac.ratification_through(tmp_path / "docs") == dg.STAGE_RELEASE
+    assert ac.approval_through(tmp_path / "docs") == dg.STAGE_RELEASE
     assert ac.keep_nondependent(tmp_path / "docs") is False
 
 
@@ -625,10 +625,8 @@ def test_the_declared_dial_beats_the_legacy_file(tmp_path):
     (tmp_path / "docs" / "gate-policy").write_text(
         "autonomous\n", encoding="utf-8", newline="\n"
     )
-    set_process_key(
-        tmp_path, "attestation", "human_ratification_through", dg.STAGE_LLREQS
-    )
-    assert ac.ratification_through(tmp_path / "docs") == dg.STAGE_LLREQS
+    set_process_key(tmp_path, "attestation", "human_approval_through", dg.STAGE_LLREQS)
+    assert ac.approval_through(tmp_path / "docs") == dg.STAGE_LLREQS
 
 
 # --- the second axis: spine_stage ----------------------------------------------
@@ -693,7 +691,7 @@ def test_a_draft_need_or_an_empty_spine_is_the_NEEDS_rung():
     assert _stage(srs=()) == dg.STAGE_NEEDS
 
 
-def test_a_ratified_but_UNCITED_need_is_the_NEEDS_rung():
+def test_a_approved_but_UNCITED_need_is_the_NEEDS_rung():
     # WI-401's coverage rung, which the stage axis did not apply: a need with
     # no requirement answering it is unfinished work AT THE NEEDS RUNG. Without
     # this such a spine read the top rung ("nothing in work") while the bar
@@ -705,7 +703,7 @@ def test_a_ratified_but_UNCITED_need_is_the_NEEDS_rung():
 def test_the_MODIFIED_rung_RETIRED_and_took_no_successor():
     # D-9 STEP 7, and the deletion is what this pins. The rung read the
     # post-attestation amendment state — the text moved after it was attested,
-    # so a fresh ratification was owed ON THE SR — and it sat ahead of the
+    # so a fresh approval was owed ON THE SR — and it sat ahead of the
     # children for that reason. No cell records that state any more (owner
     # ruling 2026-08-17m: the snapshot comparison does), so the rung went with
     # the word and was deliberately NOT re-keyed onto drift: this axis reads
@@ -1024,7 +1022,7 @@ def test_a_DECLARED_but_EMPTY_boundary_inventory_is_honestly_INCOMPLETE():
 
 def test_a_DRAFT_crossing_holds_the_BOUNDARY_rung_open():
     # `approval = "draft"` maps to DRAFTED: a frame declared and not yet
-    # ratified. Lower-cased cells against capitalized ladder constants is exactly
+    # approved. Lower-cased cells against capitalized ladder constants is exactly
     # the case `_maturity`'s case-fold exists for, so both spellings are pinned.
     assert _stage(bifs=[dict(BIF_APPROVED, Status="Drafted")], have_bifs=True) == (
         dg.STAGE_BOUNDARY
@@ -1266,7 +1264,7 @@ def test_final_review_is_INDEPENDENT_of_the_DIAL(tmp_path):
     # you could not ask for a closing read without also holding every tier. It is
     # also where the retired `G-Final` tag's meaning actually lives.  check_vocab: allow
     docs = _docs(tmp_path, BELOW, final_review="always")
-    assert ac.ratification_through(docs) == BELOW
+    assert ac.approval_through(docs) == BELOW
     assert ac.human_holds(docs, dg.STAGE_REQS) is False
     assert ac.final_review(docs) is True
 
@@ -1429,7 +1427,7 @@ def test_no_shipped_loop_module_WRITES_an_approval_cell():
 def test_the_dispatcher_seam_surfaces_on_EITHER_hold():
     """`approval_held` is a second reason to surface, not a widening of the
     spine one: a held approval surfaces an attestation/gate row even on a spine
-    tier the project declared machine-ratifiable."""
+    tier the project declared machine-approvable."""
     dispatch = load_script("dispatch")
     assert dispatch._kind_action("attestation", False) == "exclusive"
     assert dispatch._kind_action("attestation", False, approval_held=True) == "surface"

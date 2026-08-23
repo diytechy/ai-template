@@ -49,7 +49,7 @@ the order it should be taken:
    tier is the decision this item owes.
 3. **Phase 2's duplication.** The 17 migrated rows now state the attribution
    TWICE — once in `hat_refs`, once in the `Rationale` prose it came from.
-   Deleting the prose touches a **ratified** cell on Approved rows, so it is
+   Deleting the prose touches an **approved** cell on Approved rows, so it is
    owner-adjacent and deliberately not taken here; the cell is the record and
    the prose is now commentary.
 4. **Phase 3 — the generated component view.** `gen_components.py`,
@@ -114,7 +114,7 @@ Coverage edges the brief says the execution must answer explicitly rather
 than paper over: 12 SRs have no LLR (SR-034, SR-114, SR-036 never will);
 6 SRs span more than one component; 57 of 125 IF rows carry a component tag.
 Standing constraint from OI-30 D3: a GENERATED file never carries an approval
-(`human_ratification_through`).
+(`human_approval_through`).
 
 **Sequencing, the owner's own note (2026-08-20):** the new field is NOT
 anticipated to be an attested cell, so it can be tacked on AFTER the sitting

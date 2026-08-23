@@ -39,7 +39,7 @@ def test_adjudicate_is_a_weightable_phase():
 
 def test_adjudicate_defaults_strong():
     # It judges, and the cost of a wrong judgement here is a wrong
-    # ratification. Same tier as the other two judging phases.
+    # approval. Same tier as the other two judging phases.
     assert loop.DEFAULT_PHASE_TIER["ADJUDICATE"] == "strong"
     assert loop.phase_tier("ADJUDICATE", {}) == "strong"
 

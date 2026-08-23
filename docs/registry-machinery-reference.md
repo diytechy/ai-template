@@ -84,16 +84,16 @@ There is **no Status column.** Maturity is the *heading the row sits under*:
 | Section | State | Effect |
 |---|---|---|
 | any heading whose text contains **"draft"** (case-insensitive) | **Drafted** (DevStg-Below) | exempt from "every SN needs an SR"; **drops the derived gate to DevStg-Below** |
-| any other heading (`## Core needs`, `## Edge-case expectations`) | **Ratified** (DevStg-Reqs) | must have ≥1 SR referencing it — an uncovered ratified SN is both an orphan finding (§6) **and caps the derived gate at DevStg-Below** (the WI-401 coverage rung, §8.1) |
+| any other heading (`## Core needs`, `## Edge-case expectations`) | **Approved** (DevStg-Reqs) | must have ≥1 SR referencing it — an uncovered approved SN is both an orphan finding (§6) **and caps the derived gate at DevStg-Below** (the WI-401 coverage rung, §8.1) |
 
-Ratifying a need = **moving the table row up** in a reviewed commit. That commit
-*is* the sign-off, and its date is the ratification date — git-derived, no
+Approving a need = **moving the table row up** in a reviewed commit. That commit
+*is* the sign-off, and its date is the approval date — git-derived, no
 column. Parsed by `sn_draft_ids` (a line-scanner that tracks the current heading
 and collects `SN-###` tokens under draft ones). The id *universe* those states
 partition is a **whole-text scrape** (`sn_all_ids`, an F5 twin at
 spine_rules/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
 the file counts, tables and prose alike — so an SN id mentioned only in
-ratified *prose* and cited by no SR caps the derived gate at DevStg-Below (§8.1) exactly
+approved *prose* and cited by no SR caps the derived gate at DevStg-Below (§8.1) exactly
 as an uncovered table row does.
 
 ### 2.2 Fields
@@ -106,9 +106,9 @@ Two tables ship, with **different columns**.
 |---|---|---|
 | `SN-ID` | `SN-<digits>` | The join key. Duplicate across table rows = integrity finding. |
 | `Need (plain language)` | free text | Read by the dashboard as the SN label; otherwise unvalidated. |
-| `Why it matters` | free text | Read into the OKF bundle + ratification view. Unvalidated. |
+| `Why it matters` | free text | Read into the OKF bundle + approval view. Unvalidated. |
 | `Priority` | `M` / `S` / `C` | **Never validated, never gates.** Documentation only. |
-| `Acceptance intent` | free text | Read into the ratification hierarchy view. Unvalidated. |
+| `Acceptance intent` | free text | Read into the approval hierarchy view. Unvalidated. |
 
 **Edge-case expectations table:**
 
@@ -138,7 +138,7 @@ prose enforcement; the DevStg-Reqs consistency review is the human backstop.
 ## 3. SR — System Requirements
 
 **12 columns.** The **grouping row** of the re-attest surfaces: the sitting,
-the pending-owner-actions projection and the `--ratify modified` brief all key
+the pending-owner-actions projection and the `--approve modified` brief all key
 off the SR row — presentation, never attestation scope (a row's `Status`
 answers for its own cells; a child amendment never flips the parent SR — owner
 ruling 2026-08-17).
@@ -147,15 +147,15 @@ ruling 2026-08-17).
 |---|---|---|---|
 | `SR-ID` | ✔ | `SR-<digits>` | Join key. Duplicate → integrity; malformed → integrity; **a row with content but a blank id** → integrity ("a live requirement that just vanished from every join"). |
 | `Title` | ✔ | free text | Node label in the outline / mermaid / HTML views. |
-| `SN-Refs` | ✔ | `;`-joined SN ids | **Upward join.** Empty (when real SNs exist) → orphan; unknown target → orphan. *Traced, not ratified* (§9). |
-| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Ratified prose — amending it opens a re-attest window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
+| `SN-Refs` | ✔ | `;`-joined SN ids | **Upward join.** Empty (when real SNs exist) → orphan; unknown target → orphan. *Traced, not approved* (§9). |
+| `Requirement` | ✔ | one testable shall-statement, on an EARS pattern | Approved prose — amending it opens a re-attest window. Two rules read the text: `form_findings` **gates** the decidable half of singular/unambiguous (one `shall`, no non-obligation modal, no unfalsifiable term, no open-ended clause, no actorless passive), and `ears_advisories` **warns** when the opening states a condition outside `When`/`While`/`If`/`Where` (process.md §3). |
 | `Rationale` | ✔ | free text | **Required**, unlike the LLR's. Guards zero-to-zero (every row already carries one). |
-| `AcceptanceCriteria` | ✔ | measurable condition | Ratified. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
+| `AcceptanceCriteria` | ✔ | measurable condition | Approved. Fed to the critique brief as SR intent. A **warn-only** testability advisory flags comparative/absolute claims that name no predicate. |
 | `Permutations` | ✘ | the `gen_cases.py` grammar² | Optional test-design dimensions, lifted verbatim into `gen_cases.py --spec`. Never validated by `trace.py`. |
 | `Priority` | ✔ | **open** (`M`/`S`/`C` by convention) | Required non-empty under `--strict-schema`; the *value* is never checked. |
 | `Verification` | ✔ | **closed**: `Test`, `Demonstration`, `Manual`, `Analysis`, `Inspection`, `Attest`, `Critique` | The highest-leverage cell — §3.1. |
 | `Status` | ✔ | **closed**: `Drafted`, `Approved`, `Founded` | Drives the gate — §3.2. |
-| `Phase` | ✘ | bare integer (`2`) on ratified rows once armed | Optional delivery phase — §3.3. |
+| `Phase` | ✘ | bare integer (`2`) on approved rows once armed | Optional delivery phase — §3.3. |
 | `Aspect` | ✘ | closed: `process` \| `trajectory` \| `unattended-loop` \| `connectivity` \| `perf` \| `portability` | The ruled CROSS-CUTTING review grouping (sitting-2 decision 10, executed by the WI-451 re-tier; replaced the 31-value free-text `Area`, whose 25 component-derivable values were dropped rather than remapped). Blank is normal — a non-cross-cutting row carries none, and that is never a finding; a non-empty out-of-vocabulary value IS a `--strict-schema` finding. `trace.py` emits per-aspect SR counts and never gates on the count. |
 
 ¹ under `--strict-schema` (DevStg-Impl). ² `name=range[min..max]`; `name=set{a,b,c}`;
@@ -165,7 +165,7 @@ Plus two **optional extension columns** not in the shipped template:
 
 | Column | Effect |
 |---|---|
-| `Lifecycle` | Recognised in the traced/ratified split; validated nowhere. |
+| `Lifecycle` | Recognised in the traced/approved split; validated nowhere. |
 
 ### 3.1 `Verification` — what it changes
 
@@ -186,7 +186,7 @@ Three separate mechanisms read this cell.
    bucket, so an unknown method is never counted as a runnable check.
 3. **`--strict-schema`** rejects any value outside the closed set.
 
-**Important:** `--require-verified` (the DevStg-Impl bar) applies to **every ratified SR
+**Important:** `--require-verified` (the DevStg-Impl bar) applies to **every approved SR
 regardless of method**. It was once Test-only, which let a `Demonstration` SR
 sitting at `Implemented` pass `trace.py` while `spine_rules` refused it DevStg-Impl — the
 two scripts disagreeing about the gate.
@@ -197,12 +197,12 @@ two scripts disagreeing about the gate.
 |---|---|---|---|
 | `Drafted` | `is_drafted` | **DevStg-Below — drops the repo gate** | Exempt from *child-completeness*: needs no LLR, no TC. SN linkage and all integrity rules still apply. Exempt from `--require-verified`. |
 | `Approved` | `is_approved` | doesn't hold a rung open (`is_drafted` is what does) | The row's TEXT is blessed. It makes NO claim that tests passed: the 2026-08-15 ruling (OI-30 D2) carried onto the stage axis at WI-498 slice 3. **No cell reaches DevStg-Release**, and since WI-500 that is structural rather than vacuous — the rung's one input is `spine_stage`'s `evidence_passed` parameter, fed only by `kitlib.stage.evidence_verdict` over the harness-written `docs/test/evidence` record, and the pin demands that return be guarded by the bare parameter so a row-computed guard is unrepresentable. |
-| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-ratification level (`agent_common.human_holds`). |
+| `Founded` | `is_founded` | same as `Approved` (settled, never caps) | `Approved` PLUS a demonstration: the artifacts the row calls for EXIST. **COMPUTED, not typed** — the four discharge tests are the SN coverage rung, SR decomposition, `check_doc_refs`' LLR anchor rule and the TC `Evidence` half. Armed for the spine 2026-08-20 (D-9 step 8); no live cell takes it. Nothing WRITES it — whether a tool ever will is D-9 consequence 2's still-open half — but whether an AGENT-authored `Founded` is itself an error is answered: OI-45 (ruled 2026-08-20) sanctions it for spine content past the declared human-approval level (`agent_common.human_holds`). |
 | anything else | — | (an integrity finding — see §3.2's closure) | Not inert: reported. |
 
 **There is no value for a post-approval amendment.** A transitional `Modified`
 carried that state until 2026-08-20 (D-9 step 7), feeding a `modified=N` basis
-count and the `--ratify modified` brief. It retired once the snapshot-backed
+count and the `--approve modified` brief. It retired once the snapshot-backed
 drift rule had run live beside it through the signing act: an amended row now
 stays `Approved`, and what marks it is the DIFFERENCE from its copy in
 `docs/archive/last_approved/` — a property of two files, for every row rather
@@ -214,14 +214,14 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
 - Parsed by `phase_num` — **the first digit run wins**, so `v2`, `2` and
   `phase-2` all parse to `2`. The lenient parse is **grandfathering** (owner
   ruling 2026-08-01, WI-402): historical labels keep filtering and deriving,
-  but a live ratified cell must be a bare integer — next bullet.
-- **The rule arms itself, and is NUMERIC-ONLY.** `phase_ratified_findings` is
+  but a live approved cell must be a bare integer — next bullet.
+- **The rule arms itself, and is NUMERIC-ONLY.** `phase_approved_findings` is
   vacuous until ≥1 spine row is phased (digit-parse arming — a `v2` cell arms
-  it too); once *anything* is phased, **every ratified SR/LLR/TC `Phase` must
+  it too); once *anything* is phased, **every approved SR/LLR/TC `Phase` must
   be a full-cell bare integer** — digits only, no prefix — under
   `--strict-schema` (DevStg-Impl, where the schema tier already bites). A Drafted row may
   always leave it blank. Numeric-only is a correctness rule, not a style: two
-  joins match the cell **literally**, never by parse — the `--phase`/`--ratify`
+  joins match the cell **literally**, never by parse — the `--phase`/`--approve`
   scope filters (`in_phase`/`_scope_srs`) and check_trajectory's phase-drop
   join of `docs/stage`'s `per-phase-live=` labels against phase-anchor WI titles
   — so a reformatted `P1`/`v2` cell went silently vacuous there, disarming the
@@ -241,7 +241,7 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
   current phase is derived — `max()` over non-draft spine rows, the `phase = N`
   field in `docs/stage` (§8.3) — and it increments only when
   re-opened scope is **confirmed**: an adjudication verdict that scope moved,
-  or a new draft-SN batch ratified into scope — **never on the raw derived-stage
+  or a new draft-SN batch approved into scope — **never on the raw derived-stage
   drop**. A spurious re-attest window must not burn a phase number (WI-280 is
   the counterexample: 19 traced cells, 11 SRs flipped, no scope moved).
   `derive_stage.py --next-phase` prints that max + 1 — the one derived call
@@ -262,8 +262,8 @@ commit that re-reads the changed cells and runs `intake.py snapshot`.
 | `Title` | ✔ | free text | Node label. |
 | `Module` | ✔ | repo path | Doubles as a **join target**: the set of `Module` values is added to the PB back-link target set and to the IF-endpoint advisory join. Normalised by stripping a leading `project-trajectory/` segment and any of `.py .sh .ps1 .ts .js .go .rs .cmd`. |
 | `CodeSymbol` | ✔ | function/type name | Required non-empty, and **resolved against real code** — `check_doc_refs.py`'s `symbol_findings` is the LLR tier's *discharge* test (§4.2). Also read by `gen_okf.py` for the knowledge bundle. |
-| `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Ratified prose. |
-| `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Ratified when present. |
+| `Detail` | ✔ | decomposition detail, **not** an SR paraphrase | Approved prose. |
+| `Rationale` | ✘ | free text | **Deliberately not required** — "a short decomposition row's why IS its parent SR's, so requiring one everywhere would manufacture the restatement the column exists to prevent." Approved when present. |
 | `TestRefs` | ✘ | `(see TC)` | **Inert** — see §12.1. |
 | `Status` | ✔ | closed, as SR | `Drafted` HOLDS THE `DevStg-LLReqs` RUNG OPEN (`spine_stage`: `any(is_drafted(r) for r in llrs)`) and exempts the row from "no TC". Otherwise **does not move the stage** — §4.1. |
 | `Component` | ✘ | `CMP-###` | Optional membership tag, validated against the CMP registry only when that registry is non-empty. |
@@ -289,7 +289,7 @@ transitional `Modified` until that value retired, 2026-08-20.)
 
 ### 4.2 `CodeSymbol` must BIND — the discharge test, and what the cell may name
 
-`symbol_findings` in `check_doc_refs.py` (WI-429; ratified as built by owner
+`symbol_findings` in `check_doc_refs.py` (WI-429; approved as built by owner
 ruling **OI-20**, 2026-08-13). A live LLR row must carry **at least one**
 identifier-shaped `CodeSymbol` token that binds at module scope in one of the
 `.py` modules its `Module` cell names — `CodeSymbol` supplies the tokens,
@@ -297,7 +297,7 @@ identifier-shaped `CodeSymbol` token that binds at module scope in one of the
 as a **union**, never as a positional pairing. Warn-first; **hard under
 `--strict`** at the `[step:doc-refs]` DevStg-Impl step.
 
-**The grammar, ruled with the ratification.** ADMISSIBLE in `CodeSymbol`:
+**The grammar, ruled with the approval.** ADMISSIBLE in `CodeSymbol`:
 
 - a **resolvable code symbol** — function, class, method or module constant.
   Private `_`-names and constants count: the oracle is
@@ -352,7 +352,7 @@ hidden.
 | `Method` | ✔ | **open** | Required non-empty; the value is never validated. |
 | `Tier` | ✔ | **closed**: `Smoke`, `Full`, `Release` | The only closed TC vocabulary. Wrong value → schema finding. Selects release-checklist items (§9.5); **not** joined to the pytest marker that selects tests — see §12.2. |
 | `Parameters` | ✘ | `param=a; other=x` | Read as the artifact recipe in the critique brief. Not validated. |
-| `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Ratified prose. |
+| `Expected` | ✔ | cite the AcceptanceCriteria **by id** | Approved prose. |
 | `Automated` | ✔ | `Yes` / `No` (open) | **Conditional rule:** `Yes` + empty `Evidence` → schema finding ("a claimed-automated test with no cited location is a soft false-green"). |
 | `Evidence` | ✘* | pytest node / path / procedure link | *Required only when `Automated=Yes`. |
 | `Status` | ✔ | closed, as SR | `Drafted` → DevStg-Below. Otherwise does not gate (same as LLR). |
@@ -373,7 +373,7 @@ gate-scoped orphan set.
 
 | # | Rule | Exempt when | Class |
 |---|---|---|---|
-| 1 | every ratified **SN** has ≥1 SR | SN is Drafted (section-as-state) | orphan |
+| 1 | every approved **SN** has ≥1 SR | SN is Drafted (section-as-state) | orphan |
 | 2 | every **SR** links ≥1 SN | the SN registry has no real ids yet | orphan |
 | 3 | every **SR** SN-Ref resolves | ditto | orphan |
 | 4 | every **SR** has an LLR | SR is Drafted **or** `Verification ∈ {Analysis, Inspection, Attest}` | orphan |
@@ -391,7 +391,7 @@ Rules 1–11 are **gate-scoped** — they fail `--strict`, which the harness run
 from DevStg-Tests. Rules 12–13 are **always wrong** and sit on the integrity floor the
 pre-commit hook runs on every commit.
 
-Rule 1 also has a **gate-input twin** since WI-401: an uncovered ratified SN
+Rule 1 also has a **gate-input twin** since WI-401: an uncovered approved SN
 caps the *derived gate* at DevStg-Below (§8.1) — same cited set, same Drafted exemption, so
 the itemized listing and the cap can never disagree on one registry state.
 
@@ -407,7 +407,7 @@ the itemized listing and the cap can never disagree on one registry state.
 | `orphans` | ✔ | ✘ | rules 1–11 |
 | `status_findings` | ✔ | ✘ | `--require-verified` misses |
 | `placeholders` | ✔ | ✘ | leftover `-000` rows (collected only under `--no-placeholders`) |
-| `schema` | ✔ | ✘ | empty required fields, bad enums, `Automated=Yes` without Evidence, ratified-phase misses (only under `--strict-schema`) |
+| `schema` | ✔ | ✘ | empty required fields, bad enums, `Automated=Yes` without Evidence, approved-phase misses (only under `--strict-schema`) |
 | `budget` / `module` / `component` / `interface` | ✔ | ✘ | off-spine back-link failures |
 | **advisories** | ✘ | ✘ | LLR-status drift, AcceptanceCriteria testability, EARS statement pattern, paraphrase, artifact-naming, fan-out, verification coherence, knowledge-pack refs, IF endpoint join |
 
@@ -419,7 +419,7 @@ checker feature mints no SR and gates nothing."
 ## 8. How the gate is DETECTED
 
 The gate is **computed from the registry rows, never declared.** You do not set
-it; you ratify artifacts and regenerate.
+it; you approve artifacts and regenerate.
 
 ### 8.1 The per-artifact rules
 
@@ -427,8 +427,8 @@ it; you ratify artifacts and regenerate.
 
 | Tier | DevStg-Below | DevStg-Reqs | DevStg-Tests | DevStg-Impl |
 |---|---|---|---|---|
-| **SN** | under a "draft" heading, **or ratified with no covering SR** (the WI-401 coverage rung) | — | — | ratified **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past DevStg-Reqs, so it contributes DevStg-Impl and **never caps** |
-| **SR** | `Status=Drafted` | ratified, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
+| **SN** | under a "draft" heading, **or approved with no covering SR** (the WI-401 coverage rung) | — | — | approved **and cited by ≥1 SR `SN-Refs`**: such an SN owes nothing past DevStg-Reqs, so it contributes DevStg-Impl and **never caps** |
+| **SR** | `Status=Drafted` | approved, **not decomposed** | **decomposed** = has its required LLR (unless `Verification ∈ LLR_EXEMPT`) **AND** a TC — **and this is the ceiling** (OI-30 D2) | *unreachable by cell*: the release bar is the harness's answer, not a Status value |
 | **LLR / TC** | `Status=Drafted` | — | — | once present, contributes DevStg-Impl and **never caps** |
 
 A below-`Approved` SR needs no rule of its own: it is decomposed-but-not-approved, so
@@ -438,7 +438,7 @@ visible.
 The SN column's two DevStg-Below rungs are deliberately disjoint (WI-401, owner ruling
 2026-08-01). A **Drafted** SN fires only the draft rung — it is exempt from the
 coverage rung exactly as it is exempt from trace.py's orphan rule, so one fact
-never fires two findings at once. A **ratified** SN cited by zero SR `SN-Refs`
+never fires two findings at once. An **approved** SN cited by zero SR `SN-Refs`
 is an unanswered need: DevStg-Reqs is not earned, so it caps the raw level at DevStg-Below. The
 split of labor with `trace.py` is the module pair's usual one — this rung is
 the *gate input*; the itemized `SN … has no SR` listing stays trace.py's orphan
@@ -501,7 +501,7 @@ because otherwise a recorded `DevStg-Release` would ride an unchanged evidence
 file over an edited tree with the fingerprint still matching; a repo with no
 record pays none of that walk. A reader recomputes it
 and trusts the recorded values ONLY on a match, deriving fresh in memory
-otherwise — so no **selection or ratification** consumer can read a stale stage,
+otherwise — so no **selection or approval** consumer can read a stale stage,
 on any lane. **The display surfaces are the named exception**, by design:
 `traj_parse._stage_value` and `traj_status._stage_facts` parse the recorded file
 directly, without the fingerprint check, so a generated artifact describes the
@@ -542,15 +542,15 @@ good evidence, which is the subtlety:
   older kit (or by a repo mid-migration) still carries one and still trips it.
   `Modified` was *defined* as a
   post-attestation amendment, so the row can only exist in a spine that has
-  already been ratified. A window by construction.
+  already been approved. A window by construction.
 - **`drafted>0` is ambiguous** — a `Drafted` row reads DevStg-Below in a mature repo starting a new
-  phase *and* in a project that has never ratified anything. The `ex-draft` basis
+  phase *and* in a project that has never approved anything. The `ex-draft` basis
   figure disambiguates: it is the level the same arithmetic computes with the
   draft rows removed. If that clears DevStg-Tests and sits above the level the drafts
   produced, the spine has demonstrably climbed and the drafts alone are holding
   it down.
 
-Since WI-401 an **uncovered ratified SN** opens the same kind of window (the
+Since WI-401 an **uncovered approved SN** opens the same kind of window (the
 gate drops to DevStg-Reqs, the DevStg-Tests/DevStg-Impl steps stop running), with `uncovered>0` on the
 basis line naming the cause. `window_open` does **not** read that field — its
 signals remain `drafts`/`modified` — an honest gap: the warn is absent, but the
@@ -660,7 +660,7 @@ silently not enforcing the floors.
 Generated-artifact freshness is the **trunk lane's** job. On a claimed work
 branch — one with a `docs/work/active/<branch>/` spec directory — the steps in
 `_TRUNK_FRESHNESS_STEPS` (`derived-stage`, `trajectory-map`,
-`status-map`, `open-items`, `okf`, `ratify-fresh`) are reported SKIP with their
+`status-map`, `open-items`, `okf`, `approval-fresh`) are reported SKIP with their
 reason instead of running. Gating a branch on freshness would red every branch
 for drift it is forbidden to fix.
 
@@ -723,28 +723,28 @@ assumed covered.
 
 ---
 
-## 10. The traced-vs-ratified cell split
+## 10. The traced-vs-approved cell split
 
 Owner ruling 2026-07-31 (`docs/concurrency-v2.md` §A5.1, WI-380). The newest
 layer, and the one behind a lot of historical accidental gate churn.
 
 When an **`Approved`** spine row is amended, `staged_spine_amendments` in
-`check_trajectory.py` sorts each changed cell into two halves. Only a
-**ratified** cell change warns that a re-attest is owed.
+`check_trajectory.py` sorts each changed cell into two halves. Only an
+**approved** cell change warns that a re-attest is owed.
 
-| Registry | **Traced** (amend freely) | **Ratified** (opens a re-attest window) |
+| Registry | **Traced** (amend freely) | **Approved** (opens a re-attest window) |
 |---|---|---|
 | SR | `SN-Refs`, `Boundary-Refs`, `Hat-Refs`, `Phase`, `Aspect`, `Lifecycle` | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` |
 | LLR | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase`, `SR-Refs`, `Hat-Refs` | `Title`, `Detail`, `Rationale` |
 | TC | `Verifies`, `Evidence`, `Automated`, `Phase` | `Method`, `Expected`, `Parameters`, `Level`, `Tier` |
 
 **Why it exists:** WI-280 moved code, 19 LLR `Module` cells followed it, 11
-owning SRs flipped off `Approved`, the gate dropped, and it cost a ratify
+owning SRs flipped off `Approved`, the gate dropped, and it cost an approve
 brief and four review rounds — for a change that altered no requirement.
 
 **The residual rule fails safe:** a column in *neither* set is treated as
-**ratified**, so a newly-added column can only ever be too loud, never silently
-un-ratified. `tests/test_trajectory_staged.py` pins both halves.
+**approved**, so a newly-added column can only ever be too loud, never silently
+un-approved. `tests/test_trajectory_staged.py` pins both halves.
 
 **Chain-consistency warns — RETIRED** (owner ruling 2026-08-17, the cell
 reading): `modified_chain_advisories` told an author to flip the owning SR
@@ -779,7 +779,7 @@ recurring issue. These are observations, not filed work — none has a WI.
 
 ### 12.1 `LLR.TestRefs` is fully inert
 
-It ships in the template, it is classified in the traced/ratified split, it is
+It ships in the template, it is classified in the traced/approved split, it is
 named in the required-fields exclusion comment — and **no code reads its value**.
 The LLR↔TC link is carried entirely by the TC's `Verifies`. Anyone filling this
 column is doing unverified bookkeeping; anyone trusting it is reading a cell
@@ -830,7 +830,7 @@ misses are counted *untraced* rather than gated), and four live rows are
 ### 12.5 SN has no schema tier at all
 
 Every CSV tier gets required-field and enum checks; SN gets duplicate-id and
-draft/ratified-collision only. An SN row with `Priority`, `Why it matters` and
+draft/approved-collision only. An SN row with `Priority`, `Why it matters` and
 `Acceptance intent` all blank passes DevStg-Impl.
 
 ### 12.6 Required-but-unvalidated cells
@@ -841,7 +841,7 @@ enforced by nobody. Only `SR.Verification` and `TC.Tier` are closed sets.
 
 ### 12.7 The phase rule arms globally from one row
 
-Phase a single SR anywhere and *every* ratified SR, LLR and TC across the repo
+Phase a single SR anywhere and *every* approved SR, LLR and TC across the repo
 instantly owes a bare-integer `Phase` or `--strict-schema` reds. Intended, but a
 cliff rather than a ramp — worth knowing before someone phases one row to try it.
 
@@ -858,7 +858,7 @@ tombstone-class deletion (D-4 ruling 2026-08-14b; the log's forwarding entry
 is the map). The CMP registry's own `PartOf`/`SupersededBy` rule is separate
 and still live.
 
-### 12.10 `LLR.SR-Refs` is ratified only by the residual
+### 12.10 `LLR.SR-Refs` is approved only by the residual
 
 The code says so explicitly: §A5.1 never named it, and it is "the same shape of
 pointer as the ruled-traced `SN-Refs` / `Verifies`." Flagged in-code as WI-388's
@@ -894,15 +894,15 @@ python project-trajectory/scripts/check.py --list             # show the plan on
 # per-module coverage floors (needs a coverage.json from a covered tier)
 python project-trajectory/scripts/check_coverage.py --tier full --skip-tiers smoke
 
-# the ratification hierarchy for a batch, and the re-attest brief
-python project-trajectory/scripts/trace.py --ratify SR-052,SR-053
-python project-trajectory/scripts/trace.py --ratify modified --out docs/ratify/CURRENT.md
-python project-trajectory/scripts/trace.py --ratify modified --check   # freshness gate (ratify-fresh)
+# the approval hierarchy for a batch, and the re-attest brief
+python project-trajectory/scripts/trace.py --approve SR-052,SR-053
+python project-trajectory/scripts/trace.py --approve modified --out docs/ratify/CURRENT.md
+python project-trajectory/scripts/trace.py --approve modified --check   # freshness gate (approval-fresh)
 
 # mint the sitting's dated, IMMUTABLE record from CURRENT.md (WI-503) — the
 # only sanctioned writer of a docs/ratify/<date>-*.md; check.py's
-# ratify-immutable step refuses any other commit that touches one
-python project-trajectory/scripts/trace.py --mint-ratify-brief wi052-wi053
+# approval-immutable step refuses any other commit that touches one
+python project-trajectory/scripts/trace.py --mint-approval-brief wi052-wi053
 
 # expand an SR's Permutations cell into concrete cases
 python project-trajectory/scripts/gen_cases.py --spec "size=range[0..2GiB]; enc=set{utf8,utf16}"

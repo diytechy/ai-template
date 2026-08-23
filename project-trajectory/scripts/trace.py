@@ -9,14 +9,14 @@ PROCESS.md: it never needs hand-maintaining.
 Usage:
     python scripts/trace.py [--strict] [--strict-integrity] [--require-verified]
                             [--phase LIST] [--no-placeholders] [--strict-schema]
-                            [--html] [--ratify SCOPE [--out FILE]]
+                            [--html] [--approve SCOPE [--out FILE]]
                             [--root DIR] [--docs DIR]
 
 Reads (under --docs, default "<root>/docs"; --root defaults to "."): the spine —
     requirements/{stakeholder-needs,system-requirements,low-level-requirements}.toml
     and test/test-cases.toml — id-keyed TOML read through `spine_carrier`, which
     still resolves the legacy stakeholder-needs.md / *.csv carriers for a repo
-    that has not migrated (a need is unratified per its `status` field, or, on
+    that has not migrated (a need is unapproved per its `status` field, or, on
     the markdown carrier, under a heading containing "draft", §4a) — plus the
     OPTIONAL off-spine registries requirements/{components,interfaces}.toml and
     requirements/{performance-budgets,repos,procurement,assets}.csv
@@ -62,15 +62,15 @@ Flags in brief: --require-verified adds the DevStg-Impl criterion "an SR is
 Status=Approved" — any Verification method (Drafted SRs exempt); --no-placeholders flags leftover "-000"
 example rows (wire in from DevStg-Tests on); --strict-schema adds required-field,
 closed-vocabulary, and "Automated=Yes cites Evidence" checks over the real rows;
---ratify SCOPE emits ONLY the batch-scoped ratification hierarchy (a phase tag or
+--approve SCOPE emits ONLY the batch-scoped approval hierarchy (a phase tag or
 an SR-id list) to stdout or --out and runs no checks (WI-146); the reserved scope
 `modified` (WI-316) emits the re-attestation brief instead — per-cell
 before/after for every row owing a human act, against its copy in the
 `docs/archive/last_approved/` snapshot (`baseline_snapshot.py`); regenerate it
 to `docs/ratify/CURRENT.md`, the one file this path ever rewrites. `--mint-
-ratify-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
+approval-brief SLUG` (WI-503) copies CURRENT.md to a dated, IMMUTABLE
 `docs/ratify/<date>-SLUG.md` — the only sanctioned writer of a dated brief;
-`check.py --ratify-immutable` refuses any other commit that touches one. Warn-only
+`check.py --approval-immutable` refuses any other commit that touches one. Warn-only
 advisories (loud on stdout + in the report, never gating): an unpinned
 comparative acceptance-criterion, an LLR reading below Approved while every
 citing TC is Approved (WI-129), a missing knowledge pack, and an interface
@@ -184,11 +184,11 @@ def is_approved(row):
 
     RENAMED AT D-9 MIGRATION STEP 5 from `is_verified`, and the rename carries a
     RULING, not just a word. `Verified` used to make TWO claims at once — the
-    text is ratified AND the evidence passed — and the second claim was a
+    text is approved AND the evidence passed — and the second claim was a
     hand-set cell asserting a test run nobody re-ran. D-9 deletes the pass claim
     from the vocabulary: `Approved` says only that the text is blessed, and
     whether the tests pass is the harness's answer, not a cell's. `Planned`
-    (ratified text, evidence pending) folded into this same value at the same
+    (approved text, evidence pending) folded into this same value at the same
     act under OI-30 D1 — the two named one rung and one of them named it more
     clearly. The consequence the fold created (a decomposed ex-`Planned` row
     would have read DevStg-Impl under the old `sr_bar`) is closed by OI-30 D2,
@@ -219,7 +219,7 @@ def is_founded(row):
     stays D-9 consequence 2's still-open half — nothing here decides it — but its
     other half is ANSWERED: whether an agent-authored `Founded` is itself an
     error is not open any more. OI-45 (ruled 2026-08-20) sanctions it, so long as
-    the row is spine content past the declared human-ratification level
+    the row is spine content past the declared human-approval level
     (`agent_common.human_holds` says which) — the dial says who holds what, and
     an authored `Founded` under it is judgment exercised, not an error class.
     Same case-insensitive casing rule as its two siblings; duplicated in
@@ -273,7 +273,7 @@ def llr_exempt(row):
 
 def phase_num(row):
     """The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2);
-    None when blank/unparseable. The one phase-parse the kit uses — the ratified-phase
+    None when blank/unparseable. The one phase-parse the kit uses — the approved-phase
     schema rule and the `--phase` foundation filter share it, so a downstream repo that
     kept `vN` labels parses identically (the phase doctrine, process.md §4).
     Duplicated in spine_rules.py per the F5 rule."""
@@ -421,7 +421,7 @@ REQUIRED_FIELDS = {
 # of values at least one live predicate recognizes, narrowing monotonically*.
 #
 # `Draft`→`Drafted`, `Verified`/`Planned`→`Approved` (OI-30 D1: the two
-# ratified-text rungs are ONE once the pass claim leaves the vocabulary).
+# approved-text rungs are ONE once the pass claim leaves the vocabulary).
 #
 # NARROWED AGAIN AT STEP 7 + ARMED AT STEP 8, in ONE act, because the enum must
 # equal the set of values at least one live predicate recognizes at EVERY commit:
@@ -564,8 +564,8 @@ def llr_status_advisories(llrs, tcs):
     exists, so the gap is a readout drift, not a coverage hole — mechanically
     harmless (the derived stage ignores LLR/TC Status past `Drafted` — a Drafted
     LLR holds the LLReqs rung open and a settled one says nothing further;
-    `spine_rules.spine_stage`), but confusing at a
-    ratification review, where a below-`Approved` LLR under an `Approved` SR reads
+    `spine_rules.spine_stage`), but confusing at an
+    approval review, where a below-`Approved` LLR under an `Approved` SR reads
     like an unfinished decomposition. Warn only: never promoted to an error (not
     under --strict or --strict-integrity), because making LLR status gate would
     re-introduce the exact LLR-status coupling the derived-gate model dropped.
@@ -1559,9 +1559,9 @@ def scan_sn_placeholders(sn_md):
 
 # SN maturity lives in section-as-state (derived-gate model §4a): a stakeholder-
 # needs.md heading whose text contains "draft" (case-insensitive, e.g. `## Draft
-# needs (unratified)`) marks the SNs under it as Draft (unratified, DevStg-Below); SNs under
-# any other heading are ratified (DevStg-Reqs). No new column — the state IS the section,
-# and the ratification date is git-derived (the commit that moved the row out of
+# needs (unapproved)`) marks the SNs under it as Draft (unapproved, DevStg-Below); SNs under
+# any other heading are approved (DevStg-Reqs). No new column — the state IS the section,
+# and the approval date is git-derived (the commit that moved the row out of
 # the draft section). This is the SN analogue of the `Status=Draft` bit on
 # SR/LLR/TC rows.
 _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
@@ -1570,7 +1570,7 @@ _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     `text`, whole-text — a prose mention counts exactly like a table row, which
-    is the sharp edge registry-machinery-reference §2.1 records (ratified +
+    is the sharp edge registry-machinery-reference §2.1 records (approved +
     uncited caps the derived gate at DevStg-Below since WI-401). `-000` placeholders
     excluded. Duplicated in spine_rules.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408), because this scrape decides which ids BOTH
@@ -1587,7 +1587,7 @@ def sn_draft_ids(text):
     heading containing the word "draft". Both are read; the dispatch is
     `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
     heading scan over a TOML file finds NO headings, reports ZERO drafts, and
-    every draft need reads as ratified — which floats the derived gate upward.
+    every draft need reads as approved — which floats the derived gate upward.
     A migration whose failure mode is "the gate rises" is the one shape this
     repo can least afford, so the carrier is sniffed rather than assumed.
 
@@ -1618,10 +1618,10 @@ def sn_integrity_findings(sn_text):
     integrity_findings). Two shapes are wrong at any stage: an SN id on more
     than one `|SN-###|` table row (a copy-pasted row; _sn_prose last-wins
     silently otherwise), and an id under BOTH a draft and a non-draft heading
-    (simultaneously exempt from the child rules and ratified — sn_draft_ids
-    marks it draft, silently exempting a ratified need)."""
+    (simultaneously exempt from the child rules and approved — sn_draft_ids
+    marks it draft, silently exempting an approved need)."""
     row_counts = {}
-    draft_rows, ratified_rows = set(), set()
+    draft_rows, approved_rows = set(), set()
     in_draft = False
     for line in sn_text.splitlines():
         m = _HEADING_RE.match(line)
@@ -1633,12 +1633,12 @@ def sn_integrity_findings(sn_text):
             continue
         rid = rm.group(1)
         row_counts[rid] = row_counts.get(rid, 0) + 1
-        (draft_rows if in_draft else ratified_rows).add(rid)
+        (draft_rows if in_draft else approved_rows).add(rid)
     out = []
     for rid in sorted(row_counts, key=id_sort_key):
         if row_counts[rid] > 1:
             out.append(f"SN id {rid} is duplicated ({row_counts[rid]} table rows)")
-    for rid in sorted(draft_rows & ratified_rows, key=id_sort_key):
+    for rid in sorted(draft_rows & approved_rows, key=id_sort_key):
         out.append(f"SN id {rid} appears under both a draft and a non-draft heading")
     return out
 
@@ -1776,7 +1776,7 @@ def sr_boundary_findings(srs, bifs, ifs):
     """SN-037's SR->boundary rule (WI-442), as `(findings, advisories)` — both
     plain lists of strings, per `frame_findings`' note on the pair shape.
 
-    SN-037's ratified acceptance asks that *"every system-requirement input and
+    SN-037's approved acceptance asks that *"every system-requirement input and
     output references a declared interface"* and that *"unresolved references ...
     are mechanical findings"*. Those are two obligations at two severities, and
     conflating them is what would make this check either useless or unshippable:
@@ -2632,13 +2632,13 @@ def _resolves_in_tree(root, endpoint):
     return False
 
 
-def phase_ratified_findings(real):
-    """The ratified-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner
+def phase_approved_findings(real):
+    """The approved-phase NUMERIC-ONLY rule (process.md §4 "Phased delivery"; owner
     ruling 2026-08-01, WI-402): once the project phases ANY spine row (digit-parse
-    arming — a legacy `v2` cell arms it too), every RATIFIED (non-`Drafted`) SR/LLR/TC
+    arming — a legacy `v2` cell arms it too), every APPROVED (non-`Drafted`) SR/LLR/TC
     must carry a `Phase` that is a BARE INTEGER — digits only, full cell. Numeric-
     only because two joins match the cell LITERALLY, not by parse: the `--phase` /
-    `--ratify` scope filters (`in_phase` / `_scope_srs`) and check_trajectory's
+    `--approve` scope filters (`in_phase` / `_scope_srs`) and check_trajectory's
     phase-drop join of docs/gate's `per-phase=` labels against `[phase]-[g<N>]` WI
     anchors — a prefixed cell like `P1`/`v2` goes silently vacuous there, a
     disarmed warn no one is told about, which is worse than a crash. The digit-
@@ -2647,7 +2647,7 @@ def phase_ratified_findings(real):
     derived max while this rule migrates the live cells. The rule is **vacuous
     until >=1 artifact is phased** — the arming idiom the component checks use —
     so a fully-blank downstream registry stays green (a `Drafted` row may always
-    leave `Phase` blank). SN is covered transitively: at DevStg-Reqs+ every ratified SN
+    leave `Phase` blank). SN is covered transitively: at DevStg-Reqs+ every approved SN
     has >=1 SR (the orphan rule) and SRs are phased; pre-DevStg-Reqs it is vacuously
     exempt. Part of --strict-schema; extends the schema tier rather than forking
     it.
@@ -2666,9 +2666,9 @@ def phase_ratified_findings(real):
                 continue
             shown = f"={cell!r}" if cell else " (blank)"
             out.append(
-                f"{label} {r[key]} is ratified but its Phase{shown} is not a bare "
-                "integer — a ratified row's phase is digits only, full cell; a "
-                "prefixed label silently misses the literal --phase/--ratify and "
+                f"{label} {r[key]} is approved but its Phase{shown} is not a bare "
+                "integer — an approved row's phase is digits only, full cell; a "
+                "prefixed label silently misses the literal --phase/--approve and "
                 "phase-drop joins (process.md §4 'Phased delivery')"
             )
     return out
@@ -2815,10 +2815,10 @@ def outline_lines(roots):
     return out or ["_(no requirements yet)_"]
 
 
-# --- ratification hierarchy view (WI-146) --------------------------------------
+# --- approval hierarchy view (WI-146) --------------------------------------
 # A batch-scoped SN->SR->LLR->TC tree that, unlike the whole-spine outline above,
-# carries the *prose* a ratifier needs (SR Requirement/AC, LLR Detail, TC
-# Method/Expected, and any rubric it cites) so a DevStg-Reqs/DevStg-Tests ratification brief can
+# carries the *prose* an approver needs (SR Requirement/AC, LLR Detail, TC
+# Method/Expected, and any rubric it cites) so a DevStg-Reqs/DevStg-Tests approval brief can
 # *link* the generated view instead of hand-copying registry rows. Generated, so
 # it never drifts from the CSVs — review the CSVs, not this render (process.md §3).
 
@@ -2827,7 +2827,7 @@ RUBRIC_RE = re.compile(r"[\w./-]*rubrics/[\w./-]+\.md")
 
 def _rubrics_cited(*cells):
     """Sorted unique `docs/rubrics/*.md` paths named anywhere in the given SR
-    prose cells — the ratify view names the rubric a Critique/Attest SR is judged
+    prose cells — the approve view names the rubric a Critique/Attest SR is judged
     against (there is no dedicated Rubric column; the path lives in the prose)."""
     found = set()
     for c in cells:
@@ -2835,23 +2835,23 @@ def _rubrics_cited(*cells):
     return sorted(found)
 
 
-# The `--ratify` scopes that are NOT a phase tag or an id list — a CLOSED set,
+# The `--approve` scopes that are NOT a phase tag or an id list — a CLOSED set,
 # routed to the re-attestation brief instead of the hierarchy view. Held as a set
 # rather than as a literal comparison so a scope that is neither reserved nor
 # resolvable cannot fall through to an empty brief, and so re-spelling one is a
-# single edit here plus `check.py`'s `ratify-fresh` step in the same commit.
+# single edit here plus `check.py`'s `approval-fresh` step in the same commit.
 #
 # THE SCOPE NAME IS A CLI WORD, NOT A STATUS VALUE, and it deliberately did NOT
 # move when `Modified` retired at step 7. The snapshot design proposed re-spelling
 # it `drifted`; that renames a published command surface (`check.py`'s
-# `ratify-fresh`, the `gate-advance` skill, adopters' muscle memory) and buys
+# `approval-fresh`, the `gate-advance` skill, adopters' muscle memory) and buys
 # nothing the migration needed — the COUPLING the plan named was `reattest_model`
 # SELECTING on the literal, and that was cut at step 4.
-_RESERVED_RATIFY_SCOPES = frozenset({"modified"})
+_RESERVED_APPROVAL_SCOPES = frozenset({"modified"})
 
 
 def _scope_srs(scope, srs):
-    """Resolve a `--ratify` scope to an ordered SR-row list. The scope is either a
+    """Resolve a `--approve` scope to an ordered SR-row list. The scope is either a
     comma/space list of `SR-###` ids (used verbatim) or one-or-more phase tags
     (every SR whose `Phase` cell is one of them). Detection: if *any* token looks
     like an SR id the whole scope is treated as ids, else as phases.
@@ -2859,7 +2859,7 @@ def _scope_srs(scope, srs):
     RAISES on a scope that resolves to NOTHING (migration plan §F2). Until now
     an unmatched scope fell through to an empty brief at exit 0 — a typo, a
     retired phase tag, or a reserved word this function does not know produced a
-    document that reads "there is nothing to ratify", which is the most
+    document that reads "there is nothing to approve", which is the most
     expensive way for this tool to be wrong: an owner reads a short brief and
     blesses a batch they were never shown. An empty resolution is a REFUSAL, not
     an output."""
@@ -2873,11 +2873,11 @@ def _scope_srs(scope, srs):
         matched = [s for s in srs if _cell(s, "Phase").lower() in phases]
     if not matched:
         raise SystemExit(
-            "trace: --ratify {!r} matches no SR — refusing to emit an empty "
+            "trace: --approve {!r} matches no SR — refusing to emit an empty "
             "brief. A scope is an SR-id list, a phase tag, or one of the "
-            "reserved scopes ({}); an empty brief reads as 'nothing to ratify' "
+            "reserved scopes ({}); an empty brief reads as 'nothing to approve' "
             "to the human about to sign it.".format(
-                scope, ", ".join(sorted(_RESERVED_RATIFY_SCOPES))
+                scope, ", ".join(sorted(_RESERVED_APPROVAL_SCOPES))
             )
         )
     return matched
@@ -2888,11 +2888,11 @@ _SN_EMPHASIS = re.compile(r"\*\*|`")
 
 def _sn_prose(sn_text):
     """Parse each SN row's prose (Need / Why it matters / Acceptance intent) from
-    stakeholder-needs.md so the ratify view renders the *top* of the chain, not a
+    stakeholder-needs.md so the approve view renders the *top* of the chain, not a
     bare SN id (WI-146 REVIEW-A). Reads `spine_carrier`, the ONE home the fold
     now has — it was the third copy of a rule three modules
     promised in a docstring to change together, and did not. Takes TEXT rather
-    than a path because the ratify view already holds the registry's contents;
+    than a path because the approve view already holds the registry's contents;
     example `-000` rows are skipped."""
     needs = spine_carrier.needs_from_text(sn_text)
     return {
@@ -2908,7 +2908,7 @@ def _sn_prose(sn_text):
     }
 
 
-# --- the re-attestation brief (--ratify modified, WI-316) ----------------------
+# --- the re-attestation brief (--approve modified, WI-316) ----------------------
 # A sitting cannot bless a delta it cannot see: for each SR owing a human act the
 # brief shows every chain row's changed cells as BEFORE (the row in the
 # `docs/archive/last_approved/` snapshot) vs AFTER (the working tree).
@@ -2972,20 +2972,20 @@ def _full_row_bullets(row):
     ]
 
 
-def _cell_diff_lines(changed, ratified=frozenset()):
+def _cell_diff_lines(changed, approved=frozenset()):
     """The per-cell before/after bullets, split into the §A5.1 two groups.
 
     The split is a capability the snapshot comparison hands the reader for free
-    (D-9 step 4): a RATIFIED cell that moved owes an attestation, a TRACED one
+    (D-9 step 4): an APPROVED cell that moved owes an attestation, a TRACED one
     routes to adjudication and arms no window. Rendering them in one
     undifferentiated list asked the owner to make that judgement per cell, from
     memory, mid-sitting. Headings appear only when BOTH groups are present —
     a lone heading over the only group is noise."""
     groups = [
-        ("ratified — re-attestation owed", [c for c in changed if c[0] in ratified]),
+        ("approved — re-attestation owed", [c for c in changed if c[0] in approved]),
         (
             "traced — routes to adjudication",
-            [c for c in changed if c[0] not in ratified],
+            [c for c in changed if c[0] not in approved],
         ),
     ]
     show_headings = all(rows for _label, rows in groups)
@@ -3007,7 +3007,7 @@ def _entry_kind(state):
     re-attestation of text that moved after it was blessed.
 
     BACK TO TWO ARMS AT D-9 STEP 5. The third (`plan`, for a `Planned` row whose
-    text was ratified and whose evidence was never established) went out with the
+    text was approved and whose evidence was never established) went out with the
     word: OI-30 D1 ruled `Planned` IS `Approved`, so there is no longer a state
     that means "blessed text, no evidence" — evidence is the harness's answer,
     not a cell's. A `Drafted` row owes a first approval and has no baseline to
@@ -3021,7 +3021,7 @@ def _entry_kind(state):
     function is unchanged by that: it already returned `reattest` for everything
     that is not `drafted`."""
     if state == "drafted":
-        return "ratify"
+        return "approve"
     return "reattest"
 
 
@@ -3102,10 +3102,10 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     falls back to the `Drafted` arm alone.
 
     Returns `[{id, title, kind, baseline, baseline_date, no_baseline_reason,
-    rows:[{kind, id, state, cells, ratified, full}]}]` where `state` is
+    rows:[{kind, id, state, cells, approved, full}]}]` where `state` is
     `changed` | `added` | `removed` | `current`, `cells` is the
-    `(name, before, after)` triples ORDERED ratified-first, `ratified` is the
-    subset of those names §A5.1 rules ratified (so a renderer groups by one
+    `(name, before, after)` triples ORDERED approved-first, `approved` is the
+    subset of those names §A5.1 rules approved (so a renderer groups by one
     membership test rather than re-deriving the split), and `full` is the row
     dict for the states that render whole rows. Deterministic given the working
     tree and the snapshot."""
@@ -3189,7 +3189,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                     "id": i,
                     "state": "current",
                     "cells": [],
-                    "ratified": frozenset(),
+                    "approved": frozenset(),
                     "full": r,
                 }
                 for k, i, r in current_chain
@@ -3209,20 +3209,20 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "added",
                         "cells": [],
-                        "ratified": frozenset(),
+                        "approved": frozenset(),
                         "full": row,
                     }
                 )
                 continue
             rel, id_col = SPINE_FILES[_KIND_IX[kind]]
             split = check_trajectory.split_changed_cells(rel, id_col, before, row)
-            # RATIFIED FIRST, then traced — the reader's question is "what do I
-            # have to re-bless?", and the §A5.1 split answers it: a ratified
+            # APPROVED FIRST, then traced — the reader's question is "what do I
+            # have to re-bless?", and the §A5.1 split answers it: an approved
             # cell owes attestation, a traced one routes to adjudication and
             # arms no window (the WI-388 ruling).
             cells = [
                 (name, split[half][name][0], split[half][name][1])
-                for half in ("ratified", "traced")
+                for half in ("approved", "traced")
                 for name in sorted(split[half])
             ]
             if cells:
@@ -3232,7 +3232,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "changed",
                         "cells": cells,
-                        "ratified": frozenset(split["ratified"]),
+                        "approved": frozenset(split["approved"]),
                         "full": row,
                     }
                 )
@@ -3244,7 +3244,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "id": rid,
                         "state": "removed",
                         "cells": [],
-                        "ratified": frozenset(),
+                        "approved": frozenset(),
                         "full": row,
                     }
                 )
@@ -3262,16 +3262,16 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
 # newer date appeared (measured: `docs/ratify/2026-08-13-wi444.md`, ten
 # rewrites, none of them about WI-444). Under the split there is nothing to
 # search for — the live surface has one name — and a dated brief is written
-# exactly once, by `--mint-ratify-brief`, never touched again by this path.
-CURRENT_RATIFY_BRIEF = "CURRENT.md"
+# exactly once, by `--mint-approval-brief`, never touched again by this path.
+CURRENT_APPROVAL_BRIEF = "CURRENT.md"
 
 
-def current_ratify_brief(root):
+def current_approval_brief(root):
     """The live re-attestation brief — `docs/ratify/CURRENT.md` — or None when
     it does not exist. The fixed counterpart of the retired
-    `newest_ratify_brief`; see `CURRENT_RATIFY_BRIEF` for why a fixed name
+    `newest_approval_brief`; see `CURRENT_APPROVAL_BRIEF` for why a fixed name
     replaced a derived one."""
-    path = Path(root) / "docs" / "ratify" / CURRENT_RATIFY_BRIEF
+    path = Path(root) / "docs" / "ratify" / CURRENT_APPROVAL_BRIEF
     return path if path.is_file() else None
 
 
@@ -3316,8 +3316,8 @@ def _without_derived_stamps(text):
     )
 
 
-def ratify_check(root, srs, llrs, tcs, out_path):
-    """`(code, message)` for `--ratify modified --check` — a plain
+def approval_check(root, srs, llrs, tcs, out_path):
+    """`(code, message)` for `--approve modified --check` — a plain
     regenerate-and-compare, like every other freshness gate in the kit.
 
     Fails CLOSED on a difference — a stale brief is read by a human about to
@@ -3353,7 +3353,7 @@ def ratify_check(root, srs, llrs, tcs, out_path):
         return 0, "no brief at {} — nothing to gate".format(out_path)
     model = reattest_model(root, srs, llrs, tcs)
     if not model:
-        return 0, "no row owes a ratification or a re-attest — the window is closed"
+        return 0, "no row owes an approval or a re-attest — the window is closed"
     try:
         with out_path.open("r", encoding="utf-8", newline="") as fh:
             existing = fh.read()
@@ -3364,14 +3364,14 @@ def ratify_check(root, srs, llrs, tcs, out_path):
         return 0, "{} is current".format(out_path)
     return 1, (
         "{} is STALE against the registry and the {} snapshot. Regenerate it "
-        "with `trace.py --ratify modified --out {}` and re-read it BEFORE "
+        "with `trace.py --approve modified --out {}` and re-read it BEFORE "
         "attesting — an owner blessing a short brief blesses rows they were "
         "never shown.".format(out_path, baseline_snapshot.SNAPSHOT_DIR, out_path)
     )
 
 
 def reattest_lines(root, srs, llrs, tcs):
-    """Markdown for the re-attestation brief (`--ratify modified`, WI-316): one
+    """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
     section per SR owing a human act (grouped by SR for reading) with per-cell
     before/after for every chain row (the SR + its LLRs + their/its TCs) that
     differs from the `docs/archive/last_approved/` snapshot, plus rows ADDED to
@@ -3383,13 +3383,13 @@ def reattest_lines(root, srs, llrs, tcs):
     walk dies by construction once an approved row stops flipping on amendment,
     and a snapshot cannot sit after the amendment it is supposed to precede.
 
-    Each changed row renders its RATIFIED cells first and its TRACED cells
+    Each changed row renders its APPROVED cells first and its TRACED cells
     after, under their own heading — the capability the split buys a reader:
-    ratified cells owe an attestation, traced cells route to adjudication and
+    approved cells owe an attestation, traced cells route to adjudication and
     arm no window (§A5.1, the WI-388 ruling).
 
     Deterministic given the working tree and the snapshot; a generator mode like
-    `ratify_lines` — runs no checks. The markdown RENDERER over `reattest_model`
+    `approval_lines` — runs no checks. The markdown RENDERER over `reattest_model`
     (WI-322): the model owns the comparison, this owns the prose."""
     model = reattest_model(root, srs, llrs, tcs)
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
@@ -3397,11 +3397,11 @@ def reattest_lines(root, srs, llrs, tcs):
     lines = [
         "# Re-attestation brief — spine rows owing a human act",
         "",
-        "_Generated by `trace.py --ratify modified` (WI-316). One section per SR"
+        "_Generated by `trace.py --approve modified` (WI-316). One section per SR"
         " that is `Drafted`, or whose"
         " chain has DRIFTED from the approved snapshot; each chain row"
         " shows only its CHANGED cells, before (the snapshot) vs after (the"
-        " working tree), ratified cells first. `Status` itself is never listed —"
+        " working tree), approved cells first. `Status` itself is never listed —"
         " the marker is not the amendment. Rule on each section: bless → set"
         " `Status` to `Approved` (process.md §7) — and from the first signing"
         " onward, run `intake.py snapshot` in the SAME commit, or the record of"
@@ -3415,7 +3415,7 @@ def reattest_lines(root, srs, llrs, tcs):
         # line now says what the stamp IS, and the provenance the reader was
         # actually being promised is derived beside it, from the only mechanical
         # trace an approval leaves: a status line moving in a snapshotted
-        # registry. Both are EXCLUDED from `ratify_check`'s comparison
+        # registry. Both are EXCLUDED from `approval_check`'s comparison
         # (`_DERIVED_STAMP_PREFIXES`) — a brief that goes stale because its own
         # stamp moved is a guard that fires on every commit.
         "_Baseline: `{}` — {}._".format(
@@ -3469,7 +3469,7 @@ def reattest_lines(root, srs, llrs, tcs):
                 lines += _full_row_bullets(row)
             elif row["state"] == "changed":
                 lines += ["", "### {} {}".format(row["kind"], row["id"])]
-                lines += _cell_diff_lines(row["cells"], row["ratified"])
+                lines += _cell_diff_lines(row["cells"], row["approved"])
             elif row["state"] == "removed":
                 lines += [
                     "",
@@ -3489,15 +3489,15 @@ def reattest_lines(root, srs, llrs, tcs):
     return lines
 
 
-def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
-    """Markdown for the batch-scoped ratification hierarchy (WI-146a). Groups the
+def approval_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
+    """Markdown for the batch-scoped approval hierarchy (WI-146a). Groups the
     in-scope SRs under their primary (first-listed) stakeholder need — rendering
     that need's own prose (Need/Why/Acceptance from `sn_meta`, WI-146 REVIEW-A) —
     then nests each SR's LLRs and TCs with their prose. Deterministic, stdlib-only."""
     sn_meta = sn_meta or {}
     in_scope = _scope_srs(scope, srs)
     # Bucketed joins (WI-081's _bucket_by_ref), not per-parent refs() rescans —
-    # a phase-scoped ratify over a large registry was the one path still doing
+    # a phase-scoped approve over a large registry was the one path still doing
     # the quadratic O(SR×LLR + LLR×TC) scans the report path already dropped.
     llrs_by_sr = _bucket_by_ref(llrs, "SR-Refs")
     tcs_by_ref = _bucket_by_ref(tcs, "Verifies")
@@ -3568,9 +3568,9 @@ def ratify_lines(scope, sn_ids, srs, llrs, tcs, sn_meta=None):
         return out
 
     lines = [
-        "# Ratification hierarchy — scope: {}".format(scope),
+        "# Approval hierarchy — scope: {}".format(scope),
         "",
-        "_Generated by `trace.py --ratify {}` from the registries — {} SR(s). "
+        "_Generated by `trace.py --approve {}` from the registries — {} SR(s). "
         "Review the registry CSVs, not this render (process.md §3)._".format(
             scope, len(in_scope)
         ),
@@ -3628,7 +3628,7 @@ def _mermaid_label(rid, title):
 def mermaid_graph(sn_ids, srs, llrs, tcs, orphan_ids, sn_draft=frozenset()):
     """A `graph LR` DAG of the chain (a TC verifies its SR *and* its LLR), colored
     by orphan/draft state via classDef. Kept small/diff-friendly on purpose — the
-    HTML view is the one that scales. `sn_draft` colors unratified SNs (§4a)."""
+    HTML view is the one that scales. `sn_draft` colors unapproved SNs (§4a)."""
     sr_ids = {s["SR-ID"] for s in srs}
     llr_ids = {lr["LLR-ID"] for lr in llrs}
     nodes = {}  # rid -> (label, cls); dict insertion order keeps output stable
@@ -3745,7 +3745,7 @@ class Registries:
     """Loaded spine + off-spine registries: raw rows (kept for the integrity/
     placeholder sweeps), example-filtered working sets for the join, and the SN
     ids/draft/prose scraped from stakeholder-needs.md. Produced by
-    load_registries; consumed by --ratify, analyze, and the report render."""
+    load_registries; consumed by --approve, analyze, and the report render."""
 
 
 class Findings:
@@ -3838,7 +3838,7 @@ def load_registries(docs):
     # Resolved through the CARRIER, not by literal suffix: a
     # `.toml`-only existence test reads a markdown needs registry as ABSENT, and
     # an absent needs tier makes every SR orphan-clean, every draft need
-    # ratified, and the whole SN half of `--strict` vacuous.
+    # approved, and the whole SN half of `--strict` vacuous.
     sn_md = spine_carrier.resolve(
         docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS
     )
@@ -3849,7 +3849,7 @@ def load_registries(docs):
         sn_text = sn_md.read_text(encoding="utf-8-sig", errors="replace")
         sn_ids = sn_all_ids(sn_text)
         # Section-as-state maturity (derived-gate §4a): SNs under a "draft" heading
-        # are unratified (DevStg-Below) and exempt from the "SN with no SR" child rule below.
+        # are unapproved (DevStg-Below) and exempt from the "SN with no SR" child rule below.
         sn_draft = sn_draft_ids(sn_text)
         sn_meta = _sn_prose(sn_text)
         sn_integrity = sn_integrity_findings(sn_text)
@@ -4189,7 +4189,7 @@ def analyze(reg, args):
             demonstrated_verified.append(r["SR-ID"])
     if args.require_verified:
         for r in srs:
-            # The DevStg-Impl status bar applies to every ratified SR regardless of
+            # The DevStg-Impl status bar applies to every approved SR regardless of
             # Verification method — matching spine_rules.sr_gate, which already
             # demands is_approved for any decomposed SR before DevStg-Impl with no
             # per-method carve-out (WI-259, review-2026-07-21 M-5: a Demonstration/
@@ -4231,7 +4231,7 @@ def analyze(reg, args):
                 method = (r.get("Verification") or "").strip() or "(blank)"
                 status_findings.append(
                     f"SR {r['SR-ID']} is Verification={method} but Status="
-                    f"{val or '(blank)'} (DevStg-Impl requires Approved for every ratified "
+                    f"{val or '(blank)'} (DevStg-Impl requires Approved for every approved "
                     "SR regardless of method — the magic Status values are matched "
                     "case-insensitively, so this is a real mismatch, not a casing "
                     "near-miss)"
@@ -4321,7 +4321,7 @@ def analyze(reg, args):
     )
     schema = (
         [f for label in real for f in schema_findings(label, real[label])]
-        + phase_ratified_findings(real)
+        + phase_approved_findings(real)
         if args.strict_schema
         else []
     )
@@ -4760,7 +4760,7 @@ def render_report(reg, findings, args, forest):
             "auditable._",
             "",
         ]
-        lines += [f"- {u} (SN, unratified section)" for u in sorted(sn_draft)]
+        lines += [f"- {u} (SN, unapproved section)" for u in sorted(sn_draft)]
         lines += [
             f"- {r[id_key(label)]} — {_cell(r, 'Title') or _cell(r, 'Method')}"
             for label, rows_ in (
@@ -4856,7 +4856,7 @@ def render_report(reg, findings, args, forest):
         scope = f" — phase scope: {args.phase}" if phases else ""
         lines += ["", f"## Status findings (--require-verified{scope})", ""]
         lines += (
-            ["None. Every in-scope ratified SR is Approved (any method)."]
+            ["None. Every in-scope approved SR is Approved (any method)."]
             if not status_findings
             else [f"- {s}" for s in status_findings]
         )
@@ -5090,14 +5090,14 @@ def _cmd_correct_mark(root, space, new_value_text, ruling_id):
     return 0
 
 
-def mint_ratify_brief(root, slug, date=None):
-    """`--mint-ratify-brief SLUG` (WI-503): copy `docs/ratify/CURRENT.md` to a
+def mint_approval_brief(root, slug, date=None):
+    """`--mint-approval-brief SLUG` (WI-503): copy `docs/ratify/CURRENT.md` to a
     dated, IMMUTABLE `docs/ratify/<date>-<slug>.md` — the one act the
-    immutability enforcer (`check.py --ratify-immutable`) ever permits,
+    immutability enforcer (`check.py --approval-immutable`) ever permits,
     because it only ever CREATES a fresh filename; it never rewrites one that
     already exists. Home chosen here rather than a new script or a
     intake.py flag: the mint is a plain file copy over machinery trace.py
-    already owns (`current_ratify_brief`, the CURRENT.md path), so this is
+    already owns (`current_approval_brief`, the CURRENT.md path), so this is
     the smallest-total-code seam — a sibling script would duplicate that path
     knowledge, and intake.py's writers are all registry-shaped, not a byte
     copy of a rendered view.
@@ -5113,16 +5113,16 @@ def mint_ratify_brief(root, slug, date=None):
     slug = (slug or "").strip()
     if not slug or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]*", slug):
         raise ValueError(
-            "trace: --mint-ratify-brief SLUG must be non-empty and contain "
+            "trace: --mint-approval-brief SLUG must be non-empty and contain "
             "only letters, digits and '-', got {!r}".format(slug)
         )
     root = Path(root)
-    current = current_ratify_brief(root)
+    current = current_approval_brief(root)
     if current is None:
         raise ValueError(
             "trace: no docs/ratify/{} to mint from — regenerate it first "
-            "with `trace.py --ratify modified --out docs/ratify/{}`".format(
-                CURRENT_RATIFY_BRIEF, CURRENT_RATIFY_BRIEF
+            "with `trace.py --approve modified --out docs/ratify/{}`".format(
+                CURRENT_APPROVAL_BRIEF, CURRENT_APPROVAL_BRIEF
             )
         )
     stamp = date or datetime.date.today().isoformat()
@@ -5137,11 +5137,11 @@ def mint_ratify_brief(root, slug, date=None):
     return dest
 
 
-def _cmd_mint_ratify_brief(root, slug, date):
-    """`--mint-ratify-brief`'s CLI body: report and exit rather than raise, the
+def _cmd_mint_approval_brief(root, slug, date):
+    """`--mint-approval-brief`'s CLI body: report and exit rather than raise, the
     same shape `_cmd_correct_mark` uses."""
     try:
-        dest = mint_ratify_brief(root, slug, date)
+        dest = mint_approval_brief(root, slug, date)
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -5158,8 +5158,10 @@ def _writer_mode(args):
         return _cmd_bump_ids(args.root)
     if args.correct_mark:
         return _cmd_correct_mark(args.root, *args.correct_mark)
-    if args.mint_ratify_brief:
-        return _cmd_mint_ratify_brief(args.root, args.mint_ratify_brief, args.mint_date)
+    if args.mint_approval_brief:
+        return _cmd_mint_approval_brief(
+            args.root, args.mint_approval_brief, args.mint_date
+        )
     return None
 
 
@@ -5187,12 +5189,12 @@ def main():
         "space that already carries a recorded correction",
     )
     ap.add_argument(
-        "--mint-ratify-brief",
+        "--mint-approval-brief",
         metavar="SLUG",
         default=None,
         help="WI-503: copy docs/ratify/CURRENT.md to a dated, IMMUTABLE "
         "docs/ratify/<date>-SLUG.md and exit — the only sanctioned writer of "
-        "a dated brief (check.py --ratify-immutable refuses any OTHER commit "
+        "a dated brief (check.py --approval-immutable refuses any OTHER commit "
         "that modifies one). Refuses when CURRENT.md is absent or the "
         "destination already exists; --mint-date overrides today's date",
     )
@@ -5200,7 +5202,7 @@ def main():
         "--mint-date",
         metavar="YYYY-MM-DD",
         default=None,
-        help="with --mint-ratify-brief: use this date instead of today (testing/"
+        help="with --mint-approval-brief: use this date instead of today (testing/"
         "backfill; the mint itself does not validate the calendar)",
     )
     ap.add_argument(
@@ -5239,10 +5241,10 @@ def main():
         "of the full graph (gitignored composite artifact)",
     )
     ap.add_argument(
-        "--ratify",
+        "--approve",
         metavar="SCOPE",
         default=None,
-        help="emit ONLY the batch-scoped ratification hierarchy (SN->SR->LLR->TC "
+        help="emit ONLY the batch-scoped approval hierarchy (SN->SR->LLR->TC "
         "with prose) for SCOPE — a phase tag (e.g. v3) or an SR-id list "
         "(e.g. 'SR-052,SR-053'); a DevStg-Reqs/DevStg-Tests brief links this instead of hand-copying "
         "rows (WI-146). The reserved scope 'modified' (WI-316) emits the "
@@ -5254,7 +5256,7 @@ def main():
     ap.add_argument(
         "--check",
         action="store_true",
-        help="with --ratify modified: FRESHNESS mode. Re-render the brief and "
+        help="with --approve modified: FRESHNESS mode. Re-render the brief and "
         "compare it against the committed file (--out, else "
         "docs/ratify/CURRENT.md), exiting nonzero when they differ. A plain "
         "regenerate-and-compare — the baseline is a directory of files, so "
@@ -5267,7 +5269,7 @@ def main():
         "--out",
         metavar="FILE",
         default=None,
-        help="with --ratify, write the view to FILE (parent dirs created) instead "
+        help="with --approve, write the view to FILE (parent dirs created) instead "
         "of stdout, so a brief can link a stable path",
     )
     # --root/--docs path flags: here and in check_perf.py an explicit --docs is
@@ -5286,7 +5288,7 @@ def main():
     args = ap.parse_args()
     docs = Path(args.docs) if args.docs else Path(args.root) / "docs"
 
-    # --bump-ids, --correct-mark and --mint-ratify-brief are WRITERS, not
+    # --bump-ids, --correct-mark and --mint-approval-brief are WRITERS, not
     # checkers: they act and exit before any pass runs, so none depends on the
     # tree already being clean.
     # Folded into one call rather than two `if`s at this level, which is
@@ -5295,27 +5297,27 @@ def main():
     writer_code = _writer_mode(args)
     if writer_code is not None:
         # `main()` is called bare at the bottom of this module (like the
-        # --ratify --check path above), so a plain `return` sets no process
-        # exit status — a WRITER's failure (e.g. --mint-ratify-brief refusing
+        # --approve --check path above), so a plain `return` sets no process
+        # exit status — a WRITER's failure (e.g. --mint-approval-brief refusing
         # a bad slug) must `sys.exit` or the CLI reports success regardless.
         sys.exit(writer_code)
 
     reg = load_registries(docs)
 
-    # --ratify is a generator mode, not a checker: emit the batch-scoped
-    # ratification hierarchy and exit 0 without running any orphan/integrity pass
+    # --approve is a generator mode, not a checker: emit the batch-scoped
+    # approval hierarchy and exit 0 without running any orphan/integrity pass
     # (WI-146a). It reuses the loaded, example-filtered working sets above.
-    # A RESERVED scope (`_RESERVED_RATIFY_SCOPES` — `modified` today) emits the
+    # A RESERVED scope (`_RESERVED_APPROVAL_SCOPES` — `modified` today) emits the
     # re-attestation brief instead: per-cell before/after for every row owing a
     # human act, against its copy in the `last_approved` snapshot. Anything else
     # is a phase tag or an id list, and `_scope_srs` REFUSES one that matches
     # nothing rather than rendering an empty brief.
-    if args.ratify is not None:
-        reserved = args.ratify.strip().lower() in _RESERVED_RATIFY_SCOPES
+    if args.approve is not None:
+        reserved = args.approve.strip().lower() in _RESERVED_APPROVAL_SCOPES
         if reserved and args.check:
             # WI-325: freshness, not generation. A plain regenerate-and-compare
             # now that the baseline is a directory rather than a self-stamp.
-            code, message = ratify_check(
+            code, message = approval_check(
                 Path(args.root),
                 reg.srs,
                 reg.llrs,
@@ -5323,11 +5325,11 @@ def main():
                 Path(args.out)
                 if args.out
                 else (
-                    current_ratify_brief(Path(args.root))
-                    or Path(args.root) / "docs" / "ratify" / CURRENT_RATIFY_BRIEF
+                    current_approval_brief(Path(args.root))
+                    or Path(args.root) / "docs" / "ratify" / CURRENT_APPROVAL_BRIEF
                 ),
             )
-            print("trace: ratify-check — {}".format(message), file=sys.stderr)
+            print("trace: approval-check — {}".format(message), file=sys.stderr)
             # `main()` is called bare at the bottom of this module, so a plain
             # `return` sets no exit status — this check must sys.exit like the
             # analyze path does, or it reports STALE and exits 0. (It did.)
@@ -5337,15 +5339,15 @@ def main():
         if reserved:
             body = reattest_lines(Path(args.root), reg.srs, reg.llrs, reg.tcs)
         else:
-            body = ratify_lines(
-                args.ratify, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
+            body = approval_lines(
+                args.approve, reg.sn_ids, reg.srs, reg.llrs, reg.tcs, reg.sn_meta
             )
         text = "\n".join(body) + "\n"
         if args.out:
             out_path = Path(args.out)
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(text, encoding="utf-8", newline="\n")
-            print("trace: wrote ratification view -> {}".format(out_path))
+            print("trace: wrote approval view -> {}".format(out_path))
         else:
             sys.stdout.write(text)
         return 0

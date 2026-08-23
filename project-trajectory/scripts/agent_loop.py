@@ -23,7 +23,7 @@ Empty template -> guidance and exit 2 (the launchers ship inert, like run.*).
 
 CONSENT: an unattended run typically wires the agent CLI's permission-bypass
 flag into AGENT_CMD — sessions then run with no permission prompts. The human
-consents by filling the slot, declaring how far a human ratifies
+consents by filling the slot, declaring how far a human approves
 (docs/process.toml [attestation]), and running this; git + CI remain the
 enforcement floor. The banner restates this every run.
 
@@ -316,7 +316,7 @@ DEFAULT_PHASE_TIER = {
     "CRITIQUE": "strong",
     # SN-026: an adjudicator rules on a CLAIM — was this delivered, did this
     # amendment move meaning, is this queued row a duplicate — and every one of
-    # those is a judgement whose cost of being wrong is a wrong ratification.
+    # those is a judgement whose cost of being wrong is a wrong approval.
     # Strong by default, like the other two judging phases. The per-row
     # `BuildTier` still pins it down where a disposition estimated cheaper
     # (`intake.tier_signal`), because that estimate is measured; this is the
@@ -2946,7 +2946,7 @@ def main():
     # four LOCALS stay — `print_run_banner` takes them positionally — so this
     # is a reader swap, not a signature change. SN-029: the three-value
     # gate-authority enum retires for an ORDINAL comparison — is the tier the
-    # spine is in process at still the human's to ratify? `human_holds` makes
+    # spine is in process at still the human's to approve? `human_holds` makes
     # it once; `keep_nondependent` is the orthogonal dial the enum bundled.
     # WI-437 (OI-25): the derived label is `session_hold` — WHO HOLDS this run.
     human_held = agent_common.human_holds(docs, agent_common.spine_stage_of(root))

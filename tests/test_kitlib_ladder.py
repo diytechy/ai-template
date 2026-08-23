@@ -18,7 +18,7 @@ nothing. It is the three properties the one home must actually hold:
     scaffolder and a render leaf alike.
 
 The identity assertions that WARRANT the deleted pins live at their own sites
-(`tests/test_ratification_level.py`, and `test_every_reader_resolves_to_this_one_object`
+(`tests/test_approval_level.py`, and `test_every_reader_resolves_to_this_one_object`
 below).
 """
 

@@ -2,7 +2,7 @@
 snapshot (WI-277 split this file out of tests/test_trace.py by behavior
 boundary; D-9 step 4 re-homed its baseline).
 
-WI-316's `--ratify modified` brief and WI-325's freshness gate on it.
+WI-316's `--approve modified` brief and WI-325's freshness gate on it.
 
 WHAT LEFT THIS FILE AT D-9 STEP 4, and why none of it is a lost guarantee: the
 git-derived baseline walk, the `--since` override (its unresolvable-rev refusal,
@@ -35,7 +35,7 @@ from conftest import (
 )
 
 
-# --- WI-316: the re-attestation brief (--ratify modified) ----------------------
+# --- WI-316: the re-attestation brief (--approve modified) ----------------------
 # A sitting cannot bless a delta it cannot see: per-cell before/after for every
 # DRIFTED or Drafted SR's chain, baselined at the last_approved SNAPSHOT
 # (git supplies only the stamp). A generator mode: no checks, always exits 0.
@@ -123,7 +123,7 @@ def test_reattest_brief_shows_before_after_and_added_rows(tmp_path):
     # `split_changed_cells` excludes structurally (the marker is not the
     # amendment, in either direction).
     _reattest_repo(tmp_path)
-    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
     assert "# Re-attestation brief" in out
@@ -186,7 +186,7 @@ def test_reattest_brief_reads_a_bommed_baseline(tmp_path):
     )
     run_git("add", "-A")
     run_git("commit", "-m", "amend, no flip, BOM'd")
-    proc = run_py([SCRIPTS / "trace.py", "--ratify", "modified"], cwd=tmp_path)
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "No approved baseline" not in proc.stdout
     assert "before: old text" in proc.stdout and "after: new text" in proc.stdout
@@ -197,7 +197,7 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
     # --out still writes). The selector read `Modified` until D-9 step 7.
     make_minimal_project(scaffold)
     proc = run_py(
-        ["scripts/trace.py", "--ratify", "modified", "--out", "docs/ratify/r.md"],
+        ["scripts/trace.py", "--approve", "modified", "--out", "docs/ratify/r.md"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -220,10 +220,10 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
 # The `does not re-derive` test below is therefore the load-bearing one.
 
 
-def _ratify_repo(tmp_path):
+def _approval_repo(tmp_path):
     """A git repo with an Approved SR chain amended IN PLACE (D-9 step 7 retired
     the flip), so
-    `--ratify modified` has something real to render. Returns (run_git, rev) with
+    `--approve modified` has something real to render. Returns (run_git, rev) with
     `rev` the attested baseline commit."""
     import shutil as _sh
     import subprocess as _sp
@@ -283,7 +283,7 @@ def _brief(tmp_path, *extra):
             SCRIPTS / "trace.py",
             "--root",
             tmp_path,
-            "--ratify",
+            "--approve",
             "modified",
             "--out",
             tmp_path / "docs" / "ratify" / "CURRENT.md",
@@ -299,7 +299,7 @@ def _check(tmp_path, *extra):
             SCRIPTS / "trace.py",
             "--root",
             tmp_path,
-            "--ratify",
+            "--approve",
             "modified",
             "--check",
             *extra,
@@ -309,7 +309,7 @@ def _check(tmp_path, *extra):
 
 
 def test_a_current_brief_passes_the_check(tmp_path):
-    _ratify_repo(tmp_path)
+    _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -317,12 +317,12 @@ def test_a_current_brief_passes_the_check(tmp_path):
 
 
 def test_a_SNAPSHOT_README_ONLY_commit_leaves_the_brief_FRESH(tmp_path):
-    """MAJOR-11, 2026-08-20: `ratify_check` compared the derived stamp lines, so
+    """MAJOR-11, 2026-08-20: `approval_check` compared the derived stamp lines, so
     the brief went STALE on a commit that moved no row it renders — the snapshot's
     README, a `.gitignore`, anything that touches the snapshot directory or a
     registry's status line. A guard that fires on every commit is learned as
     noise, and the read it exists to force is the first thing dropped."""
-    run_git, _rev, _write = _ratify_repo(tmp_path)
+    run_git, _rev, _write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     assert _check(tmp_path).returncode == 0
     readme = load_script("baseline_snapshot").snapshot_root(tmp_path) / "README.md"
@@ -339,7 +339,7 @@ def test_the_brief_states_what_the_stamp_IS_and_names_approval_provenance(tmp_pa
     reviewed commit that last moved an approval", which a traced-cell refresh
     moves while approving nothing. It now says what `stamp` is, and the
     provenance a reader was being promised is derived beside it."""
-    _ratify_repo(tmp_path)
+    _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     out = (tmp_path / "docs" / "ratify" / "CURRENT.md").read_text(encoding="utf-8")
     assert "the commit that last wrote this record" in out, out
@@ -356,7 +356,7 @@ def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
     """Drift direction 1 — the 121-CRITIQUE shape: chain rows added to the
     registry after the brief was written, so an owner blesses fewer rows than
     exist."""
-    _run_git, _rev, write = _ratify_repo(tmp_path)
+    _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     req = tmp_path / "docs" / "requirements"
     (req / "low-level-requirements.csv").write_text(
@@ -372,7 +372,7 @@ def test_a_row_added_after_the_brief_makes_it_stale(tmp_path):
 
 def test_a_changed_cell_makes_it_stale(tmp_path):
     """Drift direction 2 — the same row, different content."""
-    _run_git, _rev, write = _ratify_repo(tmp_path)
+    _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Approved", sr_req="The system shall do the RE-AMENDED thing.")
     proc = _check(tmp_path)
@@ -382,7 +382,7 @@ def test_a_changed_cell_makes_it_stale(tmp_path):
 
 def test_a_missing_brief_is_a_no_op_not_a_failure(tmp_path):
     """The arming idiom: a downstream repo with no docs/ratify/ pays nothing."""
-    _ratify_repo(tmp_path)
+    _approval_repo(tmp_path)
     proc = _check(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "nothing to gate" in proc.stderr
@@ -397,11 +397,11 @@ def test_a_closed_window_is_a_no_op(tmp_path):
     Status flip AND the copy that records what was blessed. See the test below
     for what the first without the second looks like.
 
-    THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves ratified
+    THE COPY NAMES ITS AUTHORITY SINCE 2026-08-20. This amendment moves approved
     text under a row that is already `Approved` — the D-9 ladder's own shape, and
     the one the authority gate makes a human declare (`--approves`), because it
     is indistinguishable from laundering without the declaration."""
-    _run_git, _rev, write = _ratify_repo(tmp_path)
+    _run_git, _rev, write = _approval_repo(tmp_path)
     assert _brief(tmp_path).returncode == 0
     write("Approved", sr_req="The system shall do the AMENDED thing.")
     load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
@@ -419,10 +419,10 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     the walk stopped at HEAD and the diff was empty. Under the snapshot the row
     still differs from the text a human actually read, so it stays in the brief
     until the copy rides with it."""
-    _run_git, _rev, write = _ratify_repo(tmp_path)
+    _run_git, _rev, write = _approval_repo(tmp_path)
     write("Approved", sr_req="The system shall do the AMENDED thing.")
     proc = run_py(
-        [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", "modified"],
         cwd=tmp_path,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
@@ -430,11 +430,11 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
     assert "before: The system shall do the thing." in proc.stdout
     assert "after: The system shall do the AMENDED thing." in proc.stdout
     # ...and the copy is what clears it — carrying the ref that names the act,
-    # since 2026-08-20: absorbing ratified text under a standing approval is the
+    # since 2026-08-20: absorbing approved text under a standing approval is the
     # one refresh that cannot be told from laundering without a human saying so.
     load_script("baseline_snapshot").copy_live(tmp_path, approves="the sitting")
     after = run_py(
-        [SCRIPTS / "trace.py", "--root", tmp_path, "--ratify", "modified"],
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--approve", "modified"],
         cwd=tmp_path,
     )
     assert "## SR-001" not in after.stdout
@@ -443,62 +443,62 @@ def test_a_flip_WITHOUT_a_copy_leaves_the_row_drifted(tmp_path):
 
 def test_current_brief_is_the_fixed_CURRENT_name_not_the_newest_dated_one(tmp_path):
     """WI-503: the live surface is CURRENT.md, a fixed name — not "newest
-    dated file by filename" (the retired `newest_ratify_brief` rule). A dated
+    dated file by filename" (the retired `newest_approval_brief` rule). A dated
     brief sitting beside it, even a lexicographically later one, is history
     and must never be picked up as the live surface."""
     tr = load_script("trace")
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True)
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True)
     for name in ("2026-01-01-reattest.md", "2099-07-27-reattest.md", "README.md"):
-        (ratify / name).write_text("x\n", encoding="utf-8")
-    assert tr.current_ratify_brief(tmp_path) is None
-    (ratify / "CURRENT.md").write_text("live\n", encoding="utf-8")
-    assert tr.current_ratify_brief(tmp_path).name == "CURRENT.md"
-    assert tr.current_ratify_brief(tmp_path / "nowhere") is None
+        (approve / name).write_text("x\n", encoding="utf-8")
+    assert tr.current_approval_brief(tmp_path) is None
+    (approve / "CURRENT.md").write_text("live\n", encoding="utf-8")
+    assert tr.current_approval_brief(tmp_path).name == "CURRENT.md"
+    assert tr.current_approval_brief(tmp_path / "nowhere") is None
 
 
 def test_check_with_no_out_defaults_to_CURRENT_md_never_a_dated_file(tmp_path):
-    """WI-503 Done-when: `--ratify modified --check` with no --out compares
+    """WI-503 Done-when: `--approve modified --check` with no --out compares
     against CURRENT.md, never against a dated brief that happens to sit in
-    the same directory — the exact regression `newest_ratify_brief` invited
+    the same directory — the exact regression `newest_approval_brief` invited
     (a dated file kept being read/compared as though it were live)."""
-    _ratify_repo(tmp_path)
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True, exist_ok=True)
+    _approval_repo(tmp_path)
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True, exist_ok=True)
     # A dated file that would have been "newest by name" under the old rule —
     # deliberately STALE (empty), so a check that mistakenly targeted it would
     # report STALE while CURRENT.md, once written, is current.
-    (ratify / "2099-01-01-decoy.md").write_text("stale decoy\n", encoding="utf-8")
+    (approve / "2099-01-01-decoy.md").write_text("stale decoy\n", encoding="utf-8")
     assert _brief(tmp_path).returncode == 0  # writes CURRENT.md
     proc = _check(tmp_path)  # no --out: must resolve to CURRENT.md
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "is current" in proc.stderr, proc.stderr
     # The decoy is untouched — regeneration never writes a dated file.
-    assert (ratify / "2099-01-01-decoy.md").read_text(
+    assert (approve / "2099-01-01-decoy.md").read_text(
         encoding="utf-8"
     ) == "stale decoy\n"
 
 
-# --- WI-503: `--mint-ratify-brief` — the one sanctioned dated-brief writer ----
+# --- WI-503: `--mint-approval-brief` — the one sanctioned dated-brief writer ----
 
 
 def test_mint_copies_CURRENT_to_a_dated_immutable_file(tmp_path):
     tr = load_script("trace")
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True)
-    (ratify / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
-    dest = tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
-    assert dest == ratify / "2026-08-22-wi503.md"
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True)
+    (approve / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
+    dest = tr.mint_approval_brief(tmp_path, "wi503", date="2026-08-22")
+    assert dest == approve / "2026-08-22-wi503.md"
     assert dest.read_text(encoding="utf-8") == "the live brief\n"
     # CURRENT.md is untouched by the mint.
-    assert (ratify / "CURRENT.md").read_text(encoding="utf-8") == "the live brief\n"
+    assert (approve / "CURRENT.md").read_text(encoding="utf-8") == "the live brief\n"
 
 
 def test_mint_refuses_without_a_CURRENT_brief(tmp_path):
     tr = load_script("trace")
     (tmp_path / "docs" / "ratify").mkdir(parents=True)
     try:
-        tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+        tr.mint_approval_brief(tmp_path, "wi503", date="2026-08-22")
         assert False, "expected ValueError"
     except ValueError as exc:
         assert "CURRENT.md" in str(exc)
@@ -509,43 +509,43 @@ def test_mint_refuses_to_overwrite_an_existing_dated_brief(tmp_path):
     enforcer: minting twice at the same date+slug must not silently rewrite
     the first mint."""
     tr = load_script("trace")
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True)
-    (ratify / "CURRENT.md").write_text("v1\n", encoding="utf-8")
-    tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
-    (ratify / "CURRENT.md").write_text("v2\n", encoding="utf-8")
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True)
+    (approve / "CURRENT.md").write_text("v1\n", encoding="utf-8")
+    tr.mint_approval_brief(tmp_path, "wi503", date="2026-08-22")
+    (approve / "CURRENT.md").write_text("v2\n", encoding="utf-8")
     try:
-        tr.mint_ratify_brief(tmp_path, "wi503", date="2026-08-22")
+        tr.mint_approval_brief(tmp_path, "wi503", date="2026-08-22")
         assert False, "expected ValueError"
     except ValueError as exc:
         assert "already exists" in str(exc)
     # The original mint is unchanged.
-    assert (ratify / "2026-08-22-wi503.md").read_text(encoding="utf-8") == "v1\n"
+    assert (approve / "2026-08-22-wi503.md").read_text(encoding="utf-8") == "v1\n"
 
 
 def test_mint_refuses_a_slug_with_a_bad_character(tmp_path):
     tr = load_script("trace")
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True)
-    (ratify / "CURRENT.md").write_text("v1\n", encoding="utf-8")
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True)
+    (approve / "CURRENT.md").write_text("v1\n", encoding="utf-8")
     for bad in ("", "  ", "wi 503", "wi/503", "../escape"):
         try:
-            tr.mint_ratify_brief(tmp_path, bad, date="2026-08-22")
+            tr.mint_approval_brief(tmp_path, bad, date="2026-08-22")
             assert False, "expected ValueError for slug {!r}".format(bad)
         except ValueError:
             pass
 
 
 def test_mint_cli_writes_and_reports(tmp_path):
-    ratify = tmp_path / "docs" / "ratify"
-    ratify.mkdir(parents=True)
-    (ratify / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
+    approve = tmp_path / "docs" / "ratify"
+    approve.mkdir(parents=True)
+    (approve / "CURRENT.md").write_text("the live brief\n", encoding="utf-8")
     proc = run_py(
         [
             SCRIPTS / "trace.py",
             "--root",
             tmp_path,
-            "--mint-ratify-brief",
+            "--mint-approval-brief",
             "wi503",
             "--mint-date",
             "2026-08-22",
@@ -554,7 +554,7 @@ def test_mint_cli_writes_and_reports(tmp_path):
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "minted" in proc.stdout
-    assert (ratify / "2026-08-22-wi503.md").read_text(
+    assert (approve / "2026-08-22-wi503.md").read_text(
         encoding="utf-8"
     ) == "the live brief\n"
 
@@ -562,7 +562,7 @@ def test_mint_cli_writes_and_reports(tmp_path):
 def test_mint_cli_refuses_without_CURRENT_and_exits_nonzero(tmp_path):
     (tmp_path / "docs" / "ratify").mkdir(parents=True)
     proc = run_py(
-        [SCRIPTS / "trace.py", "--root", tmp_path, "--mint-ratify-brief", "wi503"],
+        [SCRIPTS / "trace.py", "--root", tmp_path, "--mint-approval-brief", "wi503"],
         cwd=tmp_path,
     )
     assert proc.returncode == 1, proc.stdout + proc.stderr

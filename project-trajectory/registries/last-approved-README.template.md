@@ -48,7 +48,7 @@ the live registry first** — an approval, in a reviewed commit.
 
 Never by hand, and never by the unattended loop. Two callers only:
 
-- `scripts/intake.py snapshot` — the human path. At a ratification sitting: edit
+- `scripts/intake.py snapshot` — the human path. At an approval sitting: edit
   the `Status` cells, run it, and commit both together.
 - the mechanical flip inside `intake.py adjudicate`, which copies in the same act
   as the status write.

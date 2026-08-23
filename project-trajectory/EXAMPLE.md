@@ -86,10 +86,10 @@ and an out-of-vocabulary word is an always-on integrity finding, not a free
 label. A post-approval amendment has no value of its own — it is caught by
 diffing the row against `docs/archive/last_approved/`. The `phase` key is omitted
 throughout because this is a single-shot deliverable (no phased roadmap): with
-nothing phased the ratified-row Phase rule stays unarmed, and an absent key
-means in scope for every phase. A phased roadmap instead tags every ratified
+nothing phased the approved-row Phase rule stays unarmed, and an absent key
+means in scope for every phase. A phased roadmap instead tags every approved
 SR/LLR/TC with the integer phase it shipped in (`1`/`2`/… — digits only, full
-cell; a prefixed `v2` on a ratified row is a `--strict-schema` finding), the
+cell; a prefixed `v2` on an approved row is a `--strict-schema` finding), the
 project's current phase is *derived* as the highest, and only a `Drafted` row
 may then omit `phase` — see process.md §4 "Phased delivery". `aspect`
 (optional, process.md §1) is omitted throughout because none of these rows is

@@ -132,7 +132,7 @@ def test_a_lowering_edit_in_the_STANDING_phase_FIRES(repo):
     _write(repo, srs, llrs, tcs)
     _commit(repo)
 
-    # a second requirement in the SAME phase, ratified, not yet decomposed
+    # a second requirement in the SAME phase, approved, not yet decomposed
     _write(repo, srs + _sr("SR-002", "1"), llrs, tcs)
     assert _stage(repo) == ladder.STAGE_LLREQS  # Impl -> LLReqs, a real decrease
 

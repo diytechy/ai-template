@@ -59,13 +59,13 @@ STATUS_END = "<!-- END GENERATED STATUS -->"
 # leaves byte-untouched) — projecting every DURABLE pending-owner action so the
 # owner's one review surface never misses a hard stop. A pure projection of
 # committed-tree state ONLY:
-#   (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification
+#   (a) `blocked` WI rows carrying a BlockRef (the attestation/approval
 #       page);
 #   (b) Drafted/DRIFTED SR rows (WI-316): a `Drafted` SR owes an approval, and
 #       an SR whose chain has moved away from its `docs/archive/last_approved/`
 #       copy owes a re-attest (post-attestation amendment, process.md §7) — one
-#       pointer line each, naming the on-demand brief (`trace.py --ratify <id>`
-#       / `--ratify modified`) that carries the depth.
+#       pointer line each, naming the on-demand brief (`trace.py --approve <id>`
+#       / `--approve modified`) that carries the depth.
 #   (c) a tracked `docs/work/pause` (concurrency-restructure §5.6): one
 #       `Paused since <date>` line, the declared reason rendered verbatim (no
 #       clock), so an open pause is a visible accruing cost.
@@ -206,7 +206,7 @@ def _blocked_pending(root):
         if w["status"] != "queued" or not w["blockref"]:
             continue
         lines.append(
-            "- **{}** blocked — attest/ratify `{}`, then unblock the registry "
+            "- **{}** blocked — attest/approve `{}`, then unblock the registry "
             "row.".format(w["id"], w["blockref"])
         )
         ids.add(w["id"])
@@ -230,7 +230,7 @@ def _spine_pending(root):
     and the trace report, not here. Durable committed-tree state, so these
     join the freshness-gated PURE region; pointer-only per this block's charter
     — the depth (per-cell before/after) lives in the on-demand brief the line
-    names, `trace.py --ratify modified`, never here. Sorted by id, no clocks.
+    names, `trace.py --approve modified`, never here. Sorted by id, no clocks.
 
     THE `Planned` ARM LEFT AT D-9 STEP 5, with the word. It had joined at step 2
     because a Planned SR projected NOTHING on the owner's own pending-actions
@@ -253,7 +253,7 @@ def _spine_pending(root):
     A projection that had swapped the two in ONE commit would have gone quiet for
     exactly as long as it took someone to notice."""
     # `skip_example=True`: a copied template's `-000` example row owes no
-    # ratification. Only the SR arm projects (the docstring's surface-economy
+    # approval. Only the SR arm projects (the docstring's surface-economy
     # note), so the LLR/TC arms of the loader go unused here.
     srs = _spine(root, skip_example=True)[0]
     snapshot = baseline_snapshot.load_all(root)
@@ -273,18 +273,18 @@ def _spine_pending(root):
                 "- **{} `Drafted` — approval owed**{}: {} — approve in a "
                 "reviewed Status-change commit (`Drafted`→`Approved`; the "
                 "`gate-advance` skill); hierarchy brief: `python "
-                "project-trajectory/scripts/trace.py --ratify {}`.".format(
+                "project-trajectory/scripts/trace.py --approve {}`.".format(
                     sid, phase_note, title, sid
                 )
             )
         else:
             lines.append(
                 "- **{} DRIFTED from the approved snapshot**{}: {} — its "
-                "ratified text differs from its copy in `{}` while its own "
+                "approved text differs from its copy in `{}` while its own "
                 "Status still claims approval, so nobody has read the change. "
                 "Re-attest it, then run `intake.py snapshot` in the same "
                 "commit; before/after brief: `python "
-                "project-trajectory/scripts/trace.py --ratify modified`.".format(
+                "project-trajectory/scripts/trace.py --approve modified`.".format(
                     sid, phase_note, title, baseline_snapshot.SNAPSHOT_DIR
                 )
             )
@@ -337,7 +337,7 @@ def _pause_pending(root):
 def pending_block(root):
     """The GENERATED PENDING block CONTENT (between the markers) for the
     generated owner surface: blocked WI rows with a BlockRef + Drafted/DRIFTED
-    spine rows owing a ratification/re-attest + the tracked `docs/work/pause`
+    spine rows owing an approval/re-attest + the tracked `docs/work/pause`
     declaration. A pure function of the committed tree — deterministic (sorted,
     no clocks) — so the harness `open-items` freshness gate byte-compares the
     WHOLE block through `gen_open_items.py --check` (the renderer since
@@ -346,7 +346,7 @@ def pending_block(root):
     at concurrency-restructure Phase 5.)"""
     pure_lead = (
         "_Pending owner actions — a generated projection of durable, "
-        "committed-tree state (blocked rows with a ratify/attest pointer, "
+        "committed-tree state (blocked rows with an approve/attest pointer, "
         "Drafted/drifted spine rows owing an approval or re-attest, and the "
         "tracked pause declaration); regenerated by `python "
         "project-trajectory/scripts/gen_trajectory.py --status`, do not hand-edit. "
@@ -364,7 +364,7 @@ def pending_block(root):
 
 
 # The eight-rung stage ladder's descriptions, for the generated snapshot line.
-# A repo is IN a stage; ratification is the event that moves it (process.md §4
+# A repo is IN a stage; approval is the event that moves it (process.md §4
 # "The stage ladder"). Derived by derive_stage.py and read here off the recorded
 # `docs/stage`, never recomputed.
 #
@@ -387,7 +387,7 @@ def _stage_line(record, detail):
     the stage the repo was in AND the "next bar to clear" — because two axes were
     derived side by side. The bar axis retired with `docs/gate`, and with it the
     sentence that had to keep telling readers which reading was meant. A stage is
-    a STATE; ratification is the EVENT that moves it, and it is reported where
+    a STATE; approval is the EVENT that moves it, and it is reported where
     events are (the phase anchors), not folded into the state.
 
     A `docs/stage` that is absent, or carries a rung this ladder does not name,

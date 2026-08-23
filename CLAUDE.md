@@ -109,7 +109,7 @@ Entry points only — read the directories for the rest.
   `project-trajectory/scripts/agent_loop.py --root .`, resuming from
   `docs/status.md` under the policies declared in
   [`docs/process.toml`](docs/process.toml) — the human-approval hold is the
-  `human_ratification_through` dial there (do not paraphrase its value here;
+  `human_approval_through` dial there (do not paraphrase its value here;
   read it), and `push = "human"`.
 - **Reference, not working surfaces:**
   [`docs/registry-machinery-reference.md`](docs/registry-machinery-reference.md)

@@ -154,7 +154,7 @@ Direct and concrete; explain the *why* before the *how*.
   bar. When reality contradicts the plan, **the contradiction is the
   deliverable**: raise the conflict as a finding — never silently resolve,
   average, or route around it (process.md §4 "Consistency review"). The
-  **decision dial** (process.md §6) sets asking eagerness: high-risk ratifies
+  **decision dial** (process.md §6) sets asking eagerness: high-risk approves
   often, low-risk decides-and-records.
 - **Right-size the solution.** The simplest thing that satisfies the
   requirement; no speculative flexibility — **every line is a liability**, so

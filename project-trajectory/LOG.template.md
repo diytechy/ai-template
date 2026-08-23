@@ -1,7 +1,7 @@
 # Project Log — Append-only history
 
 The durable record for the gated process (see [process.md](process.md) §5):
-sitting sign-offs, review verdicts, ratified decisions, and session notes append
+sitting sign-offs, review verdicts, approved decisions, and session notes append
 here, **newest last**, and are never rewritten. The working surface — what to
 do *next* — lives in [status.md](status.md), which points here; this file is
 **evidence, never normative**: a rule or requirement belongs in the process
@@ -42,7 +42,7 @@ ability to answer "which sittings did a human actually attend?".
 
 ## Decisions log
 
-_Ratified or executed decisions only — the call, the alternatives passed over,
+_Approved or executed decisions only — the call, the alternatives passed over,
 why (one bullet each; cite ids). A decision still **awaiting** a human is an
 Open item in [status.md](status.md), not a log entry._
 

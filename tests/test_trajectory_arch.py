@@ -3,7 +3,7 @@ verbatim from tests/test_trajectory.py by behavior boundary).
 
 Interface-connectivity coverage (WI-056), the How-SW top-view right-sizing
 bound (WI-073/FB5), knowledge⇒component coupling (WI-153), the phase anchors +
-phase-drop detector (WI-093), the ratification-brief hierarchy-view
+phase-drop detector (WI-093), the approval-brief hierarchy-view
 lint (WI-146b), cross-CMP edges without a declared IF (WI-064), and specs
 acting on declared interface boundaries (WI-191).
 
@@ -1126,7 +1126,7 @@ def test_the_CANONICAL_anchor_spelling_parses_to_the_same_rungs():
     THE TRANSLATION IS BY MEANING AND THE SPELLINGS ARE A TRAP, which is the
     whole reason this is a table and not a string manipulation: `[p]-[reqs]`
     records `DevStg-LLReqs` (the rung the phase stands at once its requirements
-    are ratified), NOT `DevStg-Reqs` (the rung it has just left), and
+    are approved), NOT `DevStg-Reqs` (the rung it has just left), and
     `[p]-[tests]` records `DevStg-Impl`, NOT `DevStg-Tests`. Both are off by two
     rungs from the spelling, in the direction that would make the detector fire
     on healthy phases."""
@@ -1282,8 +1282,8 @@ def test_phase_findings_vacuous_without_anchors(tmp_path, monkeypatch):
     assert ct.phase_findings(tmp_path, wis) == []
 
 
-# --- WI-146(b): the ratification-brief hierarchy-view lint --------------------
-# An open-items ROW whose decision is a `[phase]-[g1|g2]` ratification should
+# --- WI-146(b): the approval-brief hierarchy-view lint --------------------
+# An open-items ROW whose decision is a `[phase]-[g1|g2]` approval should
 # name the generated batch-scoped hierarchy view rather than hand-copy rows.
 # Warn-first (never a gate fail); vacuous without such a brief. WI-322 moved the
 # briefs from markdown sections into `docs/requirements/open-items.csv`, so the
@@ -1307,67 +1307,68 @@ def _oi_row(oid, decision, title="a decision", status="pending"):
     return '{},{},{},,,"{}",,,,,,\n'.format(oid, title, status, decision)
 
 
-def test_ratify_brief_without_view_warns(tmp_path):
+def test_approval_brief_without_view_warns(tmp_path):
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
-        _oi_row("OI-20", "ratify the [v3]-[g2] dashboard batch.")
+        _oi_row("OI-20", "approve the [v3]-[g2] dashboard batch.")
         + _oi_row("OI-21", "something else, no anchor here."),
     )
-    warns = ct.ratify_brief_findings(tmp_path)
-    # Exactly the ratification brief warns; the unrelated row does not.
+    warns = ct.approval_brief_findings(tmp_path)
+    # Exactly the approval brief warns; the unrelated row does not.
     assert len(warns) == 1
     assert warns[0].startswith("OI-20:")
     assert "hierarchy view" in warns[0]
 
 
-def test_ratify_brief_with_generator_command_only_warns(tmp_path):
-    # A bare `trace.py --ratify` command mention is NOT proof the view exists and
+def test_approval_brief_with_generator_command_only_warns(tmp_path):
+    # A bare `trace.py --approve` command mention is NOT proof the view exists and
     # is carried — the brief must name the generated view (WI-146 REVIEW-A).
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
         _oi_row(
-            "OI-20", "ratify the [v3]-[g2] batch. Hierarchy: run trace.py --ratify v3."
+            "OI-20",
+            "approve the [v3]-[g2] batch. Hierarchy: run trace.py --approve v3.",
         ),
     )
-    warns = ct.ratify_brief_findings(tmp_path)
+    warns = ct.approval_brief_findings(tmp_path)
     assert len(warns) == 1 and warns[0].startswith("OI-20:")
 
 
-def test_ratify_brief_with_view_link_is_silent(tmp_path):
+def test_approval_brief_with_view_link_is_silent(tmp_path):
     ct = load_script("check_trajectory")
     _write_open_items(
         tmp_path,
         _oi_row(
-            "OI-20", "ratify the [v3]-[g2] batch. See the tree: docs/ratify/v3-g2.md."
+            "OI-20", "approve the [v3]-[g2] batch. See the tree: docs/ratify/v3-g2.md."
         ),
     )
-    assert ct.ratify_brief_findings(tmp_path) == []
+    assert ct.approval_brief_findings(tmp_path) == []
 
 
-def test_ratify_brief_lint_is_vacuous_off_the_pending_queue(tmp_path):
+def test_approval_brief_lint_is_vacuous_off_the_pending_queue(tmp_path):
     ct = load_script("check_trajectory")
     # No registry at all -> nothing to check.
-    assert ct.ratify_brief_findings(tmp_path) == []
-    # A ratification word with no [phase]-[g*] anchor -> not a brief.
-    _write_open_items(tmp_path, _oi_row("OI-30", "whether to ratify a policy change."))
-    assert ct.ratify_brief_findings(tmp_path) == []
-    # ...an anchor with no ratification language -> also not a brief.
+    assert ct.approval_brief_findings(tmp_path) == []
+    # An approval word with no [phase]-[g*] anchor -> not a brief.
+    _write_open_items(tmp_path, _oi_row("OI-30", "whether to approve a policy change."))
+    assert ct.approval_brief_findings(tmp_path) == []
+    # ...an anchor with no approval language -> also not a brief.
     _write_open_items(tmp_path, _oi_row("OI-31", "sequence [v3]-[g2] after v2 work."))
-    assert ct.ratify_brief_findings(tmp_path) == []
+    assert ct.approval_brief_findings(tmp_path) == []
     # ...and a RULED row is history, not a pending decision, so it never warns
     # even when it carries both (the negative half WI-322 added).
     _write_open_items(
         tmp_path,
-        _oi_row("OI-32", "ratify the [v3]-[g2] batch.", status="ruled"),
+        _oi_row("OI-32", "approve the [v3]-[g2] batch.", status="ruled"),
     )
-    assert ct.ratify_brief_findings(tmp_path) == []
+    assert ct.approval_brief_findings(tmp_path) == []
 
 
 # --- WI-064: the cross-CMP-edge-without-IF rule ---------------------------------
 # An internal import edge between two DIFFERENT components with no covering
-# IF-### row is a finding (the AXES ratified model's enforceability ruling) —
+# IF-### row is a finding (the AXES approved model's enforceability ruling) —
 # WARN plain, ERROR under --strict, sharing the docs/components-check opt-out.
 # Edges come from the MODULE MAP block's `Imports (internal):` lines; the seam
 # side joins interfaces.csv endpoints in either direction. Vacuous whenever any
@@ -1777,7 +1778,7 @@ def test_the_anti_duplication_rationale_arm_is_RETIRED_not_re_keyed(tmp_path):
     slimmed tier has one maturity field with two values, and neither means
     "proposed and not yet pinned by a second consumer". Re-keying onto
     `approval == "draft"` was the obvious move and is the wrong one — it
-    silently becomes "not yet ratified", which on a repo that ratifies nothing
+    silently becomes "not yet approved", which on a repo that approves nothing
     before its sitting arms 100% of rows instead of ~4%, at a severity that
     ERRORS under --strict.
 

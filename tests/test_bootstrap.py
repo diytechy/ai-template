@@ -837,10 +837,10 @@ def test_scaffold_ships_every_policy_dial_in_one_home(scaffold):
     # orthogonal dials, not a stored enum word. The default is the conservative
     # end — WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung
     # string it always meant, and `4` is now `"DevStg-Release"`.
-    assert cfg["attestation"]["human_ratification_through"] == "DevStg-Release"
+    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
     assert cfg["attestation"]["keep_nondependent"] is False
     assert "gate_policy" not in cfg["attestation"]
-    assert cfg["attestation"]["human_ratification_through"] == "DevStg-Release"
+    assert cfg["attestation"]["human_approval_through"] == "DevStg-Release"
     assert cfg["policies"] == {
         "push": "human",
         "review_rounds": 1,

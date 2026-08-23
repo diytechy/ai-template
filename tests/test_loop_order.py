@@ -1,7 +1,7 @@
 """SR-141 · SR-142 · SR-143 (under SN-025) — the loop-order contract, as a set
 of driven rules.
 
-The plan's §4 states the tick priority as *ratified prose the tests pin, not an
+The plan's §4 states the tick priority as *approved prose the tests pin, not an
 emergent property of the tick loop*: dispositions -> amendment adjudication ->
 surface-or-dispatch by level -> spine batch -> non-spine -> red-TC intake. This
 module pins the three rungs that were not already built:
@@ -42,7 +42,7 @@ def test_an_adjudication_row_outranks_a_spine_batch():
     # Spine is rank 0 and adjudication rank 1, so the FRONTIER hands them over
     # spine-first; admission re-orders. Why: an adjudication row exists because
     # a lane CLAIMED an outcome nothing has judged, and a spine batch
-    # re-attests requirements — running the batch first ratifies a spine on a
+    # re-attests requirements — running the batch first approves a spine on a
     # premise the pending judgement may overturn, and the attestation ledger is
     # append-only by design.
     frontier = [("WI-001", "spine"), ("WI-002", "adjudication")]
@@ -161,7 +161,7 @@ def test_the_three_exempt_statuses_are_never_red(tmp_path, status):
     # Stated as EXEMPTIONS rather than as a list of red words: anything else is
     # red, so the rule fails toward naming a gap rather than missing one, and it
     # keeps working for a downstream repo mid-migration.
-    # Approved is green; Drafted is pre-ratification, where "not yet green" is
+    # Approved is green; Drafted is pre-approval, where "not yet green" is
     # correct; Founded (armed at D-9 step 8) is Approved plus a demonstration, so
     # it is green a fortiori. It REPLACED `Modified` here at step 7 — that word
     # belonged to the §A5.1 amendment adjudication and retired with the marker,
@@ -212,7 +212,7 @@ def test_the_red_tc_line_grammar_round_trips():
 def test_parse_red_tc_returns_None_for_every_other_census_line():
     # The router must not match by accident: an ordinary gap line that merely
     # mentions a TC id is NOT a red-TC event.
-    assert dsp.parse_red_tc("SN-002 is a draft need (unratified)") is None
+    assert dsp.parse_red_tc("SN-002 is a draft need (unapproved)") is None
     assert dsp.parse_red_tc("TC-003 has no Evidence") is None
     assert dsp.parse_red_tc("") is None
     assert dsp.parse_red_tc(None) is None

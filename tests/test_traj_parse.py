@@ -161,14 +161,14 @@ def test_spine_loader_drops_example_rows_only_when_asked(tmp_path):
     assert [r["LLR-ID"] for r in llrs] == ["LLR-007", "LLR-001"]
     assert [r["TC-ID"] for r in tcs] == ["TC-005", "TC-001"]
     # The default keeps them: only the pending projection owes the `-000` rule
-    # (an example row owes no ratification); the icicle and the maturity counts
+    # (an example row owes no approval); the icicle and the maturity counts
     # render whatever the registry holds.
     d_srs, d_llrs, d_tcs = gt._spine(root)
     assert "SR-000" in [r["SR-ID"] for r in d_srs]
     assert "LLR-000" in [r["LLR-ID"] for r in d_llrs]
     assert "TC-000" in [r["TC-ID"] for r in d_tcs]
     # And the rule reaches its real caller: SR-000 is `Drafted`, so a leaked
-    # example row would invent a ratification the owner does not owe.
+    # example row would invent an approval the owner does not owe.
     pending = gt._spine_pending(root)
     assert pending, "the Drafted SRs must still project"
     assert not any("SR-000" in line for line in pending)

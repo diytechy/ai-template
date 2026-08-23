@@ -494,7 +494,7 @@ def test_station_barrier_and_admission_arms_pin_to_the_dispatcher(tmp_path):
     sched = load_script("schedule")
     disp = load_script("dispatch")
     tp = load_script("traj_panels")
-    levels = ("attended", "single-ratify", "autonomous")
+    levels = ("attended", "single-approve", "autonomous")
     truth = {
         disp._kind_action(kind, level)
         for kind in sched._KIND_CONCURRENCY
@@ -560,7 +560,7 @@ def test_station_links_resolve():
     # Over the real meta repo (where every canonical home exists): each linked
     # stage resolves, and the station's canonical homes are the ones the flow
     # actually lands on — the WI registry (claim/intake), the log (the merged
-    # record), and the owner surface (the surfaced ratification cards).
+    # record), and the owner surface (the surfaced approval cards).
     gt = load_script("gen_trajectory")
     station = gt._station_panel(ROOT)
     hrefs = re.findall(r'href="([^"]+)"', station)

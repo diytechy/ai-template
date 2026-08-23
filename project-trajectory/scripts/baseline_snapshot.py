@@ -424,9 +424,9 @@ def refresh_ledger(root, snapshot=None):
     `{rel: {"absorbed": {row id: {cell: (before, after)}}, "flips": [row id]}}`.
 
     The two halves are the two sides of the authority question `copy_live` asks
-    below. `absorbed` is the ratified text a copy would silently re-bless: rows
+    below. `absorbed` is the approved text a copy would silently re-bless: rows
     whose SNAPSHOT copy claims approval (that is the record that would be
-    overwritten) whose ratified cells have moved. `flips` is the authorising act
+    overwritten) whose approved cells have moved. `flips` is the authorising act
     — a row whose `Status` differs between the record and the tree, which is a
     human moving a maturity cell in a reviewed commit.
 
@@ -465,8 +465,8 @@ def refresh_ledger(root, snapshot=None):
             if not _claims_approval(before):
                 continue
             changed = check_trajectory.split_changed_cells(rel, id_col, before, row)
-            if changed["ratified"]:
-                entry["absorbed"][rid] = changed["ratified"]
+            if changed["approved"]:
+                entry["absorbed"][rid] = changed["approved"]
     return ledger
 
 
@@ -484,12 +484,12 @@ def refresh_refusal(root, approves=None, snapshot=None):
 
     THREE WAYS A REFRESH IS AUTHORISED, and the first two need no flag at all:
 
-      1. **It absorbs nothing ratified.** Traced-cell refreshes (a `Module`,
+      1. **It absorbs nothing approved.** Traced-cell refreshes (a `Module`,
          `CodeSymbol`, `TestRefs` or ref pointer re-point) and Drafted-row work
          stay exactly as cheap as they were — this is the common case, and the
          review verified the WI-482/WI-452 class of the same day was clean.
       2. **A `Status` cell moved in that same registry.** Amend-plus-flip is
-         ratification: a human moved a maturity cell in the reviewed commit the
+         approval: a human moved a maturity cell in the reviewed commit the
          copy rides.
       3. **`--approves <ref>` names the approval act.** The escape for the shape
          the ladder genuinely has — an amendment to an Approved row that a
@@ -525,7 +525,7 @@ def refresh_refusal(root, approves=None, snapshot=None):
     if not blocked:
         return ""
     lines = [
-        "baseline_snapshot: REFUSED — this refresh would ABSORB ratified text "
+        "baseline_snapshot: REFUSED — this refresh would ABSORB approved text "
         "into the record of what a human blessed, and nothing in this working "
         "tree authorises it:"
     ]
@@ -536,9 +536,9 @@ def refresh_refusal(root, approves=None, snapshot=None):
         if extra > 0:
             lines.append("  {} (+{} more row(s))".format(rel, extra))
     lines.append(
-        "A snapshot copy IS the approval record, so ratified text reaches it only "
+        "A snapshot copy IS the approval record, so approved text reaches it only "
         "through an approval act. Three ways forward: flip the row's `Status` in "
-        "the same tree (amend-plus-flip is ratification); or re-run with "
+        "the same tree (amend-plus-flip is approval); or re-run with "
         "`intake.py snapshot --approves <ref>` naming the sitting, log fragment "
         "or commit that ruled these cells (the ref is recorded into the "
         "snapshot's README stamp); or revert the amendment and leave the drift "
@@ -571,8 +571,8 @@ def _record_approval(base, ref, written):
             "from `git log` over this directory.\n\n"
             "## Refreshes recorded under an explicit approval\n\n"
             "Each line below is a human's citation of the act that authorised a "
-            "refresh absorbing ratified text (`intake.py snapshot --approves "
-            "<ref>`). A refresh that absorbs nothing ratified, or that rides a "
+            "refresh absorbing approved text (`intake.py snapshot --approves "
+            "<ref>`). A refresh that absorbs nothing approved, or that rides a "
             "`Status` flip, needs no entry.\n\n" + stamped,
             encoding="utf-8",
             newline="\n",
@@ -613,7 +613,7 @@ def copy_live(root, *, seed=False, approves=None):
     **AND REFUSES TO REFRESH ONE WITHOUT AUTHORITY** (`refresh_refusal`, 2026-08-20).
     Creating was guarded and rewriting was not, which made the second act the
     cheap one: after the first signing this function re-blessed any text it was
-    pointed at. A refresh that would absorb RATIFIED text now needs either a
+    pointed at. A refresh that would absorb APPROVED text now needs either a
     `Status` flip in the same registry or an explicit `approves` ref, which is
     recorded into the snapshot's prose stamp. Traced-cell refreshes are
     unaffected and need no flag.
@@ -672,7 +672,7 @@ def copy_live(root, *, seed=False, approves=None):
 
 
 def is_drifted(rel, id_col, live_row, snapshot_rows):
-    """True when this row claims approval-or-above AND its RATIFIED cells differ
+    """True when this row claims approval-or-above AND its APPROVED cells differ
     from its copy in the snapshot.
 
     A row BELOW approval is never drifted — it has made no claim to fall from,
@@ -686,8 +686,8 @@ def is_drifted(rel, id_col, live_row, snapshot_rows):
     already excludes the id (a join key, not content) and `Status` (the marker,
     not the amendment — folding it in would make every flip look like an
     amendment and every amendment invisible behind its own flip), and which
-    already splits the remainder into the §A5.1 ratified/traced halves. Only the
-    RATIFIED half arms drift: a re-pointed `SN-Refs`/`Verifies`/`SR-Refs` routes
+    already splits the remainder into the §A5.1 approved/traced halves. Only the
+    APPROVED half arms drift: a re-pointed `SN-Refs`/`Verifies`/`SR-Refs` routes
     to adjudication and never arms a re-attest window (the WI-388 ruling,
     unchanged)."""
     if not _claims_approval(live_row):
@@ -697,11 +697,11 @@ def is_drifted(rel, id_col, live_row, snapshot_rows):
     if before is None:
         return False  # unanchored, not drifted — a different finding entirely
     changed = check_trajectory.split_changed_cells(rel, id_col, before, live_row)
-    return bool(changed["ratified"])
+    return bool(changed["approved"])
 
 
 def drifted_cells(rel, id_col, live_row, snapshot_rows):
-    """`{cell: (before, after)}` for the ratified cells `is_drifted` fired on,
+    """`{cell: (before, after)}` for the approved cells `is_drifted` fired on,
     `{}` otherwise — the same call, kept beside its predicate so a renderer
     never re-derives the comparison with a second set of exclusions."""
     if not is_drifted(rel, id_col, live_row, snapshot_rows):
@@ -709,7 +709,7 @@ def drifted_cells(rel, id_col, live_row, snapshot_rows):
     rid = str(live_row.get(id_col) or "").strip()
     return check_trajectory.split_changed_cells(
         rel, id_col, snapshot_rows[rid], live_row
-    )["ratified"]
+    )["approved"]
 
 
 def unanchored_findings(root, snapshot=None):

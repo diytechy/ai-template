@@ -22,9 +22,9 @@ required for the minimum profile). Rows are in document order; each maps to the
 |---|---|---|
 | Proportionality doctrine | **always** — the mindset that frames how hard every layer below is applied | nothing (tells you when *not* to reach for machinery) |
 | Derived gate model | **not opt-in** — the model is core ([`process.md`](process.md) §4 "Stages and gates"); this expands the mechanics | `docs/stage` (generated) + `derive_stage.py` |
-| Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every ratified SR/LLR/TC + a derived current phase + a per-phase gate |
+| Phased delivery | a roadmap ships phase 1 before 2/3 (a single-shot deliverable skips it) | a `Phase` on every approved SR/LLR/TC + a derived current phase + a per-phase gate |
 | Lifecycle phase | install/startup/steady-state requirements are easy to miss (most non-trivial products) | lifecycle tags on SRs |
-| Gate authority levels | a repo ratifies fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_ratification_through` + a deviation register |
+| Gate authority levels | a repo approves fewer tiers by hand than the default | `docs/process.toml` `[attestation] human_approval_through` + a deviation register |
 | Agent iteration branch & sync | you want agent-driven work to land as curated, reviewable history | a branch + sync cadence, wired into hooks |
 | Unattended operation | a coordinator grinds work from one entry point while nobody watches | `agent_loop.py` + `dispatch.py`/`lane.py`, `integrate.py`, `agents.toml`, the launchers |
 | Critique verification & the critique loop | a requirement's acceptance is **subjective** | a critique round + `Attest`/critique TCs |
@@ -47,7 +47,7 @@ required for the minimum profile). Rows are in document order; each maps to the
 | Parallel work — the integration seam (multi-lane operation) | one repo runs many WIs concurrently — git + the serial integrator (the track-lane and dispatcher machinery are retired) | claims + the fail-closed merge queue |
 
 **Where the dials live.** Every *process* dial this file names — gate authority,
-the human-ratification level, push authority, the reviewer count, the privacy
+the human-approval level, push authority, the reviewer count, the privacy
 and secrets gates, guardrails, the blackout window — is declared once in
 **`docs/process.toml`**, one `key = value` per line under a bare `[section]`
 header; the file's own header explains the shape and why it is checked (the git
@@ -121,17 +121,17 @@ into a straitjacket. Four points, one voice:
   scene moving?") into finer rows a script still can't check adds process weight
   with no verification return; mark it `Attest` and move on.
 - **(e) Decision-surfacing rate is a setup dial, not a constant.** How often the
-  driver pauses for the human to **ratify a decision** is project-specific:
+  driver pauses for the human to **approve a decision** is project-specific:
   calibrate it **at project setup** on the same risk axis as review-depth triage
   (PROCESS.md §6) and record the setting in `AGENTS.md` (Project section). In
   specialized or high-consequence domains — where safety is a risk even an
   *ancillary* one, money, privacy, anything irreversible — surface decisions
-  **often**: bring even medium calls to the human to ratify. In low-risk domains
+  **often**: bring even medium calls to the human to approve. In low-risk domains
   (creative content is the archetype), where a wrong call is cheap to revert and
   carries little tech debt, a **confident** agent may decide **autonomously** —
   and the non-negotiable price of that autonomy is that every autonomous
   decision is **recorded** (an *Assumptions* / Open-items entry in `status.md`,
-  moved to `log.md`'s *Decisions log* once ratified — the call, the alternatives
+  moved to `log.md`'s *Decisions log* once approved — the call, the alternatives
   passed over, why; PROCESS.md §5) so it stays visible,
   auditable, and cheaply revertible. The dial moves *how often you ask*, never
   the fixed points: gates still close only per the declared gate authority
@@ -153,9 +153,9 @@ where it and §4 disagree, §4 rules.)
 `scripts/derive_stage.py` computes the record from the spine and caches it (a
 `key = value` block: the rung, its ordinal, the per-phase breakdown, and a
 `fingerprint` over the inputs so no reader trusts a stale one).
-Ratify artifacts, then regenerate: `python scripts/derive_stage.py`. The
+Approve artifacts, then regenerate: `python scripts/derive_stage.py`. The
 `derived-stage` step (`derive_stage.py --check`, a pre-commit floor + every
-gate) guards the cache against rot — a ratification that moved the states but not
+gate) guards the cache against rot — an approval that moved the states but not
 the cache fails loudly. **Hybrid:** the cache means the value is known on
 checkout with no recompute; a `stage.template` placeholder with no derived record
 yet is accepted **with a note** until the first derivation (so an
@@ -171,7 +171,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   `Drafted` → `Approved` → `Founded` (the last COMPUTED, never typed). An
   approved row whose text later moves stays `Approved`; the change is caught
   by diffing it against `docs/archive/last_approved/`. Per-artifact stage: an SR is **DevStg-Below** while
-  `Drafted`, **DevStg-Reqs** once ratified (Status past `Drafted`), **DevStg-Tests** once decomposed (its
+  `Drafted`, **DevStg-Reqs** once approved (Status past `Drafted`), **DevStg-Tests** once decomposed (its
   LLR — unless the Verification is LLR-exempt Analysis/Inspection/Attest — plus a
   TC). **DevStg-Release is not reachable from a cell** (the 2026-08-15 ruling,
   carried onto this axis at WI-498 slice 3): release is what the harness computes
@@ -186,7 +186,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   own Status doesn't gate — the SR's does.
 - **SN** — maturity is the **same field**: `status = "Drafted"` on a
   `[need.SN-###]` table in `stakeholder-needs.toml` is DevStg-Below, anything
-  else reads ratified (DevStg-Reqs). A ratified need must also be cited by ≥1
+  else reads approved (DevStg-Reqs). An approved need must also be cited by ≥1
   SR (`sn_refs`) or it caps the level at DevStg-Below — the WI-401 coverage
   rung. **Section-as-state is retired** (it was "appears under a heading
   containing the word draft", which a prose *mention* of an id could trip); the
@@ -194,7 +194,7 @@ yet — a fold value, never a rung a repo sits at (§4):
   the carrier is **sniffed rather than assumed** because a heading scan over
   TOML finds no headings, reports zero drafts, and floats the gate upward.
 
-The **ratification date is git-derived** — the commit that moved the `status`.
+The **approval date is git-derived** — the commit that moved the `status`.
 No new field, at any tier.
 
 **A window cannot create a blind spot, because it no longer lowers what runs**
@@ -210,7 +210,7 @@ bar did I pass that permits it?"*.
 mechanisms used to exist because the derived **bar** was a MIN over every
 in-scope row and one draft collapsed it: an **advisory tier** that re-ran the
 suppressed steps warn-only, and a **product-regression floor** that re-selected
-product-layer steps at the level the ratified rows earned. Both are deleted with
+product-layer steps at the level the approved rows earned. Both are deleted with
 the collapse they answered. Nothing is lost by the deletion — what the advisory
 tier ran warn-only now *gates*, and the floor's guarantee ("drafting cannot lower
 this") now holds for **every** step rather than only the product ones. There is
@@ -229,12 +229,12 @@ registry before it is decomposed. Parent-linkage + integrity
 still apply (a Drafted SR still links an SN; ids stay unique/well-formed), and a
 Drafted SR is skipped by the DevStg-Impl approval criterion (pre-approval).
 
-**Ratification = a reviewed Status-change commit** (§4). That commit *is* the
+**Approval = a reviewed Status-change commit** (§4). That commit *is* the
 sign-off (`gate-advance` skill), and it composes with
-the gate-authority levels (below): `attended` ratifies each batch; `single-ratify`
-ratifies the batch once at its `[phase]-[DevStg-Impl]` close (one review per
+the gate-authority levels (below): `attended` approves each batch; `single-approve`
+approves the batch once at its `[phase]-[DevStg-Impl]` close (one review per
 phase); `autonomous` on a fresh-context reviewer's recorded verdict. An agent may
-make the ratifying commit, governed by the level.
+make the approving commit, governed by the level.
 
 **Phase = a derived detector + a committed anchor.** §4's drop — a phase's
 derived stage falling **below the rung its last-closed anchor recorded**, because
@@ -247,7 +247,7 @@ a rebase/squash moves and which carries no membership).
 **An anchor names THE RUNG THE PHASE STANDS AT once that anchor closes**, which
 is not the rung the batch was working on, and the difference is the one trap in
 this grammar. `[<phase>]-[DevStg-LLReqs]` is the requirement-structuring batch:
-closing it means the phase's SRs are authored *and* ratified, so the phase has
+closing it means the phase's SRs are authored *and* approved, so the phase has
 LEFT `DevStg-Reqs` and now stands at `DevStg-LLReqs`.
 `[<phase>]-[DevStg-Impl]` is the decomposition + TC batch: closing it clears both
 the LLReqs and the Tests predicates, so the phase stands at `DevStg-Impl`. Each
@@ -260,12 +260,12 @@ translate BY MEANING, to `DevStg-LLReqs` and `DevStg-Impl` respectively, not to
 the same-named rung. `check_vocab` refuses them in newly authored text.
 
 **Parallel for pre-dev, series for dev.** A phase's requirement work is a **batch,
-in parallel** — draft + ratify all the new/reopened SN/SR together, which is
+in parallel** — draft + approve all the new/reopened SN/SR together, which is
 exactly where "this also modifies SR-12" and other conflicts surface in one review
 — then each work item runs **DevStg-Tests → DevStg-Impl in series** (the per-WI vertical slice):
 
 ```
-Phase N:  [N]-[DevStg-LLReqs]  draft+ratify ALL new/reopened SN/SR  (parallel, batch)
+Phase N:  [N]-[DevStg-LLReqs]  draft+approve ALL new/reopened SN/SR  (parallel, batch)
               │
           [N]-[DevStg-Impl]     decompose to LLR/TC, all Approved   (parallel, batch)
               │
@@ -280,7 +280,7 @@ batch review sees it alongside the new work. (One sanctioned relaxation of the s
 rule: a run of *independent, off-spine* dev slices may batch into one BUILD
 session + one review round — "Dev-slice batching" under Unattended operation;
 spine-touching slices always stay per-slice.) Within a phase the derived value
-only rises (draft → ratify → decompose → verify), so a **drop from a closed level
+only rises (draft → approve → decompose → verify), so a **drop from a closed level
 is an unambiguous boundary**; the committed anchor makes membership legible.
 
 ## Phased delivery
@@ -288,11 +288,11 @@ is an unambiguous boundary**; the committed anchor makes membership legible.
 *Referenced from PROCESS.md §4.* **Applies when** a roadmap ships phase 1 before
 2/3; a single-shot deliverable skips it. Builds on the **Derived gate model**
 above: just as the gate is computed from artifact states, the project's **current
-phase is derived** — the highest phase any ratified spine row carries — so a scope
+phase is derived** — the highest phase any approved spine row carries — so a scope
 change surfaces as a phase bump, never a hand-set marker. **The phase boundary is
 a confirmation event** (owner ruling 2026-08-01): a phase increments when
 re-opened scope is *confirmed* — an adjudication verdict that scope moved, or a
-new draft-SN batch ratified into scope — **never on the raw derived-stage drop**;
+new draft-SN batch approved into scope — **never on the raw derived-stage drop**;
 a spurious re-attest window must not burn a phase number (the counterexample:
 19 traced cells once flipped 11 SRs and dropped the gate, and no scope had
 moved). `derive_stage.py --next-phase` prints the derived max + 1 — the one call
@@ -300,11 +300,11 @@ every agent (and the intake mint helper) uses for a newly confirmed phase's
 number.
 
 A roadmap that ships phase 1 before 2/3 needs gates that close *per phase* without
-dishonesty. **Every ratified SR/LLR/TC carries the `Phase` it was ratified in** — a
+dishonesty. **Every approved SR/LLR/TC carries the `Phase` it was approved in** — a
 **bare integer** (`1`, `2`, `3`…), digits only, full cell; an SN's phase is
 *derived* as the minimum phase of its
 referencing SRs (no `stakeholder-needs.toml` schema change). Numeric-only is a
-correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--ratify`
+correctness rule, not a style (owner ruling 2026-08-01): the `--phase`/`--approve`
 scope filters and the phase-drop detector's per-phase-to-anchor join match the
 cell **literally**, so a prefixed label (`v2`, `P1`) does not fail them — it goes
 *silently vacuous*, disarming a warn without telling anyone, which is worse than
@@ -312,8 +312,8 @@ a crash. The digit-extract parse is retained for grandfathering (`phase_num`:
 `v2` → 2, `2` → 2, the same parse `spine_rules` uses), so legacy labels still
 filter and derive while `--strict-schema` migrates the live cells. Semantics:
 
-- **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** A ratified
-  SR/LLR/TC (`Approved`/`Founded`) — and transitively a ratified SN — must carry a
+- **A blank `Phase` is legal only on a pre-approval (`Drafted`) row.** An approved
+  SR/LLR/TC (`Approved`/`Founded`) — and transitively an approved SN — must carry a
   full-cell bare-integer Phase, or `trace.py --strict-schema` reports a schema
   finding. The rule is **vacuous until ≥1 artifact is phased** (the same arming idiom
   the component checks use), so a fully-blank downstream registry stays green: the
@@ -395,11 +395,11 @@ the set when the scope needs them.
 ## Gate authority levels
 
 *Referenced from PROCESS.md §4.* **Applies when** a repo lowers
-`[attestation] human_ratification_through` below its shipped `"DevStg-Release"`
+`[attestation] human_approval_through` below its shipped `"DevStg-Release"`
 — i.e. wants some rung's gate accepted by something other than a per-gate human
 pause. The default (`"DevStg-Release"`, every rung **human-held**) needs none of
 this section — it is exactly the §4/§5 flow. Generalized from a field adoption's
-ratified deviation register (a spatial-capture pilot), this layer's worked
+approved deviation register (a spatial-capture pilot), this layer's worked
 reference.
 
 **Selection.** The level is chosen **before the kit is ported** — by the
@@ -414,7 +414,7 @@ and the register below.
 **The deviation register (`docs/gate-policy.md`).** The kit-owned process doc
 is never edited per-repo (it is overwritten on re-sync); a non-default level
 lives in a repo-local register that *amends* it: a table of `process.md`
-clause → standard behavior → this repo's behavior, ratified by the owner,
+clause → standard behavior → this repo's behavior, approved by the owner,
 with the fixed points at the bottom that nothing overrides. Where the two
 disagree, the register wins — except the fixed points. `bootstrap.py`
 scaffolds the skeleton pre-filled for the chosen level.
@@ -426,24 +426,24 @@ harness is the bar everywhere; a red check is a red check.
 ### The three presets
 
 The three words are `--gate-policy` **presets**: each *translates* into the
-`[attestation]` dials (`human_ratification_through`, `keep_nondependent`,
+`[attestation]` dials (`human_approval_through`, `keep_nondependent`,
 `final_review`) and is never stored. The dials are what the machinery reads.
 
 - **`attended`** *(default)* — a human approves each gate (DevStg-Reqs/DevStg-Tests/DevStg-Impl/DevStg-Release)
   and the owner's final read. The standard §4/§5 flow; nothing else here applies.
-- **`single-ratify`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
+- **`single-approve`** — the driver advances through DevStg-Reqs+DevStg-Tests with LLM-gate review
   (below), **queuing every human call** instead of pausing: each becomes a
   `Needs <human>` Open-items bullet in `status.md` plus, where the driver had
-  to proceed, a provisional decision. At the **ratification point — fixed at
+  to proceed, a provisional decision. At the **approval point — fixed at
   DevStg-Tests close** — the human reviews the accumulated list + gate evidence in one
-  sitting and ratifies or amends (ratified decisions move to `log.md`'s
+  sitting and approves or amends (approved decisions move to `log.md`'s
   Decisions log, §5); DevStg-Impl→DevStg-Release then run under `autonomous` rules. The owner's final read
   stays human. *Why DevStg-Tests close:* every requirement/design ambiguity is resolved
   exactly once, over cheap artifacts (registries and docs, not code), before
   the expensive autonomous implementation stretch. An adopting repo *may*
-  relocate the ratification point by amending its own register — the kit does
-  not parameterize it. **Post-ratification questions route by revert-cost**,
-  never a mid-run pause (the ratifier accepted bounded risk; momentum is the
+  relocate the approval point by amending its own register — the kit does
+  not parameterize it. **Post-approval questions route by revert-cost**,
+  never a mid-run pause (the approver accepted bounded risk; momentum is the
   level's value): LOW → decide + record in the Decisions log; MEDIUM/HIGH →
   the Blocked register.
 - **`autonomous`** — every bar except the owner's final read closes on the LLM verdict;
@@ -469,9 +469,9 @@ A gate closes only on the verdict of an **independent LLM reviewer**:
   and quotes real output; a verdict citing a run it didn't perform is invalid.
 - **Verdict recorded** in `log.md` per §5, extended with `Model: <model id>`
   and `Role: LLM-GATE`; the Sittings acceptor column reads `LLM-GATE`.
-  APPROVE → the driver makes the **ratifying Status-change commit** (and
+  APPROVE → the driver makes the **approving Status-change commit** (and
   regenerates `docs/stage` via `derive_stage.py`), citing the verdict block (the
-  verdict is the review of record — this is the `autonomous` ratification the
+  verdict is the review of record — this is the `autonomous` approval the
   "Derived gate model" describes). CHANGES-REQUESTED → findings route to their
   owner hats; re-review up to `MAX_ROUNDS`, then the Blocked register.
 
@@ -486,7 +486,7 @@ what ships, *and equally* when it corrected a claim the verdict rested on, so
 "no code changed" is never by itself an argument for skipping the round. Two
 ordering rules make the avoidable part avoidable, and the lane owes both:
 **close before the final verdict round** (Deliverable filled, spec moved to its
-terminal folder, any ratifying Status-change commit made — so the reviewer sees
+terminal folder, any approving Status-change commit made — so the reviewer sees
 the record it is blessing rather than invalidating it afterwards), and **never
 hand-merge trunk on a work branch** (only the station's `refresh` commit is
 peeled). They are **necessary, not sufficient**: a verdict's own finding can
@@ -529,7 +529,7 @@ case is what turns costly rework from a unilateral act into a decidable one.
 ### The Blocked register (replaces mid-run escalation)
 
 When a finding survives `MAX_ROUNDS`, a call is MEDIUM/HIGH revert-cost after
-ratification, or a step is impossible without the owner (a purchase, an
+approval, or a step is impossible without the owner (a purchase, an
 account, a physical action): record it under **Blocked** in `status.md` —
 what, why, rounds spent, the driver's best-judgment recommendation — and
 **continue with independent work**. Every Blocked item surfaces prominently
@@ -541,8 +541,8 @@ it honestly (partial + explanation), never silently.
 Where the process says *ask / pause / solicit clarification*, an autonomous
 driver decides and appends to the `log.md` Decisions log (§5): what was
 chosen, why, the alternatives, `Revert cost: LOW|MEDIUM|HIGH`, `Model:`. A
-decision is never a license to expand scope — one that would contradict a
-ratified owner decision is a Blocked item, not a new decision.
+decision is never a license to expand scope — one that would contradict an
+approved owner decision is a Blocked item, not a new decision.
 
 ### LLM-Attest (replaces human Attest at `autonomous`)
 
@@ -653,8 +653,8 @@ too.
 *Referenced from PROCESS.md §4 ("gate authority").* **Applies when** a repo
 wants a coordinator to grind work from a single entry point while nobody
 watches. The loop runs under **every** gate authority level — what differs is
-where it stops: fully walk-away under `autonomous` (or `single-ratify` after
-its ratification point), while an `attended` repo's run grinds the in-gate
+where it stops: fully walk-away under `autonomous` (or `single-approve` after
+its approval point), while an `attended` repo's run grinds the in-gate
 work and stops *at* each human act with the ask stated, rather than being
 refused or, worse, inferring its way past. Generalized from a field adoption's
 proven coordinator (a spatial-capture pilot's `trigger.ps1`), which
@@ -691,7 +691,7 @@ serial resume driver — the loop that read `status.md`/`run-state` back as its
 control input — was retired):
 
 - **Intake/triage of new scope** belongs to the **human + the gate-stage
-  sessions**: new WIs enter the registry at planning/ratification (or through
+  sessions**: new WIs enter the registry at planning/approval (or through
   a dual-plan round's filed children), never by a session inventing scope
   mid-run.
 - **Drained-queue handling** is the run's **end-state banner** — the run
@@ -1024,7 +1024,7 @@ behavior**, so a fresh scaffold pays nothing.
   **human-held, `keep_nondependent = false`:** start nothing new, let
   in-flight sessions close out, then the loop stops `NEEDS-HUMAN` and alerts;
   **human-held, `keep_nondependent = true`:** keep working non-dependent WIs to
-  completion, surface the block for ratification; **loop-held:** schedule a
+  completion, surface the block for approval; **loop-held:** schedule a
   fresh **design-check session** (different provider, strong tier) to rule
   grind-through vs. genuine redesign, document every assumption, and continue —
   a redesign verdict re-enters the change-intake flow (process.md §5).
@@ -1577,7 +1577,7 @@ erodes the single-source-of-truth discipline the kit is built on.
 
 **The promote rule.** When a working note ripens into something durable — a
 decision, a constraint, a gotcha, an assumption confirmed — **promote it into the
-repo**: record a decision in `status.md` *Open items* (ratified: `log.md`'s
+repo**: record a decision in `status.md` *Open items* (approved: `log.md`'s
 *Decisions log*), add a
 constraint to `status.md`'s constraints block, update `AGENTS.md` if it changes
 how contributors should behave, or amend the relevant registry row. This is the
@@ -1878,7 +1878,7 @@ re-attestation should land as **one phase** — batch the changes so a **single
 owner sitting** covers each re-attestation, rather than paying for several
 (what is owed is the DIFFERENCE between the amended rows and their copies in
 `docs/archive/last_approved/` — process.md §7 — so the pending batch is tree
-state the sitting reads via `trace.py --ratify modified`, never commit-message
+state the sitting reads via `trace.py --approve modified`, never commit-message
 prose). A
 phase's spec is one shared `docs/specs/` doc with a `#anchor` per WI. **Its
 cadence:** mid-phase WI sessions end at the **commit bar** (the pre-commit
@@ -2197,7 +2197,7 @@ binary; the **record of it** is text, tracked, and reviewable.
 
 *Builds on PROCESS.md §8 (the seam registry).* **Applies when** a repo has more
 than one module and wants its architecture view to show **how the modules
-connect** — the seam the AXES ratification sanctioned ("a cross-component edge
+connect** — the seam the AXES approval sanctioned ("a cross-component edge
 without a declared interface is a finding"). §8 records a shared surface once as
 an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
 module→file, module→external-actor) exactly as it serves a cross-project one — one
@@ -2613,7 +2613,7 @@ question is forge-mode-only and deferred until approval-required lanes are
 used there.
 
 **Throughput caution.** Under `attended` gate authority, every branch's human
-asks converge on **one** ratifier; parallel branches multiply the
+asks converge on **one** approver; parallel branches multiply the
 `NEEDS-HUMAN` queue. Two to three concurrently *active* branches is the
-realistic ceiling while one human ratifies — a queued spec costs nothing
+realistic ceiling while one approver works the queue — a queued spec costs nothing
 until claimed.

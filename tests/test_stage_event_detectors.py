@@ -58,7 +58,7 @@ def test_the_anchor_translation_is_by_MEANING_and_the_spellings_are_the_trap():
     rung and neither means it:
 
       `[p]-[reqs]`  requirement structuring — the phase's SRs are authored AND
-                    ratified, which clears `spine_stage`'s `any(is_drafted(sr))`
+                    approved, which clears `spine_stage`'s `any(is_drafted(sr))`
                     test. The phase has just LEFT DevStg-Reqs; where it lands is
                     DevStg-LLReqs, two rungs up.
       `[p]-[tests]` decomposition — LLRs and TCs authored and non-Drafted, which
@@ -97,7 +97,7 @@ def test_the_legacy_anchors_are_TRANSLATED_not_re_recorded():
 
 
 def test_the_two_anchor_patterns_accept_THE_SAME_TOKEN_SET():
-    """`PHASE_ANCHOR_RE` (anchored at a Title's start) and `RATIFY_ANCHOR_RE`
+    """`PHASE_ANCHOR_RE` (anchored at a Title's start) and `APPROVAL_ANCHOR_RE`
     (mid-cell, for the brief lint) are deliberately separate patterns over one
     vocabulary. Held equal here rather than by a comment, because the comment is
     what drifted at the last changeover."""
@@ -105,7 +105,7 @@ def test_the_two_anchor_patterns_accept_THE_SAME_TOKEN_SET():
     for token in tokens:
         title = "[v1]-[{}] x".format(token)
         assert bool(CT.PHASE_ANCHOR_RE.match(title)) is bool(
-            CT.RATIFY_ANCHOR_RE.search("... {} ...".format(title))
+            CT.APPROVAL_ANCHOR_RE.search("... {} ...".format(title))
         ), token
 
 
@@ -163,7 +163,7 @@ def test_the_detector_reads_the_LIVE_per_phase_field_not_the_settled_one(
     exactly its own subject.
 
     The fixture states the divergence the two fields exist to carry: settled says
-    the phase is still at Impl (nothing ratified has moved), live says it is back
+    the phase is still at Impl (nothing approved has moved), live says it is back
     at Tests (a TC is in redraft). Keying on `per-phase` finds nothing; keying on
     `per-phase-live` finds the event."""
     settled = {"v1": ladder.STAGE_IMPL}

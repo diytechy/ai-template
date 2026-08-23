@@ -4,7 +4,7 @@
 The spine-prose predicates (a row states the system not its own history; one
 testable obligation; the paraphrase advisory that warns but never gates; the
 optional LLR Rationale column), the WI-129 LLR/TC status-coherence lint, the WI-146(a)
---ratify hierarchy view, and the WI-081 Slice C render/exit helpers
+--approve hierarchy view, and the WI-081 Slice C render/exit helpers
 (_bucket_by_ref pre-indexing + the exit_code gate policy).
 """
 
@@ -157,7 +157,7 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     assert not flags(sr={"Rationale": "The M-10 crossing carries the verdict."})
     assert not flags(llr={"Rationale": "Joined against B-04, M-10 and REL-003."})
     # (2) `ruling` / `retired` / `amended` / `attestation` are SUBJECT NOUNS in
-    # every row that specifies the ratification machinery itself — 217
+    # every row that specifies the approval machinery itself — 217
     # occurrences over 108 live rows. The stamp shape needs a DATE behind the
     # verb, so a row ABOUT amendment is silent and a row RECORDING its own
     # amendment is not.
@@ -169,11 +169,11 @@ def test_a_living_cell_carries_no_citation_frame_but_never_gates_on_one():
     # PARTICIPLES mid-sentence, and every one of these is a live cell's real
     # wording. The clause-opening constraint is the whole separation — measured
     # over every live spine + IF cell at 36 hits, 36 of them genuine stamps.
-    assert not flags(llr={"Detail": "A RATIFIED SN cited by zero SRs caps the bar."})
+    assert not flags(llr={"Detail": "An APPROVED SN cited by zero SRs caps the bar."})
     assert not flags(sr={"Rationale": "So an AMENDED requirement drops the stage."})
     assert not flags(tc={"Method": "A stale file is DELETED in the same act."})
     assert not flags(tc={"Method": "Assert a RULED row does not render as a brief."})
-    assert not flags(llr={"Detail": "Arm the comparison on the RATIFIED half only."})
+    assert not flags(llr={"Detail": "Arm the comparison on the APPROVED half only."})
     # (4) THE REVIEW-CODE ARM IS GONE, and this is the case that removed it. A
     # `C-<HAT>-<n>` "review-round code" pattern shipped and measured 20 hits, 20
     # of them FALSE — every live occurrence names a hat-charter CLAUSE as the
@@ -409,7 +409,7 @@ def test_a_requirement_states_one_testable_obligation():
     # 'must' likewise: 29148 reserves `shall`, but a repo that standardised on
     # 'must' would have EVERY row flagged, which is the cry-wolf failure.
     assert not flags(sr={"Requirement": "trace.py must exit nonzero."})
-    # A Drafted row is pre-ratification and process.md §4 already exempts it from
+    # A Drafted row is pre-approval and process.md §4 already exempts it from
     # the decomposition rules — 'TBD' in a Drafted acceptance criterion is what
     # Drafted MEANS, so flagging it would break the state's whole purpose.
     assert not flags(
@@ -677,8 +677,8 @@ def test_llr_status_advisory_is_warn_only_and_reported(scaffold):
     assert "None. No unlifted LLRs." in report3
 
 
-# --- WI-146(a): the --ratify batch-scoped ratification hierarchy view ---------
-# A generated SN->SR->LLR/TC tree carrying the prose a ratifier needs (Requirement/
+# --- WI-146(a): the --approve batch-scoped approval hierarchy view ---------
+# A generated SN->SR->LLR/TC tree carrying the prose an approver needs (Requirement/
 # AC, LLR Detail, TC Method/Expected, cited rubric), scoped by an SR-id list or a
 # phase tag. A generator mode: it runs no checks and always exits 0.
 
@@ -692,12 +692,12 @@ PHASED_RUBRIC_SR = (
 )
 
 
-def test_ratify_sr_list_emits_prose(scaffold):
+def test_approval_sr_list_emits_prose(scaffold):
     make_minimal_project(scaffold)
-    proc = run_py(["scripts/trace.py", "--ratify", "SR-001"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--approve", "SR-001"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     out = proc.stdout
-    assert "# Ratification hierarchy" in out and "scope: SR-001" in out
+    assert "# Approval hierarchy" in out and "scope: SR-001" in out
     assert "1 SR(s)" in out
     assert "SR-001" in out and "Addition" in out
     # The stakeholder need's own prose heads its subtree, not a bare SN id
@@ -711,21 +711,21 @@ def test_ratify_sr_list_emits_prose(scaffold):
     assert "TC-001" in out and "Satisfies SR-001 AcceptanceCriteria" in out  # TC
 
 
-def test_ratify_phase_scope_and_rubric(scaffold):
+def test_approval_phase_scope_and_rubric(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "system-requirements.csv").write_text(
         PHASED_RUBRIC_SR, encoding="utf-8"
     )
-    proc = run_py(["scripts/trace.py", "--ratify", "v9"], cwd=scaffold)
+    proc = run_py(["scripts/trace.py", "--approve", "v9"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "SR-001" in proc.stdout and "Addition" in proc.stdout
     assert "**Rubrics.** docs/rubrics/adder.md" in proc.stdout
     # A non-matching phase is REFUSED, not rendered empty (D-9 §F2). Until this
     # hardening it fell through to a brief that read "there is nothing to
-    # ratify" at exit 0 — the most expensive way for this tool to be wrong,
+    # approve" at exit 0 — the most expensive way for this tool to be wrong,
     # because a typo, a retired phase tag or an unknown reserved word all
     # produced a document a human then signed.
-    empty = run_py(["scripts/trace.py", "--ratify", "v1"], cwd=scaffold)
+    empty = run_py(["scripts/trace.py", "--approve", "v1"], cwd=scaffold)
     assert empty.returncode != 0
     combined = empty.stdout + empty.stderr
     assert "matches no SR" in combined and "refusing to emit an empty" in combined
@@ -735,17 +735,17 @@ def test_ratify_phase_scope_and_rubric(scaffold):
     assert empty.stdout == ""
 
 
-def test_ratify_out_writes_linkable_file(scaffold):
+def test_approval_out_writes_linkable_file(scaffold):
     make_minimal_project(scaffold)
     proc = run_py(
-        ["scripts/trace.py", "--ratify", "SR-001", "--out", "docs/ratify/x.md"],
+        ["scripts/trace.py", "--approve", "SR-001", "--out", "docs/ratify/x.md"],
         cwd=scaffold,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     written = (scaffold / "docs" / "ratify" / "x.md").read_text(encoding="utf-8")
-    assert "# Ratification hierarchy" in written
+    assert "# Approval hierarchy" in written
     assert "The system shall add two numbers." in written
-    assert "trace: wrote ratification view" in proc.stdout
+    assert "trace: wrote approval view" in proc.stdout
 
 
 # --- WI-081 Slice C: the render/exit extraction + M8 pre-indexing --------------

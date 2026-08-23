@@ -43,9 +43,9 @@ finding classes:
     kit's core value, so the root README is held to it too — every SN id cited
     anywhere in it must exist in the stakeholder-needs registry, and every
     Must/Should need in that registry must be cited somewhere in the README, so a
-    requirements change mechanically ages the README. Draft/unratified needs (under
+    requirements change mechanically ages the README. Draft/unapproved needs (under
     a "draft" heading — SN maturity is section-as-state, §4a) are exempt from that
-    floor until ratified. No delimiter markers: any
+    floor until approved. No delimiter markers: any
     `SN-###` in the README counts as a citation. A README opts out with an
     `<!-- sn-inventory: off -->` comment; a repo with no real needs yet (only the
     `-000` placeholder) is vacuously clean, so a fresh scaffold passes.

@@ -14,9 +14,9 @@ nobody watching.
 
 Three triggers, plus the drafts-not-mints arm:
 
-  (a) **the ratified-cell diff on the merged commit** — via
+  (a) **the approved-cell diff on the merged commit** — via
       `check_trajectory.staged_spine_amendments(root, before, after)` (the
-      WI-380 seam, consumed as-is). A record mints when it carries a ratified
+      WI-380 seam, consumed as-is). A record mints when it carries an approved
       change or a ROUTED traced change (`ROUTED_TRACED_CELLS`: `SN-Refs`,
       `Verifies`, and `SR-Refs` — the last ruled traced at WI-388); the other
       traced cells are silent by ruling. One `adjudication` row per merge,
@@ -475,11 +475,11 @@ def _review_id(name):
     return matched.group(1) if matched else ""
 
 
-# --- trigger (a): the ratified-cell diff on the merged commit ------------------
+# --- trigger (a): the approved-cell diff on the merged commit ------------------
 
 
 def _routed_amendments(root, before, after):
-    """The amendment records that are adjudication's to judge: a ratified
+    """The amendment records that are adjudication's to judge: an approved
     change, or a routed traced change (`ROUTED_TRACED_CELLS`). Everything else
     in the traced half is silent by ruling."""
     routed = []
@@ -495,7 +495,7 @@ def _routed_amendments(root, before, after):
                 spine_carrier.stem(rec["registry"]), ()
             )
         }
-        if rec["ratified"] or routed_cells:
+        if rec["approved"] or routed_cells:
             routed.append(dict(rec, routed=routed_cells))
     return routed
 
@@ -521,7 +521,7 @@ def _stage_moved(root, before, after):
     implemented — a None on one side and a value on the other compared unequal and
     reported a move). It also keeps the one-time migration boundary quiet: at the
     commit that first wrote `docs/stage` the before side has no file, and that is
-    a kit upgrade, not a ratification."""
+    a kit upgrade, not an approval."""
     values = []
     for rev in (before, after):
         code, out = ac.git(root, "show", "{}:{}".format(rev, kitstage.STAGE_FILE))
@@ -546,12 +546,12 @@ def _amendment_context(records):
     section; R-A forbids a filled Deliverable on an open row)."""
     lines = [
         "Derived from `staged_spine_amendments` on the merged commit (§A5.2).",
-        "Ratified and ROUTED traced cells only; other traced cells are silent",
+        "Approved and ROUTED traced cells only; other traced cells are silent",
         "by ruling. Each line: registry row / cell: before -> after.",
         "",
     ]
     for rec in records:
-        cells = dict(rec["ratified"])
+        cells = dict(rec["approved"])
         cells.update(rec["routed"])
         for cell in sorted(cells):
             before, after = cells[cell]
@@ -566,7 +566,7 @@ def _amendment_context(records):
     lines += [
         "",
         "Outcomes (§A5.2): flip rows back to Approved where no scope moved",
-        "(per the declared ratification level in docs/process.toml — "
+        "(per the declared approval level in docs/process.toml — "
         "recommend-only while the tier is HUMAN-HELD, ruled decision",
         "2), or draft the real scope-change / re-scope / cancellation rows in",
         "a `## Dispositions` section of THIS spec — intake mints them at this",
@@ -595,7 +595,7 @@ def _amendment_drafts(root, before, after):
         return []
     ids = sorted({rec["id"] for rec in records})
     title = (
-        "adjudicate: {} - ratified/routed cell(s) amended on merged trunk "
+        "adjudicate: {} - approved/routed cell(s) amended on merged trunk "
         "{}..{} (§A5.2); judge whether scope moved, then flip or draft "
         "follow-ups in ## Dispositions".format(
             ", ".join(ids), str(before)[:7], str(after)[:7]
@@ -1441,15 +1441,15 @@ def _cmd_sweep(args):
 def adjudication_action(human_held):
     """May adjudication FLIP a spine row to `Approved`? Ruled decision 2, re-keyed
     onto SN-029's ordinal: **recommend-only while the tier is HUMAN-HELD** — the
-    flip is a Status change that RECOVERS THE GATE, i.e. a ratification, and a
-    human-held tier's ratification is the human's act, so adjudication prepares
+    flip is a Status change that RECOVERS THE GATE, i.e. an approval, and a
+    human-held tier's approval is the human's act, so adjudication prepares
     the brief ("these cells are traced-only, no scope moved, recommend
     re-verify") and stops; **flip once the tier is loop-held**, where a recorded
-    LLM verdict already carries ratification authority.
+    LLM verdict already carries approval authority.
 
     Anything unreadable upstream resolves to human-held — `agent_common.
     human_holds` fails that way deliberately — so the failure direction is
-    `recommend`, never a machine ratification. The kit DEFAULT holds every tier
+    `recommend`, never a machine approval. The kit DEFAULT holds every tier
     even though this repo holds none, which is why both arms are built and
     tested.
 
@@ -1457,7 +1457,7 @@ def adjudication_action(human_held):
     this reads `flip`, `_apply_flips` writes NOTHING — it skips an
     already-blessed row and refuses every other state. The name survives
     because the two readings still distinguish which brief the caller owes
-    (recommend-and-stop vs. attempt-and-refuse); ratification itself moves only
+    (recommend-and-stop vs. attempt-and-refuse); approval itself moves only
     through the human reviewed-commit path, with `intake.py snapshot` as the
     record's one mechanical door."""
     return "recommend" if human_held else "flip"
@@ -1480,27 +1480,27 @@ def flip_verified(root, ids):
     the lane's own refresh runs it.
 
     THE `flip` ARM IS THE RULED SHAPE, not an interim state (OI-45, ruled
-    2026-08-20, executed by WI-490): mechanical ratification is RETIRED —
+    2026-08-20, executed by WI-490): mechanical approval is RETIRED —
     `_apply_flips` skips an already-blessed row and refuses everything else, so
-    this action writes nothing, permanently. Ratification stays a human
+    this action writes nothing, permanently. Approval stays a human
     reviewed-commit act; `intake.py snapshot`'s authority-gated refresh is the
     one mechanical door touching the approval record. That is a statement about
     this SCRIPT, not about agent judgment — an LLM session or adjudicator is
     still expected to move a row's Status through the reviewed-commit path for
-    spine content past the declared ratification level
+    spine content past the declared approval level
     (`agent_common.human_holds` says which). `recommend` is unaffected and is
     this repo's live arm (every spine tier is human-held)."""
     root = Path(root)
     # SN-028: the mixed-config refusal, at the third entry point that reads
     # policy without passing through agent_loop.main. This arm decides whether
-    # an LLM verdict carries RATIFICATION authority, so it is the last place
+    # an LLM verdict carries APPROVAL authority, so it is the last place
     # a half-migrated config should be resolved by precedence.
     conflicts = ac.config_conflicts(root / "docs")
     if conflicts:
         return "recommend", [], conflicts[0]
     # SN-029: the ordinal comparison, not the retired enum. `spine_stage_of`
     # reads the tier currently in process through `kitlib.stage.read_stage`;
-    # `human_holds` compares it against `human_ratification_through`.
+    # `human_holds` compares it against `human_approval_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     session_hold = "human-held" if human_held else "loop-held"
     action = adjudication_action(human_held)
@@ -1532,7 +1532,7 @@ def flip_verified(root, ids):
     # so this list is empty and the snapshot is untouched by the mechanical path
     # (2026-08-20: the unreachable write-and-copy block went with the dead arm).
     # OI-45 RULED (b) RETIRE THE ARM (2026-08-20): no mechanical path regains the
-    # authority; ratification stays human, and `intake.py snapshot`'s
+    # authority; approval stays human, and `intake.py snapshot`'s
     # authority-gated refresh is the record's one mechanical door.
     for rid in flipped:
         _say("flipped {} -> Approved ({})".format(rid, session_hold))
@@ -1622,7 +1622,7 @@ def _flip_status_lines(lines, table, rid):
     a one-word act, on the registry whose diffs the amendment guard reads.
 
     IT TRACKS MULTI-LINE STRING STATE, and that is not defensive tidiness — it
-    is the difference between a ratification and a corruption. The spine's prose
+    is the difference between an approval and a corruption. The spine's prose
     cells are `\"\"\"...\"\"\"` blocks that quote registry syntax freely, so a
     requirement can contain a line whose text reads `status = ...`. Rewriting by
     physical line alone edited THAT line, left the row's real `status` at
@@ -1666,7 +1666,7 @@ def _rewrite_toml_statuses(live, rel, ids):
 
     The file's OWN newline style is preserved. The contract this writer
     advertises is that every byte except the one status cell is unchanged, and
-    silently converting a CRLF registry to LF makes a one-word ratification a
+    silently converting a CRLF registry to LF makes a one-word approval a
     whole-file diff — on exactly the registry whose diffs the amendment guard
     reads. `newline=""` keeps the bytes; the split is on the detected
     terminator."""
@@ -1683,7 +1683,7 @@ def _rewrite_toml_statuses(live, rel, ids):
         if not _flip_status_lines(lines, table, rid):
             # A located row whose status line cannot be found is a refusal to
             # write, never a silent skip: the caller already reported the flip,
-            # so a no-op here would claim a ratification that is not in the file.
+            # so a no-op here would claim an approval that is not in the file.
             raise SystemExit(
                 "intake: {} has no `{}` line under [{}.{}] — refusing to "
                 "report a flip that was not written".format(
@@ -1709,12 +1709,12 @@ def _apply_flips(root, tables, located):
     an owner call.
 
     OI-45 IS THE RECORD, and what it retires is precise: MECHANICAL
-    ratification — a scripted path moving a Status cell with no judgment behind
+    approval — a scripted path moving a Status cell with no judgment behind
     it. It does not say no agent may ever move a Status cell. An LLM session or
     adjudicator is fully expected to flip a row to `Approved`, and further to
-    `Founded`, for spine content past the declared human-ratification level
+    `Founded`, for spine content past the declared human-approval level
     (`agent_common.human_holds` says which) — at the human's request, or when
-    working through content the level does not hold to human ratification. The
+    working through content the level does not hold to human approval. The
     dial says who holds what; this function's refusal says only that no SCRIPT
     decides. `_cmd_snapshot`'s authority-gated refresh is the one mechanical
     door the approval record has.
@@ -1772,7 +1772,7 @@ def _apply_flips(root, tables, located):
     # Dead code that LOOKS live is worse than no code, and a test was pinning a
     # guard on it by source grep, which reads as coverage of a path nothing can
     # execute. OI-45 RULED (b) RETIRE THE ARM (2026-08-20, executed by WI-490):
-    # mechanical ratification is retired for good, not deferred, and
+    # mechanical approval is retired for good, not deferred, and
     # `_cmd_snapshot`'s authority-gated refresh is the one mechanical door the
     # approval record has. An agent may still move a Status cell through the
     # reviewed-commit path under the declared authority dial
@@ -1797,7 +1797,7 @@ def _cmd_adjudicate(args):
     outcome per the derived session hold. Mechanical enactment is RETIRED
     (OI-45, ruled 2026-08-20) — the `flip` reading of the derived action
     survives in `flip_verified`'s brief text, but `_apply_flips` writes
-    nothing, ever; ratification stays a human reviewed-commit act."""
+    nothing, ever; approval stays a human reviewed-commit act."""
     root = Path(args.root).resolve()
     action, flipped, refusal = flip_verified(root, _split(args.rows))
     return _cli_result(
@@ -1826,14 +1826,14 @@ def _cmd_snapshot(args):
     """THE HUMAN PATH to the `last_approved` snapshot: copy every snapshotted
     registry into `docs/archive/last_approved/`.
 
-    RATIFICATION AUTHORITY WAS DELIBERATELY NOT MECHANIZED (OI-45, ruled
+    APPROVAL AUTHORITY WAS DELIBERATELY NOT MECHANIZED (OI-45, ruled
     2026-08-20) — this refresh is the ONE mechanical toucher of the approval
     record, and it is authority-gated (`--approves` below) rather than
     unconditional. That is a statement about which SCRIPT decides, not about
     who may act: an LLM session or adjudicator is fully expected to move a
     row's Status to `Approved`, and further to `Founded`, through the reviewed
     commit this refresh then copies — at the human's request, or for spine
-    content past the declared ratification level (`agent_common.human_holds`
+    content past the declared approval level (`agent_common.human_holds`
     says which). `intake.flip_verified`'s mechanical `_apply_flips` is the
     retired candidate (OI-45 (b)); this copy was never it.
 
@@ -1849,7 +1849,7 @@ def _cmd_snapshot(args):
     rule, with "stamping hashes" swapped for "copying files").
 
     `--approves <ref>` NAMES THE APPROVAL ACT, and is needed only when the copy
-    would absorb RATIFIED text that no `Status` flip in the same registry
+    would absorb APPROVED text that no `Status` flip in the same registry
     authorises (`baseline_snapshot.refresh_refusal`, 2026-08-20). It is the
     door the adversarial round found standing open: creating the record was
     guarded and rewriting it was not, so a two-commit path — amend an Approved
@@ -1869,7 +1869,7 @@ def _cmd_snapshot(args):
     command here learns to write an `approval`, it must consult
     `agent_common.human_approves(root / "docs", <registry stem>)` and refuse
     when it answers True — the contract is stated at the predicate, and
-    `tests/test_ratification_level.py` fails the moment a shipped loop module
+    `tests/test_approval_level.py` fails the moment a shipped loop module
     starts writing one."""
     root = Path(args.root).resolve()
     approves = getattr(args, "approves", None)
@@ -1913,9 +1913,9 @@ def main(argv=None):
     adj = sub.add_parser(
         "adjudicate",
         help="recommend re-verify for spine rows judged no-scope-moved — "
-        "mechanical enactment is RETIRED (OI-45); ratification stays a human "
+        "mechanical enactment is RETIRED (OI-45); approval stays a human "
         "reviewed-commit act (docs/process.toml [attestation] "
-        "human_ratification_through)",
+        "human_approval_through)",
     )
     adj.add_argument(
         "--rows", required=True, help="spine row id(s), ;-joined (SR-/LLR-/TC-)"
@@ -1944,7 +1944,7 @@ def main(argv=None):
         default=None,
         metavar="REF",
         help="NAME THE APPROVAL ACT this refresh rides — a sitting, a log "
-        "fragment, a commit. Required only when the copy would absorb ratified "
+        "fragment, a commit. Required only when the copy would absorb approved "
         "text that no Status flip authorises; the ref is recorded into the "
         "snapshot's prose stamp. A traced-cell refresh needs no flag",
     )

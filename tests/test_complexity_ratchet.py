@@ -229,7 +229,7 @@ BASELINE = {
     ("plan_runner.py", "run_dual_plan_round"): 31,
     # WI-259 reviewed bump 50 -> 53: the verification-basis split went binary ->
     # three-way (mechanized/demonstrated/attested, a new elif branch) and
-    # --require-verified was widened to every ratified SR of any method, naming
+    # --require-verified was widened to every approved SR of any method, naming
     # the real method in the finding. Trace decomposition remains a follow-up;
     # the added branches are the honest audit surface.
     # 53 -> 50, WI-065: the TC-`Verifies` rules moved OUT to
@@ -243,9 +243,9 @@ BASELINE = {
     # collapsing them would hide which rule fired from the message a reader acts on.
     ("trace_text.py", "form_findings"): 14,
     ("trace.py", "mermaid_graph"): 17,
-    # 28 -> 27: the L-3 ratify bucketing removed a nested scan (re-stamped
+    # 28 -> 27: the L-3 approve bucketing removed a nested scan (re-stamped
     # downward per the ratchet's improvement rule).
-    ("trace.py", "ratify_lines"): 27,
+    ("trace.py", "approval_lines"): 27,
     # WI-322 split the git archaeology out of the renderer: reattest_lines went
     # prose-only (25 -> 14) and the extracted model carries the branching (21) —
     # one computation, two renderers. WI-347 then took it UNDER the limit

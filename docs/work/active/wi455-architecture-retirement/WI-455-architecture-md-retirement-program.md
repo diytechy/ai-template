@@ -113,7 +113,7 @@ ordering, not by preference:**
    still unbuilt, and not blocked by anything.
 
 **Queued for the owner rather than decided here** (both minted this slice):
-`OI-49` — what the sitting is actually being asked to ratify from the 2026-08-15
+`OI-49` — what the sitting is actually being asked to approve from the 2026-08-15
 interface rework, given that 10 of its 21 judgement picks have since been
 re-picked onto the design tier, 2 were recorded with no reason, and the
 `carried_by` prototype has been generalised to three carriers past its own

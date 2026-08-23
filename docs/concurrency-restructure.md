@@ -29,7 +29,7 @@ home per fact**.
 ### 1.1 Git is a required substrate (RULING-1: confirm)
 
 The process has always assumed git — diffable registries, append-only log,
-"ratification is a reviewed Status-change commit," reservations as refs —
+"approval is a reviewed Status-change commit," reservations as refs —
 without naming it. Declare it in `PROCESS.md` at the same tier as Python 3.11:
 **the process requires a git repository.** No fallback story is owed to
 non-git environments.
@@ -433,11 +433,11 @@ never a forgotten one (the stale-reason lesson).
   already encodes: a branch is a *work branch* iff `docs/work/active/<branch>/`
   exists (fail-closed to full checks off-git/detached/`..`); the seven
   trunk-freshness steps (`arch-map`, `trajectory-map`, `status-map`,
-  `open-items`, `okf`, `ratify-fresh`, `derived-gate`) **SKIP with a stated
+  `open-items`, `okf`, `approval-fresh`, `derived-gate`) **SKIP with a stated
   §5.2 notice** there — `skills-sync`/`trajectory`/`registry-integrity` still
   run, and `resolve_gate` still reads `docs/gate` as-of-base. `stack.ini
   [generated]` now declares the complete trunk-regenerated set (gate,
-  open-items, ratify, skills INDEX added); the retiring dispatcher's
+  open-items, approve, skills INDEX added); the retiring dispatcher's
   auto-resolve reads the new kinds as unknown and **parks for a hand-merge
   instead of running a wrong regenerator** — fail-closed, loud, moot at
   Phase 5. `trunk_step.py --regen` is the trunk lane's regeneration half —

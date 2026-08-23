@@ -10,11 +10,11 @@ loop around it is tests/test_dispatch.py's, on real repos):
     (one branch, one worker session, one re-attest window);
   * the §A8 kind x gate-policy table exactly as ruled: ordinary/critique
     parallel at every level, high-risk/protected exclusive at every level,
-    spine dispatches at every level (building a scope change is WORK, not a
-    ratification), attestation/gate does NOT dispatch under `attended` (drain,
+    spine dispatches at every level (building a scope change is WORK, not an
+    approval), attestation/gate does NOT dispatch under `attended` (drain,
     surface the cards, exit 0), dispatches only as the queued batch once
-    nothing else remains under `single-ratify`, and dispatches under
-    `autonomous` (a recorded fresh-context reviewer verdict ratifies);
+    nothing else remains under `single-approve`, and dispatches under
+    `autonomous` (a recorded fresh-context reviewer verdict approves);
   * the lanes dial resolves on the established ladder (CLI > AGENT_LANES >
     stack.ini [agent-loop] > code default) and an ABSENT key means 1 — the
     template seeds 2, but no long-adopted repo is upgraded into concurrency
@@ -74,8 +74,8 @@ def test_kind_of_fails_closed_exactly_where_classify_quarantines():
 def test_the_kind_action_table_is_a8_verbatim():
     """The §A8 table, both columns. SN-029 replaced the three-value gate-policy
     enum with ONE BOOL — is the tier the spine is currently in process at still
-    the human's to ratify — so the table is two columns wide, not three. The
-    column that went (`single-ratify`) was never a third ANSWER to this
+    the human's to approve — so the table is two columns wide, not three. The
+    column that went (`single-approve`) was never a third ANSWER to this
     question: it differed only in whether OTHER work kept running, which is an
     orthogonal dial and now lives in `_admission`, where it belongs."""
     for kind in ("ordinary", "critique"):
@@ -134,7 +134,7 @@ def test_a_human_held_tier_surfaces_an_attestation_instead_of_dispatching():
     # §A8 attended row: do not dispatch — drain the lanes, surface the cards,
     # exit 0 into the owner's queue. Ordinary rows behind it do NOT slip past:
     # today's behaviour the owner confirmed must keep working is "no work can
-    # be taken" once a ratification is pending.
+    # be taken" once an approval is pending.
     ready = [("WI-600", "gate"), ("WI-401", "ordinary")]
     verb, payload = dsp._admission(ready, True, busy=False, free=1)
     assert verb == "surface"
@@ -142,8 +142,8 @@ def test_a_human_held_tier_surfaces_an_attestation_instead_of_dispatching():
 
 
 def test_keep_nondependent_keeps_non_dependent_work_running():
-    # SN-029 split the retired `single-ratify` level into its two independent
-    # bits. This is the second one: the tier is HUMAN-HELD (so a ratification
+    # SN-029 split the retired `single-approve` level into its two independent
+    # bits. This is the second one: the tier is HUMAN-HELD (so an approval
     # row surfaces rather than dispatching), and the `keep_nondependent` dial
     # says other work keeps going around it; the queued batch dispatches only
     # at the close, when nothing else remains. Under the enum these two facts
@@ -154,16 +154,16 @@ def test_keep_nondependent_keeps_non_dependent_work_running():
         ready, True, busy=False, free=1, keep_nondependent=True
     )
     assert verb == "admit" and payload == [["WI-401"]]
-    # THE CLOSE: the non-dependent work has drained and only the ratification
+    # THE CLOSE: the non-dependent work has drained and only the approval
     # rows remain — and they SURFACE, they are not admitted.
     #
-    # This arm used to admit them, inherited from the retired `single-ratify`
+    # This arm used to admit them, inherited from the retired `single-approve`
     # word ("dispatches only as the queued batch once nothing else remains").
     # Under the ordinal that is a contradiction: `human_held=True` IS the
-    # statement that this tier is the human's to ratify, and
+    # statement that this tier is the human's to approve, and
     # `keep_nondependent` answers a different question entirely — may other
     # lanes keep running meanwhile. Letting the second dial override the first
-    # is a machine ratifying what a human declared theirs, reached by a
+    # is a machine approving what a human declared theirs, reached by a
     # combination the enum could not even express (level 4 + keep_nondependent,
     # the fourth cell).
     verb, payload = dsp._admission(
@@ -204,7 +204,7 @@ def test_gap_census_names_the_three_gap_classes_mechanically(tmp_path):
     req.mkdir(parents=True)
     (req / "stakeholder-needs.md").write_text(
         "# Needs\n\nSN-001: The product does a thing.\n\n"
-        "## Draft needs (unratified)\n\nSN-002: A thought still forming.\n",
+        "## Draft needs (unapproved)\n\nSN-002: A thought still forming.\n",
         encoding="utf-8",
         newline="\n",
     )

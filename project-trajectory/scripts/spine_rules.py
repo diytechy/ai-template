@@ -33,7 +33,7 @@ nothing runs it — there is no `main()`.
 THE RUNG FALL-THROUGH, in one sentence each. `spine_stage` returns the LOWEST
 rung anything still holds open, so the answer is "what is in work":
 
-  0 `DevStg-Needs`      a Drafted need, or a ratified need no SR answers.
+  0 `DevStg-Needs`      a Drafted need, or an approved need no SR answers.
   1 `DevStg-Boundary`   a declared external frame with an unsettled crossing.
   2 `DevStg-Reqs`       a Drafted SR.
   3 `DevStg-Arch`       a declared partition with an unsettled component.
@@ -160,7 +160,7 @@ _HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
 def sn_all_ids(text):
     """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
     — a whole-text scrape, so a prose mention counts exactly like a table row
-    (registry-machinery-reference §2.1 records the sharp edge: a ratified,
+    (registry-machinery-reference §2.1 records the sharp edge: an approved,
     uncited prose mention caps the bar at DevStg-Below via the coverage rung). `-000`
     excluded. Duplicated from trace.py per the F5 rule; pinned equal by
     test_rule_sync (WI-408) — a divergence here would let the gate and trace's
@@ -177,7 +177,7 @@ def sn_draft_ids(text):
     heading containing the word "draft". Both are read; the dispatch is
     `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
     heading scan over a TOML file finds NO headings, reports ZERO drafts, and
-    every draft need reads as ratified — which floats the derived gate upward.
+    every draft need reads as approved — which floats the derived gate upward.
     A migration whose failure mode is "the gate rises" is the one shape this
     repo can least afford, so the carrier is sniffed rather than assumed.
 
@@ -256,7 +256,7 @@ def is_founded(row):
 # OI-51): **stages are the rungs of the decomposition, and a repo is IN exactly
 # one.** Certification is an EVENT at a rung boundary — a named human's reviewed
 # Status-change commit — recorded where events are, not as a rival value. The
-# stage is state; ratification is what moves it.
+# stage is state; approval is what moves it.
 #
 # THE VOCABULARY ITSELF MOVED OUT (WI-498 slice 0, plan §5 item 0). The rung
 # strings, their order, `STAGE_OF`, `STAGE_DESC` and the `stage_ord` lookup are
@@ -548,7 +548,7 @@ def boundary_incomplete(bifs, have_registry):
     WARN-HONEST WHEN IT DOES APPLY. A registry that exists but declares NO real
     crossing is honestly incomplete: the file says the project intends to type its
     frame and has not. And any crossing at DRAFTED maturity (`approval = "draft"`)
-    is a frame declared and not yet ratified. Both cap the rung.
+    is a frame declared and not yet approved. Both cap the rung.
 
     APPROVAL, NOT REALIZATION COVERAGE — the two readings of the ruling, resolved
     rather than assumed. 13u's wording gates on BIF *approval*; §1R.5's wording
@@ -559,7 +559,7 @@ def boundary_incomplete(bifs, have_registry):
     it here would take a decision nobody has. It is not a hypothetical gap — four
     of the six locked crossings are realized by no IF row today, so the second
     conjunct would hold rung 1 down on work decision 6 has not yet scoped, and it
-    would do so under a predicate that reads like ratification. When decision 6
+    would do so under a predicate that reads like approval. When decision 6
     lands, adding the conjunct is a two-line change HERE, with the coverage rule
     stated in its own docstring.
 
@@ -618,13 +618,13 @@ def spine_stage(
     evidence_passed=False,
 ):
     """The rung currently IN WORK — the STATE axis (a repo is *in* a stage), and
-    the one a human-ratification level is compared against. Returns a
+    the one a human-approval level is compared against. Returns a
     `DevStg-<Label>` from STAGE_ORDER.
 
     Read as the LOWEST unfinished rung — the one work is happening at, and
     therefore the one a human boundary has to be compared against.
 
-      DevStg-Needs      a need is a draft, none is ratified, or a ratified one
+      DevStg-Needs      a need is a draft, none is approved, or an approved one
                         has no SR answering it
       DevStg-Boundary   ...and the declared boundary inventory is in work
       DevStg-Reqs       ...and a requirement is Drafted
@@ -691,7 +691,7 @@ def spine_stage(
     until step 7, which retired the `Modified` case that was checked FIRST.)
 
     `cited_srs` IS THE SCOPE OF THE NEED-COVERAGE RUNG, and it exists for the
-    PER-PHASE call (WI-498 slice 1). The coverage question — "does every ratified
+    PER-PHASE call (WI-498 slice 1). The coverage question — "does every approved
     need have a requirement answering it" — is repo-global: a need answered only
     by phase 1's requirements is answered. Running this function over one phase's
     rows with the default would read every OTHER phase's needs as uncovered and
@@ -703,7 +703,7 @@ def spine_stage(
     Two corners are explicit. A repo with no real SRs at all is DevStg-Needs, NOT
     DevStg-Release — the vacuous-lowest-bar short circuit in `_raw_level` exists
     for the bar's own arithmetic and would read as "everything is finished" here,
-    which is precisely backwards. And a RATIFIED-BUT-UNCITED SN is DevStg-Needs,
+    which is precisely backwards. And an APPROVED-BUT-UNCITED SN is DevStg-Needs,
     applying WI-401's coverage rung on the same subset `_raw_level` uses: a need
     with no requirement answering it is unfinished work at the needs rung."""
     bifs = bifs or []
@@ -812,7 +812,7 @@ def load_spine(docs):
     # the kit where a literal suffix would be worst: an existence test on `.toml`
     # alone answers False for a repo still on markdown, `sn_ids` and `sn_draft`
     # both come back EMPTY, and an empty draft set makes every draft need read as
-    # ratified — the derived value RISES on a registry the reader simply could not
+    # approved — the derived value RISES on a registry the reader simply could not
     # find. Absent must mean absent, never "no drafts".
     sn_md = spine_carrier.resolve(
         docs / "requirements" / "stakeholder-needs.toml", spine_carrier.NEED_CARRIERS

@@ -24,13 +24,13 @@ def _posture(root):
 
     SN-028 moved the one-word `docs/gate-policy` file into
     `docs/process.toml`; SN-029 then RETIRED the enum key itself, because
-    shipping `gate_policy` beside `human_ratification_through` meant the
+    shipping `gate_policy` beside `human_approval_through` meant the
     template's default silently shadowed whatever word bootstrap had written.
     So a posture is read back as a dict and compared against the translation,
     never as a stored word."""
     return {
         key: process_key(root, "attestation", key)
-        for key in ("human_ratification_through", "keep_nondependent", "final_review")
+        for key in ("human_approval_through", "keep_nondependent", "final_review")
     }
 
 
@@ -38,7 +38,7 @@ def _level(root):
     """The posture, named by the legacy word it corresponds to — so these tests
     can keep speaking the vocabulary the CLI flag and the register still use."""
     posture = _posture(root)
-    for word, dials in COMMON.LEGACY_RATIFICATION.items():
+    for word, dials in COMMON.LEGACY_APPROVAL.items():
         if posture == dials:
             return word
     return posture
@@ -49,7 +49,7 @@ def test_scaffold_gate_policy_defaults_attended(scaffold):
     # adopters and default scaffolds see zero change; no register is laid down.
     assert _level(scaffold) == "attended"
     # ...and the retired enum key is not shipped at all. This is the assertion
-    # the shadowing defect needed: with both keys present, `ratification_level`
+    # the shadowing defect needed: with both keys present, `approval_level`
     # prefers the ordinal, so every repo that chose a non-default posture
     # scaffolded fully attended and nothing anywhere said so.
     assert process_key(scaffold, "attestation", "gate_policy") is None
@@ -74,9 +74,9 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
     policy = dest / "docs" / "process.toml"
     assert _level(dest) == "autonomous"
     # WI-493 re-keyed the dial from the 0-4 ordinal to the DevStg-* rung it
-    # always meant, and `ratification_level` with it: the loop-held end is no
-    # longer `0` but `DevStg-Below` — no rung a human still ratifies.
-    assert COMMON.ratification_through(dest / "docs") == "DevStg-Below", (
+    # always meant, and `approval_level` with it: the loop-held end is no
+    # longer `0` but `DevStg-Below` — no rung a human still approves.
+    assert COMMON.approval_through(dest / "docs") == "DevStg-Below", (
         "the posture must READ as loop-held, which is the whole point"
     )
     assert policy.read_text(encoding="utf-8").startswith("#"), "header kept"
@@ -93,11 +93,11 @@ def test_gate_policy_autonomous_scaffolds_register(tmp_path):
         assert point in register, "missing fixed point: " + point
 
 
-def test_gate_policy_single_ratify_scaffolds_register(tmp_path):
-    dest = _bootstrap(tmp_path, "--gate-policy", "single-ratify")
-    assert _level(dest) == "single-ratify"
+def test_gate_policy_single_approval_scaffolds_register(tmp_path):
+    dest = _bootstrap(tmp_path, "--gate-policy", "single-approve")
+    assert _level(dest) == "single-approve"
     register = (dest / "docs" / "gate-policy.md").read_text(encoding="utf-8")
-    assert "DevStg-Tests close" in register  # the fixed ratification point (Q5)
+    assert "DevStg-Tests close" in register  # the fixed approval point (Q5)
     assert "Blocked register" in register  # MEDIUM/HIGH routing (Q6 Hybrid)
     assert "the owner's final read is the human's" in register
 
@@ -155,7 +155,7 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
     text = (KIT / "PROCESS_OPTIONS.md").read_text(encoding="utf-8")
     assert "gate_policy" not in text, (
         "PROCESS_OPTIONS.md instructs through the RETIRED `gate_policy` enum; "
-        "rewrite onto `[attestation] human_ratification_through` / "
+        "rewrite onto `[attestation] human_approval_through` / "
         "`keep_nondependent` and the `human-held`/`loop-held` session hold"
     )
     stray = [
@@ -169,7 +169,7 @@ def test_process_options_teaches_only_the_live_gate_policy_interface():
 
 
 # The gate-authority claim, in the variants the kit's prose has historically
-# used. "human ratification/decision" (the §6 decision-surfacing dial) is a
+# used. "human approval/decision" (the §6 decision-surfacing dial) is a
 # different fact and deliberately not matched.
 _AUTHORITY_CLAIM = re.compile(
     r"human\s+approval|human\s+approves|pausing\s+for\s+your\s+approval",

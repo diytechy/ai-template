@@ -1,15 +1,24 @@
 # Re-attestation briefs — and the retired vocabulary they preserve
 
+**This directory KEEPS ITS NAME, `docs/ratify/`, even though "ratification"
+retired for "approval" everywhere else in the kit (WI-499, owner-ruled
+2026-08-21).** It is a record home: the dated briefs below already lived
+here, immutable, and renaming the directory a record already cites would
+misdate the record for no gain — every script, flag and step name that talks
+ABOUT this directory now says "approval" (`trace.py --approve`, the
+`approval-fresh` and `approval-immutable` harness steps), but the directory
+itself stays `docs/ratify/`.
+
 This directory splits into a live surface and a history (WI-503):
 
-- **`CURRENT.md`** is the one file `trace.py --ratify modified` ever
+- **`CURRENT.md`** is the one file `trace.py --approve modified` ever
   regenerates (`--out docs/ratify/CURRENT.md`), and the harness's
-  `ratify-fresh` step freshness-gates it — a stale `CURRENT.md` is what a
+  `approval-fresh` step freshness-gates it — a stale `CURRENT.md` is what a
   human is about to attest FROM, so the gate fails closed.
 - **`<date>-<slug>.md`** files are **IMMUTABLE once minted**: `trace.py
-  --mint-ratify-brief SLUG` copies `CURRENT.md` to a dated name at the
+  --mint-approval-brief SLUG` copies `CURRENT.md` to a dated name at the
   moment of a sitting, and never touches an existing one again. The
-  `ratify-immutable` harness step refuses any STAGED commit that modifies or
+  `approval-immutable` harness step refuses any STAGED commit that modifies or
   deletes an already-committed dated brief — a plain add of a brand-new name
   is the only change it permits. A dated brief is the record of what a human
   actually read when they signed; rewriting it in place (the pre-WI-503

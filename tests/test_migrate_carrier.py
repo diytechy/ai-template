@@ -262,7 +262,7 @@ SN_MD = (
     "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
     "|---|---|---|---|---|\n"
     "| SN-001 | Add two numbers. | Demo. | M | add(1,2) is 3. |\n\n"
-    "## Draft needs (unratified)\n\n"
+    "## Draft needs (unapproved)\n\n"
     "| SN-ID | Need (plain language) | Why it matters | Priority | Acceptance |\n"
     "|---|---|---|---|---|\n"
     "| SN-002 | Subtract. | Demo. | S | tbd |\n\n"

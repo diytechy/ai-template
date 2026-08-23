@@ -473,7 +473,7 @@ flowchart TD
     G -- no --> H[Wait for in-flight lanes<br/>to finish and merge]
     H --> G
     G -- yes --> I[Admit ALL spine WIs together<br/>as one batch, sole toucher of trunk]
-    I --> J[Build, review, ratify<br/>ONE re-attest window]
+    I --> J[Build, review, approve<br/>ONE re-attest window]
     J --> K[Merge; window closes]
     K --> L[Re-evaluate the backlog:<br/>which queued WIs cite amended SRs?]
     L --> A
@@ -537,7 +537,7 @@ is safe to land before any concurrency is switched on.
 
 The spine batch is one branch, one worker session, one re-attest window (§A4).
 That is exactly right while the batch is small, and it is the wrong shape once
-it is not: at ratification levels 2 and 3 the human holds SRs and LLRs, so a
+it is not: at approval levels 2 and 3 the human holds SRs and LLRs, so a
 broad requirements pass puts every in-process row into a single session whose
 context is the union of all of them.
 
@@ -613,9 +613,9 @@ not ask for.
 
 ## A5. What counts as a spine touch — OWNER RULING 2026-07-31
 
-> Only what is **ratified** matters. Ratification is on change of **scope**,
+> Only what is **approved** matters. Approval is on change of **scope**,
 > defined by the **prose and the relevant field attributes**. Traceability —
-> the `Module` pointer and its kin — is *traced*, not ratified, and must **not**
+> the `Module` pointer and its kin — is *traced*, not approved, and must **not**
 > count as a spine touch.
 
 The detector violates this. `check_trajectory.staged_spine_findings` compares
@@ -629,15 +629,15 @@ changed = sorted(k for k in set(head) | set(row)
 So `Module`, `CodeSymbol`, `TestRefs`, `Component` and `Phase` arm the
 re-attest warn as if requirement prose had changed. **That is what happened on
 WI-280**: 19 LLR `Module` cells followed code that moved → 11 owning SRs to
-`Modified` → gate DevStg-Impl→DevStg-Tests → a ratify brief and four review rounds, for a change
+`Modified` → gate DevStg-Impl→DevStg-Tests → an approve brief and four review rounds, for a change
 that altered no requirement. Under this ruling **that window should never have
 opened.**
 
 ### A5.1 The cell split — RESOLVED (OWNER, question C)
 
-> *"Omit SN-Refs and Verifies as a ratified item to verify against."*
+> *"Omit SN-Refs and Verifies as an approved item to verify against."*
 
-| Registry | Ratified — arms the re-attest | Traced — must NOT |
+| Registry | Approved — arms the re-attest | Traced — must NOT |
 |---|---|---|
 | SR | `Title`, `Requirement`, `Rationale`, `AcceptanceCriteria`, `Permutations`, `Priority`, `Verification` | `SN-Refs`, `Phase`, `Area`, `Lifecycle` |
 | LLR | `Title`, `Detail`, `Rationale` | `Module`, `CodeSymbol`, `TestRefs`, `Component`, `Phase` |
@@ -661,7 +661,7 @@ This is the piece that makes the §A5 ruling *safe*: narrowing the detector
 (WI-380) without it would just move the mis-fires from "spurious window" to
 "missed window."
 
-**Minting is deterministic — no model.** A trunk commit that changes a ratified
+**Minting is deterministic — no model.** A trunk commit that changes an approved
 cell of a `Verified` row causes the dispatcher to write
 `docs/work/queued/WI-NNN-adjudicate-<rows>.md` in a bookkeeping commit
 (`docs/work/` is already an allowed RULING-6 prefix), with:
@@ -750,7 +750,7 @@ the adjudication WI** — one behaviour, one home, one owner.
 
 > *"A full attended DevStg-Reqs/DevStg-Tests/DevStg-Impl would require a back and forth between the
 > detection of gate changes, which would then cause the agent-resume to exit
-> since no work could be taken, and those ratification items should surface in
+> since no work could be taken, and those approval items should surface in
 > open-items. That is how it works today, so I assumed that part would continue
 > to work."*
 
@@ -760,16 +760,16 @@ the adjudication WI** — one behaviour, one home, one owner.
   `spine_rules.py` computes, `docs/gate` falls (e.g. DevStg-Impl→DevStg-Tests), and the window
   *lowers* the bar without blinding it (the higher gate's steps run advisory).
 - **Surfacing is real**: `gen_open_items.py` renders one card per `Draft` (owes
-  a first ratification) or `Modified` (owes a re-attest) SR **with its whole
+  a first approval) or `Modified` (owes a re-attest) SR **with its whole
   chain**, alongside the `Status=pending` decision rows — and it deliberately
-  owns no second opinion, deferring to the `--ratify` brief.
+  owns no second opinion, deferring to the `--approve` brief.
 - **The exit is real but it is a REFUSAL, not a drain.** A queued spine row
   sorts *first* on the frontier (`_GATE_RANK` 0), `drive` claims `ready[0]`,
   and `_claim_refusal` rejects it with `safety_class != "ordinary"` — so the
   run stops nonzero, reading like a failure in a walk-away log when what
   actually happened is *the machine finished everything it was allowed to do*.
   **Fix that with the barrier:** drain the lanes, then exit **0** with
-  "queue drained — N ratification(s) waiting in open-items.html". Same stop,
+  "queue drained — N approval(s) waiting in open-items.html". Same stop,
   honest banner. (`agent_route.failure_action("attended")` already words the
   behaviour this way: *"start nothing new, let in-flight sessions close out,
   then alert the user"* — the dispatcher barrier is that contract implemented.)
@@ -777,42 +777,42 @@ the adjudication WI** — one behaviour, one home, one owner.
 **The three levels, as the code defines them** (`agent_route._PAGE_ACTIONS` /
 `failure_action`, and `docs/gate-policy.md`'s deviation register):
 
-| Level | Escalation action | `pause_wi` | Keeps non-dependent work? | Who ratifies a gate |
+| Level | Escalation action | `pause_wi` | Keeps non-dependent work? | Who approves a gate |
 |---|---|---|---|---|
 | `attended` (default) | `stop-needs-human` | yes | **no** — start nothing new | a human, per batch |
-| `single-ratify` | `surface-block-continue-others` | yes | **yes** | LLM-gate through DevStg-Reqs+DevStg-Tests; the human ratifies the queued batch once at the phase's `[DevStg-Impl]` close, autonomous after |
+| `single-approve` | `surface-block-continue-others` | yes | **yes** | LLM-gate through DevStg-Reqs+DevStg-Tests; the human approves the queued batch once at the phase's `[DevStg-Impl]` close, autonomous after |
 | `autonomous` (this repo) | `design-check-session` | yes | **yes** | an independent fresh-context LLM reviewer's recorded verdict, every gate except the owner's final read |
 
 **What the dispatcher does with each kind, per level.** This is the table the
 barrier needs and the one place the design must not invent policy:
 
-| Kind on the frontier | `attended` | `single-ratify` | `autonomous` |
+| Kind on the frontier | `attended` | `single-approve` | `autonomous` |
 |---|---|---|---|
 | `ordinary`, `critique` | dispatch (parallel) | dispatch | dispatch |
 | `high-risk`, `protected` | dispatch (exclusive) | dispatch | dispatch |
-| `spine` — build a scope change | dispatch: it is **work**, not a ratification. It *opens* a window; closing it is the next row's job | dispatch | dispatch |
+| `spine` — build a scope change | dispatch: it is **work**, not an approval. It *opens* a window; closing it is the next row's job | dispatch | dispatch |
 | `adjudication` | dispatch — but **see the open decision below** | dispatch | dispatch |
-| `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[DevStg-Impl]` close; otherwise surface | dispatch (recorded reviewer verdict ratifies) |
+| `attestation` / `gate` — close a window | **do not dispatch.** Drain the lanes, surface the cards, exit 0 into the owner's queue | dispatch only the queued batch at the phase `[DevStg-Impl]` close; otherwise surface | dispatch (recorded reviewer verdict approves) |
 
 **Fixed points survive every level** and the dispatcher must not paper over
 them: the owner's final read is the human's; **no un-run greens**; the harness is still the
-bar; ratified owner decisions are never re-decided by an agent.
+bar; approved owner decisions are never re-decided by an agent.
 
 **The open decision this exposes — may adjudication FLIP under `attended`?**
 An adjudication WI's cheap outcome is flipping `Modified` → `Verified` when a
 change turned out to be grammar, clarity, or a re-point that moved no scope.
-That flip is a **Status change that recovers the gate** — which is a
-ratification, and under `attended` ratification is the human's. Two readings,
+That flip is a **Status change that recovers the gate** — which is an
+approval, and under `attended` approval is the human's. Two readings,
 both defensible:
 
 - **Flip.** Adjudication asserts *no scope changed*, so there is nothing to
-  ratify — it is unwinding a false positive, not closing a real window.
+  approve — it is unwinding a false positive, not closing a real window.
 - **Recommend only.** Under `attended` it writes its judgement into the WI and
   the open-items card and stops; the human flips. The owner still sits, but now
   with a prepared brief — *"these 19 cells are traced-only, no scope moved,
   recommend re-verify"* — instead of a bare `Modified` count.
 
-**Recommendation: recommend-only under `attended`, flip under `single-ratify`
+**Recommendation: recommend-only under `attended`, flip under `single-approve`
 and `autonomous`.** It costs one owner click on the cheap path and keeps the
 level's meaning exact — and *"prepared brief instead of a bare count"* is most
 of the win WI-388 exists for.
@@ -1020,7 +1020,7 @@ has no open question left, only its entry in [`log.md`](log.md)'s Decisions.
 | # | Decision | Ruling | Where |
 |---|---|---|---|
 | **1** | Handback vs the bar — what does a lane do when it must hand back *because its code is red*? | **Revert the code; carry the failing diff as a bar-inert `.patch` under `docs/work/`.** Ruled after the owner challenged the frequency claim behind it: the claim was **refuted** (Class A = 0 at merge; no `EXIT_NEEDS_HUMAN` cause is a red bar), which strengthens the choice — a rare path earns neither an exclusion mechanism nor the invariant. Forced a second finding: **the verdict gate must key off the outcome, not the claim.** | §A3 |
-| **2** | May adjudication flip `Modified`→`Verified` under `attended`? | **Recommend-only under `attended`; flip under `single-ratify` and `autonomous`.** | §A8 |
+| **2** | May adjudication flip `Modified`→`Verified` under `attended`? | **Recommend-only under `attended`; flip under `single-approve` and `autonomous`.** | §A8 |
 | **3** | Delete the merge bar, or keep a cheap non-test tier as defence-in-depth? | **Delete it.** "Provably redundant" is the whole argument for the constraint; a kept-just-in-case bar is the shape §0 warns about. | §A2 |
 | **4** | Speculative or pessimistic refresh? | **Speculative**, with the one-lost-race-then-take-the-slot rule. The slot is the exclusive turn to advance trunk; the 11-minute bar sits outside it. Owner caveat — *may need restricting to pessimistic later* — **checked and its suspicion confirmed**: the historical pain was speculation held in state git could not adjudicate (`refs/llm/` CAS reservations, `events.jsonl`), not speculation as such. This speculates on **ancestry only**. Two requirements make the restriction cheap if ever taken: one slot-acquisition call site, and a pessimistic path that is never dead code. | §A2.0 |
 | **5** | Lane count. | **Dial in `stack.ini [agent-loop]`; template seeds `lanes = 2`, absent key means `1`** — so a re-sync never upgrades an existing adopter into concurrency it did not ask for. `stack.ini` is already adopter-preserved (ADOPTING.md §6). | §A4.3 |
@@ -1040,7 +1040,7 @@ reason recorded; three new ids carry the scope this design added.
 
 | WI | Scope | Removes machinery? | Predecessors |
 |---|---|---|---|
-| **WI-380** | Ratified-vs-traced cell split (§A5.1) | narrows a check | — |
+| **WI-380** | Approved-vs-traced cell split (§A5.1) | narrows a check | — |
 | **WI-384** | Six-state model, `disposition` deleted (§B) | **yes** | — |
 | **WI-386** *(new)* | **Station protocol**: refresh-before-merge, ancestor precondition, disposable refresh commit, bar-green-@-sha (§A2) | **yes — the largest deletion here** | — |
 | **WI-387** *(new)* | Terminal outcomes: merged \| cancelled \| handback; claim order inverted (§A3) | **yes** | WI-384, WI-386 |

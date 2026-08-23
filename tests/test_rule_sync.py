@@ -339,17 +339,17 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # would make it a pin on the ladder instead.
     method_blind_rung = None
     for m in methods:
-        # RE-POINTED AT D-9 STEP 5: the "ratified but not approved" fixture was
+        # RE-POINTED AT D-9 STEP 5: the "approved but not approved" fixture was
         # `Planned`, which FOLDED into `Approved`. Under the narrowed enum the
         # only value that still means that is `Modified` — using `Approved` here
         # would have made both halves of the comparison the same row.
         implemented = {"Verification": m, "Status": "Modified"}
         verified = {"Verification": m, "Status": "Approved"}
-        # trace's widened bar applies to every ratified (non-Drafted) row — the skip
+        # trace's widened bar applies to every approved (non-Drafted) row — the skip
         # is is_drafted, which is method-blind — and then passes iff is_approved. So
-        # a ratified SR of ANY method flags exactly when it is not Approved.
-        assert TRACE.is_drafted(implemented) is False, m  # bar applies (ratified)
-        assert TRACE.is_drafted(verified) is False, m  # bar applies (ratified)
+        # an approved SR of ANY method flags exactly when it is not Approved.
+        assert TRACE.is_drafted(implemented) is False, m  # bar applies (approved)
+        assert TRACE.is_drafted(verified) is False, m  # bar applies (approved)
         assert TRACE.is_approved(verified) is True, m  # Approved -> passes
         assert TRACE.is_approved(implemented) is False, m  # not Approved -> flagged
         # RE-POINTED AT WI-498 slice 5: `sr_bar` is DELETED with the bar axis, so
@@ -370,7 +370,7 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
         if method_blind_rung is None:
             method_blind_rung = stage_v
         assert stage_v == method_blind_rung, m
-    # A Drafted SR is pre-ratification and exempt from trace's bar (is_drafted
+    # A Drafted SR is pre-approval and exempt from trace's bar (is_drafted
     # True, so the loop `continue`s) while it HOLDS ITS RUNG OPEN on the
     # derivation side — the two are the same fact seen from each end, which is
     # what lets a draft live in the live spine and still show as work in
@@ -415,10 +415,10 @@ def test_sn_draft_ids_agrees():
     # (section-as-state maturity). Pin them equivalent across headings, -000
     # placeholders, and section boundaries.
     texts = [
-        "## Drafted\nSN-010 something\n## Ratified\nSN-011 done\n",
+        "## Drafted\nSN-010 something\n## Approved\nSN-011 done\n",
         "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
         "## DRAFT (in review)\nSN-030 SN-000 SN-031\n",
-        "## Ratified only\nSN-040\n",
+        "## Approved only\nSN-040\n",
         "SN-050 no heading at all\n",
         "",
     ]
@@ -440,13 +440,13 @@ def test_sn_all_ids_agrees():
         "SN-001 mentioned in prose, no table row at all\n",
         "| SN-002 | a table row |\n\n## Drafted\n\nSN-003\n",
         "SN-000 placeholder only\n",
-        "## Ratified\n\nSN-004 twice SN-004, then SN-005.\nAnd SN-006#frag.\n",
+        "## Approved\n\nSN-004 twice SN-004, then SN-005.\nAnd SN-006#frag.\n",
         "no ids here\n",
     ]
     for text in texts:
         assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
     # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
-    # universe exactly like a table row (the §2.1 sharp edge: ratified + uncited
+    # universe exactly like a table row (the §2.1 sharp edge: approved + uncited
     # means the coverage rung caps the gate at DevStg-Below). Drafted-section ids are
     # included (the draft/coverage split happens later, on sn_draft_ids); only
     # -000 placeholders are excluded.
@@ -490,17 +490,17 @@ def test_sn_cited_ids_agrees():
     }
 
 
-def test_the_legacy_ratification_translation_agrees():
+def test_the_legacy_approval_translation_agrees():
     # SN-029. `bootstrap.py` imports no kit sibling — it is the one script an
     # adopter may run from a bare download — so it carries its own copy of the
     # retired gate-authority enum's translation. This is duplicated POLICY, not
     # plumbing: if the migrator and the readers disagreed about what
-    # `single-ratify` meant, a repo would scaffold with one posture and run with
+    # `single-approve` meant, a repo would scaffold with one posture and run with
     # another, which is precisely the shadowing defect SN-029 removed.
     BOOT = load_script("bootstrap")
     COMMON = load_script("agent_common")
-    assert BOOT.LEGACY_RATIFICATION == COMMON.LEGACY_RATIFICATION
-    assert set(BOOT.LEGACY_RATIFICATION) == {"attended", "single-ratify", "autonomous"}
+    assert BOOT.LEGACY_APPROVAL == COMMON.LEGACY_APPROVAL
+    assert set(BOOT.LEGACY_APPROVAL) == {"attended", "single-approve", "autonomous"}
     # And the two ends are what the words always meant, stated here so a future
     # edit to either copy has to argue with a named expectation rather than
     # merely keeping two dictionaries equal to each other.
@@ -508,12 +508,10 @@ def test_the_legacy_ratification_translation_agrees():
     # 0-4 ordinal. The two ends still mean what the words always meant — the top
     # of the ladder holds everything, and the sentinel below it holds nothing.
     assert (
-        BOOT.LEGACY_RATIFICATION["attended"]["human_ratification_through"]
-        == "DevStg-Release"
+        BOOT.LEGACY_APPROVAL["attended"]["human_approval_through"] == "DevStg-Release"
     )
     assert (
-        BOOT.LEGACY_RATIFICATION["autonomous"]["human_ratification_through"]
-        == "DevStg-Below"
+        BOOT.LEGACY_APPROVAL["autonomous"]["human_approval_through"] == "DevStg-Below"
     )
     # THE SECOND F5 COPY THE RE-KEY CREATED, pinned for the same reason as the
     # first: `--migrate-config` rewrites an adopter's retired ordinal using
@@ -532,8 +530,8 @@ def test_the_legacy_ratification_translation_agrees():
 
 def test_the_retired_enum_key_is_no_longer_shipped():
     # The shadowing defect, pinned so it cannot come back: the template used to
-    # ship BOTH `gate_policy = "attended"` and `human_ratification_through = 4`,
-    # and since `ratification_through` prefers the explicit dial, every repo that
+    # ship BOTH `gate_policy = "attended"` and `human_approval_through = 4`,
+    # and since `approval_through` prefers the explicit dial, every repo that
     # chose a non-default posture scaffolded as fully attended with no
     # diagnostic.
     from conftest import KIT
@@ -545,7 +543,7 @@ def test_the_retired_enum_key_is_no_longer_shipped():
         if ln.strip().startswith("gate_policy") and "=" in ln
     ]
     assert declared == [], declared
-    assert 'human_ratification_through = "DevStg-Release"' in text
+    assert 'human_approval_through = "DevStg-Release"' in text
 
 
 def test_sn_field_mapping_agrees_across_all_three_readers(tmp_path):
@@ -643,7 +641,7 @@ MIGRATE = load_script("migrate_carrier")
 
 
 def test_the_two_spine_carrier_readers_agree():
-    # trace.py owns the ratify brief's baseline read; check_trajectory.py owns
+    # trace.py owns the approve brief's baseline read; check_trajectory.py owns
     # the two-tree amendment scan. Both resolve a registry to a tier and a
     # column vocabulary, and both are consulted about the SAME commit.
     assert TRACE.SPINE_TABLE == CHECK_TRAJ.SPINE_TABLE
@@ -822,7 +820,7 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     assert TRACE.sn_draft_ids(legacy) == GATE.sn_draft_ids(legacy) == {"SN-005"}
 
     # The same claim under the new carrier is a field, and a MENTION does not
-    # set it: SN-006 is named in SN-005's prose and stays ratified.
+    # set it: SN-006 is named in SN-005's prose and stays approved.
     modern = (
         '[need.SN-005]\nstatus = "Drafted"\nneed = "n"\n\n'
         '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'

@@ -39,7 +39,7 @@ WIRED = {
     # along with its `derived-gate` enforcer; `stage` is the surviving axis.
     "stage": "derived-stage",
     "openitems": "open-items",
-    "ratify": "ratify-fresh",
+    "approve": "approval-fresh",
     "skillsindex": "skills-index",
     "promptcatalog": "prompt-catalog",
 }
@@ -50,7 +50,7 @@ WIRED = {
 OTHERWISE_ENFORCED = {
     # A hand-stamped, measured-and-classified BASELINE (docs/stack.ini §5.3):
     # there is no command that regenerates it, because re-deriving it would
-    # blindly ratify whatever the tree currently measures — which is the ratchet
+    # blindly approve whatever the tree currently measures — which is the ratchet
     # inverted. Its enforcer is that it IS a test: tests/test_module_size_ratchet
     # re-measures every kit module against the baseline on every run.
     "linecounts": "tests/test_module_size_ratchet.py",
@@ -152,7 +152,7 @@ def test_the_two_new_steps_gate_at_every_rung():
     # (the loop's prompt templates, the skill library) — kit source that does not
     # move as a downstream plan matures — and their consumers (session forensics,
     # an agent choosing a skill) are live from the first session. Concretely: this
-    # kit's own effective stage sits low while its ratification window is open,
+    # kit's own effective stage sits low while its approval window is open,
     # so an Impl-threshold step would not run in the kit's own CI at all for the
     # window's whole duration, which is the gap re-created rather than closed.
     #   The tag was a three-bar membership set and is now the LOWEST RUNG

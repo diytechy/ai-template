@@ -180,7 +180,7 @@ make-work that produces paraphrase, not traceability. Instead:
 
 - **Let `docs/stage` derive to `DevStg-Reqs` honestly**, whatever the code's
   maturity — the stage describes the *registry's* coverage of the product, and
-  that coverage starts near zero. Ratify up to DevStg-Tests/DevStg-Impl only when
+  that coverage starts near zero. Approve up to DevStg-Tests/DevStg-Impl only when
   their criteria genuinely hold for the scope the registries actually cover.
 - **Write SNs/SRs for the load-bearing behavior first**: what the project must
   keep doing (the things a regression would page you for), plus the

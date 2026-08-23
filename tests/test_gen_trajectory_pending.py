@@ -2,8 +2,8 @@
 
 `gen_trajectory.pending_block` is a pure projection of committed-tree state:
 
-  (a) `blocked` WI rows carrying a BlockRef (the attestation/ratification page);
-  (e) Drafted/Modified SR rows (WI-316) owing a ratification / re-attest;
+  (a) `blocked` WI rows carrying a BlockRef (the attestation/approval page);
+  (e) Drafted/Modified SR rows (WI-316) owing an approval / re-attest;
   (f) the tracked `docs/work/pause` declaration (concurrency-restructure §5.6).
 
 (The dispatcher-era sources — refs/llm conflict records, quarantined trains,
@@ -159,20 +159,20 @@ def test_a_RETIRED_marker_no_longer_projects_a_reattest_line(tmp_path):
     assert "None — no durable owner action is pending" in body
 
 
-def test_draft_sr_projects_ratification_owed(tmp_path):
-    # A Drafted SR projects a ratification-owed line pointing at the per-SR
+def test_draft_sr_projects_approval_owed(tmp_path):
+    # A Drafted SR projects an approval-owed line pointing at the per-SR
     # hierarchy brief — Drafted rows never surfaced in open-items before WI-316.
     _init(tmp_path)
     _write_srs(tmp_path, 'SR-007,New need,SN-001,"r","x","a",,C,Test,Drafted,3,\n')
     body = _block(tmp_path)
     assert "SR-007" in body and "approval owed" in body
-    assert "--ratify SR-007" in body
+    assert "--approve SR-007" in body
 
 
 def test_bommed_registry_still_projects(tmp_path):
     # Adversarial-review F4: a BOM'd SR registry (the realistic Excel
     # round-trip) glued the BOM to the SR-ID header and silently hid every
-    # Drafted line — the projection read "None pending" while a ratification
+    # Drafted line — the projection read "None pending" while an approval
     # was owed. read_rows now reads utf-8-sig.
     _init(tmp_path)
     body = SR_HEADER + 'SR-004,Gate derivation,SN-001,"r","x","a",,C,Test,Drafted,2,'
@@ -184,7 +184,7 @@ def test_bommed_registry_still_projects(tmp_path):
 
 def test_approved_sr_does_not_project_and_the_flip_drops_the_line(tmp_path):
     # An Approved SR projects nothing; flipping Drafted->Approved (the
-    # ratification) drops the line on the next regeneration — the projection is
+    # approval) drops the line on the next regeneration — the projection is
     # stateless. It drove Modified->Approved until D-9 step 7 retired that
     # marker; the surviving flip is the one a Status cell still records.
     _init(tmp_path)

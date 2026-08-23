@@ -232,7 +232,7 @@ def _amend_sr(root, req, status):
 
 
 def test_staged_spine_amend_without_flip_warns(tmp_path):
-    # Amending a Approved SR's content cells while Status stays Approved warns,
+    # Amending an Approved SR's content cells while Status stays Approved warns,
     # naming the row and the changed cells — the write-time discipline the
     # RE-ATTESTATION-PENDING commit-message prose never had (process.md §7).
     run_git = _init_spine_repo(tmp_path)
@@ -335,7 +335,7 @@ def test_staged_spine_warn_survives_a_bom(tmp_path):
 
 
 def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
-    # A NEW row is not an amendment; a Status-only change (e.g. the ratification
+    # A NEW row is not an amendment; a Status-only change (e.g. the approval
     # flip Drafted->Approved with no content delta) made a deliberate call the
     # warn does not second-guess. Both stay silent.
     run_git = _init_spine_repo(tmp_path)
@@ -352,9 +352,9 @@ def test_staged_spine_new_row_and_status_only_flip_are_silent(tmp_path):
     assert "re-attest marker" not in proc.stderr
 
 
-# --- WI-380: the §A5.1 ratified-vs-traced cell split ---------------------------
+# --- WI-380: the §A5.1 approved-vs-traced cell split ---------------------------
 #
-# Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is RATIFIED
+# Owner ruling 2026-07-31 (docs/concurrency-v2.md §A5.1): only what is APPROVED
 # arms the re-attest warn. Traceability is TRACED, and a traced-only edit must
 # stay silent — WI-280 paid four review rounds and a DevStg-Impl->DevStg-Tests gate drop for 19
 # `Module` pointers that followed moved code and altered no requirement.
@@ -435,10 +435,10 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     # THE WI-380 CASE. Every traced cell of all three registries moves at once —
     # the SR's SN-Refs/Phase/Aspect, the LLR's Module/CodeSymbol/TestRefs/
     # Component/Phase (literally the WI-280 shape), the TC's Verifies/Evidence/
-    # Automated/Phase — with every ratified cell and every Status untouched.
+    # Automated/Phase — with every approved cell and every Status untouched.
     # Silence is the whole point: before this split each of these armed the warn
     # exactly as if requirement prose had changed (mutation-proof: reverting
-    # `spine_cell_class` to "everything but Status is ratified" reds this).
+    # `spine_cell_class` to "everything but Status is approved" reds this).
     run_git = _init_full_spine_repo(tmp_path)
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER
@@ -468,9 +468,9 @@ def test_staged_spine_traced_cells_do_not_arm_the_reattest_warn(tmp_path):
     assert "re-attest marker" not in proc.stderr
 
 
-def test_staged_spine_ratified_child_cells_still_arm_the_reattest_warn(tmp_path):
+def test_staged_spine_approved_child_cells_still_arm_the_reattest_warn(tmp_path):
     # The complement, so the narrowing cannot be mistaken for a disabling: the
-    # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are ratified,
+    # LLR's `Detail`/`Rationale` and the TC's `Method`/`Expected` are approved,
     # and amending them with the owning SR left Approved still warns per row.
     run_git = _init_full_spine_repo(tmp_path)
     _write_child_registries(
@@ -481,11 +481,11 @@ def test_staged_spine_ratified_child_cells_still_arm_the_reattest_warn(tmp_path)
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "LLR-001: ratified cell(s) Detail, Rationale amended" in proc.stderr
-    assert "TC-001: ratified cell(s) Expected, Method amended" in proc.stderr
+    assert "LLR-001: approved cell(s) Detail, Rationale amended" in proc.stderr
+    assert "TC-001: approved cell(s) Expected, Method amended" in proc.stderr
 
 
-def test_staged_spine_unknown_column_falls_to_ratified(tmp_path):
+def test_staged_spine_unknown_column_falls_to_approved(tmp_path):
     # THE FAIL-SAFE. A column in NEITHER §A5.1 list — one added to a registry
     # after the ruling was written — must arm the warn, not fall through it: a
     # spurious window is seen and dismissed, a missed window is seen by nobody.
@@ -501,7 +501,7 @@ def test_staged_spine_unknown_column_falls_to_ratified(tmp_path):
     run_git("add", "-A")
     proc = run_traj(tmp_path, "--staged")
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "SR-001: ratified cell(s) Novelty amended" in proc.stderr
+    assert "SR-001: approved cell(s) Novelty amended" in proc.stderr
 
 
 def test_spine_cell_split_classifies_every_shipped_column():
@@ -542,18 +542,18 @@ def test_spine_cell_split_classifies_every_shipped_column():
             c
             for c in unclassified
             if c
-            not in set(ct.SPINE_RATIFIED_CELLS[rel]) | set(ct.SPINE_TRACED_CELLS[rel])
+            not in set(ct.SPINE_APPROVED_CELLS[rel]) | set(ct.SPINE_TRACED_CELLS[rel])
         }
         assert not unclassified, (
             "{}: column(s) {} are classified by NEITHER half of the §A5.1 split "
-            "in check_trajectory.py — rule them ratified or traced".format(
+            "in check_trajectory.py — rule them approved or traced".format(
                 path, sorted(unclassified)
             )
         )
     # And the two halves must not overlap: a cell cannot be both.
     for rel, _ in ct.SPINE_CSVS:
         assert not (
-            set(ct.SPINE_RATIFIED_CELLS[rel]) & set(ct.SPINE_TRACED_CELLS[rel])
+            set(ct.SPINE_APPROVED_CELLS[rel]) & set(ct.SPINE_TRACED_CELLS[rel])
         ), rel
 
 
@@ -564,7 +564,7 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     #     siblings (`SN-Refs`, `Verifies`): re-pointing which SR owns a
     #     decomposition row changes no attested prose on either side, and
     #     whether the re-point moved scope is exactly adjudication's judgement.
-    #   * SR `SupersededBy` -> RATIFIED. That half is now VACUOUS by a later
+    #   * SR `SupersededBy` -> APPROVED. That half is now VACUOUS by a later
     #     ruling: the SR-tier column retired with the supersession tombstone
     #     class (D-4, 2026-08-14b), so there is no cell left to classify. The
     #     LLR `SR-Refs` half below is the live half, and it is the one this
@@ -572,7 +572,7 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     #     under exactly the traced/adjudication routing it pins.
     # Asked through `spine_cell_class`, the rule every caller goes through, and
     # asked under BOTH carrier suffixes: the tables are keyed by a path that
-    # carries one, and a lookup miss reads `ratified` — which would silently
+    # carries one, and a lookup miss reads `approved` — which would silently
     # re-arm the window WI-388 ruled these cells out of. The CMP registry's own
     # `SupersededBy` is a separate rule and is unaffected.
     ct = load_script("check_trajectory")
@@ -584,10 +584,10 @@ def test_the_two_wi388_cell_rulings_are_recorded_in_the_split():
     llr = "docs/requirements/low-level-requirements.toml"
     sr = "docs/requirements/system-requirements.toml"
     assert "SR-Refs" in ct.SPINE_TRACED_CELLS[llr]
-    assert "SR-Refs" not in ct.SPINE_RATIFIED_CELLS[llr]
+    assert "SR-Refs" not in ct.SPINE_APPROVED_CELLS[llr]
     # The retired SR-tier column is absent from BOTH halves — not silently
     # re-classified into one of them.
-    assert "SupersededBy" not in ct.SPINE_RATIFIED_CELLS[sr]
+    assert "SupersededBy" not in ct.SPINE_APPROVED_CELLS[sr]
     assert "SupersededBy" not in ct.SPINE_TRACED_CELLS[sr]
 
 
@@ -605,7 +605,7 @@ def test_staged_llr_sr_refs_repoint_is_traced_not_a_reattest_warn(tmp_path):
     amendments = ct.staged_spine_amendments(tmp_path)
     llr_records = [a for a in amendments if a["id"] == "LLR-001"]
     assert len(llr_records) == 1
-    assert llr_records[0]["ratified"] == {}
+    assert llr_records[0]["approved"] == {}
     assert llr_records[0]["traced"] == {"SR-Refs": ("SR-001", "SR-002")}
 
 
@@ -624,7 +624,7 @@ def test_staged_spine_amendments_expose_the_traced_half_for_adjudication(tmp_pat
     assert [(a["registry"], a["id"]) for a in amendments] == [
         ("docs/requirements/system-requirements.csv", "SR-001")
     ]
-    assert amendments[0]["ratified"] == {}
+    assert amendments[0]["approved"] == {}
     assert amendments[0]["traced"] == {"SN-Refs": ("SN-001", "SN-009")}
     assert ct.staged_spine_findings(tmp_path) == []
 
@@ -649,10 +649,10 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     assert [(a["registry"], a["id"]) for a in ranged] == [
         ("docs/requirements/system-requirements.csv", "SR-001")
     ]
-    assert ranged[0]["ratified"] == {}
+    assert ranged[0]["approved"] == {}
     assert ranged[0]["traced"] == {"SN-Refs": ("SN-001", "SN-009")}
 
-    # The ratified half survives the same trip — a rev range is not a second,
+    # The approved half survives the same trip — a rev range is not a second,
     # weaker scan: it is the same rules read against two commits.
     (tmp_path / "docs" / "requirements" / "system-requirements.csv").write_text(
         _SPINE_SR_HEADER + _sr_row("the AMENDED text", "Approved"), encoding="utf-8"
@@ -660,7 +660,7 @@ def test_staged_spine_amendments_read_a_commit_range_not_only_the_index(tmp_path
     run_git("add", "-A")
     run_git("commit", "-m", "amend the Requirement")
     ranged2 = ct.staged_spine_amendments(tmp_path, "HEAD~1", "HEAD")
-    assert list(ranged2[0]["ratified"]) == ["Requirement"]
+    assert list(ranged2[0]["approved"]) == ["Requirement"]
 
 
 # --- the carrier cutover ------------------------------------------------------
@@ -702,7 +702,7 @@ def test_the_cutover_commit_is_checked_by_the_amendment_guard_not_exempt_from_it
 
 def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     # The mutation that proves the silence above is not vacuous. Same cutover,
-    # with one ratified cell quietly rewritten in the same commit - the exact
+    # with one approved cell quietly rewritten in the same commit - the exact
     # shape a carrier migration invites, because 400-odd rows all change at once
     # and no reviewer diffs them by eye. The guard names the row and the cell.
     run_git = _init_spine_repo(tmp_path)
@@ -729,7 +729,7 @@ def test_text_smuggled_into_the_cutover_commit_is_caught(tmp_path):
     assert [(a["registry"], a["id"]) for a in amendments] == [
         ("docs/requirements/system-requirements.toml", "SR-001")
     ]
-    assert amendments[0]["ratified"] == {
+    assert amendments[0]["approved"] == {
         "Requirement": ("the original attested text", "text nobody agreed to")
     }
 

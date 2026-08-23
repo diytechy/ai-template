@@ -22,7 +22,7 @@
 #
 # STATUS is the one maturity field — the SAME field and the same words the
 # spine uses — and every row carries it from the file's first commit: a frame
-# with no approval element cannot be ratified, and the stage rung that reads it
+# with no approval element cannot be approved, and the stage rung that reads it
 # (`spine_rules.boundary_incomplete`, "is the boundary inventory still in
 # work?") would have nothing honest to read. Closed vocabulary:
 # `Drafted` | `Approved`. `Founded` is NOT APPLICABLE to this tier and never

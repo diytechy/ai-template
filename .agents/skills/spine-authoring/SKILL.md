@@ -228,9 +228,9 @@ Four questions:
   tests then refute), and the retired instrument's own header. Sweep the row,
   its children, and anything citing the retired instrument, in the same commit
   as the flip.
-- **The ratify brief.** `scripts/trace.py --ratify <scope>` renders the batch's
+- **The approve brief.** `scripts/trace.py --approve <scope>` renders the batch's
   SN→SR→LLR→TC hierarchy with prose for the acceptor to read, and
-  `--ratify modified` renders the per-cell before/after re-attestation brief.
+  `--approve modified` renders the per-cell before/after re-attestation brief.
   Link the brief; never hand-copy rows into it. (Running the bar itself: the
   `gate-advance` skill. Orphans, integrity and schema findings:
   `registry-hygiene`.)

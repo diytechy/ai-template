@@ -270,7 +270,7 @@ def test_a_legitimately_redirecting_declaration_counts(tmp_path):
 def test_a_mixed_marker_with_a_placeholder_rev_flags_its_missing_rev(tmp_path):
     # The reviewer's mixed fixture: a half-filled template — a real command
     # typed, `rev=<revision>` left unfilled — was excused wholesale by the
-    # any-value excusal, the silent direction. Under the ratified all-values
+    # any-value excusal, the silent direction. Under the approved all-values
     # Grammar sentence it is a REAL marker, and the placeholder value counts
     # as ABSENT in the completeness judgment (the trap the reviewer named:
     # the bare rev= capture arrives unclosed as `<revision`, which carries

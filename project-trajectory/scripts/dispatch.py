@@ -27,8 +27,8 @@ ADMISSION IS THE ONE SCHEDULING DECISION THIS MODULE OWNS (§A4.1/§A8, the
 authority the deleted `_claim_refusal` safety arm moved here). The §A8 policy
 table, per kind x session hold: ordinary/critique dispatch parallel at
 every level; high-risk/protected dispatch exclusive at every level; a `spine`
-row dispatches at every level — building a scope change is WORK, not a
-ratification — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
+row dispatches at every level — building a scope change is WORK, not an
+approval — but EXCLUSIVELY and BATCHED: an exclusive-kind row on the
 frontier stops new admission, the dispatcher waits for every lane back in the
 station, then admits ALL spine rows TOGETHER as one batch (one branch, one
 `agent_loop --wi 'A;B'` worker, one re-attest window, one owner sitting). An
@@ -38,11 +38,11 @@ exits 0 — the machine finished everything it was allowed to do
 (`agent_route.failure_action(human_held=True)` is the contract this
 implements). With `keep_nondependent` those rows dispatch only as the queued
 batch once nothing else remains; on a LOOP-HELD tier they dispatch outright (a
-recorded fresh-context reviewer verdict ratifies). The three retired enum words
-(`attended` / `single-ratify` / `autonomous`) each named one cell of that
+recorded fresh-context reviewer verdict approves). The three retired enum words
+(`attended` / `single-approve` / `autonomous`) each named one cell of that
 two-dial table, which is why they could not express the fourth. The fixed
 points hold at every level: the owner's final read is the human's, no un-run greens, the
-harness is still the bar, ratified owner decisions are never re-decided.
+harness is still the bar, approved owner decisions are never re-decided.
 
 Beyond admission it adds ORDERING only, no authority: every refusal stays
 where it already lives (the tracked docs/work/pause, a dirty trunk, the
@@ -272,18 +272,18 @@ def _kind_action(kind, human_held, approval_held=False):
         attestation, gate     surface              exclusive
 
     `human_held` is the SN-029 comparison already made: is the tier this repo's
-    spine is currently in process at still the human's to ratify
+    spine is currently in process at still the human's to approve
     (`agent_common.human_holds`)? It replaces the three-value gate-authority enum,
     which could not express "TCs are human-held but LLRs are not" — the whole
-    reason the ratification dial became an ordinal read against the 0-5 spine
+    reason the approval dial became an ordinal read against the 0-5 spine
     stage ladder (the dial's own levels stay 0-4: the four SPINE tiers plus
-    "nothing", and implementation is not a ratification tier).
+    "nothing", and implementation is not an approval tier).
 
     A `spine` row dispatches EITHER WAY because building a scope change is
-    WORK, not a ratification — it opens a window; closing it is the next row's
+    WORK, not an approval — it opens a window; closing it is the next row's
     job. `attestation`/`gate` close a window, which on a human-held tier is the
     human's act (drain, surface the cards, exit 0) and otherwise dispatches — a
-    recorded fresh-context reviewer verdict ratifies. The last arm also covers
+    recorded fresh-context reviewer verdict approves. The last arm also covers
     `adjudication`: exclusive, like every non-parallel kind.
 
     `approval_held` IS THE OFF-SPINE AXIS (owner ruling OI-30 D3, 2026-08-15),
@@ -291,10 +291,10 @@ def _kind_action(kind, human_held, approval_held=False):
     `human_held` answers about the SPINE tier the repo is in; a WI whose action
     would move an `approval` cell in an off-spine registry is governed by THAT
     registry's own rung — `agent_common.human_approves(docs, registry)`, which
-    reads the same `human_ratification_through` dial through
+    reads the same `human_approval_through` dial through
     `agent_common.APPROVAL_RUNGS`. Either hold surfaces: a loop session must not
     write an approval a human owes, even on a spine tier the project has
-    declared machine-ratifiable.
+    declared machine-approvable.
 
     IT DEFAULTS FALSE AND EVERY CALLER IN THIS MODULE PASSES THE DEFAULT, which
     is stated rather than hidden: NO WI KIND CARRIES A REGISTRY IDENTITY TODAY.
@@ -302,7 +302,7 @@ def _kind_action(kind, human_held, approval_held=False):
     admission to satisfy a rule with no live writer would be building the wrong
     half first. This parameter is the SEAM the rule is enforced at, placed so the
     caller that first learns which registry a row would touch has somewhere to
-    say so — and `tests/test_ratification_level.py` pins that no shipped loop
+    say so — and `tests/test_approval_level.py` pins that no shipped loop
     module writes an `approval` cell in the meantime, which is the guard that
     actually bites today.
 
@@ -332,8 +332,8 @@ def _judgement_first(ready_kinds):
     because a lane CLAIMED an outcome (a partial close, a cancellation, an
     amendment that may have moved meaning) and nothing has judged that claim
     yet. A spine batch re-attests requirements. Running the batch first
-    re-ratifies a spine on a premise the pending judgement may overturn, and a
-    ratification is the one thing this loop cannot cheaply take back — the
+    re-approves a spine on a premise the pending judgement may overturn, and an
+    approval is the one thing this loop cannot cheaply take back — the
     attestation ledger is append-only by design. Judge, then build."""
     return sorted(ready_kinds, key=lambda wk: wk[1] != "adjudication")
 
@@ -343,15 +343,15 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
 
     `ready_kinds` is the ordered frontier as `(wi_id, kind)` pairs (rank
     already sorted spine first), `human_held` the SN-029 comparison (is the
-    tier in process still the human's to ratify?), `busy` whether any lane is
+    tier in process still the human's to approve?), `busy` whether any lane is
     out, `free` how many lanes are open, and `keep_nondependent` the orthogonal
-    dial an ordinal cannot carry — may other work keep running while a
-    ratification is queued? Returns `(verb, payload)`:
+    dial an ordinal cannot carry — may other work keep running while an
+    approval is queued? Returns `(verb, payload)`:
 
       ("admit", [batch, ...])       fill lanes with parallel rows, one per lane
       ("admit-exclusive", batch)    ONE batch that must run alone — all spine
                                     rows together, or the first exclusive row,
-                                    or the queued ratification batch at the
+                                    or the queued approval batch at the
                                     close under `keep_nondependent`
       ("wait", [])                  an exclusive-kind row is pending: stop
                                     admitting and let the lanes come home
@@ -374,23 +374,23 @@ def _admission(ready_kinds, human_held, busy, free, keep_nondependent=False):
         (w, k) for w, k in ready_kinds if _kind_action(k, human_held) != "surface"
     ]
     if surfaced and not keep_nondependent:
-        # The human-held stop (§A8 premise: once a ratification is pending, no
+        # The human-held stop (§A8 premise: once an approval is pending, no
         # work can be taken): drain and exit 0 into the owner's queue.
         return "surface", surfaced
     if not dispatchable:
         if not surfaced:
             return "empty", []
         # THE CLOSE UNDER `keep_nondependent`: the non-dependent work has all
-        # drained and only the ratification rows remain. They still SURFACE.
+        # drained and only the approval rows remain. They still SURFACE.
         #
         # This arm used to admit them, inherited from the retired
-        # `single-ratify` word — "dispatches only as the queued batch once
+        # `single-approve` word — "dispatches only as the queued batch once
         # nothing else remains". Under the ordinal that is a contradiction:
         # `human_held` is TRUE here, which is the statement that this tier is
-        # the human's to ratify, and `keep_nondependent` answers an entirely
+        # the human's to approve, and `keep_nondependent` answers an entirely
         # different question — may OTHER lanes keep running while a
-        # ratification is queued. Letting the second dial override the first is
-        # the machine ratifying what a human declared theirs, reached by a
+        # approval is queued. Letting the second dial override the first is
+        # the machine approving what a human declared theirs, reached by a
         # combination the enum could not even express (level 4 +
         # keep_nondependent, the fourth cell).
         if busy:
@@ -814,14 +814,12 @@ def _surface_banner(root, surfaced):
     queued = len(surfaced)
     if cards and queued:
         return (
-            "queue drained - {} ratification(s) waiting in open-items.html; "
+            "queue drained - {} approval(s) waiting in open-items.html; "
             "{} queued attestation row(s) on the frontier (the two reads may "
             "name the same row)".format(cards, queued)
         )
     if cards:
-        return "queue drained - {} ratification(s) waiting in open-items.html".format(
-            cards
-        )
+        return "queue drained - {} approval(s) waiting in open-items.html".format(cards)
     return (
         "queue drained - {} queued attestation row(s); no card has projected "
         "to open-items.html yet".format(queued)
@@ -954,7 +952,7 @@ def _admit(
 ):
     """One tick's admission, enacted: `(admitted, exit_code)`. The exit code
     is non-None only when the run ends here — the drained queue, the surfaced
-    ratifications, a refusal — and only ever with the station idle."""
+    approvals, a refusal — and only ever with the station idle."""
     exclusive_live = any(ln.exclusive for ln in table)
     free = 0 if exclusive_live else max(0, lanes_total - len(table))
     if free == 0:
@@ -1010,7 +1008,7 @@ def _admit(
 
 
 def _station_exit(root, tier, verb, payload, state):
-    """The run's honest ends, station idle: the surfaced-ratification stop
+    """The run's honest ends, station idle: the surfaced-approval stop
     (§A8 attended: drain, leave the cards, exit 0) and the drained queue — or,
     on rung 1, NOT an end at all: a minted gap row re-fills the frontier and
     the return is None (keep driving). A finished branch may still be waiting
@@ -1057,7 +1055,7 @@ def _station_exit(root, tier, verb, payload, state):
     cards = _pending_cards(root)
     if cards:
         _say(
-            "queue drained - {} ratification(s) waiting in open-items.html".format(
+            "queue drained - {} approval(s) waiting in open-items.html".format(
                 len(cards)
             )
         )
@@ -1129,7 +1127,7 @@ def run(root, args, worker=None, tier="all"):
     # SN-029: one ordinal comparison, made once per run, threaded down exactly
     # as the enum was. `spine_stage_of` reads the tier currently in process
     # through `kitlib.stage.read_stage`; `human_holds` compares it against the
-    # declared `human_ratification_through`.
+    # declared `human_approval_through`.
     human_held = ac.human_holds(root / "docs", ac.spine_stage_of(root))
     keep_going = ac.keep_nondependent(root / "docs")
     # Computed once, APPLIED lazily: admission refuses on it only when work

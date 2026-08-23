@@ -8,7 +8,7 @@ the committed code map. The registry loading and validation are **reused from
 One self-contained HTML file — a vision header, a git-derived **as-of stamp**
 visible on open (never `now()`; excluded from the freshness compare, see
 ASOF_RE), definition + execution %-meters, and the model's views (WI-039, the
-ratified AXES artifact spec — formerly `docs/trajectory.html`):
+approved AXES artifact spec — formerly `docs/trajectory.html`):
 
   1. **What** — an SVG *icicle* of the SN->SR->LLR->TC spine (block height
      leaf-proportional; hover highlights a subtree, click reads the full text).
@@ -24,7 +24,7 @@ ratified AXES artifact spec — formerly `docs/trajectory.html`):
      inventory, e.g. files-mode.
   4. **How (physical)** — the `CMP-###` component table when the optional
      component layer carries real rows (the graph rendering is deferred-on-need
-     per the AXES ratification); omitted otherwise.
+     per the AXES approval); omitted otherwise.
   5. **Knowledge** — the committed `docs/okf/` OKF bundle as a typed concept
      graph (the dashboard is the bundle's first real *consumer*, WI-070): nodes
      fill-keyed by OKF `type`, directed spine edges from the link lists, laid out
@@ -255,7 +255,7 @@ from traj_graph import (  # noqa: F401
     route_graph,
 )
 
-# The unified project-state artifact at the repo ROOT (WI-039, the ratified
+# The unified project-state artifact at the repo ROOT (WI-039, the approved
 # AXES spec): what was docs/trajectory.html, plus the How-SW view and the
 # git-derived as-of stamp. One self-contained file, all diagrams inside.
 OUT_HTML = "PROJECT_STATE.html"

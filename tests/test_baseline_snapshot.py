@@ -5,7 +5,7 @@ The mechanism replaces a DERIVED baseline (a git walk for the newest commit at
 which a row read `Approved`) with a copied one. Its whole value rests on four
 properties, and each gets a red->green test here:
 
-  * drift is measured against the copy, over a real tree, and only RATIFIED
+  * drift is measured against the copy, over a real tree, and only APPROVED
     cells arm it;
   * an approval whose snapshot copy does not claim approval is UNANCHORED —
     the case that is only decidable because the copy is a WHOLE FILE carrying
@@ -186,7 +186,7 @@ def test_the_mechanical_flip_TOUCHES_NO_SNAPSHOT_AT_ALL(tmp_path):
 
 def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
     """The common case, and the one that must stay free: the WI-482/WI-452 class
-    (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no ratified text, so a
+    (a `Module`/`CodeSymbol`/`TestRefs` re-point) moves no approved text, so a
     gate that charged it a flag would be a gate every worker learns to route
     around."""
     root = _seeded(tmp_path)
@@ -200,9 +200,9 @@ def test_a_TRACED_only_refresh_needs_no_authority_at_all(tmp_path):
     ).read_bytes()
 
 
-def test_a_RATIFIED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
+def test_a_APPROVED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
     """THE LAUNDERING SCENARIO, executed. Rewrite an Approved requirement's
-    ratified text, then refresh: before this gate the copy landed, the drift
+    approved text, then refresh: before this gate the copy landed, the drift
     vanished and every check went green with the record rewritten to match."""
     root = _seeded(tmp_path)
     sid, row = _first_row_at(root, "approved")
@@ -220,7 +220,7 @@ def test_a_RATIFIED_amendment_with_no_flip_and_no_ref_is_REFUSED(tmp_path):
 
 
 def test_an_AMEND_PLUS_FLIP_authorises_the_refresh_with_no_flag(tmp_path):
-    """Ratification is a human moving a maturity cell in a reviewed commit. When
+    """Approval is a human moving a maturity cell in a reviewed commit. When
     the same tree carries one, the copy rides it — that is the sanctioned shape,
     and the seam that mints adjudications is documented blind to it."""
     root = _seeded(tmp_path)
@@ -360,7 +360,7 @@ def test_a_stale_other_carrier_file_is_DELETED_in_the_same_act(tmp_path):
 # --- drift --------------------------------------------------------------------
 
 
-def test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
+def test_a_approved_cell_moving_under_an_approved_row_is_DRIFT(tmp_path):
     root = _seeded(tmp_path)
     sid, _row = _first_row_at(root, "approved")
     snapshot = SNAP.load_all(root)
@@ -650,7 +650,7 @@ def test_a_PARTIAL_copy_fails_the_mirror_invariant(tmp_path):
     root, run_git = _git_tree(tmp_path)
     # RE-POINTED AT D-9 STEP 5: the first move was Verified->Planned, two live
     # values that FOLDED into one. Any real cell edit serves — this uses the
-    # Title cell, which is ratified text and therefore exactly what a snapshot
+    # Title cell, which is approved text and therefore exactly what a snapshot
     # is supposed to record.
     _rewrite(root, SR_REL, 'title = "', 'title = "amended ')
     shutil.copyfile(root / SR_REL, SNAP.snapshot_root(root) / SR_REL)
@@ -816,7 +816,7 @@ def test_a_LANDED_forgery_reds_EVERY_LATER_RUN_though_nothing_is_staged(tmp_path
 def test_a_PENDING_AMENDMENT_leaves_the_committed_mirror_GREEN(tmp_path):
     """THE RULE THAT WOULD HAVE BEEN WRONG, refused deliberately. Comparing the
     snapshot to live in the WORKING TREE reds every pending amendment — and the
-    lag between an amendment and its ratification is the signal the whole
+    lag between an amendment and its approval is the signal the whole
     mechanism exists to render. The comparison is pinned to the commit that
     WROTE each copy, so live moving on afterwards is silent here."""
     root, run_git = _git_tree(tmp_path)
@@ -936,7 +936,7 @@ def test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip(tmp_path):
     because the mirror invariant proves it was copied in an approval commit."""
     root, run_git = _git_tree(tmp_path)
     sid, row = _first_row_at(root, "approved")
-    # Amend a ratified cell AND flip the row, in one staged change.
+    # Amend an approved cell AND flip the row, in one staged change.
     _rewrite(root, SR_REL, row["Title"], row["Title"] + " (amended)")
     _rewrite(root, SR_REL, 'status = "Approved"', 'status = "Drafted"')
     run_git("add", "-A")

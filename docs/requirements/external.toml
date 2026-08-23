@@ -72,7 +72,7 @@
 #                  FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell may
 #                  be machine-flipped only when this registry's stage rung —
 #                  DevStg-Boundary — is not human-held under the `[attestation]
-#                  human_ratification_through` dial, the predicate being
+#                  human_approval_through` dial, the predicate being
 #                  `agent_common.human_approves(docs, "external")`. At this
 #                  repo's dial of 4 that means every value here is the OWNER'S to
 #                  flip, in a reviewed Status-change commit. No loop, no LLM

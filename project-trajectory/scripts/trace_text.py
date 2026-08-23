@@ -292,7 +292,7 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      literally — `OI-`, `D-`, `RULING-` — and nothing generalises over them.
 #      Re-measured at each widening: `M-10` is matched by none of them.
 #   2. `ruling` / `retired` / `attestation` / `amended` are SUBJECT NOUNS in the
-#      rows that specify the ratification machinery itself — 217 occurrences over
+#      rows that specify the approval machinery itself — 217 occurrences over
 #      108 live SR/LLR/TC rows, with SR-149, SR-165 and LLR-118 the worked
 #      instances. A verb grep would destroy every one of them. `_EDIT_STAMP_RE`
 #      therefore requires the verb to be followed WITHIN ONE CLAUSE by an ISO
@@ -311,9 +311,9 @@ _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 #      edit-stamp arms below already detect. Where a clause code genuinely rides
 #      inside a stamp ("REWORDED 2026-08-17 (C-PRF-1, applied)") the stamp is
 #      reported and the whole frame is what gets stripped.
-#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `RATIFIED`,
+#   4. AN ALL-CAPS EDIT VERB IS A STAMP ONLY WHERE A CLAUSE OPENS. `APPROVED`,
 #      `RETIRED`, `DELETED`, `RULED` and `AMENDED` are also ordinary
-#      participles mid-sentence — "a RATIFIED SN cited by zero SRs", "an AMENDED
+#      participles mid-sentence — "an APPROVED SN cited by zero SRs", "an AMENDED
 #      requirement drops the derived stage", "a stale file is DELETED in the same
 #      act" — so `_CAPS_EDIT_STAMP_RE` fires only at the start of the cell or of
 #      a clause. Measured over every live spine + IF cell: 36 hits, 36 of them
@@ -329,7 +329,7 @@ _RULING_ID_RE = re.compile(r"\bRULING-\d+\b", re.IGNORECASE)
 _EDIT_VERBS = (
     r"amended|reworded|minted|renumbered|retired|narrowed|revised|superseded|"
     r"restated|added|deleted|moved|extended|clarified|ruled|raised|split|landed|"
-    r"reopened|struck|introduced|widened|promoted|demoted|ratified|corrected|"
+    r"reopened|struck|introduced|widened|promoted|demoted|approved|corrected|"
     r"absorbs|settled|confirmed|investigated|resolved|reverted|joined|"
     r"re-?voiced|re-?based|re-?pointed|re-?affirmed|provisional"
 )
@@ -360,7 +360,7 @@ _ISO_DATE_RE = re.compile(r"\b(?P<date>" + _ISO_DATE + r")\b")
 _CAPS_STAMP_VERBS = (
     r"AMENDED|REWORDED|MINTED|RENUMBERED|RETIRED|NARROWED|REVISED|SUPERSEDED|"
     r"RESTATED|DELETED|EXTENDED|CLARIFIED|RULED|SPLIT|LANDED|REOPENED|STRUCK|"
-    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|RATIFIED|CORRECTED|ABSORBS|SETTLED|"
+    r"INTRODUCED|WIDENED|PROMOTED|DEMOTED|APPROVED|CORRECTED|ABSORBS|SETTLED|"
     r"CONFIRMED|INVESTIGATED|RESOLVED|REVERTED|JOINED|RE-?VOICED|RE-?BASED|"
     r"RE-?POINTED|RE-?AFFIRMED"
 )
@@ -372,7 +372,7 @@ _CAPS_EDIT_STAMP_RE = re.compile(
     # in the run, so the reported token is the stamp's own head word.
     #
     # A prefix word is TWO letters or more, which is not cosmetic: with `*` the
-    # article in "A RATIFIED SN cited by zero SRs caps the bar" read as an
+    # article in "An APPROVED SN cited by zero SRs caps the bar" read as an
     # all-caps subject whenever the sentence opened a cell, turning the
     # participle hazard this arm exists to avoid back on. The negative test is
     # what found it.
@@ -792,7 +792,7 @@ def form_findings(srs, llrs, tcs):
             )
     for rows, (label, key, cols) in zip((srs, llrs, tcs), PROVENANCE_COLS):
         for rid, r in _real(rows, key):
-            # A `Draft` row is pre-ratification and process.md §4 already exempts
+            # A `Draft` row is pre-approval and process.md §4 already exempts
             # it from the decomposition rules. "TBD" in a Draft acceptance
             # criterion is what Draft MEANS; flagging it would make the state
             # unusable for the drafting it exists to allow.

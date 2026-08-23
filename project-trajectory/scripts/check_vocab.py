@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Retired-vocabulary check: keep the retired `G*` gate tags from growing back.
+"""Retired-vocabulary check: keep the retired `G*` gate tags, and the retired
+`ratif*` word family (WI-499), from growing back.
 
 OI-21 (ruled 2026-08-13) retired the `G0`/`G1`/`G2`/`G3`/`G-Release`/`G-Final`
 TAGS for the eight-rung stage ladder. A second ruling (2026-08-18) retired the
@@ -18,7 +19,13 @@ Stdlib only, like trace.py / check_docs.py:
 
 WHAT IT REFUSES. The TAGS, matched as whole words: `G0`, `G1`, `G2`, `G3`,
 `G-Release`, `G-Final` — and, since the 2026-08-18 one-vocabulary ruling, any
-`DevBar-*` token. Nothing else.
+`DevBar-*` token. Since WI-499 (owner-ruled 2026-08-21, "ratification holds a
+weight to it that the semantics here don't need"), also any inflection of
+`ratif*` (`ratify`, `ratified`, `ratification`, `ratifying`, `ratifies`,
+`ratifiable`, `ratifier`, ...) — EXCEPT the literal `docs/ratify/` path, which
+kept its name as a record home for the immutable dated re-attestation briefs
+that already lived there; that one spelling is not retired vocabulary, it is a
+directory name. Nothing else.
 
 WHAT IT DOES NOT TOUCH — and this is the load-bearing half. **The word "gate"
 survives wherever it means a check that can fail.** `test_env_gates`,
@@ -38,7 +45,7 @@ THE CARVE-OUTS, and why each one is a carve-out rather than an oversight:
     that history was written in.
   - **Attestation quotes are not rewritten** — the strongest case. `docs/ratify/`
     briefs quote registry cells byte-for-byte at a pinned baseline, and the log's
-    dated sign-off entries record a NAMED HUMAN ratifying a thing that was called
+    dated sign-off entries record a NAMED HUMAN approving a thing that was called
     `G1` at the time. Rewriting those makes a signed record claim something was
     signed that was not. The ruled remedy is a one-line header note naming the
     retired vocabulary, not a rewrite.
@@ -109,6 +116,23 @@ RETIRED_TAG_RE = re.compile(
     r"|\bDevBar-\w+"
     r"|\[g[12]\]"
     r"|(?<=\]-)\[(?:reqs|tests)\]"
+    # WI-499 (owner-ruled 2026-08-21): "ratification holds a weight to it that
+    # the semantics here don't need" — the kit's vocabulary unifies on
+    # "approval". The `ratif*` word family is retired the same way the G* tags
+    # were, riding the same enforcer for the same reason (one checker, one
+    # mistake). Carve-outs for the ONE surviving spelling: the `docs/ratify/`
+    # directory itself KEPT its name as a record home (the dated
+    # re-attestation briefs already live there and are immutable), so a live
+    # file naming that real path is not quoting retired vocabulary — whether
+    # written as the one string `"docs/ratify/..."` (the `docs/` lookbehind),
+    # as a markdown-relative link from a doc that already lives under
+    # `docs/` (`ratify/2026-...-x.md`, the `/` lookahead), or as Python's
+    # split-literal path-building idiom, `Path(x) / "docs" / "ratify"` (the
+    # quote lookaround). Only the BARE, unsuffixed word gets these carve-outs
+    # — every inflected form (`ratified`, `ratification`, ...) is never a
+    # directory name.
+    r"|\b(?<!docs/)(?i:ratif(?:ying|ies|ied|ication|ications|iable|ier)\w*)\b"
+    r"|\b(?<!docs/)(?<![\"'])(?i:ratify)\b(?![\"'/])"
 )
 
 # The canonical replacements, printed in the finding so the fix is in the message.
@@ -138,20 +162,51 @@ SUGGEST = {
     # WRONG — it records a reach BELOW where the phase actually stands, which is
     # the failure direction that loses the event a drop detector exists to
     # report. Closing a `reqs`/`g1` anchor means the phase's SRs are authored AND
-    # ratified, which is the LLReqs rung — two above the token's spelling.
+    # approved, which is the LLReqs rung — two above the token's spelling.
     #
     # `check_trajectory` TRANSLATES these on read and never rewrites a committed
     # title; what this table refuses is AUTHORING one afresh, or a live doc
     # TEACHING the retired spelling. A declaration site that must name them (the
     # translation table itself, a re-sync note) carries `check_vocab: allow`.
     "[g1]": "[DevStg-LLReqs] - the rung the phase stands at once its SRs are "
-    "ratified, NOT [DevStg-Reqs], which is two rungs below it",
+    "approved, NOT [DevStg-Reqs], which is two rungs below it",
     "[reqs]": "[DevStg-LLReqs] - same reading as [g1]; the token names what the "
     "anchor CLOSED, the rung names where the phase now stands",
     "[g2]": "[DevStg-Impl] - LLRs and TCs authored and non-Drafted, NOT "
     "[DevStg-Tests], which is one rung below it",
     "[tests]": "[DevStg-Impl] - same reading as [g2]",
 }
+
+# The `ratif*` family (WI-499) has too many inflections to spell out one by
+# one the way the G* set was — this is a suffix map instead of a fixed dict,
+# checked after `SUGGEST` misses (case-insensitively, keeping the finding's
+# own casing out of the suggestion).
+RATIF_SUGGEST_SUFFIX = {
+    "ication": "approval",
+    "ications": "approvals",
+    "y": "approve",
+    "ying": "approving",
+    "ies": "approves",
+    "ied": "approved",
+    "iable": "approvable",
+    "ier": "approver",
+}
+
+
+def _suggestion_for(tag):
+    """The fix text for one retired-tag match: the `SUGGEST` dict for a G*/
+    DevBar-* tag, or the `ratif*` suffix map (WI-499) for that family."""
+    if tag in SUGGEST:
+        return SUGGEST[tag]
+    lower = tag.lower()
+    if lower.startswith("ratif"):
+        suffix = lower[len("ratif") :]
+        word = RATIF_SUGGEST_SUFFIX.get(suffix)
+        if word is not None:
+            return '{} (WI-499 retired "ratif*" for "approv*")'.format(word)
+        return 'approve/approval (WI-499 retired "ratif*" for "approv*")'
+    return "(no suggestion on file — check_vocab.SUGGEST)"
+
 
 # In-file markers. Kept as plain strings so a file can carry one in whatever
 # comment syntax it uses.
@@ -183,7 +238,7 @@ EXEMPT_GLOBS = (
     # history: the kit's design archive
     "docs/archive/*",
     # history: the append-only project log, including its dated sign-off and
-    # ratification entries (the attestation carve-out's other half)
+    # approval entries (the attestation carve-out's other half)
     "docs/log.md",
     # history: the per-branch log FRAGMENTS `trunk_step.py` compiles into
     # docs/log.md in merge order. They are the same record one merge earlier, so
@@ -197,6 +252,17 @@ EXEMPT_GLOBS = (
     "docs/rubrics/*",
     # attestation quotes: registry cells quoted byte-for-byte at a pinned baseline
     "docs/ratify/*",
+    # history, ROW-GRANULAR: open-items.toml mixes RULED rows (records of a
+    # dated decision, in the vocabulary of when it was ruled — WI-499's own
+    # Context names these "records untouched") with live PENDING rows in the
+    # same file. There is no row-level carve-out mechanism here (unlike a
+    # whole exempt directory), and the ruled majority so outnumbers the
+    # pending remainder that per-line `check_vocab: allow` marking every
+    # ruled decision would be noise, not signal — the same
+    # append-only-history posture `docs/log.md` gets above. A freshly
+    # authored pending row is expected to use the live word on its own
+    # discipline, the same as a fresh `docs/log.md` entry is.
+    "docs/requirements/open-items.toml",
     # history: a partial close's spec, whose immutable report is the close event.
     # WI-504 (OI-55 ruled (a)) relocated the live population to
     # docs/archive/work/partial/* — already covered by the generic
@@ -224,6 +290,7 @@ EXEMPT_GLOBS = (
     "docs/open-items.html",
     "PROJECT_STATE.html",
     "docs/test/report.md",
+    "docs/test/report.html",
     # generated: the derived stage record (`derive_stage.py` writes it, and its
     # own `--check` is what keeps it honest). It replaced `docs/gate` at WI-498
     # slice 5, and the swap is not just a rename in this table: the predecessor
@@ -302,10 +369,10 @@ def findings_for(text, rel):
             continue
         first = tags[0]
         out.append(
-            "{}:{}: retired gate tag {} — use {} (OI-21 retired the G* tags; "
-            "if this line must quote the retired vocabulary, mark it "
-            "`{}`)".format(
-                rel, n, "/".join(sorted(set(tags))), SUGGEST[first], ALLOW_LINE
+            "{}:{}: retired vocabulary {} — use {} (OI-21 retired the G* tags, "
+            'WI-499 retired "ratif*"; if this line must quote the retired '
+            "vocabulary, mark it `{}`)".format(
+                rel, n, "/".join(sorted(set(tags))), _suggestion_for(first), ALLOW_LINE
             )
         )
     return out

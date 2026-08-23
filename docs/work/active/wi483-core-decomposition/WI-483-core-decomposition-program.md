@@ -157,8 +157,8 @@ Two NEW rows, not amendments: `LLR-188` (`scripts/census.py`, `SR-148`,
 cells and amending `LLR-182`'s detail — was REJECTED on authority, not on taste:
 `Module`/`CodeSymbol`/`TestRefs`/`Component`/`Verifies`/`Evidence` are TRACED
 cells and free to move, but `Title`/`Detail`/`Rationale` on an `Approved` row are
-RATIFIED, and `baseline_snapshot.refresh_refusal` exists precisely to stop a
-session absorbing its own rewrite of ratified text into the baseline. `--approves`
+APPROVED, and `baseline_snapshot.refresh_refusal` exists precisely to stop a
+session absorbing its own rewrite of approved text into the baseline. `--approves`
 is a HUMAN's citation of an approving act and there is none here, so nothing this
 slice did needed one: `refresh_refusal` reads clean because the diff is new rows
 plus traced cells only. The re-export shims are what keep `LLR-149`/`LLR-159`
@@ -207,5 +207,5 @@ the How-SW containment count.
 **Deferred to the owner: nothing new, across both slices.** `OI-48` was engaged
 by slice 1's topology decision but not widened by it, and it has since been ruled
 and executed; slice 2 needed no ruling because it was built to need none — the
-two new spine rows are authored, not amended, so no `Approved` ratified cell was
+two new spine rows are authored, not amended, so no `Approved` approved cell was
 rewritten and no approval act had to be cited.

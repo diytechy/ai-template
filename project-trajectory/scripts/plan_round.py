@@ -308,7 +308,7 @@ def disposition(state):
 
 def page_action(human_held, keep_nondependent=False):
     """The documented failure-semantics action for a PAGE at the declared
-    ratification level (SN-029).
+    approval level (SN-029).
 
     `human_held` is `agent_common.human_holds`' answer — anything unreadable
     already resolved to True there, which is why this takes a bool rather than

@@ -265,7 +265,7 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         "status-map",
         "open-items",
         "okf",
-        "ratify-fresh",
+        "approval-fresh",
     }
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "SKIP", name

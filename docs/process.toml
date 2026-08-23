@@ -46,18 +46,18 @@
 # the state where two readers disagree about the same policy.
 
 [attestation]
-# THE HIGHEST STAGE RUNG A HUMAN STILL RATIFIES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
 # BELOW it, work SURFACES for the human; above it, the loop dispatches and an
-# LLM verdict carries ratification authority. It is the exact mirror of the rule
+# LLM verdict carries approval authority. It is the exact mirror of the rule
 # that selects checks — a check runs at or ABOVE its `from-stage`, a human
-# ratifies at or BELOW this dial.
+# approves at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is human-held; the loop ratifies every rung itself":
+# for "nothing is human-held; the loop approves every rung itself":
 #
 #   DevStg-Below      nothing is human-held
-#   DevStg-Needs      the human ratifies stakeholder needs
+#   DevStg-Needs      the human approves stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -73,18 +73,20 @@
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.
 #
-# Named `human_ratification_through`, never "attest level": `Attest` is already
+# Named `human_approval_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
-# THIS REPO RUNS EVERY-TIER-HUMAN-HELD (owner directive 2026-08-14, ahead of
-# the SR re-tier campaign: the full breakdown to TCs RUNS at any level — the
-# dial holds only attestation-class work — and every spine ratification
-# surfaces to the owner's sitting; supersedes the spent 2026-07-15 loop-held
-# charge-through directive). The retired `gate_policy = "autonomous"` that used
-# to sit above is DELETED rather than left inert: shipping it beside the
-# ordinal is the shadowing defect the template names, and the kit must
-# not carry in its own config the shape it refuses downstream.
-human_ratification_through = "DevStg-Needs"
+# THIS REPO RUNS `DevStg-Needs`-HELD ONLY (owner's own edit, 2026-08-21,
+# docs/log.d/2026-08-21-owner-session-dial-and-folds.md): only the Needs rung
+# is human-held; SR/LLR/TC approval and amendment proceed under ordinary
+# review. This SUPERSEDES the 2026-08-14 every-tier-human-held directive that
+# used to be recorded here (itself superseding the spent 2026-07-15
+# loop-held charge-through directive) — read the dial value below, don't
+# paraphrase it. The retired `gate_policy = "autonomous"` that used to sit
+# above is DELETED rather than left inert: shipping it beside the ordinal is
+# the shadowing defect the template names, and the kit must not carry in its
+# own config the shape it refuses downstream.
+human_approval_through = "DevStg-Needs"
 # OFF-SPINE APPROVAL AUTHORITY IS DERIVED FROM THIS SAME DIAL — NO SECOND KEY
 # (owner ruling OI-30 D3, 2026-08-15). The registries that carry an `approval`
 # cell (interfaces, external, components) are governed by the DEV-STAGE RUNG
@@ -104,9 +106,9 @@ human_ratification_through = "DevStg-Needs"
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
-# Keep NON-DEPENDENT work running while a ratification is queued? This is an
-# ORTHOGONAL policy an ordinal cannot express (it was the old `single-ratify`
-# level's distinguishing behaviour). false = a queued ratification drains the
+# Keep NON-DEPENDENT work running while an approval is queued? This is an
+# ORTHOGONAL policy an ordinal cannot express (it was the old `single-approve`
+# level's distinguishing behaviour). false = a queued approval drains the
 # station and stops the run; true = other lanes keep going around it.
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and

@@ -296,9 +296,9 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
     # EXIT_STALL (attention), never NEEDS-HUMAN.
     root, fake = make_fixture(tmp_path)
     # SN-029: the loop-held tier — `DevStg-Below`, the sentinel below every
-    # rung, where a recorded verdict carries ratification authority. Declared
+    # rung, where a recorded verdict carries approval authority. Declared
     # as the RUNG (WI-493), not as the retired enum word or the 0-4 ordinal.
-    set_process_key(root, "attestation", "human_ratification_through", "DevStg-Below")
+    set_process_key(root, "attestation", "human_approval_through", "DevStg-Below")
 
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
@@ -311,14 +311,14 @@ def test_arbiter_disagreement_on_a_loop_held_tier_stalls_not_pages(tmp_path):
 
 
 def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
-    # single-ratify rides the SAME pause-free else-arm as autonomous (both are
+    # single-approve rides the SAME pause-free else-arm as autonomous (both are
     # non-stop-needs-human page actions), so the flag path must reach
     # EXIT_STALL, never NEEDS-HUMAN. Braces SR-108's "autonomous/
-    # single-ratify" clause at the --dual-plan entry (113-REVIEW-A follow-up).
+    # single-approve" clause at the --dual-plan entry (113-REVIEW-A follow-up).
     root, fake = make_fixture(tmp_path)
-    # The retired `single-ratify` level was two facts: a human-held tier PLUS
+    # The retired `single-approve` level was two facts: a human-held tier PLUS
     # `keep_nondependent`. Both are declared now, separately.
-    set_process_key(root, "attestation", "human_ratification_through", "DevStg-Release")
+    set_process_key(root, "attestation", "human_approval_through", "DevStg-Release")
     set_process_key(root, "attestation", "keep_nondependent", True)
     fake.write_text(
         FAKE_CLI.replace('label = "A" if "ALPHA" in a else "B"', 'label = "A"'),
@@ -327,7 +327,7 @@ def test_arbiter_disagreement_with_keep_nondependent_stalls_not_pages(tmp_path):
     proc = run_dualplan(root, fake)
     assert proc.returncode == 4, proc.stdout + proc.stderr  # EXIT_STALL: attention
     assert "position-unstable" in proc.stderr
-    assert "surface-block-continue-others" in proc.stderr  # the single-ratify action
+    assert "surface-block-continue-others" in proc.stderr  # the single-approve action
 
 
 def test_missing_rubric_pages_honestly(tmp_path):

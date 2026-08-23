@@ -194,7 +194,7 @@ fi
 #                        the step is vacuous for a non-adopter; checks needing
 #                        the product toolchain or gate context (tests, perf,
 #                        flows) stay in check.py / CI.
-#      - ratify-fresh    the re-attestation brief fresh against the registry it
+#      - approval-fresh    the re-attestation brief fresh against the registry it
 #                        summarizes (WI-325). It self-stamps its baseline, so the
 #                        compare uses the one the FILE declares, never a re-derived
 #                        one. Doubly self-arming: silent with no brief, and silent
@@ -220,7 +220,7 @@ fi
 #                        (a mid-DevStg-Reqs registry legitimately has SRs with no LLR/TC
 #                        yet); the floor must never block an early-stage commit.
 #      - derived-stage   docs/stage is GENERATED from artifact states by
-#                        derive_stage.py; --check fails if a ratify/reopen moved
+#                        derive_stage.py; --check fails if an approve/reopen moved
 #                        the derived rung, or any declared derivation input, but
 #                        the recorded file did not. Its predecessor `derived-gate`
 #                        retired with `docs/gate` and the three-value bar axis.
@@ -243,12 +243,12 @@ fi
 #                        `gen_prompt_catalog.py`. Both steps are no-ops where the
 #                        kit-only generator isn't beside check.py, so a
 #                        non-adopter pays nothing.
-#      - ratify-immutable  refuses a STAGED change (other than a brand-new add)
+#      - approval-immutable  refuses a STAGED change (other than a brand-new add)
 #                        to an existing docs/ratify/<date>-*.md (WI-503): a
 #                        dated re-attestation brief is the record of what a
 #                        human was shown at a sitting, and rewriting it in
 #                        place is the defect the CURRENT.md/dated split fixes.
-#                        Mint a new one with `trace.py --mint-ratify-brief
+#                        Mint a new one with `trace.py --mint-approval-brief
 #                        SLUG`; regenerate the live surface at
 #                        docs/ratify/CURRENT.md. Fail-closed, no warn mode.
 #      - staged-divergence  the one step here that is NOT a freshness check, and
@@ -278,7 +278,7 @@ fi
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,ratify-fresh,ratify-immutable,staged-divergence
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,approval-fresh,approval-immutable,staged-divergence
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

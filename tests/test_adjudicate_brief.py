@@ -615,7 +615,7 @@ def _spine_repo(tmp_path):
 
 
 def _amend(repo):
-    """Move SR-001's `Requirement` — a RATIFIED cell — leaving its Status put.
+    """Move SR-001's `Requirement` — an APPROVED cell — leaving its Status put.
     This is the D-9 shape exactly: the text changed and nothing flipped."""
     srs = repo / "docs" / "requirements" / "system-requirements.csv"
     srs.write_text(
@@ -628,7 +628,7 @@ def _amend(repo):
 
 
 def _amendment_repo(tmp_path):
-    """A repo with a spine, an approved snapshot, an amended ratified cell, and
+    """A repo with a spine, an approved snapshot, an amended approved cell, and
     the adjudication row `intake` would have minted for it."""
     repo = _spine_repo(tmp_path)
     baseline_snapshot.copy_live(repo, seed=True)
@@ -638,7 +638,7 @@ def _amendment_repo(tmp_path):
         [
             {
                 "WI-ID": "WI-301",
-                "Title": "adjudicate: SR-001 - ratified cell(s) amended",
+                "Title": "adjudicate: SR-001 - approved cell(s) amended",
                 "SafetyClass": "adjudication",
                 "Brief": "amendment",
                 "SpecRef": "docs/requirements/system-requirements.toml",
@@ -662,7 +662,7 @@ def test_the_amendment_brief_carries_the_snapshot_as_its_anchor(tmp_path):
     assert "refuse floats" in values["rows"]  # after
 
 
-def test_only_RATIFIED_cells_reach_the_judge(tmp_path):
+def test_only_APPROVED_cells_reach_the_judge(tmp_path):
     # A traced cell is ruled non-attesting (§A5.1), so asking a judge to rule
     # "meaning or clarity" on a re-pointed Phase cell asks a question the
     # ruling already answers. Drive it: move ONLY a traced cell.

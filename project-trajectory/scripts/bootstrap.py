@@ -21,7 +21,7 @@ What it creates in the destination:
                                                   derived — run scripts/derive_stage.py)
     docs/id-watermark                          <- id-watermark.template  (id high-water marks)
     docs/process.toml                          <- process.toml.template  (EVERY policy dial:
-                                                  gate authority, the human-ratification level,
+                                                  gate authority, the human-approval level,
                                                   push, reviewer count, privacy + secrets,
                                                   guardrails, blackout, and the six
                                                   check-enablement toggles — SN-028's one home)
@@ -781,12 +781,12 @@ def prompt_choice(prompt, choices, default):
 # non-default level also gets the repo-local deviation register that amends
 # the untouched, kit-owned process.md (process-options.md "Gate authority
 # levels" — the NotHomeWrecker-proven pattern).
-GATE_POLICY_CHOICES = ("attended", "single-ratify", "autonomous")
+GATE_POLICY_CHOICES = ("attended", "single-approve", "autonomous")
 
 # Per-level deviation rows for the register skeleton: (process.md clause,
 # standard behavior, this repo). The fixed points are appended for every level.
 GATE_POLICY_DEVIATIONS = {
-    "single-ratify": [
+    "single-approve": [
         (
             "§4 acceptor, DevStg-Reqs+DevStg-Tests",
             "a human approves each gate",
@@ -794,16 +794,16 @@ GATE_POLICY_DEVIATIONS = {
             "Open item (+ provisional decision where the driver proceeded)",
         ),
         (
-            "§4 ratification point",
+            "§4 approval point",
             "per-gate approval",
-            "one human sitting at **DevStg-Tests close** ratifies/amends the queue; "
-            "ratified decisions move to docs/log.md (relocating the point = "
+            "one human sitting at **DevStg-Tests close** approves/amends the queue; "
+            "approved decisions move to docs/log.md (relocating the point = "
             "amending this register)",
         ),
         (
             "§4 acceptor, DevStg-Impl→DevStg-Impl",
             "a human approves each gate",
-            "autonomous rules after ratification (LLM-gate verdicts)",
+            "autonomous rules after approval (LLM-gate verdicts)",
         ),
         (
             "§4 consistency review 'pause and ask'",
@@ -818,7 +818,7 @@ GATE_POLICY_DEVIATIONS = {
             "a human approves each gate",
             "LLM-gate: an independent fresh-context reviewer runs the harness "
             "itself; verdict recorded in docs/log.md with `Model:` + "
-            "`Role: LLM-GATE`; the driver makes the ratifying Status-change "
+            "`Role: LLM-GATE`; the driver makes the approving Status-change "
             "commit + regenerates docs/stage (derive_stage.py) citing it",
         ),
         (
@@ -849,7 +849,7 @@ GATE_POLICY_FIXED_POINTS = """## Fixed points (nothing in this file overrides th
   executed is a process violation regardless of tier.
 - **The harness is still the bar** — LLM judgment supplements the checks; it
   never waives a red one.
-- **Ratified owner decisions are never re-decided by an agent** — flag a
+- **Approved owner decisions are never re-decided by an agent** — flag a
   problematic one as Blocked instead.
 """
 
@@ -944,9 +944,9 @@ def apply_gate_policy(dest, level, dry_run):
 
     `--gate-policy` still takes the familiar word, because that is how the
     posture is talked about — but the word is TRANSLATED here (SN-029,
-    `LEGACY_RATIFICATION` above) rather than stored. Storing it was the
-    defect: the template ships `human_ratification_through`, and
-    `ratification_through` prefers that key, so a `gate_policy = "autonomous"`
+    `LEGACY_APPROVAL` above) rather than stored. Storing it was the
+    defect: the template ships `human_approval_through`, and
+    `approval_through` prefers that key, so a `gate_policy = "autonomous"`
     written beside it was read by nothing and every repo that chose a
     non-default posture scaffolded as fully attended — silently, since neither
     dial is wrong on its own and `config_conflicts` had no rule against the
@@ -957,7 +957,7 @@ def apply_gate_policy(dest, level, dry_run):
     list of dest-relative paths written."""
     if level == "attended" or dry_run:
         return []
-    for key, value in sorted(LEGACY_RATIFICATION.get(level, {}).items()):
+    for key, value in sorted(LEGACY_APPROVAL.get(level, {}).items()):
         set_process_key(dest, "attestation", key, value)
     register = dest / "docs" / "gate-policy.md"
     written = [PROCESS_TOML_REL]
@@ -968,10 +968,10 @@ def apply_gate_policy(dest, level, dry_run):
         _write_text_lf(
             register,
             "# Gate-authority deviation register — `{level}`\n\n"
-            "**Status:** DRAFT — ratify with the owner, then keep in version "
+            "**Status:** DRAFT — approve with the owner, then keep in version "
             "control.\n"
             "**What this is:** this repo declares the `{level}` gate authority "
-            "(`docs/process.toml` `[attestation] human_ratification_through` "
+            "(`docs/process.toml` `[attestation] human_approval_through` "
             "plus `keep_nondependent` and `final_review`; process.md "
             "§4). "
             "The kit-owned process doc is "
@@ -1018,30 +1018,30 @@ def apply_privacy_check(dest, value, dry_run):
 
 
 # SN-029: the retired gate-authority enum, translated to the three dials that
-# replaced it. DUPLICATED from `agent_common.LEGACY_RATIFICATION` under the F5
+# replaced it. DUPLICATED from `agent_common.LEGACY_APPROVAL` under the F5
 # rule — bootstrap imports no kit sibling, because it is the one script an
 # adopter may run from a bare download before anything else exists — and pinned
 # equal by tests/test_rule_sync.py, which is how this kit keeps a duplicated
 # POLICY (as opposed to duplicated plumbing) from drifting.
 #
 # What each word meant, and why one key could not hold it: `attended` held every
-# tier and drained the station at a ratification; `single-ratify` held NO tier
+# tier and drained the station at an approval; `single-approve` held NO tier
 # (LLM-gate review ran through DevStg-Reqs+DevStg-Tests) but sat ONE human at the close and kept
 # non-dependent work running; `autonomous` did the same without the final read.
 # Implements: SR-138, LLR-156
-LEGACY_RATIFICATION = {
+LEGACY_APPROVAL = {
     "attended": {
-        "human_ratification_through": "DevStg-Release",
+        "human_approval_through": "DevStg-Release",
         "keep_nondependent": False,
         "final_review": "always",
     },
-    "single-ratify": {
-        "human_ratification_through": "DevStg-Below",
+    "single-approve": {
+        "human_approval_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "always",
     },
     "autonomous": {
-        "human_ratification_through": "DevStg-Below",
+        "human_approval_through": "DevStg-Below",
         "keep_nondependent": True,
         "final_review": "off",
     },
@@ -1118,25 +1118,79 @@ LEGACY_CONFIG = (
 _first_declared_line = _kitconfig.first_declared_line
 
 
+# The dial's RETIRED KEY NAME (WI-499, owner-ruled 2026-08-21: "ratification  # check_vocab: allow
+# holds a weight to it that the semantics here don't need" — check_vocab: allow,
+# a declaration site must name the retired word). A repo scaffolded
+# before this rename still carries `human_ratification_through` in  # check_vocab: allow
+# `[attestation]`; `_migrate_dial_key_name` below rewrites the KEY (not the
+# value — that is `_migrate_dial_ordinal`'s job, and it runs second so an
+# adopter still on BOTH the old key AND the retired 0-4 ordinal gets both
+# fixed in one `--migrate-config` pass) and `agent_common.approval_through`
+# reads it as a loud fallback for a repo that runs a kit script without ever
+# migrating (the same read-translate-warn shape WI-493 used for the ordinal).
+LEGACY_ATTESTATION_KEY = "human_ratification_through"  # check_vocab: allow
+
+
+def _migrate_dial_key_name(dest, notes, dry_run):
+    """Rewrite `[attestation] human_ratification_through` to  # check_vocab: allow
+    `human_approval_through`, keeping whatever value it held (a rung string OR
+    the retired 0-4 ordinal — `_migrate_dial_ordinal`, called right after this
+    in `migrate_legacy_config`, normalizes that half).
+
+    A LINE REWRITE, not a TOML parse, for the same reason `_migrate_dial_ordinal`
+    reads a line: this module parses no TOML at all. Silent when the old key is
+    absent, or when BOTH keys are present (the new one wins; the old line is
+    left as a harmless duplicate for a human to remove, not silently deleted
+    out from under a repo that may have meant to keep it visible during a
+    manual re-key).
+
+    Implements: SR-137, SR-139, LLR-155
+    """
+    path = Path(dest) / PROCESS_TOML_REL
+    if not path.is_file():
+        return
+    lines = path.read_text(encoding="utf-8-sig").splitlines()
+    new_at, _ = _locate_process_key(lines, "[attestation]", "human_approval_through")
+    old_at, _ = _locate_process_key(lines, "[attestation]", LEGACY_ATTESTATION_KEY)
+    if old_at is None or new_at is not None:
+        return
+    raw_value = lines[old_at].split("=", 1)[1].strip()
+    if not dry_run:
+        lines[old_at] = "human_approval_through = {}".format(raw_value)
+        _write_text_lf(path, "\n".join(lines) + "\n")
+    notes.append(
+        # check_vocab: allow -- the printed note must name the retired word so
+        # an adopter searching their own history for it finds the fix.
+        "{} [attestation] {} {} `human_approval_through` (WI-499: "
+        '"ratification" is retired kit vocabulary). The value ({}) is '  # check_vocab: allow
+        "unchanged by this step.".format(
+            PROCESS_TOML_REL,
+            LEGACY_ATTESTATION_KEY,
+            "would rename to" if dry_run else "renamed to",
+            raw_value,
+        )
+    )
+
+
 def _migrate_dial_ordinal(dest, notes, dry_run):
-    """Rewrite a `human_ratification_through` still holding the retired 0-4
+    """Rewrite a `human_approval_through` still holding the retired 0-4
     ordinal as the `DevStg-*` rung that ordinal meant (WI-493).
 
     NOT A LEGACY *FILE* migration like its siblings — the value is already in
     `docs/process.toml`; only its VOCABULARY is old. It rides here because this
     is the one command an adopter is told to run at re-sync, and because the
-    alternative is `agent_common.ratification_through` printing its translation
+    alternative is `agent_common.approval_through` printing its translation
     warning on every run of every kit script, forever.
 
     Silent when the dial is absent or already a rung. A number OUTSIDE the
     retired range is left alone and named in `notes` rather than guessed at:
     there is no rung it meant, and an out-of-range dial is the one input that
     reads as LESS human involvement than the owner asked for, so a migrator that
-    picked a value for it would be making a ratification-authority decision.
+    picked a value for it would be making an approval-authority decision.
 
     Implements: SR-138, LLR-156
     """
-    key = "human_ratification_through"
+    key = "human_approval_through"
     path = Path(dest) / PROCESS_TOML_REL
     if not path.is_file():
         return
@@ -1201,6 +1255,7 @@ def migrate_legacy_config(dest, dry_run=False):
         return [], ["{} is absent — nothing to migrate into".format(PROCESS_TOML_REL)]
     moved, notes = [], []
     _migrate_gate_policy(dest, moved, notes, dry_run)
+    _migrate_dial_key_name(dest, notes, dry_run)
     _migrate_dial_ordinal(dest, notes, dry_run)
     for legacy_name, section, key, coerce in LEGACY_CONFIG:
         path = dest / "docs" / legacy_name
@@ -1255,10 +1310,10 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     """Fold a legacy `docs/gate-policy` word into the THREE dials it meant.
 
     Its own arm rather than a `LEGACY_CONFIG` row because it is the one legacy
-    file that is not a one-key rename: `single-ratify` carried a tier hold, a
+    file that is not a one-key rename: `single-approve` carried a tier hold, a
     drain policy AND an end-of-run hold at once, and folding it to a single key
     is what loses two of the three (SN-029). The translation itself lives in
-    `agent_common.LEGACY_RATIFICATION`, so the migrator and the readers cannot
+    `agent_common.LEGACY_APPROVAL`, so the migrator and the readers cannot
     disagree about what a word meant.
 
     Implements: SR-138, LLR-156
@@ -1267,12 +1322,12 @@ def _migrate_gate_policy(dest, moved, notes, dry_run):
     if not path.is_file():
         return
     word = _first_declared_line(path)
-    dials = LEGACY_RATIFICATION.get((word or "").strip().lower())
+    dials = LEGACY_APPROVAL.get((word or "").strip().lower())
     if word is not None and dials is None:
         notes.append(
             "docs/gate-policy holds {!r}, which is not one of {} — left in "
             "place; fix it, then re-run --migrate-config.".format(
-                word, " / ".join(sorted(LEGACY_RATIFICATION))
+                word, " / ".join(sorted(LEGACY_APPROVAL))
             )
         )
         return
@@ -1657,7 +1712,7 @@ MAPPING = [
     # `copy_file` therefore exempts it from --force (see WATERMARK_DEST).
     ("id-watermark.template", "docs/id-watermark"),
     # THE ONE POLICY HOME (SN-028). Every process dial — gate authority, the
-    # human-ratification level, push authority, the reviewer count, the privacy
+    # human-approval level, push authority, the reviewer count, the privacy
     # toggle, the secrets floor, guardrails, the blackout window — declared once
     # here instead of in ~10 one-word files. A FRESH SCAFFOLD GETS ONLY THIS
     # FILE: shipping both homes would hand every new repo the mixed-config
@@ -1734,7 +1789,7 @@ MAPPING = [
         "docs/archive/last_approved/README.md",
     ),
     # The append-only history status.md points at (Thread 36, process.md §5):
-    # sign-offs, verdicts, and ratified decisions append here, keeping the
+    # sign-offs, verdicts, and approved decisions append here, keeping the
     # per-session status.md reload cheap.
     ("LOG.template.md", "docs/log.md"),
     # The sequenced work-plan the plan/build cadence runs on (WI-1.29,
@@ -2585,7 +2640,7 @@ def build_parser():
         default=None,
         help="declared gate authority, written to docs/process.toml "
         "[attestation] gate_policy (process.md §4): "
-        "attended|single-ratify|autonomous. Omitted + interactive TTY -> ASK; "
+        "attended|single-approve|autonomous. Omitted + interactive TTY -> ASK; "
         "non-interactive -> 'attended' (the default level; zero change). A "
         "non-default level also scaffolds the deviation-register skeleton "
         "(docs/gate-policy.md) pre-filled for it.",

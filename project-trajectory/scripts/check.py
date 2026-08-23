@@ -231,12 +231,12 @@ BUILTIN_STEP_NAMES = frozenset(
         "status-map",
         "open-items",
         "okf",
-        "ratify-fresh",
+        "approval-fresh",
         "skills-sync",
         "skills-index",
         "prompt-catalog",
         "staged-divergence",
-        "ratify-immutable",
+        "approval-immutable",
     }
 )
 
@@ -758,7 +758,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # docs/need-form-allow (ships empty). At every bar, like vocabulary —
         # the need registry is authored hardest at the LOWEST bar — but
         # WARN-FIRST ALWAYS: no `--strict` promotion here, deliberately unlike
-        # vocab_cmd/traj_cmd. Promoting a form heuristic over ratified
+        # vocab_cmd/traj_cmd. Promoting a form heuristic over approved
         # stakeholder prose to a gate is an owner ruling that has not been
         # made (WI-454's scope guard); the severity ladder stops at WARN until
         # it is.
@@ -980,7 +980,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # BUILT-IN rather than a docs/stack.ini `[step:]` — 130-REVIEW-A found
         # that shipping the hook while the step lived in a project-owned
         # stack.ini BLOCKS EVERY COMMIT for an adopter whose stack.ini predates
-        # WI-325 ("check: no step named 'ratify-fresh'", exit 1). Its siblings
+        # WI-325 ("check: no step named 'approval-fresh'", exit 1). Its siblings
         # above are all built-in for exactly this reason: check.py and the hook
         # ship together, so a step declared here can never be missing from under
         # the hook that calls it. Doubly self-arming, so a non-adopter pays
@@ -996,12 +996,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # the floor for the whole of its requirements work. Doubly self-arming
         # already, so a repo with no brief still pays nothing.
         (
-            "ratify-fresh",
+            "approval-fresh",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "trace.py"),
-                "--ratify",
+                "--approve",
                 "modified",
                 "--check",
             ],
@@ -1046,7 +1046,7 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # behaved oddly. That is `derived-stage`'s shape (an artifact the
         # machinery's own honesty rests on), not the dashboards'. The concrete
         # case this was written against — a repo pinned at the lowest reading for
-        # the whole duration of a ratification window, so a `DevStg-Impl` step
+        # the whole duration of an approval window, so a `DevStg-Impl` step
         # never ran in its own CI — is the collapse `docs/stage` removes by
         # deriving over the SETTLED spine; the ARGUMENT for the tag survives it.
         (
@@ -1106,12 +1106,12 @@ def steps(coverage, tier, stage, phase=None, profile=None):
         # no --strict switch: unlike staged-divergence, there is no honest
         # warn-first state for "a historical record just got rewritten".
         (
-            "ratify-immutable",
+            "approval-immutable",
             (),
             [
                 sys.executable,
                 str(_SCRIPTS / "check.py"),
-                "--ratify-immutable",
+                "--approval-immutable",
             ],
             _kitladder.STAGE_NEEDS,
             "process",
@@ -1295,9 +1295,9 @@ def _warn_retired_flag_spelling(argv=None):
 # and 5. The last four were the three DISPLAY readers (`traj_parse`,
 # `traj_panels`, `traj_status`), which now render the stage vocabulary, and
 # `agent_common.spine_stage_of` — not display at all, but the input to
-# `human_holds`, i.e. RATIFICATION AUTHORITY — which now comes through the common
+# `human_holds`, i.e. APPROVAL AUTHORITY — which now comes through the common
 # reader above. That one is why the freshness step could not retire earlier: a
-# stale value there decides who may ratify.
+# stale value there decides who may approve.
 STAGE_FILE = Path(_kitstage.STAGE_FILE)
 
 
@@ -1340,8 +1340,8 @@ def resolve_plan(stage, coverage, tier, phase, profile):
     ONE TIER, WHERE THERE WERE THREE (WI-498 slice 2). The gating plan used to be
     followed by a PRODUCT-REGRESSION FLOOR (`floor_plan`, WI-473) that put back
     the product steps a drafted row had knocked out, and then by an ADVISORY tier
-    (`advisory_plan`, owner ruling 2026-07-27) that re-ran warn-only whatever a
-    ratification window had suppressed. Both existed for ONE reason: the derived
+    (`advisory_plan`, owner ruling 2026-07-27) that re-ran warn-only whatever an
+    approval window had suppressed. Both existed for ONE reason: the derived
     BAR was a min over every in-scope row, so a single ordinary draft dropped it
     to what a fresh scaffold reads and steps silently stopped running.
 
@@ -1431,7 +1431,7 @@ _COVERAGE_ENV_VARS = (
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
 _TRUNK_FRESHNESS_STEPS = frozenset(
-    "derived-stage trajectory-map status-map open-items okf ratify-fresh".split()
+    "derived-stage trajectory-map status-map open-items okf approval-fresh".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1606,19 +1606,19 @@ def staged_divergence(root=".", strict=False):
 # The defect this closes: `docs/ratify/<date>-*.md` is read as the record of
 # what a human was shown at a sitting, but a regeneration used to find and
 # rewrite whichever dated file was newest — ten rewrites on one file, none of
-# them about the WI it was named for. The split (`current_ratify_brief`,
-# `mint_ratify_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
-# file a regeneration ever touches and `--mint-ratify-brief` the only thing
+# them about the WI it was named for. The split (`current_approval_brief`,
+# `mint_approval_brief` in trace.py) makes `docs/ratify/CURRENT.md` the only
+# file a regeneration ever touches and `--mint-approval-brief` the only thing
 # that ever creates a dated one — but a CONVENTION with no enforcer rots the
 # way the byte baselines did (the spec's own words). This is the enforcer: it
 # reads the STAGED tree (what the commit is about to contain, exactly like
-# `ratify_immutability`'s sibling `staged_divergence` reads the unstaged one)
+# `approval_immutability`'s sibling `staged_divergence` reads the unstaged one)
 # and refuses any status other than a plain ADD on an existing dated name.
 
-_RATIFY_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
+_APPROVAL_EXEMPT_NAMES = frozenset({"current.md", "readme.md"})
 
 
-def _is_dated_ratify_brief(path):
+def _is_dated_approval_brief(path):
     """True for a `docs/ratify/*.md` path that is neither the live surface
     (`CURRENT.md`) nor the directory's own README — i.e. a dated brief that,
     once committed, must never change again."""
@@ -1626,10 +1626,10 @@ def _is_dated_ratify_brief(path):
     if not posix.startswith("docs/ratify/"):
         return False
     name = posix.rsplit("/", 1)[-1]
-    return name.lower() not in _RATIFY_EXEMPT_NAMES
+    return name.lower() not in _APPROVAL_EXEMPT_NAMES
 
 
-def ratify_immutability(root=".", strict=True):
+def approval_immutability(root=".", strict=True):
     """Refuse a commit whose STAGED diff modifies or deletes an
     already-committed dated re-attestation brief. Returns the exit code.
 
@@ -1638,7 +1638,7 @@ def ratify_immutability(root=".", strict=True):
     reads. `--no-renames` keeps a delete-and-recreate legible as its own two
     honest halves (D + A) rather than a single R that could hide a rewrite
     behind a fresh-looking status; a plain ADD (a brand-new dated filename,
-    what `trace.py --mint-ratify-brief` ever produces) is the ONLY status this
+    what `trace.py --mint-approval-brief` ever produces) is the ONLY status this
     permits on a dated brief. `docs/ratify/CURRENT.md` and `README.md` are
     exempt — the live surface and the directory's own reference doc, neither
     of them history.
@@ -1657,7 +1657,7 @@ def ratify_immutability(root=".", strict=True):
     top = _git_out(root, ["rev-parse", "--show-toplevel"])
     if top is None or not top.strip():
         print(
-            "  SKIP  ratify-immutable  no git, or {} is not a git checkout — "
+            "  SKIP  approval-immutable  no git, or {} is not a git checkout — "
             "there is no index to compare against.".format(Path(root).resolve())
         )
         return 0
@@ -1667,7 +1667,7 @@ def ratify_immutability(root=".", strict=True):
         at_top = False
     if not at_top:
         print(
-            "  SKIP  ratify-immutable  {} is not the top level of its git "
+            "  SKIP  approval-immutable  {} is not the top level of its git "
             "checkout ({}), so docs/ratify/ does not resolve against this "
             "index.".format(Path(root).resolve(), top.strip())
         )
@@ -1675,7 +1675,7 @@ def ratify_immutability(root=".", strict=True):
     diff = _git_out(root, ["diff", "--cached", "--name-status", "--no-renames", "-z"])
     if diff is None:
         print(
-            "  SKIP  ratify-immutable  `git diff --cached` failed — the "
+            "  SKIP  approval-immutable  `git diff --cached` failed — the "
             "staged tree could not be inspected."
         )
         return 0
@@ -1686,18 +1686,18 @@ def ratify_immutability(root=".", strict=True):
     while i + 1 < len(tokens):
         status, path = tokens[i], tokens[i + 1]
         i += 2
-        if not _is_dated_ratify_brief(path):
+        if not _is_dated_approval_brief(path):
             continue
         if status != "A":
             violations.append((status, path))
     if not violations:
         print(
-            "  ok    ratify-immutable  no staged change touches an existing "
+            "  ok    approval-immutable  no staged change touches an existing "
             "dated docs/ratify/ brief."
         )
         return 0
     print(
-        "  FAIL  ratify-immutable  {} dated re-attestation brief(s) staged "
+        "  FAIL  approval-immutable  {} dated re-attestation brief(s) staged "
         "with a change other than a plain add — a dated brief is IMMUTABLE "
         "once minted:".format(len(violations))
     )
@@ -1706,20 +1706,20 @@ def ratify_immutability(root=".", strict=True):
     print(
         "    Fix: revert the change to the existing dated file (`git restore "
         "--staged --worktree -- <path>`); regenerate the LIVE surface at "
-        "`docs/ratify/CURRENT.md` instead (`trace.py --ratify modified --out "
+        "`docs/ratify/CURRENT.md` instead (`trace.py --approve modified --out "
         "docs/ratify/CURRENT.md`); mint a NEW dated brief with `trace.py "
-        "--mint-ratify-brief SLUG` rather than editing an old one."
+        "--mint-approval-brief SLUG` rather than editing an old one."
     )
     return 1 if strict else 0
 
 
-def _ratify_immutable_mode(args):
-    """The `--ratify-immutable` entry point, the same shape as
+def _approval_immutable_mode(args):
+    """The `--approval-immutable` entry point, the same shape as
     `_divergence_mode`: EXIT with the detector's code when the flag selects
     it, else return and let main() build the ordinary plan."""
-    if not args.ratify_immutable:
+    if not args.approval_immutable:
         return
-    sys.exit(ratify_immutability("."))
+    sys.exit(approval_immutability("."))
 
 
 def _divergence_mode(args):
@@ -2117,7 +2117,7 @@ def main():
         "AT OR ABOVE runs (default: the derived effective stage in docs/stage, "
         "else all). Drafting a row cannot lower it — the derivation reads the "
         "SETTLED spine — so there is no dial that turns product checks off by "
-        "opening a ratification window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
+        "opening an approval window. The retired G1/G2/G3 and DevBar-* "  # check_vocab: allow
         "value spellings are accepted as aliases and warn; `--gate` is accepted "
         "silently as the prior flag name, `--stage-cleared` warns.",
     )
@@ -2187,13 +2187,13 @@ def main():
         "clean for a program'); the step itself does NOT pass it today",
     )
     ap.add_argument(
-        "--ratify-immutable",
+        "--approval-immutable",
         action="store_true",
         help="run ONLY the re-attestation-brief immutability enforcer and exit "
         "(WI-503): refuse a STAGED change (other than a plain add) to an "
         "existing docs/ratify/<date>-*.md. Fail-closed by default — no "
         "--strict, no warn mode. This is the self-invoked body of the "
-        "'ratify-immutable' step, not a separate contract",
+        "'approval-immutable' step, not a separate contract",
     )
     ap.add_argument(
         "--jobs",
@@ -2221,7 +2221,7 @@ def main():
             "(the stage and stack-profile reads are CWD-relative)".format(Path.cwd())
         )
     _divergence_mode(args)  # exits when --staged-divergence selects it
-    _ratify_immutable_mode(args)  # exits when --ratify-immutable selects it
+    _approval_immutable_mode(args)  # exits when --approval-immutable selects it
     # Translate a retired `--stage G2` (warning once) before anything consumes  check_vocab: allow
     # it, so `resolve_stage` and `_step_stage` both see only canonical rungs.
     args.stage = (

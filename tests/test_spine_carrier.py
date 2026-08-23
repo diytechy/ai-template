@@ -310,7 +310,7 @@ def test_draft_need_ids_reads_STATUS_and_nothing_else():
     # OPPOSITE — "the word is closed and case-sensitive", so `drafted` was "an
     # unrecognized value" — and that reading was wrong in the unsafe direction:
     # an unrecognized value here does not report anything, it returns False, and
-    # False on this predicate means RATIFIED. A mis-cased need silently floated
+    # False on this predicate means APPROVED. A mis-cased need silently floated
     # the derived gate up, which is the one failure `is_draft_need`'s own
     # docstring says this tier can least afford. The other three spine tiers
     # already lower the cell before comparing (`trace.is_drafted`/`is_approved`/
@@ -335,12 +335,12 @@ def test_legacy_markdown_draftness_survives_the_field_it_moved_to():
     The legacy carrier had no maturity FIELD; it had a heading. The reader
     translates that at the boundary, and this pins the translation — because the
     failure mode when it is missing is silent and upward: every drafted need in
-    an un-migrated repo reads as ratified and the derived gate RISES.
+    an un-migrated repo reads as approved and the derived gate RISES.
     """
     text = (
         "## Core needs\n\n| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
-        "| SN-001 | ratified | M | x |\n\n"
-        "## Draft needs (unratified)\n\n"
+        "| SN-001 | approved | M | x |\n\n"
+        "## Draft needs (unapproved)\n\n"
         "| SN-ID | Need | Priority | Acceptance |\n|---|---|---|---|\n"
         "| SN-050 | not yet | M | x |\n"
     )

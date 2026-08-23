@@ -16,7 +16,7 @@ Curated research pack imported from the staged skill/knowledge library. Verify v
   **[original 3DGS paper (Kerbl et al., SIGGRAPH 2023)](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)**,
   **[GaussianSplats3D (three.js)](https://github.com/mkkellogg/GaussianSplats3D)**, and
   **[Babylon's Gaussian Splatting docs](https://doc.babylonjs.com/features/featuresDeepDive/mesh/gaussianSplatting/)**.
-  The **KHR_gaussian_splatting glTF extension** is at release-candidate and expected to ratify in 2026 — meaning splats become first-class glTF alongside meshes; author toward glTF.
+  The **KHR_gaussian_splatting glTF extension** is at release-candidate and expected to approve in 2026 — meaning splats become first-class glTF alongside meshes; author toward glTF.
 
 ### Actionable techniques
 1. **Choose the altitude deliberately.** Raw WebGPU for a bespoke renderer or heavy compute; a

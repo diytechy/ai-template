@@ -2,7 +2,7 @@
 
 `docs/open-items.md` is retired: decision briefs are ROWS in
 `docs/requirements/open-items.csv`, and this generator renders them — plus every
-spine row owing a ratification (`Drafted`) or a re-attest (`Modified`), with a
+spine row owing an approval (`Drafted`) or a re-attest (`Modified`), with a
 word-level before/after — into `docs/open-items.html`.
 
 What these guard, in the order the surface can fail a reader:
@@ -143,7 +143,7 @@ def test_pending_briefs_render_and_ruled_rows_do_not(tmp_path):
 
 def test_draft_and_DRIFTED_rows_both_surface(tmp_path):
     """ "New or changed" is the requirement: a Drafted row owes a first
-    ratification, an amended row owes a re-attest, and a view that renders only
+    approval, an amended row owes a re-attest, and a view that renders only
     one of them silently drops half the owner's queue.
 
     THE SECOND ROW IS NOW REACHED BY DRIFT, NOT BY A CELL. It used to read
@@ -335,7 +335,7 @@ def test_theme_drift_guard_reads_the_shipped_css_not_a_mirror():
 # `test_a3_every_painted_vocabulary_member_is_explained_in_words`
 # (test_traj_render_sweeps.py) sweeps gen_trajectory's declared palette dicts —
 # this module has no such dict to enumerate; its colour-differentiated idioms
-# (the diff marks, the ratify/re-attest pills) were held apart by comment
+# (the diff marks, the approve/re-attest pills) were held apart by comment
 # discipline alone (the module docstring's own claim: "ins/del carries
 # line-through + box-shadow ... pills carry words"). These are that closure's
 # equivalent for THIS module's own two encodings — each pinned so a future
@@ -369,7 +369,7 @@ def test_a3_diff_marks_keep_a_shape_cue_not_colour_alone(tmp_path):
 
 
 def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
-    """The `.pill.ratify` / `.pill` pair (`_KIND_LABELS`) is the render-level
+    """The `.pill.approve` / `.pill` pair (`_KIND_LABELS`) is the render-level
     half: the two kinds share the same shape and differ only in `--pending`
     vs `--muted` colour (the CSS above), so a colour-only encoding here would
     be a future edit that let two DIFFERENTLY-coloured kinds render the SAME
@@ -394,11 +394,11 @@ def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
     )
     assert gen(root).returncode == 0
     page = html_of(root)
-    ratify_texts = set(re.findall(r'<span class="pill ratify">([^<]*)</span>', page))
+    approval_texts = set(re.findall(r'<span class="pill approve">([^<]*)</span>', page))
     plain_texts = set(re.findall(r'<span class="pill">([^<]*)</span>', page))
-    assert ratify_texts, "no ratify-kind pill rendered — the sweep is vacuous"
+    assert approval_texts, "no approval-kind pill rendered — the sweep is vacuous"
     assert plain_texts, "no plain-kind pill rendered — the sweep is vacuous"
-    collide = ratify_texts & plain_texts
+    collide = approval_texts & plain_texts
     assert not collide, (
         "a colour-differentiated pill kind shares its wording with a "
         "differently-coloured kind — colour alone would be all that told "
@@ -407,7 +407,7 @@ def test_a3_kind_pills_are_never_distinguished_by_colour_alone(tmp_path):
 
 
 def test_the_view_names_its_authority(tmp_path):
-    """If the view and `trace.py --ratify` ever disagree, the brief wins and the
+    """If the view and `trace.py --approve` ever disagree, the brief wins and the
     view is the bug. That is only useful if the page SAYS so where a reader
     ruling from it can see it."""
     repo(tmp_path, oi_rows=PENDING_OI)
@@ -474,7 +474,7 @@ def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
 
 def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
     """122-REVIEW-A: the whole-section empty state claimed no Drafted/Modified
-    SPINE ROW while the model selects SRs only — a Drafted LLR under a Approved SR
+    SPINE ROW while the model selects SRs only — a Drafted LLR under an Approved SR
     is invisible AND was actively denied. Say what was checked."""
     repo(
         tmp_path,
@@ -568,7 +568,7 @@ def test_retired_markdown_surface_is_reported(tmp_path):
     root = repo(tmp_path, oi_rows=PENDING_OI)
     assert gen(root).returncode == 0
     (root / "docs" / "open-items.md").write_text(
-        "# Open items\n\n- **WI-999** blocked, awaiting ratification\n",
+        "# Open items\n\n- **WI-999** blocked, awaiting approval\n",
         encoding="utf-8",
     )
     proc = gen(root, "--check")

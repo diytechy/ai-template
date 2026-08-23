@@ -168,7 +168,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
     make_minimal_project(scaffold)
     _no_frame(scaffold)
     srs1, llrs1, tcs1 = _settled_phase("001", "SR-001", "1")
-    # phase 2: a ratified requirement nobody has decomposed yet
+    # phase 2: an approved requirement nobody has decomposed yet
     _write(
         scaffold,
         srs=srs1 + _sr("SR-002", phase="2"),
@@ -187,7 +187,7 @@ def test_per_phase_stages_exist_and_the_global_reading_is_defined_over_them(scaf
 
 def test_the_need_coverage_rung_stays_REPO_GLOBAL_across_phases(scaffold):
     """The seam `cited_srs` exists for. The coverage question — does every
-    ratified need have a requirement answering it — is repo-wide: a need answered
+    approved need have a requirement answering it — is repo-wide: a need answered
     by phase 1's requirements is answered. Without the seam, running the
     derivation over one phase's rows reads every OTHER phase's needs as uncovered
     and reports DevStg-Needs for every phase but the first."""
@@ -228,12 +228,12 @@ def test_the_FRAME_rungs_are_repo_global_and_cap_every_phase(scaffold):
     make_minimal_project(scaffold)
     srs, llrs, tcs = _settled_phase("001", "SR-001", "1")
     _write(scaffold, srs=srs, llrs=llrs, tcs=tcs)
-    # An ADOPTED frame: one real crossing, declared and not yet ratified.
+    # An ADOPTED frame: one real crossing, declared and not yet approved.
     ext = scaffold / "docs" / "requirements" / "external.toml"
     ext.write_text(
         ext.read_text(encoding="utf-8")
         + '\n[boundary.B-01]\nentity = "EXT-000"\ndirection = "in"\n'
-        'carries = "A real crossing, declared and not yet ratified."\n'
+        'carries = "A real crossing, declared and not yet approved."\n'
         'status = "Drafted"\n',
         encoding="utf-8",
     )
@@ -284,7 +284,7 @@ def test_an_UNMODIFIED_bootstrap_reaches_Impl_on_a_settled_spine(scaffold):
     from the derived value in every adopting repo, permanently.
 
     So: NO deletions, no edits to anything `bootstrap.py` wrote outside the
-    spine. Fill the spine, ratify it, and the ladder must climb.
+    spine. Fill the spine, approve it, and the ladder must climb.
     """
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
@@ -507,7 +507,7 @@ def test_next_phase_prints_max_plus_one(scaffold):
         [SCRIPTS / "derive_stage.py", "--root", scaffold, "--next-phase"], cwd=scaffold
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert proc.stdout.strip() == "4"  # max ratified = 3; the Drafted 4 is excluded
+    assert proc.stdout.strip() == "4"  # max approved = 3; the Drafted 4 is excluded
     # An output mode over the existing derivation: docs/stage is not rewritten.
     assert stage_file.read_text(encoding="utf-8") == before
 

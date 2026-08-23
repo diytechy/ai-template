@@ -23,7 +23,7 @@ phase = 1
 [test.TC-003]
 verifies = ["SR-157", "LLR-003"]
 level = "Integration"
-method = """Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once the spine is phased) a ratified row whose Phase is not a full-cell bare integer (blank, prefixed like P1/v2, or unparseable) are flagged."""
+method = """Run the registry-checks suite; leftover -000 rows, empty/out-of-vocab fields, and (once the spine is phased) an approved row whose Phase is not a full-cell bare integer (blank, prefixed like P1/v2, or unparseable) are flagged."""
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-003 (parent SR-157)"
 automated = "Yes"
@@ -531,7 +531,7 @@ verifies = ["SR-049", "LLR-050"]
 level = "Unit"
 method = """derive the stage from fixture states across every rung predicate and guard the cache; --print reports the derived current phase"""
 tier = "Full"
-expected = """spine_stage derives the correct RUNG per artifact state, walked end to end on the fixture: a Drafted SR reads DevStg-Reqs, a ratified-but-undecomposed SR DevStg-LLReqs, a decomposed SR with no test case DevStg-Tests, and a spine whose test cases are all authored and non-Drafted DevStg-Impl - never DevStg-Release, which is evidence-gated and has no producer. The derived current phase on the stage record is the highest phase over RATIFIED rows (a Drafted row in a higher phase does not bump it; an unphased spine reads None), the meta-repo's own per-phase-live reading matches an INDEPENDENT re-derivation from the raw registry TOML, and the record carries no retired modified= counter."""
+expected = """spine_stage derives the correct RUNG per artifact state, walked end to end on the fixture: a Drafted SR reads DevStg-Reqs, an approved-but-undecomposed SR DevStg-LLReqs, a decomposed SR with no test case DevStg-Tests, and a spine whose test cases are all authored and non-Drafted DevStg-Impl - never DevStg-Release, which is evidence-gated and has no producer. The derived current phase on the stage record is the highest phase over APPROVED rows (a Drafted row in a higher phase does not bump it; an unphased spine reads None), the meta-repo's own per-phase-live reading matches an INDEPENDENT re-derivation from the raw registry TOML, and the record carries no retired modified= counter."""
 automated = "Yes"
 evidence = "tests/test_spine_rules.py"
 status = "Approved"
@@ -828,18 +828,18 @@ phase = 1
 [test.TC-084]
 verifies = ["SR-154", "LLR-081"]
 level = "Integration"
-method = """Drive swap, tier-up, shared failure, contradiction, tripwire, and the ratification-level escalation branches (all four human_held x keep_nondependent cells)."""
+method = """Drive swap, tier-up, shared failure, contradiction, tripwire, and the approval-level escalation branches (all four human_held x keep_nondependent cells)."""
 tier = "Smoke"
 expected = "The fixed win-stay/lose-shift sequence and every paging condition match policy."
 automated = "Yes"
-evidence = """tests/test_agent_route.py::test_escalate_swap_then_tier_up_then_page; tests/test_agent_route.py::test_escalate_pages_on_top_tier_shared_failure; tests/test_agent_route.py::test_escalate_pages_on_tripwire_and_double_contradiction; tests/test_agent_route.py::test_failure_action_keyed_to_the_ratification_level; tests/test_agent_loop_review.py::test_changes_requested_swaps_implementer_family; tests/test_agent_loop_review.py::test_escalation_tiers_up_after_swap"""
+evidence = """tests/test_agent_route.py::test_escalate_swap_then_tier_up_then_page; tests/test_agent_route.py::test_escalate_pages_on_top_tier_shared_failure; tests/test_agent_route.py::test_escalate_pages_on_tripwire_and_double_contradiction; tests/test_agent_route.py::test_failure_action_keyed_to_the_approval_level; tests/test_agent_loop_review.py::test_changes_requested_swaps_implementer_family; tests/test_agent_loop_review.py::test_escalation_tiers_up_after_swap"""
 status = "Approved"
 phase = 1
 
 [test.TC-085]
 verifies = ["SR-154", "LLR-082"]
 level = "Integration"
-method = """Run critique approval, rework, configured-cap exhaustion, and the ratification-level disposition cases."""
+method = """Run critique approval, rework, configured-cap exhaustion, and the approval-level disposition cases."""
 tier = "Full"
 expected = "CHANGES-REQUESTED reworks within the bound and cap exhaustion pages through policy."
 automated = "Yes"
@@ -1188,7 +1188,7 @@ phase = 3
 [test.TC-123]
 verifies = ["SR-049", "LLR-118"]
 level = "Unit"
-method = """Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Drafted AND Modified spine rows both surface (ratification owed vs re-attest owed) while an Approved row does not; that a section with no changed cells says what is true — no cell differs from the approved snapshot, the row's own Status asking for a human — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read (the machine-local mask retired with the dispatcher); that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction)."""
+method = """Drive gen_open_items over temp repos: assert a pending registry row renders as a brief and a RULED row does not; that Drafted AND Modified spine rows both surface (approval owed vs re-attest owed) while an Approved row does not; that a section with no changed cells says what is true — no cell differs from the approved snapshot, the row's own Status asking for a human — and never CHECK THE BASELINE nor nothing-changed; that --check bites on drift as a plain regenerate-and-compare, with no baseline stamp left in the view to re-read (the machine-local mask retired with the dispatcher); that the whole thing is vacuous with neither registry nor view; that registry prose is HTML-escaped; that the word diff marks only what moved and the percentage counts words not whitespace; and that the theme tokens equal the dashboard's emitted values (a drift guard, not an extraction)."""
 tier = "Full"
 parameters = "tests/test_gen_open_items.py (temp repos; one git-backed fixture for the baseline paths)"
 expected = """Every assertion holds, each with its negative half."""
@@ -1378,7 +1378,7 @@ phase = 1
 [test.TC-141]
 verifies = ["SR-049", "LLR-147"]
 level = "Unit"
-method = """Fixture-drive the SN-coverage rung: a ratified SN cited by zero SR SN-Refs HOLDS the DevStg-Needs rung directly (the ladder reads the rung the work is at, rather than capping a bar and flooring it), and drafted=0 on the same stage record is what keeps the two causes of that rung apart - coverage here, not a draft; citing the need from an SR's SN-Refs releases the rung and the otherwise-identical registry state climbs to DevStg-Impl; -000 rows on both sides of the join are out of scope, so an SN-000 placeholder never fires the rung and an example SR-000 row cannot fake coverage of a real need; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
+method = """Fixture-drive the SN-coverage rung: an approved SN cited by zero SR SN-Refs HOLDS the DevStg-Needs rung directly (the ladder reads the rung the work is at, rather than capping a bar and flooring it), and drafted=0 on the same stage record is what keeps the two causes of that rung apart - coverage here, not a draft; citing the need from an SR's SN-Refs releases the rung and the otherwise-identical registry state climbs to DevStg-Impl; -000 rows on both sides of the join are out of scope, so an SN-000 placeholder never fires the rung and an example SR-000 row cannot fake coverage of a real need; and the sn_cited_ids parse is pinned equal between trace.py and spine_rules.py across the separator/empty/absent-cell battery (tests/test_rule_sync.py)."""
 tier = "Full"
 expected = "Satisfies SR-049 AcceptanceCriteria"
 automated = "Yes"
@@ -1400,7 +1400,7 @@ phase = 4
 [test.TC-143]
 verifies = ["SR-148", "LLR-149"]
 level = "Unit"
-method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-ratify keeps non-dependent work and admits the queued ratification batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
+method = """Run the dispatch admission suite: an exclusive row + a busy lane answers wait (never a parallel claim slipped past the barrier) while the same frontier without one keeps filling lanes; lanes back -> every spine row admits as ONE batch ahead of ordinary work; the §A8 table verbatim per kind x level (attended surfaces attestation/gate rows, single-approve keeps non-dependent work and admits the queued approval batch only at the close, autonomous dispatches them exclusive); the lanes ladder resolves CLI > AGENT_LANES > stack.ini > 1 with absent/malformed/sub-1 falling to serial; gap_census names unverified SRs, orphan rows and draft SNs mechanically and answers [] on a registry-less repo; kind_of agrees with classify at every quarantine."""
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-149 admission-table detail contract"
 automated = "Yes"
@@ -1411,7 +1411,7 @@ phase = 4
 [test.TC-144]
 verifies = ["SR-156", "LLR-150"]
 level = "Integration"
-method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the ratifications banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
+method = """Run the dispatch loop suite on real git repos with the real bar: a spine batch claims as one commit and its worker receives both ids together, ordinary work admitted only after the window closes; a NEEDS-HUMAN worker hands back, the lane's refresh runs as its own subprocess and the branch merges; a red refresh quarantines a merges-nothing branch once and stops the run for a done-asserting one; an attended gate row drains and exits 0 with the approvals banner; the empty-frontier ladder hands the gap census to the intake mint (rows minted in one bookkeeping commit, driven by the same run, deduped on the next idle pass) and counts rung-2 cards off the shared pending read; pause/dirty-trunk/stall/crash-resume keep their serial-loop contracts at lanes=1."""
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-150 detail contract"
 automated = "Yes"
@@ -1444,7 +1444,7 @@ phase = 4
 [test.TC-147]
 verifies = ["SR-174", "LLR-153", "IF-091"]
 level = "Integration"
-method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): a ratified SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-ratify and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
+method = """Run the intake suite against real git repos, red-then-green per trigger (trigger (b) keys on the close's immutable REPORT PATH, so a re-sweep dedupes exactly and a genuinely second close is a second row): an approved SR amendment mints ONE adjudication row (id max+1, blockref empty, the before/after listing in ## Context) and an LLR SR-Refs re-point mints while a Module-only move stays silent (the ruled routing); a merged handback mints the disposition row (NEEDS-HUMAN reason routes strong; a handed-back adjudication row mints NOTHING and its own handback attempt is refused structurally); a merged adjudication row's ## Dispositions drafts mint at its merge with planmode=dual passing through kind-derived, and a malformed block, an unknown key, a second adjudication kind or a bad bar value refuse with nothing minted; the census mints gap rows once and dedupes on re-run; every re-run is idempotent by exact-title dedup; the context block renders every join in failure-cost order and answers the empty string on a bare repo; both gate-policy arms enact (attended recommends and leaves the registries byte-identical; single-approve and autonomous flip only the named Status cells, cell-exact elsewhere, idempotent)."""
 tier = "Full"
 expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-153 detail contract"
 automated = "Yes"
@@ -1455,7 +1455,7 @@ phase = 4
 [test.TC-148]
 verifies = ["SR-174", "LLR-154", "IF-090"]
 level = "Integration"
-method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended a ratified SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
+method = """Run the integrator + dispatcher suites' intake-arm cases: a merged branch that amended an approved SR cell yields the adjudication row as its own mint: commit immediately after the merge commit on trunk (in-slot, serial); the dispatcher's empty-frontier rung 1 mints gap rows and KEEPS DRIVING them in the same run, then exits honestly when every gap already carries a row; a census-mint refusal stops the run loudly; the handback loop tests drive the disposition row the same run mints."""
 tier = "Full"
 expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
@@ -1488,18 +1488,18 @@ phase = 5
 [test.TC-151]
 verifies = ["SR-139", "LLR-155", "LLR-157"]
 level = "Unit"
-method = """Run the ratification-level suite: the full level x stage matrix against the ladder the shipped template documents, every malformed input (negative, out-of-range, string, float, bool, absent, unparseable), the legacy-word translation, and the spine-stage corners (draft need, empty spine, uncited need, Modified SR, missing child, LLR-exempt SR)."""
+method = """Run the approval-level suite: the full level x stage matrix against the ladder the shipped template documents, every malformed input (negative, out-of-range, string, float, bool, absent, unparseable), the legacy-word translation, and the spine-stage corners (draft need, empty spine, uncited need, Modified SR, missing child, LLR-exempt SR)."""
 tier = "Smoke"
 expected = "Satisfies SR-139 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_ratification_level.py"
+evidence = "tests/test_approval_level.py"
 status = "Approved"
 phase = 5
 
 [test.TC-152]
 verifies = ["SR-138", "LLR-156"]
 level = "Integration"
-method = """Run the migration cases in the process-config suite: a full conversion deletes every legacy file and lands all three ratification dials; a second pass is a no-op; a hand-trimmed process.toml leaves the legacy file in place with its value intact; the F5 translation tables are pinned equal and the retired enum key is absent from the shipped template."""
+method = """Run the migration cases in the process-config suite: a full conversion deletes every legacy file and lands all three approval dials; a second pass is a no-op; a hand-trimmed process.toml leaves the legacy file in place with its value intact; the F5 translation tables are pinned equal and the retired enum key is absent from the shipped template."""
 tier = "Full"
 expected = "Satisfies SR-138 AcceptanceCriteria"
 automated = "Yes"
@@ -1510,7 +1510,7 @@ phase = 5
 [test.TC-153]
 verifies = ["SR-178", "LLR-158"]
 level = "Integration"
-method = """Run the drift half of the baseline-snapshot suite. It first drives the premise: test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo. It then pins exactly what a change is taken over, in four corners: test_a_ratified_cell_moving_under_an_approved_row_is_DRIFT (a ratified cell must move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one), and test_a_row_below_approval_can_never_be_drifted (no claim to fall from). The guard and the snapshot comparison share one public basis, split_changed_cells, called by both staged_spine_amendments and baseline_snapshot.is_drifted, so their agreement carries no case of its own."""
+method = """Run the drift half of the baseline-snapshot suite. It first drives the premise: test_the_amendment_seam_is_BLIND_to_an_amend_plus_flip shows the staged-amendment guard silent on a sanctioned amend+flip over a real two-commit git repo. It then pins exactly what a change is taken over, in four corners: test_a_approved_cell_moving_under_an_approved_row_is_DRIFT (an approved cell must move it), test_a_TRACED_cell_moving_is_NOT_drift (the traced half must not), test_status_itself_is_never_the_amendment (the marker is excluded structurally, so a flip is neither an amendment nor a mask for one), and test_a_row_below_approval_can_never_be_drifted (no claim to fall from). The guard and the snapshot comparison share one public basis, split_changed_cells, called by both staged_spine_amendments and baseline_snapshot.is_drifted, so their agreement carries no case of its own."""
 tier = "Smoke"
 expected = "Satisfies SR-178 AcceptanceCriteria via the LLR-158 detail contract"
 automated = "Yes"
@@ -1598,7 +1598,7 @@ phase = 5
 [test.TC-161]
 verifies = ["LLR-167", "IF-124", "IF-127"]
 level = "Integration"
-method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only ratified cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model."""
+method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model."""
 tier = "Smoke"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
@@ -1887,7 +1887,7 @@ method = """The trust model, arm by arm. THE RECORD round-trips through its own 
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-192 (parent SR-152)"
 automated = "Yes"
-evidence = """tests/test_test_evidence.py::test_the_record_round_trips_through_its_own_parser; tests/test_test_evidence.py::test_a_file_that_is_not_a_record_reads_as_ABSENT_and_never_raises; tests/test_test_evidence.py::test_no_record_means_the_claim_does_not_hold; tests/test_test_evidence.py::test_a_matching_record_HOLDS; tests/test_test_evidence.py::test_a_SMOKE_tier_record_is_refused_by_the_READER; tests/test_test_evidence.py::test_an_outcome_other_than_pass_is_refused; tests/test_test_evidence.py::test_the_claim_is_bound_to_the_TREE_it_was_measured_on; tests/test_test_evidence.py::test_build_residue_is_NOT_part_of_the_binding; tests/test_test_evidence.py::test_the_STAGE_fingerprint_moves_with_the_SOURCE_only_while_a_record_exists; tests/test_test_evidence.py::test_the_evidence_file_is_a_declared_stage_input; tests/test_test_evidence.py::test_the_binding_does_not_fold_the_record_itself; tests/test_test_evidence.py::test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict; tests/test_test_evidence.py::test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine; tests/test_test_evidence.py::test_the_derivation_reaches_RELEASE_end_to_end; tests/test_ratification_level.py::test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT"""
+evidence = """tests/test_test_evidence.py::test_the_record_round_trips_through_its_own_parser; tests/test_test_evidence.py::test_a_file_that_is_not_a_record_reads_as_ABSENT_and_never_raises; tests/test_test_evidence.py::test_no_record_means_the_claim_does_not_hold; tests/test_test_evidence.py::test_a_matching_record_HOLDS; tests/test_test_evidence.py::test_a_SMOKE_tier_record_is_refused_by_the_READER; tests/test_test_evidence.py::test_an_outcome_other_than_pass_is_refused; tests/test_test_evidence.py::test_the_claim_is_bound_to_the_TREE_it_was_measured_on; tests/test_test_evidence.py::test_build_residue_is_NOT_part_of_the_binding; tests/test_test_evidence.py::test_the_STAGE_fingerprint_moves_with_the_SOURCE_only_while_a_record_exists; tests/test_test_evidence.py::test_the_evidence_file_is_a_declared_stage_input; tests/test_test_evidence.py::test_the_binding_does_not_fold_the_record_itself; tests/test_test_evidence.py::test_a_settled_spine_reaches_RELEASE_only_with_the_evidence_verdict; tests/test_test_evidence.py::test_the_evidence_argument_cannot_lift_an_UNSETTLED_spine; tests/test_test_evidence.py::test_the_derivation_reaches_RELEASE_end_to_end; tests/test_approval_level.py::test_the_RELEASE_rung_has_EXACTLY_ONE_PRODUCER_and_it_is_the_EVIDENCE_VERDICT"""
 status = "Approved"
 phase = 5
 

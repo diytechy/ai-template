@@ -12,7 +12,7 @@ priority = 3
 
 ## Context
 
-**This row feeds the deferred P5 ratification (2026-08-13s).** Decision 10 was
+**This row feeds the deferred P5 approval (2026-08-13s).** Decision 10 was
 deferred until after this program and the SR re-tier, to be re-taken on
 **re-derived** numbers (pack §3's finding puts the violation in the copies: 39
 behaviour-home pairs across 16 modules) — and 13s names this row as permitted

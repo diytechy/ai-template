@@ -867,7 +867,7 @@ def needs_from_markdown(text):
         # legacy markdown had exactly two maturities — under the draft heading
         # or not — so the mapping is total and loses nothing. Emitting it here
         # is what keeps `is_draft_need` honest over legacy text; without it a
-        # draft-heading row reads as ratified and the derived gate RISES, the
+        # draft-heading row reads as approved and the derived gate RISES, the
         # one failure shape this carrier exists to prevent.
         need = {
             "id": cells[0],
@@ -904,7 +904,7 @@ def needs_from_text(text):
     id scrape happens to keep working — `[need.SN-001]` still contains the token
     — but the DRAFT scan does not: it looks for a markdown heading containing
     the word "draft", finds none, and reports zero drafts. Every draft need
-    would read as ratified and the derived gate would RISE. That is the failure
+    would read as approved and the derived gate would RISE. That is the failure
     this dispatch exists to make impossible; it is not a convenience."""
     parsed = needs_from_toml(text)
     if parsed is not None and (parsed or NEED_TABLE + "." in text):
@@ -1027,7 +1027,7 @@ def is_draft_need(need):
     A NEED WITH NO `status` IS NOT DRAFT, and that default is deliberate rather
     than incidental: the failure mode this tier can least afford is the one the
     markdown carrier had — a row silently reading as un-drafted floats the
-    derived gate UPWARD. Here the absent-key case reads as ratified only because
+    derived gate UPWARD. Here the absent-key case reads as approved only because
     an absent `status` is caught upstream, as a SCHEMA finding on a required
     key, rather than being invented into a maturity by a reader.
 
@@ -1035,7 +1035,7 @@ def is_draft_need(need):
     already follow (`trace.is_drafted`/`is_approved`/`is_founded` all lower the
     cell before comparing; process.md §4). It was an EXACT compare here, and the
     asymmetry failed in the unsafe direction: a need written `status = "drafted"`
-    read as ratified, floating the derived gate upward — the same silent
+    read as approved, floating the derived gate upward — the same silent
     float this docstring's absent-key paragraph exists to prevent, arriving by
     casing instead of by an absent key. Casing is not a maturity, so a
     mis-cased word must not decide one; a word that is not in the vocabulary at

@@ -25,7 +25,7 @@
 # drives is exactly how two parsers diverge.
 #
 # WHAT IS IN SCOPE: every dial that answers "how is work PROCESSED" — gate
-# authority, the human-ratification level, push authority, the reviewer count,
+# authority, the human-approval level, push authority, the reviewer count,
 # the privacy and secrets gates, guardrails, the blackout window — and, since
 # the 2026-08-11 overturn below, every dial that answers "is this CHECK on".
 # What stays outside, and why:
@@ -63,19 +63,19 @@
 
 [attestation]
 # THE GATE-AUTHORITY DIAL. This section used to open with a three-value enum
-# (`gate_policy = "attended" | "single-ratify" | "autonomous"`). SN-029 RETIRED
+# (`gate_policy = "attended" | "single-approve" | "autonomous"`). SN-029 RETIRED
 # it and this file no longer ships the key, because shipping both was itself
-# the bug: the template's `human_ratification_through` shadowed whatever
+# the bug: the template's `human_approval_through` shadowed whatever
 # word `bootstrap --gate-policy` had written, so a repo that chose `autonomous`
 # scaffolded as fully attended with no diagnostic anywhere.
 #
-# The three words map onto the dials below (`agent_common.LEGACY_RATIFICATION`
+# The three words map onto the dials below (`agent_common.LEGACY_APPROVAL`
 # is the one home for the translation, and `bootstrap.py --migrate-config`
 # applies it to a legacy `docs/gate-policy` file):
 #
-#   attended       human_ratification_through = "DevStg-Release",
+#   attended       human_approval_through = "DevStg-Release",
 #                  keep_nondependent = false
-#   single-ratify  = "DevStg-Below", keep_nondependent = true,
+#   single-approve  = "DevStg-Below", keep_nondependent = true,
 #                  final_review = "always"
 #   autonomous     = "DevStg-Below", keep_nondependent = true,
 #                  final_review = "off"
@@ -83,18 +83,18 @@
 # Note what that makes visible: the enum's words were never one axis. Each
 # bundled a tier hold, a drain policy and an end-of-run hold, which is exactly
 # why four separate tables had to re-interpret the same word.
-# THE HIGHEST STAGE RUNG A HUMAN STILL RATIFIES, cumulatively ("through" this
+# THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this
 # rung). The dispatcher compares the rung a row is IN against this value: AT OR
 # BELOW it, work SURFACES for the human; above it, the loop dispatches and an
-# LLM verdict carries ratification authority. It is the exact mirror of the rule
+# LLM verdict carries approval authority. It is the exact mirror of the rule
 # that selects checks — a check runs at or ABOVE its `from-stage`, a human
-# ratifies at or BELOW this dial.
+# approves at or BELOW this dial.
 #
 # The value is one of the eight ladder rungs (process.md §4), or `DevStg-Below`
-# for "nothing is human-held; the loop ratifies every rung itself":
+# for "nothing is human-held; the loop approves every rung itself":
 #
 #   DevStg-Below      nothing is human-held
-#   DevStg-Needs      the human ratifies stakeholder needs
+#   DevStg-Needs      the human approves stakeholder needs
 #   DevStg-Boundary   ... and the system frame
 #   DevStg-Reqs       ... and the requirements
 #   DevStg-Arch       ... and the partition
@@ -110,19 +110,19 @@
 # 3 -> DevStg-LLReqs, 4 -> DevStg-Release, which holds exactly the rungs each
 # level held before.
 #
-# Named `human_ratification_through`, never "attest level": `Attest` is already
+# Named `human_approval_through`, never "attest level": `Attest` is already
 # a Verification method in the SR vocabulary and the collision would be
 # permanent.
-human_ratification_through = "DevStg-Release"
+human_approval_through = "DevStg-Release"
 # The separate "always show me the full breakdown at the end" hold, split out
 # because it is flipped far more often than the level itself.
 #   "always" — the loop stops for a final human read even when the level would
 #              have let it close
 #   "off"    — no final hold
 final_review = "always"
-# Keep NON-DEPENDENT work running while a ratification is queued? This is an
-# ORTHOGONAL policy an ordinal cannot express (it was the old `single-ratify`
-# level's distinguishing behaviour). false = a queued ratification drains the
+# Keep NON-DEPENDENT work running while an approval is queued? This is an
+# ORTHOGONAL policy an ordinal cannot express (it was the old `single-approve`
+# level's distinguishing behaviour). false = a queued approval drains the
 # station and stops the run; true = other lanes keep going around it.
 keep_nondependent = false
 # How a CLEAN (`complete/`) lane close is adjudicated. `partial` and

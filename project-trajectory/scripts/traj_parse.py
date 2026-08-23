@@ -104,7 +104,7 @@ def _spine(root, skip_example=False):
 
     `skip_example=True` additionally drops the `-000` placeholder rows a
     freshly copied template carries. That is the pending projection's rule — an
-    example row owes no ratification — stated once in the loader rather than
+    example row owes no approval — stated once in the loader rather than
     re-derived at the call site. The default keeps them, because the icicle and
     the maturity counts render whatever the registry holds."""
 

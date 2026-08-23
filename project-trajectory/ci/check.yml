@@ -71,7 +71,7 @@ jobs:
       # file (check.py reads it and runs every step declared at or above that
       # rung), so CI enforces what the project has actually earned — a
       # freshly-scaffolded DevStg-Reqs repo is green, and more steps select when
-      # artifacts are ratified in a reviewed commit and docs/stage is regenerated
+      # artifacts are approved in a reviewed commit and docs/stage is regenerated
       # (it is DERIVED from the artifact states by derive_stage.py, not hand-set;
       # the derived-stage step guards its freshness). In CI we do NOT pass
       # --lenient: a missing required tool must fail, so checks can't be

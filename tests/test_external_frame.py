@@ -9,7 +9,7 @@ mechanized, and what this module pins, is the joining: a crossing names a
 declared entity, a relationship names two, a tie-back names a declared crossing,
 and every row carries the one maturity field the boundary rung reads
 (`spine_rules.boundary_incomplete` — its own tests live in
-tests/test_ratification_level.py).
+tests/test_approval_level.py).
 """
 
 import tomllib
@@ -116,7 +116,7 @@ def test_the_live_frame_is_the_LOCKED_one():
 
 def test_every_frame_row_carries_the_approval_element():
     """D12's requirement, from the file's FIRST commit: a frame with no approval
-    element is un-ratifiable, and the rung that reads it would have nothing
+    element is un-approvable, and the rung that reads it would have nothing
     honest to read. Checked over every row of every tier, because a single
     unapproved-by-omission crossing is what would silently clear rung 1."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))
@@ -129,9 +129,9 @@ def test_the_live_frame_approval_state_is_pinned():
     """The flip authority, asserted rather than asked for: a `status` cell here
     is the OWNER's to flip in a reviewed commit, and nothing the kit builds may
     set one. The pre-sign form of this test pinned {"Drafted"} and fired — as
-    designed — at the 2026-08-20 sitting-3 ratification, where the owner
+    designed — at the 2026-08-20 sitting-3 approval, where the owner
     approved the locked frame in writing (log Decisions 2026-08-20a); this
-    edit IS that ratification's sanctioned update. The tripwire now points the
+    edit IS that approval's sanctioned update. The tripwire now points the
     other way: the frame is uniformly Approved, and any row leaving that state
     is again a red test rather than a quiet line in a diff."""
     tables = tomllib.loads(LIVE.read_text(encoding="utf-8"))

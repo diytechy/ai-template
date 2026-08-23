@@ -380,7 +380,7 @@ def _spine_excerpt(root, ids):
 
 
 def amendment_values(root, row):
-    """`({baseline, rows}, None)` for a spine row whose ratified text moved after
+    """`({baseline, rows}, None)` for a spine row whose approved text moved after
     it was approved, or `(None, reason)`.
 
     `{baseline}` is the SNAPSHOT STAMP, and the substitution is the whole point
@@ -393,8 +393,8 @@ def amendment_values(root, row):
     only have been written by copying a live registry in a reviewed approval
     commit.
 
-    `{rows}` is `trace.reattest_model`'s RATIFIED cells — the same model behind
-    `trace.py --ratify` and `open-items.html`, so the judge, the brief and the
+    `{rows}` is `trace.reattest_model`'s APPROVED cells — the same model behind
+    `trace.py --approve` and `open-items.html`, so the judge, the brief and the
     owner surface can never show three different diffs. Traced cells are
     deliberately excluded: §A5.1 rules them non-attesting, and a judge asked to
     rule "meaning or clarity" on a re-pointed `Module` cell is being asked a
@@ -441,8 +441,8 @@ def amendment_values(root, row):
     lines = []
     for entry in model:
         for chain_row in entry["rows"]:
-            ratified = chain_row.get("ratified") or frozenset()
-            cells = [c for c in chain_row["cells"] if c[0] in ratified]
+            approved = chain_row.get("approved") or frozenset()
+            cells = [c for c in chain_row["cells"] if c[0] in approved]
             if not cells:
                 continue
             lines.append(

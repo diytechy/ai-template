@@ -720,10 +720,10 @@ def claim(root, wi_ids, branch, dispatch_lock_held=False):
     regen below covers six of the hook's ten `--run-steps` (arch-map, okf,
     derived-gate, trajectory-map, status-map, open-items); it does NOT cover
     `registry-integrity`, the `trajectory` SSOT check, `skills-sync` or
-    `ratify-fresh`, and outside `--run-steps` the commit also skips
+    `approval-fresh`, and outside `--run-steps` the commit also skips
     `check_privacy --author`, the ALWAYS-ON secrets floor, the `format` step
     and the `commit-msg` hook. Most are vacuous for a pure bookkeeping commit
-    whose parent just passed them, but two are not: `ratify-fresh` reads the
+    whose parent just passed them, but two are not: `approval-fresh` reads the
     registry this commit MUTATES, and the secrets floor would otherwise scan
     the regenerated artifacts. So trunk advances to a commit no hook inspected,
     and the next thing to bar it is a lane's §A2 refresh. Accepted for the
@@ -2307,7 +2307,7 @@ def integrate_one(root, branch, tier, held=None):
     the caller has to carry the remainder to the run's exit code.
 
     THE POST-MERGE ARM IS THE INTAKE (WI-388, §A5.2): once the merge lands —
-    and only then — the unified mint helper reads what landed (the ratified/
+    and only then — the unified mint helper reads what landed (the approved/
     routed spine diff, a returned spec's `## Handback`, a merged adjudication
     row's `## Dispositions` drafts) and mints the rows the event forces, as
     ONE bookkeeping commit on trunk, inside this same held slot (serial by

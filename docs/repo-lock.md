@@ -1,7 +1,7 @@
 # The lock program — what is still owed
 
 **What this file is.** The one place scope and rulings accumulate until the
-repository is **locked** — every requirement ratified or rejected, every window
+repository is **locked** — every requirement approved or rejected, every window
 closed, the derived gate back at its honest ceiling, and nothing owed to a
 sitting. It is *living*: entries are appended and amended in place as decisions
 land, and it is deleted (or archived) when §5's checklist is empty.
@@ -58,10 +58,10 @@ briefs and their background.
 |---|---|---|
 | the component **partition** *(part A)* + what an **IF row** must say *(part B)* — gates the most | **OI-14** *(rewritten; the two were **merged** 2026-08-12 at the owner's direction, and the former OI-15 row deleted per D-4)* | §0, §8.6 item 1 |
 | the **prose-legibility batch** (29 SN + 17 SR) | **OI-22** | §8.4 |
-| the **carrier-falsified** ratified rows | **OI-23** | §8.4 item 7 |
+| the **carrier-falsified** approved rows | **OI-23** | §8.4 item 7 |
 | **SN-005**'s unpinned CI obligation | **OI-24** | §8.4 item 1 |
 | `gate_policy` **names two things** | **OI-25** | §8.4 items 3–4 |
-| ratify **WI-429**'s LLR discharge rule | **OI-20** | §8.5, D-9 |
+| approve **WI-429**'s LLR discharge rule | **OI-20** | §8.5, D-9 |
 | ~~the **D-8** common-module doctrine~~ — **RULED 2026-08-12**; only the step-2 inversion needs confirming | **OI-16** | §8.2 |
 | the **launcher tier** disputes | **OI-17** | §8.3, §8.7 |
 | dissolve the **edge-case tier** | **OI-18** | §8.6 item 2 |
@@ -72,7 +72,7 @@ briefs and their background.
 | **templates as product + the direct-session actor** *(raised 2026-08-13; rides OI-14's rung-1 boundary work)* | **OI-28** | — |
 
 **Not an `OI-` row, deliberately:** the **P0 sitting's 25-row re-attest** —
-`open-items.html` already renders every row owing a ratification with its
+`open-items.html` already renders every row owing an approval with its
 per-cell before/after, so minting a brief that says "hold the sitting" would
 duplicate a surface the generator maintains. → **§5 step 6**
 
@@ -124,7 +124,7 @@ duplicate a surface the generator maintains. → **§5 step 6**
   → **§5 steps 10–12**
 
 **Not blocking, but owed to nobody and therefore easy to lose:** the loose ends
-in **§5** — `intake.py`'s monolith, the traced/ratified split `trace.py` cannot
+in **§5** — `intake.py`'s monolith, the traced/approved split `trace.py` cannot
 see (this one bites *at* the sitting), the un-reusable policy-scaffold census,
 and the four unfounded LLRs.
 
@@ -337,7 +337,7 @@ same meaning; where they need different meanings they need different names.
   `schedule.py` sorts the dispatch frontier on it — so `_int` must become a
   float parse or `1.5` silently truncates to `1`.
 - **`Evidence` keeps its name** (rescinded rename) = *where the proof lives*, a
-  **traced** cell. **`Method`** = *how you obtain it*, a **ratified** cell. The
+  **traced** cell. **`Method`** = *how you obtain it*, an **approved** cell. The
   split stays: moving the pointer into `Method` would turn every test-file
   rename into a re-attestation — 110 of them for WI-277 alone.
 - **`Rationale` becomes available to IF**, which is the mechanical destination
@@ -361,7 +361,7 @@ supersession executed** (WI-426).
 
 **DONE 2026-08-14 (WI-451 slice 2, ruling 2026-08-14b):** the `SupersededBy`
 column deleted with the 26-row tombstone class — the trace.py validator, the
-SR-tier carrier key, and its `ratified` classification in `check_trajectory`
+SR-tier carrier key, and its `approved` classification in `check_trajectory`
 all retired in the same commit; the log's forwarding entry is the map. The
 CMP-registry `PartOf`/`SupersededBy` rule stays (separate, still live).
 
@@ -529,7 +529,7 @@ Three already existed; the fourth was built.
 - **SR** → `spine_rules`'s existing DevStg-Tests decomposition test.
 - **TC** → the file-existence half of the `Evidence` check (sufficient under R2).
 - **LLR** → **BUILT as WI-429**, taken under the owner's *"proceed"*;
-  **ratification owed with the ladder migration.** `CodeSymbol`/`Module`
+  **approval owed with the ladder migration.** `CodeSymbol`/`Module`
   resolving is the discharge, giving `CodeSymbol` its first real job after a
   lifetime as F-3's "required, never resolved". The census found the predicted
   rot: of 149 rows **31 carried a non-binding token and 9 bound nothing**, the
@@ -670,7 +670,7 @@ else.
   brief work). Recorded rather than shaved, because trimming a comment to clear
   a threshold buys a green by editing the guard instead of the thing it
   measures. A WI-280 decomposition candidate.
-- **`trace.py` does not know the traced/ratified split** (`spine_cell_class`
+- **`trace.py` does not know the traced/approved split** (`spine_cell_class`
   lives in `check_trajectory`), so the re-attest brief diffs every cell equally
   and cannot tell a mechanical pointer fix from a requirement amendment. This
   one bites at the sitting.
@@ -714,7 +714,7 @@ else.
   **`SR-049` is NOT a repoint — checked, and it is sitting territory.** The
   dead path sits in its **`rationale`** cell (*"SSOT applied to the gate itself
   (docs/specs/derived-gate-model.md)"*), `spine_cell_class` classes `Rationale`
-  as **ratified**, and the row is **`Verified`**. So correcting it is a spine
+  as **approved**, and the row is **`Verified`**. So correcting it is a spine
   amendment that opens a re-attest window, not a mechanical fix. It joins the
   carrier-falsified list in §8.4 item 7 — the same batch, the same window, and
   it must not be swept in with the other 14.
@@ -915,7 +915,7 @@ required.
 
 **The challenges that survive, honestly:**
 
-1. **Timing is favorable** — rewriting ratified SN prose opens re-attest
+1. **Timing is favorable** — rewriting approved SN prose opens re-attest
    windows, and the sitting's part 2 is already one. Q11 still binds: ladder
    migration after.
 2. **"No implementation references" conflicts with today's acceptance-intent
@@ -929,11 +929,11 @@ required.
    **placement** change, clearly SR-tier by the sitting's own demotion test.
    Linux double-click has no defined desktop contract on any profile.
 4. ~~**Item 5 changes machinery:** the "hat" roster needs a declared home and
-   `trace.py --ratify` must inject it — a WI, not a prose edit.~~
+   `trace.py --approve` must inject it — a WI, not a prose edit.~~
    **DISCHARGED.** The roster has its declared home
    (`docs/requirements/hats.toml`, shipped template alongside) and its
    injection — at the plan-brief/prompt layer (`plan_briefs.py`, `prompts.py`),
-   not `trace.py --ratify`, which is the correct seam because the decomposer
+   not `trace.py --approve`, which is the correct seam because the decomposer
    prose is what wears the hat. **The half that was still broken closed
    2026-08-16:** hat `applies_when` evaluated work-item tags while SN rows
    carried none, so a governing hat was structurally blind to its own need
@@ -1002,7 +1002,7 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    VERIFY** until finding 3 is resolved.
 6. **The draft SR collides with SR-141** (which gives adjudication rows top
    priority) and presumes "SN always human-attested", which
-   `human_ratification_through = 0` contradicts.
+   `human_approval_through = 0` contradicts.
 7. **Rows the carrier cutover falsified — tabled, not amended:** `SR-002` is
    the clear one ("…CSV structure", a column-count clause). Also worth reading:
    SR-025 · SR-129 · SR-147 · LLR-002 · LLR-025 · LLR-034 · LLR-041 · LLR-118 ·
@@ -1011,8 +1011,8 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
    name the six toggle FILES as a dial's home** — WI-432 moved those dials into
    `process.toml [checks]`, and the spine cells naming `docs/trajectory-check`
    and its siblings are now imprecise; they were fenced out of that WI because
-   they are ratified text. **Add `SR-049`**, whose
-   ratified `rationale` cites the pre-archive `docs/specs/derived-gate-model.md`
+   they are approved text. **Add `SR-049`**, whose
+   approved `rationale` cites the pre-archive `docs/specs/derived-gate-model.md`
    path (§5 loose ends). **Add `LLR-150`**, whose
    `detail` repeats a docstring claim WI-429 proved false.
 
@@ -1020,7 +1020,7 @@ rows), round 2 verification (4 residuals). Dispositions are in the document.
 
 **The list did its job.** Of the four entries below, the owner **overturned**
 one (WI-423 — and the reversal was cheap precisely because the agent had
-measured its own row's cost premise false), **ratified** one with a scope
+measured its own row's cost premise false), **approved** one with a scope
 correction (`key = ""`), and **ruled** the tabled question (the blackout dial).
 **Only WI-429's LLR discharge rule is still owed a yes or no** — it was taken
 under a "proceed" and is gating hard under `--strict` today.
@@ -1056,7 +1056,7 @@ under a "proceed" and is gating hard under `--strict` today.
   > `agent_loop` and `bootstrap` needed none. The migration rides SN-028's
   > existing dual-read window rather than starting a second clock, so an
   > adopter's window is **one re-sync long**.
-- **The `key = ""` refusal** (`49ab1c1c`) — **RATIFIED 2026-08-11**, with one
+- **The `key = ""` refusal** (`49ab1c1c`) — **APPROVED 2026-08-11**, with one
   correction the owner should see. Ruling: *"if it's restricted to the spine,
   draft state is the right approach"* — i.e. a half-written row is marked
   `Drafted`, not blanked. **It is no longer spine-only:** WI-431 routed
@@ -1137,7 +1137,7 @@ finish).
    > available only because 147 SRs already exist; a greenfield adopter has
    > none, so the shipped method cannot assume it. Most importantly the
    > architecture is **formative, not descriptive**: clustering today's modules
-   > would ratify the duplication already in them. The owner accepts the
+   > would approve the duplication already in them. The owner accepts the
    > consequence — *"that might surface more rework, and that's okay."*
    **Interfaces must be INTERFACES only** — each signal typed **discrete vs
    variable** — and every component boundary must have *all* its crossings
@@ -1208,7 +1208,7 @@ finish).
    implementation proceeds autonomously through work-item construction.
    **§8.4 finding 6 still stands** (collides with SR-141's adjudication-first
    priority; "SN always human-attested" contradicts this repo's
-   `human_ratification_through = 0`) — intake as Draft, decompose against
+   `human_approval_through = 0`) — intake as Draft, decompose against
    what the loop already does, surface the collision at the sitting.
 
 ### 8.7 · Agent decisions taken 2026-08-12, owed owner review

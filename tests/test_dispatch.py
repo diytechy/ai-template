@@ -846,25 +846,23 @@ def test_residue_settled_at_barrier_open_is_counted_in_the_drained_banner(
         assert wrong + " integrated this run." not in out, (wrong, out)
 
 
-def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
-    tmp_path, capfd
-):
+def test_attended_approval_row_drains_and_exits_zero_with_the_banner(tmp_path, capfd):
     # THE HONEST CORRECTION (§A8): before WI-381 a queued gate row sorted
     # first, the driver claimed ready[0], `_claim_refusal` rejected it and the
     # run stopped NONZERO — a failure banner over a machine that had finished
     # everything it was allowed to do. Under `attended` the dispatcher must
-    # not dispatch a ratification: drain, leave the cards on open-items.html,
+    # not dispatch an approval: drain, leave the cards on open-items.html,
     # exit 0 with the honest banner — and take no ordinary work past the
-    # pending ratification either (the §A8 premise: no work can be taken).
+    # pending approval either (the §A8 premise: no work can be taken).
     root = git_repo(tmp_path)
     write_spec(
-        root, "queued", "WI-600", slug="ratify", safety="gate", specref="seed.txt"
+        root, "queued", "WI-600", slug="approve", safety="gate", specref="seed.txt"
     )
     write_spec(root, "queued", "WI-401", specref="seed.txt")
     (root / "docs" / "gate-policy").write_text(
         "attended\n", encoding="utf-8", newline="\n"
     )
-    _commit(root, "file the ratification row", when=T_CODE)
+    _commit(root, "file the approval row", when=T_CODE)
     worker = Recorder()
 
     rc = drv.run(root, drive_args(), worker=worker)
@@ -876,9 +874,9 @@ def test_attended_ratification_row_drains_and_exits_zero_with_the_banner(
     # durable owner action is pending".
     assert "1 queued attestation row(s)" in out, out
     assert "no card has projected to open-items.html yet" in out, out
-    assert "ratification(s) waiting in open-items.html" not in out, out
+    assert "approval(s) waiting in open-items.html" not in out, out
     assert worker.calls == []
-    assert (root / "docs" / "work" / "queued" / "WI-600-ratify.md").is_file()
+    assert (root / "docs" / "work" / "queued" / "WI-600-approve.md").is_file()
 
 
 def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeypatch):
@@ -893,7 +891,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
 
     line = drv._surface_banner(root, ["WI-600", "WI-601"])
 
-    assert "1 ratification(s) waiting in open-items.html" in line, line
+    assert "1 approval(s) waiting in open-items.html" in line, line
     assert "2 queued attestation row(s) on the frontier" in line, line
     assert "the two reads may name the same row" in line, line
     # never summed: 1 card + 2 rows must not be reported as 3 of anything
@@ -902,7 +900,7 @@ def test_surface_banner_names_both_sources_and_never_sums_them(tmp_path, monkeyp
     # ...and with nothing queued, the cards arm is still exactly the classic
     # line the ruled amendment names.
     assert drv._surface_banner(root, []) == (
-        "queue drained - 1 ratification(s) waiting in open-items.html"
+        "queue drained - 1 approval(s) waiting in open-items.html"
     )
 
 
@@ -1004,7 +1002,7 @@ def test_empty_frontier_rung_two_banner_derives_from_the_shared_pending_read(
     rc = drv.run(root, drive_args(), worker=worker)
     assert rc == 0
     out = capfd.readouterr().out
-    assert "queue drained - 1 ratification(s) waiting in open-items.html" in out, out
+    assert "queue drained - 1 approval(s) waiting in open-items.html" in out, out
     assert worker.calls == []
 
 

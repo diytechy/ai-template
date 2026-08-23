@@ -8,7 +8,7 @@ omitted section keeps its heading plus a one-line stub.
 Canonical method for a gated, requirement-traced project. It is
 **stack-agnostic** — wire the harness commands to your project's
 language/tooling — but it **requires a git repository**: diffable registries,
-the append-only log, reviewed Status-change commits, and gate ratification
+the append-only log, reviewed Status-change commits, and gate approval
 all presume git. That substrate was always assumed; it is named here so no
 one designs around its absence. Other docs reference this file by section rather than
 restating it. Links are authored for the scaffolded home (`docs/process.md`
@@ -41,7 +41,7 @@ it **explicit, named, and auditable**, never to pass it off as a mechanized
 check. Over-aggressive traceability is itself a failure mode: right-sizing is the
 process working, not a compromise of it (see §3 "Right-sizing"). The same
 calibration sets the **decision-surfacing dial** at project setup — how often the
-driver pauses for human ratification (§6). Full doctrine — including the
+driver pauses for a human decision (§6). Full doctrine — including the
 creative/subjective stance and the dial — in
 [`process-options.md`](process-options.md#proportionality-doctrine).
 
@@ -407,18 +407,18 @@ outside the kit's required path.
 ## 4. Objectives, gates, and exit criteria
 
 Advance only when criteria pass. **Who accepts an advance is the repo's
-declared gate authority** — the `[attestation] human_ratification_through` dial
+declared gate authority** — the `[attestation] human_approval_through` dial
 in `docs/process.toml`, an ordinal `0`–`4` counting how many spine tiers stay
 **human-held** from the top (`4`, the shipped default: every tier's gate pauses
 for a human; `3` releases the TC tier, … `0` holds nothing). A held tier's gate
 waits for a per-gate human approval; a released tier's closes on an independent
 fresh-context LLM reviewer's recorded verdict. The words `attended` /
-`single-ratify` / `autonomous` are `--gate-policy` **presets** that *translate*
+`single-approve` / `autonomous` are `--gate-policy` **presets** that *translate*
 into the `[attestation]` dials and are never stored. Full
 mechanics + the deviation-register pattern:
 [process-options.md "Gate authority levels"](process-options.md#gate-authority-levels).
 **Fixed points at every level:** the owner's final read is the human's; no un-run greens; the
-harness is still the bar (LLM judgment never waives a red check); ratified
+harness is still the bar (LLM judgment never waives a red check); approved
 owner decisions are never re-decided by an agent. A coordinator can loop fresh
 driver sessions under any level, stopping where the level requires a human —
 the stop banner + typed exit codes:
@@ -508,7 +508,7 @@ Define machine-checkable criteria wherever possible; classify the rest honestly.
 
 **The stage ladder — one vocabulary, one axis.** **A stage is a STATE: the repo
 is *in* exactly one rung, and that rung is DERIVED from the artifact states, never
-declared.** Ratification is an **event** that moves it — a named human signing off
+declared.** Approval is an **event** that moves it — a named human signing off
 a reviewed Status-change commit — and an event is recorded where events are (the
 phase anchors, §5), not as a second value beside the state. There is no separate
 "bar" axis and no second spelling: a certified rung boundary is **a rung that a
@@ -547,7 +547,7 @@ DevStg-Release    nothing in work; release checklist available
 **in**, derived over its SETTLED spine so a draft cannot lower it, with the
 honest unfloored reading beside it. `check.py --stage <rung>` runs every step
 declared at or **below** that rung (OI-51); `[attestation]
-human_ratification_through` names the highest rung a human still ratifies, and
+human_approval_through` names the highest rung a human still approves, and
 holds every rung at or **below** it — the same ladder read from each end. A
 sign-off record names the rung whose boundary was **just** signed and therefore
 the rung the project has **entered**. **`DevStg-Release` has no signed boundary
@@ -603,10 +603,10 @@ accidentally right (`DevStg-Arch` sorts *before* `DevStg-Boundary`).
 **There is no `DevStg-Below` you sit at** — it is the internal sentinel below the
 lowest runnable bar; say "stage Needs", never "at DevStg-Below".
 
-**The ratification dial is a rung, on this same ladder.** `[attestation]
-human_ratification_through` takes a `DevStg-*` value (or `DevStg-Below` for
+**The approval dial is a rung, on this same ladder.** `[attestation]
+human_approval_through` takes a `DevStg-*` value (or `DevStg-Below` for
 "nothing is human-held"), and every rung **at or below** it is the human's to
-ratify. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
+approve. It was a 0–4 tier ordinal mapped onto the ladder by a declared table
 until OI-21 shape (ii) landed; a repo still carrying the number is read,
 translated and warned, and `bootstrap.py --migrate-config` rewrites it. The two
 inserted rungs need no special case any more: `DevStg-Boundary` sits immediately
@@ -617,7 +617,7 @@ human involvement — and now by the ORDER rather than by a hand-written pairing
 **What a signature certifies is NOT derivable from the rung.** Leaving
 `DevStg-Reqs` also requires non-goals captured and a UX sign-off; leaving
 `DevStg-Tests` requires the key runtime flows diagrammed. No derivation can see
-any of that, which is exactly why ratification is an **event a human records**
+any of that, which is exactly why approval is an **event a human records**
 and not a function of the state. A repo that inferred its sign-offs from its
 derived rung would have dropped the whole human half.
 
@@ -678,13 +678,13 @@ replaces it. Same stance as `ruff`/`pytest`: name the criterion; the project wir
 the tool.
 
 **Phased delivery (version subsets) — opt-in.** *Applies when* a roadmap ships
-phase 1 before 2/3. Every ratified SR/LLR/TC carries the **`Phase`** it was
-ratified in — a bare integer, digits only (a ratified prefixed/blank cell is a
+phase 1 before 2/3. Every approved SR/LLR/TC carries the **`Phase`** it was
+approved in — a bare integer, digits only (an approved prefixed/blank cell is a
 schema finding once any row is phased); an SN's phase is
 derived from its SRs. The project's **current phase is derived** = the highest
-ratified phase, mirroring the derived rung (`derive_stage.py --next-phase` prints
+approved phase, mirroring the derived rung (`derive_stage.py --next-phase` prints
 the next number); a phase increments only when re-opened scope is **confirmed**
-— an adjudication verdict that scope moved, or a ratified draft-SN batch —
+— an adjudication verdict that scope moved, or an approved draft-SN batch —
 never on the raw derived-stage drop.
 Traceability stays phase-blind while the DevStg-Impl approval criterion and DevStg-Release
 scope by phase (`check.py --gate DevStg-Impl --phase 1`; the foundation phase is always in
@@ -798,7 +798,7 @@ the source; do not hand-curate combinations the generator should produce.
 Two files split *now* from *history*: `status.md` is the **working surface** —
 the whole file holds only what must be performed next (open items, pending
 decisions, the next action) — and `log.md` is the **append-only history** it
-points at (sign-offs, verdicts, ratified decisions, session notes; evidence,
+points at (sign-offs, verdicts, approved decisions, session notes; evidence,
 never normative). Act from status.md; append evidence to log.md — directly on
 the serial trunk lane, or as a `docs/log.d/<WI-id>-<slug>.md` fragment on a
 work branch, compiled into `log.md` in merge order by `trunk_step.py` (the
@@ -927,10 +927,10 @@ the lever is manual.
 also calibrates **how often the driver pauses for a human decision**. It is a
 project-setup dial, not a constant: a specialized or high-consequence domain
 (safety even as an *ancillary* risk, money, irreversible actions) surfaces
-decisions often — the human ratifies even medium calls; a low-risk domain
+decisions often — the human decides even medium calls; a low-risk domain
 (creative content) where a reverted decision costs little tech debt lets a
 **confident** agent decide autonomously, **provided the decision is recorded**
-(pending → `status.md` Assumptions/Open items; ratified → the `log.md`
+(pending → `status.md` Assumptions/Open items; approved → the `log.md`
 Decisions log, §5) so it stays auditable and revertible. The dial never moves the fixed points — gates still close only per the declared gate authority (§4),
 contradictions still route as findings. Full doctrine: point (e) of the
 [proportionality doctrine](process-options.md#proportionality-doctrine).
@@ -966,7 +966,7 @@ gates"; the model:
 [process-options.md](process-options.md#derived-gate-model)). `check.py` defaults
 `--stage` to it and runs every step declared at or above it, so **CI enforces the
 bar the project has actually earned** — a fresh scaffold deriving DevStg-Reqs is
-green, and more steps select when a batch of artifacts is **ratified in a reviewed
+green, and more steps select when a batch of artifacts is **approved in a reviewed
 commit** and `docs/stage` is regenerated. The `derived-stage` step
 (`derive_stage.py --check`) guards the cache against rot on every trunk-lane
 commit and gate (a claimed work branch reads the cache as-of-base); a release tag

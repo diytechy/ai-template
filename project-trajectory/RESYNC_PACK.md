@@ -155,7 +155,7 @@ destination is yours, and no re-sync rule applies to it.
   `kit-profile`.
 - **Overwrite, then re-apply your dials (kit-owned, but hand-edited).**
   `docs/process.toml` — the one home for every process dial (gate authority, the
-  human-ratification level, push authority, the reviewer count, the privacy and
+  human-approval level, push authority, the reviewer count, the privacy and
   secrets gates, guardrails, the blackout window). Unlike `docs/stack.ini` it is
   **kit-owned**: its explanatory header and its key set come from
   `process.toml.template`, so take the kit's version on re-sync and re-apply your
@@ -363,7 +363,7 @@ even under `--strict-schema`.
 
 The blackboard splits: `status.md` is the **working surface** — only what the
 agent or human must perform next — and `docs/log.md` is the **append-only
-history** it points at (the Sittings table, verdict blocks, ratified
+history** it points at (the Sittings table, verdict blocks, approved
 decisions, session notes; process.md §5). Migration is **optional and
 proportionate — never forced**: an adopted repo may keep its merged file. To
 adopt: copy `LOG.template.md` → `docs/log.md`, cut the accreted history sections
@@ -504,21 +504,21 @@ the artifact states — it had to be regenerated once to migrate a legacy hand-s
 value to the derived form (SUPERSEDED — see “`docs/gate` RETIRES” below: the file is DELETED at re-sync, not regenerated) (until you did, the
 `derived-gate --check` step accepts the old one-line value **value-only**, so an
 un-migrated repo is never broken). After migrating you stop bumping the line — you
-ratify artifacts (`Status` `Draft`→`Planned`, or an SN section move) in a reviewed
+approve artifacts (`Status` `Draft`→`Planned`, or an SN section move) in a reviewed
 commit and regenerate (process-options.md "Derived gate model").
 
-**Reconcile states against your ratification history before trusting the migrated
+**Reconcile states against your approval history before trusting the migrated
 value.** The derived gate believes your recorded `Status` values and SN sections —
 but a legacy repo's registries usually contain artifacts added *after* the commit
-that last set `docs/gate`, states no reviewer ever ratified. Find that commit
+that last set `docs/gate`, states no reviewer ever approved. Find that commit
 (`git log --oneline -- docs/gate`), diff the requirement surfaces since
 (`git diff <sha>..HEAD -- docs/requirements docs/test`), and stage everything
 added or materially changed since per the new model — new stakeholder needs into a
-`## Draft needs (unratified)` section, not-yet-re-reviewed SRs to `Status=Draft` —
+`## Draft needs (unapproved)` section, not-yet-re-reviewed SRs to `Status=Draft` —
 so `spine_rules.py` reproduces the gate your history actually attests instead of
 laundering post-attestation additions into it. If the derived value still
 disagrees with your old hand-set line after that, **the disagreement is the
-finding**: ratify (or demote) deliberately before relying on the derived gate.
+finding**: approve (or demote) deliberately before relying on the derived gate.
 
 ### The phase model, and the retired grouping column [since 6daee92f]
 
@@ -527,14 +527,14 @@ SR-only), and the work-item registry **drops** its old per-WI grouping column (t
 one the dashboard used to bin the roadmap by — it now tiers
 `phase ⊃ workstream ⊃ work-item`). Both changes are **vacuous-until-armed**, so a
 re-sync is diffable and never breaks: a registry with no phased row keeps
-`trace.py`'s ratified-Phase schema rule dormant (blank = in scope for every
+`trace.py`'s approved-Phase schema rule dormant (blank = in scope for every
 phase), and any leftover grouping column is simply ignored (read by name, no
 vocabulary rule).
 
 ### `--require-verified` widened to method-blind [since a686bcc8]
 
 The DevStg-Impl traceability floor `trace.py --require-verified` now demands
-`Status=Verified` for **every** ratified, in-phase SR regardless of its
+`Status=Verified` for **every** approved, in-phase SR regardless of its
 `Verification` method (was `Verification=Test` only), matching
 `spine_rules.sr_gate` — which already blocked DevStg-Impl for any unverified decomposed SR.
 **Downstream impact:** a repo passing `--require-verified` today with a non-Test SR
@@ -542,7 +542,7 @@ The DevStg-Impl traceability floor `trace.py --require-verified` now demands
 `Verified` will now fail — it was never actually at the derived gate, only
 reporting so. To re-sync: set those SRs to `Verified` once acceptance is met
 (attach the TC evidence / recorded attestation), or mark them `Draft` if not yet
-ratified. The verification-basis report is now three-way (mechanized /
+approved. The verification-basis report is now three-way (mechanized /
 demonstrated-observed / attested); no registry schema change.
 
 ### Integrator verdict-gate unanimity + reviewer-dial redefinition [since 15015bd9]
@@ -616,7 +616,7 @@ is a promise you enforce in CI immediately, not a same-day code break.
 `docs/requirements/open-items.toml`, and `scripts/gen_open_items.py` renders them —
 together with every `Draft`/`Modified` spine row's per-cell before/after — into
 `docs/open-items.html`, the surface the owner reads. The driver was a real sitting:
-the old pending block was a POINTER ("run `trace.py --ratify modified`"), and the
+the old pending block was a POINTER ("run `trace.py --approve modified`"), and the
 depth that makes a re-attest readable is a word-level diff, which markdown cannot
 mark.
 
@@ -645,7 +645,7 @@ post-attestation amendment owing a re-attest (canonical semantics: process.md
 (`Modified`→`Verified`, or →`Planned` when the amendment invalidated the
 evidence), the pending-owner-actions projection carries one line per
 Draft/Modified SR, a warn-first `--staged` check flags an amendment without the
-flip, and `trace.py --ratify modified` emits a per-cell before/after brief against
+flip, and `trace.py --approve modified` emits a per-cell before/after brief against
 the git-derived attested baseline. Never breaking for a registry that never writes
 the value — with one **flagged migration**: the `docs/gate` `# basis:` line now
 carries `modified=N` beside `drafts=N`, so the first `check.py`/pre-commit run
@@ -775,7 +775,7 @@ re-sync, copy both new scripts and **delete your old `scripts/drive.py`** — a
 stale copy would shadow nothing (`agent_loop` imports `dispatch`) but would drift
 silently. The dispatcher now admits by the session-hold table: spine-class WIs
 wait for the lanes to drain and then admit **together as one batch**, and a
-pending ratification drains the lanes and exits 0 naming the cards in
+pending approval drains the lanes and exits 0 naming the cards in
 `open-items.html` instead of refusing nonzero. The worker-lane count is a new
 declared dial — `lanes` in `docs/stack.ini [agent-loop]` (CLI `--lanes` >
 `AGENT_LANES` > stack.ini > default). **An absent key means 1**: your repo stays
@@ -785,15 +785,15 @@ yours.
 
 ### `Phase` is numeric-only once armed [since e0623526]
 
-Once any row is phased, a *ratified* SR/LLR/TC `Phase` must be a **full-cell bare
+Once any row is phased, a *approved* SR/LLR/TC `Phase` must be a **full-cell bare
 integer** (`1`, `2`, …) — a prefixed label (`v2`, `P1`) is now a `--strict-schema`
-finding, because the `--phase`/`--ratify` filters and the phase-drop detector match
+finding, because the `--phase`/`--approve` filters and the phase-drop detector match
 the cell literally and a prefixed cell disarms them silently. A `vN` label still
 digit-parses in those filters and the derived current phase (grandfathering), so a
 `vN` registry **arms the rule and now fails it**: strip prefixes (`v2` → `2`)
-across ratified rows when you take this kit version — a mechanical, diffable edit
+across approved rows when you take this kit version — a mechanical, diffable edit
 (`Phase` is a *traced* cell, so no re-attest window opens). Once you phase any row,
-phase every *ratified* SR/LLR/TC — blank stays legal on `Draft` rows only — and the
+phase every *approved* SR/LLR/TC — blank stays legal on `Draft` rows only — and the
 foundation (minimum) phase stays in scope under `--phase`.
 `derive_stage.py --next-phase` prints the number a newly confirmed phase takes.
 
@@ -916,7 +916,7 @@ retiring the split-on-whitespace rule that read `SN-001 and SN-002` as citing an
 orphan called `and`; an **empty cell** is an *absent key*, so "unset" and "set to
 empty" stop being the same value. On the need tier, draft-ness becomes a field
 (`kind = "draft"`) instead of "appears under a heading containing the word draft" —
-a rule a passing prose mention of an id could trip, silently un-ratifying a need.
+a rule a passing prose mention of an id could trip, silently un-approving a need.
 
 *Three things to know before you run it.*
 
@@ -1075,7 +1075,7 @@ convert at your own pace.
    a stale cache makes the stage unreadable, and an unreadable stage is treated
    as **human-held**, so the one state it can produce is *more* human
    involvement.
-2. **Re-apply your `docs/process.toml` dials.** `human_ratification_through`
+2. **Re-apply your `docs/process.toml` dials.** `human_approval_through`
    keeps its 0–4 meaning — it was **mapped** onto the ladder, not re-keyed — so
    your declared value still means what it meant. Confirm it survived the
    re-sync; every pre-existing answer for the four spine tiers is unchanged.
@@ -1155,8 +1155,8 @@ stage means** — read that item before re-syncing scripts.
   one maturity field, shared with the new boundary tier. Map your values before
   or during the re-sync — `Experimental` → `draft` is the direct reading;
   `Stable`/`Deprecated` → `approved` **only if you mean it**, because `Stable`
-  was a MATURITY claim (the contract has settled) and `approved` is a
-  RATIFICATION one. The kit's own registry mapped all 113 rows to `draft`
+  was a MATURITY claim (the contract has settled) and `approved` is an
+  APPROVAL one. The kit's own registry mapped all 113 rows to `draft`
   rather than manufacture approvals nobody signed. A surviving `stability = ...`
   key is a column nothing reads.
 - **NEW optional IF keys:** `interface_from_external` / `interface_to_external`,
@@ -1176,7 +1176,7 @@ stage means** — read that item before re-syncing scripts.
 
 The optional SR `superseded_by` key, its ~110-line `trace.py` validator
 (semicolon-list shape, unknown target, self-link, cycle, the LLR re-grounding
-error above) and its ratified-cell classification are all GONE, on the ruling
+error above) and its approved-cell classification are all GONE, on the ruling
 that a supersession row is history wearing a row id: **a registry states what
 IS; git and the log are the history.** A retired row is *deleted*, its id spent
 forever (the id watermark's committed mark keeps the headroom), and one log
@@ -1346,7 +1346,7 @@ still reads them, unchanged.
 
 *(Anchored at the first commit of the D-9 mechanical prefix; the mechanism lands across the three commits that follow it. Take them as one set.)*
 
-**`Status` is now a CLOSED vocabulary on the spine — `{Draft, Planned, Modified, Verified}` for SR, LLR and TC — and an out-of-vocabulary value is an INTEGRITY finding**, which means it reds `trace.py --strict-integrity` and the pre-commit hook at every gate, not just at DevStg-Impl. This is the one entry here that can break a repo on the re-sync itself. If your LLR or TC rows carry maturity words of your own (`Implemented`, `In-Review`, …) — which the kit's own prose invited until now — map them onto the four before you take this. `Planned` is the closest fit for "ratified, not yet Verified"; the derived gate reads LLR/TC status only for `Draft`, so the mapping does not move your bar. Why the closure: the `Status` ladder D-9 is heading for renames these values, and a retired word that no predicate recognizes vanishes SILENTLY from the re-attest brief — an open vocabulary has no way to say "this row was left behind".
+**`Status` is now a CLOSED vocabulary on the spine — `{Draft, Planned, Modified, Verified}` for SR, LLR and TC — and an out-of-vocabulary value is an INTEGRITY finding**, which means it reds `trace.py --strict-integrity` and the pre-commit hook at every gate, not just at DevStg-Impl. This is the one entry here that can break a repo on the re-sync itself. If your LLR or TC rows carry maturity words of your own (`Implemented`, `In-Review`, …) — which the kit's own prose invited until now — map them onto the four before you take this. `Planned` is the closest fit for "approved, not yet Verified"; the derived gate reads LLR/TC status only for `Draft`, so the mapping does not move your bar. Why the closure: the `Status` ladder D-9 is heading for renames these values, and a retired word that no predicate recognizes vanishes SILENTLY from the re-attest brief — an open vocabulary has no way to say "this row was left behind".
 
 **What an approval records changed, and one CLI surface was deleted.** Until
 now, "has this attested row changed since a human blessed it?" was answered by
@@ -1364,7 +1364,7 @@ So the baseline is now a **copy on disk**. What you receive:
   the four spine registries plus `interfaces.toml`, `external.toml` and
   `components.toml` into `docs/archive/last_approved/`, byte for byte, with
   repo-relative paths preserved.
-- **`intake.py snapshot [--seed]`** — the human path. At a ratification sitting:
+- **`intake.py snapshot [--seed]`** — the human path. At an approval sitting:
   edit the `Status` cells, run it, commit both together. The mechanical
   adjudication flip copies in the same act.
 - **`docs/archive/last_approved/README.md`** in the scaffold (`bootstrap.py`
@@ -1381,7 +1381,7 @@ been ruled** — seeding earlier records a blessing of text nobody read. That is
 the only moment the directory is created; the flag is unreachable from every
 loop module, hook and `check.py`, and a test pins it so.
 
-**DELETED, and you must stop passing it:** `trace.py --ratify modified --since
+**DELETED, and you must stop passing it:** `trace.py --approve modified --since
 <rev>` and `gen_open_items.py --since <rev>`, plus the
 `<!-- attestation-baseline: … -->` stamp the generated view carried. They
 existed to override or reproduce a git-derived baseline that a regeneration
@@ -1390,11 +1390,11 @@ identical on every machine and in CI, so there is nothing to override and
 nothing to reproduce. A script or CI job passing `--since` now fails on an
 unrecognized argument — which is the loud direction.
 
-**One behaviour change worth expecting.** `trace.py --ratify <scope>` now
+**One behaviour change worth expecting.** `trace.py --approve <scope>` now
 REFUSES a scope that matches no SR instead of emitting an empty brief at exit 0.
-If you have a job that ratifies a phase tag which no longer exists, it will
+If you have a job that approves a phase tag which no longer exists, it will
 start failing; that is the point, because the empty brief it used to produce
-read as *"there is nothing to ratify"* to the human about to sign it.
+read as *"there is nothing to approve"* to the human about to sign it.
 
 ### The `Status` ladder RENAME: `Draft`→`Drafted`, `Planned`/`Verified`→`Approved` [since 3771c003]
 
@@ -1406,8 +1406,8 @@ inertness. **Order matters; each step below is a separate failure if skipped.**
 
 1. **The value map, applied to every SR/LLR/TC `status` cell.** `Draft` →
    `Drafted`; `Verified` → `Approved`; **`Planned` → `Approved`**. The third is
-   a FOLD, not a rename: `Planned` (text ratified, evidence pending) and
-   `Verified` (text ratified, evidence established) named one rung once the
+   a FOLD, not a rename: `Planned` (text approved, evidence pending) and
+   `Verified` (text approved, evidence established) named one rung once the
    vocabulary stopped making a pass claim, so they collapse. Matching stays
    case-insensitive, so casing in your cells is not the issue — spelling is.
 2. **The off-spine approval cells:** `approval = "draft"` → `"drafted"` in
@@ -1689,7 +1689,7 @@ certainly has needs written in instrument voice (the kit's own registry had 13 o
 means, do not touch `status`, and expect your amendment detectors to fire on
 every cell you rewrite — that is correct, and those rows are what your next
 review sitting reads. If your process holds the need tier for human
-ratification, the sweep is a provisional act your sitting countersigns.
+approval, the sweep is a provisional act your sitting countersigns.
 
 ### NO provenance citation in a living registry cell — all four spine tiers, reason cells included [since 4e9a5c8a]
 
@@ -1796,7 +1796,7 @@ the doc (an exact "Runtime flows" wins over a longer "Runtime flows …").
 
 *(Anchored at the preceding commit; the change lands in the commit that follows
 it.)* Every freshness step your hook runs — `okf`, `trajectory-map`,
-`status-map`, `open-items`, `derived-gate`, `ratify-fresh`, `skills-sync`,
+`status-map`, `open-items`, `derived-gate`, `approval-fresh`, `skills-sync`,
 `skills-index`, `prompt-catalog` — regenerates in memory and byte-compares
 against the **working tree**. None of them has any concept of the index. So an
 author who regenerates a stale artifact and forgets to `git add` it gets an
@@ -2195,7 +2195,7 @@ and `docs/process.toml`, a list stated once in `kitlib/stage.py`. Any reader
 recomputes it and trusts the recorded record only on a match, deriving fresh in
 memory otherwise. Consequences for you: the value is correct on a work branch even
 though the freshness step stands down there, and it is correct mid-session after
-you ratify something and before anyone regenerates. Readers never WRITE the file —
+you approve something and before anyone regenerates. Readers never WRITE the file —
 regeneration stays `trunk_step.py --regen` and your own explicit run.
 
 **If your registries live in CSV rather than TOML**, nothing changes: the input
@@ -2547,10 +2547,10 @@ stated once so a log carrying both stops reading as two conventions.
 **Kit-owned files — overwrite them and move on:** `scripts/baseline_snapshot.py`,
 `scripts/intake.py`. **What changes for you:** `intake.py snapshot` used to copy
 whatever was in the tree, every time. It now REFUSES a refresh that would absorb
-RATIFIED text into `docs/archive/last_approved/` unless one of three things is
-true — the copy absorbs nothing ratified (a `Module`/`CodeSymbol`/`TestRefs` or
+APPROVED text into `docs/archive/last_approved/` unless one of three things is
+true — the copy absorbs nothing approved (a `Module`/`CodeSymbol`/`TestRefs` or
 ref-pointer refresh, the common case, unchanged and free); a `Status` cell moved
-in the same registry (amend-plus-flip IS ratification); or you pass
+in the same registry (amend-plus-flip IS approval); or you pass
 `--approves <ref>` naming the sitting, log fragment or commit that ruled the
 cells, which is recorded into the snapshot's prose stamp
 (`docs/archive/last_approved/README.md`, created if you have none).
@@ -2630,7 +2630,7 @@ them, and do not expect the red the next paragraph describes unless you have
 declared such a step.
 
 **What you may notice:** if you have a `[step:*] layer = product` declared at or
-below the bar your ratified rows have earned, it now **gates** during a draft
+below the bar your approved rows have earned, it now **gates** during a draft
 window where it previously ran advisory (warn-only) or not at all. If that step
 has been failing quietly, your first push after this re-sync reds. That is the
 change working: the failure was already there, and the exit code was not
@@ -2689,10 +2689,10 @@ label form. In this kit's own repo a regex over `hat.` matched 19 rows and TWO o
 them were wrong: one names a hat in order to REFUSE it as a basis, and one
 carries a struck attribution. Read every row you migrate.
 
-**Cell classification, if you run the ratification ladder:** `Hat-Refs` is
-declared **traced**, not ratified (`check_trajectory.SPINE_TRACED_CELLS`), so
+**Cell classification, if you run the approval ladder:** `Hat-Refs` is
+declared **traced**, not approved (`check_trajectory.SPINE_TRACED_CELLS`), so
 adding it to an already-approved row does not arm a re-attest window or trip the
-`last_approved` drift comparison — the drift basis reads the ratified half only.
+`last_approved` drift comparison — the drift basis reads the approved half only.
 It is deliberately NOT in `intake.ROUTED_TRACED_CELLS`: a hat re-point restates
 which lens a row is attributable to and moves no obligation.
 
@@ -2924,7 +2924,7 @@ run it if you want the signal. Without git it degrades silently.
 `scripts/kitlib/config.py`, `scripts/agent_common.py`, `scripts/check.py`.
 
 **A MECHANISM THAT HAS BEEN SILENTLY DEAD IN YOUR REPO STARTS FIRING.**
-`intake.py` mints an adjudication row when a merged commit amends a ratified
+`intake.py` mints an adjudication row when a merged commit amends an approved
 spine cell, and it grades that row `strong` (deeper review) when the amendment
 moved the repo's derived stage. The stage half of that test has been broken
 since the gate became a generated file: it compared the FIRST LINE of
@@ -2964,7 +2964,7 @@ recorded* — used to read `docs/gate`'s `# basis: per-phase=` line and now read
 
 **`docs/gate` is still generated and still freshness-gated.** Four readers
 remain — three display surfaces and `agent_common.spine_stage_of`, which feeds
-ratification authority — and it retires with them in a later entry.
+approval authority — and it retires with them in a later entry.
 
 **One documentation correction with no behaviour attached:**
 `kitlib.config.read_declared` was described in two places as the reader for
@@ -2998,11 +2998,11 @@ plus an unrelated addition (§4's warning, in force here):**
    (it was a derived file with your values in it), and it is now *delete*.
    `git rm docs/gate` — it is not migrated, and no value in it is needed.
 2. **Delete `gate.template`** from your kit copy if you vendored the templates.
-3. **Re-key the ratification dial.** From your **KIT CHECKOUT** (not your own
+3. **Re-key the approval dial.** From your **KIT CHECKOUT** (not your own
    repo — `bootstrap.py` is kit-side and is never scaffolded into an adopting
    repo, unlike every other `scripts/…` command in this list), run
    `python project-trajectory/scripts/bootstrap.py --migrate-config --dest <your repo>`.
-   It rewrites `[attestation] human_ratification_through` from the retired 0–4
+   It rewrites `[attestation] human_approval_through` from the retired 0–4
    ordinal to a `DevStg-*` rung in place and prints what it did
    (`… migrated the retired ordinal 2 -> `DevStg-Arch` … The rungs held are
    unchanged.`). An out-of-range value is left alone with a note. See "the dial"
@@ -3012,7 +3012,7 @@ plus an unrelated addition (§4's warning, in force here):**
    **The order against step 3 does not matter**, and the reason is the part
    worth carrying away: `docs/process.toml` is **NOT** a declared derivation
    input (`kitlib/stage.py DECLARED_INPUTS`, owner ruling 2026-08-21). Dials
-   govern **who may ratify**, not **what stage is derived**, so re-keying the
+   govern **who may approve**, not **what stage is derived**, so re-keying the
    dial cannot move the fingerprint and cannot stale this file. The declared
    inputs are the six spine and frame registries, and nothing else. If you ever
    extend that list in your own repo, add the file in the same change that
@@ -3061,8 +3061,8 @@ shipped. If your CI names steps explicitly, drop `derived-gate`.
 the same rows by the same rule. Same output — the next delivery phase number,
 printed bare so a script can `int()` it.
 
-**THE DIAL: `human_ratification_through` is a rung, not a number.** It names the
-HIGHEST rung a human still ratifies, and every rung AT OR BELOW it is
+**THE DIAL: `human_approval_through` is a rung, not a number.** It names the
+HIGHEST rung a human still approves, and every rung AT OR BELOW it is
 human-held — the mirror of the selection rule above. The shipped default is
 `"DevStg-Release"` (everything human-held). `"DevStg-Below"` means nothing is.
 
@@ -3093,7 +3093,7 @@ retired `[<phase>]-[g1]`/`[reqs]` and `[<phase>]-[g2]`/`[tests]` spellings are
 TRANSLATED on read and never rewritten — a WI title is a citation. **They
 translate BY MEANING, not by spelling**, and this is the one trap in the change:
 a closed `[reqs]`/`[g1]` anchor records **`DevStg-LLReqs`** (its SRs are
-authored AND ratified, so the phase has LEFT the Reqs rung) and a closed
+authored AND approved, so the phase has LEFT the Reqs rung) and a closed
 `[tests]`/`[g2]` anchor records **`DevStg-Impl`**. Both are two rungs above the
 word they share with the ladder. Taking the spelling would under-report every
 phase's reach. `check_vocab.py` refuses the retired tokens in newly authored
@@ -3120,7 +3120,7 @@ the pre-commit floor and CI both exit non-zero on a finding.
 
 **Why it was promoted.** Because warn-first was still admitting the exact
 false green it was built to report. Every freshness step (`derived-stage`,
-`trajectory-map`, `status-map`, `open-items`, `okf`, `ratify-fresh`, …)
+`trajectory-map`, `status-map`, `open-items`, `okf`, `approval-fresh`, …)
 resolves its artifact from the FILESYSTEM, so their honest claim is "the
 artifact on disk matches its regeneration" — not "the artifact you are about to
 commit does". Stage a registry edit, run `derive_stage.py`, forget the
@@ -3199,7 +3199,7 @@ has exactly one input and it is a harness verdict.
 ```
 python scripts/record_test_evidence.py --tier full   # runs check.py; writes only on exit 0
 python scripts/derive_stage.py                       # the rung follows
-git add docs/test/evidence docs/stage && git commit  # a reviewable ratifying act
+git add docs/test/evidence docs/stage && git commit  # a reviewable approving act
 ```
 
 **The record is bound BY VALUE to the tree it was measured on.** Its `binding`
@@ -3229,7 +3229,7 @@ check wherever `derive_stage --check` runs.
 
 *(Anchored at the preceding commit: an entry cannot know its own SHA.)*
 
-**The defect this fixes.** `trace.py --ratify modified --check` used to gate
+**The defect this fixes.** `trace.py --approve modified --check` used to gate
 whichever `docs/ratify/*.md` file was **newest by filename** — so a
 regeneration rewrote a DATED file (named and read as the record of one
 sitting) in place, sometimes many times, none of the rewrites about the WI the
@@ -3238,14 +3238,14 @@ file was named for (measured: one file, ten rewrites).
 **What changed.**
 
 - The live surface is now the fixed name **`docs/ratify/CURRENT.md`**.
-  `trace.py --ratify modified --out docs/ratify/CURRENT.md` is the one command
-  that ever writes it; `--ratify modified --check` (no `--out`) now compares
+  `trace.py --approve modified --out docs/ratify/CURRENT.md` is the one command
+  that ever writes it; `--approve modified --check` (no `--out`) now compares
   against `CURRENT.md`, not "whatever is newest".
 - A dated brief — `docs/ratify/<date>-<slug>.md` — is now **minted**, never
-  hand-written with `--out`: `trace.py --mint-ratify-brief SLUG` copies
+  hand-written with `--out`: `trace.py --mint-approval-brief SLUG` copies
   `CURRENT.md` to a dated name and refuses to overwrite one that already
   exists (`--mint-date` overrides the calendar date for backfill/testing).
-- A new harness step, **`ratify-immutable`** (`check.py --ratify-immutable`,
+- A new harness step, **`approval-immutable`** (`check.py --approval-immutable`,
   wired into `steps()`, `BUILTIN_STEP_NAMES`, and the shipped
   `hooks/pre-commit`'s batched floor), refuses any STAGED commit that modifies
   or deletes an already-committed `docs/ratify/<date>-*.md` — a plain ADD of a
@@ -3253,18 +3253,18 @@ file was named for (measured: one file, ten rewrites).
   Fail-closed, no warn mode, no `--strict` switch: unlike its sibling
   `staged-divergence`, there is no honest partial-compliance state for "a
   historical sign-off record just got rewritten".
-- `docs/stack.ini`'s `[generated]` row (`docs/ratify/ = ratify`) is unchanged —
+- `docs/stack.ini`'s `[generated]` row (`docs/ratify/ = approve`) is unchanged —
   it was already a directory PREFIX, so it already covers both the one
   regenerated file and the N immutable ones without edit; its comment block
   now states the split explicitly.
 
 **What you must do.** If you (or a job) ever passed `--out
-docs/ratify/<date>-something.md` directly to `--ratify modified`, stop:
+docs/ratify/<date>-something.md` directly to `--approve modified`, stop:
 write to `docs/ratify/CURRENT.md` and mint the dated copy as a second step.
 Any EXISTING dated brief in your repo is untouched and stays exactly as
 committed — the split changes nothing about history, only how the next one is
-produced. `newest_ratify_brief` (the "pick the newest filename" helper) is
-RENAMED to `current_ratify_brief` and now reads the fixed `CURRENT.md` path;
+produced. `newest_approval_brief` (the "pick the newest filename" helper) is
+RENAMED to `current_approval_brief` and now reads the fixed `CURRENT.md` path;
 a script that imported the old name in-process needs the new one.
 
 ---
@@ -3321,6 +3321,56 @@ repo hand-curates which kit skills it dogfoods into `.claude/skills/` (or
 `.gemini`/`.agents`) rather than materializing the full set, decide whether to
 add `antidote` explicitly — it is not force-selected by scope alone once a
 repo has departed from full auto-selection.
+
+### "Ratification" retires for "approval" across the live kit [since 7e898d15]
+
+*(Anchored at the PRECEDING commit — this entry ships with the changes,
+the same convention the `docs/gate` RETIRES entry above uses.)*
+
+**What changed.** Owner ruling 2026-08-21 ("ratification holds a weight to it
+that the semantics here don't need"): the kit's vocabulary unifies on
+**approval** everywhere it is live prose, a code identifier, or a CLI flag.
+`docs/process.toml [attestation] human_ratification_through` renames to
+`human_approval_through`; `trace.py --ratify` and its `ratify-fresh` harness
+step rename to `--approve` and `approval-fresh`; WI-503's `--mint-ratify-brief`
+/ `--ratify-immutable` / `ratify-immutable` step rename to
+`--mint-approval-brief` / `--approval-immutable` / `approval-immutable`;
+`check_vocab.py`'s retired-tag enforcer gained the whole `ratif*` word family
+(same mechanism as the `G*` tags). **The `docs/ratify/` DIRECTORY KEEPS ITS
+NAME** — it is a record home for the immutable dated re-attestation briefs
+that already lived there, and renaming a directory a record already cites
+would misdate the record — so `docs/ratify/CURRENT.md` and the dated briefs
+under it do not move, even though every script and doc that talks ABOUT that
+directory now says "approval".
+
+**What you must do.**
+
+1. **Re-key the dial** from your **KIT CHECKOUT**:
+   `python project-trajectory/scripts/bootstrap.py --migrate-config --dest <your repo>`.
+   It rewrites `[attestation] human_ratification_through` to
+   `human_approval_through` in place (the VALUE is untouched by this step —
+   if it is still the retired 0-4 ordinal, the same command's existing
+   ordinal migration fixes that too, in the same pass). Skipping this is not
+   fatal: `agent_common.approval_through` reads the old key as a loud,
+   per-call fallback and names the fix, the same shape WI-493 used for the
+   ordinal.
+2. **Kit-owned files — overwrite and move on:** every `scripts/*.py`,
+   `PROCESS.md`, `PROCESS_OPTIONS.md`, `ADOPTING.md`, `README.md`,
+   `AGENTS.template.md`, every shipped `skills/*/SKILL.md`,
+   `process.toml.template`, `gate-policy.template`, `hooks/pre-commit`,
+   `ci/check.yml`, `registries/*.template.*`.
+3. **One test file renamed:** `tests/test_ratification_level.py` →
+   `tests/test_approval_level.py` — a plain `git mv` if you vendored the
+   kit's own tests rather than writing your own.
+4. **Grep your own live surfaces** for `ratif` (case-insensitive) — your
+   requirements/test-case registries, your own process docs, anything you
+   authored rather than received from the kit. Leave `docs/ratify/` path
+   references and anything inside your own history (logs, archives, closed
+   work items, attestation records) alone; a record is not rewritten to
+   agree with a later word choice (D-4).
+5. **Run the checks:** `python scripts/check.py --jobs 0`, then
+   `python scripts/check_vocab.py --root . --strict` — it now refuses a
+   fresh `ratif*` site the same way it refuses a `G1`.
 
 ---
 

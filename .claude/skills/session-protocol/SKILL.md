@@ -144,7 +144,7 @@ cadence"). New behavior needs new tests
   merge queue wants the APPROVE no older than the branch's last **non-record**
   commit (`docs/reviews/` + `docs/log.d/` are excluded; `docs/work/` is not), so
   anything committed after it buys another round. Close **first** — Deliverable
-  filled, spec moved to its terminal folder, any ratifying Status-change commit
+  filled, spec moved to its terminal folder, any approving Status-change commit
   — and take the final verdict round **last**; never hand-merge trunk, since
   only the station's `refresh` commit is peeled. A correction the verdict itself
   demanded still costs a round: that is the gate working, not a defect

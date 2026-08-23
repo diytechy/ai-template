@@ -4,13 +4,13 @@
 Replaces the hand-maintained `docs/open-items.md`. Two inputs, one output:
 
   docs/requirements/open-items.toml   pending decision briefs, one row per OI
-  the spine registries + git         rows owing a ratification or a re-attest
+  the spine registries + git         rows owing an approval or a re-attest
   -> docs/open-items.html            the ONLY surface a human reads
 
 Why HTML and not markdown: the depth an owner needs to rule a re-attest is a
 WORD-LEVEL DIFF — of a 1,500-character cell, which forty words moved — and
 markdown cannot mark that. The first sitting under the retired `Modified` regime
-read a POINTER ("run `trace.py --ratify modified`") and could not act from it,
+read a POINTER ("run `trace.py --approve modified`") and could not act from it,
 which is what this replaces. The CSV is a machine source: it is read raw about as often
 as `work-items.csv` is, i.e. never.
 
@@ -40,7 +40,7 @@ ANTI-DUPLICATION, deliberately: the git archaeology and the cell comparison live
 in `trace.reattest_model`, and the pending projection lives in
 `gen_trajectory.pending_block`. This module imports both and RENDERS. It owns no
 second opinion about what is pending or what changed — if this view and the
-`--ratify` brief ever disagree, the brief is authoritative and this is the bug.
+`--approve` brief ever disagree, the brief is authoritative and this is the bug.
 
 Freshness: `--check` byte-compares the regenerated view against the file — a
 pure function of the committed tree since the dispatcher-era machine-local
@@ -149,7 +149,7 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .pill{font-size:var(--tiny);border-radius:var(--r-pill);padding:.1rem .55rem;
   border:1px solid var(--border);color:var(--muted);white-space:nowrap;
   font-variant-numeric:tabular-nums;}
-.pill.ratify{border-color:var(--pending);color:var(--pending);}
+.pill.approve{border-color:var(--pending);color:var(--pending);}
 .baseline{font-size:var(--xsmall);color:var(--muted);font-family:var(--mono);}
 .empty{font-size:var(--small);border-left:3px solid var(--pending);
   padding-left:.75rem;}
@@ -159,7 +159,7 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .row-head .rid{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;}
 .cellname{font-family:var(--mono);font-size:var(--xsmall);font-weight:700;
   color:var(--muted);}
-/* The §A5.1 group label above a run of cells (D-9 step 4) — ratified cells owe
+/* The §A5.1 group label above a run of cells (D-9 step 4) — approved cells owe
    an attestation, traced ones route to adjudication. Set apart from .cellname
    by weight and a rule rather than by colour alone, so the grouping survives a
    monochrome print and a low-contrast display. */
@@ -497,22 +497,22 @@ def _chain_row(row):
     bump, which is the escape the ratchet exists to force."""
     inner = []
     if row["state"] == "changed":
-        # TWO GROUPS, §A5.1 (D-9 step 4). A RATIFIED cell that moved owes an
+        # TWO GROUPS, §A5.1 (D-9 step 4). An APPROVED cell that moved owes an
         # attestation; a TRACED one routes to adjudication and arms no window
         # (the WI-388 ruling). Rendering them in one undifferentiated list asked
         # the owner to make that judgement per cell, from memory, mid-sitting —
         # and the snapshot comparison hands the split over for free. The heading
         # appears only when both groups are present; a lone heading over the
         # only group is noise.
-        ratified = row.get("ratified") or frozenset()
+        approved = row.get("approved") or frozenset()
         groups = [
             (
-                "ratified — re-attestation owed",
-                [c for c in row["cells"] if c[0] in ratified],
+                "approved — re-attestation owed",
+                [c for c in row["cells"] if c[0] in approved],
             ),
             (
                 "traced — routes to adjudication",
-                [c for c in row["cells"] if c[0] not in ratified],
+                [c for c in row["cells"] if c[0] not in approved],
             ),
         ]
         both = all(cells for _label, cells in groups)
@@ -569,7 +569,7 @@ def _chain_row(row):
 # what makes the removal safe in this direction too — a model still emitting the
 # retired kind would fail loudly here rather than render a wrong pill.
 _KIND_LABELS = {
-    "ratify": "approval owed",
+    "approve": "approval owed",
     "reattest": "re-attest owed",
 }
 
@@ -608,7 +608,7 @@ def _attestation_cards(model, srs_by_id=None):
             '<span class="pill{cls}">{label}</span></h3>'.format(
                 i=esc(entry["id"]),
                 t=esc(entry["title"] or "(untitled)"),
-                cls="" if entry["kind"] == "reattest" else " ratify",
+                cls="" if entry["kind"] == "reattest" else " approve",
                 label=label,
             )
         )
@@ -742,11 +742,11 @@ def render(root):
         "<code>python project-trajectory/scripts/gen_open_items.py</code></p>\n"
         "<h1>Open items — owner decision surface</h1>\n"
         '<p class="sub">{pending} pending decision(s) · {attest} spine row(s) owing a '
-        "ratification or a re-attest, across {rows} chain row change(s); "
+        "approval or a re-attest, across {rows} chain row change(s); "
         "{drifted} row(s) drifted from the approved snapshot. Briefs are rows "
         "in <code>{registry}</code>; the attestation depth is "
         "computed by <code>trace.reattest_model</code>, the same code behind "
-        "<code>trace.py --ratify</code>. If the two ever disagree, the brief is "
+        "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
         '<p class="baseline">Baseline: {baseline}</p>\n'
         "</header>\n"
@@ -756,7 +756,7 @@ def render(root):
         '<span class="hint">clear it to read every row in full — each amended '
         "row's remaining cells, and the SR text a chain-only amendment hangs "
         "from</span></div>\n"
-        '<section class="band"><p class="eyebrow">2 · Ratification &amp; '
+        '<section class="band"><p class="eyebrow">2 · Approval &amp; '
         "re-attestation</p>{attestations}</section>\n"
         '<section class="band"><p class="eyebrow">3 · Pending owner actions '
         "(derived)</p>{pointers}</section>\n"

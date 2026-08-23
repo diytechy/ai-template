@@ -376,9 +376,9 @@ def test_per_wi_exhaustion_disposition_overrides_autonomous(
     # (WI-498 slice 5 / WI-493 re-keyed this dial off the 0-4 ordinal; the
     # retired `0` still reads through the migration window, but a fixture that
     # spells it leaves the re-key untested exactly here).
-    set_process_key(repo, "attestation", "human_ratification_through", "DevStg-Below")
+    set_process_key(repo, "attestation", "human_approval_through", "DevStg-Below")
     _git(repo, "add", "docs/process.toml")
-    _git(repo, "commit", "-qm", "set the loop-held ratification level")
+    _git(repo, "commit", "-qm", "set the loop-held approval level")
     (ctl / "verdict.txt").write_text(CHANGES, encoding="utf-8")
     proc = _loop(repo, cmd, "--max-iterations", "3")
     assert proc.returncode == expected, proc.stdout + proc.stderr
