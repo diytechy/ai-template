@@ -12,6 +12,40 @@ priority = 3
 
 ## Context
 
+### Slice 5, 2026-08-23 — item 3 CLOSES: the `external.toml` context view lands. The lane's ONLY remainder is item 1, blocked on `OI-60`.
+
+The lane stays ACTIVE, and it now holds exactly one thing. The depth-0 frame is
+DERIVED into `PROJECT_STATE.html`'s architecture tab, above the module map:
+parties, crossings, relationships, the realizing `IF-###` rows joined from
+`interfaces.toml`, and the adjudicated no-tie-back rows with their recorded
+reasons. That derived view IS the boundary record `SN-040` kept "with the
+architecture" — sitting-2 decision 8's own point, and the clause that let
+`docs/architecture.md` be retired in slice 1. **Decision 8's execution is
+therefore complete**; what is left of this program is the column shed, which
+decision 8 never asked for.
+
+Three rendering decisions worth the record. Realization is **joined**, never
+read off the frame row — the frame is LOCKED and a realization is the other
+side's claim. An **unrealized** crossing (`B-02`) draws dashed and says so
+rather than being hidden; its `SR-140` reason is left in the registry header
+where the ruling lives, not restated in the view. The three **adjudicated
+absences** from slice 2 (`IF-032`, `IF-036`, `IF-041`) render with the whole
+reason each row records, and slice 2's two tie-backs (`IF-080`, `IF-081`) now
+appear in `B-05`'s realizing set — the view is checked against the registry by
+test, so a frame silently shorter than the registry reds.
+
+Two things the slice was not scoped for and did anyway, both forced: the
+renderer is a **new shipped module** (`traj_context.py`) because folding it into
+`traj_views.py` pushed that module past the 1,500-line decomposition ratchet,
+whose rule is decompose-never-bump; and that made this a **scaffold-surface
+change** (bootstrap MAPPING, the test file list, the kit README, a
+`RESYNC_PACK.md` entry), verified by bootstrapping a real scaffold rather than
+by reading the mapping. Spine acts: `LLR-200` + `TC-196`, both minted `Drafted`.
+
+**Item 3 below is STRUCK.** Item 1 stays blocked on `OI-60` (pending, the
+owner's) and on nothing else. The lane is deliberately NOT closed: it holds
+item 1 until that ruling lands.
+
 ### Slice 4, 2026-08-23 — item 2 CLOSES: the held `Contract` citations are swept and the hold expires.
 
 The lane stays ACTIVE on items 1 and 3. `OI-36` (ruled 2026-08-19, option (b))
@@ -146,9 +180,13 @@ ordering, not by preference:**
    the hold as expired-and-executed. The two retired `CMP-00x` ids inside
    `IF-056`'s and `IF-077`'s held clauses died with the sentences carrying them,
    which is why they were deliberately left rather than corrected separately.
-3. **The `external.toml` context view** — entities/crossings/relationships
-   rendered into the dashboard. The spec's own *"may land as its own slice"*,
-   still unbuilt, and not blocked by anything.
+3. ~~**The `external.toml` context view** — entities/crossings/relationships
+   rendered into the dashboard.~~ **DONE — slice 5, 2026-08-23.** The spec's own
+   *"may land as its own slice"*, and it was: `traj_parse.frame_context` +
+   `traj_context.py`, spliced above the derived structure in the How tab, with
+   the tie-backs joined from `interfaces.toml` and the adjudicated absences
+   stated. This is what satisfies the boundary record and closes sitting-2
+   decision 8's execution.
 
 **Queued for the owner rather than decided here** (both minted this slice):
 `OI-49` — what the sitting is actually being asked to approve from the 2026-08-15

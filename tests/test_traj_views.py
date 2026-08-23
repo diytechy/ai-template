@@ -32,6 +32,7 @@ from traj_fixtures import (
     html_of,
     make_repo,
     tiered_repo,
+    write_frame,
 )
 
 
@@ -146,11 +147,138 @@ def test_how_sw_stays_a_table_without_seams(tmp_path):
     assert "swarrow" not in text
 
 
-# --- WI-073/FB5: the containerized How-SW top view -----------------------------
+# --- WI-455: the System-context view (the depth-0 frame, rendered) -------------
+#
+# Sitting-2 decision 8 ruled the boundary record SATISFIED by a derived view, so
+# these pin the derivation, not a drawing: the counts and ids come off
+# external.toml, the realizing rows are joined from interfaces.toml, and an
+# adjudicated no-tie-back is stated with the reason its row records.
 
 
 def sw_section(root):
     return html_of(root).split('id="sw"', 1)[1].split("</section>", 1)[0]
+
+
+def test_context_view_renders_the_declared_frame(tmp_path):
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    write_frame(tmp_path)
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row(
+            "IF-001",
+            "Provides",
+            "src/m",
+            "external:downstream adopter",
+            "cli",
+            interface_to_external="B-01",
+        ),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    # the frame's own census, derived — never a hand-typed caption
+    assert "2 entities · 2 crossing(s) · 1 relationship(s)" in sw
+    # every declared row reaches the diagram, including the party that holds no
+    # crossing at all (it keeps a card; it simply has no wire)
+    for node in ('data-node="EXT-001"', 'data-node="EXT-002"', 'data-node="system"'):
+        assert node in sw
+    assert 'data-edge="B-01"' in sw and 'data-edge="B-02"' in sw
+    assert 'data-edge="REL-001"' in sw
+    # direction is read from the SYSTEM: `out` heads at the party, `in` at us
+    assert 'marker-start="url(#ctxarrow)"' in sw  # B-01, out
+    assert 'marker-end="url(#ctxarrow)"' in sw  # B-02, in
+    # the tie-back is JOINED from interfaces.toml, and the crossing nothing
+    # realizes says so — in the table and by drawing dashed
+    assert "<code>IF-001</code>" in sw
+    assert "none — declared, not yet realized" in sw
+    assert 'class="ctxcross unrealized"' in sw
+    # the relationship carries no interface vocabulary, only its own row
+    assert "hands-off" in sw and "a flow this system is not a party to" in sw
+    # the system card is named for the project, not for a literal
+    assert "demoproj" in sw
+    first = html_of(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert html_of(tmp_path) == first  # deterministic -> --check stays stable
+
+
+def test_context_view_states_an_untied_external_endpoint_with_its_reason(tmp_path):
+    # The adjudicated absences (WI-455 slice 2) are part of the boundary record:
+    # an `external:` endpoint that realizes NO crossing renders with the reason
+    # its own row states, rather than being silently dropped from the frame.
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    write_frame(tmp_path)
+    reason = "No tie-back: git is not a party of its own in this frame."
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        if_row("IF-002", "Consumes", "src/m", "external:git", "reads", notes=reason),
+        encoding="utf-8",
+    )
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert "External endpoints that tie back to no crossing" in sw
+    assert "IF-002" in sw and "external:git" in sw and reason in sw
+
+
+def test_context_view_renders_above_the_derived_structure(tmp_path):
+    # Reading order is the point: what is outside and what crosses is settled
+    # before what the inside is built of, so the context view splices in at the
+    # TOP of the How panel — above the module map, not appended after it.
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    write_frame(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    sw = sw_section(tmp_path)
+    assert sw.index("System context (the depth-0 frame)") < sw.index("The module map")
+
+
+def test_context_view_omitted_and_byte_identical_without_a_frame(tmp_path):
+    # The vacuity guarantee (the Knowledge-tab idiom): a project that declares no
+    # boundary does not create the file, and the artifact is byte-for-byte what
+    # it was before this view existed. Proven by round-trip.
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    without = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    assert b"ctxsvg" not in without
+
+    write_frame(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    assert b"ctxsvg" in (tmp_path / "PROJECT_STATE.html").read_bytes()
+
+    (tmp_path / "docs" / "requirements" / "external.toml").unlink()
+    assert gen(tmp_path).returncode == 0
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == without
+
+
+def test_a_template_only_frame_renders_the_vacuous_view(tmp_path):
+    # A freshly bootstrapped scaffold HAS an external.toml — the blank form, whose
+    # rows all end `-000`. Those are example rows everywhere else in the kit and
+    # they are here too: the view stays vacuous rather than rendering the
+    # template's own placeholder prose as this project's boundary.
+    make_repo(tmp_path)
+    write_arch_src(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    without = (tmp_path / "PROJECT_STATE.html").read_bytes()
+    write_frame(
+        tmp_path,
+        (
+            ROOT / "project-trajectory" / "registries" / "external.template.toml"
+        ).read_text(encoding="utf-8"),
+    )
+    assert gen(tmp_path).returncode == 0
+    assert (tmp_path / "PROJECT_STATE.html").read_bytes() == without
+
+
+def test_context_view_alone_earns_the_how_tab(tmp_path):
+    # No symbol inventory yet (files-mode / pre-code) but a declared frame: the
+    # tab still renders, for the flows block's reason — a boundary is architecture
+    # before there is an inside to map, and it is the earliest of the three.
+    make_repo(tmp_path)
+    write_frame(tmp_path)
+    assert gen(tmp_path).returncode == 0
+    text = html_of(tmp_path)
+    assert 'data-tab="sw"' in text and "System context (the depth-0 frame)" in text
+    assert "The module map" not in text
 
 
 def _sw_layer_with(sw, marker):

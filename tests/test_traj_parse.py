@@ -18,8 +18,8 @@ import subprocess
 import sys
 
 import pytest
-from conftest import load_script, pin_autocrlf
-from traj_fixtures import gen, html_of, make_repo
+from conftest import ROOT, load_script, pin_autocrlf
+from traj_fixtures import FRAME, gen, html_of, make_repo, write_frame
 
 
 def test_asof_stamp_from_git_and_excluded_from_check(tmp_path):
@@ -236,3 +236,85 @@ def test_run_captured_states_the_five_keywords_and_degrades_off_git(
     code, out = gt._git(tmp_path, "rev-parse", "--verify", "--quiet", "HEAD")
     assert code != 0 and out.strip() == ""
     assert gt._asof(tmp_path) == ""
+
+
+# --- WI-455: `frame_context`, the depth-0 frame as a read model ----------------
+
+
+def test_frame_context_is_none_without_a_declared_frame(tmp_path):
+    # The registry's own applies-when: a project that never declares a boundary
+    # simply does not create the file, and the reader says so with None rather
+    # than an empty-but-present frame the view would render as a blank picture.
+    gt = load_script("gen_trajectory")
+    assert gt.traj_parse.frame_context(tmp_path) is None
+
+
+def test_frame_context_drops_the_blank_form_s_example_rows(tmp_path):
+    # A freshly bootstrapped scaffold HAS the file — the blank form, all of whose
+    # rows end `-000`. Same rule as every other tier: example rows are not data.
+    gt = load_script("gen_trajectory")
+    write_frame(
+        tmp_path,
+        (
+            ROOT / "project-trajectory" / "registries" / "external.template.toml"
+        ).read_text(encoding="utf-8"),
+    )
+    assert gt.traj_parse.frame_context(tmp_path) is None
+
+
+def test_frame_context_joins_the_tie_backs_and_keeps_id_order(tmp_path):
+    gt = load_script("gen_trajectory")
+    write_frame(tmp_path, FRAME)
+    (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
+        """[interface.IF-001]
+direction = "Provides"
+this_project = "src/m"
+counterpart = "external:downstream adopter"
+contract = "cli"
+status = "Drafted"
+interface_to_external = "B-01"
+
+[interface.IF-002]
+direction = "Consumes"
+this_project = "src/m"
+counterpart = "external:git"
+contract = "reads"
+status = "Drafted"
+notes = "No tie-back: git is not a party of its own here."
+""",
+        encoding="utf-8",
+    )
+    frame = gt.traj_parse.frame_context(tmp_path)
+    assert [e["id"] for e in frame["entities"]] == ["EXT-001", "EXT-002"]
+    assert [c["id"] for c in frame["crossings"]] == ["B-01", "B-02"]
+    by_id = {c["id"]: c for c in frame["crossings"]}
+    # the realization is JOINED from interfaces.toml, with the side it ties on...
+    assert by_id["B-01"]["realized_by"] == [("IF-001", "out")]
+    # ...and a crossing nothing realizes stays declared, not dropped
+    assert by_id["B-02"]["realized_by"] == []
+    # the entity name resolves for display without the frame row restating it
+    assert by_id["B-01"]["entity_name"] == "Downstream adopter"
+    # the untied `external:` endpoint carries the reason its own row records
+    assert [(u["id"], u["endpoint"]) for u in frame["untied"]] == [
+        ("IF-002", "external:git")
+    ]
+    assert frame["untied"][0]["reason"].startswith("No tie-back")
+
+
+def test_frame_context_reads_this_repo_s_own_locked_frame():
+    # The meta repo's own frame, pinned as data rather than as a picture: the
+    # locked depth-0 table is 4 parties, 4 crossings and 3 relationships, `B-02`
+    # is the one crossing deliberately left unrealized (SR-140's condition, stated
+    # in the registry header), and WI-455 slice 2's adjudication left exactly
+    # three `external:` rows tied back to nothing, each with its reason on the row.
+    gt = load_script("gen_trajectory")
+    frame = gt.traj_parse.frame_context(ROOT)
+    assert len(frame["entities"]) == 4
+    assert [c["id"] for c in frame["crossings"]] == ["B-01", "B-02", "B-04", "B-05"]
+    assert len(frame["relationships"]) == 3
+    by_id = {c["id"]: c for c in frame["crossings"]}
+    assert by_id["B-02"]["realized_by"] == []
+    # the two rows slice 2 gave a facing, and the largest bundle in the frame
+    assert {"IF-080", "IF-081"} <= {i for i, _side in by_id["B-05"]["realized_by"]}
+    assert [u["id"] for u in frame["untied"]] == ["IF-032", "IF-036", "IF-041"]
+    assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

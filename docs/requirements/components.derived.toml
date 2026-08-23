@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 181
+design_rows = 182
 seam_rows = 135
 requirements_placed = 70
 requirements_unplaced = 5
@@ -592,6 +592,7 @@ llr_refs = [
   "LLR-193",
   "LLR-198",
   "LLR-199",
+  "LLR-200",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -623,6 +624,7 @@ modules = [
   "project-trajectory/scripts/onboard.template.sh",
   "project-trajectory/scripts/pending.py",
   "project-trajectory/scripts/run_menu.py",
+  "project-trajectory/scripts/traj_context.py",
   "project-trajectory/scripts/traj_graph.py",
   "project-trajectory/scripts/traj_panels.py",
   "project-trajectory/scripts/traj_parse.py",

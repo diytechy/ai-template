@@ -183,6 +183,53 @@ def write_arch_src(root):
     (root / "src" / "m.py").write_text(ARCH_SRC, encoding="utf-8")
 
 
+# The depth-0 FRAME fixture (WI-455): two declared parties, two crossings on the
+# FIRST of them (so one party's card has to span two lanes) and one crossing-less
+# party (a declared party with nothing crossing is a real frame state), plus one
+# external-to-external relationship. `B-02` is deliberately left with no realizing
+# interface row, so the unrealized-crossing rendering has something to say.
+FRAME = """
+[entity.EXT-001]
+name = "Downstream adopter"
+class = "operational"
+description = "The team that adopts the package."
+status = "Drafted"
+
+[entity.EXT-002]
+name = "Vendored upstream"
+class = "enabling"
+description = "A source this project vendors from."
+status = "Drafted"
+
+[boundary.B-01]
+entity = "EXT-001"
+direction = "out"
+carries = "the delivered package"
+status = "Drafted"
+
+[boundary.B-02]
+entity = "EXT-001"
+direction = "in"
+carries = "adopter feedback"
+status = "Drafted"
+
+[relationship.REL-001]
+from = "EXT-002"
+to = "EXT-001"
+kind = "hands-off"
+flow = "a flow this system is not a party to"
+status = "Drafted"
+"""
+
+
+def write_frame(root, text=FRAME):
+    """Write the depth-0 frame registry the System-context view reads."""
+    req = root / "docs" / "requirements"
+    req.mkdir(parents=True, exist_ok=True)
+    (req / "external.toml").write_text(text, encoding="utf-8")
+    return root
+
+
 def if_row(iid, direction, this, counterpart, contract="call", **cells):
     """One `[interface.IF-###]` TOML table (the carrier since WI-443).
 

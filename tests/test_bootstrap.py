@@ -142,6 +142,7 @@ def test_scaffold_contains_expected_files(scaffold):
         "scripts/traj_views.py",
         "scripts/traj_status.py",
         "scripts/traj_panels.py",
+        "scripts/traj_context.py",
         "scripts/gen_open_items.py",
         "scripts/gen_components.py",
         "scripts/gen_okf.py",

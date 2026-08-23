@@ -115,6 +115,7 @@ except ImportError:
 # actually resolves in — has one place to reach it. Deliberate, hence the
 # per-line F401 suppression each carries: unused HERE is the point.
 import traj_views  # noqa: F401
+import traj_context  # noqa: F401
 import traj_status  # noqa: F401
 import traj_render  # noqa: F401
 import traj_panels  # noqa: F401
@@ -134,6 +135,7 @@ from traj_parse import (  # noqa: F401
     _sn_rows,
     _spine,
     cmp_rows,
+    frame_context,
     project_name,
     project_vision,
     read_sns,
@@ -189,6 +191,7 @@ from traj_render import (  # noqa: F401
     tab_button,
     tab_panel_open,
 )
+from traj_context import context_block  # noqa: F401
 from traj_views import (  # noqa: F401
     DEFAULT_PHASE,
     SW_CMPTREE_STYLE,
@@ -778,6 +781,30 @@ def _splice_flows_into_panel(panel, flows_html):
     return panel[: -len("</section>")] + flows_html + "\n</section>"
 
 
+# Every How-SW panel shape — the containment drill, the flat seam graph and the
+# files-mode fallback — opens on this heading, which is what makes a prepend
+# splice safe rather than shape-dependent.
+_SW_HEADING = "<h2>Software architecture (How)</h2>\n"
+
+
+def _splice_context_into_panel(panel, context_html):
+    """Insert `context_html` directly after the How-SW panel's heading (WI-455).
+
+    It goes FIRST, above the derived structure, because that is the reading
+    order the frame is for: what is outside and what crosses is settled before
+    what the inside is built of. Checked explicitly rather than asserted, for
+    `_splice_flows_into_panel`'s reason (L-02): under `python -O` an assert
+    vanishes and the splice would silently emit an unspliced panel."""
+    if _SW_HEADING not in panel:
+        raise ValueError(
+            "How-SW panel does not open on the architecture heading — cannot "
+            "splice in the derived System-context view (WI-455); panel head: "
+            + repr(panel[:120])
+        )
+    head, tail = panel.split(_SW_HEADING, 1)
+    return head + _SW_HEADING + context_html + "\n" + tail
+
+
 def build_html(root, wis):
     total = len(wis)
     done = sum(1 for w in wis if w["status"] == "done")
@@ -846,6 +873,12 @@ def build_html(root, wis):
     # How-SW panel, so the dashboard carries the FULL architecture — the
     # derived structure AND the narrative. "" when none are authored.
     flows_html = flows_block(runtime_flows(root))
+    # WI-455 (the same decision's other half): the depth-0 frame — who is
+    # outside, what crosses, and the external-to-external flows the system is
+    # not a party to — DERIVED from docs/requirements/external.toml into the
+    # same tab. That derived view IS the boundary record decision 8 kept "with
+    # the architecture"; "" when the repo declares no frame.
+    context_html = context_block(frame_context(root), project_name(root))
     if mods:
         # WI-073: when a CMP layer contains modules, the How-SW panel becomes the
         # containerized top view (≤ ct.TOP_VIEW_MAX items, expandable); otherwise
@@ -853,15 +886,21 @@ def build_html(root, wis):
         tab, panel = sw_containment(root, mods) or _sw_panel(mods, sw_graph(root, mods))
         if flows_html:
             panel = _splice_flows_into_panel(panel, flows_html)
+        if context_html:
+            panel = _splice_context_into_panel(panel, context_html)
         extra_tabs.append(tab)
         extra_panels.append(panel)
-    elif flows_html:
-        # A files-mode / pre-code repo with authored flows still gets the How
-        # tab: the narrative is architecture even before a symbol map exists.
+    elif flows_html or context_html:
+        # A files-mode / pre-code repo with an authored narrative or a declared
+        # frame still gets the How tab: both are architecture even before a
+        # symbol map exists — and the frame is the earliest of the three, since
+        # a boundary is drawn before there is an inside to map.
         extra_tabs.append(tab_button("sw", "How (SW architecture)"))
         extra_panels.append(
             tab_panel_open("sw")
-            + "\n<h2>Software architecture (How)</h2>\n"
+            + "\n"
+            + _SW_HEADING
+            + context_html
             + flows_html
             + "\n</section>"
         )

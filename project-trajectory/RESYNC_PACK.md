@@ -3545,6 +3545,37 @@ pointing at. The column is gone from `registries/components.template.toml`, from
    link it from the component's `Notes`; the view deliberately shows no
    internals.
 
+### The dashboard grows a System-context view, and a new `traj_*` sibling ships with it [since d6818b0b]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**What changed.** `PROJECT_STATE.html`'s architecture tab now opens on a
+**System context** block derived from `docs/requirements/external.toml` — the
+declared external parties, the boundary crossings, and the external-to-external
+relationships the system is not a party to — with the realizing `IF-###` rows
+joined from `interfaces.toml`, an unrealized crossing drawn dashed, and any
+`external:`-endpoint interface row that ties back to no crossing listed with the
+reason its own row records. It splices ABOVE the derived module map: the frame is
+the architecture's context, and it is generated rather than hand-drawn (the
+ruling that let `docs/architecture.md` be retired).
+
+The renderer lives in a **new shipped module, `scripts/traj_context.py`**, which
+joins the `gen_trajectory.py` sibling set that copies together.
+
+**What you must do.**
+
+1. **Copy the new module in** (`scripts/traj_context.py`) alongside the
+   overwritten `scripts/gen_trajectory.py`, `scripts/traj_parse.py`,
+   `scripts/traj_views.py` and `scripts/bootstrap.py`. A scaffold that takes the
+   new `gen_trajectory.py` without it `ImportError`s on the first render — the
+   standing rule for that set.
+2. **Regenerate and commit the dashboard** (`python scripts/gen_trajectory.py`);
+   otherwise the `trajectory-map` freshness step reds on the new block.
+3. **Nothing else.** No registry column changed and no dial moved. A repo that
+   declares no boundary — no `external.toml`, or one holding only the blank
+   form's `-000` rows — renders **byte-identically** to before, so the view costs
+   a non-adopter nothing.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

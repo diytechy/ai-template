@@ -2094,3 +2094,15 @@ test_refs = "TC-195"
 status = "Drafted"
 component = "CMP-009"
 phase = 5
+
+[design.LLR-200]
+sr_refs = ["SR-168"]
+title = "The depth-0 frame as a generated context view in the state view"
+module = "project-trajectory/scripts/traj_context.py"
+code_symbol = "context_block/_context_svg/_ctx_layout"
+detail = """Renders the declared external frame - the entities outside the system, the boundary crossings, and the external-to-external relationships the system is not a party to - as a self-contained block spliced into the state view's architecture tab ABOVE the derived structure, from the read model traj_parse.frame_context. One lane per crossing so a party holding several keeps one card spanning them; the system opposite; each crossing a directed wire whose heading is read from the system's own point of view; the relationships bowed clear of the system card entirely, carrying no interface vocabulary. The realizing IF-### rows are JOINED from the interface registry rather than restated on the frame row, so a crossing nothing realizes renders dashed and says so, and an interface row whose endpoint is outside the tree but which ties back to no crossing is listed with the reason its own row records. Three tables carry every cell the diagram truncates. Vacuous when the repository declares no frame or carries only the blank form's -000 example rows: the block is omitted and the artifact is byte-identical to one generated before the view existed. Fixed geometry, id-sorted inputs, no clocks, so the artifact's freshness byte-compare stays stable."""
+rationale = """The boundary record is satisfied by a DERIVED view rather than by a picture kept beside an architecture document, which is what lets no such document exist. That is the reason the parent's "without consulting a second surface" holds for the boundary too: without this view, a reviewer who wanted to know what crosses this system's boundary had to open the registry. The realization join is derived rather than declared on the frame row because the frame is LOCKED and a realization is the other side's claim - the same split that lets a requirement state the crossing while a design row states which piece provides it. An unrealized crossing is drawn rather than hidden for the reason the empty-graph clause exists one row over: a frame silently shorter than the registry is indistinguishable from a complete one. Its OWN module rather than a seventh section of the views module: the view lands at ~440 lines and would have pushed that module past the decomposition threshold, whose rule is decompose, never bump."""
+test_refs = "(see TC-196)"
+status = "Drafted"
+component = "CMP-009"
+phase = 5

@@ -324,17 +324,150 @@ def runtime_flows(root):
     return flows
 
 
+def _real_rows(rows, id_col, prefix, sort=True):
+    """The registry's REAL rows: right id prefix, `-000` example rows dropped.
+
+    One home for the predicate `cmp_rows` used to state inline — the frame's
+    three tiers and the interface tier would otherwise have restated it four
+    more times. `sort=False` keeps FILE order, which is what `cmp_rows` (and the
+    table it feeds) has always rendered; the frame tiers take id order, since a
+    diagram laid out in file order would move whenever a row is inserted."""
+    out = []
+    for r in rows:
+        rid = (r.get(id_col) or "").strip()
+        if rid.startswith(prefix) and not rid.endswith("-000"):
+            out.append(dict(r, **{id_col: rid}))
+    return sorted(out, key=lambda r: r[id_col]) if sort else out
+
+
+def frame_context(root):
+    """The depth-0 FRAME — `docs/requirements/external.toml` — as the read model
+    behind the dashboard's System-context view (WI-455, sitting-2 decision 8:
+    the boundary record is SATISFIED by the derived view, so the frame is
+    generated into the architecture tab and never hand-drawn).
+
+    `None` when the frame declares nothing — a project that never declares a
+    boundary simply does not create the file (the registry's own applies-when),
+    and the view is then omitted rather than rendered empty (the Knowledge-tab
+    vacuity idiom). Otherwise four id-sorted lists:
+
+      `entities`       one per `[entity.EXT-###]`.
+      `crossings`      one per `[boundary.B-##]`, each carrying `realized_by` —
+                       `(IF-id, in|out)` for every interface row whose
+                       directional tie-back names it. DERIVED from
+                       `interfaces.toml`, never read off the frame row: the
+                       frame is LOCKED and a realization is the other side's
+                       claim, which is exactly the split that lets an SR state
+                       the crossing while an LLR states which piece provides it.
+      `relationships`  one per `[relationship.REL-###]` — external-to-external,
+                       the system not a party. No interface vocabulary reaches
+                       them here either, deliberately: a relationship is not a
+                       crossing.
+      `untied`         the interface rows whose endpoint carries the `external:`
+                       marker and which tie back to NO crossing, with the reason
+                       each row records. Those absences were ADJUDICATED one at a
+                       time (WI-455 slice 2) and the reason lives in the row, so
+                       the view states them rather than quietly rendering a
+                       shorter frame than the registry holds.
+
+    Deterministic (sorted ids, no clocks) so the `--check` freshness byte-compare
+    stays stable."""
+    req = root / "docs" / "requirements"
+    ext = req / "external.toml"
+    entities = _real_rows(ct.spine_carrier.load(ext, "EXT-ID"), "EXT-ID", "EXT-")
+    crossings = _real_rows(ct.spine_carrier.load(ext, "B-ID"), "B-ID", "B-")
+    rels = _real_rows(ct.spine_carrier.load(ext, "REL-ID"), "REL-ID", "REL-")
+    if not (entities or crossings or rels):
+        return None
+
+    ifs = _real_rows(
+        ct.spine_carrier.load(req / "interfaces.toml", "IF-ID"), "IF-ID", "IF-"
+    )
+    realized, untied = {}, []
+    for r in ifs:
+        ties = [
+            (kind, (r.get(col) or "").strip())
+            for col, kind in (
+                ("InterfaceFromExternal", "in"),
+                ("InterfaceToExternal", "out"),
+            )
+        ]
+        ties = [(kind, bid) for kind, bid in ties if bid]
+        for kind, bid in ties:
+            realized.setdefault(bid, []).append((r["IF-ID"], kind))
+        if ties:
+            continue
+        endpoint = next(
+            (
+                cell
+                for cell in (
+                    (r.get("ThisProject") or "").strip(),
+                    (r.get("Counterpart") or "").strip(),
+                )
+                if cell.startswith("external:")
+            ),
+            "",
+        )
+        if endpoint:
+            untied.append(
+                {
+                    "id": r["IF-ID"],
+                    "endpoint": endpoint,
+                    "reason": (r.get("Notes") or "").strip(),
+                }
+            )
+
+    names = {e["EXT-ID"]: (e.get("Name") or "").strip() for e in entities}
+
+    def cell(row, key):
+        return (row.get(key) or "").strip()
+
+    return {
+        "entities": [
+            {
+                "id": e["EXT-ID"],
+                "name": cell(e, "Name"),
+                "class": cell(e, "Class"),
+                "description": cell(e, "Description"),
+                "status": cell(e, "Status"),
+            }
+            for e in entities
+        ],
+        "crossings": [
+            {
+                "id": b["B-ID"],
+                "entity": cell(b, "Entity"),
+                "entity_name": names.get(cell(b, "Entity"), ""),
+                "direction": cell(b, "Direction"),
+                "carries": cell(b, "Carries"),
+                "status": cell(b, "Status"),
+                "realized_by": sorted(realized.get(b["B-ID"], [])),
+            }
+            for b in crossings
+        ],
+        "relationships": [
+            {
+                "id": r["REL-ID"],
+                "from": cell(r, "From"),
+                "to": cell(r, "To"),
+                "from_name": names.get(cell(r, "From"), ""),
+                "to_name": names.get(cell(r, "To"), ""),
+                "kind": cell(r, "Kind"),
+                "flow": cell(r, "Flow"),
+                "status": cell(r, "Status"),
+            }
+            for r in rels
+        ],
+        "untied": sorted(untied, key=lambda u: u["id"]),
+    }
+
+
 def cmp_rows(root):
     """Real CMP-### component rows (the optional physical/component layer)."""
     rows = ct.spine_carrier.load(
         root / "docs" / "requirements" / "components.toml", "CMP-ID"
     )
-    return [
-        r
-        for r in rows
-        if (r.get("CMP-ID") or "").strip().startswith("CMP-")
-        and not (r.get("CMP-ID") or "").strip().endswith("-000")
-    ]
+    return _real_rows(rows, "CMP-ID", "CMP-", sort=False)
 
 
 # --- the Knowledge tab: the committed OKF bundle as a concept graph (WI-070) ----

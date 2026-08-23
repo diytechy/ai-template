@@ -1409,7 +1409,7 @@ BASELINE = {
     # 2859 was already the effective baseline, and the composed-sum accounting
     # below already threads the WI-439-review-fix (+15) and WI-446 (+20) deltas
     # through the 2026-08-18 merge math, so no history is lost by the merge.
-    "bootstrap.py": 3125,  # +1 (3124 -> 3125) 2026-08-23, WI-484 phase 3: one MAPPING row shipping `scripts/gen_components.py` to an adopter (plus the generator's name in the module-list docstring, same line). Reviewed bump, reason in docs/log.d/2026-08-23-wi484-component-view.md. Earlier: +8 (3116 -> 3124) 2026-08-23, WI-483 slice 3:
+    "bootstrap.py": 3126,  # +1 (3125 -> 3126) 2026-08-23, WI-455 slice 5: one MAPPING row shipping `scripts/traj_context.py` (the System-context view) to an adopter, plus the module name in the gen_trajectory sibling-set docstring line — the set copies together or a scaffold ImportErrors on its first render. Reviewed bump, reason in docs/log.d/2026-08-23-wi455-context-view.md. Earlier: +1 (3124 -> 3125) 2026-08-23, WI-484 phase 3: one MAPPING row shipping `scripts/gen_components.py` to an adopter (plus the generator's name in the module-list docstring, same line). Reviewed bump, reason in docs/log.d/2026-08-23-wi484-component-view.md. Earlier: +8 (3116 -> 3124) 2026-08-23, WI-483 slice 3:
     # one MAPPING row for `scripts/pending.py` plus the seven comment lines
     # saying why it ships (traj_status.py, gen_open_items.py and dispatch.py
     # all import it, the first two unguarded, so a scaffold without it cannot
