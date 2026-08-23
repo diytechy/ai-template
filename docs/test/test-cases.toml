@@ -1945,3 +1945,14 @@ automated = "Yes"
 evidence = """tests/test_routing_and_prompts.py::test_the_catalogue_lists_every_shipped_prompt_with_its_digest; tests/test_routing_and_prompts.py::test_the_catalogue_on_disk_is_FRESH; tests/test_routing_and_prompts.py::test_a_template_edit_moves_its_digest_and_so_the_catalogue; tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes"""
 status = "Drafted"
 phase = 5
+
+[test.TC-193]
+verifies = ["SR-157", "LLR-197"]
+level = "Unit"
+method = """The consolidation is driven from both ends. IDENTITY, which is the deletion's warrant: test_the_spine_row_vocabulary_is_one_home asserts every re-exported name in trace.py, trace_text.py and spine_rules.py IS the kitlib.spine object (`is`, not `==` - a value battery over one shared function is the vacuous-agreement shape test_rule_sync exists to refuse), and that both sn_draft_ids names bind the carrier function each module itself imported. VALUES, which is the half of the retired batteries that was never about sameness: the three Status predicates are driven over the casing/whitespace/None battery WITH the four retired spellings (Draft, Verified, Planned, Modified) each pinned to False, the LLR-exemption is pinned over the closed vocabulary including review 017's whitespace-padded case and the frozenset TYPE, and the SN scrapes are pinned whole-text, -000-excluding, separator-splitting and filter-nothing. SHIPPING: test_bootstrap.py::test_the_common_package_ships_complete bootstraps a REAL scaffold and asserts the copied scripts/kitlib/ holds exactly the kit's module set, so a MAPPING row omitted for this module reds there rather than in a downstream repo's first check."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-197 (parent SR-157)"
+automated = "Yes"
+evidence = """tests/test_rule_sync.py::test_the_spine_row_vocabulary_is_one_home; tests/test_rule_sync.py::test_the_status_predicates_answer_by_value; tests/test_rule_sync.py::test_the_llr_exemption_answers_by_value; tests/test_rule_sync.py::test_the_sn_scrapes_answer_by_value; tests/test_bootstrap.py::test_the_common_package_ships_complete"""
+status = "Drafted"
+phase = 5

@@ -1937,6 +1937,13 @@ MAPPING = [
     # must-be-whole rule applies — a scaffold missing it ImportErrors on the
     # first stage read, not on some later Release-only path.
     ("scripts/kitlib/evidence.py", "scripts/kitlib/evidence.py"),
+    # WI-448 slice 3 added `spine`: the spine ROW vocabulary — the Status
+    # predicates, the LLR-exemption set, the phase parse, the SN id scrapes and
+    # the registry CSV loader — which `trace.py` and `spine_rules.py` each
+    # carried a copy of under the retired F5 rule. Both of those are in this
+    # list, and `trace_text.py` re-exports three of the names for `trace.py`, so
+    # the must-be-whole rule bites on the FIRST check a scaffold runs.
+    ("scripts/kitlib/spine.py", "scripts/kitlib/spine.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

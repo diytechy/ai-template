@@ -51,6 +51,16 @@ theme and says so in its own docstring:
                  every consumer of "what stage is this repo in" calls. It takes
                  the derivation as an ARGUMENT — the registry parse needs a
                  sibling this package may not import.
+  * `spine`    — the spine ROW vocabulary, one tier over `ladder`: what a
+                 `Status` word means (`Drafted`/`Approved`/`Founded`), which
+                 `Verification` methods decompose to a TC but no LLR, what a
+                 free-form `Phase` cell parses to, which `SN-###` ids a needs
+                 registry mentions and which of them the SRs cite, plus the ref
+                 split, the `-000` placeholder test and the registry CSV loader
+                 those rules are written on.
+  * `evidence` — the TEST-EVIDENCE record: the `docs/test/evidence` format and
+                 the declared source surface a harness claim binds to, so the
+                 top rung can be derived from a verdict instead of a cell.
   * `station`  — the lane-close TERMINAL-OUTCOME vocabulary: the three states a
                  lane can close into, the status directory each is declared by,
                  the bar-attestation trailer label, and the "exactly one
@@ -65,6 +75,16 @@ module that claims lanes and moves specs in order to read a table. A view did
 exactly that, which is how the render leaf became part of the runtime scripts'
 strongly connected component. A shared home is not only for things that were
 duplicated; it is also for things that were correctly single and wrongly PLACED.
+
+`spine` (WI-448 slice 3) is the FIRST shape at its purest, and it is the case
+the package was ruled into existence for: two modules that must never disagree —
+`trace.py`, which ENFORCES the spine, and `spine_rules.py`, which DERIVES its
+stage from the same rows — each carrying its own copy of nine POLICY decisions,
+with nine equality pins standing in for one home. It got its own module rather
+than joining `registry` because `registry` is the `docs/work/` SPEC-FOLDER
+reader: a different registry, a different carrier, a different consumer set.
+Folding the two together would have grown the package's largest module into
+exactly the generic bucket the shape constraint above forbids.
 
 `ladder` (WI-498 slice 0) is BOTH shapes at once, which is why it is the
 clearest case in the package. It was DUPLICATED — the eight rung strings

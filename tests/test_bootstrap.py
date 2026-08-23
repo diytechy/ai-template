@@ -104,17 +104,19 @@ def test_scaffold_contains_expected_files(scaffold):
         # The shared helper package (WI-448) — every module, because a
         # PARTIAL copy is the failure mode: the scripts import
         # `kitlib.config` / `kitlib.evidence` / `kitlib.git` / `kitlib.ladder` /
-        # `kitlib.registry` / `kitlib.stage` / `kitlib.station` by name, so a
-        # missing module ImportErrors on the scaffold's first check rather
-        # than degrading. `test_the_common_package_ships_complete` asserts the
-        # set EXACTLY against the kit; these eight rows are the spot-check that
-        # keeps the expectation readable beside the other scripts.
+        # `kitlib.registry` / `kitlib.spine` / `kitlib.stage` / `kitlib.station`
+        # by name, so a missing module ImportErrors on the scaffold's first
+        # check rather than degrading. `test_the_common_package_ships_complete`
+        # asserts the set EXACTLY against the kit; these nine rows are the
+        # spot-check that keeps the expectation readable beside the other
+        # scripts.
         "scripts/kitlib/__init__.py",
         "scripts/kitlib/config.py",
         "scripts/kitlib/evidence.py",
         "scripts/kitlib/git.py",
         "scripts/kitlib/ladder.py",
         "scripts/kitlib/registry.py",
+        "scripts/kitlib/spine.py",
         "scripts/kitlib/stage.py",
         "scripts/kitlib/station.py",
         "scripts/check.py",

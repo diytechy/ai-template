@@ -44,15 +44,18 @@ Two engines read these rows and must never disagree:
 - `project-trajectory/scripts/spine_rules.py` **picks the rung** — it reads the
   same rows and computes which stage the repo has reached.
 
-Shared rules are duplicated between them per the kit's F5 independently-copyable
-convention and pinned equal by `tests/test_rule_sync.py`. A divergence between
-them is precisely the false-green the kit exists to prevent.
+Shared rules USED to be duplicated between them per the retired F5
+independently-copyable convention and pinned equal by `tests/test_rule_sync.py`.
+Since WI-448 slice 3 they have ONE home — `project-trajectory/scripts/kitlib/spine.py`,
+the spine ROW vocabulary — which both modules re-export under their existing
+names, so a divergence between them (precisely the false-green the kit exists to
+prevent) is now unrepresentable rather than pinned.
 
 **Three cross-cutting conventions, stated once:**
 
 - **`-000` is inert.** Any id ending `-000` is a template example row, skipped by
   every integrity, schema and orphan rule (`is_example`, in
-  `project-trajectory/scripts/trace_text.py`), so a fresh scaffold is vacuously
+  `project-trajectory/scripts/kitlib/spine.py`, re-exported by `trace_text.py`), so a fresh scaffold is vacuously
   clean. It is *not* skipped by the column-count structural check — a template
   row must still parse.
 - **Multi-ref cells split on `;`, `,` or whitespace** (`refs()`, same file).
@@ -90,8 +93,9 @@ Approving a need = **moving the table row up** in a reviewed commit. That commit
 *is* the sign-off, and its date is the approval date — git-derived, no
 column. Parsed by `sn_draft_ids` (a line-scanner that tracks the current heading
 and collects `SN-###` tokens under draft ones). The id *universe* those states
-partition is a **whole-text scrape** (`sn_all_ids`, an F5 twin at
-spine_rules/trace pinned by `test_rule_sync`): any `SN-###` token anywhere in
+partition is a **whole-text scrape** (`sn_all_ids`, one home in
+`kitlib/spine.py` since WI-448 slice 3, re-exported by spine_rules and trace):
+any `SN-###` token anywhere in
 the file counts, tables and prose alike — so an SN id mentioned only in
 approved *prose* and cited by no SR caps the derived gate at DevStg-Below (§8.1) exactly
 as an uncovered table row does.
@@ -443,7 +447,9 @@ is an unanswered need: DevStg-Reqs is not earned, so it caps the raw level at De
 split of labor with `trace.py` is the module pair's usual one — this rung is
 the *gate input*; the itemized `SN … has no SR` listing stays trace.py's orphan
 finding at DevStg-Tests strictness — and both read the **same cited set**
-(`sn_cited_ids`, an F5 duplicate pinned equal by `test_rule_sync`), so the gate
+(`sn_cited_ids`, which since WI-448 slice 3 has ONE home in `kitlib/spine.py`
+that both modules re-export — it was an F5 duplicate pinned equal by
+`test_rule_sync`, and the pin retired with the copy), so the gate
 and the listing cannot contradict on one registry state. The cited set is
 built from the rows in scope: in the raw view a Drafted SR's citation counts
 (the draft itself already drops the gate), while the `ex-draft` counterfactual

@@ -81,6 +81,49 @@ all 32 shipped scripts there (`gen_skills_index.py` is kit-authoring, not in
 the 15 residual groups is named in items 3 and 4 below — there is nothing left
 in the population this row has not already scoped.
 
+### SLICE 3 LANDED 2026-08-23 — item 3, the spine POLICY pair
+
+**Landed.** The ten duplicated groups the `trace.py`/`spine_rules.py` pair
+carried consolidate into a NEW themed module, `kitlib/spine.py` — the spine ROW
+vocabulary — which joins `MAPPING`, the kit README, the package roster,
+`RESYNC_PACK.md` §3 and takes `LLR-197`/`TC-193` at `CMP-006`, both
+`Drafted`: approving them here would have forced a `last_approved` refresh in
+the same act, and that refresh would have absorbed this slice's LLR-147 Detail
+amendment — laundering the re-attestation it owes. The amendment stays visible
+in `docs/ratify/CURRENT.md` for the owner's sitting. Nine
+`test_rule_sync` equality pins are deleted with the reasoning recorded in their
+place, three more were trimmed of the limb that became a call to one object
+twice, and two replacements landed: an IDENTITY pin (the deletion's warrant) and
+three by-VALUE batteries holding the half of the retired pins that was never
+about sameness. Every former name is re-exported from its original module, so
+CLI behaviour is byte-identical.
+
+**Chosen against `kitlib/registry.py`** deliberately: that module is the
+`docs/work/` SPEC-FOLDER reader — a different registry, carrier and consumer set
+— and folding the spine's row rules in would have grown the package's largest
+module into the generic bucket the adopted H-09 shape constraint forbids.
+
+**NO KERNEL DECLARATION, and that is the sanctioned answer, not a silenced
+finding:** every consumer of the new module is `CMP-006`, the component
+`LLR-197` tags it, so no cross-component edge exists for
+`docs/kernel-modules-allow` to cover. `station.py`'s deliberate absence is the
+precedent; the WI-440 multi-membership advisory surfaces the module if that
+changes.
+
+**ONE COPY DISAGREEMENT FOUND.** `trace.LLR_EXEMPT` was a `tuple`,
+`spine_rules.LLR_EXEMPT` a `set`; the pin compared `set(a) == set(b)`, so the
+type never entered the assertion — structurally blind, the slice-1 shape again.
+The one home is a `frozenset`, and the type is now pinned. `sn_draft_ids` is the
+one member that could NOT move — its body delegates to `spine_carrier`, which
+this package may not import — so its duplicate is retired the other way: both
+modules bind the sibling function directly, and the two wrappers disappear.
+
+**Measured** (the slice-1 command, both revisions; `fig:` marker in
+`docs/log.d/2026-08-23-wi448-spine-policy-pair.md`): duplicated function-body
+groups 15 -> 6, redundant copies 15 -> 6, redundant lines 202 -> 76. The
+`[dupes-census]` baseline is re-stamped down to match, and `trace.py`'s
+module-size ratchet down 5460 -> 5373.
+
 **STILL OWED BY THIS ROW — the reason it is not closed:**
 
 1. ~~**`_utf8_console`, 33 remaining copies**~~ — **LANDED 2026-08-22** (slice 2,
@@ -92,11 +135,8 @@ in the population this row has not already scoped.
    sibling") is exactly what slice 1 overturned, so the comment on
    `test_rule_sync.test_bootstraps_scaffolded_brief_uses_the_converters_own_keys`
    is now stale and must be corrected when the duplicate goes.
-3. **The `spine_rules`/`trace` spine-policy pair** — 10 duplicated groups
-   (`is_approved`, `is_founded`, `is_drafted`, `sn_all_ids`, `sn_cited_ids`,
-   `sn_draft_ids`, `phase_num`, `llr_exempt`, `load_csv`). These are POLICY,
-   not plumbing, so they are what `test_rule_sync` pins most carefully;
-   consolidating them retires more pins and needs the care slice 1 took.
+3. ~~**The `spine_rules`/`trace` spine-policy pair**~~ — **LANDED 2026-08-23**
+   (slice 3, below).
 4. **`is_example`** (the 3-home behaviour whose copies disagreed, one crashing
    on `None`), `_process_check` x2, `_norm_module` x2, `sn_rows` x2,
    `_split_tokens`/`split_refs` x2, and `wi_convert`'s `spec_paths` /

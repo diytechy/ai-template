@@ -3455,6 +3455,45 @@ the bare form: your own copy of `docs/process.toml` (regenerated from
 same bare-path text if it predates this re-sync and is worth fixing the same
 way in the same commit.
 
+### `kitlib/spine.py` — the spine ROW vocabulary gets one home [since d00a8506]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**An eighth module in `scripts/kitlib/`, and the same copy-it-whole rule.** The
+row predicates `trace.py` and `spine_rules.py` each carried their own copy of —
+`is_drafted`, `is_approved`, `is_founded`, `llr_exempt` with its `LLR_EXEMPT`
+set, `phase_num`, `sn_all_ids`, `sn_cited_ids`, `refs`, `is_example` and the
+registry CSV loader `load_csv` — now live in `scripts/kitlib/spine.py`. Nine
+duplicated function bodies, held equal by nine `tests/test_rule_sync.py` pins,
+because the retired F5 rule licensed the duplication and a test could only
+CONTAIN the drift rather than remove it. Those pins are deleted with the copies.
+
+**If you only overwrite kit files, you need do nothing but include the new
+module in the copy.** `trace.is_approved`, `spine_rules.is_drafted`,
+`trace_text.refs`, `spine_rules.LLR_EXEMPT` and every one of their siblings are
+still there under the same names and still answer identically; they are
+re-exports now. No call signature changed and no derived value changed.
+
+**One type note, and it is the only observable difference.**
+`trace.LLR_EXEMPT` was a `tuple` and `spine_rules.LLR_EXEMPT` a `set`; both are
+now the same `frozenset`. `in` is unaffected — only code that indexed the tuple
+(`LLR_EXEMPT[0]`) or mutated the set would notice, and neither existed in the
+kit.
+
+**`sn_draft_ids` is the one name that did NOT move here**, deliberately: it was
+a one-line delegation to `spine_carrier.draft_ids_from_text`, and `kitlib` may
+import no sibling of `scripts/`. Both modules now bind that function directly,
+so `trace.sn_draft_ids` and `spine_rules.sn_draft_ids` still resolve and still
+behave identically — they are simply the carrier's function under a local name.
+
+**If you have your OWN copy of any of these predicates** — a report script that
+spells out `Status.strip().lower() == "approved"`, a dashboard filter with its
+own `-000` test — this is the moment to delete it and import instead. A second
+opinion about what `Approved` means is a false green or a false red at a gate,
+which is the whole reason this consolidation happened.
+
+**Nothing in your `docs/` changes**, and no registry cell moves.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

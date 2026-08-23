@@ -20,6 +20,8 @@ LOADS registry rows, these rules JUDGE them.
 THE LAYERING, top to bottom:
 
   * `kitlib/ladder.py`  the eight rung labels and their order. Imports nothing.
+  * `kitlib/spine.py`   the ROW vocabulary: the Status predicates, the
+                        LLR-exemption set, the phase parse and the SN id scrapes.
   * `spine_rules.py`    (here) the predicates over rows, and `spine_stage` — the
                         fall-through that decides which rung a row set stands at.
   * `derive_stage.py`   the per-phase fold, the record, the file, the CLI.
@@ -63,16 +65,14 @@ live in the live spine) yet holds its rung open here (so it is visible as work i
 progress). Auditing correctness is the whole point, so every rule is
 fixture-tested (`tests/test_spine_rules.py`).
 
-Stack-agnostic, standard-library only. The small CSV/heading loaders below are
-duplicated from `trace.py` per the kit's independently-copyable-script convention
-(the F5 rule) — this stays a self-contained drop-in that never imports the
-joined-spine engine.
+Stack-agnostic, standard-library only. The row vocabulary this module used to
+duplicate from `trace.py` under the retired F5 rule now has ONE home,
+`kitlib.spine`, and is re-exported below (WI-448 slice 3) — this still never
+imports the joined-spine engine.
 
 Contracts: IF-050, IF-051 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
-import csv
-import re
 import sys
 from pathlib import Path
 
@@ -89,142 +89,68 @@ except ImportError:  # pragma: no cover - in-process fallback
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`): `kitlib.ladder`
 # is the ONE home for the eight-rung stage vocabulary this module used to define
-# (WI-498 slice 0). Same guarded idiom as the sibling import above.
+# (WI-498 slice 0), and `kitlib.spine` is the ONE home for the ROW vocabulary it
+# used to duplicate against trace.py (WI-448 slice 3). Same guarded idiom as the
+# sibling import above.
 try:
     from kitlib import ladder as _ladder
+    from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import ladder as _ladder
+    from kitlib import spine as _spine
 
-# SR Verification methods with no code to decompose, so they need a TC but no LLR.
-# This is the same policy as trace.py's orphan rule (trace.LLR_EXEMPT); the promise
-# is mechanized, not just prose — tests/test_rule_sync.py pins the two sets equal
-# (WI-099). Critique is NOT here: its artifact is produced by code, only its
-# acceptance is subjective.
-LLR_EXEMPT = {"Analysis", "Inspection", "Attest"}
+# --- THE ROW VOCABULARY, RE-EXPORTED FROM ITS ONE HOME (WI-448 slice 3) --------
+# These nine names were DUPLICATED between this module and trace.py under the
+# retired F5 rule and held equal by nine `tests/test_rule_sync.py` pins. They are
+# POLICY — what a Status word means, which Verification methods decompose to a TC
+# but no LLR, what a Phase cell parses to, which SN ids exist and which are cited
+# — and a policy disagreement between the module that ENFORCES the spine and the
+# module that DERIVES its stage is a false green or false red AT A GATE (WI-099).
+# D-8 replaced the pins with one home: `kitlib/spine.py`. The names are
+# RE-EXPORTED here, exactly as the ladder's were at WI-498 slice 0, because
+# `spine_rules.is_approved` is the spelling `derive_stage` and the test suite
+# already read, and re-pointing every citation is churn this slice does not need.
+# The rules' own rationale travelled with them and is NOT restated here.
+#
+# `LLR_EXEMPT` WAS A `set` HERE AND A `tuple` IN trace.py — behaviour-equal under
+# `in`, so the value pin was blind to it. The one home is a `frozenset`; see its
+# comment there for why immutability is the right answer for a shared kernel's
+# closed vocabulary.
+LLR_EXEMPT = _spine.LLR_EXEMPT
+load_csv = _spine.load_csv
+refs = _spine.refs
+is_example = _spine.is_example
+is_drafted = _spine.is_drafted
+is_approved = _spine.is_approved
+is_founded = _spine.is_founded
+llr_exempt = _spine.llr_exempt
+phase_num = _spine.phase_num
+sn_all_ids = _spine.sn_all_ids
+sn_cited_ids = _spine.sn_cited_ids
 
+# THE TENTH DUPLICATE, RETIRED THE OTHER WAY. `sn_draft_ids` was a one-line
+# delegation to `spine_carrier.draft_ids_from_text` in BOTH modules, and it is
+# the one member of the pair that cannot move into `kitlib`: the package's single
+# asserted rule is that it imports no sibling of `scripts/`, and a `kitlib`
+# module reaching for `spine_carrier` would smuggle the whole script graph into
+# the scaffolder (`tests/test_bootstrap.py`). So the copy is deleted rather than
+# relocated — both modules now BIND the sibling function directly under the same
+# local name, which is what the two wrapper bodies were worth.
+#
+# What the wrapper's docstring carried is the carrier's own claim and lives on
+# `spine_carrier.draft_ids_from_text`: under TOML draft-ness is a FIELD, under
+# legacy markdown it was SECTION-AS-STATE, and the dispatch between them is
+# load-bearing rather than tidy — a heading scan over a TOML file finds no
+# headings, reports zero drafts, and floats the derived stage upward.
+sn_draft_ids = spine_carrier.draft_ids_from_text
 
-# --- small self-contained loaders (duplicated from trace.py per the F5 rule) ---
-def load_csv(path):
-    if not path.exists():
-        return []
-    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
-        return list(csv.DictReader(f))
-
-
-def refs(value):
-    """Split a multi-ref cell (';', ',' or whitespace separated) into ids."""
-    return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
-
-
-def is_example(rid):
-    return (rid or "").endswith("-000")
-
-
-def is_drafted(row):
-    """A row in the pre-approval `Drafted` state (closed Status vocabulary since
-    D-9 step 1; renamed from `is_draft` with its value at step 5)."""
-    return (row.get("Status") or "").strip().lower() == "drafted"
-
-
-def is_approved(row):
-    """The `Approved` state — the row's TEXT is blessed by a human — matched
-    case-insensitively, the SAME rule as is_drafted (the one Status-casing rule,
-    process.md §4). RENAMED FROM `is_verified` AT D-9 STEP 5, carrying the ruling
-    that the vocabulary no longer makes a pass claim: `Verified` and `Planned`
-    both fold here (OI-30 D1), and whether the tests pass is the harness's
-    answer. Duplicated from trace.py per the F5 rule; pinned equal by
-    test_rule_sync."""
-    return (row.get("Status") or "").strip().lower() == "approved"
-
-
-def llr_exempt(row):
-    """SR Verification method in LLR_EXEMPT, matched on the stripped cell.
-    Duplicated in trace.py per the F5 rule; pinned equal by test_rule_sync."""
-    return (row.get("Verification") or "").strip() in LLR_EXEMPT
-
-
-def phase_num(row):
-    """The integer a row's free-form `Phase` cell digit-parses to (`v2`->2, `2`->2);
-    None when blank/unparseable. The one phase-parse the kit uses — trace.py's
-    schema rule and its `--phase` foundation filter reuse the same `\\d+` extraction
-    so a downstream repo that kept `vN` labels parses identically (the phase doctrine,
-    process.md §4). Duplicated in trace.py per the F5 rule."""
-    m = re.search(r"\d+", (row.get("Phase") or ""))
-    return int(m.group()) if m else None
-
-
-_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s+(.*)")
-
-
-def sn_all_ids(text):
-    """The SN id UNIVERSE: every `SN-###` token anywhere in stakeholder-needs.md
-    — a whole-text scrape, so a prose mention counts exactly like a table row
-    (registry-machinery-reference §2.1 records the sharp edge: an approved,
-    uncited prose mention caps the bar at DevStg-Below via the coverage rung). `-000`
-    excluded. Duplicated from trace.py per the F5 rule; pinned equal by
-    test_rule_sync (WI-408) — a divergence here would let the gate and trace's
-    itemized listing disagree about which ids the rules run over."""
-    return {u for u in re.findall(r"\bSN-\d+\b", text) if not is_example(u)}
-
-
-def sn_draft_ids(text):
-    """The set of Drafted SN ids in a needs registry's `text`, through whichever
-    CARRIER wrote it.
-
-    Under TOML draft-ness is a FIELD on the need (`status = "Drafted"`); under the
-    legacy markdown it was SECTION-AS-STATE — every `SN-###` appearing under a
-    heading containing the word "draft". Both are read; the dispatch is
-    `spine_carrier.needs_from_text`, and it is load-bearing rather than tidy: a
-    heading scan over a TOML file finds NO headings, reports ZERO drafts, and
-    every draft need reads as approved — which floats the derived gate upward.
-    A migration whose failure mode is "the gate rises" is the one shape this
-    repo can least afford, so the carrier is sniffed rather than assumed.
-
-    Retiring section-as-state also closes a live sharp edge the 2026-08-10
-    sitting hit: a prose MENTION of an id under the draft heading silently
-    re-drafted an already-attested need, because the id universe is a whole-text
-    scrape while draft-ness was a heading scan. A field cannot be set by
-    mentioning the id in a sentence. `-000` placeholders stay excluded.
-    Duplicated in spine_rules.py per the F5 rule; pinned equal by
-    test_rule_sync."""
-    return spine_carrier.draft_ids_from_text(text)
-
-
-def sn_cited_ids(srs):
-    """Every SN id cited by >=1 SR row's `SN-Refs` cell — the coverage set the
-    SN-coverage rung reads (WI-401). No filtering here: -000 rows are excluded
-    by the caller's row filter, and a Drafted SR's citation is deliberately in the
-    set (the raw view matches trace.py's orphan exemption; the ex-draft
-    counterfactual re-runs this on the non-draft subset instead). Duplicated in
-    trace.py per the F5 rule; pinned equal by test_rule_sync.
-
-    Implements: SR-049, LLR-147"""
-    return {x for r in srs for x in refs(r.get("SN-Refs"))}
-
-
-def is_founded(row):
-    """The ladder's top rung (repo-lock D-9): settled AND the artifacts the row
-    calls for EXIST. Armed for the spine at D-9 step 8, as it armed for CMP at
-    the registry status unification — the word becomes legal, no live cell moves
-    to it. What matters HERE is that it reads ABOVE `Approved`: `SPINE_MATURITY`
-    maps it to FOUNDED (never caps), so arming a word cannot LOWER the derived
-    gate — the rule the step-5 rename ran under. The DISCHARGE is computed per
-    tier elsewhere (migration plan C4); this reads the cell, like its siblings.
-    Duplicated from trace.py per F5; pinned equal by test_rule_sync.
-
-    NO CALLER IN THIS MODULE SINCE WI-498 SLICE 3, and neither has `is_approved`:
-    the Impl->Release discriminator was the last one, and it retired when Release
-    stopped being derivable from a cell — WI-500 did not bring it back, because
-    the rung's new input is a harness verdict, not a row. Both stay because what
-    they are is a
-    SHARED VOCABULARY pinned equal to trace.py's copies (test_rule_sync), not a
-    private helper of a rung — deleting the mirror of a live predicate to satisfy
-    a dead-code reading would take the pin with it. Slice 5 retired the bar axis
-    and they did NOT leave with it, which settles the question the previous
-    revision left open: the pin is the reason they exist, so they leave only if
-    the pin moves to one home."""
-    return (row.get("Status") or "").strip().lower() == "founded"
+# `is_founded` and `is_approved` have HAD NO CALLER IN THIS MODULE since WI-498
+# slice 3 — the Impl->Release discriminator was the last one, and it retired when
+# Release stopped being derivable from a cell. They stay re-exported because they
+# are SHARED VOCABULARY this module's readers spell `spine_rules.is_approved`,
+# not private helpers of a rung. Under the pins that was an argument that had to
+# be made; now it is just what a re-export is for.
 
 
 # `is_planned` WAS DELETED AT D-9 STEP 5 (not re-keyed) with the word it read:

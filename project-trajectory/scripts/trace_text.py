@@ -22,13 +22,16 @@ They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
 asks for, and what makes them cheap to test in isolation.
 
-The row primitives (`refs`, `is_example`, `is_drafted`) live here because this is
-the lower layer: `trace.py` imports them back rather than the reverse, so the
-dependency runs one way and there is no cycle.
+The row primitives (`refs`, `is_example`, `is_drafted`) are RE-EXPORTED here from
+`kitlib.spine`, their one home since WI-448 slice 3. They used to be DEFINED here
+and duplicated in `spine_rules.py`; `trace.py` still imports them back from this
+module by name, so the dependency runs one way and there is no cycle.
 
-This is NOT the shared-`_kitcommon` shape that was ruled out for breaking a
-script's independent copy-ability: it is one module's own core, imported by that
-one module. A re-sync copies two files where it copied one (ADOPTING.md §6).
+The shared-`_kitcommon` shape this module's split once avoided is no longer ruled
+out — owner ruling D-8 (`OI-16`) replaced F5, and `kitlib` IS that home, shipped
+as a whole directory so a partial copy ImportErrors rather than degrading. What
+stays true of this file is the narrower claim: it is one module's own TEXT core,
+imported by that one module (ADOPTING.md §6).
 
 Contracts: IF-076 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
@@ -39,35 +42,34 @@ LLR-179 (ears_advisories).
 """
 
 import re
+import sys
+from pathlib import Path
 
+# THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`). Same guarded
+# idiom the other scripts use: run as a subprocess this file's own dir is
+# sys.path[0], so the plain import resolves; the fallback covers an in-process
+# import whose sys.path does not yet carry scripts/.
+try:
+    from kitlib import spine as _spine
+except ImportError:  # pragma: no cover - in-process fallback
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from kitlib import spine as _spine
 
-def refs(value):
-    """Split a multi-ref cell (';', ',' or whitespace separated) into ids."""
-    return [t for t in re.split(r"[;,\s]+", (value or "").strip()) if t]
-
-
-def is_example(rid):
-    return (rid or "").endswith("-000")
-
-
-def is_drafted(row):
-    """A row in the pre-approval `Drafted` state (derived-gate model §3): exempt
-    from the child-completeness orphan rules (a Drafted SR needs no LLR/TC, a
-    Drafted LLR needs no TC) and from the --require-verified criterion, so a
-    requirement lives in the live spine while it is being drafted.
-
-    RENAMED FROM `is_draft` AT D-9 MIGRATION STEP 5 with the value it reads
-    (`Draft` -> `Drafted`). `Status` is a CLOSED vocabulary since step 1 and
-    reached D-9's ruled ladder at steps 7/8 — `{Drafted, Approved, Founded}`,
-    the transitional `Modified` retired and `Founded` armed. No predicate
-    anywhere honours a retired word, which `tests/test_rule_sync.py` asserts
-    negatively over the source of every script.
-
-    THIS TIER OWNS ONLY THE BOTTOM RUNG, and deliberately: `is_drafted` lives
-    here because the pure text/row predicates do, while `is_approved` and
-    `is_founded` live in `trace.py` and `spine_rules.py` as the F5-duplicated
-    pair. A third copy here would be a third answer to the same question."""
-    return (row.get("Status") or "").strip().lower() == "drafted"
+# THE ROW PRIMITIVES, RE-EXPORTED FROM THEIR ONE HOME (WI-448 slice 3). They were
+# DEFINED here and duplicated in `spine_rules.py` under the retired F5 rule; the
+# rule now lives in `kitlib/spine.py`, and these names stay because `trace.py`
+# imports all three from this module by name. `is_drafted` in particular was the
+# copy `tests/test_rule_sync.py` pinned against `spine_rules`' — the pin is gone
+# because there is nothing left to hold equal.
+#
+# The tier claim this module used to make about `is_drafted` — "the pure text/row
+# predicates live here, while `is_approved`/`is_founded` live in trace.py and
+# spine_rules.py as the F5-duplicated pair" — EXPIRED with the pair. All three
+# Status predicates now sit at the same tier, below every reader, which is what
+# the claim was reaching for and could not have while F5 stood.
+refs = _spine.refs
+is_example = _spine.is_example
+is_drafted = _spine.is_drafted
 
 
 # Source-file extensions stripped when normalizing a module path so the two

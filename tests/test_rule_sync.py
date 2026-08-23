@@ -1,12 +1,20 @@
-"""Pin the gate-policy that trace.py and spine_rules.py each carry to be equal.
+"""Pin the duplicated POLICY across the kit's scripts — or, where it has been
+consolidated, pin that there is nothing left to hold equal.
 
-The F5 rule lets the kit's scripts duplicate *plumbing* (small CSV/heading loaders)
-so each stays an independently-copyable drop-in. But the two files also duplicate
-*policy* — which SR Verification methods are LLR-exempt, and what "Drafted" means —
-and policy disagreement is a false green or false red at a gate, the exact failure
-class the kit exists to prevent (repo-review-2026-07-12b.md M1 -> WI-099). These
-tests mechanize the "kept in sync" promise the two files used to make only in prose:
-import both modules and assert they agree.
+THE FILE'S ORIGINAL SUBJECT — the gate policy `trace.py` and `spine_rules.py`
+each carried a copy of — IS GONE (WI-448 slice 3). Which SR Verification methods
+are LLR-exempt, what "Drafted"/"Approved"/"Founded" mean, what a `Phase` cell
+parses to, which SN ids exist and which are cited: nine duplicated bodies, nine
+equality pins, one home now (`kitlib.spine`). Policy disagreement between the
+module that ENFORCES the spine and the module that DERIVES its stage is a false
+green or false red at a gate — the exact failure class the kit exists to prevent
+(repo-review-2026-07-12b.md M1 -> WI-099) — and it is now unrepresentable rather
+than detected. The block below the imports records the deletion and keeps the
+half of those batteries that was about VALUES, not sameness.
+
+What is still pinned by equality here is the policy the kit still duplicates on
+purpose: the `[checks]` enablement readers, the carrier reader/writer inverse,
+`is_example`'s third home, and the ref splitters.
 
 THE F5 RULE'S LIVE HOME, AND THE ANTI-DRIFT TOOL OF RECORD (owner ruling
 2026-08-10, repo-lock D-7; executed WI-426). F5 is the kit's standing ruling
@@ -46,86 +54,139 @@ TRACE = load_script("trace")
 GATE = load_script("spine_rules")
 
 
-def test_llr_exempt_sets_agree():
-    # The one policy set: SR Verification methods that decompose to a TC but no
-    # LLR. If one file adds a method to the exempt set and the other does not, the
-    # orphan report and the derived gate disagree about what "decomposed" means.
-    assert set(TRACE.LLR_EXEMPT) == set(GATE.LLR_EXEMPT)
-    assert set(TRACE.LLR_EXEMPT) == {"Analysis", "Inspection", "Attest"}
+# --- the spine ROW vocabulary: WAS a duplicated PAIR, now ONE home (WI-448) ----
+# EIGHT EQUALITY TESTS STOOD HERE AND THEY ARE GONE, which is the point of this
+# block. `test_llr_exempt_sets_agree`, `test_is_drafted_agrees`,
+# `test_is_approved_agrees`, `test_is_founded_agrees`, `test_llr_exempt_agrees`,
+# `test_sn_all_ids_agrees`, `test_sn_cited_ids_agrees` and
+# `test_sn_draft_ids_agrees` each imported both modules and asserted one
+# predicate answered identically in each, over a casing/whitespace/None battery.
+# They were the D-7 bar's whole content for this pair: F5 licensed the
+# duplication, so the best a test could do was CONTAIN the drift.
+#
+# Owner ruling D-8 (`OI-16`) moved the rules into `kitlib.spine`; `trace.py`,
+# `trace_text.py` and `spine_rules.py` re-export them, so "the copies agree" is
+# no longer a property that can FAIL — there are no copies. A test asserting a
+# function equals itself is not a weaker pin, it is a VACUOUS one, and this
+# file's `_sn_fields` lesson is that vacuous agreement reads green while checking
+# nothing. Drift is now UNREPRESENTABLE rather than DETECTED, which is this
+# repo's stated preference (the declared-line precedent, further down).
+#
+# THE COPIES DID DISAGREE, once, in a way every one of those batteries was blind
+# to: `trace.LLR_EXEMPT` was a `tuple` and `spine_rules.LLR_EXEMPT` a `set`. The
+# pin compared `set(...) == set(...)`, so the type never entered the assertion —
+# the same structural blindness the spec-folder extraction found in a comment.
+# The one home is a `frozenset`.
+#
+# What survives is what was never about sameness: the VALUES. Each battery
+# carried absolute expectations — the retired spellings must answer False, a
+# whitespace-padded valid method IS exempt, the SN scrape is whole-text — and
+# those are claims about the rule, not about the copies, so they are kept below
+# on the one home. The identity test is what warrants deleting the rest.
+import kitlib.spine as KITSPINE  # noqa: E402  (after the load_script calls above)
 
 
-def test_is_drafted_agrees():
-    # Both files decide the pre-approval `Drafted` state. Pin them equivalent
-    # across the casing/whitespace/None battery. THE RETIRED SPELLING IS IN THE
-    # BATTERY DELIBERATELY (D-9 step 5): `draft` must now answer False in BOTH
-    # copies, so a half-migrated tree fails here rather than reading a retired
-    # word in one module and not the other.
-    cases = [
-        {"Status": "Drafted"},
-        {"Status": "drafted"},
-        {"Status": "  DRAFTED  "},
-        {"Status": "Draft"},
-        {"Status": "Approved"},
-        {"Status": "Modified"},
-        {"Status": ""},
-        {"Status": None},
-        {},
-    ]
-    for row in cases:
-        assert TRACE.is_drafted(row) == GATE.is_drafted(row), row
-    assert TRACE.is_drafted({"Status": "Draft"}) is False
-    assert GATE.is_drafted({"Status": "Draft"}) is False
+def test_the_spine_row_vocabulary_is_one_home():
+    # The deletion's warrant, asserted by IDENTITY rather than by value: a value
+    # battery over one shared function is exactly the vacuous shape above.
+    # `is_drafted`/`is_example`/`refs` reach trace.py through `trace_text`, which
+    # re-exports the same objects, so the chain is asserted end to end.
+    for name in (
+        "is_approved",
+        "is_founded",
+        "llr_exempt",
+        "phase_num",
+        "sn_all_ids",
+        "sn_cited_ids",
+        "load_csv",
+    ):
+        want = getattr(KITSPINE, name)
+        assert getattr(TRACE, name) is want, name
+        assert getattr(GATE, name) is want, name
+    TEXT = load_script("trace_text")
+    for name in ("is_drafted", "is_example", "refs"):
+        want = getattr(KITSPINE, name)
+        assert getattr(TEXT, name) is want, name
+        assert getattr(TRACE, name) is want, name
+        assert getattr(GATE, name) is want, name
+    assert TRACE.LLR_EXEMPT is GATE.LLR_EXEMPT is KITSPINE.LLR_EXEMPT
+    # THE TENTH DUPLICATE, retired the other way: `sn_draft_ids` was a one-line
+    # delegation in both modules and CANNOT live in `kitlib` (that package may
+    # import no sibling of scripts/, or the whole graph follows it into the
+    # scaffolder). Both now bind the carrier's function directly, so the pin is
+    # still an identity — just onto `spine_carrier` instead.
+    # Asserted against the carrier module EACH ONE ITSELF IMPORTED, not against a
+    # `load_script("spine_carrier")` of our own: `load_script` builds a fresh
+    # module object per call, so a cross-instance `is` would compare two distinct
+    # copies of the same source and fail for a reason that is about the fixture.
+    assert TRACE.sn_draft_ids is TRACE.spine_carrier.draft_ids_from_text
+    assert GATE.sn_draft_ids is GATE.spine_carrier.draft_ids_from_text
 
 
-def test_is_approved_agrees():
-    # Both files decide the `Approved` state (the DevStg-Impl --require-verified
-    # criterion in trace.py, the gate derivation in spine_rules.py). Matched
-    # case-insensitively — the one Status-casing rule (M3 -> WI-101) — so pin the
-    # two equivalent across the same casing/whitespace/None battery as is_drafted.
-    # The two RETIRED spellings that folded into this value (`Verified`,
-    # `Planned`) are in the battery and must both answer False.
-    cases = [
-        {"Status": "Approved"},
-        {"Status": "approved"},
-        {"Status": "  APPROVED  "},
-        {"Status": "Verified"},
-        {"Status": "Planned"},
-        {"Status": "Drafted"},
-        {"Status": "Modified"},
-        {"Status": ""},
-        {"Status": None},
-        {},
-    ]
-    for row in cases:
-        assert TRACE.is_approved(row) == GATE.is_approved(row), row
-    for retired in ("Verified", "Planned"):
-        assert TRACE.is_approved({"Status": retired}) is False, retired
-        assert GATE.is_approved({"Status": retired}) is False, retired
+def test_the_status_predicates_answer_by_value():
+    # The half of the deleted batteries that was never about sameness: what the
+    # rules ANSWER. The RETIRED SPELLINGS ARE IN HERE DELIBERATELY (D-9 step 5 /
+    # step 7 / OI-30 D1) — `Draft`, `Verified`, `Planned` and `Modified` must all
+    # read False everywhere, so a half-migrated tree fails here rather than
+    # honouring a word the closed enum no longer holds.
+    for row, want in [
+        ({"Status": "Drafted"}, True),
+        ({"Status": "drafted"}, True),
+        ({"Status": "  DRAFTED  "}, True),
+        ({"Status": "Draft"}, False),  # RETIRED spelling
+        ({"Status": "Approved"}, False),
+        ({"Status": ""}, False),
+        ({"Status": None}, False),
+        ({}, False),
+    ]:
+        assert KITSPINE.is_drafted(row) is want, row
+    for row, want in [
+        ({"Status": "Approved"}, True),
+        ({"Status": "approved"}, True),
+        ({"Status": "  APPROVED  "}, True),
+        ({"Status": "Verified"}, False),  # RETIRED — folded, not honoured
+        ({"Status": "Planned"}, False),  # RETIRED — folded (OI-30 D1)
+        ({"Status": "Modified"}, False),  # RETIRED at step 7
+        ({"Status": "Drafted"}, False),
+        ({"Status": None}, False),
+        ({}, False),
+    ]:
+        assert KITSPINE.is_approved(row) is want, row
+    for row, want in [
+        ({"Status": "Founded"}, True),
+        ({"Status": "founded"}, True),
+        ({"Status": "  FOUNDED  "}, True),
+        ({"Status": "Approved"}, False),
+        ({"Status": "Modified"}, False),
+        ({"Status": None}, False),
+        ({}, False),
+    ]:
+        assert KITSPINE.is_founded(row) is want, row
 
 
-def test_is_founded_agrees():
-    # Both files decide the ladder's TOP rung, armed for the spine at D-9 step 8
-    # (trace.py for the LLR-status advisory's exemption, spine_rules.py for the
-    # SPINE_MATURITY lookup and the Impl->Release discriminator). Divergence
-    # would let a Founded row read settled on one surface and unblessed on the
-    # other — the same false-green class the is_drafted/is_approved pins exist
-    # for. Same casing/whitespace/None battery, plus the two sibling live values
-    # and the RETIRED `Modified` (each must read NOT-founded in both).
-    cases = [
-        {"Status": "Founded"},
-        {"Status": "founded"},
-        {"Status": "  FOUNDED  "},
-        {"Status": "Approved"},
-        {"Status": "Drafted"},
-        {"Status": "Modified"},
-        {"Status": ""},
-        {"Status": None},
-        {},
-    ]
-    for row in cases:
-        assert TRACE.is_founded(row) == GATE.is_founded(row), row
-    assert TRACE.is_founded({"Status": "Founded"}) is True
-    assert GATE.is_founded({"Status": "Modified"}) is False
+def test_the_llr_exemption_answers_by_value():
+    # Review 017's case, kept: the two former copies disagreed on a
+    # whitespace-padded valid method (one stripped, one did not), which is a
+    # false green on one surface and a false red on the other for ONE registry
+    # state. The direction is pinned, not merely the sameness.
+    assert set(KITSPINE.LLR_EXEMPT) == {"Analysis", "Inspection", "Attest"}
+    for row, want in [
+        ({"Verification": "Analysis"}, True),
+        ({"Verification": " Analysis "}, True),  # the 017 case itself
+        ({"Verification": "Attest  "}, True),
+        ({"Verification": "Inspection"}, True),
+        ({"Verification": "analysis"}, False),  # closed vocab stays case-sensitive
+        ({"Verification": "Test"}, False),
+        ({"Verification": ""}, False),
+        ({"Verification": None}, False),
+        ({}, False),
+    ]:
+        assert KITSPINE.llr_exempt(row) is want, row
+    # A FROZENSET, and the type is now part of the pin: the tuple/set divergence
+    # the equality batteries could not see is closed by making the shared
+    # kernel's closed vocabulary immutable — a caller that mutated it would move
+    # the gate for every other reader in the process.
+    assert isinstance(KITSPINE.LLR_EXEMPT, frozenset)
 
 
 def test_is_modified_is_GONE_from_both_copies():
@@ -139,6 +200,10 @@ def test_is_modified_is_GONE_from_both_copies():
     # forbids for every module at once.
     assert not hasattr(TRACE, "is_modified")
     assert not hasattr(GATE, "is_modified")
+    # ...and not on the one home either, since WI-448 slice 3: a re-export can
+    # only hand back what the shared module defines, so this is where a
+    # resurrected predicate would actually have to appear.
+    assert not hasattr(KITSPINE, "is_modified")
     # ...and the SPINE_MATURITY row went with it, per the registry-status
     # unification §5B. A ladder table that still mapped the word would be a
     # third reader of it, one the predicate grep below cannot see (it is a dict
@@ -154,10 +219,15 @@ def test_is_planned_is_GONE_from_both_copies():
     # and a surviving copy would be a second reader of a retired word.
     assert not hasattr(TRACE, "is_planned")
     assert not hasattr(GATE, "is_planned")
+    assert not hasattr(KITSPINE, "is_planned")  # the one home, WI-448 slice 3
 
 
 def test_the_three_recognized_status_values_are_mutually_exclusive():
-    # EXACTLY ONE predicate answers for each declared value, in BOTH copies.
+    # EXACTLY ONE predicate answers for each declared value.
+    # IT USED TO SAY "IN BOTH COPIES" and looped over `(TRACE, GATE)`; WI-448
+    # slice 3 gave the three predicates one home, so that loop ran the same
+    # objects twice — the vacuous shape this file refuses. The claim it makes is
+    # untouched and is about the ENUM, not about copies.
     # This is the assertion that makes `trace.STATUS_VALUES` — the closed enum
     # the integrity floor now enforces — a truthful declaration rather than a
     # list of words: the enum-close-first rule the D-9 migration runs under says
@@ -171,11 +241,10 @@ def test_the_three_recognized_status_values_are_mutually_exclusive():
     assert TRACE.STATUS_VALUES == frozenset({"Drafted", "Approved", "Founded"})
     for val in sorted(TRACE.STATUS_VALUES):
         row = {"Status": val}
-        for mod in (TRACE, GATE):
-            hits = [name for name in predicates if getattr(mod, name)(row)]
-            assert hits == ["is_" + val.lower()], "{}: {} matched {}".format(
-                mod.__name__, val, hits or "nothing"
-            )
+        hits = [name for name in predicates if getattr(KITSPINE, name)(row)]
+        assert hits == ["is_" + val.lower()], "{}: {} matched {}".format(
+            KITSPINE.__name__, val, hits or "nothing"
+        )
     # ...and the declared enum has no member no predicate answers for, which is
     # the direction that actually bit: a value can be added to a registry cell
     # and to this set while every surface stays blind to it.
@@ -290,30 +359,6 @@ def test_status_findings_ride_the_integrity_floor_not_the_schema_gate():
     assert TRACE.enum_integrity_findings("SR", [dict(row, **{"SR-ID": "SR-000"})]) == []
 
 
-def test_llr_exempt_agrees():
-    # Both files decide the LLR-exemption at their own decision point (trace's
-    # orphan rule, spine_rules's sr_bar). Review 017 caught them disagreeing on
-    # a whitespace-padded valid method (spine_rules stripped, trace did not) —
-    # the exact false-green/false-red divergence WI-099 promised away. Pin the
-    # predicate equivalent, and pin the padded case to the fixed direction.
-    cases = [
-        {"Verification": "Analysis"},
-        {"Verification": " Analysis "},
-        {"Verification": "Inspection"},
-        {"Verification": "Attest"},
-        {"Verification": "analysis"},  # closed vocab stays case-sensitive
-        {"Verification": "Test"},
-        {"Verification": ""},
-        {"Verification": None},
-        {},
-    ]
-    for row in cases:
-        assert TRACE.llr_exempt(row) == GATE.llr_exempt(row), row
-    # the 017 case itself: whitespace-padded valid method IS exempt, in both
-    assert TRACE.llr_exempt({"Verification": " Analysis "}) is True
-    assert GATE.llr_exempt({"Verification": "Attest  "}) is True
-
-
 def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     # WI-259 (repo-review-2026-07-21 M-5): trace's --require-verified DevStg-Impl bar and
     # spine_rules.sr_bar must agree about which SRs must be Approved before DevStg-Impl.
@@ -410,84 +455,64 @@ def test_require_verified_bar_matches_sr_gate_regardless_of_method(scaffold):
     assert "Verification=Demonstration but Status=Modified" in proc.stdout
 
 
-def test_sn_draft_ids_agrees():
-    # Both files scan stakeholder-needs.md for SNs under a "draft" heading
-    # (section-as-state maturity). Pin them equivalent across headings, -000
-    # placeholders, and section boundaries.
-    texts = [
-        "## Drafted\nSN-010 something\n## Approved\nSN-011 done\n",
-        "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
-        "## DRAFT (in review)\nSN-030 SN-000 SN-031\n",
-        "## Approved only\nSN-040\n",
-        "SN-050 no heading at all\n",
-        "",
-    ]
-    for text in texts:
-        assert TRACE.sn_draft_ids(text) == GATE.sn_draft_ids(text), text
-
-
-def test_sn_all_ids_agrees():
-    # WI-408 (WI-401 REVIEW-A finding 2): the SN id-UNIVERSE scrape is the third
-    # SN policy duplicate in the pair — both files decide WHICH ids the draft and
-    # coverage rules run over with the same whole-text scrape, and it was the one
-    # duplicate the WI-401 "both surfaces read the same state" promise rested on
-    # that no pin held. If the two scrapes diverge, the gate and the itemized
-    # listing can disagree about which ids exist — the exact WI-099 class the
-    # sn_cited_ids pin exists to prevent. Pin the parse equivalent across prose
-    # mentions, table rows, draft sections, -000 placeholders, and empty text.
-    texts = [
-        "",
-        "SN-001 mentioned in prose, no table row at all\n",
-        "| SN-002 | a table row |\n\n## Drafted\n\nSN-003\n",
-        "SN-000 placeholder only\n",
-        "## Approved\n\nSN-004 twice SN-004, then SN-005.\nAnd SN-006#frag.\n",
-        "no ids here\n",
-    ]
-    for text in texts:
-        assert TRACE.sn_all_ids(text) == GATE.sn_all_ids(text), text
-    # Semantics pins: the scrape is WHOLE-TEXT — a prose-mentioned id is in the
-    # universe exactly like a table row (the §2.1 sharp edge: approved + uncited
-    # means the coverage rung caps the gate at DevStg-Below). Drafted-section ids are
-    # included (the draft/coverage split happens later, on sn_draft_ids); only
-    # -000 placeholders are excluded.
-    assert GATE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
+def test_the_sn_scrapes_answer_by_value():
+    # The surviving half of `test_sn_all_ids_agrees` (WI-408),
+    # `test_sn_cited_ids_agrees` (WI-401) and `test_sn_draft_ids_agrees`. Their
+    # equality loops retired with the copies; these are the SEMANTICS each
+    # battery also pinned, which are claims about the RULE, not about the copies.
+    #
+    # The scrape is WHOLE-TEXT: a prose-mentioned id is in the universe exactly
+    # like a table row (the registry-machinery-reference §2.1 sharp edge —
+    # approved + uncited caps the derived stage through the coverage rung).
+    # Drafted-section ids are INCLUDED; the draft/coverage split happens later,
+    # on sn_draft_ids. Only -000 placeholders are excluded.
+    assert KITSPINE.sn_all_ids("prose SN-010\n## Drafted\nSN-011 and SN-000\n") == {
         "SN-010",
         "SN-011",
     }
-
-
-def test_sn_cited_ids_agrees():
-    # WI-401: the SN-coverage rung made SR SN-Refs a GATE input, so "which SN ids
-    # do the SRs cite" is policy duplicated across the pair — trace.py's
-    # "SN has no SR" orphan listing and spine_rules.py's coverage rung must read
-    # the SAME set, or the gate and the itemized findings contradict on one
-    # registry state (the exact WI-099 divergence class). Pin the parse
-    # equivalent across separators, empties, and absent cells.
-    batteries = [
-        [],
-        [{"SN-Refs": "SN-001"}],
-        [{"SN-Refs": "SN-001;SN-002"}, {"SN-Refs": "SN-002, SN-003"}],
-        [{"SN-Refs": " SN-004  SN-005 "}],
-        [{"SN-Refs": ""}, {"SN-Refs": None}, {}],
-        [{"SN-Refs": "SN-000"}],
-        [{"SN-Refs": "SN-006", "Status": "Drafted"}],
-    ]
-    for rows in batteries:
-        assert TRACE.sn_cited_ids(rows) == GATE.sn_cited_ids(rows), rows
-    # Semantics pins: every separator splits; the function filters NOTHING itself.
-    # -000 rows are excluded by the CALLER's row filter (compute/analyze), and a
-    # Drafted SR's citation is deliberately IN the set — the raw-view exemption the
-    # double-counting seam manages (spine_rules's ex-draft view re-runs the same
-    # parse on the non-draft subset instead of special-casing it here).
-    assert GATE.sn_cited_ids([{"SN-Refs": "SN-001;SN-002 SN-003,SN-000"}]) == {
+    assert KITSPINE.sn_all_ids("") == set()
+    assert KITSPINE.sn_all_ids("no ids here\n") == set()
+    assert KITSPINE.sn_all_ids("SN-004 twice SN-004, then SN-005. SN-006#frag.\n") == {
+        "SN-004",
+        "SN-005",
+        "SN-006",
+    }
+    # Every separator splits, and the function filters NOTHING itself: -000 rows
+    # are excluded by the CALLER's row filter, and a Drafted SR's citation is
+    # deliberately IN the set — the raw-view exemption the double-counting seam
+    # manages (the ex-draft view re-runs the same parse on the non-draft subset
+    # instead of special-casing it here).
+    assert KITSPINE.sn_cited_ids([{"SN-Refs": "SN-001;SN-002 SN-003,SN-000"}]) == {
         "SN-001",
         "SN-002",
         "SN-003",
         "SN-000",
     }
-    assert TRACE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Drafted"}]) == {
+    assert KITSPINE.sn_cited_ids([{"SN-Refs": " SN-004  SN-005 "}]) == {
+        "SN-004",
+        "SN-005",
+    }
+    assert KITSPINE.sn_cited_ids([{"SN-Refs": ""}, {"SN-Refs": None}, {}]) == set()
+    assert KITSPINE.sn_cited_ids([{"SN-Refs": "SN-006", "Status": "Drafted"}]) == {
         "SN-006"
     }
+    # The draft scrape's section-as-state battery, kept on the CARRIER that owns
+    # it now that both wrappers bind straight to it. The heading match is
+    # case-insensitive and substring ("## DRAFT (in review)" counts), it resets
+    # at the next heading, and -000 is excluded here too.
+    CARRIER = load_script("spine_carrier")
+    for text, want in [
+        ("## Drafted\nSN-010 x\n## Approved\nSN-011 done\n", {"SN-010"}),
+        (
+            "# Needs\nSN-001\n### Drafted candidates\nSN-020\nSN-021\n",
+            {"SN-020", "SN-021"},
+        ),
+        ("## DRAFT (in review)\nSN-030 SN-000 SN-031\n", {"SN-030", "SN-031"}),
+        ("## Approved only\nSN-040\n", set()),
+        ("SN-050 no heading at all\n", set()),
+        ("", set()),
+    ]:
+        assert CARRIER.draft_ids_from_text(text) == want, text
 
 
 def test_the_legacy_approval_translation_agrees():
@@ -740,14 +765,14 @@ def test_the_need_reader_agrees_with_both_heading_scrapers():
     md = ROOT / "docs/requirements/stakeholder-needs.md"
     if not md.is_file():
         return  # post-cutover: the twins are gone and this pin retires with them
+    #
+    # The `TRACE.x == GATE.x` halves went at WI-448 slice 3 with the copies —
+    # both names resolve to the one home now, so the only agreement still worth
+    # asserting is the carrier's reader against the scrape it replaces.
     text = md.read_text(encoding="utf-8")
     needs = SPINE.load_needs(md)
-    assert SPINE.need_ids(needs) == TRACE.sn_all_ids(text) == GATE.sn_all_ids(text)
-    assert (
-        SPINE.draft_need_ids(needs)
-        == TRACE.sn_draft_ids(text)
-        == GATE.sn_draft_ids(text)
-    )
+    assert SPINE.need_ids(needs) == KITSPINE.sn_all_ids(text)
+    assert SPINE.draft_need_ids(needs) == SPINE.draft_ids_from_text(text)
     assert needs, "the fixture read no needs — the agreement would be vacuous"
 
 
@@ -815,9 +840,15 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
     # under TOML draft-ness is a FIELD, which is what retires the sharp edge the
     # 2026-08-10 sitting hit. Reading legacy text by the new rule would silently
     # un-draft needs in every un-migrated repo and float the derived gate.
+    #
+    # THE `TRACE.sn_draft_ids == GATE.sn_draft_ids` HALF IS GONE (WI-448 slice
+    # 3): both wrappers were deleted and both names now BIND this very function,
+    # so re-asserting them here would have been the same call written three
+    # times. The identity is pinned once, in
+    # `test_the_spine_row_vocabulary_is_one_home`; what stays here is the
+    # carrier's own two-rule claim, which is what this test was ever about.
     legacy = "## Draft needs\nSN-000 SN-005\n"
     assert SPINE.draft_ids_from_text(legacy) == {"SN-005"}
-    assert TRACE.sn_draft_ids(legacy) == GATE.sn_draft_ids(legacy) == {"SN-005"}
 
     # The same claim under the new carrier is a field, and a MENTION does not
     # set it: SN-006 is named in SN-005's prose and stays approved.
@@ -826,12 +857,11 @@ def test_draft_ness_reads_by_the_rule_the_file_was_written_under():
         '[need.SN-006]\nstatus = "Approved"\nneed = "supersedes SN-005"\n'
     )
     assert SPINE.draft_ids_from_text(modern) == {"SN-005"}
-    assert TRACE.sn_draft_ids(modern) == GATE.sn_draft_ids(modern) == {"SN-005"}
 
     # And the id UNIVERSE keeps working unchanged across both, because the
     # prefixed token survives into the table key — the measured reason D-5 kept
     # the prefix rather than taking a bare numeric one.
-    assert TRACE.sn_all_ids(modern) == {"SN-005", "SN-006"}
+    assert KITSPINE.sn_all_ids(modern) == {"SN-005", "SN-006"}
 
 
 # --- the [checks] enablement readers (WI-432) ----------------------------------
