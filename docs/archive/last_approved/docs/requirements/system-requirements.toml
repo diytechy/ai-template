@@ -1010,3 +1010,17 @@ verification = "Test"
 status = "Approved"
 phase = 5
 aspect = "process"
+
+[requirement.SR-182]
+title = "Duplicated function bodies in the kit's own scripts are measured against a stamped baseline, never gated"
+sn_refs = ["SN-007"]
+boundary_refs = ["B-05"]
+hat_refs = ["CONSISTENCY"]
+requirement = """The delivered harness shall report the kit's own duplicated-function-body count against a stamped baseline at a warn-only severity, never gating a bar on it."""
+rationale = """Realizes SN-007 (the kit holds itself to its own standard): the consolidation doctrine states the goal in prose, and a number that moves is what proves it is not just prose. Deliberately narrower than an earlier, retired duplication-census step that GATED on an unbounded population where most of its findings registered as accepted idioms — that step was torn down and duplication left unbounded by design, and this row does not revisit that: the response clause's "never gating" is not a style choice, it is the boundary this row states as the obligation itself. One row because the standing measurement and its never-gating posture are one contract: a version of this check that gated would be a different requirement, not a stricter reading of this one."""
+acceptance_criteria = """A fresh run reports the current duplicated-function-body group/copy/line counts over the kit's own script tree; when compared against a stamped baseline (the current carrier: `docs/stack.ini` `[dupes-census]`) any count above baseline is reported as a finding naming the delta, any count below baseline is reported as an invitation to re-stamp downward, and an unstamped repo (no baseline yet) reports the bare reading; the check exits 0 in every one of those cases, including under `--strict` — a gating change here is a new requirement, not a tightened acceptance of this one."""
+priority = "S"
+verification = "Test"
+status = "Approved"
+phase = 5
+aspect = "process"

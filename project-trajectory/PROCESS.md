@@ -177,6 +177,19 @@ Stable, zero-padded, never reused.
   bar requires).
 - **Modularity/dedup**: shared logic in exactly one place; pure cores separated
   from I/O/GUI shells; small functions; one-page-readable architecture.
+- **Consolidate, don't duplicate — the 0→A→B rule.** Edit-conservatively (agent
+  guide, "Working agreement") is scoped to the task in front of you: smallest
+  diff, within that one change. Across the codebase the goal is the opposite —
+  prefer the change that minimizes **total** behavior. When a fix wants the
+  same code in two places, don't patch each site: extract the shared stage
+  both sites call through, so two independent paths to a result (0→B, 0→D)
+  become one shared stage feeding both (0→A→B, 0→A→D). Where two or more
+  existing outputs already overlap, restructure so each behavior has exactly
+  one home — never an original plus a near-copy. The same principle governs
+  validation and error handling: implement once, at the boundary that owns the
+  behavior, never re-derived at each caller — this is the antidote skill's
+  "validate once at the boundary" applied at repo scale (vendored at
+  `skills/antidote/`, a per-fix companion to this repo-scale doctrine).
 - **Thin orchestrators**: an entry point / top-level routine should *compose, not
   compute* — a short, ordered sequence of well-named calls so that reading it is
   the high-level flow. Push logic down into the named steps. The flow is

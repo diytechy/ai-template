@@ -1912,3 +1912,14 @@ automated = "Yes"
 evidence = """tests/test_trace.py::test_missing_required_if_field_is_a_warn; tests/test_trace.py::test_out_of_vocabulary_aspect_is_a_schema_finding"""
 status = "Drafted"
 phase = 5
+
+[test.TC-190]
+verifies = ["SR-182", "LLR-195"]
+level = "Integration"
+method = """Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_dupes_census.py as a subprocess: no baseline stamped reports the bare reading and exits 0; a reading unchanged from a stamped baseline reports OK; a reading worse than baseline (new duplicate function added) prints a WARN naming the regression and exits 0 under both no-flag and --strict — the never-gates-even-under---strict pin; a reading better than baseline (duplicate removed) asks for a downward re-stamp and still exits 0; an absent project-trajectory/scripts/ directory is vacuously OK."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-195 (parent SR-182)"
+automated = "Yes"
+evidence = "tests/test_check_dupes_census.py"
+status = "Approved"
+phase = 5

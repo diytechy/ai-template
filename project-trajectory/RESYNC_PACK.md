@@ -3269,6 +3269,61 @@ a script that imported the old name in-process needs the new one.
 
 ---
 
+### The consolidation doctrine lands, plus a standing duplication census [since 1806f5c8]
+
+*(Anchored at the preceding commit: an entry cannot know its own SHA.)*
+
+**What changed.** `CLAUDE.md`, `AGENTS.template.md` and `PROCESS.md` gain a
+consolidation clause beside (not replacing) edit-conservatively: conservative
+WITHIN a task, consolidating ACROSS the codebase when the task itself is
+consolidation — prefer the change that minimizes TOTAL behavior, extract the
+shared stage a duplicated fix wants (the 0→A→B rule), restructure where
+outputs overlap. The full text lives once, in `PROCESS.md` §3
+("Consolidate, don't duplicate — the 0→A→B rule"); `CLAUDE.md` and
+`AGENTS.template.md` each carry a one-line pointer, not a restatement.
+
+A new standing check, `scripts/check_dupes_census.py`
+(`[step:dupes-census]` in `docs/stack.ini`, `layer = product`,
+`from-stage = DevStg-Impl`), measures duplicated function bodies across
+your own `scripts/` tree — the WI-448 function-body-hash census, now a named
+function instead of a `python -c` one-liner. It is **WARN-ONLY FOREVER**:
+it never fails a gate, not even under `--strict`. The baseline lives in
+`docs/stack.ini` `[dupes-census]` (`groups`/`copies`/`lines`), hand
+re-stamped downward-only with a reason, the same convention the module-size
+and smoke-budget ratchets already use.
+
+**What you must do.** Merge the three doctrine edits (small, additive) and
+either adopt `[step:dupes-census]` + `check_dupes_census.py` verbatim, or skip
+it if your repo already ran and retired an equivalent (this kit's own history
+did exactly that — see `docs/stack.ini`'s retired `[step:dupes]` note — before
+OI-58 re-armed a deliberately narrower, never-gating version). If you adopt
+it, stamp your own baseline: run `check_dupes_census.py --root .` once with no
+baseline present, and write the printed reading into `[dupes-census]`.
+
+### `antidote` joins the shipped skill set, vendored [since 1806f5c8]
+
+*(Anchored at the preceding commit: an entry cannot know its own SHA.)*
+
+**What changed.** `project-trajectory/skills/antidote/SKILL.md` is a new
+**vendored** (not authored) `kit`-scope, `domains: [any]` skill — a
+root-cause-vs-patch review discipline, the per-fix companion to the
+consolidation doctrine above. Source: MIT-licensed
+[Avtr99/antidote](https://github.com/Avtr99/antidote), commit
+`8e0350e3d86df36852d56ad0a502376e24de870c`; the ledger row is in
+`docs/dependencies.md` (a new `kit` tier there, for vendored content rather
+than a Python import). `skills/INDEX.csv` is regenerated to include it.
+
+**What you must do.** Re-run the skill fan-out for your chosen agent(s) —
+`bootstrap.py --sync` (or your repo's equivalent materialization step) picks
+up the new `scope: kit`, `domains: [any]` skill automatically, the same as any
+other shipped skill; no repo-specific action beyond the normal sync. If your
+repo hand-curates which kit skills it dogfoods into `.claude/skills/` (or
+`.gemini`/`.agents`) rather than materializing the full set, decide whether to
+add `antidote` explicitly — it is not force-selected by scope alone once a
+repo has departed from full auto-selection.
+
+---
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

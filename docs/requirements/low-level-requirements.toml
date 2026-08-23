@@ -2033,3 +2033,15 @@ test_refs = "(see TC-189)"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-195]
+sr_refs = ["SR-182"]
+title = "Standing duplicated-function-body census, warn-first forever"
+module = "project-trajectory/scripts/check_dupes_census.py"
+code_symbol = "measure/main"
+detail = """measure() walks project-trajectory/scripts/**/*.py (excluding __pycache__), hashes each function's AST-dumped body (docstring stripped, bodies under 4 lines excluded) and groups identical hashes — one named function computing what used to be a python -c one-liner re-typed into every measurement that needed it. main() reads the stamped baseline from docs/stack.ini [dupes-census] (groups/copies/lines) via configparser and prints OK/WARN accordingly; a missing baseline is reported as a bare reading, never a finding. --strict is accepted (for the [step:] convention's uniform command shape) but never changes the exit code — main() always returns 0, which is what makes this check warn-first FOREVER rather than warn-first-until---strict like check_figures.py beside it. Wired as [step:dupes-census] (layer=product, from-stage=DevStg-Impl) in docs/stack.ini."""
+rationale = """The always-0 exit is the part that could silently regress toward gating the count it measures, so it is the one behavior this row states explicitly rather than leaving to the implementation's discretion: the parent realizes a measurement, never a floor, and a future edit that added a real --strict-gates branch would be reopening the boundary this row's acceptance criterion refuses by construction."""
+test_refs = "(see TC-190)"
+status = "Approved"
+component = "CMP-007"
+phase = 5

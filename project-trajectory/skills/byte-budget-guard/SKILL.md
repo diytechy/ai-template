@@ -29,9 +29,9 @@ before you edit and again before you commit.
 
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
-| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,941 | 2026-08-21 | −7: WI-498 slice 5 — the two-axis sentence becomes one axis; the harness line says at-or-above the derived stage |
-| `CLAUDE.md` | **8,500** | 7,238 | 2026-08-22 | +90: the human-hold sentence points at the dial instead of paraphrasing it (owner dial change) |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,877 | 2026-08-22 | −98: WI-500 re-stamped both watched rows (PROCESS.md, PROCESS_OPTIONS.md); the superseded reasons went with them |
+| `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
+| `CLAUDE.md` | **8,500** | 7,513 | 2026-08-22 | +275: WI-507 — a consolidation-across-the-codebase bullet beside edit-conservatively |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,841 | 2026-08-22 | −36: WI-507 re-stamped the AGENTS.template.md/CLAUDE.md/PROCESS.md rows for the consolidation-doctrine edit |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~15%. Those two are what you hit first, and the DOC is
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 84,881 | 2026-08-22 | **+78** FLAGGED: WI-500 — the top rung stops being "derived by nothing" and names its one input, the harness-written `docs/test/evidence` record |
+| `project-trajectory/PROCESS.md` | 85,889 | 2026-08-22 | **+1,008** FLAGGED: WI-507 — §3 gains the consolidation doctrine (the 0→A→B rule, restructure on output overlap, vendored antidote as its per-fix companion) |
 | `project-trajectory/PROCESS_OPTIONS.md` | 177,704 | 2026-08-22 | **+412** FLAGGED: WI-500 — the per-artifact stage passage said the carrier had not landed; it now teaches the producer, the value binding and the refused partial tier |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
