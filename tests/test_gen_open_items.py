@@ -190,6 +190,66 @@ def test_verified_rows_are_not_in_the_queue(tmp_path):
     assert "no SR owes an approval or a re-attest" in page
 
 
+def test_drafted_child_under_approved_undrifted_sr_owes(tmp_path):
+    """The OI-61-sitting gap
+    (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md): `owes()` used to
+    test the SR row's own `Status` alone, so a `Drafted` LLR/TC hanging off an
+    `Approved`, undrifted SR reached no surface — the drift arm cannot catch it
+    either, since a row below approval has made no claim to fall from. Widened:
+    the chain is asked too, and the pill says WHY."""
+    sr = (
+        "SR-020,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+    )
+    root = repo(tmp_path, sr_rows=sr)
+    _git_init(root)
+    _approve(root)
+    # The SR is untouched after the snapshot — no drift. A brand-new `Drafted`
+    # LLR is added under it: never approved, absent from the snapshot.
+    llr = "LLR-020,SR-020,A new child,mod.py,sym,detail,TC-020,Drafted,CMP-001,1\n"
+    (root / "docs" / "requirements" / "low-level-requirements.csv").write_text(
+        LLR_HEADER + llr, encoding="utf-8"
+    )
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert 'id="SR-020-attest"' in page and "approval owed" in page
+    assert "LLR-020" in page and "Drafted" in page and "never approved" in page
+
+
+def test_approved_child_under_approved_sr_does_not_owe(tmp_path):
+    """The negative half: an `Approved` child under an `Approved`, undrifted SR
+    owes nothing — the widening must not turn every settled chain row into a
+    false positive."""
+    sr = (
+        "SR-021,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+    )
+    llr = "LLR-021,SR-021,A child,mod.py,sym,detail,TC-021,Approved,CMP-001,1\n"
+    root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
+    _git_init(root)
+    _approve(root)
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert 'id="SR-021-attest"' not in page
+    assert "no SR owes an approval or a re-attest" in page
+
+
+def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
+    """A `Drafted` row can sit in `docs/archive/last_approved/` byte-identical to
+    its current text — `intake.py snapshot` copies every registry wholesale, not
+    only approved rows — so the widened arm cannot rely on a cell diff to notice
+    it; it has to ask `Status` directly, independent of whether anything moved."""
+    sr = (
+        "SR-022,Stable parent,SN-001,shall hold,because,criteria,,C,Test,Approved,1,W\n"
+    )
+    llr = "LLR-022,SR-022,A child,mod.py,sym,detail,TC-022,Drafted,CMP-001,1\n"
+    root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
+    _git_init(root)
+    _approve(root)  # snapshots the Drafted LLR too, unchanged
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert 'id="SR-022-attest"' in page and "approval owed" in page
+    assert "No cell differs from the approved snapshot" in page
+
+
 def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_path):
     """THE SUCCESSOR to `test_empty_diff_section_says_check_the_baseline`
     (D-9 step 4). That test guarded a real hazard: an auto-derived baseline could
@@ -473,22 +533,26 @@ def test_check_is_agnostic_to_the_checkouts_line_endings(tmp_path):
 
 
 def test_empty_attestation_state_names_only_what_it_checked(tmp_path):
-    """122-REVIEW-A: the whole-section empty state claimed no Drafted/Modified
-    SPINE ROW while the model selects SRs only — a Drafted LLR under an Approved SR
-    is invisible AND was actively denied. Say what was checked."""
+    """122-REVIEW-A named a real gap: the whole-section empty state used to
+    claim no Drafted/Modified SPINE ROW while the model selected SRs only, so a
+    Drafted LLR under an Approved SR was invisible AND actively denied. That
+    gap is CLOSED (the OI-61-sitting widening,
+    docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md) — a Drafted LLR now
+    surfaces directly, so this fixture no longer reaches the empty state at
+    all; `test_drafted_child_under_approved_undrifted_sr_owes` covers that.
+    What remains to guard here is the TRULY vacuous state — nothing Drafted
+    anywhere, nothing drifted — and that its wording states the widened
+    contract honestly rather than the pre-widening SR-only caveat."""
     repo(
         tmp_path,
         sr_rows="SR-007,Settled,SN-001,shall,because,criteria,,C,Test,Approved,1,W\n",
-        llr_rows=(
-            "LLR-007,SR-007,A drafted child,mod.py,sym,detail,(see TC-007),"
-            "Drafted,CMP-001,1\n"
-        ),
     )
     assert gen(tmp_path).returncode == 0
     page = html_of(tmp_path)
-    assert "<strong>SR</strong>" in page
-    assert "snapshot-drift" in page  # where the reader is sent instead
-    assert "spine row — nothing owes" not in page  # the refuted claim is gone
+    assert "<strong>SR</strong>" in page and "<strong>LLR</strong>" in page
+    assert "snapshot-drift" in page  # drift is still one route in
+    assert "reaches this view DIRECTLY" in page  # ...but Drafted no longer needs it
+    assert "spine row — nothing owes" not in page  # the refuted claim stays gone
 
 
 def test_unsafe_link_target_is_not_clickable():

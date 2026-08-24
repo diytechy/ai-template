@@ -3140,9 +3140,9 @@ def _cell_diff_lines(changed, approved=frozenset()):
     return lines
 
 
-def _entry_kind(state):
-    """What the model's entry OWES, from the SR's Status: a first approval, or a
-    re-attestation of text that moved after it was blessed.
+def _entry_kind(sr_drafted, chain_has_drafted):
+    """What the model's entry OWES: a first approval, or a re-attestation of
+    text that moved after it was blessed.
 
     BACK TO TWO ARMS AT D-9 STEP 5. The third (`plan`, for a `Planned` row whose
     text was approved and whose evidence was never established) went out with the
@@ -3157,8 +3157,17 @@ def _entry_kind(state):
     retired with the word, so the snapshot is the whole answer — which is the
     point of the mechanism rather than a loss (owner ruling 2026-08-17m). This
     function is unchanged by that: it already returned `reattest` for everything
-    that is not `drafted`."""
-    if state == "drafted":
+    that is not `drafted`.
+
+    WIDENED (the OI-61-sitting gap, `docs/log.d/2026-08-23-oi61-rule-and-spine-
+    approval.md`): `state` used to be read off the SR's own `Status` alone, which
+    is exactly the discriminator that let nineteen `Drafted` LLR/TC rows sit
+    under `Approved`, undrifted SRs and never reach the brief's pill. The pill
+    now answers "does ANYTHING in this chain owe a first approval" — the SR
+    itself, or any LLR/TC beneath it — because that is the action the reader
+    actually owes; a card whose only drafted content is a child would otherwise
+    wear "re-attest owed" and mislead about what act closes it."""
+    if sr_drafted or chain_has_drafted:
         return "approve"
     return "reattest"
 
@@ -3227,6 +3236,15 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     has DRIFTED from `docs/archive/last_approved/`, which is a property of two
     files rather than of a word, and which no rename can silence.
 
+    THE `Drafted` ARM IS CHAIN-WIDE, NOT SR-ONLY (the OI-61-sitting widening,
+    `docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md`). The selector used
+    to read `Drafted` off the SR row alone, so a `Drafted` LLR or TC hanging off
+    an `Approved`, undrifted SR reached no surface: the drift arm cannot catch
+    it either, since a row below approval has made no claim to fall from, and one
+    absent from the snapshot is unanchored rather than drifted. The docstring
+    said "a row" from the start; the code now matches it — `owes()` tests every
+    row in the SR's chain, not just the SR.
+
     THE `Modified` ARM LEFT AT STEP 7: the selector now reads ONE status word,
     for the one thing a word can honestly answer — "this row has never been
     approved". Everything post-approval is the snapshot's answer (owner ruling
@@ -3240,13 +3258,20 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     falls back to the `Drafted` arm alone.
 
     Returns `[{id, title, kind, baseline, baseline_date, no_baseline_reason,
-    rows:[{kind, id, state, cells, approved, full}]}]` where `state` is
-    `changed` | `added` | `removed` | `current`, `cells` is the
+    rows:[{kind, id, state, cells, approved, full, drafted}]}]` where `state` is
+    `changed` | `added` | `removed` | `current` | `drafted` (the last: a
+    `Drafted` row with no cell diff against the snapshot — it owes only because
+    it was never approved, not because its text moved), `cells` is the
     `(name, before, after)` triples ORDERED approved-first, `approved` is the
     subset of those names §A5.1 rules approved (so a renderer groups by one
-    membership test rather than re-deriving the split), and `full` is the row
-    dict for the states that render whole rows. Deterministic given the working
-    tree and the snapshot."""
+    membership test rather than re-deriving the split), `full` is the row dict
+    for the states that render whole rows, and `drafted` is whether THIS row
+    (independent of `state`) is in the pre-approval `Drafted` state — the
+    per-row "why" a renderer needs to say "Drafted, never approved" rather than
+    leave that reason implicit in `state` alone. `kind` answers for the whole
+    chain: `approve` if the SR or any chain row is `Drafted`, `reattest`
+    otherwise (drift only). Deterministic given the working tree and the
+    snapshot."""
     if snapshot is _UNSET:
         snapshot = baseline_snapshot.load_all(root)
 
@@ -3274,11 +3299,17 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     def owes(sr):
         if is_drafted(sr):
             return True
-        return sr_chain_drifts(
-            sr.get("SR-ID", ""),
-            chain_of(sr.get("SR-ID", ""), srs, llrs_by_sr, tcs_by_ref),
-            snapshot,
-        )
+        chain = chain_of(sr.get("SR-ID", ""), srs, llrs_by_sr, tcs_by_ref)
+        # WIDENED: a `Drafted` LLR/TC owes a first approval in its own right,
+        # regardless of what its owning SR's Status says — `is_drafted(sr)`
+        # above tests the SR row ONLY, and `sr_chain_drifts` below cannot see
+        # this case either (a row below approval has made no claim to fall
+        # from, and one absent from the snapshot is unanchored, not drifted).
+        # Without this arm the row is invisible to the brief a human approves
+        # from (the OI-61-sitting finding).
+        if any(is_drafted(row) for _kind, _rid, row in chain):
+            return True
+        return sr_chain_drifts(sr.get("SR-ID", ""), chain, snapshot)
 
     pending_srs = sorted((r for r in srs if owes(r)), key=lambda r: r.get("SR-ID", ""))
     if not pending_srs:
@@ -3296,16 +3327,21 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
     model = []
     for sr in pending_srs:
         sid = sr.get("SR-ID", "")
+        current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
         entry = {
             "id": sid,
             "title": (sr.get("Title") or "").strip(),
-            "kind": _entry_kind((sr.get("Status") or "").strip().lower()),
+            # WIDENED: the pill answers for the whole chain, not the SR row
+            # alone — see `_entry_kind`'s docstring for why.
+            "kind": _entry_kind(
+                is_drafted(sr),
+                any(is_drafted(row) for _k, _i, row in current_chain),
+            ),
             "baseline": "",
             "baseline_date": stamp_date,
             "no_baseline_reason": "",
             "rows": [],
         }
-        current_chain = chain_of(sid, srs, llrs_by_sr, tcs_by_ref)
         # A row ABSENT from the snapshot has no baseline to diff against — and
         # under the snapshot that is a statement about a FILE, checkable by
         # opening it, rather than the old "the row was never approved in
@@ -3329,6 +3365,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                     "cells": [],
                     "approved": frozenset(),
                     "full": r,
+                    "drafted": is_drafted(r),
                 }
                 for k, i, r in current_chain
             ]
@@ -3340,6 +3377,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
         cur_by_id = {(k, i): r for k, i, r in current_chain}
         for kind, rid, row in current_chain:
             before = base_by_id.get((kind, rid))
+            drafted = is_drafted(row)
             if before is None:
                 entry["rows"].append(
                     {
@@ -3349,6 +3387,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "cells": [],
                         "approved": frozenset(),
                         "full": row,
+                        "drafted": drafted,
                     }
                 )
                 continue
@@ -3363,15 +3402,22 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                 for half in ("approved", "traced")
                 for name in sorted(split[half])
             ]
-            if cells:
+            # WIDENED: a `Drafted` row present in the snapshot with no cell
+            # diff (the snapshot copies every registry wholesale, not only
+            # approved rows — `intake.py snapshot` — so a never-approved row
+            # can sit there byte-identical) still owes its first approval.
+            # Without this arm it would silently drop out here: `cells` is
+            # empty and the old code only appended on a non-empty diff.
+            if cells or drafted:
                 entry["rows"].append(
                     {
                         "kind": kind,
                         "id": rid,
-                        "state": "changed",
+                        "state": "changed" if cells else "drafted",
                         "cells": cells,
                         "approved": frozenset(split["approved"]),
                         "full": row,
+                        "drafted": drafted,
                     }
                 )
         for kind, rid, row in base_chain:
@@ -3384,6 +3430,7 @@ def reattest_model(root, srs, llrs, tcs, snapshot=_UNSET):
                         "cells": [],
                         "approved": frozenset(),
                         "full": row,
+                        "drafted": False,
                     }
                 )
         model.append(entry)
@@ -3538,10 +3585,13 @@ def reattest_lines(root, srs, llrs, tcs):
         "_GENERATED by `trace.py --approve modified` (WI-316) — do not"
         " hand-edit; cite the spine registries, not this rendering. One"
         " section per SR"
-        " that is `Drafted`, or whose"
+        " that is itself `Drafted`, has a `Drafted` LLR or TC anywhere in its"
+        " chain, or whose"
         " chain has DRIFTED from the approved snapshot; each chain row"
         " shows only its CHANGED cells, before (the snapshot) vs after (the"
-        " working tree), approved cells first. `Status` itself is never listed —"
+        " working tree), approved cells first — or, for a `Drafted` row with no"
+        " cell diff, its full current content, since it owes only because it"
+        " was never approved. `Status` itself is never listed —"
         " the marker is not the amendment. Rule on each section: bless → set"
         " `Status` to `Approved` (process.md §7) — and from the first signing"
         " onward, run `intake.py snapshot` in the SAME commit, or the record of"
@@ -3599,16 +3649,34 @@ def reattest_lines(root, srs, llrs, tcs):
                 lines += _full_row_bullets(row)
             continue
         for row in entry["rows"]:
+            # WIDENED: a `Drafted` row that carries no cell diff against the
+            # snapshot (it sat there byte-identical, never approved) still
+            # renders — its own section, tagged with WHY, rather than being
+            # dropped for lack of a diff.
+            suffix = ", Drafted — never approved" if row.get("drafted") else ""
             if row["state"] == "added":
                 lines += [
                     "",
-                    "### {} {} — ADDED since the snapshot".format(
-                        row["kind"], row["id"]
+                    "### {} {} — ADDED since the snapshot{}".format(
+                        row["kind"], row["id"], suffix
                     ),
                 ]
                 lines += _full_row_bullets(row)
+            elif row["state"] == "drafted":
+                lines += [
+                    "",
+                    "### {} {} — Drafted, never approved".format(
+                        row["kind"], row["id"]
+                    ),
+                    "_No cell differs from the approved snapshot; this row owes"
+                    " because its own `Status` has never been `Approved`._",
+                ]
+                lines += _full_row_bullets(row)
             elif row["state"] == "changed":
-                lines += ["", "### {} {}".format(row["kind"], row["id"])]
+                lines += [
+                    "",
+                    "### {} {}{}".format(row["kind"], row["id"], suffix),
+                ]
                 lines += _cell_diff_lines(row["cells"], row["approved"])
             elif row["state"] == "removed":
                 lines += [

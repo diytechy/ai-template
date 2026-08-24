@@ -485,6 +485,11 @@ ROW_STATE_TAGS = {
     "added": "ADDED since the snapshot",
     "removed": "REMOVED since the snapshot",
     "current": "current content",
+    # WIDENED (the OI-61-sitting gap): a `Drafted` row present in the snapshot
+    # byte-identical to its current text still owes a first approval — it just
+    # never moved since being copied wholesale by `intake.py snapshot`, which
+    # copies every registry, not only approved rows.
+    "drafted": "Drafted — never approved",
 }
 
 
@@ -540,6 +545,18 @@ def _chain_row(row):
             )
         )
     else:
+        if row["state"] == "drafted":
+            # Same wording the pre-widening EMPTY-entry branch used for this
+            # exact case (a row whose only claim on the brief is its own
+            # `Status`, not a diff) — this row used to be silently dropped
+            # instead of rendered, and the entry-level empty message covered
+            # for it; now it renders itself, with the reason kept identical
+            # so a reader who saw the old wording sees the same words.
+            inner.append(
+                '<p class="empty">No cell differs from the approved snapshot. '
+                "This row is here because its own <code>Status</code> asks for "
+                "a human, not because its text moved.</p>"
+            )
         for key, val in (row["full"] or {}).items():
             if (val or "").strip():
                 inner.append(
@@ -547,13 +564,22 @@ def _chain_row(row):
                         k=esc(key), v=esc(val.strip())
                     )
                 )
+    # WIDENED: WHY does this row owe — drift (its state already says so) or a
+    # first approval it never received (its own `Drafted` Status, independent
+    # of whether its text also moved)? A row whose state is already "drafted"
+    # carries the reason in the base tag; anything else states it as an add-on
+    # so "ADDED since the snapshot" and "Drafted, never approved" both show
+    # rather than one silently standing in for the other.
+    tag = ROW_STATE_TAGS[row["state"]]
+    if row.get("drafted") and row["state"] != "drafted":
+        tag = "{}, Drafted — never approved".format(tag)
     return (
         '<div class="row"><div class="row-head">'
         '<span class="rid">{k} {i}</span>'
         '<span class="pill">{s}</span></div>{b}</div>'.format(
             k=esc(row["kind"]),
             i=esc(row["id"]),
-            s=esc(ROW_STATE_TAGS[row["state"]]),
+            s=esc(tag),
             b="".join(inner),
         )
     )
@@ -585,19 +611,20 @@ def _attestation_cards(model, srs_by_id=None):
     srs_by_id = srs_by_id or {}
     if not model:
         return (
-            '<p class="empty">No <code>Drafted</code> '
-            "<strong>SR</strong> and no drifted chain — no SR owes an "
-            "approval or a "
-            "re-attest. Say only what was checked: this view keys on SR "
-            "rows (a row's Status answers for its own cells, owner ruling "
-            "2026-08-17m), so a chain row amended under an "
+            '<p class="empty">No <code>Drafted</code> <strong>SR</strong>, '
+            "<strong>LLR</strong>, or <strong>TC</strong> anywhere in the "
+            "spine, and no drifted chain — no SR owes an approval or a "
+            "re-attest. Say only what was checked: an amended row's own "
+            "<code>Status</code> answers for its own cells (owner ruling "
+            "2026-08-17m), so a chain row's TEXT moving under an "
             "<code>Approved</code> SR reaches this view through the "
             "snapshot-drift arm — which compares against "
-            "<code>docs/archive/last_approved/</code> — and through nothing "
-            "else, the <code>Modified</code> marker having retired at D-9 "
-            "step 7. "
-            "The earlier wording said <em>spine row</em>, which denied a state "
-            "this view cannot see (122-REVIEW-A).</p>"
+            "<code>docs/archive/last_approved/</code>, the "
+            "<code>Modified</code> marker having retired at D-9 step 7 — "
+            "but a chain row's <code>Drafted</code> Status reaches this view "
+            "DIRECTLY (the OI-61-sitting widening: it used to be checked on "
+            "the SR row alone, `docs/log.d/2026-08-23-oi61-rule-and-spine-"
+            "approval.md`), not only through drift.</p>"
         )
     cards = []
     for entry in model:

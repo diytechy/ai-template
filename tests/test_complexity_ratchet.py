@@ -307,7 +307,20 @@ BASELINE = {
     # the three-way no-baseline-reason ternary. What remains is one dict lookup
     # against the snapshot. Recorded DOWN rather than left as headroom for the
     # next regression to hide in.
-    ("trace.py", "reattest_model"): 18,
+    # RE-STAMPED UP 18 -> 19, 2026-08-24, WI-513 (the OI-61-sitting owes() gap):
+    # `owes()` gained one more `any(is_drafted(row) for ...)` branch over the
+    # chain — the same question the SR-only test already asked, now asked of
+    # every row rather than folded away. One branch, one reason: a Drafted
+    # child now owes independently of drift.
+    ("trace.py", "reattest_model"): 19,
+    # NEW ENTRY, 2026-08-24, WI-513: `reattest_lines` crossed back over the
+    # threshold when its per-row loop gained the `state == "drafted"` arm
+    # (a Drafted row with no cell diff against the snapshot still owes, and
+    # needs its own section) alongside the existing `added`/`changed`/
+    # `removed` arms — the same shape `_chain_row` in gen_open_items.py grew
+    # for the same reason, and the branches are the row states a reader acts
+    # on, not incidental nesting.
+    ("trace.py", "reattest_lines"): 11,
     ("trace.py", "render_report"): 17,
     # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The

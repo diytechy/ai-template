@@ -243,11 +243,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # and 1150 -> 1156 when WI-483 slice 3 re-pointed `pending_block_text` off
     # the `gen_trajectory` facade onto the `pending` read model and its
     # docstring recorded why (six comment lines above the site; no executable
-    # line moved into or out of the region between).
+    # line moved into or out of the region between), and 1156 -> 1183 when
+    # WI-513 widened `owes()` past the SR-only test (the OI-61-sitting gap):
+    # `_attestation_cards`' vacuous-state message grew to state the widened
+    # contract honestly, and `_chain_row` gained the `drafted`-state branch and
+    # the "Drafted, never approved" suffix logic, all above this site.
     # That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 1156)], sites
+    assert sites == [("gen_open_items.py", 1183)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

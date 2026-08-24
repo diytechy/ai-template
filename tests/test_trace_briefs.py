@@ -206,6 +206,151 @@ def test_reattest_brief_empty_when_nothing_is_modified(scaffold):
     assert "no row awaits a first approval" in written
 
 
+# --- the OI-61-sitting widening: a Drafted LLR/TC owes even under an --------
+# --- Approved, undrifted SR (docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md)
+
+
+def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_path):
+    """`trace.reattest_model`'s `owes()` used to test the SR row's own `Status`
+    alone: `is_drafted(sr)` never looked at the chain, and `sr_chain_drifts`
+    cannot see a `Drafted` child either (it has made no claim to fall from the
+    snapshot). Widened so the brief a human approves from actually shows the
+    row."""
+    import shutil as _sh
+    import subprocess as _sp
+
+    skip_without_env_gates("git")
+    git = _sh.which("git")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(tmp_path), *a], capture_output=True, text=True)
+
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(
+        _REATTEST_SR_H
+        + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
+        "Test,Approved,1\n",
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H, encoding="utf-8"
+    )
+    run_git("init")
+    pin_autocrlf(tmp_path)
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested SR + snapshot, no LLR yet")
+    # The SR is untouched after the snapshot — no drift. A brand-new `Drafted`
+    # LLR is added under it: never approved, absent from the snapshot.
+    (req / "low-level-requirements.csv").write_text(
+        _REATTEST_LLR_H + 'LLR-001,SR-001,A new child,src/demo.py,add,"never approved",'
+        "(see TC-001),Drafted\n",
+        encoding="utf-8",
+    )
+    run_git("add", "-A")
+    run_git("commit", "-m", "add a Drafted LLR under the stable SR")
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "## SR-001 — Stable parent" in out
+    assert "LLR LLR-001" in out
+    assert "Drafted — never approved" in out
+
+
+def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):
+    """The negative half: an `Approved` LLR under an `Approved`, undrifted SR
+    owes nothing. The widening asks the chain the `Drafted` question; it must
+    not turn every settled row into a false positive."""
+    import shutil as _sh
+    import subprocess as _sp
+
+    skip_without_env_gates("git")
+    git = _sh.which("git")
+
+    def run_git(*a):
+        return _sp.run([git, "-C", str(tmp_path), *a], capture_output=True, text=True)
+
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    (req / "system-requirements.csv").write_text(
+        _REATTEST_SR_H
+        + 'SR-001,Stable parent,SN-001,"a stable requirement","why","ac",,C,'
+        "Test,Approved,1\n",
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(
+        _REATTEST_LLR_H + 'LLR-001,SR-001,A stable child,src/demo.py,add,"settled",'
+        "(see TC-001),Approved\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H, encoding="utf-8"
+    )
+    run_git("init")
+    pin_autocrlf(tmp_path)
+    run_git("config", "user.email", "t@example.com")
+    run_git("config", "user.name", "T")
+    load_script("baseline_snapshot").copy_live(tmp_path, seed=True)
+    run_git("add", "-A")
+    run_git("commit", "-m", "attested SR + Approved LLR + snapshot")
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "No spine row differs from its" in proc.stdout
+    assert "SR-001" not in proc.stdout
+
+
+def test_reattest_model_owed_row_count_matches_the_live_drafted_llr_tc_census():
+    """The number this widening is FOR: `docs/stage`'s `drafted` figure counts
+    every `Drafted` SR/LLR/TC row (+ SN drafts) live in this repo's own
+    registries, and this test asserts the widened `owes()` surfaces the SR/LLR/TC
+    slice of that same count — not the literal 19 the OI-61 sitting measured
+    (that number moves as the spine does), but whatever `is_drafted` counts on
+    the tree under test right now.
+
+    Runs against THIS repo's own live spine, the way `test_dogfood_sync.py`
+    does — a fixture would only prove the code path once; the point of a
+    dynamic assertion is that it re-proves itself on every future spine change.
+    """
+    import sys as _sys
+
+    from conftest import ROOT
+
+    if str(SCRIPTS) not in _sys.path:
+        _sys.path.insert(0, str(SCRIPTS))
+    import trace as _trace  # noqa: E402
+    import spine_rules as _spine_rules  # noqa: E402
+
+    reg = _trace.load_registries(ROOT / "docs")
+    live_drafted = sum(
+        1
+        for rows in (reg.srs, reg.llrs, reg.tcs)
+        for row in rows
+        if _spine_rules.is_drafted(row)
+    )
+    model = _trace.reattest_model(ROOT, reg.srs, reg.llrs, reg.tcs)
+    # Unique (kind, id), not a raw sum: a TC cited by more than one SR's chain
+    # is deduped by design (`chain_of`'s `seen_tcs`) within one entry, but the
+    # census question is "does every live Drafted row appear at least once",
+    # which a set answers correctly even if some future spine shape let one
+    # row surface under two SR entries.
+    surfaced_drafted_ids = {
+        (row["kind"], row["id"])
+        for entry in model
+        for row in entry["rows"]
+        if row.get("drafted")
+    }
+    assert len(surfaced_drafted_ids) == live_drafted, (
+        "the brief must surface every live Drafted SR/LLR/TC row at least once — "
+        "got {} surfaced vs {} live".format(len(surfaced_drafted_ids), live_drafted)
+    )
+
+
 # --- WI-325: the re-attestation brief gets a freshness gate ---------------------
 #
 # Every other generated surface here is freshness-gated; the brief was not, and
