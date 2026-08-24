@@ -1858,6 +1858,17 @@ automated = "Yes"
 evidence = """tests/test_handback.py; tests/test_kitlib_station.py; tests/test_import_layers.py::test_no_new_import_cycle; tests/test_import_layers.py::test_the_graph_sees_imports_inside_function_bodies"""
 status = "Approved"
 phase = 5
+[test.TC-194]
+verifies = ["SR-168", "LLR-198", "IF-138"]
+level = "Integration"
+method = """Two claims, because the row makes two. THE BEHAVIOUR, unchanged by the move and still driven through the facade that used to own it: a blocked row projects its pointer, a Drafted or drifted SR projects the brief that carries the depth, a tracked pause projects one bullet and a malformed one still projects fail-closed, and the whole block is deterministic over two reads. THE MODEL AND THE SITING: assert every item carries a kind field, that owner_cards is exactly pending_items minus the pause, that every item's line appears in the rendered block, that the dispatcher's card read and the generated owner surface's block text each equal the read model's own answer, and that the facade still resolves all four former names to the read model's functions; then build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert that nothing imports the dashboard facade at all. IF-138, the loader seam this module carries, rides the blocked-row arms: they drive the derivation end to end through the validator's work-registry loaders over real temp repositories, so a loader that stopped answering would red here rather than silently projecting an empty owner queue."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-198 (parent SR-168)"
+automated = "Yes"
+evidence = """tests/test_gen_trajectory_pending.py::test_the_typed_model_kinds_every_pending_item; tests/test_gen_trajectory_pending.py::test_owner_cards_is_pending_items_minus_the_pause; tests/test_gen_trajectory_pending.py::test_the_block_renders_exactly_the_model; tests/test_gen_trajectory_pending.py::test_the_dashboard_still_answers_to_the_former_private_names; tests/test_gen_trajectory_pending.py::test_the_dispatcher_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_the_owner_surface_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_pause_projection_is_deterministic; tests/test_gen_trajectory_pending.py::test_malformed_pause_still_projects_fail_closed; tests/test_import_layers.py::test_a_facade_is_an_entry_point_and_nothing_imports_it; tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service"""
+status = "Drafted"
+phase = 5
+
 [test.TC-185]
 verifies = ["SR-151", "LLR-190"]
 level = "Integration"
@@ -1922,4 +1933,80 @@ expected = "Satisfies the acceptance folded into LLR-195 (parent SR-182)"
 automated = "Yes"
 evidence = "tests/test_check_dupes_census.py"
 status = "Approved"
+phase = 5
+
+[test.TC-191]
+verifies = ["SR-177", "LLR-196"]
+level = "Integration"
+method = """Runs the real folding path rather than reading it: `tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run` calls `agent_common.regenerate_index` on a synthetic `docs/` tree and asserts the generated table exists (the row-per-session fold LLR-196 cites); `tests/test_agent_loop.py::test_done_exit_writes_logs_and_index` and `::test_stream_json_echo_and_result_parse` drive a live fake-CLI session end to end and assert the exact telemetry columns (`wall-secs`, `api-secs`, `turns`, `tokens`, `cache-read`, `cache-create`) land in the log header `regenerate_index`/`per_turn_pace`/`per_turn_context` read. No test here exercises a lanes-configured-vs-occupied or work-per-wall-hour GROUPING, because LLR-196 states plainly that grouping does not exist yet — this case verifies the inputs the future grouping pass would consume, not the report SR-177 ultimately asks for."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-196 (parent SR-177) for the telemetry INPUT half only; the utilisation report itself remains the stated build gap"
+automated = "Yes"
+evidence = """tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run; tests/test_agent_loop.py::test_done_exit_writes_logs_and_index; tests/test_agent_loop.py::test_stream_json_echo_and_result_parse"""
+status = "Drafted"
+phase = 5
+
+[test.TC-192]
+verifies = ["SR-146", "LLR-164"]
+level = "Unit"
+method = """`gen_prompt_catalog.render` is exercised directly rather than read: `test_the_catalogue_lists_every_shipped_prompt_with_its_digest` asserts every `prompts.KIT_PROMPTS` key and every `prompts.catalog_rows()` digest appears in the rendered text (the PURE-render claim, since it reads only the shipped templates); `test_the_catalogue_on_disk_is_FRESH` runs `catalog.main(["--check"])` and asserts exit 0 against the committed file (the freshness gate LLR-164 names); `test_a_template_edit_moves_its_digest_and_so_the_catalogue` asserts a real text edit moves the digest while a bare line-ending difference does not (the CRLF-vs-stale-catalogue claim `--check` exists to avoid); `tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes` drives the wired `[step:]` enforcer end to end — edits a template, asserts the commit-floor step reds, then runs `gen_prompt_catalog.py` and asserts it goes green — over a bootstrapped scaffold, not the source tree alone."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-164 (parent SR-146)"
+automated = "Yes"
+evidence = """tests/test_routing_and_prompts.py::test_the_catalogue_lists_every_shipped_prompt_with_its_digest; tests/test_routing_and_prompts.py::test_the_catalogue_on_disk_is_FRESH; tests/test_routing_and_prompts.py::test_a_template_edit_moves_its_digest_and_so_the_catalogue; tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes"""
+status = "Drafted"
+phase = 5
+
+[test.TC-193]
+verifies = ["SR-157", "LLR-197"]
+level = "Unit"
+method = """The consolidation is driven from both ends. IDENTITY, which is the deletion's warrant: test_the_spine_row_vocabulary_is_one_home asserts every re-exported name in trace.py, trace_text.py and spine_rules.py IS the kitlib.spine object (`is`, not `==` - a value battery over one shared function is the vacuous-agreement shape test_rule_sync exists to refuse), and that both sn_draft_ids names bind the carrier function each module itself imported. VALUES, which is the half of the retired batteries that was never about sameness: the three Status predicates are driven over the casing/whitespace/None battery WITH the four retired spellings (Draft, Verified, Planned, Modified) each pinned to False, the LLR-exemption is pinned over the closed vocabulary including review 017's whitespace-padded case and the frozenset TYPE, and the SN scrapes are pinned whole-text, -000-excluding, separator-splitting and filter-nothing. SHIPPING: test_bootstrap.py::test_the_common_package_ships_complete bootstraps a REAL scaffold and asserts the copied scripts/kitlib/ holds exactly the kit's module set, so a MAPPING row omitted for this module reds there rather than in a downstream repo's first check."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-197 (parent SR-157)"
+automated = "Yes"
+evidence = """tests/test_rule_sync.py::test_the_spine_row_vocabulary_is_one_home; tests/test_rule_sync.py::test_the_status_predicates_answer_by_value; tests/test_rule_sync.py::test_the_llr_exemption_answers_by_value; tests/test_rule_sync.py::test_the_sn_scrapes_answer_by_value; tests/test_bootstrap.py::test_the_common_package_ships_complete"""
+status = "Approved"
+phase = 5
+
+[test.TC-195]
+verifies = ["SR-070", "LLR-199", "IF-139", "IF-140", "IF-141", "IF-142", "IF-143"]
+level = "Unit"
+method = """The join, the three coverage edges, the standing constraint and the freshness contract, each driven against a two-component spine small enough to reason about by hand. THE JOIN: assert membership comes from the design tier's Component tag, that the requirement tier is reached through it, and that the modules follow. DERIVED NEVER COPIED: a design row carrying no hat cell still contributes its SR parent's perspectives, and re-ruling that one requirement moves the view with no design cell edited. EDGE 1: a requirement with no design child appears in the unplaced table, is counted there, and appears in no component section - visible rather than dropped. EDGE 2: a requirement reaching two components appears in both and is marked shared in both, while one reaching a single component is not. EDGE 3: seams enter the view, an interface with both endpoints inside a component is internal to it while one crossing two is a boundary of BOTH, an UNTAGGED interface is still placed through its endpoints, and one that resolves nowhere is reported as unplaced. NO APPROVAL: with one Approved and one Drafted component declared in the hand file, no maturity key and neither word appears in any emitted cell. FRESHNESS, DRIVEN BOTH WAYS: --check greens on a fresh view, reds after a registry row moves, and greens again once regenerated; a missing view reds; the written bytes carry no CRLF and two renders agree. VACUITY: a repo whose only CMP row is the inert -000 example writes nothing and exits zero on both paths."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
+automated = "Yes"
+evidence = """tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_an_untagged_seam_is_placed_by_its_ENDPOINTS; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_approval_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process"""
+status = "Drafted"
+phase = 5
+
+[test.TC-196]
+verifies = ["SR-168", "LLR-200"]
+level = "Unit"
+method = """The derivation and the vacuity, both driven, over a hand-written frame small enough to reason about: two parties (one holding two crossings, one holding none), two crossings (one realized by an interface row that ties back to it, one realized by nothing) and one external-to-external relationship. THE READ MODEL: the three tiers come back id-ordered, the tie-back is joined from the interface registry with the side it ties on, the crossing nothing realizes comes back with an empty realization rather than being dropped, the entity name resolves for display without the crossing row restating it, and an interface row whose endpoint is outside the tree but which ties back to nothing is returned with the reason its own row records. THE RENDER: the census line matches the registry's real counts, every declared row reaches the diagram INCLUDING the party that holds no crossing, direction is read from the system's point of view (an inbound crossing heads at the system, an outbound one at the party), the unrealized crossing is marked in the markup and stated in the table, and the block splices ABOVE the module map rather than after it. VACUITY, DRIVEN BOTH WAYS: with no frame file the artifact is byte-identical to one generated before the view existed and the round trip proves it; a frame holding only the blank form's -000 example rows is equally vacuous; and a repository with a frame but no symbol inventory still earns the architecture tab. THE META REPO'S OWN FRAME is read as data, not as a picture: its locked table's counts, the one crossing deliberately left unrealized, and the three adjudicated no-tie-back rows with their recorded reasons."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-200 (parent SR-168)"
+automated = "Yes"
+evidence = """tests/test_traj_parse.py::test_frame_context_is_none_without_a_declared_frame; tests/test_traj_parse.py::test_frame_context_drops_the_blank_form_s_example_rows; tests/test_traj_parse.py::test_frame_context_joins_the_tie_backs_and_keeps_id_order; tests/test_traj_parse.py::test_frame_context_reads_this_repo_s_own_locked_frame; tests/test_traj_views.py::test_context_view_renders_the_declared_frame; tests/test_traj_views.py::test_context_view_states_an_untied_external_endpoint_with_its_reason; tests/test_traj_views.py::test_context_view_renders_above_the_derived_structure; tests/test_traj_views.py::test_context_view_omitted_and_byte_identical_without_a_frame; tests/test_traj_views.py::test_a_template_only_frame_renders_the_vacuous_view; tests/test_traj_views.py::test_context_view_alone_earns_the_how_tab"""
+status = "Drafted"
+phase = 5
+
+[test.TC-197]
+verifies = ["SR-157", "LLR-201"]
+level = "Unit"
+method = """Two claims, because the row makes two. THE RULES, each driven directly rather than through the engine: the orphan pass emits SR then LLR then TC then SN and returns exactly the at-fault ids of the findings it emitted; a Drafted SR stands the child-completeness rules down while its SN linkage still applies; a PB Refs cell resolves against an LLR Module path as well as against ids, and an empty one is a finding; a Component tag naming no CMP row is a finding while an empty component registry disarms the membership half entirely; a knowledge ref resolves only under the docs/knowledge prefix and a traversal ref never escapes the pack root; the phase scope covers the foundation phase under every filter and a blank Phase always; and the status criterion defers an out-of-phase row rather than failing it. THE BOUNDARY AND THE BAGS: assert that this module imports no sibling of the scripts directory, that the engine still answers to every moved name and that each definition lives here; that the loaded registry record is frozen, total, and constructed at exactly one site; that the findings record's list defaults are per instance and that the two fields filled after the pure pass returns are DECLARED rather than conjured at a call site; that the flags record accepts either itself or a CLI namespace; that no caller imports argparse to forge the engine's config; and that the composer stays a composer - measured line span, and no nested def, which is how the number this split removed got to fifty."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-201 (parent SR-157)"
+automated = "Yes"
+evidence = """tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one"""
+status = "Drafted"
+phase = 5
+[test.TC-198]
+verifies = ["SR-161", "LLR-202"]
+level = "Unit"
+method = """The arm driven over a real two-commit git repo whose HEAD holds an Approved SR-001 (and, for the tier case, an Approved LLR-001 + TC-001), with the change STAGED rather than committed - the hook's own question. FIRES: the requirement cell amended while Hat-Refs stands, one finding naming the row and the moved cells, with the amendment arm firing alongside it so the second arm is proven an addition rather than a re-spelling. SILENT ON TRACED-ONLY MOVEMENT, the regression case and a measured one: writing the Hat-Refs cell itself - literally the perspective backfill's edit - raises nothing, and neither does an SN-Refs re-point, because no approved cell moved. SILENT WHEN DISCHARGED: substance and Hat-Refs moving together raises nothing here while the amendment arm still fires. VACUOUS WHERE THERE IS NO BASELINE, both shapes: a row minted in the staged commit, and a row amended below approval on both sides. STRUCTURALLY SILENT ON A TIER WITH NO SUCH COLUMN: an LLR and a TC amended in the same commit yield exactly one finding, the LLR's, so the scoping cannot pass by the arm being silent everywhere."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-202 (parent SR-161)"
+automated = "Yes"
+evidence = """tests/test_trajectory_staged.py::test_amending_approved_cells_without_moving_hat_refs_warns; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_only_traced_cells_move; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment; tests/test_trajectory_staged.py::test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_on_a_tier_that_carries_no_such_column"""
+status = "Drafted"
 phase = 5

@@ -44,28 +44,42 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   is dispositioned, the signed figures were independently reproduced
   (2831/14 exact at the approval commit), and the remainders all carry rows
   in the frontier below (the cell repairs + cross check, the approval-brief
-  split, and the four open lanes). The spine is
-  FULLY APPROVED (2026-08-22, the owner's written act; drafts ZERO; the
-  close's five false blessed cells re-authored and re-seeded under a named
-  `--approves` warrant, the correction recorded beside the original
-  sentence). The component registry is APPROVED too (2026-08-22, the
-  owner's ruling after reading the four rows in full) — EVERY registry is
-  now fully approved, and the ladder reads `DevStg-LLReqs`: what holds it
-  there is the orphan debt — **two** undecomposed SRs remaining
+  split, and the four open lanes). The spine's surfaced set is
+  APPROVED and the baseline is CURRENT (2026-08-23, the owner's in-session
+  act — the dated brief he signed from is
+  [ratify/2026-08-23-spine-approval.md](ratify/2026-08-23-spine-approval.md)):
+  the drift is at **zero rows** and the open-items surface at **zero pending
+  decisions**. The component registry is APPROVED too (2026-08-22, the
+  owner's ruling after reading the four rows in full), and the ladder reads
+  `DevStg-LLReqs`: what holds it there is the orphan debt — **two**
+  undecomposed SRs remaining
   (`SR-163`, `SR-181`; no TC-less LLR remains), assigned (owner-directed
   2026-08-22) and riding fold-in notes on the queued rows that own their
   subjects, so the grind pays the debt as a side effect and the ladder climbs
   as the mints approve — each mint lands `Drafted`, so the ladder itself has
-  not moved yet. (The CI pair — the hosted bar
+  not moved. (The CI pair — the hosted bar
   per trigger and the hosted verdict — was the first fold-in paid, minting
-  three LLR/TC pairs beside the test-evidence carrier.) **ALL owner
-  briefs are RULED** (OI-55..59 on 2026-08-22; execution rows queued) —
-  the open-items surface carries **ONE pending row again**: `OI-61`, filed
-  2026-08-23 on the owner's question about the interfaces registry's
-  `contract` cell — generalize the 27 CLI restatements, or retire the prose
-  cell for source-resident, test-validated declarations. It is the owner's to
-  rule and blocks nothing; the recommendation sequences its first step behind
-  the wi455 lane's rename. The grind over the
+  three LLR/TC pairs beside the test-evidence carrier.)
+  **NINETEEN DRAFTED SPINE ROWS ARE LIVE AND THE OWNER SURFACE DOES NOT
+  ENUMERATE THEM** — the one thing this sitting could not close, and it is a
+  MECHANISM gap, not a backlog: `trace.reattest_model`'s `owes()` tests
+  `is_drafted` on the **SR row only**, so a `Drafted` LLR or TC under an
+  Approved, undrifted SR never reaches `open-items.html` or
+  `ratify/CURRENT.md`, which is why both read `0 spine row(s) owing` while
+  `docs/stage` reads `drafted = 19`. The two surfaces disagree with the
+  registries, and the model's own docstring ("a row owes an act when it is
+  `Drafted`") is the contract it misses. The nineteen were NOT approved in the
+  2026-08-23 act, because the owner was never shown them. **UNFILED
+  DELIBERATELY** — whether the fix is a widened `owes()` or a ruled scoping
+  is the owner's read, and no row was minted for it in the sitting that found
+  it; the next owner sitting is where it goes. **ALL owner
+  briefs are RULED** — `OI-61` on 2026-08-23 (the recommendation as written:
+  staged (a) toward (b), (d)'s tripwire folded in, (c) deferred on a
+  condition, `verified_by` sanctioned warn-first); its execution row is
+  MINTED AND QUEUED, sequenced behind the wi455 lane's
+  counterpart-to-consumers rename, and the generated frontier below names it
+  when it is ready — this prose deliberately does not, so the claim refusal
+  does not lock the row it just filed. The grind over the
   queued execution rows runs in series (owner directive 2026-08-22), the
   generated frontier below carrying the order. Known environmental
   constraint: ~1.6 GB free on C:, so full-suite runs may need the
@@ -134,13 +148,12 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   remainder, `check.steps` (628 lines but under the complexity limit), which
   needs a decision about the carrier for a flat declaration rather than a
   technique — then M-06's test-monolith splits, which ride along with them.
-- **A pre-existing snapshot block is standing and is nobody's yet:**
-  `intake.py snapshot` refuses in this tree on `LLR-147`'s `Detail`, which
-  differs from its `docs/archive/last_approved/` copy at HEAD. Until it is
-  blessed or reverted, no session can record an approval by refreshing the
-  snapshot — WI-483 slice 3 authored its two new spine rows `Drafted` for exactly
-  that reason. Whoever amended `LLR-147` owns the resolution: re-attest it and
-  re-run the refresh, or revert the amendment.
+- **The snapshot block is CLEARED** (2026-08-23): `LLR-147`'s amended `Detail`
+  was blessed under the owner's in-session act and the baseline re-seeded, so
+  `intake.py snapshot` no longer refuses and a session can again record an
+  approval by refreshing it. A row authored `Drafted` only to dodge that block
+  is now free to be approved on its own merits — which is a reason to close the
+  drafted-row surface gap above, not a licence to bulk-flip.
 - **The `wi484-concern-refs-component-view` lane is OPEN with slice 5 landed**
   (2026-08-23): phases 0, 1, **2**, 3 and 5 are done — the component view is
   GENERATED (`components.derived.toml`, freshness-gated by the `component-view`
@@ -201,9 +214,7 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
 _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
 
 - **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-LLReqs;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
-- **Spine:** **SN=27 SR=75 LLR=184 TC=181** (21 drafts) · 135 seams · 4 components.
-- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
-  - **OI-61** — the owner (2026-08-23), reading the interface registry: "These interfaces are just methods that we provide to downstream users ... I would question if this is really an interface that needs such a detailed contract if it's just restatement" and then, going further, "I would wonder if 'contract' is necessary at all" - the measurement behind the question is that 27 of the registry's 46 Provides rows carry a hand-written CLI restatement averaging 274 characters, the two known rot exhibits are both inside contract prose, and the only enforcement on the cell is PRESENCE of an id, never agreement of its content
+- **Spine:** **SN=27 SR=75 LLR=184 TC=181** (19 drafts) · 135 seams · 4 components.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
   - **WI-455** `P3` — The docs/architecture.md RETIREMENT program (owner-ruled 2026-08-13u, sitting-2 decision…
   - **WI-483** `P2` — Successor decomposition program: break the seven-module import cycle behind typed read mo…

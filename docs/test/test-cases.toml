@@ -1965,7 +1965,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-197 (parent SR-157)"
 automated = "Yes"
 evidence = """tests/test_rule_sync.py::test_the_spine_row_vocabulary_is_one_home; tests/test_rule_sync.py::test_the_status_predicates_answer_by_value; tests/test_rule_sync.py::test_the_llr_exemption_answers_by_value; tests/test_rule_sync.py::test_the_sn_scrapes_answer_by_value; tests/test_bootstrap.py::test_the_common_package_ships_complete"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-195]

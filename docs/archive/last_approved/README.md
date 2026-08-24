@@ -11,3 +11,4 @@ Each line below is a human's citation of the act that authorised a refresh absor
 - 2026-08-22 — refreshed under approval ref: **OI-53 (b), 2026-08-22 -- docs/log.d/2026-08-22-oi53-54-rule.md** (7 registry file(s)).
 - 2026-08-22 — refreshed under approval ref: **OI-53 (b), 2026-08-22 -- docs/log.d/2026-08-22-oi53-54-rule.md** (7 registry file(s)).
 - 2026-08-23 — refreshed under approval ref: **owner ruling 2026-08-21, docs/log.d/2026-08-21-owner-session-dial-and-folds.md -- WI-499 vocabulary rename** (7 registry file(s)).
+- 2026-08-23 — refreshed under approval ref: **the owner's in-session act 2026-08-23 — "OI-61: I agree with the recommendation, let's see where it lands, and I approve of the other spine changes surfaced in open-items.html" — recorded at docs/log.d/2026-08-23-oi61-rule-and-spine-approval.md** (7 registry file(s)).
