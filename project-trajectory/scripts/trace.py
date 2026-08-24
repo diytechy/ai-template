@@ -3097,6 +3097,30 @@ _spine_stem = spine_carrier.stem
 _git_out = _kitgit.git_out
 
 
+# The reviewable-text threshold, shared by both re-attestation renderers
+# (this module's markdown brief and `gen_open_items.py`'s HTML, which imports
+# `truncate_cell` rather than re-deriving its own limit — one number, not a
+# pair a future edit could let drift). Generous on purpose: this gates a
+# handful of genuinely long prose cells (a Detail or a Rationale paragraph),
+# not the common case, so a normal cell never crosses it.
+CELL_TRUNCATE_LIMIT = 1500
+
+
+def truncate_cell(text, limit=CELL_TRUNCATE_LIMIT):
+    """`text` clipped to `limit` characters with an EXPLICIT marker naming how
+    much was dropped — never a silent cut. The brief this feeds is an owner
+    approval surface: a cell trimmed without saying so reads identically to a
+    cell that was always short, which is exactly the false-green shape the
+    rest of this kit refuses. Below the limit, `text` is returned unchanged —
+    the common case pays nothing, not even a length check past the compare."""
+    text = text or ""
+    if len(text) <= limit:
+        return text
+    return "{}… [{} more chars — read the registry row]".format(
+        text[:limit], len(text) - limit
+    )
+
+
 def _full_row_bullets(row):
     """The `- **Cell**: value` bullets for a WHOLE registry row, non-empty cells
     only — how the re-attestation brief renders a row it has no baseline to diff
@@ -3104,10 +3128,37 @@ def _full_row_bullets(row):
     the baseline) rendered it identically in place (WI-347); same file, so the
     cross-script F5 sanction never covered the copy."""
     return [
-        "- **{}**: {}".format(k, v.strip())
+        "- **{}**: {}".format(k, truncate_cell(v.strip()))
         for k, v in row["full"].items()
         if (v or "").strip()
     ]
+
+
+def _anchor_lines(sr_row):
+    """The anchor SR's OWN reviewable text — Requirement verbatim, Rationale
+    truncated the same way — as quoted markdown lines, rendered UNCONDITIONALLY
+    for every entry regardless of whether the SR row itself appears among its
+    chain rows.
+
+    THE GAP THIS CLOSES: an `Approved`, undrifted SR whose amendment lives
+    entirely in a `Drafted` child never appeared in `entry["rows"]` at all (see
+    `reattest_model`'s `if cells or drafted:` gate) — so the brief showed the
+    chain row a human must bless with no statement of the requirement it hangs
+    from. The owner's report, verbatim (2026-08-24): opening the surface and
+    looking at an owing SR, the requirement text itself was nowhere on the
+    page. `_full_row_bullets`/`_cell_diff_lines` already rendered a CHANGED or
+    ADDED chain row's own text in full; this is the one row shape — SR
+    unchanged, chain amended beneath it — that rendered nothing."""
+    if not sr_row:
+        return []
+    out = []
+    req = (sr_row.get("Requirement") or "").strip()
+    rat = (sr_row.get("Rationale") or "").strip()
+    if req:
+        out += ["> **Requirement.** {}".format(truncate_cell(req)), ""]
+    if rat:
+        out += ["> **Rationale.** {}".format(truncate_cell(rat)), ""]
+    return out
 
 
 def _cell_diff_lines(changed, approved=frozenset()):
@@ -3135,8 +3186,8 @@ def _cell_diff_lines(changed, approved=frozenset()):
             lines.append("_{}_".format(label))
         for cell, b, a in rows:
             lines.append("- **{}**".format(cell))
-            lines.append("  - before: {}".format(b or "(empty)"))
-            lines.append("  - after: {}".format(a or "(empty)"))
+            lines.append("  - before: {}".format(truncate_cell(b) or "(empty)"))
+            lines.append("  - after: {}".format(truncate_cell(a) or "(empty)"))
     return lines
 
 
@@ -3577,6 +3628,7 @@ def reattest_lines(root, srs, llrs, tcs):
     `approval_lines` — runs no checks. The markdown RENDERER over `reattest_model`
     (WI-322): the model owns the comparison, this owns the prose."""
     model = reattest_model(root, srs, llrs, tcs)
+    srs_by_id = {r.get("SR-ID"): r for r in srs if r.get("SR-ID")}
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
     appr_rev, appr_date = baseline_snapshot.approval_stamp(root)
     lines = [
@@ -3638,6 +3690,11 @@ def reattest_lines(root, srs, llrs, tcs):
     for entry in model:
         sid, title = entry["id"], entry["title"]
         lines += ["", "## {} — {}".format(sid, title or "(untitled)"), ""]
+        # UNCONDITIONAL, unlike every other block below: the anchor SR's own
+        # Requirement/Rationale render here regardless of whether the SR row
+        # appears in `entry["rows"]` — see `_anchor_lines`'s docstring for the
+        # gap this closes.
+        lines += _anchor_lines(srs_by_id.get(sid))
         if entry["no_baseline_reason"]:
             lines.append(
                 "_No approved baseline — {}; current state only._".format(

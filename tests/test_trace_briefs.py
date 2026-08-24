@@ -260,6 +260,38 @@ def test_reattest_brief_owes_a_drafted_llr_under_an_approved_undrifted_sr(tmp_pa
     assert "## SR-001 — Stable parent" in out
     assert "LLR LLR-001" in out
     assert "Drafted — never approved" in out
+    # THE SR-177 GAP: the SR row itself carries no diff (it is `Approved` and
+    # undrifted), so it never appeared in `entry["rows"]` at all — the anchor
+    # block is the only thing that puts its own Requirement on the page.
+    assert "> **Requirement.** a stable requirement" in out
+
+
+def test_reattest_brief_truncates_long_anchor_requirement_with_marker(tmp_path):
+    """Long-cell sanity: the anchor SR's own Requirement truncates above the
+    1,500-char threshold with an explicit marker — never silently. A cell
+    comfortably below the threshold renders untouched."""
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (tmp_path / "docs" / "test").mkdir(parents=True)
+    long_req = "A" * 1600
+    short_req = "B" * 100
+    (req / "system-requirements.csv").write_text(
+        _REATTEST_SR_H
+        + 'SR-001,Long,SN-001,"{}","why","ac",,C,Test,Drafted,1\n'.format(long_req)
+        + 'SR-002,Short,SN-001,"{}","why","ac",,C,Test,Drafted,1\n'.format(short_req),
+        encoding="utf-8",
+    )
+    (req / "low-level-requirements.csv").write_text(_REATTEST_LLR_H, encoding="utf-8")
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        _REATTEST_TC_H, encoding="utf-8"
+    )
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "more chars — read the registry row" in out
+    assert "A" * 1500 in out
+    assert "A" * 1600 not in out
+    assert "B" * 100 in out
 
 
 def test_reattest_brief_stays_silent_for_an_approved_undrifted_chain(tmp_path):

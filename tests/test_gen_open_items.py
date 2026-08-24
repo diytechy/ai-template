@@ -250,6 +250,68 @@ def test_drafted_child_unchanged_since_snapshot_still_owes(tmp_path):
     assert "No cell differs from the approved snapshot" in page
 
 
+# --- the SR-177 gap: the anchor SR's own text, unconditional and never -----
+# --- hidden behind the "Collapse unchanged text" toggle --------------------
+
+
+def test_anchor_sr_requirement_and_rationale_render_unconditionally_and_visibly(
+    tmp_path,
+):
+    """The owner's report, verbatim (2026-08-24): opening open-items.html and
+    looking at SR-177, the requirement text itself was nowhere on the page.
+
+    It WAS on the page — inside `.ctx`, which is `display:none` until the
+    toolbar's "Collapse unchanged text" box (checked by default) is cleared —
+    for exactly the shape SR-177 is: `Approved`, undrifted, its amendment
+    living entirely in a `Drafted` child. The anchor block must render the
+    SR's own Requirement/Rationale OUTSIDE `.ctx`, before it, so it is visible
+    on load with no interaction."""
+    sr = (
+        "SR-030,Stable parent,SN-001,shall report the DISTINCTIVE requirement,"
+        "because DISTINCTIVE rationale,criteria,,C,Test,Approved,1,W\n"
+    )
+    llr = "LLR-030,SR-030,A new child,mod.py,sym,detail,TC-030,Drafted,CMP-001,1\n"
+    root = repo(tmp_path, sr_rows=sr, llr_rows=llr)
+    _git_init(root)
+    _approve(root)
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    card_start = page.index('id="SR-030-attest"')
+    ctx_start = page.index('class="ctx"', card_start)
+    anchor_slice = page[card_start:ctx_start]
+    assert "DISTINCTIVE requirement" in anchor_slice
+    assert "DISTINCTIVE rationale" in anchor_slice
+    # ...and it is not ALSO duplicated inside the collapsed remainder — one
+    # visible copy, not a visible one plus a hidden one.
+    assert page.count("DISTINCTIVE requirement") == 1
+    assert page.count("DISTINCTIVE rationale") == 1
+
+
+def test_anchor_requirement_truncates_above_threshold_not_below(tmp_path):
+    """Long-cell sanity: a cell above the 1,500-char threshold truncates with
+    an explicit marker; a cell comfortably below it renders untouched."""
+    long_req = "A" * 1600
+    short_req = "B" * 100
+    sr_rows = "SR-031,Long,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+        long_req
+    ) + "SR-032,Short,SN-001,{},because,criteria,,C,Test,Approved,1,W\n".format(
+        short_req
+    )
+    llr_rows = (
+        "LLR-031,SR-031,child,mod.py,sym,detail,TC-031,Drafted,CMP-001,1\n"
+        "LLR-032,SR-032,child,mod.py,sym,detail,TC-032,Drafted,CMP-001,1\n"
+    )
+    root = repo(tmp_path, sr_rows=sr_rows, llr_rows=llr_rows)
+    _git_init(root)
+    _approve(root)
+    assert gen(root).returncode == 0
+    page = html_of(root)
+    assert "more chars — read the registry row" in page
+    assert "A" * 1500 in page
+    assert "A" * 1600 not in page
+    assert "B" * 100 in page
+
+
 def test_an_empty_section_says_what_it_means_instead_of_check_the_baseline(tmp_path):
     """THE SUCCESSOR to `test_empty_diff_section_says_check_the_baseline`
     (D-9 step 4). That test guarded a real hazard: an auto-derived baseline could

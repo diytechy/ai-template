@@ -247,11 +247,15 @@ def test_the_one_non_literal_site_in_the_kit_is_lf():
     # WI-513 widened `owes()` past the SR-only test (the OI-61-sitting gap):
     # `_attestation_cards`' vacuous-state message grew to state the widened
     # contract honestly, and `_chain_row` gained the `drafted`-state branch and
-    # the "Drafted, never approved" suffix logic, all above this site.
-    # That churn is the price of pinning a SITE rather than a
+    # the "Drafted, never approved" suffix logic, all above this site, and
+    # 1183 -> 1234 when WI-514 (the SR-177 anchor-text gap) added `_anchor_block`
+    # (the anchor SR's Requirement/Rationale, rendered unconditionally rather
+    # than only inside the collapsible `.ctx`) and threaded `tr.truncate_cell`
+    # through `_context_block` and `_chain_row`'s full-cell branch, all above
+    # this site. That churn is the price of pinning a SITE rather than a
     # count, and it is the right trade: a count would stay green if this site
     # were deleted and a different one added.
-    assert sites == [("gen_open_items.py", 1183)], sites
+    assert sites == [("gen_open_items.py", 1234)], sites
     source = (SCRIPTS / "gen_open_items.py").read_text(encoding="utf-8").splitlines()
     # Derived from the pinned site above rather than hand-carried: two numbers
     # for one fact drifted apart the moment the line moved (the second still

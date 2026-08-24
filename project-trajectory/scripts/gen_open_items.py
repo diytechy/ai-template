@@ -137,6 +137,7 @@ section.band{display:flex;flex-direction:column;gap:1rem;}
 .field{display:flex;flex-direction:column;gap:.2rem;}
 .field .k{font-size:var(--tiny);text-transform:uppercase;letter-spacing:.08em;
   color:var(--muted);font-weight:600;}
+.anchor{display:flex;flex-direction:column;gap:.6rem;}
 .field .v{font-size:var(--small);}
 .field .v p{margin:0 0 .5rem;}
 .field .v p:last-child{margin-bottom:0;}
@@ -471,13 +472,53 @@ def _context_block(full, skip=(), heading="the rest of this row"):
             continue
         fields.append(
             '<div class="field"><span class="k">{}</span>'
-            '<span class="v">{}</span></div>'.format(esc(key), esc(val.strip()))
+            '<span class="v">{}</span></div>'.format(
+                esc(key), esc(tr.truncate_cell(val.strip()))
+            )
         )
     if not fields:
         return ""
     return '<div class="ctx"><div class="ctxhead">{}</div>{}</div>'.format(
         esc(heading), "".join(fields)
     )
+
+
+# The two cells the anchor block below renders on its own — excluded from
+# `_context_block`'s collapsed "rest of this row" so the owner never sees the
+# same Requirement/Rationale twice, once visible and once behind the toggle.
+_ANCHOR_CELLS = ("Requirement", "Rationale")
+
+
+def _anchor_block(sr_row):
+    """The anchor SR's OWN reviewable text — Requirement verbatim, Rationale
+    truncated the same way — rendered UNCONDITIONALLY for every card, never
+    inside `.ctx`.
+
+    THE OWNER'S REPORT, VERBATIM (2026-08-24): opening `open-items.html` and
+    looking at an owing SR, the Requirement text was nowhere on the page. It
+    was, in fact, on the page — `_context_block` already rendered it, for the
+    SR-unchanged-chain-amended case — but only inside `.ctx`, which is
+    `display:none` until a reader clears the "Collapse unchanged text" toolbar
+    box (checked by default). A card that renders only ids and pills above the
+    fold reads as having no requirement text at all, which is exactly the
+    complaint. This block sits OUTSIDE that toggle so the anchor requirement is
+    always the first thing under the card's heading — for every entry, not
+    only the ones where the SR row itself carries no diff."""
+    if not sr_row:
+        return ""
+    parts = []
+    for key in _ANCHOR_CELLS:
+        val = (sr_row.get(key) or "").strip()
+        if val:
+            parts.append(
+                '<div class="field"><span class="k">{}</span>'
+                '<div class="v"><p>{}</p></div></div>'.format(
+                    esc(key), esc(tr.truncate_cell(val))
+                )
+            )
+    if not parts:
+        return ""
+    return '<div class="anchor">{}</div>'.format("".join(parts))
 
 
 ROW_STATE_TAGS = {
@@ -561,7 +602,7 @@ def _chain_row(row):
             if (val or "").strip():
                 inner.append(
                     '<div class="cellname">{k}</div><div class="diff">{v}</div>'.format(
-                        k=esc(key), v=esc(val.strip())
+                        k=esc(key), v=esc(tr.truncate_cell(val.strip()))
                     )
                 )
     # WIDENED: WHY does this row owe — drift (its state already says so) or a
@@ -603,11 +644,15 @@ _KIND_LABELS = {
 def _attestation_cards(model, srs_by_id=None):
     """One card per SR owing an approval or a re-attest, its chain beneath.
 
-    `srs_by_id` supplies the SR row's own cells for the case where the SR does
-    NOT appear among its chain rows — which happens whenever the SR's own cells
-    did not move and an LLR or TC carries the whole amendment. Without it that
-    owner reads a diff of a child row with no statement of the requirement it
-    hangs from."""
+    `srs_by_id` supplies the SR row's own cells for two things now: the
+    UNCONDITIONAL anchor block (`_anchor_block` — the SR's Requirement and
+    Rationale, rendered visibly above the fold for every card) and the
+    collapsed `sr_ctx` remainder for the case where the SR does NOT appear
+    among its chain rows — which happens whenever the SR's own cells did not
+    move and an LLR or TC carries the whole amendment. Without the anchor
+    block a reader saw ids and pills with no requirement text on the page at
+    all (the owner's report, 2026-08-24); without `sr_ctx` a reader diffing a
+    child row still had no statement of the requirement it hangs from."""
     srs_by_id = srs_by_id or {}
     if not model:
         return (
@@ -651,14 +696,19 @@ def _attestation_cards(model, srs_by_id=None):
                 esc(entry["no_baseline_reason"])
             )
         )
-        # The SR's own text, for the section where the SR row itself does not
+        # UNCONDITIONAL and never hidden — see `_anchor_block`'s docstring for
+        # the gap this closes (the owner's report, verbatim).
+        anchor = _anchor_block(srs_by_id.get(entry["id"]))
+        # The SR's own REMAINING text (SN-Refs, Boundary-Refs, … — Requirement
+        # and Rationale are excluded: `anchor` above already showed them,
+        # unconditionally), for the section where the SR row itself does not
         # render: nothing but the Status flip touched it, so the amendment sits
-        # entirely in a child LLR/TC. The chain hangs off a requirement the
-        # reader would otherwise have to go and look up mid-attestation.
+        # entirely in a child LLR/TC.
         sr_ctx = ""
         if not any(r["kind"] == "SR" and r["id"] == entry["id"] for r in entry["rows"]):
             sr_ctx = _context_block(
                 srs_by_id.get(entry["id"]),
+                skip=_ANCHOR_CELLS,
                 # The heading named "beyond the Status flip" until D-9 step 7,
                 # when the flip retired: an amended row's Status does not move at
                 # all now, so the honest statement is about the SR's OWN cells.
@@ -678,9 +728,10 @@ def _attestation_cards(model, srs_by_id=None):
                 "human, not because its text moved.</p>"
             )
         cards.append(
-            '<article class="card" id="{i}">{h}{b}{c}{rows}</article>'.format(
+            '<article class="card" id="{i}">{h}{a}{b}{c}{rows}</article>'.format(
                 i=esc(entry["id"] + "-attest"),
                 h=head,
+                a=anchor,
                 b=base,
                 c=sr_ctx,
                 rows="".join(body),

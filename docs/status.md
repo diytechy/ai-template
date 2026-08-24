@@ -73,6 +73,13 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   19` for the first time. **Nothing was approved** — the corrected brief is
   what the owner approves FROM, next. Record:
   [log.d/2026-08-24-owes-widening-and-b-brief.md](log.d/2026-08-24-owes-widening-and-b-brief.md).
+  **THE TEXT ITSELF NOW RENDERS TOO** (owner report, 2026-08-24, reviewing
+  SR-177's entry: "I don't see the actual requirement text… to be able to
+  review"): an owing SR's own `Requirement`/`Rationale` render
+  unconditionally on both surfaces now — before, an SR whose whole amendment
+  lived in a `Drafted` child (SR-177's shape) never got its own row, and its
+  text sat only inside the HTML's collapsed context, hidden by default.
+  Record: [log.d/2026-08-24-wi514-brief-carries-text.md](log.d/2026-08-24-wi514-brief-carries-text.md).
   Known environmental constraint: ~1.6 GB free on C:, so full-suite runs may
   need the batched/cleaned-basetemp form until space is reclaimed.
 - **The interface `contract` cell's next question is (b), and it now has a
