@@ -793,17 +793,23 @@ _MODULE_EXTS = _kitspine.MODULE_EXTS
 _norm_module = _kitspine.norm_module
 
 
-def load_ifs(rows):
-    """Real (non-`-000`) IF-### interface rows as dicts. Lenient — `trace.py` owns
-    IF integrity (malformed ids, SR-Ref resolution); this loader only feeds the
-    warn-first coverage views, so a malformed id is simply skipped here.
+def load_ifs(rows, llr_modules=None):
+    """Real (non-`-000`) IF-### interface rows as dicts, each already RESOLVED
+    into its two sides — `provider` (one endpoint, possibly `''`) and
+    `consumers` (a list). Lenient — `trace.py` owns IF integrity (malformed ids,
+    SR-Ref resolution); this loader only feeds the warn-first coverage views, so
+    a malformed id is simply skipped here.
 
     `approval` is the tier's ONE maturity field. It replaced `stability` at
     WI-442, which had itself replaced `status` at WI-443 — the same defect twice
     (two columns on one row meaning different kinds of "settled"), fixed the same
-    way. `direction`/`counterpart` are HELD pending WI-455 — evidence and
-    removal owner: docs/requirements/interfaces.toml's header — so the loader
-    still carries them."""
+    way. `direction`/`this_project`/`counterpart` went at WI-455 (OI-60 ruled
+    (a)): flow is no longer a column but the shape of the row, so RESOLUTION
+    happens here, once, and every view downstream (this module's connectivity
+    credit and declared pairs, `traj_views`' seam graphs) reads the same two
+    keys instead of re-deriving the orientation from a flag. `llr_modules` is
+    the design tier's `{id: Module}` — pass it, or a row whose provider is
+    derivable reads as having none."""
     out = []
     for r in rows:
         iid = (r.get("IF-ID") or "").strip()
@@ -812,14 +818,22 @@ def load_ifs(rows):
         out.append(
             {
                 "id": iid,
-                "direction": (r.get("Direction") or "").strip().lower(),
-                "this": (r.get("ThisProject") or "").strip(),
-                "counterpart": (r.get("Counterpart") or "").strip(),
+                "provider": _kitspine.seam_provider(r, llr_modules or {}),
+                "consumers": _kitspine.seam_consumers(r),
                 "approval": (r.get("Status") or "").strip().lower(),
                 "notes": (r.get("Notes") or "").strip().lower(),
             }
         )
     return out
+
+
+def load_seams(root):
+    """`load_ifs` over the live registry with the design tier's modules joined —
+    the one call every seam view makes, so no consumer forgets the join and
+    silently loses the derivable providers."""
+    return load_ifs(
+        spine_carrier.load(root / IF_CSV, "IF-ID"), spine_carrier.llr_modules(root)
+    )
 
 
 def arch_inventory(root):
@@ -877,7 +891,7 @@ def interface_findings(root):
     inventory, declared_contracts, _imports = arch_inventory(root)
     if len(inventory) <= 1:
         return []  # nothing to connect (or no arch-map yet) — vacuous
-    ifs = load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))
+    ifs = load_seams(root)
     out = []
     if not ifs:
         return [
@@ -891,28 +905,27 @@ def interface_findings(root):
     endpoints, provides, consumes = set(), set(), set()
     sources, sinks = set(), set()
     for r in ifs:
-        this_n, cp_n = _norm_module(r["this"]), _norm_module(r["counterpart"])
-        for n in (this_n, cp_n):
-            if n in inv_norm:
-                endpoints.add(n)
-        # The honesty valve: a `source`/`sink` FIRST word in Notes marks
-        # ThisProject a deliberate source (consumes nothing) / sink (provides
-        # nothing), so it doesn't breed a boilerplate opposite-direction row.
+        producer = _norm_module(r["provider"])
+        consumer_ns = {_norm_module(c) for c in r["consumers"]} & set(inv_norm)
+        endpoints.update(consumer_ns)
+        if producer in inv_norm:
+            endpoints.add(producer)
+        # The honesty valve: a `source`/`sink` FIRST word in Notes marks the
+        # row's own side a deliberate source (consumes nothing) / sink (provides
+        # nothing), so it doesn't breed a boilerplate opposite-facing row. Since
+        # WI-455 the marked side is named by the ROLE rather than by a column:
+        # `source` marks the PROVIDER, `sink` marks the CONSUMERS — which is what
+        # the two words meant when both were read off `ThisProject`.
         marker = r["notes"].split()
         first = marker[0].rstrip(":;,.") if marker else ""
         if first == "source":
-            sources.add(this_n)
+            sources.add(producer)
         elif first == "sink":
-            sinks.add(this_n)
-        # Producer -> consumer roles: Consumes flips the endpoints so the
-        # producing/consuming credit lands on the right module either way.
-        producer, consumer = (
-            (cp_n, this_n) if r["direction"] == "consumes" else (this_n, cp_n)
-        )
+            sinks.update(_norm_module(c) for c in r["consumers"])
+        # Producer -> consumer credit, read off the resolved sides.
         if producer in inv_norm:
             provides.add(producer)
-        if consumer in inv_norm:
-            consumes.add(consumer)
+        consumes.update(consumer_ns)
 
     for n in sorted(inv_norm):
         module = inv_norm[n]
@@ -1571,35 +1584,45 @@ def _declared_seam_pairs(root):
     """The IF registry's endpoint pairs, normalized and stored BOTH ways — a
     seam is one declared relationship, whichever side authored the row.
 
-    A `;`-JOINED CELL IS SEVERAL ENDPOINTS, and every combination is a declared
-    pair. `trace.py` has split on `;` since IF-097 (the comment there names it);
-    this reader did not, so the two readers of the same cells disagreed — 14 of
-    249 pairs carried an unsplit, non-existent module name as an endpoint after
-    WI-469 took the population from one row to seven (2026-08-21 review, M-14).
-    Latent, but the failure it sets up is expensive in the wrong direction: a
-    real cross-component import whose seam row plainly names both modules is
-    reported as having no declared seam, and the cheapest fix available to that
-    author is to duplicate or delete a correct row."""
+    A MULTI-ENDPOINT SIDE IS SEVERAL ENDPOINTS, and every combination is a
+    declared pair. `trace.py` has split on `;` since IF-097 (the comment there
+    names it); this reader did not, so the two readers of the same cells
+    disagreed — 14 of 249 pairs carried an unsplit, non-existent module name as
+    an endpoint after WI-469 took the population from one row to seven
+    (2026-08-21 review, M-14). Latent, but the failure it sets up is expensive
+    in the wrong direction: a real cross-component import whose seam row plainly
+    names both modules is reported as having no declared seam, and the cheapest
+    fix available to that author is to duplicate or delete a correct row.
+
+    PAIRS ARE TAKEN ACROSS THE ROW'S WHOLE ENDPOINT SET since WI-455, not across
+    two named cells. On a row whose consumers are a measured READER SET over one
+    medium (`IF-029`, `IF-035`, `IF-037`, `IF-047`, `IF-072`) that is what keeps
+    the reader-to-reader pairs the two-cell shape used to produce, now stated as
+    what they always were: one declared relationship among all of the seam's
+    endpoints."""
     covered = set()
-    for r in load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID")):
-        for a in _seam_endpoints(r["this"]):
-            for b in _seam_endpoints(r["counterpart"]):
-                covered.add((a, b))
-                covered.add((b, a))
+    for r in load_seams(root):
+        ends = _norm_endpoints([r["provider"]] + r["consumers"])
+        for a in ends:
+            for b in ends:
+                if a != b:
+                    covered.add((a, b))
+                    covered.add((b, a))
     return covered
 
 
-def _seam_endpoints(cell):
-    """Every normalized module endpoint in one IF endpoint cell.
-
-    Split on `;` ONLY — an endpoint may legitimately contain a space
-    (`external:downstream adopter`) or a comma. Empty results are dropped, so a
-    blank cell contributes no pair, exactly as before."""
+def _norm_endpoints(endpoints):
+    """The normalized module keys of an endpoint list, empties dropped — so a
+    blank side contributes no pair, exactly as before. Each entry may itself be
+    a `;`-joined cell (`kitlib.spine.seam_endpoints` splits those): an endpoint
+    may legitimately contain a space (`external:downstream adopter`) or a
+    comma, so `;` stays the only separator."""
     out = []
-    for endpoint in (cell or "").split(";"):
-        normalized = _norm_module(endpoint.strip())
-        if normalized:
-            out.append(normalized)
+    for endpoint in endpoints:
+        for part in _kitspine.seam_endpoints(endpoint):
+            normalized = _norm_module(part)
+            if normalized:
+                out.append(normalized)
     return out
 
 

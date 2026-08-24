@@ -71,6 +71,7 @@ from pathlib import Path
 
 # The console guard's one home is the shipped package (WI-448 / D-8).
 from kitlib.config import utf8_console as _utf8_console
+from kitlib import spine as _kitspine
 from kitlib.spine import is_example, refs
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -142,7 +143,7 @@ def module_components(llrs):
     return out
 
 
-def seam_placement(row, mod_comps):
+def seam_placement(row, mod_comps, llr_modules=None):
     """One IF row as `(placed, internal)` — the components it touches, and the
     subset it is INTERNAL to.
 
@@ -150,10 +151,19 @@ def seam_placement(row, mod_comps):
     resolve into; internality needs endpoint evidence on BOTH sides, so a row
     placed only by its tag is a boundary (we have no evidence the far side is
     inside). Empty `placed` means the row is unplaceable — reported, never
-    dropped."""
+    dropped.
+
+    The two sides are the provider and the consumers (WI-455). The provider is
+    resolved through `llr_modules` when the row states none, so a row whose
+    provider is derivable is placed exactly as it was when the cell was there."""
+    provider = _kitspine.seam_provider(row, llr_modules or {})
     ends = [
-        set(mod_comps.get(trace_text.norm_module((row.get(col) or "").strip()), ()))
-        for col in ("ThisProject", "Counterpart")
+        set(mod_comps.get(trace_text.norm_module(provider), ())),
+        {
+            cid
+            for consumer in _kitspine.seam_consumers(row)
+            for cid in mod_comps.get(trace_text.norm_module(consumer), ())
+        },
     ]
     placed = set(refs(row.get("Component"))) | ends[0] | ends[1]
     internal = {c for c in placed if c in ends[0] and c in ends[1]}
@@ -199,11 +209,11 @@ def _add_members(view, srs, llrs):
     return sr_components
 
 
-def _add_seams(view, ifs, mod_comps):
+def _add_seams(view, ifs, mod_comps, llr_modules):
     """Fold the seam tier into `view` and return the ids it could not place."""
     unplaced = []
     for row in ifs:
-        placed, internal = seam_placement(row, mod_comps)
+        placed, internal = seam_placement(row, mod_comps, llr_modules)
         placed &= set(view)
         if not placed:
             unplaced.append(row["IF-ID"])
@@ -220,7 +230,15 @@ def build(cmps, srs, llrs, ifs):
     back out of a string."""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
     sr_components = _add_members(view, srs, llrs)
-    unplaced_seams = _add_seams(view, ifs, module_components(llrs))
+    unplaced_seams = _add_seams(
+        view,
+        ifs,
+        module_components(llrs),
+        {
+            (r.get("LLR-ID") or "").strip(): (r.get("Module") or "").strip()
+            for r in llrs
+        },
+    )
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
     return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
 

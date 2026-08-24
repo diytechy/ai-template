@@ -122,8 +122,8 @@ def test_how_sw_graph_renders_seams(tmp_path):
     make_repo(tmp_path)
     write_arch_src(tmp_path)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
-        if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
-        + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),
+        if_row("IF-001", "src/m", "downstream adopter", "cli")
+        + if_row("IF-002", "docs/stack.ini", "src/m", "reads"),
         encoding="utf-8",
     )
     assert gen(tmp_path).returncode == 0
@@ -166,7 +166,6 @@ def test_context_view_renders_the_declared_frame(tmp_path):
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
         if_row(
             "IF-001",
-            "Provides",
             "src/m",
             "external:downstream adopter",
             "cli",
@@ -210,7 +209,7 @@ def test_context_view_states_an_untied_external_endpoint_with_its_reason(tmp_pat
     write_frame(tmp_path)
     reason = "No tie-back: git is not a party of its own in this frame."
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
-        if_row("IF-002", "Consumes", "src/m", "external:git", "reads", notes=reason),
+        if_row("IF-002", "external:git", "src/m", "reads", notes=reason),
         encoding="utf-8",
     )
     assert gen(tmp_path).returncode == 0

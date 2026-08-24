@@ -477,19 +477,20 @@ def sw_graph(root, mods):
     (`_layered_layout`), so producers sit left of consumers and crossings are
     reduced. Byte-deterministic: sorted inputs, fixed
     passes, no clocks — the `--check` freshness compare stays stable."""
-    ifs = ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID"))
+    ifs = ct.load_seams(root)
     if not ifs or not mods:
         return None
     module_norm = {ct._norm_module(m["name"]): m["name"] for m in mods}
     nodes, edges = {}, []
     for r in ifs:
-        tk, tkey, tdisp = _sw_node(r["this"], module_norm)
-        ck, ckey, cdisp = _sw_node(r["counterpart"], module_norm)
-        nodes.setdefault(tkey, {"display": tdisp, "kind": tk})
-        nodes.setdefault(ckey, {"display": cdisp, "kind": ck})
-        # Consumes flips the arrow so it always runs producer -> consumer.
-        edges.append((ckey, tkey, r["id"]) if r["direction"] == "consumes"
-                     else (tkey, ckey, r["id"]))  # fmt: skip
+        if not r["provider"]:
+            continue  # a published-medium row states no provider; no arrow to draw
+        pk, pkey, pdisp = _sw_node(r["provider"], module_norm)
+        nodes.setdefault(pkey, {"display": pdisp, "kind": pk})
+        for consumer in r["consumers"]:
+            ck, ckey, cdisp = _sw_node(consumer, module_norm)
+            nodes.setdefault(ckey, {"display": cdisp, "kind": ck})
+            edges.append((pkey, ckey, r["id"]))  # always producer -> consumer
     if not nodes:
         return None
 
@@ -581,6 +582,35 @@ def _subtree_modules(cid, direct, children_of):
     return out
 
 
+def _wire_blocks(producer, consumer, block_of, in_scope, allow_boundary, externals):
+    """The `(producer blocks, consumer blocks)` one seam endpoint PAIR wires at
+    this layer, or None when it wires nothing — lifted out of `_layer_edges`
+    when the consumers side became a list. Records any file/external hub it
+    reaches in `externals`."""
+    (pk, pkey, pd), (nk, nkey, nd) = producer, consumer
+    pn = pkey.split(":", 1)[1] if pk == "module" else None
+    nn = nkey.split(":", 1)[1] if nk == "module" else None
+    if pk == "module" and nk == "module":  # internal / cross seam
+        if pn not in in_scope or nn not in in_scope:
+            return None
+        return block_of(pn), block_of(nn)
+    # Boundary seam to a file / external hub: exactly one endpoint is the
+    # module, the other is the hub. Keep the producer -> consumer orientation
+    # (module producer wires OUT to the hub; module consumer takes the hub's
+    # OUT into its IN).
+    if pk == "module":
+        mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
+    elif nk == "module":
+        mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
+    else:
+        return None  # hub to hub: no module block to wire
+    if mnorm not in in_scope or not allow_boundary(mnorm):
+        return None
+    externals[ekey] = (edisp, ekind)
+    mkeys = block_of(mnorm)
+    return (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
+
+
 def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
     """Aggregated seam wires among one drill layer's blocks + the file/external
     blocks they reach — lifted out of `sw_containment` (WI-280 S9), which passes
@@ -591,35 +621,25 @@ def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
     becomes one deduped wire."""
     agg, externals = {}, {}
     for r in ifs:
-        tk, tkey, tdisp = _sw_node(r["this"], inv)
-        ck, ckey, cdisp = _sw_node(r["counterpart"], inv)
-        if r["direction"] == "consumes":  # flip so producer -> consumer
-            (pk, pkey, pd), (nk, nkey, nd) = (ck, ckey, cdisp), (tk, tkey, tdisp)
-        else:
-            (pk, pkey, pd), (nk, nkey, nd) = (tk, tkey, tdisp), (ck, ckey, cdisp)
-        pn = pkey.split(":", 1)[1] if pk == "module" else None
-        nn = nkey.split(":", 1)[1] if nk == "module" else None
-        if pk == "module" and nk == "module":  # internal / cross seam
-            if pn not in in_scope or nn not in in_scope:
+        if not r["provider"]:
+            continue  # a published-medium row states no provider; no wire to run
+        producer = _sw_node(r["provider"], inv)
+        for consumer in r["consumers"]:
+            blocks = _wire_blocks(
+                producer,
+                _sw_node(consumer, inv),
+                block_of,
+                in_scope,
+                allow_boundary,
+                externals,
+            )
+            if blocks is None:
                 continue
-            pkeys, nkeys = block_of(pn), block_of(nn)
-        else:  # boundary seam to a file / external hub
-            # exactly one endpoint is the module; the other is the hub. Keep
-            # the producer -> consumer orientation (module producer wires OUT to
-            # the hub; module consumer takes the hub's OUT into its IN).
-            if pk == "module":
-                mnorm, (ekey, edisp, ekind) = pn, (nkey, nd, nk)
-            else:
-                mnorm, (ekey, edisp, ekind) = nn, (pkey, pd, pk)
-            if mnorm not in in_scope or not allow_boundary(mnorm):
-                continue
-            externals[ekey] = (edisp, ekind)
-            mkeys = block_of(mnorm)
-            pkeys, nkeys = (mkeys, {ekey}) if pk == "module" else ({ekey}, mkeys)
-        for a in sorted(pkeys):
-            for b in sorted(nkeys):
-                if a != b:
-                    agg.setdefault((a, b), set()).add(r["id"])
+            pkeys, nkeys = blocks
+            for a in sorted(pkeys):
+                for b in sorted(nkeys):
+                    if a != b:
+                        agg.setdefault((a, b), set()).add(r["id"])
     edges = [(a, b, ", ".join(sorted(ids))) for (a, b), ids in sorted(agg.items())]
     return edges, externals
 
@@ -661,7 +681,7 @@ def sw_containment(root, mods):
     def subtree_modules(cid):
         return _subtree_modules(cid, direct, children_of)
 
-    ifs = ct.load_ifs(ct.spine_carrier.load(root / ct.IF_CSV, "IF-ID"))
+    ifs = ct.load_seams(root)
     counter = [0]
     layers = []
     # U3: a per-block detail record (keyed by the block's `data-node`) so the How-SW

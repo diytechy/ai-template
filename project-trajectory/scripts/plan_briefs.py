@@ -142,15 +142,17 @@ IF_CSV = "docs/requirements/interfaces.toml"
 # answers the complaint this surface caused: reading who serves a seam took
 # three cells (`Direction` + `ThisProject` + `Counterpart`) whose meanings swap
 # on the first, and a planning model was being handed that puzzle as fact. One
-# id-typed cell says it instead (Q1, 2026-08-15a). Nothing was dropped to make
-# room — the endpoint cells still name the surface, which is the only place it
-# is named.
+# id-typed cell says it instead (Q1, 2026-08-15a). WI-455 then removed the
+# puzzle at the source: the three cells became `Provider` + `Consumers`, which
+# read the same way on every row. The endpoint cells still name the surface,
+# which is the only place it is named — and `Provider` is EMPTY on a row whose
+# owner derives it, which is honest for a brief: the `Owner` column beside it is
+# where that seam's provider is stated.
 IF_SURFACE_COLUMNS = (
     "IF-ID",
     "Owner",
-    "Direction",
-    "ThisProject",
-    "Counterpart",
+    "Provider",
+    "Consumers",
     "Contract",
 )
 
@@ -236,7 +238,7 @@ def build_surface(root):
     """The allowlist-only registry surface the briefs embed, as `{slot: text}`
     keyed by the planner/critic slot names: `SR_SURFACE` (the SR rows — id,
     title, requirement) and `IF_REGISTRY` (the interfaces registry excerpt — id,
-    direction, endpoints, contract).
+    owner, endpoints, contract).
 
     Reads ONLY the SR and IF registries under `root`. That
     two-file read IS the redaction boundary: status.md, log.md, and every

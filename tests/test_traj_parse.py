@@ -267,17 +267,15 @@ def test_frame_context_joins_the_tie_backs_and_keeps_id_order(tmp_path):
     write_frame(tmp_path, FRAME)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
         """[interface.IF-001]
-direction = "Provides"
-this_project = "src/m"
-counterpart = "external:downstream adopter"
+provider = "src/m"
+consumers = ["external:downstream adopter"]
 contract = "cli"
 status = "Drafted"
 interface_to_external = "B-01"
 
 [interface.IF-002]
-direction = "Consumes"
-this_project = "src/m"
-counterpart = "external:git"
+provider = "external:git"
+consumers = ["src/m"]
 contract = "reads"
 status = "Drafted"
 notes = "No tie-back: git is not a party of its own here."

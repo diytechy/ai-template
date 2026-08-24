@@ -729,10 +729,12 @@ def _ifs_toml(body):
     import csv as _csv
     import io as _io
 
+    # WI-455: the fixture bodies keep the CSV's three-cell shape because that is
+    # what the legacy carrier holds; the translation applies the rename the
+    # registry took — `Direction` is DROPPED (flow is the shape of the row),
+    # `ThisProject` becomes the provider and `Counterpart` the consumers list.
     keys = [
-        ("Direction", "direction"),
-        ("ThisProject", "this_project"),
-        ("Counterpart", "counterpart"),
+        ("ThisProject", "provider"),
         ("Contract", "contract"),
         ("Version", "version"),
         ("Stability", "status"),
@@ -746,6 +748,14 @@ def _ifs_toml(body):
             continue
         out.append("[interface.{}]".format(rid))
         out.append('signal = "discrete"')
+        consumers = [
+            c.strip() for c in (r.get("Counterpart") or "").split(";") if c.strip()
+        ]
+        out.append(
+            "consumers = [{}]".format(
+                ", ".join('"{}"'.format(c.replace('"', '\\"')) for c in consumers)
+            )
+        )
         for col, key in keys:
             value = (r.get(col) or "").strip()
             if value:
@@ -1062,9 +1072,9 @@ def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffol
     assert "1 are marked `external:`" in out
     assert "1 resolve to nothing" in out
     # Only the unresolved one is named individually.
-    assert "IF IF-003 Counterpart='docs/gone/nowhere.md' resolves to no module" in out
-    assert "IF IF-001 Counterpart" not in out
-    assert "IF IF-002 Counterpart" not in out
+    assert "IF IF-003 Consumers='docs/gone/nowhere.md' resolves to no module" in out
+    assert "IF IF-001 Consumers" not in out
+    assert "IF IF-002 Consumers" not in out
 
 
 def test_semicolon_joined_endpoint_is_several_endpoints(scaffold):
@@ -1096,7 +1106,7 @@ def test_actor_shaped_endpoint_without_the_marker_is_now_named(scaffold):
         scaffold,
         'IF-001,Provides,src/demo,agent CLI,"x",SR-001,v1,Stable,Active,,\n',
     )
-    assert "IF IF-001 Counterpart='agent CLI' resolves to no module" in out
+    assert "IF IF-001 Consumers='agent CLI' resolves to no module" in out
     assert "mark it `external:<actor>`" in out
     assert "0 are marked `external:`" in out
 
@@ -1118,7 +1128,7 @@ def test_a_bare_external_marker_names_nobody_and_still_warns(scaffold):
     out = _warn_run(
         scaffold, 'IF-001,Provides,src/demo,external:,"x",SR-001,v1,Stable,Active,,\n'
     )
-    assert "IF IF-001 Counterpart='external:' resolves to no module" in out
+    assert "IF IF-001 Consumers='external:' resolves to no module" in out
 
 
 def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
@@ -1127,7 +1137,7 @@ def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
         scaffold,
         'IF-001,Provides,src/gone,docs/status.md,"x",SR-001,v1,Stable,Active,,\n',
     )
-    assert "IF IF-001 ThisProject='src/gone' resolves to no module" in out
+    assert "IF IF-001 Provider='src/gone' resolves to no module" in out
 
 
 # --- 2026-08-15 interface rework, steps 5 + 7: the Owner cell and carriage -----
@@ -1140,9 +1150,8 @@ def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
 
 def _if_row(**kw):
     base = {
-        "direction": "Provides",
-        "this_project": "src/demo",
-        "counterpart": "external:git",
+        "provider": "src/demo",
+        "consumers": '["external:git"]',
         "contract": "reads the ref state",
         "signal": "discrete",
         "req_refs": '["SR-001"]',
@@ -1273,7 +1282,7 @@ def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
         'IF-001,Provides,src/demo,docs/off/budgets.csv,"x",SR-001,v1,Stable,Active,,\n'
     )
     out = _warn_run(scaffold, body)
-    assert "IF IF-001 Counterpart='docs/off/budgets.csv' resolves to no module" in out
+    assert "IF IF-001 Consumers='docs/off/budgets.csv' resolves to no module" in out
     (scaffold / "docs" / "declared-absences").write_text(
         "# declared\ndocs/off/budgets.csv — the perf layer is not enabled\n",
         encoding="utf-8",
@@ -1287,13 +1296,17 @@ def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
     assert "resolves to no module" in _warn_run(scaffold, body)
 
 
-def test_direction_refuses_an_unknown_value_as_a_warn(scaffold):
-    # Step 1: `Direction` was the one IF column whose vocabulary process.md §8
-    # stated and nothing checked.
+def test_the_retired_direction_column_closes_no_vocabulary_here(scaffold):
+    # Step 1 closed `Direction`'s vocabulary — the one IF column process.md §8
+    # stated and nothing checked. WI-455 then retired the column itself (OI-60
+    # ruled (a)): flow is the SHAPE of the row, provider -> consumers. The
+    # vocabulary must go WITH it, or the tier keeps refusing values for a cell
+    # no row is allowed to carry — and the enum survives, correctly, on the
+    # BOUNDARY tier, which is the collision the shed closed.
     make_minimal_project(scaffold)
     out = _warn_run(scaffold, CLEAN_IF.replace("IF-001,Provides,", "IF-001,Serves,"))
-    assert "IF IF-001 has Direction='Serves'" in out
-    assert "Consumes, Provides" in out
+    assert "Direction" not in out
+    assert "Consumes, Provides" not in out
 
 
 def test_if_placeholder_and_absent_are_free(scaffold):

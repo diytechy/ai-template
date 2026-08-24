@@ -206,13 +206,14 @@ def test_if_surface_no_longer_hands_a_planner_the_retired_status_column():
     addition to be argued rather than slipped in. It is the one cell that
     answers "who serves this seam"; before it, a planning model was handed
     `Direction` + `ThisProject` + `Counterpart` — three cells whose meanings
-    swap on the first — and told they were fact."""
+    swapped on the first — and told they were fact. WI-455 retired those three
+    for `Provider` + `Consumers`, which read the same way on every row; the pin
+    moved with them."""
     assert pb.IF_SURFACE_COLUMNS == (
         "IF-ID",
         "Owner",
-        "Direction",
-        "ThisProject",
-        "Counterpart",
+        "Provider",
+        "Consumers",
         "Contract",
     )
     assert "Status" not in pb.IF_SURFACE_COLUMNS

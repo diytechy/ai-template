@@ -559,7 +559,7 @@ so its one input is the harness-written `docs/test/evidence` record
 to requirements: a scope is partitioned in whatever way best satisfies its
 obligations, so partitioning first means partitioning against nothing but the
 frame. An interface and a requirement say different things — an interface says
-*what crosses* (direction, counterpart, contract, type), a requirement says
+*what crosses* (provider, consumers, contract, type), a requirement says
 *what must be achieved* — so neither derives from the other.
 
 **The frame is a registry, not prose.** `DevStg-Boundary`'s deliverable is
@@ -1136,17 +1136,19 @@ repo in one command. See `EXAMPLE.md` for a complete worked SN→SR→LLR→TC c
 ## 8. Interface seams — cross-project and intra-repo
 
 When this project provides or consumes a contract — shared with another repo, or
-between its **own modules** — record each directed seam once in
+between its **own modules** — record each seam once in
 `requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
-direction, counterpart (another module, a file, or an external actor), contract,
-its signal type, the `Req-Refs` that realize/rely on it, its `Owner`, a
+`Provider` and `Consumers` (modules, a file medium, or an external actor),
+contract, its signal type, the `Req-Refs` that realize/rely on it, its `Owner`, a
 rationale, a version, and its `Status`. `Owner` is the **one** row
 answerable for the seam — an `SR-###` or a design-tier id, exactly one, and the
-cell that answers "who serves this" without reading three others. `Direction` is
-**flow and coverage, never ownership**: a `Provides` implies orientation but not
-that the seam is actually directional (a mated connector has an owner and no
-flow), and a `Consumes` row declares that a cross-component edge is intended and
-that this row discharges it. The `Owner`'s side holds the authoritative spec and
+cell that answers "who serves this" without reading three others. **Flow is the
+shape of the row**, `Provider` → `Consumers`, never a column beside it: a
+provision implies orientation but not that the seam is actually directional (a
+mated connector has an owner and no flow), and naming a consumer declares that
+its cross-component edge is intended and that this row discharges it. Omit
+`Provider` where the `Owner` derives it (a design row naming one module IS the
+provider). The `Owner`'s side holds the authoritative spec and
 closes the final read; a consuming side links the same
 `IF-###` and pins the version. A seam may also name the bundle that carries it
 (`CarriedBy`), so one contract can be declared at both grains. Every interface is backed by an SR and a

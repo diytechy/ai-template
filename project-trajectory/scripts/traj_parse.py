@@ -397,12 +397,10 @@ def frame_context(root):
             continue
         endpoint = next(
             (
-                cell
-                for cell in (
-                    (r.get("ThisProject") or "").strip(),
-                    (r.get("Counterpart") or "").strip(),
-                )
-                if cell.startswith("external:")
+                e
+                for e in [(r.get("Provider") or "").strip()]
+                + ct._kitspine.seam_consumers(r)
+                if e.startswith("external:")
             ),
             "",
         )

@@ -1247,11 +1247,12 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
         assert trace.exit_code(loud, ns()) == 0
 
 
-# --- Re-tier v2 R4: ThisProject is derivable, so first prove it agrees --------
-# Owner ruling 2026-08-15 (log `2026-08-15p`), slice S5. `ThisProject` dies once
-# it is derivable as owner -> LLR -> `Module` (wi455 owns the removal); a cell can
-# be deleted as REDUNDANT but not while its two spellings still DISAGREE, so this
-# advisory runs first and makes the disagreements visible.
+# --- Re-tier v2 R4, EXECUTED: no row states a provider its owner derives ------
+# Owner ruling 2026-08-15 (log `2026-08-15p`) staged it; `OI-60` (a) ordered it
+# behind the counterpart-to-consumers rename and WI-455 ran both (2026-08-23).
+# `Provider` is now ABSENT wherever `owner` -> LLR -> `Module` derives it, and
+# this advisory is what holds that state: a row that states one anyway is
+# reported as redundant, and one that CONTRADICTS its owner as a disagreement.
 
 _LLR = {"LLR-014": "project-trajectory/scripts/check_perf.py"}
 
@@ -1259,66 +1260,56 @@ _LLR = {"LLR-014": "project-trajectory/scripts/check_perf.py"}
 def _if_row(**over):
     row = {
         "IF-ID": "IF-101",
-        "Direction": "Provides",
-        "ThisProject": "scripts/check_perf",
-        "Counterpart": "scripts/check",
+        "Provider": "scripts/check_perf",
+        "Consumers": "scripts/check",
         "Owner": "LLR-014",
     }
     row.update(over)
     return row
 
 
-def test_an_endpoint_that_disagrees_with_its_owner_llrs_module_warns():
+def test_a_provider_that_disagrees_with_its_owner_llrs_module_warns():
     from conftest import load_script
 
     trace = load_script("trace")
     llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
 
-    # A `Provides` row: the owner answers for THIS side, and this side names a
-    # different module than the owner LLR implements — so the derivation R4 rests
-    # on would silently change the row's meaning.
-    fires = trace.if_this_project_advisories(
-        [_if_row(ThisProject="scripts/spine_rules")], llrs
+    # The owner answers for the PROVIDER side, and this row names a different
+    # module than the owner LLR implements — the derivation the shed rests on
+    # would silently change the row's meaning.
+    fires = trace.if_provider_advisories(
+        [_if_row(Provider="scripts/spine_rules")], llrs
     )
     assert len(fires) == 1
-    assert "IF-101" in fires[0] and "ThisProject='scripts/spine_rules'" in fires[0]
+    assert "IF-101" in fires[0] and "Provider='scripts/spine_rules'" in fires[0]
     assert "LLR-014" in fires[0] and "check_perf.py" in fires[0]
-    assert "derivable as owner→LLR→module" in fires[0]
-    assert "wi455" in fires[0] and "warn-only, never the exit code" in fires[0]
-    # THE FINDING NAMES THE CELL IT ACTUALLY COMPARED (S6 second-read M7). On a
-    # `Provides` row that cell IS `ThisProject`, so the derivation claim and the
-    # comparison agree — the case that made the old wording look right everywhere.
-    assert "ThisProject is the endpoint this owner answers for" in fires[0]
+    assert "the two must agree" in fires[0]
+    assert "warn-only, never the exit code" in fires[0]
 
-    # AGREEMENT IS SILENT IN BOTH SPELLINGS — the arch-map short form and the full
-    # repo path with its extension are one module, and a rule that read them as two
-    # would report every correctly-filed row in the registry.
-    assert trace.if_this_project_advisories([_if_row()], llrs) == []
-    assert (
-        trace.if_this_project_advisories(
-            [_if_row(ThisProject="project-trajectory/scripts/check_perf.py")], llrs
-        )
-        == []
-    )
-    # A `;`-joined cell matches on ANY endpoint: a bundle naming the owner's module
-    # among several is filed correctly, not misfiled.
-    assert (
-        trace.if_this_project_advisories(
-            [_if_row(ThisProject="scripts/spine_rules; scripts/check_perf")], llrs
-        )
-        == []
-    )
+    # AGREEMENT IS NOT SILENT — IT IS THE OTHER FINDING. The cell restates what
+    # the owner already derives, which is exactly the cell WI-455 removed, so
+    # the rule asks for it to go rather than nodding at it. Both spellings read
+    # as one module (the arch-map short form and the full repo path with its
+    # extension), or every correctly-filed row would report a disagreement.
+    for spelling in ("scripts/check_perf", "project-trajectory/scripts/check_perf.py"):
+        fires = trace.if_provider_advisories([_if_row(Provider=spelling)], llrs)
+        assert len(fires) == 1 and "already derives" in fires[0], spelling
+        assert "drop it" in fires[0]
+
+    # A ROW THAT STATES NO PROVIDER IS THE NORMAL SHAPE and is silent — that is
+    # what 85 of the kit's 135 rows look like after the shed.
+    assert trace.if_provider_advisories([_if_row(Provider="")], llrs) == []
 
 
-def test_a_bundle_moduled_owner_matches_on_any_of_its_modules():
+def test_a_bundle_moduled_owner_keeps_its_provider_cell():
     from conftest import load_script
 
     trace = load_script("trace")
-    # THE OWNER SIDE SPLITS ON `;` TOO (log 2026-08-17e): an LLR whose `Module`
-    # cell bundles several modules (the live LLR-035 names three) matches an
-    # endpoint naming ANY one of them. Before the fix the whole cell went
-    # through `norm_module` unsplit, so a bundle-moduled owner could NEVER
-    # match its endpoint — the docstring promised the split, the code did not.
+    # A MULTI-MODULE OWNER DERIVES A SET, NOT THE FACT (the live IF-088 /
+    # IF-117 / IF-131 / IF-132 / IF-141 shape), so those rows KEEP the cell and
+    # this rule must not ask them to drop it — nor read the bundle as a
+    # disagreement, which is what an unsplit `norm_module` over the whole cell
+    # would do.
     llrs = [
         {
             "LLR-ID": "LLR-014",
@@ -1326,21 +1317,8 @@ def test_a_bundle_moduled_owner_matches_on_any_of_its_modules():
             "project-trajectory/scripts/spine_rules.py",
         }
     ]
-    # Provides: `ThisProject` names one module of the bundle — silent.
-    assert trace.if_this_project_advisories([_if_row()], llrs) == []
-    # Consumes (the live IF-088 shape): `Counterpart` names one — silent.
-    consuming = _if_row(
-        Direction="Consumes",
-        ThisProject="scripts/trunk_step",
-        Counterpart="scripts/spine_rules",
-    )
-    assert trace.if_this_project_advisories([consuming], llrs) == []
-    # An endpoint naming NONE of the bundle's modules still fires.
-    fires = trace.if_this_project_advisories(
-        [_if_row(ThisProject="scripts/trace")], llrs
-    )
-    assert len(fires) == 1
-    assert "IF-101" in fires[0] and "check_perf.py;" in fires[0]
+    assert trace.if_provider_advisories([_if_row()], llrs) == []
+    assert trace.if_provider_advisories([_if_row(Provider="scripts/trace")], llrs) == []
 
 
 def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only():
@@ -1349,10 +1327,11 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     trace = load_script("trace")
     llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
 
-    # An SR owner names no module, so nothing is derivable and nothing disagrees.
+    # An SR owner names no module, so nothing is derivable and the cell is the
+    # only record of the provider — the 24 requirement-owned rows keep it.
     assert (
-        trace.if_this_project_advisories(
-            [_if_row(Owner="SR-014", ThisProject="scripts/spine_rules")], llrs
+        trace.if_provider_advisories(
+            [_if_row(Owner="SR-014", Provider="scripts/spine_rules")], llrs
         )
         == []
     )
@@ -1360,13 +1339,16 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
     # unknown LLR-999"), and reporting it twice under two headings would make one
     # defect look like two.
     assert (
-        trace.if_this_project_advisories(
-            [_if_row(Owner="LLR-999", ThisProject="scripts/spine_rules")], llrs
+        trace.if_provider_advisories(
+            [_if_row(Owner="LLR-999", Provider="scripts/spine_rules")], llrs
         )
         == []
     )
-    # NON-MODULE ENDPOINTS ARE NOT A DISAGREEMENT — they are wi455's
-    # counterpart-transform business (45 of 122 counterparts are non-module facts).
+    # NON-MODULE PROVIDERS ARE NOT A DISAGREEMENT — a file medium, a directory
+    # or a named external party is a legitimate provider that no design row can
+    # ever be, so the module comparison does not range over them. They read as
+    # the redundancy arm's "no module-shaped endpoint to compare", which is the
+    # quiet answer, not an accusation.
     for endpoint in (
         "docs/requirements/performance-budgets.csv",
         "docs/stage",
@@ -1374,58 +1356,21 @@ def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only()
         "agent CLI",
         ".github/workflows/check.yml",
     ):
-        assert (
-            trace.if_this_project_advisories([_if_row(ThisProject=endpoint)], llrs)
-            == []
-        ), endpoint
+        fires = trace.if_provider_advisories([_if_row(Provider=endpoint)], llrs)
+        assert all("names no module matching" not in f for f in fires), endpoint
     # An owner LLR with no Module cell is the required-field rule's finding.
     assert (
-        trace.if_this_project_advisories(
-            [_if_row(ThisProject="scripts/spine_rules")], [{"LLR-ID": "LLR-014"}]
+        trace.if_provider_advisories(
+            [_if_row(Provider="scripts/spine_rules")], [{"LLR-ID": "LLR-014"}]
         )
         == []
     )
     # A `-000` example row is a blank form, not a seam.
     assert (
-        trace.if_this_project_advisories(
-            [_if_row(**{"IF-ID": "IF-000", "ThisProject": "scripts/spine_rules"})], llrs
+        trace.if_provider_advisories(
+            [_if_row(**{"IF-ID": "IF-000", "Provider": "scripts/spine_rules"})], llrs
         )
         == []
-    )
-
-
-def test_a_consumes_row_is_answered_for_on_the_counterpart_side():
-    from conftest import load_script
-
-    trace = load_script("trace")
-    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
-
-    # THE SIDE THE OWNER ANSWERS FOR IS THE PROVIDING SIDE (Q2, 2026-08-15): a
-    # `Consumes` row is a coverage declaration written from the consumer's
-    # viewpoint, so its `ThisProject` is the CONSUMER and the owner's module is in
-    # `Counterpart`. Reading `ThisProject` here would invert the whole rule.
-    consuming = _if_row(
-        Direction="Consumes",
-        ThisProject="scripts/spine_rules",
-        Counterpart="scripts/check_perf",
-    )
-    assert trace.if_this_project_advisories([consuming], llrs) == []
-    mismatched = dict(consuming, Counterpart="scripts/spine_carrier")
-    fires = trace.if_this_project_advisories([mismatched], llrs)
-    assert len(fires) == 1
-    assert "Counterpart='scripts/spine_carrier'" in fires[0]
-    # AND THE FINDING SAYS SO (S6 second-read M7). The message used to compare
-    # `Counterpart` while asserting that `this_project` was thereby derivable —
-    # true only under the OTHER, still-unruled reading of `Owner`, and on 30 live
-    # rows the exact inverse of the truth: there `ThisProject` is the CONSUMER,
-    # which no owner→LLR→module derivation reaches. The comparison was never
-    # wrong; the sentence about it was, and a sitting reads the sentence.
-    assert "Counterpart is the endpoint this owner answers for" in fires[0]
-    assert "this_project is derivable" not in fires[0]
-    # A Direction outside the closed vocabulary decides no side: the enum rule owns
-    # that row, and guessing a side would report a disagreement nobody declared.
-    assert (
-        trace.if_this_project_advisories([dict(mismatched, Direction="")], llrs) == []
     )
 
 
@@ -1442,9 +1387,7 @@ def test_the_derivability_advisory_warns_but_never_gates():
     def ns(strict=False, strict_integrity=False):
         return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
 
-    loud = _findings_stub(
-        trace, if_this_project_advis=["IF-101 disagrees with its owner"]
-    )
+    loud = _findings_stub(trace, if_provider_advis=["IF-101 disagrees with its owner"])
     assert trace.exit_code(loud, ns(strict=True)) == 0
     assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
     assert trace.exit_code(loud, ns()) == 0

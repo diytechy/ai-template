@@ -131,9 +131,9 @@ None. No requirement states two verification methods.
 
 None. No SR's direct-LLR fan-out exceeds the declared bound.
 
-## ThisProject derivability advisories (warn-only)
+## Provider derivability advisories (warn-only)
 
-None. Every LLR-owned row's owner-side endpoint agrees with its owner's Module.
+None. No row states a Provider that its owner LLR's Module already derives.
 
 ## Verification basis (mechanized / demonstrated / attested)
 

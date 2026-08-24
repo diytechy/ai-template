@@ -391,27 +391,23 @@ def test_contracts_and_if_edges(tmp_path):
 
     # A module<->module IF row becomes a dotted, labeled edge, distinct from the
     # solid import arrows.
-    if_rows = [
-        {
-            "IF-ID": "IF-003",
-            "Direction": "Provides",
-            "ThisProject": "src/a",
-            "Counterpart": "src/b",
-        }
-    ]
+    if_rows = [{"IF-ID": "IF-003", "Provider": "src/a", "Consumers": "src/b"}]
     diag = gen_arch_map.build_dependency_diagram([str(src)], if_rows)
     assert "-. IF-003 .->" in diag
 
+    # A row that states NO provider derives one from its owner's design row —
+    # the shape 85 of the kit's 135 rows take since WI-455, and the reason the
+    # LLR module map is passed in beside the seams.
+    derived = [{"IF-ID": "IF-006", "Owner": "LLR-001", "Consumers": "src/b"}]
+    assert "-. IF-006 .->" in gen_arch_map.build_dependency_diagram(
+        [str(src)], derived, {"LLR-001": "src/a.py"}
+    )
+    # ...and with no map to join, it draws nothing rather than guessing.
+    assert "IF-006" not in gen_arch_map.build_dependency_diagram([str(src)], derived)
+
     # A seam to a file / external actor is a How-SW dashboard node, not a code
     # edge — it is skipped here.
-    ext = [
-        {
-            "IF-ID": "IF-005",
-            "Direction": "Provides",
-            "ThisProject": "src/a",
-            "Counterpart": "downstream adopter",
-        }
-    ]
+    ext = [{"IF-ID": "IF-005", "Provider": "src/a", "Consumers": "downstream adopter"}]
     assert "IF-005" not in gen_arch_map.build_dependency_diagram([str(src)], ext)
 
 

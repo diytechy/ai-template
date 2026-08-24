@@ -216,9 +216,11 @@ OFFSPINE_COLUMN = {
     # the live one is precisely the two-words-one-meaning defect that retired
     # `Status`.
     #
-    # `direction` + `counterpart` were ruled to go with it and are HELD pending
-    # WI-455 — evidence and removal owner: docs/requirements/interfaces.toml's
-    # header.
+    # `direction` + `this_project` + `counterpart` went the same way at WI-455
+    # (OI-60 ruled (a), 2026-08-23), and the two cells below replace all three:
+    # `provider` (optional — absent wherever `owner`→LLR→`module` derives it)
+    # and `consumers` (the list the far side always was). Flow is no longer a
+    # column: it is provider→consumers, read off the row.
     # `req_refs` IS THE IF TIER'S OWN REQUIREMENT LINK, and it is here rather
     # than sharing the spine's `sr_refs` because the two are different
     # relationships wearing one name (the 2026-08-15 rework, D6). An LLR's
@@ -237,9 +239,8 @@ OFFSPINE_COLUMN = {
     # Q3: a constituent names the bundle that carries it. Optional by design —
     # most seams ride nothing, and an empty cell IS "this is not a constituent".
     "carried_by": "CarriedBy",
-    "direction": "Direction",
-    "this_project": "ThisProject",
-    "counterpart": "Counterpart",
+    "provider": "Provider",
+    "consumers": "Consumers",
     "contract": "Contract",
     "interface_from_external": "InterfaceFromExternal",
     "interface_to_external": "InterfaceToExternal",
@@ -249,18 +250,15 @@ OFFSPINE_COLUMN = {
     # §1R). Shared columns already declared above (`name`, `notes`) are NOT
     # repeated — one column name, one meaning, repo-wide (D-3).
     #
-    # `direction` IS THE WATCHED COLLISION IN THIS MAP, stated rather than
-    # hidden — and "in this map" is the honest scope, because `Direction` carries
-    # a THIRD vocabulary repo-wide that this file cannot see: `check_perf.py`
-    # reads `lower-better`/`higher-better` off the perf-budget registry, which is
-    # not on the carrier. It is declared once, above, and the boundary tier reads
-    # it as in|out|inout while the IF tier still reads it as
-    # Provides|Consumes. The vocabularies are
-    # disambiguated per tier by `trace.ENUM_FIELDS`, and they never appear in one
-    # file — but two meanings under one name is the D-3 defect however tidily it
-    # is scoped. It is temporary BY CONSTRUCTION: the collision closes itself the
-    # moment WI-455 deletes the IF reading. If WI-455 slips, the fix is to rename
-    # the boundary column, not to leave this note as the whole enforcement.
+    # `direction` WAS THE WATCHED COLLISION IN THIS MAP, and WI-455 CLOSED IT
+    # exactly as the note promised it would: the IF tier's Provides|Consumes
+    # reading is gone (OI-60 ruled (a), 2026-08-23), so `Direction` now carries
+    # ONE vocabulary on the carrier — the boundary tier's in|out|inout. The
+    # honest residue, stated because it is still true: `Direction` carries a
+    # THIRD vocabulary repo-wide that this file cannot see, `check_perf.py`'s
+    # `lower-better`/`higher-better` off the perf-budget registry, which is not
+    # on the carrier.
+    "direction": "Direction",
     "class": "Class",
     "description": "Description",
     "entity": "Entity",
@@ -553,6 +551,25 @@ def load(path, id_col, keep_examples=True):
         for r in rows
         if keep_examples or not str(r.get(id_col) or "").endswith("-000")
     ]
+
+
+def llr_modules(root):
+    """`{LLR-###: Module cell}` for the design tier under `root` — the join
+    every IF seam reader needs since WI-455 shed the derivable provider cell.
+
+    ONE HOME rather than seven: `trace`, `trace_text`, `check_trajectory`,
+    `traj_views`, `gen_arch_map` and `gen_components` all resolve a seam's
+    provider through `kitlib.spine.seam_provider`, which takes this map. `{}`
+    when the registry is absent, so a repo with no design tier reads every
+    provider off the row's own cell and nothing crashes."""
+    import pathlib
+
+    rel = "docs/requirements/low-level-requirements.toml"
+    return {
+        (r.get("LLR-ID") or "").strip(): (r.get("Module") or "").strip()
+        for r in load(pathlib.Path(root) / rel, "LLR-ID")
+        if (r.get("LLR-ID") or "").strip()
+    }
 
 
 def columns(path, id_col):

@@ -126,6 +126,11 @@ REF_COLS = {
     "Verifies",
     "SupersededBy",
     "WI-Refs",
+    # WI-455: an IF row's consuming side is a LIST — it always held several
+    # `;`-joined endpoints on the rows that have several, and the reader
+    # (`kitlib.spine.seam_endpoints`) splits on `;` alone, so the typed array is
+    # what the cell already meant.
+    "Consumers",
 }
 INT_COLS = {"Phase"}
 
@@ -198,14 +203,18 @@ KEY = {
     # same row); a stray `Status` cell would therefore key as `Status` and be
     # caught by the schema tier rather than silently absorbed.
     # `Stability` LEFT this block at WI-442, replaced by `Approval`.
-    # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
-    # owner: docs/requirements/interfaces.toml's header.
+    # `ThisProject`/`Counterpart` LEFT AT WI-455 (OI-60 ruled (a)), replaced by
+    # `Provider`/`Consumers`, and the IF tier's `Direction` reading went with
+    # them — the `Direction` entry below is now the BOUNDARY tier's alone. A
+    # legacy CSV still carrying the retired columns keys them as themselves
+    # (`KEY.get(col, col)`) and the schema tier names them, exactly as a stray
+    # `Status` cell is handled: convert the carrier first, then rename the cells
+    # (RESYNC_PACK.md).
     "Req-Refs": "req_refs",
     "Owner": "owner",
     "CarriedBy": "carried_by",
-    "Direction": "direction",
-    "ThisProject": "this_project",
-    "Counterpart": "counterpart",
+    "Provider": "provider",
+    "Consumers": "consumers",
     "Contract": "contract",
     "InterfaceFromExternal": "interface_from_external",
     "InterfaceToExternal": "interface_to_external",
@@ -223,9 +232,11 @@ KEY = {
     # as an exact bijection against `spine_carrier.REGISTRY_COLUMN`
     # (tests/test_rule_sync.py). A tier the vocabulary knows and this map does
     # not would be a column the reader can name and the writer cannot.
-    # `Approval`/`Notes`/`Name`/`Direction` are ALREADY above (the boundary
-    # tier's in|out|inout reading of `Direction` is the watched collision
-    # spine_carrier's note names).
+    # `Approval`/`Notes`/`Name` are ALREADY above. `Direction` is DECLARED HERE
+    # since WI-455: the IF tier's Provides|Consumes reading is gone, so the
+    # column now carries the boundary tier's in|out|inout alone and belongs in
+    # this block — the collision spine_carrier's note watched is closed.
+    "Direction": "direction",
     "Class": "class",
     "Description": "description",
     "Entity": "entity",

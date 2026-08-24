@@ -388,15 +388,13 @@ status = "Approved"
 ```
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
-§8) — which applies *within* a repo just as across repos, the counterpart naming
-the other **module** rather than another repo, both rows in the one
-`interfaces.toml`:
+§8) — which applies *within* a repo just as across repos, the endpoints naming
+**modules** rather than repos, both rows in the one `interfaces.toml`:
 
 ```toml
 [interface.IF-001]
-direction = "Provides"
-this_project = "export"
-counterpart = "delivery"
+provider = "export"
+consumers = ["delivery"]
 contract = "Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001)."
 signal = "variable"
 rationale = "One writer for the export file; delivery must not re-derive its schema."
@@ -406,9 +404,8 @@ version = "v1"
 status = "Approved"
 
 [interface.IF-002]
-direction = "Consumes"
-this_project = "delivery"
-counterpart = "export"
+provider = "export"
+consumers = ["delivery"]
 contract = "Reads the export file produced per IF-001 v1 before uploading it."
 signal = "variable"
 req_refs = ["SR-050"]
@@ -500,9 +497,8 @@ the owner `IF-###`:
 
 ```toml
 [interface.IF-010]
-direction = "Provides"
-this_project = "export"
-counterpart = "delivery"
+provider = "export"
+consumers = ["delivery"]
 contract = "RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009)."
 signal = "variable"
 req_refs = ["SR-009"]
@@ -511,9 +507,8 @@ version = "v2"
 status = "Approved"
 
 [interface.IF-011]
-direction = "Consumes"
-this_project = "delivery"
-counterpart = "object-store"
+provider = "object-store"
+consumers = ["delivery"]
 contract = "S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet."
 signal = "variable"
 req_refs = ["SR-010"]

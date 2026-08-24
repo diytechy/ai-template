@@ -176,6 +176,52 @@ def norm_module(path):
     return p
 
 
+def seam_endpoints(cell):
+    """The endpoints of one IF endpoint cell, split on `;` ONLY.
+
+    An endpoint may legitimately contain a space (`external:downstream
+    adopter`) or a comma, so `;` is the only separator — and a `Consumers` cell
+    is a LIST in the carrier, joined on `;` by `spine_carrier.value_to_cell`,
+    so the same split reads it back."""
+    return [e.strip() for e in (cell or "").split(";") if e.strip()]
+
+
+def seam_provider(row, llr_modules):
+    """An IF row's PROVIDER-side endpoint — the one home every seam reader
+    joins on (WI-455, OI-60 ruled (a)).
+
+    The registry states the provider only where it is NOT derivable: the cell
+    is present on a row whose `Owner` is a requirement (a requirement names no
+    module) or whose owner LLR names SEVERAL modules (which derives a SET, not
+    the fact). Everywhere else the provider IS the owner design row's single
+    `Module`, and the cell is absent because a derivable cell is a second
+    spelling of a fact that already has a home.
+
+    `''` when the row records no provider and derives none — the legitimate
+    shape of a published-medium row whose far side is its reader SET (the seam
+    relates each reader to a file the registry names in `Contract`, and no
+    endpoint cell ever claimed the file).
+
+    Contract:
+      Inputs:  row: dict — one IF row under today's column names
+               llr_modules: {llr_id: module_cell} — the design tier's modules
+      Outputs: str — the provider endpoint, or ''
+    """
+    stated = (row.get("Provider") or "").strip()
+    if stated:
+        return stated
+    owners = refs(row.get("Owner"))
+    if len(owners) != 1 or not owners[0].startswith("LLR-"):
+        return ""
+    modules = seam_endpoints(llr_modules.get(owners[0], ""))
+    return modules[0] if len(modules) == 1 else ""
+
+
+def seam_consumers(row):
+    """An IF row's consuming side, as a list of endpoints."""
+    return seam_endpoints(row.get("Consumers"))
+
+
 def is_example(rid):
     """The `-000` placeholder-row convention: a template row, nobody's finding."""
     return (rid or "").endswith("-000")
@@ -436,12 +482,15 @@ OFFSPINE_KEYS = {
     # two `interface_*_external` keys are the DIRECTIONAL tie-back an IF row
     # carries ONLY when it realizes a boundary crossing (owner naming, 13m). An
     # IF row that realizes nothing carries neither — which is how the registry
-    # says "internal seam" without a column claiming it. `direction` and
-    # `counterpart` are HELD pending WI-455 (see above).
+    # says "internal seam" without a column claiming it.
+    # WI-455 executed the held removal (OI-60 ruled (a), 2026-08-23):
+    # `direction` is GONE (flow is provider→consumers, read off the two cells
+    # below), `this_project`/`counterpart` are GONE, and the seam's two sides
+    # are `provider` (OPTIONAL — omitted wherever `owner`→LLR→`module` derives
+    # it uniquely) and `consumers` (a LIST, required).
     "IF-ID": (
-        "direction",
-        "this_project",
-        "counterpart",
+        "provider",
+        "consumers",
         "contract",
         "signal",
         "signal_note",

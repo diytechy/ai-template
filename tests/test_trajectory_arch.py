@@ -171,10 +171,12 @@ def _csv_body_to_toml(header, table, body):
     import csv as _csv
     import io as _io
 
+    # WI-455: the CSV bodies keep their three-cell shape (it is what the legacy
+    # carrier holds); the translation applies the rename the registry took —
+    # `Direction` DROPPED, `ThisProject` -> `provider`, `Counterpart` ->
+    # `consumers` (a list, emitted below).
     keys = {
-        "Direction": "direction",
-        "ThisProject": "this_project",
-        "Counterpart": "counterpart",
+        "ThisProject": "provider",
         "Contract": "contract",
         "Req-Refs": "req_refs",
         "Version": "version",
@@ -210,6 +212,14 @@ def _csv_body_to_toml(header, table, body):
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
             out.append('signal = "discrete"')
+            consumers = [
+                c.strip()
+                for c in (row.get("Counterpart") or "").split(";")
+                if c.strip()
+            ]
+            out.append(
+                "consumers = [{}]".format(", ".join('"%s"' % c for c in consumers))
+            )
         for col, key in keys.items():
             value = (row.get(col) or "").strip()
             if not value:

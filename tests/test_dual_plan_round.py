@@ -115,7 +115,7 @@ def make_fixture(tmp_path, plan_mode="dual"):
         encoding="utf-8",
     )
     (root / "docs" / "requirements" / "interfaces.csv").write_text(
-        "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
+        "IF-ID,Provider,Consumers,Contract,Req-Refs,Version,"
         "Stability,Status,Component,Notes\n",
         encoding="utf-8",
     )

@@ -1,7 +1,7 @@
 +++
 id = "WI-455"
 title = "The docs/architecture.md RETIREMENT program (owner-ruled 2026-08-13u, sitting-2 decision 8): 'architecture.md can die — instead the available tables should produce full architecture in ProjectState.html.' This is a program, not a delete: TEN kit scripts touch the file (gen_arch_map, traj_parse, gen_trajectory, check_trajectory, check.py, traj_status, trunk_step, check_flows, check_doc_refs, bootstrap — plus gen_okf, traj_views and ~34 test files), and the data path registries -> gen_arch_map -> architecture.md -> traj_parse -> dashboard must become registries -> dashboard directly (the 'How (SW architecture)' tab already renders the map — extend, don't rebuild). Three things 13u refused to let lapse silently, each an explicit deliverable: (1) check_flows.py loses its input — the Runtime flows are narrative, SR-cited and NOT registry-derivable; move them into the dashboard as authored-and-checked content (the check follows them) or retire the obligation with a recorded ruling — never by the file's deletion (check_flows is named by 2 live SRs). (2) bootstrap.py's MAPPING and the scaffold surface change (ARCHITECTURE.template.md scaffolds today) — downstream-visible, owes a resync-pack entry, and is only verified by bootstrapping a real scaffold. (3) A disposition for each of the file's ~192 hand-authored lines (intro, Shape of the product, Runtime flows) — derived, moved, or retired, stated per block. Registry citations to the path (interfaces.toml, open-items.toml, low-level-requirements.toml) and process-doc references (PROCESS.md x7, PROCESS_OPTIONS, AGENTS.template.md x2 — byte-budgeted, must land net-zero, and the stale baselines must be reconciled first) re-point with the change that lands, not before. SEQUENCING: collides with WI-390 clause (2) (arch-map/Contracts declarations) and WI-448 (MAPPING) — sequence against both or the three programs fight over gen_arch_map; the generated-context-view half (entities/BIF/relationships rendered from external.toml) depends on the schema row and may land as its own slice. The boundary record itself (SN-040's 'kept with the architecture') is SATISFIED by the derived view — that was decision 8's point — so this program is also what closes sitting-2 decision 8's execution."
-specref = "docs/plans/2026-08-13-sitting-2-boundary-and-context.md#decision-8--where-the-boundary-record-lives-once-ruled"
+specref = ""
 workstream = "process"
 sr_refs = ["SR-162"]
 needs = ["~WI-442", "~WI-469"]
@@ -9,6 +9,62 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 3
 +++
+
+## Deliverable
+
+`docs/architecture.md` is gone and the architecture it carried is DERIVED — the
+data path is `registries -> dashboard`, with no markdown way-station — and the
+interface registry that path reads now states a seam the way the dashboard draws
+it: `provider -> consumers`, with no direction column and no cell restating what
+the owner already says.
+
+**The three deliverables 13u refused to let lapse silently, each dispositioned.**
+
+1. **`check_flows.py`'s input** — the Runtime flows moved VERBATIM to
+   [`../../../runtime-flows.md`](../../../runtime-flows.md) and the checker
+   followed them there, so `SR-013`'s obligation never lapsed; the dashboard's
+   How tab embeds the authored flows, and `RUNTIME_FLOWS.template.md` scaffolds
+   the home downstream (slice 1).
+2. **`bootstrap.py`'s MAPPING and the scaffold surface** —
+   `ARCHITECTURE.template.md` deleted, the MAPPING row and the whole `arch-map`
+   harness step retired, `[arch-map] mode` re-purposed as the AST-inventory
+   dial, and the `RESYNC_PACK.md` entry written. VERIFIED by bootstrapping a
+   real scaffold, twice, not by reading the mapping (slice 1).
+3. **A disposition per hand-authored block** — the ~192 lines answered
+   block-by-block (derived / moved / retired) in the slice-1 log's table, which
+   is the record of what happened to each one.
+
+**And the schema half the program owed, in six slices.** The crossing/tie-back
+adjudication and the endpoint-marker sweep (slice 2); `SR-162`'s decomposition
+into `LLR-187` + `TC-182` (slice 3); the 48 held `Contract`-cell provenance
+citations swept to zero, `OI-36`'s hold recorded as expired-and-executed (slice
+4); the `external.toml` context view derived into the dashboard, which IS the
+boundary record `SN-040` kept "with the architecture" and what closes sitting-2
+decision 8's execution (slice 5); `OI-60` ruled (a) with the twelve-row owner
+report shipped and the shed HELD on a measurement (slice 6); and the rename +
+shed themselves (slice 7).
+
+**The end-state schema, as landed.** Three cells became two on all 135 rows:
+`direction` DIED (flow is the shape of the row), `this_project` and
+`counterpart` became `provider` (a single endpoint) and `consumers` (a list),
+per class — carrier, medium, consumer-class and reader-set rows each handled by
+their own recorded reading rather than by one transform. `provider` is then
+absent on the 85 rows where `owner -> LLR -> module` derives it UNIQUELY, states
+the fact on the 29 where it cannot (a requirement owner, a multi-module owner, a
+file or `external:` provider), and is legitimately unstated on the 21
+published-medium rows that never recorded one. The derivations ship as tests
+(`tests/test_seam_resolution.py`), not as a claim; the readers resolve a seam
+through ONE home (`kitlib.spine.seam_provider`/`seam_consumers`); and
+`trace_text.if_provider_advisories` — the countdown that used to say "this cell
+is on its way out" — now holds the state it counted down to.
+
+**What this lane deliberately did NOT do.** Re-pointing the twelve
+requirement-owned provider-side rows onto the design tier is an owner-informed
+judgement per seam, fed by
+[`../../../plans/2026-08-23-sr-owned-provides-report.md`](../../../plans/2026-08-23-sr-owned-provides-report.md);
+the advisory above is its executable half, and it asks for each cell back as its
+owner is re-pointed. Recording a medium as the provider on the 21 rows that
+state none is authoring, per row, not a rename. Neither is owed by this program.
 
 ## Context
 

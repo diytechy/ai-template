@@ -2204,15 +2204,20 @@ an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
 module→file, module→external-actor) exactly as it serves a cross-project one — one
 `interfaces.toml`, two uses.
 
-**The model — one row per directed seam.** `ThisProject` = the module path;
-`Counterpart` = another module, a **file path** (giving module→file→module
-dataflow, so a shared file like `docs/stack.ini` is a hub node many modules
-Consume), or an **external actor** (`downstream adopter`, `git`, `agent CLI`);
-`Direction` = Provides/Consumes; `Contract` = one testable line (CLI flags + exit
-codes, or the file schema); `req_refs` links the spine so every seam is
-transitively TC-covered. `trace.py` integrity-checks the tier (id shape, the
-`req_refs` back-link under `--strict`, a best-effort `ThisProject`↔`LLR.Module`
-advisory) — WI-056 closed the SR-002-era gap where trace never read the IF tier.
+**The model — one row per seam, read `Provider` → `Consumers`.** `Provider` =
+the side it is served from, OMITTED where `Owner` derives it (a design row
+naming one `Module` IS the provider); `Consumers` = a **list** of the sides that
+read it — modules, a **file path** (giving module→file→module dataflow, so a
+shared file like `docs/stack.ini` is a hub node many modules read), or an
+**external actor** (`downstream adopter`, `git`, `agent CLI`); `Contract` = one
+testable line (CLI flags + exit codes, or the file schema); `req_refs` links the
+spine so every seam is transitively TC-covered. There is no direction column:
+flow is the shape of the row (WI-455 shed it), and what a `Consumes` row used to
+declare — this cross-component edge is intended, and this row discharges it — is
+read off the endpoint pair. `trace.py` integrity-checks the tier (id shape, the
+`req_refs` back-link under `--strict`, a best-effort `Provider`↔`LLR.Module`
+advisory, and a warn when a row states a provider its owner already derives) —
+WI-056 closed the SR-002-era gap where trace never read the IF tier.
 
 **Opt-out, default-on (ruled).** By default a contract IF must define how the
 architecture connects, so the **coverage warn runs even when `interfaces.toml` is
@@ -2254,9 +2259,10 @@ discharges.
 
 **The honesty valve.** A pure **source** (produces output, consumes nothing) or
 **sink** (consumes, produces nothing) would otherwise breed a boilerplate
-opposite-direction row. Mark it instead: make the `Notes` cell of one of that
-module's IF rows **begin** with the word `source` or `sink`, and the
-missing-direction warn for `ThisProject` is suppressed.
+opposite-facing row. Mark it instead: make the `Notes` cell of one of that
+module's IF rows **begin** with the word `source` or `sink`, and the missing-seam
+warn is suppressed for that side — `source` marks the row's `Provider`, `sink`
+its `Consumers`.
 
 **The graph.** When real seams exist, `gen_trajectory.py`'s How-SW panel renders
 them as a directed graph (module / file / external-actor nodes, IF-labeled edges,

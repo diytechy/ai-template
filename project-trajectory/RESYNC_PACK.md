@@ -1301,8 +1301,11 @@ whose registry is still the `-000` placeholder can skip to step 4 and just
 overwrite the template.
 
 Everything below is **warn-first at every gate** — no exit code changes, so you
-can land it in pieces. Nothing was deleted: `direction`, `this_project` and
-`counterpart` all stay, and so do your `Consumes` rows.
+can land it in pieces. Nothing was deleted here: `direction`, `this_project` and
+`counterpart` all stay, and so do your `Consumes` rows. **All three DID go
+later** — see *The interface tier sheds `direction` and renames its endpoints*
+below; if your range covers both, read them in order, because this entry is what
+makes that one's derivation possible.
 
 1. **Rename `sr_refs` → `req_refs`** in every interface row (`Req-Refs` if you
    are still on the CSV carrier). Mechanical, one find-replace *scoped to the
@@ -3717,6 +3720,64 @@ field, no checker or gate reads `knowledge` yet.
 roster keeps parsing exactly as before. If you want to cite knowledge packs
 from a hat, add `knowledge = ["docs/knowledge/…"]` to that hat's row yourself —
 this pack does not fill values into owner text.
+
+### The interface tier sheds `direction` and renames its endpoints to `provider` / `consumers` [since 55d1cb77]
+
+The last piece of the 2026-08-15 rework's ruled end state (owner ruling on
+`OI-60`, option (a), 2026-08-23), and it is a **schema change to every IF row**.
+Applies to any adoption carrying a populated `docs/requirements/interfaces.toml`;
+a repo still on the `-000` placeholder just overwrites the template.
+
+**What the row looks like now.** Three cells become two, and flow stops being a
+column:
+
+| was | now |
+|---|---|
+| `direction = "Provides"` / `"Consumes"` | *deleted* — flow is the SHAPE of the row, `provider` → `consumers` |
+| `this_project` (this side) | `provider` on a Provides row; folded into `consumers` on a Consumes row |
+| `counterpart` (the far side) | `consumers` (a LIST) on a Provides row; `provider` on a Consumes row whose far side is the provider or the medium |
+
+**Then `provider` is dropped wherever it is DERIVABLE**: an `owner` that is a
+design row naming exactly one `module` IS the provider. The cell survives only
+where the derivation cannot run — a requirement owner (which names no module),
+an owner naming several modules (a set, not the fact), or a provider that is a
+file medium or an `external:` party. `trace.py` gains a warn-only advisory naming
+any row that states a provider its owner already derives.
+
+**The migration, in order — and measure before you edit.**
+
+1. **Classify every `Consumes` row before you touch it.** The far side is one of
+   three things and only you know which: the **provider** module, the **medium**
+   consumed (a file or directory — that becomes `provider`, which is honest: it
+   is the side the contract is served from), or a **consumer class / reader set**
+   (`external:downstream adopter`, or the other measured readers of one file). On
+   that third class both cells are consumers: they merge into `consumers`, and
+   the row states NO provider, because none was ever recorded. The kit's own 135
+   rows split 51 + 5 carrier, 12 medium, 16 consumer-class, 5 reader-set, 46
+   `Provides`. Guessing here silently reverses seams; a row you cannot classify
+   is a row to stop on.
+2. **Rewrite the cells** per the table above, `consumers` always a LIST.
+3. **Drop `provider`** on every row whose owner derives it. Run
+   `python scripts/trace.py` and read the *Provider derivability advisories*
+   section of `docs/test/report.md` — it names what is left to drop.
+4. **Take the readers as one set**: `kitlib/spine.py` (the schema plus the new
+   `seam_provider`/`seam_consumers`/`seam_endpoints` resolvers), `spine_carrier.py`
+   (the column map plus `llr_modules`), `trace.py`, `trace_text.py`,
+   `check_trajectory.py` (`load_ifs` now RESOLVES each row and `load_seams` is the
+   one live-registry call), `traj_views.py`, `gen_arch_map.py`,
+   `gen_components.py`, `traj_parse.py`, `intake.py`, `plan_briefs.py`. A partial
+   take leaves a reader looking for a column that no longer exists.
+5. **Overwrite `registries/interfaces.template.toml`, `INTERFACES.template.md`
+   and `prompts/dual-plan-planner.template.md`**, and re-read `PROCESS.md` §8.
+
+**Two behaviour changes worth expecting.** The `source`/`sink` honesty valve now
+marks a ROLE rather than a cell — `source` the row's provider, `sink` its
+consumers — which is what both words meant when both were read off
+`this_project`. And the How-SW seam graph draws nothing for a row that states no
+provider: those rows record readers of a medium the row names only in `contract`,
+and the old arrow pointed the wrong way (from the adopter INTO the module).
+Recording those media as providers is authoring, per row, and the kit has not
+done it.
 
 ---
 

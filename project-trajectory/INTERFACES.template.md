@@ -31,9 +31,8 @@ namespace, parallel to SN/SR/LLR/TC).
 | Column | Meaning |
 |---|---|
 | `IF-ID` | Stable id for this interface. |
-| `Direction` | **Flow and coverage — never ownership.** `Provides` (this side authors the contract) or `Consumes` (a cross-component edge is intended, and this row discharges it). A "provide" implies orientation but does not mean the interface is actually *directional*: a bolted joint, a mated connector, a thermal path each have an owner and no flow at all. Who is answerable is `Owner`, and only `Owner`. |
-| `ThisProject` | This repo/project name (or, intra-repo, the module on this side of the seam). Validated against the tree — see `Counterpart`. |
-| `Counterpart` | The other project/repo — or, intra-repo, another module, a file path, or an external actor — on the far side of the contract. **Both endpoint cells are checked against the tree**, warn-first: one that resolves to no module, file or directory is named individually (a spine file that migrated and left its seam row behind is the failure this catches). Prefix a deliberately-outside-the-tree endpoint with `external:` — `external:downstream adopter`, `external:git` — a value convention, not a column, so it rides the carrier and cannot drift from the cell it qualifies. Several `;`-separated endpoints are allowed when one contract genuinely has more than one far side; prefer one per row, and use the list only when splitting would copy the `Contract` text. |
+| `Provider` | The side the contract is served **from** — a repo/project name, or intra-repo a module, the file medium itself, or an external actor. **Omit it wherever `Owner` derives it**: an `Owner` that is a design row naming exactly one `Module` IS the provider, and a derivable cell is a second spelling that can disagree with the first. State it when the owner is a requirement (which names no module), when the owner names several modules (a set, not the fact), or when the provider is a file or an `external:` party. A warn-only advisory names any row that states one its owner already derives. |
+| `Consumers` | A **list** of the sides that read the contract — the other project/repo, or intra-repo other modules, a file path, or an external actor. Name every reader you have MEASURED, and the open-ended ones as a class (`external:downstream adopter`); one seam read by three modules is one row with three consumers, not three rows copying one `Contract`. **Both endpoint cells are checked against the tree**, warn-first: one that resolves to no module, file or directory is named individually (a spine file that migrated and left its seam row behind is the failure this catches). Prefix a deliberately-outside-the-tree endpoint with `external:` — `external:downstream adopter`, `external:git` — a value convention, not a column, so it rides the carrier and cannot drift from the cell it qualifies. |
 | `Contract` | One testable line naming the surface (REST route, CLI, file schema, event, library symbol) + a link to its spec. **What crosses, typed — nothing else** (process.md §8): no rationale, no work-item id, no decision citation, ≤500 characters. |
 | `Signal` | **Closed**: `discrete` (a finite enumerable alphabet — exit code, gate name, status enum, dial) or `variable` (unbounded content — prose, file bytes, a count, a duration). If both cross, the row is `variable`. |
 | `SignalNote` | Optional. Why the typing is not obvious — a crossing that carries both kinds, or one the `Contract` does not type. |
@@ -45,7 +44,7 @@ namespace, parallel to SN/SR/LLR/TC).
 | `Status` | **Closed**, and the row's **one** maturity field: `Drafted` · `Approved` — the spine's own words, shared with `external.toml`. `Founded` is **not applicable** to this tier and never will be: it means settled *and demonstrated*, while an approval says only that the seam is agreed. Flipping a cell to `Approved` is a human act in a reviewed commit. (Two columns retired into this one: `Stability` — `Experimental`/`Stable`/`Deprecated` — at WI-442, and a short-lived `Approval` at the 2026-08-17 status unification. Never carry a second maturity column beside it; the reason this tier has one field is that it once had two meaning different things on the same row.) |
 | `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement, so there is no "internal" value to set wrongly. |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
-| `Notes` | Free-form. The `source`/`sink` honesty valve lives here (silences the missing-direction coverage warn for `ThisProject` — see the registry's `-000` row). |
+| `Notes` | Free-form. The `source`/`sink` honesty valve lives here — `source` marks the row's `Provider`, `sink` its `Consumers`, silencing the missing-seam coverage warn for that side (see the registry's `-000` row). |
 
 ## Rules (keep links from rotting)
 
@@ -63,7 +62,7 @@ namespace, parallel to SN/SR/LLR/TC).
   therefore carry **different local ids** (exactly as the snippet below shows),
   and a foreign seam is cited as the **qualified pair** — the counterpart repo
   (its name or `REPO-###` row) **plus** its local `IF-###` and pinned version —
-  written in `Counterpart` and `Contract`/`Notes`, **never in the `IF-ID`
+  written in `Consumers` and `Contract`/`Notes`, **never in the `IF-ID`
   column** (`trace.py`'s `^IF-\d+$` integrity pattern rejects any qualified
   form there). Under a coordinator repo, the one stable global handle is the
   coordinator-level `CIF-###` (MULTI_REPO.md §3.3). Honesty note: no tool
@@ -73,20 +72,20 @@ namespace, parallel to SN/SR/LLR/TC).
 - **Approval gates change.** Changing an `Approved` contract requires a notice
   to the counterpart and a version bump; a `Drafted` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
-- **The `Owner` cell's side closes the read** — not `Direction`. The row named
-  in `Owner` is answerable for the contract's correctness and closes the final
-  read on it; a `Consumes` row verifies against the pinned version. (This
-  replaces "Direction drives ownership. Only the `Provides` side may close the
-  owner's final read", which fused two facts: `Direction` is now flow and
-  coverage, and ownership has its own cell.)
+- **The `Owner` cell's side closes the read.** The row named in `Owner` is
+  answerable for the contract's correctness and closes the final read on it; a
+  consuming side verifies against the pinned version. (This replaces "Direction
+  drives ownership. Only the `Provides` side may close the owner's final read",
+  which fused two facts — and the `Direction` column it named is gone: flow is
+  the shape of the row, `Provider` → `Consumers`, and ownership has its own
+  cell.)
 
 ## Worked snippet
 
 ```toml
 [interface.IF-001]
-direction = "Provides"
-this_project = "billing-api"
-counterpart = "reporting-etl"
+provider = "billing-api"
+consumers = ["reporting-etl"]
 contract = "GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice)."
 signal = "variable"
 rationale = "One read model for invoices; the ETL must not re-derive totals."
@@ -96,9 +95,8 @@ version = "v1"
 status = "Approved"
 
 [interface.IF-002]
-direction = "Consumes"
-this_project = "reporting-etl"
-counterpart = "billing-api"
+provider = "billing-api"
+consumers = ["reporting-etl"]
 contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json)."
 signal = "variable"
 req_refs = ["SR-031"]

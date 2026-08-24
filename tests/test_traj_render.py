@@ -64,7 +64,7 @@ def test_svg_nodes_carry_escaped_title_tooltips(tmp_path):
     # the How-SW graph needs the module map + a declared seam (hostile external)
     write_arch_src(tmp_path)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
-        if_row("IF-001", "Provides", "src/m", "pip & git", "cli"),
+        if_row("IF-001", "src/m", "pip & git", "cli"),
         encoding="utf-8",
     )
     assert gen_okf(tmp_path).returncode == 0  # the Knowledge tab's bundle

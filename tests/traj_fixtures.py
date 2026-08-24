@@ -230,17 +230,21 @@ def write_frame(root, text=FRAME):
     return root
 
 
-def if_row(iid, direction, this, counterpart, contract="call", **cells):
+def if_row(iid, provider, consumers, contract="call", **cells):
     """One `[interface.IF-###]` TOML table (the carrier since WI-443).
 
     A helper rather than a header constant: under TOML there IS no header, an
     absent key IS the empty cell, and building rows by hand in six fixtures is
-    how a schema change quietly diverges between them."""
+    how a schema change quietly diverges between them. Since WI-455 the seam is
+    `provider` -> `consumers` (a list; a bare string is taken as one endpoint)
+    and there is no direction cell to pass.
+    """
+    if isinstance(consumers, str):
+        consumers = [consumers]
     lines = [
         "[interface.{}]".format(iid),
-        'direction = "{}"'.format(direction),
-        'this_project = "{}"'.format(this),
-        'counterpart = "{}"'.format(counterpart),
+        'provider = "{}"'.format(provider),
+        "consumers = [{}]".format(", ".join('"%s"' % c for c in consumers)),
         'contract = "{}"'.format(contract),
         'signal = "{}"'.format(cells.pop("signal", "discrete")),
         'sr_refs = ["{}"]'.format(cells.pop("sr_refs", "SR-001")),
@@ -335,10 +339,10 @@ CONT_CMPS = cmp_row("CMP-001", "Core") + cmp_row("CMP-002", "Gen")
 # Two seams a->c and b->c both cross CMP-001 -> CMP-002 (must aggregate to ONE
 # deduplicated edge); IF-003 is intra-CMP-001, IF-004 a boundary to a file hub.
 CONT_IFS = (
-    if_row("IF-001", "Provides", "scripts/mod_a", "scripts/mod_c")
-    + if_row("IF-002", "Provides", "scripts/mod_b", "scripts/mod_c")
-    + if_row("IF-003", "Provides", "scripts/mod_a", "scripts/mod_b")
-    + if_row("IF-004", "Consumes", "scripts/mod_a", "docs/stack.ini", "reads")
+    if_row("IF-001", "scripts/mod_a", "scripts/mod_c")
+    + if_row("IF-002", "scripts/mod_b", "scripts/mod_c")
+    + if_row("IF-003", "scripts/mod_a", "scripts/mod_b")
+    + if_row("IF-004", "docs/stack.ini", "scripts/mod_a", "reads")
 )
 
 
@@ -519,8 +523,8 @@ def _how_sw_flat(root):
     make_repo(root)
     write_arch_src(root)
     (root / "docs" / "requirements" / "interfaces.toml").write_text(
-        if_row("IF-001", "Provides", "src/m", "downstream adopter", "cli")
-        + if_row("IF-002", "Consumes", "src/m", "docs/stack.ini", "reads"),
+        if_row("IF-001", "src/m", "downstream adopter", "cli")
+        + if_row("IF-002", "docs/stack.ini", "src/m", "reads"),
         encoding="utf-8",
     )
     return root

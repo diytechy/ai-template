@@ -147,10 +147,11 @@ try:
         allow_key,
         ears_advisories,
         form_findings,
-        if_this_project_advisories,
+        if_provider_advisories,
         is_allowed,
         is_drafted,
         is_example,
+        module_endpoints,
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
@@ -185,10 +186,11 @@ except ImportError:  # pragma: no cover - in-process fallback
         allow_key,
         ears_advisories,
         form_findings,
-        if_this_project_advisories,
+        if_provider_advisories,
         is_allowed,
         is_drafted,
         is_example,
+        module_endpoints,
         norm_module,
         off_spine_advisories,
         paraphrase_advisories,
@@ -370,13 +372,14 @@ REQUIRED_FIELDS = {
     # `Interface*External` tie-backs are deliberately NOT required — a row
     # carries one only when it realizes a boundary crossing, and requiring them
     # would demand every internal seam claim to be a boundary.
-    # `Direction`/`Counterpart` are HELD pending WI-455 — evidence and removal
-    # owner: docs/requirements/interfaces.toml's header.
+    # WI-455 executed the held removal (OI-60 ruled (a), 2026-08-23):
+    # `Direction`/`ThisProject`/`Counterpart` are GONE and `Consumers` is the
+    # required endpoint cell. `Provider` is deliberately NOT required — it is
+    # present only where `Owner`→LLR→`Module` does not derive it, so demanding
+    # it everywhere would re-introduce the derivable cell the shed removed.
     "IF": [
         "IF-ID",
-        "Direction",
-        "ThisProject",
-        "Counterpart",
+        "Consumers",
         "Contract",
         "Signal",
         "Req-Refs",
@@ -480,16 +483,13 @@ ENUM_FIELDS = {
     # one, no longer provisional — D-9's ladder LANDED — and `Founded` is
     # excluded on merit: settled AND DEMONSTRATED, not merely AGREED.
     #
-    # `Direction` joined at the 2026-08-15 interface rework (plan step 1). It was
-    # the one IF column carrying a vocabulary that §8 states and nothing checked,
-    # and it is stated here with its RULED meaning (Q2, 2026-08-15a): the cell is
-    # the seam's FLOW/COVERAGE declaration, never an ownership claim — ownership
-    # is the `Owner` cell. A `Provides` row says this side authors the contract;
-    # a `Consumes` row is a coverage declaration (this cross-component edge is
-    # intended, and this row discharges it), which is exactly what
-    # check_trajectory's `_declared_seam_pairs` reads the 74 of them for.
+    # `Direction` joined at the 2026-08-15 interface rework (plan step 1) and
+    # LEFT at WI-455 (OI-60 ruled (a), 2026-08-23) — so this tier now closes one
+    # vocabulary, not two. The column stated FLOW, and flow is no longer stated:
+    # it is READ, provider→consumers, off the two endpoint cells. The
+    # coverage half a `Consumes` row carried is unharmed — `_declared_seam_pairs`
+    # reads the endpoint pair, which the header always said it took both ways.
     "IF": {
-        "Direction": {"Provides", "Consumes"},
         "Signal": {"discrete", "variable"},
         "Status": {"Drafted", "Approved"},
     },
@@ -499,8 +499,8 @@ ENUM_FIELDS = {
     },
     # WI-442 — the depth-0 frame. `Class` is the entity vocabulary §1R.7 item 2
     # confirmed (`deliverable` was the ruled addition); `Direction` is read from
-    # the SYSTEM's point of view, which is why it is in|out|inout and not the
-    # IF tier's retired Provides/Consumes.
+    # the SYSTEM's point of view, in|out|inout — and since WI-455 retired the IF
+    # tier's Provides/Consumes reading, this is the carrier's ONLY `Direction`.
     "EXT": {
         "Class": {"operational", "enabling", "interoperating", "deliverable"},
         "Status": {"Drafted", "Approved"},
@@ -1440,7 +1440,7 @@ def triangle_findings(tcs, llrs):
 
 
 # The module-path normalizer MOVED TO trace_text.py at re-tier v2 S5 (WI-464),
-# unchanged: `if_this_project_advisories` compares the same two naming conventions
+# unchanged: `if_provider_advisories` compares the same two naming conventions
 # and is a pure row predicate, so keeping one home there beat a fourth copy here.
 # Aliased back under the private name so this module's call sites read as before.
 _norm_module = norm_module
@@ -1452,8 +1452,8 @@ def interface_findings(ifs, sr_ids, module_ids):
     ``(findings, advisories)``: *findings* join the --strict failure set like PB's
     back-links (an IF row's Req-Refs is empty or names an unknown SR — every seam
     links the spine so it stays transitively TC-covered); *advisories* are
-    warn-only (an IF row's ThisProject endpoint resolves to no LLR Module after
-    normalization). The endpoint join is best-effort: the LLR Module set is a
+    warn-only (an IF row's stated Provider endpoint resolves to no LLR Module
+    after normalization). The endpoint join is best-effort: the LLR Module set is a
     partial, differently-named inventory, so the authoritative module-coverage
     check lives in check_trajectory against the full arch-map.
 
@@ -1470,13 +1470,18 @@ def interface_findings(ifs, sr_ids, module_ids):
         for x in srrefs:
             if x not in sr_ids:
                 findings.append(f"IF {iid} references unknown {x}")
-        endpoint = (r.get("ThisProject") or "").strip()
-        if norm_modules and endpoint and _norm_module(endpoint) not in norm_modules:
-            advisories.append(
-                f"IF {iid} ThisProject={endpoint!r} matches no LLR Module "
-                "(best-effort join; a module with no LLR is legitimate — "
-                "check_trajectory's arch-map coverage is the full check)"
-            )
+        # MODULE-shaped endpoints only (`trace_text.module_endpoints`): since
+        # WI-455 the cell this ranges over is `Provider`, which legitimately
+        # holds a file medium or an `external:` party on a requirement-owned
+        # row, and "docs/coverage-floors matches no LLR Module" is noise by
+        # construction — the LLR inventory holds modules.
+        for endpoint in module_endpoints(r.get("Provider")):
+            if norm_modules and _norm_module(endpoint) not in norm_modules:
+                advisories.append(
+                    f"IF {iid} Provider={endpoint!r} matches no LLR Module "
+                    "(best-effort join; a module with no LLR is legitimate — "
+                    "check_trajectory's arch-map coverage is the full check)"
+                )
     return findings, advisories
 
 
@@ -2284,7 +2289,8 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     modules. So a green from either rule said nothing at all about these rows.
 
     THE RULE, since the 2026-08-15 rework (plan step 2): an endpoint — in
-    `ThisProject` **or** `Counterpart` — that resolves to no module, no file and
+    `Provider` **or** `Consumers` (`ThisProject`/`Counterpart` until WI-455
+    renamed them) — that resolves to no module, no file and
     no directory AND carries no `external:` marker is a NAMED finding. A
     file/directory endpoint and a marked external one are both legitimate and
     stay counted-not-named; the summary still reports every class, because the
@@ -2300,7 +2306,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     files, external, unknown, rows_hit = [], [], [], set()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
-        for col in ("ThisProject", "Counterpart"):
+        for col in ("Provider", "Consumers"):
             # A `;`-joined cell is SEVERAL endpoints, and reading it as one is
             # how a real seam gets reported as a dangling path (IF-097 names
             # three modules). Split on `;` only — an endpoint may legitimately
@@ -2361,7 +2367,7 @@ def if_ownership_advisories(ifs, sr_ids, llr_ids):
     one — and none of them is thereby answerable FOR the seam. `Owner` names the
     one that is. Deriving it instead was the plan's first recommendation and Q1
     overturned it: a derived view can only surface what is already encoded, and
-    `ThisProject` holds a module PATH, not a resolvable id.
+    an endpoint cell holds a module PATH, not a resolvable id.
 
     Warn-first, with the whole set: the cells were seeded mechanically from
     `Req-Refs` and every multi-ref pick is a provisional judgement recorded in
@@ -3761,7 +3767,7 @@ class Findings:
     provenance_advis: list = field(default_factory=list)
     sr_fanout_advis: list = field(default_factory=list)
     verif_coherence_advis: list = field(default_factory=list)
-    if_this_project_advis: list = field(default_factory=list)
+    if_provider_advis: list = field(default_factory=list)
     budget_findings: list = field(default_factory=list)
     module_findings: list = field(default_factory=list)
     component_findings: list = field(default_factory=list)
@@ -4132,7 +4138,7 @@ def analyze(reg, args):
     knowledge_advisories = knowledge_pack_advisories(cmps, docs)
 
     # Interface seams (IF-###, process.md §8): Req-Refs back-links join the
-    # --strict failure set like PB's; the ThisProject-vs-LLR-Module endpoint join
+    # --strict failure set like PB's; the Provider-vs-LLR-Module endpoint join
     # is a warn-only advisory (module_ids reused from the PB back-link check above).
     interface_backlink_findings, interface_advisories = interface_findings(
         ifs, sr_ids, module_ids
@@ -4181,14 +4187,13 @@ def analyze(reg, args):
         + if_ownership_advisories(ifs, sr_ids, llr_ids)
         + if_carriage_advisories(ifs)
     )
-    # Warn-only, always on (re-tier v2 R4, owner ruling 2026-08-15): an IF row
-    # whose owner-side endpoint disagrees with its owner LLR's `Module`. Its OWN
-    # pipe rather than the interface-advisory bundle above, for the reason the S2
-    # pair got theirs: this is the pre-condition for DELETING a column (`ThisProject`
-    # is derivable as owner->LLR->module, wi455 owns the removal), so it is read as
-    # a countdown to a schema change and not as one more seam lint. Never joins a
-    # failure set below.
-    if_this_project_advis = if_this_project_advisories(ifs, llrs)
+    # Warn-only, always on (re-tier v2 R4, owner ruling 2026-08-15; WI-455
+    # executed the removal it counted down to): an IF row that STATES a
+    # `Provider` its owner LLR's `Module` already derives. Its OWN pipe rather
+    # than the interface-advisory bundle above, for the reason the S2 pair got
+    # theirs: it reports on the SCHEMA — a cell that should no longer exist on
+    # that row — and not on one more seam lint. Never joins a failure set below.
+    if_provider_advis = if_provider_advisories(ifs, llrs)
 
     # The delivery filter and the two rules scoped by it. `verification_basis`
     # runs unconditionally (the footprint is always visible); the status
@@ -4294,7 +4299,7 @@ def analyze(reg, args):
         provenance_advis=provenance_advis,
         sr_fanout_advis=sr_fanout_advis,
         verif_coherence_advis=verif_coherence_advis,
-        if_this_project_advis=if_this_project_advis,
+        if_provider_advis=if_provider_advis,
         budget_findings=budget_findings,
         module_findings=module_findings,
         component_findings=component_findings,
@@ -4342,7 +4347,7 @@ def render_report(reg, findings, args, forest):
     provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
-    if_this_project_advis = findings.if_this_project_advis
+    if_provider_advis = findings.if_provider_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
     component_findings = findings.component_findings
@@ -4576,17 +4581,14 @@ def render_report(reg, findings, args, forest):
         if not sr_fanout_advis
         else [f"- {f}" for f in sr_fanout_advis]
     )
-    # Warn-only (re-tier v2 R4): the countdown to dropping `ThisProject` — every
-    # row where the cell and its owner LLR's Module still disagree, so the
-    # derivation that makes the column redundant cannot yet be trusted.
-    lines += ["", "## ThisProject derivability advisories (warn-only)", ""]
+    # Warn-only (re-tier v2 R4, executed at WI-455): the column WENT, and this
+    # is what the countdown became — every row still STATING a provider its
+    # owner already derives, redundantly or contradictorily.
+    lines += ["", "## Provider derivability advisories (warn-only)", ""]
     lines += (
-        [
-            "None. Every LLR-owned row's owner-side endpoint agrees with its "
-            "owner's Module."
-        ]
-        if not if_this_project_advis
-        else [f"- {f}" for f in if_this_project_advis]
+        ["None. No row states a Provider that its owner LLR's Module already derives."]
+        if not if_provider_advis
+        else [f"- {f}" for f in if_provider_advis]
     )
     # Verification-basis surface (process.md §4): make the project's trust
     # footprint auditable — of what is `Approved`, how much rests on a runnable
@@ -4750,7 +4752,7 @@ def render_console(reg, findings, args, out, html_out):
     provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
-    if_this_project_advis = findings.if_this_project_advis
+    if_provider_advis = findings.if_provider_advis
     watermark_advis = findings.watermark_advisories
     snapshot_findings = findings.snapshot_findings
     mechanized_verified = findings.mechanized_verified
@@ -4785,7 +4787,7 @@ def render_console(reg, findings, args, out, html_out):
         + provenance_advis
         + sr_fanout_advis
         + verif_coherence_advis
-        + if_this_project_advis
+        + if_provider_advis
         + watermark_advis
     ):
         print(f"WARNING (advisory): {a}")

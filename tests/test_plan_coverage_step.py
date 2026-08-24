@@ -44,8 +44,8 @@ PLAN_B_BAD = PLAN_B_GOOD.replace(
 )
 
 IFS = (
-    "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,Stability,Status,Component,Notes\n"
-    "IF-001,Provides,scripts/a,scripts/b,contract,SR-001,v1,Stable,Stable,,\n"
+    "IF-ID,Provider,Consumers,Contract,Req-Refs,Version,Stability,Status,Component,Notes\n"
+    "IF-001,scripts/a,scripts/b,contract,SR-001,v1,Stable,Stable,,\n"
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 

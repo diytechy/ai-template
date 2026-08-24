@@ -128,9 +128,8 @@ def test_the_meta_repos_own_registries_convert_losslessly():
 
 IF_HEADER = [
     "IF-ID",
-    "Direction",
-    "ThisProject",
-    "Counterpart",
+    "Provider",
+    "Consumers",
     "Contract",
     "Signal",
     "SignalNote",
@@ -143,9 +142,8 @@ IF_HEADER = [
 ]
 IF_ROW = {
     "IF-ID": "IF-001",
-    "Direction": "Provides",
-    "ThisProject": "scripts/trace",
-    "Counterpart": "scripts/check",
+    "Provider": "scripts/trace",
+    "Consumers": "scripts/check;scripts/gen_okf",
     "Contract": 'trace.py CLI: --strict exits 1 on an orphan; writes "report.md"',
     "Signal": "discrete",
     "SignalNote": "",
@@ -203,7 +201,38 @@ def test_the_two_new_tiers_round_trip_cell_for_cell(table, id_col, header, row):
     # ...and the ref cell is a typed array, not a `;`-joined string.
     if table == "interface":
         assert parsed["sr_refs"] == ["SR-001", "SR-002"]
+        # `Consumers` is a typed array too since WI-455 — the cell always held
+        # several `;`-joined endpoints on the rows that have several, and the
+        # reader splits on `;` alone, so the array is what it already meant.
+        assert parsed["consumers"] == ["scripts/check", "scripts/gen_okf"]
         assert parsed["signal"] == "discrete"
+
+
+def test_a_retired_endpoint_column_converts_under_its_own_name():
+    """A legacy CSV still carrying `ThisProject`/`Counterpart` (retired at
+    WI-455) keys them as THEMSELVES rather than guessing which side each was.
+
+    The documented degrade, and the same one the retired `Status` column
+    already had: the carrier converts, the schema tier then names the unknown
+    key, and the adopter renames the cells deliberately (RESYNC_PACK.md).
+    Guessing here would silently reverse every `Consumes` row, which is the one
+    failure the migration entry is written to prevent."""
+    header = ["IF-ID", "Direction", "ThisProject", "Counterpart", "Contract"]
+    row = {
+        "IF-ID": "IF-001",
+        "Direction": "Consumes",
+        "ThisProject": "scripts/check_perf",
+        "Counterpart": "docs/requirements/performance-budgets.csv",
+        "Contract": "reads the budgets registry",
+    }
+    parsed = tomllib.loads(mc.rows_to_toml("interface", "IF-ID", [row], header))
+    cells = parsed["interface"]["IF-001"]
+    assert cells["ThisProject"] == "scripts/check_perf"
+    assert cells["Counterpart"] == "docs/requirements/performance-budgets.csv"
+    # `Direction` still MAPS — the boundary tier keeps that column and its
+    # in|out|inout reading; only the IF tier's reading of it retired.
+    assert cells["direction"] == "Consumes"
+    assert "provider" not in cells and "consumers" not in cells
 
 
 def test_the_if_tier_has_exactly_ONE_declared_maturity_key():

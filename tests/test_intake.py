@@ -557,9 +557,9 @@ def context_repo(tmp_path):
         newline="\n",
     )
     (req / "interfaces.csv").write_text(
-        "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
+        "IF-ID,Provider,Consumers,Contract,Req-Refs,Version,"
         "Stability,Status,Component,Notes\n"
-        'IF-001,Provides,scripts/widget,scripts/check,"widget CLI: exits 1 on '
+        'IF-001,scripts/widget,scripts/check,"widget CLI: exits 1 on '
         'a bad widget",SR-001,v1,Stable,Active,CMP-001,\n',
         encoding="utf-8",
         newline="\n",

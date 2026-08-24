@@ -85,15 +85,15 @@ status = "Approved"
 notes = "demo component"
 """
 
-# `direction` READS `Provides` here and read `out` until 2026-08-15, when the IF
-# tier's `Direction` vocabulary was finally closed and caught it: `in|out|inout`
-# is the depth-0 BOUNDARY tier's vocabulary, and it had leaked into an interface
-# fixture where nothing could see it. `counterpart` is a cross-repo endpoint, so
-# it carries the external marker rather than reading as a dangling path.
+# The row carried a `direction` cell until WI-455 retired the column (OI-60
+# ruled (a), 2026-08-23) — it had read `out`, the depth-0 BOUNDARY tier's
+# vocabulary leaked into an interface fixture, until the 2026-08-15 enum close
+# caught it; now flow is the shape of the row and there is no cell to leak into.
+# The consumer is a cross-repo endpoint, so it carries the external marker
+# rather than reading as a dangling path.
 RICH_IFS = """[interface.IF-001]
-direction = "Provides"
-this_project = "src/demo"
-counterpart = "external:acme/widget"
+provider = "src/demo"
+consumers = ["external:acme/widget"]
 contract = "call"
 signal = "discrete"
 req_refs = ["SR-001"]

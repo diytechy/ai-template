@@ -16,13 +16,18 @@
 # A row with neither key is an internal seam. That absence IS the statement —
 # there is no column to set to "internal" and get wrong.
 #
-# ENDPOINTS ARE VALIDATED AGAINST THE TREE. `this_project` and `counterpart` are
-# checked, warn-first, against the arch-map modules and then against the files
-# and directories that actually exist; an endpoint that resolves to NOTHING is
-# named individually, because a spine file that migrated (`.csv` -> `.toml`) and
-# left its seam row behind is the failure this rule was written for.
+# THE TWO SIDES ARE `provider` AND `consumers`, and the row is read
+# provider -> consumers. `consumers` is a LIST and is required; `provider` is a
+# single endpoint and is OMITTED wherever `owner` derives it (see DERIVABILITY
+# below).
 #
-#     counterpart = "external:downstream adopter"
+# ENDPOINTS ARE VALIDATED AGAINST THE TREE. Both cells are checked, warn-first,
+# against the arch-map modules and then against the files and directories that
+# actually exist; an endpoint that resolves to NOTHING is named individually,
+# because a spine file that migrated (`.csv` -> `.toml`) and left its seam row
+# behind is the failure this rule was written for.
+#
+#     consumers = ["external:downstream adopter"]
 #
 # The `external:` PREFIX is how a row says an endpoint is deliberately outside
 # this tree — an adopter, `git`, an agent CLI, an upstream doc set. It is a value
@@ -32,9 +37,11 @@
 # A path your `docs/declared-absences` already declares (an opt-in layer you have
 # switched off) counts as resolved — the reason is stated there, once.
 #
-# An endpoint cell may name SEVERAL endpoints, `;`-separated, when one contract
-# genuinely has more than one far side. Prefer one endpoint per row; use the list
-# only when splitting would copy the same `contract` text into two rows.
+# `consumers` names EVERY consuming side the contract really has — one seam
+# read by three modules is one row with three consumers, not three rows copying
+# one `contract`. Name the readers you have MEASURED, not everything that might
+# read it. A published medium whose readers are open-ended names the class
+# (`external:downstream adopter`) alongside the in-tree readers.
 #
 # OWNER is the ONE row that is answerable for this interface, id-typed, and it is
 # POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`, resolved against whichever
@@ -46,16 +53,29 @@
 #
 # `owner` is NOT `req_refs`. `req_refs` lists every requirement the seam realizes
 # or relies on, and several is normal; `owner` names the one that ANSWERS for it.
-# Reading who serves a seam used to take three cells (`direction` +
-# `this_project` + `counterpart`) whose meanings swap on the first. This is that
-# answer in one cell.
+# Reading who serves a seam used to take three cells (a `direction` flag plus two
+# endpoint cells whose meanings swapped on it). This is that answer in one cell.
 #
-# DIRECTION IS FLOW AND COVERAGE, NEVER OWNERSHIP. `Provides` says this side
-# authors the contract; `Consumes` says a cross-component edge is INTENDED and
-# this row discharges it — a coverage declaration, not a claim on the seam. A
-# "provide" implies orientation but does not mean the interface is actually
-# directional: a bolted joint, a mated connector and a thermal path each have an
-# owner and no flow at all. Ownership lives in `owner`, and only there.
+# ON A ROW WHOSE MEDIUM IS CONSUMED, `owner` NAMES THE PROVIDER OF THAT MEDIUM —
+# never the module that merely holds the consuming code. One row per medium, with
+# its verified readers in `consumers`, beats one row per reader.
+#
+# DERIVABILITY — WHEN TO OMIT `provider`. Where `owner` is a design row naming
+# exactly ONE module, that module IS the provider, so the cell is left OUT: a
+# derivable cell is a second spelling of a fact that already has a home, and the
+# two spellings can disagree. State `provider` only where the derivation cannot
+# run — an `SR-###` owner (a requirement names no module) or an owner whose
+# `module` names several (which derives a SET, not the fact) — or where the
+# provider is a file medium or an `external:` party, which no design row is.
+# A warn-only advisory names any row that states a provider its owner derives.
+#
+# THERE IS NO DIRECTION COLUMN, deliberately. Flow is the SHAPE of the row
+# (provider -> consumers), not a flag beside it — and a "provide" implies
+# orientation without meaning the interface is actually directional: a bolted
+# joint, a mated connector and a thermal path each have an owner and no flow at
+# all. What a `Consumes` row used to declare — this cross-component edge is
+# INTENDED, and this row discharges it — is unchanged and is read off the
+# endpoint pair. Ownership lives in `owner`, and only there.
 #
 # CARRIED_BY is OPTIONAL interface composition: a constituent naming the bundle
 # that carries it (`carried_by = "IF-###"`). Six seams riding one larger seam
@@ -75,10 +95,9 @@
 # shipped undeclared — this field carries that name honestly now).
 
 [interface.IF-000]
-direction = "Provides"
-this_project = "EXAMPLE - delete on first real entry"
-counterpart = "another-module-or-file-or-external-actor"
-contract = """One directed seam, one testable line: CLI flags + exit codes, or the file schema. ThisProject is a module path; Counterpart is another module, a file path (module->file->module dataflow, so a shared file like docs/stack.ini is a hub node many modules Consume), or an external actor (downstream adopter / git / agent CLI)."""
+provider = "EXAMPLE - delete on first real entry"
+consumers = ["another-module-or-file-or-external-actor"]
+contract = """One seam, one testable line: CLI flags + exit codes, or the file schema. Provider is the side the contract is served FROM - a module path, or the file medium itself (module->file->module dataflow, so a shared file like docs/stack.ini is a hub node many modules read); consumers are the sides that read it - modules, or an external actor (downstream adopter / git / agent CLI). Provider is OMITTED on a row whose owner derives it."""
 signal = "discrete"
 signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable alphabet - exit code, gate name, status enum, dial) or variable (unbounded content - prose, file bytes, a count, a duration). If BOTH cross, the row is variable, and this cell says why."""
 rationale = """WHY the seam is drawn here - the argument that would otherwise squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take. It takes the ARGUMENT, never the CITATION: state what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3)."""
@@ -90,4 +109,4 @@ status = "Drafted"
 interface_from_external = "B-000"
 interface_to_external = "B-000"
 component = "CMP-000"
-notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-direction coverage warn for ThisProject. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""
+notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-seam coverage warn - source marks this row's provider, sink marks its consumers. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the crossing direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

@@ -63,7 +63,7 @@ Produce exactly one markdown table, one row per proposed WI:
 - **Interfaces**: the `IF-###` seams the WI acts on, from the registry above.
   If no existing seam fits, write `Proposed:` followed by a one-line rationale
   that names the **nearest existing IF-###** and why it falls short (wrong
-  direction, wrong counterpart, incompatible contract). If the WI acts within
+  provider, wrong consumers, incompatible contract). If the WI acts within
   a single module and touches no seam, write `intra-module`.
 - **Predecessors**: plan-local ids this WI hard-depends on (it consumes their
   deliverable), or empty. No cycles. Do not add sequencing-habit edges.

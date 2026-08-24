@@ -29,7 +29,7 @@ surface (the search genuinely came up empty).
 **B2 — Dishonest or absent rationale.** A `Proposed` citation's rationale does
 not truly name the **nearest** existing seam, or hand-waves "no existing seam"
 without evidence of a search. *Good:* it names a concrete `IF-###` and states
-the specific reason it falls short — wrong direction, wrong counterpart,
+the specific reason it falls short — wrong provider, wrong consumers,
 incompatible contract.
 
 **B3 — Speculative seam.** A seam is proposed before a second consumer exists —

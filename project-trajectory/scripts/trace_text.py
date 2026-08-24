@@ -16,7 +16,7 @@ Split out of `trace.py`, which owns the JOIN — this module owns the question
 | `sn_artifact_advisories`    | advisory | a need's acceptance names an artifact  |
 | `sr_fanout_advisories`      | advisory | an SR's direct-LLR fan-out is merged   |
 | `ears_advisories`           | advisory | a condition stated outside EARS        |
-| `if_this_project_advisories`| advisory | an endpoint disagrees with its owner   |
+| `if_provider_advisories`    | advisory | a stated Provider its owner derives    |
 
 They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
@@ -98,7 +98,7 @@ MODULE_EXTS = _spine.MODULE_EXTS
 EXTERNAL_ENDPOINT_PREFIX = "external:"
 
 # MODULE_EXTS, EXTERNAL_ENDPOINT_PREFIX and `norm_module` MOVED HERE FROM trace.py
-# at re-tier v2 S5 (WI-464): `if_this_project_advisories` below asks the same
+# at re-tier v2 S5 (WI-464): `if_provider_advisories` below asks the same
 # endpoint-vs-module question and is a PURE predicate, so the choice was a
 # fourth copy of the normalizer or ONE home in the lower layer. trace.py imports
 # all three back — the same direction it already imports `refs`/`is_example`, so
@@ -1221,17 +1221,6 @@ def sr_fanout_advisories(srs, llrs, bound=SR_FANOUT_MAX):
     return out
 
 
-# Which endpoint cell the OWNER answers for, by `Direction`. The owner answers for
-# the PROVIDING side: on a `Provides` row that side is written in `ThisProject`, on
-# a `Consumes` row the providing side is the `Counterpart` (Q2, 2026-08-15 — a
-# Consumes row is a COVERAGE declaration written from the consumer's viewpoint, so
-# the row's own `ThisProject` is the consumer, not the owner's module). Keyed
-# lower-case off the closed `Direction` vocabulary; any other value (blank, or a
-# word the enum does not know) resolves to None and the row is skipped, because
-# the required-field and enum rules already say what is wrong with it.
-_OWNER_SIDE_COLUMN = {"provides": "ThisProject", "consumes": "Counterpart"}
-
-
 def _module_shaped(endpoint):
     """Is this endpoint a MODULE reference at all — the only class the
     derivability question ranges over?
@@ -1262,7 +1251,7 @@ def _module_shaped(endpoint):
     return e.endswith(MODULE_EXTS)
 
 
-def _module_endpoints(cell):
+def module_endpoints(cell):
     """The MODULE-shaped endpoints of one `;`-joined endpoint cell.
 
     Split on `;` ONLY — an endpoint may legitimately contain a space or a comma,
@@ -1289,78 +1278,57 @@ def _owner_llr_module(row, modules):
     return owners[0], modules.get(owners[0], "")
 
 
-def if_this_project_advisories(ifs, llrs):
-    """Warn-only: an IF row whose OWNER-SIDE endpoint disagrees with the `Module`
-    its owner LLR names (re-tier v2 R4, owner ruling 2026-08-15).
+def if_provider_advisories(ifs, llrs):
+    """Warn-only: an IF row that STATES a `Provider` its owner already derives —
+    redundantly (the two agree) or contradictorily (they do not).
 
-    **One endpoint cell is on its way out — but WHICH ONE depends on the row's
-    direction, and saying otherwise is how this advisory misread itself.** R4 ruled
-    the end-state schema: `owner` stays id-typed and points at the design tier
-    wherever a design row exists, and once it does, the endpoint the owner ANSWERS
-    FOR is DERIVABLE — owner → LLR → `module` — so THAT cell restates a fact which
-    already has a home. One artifact binding, stated once, at the LLR `Module` cell.
+    THE RULE THE SHED LEFT BEHIND. Until WI-455 this compared the owner-side
+    endpoint against the owner LLR's `Module` and counted down to deleting a
+    column. The column is gone (OI-60 ruled (a), 2026-08-23): a seam's provider
+    is `owner`->LLR->`module` wherever the owner is a design row naming ONE
+    module, and `Provider` survives only where that derivation cannot run — a
+    requirement owner (a requirement names no module) or a multi-module owner
+    (which derives a SET, not the fact).
 
-    Under the providing-side reading this predicate implements (`_OWNER_SIDE_COLUMN`),
-    the derivable cell differs by direction, and only one of the two is
-    `ThisProject`:
+    So the disagreement this rule always policed is now a PRESENCE question, and
+    it is the executable half of the twelve-row re-point the SR-owned-`Provides`
+    report describes: re-point such a row's owner at the design row that
+    implements the provider, and this advisory says the cell has become
+    derivable and should go. Its silence is the invariant *no row states what
+    the registry already knows*.
 
-    * `Provides` — the owner's module IS `ThisProject`, so **`ThisProject` is the
-      derivable cell** and `Counterpart` stays as the consumer/coverage fact.
-    * `Consumes` — the owning design row is the PROVIDER and its module is written
-      in `Counterpart`, so **`Counterpart` is the derivable cell**; `ThisProject`
-      here names the CONSUMER, which no derivation reaches and which R4's
-      consumers/endpoints list is what carries forward.
+    Both sides are normalized (`norm_module`) and the owner's `Module` splits on
+    `;`, so the arch-map short form and the full repo path with its extension
+    read as one module rather than as a disagreement.
 
-    So "drop `ThisProject`" is the whole story only if the owner is read as
-    the-module-that-holds-the-code (the IF-031/F6 reading) on every row. That
-    question is OPEN and the owner's to rule (log 2026-08-16g flags it); this
-    predicate does not presume the answer — it compares whichever endpoint the
-    CURRENT reading makes the owner's, and its finding text names that column
-    rather than asserting a derivation the compared cell does not support.
-    (Corrected 2026-08-16, S6 second top-down read, finding M7: the message
-    previously read `Counterpart` on a Consumes row while claiming `this_project`
-    was thereby derivable. The comparison was right; the sentence about it was not,
-    and it is the sentence a sitting would have signed.)
-
-    Both sides are normalized (`norm_module`) and both sides split on `;`, so the
-    arch-map short form and the full repo path with its extension read as one
-    module rather than as a disagreement, and a `;`-joined cell matches on ANY
-    endpoint — a bundle that names the owner's module among several is not
-    misfiled, whether the bundle is the endpoint cell or the owner LLR's `Module`
-    cell.
-
-    wi455 owns the removal (the schema's existing HELD note names it); this is the
-    ADVISORY THAT RUNS FIRST, because a cell cannot be dropped as redundant while
-    the two spellings of it still disagree — the disagreement is the one thing a
-    derivation cannot survive, and it has to be visible and settled before any
-    column goes.
-
-    Warn-only, never the exit code, and permanently so as far as this rule is
-    concerned: clearing it means re-pointing owners and correcting endpoints across
-    the registry, which is the re-tier campaign's schedule, not the checker's."""
+    Warn-only, never the exit code: dropping a now-derivable cell is an
+    authoring act with a judgement in it (the report's twelve are exactly that
+    judgement), not something a gate should force."""
     modules = {rid: (r.get("Module") or "").strip() for rid, r in _real(llrs, "LLR-ID")}
     out = []
     for r in ifs:
         iid = (r.get("IF-ID") or "").strip()
+        stated = (r.get("Provider") or "").strip()
         oid, module = _owner_llr_module(r, modules)
-        col = _OWNER_SIDE_COLUMN.get((r.get("Direction") or "").strip().lower())
-        if not iid or is_example(iid) or not module or not col:
+        if not iid or is_example(iid) or not stated or not module:
             continue
-        endpoints = _module_endpoints(r.get(col))
-        # The LLR `Module` cell splits on `;` exactly like the endpoint cell —
-        # a bundle-moduled owner (LLR-035 names three) matches on ANY of them.
         want = {norm_module(m) for m in module.split(";") if m.strip()}
-        if not endpoints or any(norm_module(e) in want for e in endpoints):
+        if len(want) != 1:
+            continue  # a multi-module owner derives a SET; the cell IS the fact
+        endpoints = module_endpoints(stated)
+        if endpoints and all(norm_module(e) not in want for e in endpoints):
+            out.append(
+                "IF {} Provider={!r} names no module matching owner {}'s LLR "
+                "Module {!r} — the provider is the endpoint this owner answers "
+                "for, so the two must agree: re-point Owner at the LLR that "
+                "implements this provider, or correct the cell (warn-only, "
+                "never the exit code)".format(iid, stated, oid, module)
+            )
             continue
         out.append(
-            "IF {} {}={!r} names no module matching owner {}'s LLR Module {!r} — "
-            "{} is the endpoint this owner answers for, so it is the cell that "
-            "becomes derivable as owner→LLR→module once the two agree, and the "
-            "one dropped once it is (re-tier v2 R4; wi455 owns the removal): "
-            "re-point Owner at the LLR that implements this endpoint, or correct "
-            "the endpoint — a redundant cell can be deleted, a DISAGREEING one "
-            "cannot (warn-only, never the exit code)".format(
-                iid, col, (r.get(col) or "").strip(), oid, module, col
-            )
+            "IF {} states Provider={!r}, which owner {}'s LLR Module {!r} "
+            "already derives — a derivable cell is a second spelling of a fact "
+            "that has a home (WI-455): drop it (warn-only, never the exit "
+            "code)".format(iid, stated, oid, module)
         )
     return out

@@ -161,7 +161,12 @@ BASELINE = {
     (
         "check_trajectory.py",
         "interface_findings",
-    ): 22,  # -1 2026-08-13: WI-443 — the seam-TC loop became a comprehension plus one summary line when it re-keyed onto Stability
+    ): 20,  # RE-STAMPED DOWN -2 (22 -> 20) 2026-08-23, WI-455: the endpoint
+    # orientation left this function. `load_ifs` now resolves each row into
+    # provider + consumers once, so the producer/consumer credit is two set
+    # updates instead of a direction flip plus two membership branches.
+    # Recorded DOWN in the same commit, per this file's rule.
+    # Earlier -1 2026-08-13: WI-443 — the seam-TC loop became a comprehension plus one summary line when it re-keyed onto Stability
     # WI-352 reviewed bump 21 -> 22, +1: the completion reconciler is
     # deliberately split across TWO tiers (spec evidence gates, trailer evidence
     # only warns), so main() needs one warn loop beside the gated extend. Folding
@@ -201,7 +206,10 @@ BASELINE = {
     # only caller is this function, which the ratchet's own preference reads as
     # motion rather than simplification; the spec-collection half IS already
     # extracted (`_snapshot_write_revs`). Reviewed entry, reason in the log.
-    ("gen_arch_map.py", "build_dependency_diagram"): 14,
+    # RE-STAMPED DOWN -3 (14 -> 11) 2026-08-23, WI-455: the declared-seam edge
+    # walk went out to `_seam_edges` when the consumers side became a list —
+    # decomposition rather than the bump the nesting would otherwise have cost.
+    ("gen_arch_map.py", "build_dependency_diagram"): 11,
     (
         "gen_arch_map.py",
         "main",

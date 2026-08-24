@@ -73,21 +73,18 @@ status = "Approved"
 """
 
 IFS = """[interface.IF-001]
-direction = "Provides"
-this_project = "scripts/alpha"
-counterpart = "scripts/beta"
+provider = "scripts/alpha"
+consumers = ["scripts/beta"]
 req_refs = ["SR-001"]
 
 [interface.IF-002]
-direction = "Provides"
-this_project = "scripts/alpha"
-counterpart = "scripts/alpha"
+provider = "scripts/alpha"
+consumers = ["scripts/alpha"]
 req_refs = ["SR-002"]
 
 [interface.IF-003]
-direction = "Consumes"
-this_project = "external:somebody"
-counterpart = "external:somebody-else"
+provider = "external:somebody"
+consumers = ["external:somebody-else"]
 req_refs = ["SR-002"]
 """
 
