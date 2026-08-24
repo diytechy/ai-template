@@ -80,6 +80,16 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   lived in a `Drafted` child (SR-177's shape) never got its own row, and its
   text sat only inside the HTML's collapsed context, hidden by default.
   Record: [log.d/2026-08-24-wi514-brief-carries-text.md](log.d/2026-08-24-wi514-brief-carries-text.md).
+  **AND THE TEXT IS LIGHTER TO READ** (owner-directed, 2026-08-24: the items
+  needing approval "still seem pretty heavy"): a cross-family wording round
+  (`OPENAI-TERRA`, `gpt-5.6-terra` via `codex exec`) over the nineteen
+  `Drafted` rows was adjudicated suggestion by suggestion — 21 accepted of 38,
+  the reviewable population down 13.2% — and applied to those rows only.
+  **Nothing was approved**: the brief the owner signs FROM is the regenerated
+  one, and it now shows each re-worded row's before/after until the approval
+  re-seeds the snapshot. Dossier (every rejection reasoned, plus two findings
+  banked for the owner about `Approved` text nobody may edit):
+  [reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md).
   Known environmental constraint: ~1.6 GB free on C:, so full-suite runs may
   need the batched/cleaned-basetemp form until space is reclaimed.
 - **The interface `contract` cell's next question is (b), and it now has a
