@@ -406,6 +406,39 @@ def _components(root):
     )
 
 
+CLI_REFERENCE_REL = "docs/cli-reference.md"
+
+
+def _cli_reference(root):
+    """The CLI reference applies only where the doc exists AND carries its
+    marker pair — the same opt-in reading `_status_block` gives the status
+    snapshot, and for the same reason: without the markers there is nothing to
+    splice, so a regen would be a hard error rather than a no-op."""
+    path = Path(root) / CLI_REFERENCE_REL
+    if not path.exists():
+        return False
+    return "BEGIN GENERATED CLI REFERENCE" in path.read_text(
+        encoding="utf-8", errors="replace"
+    )
+
+
+def _cli_reference_cmd(root):
+    """Its own argv builder rather than `_cmd`: this generator needs the
+    declared `[paths] src` (it scans SOURCE, not registries), and the profile
+    is only readable per-root."""
+    src = _pget(_profile(root), "paths", "src", "src")
+    return [
+        sys.executable,
+        str(_SCRIPTS / "gen_arch_map.py"),
+        "--root",
+        ".",
+        "--src",
+        src,
+        "--cli-doc",
+        CLI_REFERENCE_REL,
+    ]
+
+
 def _open_items(root):
     return (
         spine_carrier.resolve(Path(root) / "docs/requirements/open-items.toml")
@@ -438,6 +471,9 @@ def _open_items(root):
 #                (it is a LEAF, like open-items, so its position is free — it
 #                sits last because it was added last, not because anything
 #                downstream of it exists).
+#   cli-reference reads the SOURCE TREE only — no registry, no generated file —
+#                so it has no edge at all and its position is free for the same
+#                reason component-view's is.
 REGEN_STEPS = (
     (
         "okf",
@@ -474,6 +510,12 @@ REGEN_STEPS = (
         _components,
         _cmd("gen_components.py"),
         "neither docs/requirements/components.{toml,csv} nor the derived view",
+    ),
+    (
+        "cli-reference",
+        _cli_reference,
+        _cli_reference_cmd,
+        "docs/cli-reference.md absent or carries no CLI REFERENCE markers",
     ),
 )
 

@@ -758,3 +758,125 @@ def test_backlink_cli_is_warn_first_and_strict_only_on_demand(scaffold):
     strict = run_py(args + ["--strict-backlinks"], cwd=scaffold)
     assert strict.returncode == 1
     assert "WARNING" in strict.stdout + strict.stderr
+
+
+# --- the generated CLI reference (OI-61 ruled (a), second step) ---------------
+
+CLI_MOD = '''"""Widget CLI — demo.
+
+Contracts: IF-101
+"""
+
+import argparse
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tier", help="the tier to run")
+    ap.add_argument("--strict", action="store_true", help="exit 1 on a finding")
+    ap.add_argument("path")
+'''
+
+LIB_MOD = '''"""Library — no command line."""
+
+
+def helper():
+    """Not a CLI."""
+'''
+
+
+@pytest.fixture
+def cli_src(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "widget.py").write_text(CLI_MOD, encoding="utf-8")
+    (src / "library.py").write_text(LIB_MOD, encoding="utf-8")
+    return src
+
+
+def test_cli_reference_harvests_flags_help_and_declared_seams(cli_src):
+    out = gen_arch_map.build_cli_reference([cli_src])
+    assert "### `src/widget`" in out
+    assert "_Widget CLI — demo._" in out
+    # The `Contracts:` line is what makes this a REFERENCE for the interface
+    # registry rather than a second document beside it.
+    assert "Contracts (interfaces): IF-101" in out
+    assert "| `--tier` | the tier to run |" in out
+    assert "| `--strict` | exit 1 on a finding |" in out
+    # A positional is a real part of the surface and is named by its dest.
+    assert "| `path` |" in out
+    # A module that builds no parser is not a CLI and is left out entirely —
+    # the reference lists the surfaces an adopter can run, not the files.
+    assert "library" not in out
+
+
+def test_cli_reference_tracks_the_argparse_tree(cli_src):
+    before = gen_arch_map.build_cli_reference([cli_src])
+    (cli_src / "widget.py").write_text(
+        CLI_MOD.replace('help="the tier to run"', 'help="the tier, renamed"'),
+        encoding="utf-8",
+    )
+    after = gen_arch_map.build_cli_reference([cli_src])
+    assert before != after
+    assert "the tier, renamed" in after
+
+
+def test_cli_reference_is_empty_but_honest_with_no_command_line(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "library.py").write_text(LIB_MOD, encoding="utf-8")
+    out = gen_arch_map.build_cli_reference([src])
+    assert "_(no command-line surface scanned)_" in out
+
+
+def test_cli_doc_splices_and_check_reds_on_drift(tmp_path, cli_src):
+    from conftest import run_py
+
+    doc = tmp_path / "cli-reference.md"
+    doc.write_text(
+        "# CLI\n\n<!-- BEGIN GENERATED CLI REFERENCE -->\n"
+        "<!-- END GENERATED CLI REFERENCE -->\n",
+        encoding="utf-8",
+    )
+    script = Path(gen_arch_map.__file__)
+    args = ["--src", str(cli_src), "--cli-doc", str(doc)]
+
+    # A bare run writes the block; --check is then green.
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert "--tier" in doc.read_text(encoding="utf-8")
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+    # Edit the argparse tree and the committed block is STALE — the whole point
+    # of generating it rather than paraphrasing it by hand.
+    (cli_src / "widget.py").write_text(
+        CLI_MOD.replace("--tier", "--stratum"), encoding="utf-8"
+    )
+    red = run_py([script] + args + ["--check"], cwd=tmp_path)
+    assert red.returncode == 1
+    assert "STALE" in (red.stdout + red.stderr)
+
+    # And regenerating clears it.
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+
+def test_cli_doc_is_vacuous_when_the_target_is_absent(tmp_path, cli_src):
+    # The opt-in posture: a repo that has not adopted the reference has no file
+    # to be stale, and the harness step must cost it nothing. (`--doc`'s
+    # missing-target REFUSAL is deliberately the other way round — that target
+    # is a hand-authored doc the caller named.)
+    from conftest import run_py
+
+    proc = run_py(
+        [
+            Path(gen_arch_map.__file__),
+            "--src",
+            str(cli_src),
+            "--cli-doc",
+            str(tmp_path / "absent.md"),
+            "--check",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0
+    assert "nothing to check" in proc.stdout

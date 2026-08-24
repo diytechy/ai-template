@@ -4,6 +4,20 @@
 # An IF row states what one interface concretely IS — one testable line: CLI
 # flags and exit codes, or the file schema.
 #
+# WHAT A CONTRACT MUST NOT BE IS A RESTATEMENT OF ITS OWNER. Where the seam's
+# detail already lives on the `owner` row and in the module itself, the contract
+# states the CROSSING and stops:
+#
+#     contract = """SR-006's obligation delivered as a CLI at check.py; crosses B-05."""
+#
+# What crosses, who answers for it, which boundary — and a reader who needs the
+# flags reads the owner row, the module, or the generated CLI reference, each of
+# which is checked against the code in a way a hand-copied paragraph is not.
+# Keep a clause past that only for a typed fact the owner row does NOT state (a
+# written artifact, a fail-loud guarantee, an exclusion in a comparison); a
+# clause you could have copied from the owner is one you will later have to
+# maintain in two places.
+#
 # BOUNDARY vs INTERNAL, and it is the distinction worth learning first. A
 # crossing of your SYSTEM boundary is a row in registries/external.template.toml,
 # not here — that is the tier your system requirements form around. A row here
@@ -77,6 +91,17 @@
 # INTENDED, and this row discharges it — is unchanged and is read off the
 # endpoint pair. Ownership lives in `owner`, and only there.
 #
+# VERIFIED_BY is OPTIONAL, and LEAVING IT EMPTY IS A REAL ANSWER: "this seam is
+# verified in its own right". Fill it only for a LOW-LEVEL seam whose honest
+# answer is that the parent functionality's tests are what cover it — a
+# `TC-###` (the test) or an `LLR-###` (the parent design row that carries one).
+# Building blocks are not thereby forced into a test each, and the position stops
+# being unsayable: without this cell an IF row has no verification column at all,
+# so "covered by the parent" could only be left silent. What is checked is that
+# the pointer RESOLVES, warn-first — nothing reads whether the named test really
+# exercises the seam, which is a judgement, not a grammar. DELETE the key unless
+# this seam really rides its parent's coverage.
+#
 # CARRIED_BY is OPTIONAL interface composition: a constituent naming the bundle
 # that carries it (`carried_by = "IF-###"`). Six seams riding one larger seam
 # name the same carrier id, so granularity stops being a forced choice — declare
@@ -103,6 +128,7 @@ signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable al
 rationale = """WHY the seam is drawn here - the argument that would otherwise squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take. It takes the ARGUMENT, never the CITATION: state what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3)."""
 req_refs = ["SR-000"]
 owner = "SR-000"
+verified_by = "TC-000"
 carried_by = "IF-000"
 version = "v1"
 status = "Drafted"

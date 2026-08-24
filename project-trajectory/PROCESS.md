@@ -1152,7 +1152,10 @@ provider). The `Owner`'s side holds the authoritative spec and
 closes the final read; a consuming side links the same
 `IF-###` and pins the version. A seam may also name the bundle that carries it
 (`CarriedBy`), so one contract can be declared at both grains. Every interface is backed by an SR and a
-contract/fixture test. This keeps interlinked projects — and a repo's own modules
+contract/fixture test — or, for a **low-level** seam whose parent functionality
+is what the tests exercise, by an optional `VerifiedBy` pointer (a `TC-###` or
+an `LLR-###`, warn-first that it resolves; empty means "verified in its own
+right"), so building blocks are not forced into a test each. This keeps interlinked projects — and a repo's own modules
 — from silently drifting apart without imposing a build system. Single-module
 standalone projects skip this section; a multi-repo or multi-module repo declares
 its seams the same way, and the architecture-connectivity coverage over them is
@@ -1167,7 +1170,13 @@ enumerable alphabet — exit code, gate name, status enum, dial) or `variable`
 police the difference by FORM, since no check reads intent: no work-item id and
 no decision citation in `Contract` (both age — a cancelled id still reads as
 authority), no rationale connective (*because* / *rather than* / *so that* /
-*since* — that sentence belongs in `Rationale`), and a 500-character ceiling.
+*since* — that sentence belongs in `Rationale`), and a 500-character ceiling. A
+fifth reads CONTENT at the one resolution a grammar can: a `SCHED_*` /
+`Foo.bar` / `CONSTANT_NAME` token, or a named path, must still resolve. And a
+contract **never restates its `Owner`** — where the detail lives on the owner
+row and in the module, state the crossing and stop (`SR-006's obligation
+delivered as a CLI at check.py; crosses B-05`), keeping a clause only for a
+typed fact the owner does not carry.
 `Status` (`Drafted` · `Approved`) is the row's **one** maturity field, shared
 with the boundary tier — the spine's own vocabulary (§7) minus `Founded`, which
 never applies here: an approval says the seam is agreed, not demonstrated. A row ties back to a declared boundary crossing — a

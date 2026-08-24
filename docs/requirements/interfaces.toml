@@ -50,6 +50,28 @@
 #                    codes, or the file schema. Not the argument for it — that
 #                    is `rationale`'s job where a row carries one.
 #
+#                    AND NOT A RESTATEMENT OF ITS OWNER (OI-61 ruled (a),
+#                    2026-08-23, declared as the first step toward emptying the
+#                    prose cell registry-wide). The 27 rows delivering a shipped
+#                    script's CLI now state the CROSSING and stop — "SR-006's
+#                    obligation delivered as a CLI at check.py; crosses B-05" —
+#                    what crosses, who answers for it, which boundary. The flags
+#                    and exit codes are read from the owner row, the module, and
+#                    the generated CLI reference, all three of which are held to
+#                    the code by a check; a hand-copied paragraph is held to it
+#                    by nobody, which is how two of this registry's cells came
+#                    to name deleted code. A clause survives past the crossing
+#                    statement only where it carries a typed fact the owner row
+#                    does NOT state: a written artifact, a fail-loud guarantee,
+#                    an exclusion in a comparison. The other 108 rows are
+#                    deliberately untouched — that pass is what this one's
+#                    measurement decides.
+#
+#                    A NAMED SYMBOL OR PATH IN THIS CELL IS CHECKED (OI-61 ruled
+#                    (d), folded in): a `SCHED_*`, `Foo.bar` or `CONSTANT_NAME`
+#                    token must resolve in the declared source surface, and a
+#                    named path must exist. Warn-first.
+#
 #   signal           CLOSED vocabulary: `discrete` (a finite enumerable alphabet
 #                    — exit code, gate name, status enum, dial) or `variable`
 #                    (unbounded content — prose, file bytes, a count, a
@@ -89,6 +111,16 @@
 #                    row where the design tier can name it: re-pointing an owner
 #                    at a design row is what makes that row's `provider` cell
 #                    derivable and therefore droppable.
+#
+#   verified_by      OPTIONAL, and an EMPTY cell is the ordinary answer: this
+#                    seam is verified in its own right. Filled, it names the
+#                    parent whose tests cover a low-level seam — a `TC-###` or
+#                    an `LLR-###` — which is the position the `Verification`
+#                    vocabulary cannot state at all (its one exemption is
+#                    LLR-exemption on an SR, and an IF row carries no
+#                    `Verification` cell). Warn-first that the pointer resolves;
+#                    nothing reads whether the named test really exercises the
+#                    seam. No live row here claims it yet.
 #
 #   carried_by       OPTIONAL interface composition: a constituent naming the
 #                    bundle that carries it (`carried_by = "IF-###"`). Several
@@ -158,9 +190,9 @@
 [interface.IF-001]
 provider = "scripts/trace"
 consumers = ["scripts/check"]
-contract = """trace.py CLI: --strict-integrity exits 1 on a duplicate/malformed id or mis-columned row; --strict adds orphan + IF/PB back-link findings; --require-verified adds the DevStg-Impl status check; writes docs/test/report.md"""
+contract = """SR-157's obligation delivered as a CLI at trace.py, which writes docs/test/report.md."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The exit code is one bounded part of an unbounded output: the run emits finding prose naming rows and cells, and writes a report file."""
 req_refs = ["SR-157"]
 owner = "SR-157"
 version = "v1"
@@ -168,7 +200,7 @@ status = "Drafted"
 
 [interface.IF-002]
 consumers = ["scripts/check"]
-contract = """check_docs.py CLI: --stale exits 1 on a broken intra-repo link, a missing PROJECT-VISION tag, or a generated doc newer than a doc that links it"""
+contract = """LLR-012's obligation delivered as a CLI at check_docs.py."""
 signal = "discrete"
 req_refs = ["SR-158"]
 owner = "LLR-012"
@@ -177,7 +209,7 @@ status = "Drafted"
 
 [interface.IF-003]
 consumers = ["scripts/check"]
-contract = """check_flows.py CLI: --no-placeholders; exits 1 when an authored runtime-flow diagram violates its structural contract or cites an unknown id"""
+contract = """LLR-013's obligation delivered as a CLI at check_flows.py."""
 signal = "discrete"
 req_refs = ["SR-158"]
 owner = "LLR-013"
@@ -186,9 +218,9 @@ status = "Drafted"
 
 [interface.IF-004]
 consumers = ["scripts/check"]
-contract = """check_perf.py CLI: --tier T exits nonzero when a measured metric regresses beyond its declared PB budget tolerance at the block level"""
+contract = """LLR-014's obligation delivered as a CLI at check_perf.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A measured metric value and its tolerance comparison are unbounded numbers, and the finding quotes them."""
 req_refs = ["SR-167", "SR-006", "SR-015"]
 owner = "LLR-014"
 version = "v1"
@@ -197,9 +229,9 @@ status = "Drafted"
 [interface.IF-005]
 provider = "scripts/check_privacy"
 consumers = ["scripts/check"]
-contract = """check_privacy.py CLI: --repo scans the tree and exits 1 on a secret (always-on floor) or, under docs/privacy-check, a gated identity/PII class"""
+contract = """SR-017's obligation delivered as a CLI at check_privacy.py; the secret floor is always on and the identity/PII classes are gated by docs/privacy-check."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A finding names the matched file, line and class, which is unbounded content."""
 req_refs = ["SR-017", "SR-018"]
 owner = "SR-017"
 version = "v1"
@@ -207,7 +239,7 @@ status = "Drafted"
 
 [interface.IF-006]
 consumers = ["scripts/check"]
-contract = """check_stubs.py CLI: --strict exits 1 on a stub/NotImplemented/pass-only public symbol at the declared gate; clean source exits 0"""
+contract = """LLR-016's obligation delivered as a CLI at check_stubs.py."""
 signal = "discrete"
 req_refs = ["SR-006"]
 owner = "LLR-016"
@@ -216,9 +248,9 @@ status = "Drafted"
 
 [interface.IF-008]
 consumers = ["scripts/check"]
-contract = """check_doc_refs.py CLI: --strict exits 1 on a dangling backticked repo path or a sym:<module>.<name> absent from the arch-map; warn-first (exit 0) otherwise"""
+contract = """LLR-038's obligation delivered as a CLI at check_doc_refs.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A finding quotes the offending backticked token and its file, which is unbounded content."""
 req_refs = ["SR-158"]
 owner = "LLR-038"
 version = "v1"
@@ -227,7 +259,7 @@ status = "Drafted"
 [interface.IF-009]
 provider = "scripts/check_trajectory"
 consumers = ["scripts/check"]
-contract = """check_trajectory.py CLI: exits 1 on a WI id/predecessor/cycle or an R-A coherence violation (every run), R-B..R-E under --strict; connectivity coverage is warn-only"""
+contract = """SR-157's obligation delivered as a CLI at check_trajectory.py; R-A coherence gates every run, R-B..R-E gate only under --strict, connectivity coverage never gates."""
 signal = "discrete"
 req_refs = ["SR-157", "SR-159"]
 owner = "SR-157"
@@ -236,9 +268,9 @@ status = "Drafted"
 
 [interface.IF-010]
 consumers = ["scripts/check"]
-contract = """gen_arch_map.py library + CLI: scan_inventory(src_roots) exposes the per-module AST records the derived-architecture readers consume (IF-123/IF-124 and check_doc_refs' sym: oracle); the CLI splices the rendered map into opt-in --doc marker blocks (AGENTS.md/CLAUDE.md routing), and --check exits 1 when a routed block has drifted"""
+contract = """LLR-023's obligation delivered as a library plus CLI at gen_arch_map.py: scan_inventory() is the one AST harvest the derived-architecture readers consume, and the CLI splices its rendered blocks into opt-in marker pairs."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The harvested per-module records and the rendered block are unbounded content, not an alphabet."""
 req_refs = ["SR-070"]
 owner = "LLR-023"
 version = "v1"
@@ -247,7 +279,7 @@ status = "Drafted"
 [interface.IF-011]
 provider = "scripts/gen_trajectory"
 consumers = ["scripts/check"]
-contract = """gen_trajectory.py CLI: --check exits 1 when root PROJECT_STATE.html is stale or missing (the git as-of line is excluded from the byte compare)"""
+contract = """SR-070's obligation delivered as a CLI at gen_trajectory.py; the --check byte-compare excludes the git as-of line."""
 signal = "discrete"
 req_refs = ["SR-070"]
 owner = "SR-070"
@@ -256,9 +288,9 @@ status = "Drafted"
 
 [interface.IF-012]
 consumers = ["scripts/check"]
-contract = """gen_okf.py CLI: --check exits 1 when the docs/okf bundle is stale, missing, or carries an extra file; docs/okf-export off silences it"""
+contract = """LLR-039's obligation delivered as a CLI at gen_okf.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The bundle's file bytes cross, not an enumerable outcome."""
 req_refs = ["SR-070"]
 owner = "LLR-039"
 version = "v1"
@@ -267,7 +299,7 @@ status = "Drafted"
 [interface.IF-013]
 provider = "scripts/check"
 consumers = ["external:downstream adopter"]
-contract = """check.py CLI: --gate DevStg-Reqs|DevStg-Tests|DevStg-Impl|all with --tier/--coverage/--lenient runs the active gate's steps as subprocesses and exits nonzero on any required failure (never a silent pass)"""
+contract = """SR-006's obligation delivered as a CLI at check.py; crosses B-05."""
 signal = "discrete"
 req_refs = ["SR-006", "SR-007"]
 owner = "SR-006"
@@ -279,7 +311,7 @@ notes = """owner = SR-006, not SR-007: the contract's central claim — running 
 [interface.IF-014]
 provider = "scripts/bootstrap"
 consumers = ["external:downstream adopter"]
-contract = """bootstrap.py CLI: --dest DIR [--stack/--domain/--agents/--force] writes the mapped kit files so the scaffold harness runs green; idempotent without --force; stamps docs/kit-version"""
+contract = """SR-010's obligation delivered as a CLI at bootstrap.py; crosses B-05. Idempotent without --force, and it stamps the kit version it wrote."""
 signal = "variable"
 req_refs = ["SR-009", "SR-010", "SR-011"]
 owner = "SR-010"
@@ -290,9 +322,9 @@ interface_to_external = "B-05"
 [interface.IF-015]
 provider = "scripts/agent_loop"
 consumers = ["external:downstream adopter"]
-contract = """agent_loop.py CLI: --wi runs one claimed worker assignment (--train is the optional session tag, defaulting to the branch name), --interactive launches one attached session, --dual-plan runs one decomposition round; a PLAIN launch (no role flag) runs the DRIVE mode (sibling dispatch.py + lane.py): claim the next ready WI in build order (schedule.py frontier -> integrate.py claim), run a worker session on the claimed branch's worktree, drain the serial merge queue (integrate.py integrate), repeat - re-deriving the frontier every cycle, resuming a parked claim on relaunch, stopping loudly on any composed refusal, never pushing. Preflight refuses broken footing and the per-checkout lock refuses a second coordinator."""
+contract = """SR-026's obligation delivered as a CLI at agent_loop.py; crosses B-05. A plain launch drives the claim/work/merge cycle and never pushes; the per-checkout lock refuses a second coordinator."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A session's branch state, trailer evidence and refusal text are unbounded content."""
 req_refs = ["SR-026", "SR-027", "SR-028"]
 owner = "SR-026"
 version = "v3"
@@ -301,9 +333,9 @@ interface_to_external = "B-05"
 
 [interface.IF-016]
 consumers = ["external:downstream adopter"]
-contract = """check_vendored.py CLI: network-gated and warn-first; reports a vendored doc copy that has drifted from its recorded upstream source"""
+contract = """LLR-022's obligation delivered as a CLI at check_vendored.py; crosses B-05. Network-gated and warn-first."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A drift report names the vendored doc and quotes what moved."""
 req_refs = ["SR-022"]
 owner = "LLR-022"
 version = "v1"
@@ -312,9 +344,9 @@ interface_to_external = "B-05"
 
 [interface.IF-017]
 consumers = ["external:downstream adopter"]
-contract = """gen_cases.py CLI: --spec 'name=range[..]|set{..}|bool ; @full|@pairwise|@boundaries' prints the expanded dimensional case set to stdout"""
+contract = """LLR-024's obligation delivered as a CLI at gen_cases.py; crosses B-05."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The expanded case set printed to stdout is unbounded in size and content."""
 req_refs = ["SR-024"]
 owner = "LLR-024"
 version = "v1"
@@ -324,7 +356,7 @@ notes = "source"
 
 [interface.IF-018]
 consumers = ["external:downstream adopter"]
-contract = """gen_release_checklist.py CLI: emits the release-gate checklist (each warn-tier PB id + allocation) from the registries to docs/release-checklist.md"""
+contract = """LLR-033's obligation delivered as a CLI at gen_release_checklist.py; crosses B-05."""
 signal = "variable"
 req_refs = ["SR-033"]
 owner = "LLR-033"
@@ -334,7 +366,7 @@ interface_to_external = "B-05"
 
 [interface.IF-019]
 consumers = ["skills/INDEX.csv"]
-contract = """gen_skills_index.py CLI: regenerates skills/INDEX.csv from each SKILL.md applicability frontmatter (generated, never hand-maintained)"""
+contract = """LLR-025's obligation delivered as a CLI at gen_skills_index.py."""
 signal = "variable"
 req_refs = ["SR-112"]
 owner = "LLR-025"
@@ -645,7 +677,7 @@ notes = """ONE engine, two layers, which is what answers the half-contract readi
 [interface.IF-044]
 provider = "scripts/agent_route"
 consumers = ["scripts/agent_loop"]
-contract = """agent_route.py module/CLI: load_registry/load_enabled + resolve_enabled (a version-less enable-list token -> the newest pair in its Family-Model line) + parse_env (a pair row's Env cell) + select(pool,tier)->routed id honoring per-pair cooldown, the Family-keyed reviewer heterogeneity preference and tier-up-never-down; escalate()/failure_action() the fixed win-stay/lose-shift policy keyed to docs/gate-policy; planner_pair()/planner_fallback() the dual-plan two-hat selection (different families where the pool allows, else two fresh same-family sessions with a recorded PAIR_* reason; the fallback hard-excludes a launch-nonresponsive family) - pure selection returning the reason as data, the coordinator owning launch; --select prints the routed id + reason, --list the enabled pool"""
+contract = """SR-154's obligation delivered as a module plus CLI at agent_route.py; selection is pure and returns its reason as data, the coordinator owning every launch."""
 signal = "variable"
 req_refs = ["SR-154", "SR-155"]
 owner = "SR-154"
@@ -666,9 +698,9 @@ notes = """The provider side is the two declared files, which is the medium cons
 
 [interface.IF-046]
 consumers = ["scripts/agent_loop"]
-contract = """score_reviews.py module/CLI: parse_verdict + substance (anchored precision, actionability, cross-reviewer corroboration, optional confirmed rate; length never positive) + fired_tripwires (non-scored gates) + merge_verdict + record_round; --verdict scores a block and exits 1 when a tripwire fired"""
+contract = """LLR-046's obligation delivered as a module plus CLI at score_reviews.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """Component scores, decay history and the round record are unbounded content."""
 req_refs = ["SR-154"]
 owner = "LLR-046"
 version = "v1"
@@ -687,9 +719,9 @@ notes = """Low fan-out: three direct content readers - check_trajectory (_latest
 
 [interface.IF-048]
 consumers = ["external:run.* launchers"]
-contract = """run_menu.py CLI: reads docs/stack.ini [run] and presents a numbered menu (no args) / direct launch by name with exit-code passthrough (run_menu.py <name>) / --list (name<TAB>desc, the agent surface); an absent or empty [run] section prints guidance and exits 1"""
+contract = """LLR-047's obligation delivered as a CLI at run_menu.py; crosses B-05."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The launched child's own output and exit code pass through, and neither is drawn from a fixed alphabet."""
 req_refs = ["SR-046"]
 owner = "LLR-047"
 version = "v1"
@@ -744,7 +776,7 @@ notes = """gen_trajectory does not read docs/stage directly - that read moved in
 [interface.IF-053]
 provider = "scripts/schedule"
 consumers = ["scripts/check_trajectory"]
-contract = """the ready-frontier + deterministic-order + safety-classification library/CLI: `ready [--explain|--format json]` and `simulate --jobs N` over the WI registry (docs/work/; legacy work-items.csv via dual-read) return the ordered frontier and reason-coded dispositions; pure and side-effect-free (never mutates the registry, spawns a worker, or touches git). Shared by validation, the dashboard, and the dispatcher (Slice D)."""
+contract = """SR-148's obligation delivered as a library plus CLI at schedule.py; pure and side-effect-free — it never mutates the registry, spawns a worker, or touches git."""
 signal = "variable"
 req_refs = ["SR-148"]
 owner = "SR-148"
@@ -828,9 +860,9 @@ notes = "built and consumed together; same population as IF-022/049 - this row's
 
 [interface.IF-069]
 consumers = ["scripts/check"]
-contract = """check_coverage.py CLI: exits 1 when a module in the docs/coverage-floors census is below its declared per-module line-coverage in coverage.json or is absent from it; a missing report SKIPs and an empty census is a no-op"""
+contract = """LLR-098's obligation delivered as a CLI at check_coverage.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A finding names the module and its measured percentage against the floor."""
 req_refs = ["SR-006"]
 owner = "LLR-098"
 version = "v1"
@@ -1014,9 +1046,9 @@ notes = """The guarded import lives in traj_parse, its one home, so the seam is 
 
 [interface.IF-086]
 consumers = ["scripts/check"]
-contract = """check_figures.py CLI: flags a declared fig: figure marker that carries neither a non-empty cmd= plus rev= pair nor a non-empty derived= derivation, over root+docs markdown and docs/stack.ini; presence only, warn-first (exit 0), --strict exits 1 - wired as the opt-in [step:figures] DevStg-Impl product step"""
+contract = """LLR-146's obligation delivered as a CLI at check_figures.py."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """A finding quotes the offending marker line."""
 req_refs = ["SR-158"]
 owner = "LLR-146"
 version = "v1"
@@ -1173,9 +1205,9 @@ notes = """source - spine_carrier consumes nothing by design, the trace_text pat
 
 [interface.IF-103]
 consumers = ["docs/requirements"]
-contract = """migrate_carrier.py: the carrier converter that moves the spine's four tiers from their two legacy carriers (stakeholder-needs.md prose tables, SR/LLR/TC CSV) to the TOML carrier spine_carrier reads. convert(root, write) -> (findings, written_paths): findings is EMPTY only when every cell survived a re-read of what was emitted, so the caller decides whether a lossy conversion is allowed to write. CLI: --check converts in memory and verifies the round-trip, writing nothing, exit 1 with a finding naming the registry, row id and field for each cell that did not survive; without --check it writes each .toml beside its source and STILL refuses on a lossy result. KEY is the column -> carrier-key map and the definition of record; spine_carrier.SPINE_COLUMN is its inverse, pinned by test_rule_sync."""
+contract = """LLR-165's obligation delivered as a CLI at migrate_carrier.py; a lossy conversion refuses to write, with or without --check."""
 signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
+signal_note = """The written TOML bytes and the per-cell round-trip findings are both unbounded."""
 req_refs = ["SR-147"]
 owner = "LLR-165"
 version = "v1"
@@ -1388,7 +1420,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 
 [interface.IF-121]
 consumers = ["scripts/check"]
-contract = """check_need_form.py CLI: reports each SN need cell carrying an internal path, implementation-only identifier or process citation, naming the row and the offending phrase, against the reviewed exception list in docs/need-form-allow (absent = empty; an entry without its ' — <reason>' separator — the literal em-dash with spaces — declares nothing); need cells only - SN-033 exempts acceptance and engineering-requirement cells by its own text; warn-first (exit 0), --strict exits 1 - wired as check.py's need-form step at every bar WITHOUT --strict (gating is an owner ruling not yet made)"""
+contract = """LLR-170's obligation delivered as a CLI at check_need_form.py."""
 signal = "variable"
 signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content (the offending phrases), and any unbounded part makes the whole crossing variable (B1)"""
 req_refs = ["SR-150"]
@@ -1592,7 +1624,7 @@ notes = """sink - a read model: it provides nothing across a component boundary,
 
 [interface.IF-139]
 consumers = ["scripts/check"]
-contract = """gen_components.py CLI: --check exits 1 when docs/requirements/components.derived.toml is stale or missing and 0 when it matches a fresh render; vacuous (exit 0, nothing written) for a repo with no real CMP row and no view on disk"""
+contract = """LLR-199's obligation delivered as a CLI at gen_components.py."""
 signal = "variable"
 signal_note = """typed at mint: the Contract names a typed outcome plus the unbounded STALE line built from the artifact path, and any unbounded part makes the whole crossing variable (B1)"""
 req_refs = ["SR-070"]

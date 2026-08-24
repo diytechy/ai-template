@@ -271,6 +271,13 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         "component-view",
         "okf",
         "approval-fresh",
+        # OI-61 ruled (a)'s second step: the generated CLI reference. Its SOURCE
+        # is code a work branch edits, which is exactly why the branch must not
+        # be asked to commit the derived block — and it joined `trunk_step.py
+        # --regen` in the same change, so the side that gates it is the side
+        # that can fix it (the test `skills-index`/`prompt-catalog` fail, and
+        # the reason they stay out of this set).
+        "cli-reference",
     }
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "SKIP", name

@@ -3779,6 +3779,60 @@ and the old arrow pointed the wrong way (from the adopter INTO the module).
 Recording those media as providers is authoring, per row, and the kit has not
 done it.
 
+### An interface `contract` stops restating its owner; `VerifiedBy` and two new checks arrive [since 3cf43e2e]
+
+Four coupled changes to the interface tier (owner ruling on `OI-61`, 2026-08-23).
+**None of them breaks a legacy registry**: the new cell is optional, both new
+checks are warn-first and never join a failure set, and the generated reference
+is opt-in. Take them in this order.
+
+**(a) Thin the contracts that only restate their owner.** Where a row's
+`contract` paraphrases what the `owner` row and the module already say — the
+whole `<module>.py CLI: --flag does X` family is the worked case — rewrite it as
+the crossing and stop:
+
+```
+contract = """SR-006's obligation delivered as a CLI at check.py; crosses B-05."""
+```
+
+What crosses, who answers for it, which boundary. **Review it per row, never by
+regex**: keep (or re-home) any clause carrying a typed fact the owner row does
+*not* state — a written artifact, a fail-loud guarantee, an exclusion in a
+comparison. The kit's own pass took 27 rows from 7,385 characters to 2,605 and
+cleared all four of its over-ceiling breaches; expect roughly two thirds off a
+comparable family, and expect a handful of rows to keep a clause.
+
+**(b) Adopt the generated CLI reference, or don't.** `gen_arch_map.py` gains
+`--cli-doc FILE` (repeatable, honours `--check`): it reads every scanned module's
+`argparse` tree — by AST, never importing it — and splices a flag/help table plus
+each module's declared `Contracts: IF-###` line into a
+`<!-- BEGIN GENERATED CLI REFERENCE -->` marker pair. It is its own mode and
+needs no `--doc`, so adopting it does **not** re-commit the module map that
+retired at `WI-455`. To adopt: create the doc with the marker pair, add a
+`[generated]` row of kind `cli` naming it (with its markers), and the shipped
+`cli-reference` check step + `trunk_step.py --regen` pick it up. Skip all of it
+and the step is vacuous — a missing target prints a notice and exits 0.
+
+**(c) Expect new warn-first findings on your `contract` cells.** `trace.py` now
+resolves the names a contract *claims*: a `SCHED_*` / `Foo.bar` / `CONSTANT_NAME`
+token must exist in the declared source surface (`[paths] src`, symbol mode), and
+a path whose first segment is a real directory must exist. A path your
+`docs/declared-absences` already declares is resolved, not dangling. The rule is
+vacuous — silent — where there is no surface to read (`[arch-map] mode = files`,
+a missing source dir), because an empty surface would report every name as dead.
+Read the findings; they are the class no form rule could ever see.
+
+**(d) `VerifiedBy` is available and optional.** A new optional IF cell taking a
+`TC-###` or an `LLR-###`. **Empty means "verified in its own right"** and is the
+ordinary case, so there is nothing to backfill. Fill it only on a *low-level*
+seam whose honest answer is that the parent functionality's tests are what cover
+it — the position `Verification` cannot state, since its one exemption is
+LLR-exemption on an SR and an IF row carries no `Verification` cell at all. Only
+resolution is checked, warn-first. Take
+`kitlib/spine.py` (the tier schema), `spine_carrier.py` (the column map),
+`trace.py`, and overwrite `registries/interfaces.template.toml` +
+`INTERFACES.template.md`; re-read `PROCESS.md` §8.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

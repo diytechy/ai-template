@@ -44,7 +44,7 @@ the day before. The four parts, restated so no executor infers them from prose:
 
 **Execution row minted: `WI-512`**, queued, `buildtier = "strong"`, workstream
 `requirements`, safety_class `spine`, `needs = ["WI-455"]`, priority 3 —
-[../work/queued/WI-512-if-contract-generalization.md](../work/queued/WI-512-if-contract-generalization.md).
+[../archive/work/complete/WI-512-if-contract-generalization.md](../archive/work/complete/WI-512-if-contract-generalization.md).
 `strong` rather than `medium` deliberately: the row re-authors 27 cells of a
 SHIPPED registry, adds a cell to its schema, and moves
 `INTERFACES.template.md`, `registries/interfaces.template.toml`, PROCESS.md §8's

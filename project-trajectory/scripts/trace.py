@@ -204,6 +204,22 @@ except ImportError:  # pragma: no cover - in-process fallback
         verification_coherence_advisories,
     )
 
+# Sibling: the arch-map AST walk (`gen_arch_map.implements_report`), the ONE home
+# for "does this name exist in the declared source surface" (WI-486/WI-502).
+# `if_contract_advisories`' named-symbol tripwire reads it; a second AST walk in
+# a second module is the duplication that home was consolidated to prevent.
+# OPTIONAL, on check_trajectory's own reasoning: a fixture that copies trace.py
+# without its siblings simply has no surface, and the rule is then vacuous —
+# which is the same answer a repo declaring `[arch-map] mode = files` gets.
+try:
+    import gen_arch_map
+except ImportError:  # pragma: no cover - in-process fallback
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import gen_arch_map
+    except ImportError:
+        gen_arch_map = None
+
 
 # --- THE ROW VOCABULARY, RE-EXPORTED FROM ITS ONE HOME (WI-448 slice 3) --------
 # `load_csv`, `is_approved`, `is_founded`, `LLR_EXEMPT`/`llr_exempt`, `phase_num`,
@@ -532,6 +548,38 @@ _IF_WI_RE = re.compile(r"\bWI-\d+\b")
 _IF_DECISION_RE = re.compile(r"\bD-\d+\b")
 _IF_CONNECTIVE_RE = re.compile(r"\b(because|rather than|so that|since)\b", re.I)
 IF_CONTRACT_MAX = 500
+
+# --- the FIFTH rule: does the surviving prose name anything that is GONE? ------
+# The four rules above read FORM only, which is why a contract can name a
+# deleted constant for months and stay green — the measured exhibit is a live
+# row still naming `SCHED_*` classification constants that the concurrency
+# program deleted, with the presence-only module back-link reporting 27/27
+# complete over it. This rule reads CONTENT, at the one resolution a grammar
+# honestly can: a token that CLAIMS to be a code symbol or a repository path
+# must resolve. It is warn-first like its four siblings and never joins a
+# failure set.
+#
+# THE THREE SYMBOL SHAPES, and they are the shapes contracts actually use:
+_IF_CALL_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\(\)")
+_IF_DOTTED_RE = re.compile(r"\b([A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)\b")
+# A SCREAMING_SNAKE constant, with an optional `*` glob tail — the tail is not a
+# nicety, it is the exhibit's own spelling (`SCHED_*` names a FAMILY of deleted
+# constants, and a rule that only read whole names would have missed it).
+_IF_CONST_RE = re.compile(r"\b([A-Z][A-Z0-9]*(?:_(?:[A-Z0-9]+|\*))+)")
+# A repo path. THE FIRST SEGMENT MUST BE A REAL DIRECTORY before the token is
+# judged at all — that one test is what separates `docs/privacy-check` from the
+# English slashes a contract legitimately writes (`identity/PII`,
+# `claim/work/merge`, `library/CLI`), and it needs no extension list to do it.
+# The cost is stated rather than hidden: a path whose top-level directory was
+# deleted OUTRIGHT is not judged, only one whose neighbourhood still exists.
+_IF_PATH_RE = re.compile(r"\b([A-Za-z0-9_.\-]+(?:/[A-Za-z0-9_.\-]+)+)")
+# A dotted token whose tail is one of these is a FILENAME, not an attribute
+# access — `trace.py`, `stack.ini`, `report.md`. The list is deliberately the
+# suffixes `_resolves_in_tree` already probes, so the two readers of "is this
+# text a file" agree.
+_IF_FILE_TAILS = frozenset(
+    "py md toml csv ini html yml yaml json txt cmd sh ps1 command bat js ts".split()
+)
 
 # --- Acceptance-criteria testability advisory (warn-only) --------------------
 # A comparative/absolute claim in an AcceptanceCriteria cell is untestable until
@@ -1968,16 +2016,151 @@ def _frame_report_section(exts, bifs, rels, findings):
     return ["", "## The depth-0 frame (external.toml resolution)", ""] + body
 
 
-def if_contract_advisories(ifs):
-    """The four ruled negative rules on an IF `Contract` cell (WI-443), all
-    warn-first. See the `_IF_*` constants above for why form is the only thing a
-    check can honestly read here."""
+def contract_symbol_surface(root):
+    """The declared source surface as three name sets — `(names, tails,
+    modules)` — or `(None, None, None)` when there is no surface to read.
+
+    `names` is `gen_arch_map.implements_report`'s `known_names`: every dotted
+    def/class qualname plus every module-scope binding under `[paths] src`.
+    `tails` is the last dotted segment of each, which is what lets a contract
+    write `check_doc_refs.doc_files` (a MODULE-qualified name, and a module is
+    not a def, so the full token is never in `names`) and still resolve.
+    `modules` is every module and package name in that surface — the set that
+    decides whether a dotted token is even OURS to judge.
+
+    `(None, None, None)` — not three empty sets — for the three vacuous cases,
+    and the distinction is the whole safety of the rule: an EMPTY surface would
+    report every named symbol in the registry as dead, which is the loudest
+    possible false positive. The cases are a repo declaring `[arch-map] mode =
+    files` (no parser for its language), a missing source directory, and a
+    fixture that copied this script without its siblings."""
+    if gen_arch_map is None or root is None:
+        return None, None, None
+    try:
+        src, mode = check_trajectory._arch_scan_profile(root)
+    except (
+        OSError,
+        ValueError,
+    ):  # pragma: no cover - a broken profile is not this rule's finding
+        return None, None, None
+    if mode == "files":
+        return None, None, None
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    if not src_dir.exists():
+        return None, None, None
+    _sites, known = gen_arch_map.implements_report([src_dir])
+    if not known:
+        return None, None, None
+    modules = {p.stem for p in src_dir.rglob("*.py")}
+    modules |= {p.parent.name for p in src_dir.rglob("__init__.py")}
+    return known, {n.rsplit(".", 1)[-1] for n in known}, modules
+
+
+def _symbol_resolves(token, names, tails, modules):
+    """True when `token` names something the source surface really has, or is a
+    token this rule declines to judge.
+
+    A `*`-tailed token is a FAMILY and resolves on any prefix match — the live
+    rot exhibit's own shape. A DOTTED token is judged only when its head names a
+    module, a package or a real class in the surface: `csv.DictReader`,
+    `sys.executable` and the registry's own `LLR.Module` notation are not this
+    tree's symbols, and a rule that reported them would be inventing a finding
+    about somebody else's code. Everything judged resolves on the whole token or
+    on its last dotted segment — the same CONTAINMENT posture the `CodeSymbol`
+    crosscheck takes, since a contract naming a real symbol by a shorter path
+    than the registry spells it is not the defect this rule is for."""
+    if token.endswith("*"):
+        prefix = token[:-1].rstrip("_") + "_"
+        return any(t.startswith(prefix) for t in tails)
+    head, _dot, _rest = token.partition(".")
+    if _dot and head not in modules and head not in names:
+        return True
+    tail = token.rsplit(".", 1)[-1]
+    return token in names or tail in names or tail in tails or tail in modules
+
+
+def contract_named_tokens(cell):
+    """`(symbols, paths)` — the tokens one `Contract` cell CLAIMS resolve.
+
+    PATHS ARE READ FIRST AND MASKED OUT, which is not an optimization: without
+    it `docs/log.d/` yields the "attribute" `log.d` and every `<file>.md` in a
+    contract becomes a symbol. What survives the mask is scanned for the three
+    symbol shapes, with a filename-tailed dotted token dropped (`trace.py` is a
+    file, not an attribute) and a call's `()` stripped. Both lists are
+    order-preserving and de-duplicated, so one dead name written twice in one
+    cell is one finding."""
+    paths = {}
+    for m in _IF_PATH_RE.finditer(cell):
+        # Prose punctuation abutting a path is not part of it: a sentence-final
+        # `docs/kit-version.` names `docs/kit-version`.
+        paths[m.group(1).rstrip(".,;:)")] = None
+    masked = _IF_PATH_RE.sub(" ", cell)
+    symbols = {}
+    for m in _IF_CALL_RE.finditer(masked):
+        symbols[m.group(1)] = None
+    for m in _IF_DOTTED_RE.finditer(masked):
+        token = m.group(1)
+        if token.rsplit(".", 1)[-1].lower() not in _IF_FILE_TAILS:
+            symbols[token] = None
+    for m in _IF_CONST_RE.finditer(masked):
+        symbols[m.group(1)] = None
+    return list(symbols), list(paths)
+
+
+def _if_named_symbol_advisories(iid, cell, root, surface, absences):
+    """The fifth rule for ONE row: every symbol and path the cell names must
+    resolve. A separate function from `if_contract_advisories`' loop body so the
+    four form rules and the one content rule stay separately readable (and the
+    complexity ratchet stays where it is).
+
+    A path this repo has DECLARED it does not carry is resolved, not dangling —
+    the same reading `if_endpoint_class_advisories` and `check_doc_refs` already
+    give `docs/declared-absences`, whose whole point is that the fact is stated
+    once."""
+    names, tails, modules = surface
     out = []
+    symbols, paths = contract_named_tokens(cell)
+    if names is not None:
+        for token in symbols:
+            if not _symbol_resolves(token, names, tails, modules):
+                out.append(
+                    f"IF {iid} Contract names {token} — no such symbol exists "
+                    "in the declared source surface. A contract that names code "
+                    "that is gone reads as authority and is not: re-point it at "
+                    "what the module has now, or drop the name."
+                )
+    for token in paths:
+        if token in absences or token + "/" in absences:
+            continue
+        # The first segment must be a real directory before the token is judged
+        # at all — see `_IF_PATH_RE`.
+        if not _resolves_in_tree(root, token.split("/", 1)[0]):
+            continue
+        if not _resolves_in_tree(root, token):
+            out.append(
+                f"IF {iid} Contract names path {token} — nothing at that path "
+                "exists. Re-point it, or drop it."
+            )
+    return out
+
+
+def if_contract_advisories(ifs, root=None):
+    """The four ruled negative rules on an IF `Contract` cell (WI-443) plus the
+    named-symbol/named-path tripwire (OI-61 ruled (d), folded in), all
+    warn-first. See the `_IF_*` constants above for why form is what the first
+    four can honestly read, and why the fifth needs the AST surface.
+
+    `root=None` keeps the four form rules runnable with no tree — the shape a
+    row-level unit test wants — and makes the content rule vacuous there."""
+    out = []
+    surface = contract_symbol_surface(root)
+    absences = _declared_absences(root) if root is not None else frozenset()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
         cell = (r.get("Contract") or "").strip()
         if not cell:
             continue
+        out += _if_named_symbol_advisories(iid, cell, root, surface, absences)
         for token in dict.fromkeys(_IF_WI_RE.findall(cell)):
             out.append(
                 f"IF {iid} Contract names {token} — a work-item id belongs in the "
@@ -2401,6 +2584,51 @@ def if_ownership_advisories(ifs, sr_ids, llr_ids):
             continue
         if oid not in known:
             out.append(f"IF {iid} Owner references unknown {oid} ({tier})")
+    return out
+
+
+def if_verified_by_advisories(ifs, tc_ids, llr_ids):
+    """`VerifiedBy` — the OPTIONAL seam-tier verification pointer, warn-first
+    (OI-61's sub-question, sanctioned 2026-08-23).
+
+    THE POSITION IT MAKES SAYABLE did not exist anywhere in the vocabulary
+    before. `Verification` is `Test | Demonstration | Manual | Analysis |
+    Inspection | Attest | Critique`, its only exemption is LLR-exemption on an
+    SR, process.md states "Every SR needs >=1 TC row regardless of method", and
+    an IF row carries no `Verification` cell at all — so a low-level seam whose
+    honest answer is *verified by the parent functionality's tests* could only
+    be silent about it, or invent a per-seam test nobody wanted.
+
+    THE CELL IS OPTIONAL AND ITS EMPTINESS MEANS SOMETHING: empty is "this seam
+    is verified in its own right", which is the ordinary case and needs no
+    ceremony. A FILLED cell names the parent whose tests cover it — a `TC-###`
+    (the test itself) or an `LLR-###` (the parent design row that carries one) —
+    and the only thing checked is that the pointer RESOLVES. That is the whole
+    mechanism, deliberately: a pointer that must resolve is stronger than the
+    silence it replaces, and nothing here asks whether the named test actually
+    exercises the seam, which no grammar can read.
+
+    Warn-first, matching every other content rule on this tier."""
+    out = []
+    for r in ifs:
+        iid = r.get("IF-ID") or "(unnamed row)"
+        cell = (r.get("VerifiedBy") or "").strip()
+        if not cell:
+            continue  # "verified in its own right" — the meaning of empty
+        for pid in refs(cell):
+            if ID_PATTERNS["TC"].match(pid):
+                known, tier = tc_ids, "test-cases"
+            elif ID_PATTERNS["LLR"].match(pid):
+                known, tier = llr_ids, "low-level-requirements"
+            else:
+                out.append(
+                    "IF {} VerifiedBy={!r} is not a TC-### or LLR-### id — the "
+                    "pointer names the test that covers the seam, or the parent "
+                    "design row that carries one".format(iid, pid)
+                )
+                continue
+            if pid not in known:
+                out.append(f"IF {iid} VerifiedBy references unknown {pid} ({tier})")
     return out
 
 
@@ -4181,10 +4409,11 @@ def analyze(reg, args):
         + schema_advisories("REL", rels)
         + sr_frame_advisories
         + hat_advisories
-        + if_contract_advisories(ifs)
+        + if_contract_advisories(ifs, docs.parent)
         + if_note_advisories(ifs, prov_allow)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
         + if_ownership_advisories(ifs, sr_ids, llr_ids)
+        + if_verified_by_advisories(ifs, {t["TC-ID"] for t in tcs}, llr_ids)
         + if_carriage_advisories(ifs)
     )
     # Warn-only, always on (re-tier v2 R4, owner ruling 2026-08-15; WI-455

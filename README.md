@@ -274,6 +274,7 @@ Each is regenerated from the registries or source and freshness-gated
 | root `PROJECT_STATE.html` | `gen_trajectory.py` | The offline dashboard: spine icicle, WI DAG, module map, an OKF knowledge-graph tab (when `docs/okf/` exists), definition/execution meters, a git-derived as-of stamp. |
 | `docs/okf/` | `gen_okf.py` | The same graph exported as an Open Knowledge Format bundle — consumed by the dashboard's Knowledge tab. |
 | `docs/requirements/components.derived.toml` | `gen_components.py` | The component view: per component, the design rows that belong to it, the requirements they reach, the perspectives that bear, its modules and its internal/boundary seams — derived, so it cannot rot (the hand-authored `components.toml` still declares the component itself). |
+| [`docs/cli-reference.md`](docs/cli-reference.md) | `gen_arch_map.py --cli-doc` | Every shipped script's command-line surface, read from its own `argparse` tree — the generated home an interface row's thinned `contract` cell points at instead of paraphrasing the flags by hand. Opt-in: create the doc with the `CLI REFERENCE` marker pair and the step gates it. |
 | `docs/release-checklist.md` | `gen_release_checklist.py` | Every human-verified item (Demonstration / Manual / Inspection SRs, Release-tier TCs) as back-linked tick-boxes for DevStg-Release. |
 
 ## Quick start — bootstrap a new project

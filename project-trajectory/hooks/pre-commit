@@ -278,7 +278,7 @@ fi
 #    stale bytes — the staged-divergence step above reports exactly that.
 #    The two kit-only index/catalogue steps stand alone: each regenerates with
 #    its own single command and feeds nothing else.
-"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,approval-fresh,approval-immutable,staged-divergence
+"$PY" "$SCRIPTS_DIR/check.py" --run-steps okf,trajectory-map,status-map,open-items,component-view,cli-reference,trajectory,registry-integrity,derived-stage,skills-sync,skills-index,prompt-catalog,approval-fresh,approval-immutable,staged-divergence
 
 # 2. No-validation-delta warn (warn-first, never blocks): when this commit
 #    closes a WI that is a follow-up on an SR a previously-done WI already

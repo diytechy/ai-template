@@ -421,7 +421,11 @@ module LLRs are omitted to keep the seam in focus, so the SRs stand in).
 
 And the seam gets its **own** integration TC — covered by neither module's internal
 unit tests — so the boundary is a tested contract, not a gap between two green
-modules (process.md §10). It verifies the consuming SR (`SR-050`, the side that
+modules (process.md §10). (A *low-level* seam, where the parent functionality's
+tests are honestly what cover it, says so instead: `verified_by = "TC-050"` on
+the IF row, warn-first that the pointer resolves. Empty — as both rows above
+leave it — means "verified in its own right", which is what a seam at this grain
+is.) It verifies the consuming SR (`SR-050`, the side that
 relies on the contract; `IF-002` links the interface to that SR, and the TC covers
 the SR):
 

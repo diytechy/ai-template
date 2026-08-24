@@ -161,6 +161,11 @@ _SCRIPTS = Path(__file__).resolve().parent
 # as-is either way).
 SRC = "src"  # source root ([paths] src)
 TESTS = "tests"  # test root ([paths] tests)
+# The generated CLI reference's target (OI-61 ruled (a)'s second step). A
+# CONSTANT, not a dial: the `[generated]` declaration, the trunk regen and this
+# step all have to name the same file, and three spellings of one path is how
+# a freshness gate ends up watching a document nobody writes.
+CLI_REFERENCE_DOC = "docs/cli-reference.md"
 COVERAGE_THRESHOLD = 80  # line-coverage %, enforced at full/release (process.md)
 
 # The declared product toolchain (Thread 30), read at repo root when present.
@@ -231,6 +236,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "status-map",
         "open-items",
         "component-view",
+        "cli-reference",
         "okf",
         "approval-fresh",
         "skills-sync",
@@ -971,6 +977,27 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
+        # CLI-reference freshness (OI-61 ruled (a), second step): docs/cli-reference.md
+        # carries a block derived from every scanned module's own argparse tree.
+        # It lands in the same change as the `[generated]` row it enforces, on
+        # component-view's argument: the reference is worth having only while it
+        # cannot drift, and "cannot drift" IS this step. Vacuous — exit 0 — when
+        # the doc is absent, so a scaffold and a non-adopter pay nothing.
+        (
+            "cli-reference",
+            (),
+            [
+                sys.executable,
+                str(_SCRIPTS / "gen_arch_map.py"),
+                "--src",
+                src,
+                "--cli-doc",
+                CLI_REFERENCE_DOC,
+                "--check",
+            ],
+            _kitladder.STAGE_IMPL,
+            "process",
+        ),
         # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
         # export of the spine registries (never a parallel source of truth) —
         # gen_okf.py --check regenerates in memory and byte-compares like
@@ -1448,9 +1475,14 @@ _COVERAGE_ENV_VARS = (
 # the side that gates it — the trunk would red with no mechanical regen to run.
 # The `[generated]` section declares OWNERSHIP, not lane; this set encodes which
 # owners the trunk can actually regenerate.
+#   `cli-reference` IS in the set, and the difference from those two is exactly
+# the rule above: it joined `trunk_step.py --regen`'s table in the same change
+# that created it, so the side that gates it is the side that can fix it. Its
+# source is code a work branch edits, which is precisely why the branch must not
+# be asked to commit the derived block.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-stage trajectory-map status-map open-items component-view okf "
-    "approval-fresh".split()
+    "approval-fresh cli-reference".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed

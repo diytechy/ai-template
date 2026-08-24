@@ -74,6 +74,7 @@ Usage:
     python scripts/gen_arch_map.py --doc FILE [--src SRC ...] [--flow ENTRY]
                                    [--mode symbols|files] [--comment-prefix TOK ...]
                                    [--check] [--strict-parse]
+    python scripts/gen_arch_map.py --cli-doc FILE [--src SRC ...] [--check]
     python scripts/gen_arch_map.py --backlink-coverage [--src SRC ...]
                                    [--root DIR] [--backlink-ext .EXT ...]
                                    [--strict-backlinks]
@@ -81,6 +82,10 @@ Usage:
     --src            One or more source roots to scan (default: src). Repeatable.
     --doc            File(s) to update in place (required; repeatable) — each
                      must contain the MODULE MAP marker pair.
+    --cli-doc        File(s) carrying the CLI REFERENCE marker pair, spliced
+                     with every scanned module's argparse surface (repeatable).
+                     Its own mode: it needs no --doc, since the module map it
+                     would demand there retired at WI-455.
     --flow           Entry function (e.g. `run` or `module:run`) whose call
                      sequence is spliced into the FLOW markers of any --doc.
     --mode           `symbols` (default; Python-AST symbol map + diagram/flow) or
@@ -95,6 +100,7 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED MODULE MAP -->  ... <!-- END GENERATED MODULE MAP -->   (required per --doc)
     <!-- BEGIN GENERATED FLOW -->        ... <!-- END GENERATED FLOW -->          (optional; used by --flow)
     <!-- BEGIN GENERATED DEPENDENCY DIAGRAM --> ... <!-- END GENERATED DEPENDENCY DIAGRAM -->  (optional)
+    <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
 
 Contracts: IF-010, IF-025 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
@@ -138,6 +144,14 @@ BEGIN_FLOW = "<!-- BEGIN GENERATED FLOW -->"
 END_FLOW = "<!-- END GENERATED FLOW -->"
 BEGIN_DIAGRAM = "<!-- BEGIN GENERATED DEPENDENCY DIAGRAM -->"
 END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
+# The CLI reference's own marker pair (OI-61 ruled (a)'s second step). It gets a
+# DEDICATED target flag (`--cli-doc`) rather than riding `--doc`, and the reason
+# is a standing ruling: the committed MODULE MAP retired at WI-455 — structure
+# derives live into the dashboard — so a repo that wants the CLI surface written
+# down must be able to have it WITHOUT re-committing the map that was
+# deliberately retired.
+BEGIN_CLI = "<!-- BEGIN GENERATED CLI REFERENCE -->"
+END_CLI = "<!-- END GENERATED CLI REFERENCE -->"
 # THE TWO PARSING GRAMMARS IN THIS MODULE ARE SEPARATE, and deliberately so.
 # `Implements:` (below) is a SYMBOL-level back-link declaration over the four
 # spine tiers; `Contracts:` (further down) is a MODULE-level interface-seam
@@ -745,6 +759,171 @@ def build_map(src_roots):
     return "\n".join(sections)
 
 
+# --- the generated CLI reference (OI-61 ruled (a), second step) ---------------
+# The registry's 27 CLI `Contract` cells used to PARAPHRASE these argparse
+# surfaces by hand, at a mean of 274 characters each, with nothing checking that
+# the paraphrase still matched. This is the same walk one step further, and it
+# is the kit's own rule applied to its own registry: generated, not
+# hand-maintained. What it harvests is deliberately narrow — the flags, their
+# help text and the module's declared seams — because that is what an argparse
+# tree can be read for WITHOUT importing the module, and importing shipped
+# scripts to document them would run their side effects.
+
+
+def _add_argument_calls(tree):
+    """Every `....add_argument(...)` call node in `tree`, in source order.
+
+    Matched on the ATTRIBUTE NAME only, not on a resolved parser object: a
+    module builds its parser as `ap`, `parser`, a subparser or a group, and
+    chasing which is which needs type inference that a stdlib AST walk does not
+    have. The false-positive cost of the loose match is a non-argparse method
+    that happens to be called `add_argument`, which nothing in this kit has."""
+    return [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "add_argument"
+    ]
+
+
+def _option_record(call):
+    """`(names, help)` for one `add_argument` call, or None when its names are
+    not literals.
+
+    Only CONSTANT arguments are read. A flag computed at runtime, or help text
+    built by an f-string or a concatenation with a variable, yields `""` for the
+    help rather than a guess — an empty cell is honest, and a half-rendered
+    f-string in a generated reference would be worse than nothing."""
+    names = [
+        a.value
+        for a in call.args
+        if isinstance(a, ast.Constant) and isinstance(a.value, str)
+    ]
+    if not names:
+        return None
+    text = ""
+    for kw in call.keywords:
+        if kw.arg == "help" and isinstance(kw.value, ast.Constant):
+            if isinstance(kw.value.value, str):
+                text = " ".join(kw.value.value.split())
+    return names, text
+
+
+def scan_cli(src_roots):
+    """`[(rel, summary, contracts, options)]` for every scanned module that
+    BUILDS AN ARGUMENT PARSER — the CLI half of the same AST harvest
+    `scan_inventory` does for symbols.
+
+    A module with no `ArgumentParser(` construction is not a CLI and is left
+    out entirely: the reference is a list of the surfaces an adopter can
+    actually run, not a list of files. Sorted by module path (`_walk_roots`
+    sorts), so the rendered block is byte-stable across regeneration."""
+    out = []
+    for _root, base, path in _walk_roots(src_roots, "*.py"):
+        try:
+            text = path.read_text(encoding="utf-8")
+            tree = ast.parse(text)
+        except (UnicodeDecodeError, OSError, SyntaxError):
+            continue
+        if "ArgumentParser(" not in text:
+            continue
+        options = []
+        for call in _add_argument_calls(tree):
+            record = _option_record(call)
+            if record:
+                options.append(record)
+        if not options:
+            continue
+        rel = path.relative_to(base).with_suffix("").as_posix()
+        out.append(
+            (
+                rel,
+                first_line(ast.get_docstring(tree)),
+                module_contracts(tree, text.splitlines()),
+                options,
+            )
+        )
+    return out
+
+
+def build_cli_reference(src_roots):
+    """The rendered CLI-reference block: one section per CLI module, its
+    summary, the interface seams it declares, and a flag/help table.
+
+    The `Contracts:` line is what makes this a REFERENCE for the registry
+    rather than a second document beside it — an `IF-###` cell that now says
+    only "SR-006's obligation delivered as a CLI at check.py" is one hop from
+    the flags, and the hop is a generated one."""
+    note = (
+        "_Generated by `scripts/gen_arch_map.py --cli-doc` from each module's "
+        "argparse tree (AST, no import). Do not edit by hand; run the check "
+        "harness to refresh. Help text comes from your `help=` strings._"
+    )
+    records = scan_cli(src_roots)
+    if not records:
+        return note + "\n\n_(no command-line surface scanned)_"
+    sections = [note]
+    for rel, summary, contracts, options in records:
+        sections.append("\n### `{}`".format(rel))
+        if summary:
+            sections.append("_{}_".format(summary.replace("|", "\\|")))
+        if contracts:
+            sections.append("Contracts (interfaces): {}".format(", ".join(contracts)))
+        sections.append("\n| Option | Help |\n|---|---|")
+        for names, text in options:
+            sections.append(
+                "| {} | {} |".format(
+                    ", ".join("`{}`".format(n) for n in names),
+                    text.replace("|", "\\|"),
+                )
+            )
+    return "\n".join(sections)
+
+
+def _cli_doc_exit(src_roots, args):
+    """Splice (or `--check`) the CLI reference into each `--cli-doc` target;
+    the process exit code.
+
+    Its own mode, returning before main()'s `--doc`/MODULE MAP contract, on
+    `--backlink-coverage`'s reasoning: this target carries the CLI block and
+    NOT the retired module map, so demanding a MODULE MAP marker pair would
+    refuse the one document this step exists to write."""
+    generated = build_cli_reference(src_roots)
+    stale = False
+    for doc in [Path(d) for d in args.cli_doc]:
+        if not doc.exists():
+            # VACUOUS, unlike --doc's hard refusal, and the asymmetry is the
+            # opt-in posture: a repo that has not adopted the CLI reference has
+            # no file to be stale, and the harness step must cost it nothing.
+            # What that trades away is stated rather than hidden — deleting the
+            # doc disarms this gate silently, and what catches THAT is the
+            # `[generated]` declaration plus the links into it, not this run.
+            print("no CLI reference at {} — nothing to check.".format(doc))
+            continue
+        current = doc.read_text(encoding="utf-8")
+        updated = splice_region(current, BEGIN_CLI, END_CLI, generated, doc, True)
+        if args.check:
+            if updated != current:
+                stale = True
+                print(
+                    "CLI reference STALE in {}: run `python "
+                    "scripts/gen_arch_map.py --cli-doc {}`".format(doc, doc),
+                    file=sys.stderr,
+                )
+        elif updated != current:
+            with doc.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(updated)
+            print("CLI reference regenerated -> {}".format(doc))
+        else:
+            print("CLI reference already up to date -> {}".format(doc))
+    if stale:
+        return 1
+    if args.check:
+        print("CLI reference up to date.")
+    return 0
+
+
 def collect_parse_errors(src_roots):
     """(rel, message) for every scanned module that fails to parse. Used by
     --strict-parse to fail the gate, rather than only surfacing the PARSE ERROR
@@ -1299,6 +1478,14 @@ def main():
         "/ CLAUDE.md to route the map where agents read.",
     )
     ap.add_argument(
+        "--cli-doc",
+        action="append",
+        default=None,
+        help="REPORT MODE (needs no --doc): file(s) carrying the CLI REFERENCE "
+        "marker pair, spliced with the argparse surface of every scanned "
+        "module (repeatable). Honours --check.",
+    )
+    ap.add_argument(
         "--flow",
         default=None,
         help="entry/orchestrator function whose call sequence fills "
@@ -1370,6 +1557,8 @@ def main():
     # asking for a document the measurement never touches.
     if args.backlink_coverage:
         sys.exit(_backlink_exit(src_roots, args))
+    if args.cli_doc:
+        sys.exit(_cli_doc_exit(src_roots, args))
     if not args.doc:
         raise SystemExit(
             "gen_arch_map: pass --doc <file carrying the MODULE MAP marker "

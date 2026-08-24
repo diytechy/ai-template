@@ -501,6 +501,12 @@ OFFSPINE_KEYS = {
         # relationships is the defect D-3 forbids.
         "req_refs",
         "owner",
+        # OPTIONAL, and its EMPTINESS is the ordinary answer: "this seam is
+        # verified in its own right". Filled, it names the parent whose tests
+        # cover a low-level seam — a `TC-###` or an `LLR-###` — which is the
+        # position the `Verification` vocabulary cannot state (OI-61's
+        # sub-question, sanctioned 2026-08-23). Warn-first that it resolves.
+        "verified_by",
         "carried_by",
         "version",
         "status",

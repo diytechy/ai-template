@@ -164,6 +164,15 @@ Two shipped scripts parse **Python source specifically**:
      the same marker block. No new runtime, works for any language, and
      `--check` still trips on a file added/removed/renamed or a summary edit
      — a real freshness gate, just coarser.
+  The same script's **`--cli-doc`** mode is a separate, opt-in question: it
+  splices every scanned module's `argparse` surface (flags, help, and the
+  module's declared `Contracts: IF-###` line) into a
+  `<!-- BEGIN/END GENERATED CLI REFERENCE -->` pair, so an interface row can
+  state the crossing and stop instead of hand-copying the flags into its
+  `contract` cell. It is Python/`argparse`-specific and it is **not**
+  scaffolded: create the doc with the marker pair, declare it in `[generated]`
+  as kind `cli`, and the shipped `cli-reference` step gates it. Do nothing and
+  the step is vacuous.
 - **`check_stubs.py`** is Python-only and already optional/product-layer: swap
   it for your language's equivalent or ignore it.
 - **`check_flows.py`** (the authored "Runtime flows" section, required from DevStg-Tests)

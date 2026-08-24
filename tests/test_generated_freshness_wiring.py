@@ -43,6 +43,10 @@ WIRED = {
     "skillsindex": "skills-index",
     "promptcatalog": "prompt-catalog",
     "components": "component-view",
+    # OI-61 ruled (a)'s second step: the argparse-derived CLI reference, which
+    # is what the registry's thinned CLI `contract` cells now point at instead
+    # of paraphrasing the flags by hand.
+    "cli": "cli-reference",
 }
 
 # The kinds whose enforcer is NOT a check.py step, each named with its reason.
@@ -118,6 +122,21 @@ def test_every_declared_generated_artifact_has_an_enforcer():
         "this table names kinds docs/stack.ini no longer declares: "
         + str(sorted(stale))
     )
+
+
+def test_the_cli_reference_path_has_one_spelling_in_three_places():
+    # THREE readers name this one file — the `[generated]` declaration (what the
+    # trunk owns), `check.py`'s freshness step (what gates it) and
+    # `trunk_step.py`'s regen row (what fixes it) — and they cannot import one
+    # another: `check.py` and `trunk_step.py` are standalone-copied scripts. So
+    # the constant is duplicated by design and pinned here instead, which is the
+    # duplicated-policy rule applied to a path. Drift would not be silent (the
+    # step would red while the regen wrote elsewhere), but it would be
+    # baffling, and this says so in one line.
+    check = load_script("check")
+    trunk = load_script("trunk_step")
+    assert check.CLI_REFERENCE_DOC == trunk.CLI_REFERENCE_REL
+    assert check.CLI_REFERENCE_DOC in _generated_kinds()
 
 
 def test_every_wired_enforcer_is_a_real_step_and_runs_in_the_commit_floor():

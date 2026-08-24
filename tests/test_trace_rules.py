@@ -1391,3 +1391,184 @@ def test_the_derivability_advisory_warns_but_never_gates():
     assert trace.exit_code(loud, ns(strict=True)) == 0
     assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
     assert trace.exit_code(loud, ns()) == 0
+
+
+# --- OI-61 ruled (d): the named-symbol / named-path tripwire ------------------
+# The four form rules on a `Contract` cell cannot see CONTENT, which is how a
+# live row named the deleted `SCHED_*` classification constants for weeks while
+# the presence-only module back-link reported 27/27 complete over it. This rule
+# reads the one thing a grammar honestly can: a token that CLAIMS to be a symbol
+# or a path must resolve.
+
+
+def _surface_root(tmp_path, body):
+    """A minimal repo whose `[paths] src` holds one real module."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n\n[arch-map]\nmode = symbols\n", encoding="utf-8"
+    )
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "widget.py").write_text(body, encoding="utf-8")
+    return tmp_path
+
+
+_LIVE_MODULE = (
+    '"""A module."""\n'
+    "LIVE_CONSTANT = 1\n"
+    "SCHED_READY = 'ready'\n"
+    "\n"
+    "def harvest(x):\n"
+    "    return x\n"
+    "\n"
+    "class Router:\n"
+    "    def route(self):\n"
+    "        return None\n"
+)
+
+
+def _contract_advisories(trace, root, contract):
+    return trace.if_contract_advisories(
+        [{"IF-ID": "IF-101", "Contract": contract}], root
+    )
+
+
+def test_a_contract_naming_a_deleted_symbol_family_is_reported(tmp_path):
+    # THE ACCEPTANCE CASE, and it is the live exhibit's own shape: `SCHED_*` is
+    # a FAMILY, so a rule that only read whole names would have missed the very
+    # defect it was ruled for. Driven both ways round on one tree — the family
+    # present resolves, the family deleted reports.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    root = _surface_root(tmp_path, _LIVE_MODULE)
+    assert _contract_advisories(trace, root, "emits the SCHED_* states") == []
+
+    (root / "src" / "widget.py").write_text(
+        _LIVE_MODULE.replace("SCHED_READY = 'ready'\n", ""), encoding="utf-8"
+    )
+    fires = _contract_advisories(trace, root, "emits the SCHED_* states")
+    assert len(fires) == 1
+    assert "IF-101" in fires[0] and "SCHED_*" in fires[0]
+    assert "no such symbol exists" in fires[0]
+
+
+def test_the_tripwire_reads_calls_constants_and_dotted_names(tmp_path):
+    from conftest import load_script
+
+    trace = load_script("trace")
+    root = _surface_root(tmp_path, _LIVE_MODULE)
+
+    # Every shape that RESOLVES is silent: a call, a module-scope constant, a
+    # class method by qualname, and a module-qualified name (a module is not a
+    # def, so the whole token is never in the AST's name set — the tail is).
+    for good in (
+        "harvest() returns the record",
+        "LIVE_CONSTANT bounds the run",
+        "Router.route picks the pair",
+        "widget.harvest is the entry point",
+    ):
+        assert _contract_advisories(trace, root, good) == [], good
+
+    # And every shape that does NOT resolve is named individually.
+    for dead, token in (
+        ("vanished() returns nothing", "vanished"),
+        ("DEAD_CONSTANT bounds the run", "DEAD_CONSTANT"),
+        ("Router.gone picks the pair", "Router.gone"),
+    ):
+        fires = _contract_advisories(trace, root, dead)
+        assert len(fires) == 1 and token in fires[0], dead
+
+
+def test_the_tripwire_declines_to_judge_names_that_are_not_ours(tmp_path):
+    # The false-positive classes that would have made this rule unusable, each
+    # pinned: another library's symbols, the registry's own column notation,
+    # English slashes, and a filename read as an attribute access.
+    from conftest import load_script
+
+    trace = load_script("trace")
+    root = _surface_root(tmp_path, _LIVE_MODULE)
+
+    for benign in (
+        "reads csv.DictReader rows",
+        "passes sys.executable through",
+        "joins TC.Evidence to LLR.Module",
+        "gates the identity/PII classes",
+        "drives the claim/work/merge cycle",
+        "delivered as a library plus CLI at widget.py",
+    ):
+        assert _contract_advisories(trace, root, benign) == [], benign
+
+
+def test_a_named_path_must_exist_unless_the_repo_declares_its_absence(tmp_path):
+    from conftest import load_script
+
+    trace = load_script("trace")
+    root = _surface_root(tmp_path, _LIVE_MODULE)
+
+    # A path whose first segment is a real directory is judged; sentence
+    # punctuation is not part of it.
+    assert _contract_advisories(trace, root, "writes docs/stack.ini.") == []
+    fires = _contract_advisories(trace, root, "writes docs/report.md.")
+    assert len(fires) == 1 and "docs/report.md" in fires[0]
+    assert "nothing at that path exists" in fires[0]
+
+    # A path the repo has DECLARED it does not carry is resolved, not dangling —
+    # the reading `docs/declared-absences` already has for two other readers.
+    (root / "docs" / "declared-absences").write_text(
+        "docs/report.md — the layer is off here\n", encoding="utf-8"
+    )
+    assert _contract_advisories(trace, root, "writes docs/report.md.") == []
+
+    # A token whose top-level directory does not exist at all is NOT judged: the
+    # one test that separates a path from an English slash needs no extension
+    # list, and this is the cost it pays, stated rather than hidden.
+    assert _contract_advisories(trace, root, "writes nowhere/at/all.md") == []
+
+
+def test_the_tripwire_is_vacuous_with_no_source_surface(tmp_path):
+    # An EMPTY surface would report every named symbol in the registry as dead,
+    # which is the loudest possible false positive — so "no surface" must be
+    # distinguishable from "a surface with nothing in it".
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    assert _contract_advisories(trace, None, "emits the SCHED_* states") == []
+
+    root = _surface_root(tmp_path, _LIVE_MODULE)
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = src\n\n[arch-map]\nmode = files\n", encoding="utf-8"
+    )
+    assert _contract_advisories(trace, root, "emits the SCHED_* states") == []
+
+
+# --- OI-61's sub-question: the `VerifiedBy` seam-tier pointer -----------------
+
+
+def test_verified_by_is_optional_and_its_pointer_must_resolve():
+    from conftest import load_script
+
+    trace = load_script("trace")
+    tcs, llrs = {"TC-014"}, {"LLR-014"}
+
+    def flags(cell):
+        return trace.if_verified_by_advisories(
+            [_if_row(**{"VerifiedBy": cell})], tcs, llrs
+        )
+
+    # EMPTY IS AN ANSWER — "verified in its own right" — and it is the ordinary
+    # case, so it must never report.
+    assert flags("") == []
+    # Both tiers are legitimate: the test itself, or the parent design row whose
+    # tests cover the seam.
+    assert flags("TC-014") == []
+    assert flags("LLR-014") == []
+    # A pointer that resolves to nothing is the whole of what is checked.
+    fires = flags("TC-999")
+    assert len(fires) == 1 and "TC-999" in fires[0] and "test-cases" in fires[0]
+    # An id of the wrong tier says so in its own words rather than reporting
+    # "unknown" — an SR is a plausible mistake and a confusing finding.
+    fires = flags("SR-014")
+    assert len(fires) == 1 and "not a TC-### or LLR-### id" in fires[0]

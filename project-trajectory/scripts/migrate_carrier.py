@@ -212,6 +212,10 @@ KEY = {
     # (RESYNC_PACK.md).
     "Req-Refs": "req_refs",
     "Owner": "owner",
+    # The optional seam-tier verification pointer (OI-61's sub-question,
+    # sanctioned 2026-08-23). A legacy CSV will not carry it; a converter that
+    # did not map it would silently drop the cell on the one repo that did.
+    "VerifiedBy": "verified_by",
     "CarriedBy": "carried_by",
     "Provider": "provider",
     "Consumers": "consumers",

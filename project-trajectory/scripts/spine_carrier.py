@@ -236,6 +236,12 @@ OFFSPINE_COLUMN = {
     # names. It is not a second `req_refs` — that cell lists everything the seam
     # realizes or relies on; this one names the row that answers for it.
     "owner": "Owner",
+    # OI-61's sub-question, sanctioned 2026-08-23: the OPTIONAL seam-tier
+    # verification pointer. A `TC-###` or an `LLR-###`; empty means "verified in
+    # its own right". It is not a second `Verification` column — the IF tier has
+    # none — it is the pointer that makes "the parent functionality's tests
+    # cover this" sayable at all.
+    "verified_by": "VerifiedBy",
     # Q3: a constituent names the bundle that carries it. Optional by design —
     # most seams ride nothing, and an empty cell IS "this is not a constituent".
     "carried_by": "CarriedBy",
