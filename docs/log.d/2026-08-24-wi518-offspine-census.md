@@ -101,5 +101,5 @@ right now, so the new census section renders nothing on the live repo.
   workaround; both batches together account for all 3033 collected tests, 0
   failed. `tests/test_pre_commit_hook.py`'s known collection-order-dependent
   case (documented pre-existing at HEAD) did not fire in either batch.
-<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=760d1aa8 -->
-<!-- fig: cmd="python -m pytest -q -n auto -m \"not smoke\"" rev=760d1aa8 -->
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=3d053db2 -->
+<!-- fig: cmd="python -m pytest -q -n auto -m \"not smoke\"" rev=3d053db2 -->
