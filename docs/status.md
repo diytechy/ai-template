@@ -60,62 +60,39 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   not moved. (The CI pair — the hosted bar
   per trigger and the hosted verdict — was the first fold-in paid, minting
   three LLR/TC pairs beside the test-evidence carrier.)
-  **THE SURFACE GAP IS FIXED — the nineteen now render, and the owner's
-  approval act on them is what is next.** (2026-08-24, owner-chosen path:
-  "fix the surface first, approve from a corrected brief")
-  `trace.reattest_model`'s `owes()` widened past the SR-only test: a
-  `Drafted` LLR or TC now owes on its own Status, regardless of its parent
-  SR's. Both
-  `open-items.html` and `ratify/CURRENT.md` regenerated against the widened
-  model and now read **10 spine row(s) owing … across 20 chain row
-  change(s)** (19 `Drafted` rows across 9 SRs whose Status never moved, plus
-  the one pre-existing `SR-159` drift) — matching `docs/stage`'s `drafted =
-  19` for the first time. **Nothing was approved** — the corrected brief is
-  what the owner approves FROM, next. Record:
-  [log.d/2026-08-24-owes-widening-and-b-brief.md](log.d/2026-08-24-owes-widening-and-b-brief.md).
-  **THE TEXT ITSELF NOW RENDERS TOO** (owner report, 2026-08-24, reviewing
-  SR-177's entry: "I don't see the actual requirement text… to be able to
-  review"): an owing SR's own `Requirement`/`Rationale` render
-  unconditionally on both surfaces now — before, an SR whose whole amendment
-  lived in a `Drafted` child (SR-177's shape) never got its own row, and its
-  text sat only inside the HTML's collapsed context, hidden by default.
-  Record: [log.d/2026-08-24-wi514-brief-carries-text.md](log.d/2026-08-24-wi514-brief-carries-text.md).
-  **AND THE TEXT IS LIGHTER TO READ** (owner-directed, 2026-08-24: the items
-  needing approval "still seem pretty heavy"): a cross-family wording round
-  (`OPENAI-TERRA`, `gpt-5.6-terra` via `codex exec`) over the nineteen
-  `Drafted` rows was adjudicated suggestion by suggestion — 21 accepted of 38,
-  the reviewable population down 13.2% — and applied to those rows only.
-  **Nothing was approved**: the brief the owner signs FROM is the regenerated
-  one, and it now shows each re-worded row's before/after until the approval
-  re-seeds the snapshot. Dossier (every rejection reasoned, plus two findings
-  banked for the owner about `Approved` text nobody may edit):
-  [reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md).
+  **THE NINETEEN ARE APPROVED AND THE BASELINE IS RE-SEEDED** (2026-08-24,
+  the owner's in-session act, from the corrected brief the three preceding
+  fixes produced — the dated copy he signed from is
+  [ratify/2026-08-24-spine-approval.md](ratify/2026-08-24-spine-approval.md);
+  record: [log.d/2026-08-24-oi62-rule-and-spine-approval.md](log.d/2026-08-24-oi62-rule-and-spine-approval.md)):
+  `docs/stage` reads **`drafted = 0`**, the re-attest window is closed
+  (`trace.py --approve modified --check` exit 0), and **phase 4 climbed back
+  to `DevStg-Impl`** — the reopened-phase warning its minted drafts held open
+  is cleared. The ladder's live rung stays `DevStg-LLReqs` on phase 5. Still
+  owner-owed from the wording round that lightened the brief: the two banked
+  findings about `Approved` text nobody may edit
+  ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
   Known environmental constraint: ~1.6 GB free on C:, so full-suite runs may
   need the batched/cleaned-basetemp form until space is reclaimed.
-- **The interface `contract` cell's next question is no longer only "how much
-  do we thin, and at what grain" — it is now also "does the remainder belong in
-  the cell at all".** The staged (a) pass thinned the 27 CLI-restatement
-  cells from 7,385 characters to 2,613, of which only **908 over 11 rows** was
-  irreducible — a typed fact no owner row states. So **87.7% of that family's
-  prose was restatement**, and **16 of the 27 rows kept nothing at all** past
-  the crossing statement. The open decision is whether to run the same
-  reviewed pass across the **other 108 rows**, whose median cell is longer
-  (374 chars, 34 over the ceiling) — and, since the owner's 2026-08-24 raise
-  widened the brief, whether that pass **edits or only measures**: new option
-  (e) reads all 108 without rewriting a cell, so the remainder's HOME is ruled
-  on with a number in hand rather than settled by default. Its relocation
-  candidate already exists and is already policed both ways — the
-  `Contracts: IF-###` line **57 of 76 modules carry**. Two inputs are live and
-  neither is owed by
-  the lane that shipped (a): the named-symbol tripwire is **reporting 7 findings
-  over 5 rows** and they want triage — one is demonstrated rot (`IF-055`'s
-  deleted `SCHED_*`), the rest are judgement calls — and `OI-61`'s option (c)
-  re-opens only once a residual rot class is DEMONSTRATED that neither (a) nor
-  (d) reached, which the `IF-080` class is still the candidate for and nothing
-  has yet shown. The generated CLI reference
-  ([cli-reference.md](cli-reference.md)) is the home a thinned cell points at
-  today, and the worked precedent for moving a fact class to the owner's side;
-  it is opt-in for adopters and vacuous for a repo that skips it.
+- **The interface `contract` question is RULED (e): MEASURE, DON'T REWRITE**
+  (OI-62 ruled 2026-08-24, in session, at the owner's own widening; record:
+  [log.d/2026-08-24-oi62-rule-and-spine-approval.md](log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
+  What runs next is a read-only per-row classification of the **108 non-CLI
+  rows** — restatement vs irreducible remainder, tranche by row family, NO
+  cell edited — whose durable verdict record becomes the input to a
+  follow-on relocation brief: does the remainder move to a contract-header
+  declaration on the owning component's side (the `Contracts: IF-###` line
+  **57 of 76 modules carry**, policed both ways), or stay in the cell? That
+  brief is FILED at the pass's close, with the measured per-family numbers —
+  the ruling's two explicit obligations. The 5 ambiguous tripwire findings
+  (`IF-055`'s real rot aside) are triaged inside tranche 1, folded, not
+  blocking. `OI-61`'s (c) stays deferred on its unchanged condition — a
+  DEMONSTRATED residual rot class, `IF-080`'s still the candidate. The
+  comparison figure the tranches re-measure against: the CLI family's
+  **87.7% restatement / 11-of-27 rows carrying a remainder**
+  (the (a) pass), with the generated
+  [cli-reference.md](cli-reference.md) the worked precedent for moving a
+  fact class to the owner's side; opt-in for adopters, vacuous if skipped.
 - **The interface tier's end-state schema is LANDED.**
   A seam row now reads `provider -> consumers`: no direction
   column, no endpoint cell restating what the row's owner already derives, and
@@ -161,12 +138,11 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   remainder, `check.steps` (628 lines but under the complexity limit), which
   needs a decision about the carrier for a flat declaration rather than a
   technique — then M-06's test-monolith splits, which ride along with them.
-- **The snapshot block is CLEARED** (2026-08-23): `LLR-147`'s amended `Detail`
-  was blessed under the owner's in-session act and the baseline re-seeded, so
-  `intake.py snapshot` no longer refuses and a session can again record an
-  approval by refreshing it. A row authored `Drafted` only to dodge that block
-  is now free to be approved on its own merits — which is a reason to close the
-  drafted-row surface gap above, not a licence to bulk-flip.
+- **The snapshot block is CLEARED and STAYS clear** (2026-08-23, re-seeded
+  again 2026-08-24): `intake.py snapshot` does not refuse, so a session can
+  record an approval by refreshing it. The standing rule survives the closes
+  around it: a `Drafted` row is approved on its own merits, from the rendered
+  brief — never bulk-flipped to tidy a surface.
 - **The `wi484-concern-refs-component-view` lane is OPEN with slice 5 landed**
   (2026-08-23): phases 0, 1, **2**, 3 and 5 are done — the component view is
   GENERATED (`components.derived.toml`, freshness-gated by the `component-view`
@@ -226,13 +202,14 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
 <!-- BEGIN GENERATED STATUS -->
 _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
 
-- **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-LLReqs;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
-- **Spine:** **SN=27 SR=75 LLR=184 TC=181** (19 drafts) · 135 seams · 4 components.
-- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
-  - **OI-62** — OI-61 ruled (a) NOW and deferred (b) - the per-row contract review across the other 108 rows - behind a NUMBER: 908 of 7,385 characters (12.3%) of the 27 CLI contracts turned out to be irreducible once thinned, meaning 87.7% was recoverable from the owner row/module/generated reference; that number is now measured (WI-512, docs/log.d/2026-08-24-wi512-contract-generalization.md) and this brief asks whether it is a proceed signal for (b). WIDENED 2026-08-24 at the owner's raise with option (e) - MEASURE, DO NOT REWRITE - because (a) through (d) all hold the schema fixed and so structurally cannot ask the question behind the number: whether the irreducible remainder belongs in the contract cell at all, or as a contract header / output-interface declaration on the owning component's side
+- **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
+- **Spine:** **SN=27 SR=75 LLR=184 TC=181** (0 drafts) · 135 seams · 4 components.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
   - **WI-483** `P2` — Successor decomposition program: break the seven-module import cycle behind typed read mo…
   - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
+  - **WI-518** `P3` — The snapshot re-seed absorbs off-spine registries with no owner surface
+  - **WI-517** `P3` — approval_stamp's -G regex uses \s, silently empty on BSD regcomp
+  - **WI-516** `P2` — The (e) measuring pass: per-row contract verdicts over the 108 non-CLI rows, no cell edit…
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,

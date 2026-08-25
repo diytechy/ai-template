@@ -1834,7 +1834,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-187 (parent SR-162)"
 automated = "Yes"
 evidence = """tests/test_external_frame.py::test_a_clean_frame_produces_no_finding; tests/test_external_frame.py::test_a_crossing_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_a_relationship_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING; tests/test_external_frame.py::test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass; tests/test_external_frame.py::test_a_frame_declaring_NOTHING_stays_vacuous; tests/test_external_frame.py::test_the_frame_rules_are_VACUOUS_without_the_registry; tests/test_external_frame.py::test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding; tests/test_external_frame.py::test_an_SR_naming_a_DECLARED_crossing_is_clean; tests/test_external_frame.py::test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error; tests/test_external_frame.py::test_the_realization_gap_is_REPORTED_and_never_gated; tests/test_external_frame.py::test_the_SR_boundary_rule_is_vacuous_without_a_frame; tests/test_trace.py::test_signal_refuses_an_unknown_value_as_a_warn"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-183]
@@ -1861,12 +1861,12 @@ phase = 5
 [test.TC-194]
 verifies = ["SR-168", "LLR-198", "IF-138"]
 level = "Integration"
-method = """Two claims, because the row makes two. THE BEHAVIOUR, unchanged by the move and still driven through the facade that used to own it: a blocked row projects its pointer, a Drafted or drifted SR projects the brief that carries the depth, a tracked pause projects one bullet and a malformed one still projects fail-closed, and the whole block is deterministic over two reads. THE MODEL AND THE SITING: assert every item carries a kind field, that owner_cards is exactly pending_items minus the pause, that every item's line appears in the rendered block, that the dispatcher's card read and the generated owner surface's block text each equal the read model's own answer, and that the facade still resolves all four former names to the read model's functions; then build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert that nothing imports the dashboard facade at all. IF-138, the loader seam this module carries, rides the blocked-row arms: they drive the derivation end to end through the validator's work-registry loaders over real temp repositories, so a loader that stopped answering would red here rather than silently projecting an empty owner queue."""
+method = """Drive blocked rows, Drafted or drifted SRs, tracked pauses and malformed pauses through the facade that used to own the derivation. Assert that a blocked row projects its pointer, a Drafted or drifted SR projects the brief that carries the depth, a tracked pause projects exactly one bullet, a malformed one still projects fail-closed, and two reads agree. Assert every item carries a kind field, that owner_cards is exactly pending_items minus the pause, that every item's line appears in the rendered block, that the dispatcher's card read and the generated owner surface's block text each equal the read model's own answer, and that the facade still resolves all four former names to the read model's functions. Build the import graph of the shipped scripts INCLUDING imports written inside function bodies and assert that nothing imports the dashboard facade at all. IF-138, the loader seam this module carries, rides the blocked-row arms: they drive the derivation end to end through the validator's work-registry loaders over real temp repositories, so a loader that stopped answering reds here rather than silently projecting an empty owner queue."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-198 (parent SR-168)"
 automated = "Yes"
 evidence = """tests/test_gen_trajectory_pending.py::test_the_typed_model_kinds_every_pending_item; tests/test_gen_trajectory_pending.py::test_owner_cards_is_pending_items_minus_the_pause; tests/test_gen_trajectory_pending.py::test_the_block_renders_exactly_the_model; tests/test_gen_trajectory_pending.py::test_the_dashboard_still_answers_to_the_former_private_names; tests/test_gen_trajectory_pending.py::test_the_dispatcher_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_the_owner_surface_reads_the_model_not_the_render_facade; tests/test_gen_trajectory_pending.py::test_pause_projection_is_deterministic; tests/test_gen_trajectory_pending.py::test_malformed_pause_still_projects_fail_closed; tests/test_import_layers.py::test_a_facade_is_an_entry_point_and_nothing_imports_it; tests/test_import_layers.py::test_a_view_never_imports_a_lifecycle_service"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-185]
@@ -1910,18 +1910,18 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-193 (parent SR-160)"
 automated = "Yes"
 evidence = """tests/test_launcher_interpreter.py::test_sh_prefers_the_project_venv_over_a_below_floor_ambient_python[live]; tests/test_launcher_interpreter.py::test_sh_refuses_a_below_floor_interpreter_and_names_what_it_rejected[live]; tests/test_launcher_interpreter.py::test_sh_takes_a_path_python_that_satisfies_the_floor[live]; tests/test_launcher_interpreter.py::test_sh_falls_back_when_the_venv_itself_is_below_the_floor[live]; tests/test_launcher_interpreter.py::test_the_command_wrapper_inherits_the_venv_preference[live]; tests/test_launcher_interpreter.py::test_the_command_wrapper_declares_the_inheritance_and_holds_no_copy[live]; tests/test_launcher_interpreter.py::test_cmd_prefers_the_project_venv_over_a_below_floor_ambient_python[live]; tests/test_launcher_interpreter.py::test_cmd_refuses_a_below_floor_interpreter_and_names_what_it_rejected[live]; tests/test_launcher_interpreter.py::test_cmd_takes_a_path_python_that_satisfies_the_floor[live]; tests/test_launcher_interpreter.py::test_cmd_falls_back_when_the_venv_is_present_but_unusable[live]; tests/test_launcher_interpreter.py::test_cmd_walks_past_an_alias_stub_to_the_py_launcher[live]"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-189]
 verifies = ["SR-164", "LLR-194"]
 level = "Unit"
-method = """The seam's own two behaviours, driven over an existing REQUIRED_FIELDS/ENUM_FIELDS table (IF today, since no SN entry exists yet) because the shape being verified is the mechanism scope is scheduled to join, not a scope-specific checker: a column absent from a row raises a warn naming the row and the exact column, gated only under --strict and never by the bare read; and a value present but outside a closed vocabulary is reported as a schema finding naming the row, the offending value and the full allowed set, staying silent at --strict-schema alone and gating only when --strict joins it. Both are the identical shape SR-164's acceptance asks of scope - missing or out-of-vocabulary, naming the row - over the mechanism the field is scheduled to extend rather than a fabricated one."""
+method = """The seam's own two behaviours, driven over an existing REQUIRED_FIELDS/ENUM_FIELDS table (IF today, since no SN entry exists yet), because the shape being verified is the mechanism scope is scheduled to join rather than a scope-specific checker. A column absent from a row raises a warn naming the row and the exact column, gated only under --strict and never by the bare read. A value present but outside a closed vocabulary is reported as a schema finding naming the row, the offending value and the full allowed set, staying silent under --strict-schema alone and gating only when --strict joins it. Both are the identical shape SR-164's acceptance asks of scope - missing or out-of-vocabulary, naming the row."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-194 (parent SR-164)"
 automated = "Yes"
 evidence = """tests/test_trace.py::test_missing_required_if_field_is_a_warn; tests/test_trace.py::test_out_of_vocabulary_aspect_is_a_schema_finding"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-190]
@@ -1938,23 +1938,23 @@ phase = 5
 [test.TC-191]
 verifies = ["SR-177", "LLR-196"]
 level = "Integration"
-method = """Runs the real folding path rather than reading it: `tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run` calls `agent_common.regenerate_index` on a synthetic `docs/` tree and asserts the generated table exists (the row-per-session fold LLR-196 cites); `tests/test_agent_loop.py::test_done_exit_writes_logs_and_index` and `::test_stream_json_echo_and_result_parse` drive a live fake-CLI session end to end and assert the exact telemetry columns (`wall-secs`, `api-secs`, `turns`, `tokens`, `cache-read`, `cache-create`) land in the log header `regenerate_index`/`per_turn_pace`/`per_turn_context` read. No test here exercises a lanes-configured-vs-occupied or work-per-wall-hour GROUPING, because LLR-196 states plainly that grouping does not exist yet — this case verifies the inputs the future grouping pass would consume, not the report SR-177 ultimately asks for."""
+method = """Runs the real folding path rather than reading it. tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run calls agent_common.regenerate_index on a synthetic docs/ tree and asserts the generated table exists - the row-per-session fold LLR-196 cites. tests/test_agent_loop.py::test_done_exit_writes_logs_and_index and ::test_stream_json_echo_and_result_parse drive a live fake-CLI session end to end and assert that wall-secs, api-secs, turns, tokens, cache-read and cache-create land in the log header regenerate_index, per_turn_pace and per_turn_context read. No test here exercises a lanes-configured-versus-occupied or work-per-wall-hour GROUPING, because LLR-196 states plainly that the grouping does not exist yet: this case verifies the inputs the future grouping pass would consume, not the report SR-177 ultimately asks for."""
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-196 (parent SR-177) for the telemetry INPUT half only; the utilisation report itself remains the stated build gap"
 automated = "Yes"
 evidence = """tests/test_generated_newlines.py::test_the_three_crash_paths_actually_run; tests/test_agent_loop.py::test_done_exit_writes_logs_and_index; tests/test_agent_loop.py::test_stream_json_echo_and_result_parse"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-192]
 verifies = ["SR-146", "LLR-164"]
 level = "Unit"
-method = """`gen_prompt_catalog.render` is exercised directly rather than read: `test_the_catalogue_lists_every_shipped_prompt_with_its_digest` asserts every `prompts.KIT_PROMPTS` key and every `prompts.catalog_rows()` digest appears in the rendered text (the PURE-render claim, since it reads only the shipped templates); `test_the_catalogue_on_disk_is_FRESH` runs `catalog.main(["--check"])` and asserts exit 0 against the committed file (the freshness gate LLR-164 names); `test_a_template_edit_moves_its_digest_and_so_the_catalogue` asserts a real text edit moves the digest while a bare line-ending difference does not (the CRLF-vs-stale-catalogue claim `--check` exists to avoid); `tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes` drives the wired `[step:]` enforcer end to end — edits a template, asserts the commit-floor step reds, then runs `gen_prompt_catalog.py` and asserts it goes green — over a bootstrapped scaffold, not the source tree alone."""
+method = """gen_prompt_catalog.render is exercised directly rather than read. test_the_catalogue_lists_every_shipped_prompt_with_its_digest asserts that the rendered text contains every prompts.KIT_PROMPTS key and every prompts.catalog_rows() digest. test_the_catalogue_on_disk_is_FRESH runs catalog.main(["--check"]) against the committed file and asserts exit 0 - the freshness gate LLR-164 names. test_a_template_edit_moves_its_digest_and_so_the_catalogue asserts that a real text edit moves the digest while a bare line-ending difference does not. tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes drives the wired [step:] enforcer end to end over a bootstrapped scaffold: edit a template, assert the commit-floor step reds, run gen_prompt_catalog.py, then assert it goes green."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-164 (parent SR-146)"
 automated = "Yes"
 evidence = """tests/test_routing_and_prompts.py::test_the_catalogue_lists_every_shipped_prompt_with_its_digest; tests/test_routing_and_prompts.py::test_the_catalogue_on_disk_is_FRESH; tests/test_routing_and_prompts.py::test_a_template_edit_moves_its_digest_and_so_the_catalogue; tests/test_generated_freshness_wiring.py::test_prompt_catalog_step_reds_when_a_template_changes"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-193]
@@ -1976,7 +1976,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-199 (parent SR-070)"
 automated = "Yes"
 evidence = """tests/test_gen_components.py::test_membership_and_the_requirement_reach; tests/test_gen_components.py::test_the_hat_union_is_DERIVED_from_the_parent_not_copied; tests/test_gen_components.py::test_a_parent_re_ruling_moves_the_view_with_no_design_cell_edited; tests/test_gen_components.py::test_a_childless_requirement_is_listed_ONCE_and_never_dropped; tests/test_gen_components.py::test_a_shared_requirement_appears_in_EVERY_component_it_reaches; tests/test_gen_components.py::test_seams_enter_the_view_split_internal_from_boundary; tests/test_gen_components.py::test_an_untagged_seam_is_placed_by_its_ENDPOINTS; tests/test_gen_components.py::test_an_unplaceable_seam_is_REPORTED_not_silently_excluded; tests/test_gen_components.py::test_the_generated_view_carries_NO_approval_cell; tests/test_gen_components.py::test_check_reds_on_a_stale_view_and_greens_once_regenerated; tests/test_gen_components.py::test_check_reds_when_the_view_is_missing_entirely; tests/test_gen_components.py::test_the_written_file_is_LF_and_reproducible; tests/test_gen_components.py::test_a_repo_with_no_real_component_is_VACUOUS; tests/test_gen_components.py::test_the_cli_runs_out_of_process"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-196]
@@ -1987,7 +1987,7 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-200 (parent SR-168)"
 automated = "Yes"
 evidence = """tests/test_traj_parse.py::test_frame_context_is_none_without_a_declared_frame; tests/test_traj_parse.py::test_frame_context_drops_the_blank_form_s_example_rows; tests/test_traj_parse.py::test_frame_context_joins_the_tie_backs_and_keeps_id_order; tests/test_traj_parse.py::test_frame_context_reads_this_repo_s_own_locked_frame; tests/test_traj_views.py::test_context_view_renders_the_declared_frame; tests/test_traj_views.py::test_context_view_states_an_untied_external_endpoint_with_its_reason; tests/test_traj_views.py::test_context_view_renders_above_the_derived_structure; tests/test_traj_views.py::test_context_view_omitted_and_byte_identical_without_a_frame; tests/test_traj_views.py::test_a_template_only_frame_renders_the_vacuous_view; tests/test_traj_views.py::test_context_view_alone_earns_the_how_tab"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-197]
@@ -1998,15 +1998,15 @@ tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-201 (parent SR-157)"
 automated = "Yes"
 evidence = """tests/test_trace_coherence.py::test_the_orphan_rules_emit_sr_then_llr_then_tc_then_sn; tests/test_trace_coherence.py::test_a_drafted_row_stands_the_child_rules_down_but_not_its_sn_link; tests/test_trace_coherence.py::test_off_spine_backlinks_resolve_against_ids_and_llr_module_paths; tests/test_trace_coherence.py::test_component_membership_is_checked_from_the_primitive_side; tests/test_trace_coherence.py::test_the_knowledge_ref_resolves_only_the_pack_prefix; tests/test_trace_coherence.py::test_the_phase_scope_always_covers_the_foundation_phase; tests/test_trace_coherence.py::test_the_status_criterion_defers_out_of_phase_and_stands_down_for_drafted; tests/test_trace_coherence.py::test_registries_is_frozen_and_total; tests/test_trace_coherence.py::test_the_loader_is_the_only_construction_site_of_registries; tests/test_trace_coherence.py::test_findings_list_defaults_are_per_instance; tests/test_trace_coherence.py::test_the_two_post_analyze_fields_are_declared_not_conjured; tests/test_trace_coherence.py::test_analysis_flags_takes_a_record_or_a_namespace; tests/test_trace_coherence.py::test_no_caller_forges_an_argparse_namespace_for_the_engine; tests/test_trace_coherence.py::test_the_coherence_rules_import_no_sibling_of_scripts; tests/test_trace_coherence.py::test_trace_re_exports_every_moved_name; tests/test_trace_coherence.py::test_analyze_is_a_composer_and_stays_one"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 [test.TC-198]
 verifies = ["SR-161", "LLR-202"]
 level = "Unit"
-method = """The arm driven over a real two-commit git repo whose HEAD holds an Approved SR-001 (and, for the tier case, an Approved LLR-001 + TC-001), with the change STAGED rather than committed - the hook's own question. FIRES: the requirement cell amended while Hat-Refs stands, one finding naming the row and the moved cells, with the amendment arm firing alongside it so the second arm is proven an addition rather than a re-spelling. SILENT ON TRACED-ONLY MOVEMENT, the regression case and a measured one: writing the Hat-Refs cell itself - literally the perspective backfill's edit - raises nothing, and neither does an SN-Refs re-point, because no approved cell moved. SILENT WHEN DISCHARGED: substance and Hat-Refs moving together raises nothing here while the amendment arm still fires. VACUOUS WHERE THERE IS NO BASELINE, both shapes: a row minted in the staged commit, and a row amended below approval on both sides. STRUCTURALLY SILENT ON A TIER WITH NO SUCH COLUMN: an LLR and a TC amended in the same commit yield exactly one finding, the LLR's, so the scoping cannot pass by the arm being silent everywhere."""
+method = """Drive the arm over a real two-commit git repository whose HEAD holds an Approved SR-001 (and, for the tier case, an Approved LLR-001 and TC-001), with the change STAGED rather than committed - the hook's own question. FIRES: the requirement cell amended while Hat-Refs stands raises one finding naming the row and the moved cells, with the amendment arm firing alongside it so the second arm is proven an addition rather than a re-spelling. SILENT ON TRACED-ONLY MOVEMENT: writing the Hat-Refs cell itself - the perspective backfill's own edit - raises nothing, and neither does an SN-Refs re-point. SILENT WHEN DISCHARGED: substance and Hat-Refs moving together raises nothing here while the amendment arm still fires. VACUOUS WHERE THERE IS NO BASELINE, both shapes: a row minted in the staged commit, and a row amended below approval on both sides. STRUCTURALLY SILENT ON A TIER WITH NO SUCH COLUMN: an LLR and a TC amended in the same commit yield exactly one finding, the LLR's, so the scoping cannot pass by the arm being silent everywhere."""
 tier = "Smoke"
 expected = "Satisfies the acceptance folded into LLR-202 (parent SR-161)"
 automated = "Yes"
 evidence = """tests/test_trajectory_staged.py::test_amending_approved_cells_without_moving_hat_refs_warns; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_only_traced_cells_move; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment; tests/test_trajectory_staged.py::test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_on_a_tier_that_carries_no_such_column"""
-status = "Drafted"
+status = "Approved"
 phase = 5
