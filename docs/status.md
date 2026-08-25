@@ -205,6 +205,23 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   **WHAT REMAINS ON THE REMAP ROW IS OWNER-OWED AND ONLY THAT:** `OI-64`'s
   ruling, and the blessing of the four `Drafted` rows. It stays ACTIVE
   deliberately — closing it would strand the ruling with no row to return to.
+- **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
+  (2026-08-25; record:
+  [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.d/2026-08-25-wi521-slice1-acceptance-record.md)).
+  The acceptance record left the checker: 677 lines moved VERBATIM into
+  `project-trajectory/scripts/acceptance_record.py`, `check_trajectory.py`
+  re-stamped **4,963 → 4,327**, every name re-exported so no caller moved, the
+  CLI byte-identical across nine driven paths and 56 API probes, and `intake.py`
+  no longer importing a ~5,000-line validator at all. **Before trusting the
+  fusion table this row inherited, read the re-derivation that corrects it:** 13
+  of the 71 SRs have a TIED live module and `agent_loop`'s head position rests
+  on one of them, so the table says WHICH modules fuse obligations, not in what
+  order. **The row does not close** — it is the standing debt owner and the
+  ratchet still points at it. Next, in that order: the rest of
+  `check_trajectory`, then `agent_common` / `bootstrap` / `agent_loop`, then
+  M-06's four monoliths (a standalone split, unbound from the ride-along rule).
+  The test-tree sensor gap stays CARRIED, its axis still under an unruled owner
+  question.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the

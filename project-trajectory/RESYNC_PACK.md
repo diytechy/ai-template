@@ -3923,6 +3923,53 @@ half instead), and `check_trajectory.parse_if_tc_allow` keeps its pinned
 2-tuple return for the same reason. Re-apply your patch to whichever function
 you touched; nothing downstream of it needed to change shape.
 
+### `scripts/acceptance_record.py` — the acceptance record leaves the checker [since c3bc6e07]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/check_trajectory.py`,
+`scripts/acceptance_record.py` (NEW), `scripts/intake.py`,
+`scripts/kitlib/git.py`, `scripts/bootstrap.py`.
+
+**A NEW SHIPPED SCRIPT, and a scaffold without it cannot run the checker.**
+`check_trajectory.py` imports `acceptance_record` UNGUARDED and joins its
+findings to the failure set, so copy the new file across with the rest — it is a
+`bootstrap.MAPPING` row, so a re-bootstrap or a `--repair` places it for you.
+
+**What moved, and nothing else did.** 677 lines came out of
+`check_trajectory.py` VERBATIM: the §A5.1 approved/traced cell split
+(`SPINE_TRACED_CELLS`, `SPINE_APPROVED_CELLS`, `spine_cell_class`,
+`traced_cells`), the two-tree comparison (`SPINE_CSVS`, `_spine_rows_at`,
+`_spine_revs`, `split_changed_cells`, `staged_spine_amendments`), the two staged
+warns (`staged_spine_findings`, `staged_hat_refs_findings`) and the mirror
+invariant in both forms (`staged_snapshot_findings`,
+`committed_snapshot_findings`). The boundary: **what compares two git trees is
+in the new module; what reads the working tree stayed.**
+
+**What you may notice: nothing.** `check_trajectory.py` re-exports every one of
+those names under its former spelling, so `check_trajectory.staged_spine_
+amendments(...)` and the rest still resolve. CLI console output and exit codes
+are unchanged — measured, not asserted: nine driven CLI paths and 56 API probes
+capture-diffed empty against the pre-change tree.
+
+**If you call these from your own code**, prefer the new home
+(`import acceptance_record`) — that is what this kit's own `intake.py` now does,
+which removed its import of a ~5,000-line validator entirely. The re-exports are
+not deprecated and nothing warns; they are how the move cost no caller anything.
+
+**One shared helper widened:** `kitlib.git.git_out(root, args)` gained an
+optional third parameter, `stdin=None`, and absorbed `check_trajectory._git` —
+a fourth copy of the "git, or None" pattern that the D-8/`OI-16` consolidation
+missed because the extra argument made it look like a different function.
+Existing two-argument calls are byte-for-byte unaffected. **If you had a local
+copy of that pattern**, this is the moment to alias it (`_git = kitgit.git_out`)
+rather than carry a fifth.
+
+**Registry side, if you traced these rows:** three LLR `Module` cells re-point
+to the new module. `Module` is a TRACED cell, so this amends no attested prose
+and arms no re-attest window; re-point yours the same way if your registry names
+the old home for the amendment or mirror rules.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

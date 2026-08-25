@@ -122,6 +122,7 @@ hat_refs = [
   "UNATTENDED-OPS",
 ]
 modules = [
+  "project-trajectory/scripts/acceptance_record.py",
   "project-trajectory/scripts/baseline_snapshot.py",
   "project-trajectory/scripts/check_doc_refs.py",
   "project-trajectory/scripts/check_trajectory.py",

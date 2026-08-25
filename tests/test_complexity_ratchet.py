@@ -193,9 +193,17 @@ BASELINE = {
     # Reviewed bump, reason in docs/log.d/2026-08-23-wi502-codesymbol-crosscheck.md.
     ("check_trajectory.py", "codesymbol_crosscheck_findings"): 13,
     (
-        "check_trajectory.py",
+        "acceptance_record.py",
         "committed_snapshot_findings",
-    ): 12,  # NEW 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3):
+    ): 12,  # RE-KEYED, NOT RE-STAMPED, 2026-08-25, WI-521 slice 1: the function
+    # moved VERBATIM from check_trajectory.py to the new acceptance_record.py
+    # sibling and its complexity is unchanged at 12. This file keys on
+    # (scripts-relative path, name), so a module move has to be spelled here or
+    # the census reports the same 12 twice — once as an unbaselined newcomer and
+    # once as a baselined entry that vanished. Nothing was simplified and nothing
+    # was sanctioned; the reason the entry moved is the reason the module did
+    # (docs/log.d/2026-08-25-wi521-slice1-acceptance-record.md).
+    # NEW 2026-08-20, the batch-close iterate pass (ROUND-OPUS CRITICAL-3):
     # the mirror invariant over COMMITTED state. The 12 is what a per-file mirror
     # comparison irreducibly costs: two degrade arms (git cannot answer / nothing
     # under the snapshot root), the README exemption, the batch-length sanity check,

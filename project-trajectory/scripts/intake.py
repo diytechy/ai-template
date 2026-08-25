@@ -15,7 +15,7 @@ nobody watching.
 Three triggers, plus the drafts-not-mints arm:
 
   (a) **the approved-cell diff on the merged commit** — via
-      `check_trajectory.staged_spine_amendments(root, before, after)` (the
+      `acceptance_record.staged_spine_amendments(root, before, after)` (the
       WI-380 seam, consumed as-is). A record mints when it carries an approved
       change or a ROUTED traced change (`ROUTED_TRACED_CELLS`: `SN-Refs`,
       `Verifies`, and `SR-Refs` — the last ruled traced at WI-388); the other
@@ -82,10 +82,10 @@ except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import stage as kitstage
 
+import acceptance_record
 import agent_common as ac
 import baseline_snapshot
 import census
-import check_trajectory
 import schedule
 import trace
 import wi_convert
@@ -149,7 +149,7 @@ def normalize_bar(value):
 
 # The traced cells that ROUTE to adjudication rather than staying silent
 # (§A5.1 for `SN-Refs`/`Verifies`; the WI-388 ruling for LLR `SR-Refs` —
-# recorded at check_trajectory.SPINE_TRACED_CELLS, the cell-split table's
+# recorded at acceptance_record.SPINE_TRACED_CELLS, the cell-split table's
 # home). Keyed per registry so a same-named column elsewhere never rides in.
 ROUTED_TRACED_CELLS = {
     "docs/requirements/system-requirements.toml": frozenset(
@@ -482,7 +482,7 @@ def _routed_amendments(root, before, after):
     change, or a routed traced change (`ROUTED_TRACED_CELLS`). Everything else
     in the traced half is silent by ruling."""
     routed = []
-    for rec in check_trajectory.staged_spine_amendments(root, before, after):
+    for rec in acceptance_record.staged_spine_amendments(root, before, after):
         routed_cells = {
             cell: change
             for cell, change in rec["traced"].items()
@@ -1553,7 +1553,7 @@ def _locate_spine_rows(root, wanted):
     import csv
 
     located, tables = {}, {}
-    for rel, id_col in check_trajectory.SPINE_CSVS:
+    for rel, id_col in acceptance_record.SPINE_CSVS:
         live = spine_carrier.resolve(root / rel)
         if live is None:
             continue
@@ -1669,7 +1669,7 @@ def _rewrite_toml_statuses(live, rel, ids):
     whole-file diff — on exactly the registry whose diffs the amendment guard
     reads. `newline=""` keeps the bytes; the split is on the detected
     terminator."""
-    table = spine_carrier.SPINE_TABLE[dict(check_trajectory.SPINE_CSVS)[rel]]
+    table = spine_carrier.SPINE_TABLE[dict(acceptance_record.SPINE_CSVS)[rel]]
     # open() rather than Path.read_text: read_text only grew a `newline`
     # parameter at Python 3.13, and the kit's floor is 3.11 — on the floor the
     # keyword is a TypeError, found 2026-08-15 when the suite first ran on the
@@ -1838,7 +1838,7 @@ def _cmd_snapshot(args):
 
     The owner's hand sequence at a sitting is: edit the Status cells in the
     reviewed commit -> run `intake.py snapshot` -> commit both together. The
-    mirror invariant (`check_trajectory.staged_snapshot_findings`) is what makes
+    mirror invariant (`acceptance_record.staged_snapshot_findings`) is what makes
     "together" checkable rather than remembered.
 
     `--seed` is the ONLY way the directory is created, and it exists for one
@@ -1864,7 +1864,7 @@ def _cmd_snapshot(args):
     record of what was blessed is whole — but a COPY records a human's decision,
     it never makes one, so no authority question arises. The refusal belongs on
     a WRITER, and this module ships none: `_apply_flips` moves SPINE `status`
-    cells only (`check_trajectory.SPINE_CSVS` is its universe). If a future
+    cells only (`acceptance_record.SPINE_CSVS` is its universe). If a future
     command here learns to write an `approval`, it must consult
     `agent_common.human_approves(root / "docs", <registry stem>)` and refuse
     when it answers True — the contract is stated at the predicate, and

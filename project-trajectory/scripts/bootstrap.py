@@ -2171,6 +2171,13 @@ MAPPING = [
     # the carrier sweeps and the report in one 553-line function. trace.py
     # imports it unguarded, so a scaffold without it cannot run the checker.
     ("scripts/coherence.py", "scripts/coherence.py"),
+    # The acceptance record (WI-521 slice 1): the two-tree spine comparison and
+    # the snapshot mirror — which cells are attested, whether their text has
+    # moved away from the copy recording its acceptance, and that the copy is
+    # only ever written by copying live text. Split out of check_trajectory.py,
+    # which imports it UNGUARDED and joins its findings to the failure set, so a
+    # scaffold without it cannot run the checker — let alone report drift.
+    ("scripts/acceptance_record.py", "scripts/acceptance_record.py"),
     # The WI-218 split of the coordinator engine: the headless session layer,
     # the shared primitives, and the dual-plan runner agent_loop.py imports as
     # siblings. (The parallel dispatcher retired at concurrency-restructure
