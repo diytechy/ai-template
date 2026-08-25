@@ -1,7 +1,7 @@
 +++
 id = "WI-483"
 title = "Successor decomposition program: break the seven-module import cycle behind typed read models, split the largest engines by policy/effect boundary, and re-point the size-ratchet's debt owner (repo review 2026-08-19 H-02, H-05, M-02, M-06)"
-specref = "docs/archive/repo-review-2026-08-19.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = ["~WI-448"]
@@ -9,6 +9,63 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 2
 +++
+
+## Deliverable
+
+**The seven-module import cycle is GONE, the lifecycle band is LAYERED and the
+layering is asserted, and the three worst engines are decomposed.** Seven
+slices, 2026-08-20 → 2026-08-24; each slice's own record is a block under
+`## Context` below and a fragment in `docs/log.d/`. Spec of record (the
+`SpecRef` cell is cleared at a terminal close, so it is named here instead):
+`docs/archive/repo-review-2026-08-19.md`.
+
+**H-02 (the cycle).** 7 modules / 12 intra-cycle edges → **0 / 0**, measured on
+a graph that INCLUDES function-body imports. Five extractions did it, each
+placed BELOW every module that reads it: the lane-close terminal-outcome
+vocabulary and the per-close report's shape into `scripts/kitlib/station.py`,
+the registry-gap census into `scripts/census.py`, the pending-owner-action read
+model into `scripts/pending.py`, the checker's cross-row coherence rules into
+`scripts/coherence.py`. The two DOCUMENTED bad edges (`IF-088`,
+`gen_open_items`) are cut rather than described, and the `gen_trajectory` facade
+now has zero importers. `tests/test_import_layers.py` holds all of it as
+equality ratchets.
+
+**Program shape item 4 (the layering).** `dispatch` is the sole composer and the
+band runs one way below it — `dispatch` > `handback`/`lane` > `integrate` >
+`intake` — and slice 7 turned that sentence into `LIFECYCLE_RANK` plus
+`test_a_lifecycle_edge_never_points_up`, which reds on an edge that points up OR
+sideways even when no cycle forms. The surviving `integrate -> intake` edge was
+MEASURED rather than inherited and ruled a downward call, KEPT.
+
+**H-05 (the engines), on the axis the owner's `OI-16` correction names.**
+`trace.analyze` 553 → 218 lines / C901 50 → under the limit; `agent_loop.main`
+402 → 152 / 27 → under; `session_bookkeeping` 325 → 28 / 31 → under;
+`run_iteration` 326 → 120 / 20 → under. **Four complexity-baseline entries
+DELETED.** Four attribute bags became typed records — `Registries` (frozen, 34
+fields, one construction site), `Findings`, `LoopContext` (frozen, 29 fields)
+and `LoopRun` — and declaring them exposed a dead field and two defaulted
+`getattr` reads that would have silently meant "human-held, don't keep going".
+`check.steps` was re-measured and deliberately LEFT (649 lines, complexity
+**8**): the split is a question about the carrier for a flat declaration, and
+the honest answer is that it is not debt on this program's axis — see slice 7.
+
+**The debt owner moves on, rather than rotting.** `tests/test_module_size_
+ratchet.py` now names `WI-508`. Re-pointing it away from a closed item was this
+row's own first act (H-05's finding); leaving it pointing HERE at close would
+have recreated the defect exactly.
+
+**Behaviour is byte-identical wherever a slice touched a CLI**, measured by
+capture-diff against `HEAD`/a stash rather than asserted — 31 driven paths and
+seven exit codes for the loop, console + exit code + the whole `render_report`
+text for the checker.
+
+**Not done, and named as such:** M-06's four test monoliths
+(`test_integrate.py` 3,520, `test_trace.py` 2,099, `test_trajectory_arch.py`
+1,927, `test_agent_loop.py` 1,640) are unsplit. Item 4's own rule is that a
+split RIDES ALONG with a subsystem decomposition and a standalone split slice is
+out of scope; every subsystem this program decomposed was checked and none
+needed one. They belong to the next decomposition, `WI-508`. Record:
+[../../../log.d/2026-08-24-wi483-layering-close.md](../../../log.d/2026-08-24-wi483-layering-close.md).
 
 ## Context
 
@@ -491,3 +548,151 @@ the carrier for a declaration and may reasonably end in "leave it". Item 1 (the
 about what `integrate.py merge` does on its own; item 4 (M-06) is unchanged.
 
 **Deferred to the owner: nothing new.**
+
+### SLICE 7 LANDED 2026-08-24 — the layering MEASURED, item 3 dispositioned, and the row closed
+
+**Item 1's premise was re-measured before anything was designed, and it does not
+hold.** The lifecycle band's whole edge set, read off the same walker the
+ratchet uses (function-body imports included):
+
+| edge | kind |
+| --- | --- |
+| `dispatch -> handback`, `lane`, `integrate`, `intake` | module-level |
+| `handback -> integrate` | module-level |
+| `lane -> integrate` | module-level |
+| `integrate -> intake` | deferred (the post-merge mint) |
+| `intake -> ` *(nothing in the band)* | — |
+
+fig: `import_graph()` from `tests/test_import_layers.py`, restricted to
+`LIFECYCLE`, at `14759fc8`.
+
+That is a strict total order — `dispatch` 0, `handback`/`lane` 1, `integrate` 2,
+`intake` 3 — so **`integrate -> intake` points DOWN, and program shape item 4 is
+already true.** The word "upward" in this row's own spec was inherited from the
+cycle era: `intake` was above `integrate` only THROUGH `intake -> dispatch`,
+which slice 2 cut. `intake` imports no lifecycle module at all, which is the
+definition of the bottom, and `integrate.py`'s comment at the call site
+(*"intake sits ABOVE this module"*) has been false since that cut — the same
+class of defect as `handback.py`'s "never the reverse" that the review named,
+and it is corrected in place.
+
+**TOPOLOGY DECISION — `integrate -> intake` is KEPT, and `integrate.py merge`
+is UNCHANGED.** This is the decision item 1 asked for, recorded here because the
+row is `safety_class = spine`.
+
+- **Rejected: hoist the mint into `dispatch`.** The mint must run INSIDE the
+  held merge slot — serial by construction, all-or-nothing on one trunk commit
+  (`integrate_one`'s own docstring, rulings R1/R3). Hoisting it above `integrate`
+  runs it after the slot is released, or else moves lock acquisition up out of
+  `_slot`, whose docstring names itself the one acquisition site *"and it must
+  stay that way (§A2.0 requirement 1)"*.
+- **Rejected: inject the hook** (`integrate_one(..., after_merge=…)`, dispatch
+  passing `intake.intake_after_merge`). Either `integrate`'s own `main` supplies
+  the default — in which case the import edge simply moves up one function and
+  the graph is unchanged, a cosmetic fix — or it does not, in which case a
+  human's `integrate.py merge` LANDS THE MERGE AND SILENTLY MINTS NOTHING. That
+  is an owner-visible contract change trading a correctness hazard for one graph
+  edge, and the edge was not even pointing the wrong way.
+- **Rejected: move the mint family down.** `intake_after_merge` reaches
+  `_amendment_drafts`, `_close_drafts`, `_disposition_drafts` and `_mint`, which
+  is most of `intake.py`; "moving it below `integrate`" is renaming the module.
+- **Accepted: `integrate_one` composing "merge, then mint" is not a second
+  composer.** It is what taking the slot MEANS. `dispatch` remains the only
+  module that sequences lifecycle services against each other.
+- **The import stays DEFERRED**, and the reason is unchanged and now stated
+  honestly: it keeps a plain `integrate.py claim` — the hot path of every lane
+  run — from paying the mint family's import (`trace`, `check_trajectory`,
+  `census`, `schedule`, `baseline_snapshot`, `wi_convert`). It hides nothing,
+  because every rule in `test_import_layers.py` reads function bodies.
+
+**What the slice SHIPS is the instrument, because the ratchet file itself
+recorded that nothing policed direction.** `LIFECYCLE_RANK` + two tests: the
+ranks must cover `LIFECYCLE` exactly (so a new lifecycle module forces a
+placement rather than being exempt), and every intra-band edge must point
+STRICTLY down. Strict, not `>=`: a peer-to-peer edge means one module is really
+above the other and nobody has said which. **Mutation-checked three ways rather
+than asserted** — a deferred `intake -> integrate` reds it; the 2026-08-21
+review's own mutation (`lane -> dispatch` + `lane -> handback`) reds it; and the
+case that matters, a SIDEWAYS `handback -> lane`, reds it **while both cycle
+tests stay green**, which is the hole it was added to close.
+
+**No new module, no spine row, no seam.** Nothing moved between modules, so no
+MAPPING row, no `bootstrap.py` change, no RESYNC entry, and no `Approved` cell is
+rewritten anywhere in the diff. `integrate.py` is NET-ZERO at 2,597 lines — the
+corrected comment was written to fit rather than to buy a ratchet bump, since the
+argument's one home is `LIFECYCLE_RANK` and a code comment restating it would be
+the duplication this kit forbids.
+
+**ITEM 3 REMAINDER — `check.steps` is LEFT, and this is the decision, not a
+deferral.** Re-measured at `14759fc8`: **649 lines** (was 628 at slice 4),
+**complexity 8**, **350 of the 649 lines are comment** and 299 are code.
+
+fig: `wc -l` + `python -m ruff check --select C901 --config
+"lint.mccabe.max-complexity=1"` over `project-trajectory/scripts/check.py`, plus
+an `ast` span/comment count of the `steps` node, at `14759fc8`.
+
+Four grounds, in order of weight:
+
+1. **It is not debt on this program's axis.** The owner's `OI-16` correction —
+   quoted by the size ratchet's own docstring and by slice 4 — is that the
+   monolith risk is FUNCTION COMPLEXITY, not file length. `steps` measures 8,
+   under the limit and BELOW three other functions in the same file
+   (`approval_immutability` 10, `staged_divergence` 8, `run_plan` 8) that nobody
+   proposes splitting. Splitting the one long flat function while leaving the
+   branchier short ones is length-chasing.
+2. **Its bulk is RATIONALE, not code.** 54% of the lines are the per-step
+   comment explaining which rung a check arrives at and why. A split relocates
+   comments; it does not simplify anything.
+3. **The order of the returned list is load-bearing and reads top to bottom
+   today** (*"Listed before traceability so at `--gate all` the fuller report.md
+   wins"*). Per-band helper functions would distribute that ordering across
+   call sites.
+4. **The data-file carrier already exists and is deliberately partial.** An
+   adopter adds steps through `docs/stack.ini` `[step:<name>]` and overrides the
+   three product commands there; the PROCESS floor stays in code, where a
+   profile cannot edit it away. Moving that floor into data would hand the
+   assurance floor to the same file the project owns.
+
+**And "leave it" is not an unguarded state.** `tests/test_complexity_ratchet.py`
+compares the C901 census for EXACT equality, so a function absent from the
+baseline that crosses the limit reds — the day `steps` stops being a flat
+declaration, it fails, with no new instrument needed. Adding a second sensor for
+one function would duplicate an armed one.
+
+**ITEM 4 — M-06 rides nothing, at close as at every slice.** Nothing was
+decomposed here, so nothing needed splitting. The four monoliths the review
+named are unsplit and re-measured for the record: `test_integrate.py` **3,520**
+(review: 3,495), `test_trace.py` **2,099** (1,826), `test_trajectory_arch.py`
+**1,927** (1,412), `test_agent_loop.py` **1,640** (1,567).
+
+fig: `wc -l` at `14759fc8`.
+
+Item 4's own rule — a split rides along with a subsystem decomposition, a
+standalone split slice is explicitly out of scope — held for all seven slices:
+each checked its touched tests and none needed one. They belong to the next
+subsystem decomposition, `WI-508`. **Named as unfinished rather than folded into
+the close**, and one thing found while measuring them is left as a FINDING for
+its own row, not fixed here: `tests/test_module_size_ratchet.py` censuses
+`SCRIPTS` only, so no armed sensor watches these four grow — and three of the
+four have grown since the review recorded them.
+
+**THE DEBT OWNER MOVES TO `WI-508`.** This row's FIRST act (slice 1) was
+re-pointing `tests/test_module_size_ratchet.py` away from the closed `WI-280`,
+on H-05's finding that *"a ratchet whose commentary names a closed item tells the
+next author that the debt is somebody's when it is nobody's"*. Closing this row
+while it is named there would recreate that defect precisely, so the pointer
+moves to `WI-508` — the live architectural-remapping program, which `needs`
+this row and whose declared output is consolidation WIs filed against exactly
+this residue. The dated per-entry bump notes are NOT re-pointed, for the reason
+that file already states: rewriting a dated record to cite an item that did not
+exist on its date would falsify it.
+
+**STILL OWED BY THIS ROW: nothing. The row CLOSES.** Items 1 and 3 are
+dispositioned above (one measured and ruled, one decided and left); item 2 was
+struck at slice 3; item 5's engines are all done; item 4 never triggered and its
+residue is named with a live owner.
+
+**Deferred to the owner: nothing new.** Item 1's decision changes no
+owner-visible contract — that is the reason it was takeable in a slice — and
+item 3's is a shape call inside a kit script, argued from a rule the owner
+already gave.

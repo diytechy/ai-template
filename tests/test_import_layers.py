@@ -35,6 +35,13 @@ descending into function bodies would make every cycle here vanish and this
 whole file go green — the exact failure mode the review describes, reproduced in
 the instrument meant to catch it. `test_the_graph_sees_imports_inside_function_
 bodies` pins a known deferred edge so that regression fails loudly.
+
+CYCLES ARE NOT THE ONLY DIRECTION RULE HERE. An acyclic tangle is still a
+tangle, so the file also carries the DECLARED LAYER ORDER of the lifecycle band
+(`LIFECYCLE_RANK`, WI-483 slice 7) and asserts every edge inside it points
+strictly down — the property "`dispatch` is the sole composer" had been prose in
+a spec file with nothing measuring it, and a sideways edge between two peers
+leaves both cycle tests green.
 """
 
 import ast
@@ -55,6 +62,52 @@ from conftest import SCRIPTS
 # the composer, above both bands, and it is allowed to import either.
 VIEW_PREFIXES = ("traj_", "gen_")
 LIFECYCLE = frozenset({"dispatch", "handback", "intake", "integrate", "lane"})
+
+# --- the lifecycle layer ORDER (WI-483 slice 7, program shape item 4) --------
+#
+# The cycle ratchet below says the lifecycle band has no cycles. It does NOT say
+# the band is layered: an acyclic tangle is still a tangle, and "`dispatch` the
+# sole composer with `integrate`/`handback`/`intake`/`lane` one-way below" was
+# prose in a spec file with nothing measuring it — this file's own CYCLES
+# comment said so ("the only rule policing direction today" was the view rule,
+# which `integrate` is not subject to).
+#
+# So: a declared RANK per lifecycle module, and every edge inside the band must
+# point STRICTLY DOWN. Strict, not `>=`, because a peer-to-peer edge between two
+# modules of equal rank means one of them is really above the other and nobody
+# has said which.
+#
+# Measured 2026-08-24, and this is the whole band:
+#   dispatch -> handback, lane, integrate, intake   (module-level, the composer)
+#   handback -> integrate                           (module-level)
+#   lane     -> integrate                           (module-level)
+#   integrate -> intake                             (deferred, the post-merge
+#                                                    mint at the held slot)
+# `intake` imports no lifecycle module at all. The ordering is therefore forced,
+# not chosen: dispatch composes; handback and lane are peers that both drive the
+# merge service; `integrate` merges; `intake` mints and reaches nothing above it.
+#
+# WHY `integrate -> intake` IS NOT AN INVERSION, recorded because WI-483's own
+# spec called it one for two slices. That word was inherited from the era when
+# `intake -> dispatch` existed: intake was then above integrate THROUGH THE
+# CYCLE. Slice 2 cut that edge, and with it the only reason to call intake the
+# higher module — it imports nothing here, which is the definition of the
+# bottom. `integrate.integrate_one` composing "merge, then mint" is not a second
+# composer either: the mint is required to run INSIDE the held merge slot
+# (serial by construction, all-or-nothing on one trunk commit), so it is part of
+# what taking the slot MEANS, not a lifecycle step sequenced from above.
+#
+# RE-RANKING TO GET GREEN IS ACCEPTING WHAT THIS MEASURES, exactly like editing
+# CYCLES. A new edge that points up is decomposition work: move what crosses to
+# a module below both (`kitlib/station.py`, `census.py`, `pending.py` are the
+# three worked precedents in this program).
+LIFECYCLE_RANK = {
+    "dispatch": 0,  # the composer; nothing in the band may import it
+    "handback": 1,  # closes a lane
+    "lane": 1,  # opens/manages one — handback's peer, not its caller
+    "integrate": 2,  # the merge slot
+    "intake": 3,  # the mint; imports nothing in the band
+}
 
 # --- the cycle baseline ----------------------------------------------------
 #
@@ -79,10 +132,10 @@ CYCLES = [
     #                           WRITES stayed in `handback`.
     # The third back edge, `integrate -> intake` (the post-merge mint at the
     # held slot), SURVIVES — it just no longer closes anything, because with
-    # `intake -> dispatch` gone `intake` reaches nothing above it. It remains a
-    # layering inversion WI-483 still owes (program shape item 4: `dispatch` as
-    # the sole composer), and this file's `test_a_view_never_imports_a_lifecycle_
-    # service` is the only rule policing direction today.
+    # `intake -> dispatch` gone `intake` reaches nothing above it. WI-483 slice 7
+    # MEASURED that survivor rather than inheriting the word "upward" from the
+    # cycle era, and it is a DOWNWARD edge: see `LIFECYCLE_RANK` above, which
+    # turns program shape item 4 into a test instead of a sentence.
     #
     # AN EMPTY LIST IS NOW A REAL ASSERTION: `test_no_new_import_cycle` compares
     # for EQUALITY, so any new cycle anywhere under `scripts/` reds here. Do not
@@ -97,8 +150,14 @@ CYCLES = [
 # appended to `lane.py` (`import dispatch`, `import handback` inside a
 # function) left all three tests green. That is the exact pattern this file's
 # docstring calls "the failure mode the review describes", and WI-483's
-# remaining slices are paid to REMOVE three such edges — a ratchet that reports
-# success while the tangle tightens is worse than none.
+# remaining slices were paid to REMOVE three such edges — a ratchet that reports
+# success while the tangle tightens is worse than none. (Those three are gone,
+# and WI-483 slice 7 re-ran the review's mutation rather than assuming: the
+# deferred `lane -> dispatch` / `lane -> handback` pair now reds all three
+# tests. The residual hole it leaves is the SIDEWAYS edge — `handback -> lane`,
+# two peers, no cycle formed, both cycle tests green — and that is exactly what
+# `test_a_lifecycle_edge_never_points_up` was added to catch. Mutation-checked
+# the same way.)
 #
 # So: the number of edges whose head and tail are both inside one component,
 # deferred function-body imports INCLUDED (they are the ones that hide).
@@ -262,8 +321,8 @@ def test_the_graph_sees_imports_inside_function_bodies():
     THE PIN MOVED at WI-483 slice 2, and the move is itself the record: it used
     to name `integrate -> handback`, which is one of the two back edges that
     slice CUT. A self-test pinned to an edge the program is paid to remove
-    cannot survive the program; this one names the edge that is still there and
-    still owed (program shape item 4), so it will move exactly once more.
+    cannot survive the program; this one names an edge slice 7 ruled KEPT
+    (see `LIFECYCLE_RANK`), so it is a stable pin rather than a countdown.
     """
     graph = import_graph()
     assert graph["integrate"].get("intake") == "function", (
@@ -291,7 +350,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
-        "WI-483 is paid to reduce: re-stamp only with the reason.".format(deferred)
+        "WI-508 now owns reducing: re-stamp only with the reason.".format(deferred)
     )
 
 
@@ -303,7 +362,7 @@ def test_no_new_import_cycle():
         "the import-cycle census changed.\n"
         "  found:    {}\n"
         "  baseline: {}\n"
-        "A cycle that GREW or APPEARED is decomposition work (WI-483) — do "
+        "A cycle that GREW or APPEARED is decomposition work (WI-508) — do "
         "NOT widen CYCLES to get green, because editing this list IS "
         "accepting what it measures. A cycle that SHRANK is a win: re-stamp "
         "the entry downward, or delete it, in the same commit, with the "
@@ -413,4 +472,52 @@ def test_a_view_never_imports_a_lifecycle_service():
         "service owns, the value belongs BELOW both — see "
         "`kitlib/station.py`, which is exactly this fix applied to the "
         "terminal-outcome vocabulary.".format(offenders)
+    )
+
+
+def test_the_rank_map_covers_the_whole_lifecycle_band():
+    """A new lifecycle module must be RANKED, not silently unpoliced.
+
+    `LIFECYCLE` is what the view rule forbids reaching; `LIFECYCLE_RANK` is what
+    orders it. If the two ever drift apart, a module could join the band and its
+    edges would go unmeasured by the direction rule below — which is the same
+    class of hole `MAX_INTRA_CYCLE_EDGES` exists to close for `CYCLES`.
+    """
+    assert set(LIFECYCLE_RANK) == set(LIFECYCLE), (
+        "LIFECYCLE and LIFECYCLE_RANK disagree: {}\n"
+        "Every lifecycle module needs a declared rank, so that adding one "
+        "forces a decision about where it sits rather than exempting it from "
+        "the direction rule.".format(sorted(set(LIFECYCLE_RANK) ^ set(LIFECYCLE)))
+    )
+
+
+def test_a_lifecycle_edge_never_points_up():
+    """Program shape item 4, asserted rather than written down.
+
+    `dispatch` is the sole composer and the rest of the band runs one way below
+    it. See `LIFECYCLE_RANK` for the measured order, for why
+    `integrate -> intake` is a DOWNWARD edge rather than the inversion WI-483's
+    spec called it for two slices, and for why re-ranking to get green is
+    accepting what this measures.
+    """
+    graph = import_graph()
+    offenders = sorted(
+        "{} (rank {}) -> {} (rank {}) [{}]".format(
+            module, LIFECYCLE_RANK[module], target, LIFECYCLE_RANK[target], kind
+        )
+        for module, edges in graph.items()
+        if module in LIFECYCLE_RANK
+        for target, kind in edges.items()
+        if target in LIFECYCLE_RANK and LIFECYCLE_RANK[target] <= LIFECYCLE_RANK[module]
+    )
+    assert not offenders, (
+        "a lifecycle import points UP or SIDEWAYS: {}\n"
+        "The band is layered: `dispatch` composes, `handback`/`lane` drive the "
+        "merge service, `integrate` merges, `intake` mints. An edge that does "
+        "not point strictly down means either the call belongs to a module "
+        "BELOW both ends (`kitlib/station.py`, `census.py` and `pending.py` are "
+        "this program's three precedents) or the declared order is wrong — and "
+        "if it is wrong, say so in the log and re-rank deliberately. Editing "
+        "LIFECYCLE_RANK to clear a finding IS accepting what it "
+        "measures.".format(offenders)
     )

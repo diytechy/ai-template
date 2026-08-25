@@ -2382,10 +2382,10 @@ def integrate_one(root, branch, tier, held=None):
     if not unloaded and held is not None:
         held.append(branch)
     # The WI-388 intake, at the one honest hook point: the merge has landed,
-    # the slot is still held, trunk is serial. Deferred import — intake sits
-    # ABOVE this module (it imports nothing of integrate, but dispatch imports
-    # both), and the deferral keeps a plain `integrate.py claim` from paying
-    # the mint family's import.
+    # the slot is still held, trunk is serial. A DOWNWARD call — this said
+    # ABOVE until WI-483 slice 7, true only while the cycle made it so; the
+    # order lives once, in `tests/test_import_layers.py` LIFECYCLE_RANK, which
+    # reads function bodies, so deferring to skip the mint family hides nothing.
     import intake
 
     _minted, mint_refusal = intake.intake_after_merge(

@@ -4,22 +4,27 @@ The per-function complexity ratchet (test_complexity_ratchet.py) freezes how
 hard any one function is to read. This is its file-scale sibling: it freezes how
 large the kit's biggest scripts are, so the six coordinators the 2026-07-22 deep
 review flagged as "beyond maintainable review scale" cannot silently grow while
-the real decomposition (WI-483) is deferred.
+the real decomposition is deferred.
 
-THE DEBT OWNER IS `WI-483`, NOT `WI-280` (repo review 2026-08-19, H-05; the
-re-point is WI-483's own first act). This file directed its active debt to
-WI-280 for months after that item CLOSED, and WI-280's scope was the dashboard
-plus `bootstrap.main` — not the remaining baseline. A ratchet whose commentary
-names a closed item tells the next author that the debt is somebody's when it is
-nobody's, which is the one thing a growth sensor must not do. `WI-483` is the
-successor decomposition program: it breaks the seven-module import cycle behind
-typed read models and splits the largest engines by policy/effect boundary.
+THE DEBT OWNER IS `WI-508`, AND THE RE-POINT IS THE SAME ACT WI-483 PERFORMED ON
+ITS FIRST DAY (repo review 2026-08-19, H-05). The chain: this file directed its
+active debt to `WI-280` for months after that item CLOSED, and WI-280's scope
+was the dashboard plus `bootstrap.main` — not the remaining baseline. A ratchet
+whose commentary names a closed item tells the next author that the debt is
+somebody's when it is nobody's, which is the one thing a growth sensor must not
+do. `WI-483` took the ownership then and CLOSED 2026-08-24 having paid down the
+axis it was scoped for — the seven-module import cycle is gone, the lifecycle
+band is layered and asserted, and four complexity-baseline entries were deleted
+— which is precisely NOT this file's axis (see the dispute below). So the
+pointer moves on the same rule rather than being left to rot: `WI-508` is the
+live architectural-remapping program, and its declared output is consolidation
+WIs filed against exactly this kind of residue.
 
 Any kit script whose line count exceeds THRESHOLD must have an EXACT baseline
 entry below. The census may only tighten by default:
 
 - A baselined module grew, or a NEW module crossed THRESHOLD without a baseline:
-  the fix is DECOMPOSITION (WI-483), not a baseline bump. A deliberate bump is a
+  the fix is DECOMPOSITION (WI-508), not a baseline bump. A deliberate bump is a
   reviewed baseline edit whose reason lands in the WI/session log — never a
   drive-by. Moving lines into a new module is exactly the intended escape hatch:
   the new module stays under THRESHOLD (or earns its own reviewed baseline) and
@@ -28,8 +33,8 @@ entry below. The census may only tighten by default:
   renamed/removed): re-stamp its entry downward — or delete it — in the same
   commit, so the ratchet only ever tightens.
 
-This is a growth SENSOR, not an approval of the current sizes. WI-483 is the
-scoped decomposition that pays this debt down; every entry here is active
+This is a growth SENSOR, not an approval of the current sizes. WI-508 is the
+scoped program that pays this debt down; every entry here is active
 architectural debt, not a target.
 
 AND THE SENSOR MEASURES AN AXIS ITS OWN OWNER DISPUTES. The owner's `OI-16`
@@ -66,7 +71,7 @@ THRESHOLD = 1500
 # reviewed-baseline-edit escape hatch (see the module docstring) and must name
 # its WI right here.
 #
-# THE DEBT OWNER IS NAMED ONCE, IN THE MODULE DOCSTRING, AND IT IS `WI-483`.
+# THE DEBT OWNER IS NAMED ONCE, IN THE MODULE DOCSTRING, AND IT IS `WI-508`.
 # Entries below carry dated notes that still read "re-stamp down with WI-280";
 # those are RECORDS of the bump they sit beside — each names the log entry that
 # reviewed it — and rewriting a dated record to cite an item that did not exist
@@ -2007,7 +2012,7 @@ def test_module_sizes_exactly_match_the_committed_baseline():
     message = []
     if grew:
         message.append(
-            "module(s) grew past baseline — decompose (WI-483), do not bump "
+            "module(s) grew past baseline — decompose (WI-508), do not bump "
             "(a deliberate bump is a reviewed baseline edit, reason in the log): "
             + "; ".join(
                 "{} baseline {} -> now {}".format(
