@@ -20,9 +20,10 @@ Each guard carries its negative half, per the house rule.
 """
 
 import re
+import shutil
 import subprocess
 
-from conftest import SCRIPTS, load_script, pin_autocrlf, run_py
+from conftest import ROOT, SCRIPTS, load_script, pin_autocrlf, run_py
 
 SR_HEADER = (
     "SR-ID,Title,SN-Refs,Requirement,Rationale,AcceptanceCriteria,Notes,"
@@ -1083,3 +1084,61 @@ def test_the_deferral_arms_print_but_never_move_the_exit_code(tmp_path):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "VACUITY" in proc.stdout
     assert "up to date" in proc.stdout
+
+
+# --- WI-518: the off-spine census, the HTML half of the two renderers over
+# `trace.offspine_census_rows` — see tests/test_trace_briefs.py for the
+# markdown half and docs/log.d/2026-08-24-oi62-rule-and-spine-approval.md
+# (MAJOR-2) for the gap both close.
+
+
+def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path):
+    snap = load_script("baseline_snapshot")
+    root = tmp_path / "repo"
+    for rel in snap.SNAPSHOTTED:
+        src = ROOT / rel
+        if not src.is_file():
+            continue
+        dest = root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+    (root / "docs" / "requirements" / "open-items.csv").write_text(
+        OI_HEADER, encoding="utf-8"
+    )
+    snap.copy_live(root, seed=True)
+    if_path = root / "docs" / "requirements" / "interfaces.toml"
+    data = if_path.read_bytes()
+    needle = b'contract = """SR-157\'s obligation delivered as a CLI at trace.py, which writes docs/test/report.md."""'
+    assert needle in data, "fixture: IF-001's contract cell not found"
+    if_path.write_bytes(
+        data.replace(needle, needle[:-3] + b" (amended)" + needle[-3:], 1)
+    )
+    proc = gen(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    html = html_of(root)
+    assert "docs/requirements/interfaces.toml" in html
+    assert "1 changed, 0 added, 0 removed" in html
+    # No-change off-spine tiers render nothing.
+    assert "docs/requirements/components.toml" not in html
+    assert "docs/requirements/external.toml" not in html
+
+
+def test_offspine_census_is_silent_in_the_html_view_when_nothing_changed(tmp_path):
+    snap = load_script("baseline_snapshot")
+    root = tmp_path / "repo"
+    for rel in snap.SNAPSHOTTED:
+        src = ROOT / rel
+        if not src.is_file():
+            continue
+        dest = root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+    (root / "docs" / "requirements" / "open-items.csv").write_text(
+        OI_HEADER, encoding="utf-8"
+    )
+    snap.copy_live(root, seed=True)
+    proc = gen(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    html = html_of(root)
+    assert "offspine-note" not in html
+    assert "docs/requirements/interfaces.toml" not in html

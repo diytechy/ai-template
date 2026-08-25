@@ -740,6 +740,35 @@ def _attestation_cards(model, srs_by_id=None):
     return "".join(cards)
 
 
+def _offspine_census_block(rows):
+    """The off-spine census (WI-518): per off-spine registry with a nonzero
+    delta since the snapshot, rows changed/added/removed and a pointer at the
+    ruling(s) whose commits touched it. `''` — no heading, no paragraph — when
+    `rows` is empty, matching `trace.offspine_census_lines`'s own silence for
+    a clean re-seed: see that function's docstring for why this exists (the
+    off-spine tiers have no per-row rendering anywhere on this page either)."""
+    if not rows:
+        return ""
+    items = "".join(
+        "<li><code>{rel}</code> — {changed} changed, {added} added, {removed}"
+        " removed since the snapshot; ruling(s): {ruling}.</li>".format(
+            rel=esc(r["rel"]),
+            changed=r["changed"],
+            added=r["added"],
+            removed=r["removed"],
+            ruling=esc(r["ruling"]),
+        )
+        for r in rows
+    )
+    return (
+        '<p class="sub offspine-note">The off-spine registries above carry no '
+        "per-row rendering here; <code>intake.py snapshot</code> copies them "
+        "WHOLESALE alongside any spine approval. What changed since the last "
+        "snapshot, so the signer sees what a re-seed will absorb:</p>"
+        '<ul class="pointers">{}</ul>\n'.format(items)
+    )
+
+
 def _pointer_list(markdown_items):
     lines = [
         ln.strip()[2:].strip()
@@ -780,6 +809,7 @@ def render(root):
     # is the arm no cell can carry, and the reason this page survived both the
     # rename and step 7's retirement with nothing to re-key.
     model = tr.reattest_model(root, reg.srs, reg.llrs, reg.tcs)
+    offspine_rows = tr.offspine_census_rows(root)
     items = load_open_items(root)
     pure = pending_block_text(root)
     stamp_rev, stamp_date = baseline_snapshot.stamp(root)
@@ -827,6 +857,7 @@ def render(root):
         "<code>trace.py --approve</code>. If the two ever disagree, the brief is "
         "authoritative and this view is the bug.</p>\n"
         '<p class="baseline">Baseline: {baseline}</p>\n'
+        "{offspine}"
         "</header>\n"
         '<section class="band"><p class="eyebrow">1 · Pending decisions</p>{briefs}</section>\n'
         '<div class="toolbar"><label><input type="checkbox" id="focus" checked> '
@@ -854,6 +885,7 @@ def render(root):
             model, {r.get("SR-ID"): r for r in reg.srs if r.get("SR-ID")}
         ),
         pointers=_pointer_list(pure),
+        offspine=_offspine_census_block(offspine_rows),
         # The LIVE carrier, never a hardcoded suffix: this view is the surface
         # an owner rules from, and a pointer at the file the repo no longer has
         # (or has not migrated to yet) sends them to edit nothing.

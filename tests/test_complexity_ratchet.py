@@ -320,7 +320,11 @@ BASELINE = {
     # `removed` arms — the same shape `_chain_row` in gen_open_items.py grew
     # for the same reason, and the branches are the row states a reader acts
     # on, not incidental nesting.
-    ("trace.py", "reattest_lines"): 11,
+    # RE-STAMPED UP 11 -> 12, 2026-08-24, WI-518 (the off-spine census): one
+    # more branch — `if census:` — to splice the off-spine census lines in
+    # only when a tier actually changed, so a clean re-seed costs the reader
+    # nothing extra to read past. Reason: docs/log.d/2026-08-24-wi518-offspine-census.md.
+    ("trace.py", "reattest_lines"): 12,
     ("trace.py", "render_report"): 17,
     # 2026-08-15, the interface rework step 7 (Q3, owner-ruled): the carriage
     # graph's three rules in one pass — resolve, acyclic, depth-bounded. The

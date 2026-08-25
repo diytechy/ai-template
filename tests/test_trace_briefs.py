@@ -25,7 +25,10 @@ disk.
 # note with the tests it guards — it was authored in tests/test_trace.py, whose
 # git-backed tests are now all here.)
 
+import shutil
+
 from conftest import (
+    ROOT,
     skip_without_env_gates,
     SCRIPTS,
     load_script,
@@ -744,3 +747,66 @@ def test_mint_cli_refuses_without_CURRENT_and_exits_nonzero(tmp_path):
     )
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "CURRENT.md" in (proc.stdout + proc.stderr)
+
+
+# --- WI-518: the off-spine census — the brief cannot render per-row for the
+# off-spine tiers (interfaces/external/components), and a re-seed absorbs them
+# WHOLESALE regardless — see docs/log.d/2026-08-24-oi62-rule-and-spine-approval.md
+# (the OI-62-sitting adversarial round's MAJOR-2). The fixture copies THIS
+# repo's real registries (like test_baseline_snapshot.py's `_tree`) because the
+# failure mode is about a whole-file snapshot copy and a real IF row, which a
+# hand-rolled two-row fixture would not honestly exercise.
+
+
+def _offspine_census_tree(tmp_path):
+    """This repo's seven real registries, snapshotted, ready for one off-spine
+    cell to be amended after the seed."""
+    snap = load_script("baseline_snapshot")
+    root = tmp_path / "repo"
+    for rel in snap.SNAPSHOTTED:
+        src = ROOT / rel
+        if not src.is_file():
+            continue
+        dest = root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+    snap.copy_live(root, seed=True)
+    return root
+
+
+def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
+    tmp_path,
+):
+    root = _offspine_census_tree(tmp_path)
+    if_path = root / "docs" / "requirements" / "interfaces.toml"
+    data = if_path.read_bytes()
+    needle = b'contract = """SR-157\'s obligation delivered as a CLI at trace.py, which writes docs/test/report.md."""'
+    assert needle in data, "fixture: IF-001's contract cell not found"
+    if_path.write_bytes(
+        data.replace(
+            needle,
+            needle[:-3] + b" (amended for WI-518's test)" + needle[-3:],
+            1,
+        )
+    )
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "docs/requirements/interfaces.toml" in out
+    assert "1 changed, 0 added, 0 removed" in out
+    # A no-change off-spine tier — components.toml here, untouched by the
+    # fixture — renders NOTHING: no standing noise for a reader to learn to
+    # ignore.
+    assert "docs/requirements/components.toml" not in out
+    assert "docs/requirements/external.toml" not in out
+
+
+def test_offspine_census_renders_nothing_when_no_offspine_tier_changed(tmp_path):
+    root = _offspine_census_tree(tmp_path)
+    proc = run_py([SCRIPTS / "trace.py", "--approve", "modified"], cwd=root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    out = proc.stdout
+    assert "docs/requirements/interfaces.toml" not in out
+    assert "docs/requirements/external.toml" not in out
+    assert "docs/requirements/components.toml" not in out
+    assert "Off-spine census" not in out

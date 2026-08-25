@@ -3606,6 +3606,140 @@ def approval_check(root, srs, llrs, tcs, out_path):
     )
 
 
+# --- WI-518: the off-spine census ---------------------------------------------
+# `intake.py snapshot` copies all SEVEN `SNAPSHOTTED` registries wholesale, but
+# `reattest_lines` renders one section per SR — the off-spine tiers
+# (`interfaces.toml`, `external.toml`, `components.toml`) never reach it, so a
+# row changed there since the last snapshot enters the signed baseline with no
+# owner-visible before/after at all (found by the OI-62-sitting adversarial
+# round, `docs/log.d/2026-08-24-oi62-rule-and-spine-approval.md`, its MAJOR-2).
+#
+# THIS IS A DISCLOSURE SURFACE, NOT A NEW GATE — it changes nothing `owes()`
+# tests; the off-spine tiers carry their own approval machinery, one status
+# cell per row, per the OI-30 D3 rung map. It answers one question only: "if a
+# re-seed happens right now, how much off-spine text rides along with no
+# per-row rendering anywhere?" — at FILE grain, the grain `SNAPSHOTTED` copies
+# at, not the fuller per-row diff that is explicitly a possible follow-on.
+#
+# NO-CHANGE TIERS RENDER NOTHING (no standing noise a reader learns to ignore,
+# the same reason the spine's own unchanged chain rows emit no section above).
+OFFSPINE_CENSUS_TIERS = (
+    ("docs/requirements/interfaces.toml", ("IF-ID",)),
+    ("docs/requirements/external.toml", ("EXT-ID", "B-ID", "REL-ID")),
+    ("docs/requirements/components.toml", ("CMP-ID",)),
+)
+
+# WI-/OI- tokens in a commit subject — the same house pattern `agent_loop.py`'s
+# `build_scope_wis` uses to read a WI id back off a commit range, aimed here at
+# whichever ruling(s) a reader would cite for an off-spine change.
+_RULING_TOKEN_RE = re.compile(r"\b(?:WI|OI)-\d+\b")
+
+
+def _offspine_row_diff(root, rel, id_cols, snapshot):
+    """`(changed, added, removed)` row counts for one off-spine FILE (which may
+    key several id-keyed tables, `external.toml`'s three) between the live
+    tree and the snapshot copy. Plain whole-row equality, unlike the spine's
+    approved/traced cell split (`check_trajectory.split_changed_cells`) —
+    that split's table is keyed to the spine tiers, and this is a COUNT for a
+    signer's attention, not a cell-level attestation surface."""
+    live_by_key = {}
+    for id_col in id_cols:
+        for r in spine_carrier.load(Path(root) / rel, id_col, keep_examples=False):
+            rid = str(r.get(id_col) or "").strip()
+            if rid:
+                live_by_key[(id_col, rid)] = r
+    changed = added = removed = 0
+    seen = set()
+    for id_col in id_cols:
+        for rid, before in baseline_snapshot.rows_for(snapshot, rel, id_col).items():
+            key = (id_col, rid)
+            seen.add(key)
+            after = live_by_key.get(key)
+            if after is None:
+                removed += 1
+            elif after != before:
+                changed += 1
+    added = sum(1 for key in live_by_key if key not in seen)
+    return changed, added, removed
+
+
+def _offspine_ruling_pointer(root, rel, stamp_rev):
+    """One-line pointer at the ruling(s) whose commits touched `rel` since the
+    snapshot was written — the `WI-###`/`OI-###` tokens in those commits'
+    subjects, deduplicated — or `"none cited"` when git cannot say or names
+    nothing. Advisory, like every other git-derived line in this brief
+    (`baseline_snapshot.stamp`'s docstring): a reader loses one line of
+    context on the degrade, and nothing computes from it."""
+    if not stamp_rev:
+        return "none cited"
+    out = _git_out(
+        root, ["log", "--format=%s", "{}..HEAD".format(stamp_rev), "--", rel]
+    )
+    if not out:
+        return "none cited"
+    ids = sorted(set(_RULING_TOKEN_RE.findall(out)), key=id_sort_key)
+    return ", ".join(ids) if ids else "none cited"
+
+
+def offspine_census_rows(root, snapshot=_UNSET):
+    """`[{rel, changed, added, removed, ruling}]` — one entry per off-spine
+    FILE with a nonzero delta since the snapshot, `ruling` being the
+    `_offspine_ruling_pointer` string. `[]` when every off-spine tier is
+    unchanged (including when there is no snapshot at all — nothing to
+    disclose about a re-seed that has never happened).
+
+    Split out (WI-518, the `reattest_model`/`reattest_lines` shape) so the
+    comparison runs ONCE and two renderers consume it — this module's
+    markdown brief (`offspine_census_lines`) and `gen_open_items.py`'s HTML
+    owner view."""
+    if snapshot is _UNSET:
+        snapshot = baseline_snapshot.load_all(root)
+    if snapshot is None:
+        return []
+    stamp_rev, _stamp_date = baseline_snapshot.stamp(root)
+    rows = []
+    for rel, id_cols in OFFSPINE_CENSUS_TIERS:
+        changed, added, removed = _offspine_row_diff(root, rel, id_cols, snapshot)
+        if not (changed or added or removed):
+            continue
+        rows.append(
+            {
+                "rel": rel,
+                "changed": changed,
+                "added": added,
+                "removed": removed,
+                "ruling": _offspine_ruling_pointer(root, rel, stamp_rev),
+            }
+        )
+    return rows
+
+
+def offspine_census_lines(root, snapshot=_UNSET):
+    """Markdown lines for the off-spine census (WI-518): per off-spine
+    registry that changed since the snapshot, rows changed/added/removed and a
+    pointer at the ruling(s) whose commits touched it. `[]` — no heading, no
+    lines — when every off-spine tier is unchanged, so a clean re-seed costs
+    the reader nothing to read past. The markdown RENDERER over
+    `offspine_census_rows`: the rows own the comparison, this owns the
+    prose."""
+    rows = offspine_census_rows(root, snapshot)
+    if not rows:
+        return []
+    return [
+        "## Off-spine census",
+        "",
+        "_The off-spine registries above carry no per-row rendering in this"
+        " brief; `intake.py snapshot` copies them WHOLESALE alongside any"
+        " spine approval. What changed since the last snapshot, so the signer"
+        " sees what a re-seed will absorb:_",
+        "",
+    ] + [
+        "- `{rel}` — {changed} changed, {added} added, {removed} removed"
+        " since the snapshot; ruling(s): {ruling}.".format(**r)
+        for r in rows
+    ]
+
+
 def reattest_lines(root, srs, llrs, tcs):
     """Markdown for the re-attestation brief (`--approve modified`, WI-316): one
     section per SR owing a human act (grouped by SR for reading) with per-cell
@@ -3681,6 +3815,13 @@ def reattest_lines(root, srs, llrs, tcs):
         ),
         "",
     ]
+    # WI-518: rendered here — before the per-SR sections, after the derived
+    # stamps — so it reaches the reader in BOTH arms below: the spine window
+    # can be closed while an off-spine registry still changed since the last
+    # snapshot, which is exactly the disclosure gap this closes.
+    census = offspine_census_lines(root)
+    if census:
+        lines += census + [""]
     if not model:
         lines.append(
             "_No spine row differs from its `{}` copy, and no row awaits a first"
