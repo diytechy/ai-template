@@ -28,7 +28,7 @@ behind one average. It could not.
 | rows carrying a remainder | **40.7%** | **84.2%** | **61.8%** | **65.7%** |
 
 Read as the owner's own question — how much would be missed once it is gone —
-**35.7%**, against the CLI family's 12.3%. Only 21 of 108 rows are pure
+**35.7%**, against the CLI family's 12.3%. Only 19 of 108 rows are pure
 restatement end to end, where `WI-512` found 16 of 27.
 
 **The family split is recovered from git, not invented.** `WI-455` shed the

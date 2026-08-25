@@ -2419,7 +2419,7 @@ THE MEASURED NUMBERS, per family, from docs/plans/2026-08-25-if-contract-verdict
 
 WHAT THE NUMBERS CHANGE ABOUT THE QUESTION, stated plainly because it is easy to read them as merely disappointing. THREE THINGS.
 
-FIRST, the CLI family was the outlier the (d) skeptic said it was. Restatement falls 87.7% to 64.3% and the share of rows carrying something real rises from two in five to two in three. Only 21 of 108 rows are pure restatement end to end, where WI-512 found 16 of 27. Relocation still has a real population to move - 8,975 characters over 71 rows - but it is no longer a cleanup that happens to leave a residue; the residue IS most of the rows.
+FIRST, the CLI family was the outlier the (d) skeptic said it was. Restatement falls 87.7% to 64.3% and the share of rows carrying something real rises from two in five to two in three. Only 19 of 108 rows are pure restatement end to end, where WI-512 found 16 of 27. Relocation still has a real population to move - 8,975 characters over 71 rows - but it is no longer a cleanup that happens to leave a residue; the residue IS most of the rows.
 
 SECOND, the two families are genuinely different and a single ruling covering both is a ruling made on an average. Provides rows are longer and denser in remainder but nearly free of non-crossing prose (2.9%); Consumes rows carry 19.0% non-crossing. A ruling could reasonably differ per family.
 
@@ -2460,4 +2460,4 @@ Against (a): it is the honest zero-radius answer and a ruler who weighs adopter 
 
 (e) is not recommended: a per-clause rule is the hardest thing to teach an adopter and the easiest to apply inconsistently, and it buys the least.
 
-WHAT THE DRIVER IS NOT CLAIMING. The character counts for remainder and non-crossing are spans of the clauses judged, not post-edit lengths - a pass forbidden to write cannot measure by subtraction the way WI-512 did. They are accurate to the clause, not to the character. The ROW counts (108 read, 71 carrying a remainder, 21 pure restatement, 16 carrying zero remainder at non-trivial length) are exact, and the recommendation rests on those rather than on the percentages."""
+WHAT THE DRIVER IS NOT CLAIMING. The character counts for remainder and non-crossing are spans of the clauses judged, not post-edit lengths - a pass forbidden to write cannot measure by subtraction the way WI-512 did. They are accurate to the clause, not to the character. The ROW counts (108 read, 71 carrying a remainder, 19 pure restatement, 18 carrying zero remainder at non-trivial length) are exact, and the recommendation rests on those rather than on the percentages."""

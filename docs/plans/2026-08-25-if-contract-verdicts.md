@@ -39,8 +39,8 @@ tranche 1 is the 19 `Provides` rows that pass left behind.
 rows carrying something real rises from two in five to two in three. Read as the
 owner's own question — *how much of what these cells say would be missed once it
 is gone* — the answer is **15,690 of 43,995 characters, 35.7%**, against the CLI
-family's 12.3%. On a per-row basis it is starker still: only **21 of 108 rows**
-(19.4%) are pure restatement end to end, where `WI-512` found 16 of 27 (59.3%).
+family's 12.3%. On a per-row basis it is starker still: only **19 of 108 rows**
+(17.6%) are pure restatement end to end, where `WI-512` found 16 of 27 (59.3%).
 
 Two splits inside those numbers, both worth the ruler's attention:
 
@@ -136,7 +136,7 @@ will strand this class.
 
 ## THE STRUCTURAL FINDINGS
 
-**1. Sixteen rows carry a remainder of ZERO and are still long.** `IF-082`,
+**1. Eighteen rows carry a remainder of ZERO and are still long.** `IF-082`,
 `IF-083`, `IF-084`, `IF-085` and `IF-138` say in their own text that their
 contract is another row's (`IF-056`'s or `IF-071`'s) and then spend 110–250
 characters explaining why the row exists at all. `IF-112` spends 330 of its 468
