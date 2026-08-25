@@ -322,10 +322,78 @@ shipped checkers honour ONE contract before minting a row that might land red.
 **No module work was filed against it**, and the row says so, so a later reader
 cannot mistake it for a deferred refactor.
 
-**STILL OWED BY THIS ROW.** The program is NOT complete. Outstanding: the
-remaining dispersion families each need their own shared-stage test and their own
-rationale read (naming them without that reading is what the standing directive
-refuses); the 48 fusion pairs want routing to the size-ratchet debt rather than
-re-derivation; `OI-64` awaits a ruling; and the two inherited items are
-undischarged — the module-size ratchet's debt pointer still names this row, and
-M-06's four test monoliths are still unsplit.
+**STILL OWED AFTER SLICE 4** (all discharged by slice 5 below): the remaining
+dispersion families; routing the 48 fusion pairs; the module-size ratchet's debt
+pointer; M-06's four test monoliths. `OI-64` awaits a ruling.
+
+### SLICE 5 LANDED 2026-08-25 — the survey is complete and the inherited debt has a live owner
+
+Record: [../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md)
+§§8–10.
+
+**ALL EIGHTEEN dispersion families now carry a disposition** (four in slice 3,
+fourteen here) — **one consolidate, one partly upheld by a row already filed,
+twelve keep.** Each KEEP states whether it rests on a mechanical shared-stage
+test or on a read rationale, because conflating the two is how a survey starts
+sounding more certain than it is. Three keeps rest on a read: the **launchers**
+split is recorded in `SR-160`'s own text and the shared piece would have to
+become a shell library the kit deliberately does not ship; the two **converters**
+are one-shot tools whose migrations have already run, so a shared verifier would
+have no future caller; the **scaffold/manifest** cluster's shared signal already
+has exactly one home.
+
+**ONE MORE ROW EARNED, and it is the one both derivations predicted from the
+requirements alone.** `WI-520` — the credential class vocabulary. Two pattern
+sets compiled independently, and driven against five samples **four disagree in
+both directions**. The first inverts the protection: a PEM private-key block is
+refused at the commit hook and passes **unredacted into a committed transcript**,
+so the durable artifact is less protected than the ephemeral one — exactly the
+hazard `SR-176` exists to prevent. The original rationale was read first and it
+NARROWED the proposal: `redact_secrets` is documented as "deliberately imperfect
+— unknown token shapes pass through", that decision stands, and the row asks for
+one home for the class vocabulary rather than for exhaustive redaction.
+
+**THE INHERITED DEBT NOW HAS AN OWNER THAT OUTLIVES THIS ROW.** `WI-521` is
+filed and **the module-size ratchet's pointer moved to it** — six live pointers
+across `tests/test_module_size_ratchet.py` and `tests/test_import_layers.py`;
+the three surviving mentions of this row are the docstring's history of the
+hand-off and are deliberately kept. It moved NOW rather than at this row's close
+on two grounds recorded in the ratchet itself: a close-time re-point is a promise
+where a filed row is a fact, and this row was never scoped to that axis anyway —
+it is a CONSOLIDATION program while the ratchet measures SIZE, which is
+decomposition. **This row's close now has nothing to re-point**, which is the
+dead-owner defect made unreachable rather than deferred a third time.
+
+**M-06's four test monoliths land on `WI-521`, explicitly unbound from the
+ride-along rule.** That rule was `WI-483`'s own scope decision, it was honoured
+across all seven of its slices and delivered nothing, and this program filed no
+decomposition for it to ride — a rider with no vehicle. A successor row is free
+to scope itself differently, which is why this is not an owner question. The
+test-tree sensor gap rides with them, carried but NOT executed: extending a
+census whose own axis is under an unruled owner question would double whatever
+is wrong with it.
+
+**The 48 fusion pairs are routed, not re-derived.** They are attached to `WI-521`
+as the requirements-side evidence the size debt never had — which modules a
+reader must hold too much in mind to read, reached independently of line counts.
+
+### WHAT REMAINS ON THIS ROW IS OWNER-OWED, AND ONLY THAT
+
+The program has no agent-executable work left. Precisely:
+
+1. **`OI-64` awaits the owner's ruling** — whether the finding/severity/exit
+   contract becomes a requirement. No module work may be filed against it until
+   then, and the row says so itself.
+2. **Four `Drafted` spine rows await blessing** (`LLR-203`/`TC-199`,
+   `LLR-204`/`TC-200`), rendered in `docs/ratify/CURRENT.md`. No session may
+   flip them.
+
+Everything else this program produced is either landed or filed as its own
+claimable row (`WI-519`, `WI-520`, `WI-521`). **The row stays ACTIVE and is
+deliberately neither closed nor parked**: closing it would strand `OI-64`'s
+ruling with no row to return to, and there is no pause file. When `OI-64` is
+ruled and the four rows are blessed, the close is a bookkeeping act — and it
+needs to re-point nothing.
+
+Record:
+[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md).

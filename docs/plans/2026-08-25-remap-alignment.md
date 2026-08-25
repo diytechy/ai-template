@@ -290,13 +290,159 @@ explicitly NOT filed as a consolidation WI: building a shared finding module
 before the obligation is stated would install a mechanism ahead of its
 requirement, which is the inversion this kit exists to prevent.
 
-## 7. What this pass did NOT do
+## 7. What the first pass did not do — and what §§8–10 then did
 
-- It did not adjudicate the **48 fusion pairs** individually. They are measured,
-  clustered and attributed above; they restate the module-size ratchet's
-  existing debt from the requirements side and belong to that debt's owner.
-- It did not adjudicate the **remaining dispersion pairs** beyond the three
-  families §4 names. Each remaining family needs its own shared-stage test and
-  its own rationale read; naming them without that reading is exactly what the
-  standing directive refuses.
-- It moved **no module, no cell and no test**.
+The first pass (2026-08-25, slices 3–4) left three items open, and all three are
+now discharged below: the remaining dispersion families are adjudicated (§8), the
+fusion set is routed to a filed owner (§9), and M-06's monoliths have a landing
+(§9). What still stands from that list: this pass **moved no module and no spine
+cell**. It did move six debt pointers in two test files, which is §9's whole
+subject and is recorded there.
+
+---
+
+## 8. The remaining dispersion families, adjudicated
+
+**Eighteen dispersion families exist**, grouped by the (A-module, B-module) pair
+both derivations agreed on. Four were adjudicated in §4; the fourteen below
+complete the set.
+
+fig: derived="pairs (x,y) where A and B each co-locate x and y while the live SR->module join separates them, grouped by the (A,B) module pair; the live join reads LLR `module` cells through `sr_refs`"
+
+The test is §1's, unchanged: **is there a shared stage, or is the behaviour
+re-implemented?** Where the answer came from an import edge or a missing second
+implementation, the disposition says so — a KEEP grounded mechanically is not
+the same claim as a KEEP grounded in a read rationale, and conflating them is
+how a survey starts sounding more certain than it is.
+
+| family (A/B) | SRs | live modules | disposition |
+| --- | --- | --- | --- |
+| `P1`/`M15` scaffold + manifest | 009, 010, 011, 032, 166 | `bootstrap`, `onboard.template.sh`, `kitlib/__init__` | KEEP — shared signal has one home |
+| `U1`/`M20` run lifecycle | 026, 027, 028, 171, 172 | `agent_common`, `agent_loop` | KEEP — `agent_loop` imports `agent_common` |
+| **`F4`/`M17` sensitive content** | **017, 018, 176** | **`check_privacy`, `agent_common`** | **CONSOLIDATE → `WI-520`** |
+| `U3`/`M21` dispatch + brief | 040, 146, 175 | `adjudicate_brief`, `agent_loop`, `plan_briefs` | KEEP — mechanical |
+| `G2`/`M12` presentation vocabulary | 052, 053, 054 | `traj_render`, `gen_trajectory` | KEEP — shared stage exists |
+| `A2`/`M06` acceptance record | 140, 178, 179 | `baseline_snapshot`, `check_trajectory` | KEEP — mechanical |
+| `U5`/`M23` lane + seam | 144, 156, 170 | `handback`, `integrate`, `trunk_step` | KEEP — recorded, recently re-argued |
+| `V5`/`M11` authored prose | 149, 150, 158 | `check_vocab`, `check_need_form`, `check_doc_refs` | PARTLY UPHELD — the carve-out arm is `WI-519`'s |
+| `V3`/`M04` spine rules | 157, 164, 180 | `trace`, `check_trajectory`, `check_doc_refs` | KEEP — recorded, recently re-argued |
+| `P2`/`M16` launchers | 046, 160 | `run_menu`, `agent-resume.sh` | KEEP — the split is recorded and argued |
+| `A1`/`M05` stage + approval | 049, 139 | `spine_rules`, `agent_common` | KEEP — shared stage exists |
+| `F2`/`M02` converters | 129, 147 | `wi_convert`, `migrate_carrier` | KEEP — both migrations are spent |
+| `V2`/`M14` hosted bar | 151, 152 | `check.yml`, `kitlib/evidence.py` | KEEP — recorded, built deliberately |
+| `V4`/`M09` frame checks | 159, 162 | `check_trajectory`, `trace` | KEEP — `trace` imports `check_trajectory` |
+
+**Where the KEEP is grounded in a read rather than an import edge:**
+
+- **Launchers** (`P2`/`M16`). Both maps wanted one entry-point module and quoted
+  `SR-046`'s "the platform launchers delegate to the one selector rather than
+  carrying commands of their own". But `SR-160`'s own text records the split as
+  deliberate — it "spans two audiences … and parts along that line" — and the
+  piece that IS shared, the interpreter probe, would have to become a **shell
+  library** to be shared between a hook and a launcher. The kit ships no such
+  thing, deliberately: a hook must work standing on nothing but the repository.
+  The recorded reason still holds.
+- **Converters** (`F2`/`M02`). Both maps merged them to remove "a second
+  cell-exact round-trip verifier". Both verifiers exist — and **both migrations
+  have already run**: the spine is TOML and the work registry is spec files.
+  These are one-shot tools retained as the proof that the conversion was
+  lossless, which is their stated purpose ("the converter is proven by a
+  round-trip before the CSV is demoted"). A shared verifier would be built for
+  no future caller.
+- **Scaffold + manifest** (`P1`/`M15`). The shared signal both maps clustered on
+  is the inventory, and the inventory has exactly one home (`bootstrap.MAPPING`).
+  The other two live modules are different artifact kinds — a shipped shell
+  template and a package `__init__` — not second manifest walkers.
+
+### The one that earned a row, and it is the one both teams predicted
+
+**`F4`/`M17` — the credential class vocabulary.** Both derivations merged the
+scanner and the redactor and both cited `SR-176`'s own rationale as evidence the
+duplicated class list had *already* diverged. Measured, it is worse than the
+requirement records. Two pattern sets are compiled independently —
+`check_privacy.KEY_RE` + `TOKEN_RES` (the hook floor) and
+`agent_common._SECRET_RES` (`redact_secrets`, applied before a transcript is
+committed) — and driven against five samples, **four disagree, in both
+directions**:
+
+| sample | hook scanner | transcript redactor |
+| --- | --- | --- |
+| PEM private key block | catch | **MISS** |
+| `Bearer <30 chars>` | **MISS** | catch |
+| `ghp_` + 36 chars | catch | catch |
+| `ghp_` + 24 chars | **MISS** | catch |
+| `sk-` + 22 chars | **MISS** | catch |
+
+fig: cmd="load check_privacy and agent_common by path, then evaluate KEY_RE + TOKEN_RES against _SECRET_RES over the five samples in the table" rev=754870db
+
+**The first row inverts the protection**: a PEM private-key block is refused at
+the commit hook and passes **unredacted into a committed transcript**, so the
+durable artifact is less protected than the ephemeral one — the exact hazard
+`SR-176` exists to prevent, with a different subject.
+
+**The original rationale was read first and it narrowed the proposal.**
+`redact_secrets` is documented as "deliberately imperfect — unknown token shapes
+pass through", and that decision STANDS: `WI-520` does not make redaction
+exhaustive. What the docstring does not license is the measured gap — a PEM key
+is not an unknown shape, it is a compiled pattern in a sibling module. The row
+asks for one home for the class vocabulary and a per-class decision on each
+side, not for one behaviour.
+
+---
+
+## 9. The fusion set and M-06 — routed to a filed owner, not left to a promise
+
+The 48 fusion pairs (§2) are the module-size ratchet's existing debt seen from
+the requirements side. They needed an owner that outlives this program, and so
+did M-06's four test monoliths, which had been riding a vehicle that never
+arrived.
+
+**`WI-521` is filed and the ratchet's pointer MOVED TO IT** — six live pointers
+across `tests/test_module_size_ratchet.py` (the module docstring, the
+decomposition instruction, the sensor paragraph, the `BASELINE` header comment,
+the growth failure message) and `tests/test_import_layers.py` (the deferred-import
+window, the cycle ratchet). The three surviving `WI-508` mentions are the
+docstring's history of the hand-off and are deliberately kept.
+
+**Why it moved now rather than at `WI-508`'s close**, recorded in the ratchet's
+own docstring because that is where its rule lives:
+
+1. **A close-time re-point is a promise; a filed row is a fact.** It has been
+   honoured exactly once, deliberately, with the defect named — and relying on
+   it again makes the sensor's honesty depend on a session remembering.
+2. **`WI-508` was never scoped to this axis, and the ratchet says the same
+   about its predecessor in the same words.** `WI-508` is a CONSOLIDATION
+   program; this ratchet measures SIZE, which is decomposition. It held the
+   pointer for being the live architectural program, not for matching the axis.
+
+**`WI-508`'s eventual close now has nothing to re-point.** That is the dead-owner
+defect made unreachable rather than deferred a third time.
+
+**M-06 lands on `WI-521`, explicitly unbound from the ride-along rule.**
+`WI-483`'s item 4 held that a test split rides along with a subsystem
+decomposition and that a standalone split was out of scope — honoured across all
+seven of its slices, and it delivered nothing, because no slice needed one.
+`WI-508` then filed no decomposition at all. A rule that has failed to deliver
+across two programs is a rider with no vehicle, so `WI-521` states that a
+standalone split is in scope for it. That rule was `WI-483`'s own scope decision,
+not a standing ruling, which is what makes this a successor row's call rather
+than the owner's.
+
+**The sensor gap is carried, NOT executed.** No armed sensor watches the test
+tree, which is why three of the four monoliths grew 5–36% unnoticed. Extending
+the census is deliberately not proposed: that file banks an unruled owner
+question about whether the line-count axis survives at all, and extending a
+disputed axis to a second tree doubles whatever is wrong with it.
+
+---
+
+## 10. What remains, after this pass
+
+- **Not adjudicated, and named as such:** nothing in the dispersion set. All 18
+  families now carry a disposition.
+- **Owner-owed:** `OI-64`'s ruling, and the four `Drafted` spine rows on the
+  approval surface.
+- **Filed and executable by a worker:** `WI-519` (the carve-out parse-honesty
+  arm), `WI-520` (the credential class vocabulary), `WI-521` (the standing
+  decomposition debt).
+- **Still true and unchanged:** this pass moved no module and no spine cell.

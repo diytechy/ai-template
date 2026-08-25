@@ -6,25 +6,38 @@ large the kit's biggest scripts are, so the six coordinators the 2026-07-22 deep
 review flagged as "beyond maintainable review scale" cannot silently grow while
 the real decomposition is deferred.
 
-THE DEBT OWNER IS `WI-508`, AND THE RE-POINT IS THE SAME ACT WI-483 PERFORMED ON
-ITS FIRST DAY (repo review 2026-08-19, H-05). The chain: this file directed its
-active debt to `WI-280` for months after that item CLOSED, and WI-280's scope
-was the dashboard plus `bootstrap.main` — not the remaining baseline. A ratchet
-whose commentary names a closed item tells the next author that the debt is
-somebody's when it is nobody's, which is the one thing a growth sensor must not
-do. `WI-483` took the ownership then and CLOSED 2026-08-24 having paid down the
-axis it was scoped for — the seven-module import cycle is gone, the lifecycle
-band is layered and asserted, and four complexity-baseline entries were deleted
-— which is precisely NOT this file's axis (see the dispute below). So the
-pointer moves on the same rule rather than being left to rot: `WI-508` is the
-live architectural-remapping program, and its declared output is consolidation
-WIs filed against exactly this kind of residue.
+THE DEBT OWNER IS `WI-521`, AND IT IS THE FIRST OWNER SCOPED TO THIS FILE'S OWN
+AXIS. The chain, kept because it is the argument: this file directed its active
+debt to `WI-280` for months after that item CLOSED, and WI-280's scope was the
+dashboard plus `bootstrap.main` — not the remaining baseline. A ratchet whose
+commentary names a closed item tells the next author that the debt is somebody's
+when it is nobody's, which is the one thing a growth sensor must not do.
+`WI-483` took the ownership then (repo review 2026-08-19, H-05) and CLOSED
+2026-08-24 having paid down the axis it was scoped for — the seven-module import
+cycle is gone, the lifecycle band is layered and asserted, and four
+complexity-baseline entries were deleted — which is precisely NOT this file's
+axis (see the dispute below). It handed the pointer to `WI-508`, the live
+architectural-remapping program.
+
+TWO THINGS ENDED THAT PATTERN RATHER THAN CONTINUING IT. First, a close-time
+re-point is a PROMISE and a filed row is a FACT: it has been honoured once,
+deliberately and with the defect named, and leaning on it again makes this
+sensor's honesty depend on a future session remembering. Second, `WI-508` was no
+better matched to this axis than its predecessor — it is a CONSOLIDATION program
+(minimize duplicated behaviour) while this file measures module SIZE, which is
+decomposition; it inherited the pointer for being the live architectural program,
+not for being scoped to what is measured here. So `WI-521` was FILED to own the
+axis, the pointer moved to it while `WI-508` was still open, and `WI-508`'s
+eventual close now has nothing to re-point. `WI-521` carries the baseline below,
+M-06's four test monoliths, and the requirements-side evidence for which modules
+are wide and why — and if IT ever closes, the pointer moves in the same commit,
+which is the rule it inherited.
 
 Any kit script whose line count exceeds THRESHOLD must have an EXACT baseline
 entry below. The census may only tighten by default:
 
 - A baselined module grew, or a NEW module crossed THRESHOLD without a baseline:
-  the fix is DECOMPOSITION (WI-508), not a baseline bump. A deliberate bump is a
+  the fix is DECOMPOSITION (WI-521), not a baseline bump. A deliberate bump is a
   reviewed baseline edit whose reason lands in the WI/session log — never a
   drive-by. Moving lines into a new module is exactly the intended escape hatch:
   the new module stays under THRESHOLD (or earns its own reviewed baseline) and
@@ -33,8 +46,8 @@ entry below. The census may only tighten by default:
   renamed/removed): re-stamp its entry downward — or delete it — in the same
   commit, so the ratchet only ever tightens.
 
-This is a growth SENSOR, not an approval of the current sizes. WI-508 is the
-scoped program that pays this debt down; every entry here is active
+This is a growth SENSOR, not an approval of the current sizes. WI-521 is the
+scoped row that pays this debt down; every entry here is active
 architectural debt, not a target.
 
 AND THE SENSOR MEASURES AN AXIS ITS OWN OWNER DISPUTES. The owner's `OI-16`
@@ -71,7 +84,7 @@ THRESHOLD = 1500
 # reviewed-baseline-edit escape hatch (see the module docstring) and must name
 # its WI right here.
 #
-# THE DEBT OWNER IS NAMED ONCE, IN THE MODULE DOCSTRING, AND IT IS `WI-508`.
+# THE DEBT OWNER IS NAMED ONCE, IN THE MODULE DOCSTRING, AND IT IS `WI-521`.
 # Entries below carry dated notes that still read "re-stamp down with WI-280";
 # those are RECORDS of the bump they sit beside — each names the log entry that
 # reviewed it — and rewriting a dated record to cite an item that did not exist
@@ -2012,7 +2025,7 @@ def test_module_sizes_exactly_match_the_committed_baseline():
     message = []
     if grew:
         message.append(
-            "module(s) grew past baseline — decompose (WI-508), do not bump "
+            "module(s) grew past baseline — decompose (WI-521), do not bump "
             "(a deliberate bump is a reviewed baseline edit, reason in the log): "
             + "; ".join(
                 "{} baseline {} -> now {}".format(

@@ -350,7 +350,7 @@ def test_the_graph_sees_imports_inside_function_bodies():
         "stopped descending into function bodies and every cycle measured in "
         "this file is understated — fix the walker, do not re-stamp. A rise "
         "means the deferred-import population grew, which is the coupling "
-        "WI-508 now owns reducing: re-stamp only with the reason.".format(deferred)
+        "WI-521 now owns reducing: re-stamp only with the reason.".format(deferred)
     )
 
 
@@ -362,7 +362,7 @@ def test_no_new_import_cycle():
         "the import-cycle census changed.\n"
         "  found:    {}\n"
         "  baseline: {}\n"
-        "A cycle that GREW or APPEARED is decomposition work (WI-508) — do "
+        "A cycle that GREW or APPEARED is decomposition work (WI-521) — do "
         "NOT widen CYCLES to get green, because editing this list IS "
         "accepting what it measures. A cycle that SHRANK is a win: re-stamp "
         "the entry downward, or delete it, in the same commit, with the "
