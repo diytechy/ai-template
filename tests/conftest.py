@@ -86,6 +86,15 @@ SLOW_MODULES = frozenset(
         # concurrency-restructure Phase 5.)
         "test_dual_plan_round",  # the dual-plan round end-to-end (WI-199)
         "test_integrate",  # local integrator: real git repos + a real check.py bar
+        # WI-521 slice 2 split test_integrate.py by behavior boundary (M-06).
+        # The three new modules are the SAME heavy class as the module they came
+        # out of — real git repos, real worktrees, the real bar in the e2e — so
+        # they are re-tiered WITH it rather than accreting into the commit bar
+        # by default. The shared fixture surface, tests/integrate_fixtures.py,
+        # carries no `test_` prefix and is never collected.
+        "test_integrate_admission",  # what the slot admits: outcome/mint/verdict/bar
+        "test_integrate_station",  # the station protocol, refresh + merge slot
+        "test_integrate_unload",  # the §5.6 branch + worker-worktree unload
         "test_dispatch",  # the dispatch loop: real git repos + the real bar (WI-374/WI-381)
         # The two lane closes: real claims (so the real trunk_step --regen
         # subprocess), real lane worktrees, real reverts — the same heavy class

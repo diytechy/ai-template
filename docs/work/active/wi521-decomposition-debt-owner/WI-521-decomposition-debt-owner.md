@@ -255,3 +255,79 @@ monoliths, and the sensor gap. **Nothing here closes the row.**
 **Deferred to the owner: nothing new.** `LLR-178`'s rationale now locates the
 judge one indirection away from where the code sits; the multi-module cell keeps
 the sentence true, so this is a finding, not a decision withheld.
+
+### SLICE 2 LANDED 2026-08-25 — M-06's largest monolith, split standalone
+
+**The rider finally has no vehicle to wait for, so it walked.** `WI-483`'s item 4
+held that a test split RIDES ALONG with a subsystem decomposition; it was
+honoured across seven slices and delivered nothing, `WI-508` filed no
+decomposition at all, and slice 1 above found the same thing a third time — the
+acceptance record's tests live in `test_trajectory_staged.py` and
+`test_baseline_snapshot.py`, neither a monolith, and neither needed to move.
+**Three programs, zero deliveries.** This row is explicitly unbound from that
+rule, and slice 2 is the standalone split.
+
+**Re-measured, and the worst offender is unambiguous.** `test_integrate.py`
+**3,520** lines / 131 tests; `test_trace.py` 2,099 / 88;
+`test_trajectory_arch.py` 1,993 / 86; `test_agent_loop.py` 1,640 / 66. No tie to
+break here.
+
+**The boundary is the file's OWN, not a line count.** It already carried seven
+numbered banner sections; the split follows them, which is why it moves no
+argument:
+
+| module | subject | lines | tests |
+| --- | --- | --- | --- |
+| `test_integrate.py` | the CLAIM rung and the refusals in front of it | 932 | 42 |
+| `test_integrate_admission.py` | what the slot ADMITS — outcome, the R1 mint refusal, the verdict gate, the declared bar, the branch harness, the window audit | 726 | 32 |
+| `test_integrate_station.py` | the station protocol — refresh, attestation, merge slot — and the real-bar e2e | 1,129 | 36 |
+| `test_integrate_unload.py` | the §5.6 unload of the branch and its worktree | 526 | 21 |
+| `integrate_fixtures.py` | the shared surface (never collected) | 374 | — |
+
+fig: cmd="python -c \"import pathlib; [print(len(pathlib.Path('tests',n).read_text(encoding='utf-8').splitlines()), n) for n in ('integrate_fixtures.py','test_integrate.py','test_integrate_admission.py','test_integrate_station.py','test_integrate_unload.py')]\"" rev=9c9e1aa7
+
+**`tests/integrate_fixtures.py` follows `traj_fixtures.py`'s stated rule
+exactly** (WI-277, which split a 5,359-line test monolith the same way): what
+lives there is what MORE THAN ONE split module uses, **measured** — the git
+plumbing, the repo builders, the pinned commit stamps, and the two builders whose
+callers straddle a boundary (`scaffolded_closed_branch`, `_worktree_count`).
+Anything one module uses moved WITH that module: `claim_dir`/`spec_move` to
+claim, `verdict_repo` to admission, `station_repo` to the station,
+`residue_lane` to unload.
+
+**The proof is node-id set equality, not a green.** The collected node ids of the
+four new modules are **byte-identical as a set** to the monolith's at `9c9e1aa7`
+(133 ids, `diff` empty), and both sides run **132 passed / 1 skipped** — the skip
+is the POSIX-only backslash test on Windows. Nothing was renamed, dropped or
+quietly merged.
+
+**+167 lines across the family** (3,520 → 3,687): four module docstrings that
+each state their own subject, four import blocks, and the shared file's own
+header. Nothing executable was added and nothing was deleted.
+
+**Two tests were RE-HOMED rather than left where the line numbers put them.**
+`test_the_git_dependency_is_declared_for_this_module` asserts the module's env
+gate would have skipped — it went to the claim module; and
+`test_bar_step_count_is_by_distinct_name_not_by_echoed_line` is a pure unit test
+on the bar's step count in the merge record, so it went to the station beside the
+bar it measures.
+
+**The commit bar is unmoved, deliberately.** All three new modules join
+`conftest.SLOW_MODULES` beside the one they came out of — same heavy class (real
+git repos, real worktrees, the real bar in the e2e) — so smoke membership reads
+**1,369 before and after** and the total **3,073 before and after**. A split that
+quietly added 90 heavy tests to the per-commit bar would have been a regression
+dressed as tidying.
+
+**Spine: four `Evidence` cells re-pointed, TRACED only, no row minted.**
+`TC-132` now names claim + admission + station (its `method` spans all three),
+`TC-146` and `TC-148` follow their named tests to the station, `TC-145` stays on
+the claim module. `Evidence` is a TRACED cell, so no attested prose moved;
+`check_trajectory --strict` clean, `integrity=0`, `trace.py` findings unchanged.
+
+**M-06 after this slice: one of four done.** `test_trace.py` (2,099),
+`test_trajectory_arch.py` (1,993) and `test_agent_loop.py` (1,640) remain, and
+the sensor gap stays CARRIED — extending a disputed line-count axis to a second
+tree still doubles whatever is wrong with it.
+
+**Deferred to the owner: nothing new.**

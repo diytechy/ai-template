@@ -217,11 +217,18 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   of the 71 SRs have a TIED live module and `agent_loop`'s head position rests
   on one of them, so the table says WHICH modules fuse obligations, not in what
   order. **The row does not close** — it is the standing debt owner and the
-  ratchet still points at it. Next, in that order: the rest of
+  ratchet still points at it. **Slice 2 took M-06's largest monolith
+  standalone** (record:
+  [log.d/2026-08-25-wi521-slice2-integrate-test-split.md](log.d/2026-08-25-wi521-slice2-integrate-test-split.md)):
+  `tests/test_integrate.py` 3,520 lines → four modules along its OWN seven
+  banner sections plus `tests/integrate_fixtures.py`, proven by node-id SET
+  equality against the monolith (133 ids, diff empty) rather than by a green,
+  and with smoke membership unmoved at 1,369 because all three new modules were
+  re-tiered into `conftest.SLOW_MODULES`. Next, in that order: the rest of
   `check_trajectory`, then `agent_common` / `bootstrap` / `agent_loop`, then
-  M-06's four monoliths (a standalone split, unbound from the ride-along rule).
-  The test-tree sensor gap stays CARRIED, its axis still under an unruled owner
-  question.
+  M-06's remaining three (`test_trace` 2,099, `test_trajectory_arch` 1,993,
+  `test_agent_loop` 1,640). The test-tree sensor gap stays CARRIED, its axis
+  still under an unruled owner question.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the

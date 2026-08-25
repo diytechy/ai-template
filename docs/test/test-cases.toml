@@ -1294,7 +1294,7 @@ method = """Run the integrator suite: each claim refusal fires by name and the g
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py"
+evidence = "tests/test_integrate.py; tests/test_integrate_admission.py; tests/test_integrate_station.py"
 status = "Approved"
 phase = 4
 
@@ -1437,7 +1437,7 @@ method = """Run the schedule + integrate suites' adjudication cases: the kind cl
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
 automated = "Yes"
-evidence = "tests/test_schedule.py; tests/test_integrate.py"
+evidence = "tests/test_schedule.py; tests/test_integrate_station.py"
 status = "Approved"
 phase = 4
 
@@ -1459,7 +1459,7 @@ method = """Run the integrator + dispatcher suites' intake-arm cases: a merged b
 tier = "Full"
 expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py; tests/test_dispatch.py"
+evidence = "tests/test_integrate_station.py; tests/test_dispatch.py"
 status = "Approved"
 phase = 4
 
