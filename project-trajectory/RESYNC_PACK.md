@@ -3833,6 +3833,48 @@ resolution is checked, warn-first. Take
 `trace.py`, and overwrite `registries/interfaces.template.toml` +
 `INTERFACES.template.md`; re-read `PROCESS.md` §8.
 
+### `kitlib/secret_classes.py` — the credential class vocabulary gets one home [since 2f054aab]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**A new module in `scripts/kitlib/`, and the same copy-it-whole rule.** The
+credential PATTERN table — which classes (PEM private key, GitHub token,
+GitHub fine-grained token, Slack token, AWS access key id, API secret key,
+generic bearer token) each of the commit-hook secrets floor
+(`check_privacy.py`'s `KEY_RE`/`TOKEN_RES`) and the session-transcript
+redactor (`agent_common.py`'s `redact_secrets`/`_SECRET_RES`) compile — used
+to be two independent literals in those two modules. A WI-508 alignment pass
+measured them disagreeing on four of five driven samples, **in both
+directions**: the worst case, a PEM private-key block was refused at the
+commit hook but passed unredacted into a committed transcript, so the durable
+artifact was less protected than the ephemeral one. `kitlib.secret_classes`
+is the one table both now read.
+
+**If you only overwrite kit files, you need do nothing but include the new
+module in the copy.** `check_privacy.KEY_RE` / `check_privacy.TOKEN_RES` and
+`agent_common._SECRET_RES` are all still there and still resolve to the same
+names; they are now derived from the shared table rather than hand-copied.
+**One behavior change, and it is the fix this entry exists to describe:**
+`agent_common.redact_secrets` now also redacts a PEM private-key header,
+which it did not before. Every other class's matching behavior — on both
+sides — is unchanged; the two modules' driving test
+(`tests/test_kitlib_secret_classes.py`) pins that directly against the
+pre-change literals.
+
+**If you had a local patch to either module's pattern list** — an added
+credential shape, a tightened or loosened threshold — that edit is on a
+kit-owned file and the deviation review in §2 is where it surfaces. Re-apply
+it to `scripts/kitlib/secret_classes.py`'s `SECRET_CLASSES` table (a
+`SecretClass(name, scan_pattern, redact_pattern)` tuple; either pattern may be
+`None`, a deliberate per-class decision), not to `check_privacy.py` or
+`agent_common.py` directly — both now derive their working pattern lists from
+that table by comprehension, so a hand-edit on either consumer is silently
+shadowed at the next re-sync.
+
+**Nothing in your `docs/` changes**, and no registry cell moves — `SR-017` /
+`SR-018` / `SR-176` and their LLR rows are unchanged; this is an
+implementation consolidation under the same obligations, not a new one.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

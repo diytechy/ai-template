@@ -1,7 +1,7 @@
 +++
 id = "WI-520"
 title = "One home for the credential class vocabulary: the hook scanner and the transcript redactor disagree both ways"
-specref = "docs/plans/2026-08-25-remap-alignment.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,63 @@ buildtier = "medium"
 safety_class = "high-risk"
 priority = 1
 +++
+
+## Deliverable
+
+One home for the credential class vocabulary:
+`project-trajectory/scripts/kitlib/secret_classes.py` — a pure-data
+`SecretClass(name, scan_pattern, redact_pattern)` table. `check_privacy.py`'s
+`KEY_RE`/`TOKEN_RES` and `agent_common.py`'s `_SECRET_RES` are now
+comprehensions over this one table rather than hand-copied literals, so the
+measured drift cannot reopen by one side forgetting to update its own copy.
+Record: [../../../log.d/2026-08-25-wi520-secret-class-vocabulary.md](../../../log.d/2026-08-25-wi520-secret-class-vocabulary.md).
+
+The fix: the PEM private-key class now reaches the redactor (was floor-catch,
+redactor-MISS; both catch now) — the one gap the spec named as the row's
+minimum. The three deliberate threshold asymmetries the redactor already ran
+looser than the floor (`github token`, `github fine-grained token`, `api
+secret key`) are UNCHANGED and now stated as per-class decisions on the
+table's own rows, not left as a side effect of two literals. Proven, not
+asserted: `tests/test_kitlib_secret_classes.py` reproduces the alignment
+pass's five-sample table post-fix, drives one canonical positive sample per
+declared class through both consumers (catching a class that drops off either
+consumer's derivation), and holds a frozen, independent record of every
+pre-row pattern compared by matching behavior — nothing caught before this
+row is caught less after it (the one cosmetic change, a character-class
+member reorder in `slack token`, is proven a matching no-op first).
+
+Deliberately NOT done, per the spec's own MUST NOTs: `redact_secrets` stays
+"deliberately imperfect" (unknown shapes still pass, the raw stream still
+lands in gitignored `out/run-logs/`); the floor's tighter thresholds are
+untouched; `generic bearer token` was not added to the commit-blocking floor
+(a stated, deliberate absence — false-positive risk on ordinary
+documentation); `agent_common` does not import `check_privacy`.
+
+Two new Drafted spine rows (`SR-017`/`SR-176` are both Approved, so nothing
+under them was rewritten): `LLR-205` and `TC-201`, component `CMP-006`.
+`bootstrap.py` MAPPING, `tests/test_bootstrap.py`'s file-list spot-check and
+`RESYNC_PACK.md` all gained the new shipped module. `docs/stage` /
+`docs/status.md` / `PROJECT_STATE.html` regenerated. Two ratchets re-stamped
+with reasons at each site (`tests/test_module_size_ratchet.py`,
+`docs/stack.ini` `[smoke-budget]`).
+
+Gates, final on the settled tree: `pytest -q -n auto -m smoke` green (1353
+passed/6 skipped, 19.58s); `check_smoke_budget.py --mode enforce`: 19.9s/60s;
+`check_docs.py --stale`: OK; `check_trajectory.py --strict`: clean (two
+ERRORs surfaced and were fixed in-session — the new module needed a `CMP-###`
+tag, `LLR-205` supplies it; closing the WI left a done-id in `status.md` and
+a live `SpecRef`, both scrubbed); `derive_stage.py --check`: up to date. Full
+unfiltered suite run twice at the smoke/slow boundary: the first "not smoke"
+pass caught a real staleness bug (fixed, re-verified 18/18); the second came
+back green (1692 passed/9 skipped) but overlapped with two later prose-only
+fixes, so it is not taken at face value — the one test that measurably
+depends on that content (`test_derive_stage.py`) was re-run alone on the
+final tree and passed. Full detail, real tails and the before/after driven
+table are in the log fragment above.
+
+One owner-owed observation, not fixed here: `LLR-177`'s Approved `Detail`
+cell enumerates the redactor's classes by name and does not mention the PEM
+class this row adds (rewriting an Approved cell is the owner's act).
 
 ## Context
 

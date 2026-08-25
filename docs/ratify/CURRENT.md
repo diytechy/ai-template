@@ -6,6 +6,44 @@ _Baseline: `docs/archive/last_approved` — copied 2026-08-24 (13593db9), the co
 
 _Approval provenance: the last commit to move a `Status` cell in a snapshotted registry is 0f8cb9a7 (2026-08-25) — the record's maturity cells have not moved since._
 
+## Off-spine census
+
+_The off-spine registries above carry no per-row rendering in this brief; `intake.py snapshot` copies them WHOLESALE alongside any spine approval. What changed since the last snapshot, so the signer sees what a re-seed will absorb:_
+
+- `docs/requirements/components.toml` — 1 changed, 0 added, 0 removed since the snapshot; ruling(s): none cited.
+
+
+## SR-017 — Always-on secrets floor
+
+> **Requirement.** When a session attempts to commit or push content matching a secret pattern, the system shall refuse at the hook floor — scanning every commit's staged diff, message and outgoing range regardless of the privacy toggle, and naming the finding — unless the declared secrets_scan dial is explicitly false.
+
+> **Rationale.** Realizes SN-009 — a credential that reaches a shared branch must be treated as disclosed and rotated, and expunging it from history is a rewrite every clone has to follow, so the cheap moment to catch it is before the commit and the expensive one is any moment after. Folding the scan into the privacy toggle was rejected: that makes the highest-severity check opt-in alongside a preference. The one opt-out is an explicit declaration, so turning it off is a visible act.
+
+
+### LLR LLR-205 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-205
+- **SR-Refs**: SR-017;SR-176
+- **Title**: The credential class vocabulary, one home below the floor and the redactor
+- **Module**: project-trajectory/scripts/kitlib/secret_classes.py
+- **CodeSymbol**: SecretClass/SECRET_CLASSES/SECRET_CLASSES_BY_NAME
+- **Detail**: SECRET_CLASSES is a tuple of SecretClass(name, scan_pattern, redact_pattern) rows, one per credential class (private key header, github token, github fine-grained token, slack token, aws access key id, api secret key, generic bearer token); either pattern may be None, a stated per-class decision rather than an omission. check_privacy.py's KEY_RE and TOKEN_RES and agent_common.py's _SECRET_RES are DERIVED from this table by comprehension (filtering on scan_pattern / redact_pattern respectively) rather than each carrying its own literal, so LLR-017's Scanner/KEY_RE and LLR-177's redact_secrets/_SECRET_RES code symbols still resolve unchanged. Before this table, the two consumers had compiled their pattern sets independently: driven against five samples, four disagreed in both directions - the PEM private-key class was refused at the commit hook (SR-017) but passed unredacted into a committed transcript (SR-176's own never-by-value rule, missed by omission rather than by name). The table adds no exhaustiveness claim: redact_secrets stays "deliberately imperfect - unknown token shapes pass through" by its own docstring, and the redactor's threshold is DELIBERATELY looser than the floor's on three classes (comments on the table's own rows state which and why) because a false-positive redaction costs a reader nothing while a false-positive commit refusal costs a contributor a lot.
+- **Rationale**: A vocabulary two enforcement surfaces must never disagree on belongs below both, on the same test kitlib/spine.py was ruled into existence for (trace.py/spine_rules.py, nine equality pins standing in for one home) - except here the two copies were never even pinned equal, so the divergence this row measures is not a hypothetical drift but a live, dated finding (docs/plans/2026-08-25-remap-alignment.md S8). Component CMP-006 rather than CMP-007 (the floor's own component, via LLR-017) or CMP-008 (the redactor's, via LLR-177): the module is pure data (stdlib re/typing only, no sibling import) - the same data-only shape ladder.py (LLR-184) established for a shared kitlib module - and kitlib's shared modules are single-tagged to their established owner for the same reason ladder.py and stage.py are - a consumer reading a shared table does not own it, and a usage tag would suppress the cross-component seam rule on exactly the edges this extraction creates. Landing Drafted because SR-017 and SR-176 are both Approved and this row must not be read as amending either row's own attestation; approving it is the owner's act.
+- **TestRefs**: (see TC-201)
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 5
+
+### TC TC-201 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-201
+- **Verifies**: SR-017;SR-176;LLR-205
+- **Level**: Integration
+- **Method**: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after.
+- **Tier**: Full
+- **Expected**: Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision
+- **Automated**: Yes
+- **Evidence**: tests/test_kitlib_secret_classes.py
+- **Status**: Drafted
+- **Phase**: 5
 
 ## SR-163 — Every shipped file maps to a stakeholder outcome
 
@@ -61,5 +99,37 @@ _Approval provenance: the last commit to move a `Status` cell in a snapshotted r
 - **Expected**: Satisfies the acceptance folded into LLR-204 (parent SR-163)
 - **Automated**: Yes
 - **Evidence**: tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand
+- **Status**: Drafted
+- **Phase**: 5
+
+## SR-176 — A privacy finding persists by class and location, never by value
+
+> **Requirement.** Any durable record the delivered kit produces of a secrets or privacy finding shall identify the finding by its class and location, never by the matched value.
+
+> **Rationale.** Hat-derived (hat.DATA-PROTECTION, C-DPR-2 — clause text in docs/plans/2026-08-16-blind-derivation-c-hats.md): the finding record is the one artifact guaranteed to contain the personal data it reports, created by the control itself — SN-009 defeating itself, since a scanner that catches a value and then echoes it into a committed artifact has published what it protected. The intake proposal's measurement (docs/plans/2026-08-17-wi468-obligation-intake-options.md §2 option (b)) grounds the row: the scanner mints no record of its own (check_privacy prints location, label and the MATCHED VALUE to stdout and writes nothing), but an unattended run's transcript is committed bookkeeping, so the durable copy of every finding is the session log — and the transcript path redacts credential shapes only. DELIBERATE NARROWING of the charter's ask, recorded here as the deriving decision: C-DPR-2 asks for a retention limit and an access rule, and a kit cannot honestly promise either over an adopter's git history (committed content is effectively forever; access is the host's) — what it CAN promise is that the matched value never reaches durable storage, which moots both. MECHANIZED TODAY for the always-on class: the transcript writer redacts the credential shapes and its summary line names class and count, never the value — pinned by the chain below. NOT YET MECHANIZED, stated rather than implied: the PII/identity classes the privacy gate adds are not in the redaction set, so for an adopter w… [136 more chars — read the registry row]
+
+
+### LLR LLR-205 — ADDED since the snapshot, Drafted — never approved
+- **LLR-ID**: LLR-205
+- **SR-Refs**: SR-017;SR-176
+- **Title**: The credential class vocabulary, one home below the floor and the redactor
+- **Module**: project-trajectory/scripts/kitlib/secret_classes.py
+- **CodeSymbol**: SecretClass/SECRET_CLASSES/SECRET_CLASSES_BY_NAME
+- **Detail**: SECRET_CLASSES is a tuple of SecretClass(name, scan_pattern, redact_pattern) rows, one per credential class (private key header, github token, github fine-grained token, slack token, aws access key id, api secret key, generic bearer token); either pattern may be None, a stated per-class decision rather than an omission. check_privacy.py's KEY_RE and TOKEN_RES and agent_common.py's _SECRET_RES are DERIVED from this table by comprehension (filtering on scan_pattern / redact_pattern respectively) rather than each carrying its own literal, so LLR-017's Scanner/KEY_RE and LLR-177's redact_secrets/_SECRET_RES code symbols still resolve unchanged. Before this table, the two consumers had compiled their pattern sets independently: driven against five samples, four disagreed in both directions - the PEM private-key class was refused at the commit hook (SR-017) but passed unredacted into a committed transcript (SR-176's own never-by-value rule, missed by omission rather than by name). The table adds no exhaustiveness claim: redact_secrets stays "deliberately imperfect - unknown token shapes pass through" by its own docstring, and the redactor's threshold is DELIBERATELY looser than the floor's on three classes (comments on the table's own rows state which and why) because a false-positive redaction costs a reader nothing while a false-positive commit refusal costs a contributor a lot.
+- **Rationale**: A vocabulary two enforcement surfaces must never disagree on belongs below both, on the same test kitlib/spine.py was ruled into existence for (trace.py/spine_rules.py, nine equality pins standing in for one home) - except here the two copies were never even pinned equal, so the divergence this row measures is not a hypothetical drift but a live, dated finding (docs/plans/2026-08-25-remap-alignment.md S8). Component CMP-006 rather than CMP-007 (the floor's own component, via LLR-017) or CMP-008 (the redactor's, via LLR-177): the module is pure data (stdlib re/typing only, no sibling import) - the same data-only shape ladder.py (LLR-184) established for a shared kitlib module - and kitlib's shared modules are single-tagged to their established owner for the same reason ladder.py and stage.py are - a consumer reading a shared table does not own it, and a usage tag would suppress the cross-component seam rule on exactly the edges this extraction creates. Landing Drafted because SR-017 and SR-176 are both Approved and this row must not be read as amending either row's own attestation; approving it is the owner's act.
+- **TestRefs**: (see TC-201)
+- **Status**: Drafted
+- **Component**: CMP-006
+- **Phase**: 5
+
+### TC TC-201 — ADDED since the snapshot, Drafted — never approved
+- **TC-ID**: TC-201
+- **Verifies**: SR-017;SR-176;LLR-205
+- **Level**: Integration
+- **Method**: Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after.
+- **Tier**: Full
+- **Expected**: Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision
+- **Automated**: Yes
+- **Evidence**: tests/test_kitlib_secret_classes.py
 - **Status**: Drafted
 - **Phase**: 5

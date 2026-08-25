@@ -18,7 +18,7 @@
 
 [derived]
 components = 4
-design_rows = 186
+design_rows = 187
 seam_rows = 135
 requirements_placed = 71
 requirements_unplaced = 4
@@ -28,6 +28,7 @@ seams_unplaced = 0
 name = "W1 Registry & conformance"
 sr_refs = [
   "SR-015",
+  "SR-017",
   "SR-049",
   "SR-070",
   "SR-129",
@@ -44,17 +45,20 @@ sr_refs = [
   "SR-164",
   "SR-165",
   "SR-166",
+  "SR-176",
   "SR-178",
   "SR-179",
   "SR-180",
 ]
 sr_shared_refs = [
+  "SR-017",
   "SR-049",
   "SR-070",
   "SR-139",
   "SR-152",
   "SR-155",
   "SR-163",
+  "SR-176",
 ]
 llr_refs = [
   "LLR-001",
@@ -105,9 +109,11 @@ llr_refs = [
   "LLR-201",
   "LLR-202",
   "LLR-204",
+  "LLR-205",
 ]
 hat_refs = [
   "CONSISTENCY",
+  "DATA-PROTECTION",
   "FIRST-RUN-ADOPTER",
   "INTEGRITY-RECOVERABILITY",
   "MAINTAINER",
@@ -128,6 +134,7 @@ modules = [
   "project-trajectory/scripts/kitlib/git.py",
   "project-trajectory/scripts/kitlib/ladder.py",
   "project-trajectory/scripts/kitlib/registry.py",
+  "project-trajectory/scripts/kitlib/secret_classes.py",
   "project-trajectory/scripts/kitlib/spine.py",
   "project-trajectory/scripts/kitlib/stage.py",
   "project-trajectory/scripts/migrate_carrier.py",
@@ -227,6 +234,7 @@ sr_refs = [
   "SR-182",
 ]
 sr_shared_refs = [
+  "SR-017",
   "SR-152",
   "SR-170",
 ]
@@ -363,6 +371,7 @@ sr_shared_refs = [
   "SR-146",
   "SR-155",
   "SR-170",
+  "SR-176",
 ]
 llr_refs = [
   "LLR-026",

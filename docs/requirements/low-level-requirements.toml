@@ -2154,3 +2154,15 @@ test_refs = "(see TC-200)"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-205]
+sr_refs = ["SR-017", "SR-176"]
+title = "The credential class vocabulary, one home below the floor and the redactor"
+module = "project-trajectory/scripts/kitlib/secret_classes.py"
+code_symbol = "SecretClass/SECRET_CLASSES/SECRET_CLASSES_BY_NAME"
+detail = """SECRET_CLASSES is a tuple of SecretClass(name, scan_pattern, redact_pattern) rows, one per credential class (private key header, github token, github fine-grained token, slack token, aws access key id, api secret key, generic bearer token); either pattern may be None, a stated per-class decision rather than an omission. check_privacy.py's KEY_RE and TOKEN_RES and agent_common.py's _SECRET_RES are DERIVED from this table by comprehension (filtering on scan_pattern / redact_pattern respectively) rather than each carrying its own literal, so LLR-017's Scanner/KEY_RE and LLR-177's redact_secrets/_SECRET_RES code symbols still resolve unchanged. Before this table, the two consumers had compiled their pattern sets independently: driven against five samples, four disagreed in both directions - the PEM private-key class was refused at the commit hook (SR-017) but passed unredacted into a committed transcript (SR-176's own never-by-value rule, missed by omission rather than by name). The table adds no exhaustiveness claim: redact_secrets stays "deliberately imperfect - unknown token shapes pass through" by its own docstring, and the redactor's threshold is DELIBERATELY looser than the floor's on three classes (comments on the table's own rows state which and why) because a false-positive redaction costs a reader nothing while a false-positive commit refusal costs a contributor a lot."""
+rationale = """A vocabulary two enforcement surfaces must never disagree on belongs below both, on the same test kitlib/spine.py was ruled into existence for (trace.py/spine_rules.py, nine equality pins standing in for one home) - except here the two copies were never even pinned equal, so the divergence this row measures is not a hypothetical drift but a live, dated finding (docs/plans/2026-08-25-remap-alignment.md S8). Component CMP-006 rather than CMP-007 (the floor's own component, via LLR-017) or CMP-008 (the redactor's, via LLR-177): the module is pure data (stdlib re/typing only, no sibling import) - the same data-only shape ladder.py (LLR-184) established for a shared kitlib module - and kitlib's shared modules are single-tagged to their established owner for the same reason ladder.py and stage.py are - a consumer reading a shared table does not own it, and a usage tag would suppress the cross-component seam rule on exactly the edges this extraction creates. Landing Drafted because SR-017 and SR-176 are both Approved and this row must not be read as amending either row's own attestation; approving it is the owner's act."""
+test_refs = "(see TC-201)"
+status = "Drafted"
+component = "CMP-006"
+phase = 5

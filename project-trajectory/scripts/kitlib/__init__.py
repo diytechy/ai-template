@@ -73,6 +73,13 @@ theme and says so in its own docstring:
                  lane can close into, the status directory each is declared by,
                  the bar-attestation trailer label, and the "exactly one
                  declared directory, or none" decision.
+  * `secret_classes` — the credential CLASS vocabulary: which named classes
+                 (PEM private key, GitHub token, GitHub fine-grained token,
+                 Slack token, AWS access key id, API secret key, generic
+                 bearer token) the commit-hook secrets floor scans for and the
+                 session-transcript redactor best-effort redacts, and — where
+                 the two deliberately differ — which side and why. Pure data:
+                 stdlib (`re`, `typing`) only, no sibling import.
 
 `station` arrived by a different route from the other three, and the difference
 is worth stating because it is the shape the remaining slots should follow. The
@@ -129,6 +136,20 @@ already on this roster (`config`, `spine`, `evidence`, `registry`), taking the
 census to zero. A new module is warranted when a behaviour's theme is NOT here;
 inventing one to hold a constant that fits an existing theme is how a roster
 becomes a directory listing.
+
+`secret_classes` (WI-520) is `spine`'s shape again: two modules that must never
+disagree — `check_privacy.py`, which ENFORCES the commit-hook secrets floor, and
+`agent_common.py`, which best-effort REDACTS the same classes out of a
+committed transcript — each carrying its own copy of a credential-pattern
+table. Unlike `spine`'s nine equality pins, the two copies here were never
+pinned equal, and a WI-508 alignment pass measured why that mattered: driven
+against five samples, four disagreed IN BOTH DIRECTIONS, including a PEM
+private-key block refused at the commit hook but passed unredacted into a
+committed transcript. The module does not merge the two into one behaviour —
+the redactor's threshold is DELIBERATELY looser than the floor's on three
+classes, recorded per class rather than left as a side effect of two literals —
+it merges only what a class IS, so a divergence is now a decision on one row
+of one table instead of an accident of two files.
 
 One further theme slot is NAMED BY THE ADOPTED SHAPE AND DELIBERATELY NOT YET
 CREATED, because an empty module is a worse statement than an absent one:

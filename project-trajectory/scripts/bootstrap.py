@@ -1950,6 +1950,14 @@ MAPPING = [
     # list, and `trace_text.py` re-exports three of the names for `trace.py`, so
     # the must-be-whole rule bites on the FIRST check a scaffold runs.
     ("scripts/kitlib/spine.py", "scripts/kitlib/spine.py"),
+    # WI-520 added `secret_classes`: the credential CLASS vocabulary —
+    # `check_privacy.py`'s enforcement floor and `agent_common.py`'s
+    # transcript redactor each compiled their own credential patterns until
+    # the WI-508 alignment pass measured them disagreeing, in both
+    # directions, on the same classes. Both of those are in this list and
+    # both import it now, so the must-be-whole rule applies on the very first
+    # secrets-floor scan a scaffold runs.
+    ("scripts/kitlib/secret_classes.py", "scripts/kitlib/secret_classes.py"),
     ("scripts/trace.py", "scripts/trace.py"),
     # WI-329: trace.py imports its spine-row TEXT layer from this sibling, so a
     # scaffold missing it gets an ImportError on the first check. Copied

@@ -2032,3 +2032,14 @@ automated = "Yes"
 evidence = """tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand"""
 status = "Drafted"
 phase = 5
+
+[test.TC-201]
+verifies = ["SR-017", "SR-176", "LLR-205"]
+level = "Integration"
+method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after."""
+tier = "Full"
+expected = "Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision"
+automated = "Yes"
+evidence = """tests/test_kitlib_secret_classes.py"""
+status = "Drafted"
+phase = 5

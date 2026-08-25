@@ -88,9 +88,11 @@ from kitlib.config import utf8_console as _utf8_console
 # not yet carry scripts/ — the sanctioned-sibling idiom the engines already use.
 try:
     from kitlib import config as _kitconfig
+    from kitlib import secret_classes as _kitsecrets
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
+    from kitlib import secret_classes as _kitsecrets
 
 # The inline allowlist marker: a line carrying it is never flagged.
 ALLOW_MARKER = "privacy-ok"
@@ -147,16 +149,19 @@ EXAMPLE_SUFFIXES = (".example", ".invalid", ".test", ".localhost")
 #     ]
 EXEMPT_EMAILS = ["*noreply*"]
 
-KEY_RE = re.compile(r"-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----")
-TOKEN_RES = (
-    ("github token", re.compile(r"ghp_[A-Za-z0-9]{36}")),
-    ("github fine-grained token", re.compile(r"github_pat_[A-Za-z0-9_]{22,}")),
-    ("slack token", re.compile(r"xox[abprs]-[A-Za-z0-9-]{10,}")),
-    ("aws access key id", re.compile(r"(?<![A-Z0-9])AKIA[0-9A-Z]{16}(?![A-Z0-9])")),
-    (
-        "api secret key",
-        re.compile(r"(?<![A-Za-z0-9_-])sk-[A-Za-z0-9_-]{24,}(?![A-Za-z0-9_-])"),
-    ),
+# THE CREDENTIAL CLASS VOCABULARY'S ONE HOME (WI-520). `kitlib.secret_classes`
+# is the table both this enforcement floor and `agent_common.redact_secrets`
+# read, so a class neither module states independently can no longer diverge
+# by which literal it happened to be typed into — the WI-508 alignment pass
+# measured four of five driven samples disagreeing, in both directions,
+# before this. `KEY_RE` / `TOKEN_RES` keep their long-standing names and
+# shapes (LLR-017's own `code_symbol` cell names `Scanner/KEY_RE`) as this
+# floor's VIEW of the shared table; `Scanner.scan_line` below is unchanged.
+KEY_RE = _kitsecrets.SECRET_CLASSES_BY_NAME["private key header"].scan_pattern
+TOKEN_RES = tuple(
+    (cls.name, cls.scan_pattern)
+    for cls in _kitsecrets.SECRET_CLASSES
+    if cls.scan_pattern is not None and cls.name != "private key header"
 )
 
 # Identity terms shorter than this are too collision-prone to word-match.

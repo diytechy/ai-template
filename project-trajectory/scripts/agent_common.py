@@ -52,12 +52,14 @@ try:
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import secret_classes as _kitsecrets
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import config as _kitconfig
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
+    from kitlib import secret_classes as _kitsecrets
     from kitlib import stage as _kitstage
 
 # This module's own directory, so `spine_stage_of` can spawn the sibling
@@ -2112,13 +2114,19 @@ def bounded_transcript(output):
     return text
 
 
-_SECRET_RES = (
-    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
-    re.compile(r"ghp_[A-Za-z0-9]{20,}"),
-    re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
-    re.compile(r"AKIA[0-9A-Z]{16}"),
-    re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._\-]{25,}"),
-    re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
+# THE CREDENTIAL CLASS VOCABULARY'S ONE HOME (WI-520). Derived from
+# `kitlib.secret_classes.SECRET_CLASSES` — the same table
+# `check_privacy.py`'s enforcement floor reads — so a class this redactor
+# claims can no longer silently diverge from what the floor scans for. This
+# closes the measured gap: a PEM private-key block used to reach this tuple
+# as an "unknown token shape" (this function's own licensed gap, below) when
+# it is in fact a known, compiled class one sibling module over; it is now
+# `private key header`'s entry in the shared table, redacted here like every
+# other declared class.
+_SECRET_RES = tuple(
+    cls.redact_pattern
+    for cls in _kitsecrets.SECRET_CLASSES
+    if cls.redact_pattern is not None
 )
 
 
@@ -2127,6 +2135,7 @@ def redact_secrets(text):
     transcript is committed to tracked history (docs/iteration/*.log): a CLI
     auth error echoing a key otherwise lands in permanent history with only
     push-policy between it and publication (repo-review 2026-07-21 M-19).
+    The shapes are `kitlib.secret_classes`' redact-side classes (WI-520).
     Deliberately imperfect — unknown token shapes pass through, and the raw
     unredacted stream stays in gitignored out/run-logs/ for debugging."""
     hits = 0
