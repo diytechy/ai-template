@@ -95,7 +95,7 @@ renders the no-rows arm. `derive_stage.py`: **`drafted = 0`**, and **phase 4
 climbs `DevStg-LLReqs` → `DevStg-Impl`** — the reopened-phase warning its
 minted drafts held open clears with it. `stage` stays `DevStg-LLReqs` on
 phase 5, honestly: approving text moves no test evidence.
-<!-- fig: cmd="python project-trajectory/scripts/derive_stage.py && grep -E '^(drafted|per-phase) ' docs/stage" rev=3da625e2 -->
+<!-- fig: cmd="python project-trajectory/scripts/derive_stage.py && grep -E '^(drafted|per-phase) ' docs/stage" rev=13593db9 -->
 
 ### Banked finding — `approval_stamp` is blind on BSD regex (WI-517 filed)
 
@@ -171,5 +171,5 @@ led to is independently confirmed either way.
   PRE-EXISTING at HEAD (verified by stash) and is the same defect `WI-517`
   now owns: the test drives `approval_stamp` on this Mac and the `-G`
   pattern returns empty. Not introduced, not worked around, now tracked.
-<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=3da625e2 -->
-<!-- fig: cmd="python -m pytest -q -n auto" rev=3da625e2 -->
+<!-- fig: cmd="python -m pytest -q -n auto -m smoke" rev=13593db9 -->
+<!-- fig: cmd="python -m pytest -q -n auto" rev=13593db9 -->
