@@ -18,10 +18,10 @@
 
 [derived]
 components = 4
-design_rows = 184
+design_rows = 186
 seam_rows = 135
-requirements_placed = 70
-requirements_unplaced = 5
+requirements_placed = 71
+requirements_unplaced = 4
 seams_unplaced = 0
 
 [component_view.CMP-006]
@@ -40,6 +40,7 @@ sr_refs = [
   "SR-159",
   "SR-161",
   "SR-162",
+  "SR-163",
   "SR-164",
   "SR-165",
   "SR-166",
@@ -53,6 +54,7 @@ sr_shared_refs = [
   "SR-139",
   "SR-152",
   "SR-155",
+  "SR-163",
 ]
 llr_refs = [
   "LLR-001",
@@ -102,6 +104,7 @@ llr_refs = [
   "LLR-197",
   "LLR-201",
   "LLR-202",
+  "LLR-204",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -532,6 +535,7 @@ sr_refs = [
   "SR-138",
   "SR-146",
   "SR-160",
+  "SR-163",
   "SR-168",
   "SR-169",
 ]
@@ -539,6 +543,7 @@ sr_shared_refs = [
   "SR-049",
   "SR-070",
   "SR-146",
+  "SR-163",
 ]
 llr_refs = [
   "LLR-009",
@@ -597,6 +602,7 @@ llr_refs = [
   "LLR-198",
   "LLR-199",
   "LLR-200",
+  "LLR-203",
 ]
 hat_refs = [
   "ACCESSIBILITY",
@@ -693,7 +699,6 @@ sr_refs = [
   "SR-034",
   "SR-036",
   "SR-114",
-  "SR-163",
   "SR-181",
 ]
 seam_refs = []
