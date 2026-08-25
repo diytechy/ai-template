@@ -72,8 +72,12 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   owner-owed from the wording round that lightened the brief: the two banked
   findings about `Approved` text nobody may edit
   ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
-  Known environmental constraint: ~1.6 GB free on C:, so full-suite runs may
-  need the batched/cleaned-basetemp form until space is reclaimed.
+  Environment, RE-MEASURED 2026-08-25: **41 GB free on C:** — the disk pressure
+  that forced the batched/cleaned-basetemp form is gone. Measured in the other
+  direction on the same box, and worth knowing before reaching for the
+  workaround: pointing `--basetemp` at D: roughly **doubles** the smoke tier's
+  wall time (26 s on the declared command, 60 s with the redirect), so redirect
+  it only when C: is genuinely short.
 - **THE INTERFACE `contract` IS MEASURED, AND THE RELOCATION QUESTION IS ON THE
   OWNER'S DESK AS `OI-63`** (pending; the measuring pass ran 2026-08-25 under
   `OI-62`'s (e) ruling — record:
@@ -128,7 +132,7 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   without becoming mandatory on all 16 rows. What phase 4 still awaits is the
   owner's own act, not a next slice: filling `knowledge` values into
   `hats.toml`, which is declared owner text and was deliberately left empty.
-- **The `wi508-architectural-remap` lane is OPEN with slice 1 landed**
+- **The `wi508-architectural-remap` lane is OPEN with slices 1–2 landed**
   (2026-08-25). The framing act is done: the row was re-validated against
   the amended `SR-163` — the sole amendment is the `MAINTAINER` lens, and
   every normative cell is byte-identical to the text the row was minted
@@ -139,13 +143,27 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   `Implements:` grammar and the declared warn-to-gate dial, running the
   OTHER direction). The orphan debt is therefore down to `SR-181` alone,
   and **four `Drafted` rows are back on the approval surface** — the
-  ordinary consequence of a mint, moving no rung. NEXT in this lane is the
-  blind derivation itself: the brief, a strictly bounded input set
-  (requirements + the depth-0 frame + the hat roster — never the design
-  tier, the component or interface registries, or the source tree), and a
-  durably recorded return. The lane also carries the debt the wi483
-  decomposition handed on: the module-size ratchet's live debt owner, and
-  M-06's four unsplit test monoliths.
+  ordinary consequence of a mint, moving no rung; the re-attestation brief
+  carries one section for them and blessing it is the owner's act.
+  **The blind derivation has RUN** (slice 2), on two axes, from a five-file
+  input set with the design tier, the component/interface registries and the
+  source tree held out — brief recorded before the answers at
+  [plans/2026-08-25-blind-minimal-map-brief.md](plans/2026-08-25-blind-minimal-map-brief.md),
+  both returns and the measured agreement at
+  [plans/2026-08-25-blind-minimal-map-derivation.md](plans/2026-08-25-blind-minimal-map-derivation.md).
+  24 modules against 23, **97.2%** pair agreement, 84% placed identically —
+  and the result neither axis could reach alone: **both invented the same
+  module owning ZERO requirements** (the finding/severity/exit contract), so
+  the corpus is missing a row that eleven-to-thirteen others each restate.
+  **That is a missing requirement, not module work.** Blindness was NOT total
+  and both teams disclosed it: the harness injects this repo's own instruction
+  file into a subagent's context, so a future run of this instrument must strip
+  the harness context and not only the input set. NEXT in this lane is the
+  alignment pass — the only role permitted to read both sides, three buckets,
+  every divergence adjudicated with the legacy row's own rationale read FIRST —
+  then filing the consolidations that earn a row. The lane also carries the debt
+  the wi483 decomposition handed on: the module-size ratchet's live debt owner,
+  and M-06's four unsplit test monoliths.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the

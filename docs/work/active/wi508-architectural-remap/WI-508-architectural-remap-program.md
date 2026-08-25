@@ -171,3 +171,67 @@ approval act is claimed and none was needed.
 **Watermarks** `LLR` 202 → 204, `TC` 198 → 200, via `trace.py
 --bump-ids`. Record:
 [../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md).
+
+### SLICE 2 LANDED 2026-08-25 — the blind derivation ran, on two axes
+
+**The brief was written and recorded BEFORE either agent ran**, so the question
+cannot be re-written to fit the answer:
+[../../../plans/2026-08-25-blind-minimal-map-brief.md](../../../plans/2026-08-25-blind-minimal-map-brief.md).
+Two agents derived the minimal module map from a **five-file input set** — the
+purpose statement, the needs, the requirements, the depth-0 frame and the hat
+roster — with the design tier, the component and interface registries, the
+process masters and the source tree all held out, each for a stated reason. Two
+axes, per the precedent that two teams on the SAME axis mostly agree and tell
+you little: **A worked backwards from the declared boundary outputs**, **B
+clustered obligations by shared signal and failure mode**.
+
+Returns, verbatim and durable:
+[a](../../../plans/2026-08-25-blind-derivation-a-outputs.md) (24 modules) ·
+[b](../../../plans/2026-08-25-blind-derivation-b-obligations.md) (23 modules) ·
+the record, the measured agreement and the disclosures:
+[../../../plans/2026-08-25-blind-minimal-map-derivation.md](../../../plans/2026-08-25-blind-minimal-map-derivation.md).
+
+**Agreement, measured rather than eyeballed.** Both returned complete forward
+assignments (75 SRs, no id twice), so the two maps are comparable as partitions:
+**97.2%** pair agreement over 2,775 SR pairs, and a best one-to-one module
+correspondence placing **63 of 75 (84%)** identically across 22 matched module
+pairs. Twelve SRs are placed differently — those are the places the requirements
+underdetermine the boundary, and they are listed in the record as INPUTS to the
+adjudication rather than as findings against either map.
+
+**The convergence the arithmetic cannot see, and the program's biggest result so
+far.** Team A's `F5` and Team B's `M03` own **zero SRs each** and are the same
+module: one home for the shape of a finding, its severity class, strict-mode
+escalation, vacuity, and how findings compose into an exit code. Two opposite
+axes independently invented it, and independently found that **no requirement
+states it** while eleven-to-thirteen rows each restate a fragment — with
+`SR-158`'s own acceptance conceding the hole in the corpus's own words. That is
+a missing requirement, not a layout defect, and it must NOT be filed as module
+work.
+
+**`SR-163` split the two teams on exactly the seam slice 1 wrote.** A assigned it
+to the spine-join checks, B to the package manifest — which is `LLR-204` against
+`LLR-203`. Two agents that could not see the registry cut along the same line the
+decomposition did.
+
+**THE BLINDNESS WAS NOT TOTAL, and both teams disclosed it unprompted.** Neither
+read one byte of this repository and both confined every read to the pack by
+absolute path — but the harness injected this repository's own instruction file
+(and for B a memory index) into their context BEFORE the brief, naming
+directories and several script filenames. Both checked their module names against
+that material, neither reproduced a filename as a module name, and both recorded
+declining the obvious shortcut of using the boundary registry's script
+enumeration as the module list. **The method finding: a future run must strip the
+harness context, not only the input set.** It belongs to this program, not to
+either team.
+
+**STILL OWED BY THIS ROW.** Slices 3 and 4, unchanged: the alignment pass (the
+only role permitted to read both sides, three buckets, every divergence
+adjudicated with the legacy side's own rationale read FIRST), then filing the
+consolidations that earn a row. The record's §6 carries two instructions for the
+alignment pass — weight a live divergence by whether A and B agreed there, and
+keep the requirement-level findings out of the module-work pile.
+
+**Deferred to the owner: nothing new.** The derivation commissions no act; it is
+one half of a diff. Record:
+[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md).
