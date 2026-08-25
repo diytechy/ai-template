@@ -307,17 +307,31 @@ def load_symbol_oracle(root):
     return oracle
 
 
-def load_declared_absences(path):
-    """`{path: reason}` from a declared-absences file, or `{}` when it is absent
-    (WI-308). Format is one `<path> — <reason>` per line, `#` comments and blanks
-    ignored; a line without the separator is skipped rather than fatal, so a
-    malformed entry degrades to "not declared" — the conservative direction, since
-    the failure mode of guessing is silencing a real rot."""
+def read_declared_absences(path):
+    """`(entries, unparsed)` for a declared-absences file — the whole parse,
+    both halves, the `docs/provenance-allow` split (`trace.read_provenance_allow`):
+    `entries` is `load_declared_absences`'s own `{path: reason}` (kept as a
+    separate, unchanged-return wrapper below since `tests/test_dogfood_sync.py`
+    reads it as a plain dict); `unparsed` is `[(lineno, line)]` for every
+    DECLARING line the grammar could not read — not blank, not a `#`-comment,
+    and carrying neither of the two accepted separators — so a malformed
+    entry is reported rather than silently read as an empty file
+    (`declared_absences_parse_findings`).
+
+    Grammar unchanged: one non-blank, non-`#`-comment line per entry, `<path>
+    <sep> <reason>` with `<sep>` an em dash or hyphen, space-padded either
+    side (` — ` or ` - `) — the two separators this file alone accepts — and
+    a `LIFECYCLE:`-prefixed reason marks a path whose presence is a legal
+    state (WI-369). Fail-soft in the LOUD direction, the same rule: a line
+    with neither separator DECLARES NOTHING and is dropped, counted as
+    unparsed rather than silently read as "no exception at all"."""
     if path is None or not path.is_file():
-        return {}
-    out = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
+        return {}, []
+    out, unparsed = {}, []
+    for lineno, raw in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        line = raw.strip()
         if not line or line.startswith("#"):
             continue
         for sep in (" — ", " - "):
@@ -325,7 +339,53 @@ def load_declared_absences(path):
                 p, reason = line.split(sep, 1)
                 out[p.strip().rstrip("/")] = reason.strip()
                 break
-    return out
+        else:
+            unparsed.append((lineno, line))
+    return out, unparsed
+
+
+def load_declared_absences(path):
+    """`{path: reason}` from a declared-absences file, or `{}` when it is absent
+    (WI-308). Format is one `<path> — <reason>` per line, `#` comments and blanks
+    ignored; a line without the separator is skipped rather than fatal, so a
+    malformed entry degrades to "not declared" — the conservative direction, since
+    the failure mode of guessing is silencing a real rot.
+
+    `read_declared_absences` is the same parse plus the malformed-line half,
+    for the caller (`main`, below) that also wants parse-honesty reporting.
+    This wrapper's signature and return shape are UNCHANGED on purpose:
+    `tests/test_dogfood_sync.py` calls it directly with a bare path and reads
+    a plain dict, so growing its return here would reach a module this row
+    does not own."""
+    return read_declared_absences(path)[0]
+
+
+def declared_absences_parse_findings(path):
+    """PARSE HONESTY for a declared-absences file, the
+    `kernel_allow_parse_findings` idiom (WI-519): a declaring line the
+    grammar cannot read is an explicit finding naming it, not a silent drop —
+    the other half of "declares nothing" is that it also grants no exemption,
+    and a malformed line that still reads like a live entry to a human is the
+    state most worth reporting. Reported at the FIRST unparsed line with a
+    count, not all of them, for the same reason `provenance_allow_parse_findings`
+    does: the fix is the same edit for every one.
+
+    The finding lands in `main`'s own `findings` list (the WARN-plain /
+    ERROR-under-`--strict` severity `check_doc_refs` already uses for a
+    dangling reference) — not in `tests/test_dogfood_sync.py`'s scaffold
+    walk, which reads `load_declared_absences` for its own assertion and owns
+    no reporting surface of its own (WI-519's own watch-for: the finding
+    belongs to whichever consumer already has one, not a second)."""
+    _entries, unparsed = read_declared_absences(path)
+    if not unparsed:
+        return []
+    lineno, line = unparsed[0]
+    return [
+        "{}:{}: this line DECLARES an absence and the grammar cannot read it "
+        "({} such line(s)) — `{}`. An entry is `<path> — <reason>` (an em "
+        "dash or hyphen, space-padded) and a bare path with no separator "
+        "suppresses nothing".format(path, lineno, len(unparsed), line[:80])
+    ]
 
 
 def untraced_reason(token, rel, root, kit_root, record_prefixes, absences=None):
@@ -767,9 +827,8 @@ def main():
     if kit_root is not None and not kit_root.is_dir():
         kit_root = None
     records = tuple(args.record_prefix) if args.record_prefix else RECORD_PREFIXES
-    absences = load_declared_absences(
-        (root / args.declared_absences) if args.declared_absences else None
-    )
+    absences_path = (root / args.declared_absences) if args.declared_absences else None
+    absences = load_declared_absences(absences_path)
     oracle = load_symbol_oracle(root)
     if not oracle:
         print(
@@ -777,6 +836,7 @@ def main():
             "— the sym: tier is skipped (path tier still runs)."
         )
     findings, untraced = [], []
+    findings += declared_absences_parse_findings(absences_path)
     for doc in doc_files(root):
         found, explained = findings_for(doc, root, oracle, kit_root, records, absences)
         findings += found

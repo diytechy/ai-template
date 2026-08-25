@@ -1012,21 +1012,20 @@ def interface_findings(root):
 # WI-488) -------------------------------------------------------------------
 
 
-def parse_if_tc_allow(text):
-    """`([(id, reason-or-None), ...] in file order, declared seed count or
-    None)` for one allowlist file's TEXT.
-
-    The SEED COUNT is a machine-readable header key, `# seed-count: <int>`,
-    naming how many of the entries below are the migration BASELINE — the
-    population measured when the promotion was seeded, which shares one reason
-    stated once in the header rather than repeated per line. Entries past that
-    count are ADDITIONS, and an addition is a judgment someone made, so it
-    carries its own ` — <reason>`. A file that declares no seed count has no
-    baseline to grow past; every entry is then read as seeded, which is what an
-    adopter's freshly-seeded file looks like before it has ever grown."""
+def _parse_if_tc_allow_full(text):
+    """`(entries, seed, unparsed)` — the whole parse, both halves, the
+    `docs/provenance-allow` split (`trace.read_provenance_allow`): `entries`
+    and `seed` are exactly `parse_if_tc_allow`'s return (kept as a separate,
+    pinned-arity wrapper below since `tests/test_trajectory_arch.py` unpacks
+    it as a 2-tuple); `unparsed` is `[(lineno, line)]` for every DECLARING
+    line the grammar dropped — not blank, not a `#`-comment, and whose first
+    token does not parse as an `IF-###` id — so a malformed entry is reported
+    rather than silently read as an empty file
+    (`if_tc_allow_parse_findings`)."""
     entries = []
     seed = None
-    for raw in text.splitlines():
+    unparsed = []
+    for lineno, raw in enumerate(text.splitlines(), start=1):
         line = raw.strip()
         if not line:
             continue
@@ -1039,6 +1038,29 @@ def parse_if_tc_allow(text):
         token = head.split()[0] if head.split() else ""
         if IF_ID_RE.fullmatch(token):
             entries.append((token, reason.strip() or None))
+        else:
+            unparsed.append((lineno, line))
+    return entries, seed, unparsed
+
+
+def parse_if_tc_allow(text):
+    """`([(id, reason-or-None), ...] in file order, declared seed count or
+    None)` for one allowlist file's TEXT.
+
+    The SEED COUNT is a machine-readable header key, `# seed-count: <int>`,
+    naming how many of the entries below are the migration BASELINE — the
+    population measured when the promotion was seeded, which shares one reason
+    stated once in the header rather than repeated per line. Entries past that
+    count are ADDITIONS, and an addition is a judgment someone made, so it
+    carries its own ` — <reason>`. A file that declares no seed count has no
+    baseline to grow past; every entry is then read as seeded, which is what an
+    adopter's freshly-seeded file looks like before it has ever grown.
+
+    `_parse_if_tc_allow_full` is the same parse plus the malformed-line half;
+    this wrapper's 2-tuple return is pinned by
+    `test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set`, so it stays
+    exactly as it was rather than growing a third element."""
+    entries, seed, _unparsed = _parse_if_tc_allow_full(text)
     return entries, seed
 
 
@@ -1235,6 +1257,44 @@ def if_tc_allow_hygiene_findings(root):
             )
         )
     return out
+
+
+def if_tc_allow_parse_findings(root):
+    """PARSE HONESTY for `docs/if-tc-coverage-allow`, the
+    `kernel_allow_parse_findings` idiom (WI-519): a declaring line the grammar
+    cannot read is an explicit finding naming it, not a silent drop — the
+    other half of "declares nothing" is that it also grants no exemption, and
+    a malformed line that still reads like a live entry to a human is the
+    state most worth reporting. Reported at the FIRST unparsed line with a
+    count, not all of them, for the same reason `provenance_allow_parse_findings`
+    does: the fix is the same edit for every one.
+
+    Shares `if_tc_coverage_findings`' `[checks] interfaces_check` opt-out —
+    deliberately NOT its ≤1-module arch-map vacuity, unlike that function and
+    `if_tc_allow_hygiene_findings`: a malformed line is a fact about the FILE,
+    not about whether the tree is currently large enough for the coverage
+    rule to have anything to say, the same reasoning
+    `kernel_allow_parse_findings` gives for riding only `components_check`
+    and not the top-view bound."""
+    if not read_interfaces_check_enabled(root):
+        return []
+    path = Path(root) / IF_TC_ALLOW
+    if not path.is_file():
+        return []
+    _entries, _seed, unparsed = _parse_if_tc_allow_full(
+        path.read_text(encoding="utf-8-sig", errors="replace")
+    )
+    if not unparsed:
+        return []
+    lineno, line = unparsed[0]
+    return [
+        "{}:{}: this line DECLARES a seam-TC exception and the grammar cannot "
+        "read it ({} such line(s)) — `{}`. An entry's first token is an "
+        "IF-### id, optionally followed by ` — <reason>`; a token that does "
+        "not parse as IF-### suppresses nothing".format(
+            IF_TC_ALLOW, lineno, len(unparsed), line[:80]
+        )
+    ]
 
 
 # --- Implements-tag vs CodeSymbol crosscheck (WI-502; OI-53 ruled (d)) --------
@@ -4746,7 +4806,7 @@ def main():
     # does: the finding is a property of the arch-map + interfaces + TCs, not of
     # the WI registry, so a repo with no work items still gets it.
     if_tc_errors = []
-    for msg in if_tc_coverage_findings(root):
+    for msg in if_tc_coverage_findings(root) + if_tc_allow_parse_findings(root):
         if args.strict:
             if_tc_errors.append(msg)
         else:

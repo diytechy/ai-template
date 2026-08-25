@@ -281,6 +281,38 @@ def test_absences_file_absent_or_malformed_never_silences(tmp_path):
     assert "docs/review-cadence` does not exist" in proc.stderr
 
 
+def test_declared_absences_malformed_line_is_reported_by_name_and_line(tmp_path):
+    # PARSE HONESTY (WI-519): dropping a malformed entry un-silences the
+    # dangling finding it was written to silence (the test above), but it
+    # also removes the entry from every COUNT — the `docs/provenance-allow`
+    # arm, carried here as the second of the three readers that lacked it.
+    make_repo(tmp_path, "See `docs/review-cadence`.\n")
+    (tmp_path / "docs" / "declared-absences").write_text(
+        "# a comment declares nothing, and is not counted\n"
+        "docs/review-cadence — a fine entry\n"
+        "docs/nope-one\n"
+        "docs/nope-two\n",
+        encoding="utf-8",
+    )
+    plain = refs(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "declared-absences:3" in plain.stderr
+    assert "2 such line(s)" in plain.stderr
+    assert "grammar cannot read it" in plain.stderr
+    strict = refs(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "grammar cannot read it" in strict.stderr
+
+    # A well-formed file stays silent on this arm (the dangling finding it
+    # would otherwise leave behind is exactly the test above).
+    (tmp_path / "docs" / "declared-absences").write_text(
+        "docs/review-cadence — a fine entry\n", encoding="utf-8"
+    )
+    clean = refs(tmp_path, "--strict")
+    assert "grammar cannot read it" not in clean.stderr
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+
+
 # --- WI-396: a LINE-SUFFIXED citation is the path it names --------------------
 # `docs/x.md:40-41` defeated the extension test, so every suffixed token fell to
 # PATH_PREFIXES — the DOWNSTREAM layout — and a suffixed reference into the kit's

@@ -1,7 +1,7 @@
 +++
 id = "WI-519"
 title = "Carry the allow-file parse-honesty arm to the three declared exception readers that drop a malformed line silently"
-specref = "docs/plans/2026-08-25-remap-alignment.md"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = []
@@ -9,6 +9,50 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+All five declared-exception readers now report a DECLARING line their grammar
+cannot read, instead of silently dropping it. `docs/provenance-allow`
+(`trace.read_provenance_allow`) and `docs/kernel-modules-allow`
+(`check_trajectory._parse_kernel_allow`) already had the arm; this row carries
+it to the three that lacked it, each keeping its own grammar, required fields
+and fail-safe direction — nothing merged, no grammar changed:
+
+- `docs/if-tc-coverage-allow` — `check_trajectory._parse_if_tc_allow_full`
+  (the whole parse: entries, seed, unparsed) behind `parse_if_tc_allow`'s
+  UNCHANGED, pinned 2-tuple return (`test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set`
+  unpacks it directly). Consumer: `if_tc_allow_parse_findings`, wired into
+  `main()`'s `if_tc_errors` block beside `if_tc_coverage_findings` — same
+  WARN-plain / ERROR-under-`--strict` severity, same `[checks]
+  interfaces_check` opt-out; deliberately NOT that function's ≤1-module
+  vacuity, since a malformed line is a fact about the file, not about
+  whether the coverage rule has anything to say.
+- `docs/declared-absences` — `check_doc_refs.read_declared_absences`
+  (entries, unparsed) behind `load_declared_absences`'s UNCHANGED signature
+  and return shape (`tests/test_dogfood_sync.py` calls it directly with a
+  bare path). Consumer: `declared_absences_parse_findings`, folded into
+  `main()`'s own `findings` list — the same WARN-plain / ERROR-under-`--strict`
+  severity a dangling reference already gets. The finding lands in
+  `check_doc_refs`'s reporting surface, not in the dogfood scaffold walk,
+  which owns none.
+- `docs/need-form-allow` — `check_need_form.read_need_form_allow` (tokens,
+  unparsed) behind `load_allow`'s UNCHANGED return. Consumer:
+  `need_form_allow_parse_findings`, printed in `main()` at the same
+  WARN-always / ERROR-only-under-its-own-`--strict` severity the checker's
+  need-cell findings already use (still not wired into `check.py` at any
+  bar — WI-454's scope guard, unchanged).
+
+Each new finding is driven by a test that fails without it (verified RED
+against the pre-fix functions, then GREEN after): a malformed line reported
+by file and line number, a well-formed file staying silent. The fail-safe
+direction is unchanged everywhere — a malformed entry still grants no
+exemption, before and after. The live tree's five allow files were
+re-verified to parse to exactly what they parsed to before this row on the
+full bar; no existing entry needed an edit. `project-trajectory/RESYNC_PACK.md`
+gained an entry (all three touched modules ship). `tests/test_module_size_ratchet.py`
+re-stamped `check_trajectory.py` 4903 -> 4963 (+60), reason recorded at the
+site. Record: [../../log.d/2026-08-25-wi519-allow-file-parse-honesty.md](../../../log.d/2026-08-25-wi519-allow-file-parse-honesty.md).
 
 ## Context
 

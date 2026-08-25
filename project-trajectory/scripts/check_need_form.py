@@ -182,24 +182,79 @@ def _looks_like_path(token, root=None):
         return False
 
 
+def read_need_form_allow(root):
+    """`(tokens, unparsed)` for `docs/need-form-allow` — the whole parse, both
+    halves, the `docs/provenance-allow` split (`trace.read_provenance_allow`):
+    `tokens` is `load_allow`'s own set (kept as a separate, unchanged-return
+    wrapper below); `unparsed` is `[(lineno, line)]` for every DECLARING line
+    the grammar could not read — not blank, not a `#`-comment, and carrying
+    no ` — ` separator — so a malformed entry is reported rather than
+    silently read as an empty file (`need_form_allow_parse_findings`).
+
+    Absent file: `(set(), [])` (the list ships empty). Fail-soft in the LOUD
+    direction, the same rule: a line with no separator declares nothing and
+    is dropped, counted as unparsed rather than silently read as "no
+    exception at all"."""
+    path = Path(root) / ALLOW
+    if not path.is_file():
+        return set(), []
+    out, unparsed = set(), []
+    for lineno, raw in enumerate(
+        path.read_text(encoding="utf-8-sig", errors="replace").split("\n"), start=1
+    ):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ALLOW_SEP not in line:
+            unparsed.append((lineno, line))
+            continue
+        token = line.split(ALLOW_SEP, 1)[0].strip()
+        if token:
+            out.add(token)
+    return out, unparsed
+
+
 def load_allow(root):
     """The reviewed exception tokens from `docs/need-form-allow`, as a set.
 
     Absent file: empty set (the list ships empty). A line with no separator
     declares nothing — loud-direction fail-soft: the worst a malformed entry
-    can do is leave a finding reported."""
+    can do is leave a finding reported.
+
+    `read_need_form_allow` is the same parse plus the malformed-line half,
+    for `main`'s own parse-honesty reporting."""
+    return read_need_form_allow(root)[0]
+
+
+def need_form_allow_parse_findings(root):
+    """PARSE HONESTY for `docs/need-form-allow`, the
+    `kernel_allow_parse_findings` idiom (WI-519): a declaring line the
+    grammar cannot read is an explicit finding naming it, not a silent drop —
+    the other half of "declares nothing" is that it also grants no exemption,
+    and a malformed line that still reads like a live entry to a human is the
+    state most worth reporting. Reported at the FIRST unparsed line with a
+    count, not all of them, for the same reason `provenance_allow_parse_findings`
+    does: the fix is the same edit for every one.
+
+    Shares this checker's own WARN-plain / ERROR-under-`--strict` severity
+    (`main`, below) — there is no separate opt-out to ride here, unlike the
+    kernel/interfaces siblings: `check_need_form` is not wired into `check.py`
+    at any bar (WI-454's scope guard), so its `--strict` flag is the whole
+    dial."""
     path = Path(root) / ALLOW
     if not path.is_file():
-        return set()
-    out = set()
-    for line in path.read_text(encoding="utf-8-sig", errors="replace").split("\n"):
-        line = line.strip()
-        if not line or line.startswith("#") or ALLOW_SEP not in line:
-            continue
-        token = line.split(ALLOW_SEP, 1)[0].strip()
-        if token:
-            out.add(token)
-    return out
+        return []
+    _tokens, unparsed = read_need_form_allow(root)
+    if not unparsed:
+        return []
+    lineno, line = unparsed[0]
+    return [
+        "{}:{}: this line DECLARES an exception and the grammar cannot read "
+        "it ({} such line(s)) — `{}`. An entry is `<token> — <reason>` and a "
+        "bare token with no separator suppresses nothing".format(
+            ALLOW, lineno, len(unparsed), line[:80]
+        )
+    ]
 
 
 def need_findings(needs, allow, root=None):
@@ -283,6 +338,7 @@ def main():
     args = ap.parse_args()
 
     findings, scanned, vacuous = scan(args.root)
+    allow_parse_findings = need_form_allow_parse_findings(args.root)
     label = "check_need_form: ERROR" if args.strict else "check_need_form: WARN"
     if vacuous:
         print(
@@ -291,6 +347,8 @@ def main():
             "is not a clean tier: the registry this check guards has been "
             "emptied or lost its schema (SN-008; round-1 review find)".format(label)
         )
+    for msg in allow_parse_findings:
+        print("{} - {}".format(label, msg))
     for rid, cls, phrase in findings:
         article = "an" if cls[0] in "aeiou" else "a"
         print(
@@ -300,7 +358,7 @@ def main():
                 label, rid, article, cls, phrase, ALLOW
             )
         )
-    total = len(findings) + (1 if vacuous else 0)
+    total = len(findings) + len(allow_parse_findings) + (1 if vacuous else 0)
     if not total:
         print(
             "check_need_form: clean ({} need cell(s); no internal path, "

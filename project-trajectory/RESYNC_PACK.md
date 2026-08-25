@@ -3875,6 +3875,54 @@ shadowed at the next re-sync.
 `SR-018` / `SR-176` and their LLR rows are unchanged; this is an
 implementation consolidation under the same obligations, not a new one.
 
+### The allow-file parse-honesty arm reaches three more declared exception readers [since e1c01f2b]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/check_trajectory.py`,
+`scripts/check_doc_refs.py`, `scripts/check_need_form.py`.
+
+**Three more declared-exception readers now REPORT a declaring line their
+grammar cannot read, instead of silently dropping it.** `docs/provenance-allow`
+and `docs/kernel-modules-allow` already did this (a malformed line grants no
+exemption either way — fail-safe, unchanged — but a drop that also removes the
+entry from every COUNT was itself worth reporting, `trace.read_provenance_allow`'s
+own docstring argues why). The same arm now reaches `docs/if-tc-coverage-allow`
+(`check_trajectory.if_tc_allow_parse_findings`), `docs/declared-absences`
+(`check_doc_refs.declared_absences_parse_findings`) and `docs/need-form-allow`
+(`check_need_form.need_form_allow_parse_findings`). Nothing is merged: each of
+the five files keeps its own grammar, its own required fields and its own
+fail-safe direction — only the "a malformed line is worth naming" behavior is
+now uniform.
+
+**What you may notice:** nothing, unless one of your three files already
+carries a line the grammar cannot read (no separator; for
+`docs/if-tc-coverage-allow`, a first token that does not parse as `IF-###`) —
+in which case the next run reports it where it did not before:
+
+- `check_trajectory` — a malformed `docs/if-tc-coverage-allow` line rides
+  `if_tc_coverage_findings`' own `[checks] interfaces_check` opt-out and its
+  WARN-plain / ERROR-under-`--strict` severity (unlike that function, it does
+  NOT share the ≤1-module arch-map vacuity — a malformed line is a fact about
+  the file, not about whether the coverage rule currently has anything to say).
+- `check_doc_refs` — a malformed `docs/declared-absences` line joins the same
+  `findings` list a dangling reference does: WARN plain, `--strict` gates.
+- `check_need_form` — a malformed `docs/need-form-allow` line shares that
+  checker's own WARN-always / ERROR-only-under-its-own-`--strict` severity
+  (still not wired into `check.py` at any bar).
+
+Every well-formed file behaves exactly as before — this repo's own five allow
+files were re-verified to parse to what they parsed to before this change; no
+existing entry needs an edit.
+
+**If you had a local patch to any of the five parsers** — `check_doc_refs.
+load_declared_absences` and `check_need_form.load_allow` keep their exact
+prior signatures and return shapes (a new sibling accessor,
+`read_declared_absences`/`read_need_form_allow`, carries the malformed-line
+half instead), and `check_trajectory.parse_if_tc_allow` keeps its pinned
+2-tuple return for the same reason. Re-apply your patch to whichever function
+you touched; nothing downstream of it needed to change shape.
+
 ---
 
 ## 5. Promotion: when this pack stops being prose

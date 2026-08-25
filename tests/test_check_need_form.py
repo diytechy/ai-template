@@ -84,6 +84,41 @@ def test_an_allow_line_with_no_reason_separator_declares_nothing(tmp_path):
     assert "PROJECT_STATE.html" in form(tmp_path).stdout
 
 
+def test_a_malformed_allow_line_is_reported_by_name_and_line(tmp_path):
+    # PARSE HONESTY (WI-519): `docs/provenance-allow` and
+    # `docs/kernel-modules-allow` already report a declaring line the grammar
+    # cannot read, rather than silently reading it as an empty file — this
+    # carries the same arm to `docs/need-form-allow`, the third of the three
+    # readers that lacked it.
+    need = "A stakeholder opens PROJECT_STATE.html and sees the plan's state."
+    make_repo(
+        tmp_path,
+        need,
+        allow="# reviewed exceptions\n"
+        "PROJECT_STATE.html — the dashboard IS the user-facing interface\n"
+        "bad-line-one\n"
+        "bad-line-two\n",
+    )
+    plain = form(tmp_path)
+    assert plain.returncode == 0, plain.stdout
+    assert "docs/need-form-allow:3" in plain.stdout
+    assert "2 such line(s)" in plain.stdout
+    assert "grammar cannot read it" in plain.stdout
+    strict = form(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "grammar cannot read it" in strict.stdout
+
+    # A well-formed file stays silent on this arm.
+    make_repo(
+        tmp_path,
+        need,
+        allow="PROJECT_STATE.html — the dashboard IS the user-facing interface\n",
+    )
+    clean = form(tmp_path, "--strict")
+    assert "grammar cannot read it" not in clean.stdout
+    assert clean.returncode == 0, clean.stdout
+
+
 def test_acceptance_and_why_cells_are_exempt_by_sn033s_own_text(tmp_path):
     make_repo(
         tmp_path,

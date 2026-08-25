@@ -620,6 +620,72 @@ def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
     assert len(grown) == 1 and "suppress nothing" not in grown[0]
 
 
+def test_if_tc_allow_entry_that_does_not_parse_as_an_id_is_reported(tmp_path):
+    # PARSE HONESTY (WI-519): `docs/provenance-allow` and
+    # `docs/kernel-modules-allow` already report a declaring line the grammar
+    # cannot read, rather than silently reading it as an empty file — this
+    # carries the same arm to `docs/if-tc-coverage-allow`, the last of the
+    # three readers that lacked it.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
+        "# seed-count: 0\n"
+        "IF-001 — a fine entry\n"
+        "not-an-id — this token does not parse as IF-###\n"
+        "also bad\n",
+        encoding="utf-8",
+    )
+    findings = check_trajectory.if_tc_allow_parse_findings(tmp_path)
+    assert len(findings) == 1, findings
+    assert "if-tc-coverage-allow:3" in findings[0]
+    assert "2 such line(s)" in findings[0]
+    assert "grammar cannot read it" in findings[0]
+
+    # A well-formed file stays silent on this arm.
+    (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
+        "# seed-count: 0\nIF-001 — a fine entry\n", encoding="utf-8"
+    )
+    assert check_trajectory.if_tc_allow_parse_findings(tmp_path) == []
+
+
+def test_if_tc_allow_parse_honesty_shares_the_interfaces_check_opt_out(tmp_path):
+    # Shares `if_tc_coverage_findings`' own `[checks] interfaces_check`
+    # opt-out — the file is part of the interfaces layer, not a
+    # spine-integrity surface, so it rides that gate the same way
+    # `kernel_allow_parse_findings` rides `components_check`.
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "if-tc-coverage-allow").write_text(
+        "not-an-id\n", encoding="utf-8"
+    )
+    (tmp_path / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
+    assert check_trajectory.if_tc_allow_parse_findings(tmp_path) == []
+
+
+def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):
+    # The same fixture `test_a_bare_addition_past_the_seed_suppresses_nothing`
+    # uses, proving the new arm rides the real `main()` wiring at the same
+    # WARN-plain / ERROR-under-`--strict` severity `if_tc_coverage_findings`
+    # already uses, not a parallel channel.
+    write_arch(tmp_path, ARCH_2MOD)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    allow = tmp_path / "docs" / "if-tc-coverage-allow"
+    allow.write_text("# seed-count: 0\nnot-an-id\n", encoding="utf-8")
+    plain = run_traj(tmp_path)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "grammar cannot read it" in plain.stderr
+    strict = run_traj(tmp_path, "--strict")
+    assert strict.returncode == 1
+    assert "grammar cannot read it" in strict.stderr
+
+
 def test_seam_tc_promotion_shares_the_one_module_vacuity(tmp_path):
     # <=1 module: the promotion must arm on no MORE than the warn it promotes
     # (test_single_module_inventory_is_vacuous, above) — an uncited seam here
