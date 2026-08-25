@@ -308,7 +308,7 @@ def approval_stamp(root):
                 "-1",
                 "--format=%h %cs",
                 "-G",
-                r'^\s*(status|Status)\s*=\s*"',
+                r'^[[:space:]]*(status|Status)[[:space:]]*=[[:space:]]*"',
                 "--",
                 *SNAPSHOTTED,
             ],

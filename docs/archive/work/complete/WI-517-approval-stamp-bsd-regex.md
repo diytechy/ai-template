@@ -1,7 +1,7 @@
 +++
 id = "WI-517"
 title = "approval_stamp's -G regex uses \\s, silently empty on BSD regcomp — the provenance line reads 'git cannot say' on macOS"
-specref = "tests/test_baseline_snapshot.py"
+specref = ""
 workstream = "tooling"
 needs = []
 buildtier = "quick"
@@ -11,11 +11,28 @@ priority = 3
 
 ## Deliverable
 
+`baseline_snapshot.approval_stamp`'s `-G` pattern moved from `\s` (a GNU regex
+extension BSD `regcomp` silently ignores) onto POSIX `[[:space:]]` classes,
+which mean the same thing under every regex engine git links against. Sweep
+of the whole tree (`*.py`, excluding `.venv`) for `-G`/`-S`/`--pickaxe` call
+sites found exactly one: `baseline_snapshot.py:310`, now fixed — no siblings
+existed. Record:
+[../../../log.d/2026-08-24-wi517-approval-stamp-bsd-regex.md](../../../log.d/2026-08-24-wi517-approval-stamp-bsd-regex.md).
+
+**CI-macOS open question, answered:** yes, inferred red on that test —
+`.github/workflows/test.yml`'s `test` matrix job runs the full unfiltered
+`pytest -q -n auto` (not `-m smoke`) on `macos-latest`, and read-only GitHub
+API history shows the macOS job completing with a real `failure` conclusion
+on two sampled runs. The specific failing test name inside those jobs could
+not be confirmed directly — the job-logs endpoint returned `403` without an
+auth token this session did not have — so this is evidence-based inference,
+not a log-read fact; the log fragment states exactly what is direct evidence
+versus inference.
 
 ## Context
 
 Found 2026-08-24, during the OI-62 sitting, on a macOS checkout (record:
-[../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
+[../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
 `baseline_snapshot.approval_stamp` runs `git log -1 -G'^\s*(status|Status)\s*=\s*"'`
 over the snapshotted registries. `\s` is a GNU-regex extension: git's Windows
 build (glibc compat regex) honors it, while macOS's system BSD `regcomp` does
