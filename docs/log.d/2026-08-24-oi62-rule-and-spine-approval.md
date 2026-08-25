@@ -35,7 +35,7 @@ per-family numbers. The 5 ambiguous (d) findings triage inside tranche 1.
 `safety_class = "ordinary"` (deliberate, argued in the spec: the pass writes
 no registry cell — the care lives in the tier, not the class), workstream
 `requirements`, `needs = []`, priority 2 —
-[../work/queued/WI-516-if-contract-e-measure.md](../work/queued/WI-516-if-contract-e-measure.md).
+[../archive/work/complete/WI-516-if-contract-e-measure.md](../archive/work/complete/WI-516-if-contract-e-measure.md).
 Watermark `WI 515 -> 516` via `trace.py --bump-ids`.
 
 ### Act 2 — the spine approval, executed against the corrected brief
