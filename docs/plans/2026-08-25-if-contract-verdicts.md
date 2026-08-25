@@ -335,3 +335,33 @@ above, with non-crossing letters after a semicolon.
 | `IF-141` | 156 | 148 | 8 | 0 | D | LLR-183 states the derivation verbatim. KEPT: 'sorted'. The ONE row in the registry carrying a `rationale` cell - the schema's own home for the argument every other row puts in `contract`. |
 | `IF-142` | 346 | 346 | 0 | 0 | — | keep_examples is a harvested signature parameter; the -000 convention is the kit's declared one. Zero remainder. |
 | `IF-143` | 396 | 138 | 138 | 120 | D,B;X | KEPT: the two module-naming conventions the normalizer reconciles, and the one-normalizer guarantee. A (d) tripwire row. |
+
+## Cross-review addendum (2026-08-25, after the close)
+
+An owner-requested cross-family second opinion (`OPENAI-SOL`, record:
+[../reviews/2026-08-25-oi63-brief-round/](../reviews/2026-08-25-oi63-brief-round/RESUME.md))
+re-summed this document's table EXACT, re-verified both rot exhibits, and
+AGREED on 12 of 15 spot-checked rows. No verdict line above is edited; the
+three DISAGREE rows are flagged here as re-adjudication candidates for the
+follow-on pass, with the reviewer's evidence:
+
+- `IF-050` - the kept clause "every consumer reads it through
+  kitlib.stage.read_stage" is a FALSE UNIVERSAL: `kitlib/stage.py`'s own
+  "WHO THE FRESHNESS GUARANTEE COVERS" block states the display surfaces
+  (`traj_parse._stage_value`, `traj_status._stage_facts`) deliberately parse
+  the recorded file directly. Verified in-tree at adjudication. The clause is
+  a correction candidate, not a relocation candidate as written.
+- `IF-061` - "legacy work-items.csv rows via dual-write" describes a retired
+  mechanism as live (CSV append retired at `plan_artifacts.py`); the live
+  compatibility guarantee (allocation over ids in both homes) should be split
+  from the rot before its class is settled.
+- `IF-098` - part of the 219-character remainder (the returned tuple, the
+  purity claim) is recoverable from `catalog_rows()`/`render()`'s public
+  docstrings (an R2 surface); plausibly only the negative "and nothing else"
+  and the never-disagree guarantee remain. Needs remeasurement.
+
+The reviewer also holds that class F (consumer-side obligation) is an
+ownership axis over clauses rather than a clause kind - `IF-116` is `D,B,F`,
+`IF-124` is `F,D` - and that a provider-side header CAN state a caller
+precondition (what it cannot do is keep the consumer synchronized). OI-63
+carries that qualification where it bears on the options.
