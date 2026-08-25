@@ -235,3 +235,97 @@ keep the requirement-level findings out of the module-work pile.
 **Deferred to the owner: nothing new.** The derivation commissions no act; it is
 one half of a diff. Record:
 [../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md).
+
+### SLICES 3 AND 4 LANDED 2026-08-25 — the alignment, one WI filed, one question to the owner
+
+Full record:
+[../../../plans/2026-08-25-remap-alignment.md](../../../plans/2026-08-25-remap-alignment.md).
+
+**The live side was read the way the registry defines it** — an LLR row's
+`module` cell joined through its `sr_refs` — so `SR` → `{modules}` is a join
+that already exists and no judgement enters until the numbers are down. **75
+SRs, 186 LLRs, 83 distinct modules named, and ZERO scripts named by no `Module`
+cell.** Three-way pair agreement over the 71 SRs comparable on all three sides:
+**A↔live 94.6%, B↔live 94.8%, A↔B 97.0%**.
+
+**The fact that governs every disposition below: the live map is ~3.5× finer
+than either derived map** (83 named modules against 24 and 23). A derived module
+is a responsibility cluster; a live module is a file; several files realize one
+cluster with no duplication provided they call a shared stage. So the question
+is never "do these live in one file" but **"does each home re-implement the
+behaviour, or do they all call one home for it?"** — *calls, not lines*, applied
+as a test rather than quoted.
+
+**THE TWELVE DISPOSITIONS: 10 keep-with-recorded-reason, 2 keep-with-the-reason-
+absent, 0 consolidate, 0 requirement gap.** That is not a shrug — the twelve are
+exactly the set where the two blind maps DISAGREED, so a live choice cannot be
+convicted against a derived answer that does not exist. Two of them refute a
+derived map's prediction by measurement: `SR-173` (B predicted the regeneration
+order would be duplicated if the seam owned it — it is stated in exactly one
+place, with its reason on `LLR-142`) and `SR-174` (B predicted non-reuse would
+live away from the mark that proves it — `intake.next_wi_id` CALLS
+`trace.read_watermark` and deliberately does not catch its refusal). Two more,
+`SR-043` and `SR-024`, sit at the alternative the deriving team had already
+named and rejected in its own honesty section. The two thin ones (`LLR-024`,
+`LLR-033`) carry a defensible module and no `Rationale`; both rows are
+`Approved`, so writing one is an amendment over an attestation and **the
+owner's act, not a worker's** — banked, not fixed.
+
+**THE CONSOLIDATION EVIDENCE IS WHERE A AND B AGREED** (47 dispersion pairs),
+and the shared-stage test dissolved most of it:
+- **Declaration reading — REFUTED.** 38 modules import the shared
+  `kitlib.config` stage and only `config.py` defines a declared-line reader. The
+  largest apparent dispersion is one home with 38 callers.
+- **Measured-value-versus-baseline — REFUSED, and the refusal matters.** Merging
+  `check_perf`'s gating engine with the duplication census would put the
+  disposition behind one interface and leave an owner ruling (`D-7`, which tore
+  down a gated duplication step) one refactor from being undone.
+- **Derived-copy freshness — REFUTED.** Team A predicted the largest saving in
+  its map; each `--check` is `render() != read()` reusing the generator's own
+  renderer, so what a shared module absorbs is lines, not calls.
+- **Declared exception lists — UPHELD, and the rationale SHAPED it.** Five files,
+  five parsers, five recorded and genuinely different grammars — a blanket merge
+  would flatten five arguments. What the reading surfaced is narrower and is a
+  live defect the repo diagnosed in its own words: the parse-honesty arm
+  (a malformed declaring line is REPORTED, not swallowed) exists on two readers,
+  is argued in `read_provenance_allow`'s docstring, was adopted by
+  `_parse_kernel_allow` by explicit reference, and is **missing from three**.
+
+**FILED (slice 4): `WI-519`** — carry the parse-honesty arm to the three, each
+keeping its own grammar and fail-safe direction. `medium` / `ordinary`, no
+`needs`: `WI-448` and `WI-483` are both closed-archived, so there is no parent
+lane to feed and the row does not wait on this program.
+
+**DECLINED, each with its reason on the record:** the two refuted families above;
+the 48 FUSION pairs (A and B agree apart, live fuses — clustered on `agent_loop`
+14, `check_trajectory` 13, `agent_common` 10, `bootstrap` 5), which restate the
+module-size ratchet's existing debt from the requirements side and are recorded
+as corroboration rather than filed as a rival program; and the census
+blind-spot finding below.
+
+**A FINDING ABOUT THE INSTRUMENT, recorded and deliberately NOT filed.** The
+standing duplication census reads **0 / 0 / 0** on this tree while this pass
+confirmed a real repeated behaviour. No fault in the census: it hashes function
+BODIES, so it measures textual duplication, and every family here is structural
+— the same behaviour written differently. That is the blind derivation's
+measurable value over the standing instrument. It is not a WI because the remedy
+is not obvious and the census's own header routes changes through the owner on
+`D-7`'s strength, where an over-eager duplication gate was torn down after 93%
+of its findings proved to be accepted idioms.
+
+**TO THE OWNER: `OI-64`** — the zero-SR module both teams derived is a
+REQUIREMENT gap, not a layout defect. The finding/severity/strict-escalation/
+vacuity/exit-composition contract is restated in 11–13 rows and stated by none,
+with `SR-158` declaring itself unsatisfied for want of a declaration surface no
+row owns. Four options, recommendation (c) then (a) — measure whether the
+shipped checkers honour ONE contract before minting a row that might land red.
+**No module work was filed against it**, and the row says so, so a later reader
+cannot mistake it for a deferred refactor.
+
+**STILL OWED BY THIS ROW.** The program is NOT complete. Outstanding: the
+remaining dispersion families each need their own shared-stage test and their own
+rationale read (naming them without that reading is what the standing directive
+refuses); the 48 fusion pairs want routing to the size-ratchet debt rather than
+re-derivation; `OI-64` awaits a ruling; and the two inherited items are
+undischarged — the module-size ratchet's debt pointer still names this row, and
+M-06's four test monoliths are still unsplit.
