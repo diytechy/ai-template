@@ -2399,11 +2399,13 @@ TRANCHE THE MEASUREMENT ANYWAY: (e) should be run by row family, for (b)'s own r
 THE STRONGEST CASE AGAINST THIS RECOMMENDATION, stated so a ruler can take it: (b)'s edit is mostly DURABLE under relocation. The crossing statement ("SR-006's obligation delivered as a CLI at check.py; crosses B-05") is a better cell than what it replaced whichever way the placement question is ruled, and it is the large majority of the change by character count - so the double-authoring (e) avoids applies only to the 12.3% remainder, and a ruler who reads that as small overhead against a full session's delay in removing 108 rows of restatement should take (b) and let the relocation question ride on the cells as thinned. That is a reasonable ruling and the disagreement is narrow. The reason the driver does not land there: the placement question is the one with a KIT-WIDE, every-adopter answer, and it is easier to ask honestly with a number in hand and an unedited registry than after 108 rows have been re-authored into the shape that presumes the answer.
 
 TWO THINGS (e) MUST CARRY IF RULED, or it is worse than (b) rather than better: the per-row verdicts must be recorded durably enough to be the follow-on pass's INPUT (otherwise the second pass re-reads and (e) is a pure tax), and the follow-on relocation question must be FILED as its own item at (e)'s close rather than left implicit - a measured number with no row to rule on is how a deferred question becomes a forgotten one. Triage the 5 ambiguous (d) findings alongside the first tranche, unchanged from the reading above; that advice is independent of which option is taken."""
-wi_refs = ["WI-516"]
+wi_refs = ["WI-516", "WI-522"]
 
 [open_item.OI-63]
 title = "Does the interface `contract`'s irreducible remainder move to a contract header on the owning component's side, or stay in the cell - and what happens to the 15% that belongs in neither"
-status = "pending"
+status = "ruled"
+ruled_date = "2026-08-25"
+ruling_ref = "docs/log.d/2026-08-25-owner-rulings-oi63-oi64.md"
 raised = "2026-08-25"
 one_line = """Discharges obligation 2 of OI-62's option (e), MEASURE, DO NOT REWRITE: decide whether irreducible `contract` content moves to an owning-component header or stays in-cell. Across 108 non-CLI rows, WI-516 found 64.3% restatement (CLI: 87.7%) and remainder on 65.7% of rows (CLI: 40.7%). It also found that 15.3% is non-crossing registry bookkeeping, provenance, or argument belonging in neither home."""
 decision = """### Origin
@@ -2485,7 +2487,15 @@ Typed shapes, vocabularies, postures and consumer duties stay in the cell.
 
 - FOR: A and B are the classes a module can actually assert about itself, and their staleness is the dangerous kind (a refusal that no longer refuses); a much smaller kit change than (b), needing no new generated artifact if the header stays prose.
 - AGAINST: a per-clause rule is the hardest to teach and the easiest to apply inconsistently; the cell keeps most of what it carries today, so the measured benefit is small."""
-recommendation = """### Recommend (d), then re-ask; (c) is the strong second
+recommendation = """### RULED (owner, in session 2026-08-25): OPTION (d) - THE NON-CROSSING CLEANUP RUNS FIRST
+
+The owner's words, verbatim: *"recommendation is okay at least to move information to rationale to clean up the contract text itself before further shuffle."* What is ruled: non-crossing content (class M/X) leaves `contract` for the row's `rationale` field, and the cleanup pass runs BEFORE any placement shuffle - the placement question is re-asked on the cleaned cells, per (d)'s own construction. Execution row: WI-522.
+
+The owner corrected (c)'s Consumes-side objection in the same act, recorded here because the re-ask must carry it: *"note that C says '(the far side is often a file or an external party with no module to hold a header)' but that indicates the file is itself the interface, and can still be defined / set by the owning header contract, so long as others refer back to it, and an external party should just be a boundary line interface."* So a file far side does NOT lack a header home - the file's format is the producing side's contract to define, with consumers referring back to it - and an external far side resolves to the boundary tier. The re-ask weighs (b)/(c) with that correction in hand, together with the method-consistency rule the owner stated on OI-64 in the same sitting: for a given interface expectation there is ONE definer - the interface contract or the LLR, never both.
+
+--- the pre-ruling recommendation, kept verbatim below ---
+
+### Recommend (d), then re-ask; (c) is the strong second
 
 The reading moved DURING the measurement rather than being written to fit it: going in, a high restatement rate was expected to make (b) near-obvious. It did not survive the population - 64.3% is not 87.7%, two in three rows carry something real, and the pilot family was uniform in ways the 108 are not. Carrying its conclusion across would be the extrapolation OI-62 warned against.
 
@@ -2540,7 +2550,11 @@ options = """- (a) MINT THE ROW, SWEEP THE CITATIONS. One SR stating the contrac
 - (b) MINT THE ROW, SWEEP NOTHING. State the contract, leave every existing fragment exactly where it is, and let new rows cite instead of restate. FOR: banks the subject at almost no cost and no re-attestation; the duplication stops GROWING even if it does not shrink. AGAINST: the corpus keeps thirteen statements of one thing, so the retrieval collision the doctrine names is unrelieved, and a fragment that drifts from the new row is now a contradiction rather than a repetition.
 - (c) MEASURE FIRST, THEN RULE. Before minting anything, measure whether the shipped checkers actually honour one contract - the severity words in use, whether every finding names a location, what each does with an absent optional input - and file the numbers. FOR: the WI-516 precedent for exactly this shape (measure, do not rewrite); it answers whether (a) would mint a green row or a red one, which no option above can currently say. AGAINST: a third pass before the question is answered, and the pattern where a measured number with no row to rule on becomes a forgotten one.
 - (d) DECLINE, AND RECORD WHY. Rule that the contract is a coding convention rather than a requirement, and that thirteen rows each stating their own disposition is the correct shape because disposition is genuinely per-row. FOR: it is a defensible position - the severity of a given class IS a per-row decision, and a single row could over-constrain rows whose needs differ; it costs nothing and closes the question honestly. AGAINST: it accepts that the property every checking row assumes has no enforcer, and it leaves SR-158 declaring itself unsatisfied with no path to satisfaction."""
-recommendation = """RECOMMENDED: (c) then (a) - measure, then mint, with (b) as the fallback if the measurement comes back ragged.
+recommendation = """OWNER DIRECTION (2026-08-25, in session - recorded verbatim; the row stays PENDING because the measure-vs-state choice is still the owner's to make): *"yes this is also my concern. Technically a 'contract' is a requirement, but specifically an interface type. Interfaces can be numerous, so I don't think it needs to be elevated to an LLR, and interfaces already trace back to their LLRs, but either way the method should be consistent. Either the interface contract (whereever it lives) defines the interface expectations, or the LLR does."*
+
+What the direction changes about the options: the mint target in (a)/(b) is re-read at the INTERFACE tier - the contract would be stated as an interface contract (wherever OI-63's re-ask puts contracts), NOT minted as a new SR or elevated to an LLR - and any statement must honour the one-definer rule: for a given interface expectation, EITHER the interface contract defines it OR the LLR does, never both. (c)'s uniformity measurement is unchanged by the direction and still precedes any statement that claims to be green.
+
+RECOMMENDED: (c) then (a) - measure, then mint, with (b) as the fallback if the measurement comes back ragged.
 
 The reason is that (a)'s single unanswered question is decisive and cheap to answer. Everything about (a) is attractive except one thing nobody has measured: whether the thirteen rows describe ONE contract or three similar ones. If the shipped checkers already agree - same severity vocabulary, location on every finding, the same treatment of an absent input - then (a) mints a row that is green on the day it lands and the sweep is bookkeeping. If they do not, (a) mints a requirement the delivered harness fails, and the honest response to that discovery is a different piece of work entirely. The measurement is a read over the checkers this repository already ships, in the WI-516 shape that has now been run twice successfully.
 
