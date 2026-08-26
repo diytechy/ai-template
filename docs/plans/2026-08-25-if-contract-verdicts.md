@@ -497,6 +497,24 @@ non-crossing population at **6,715** characters over 46 rows: **6,136 of it left
 `contract`** (91.4%), and the remaining **679** is the ten rows flagged or
 re-judged above.
 
+**THE RESIDUAL 17 ARE NOT 17 ROWS STILL ARGUING — read the count with this.**
+Every one of the 17 surviving "Contract argues" fires was classified against the
+committed tree, and **all 17 are FALSE POSITIVES**: four are a temporal or
+flag-name `since` (`the one home since Phase 5` on `IF-023`/`IF-024`/`IF-079`,
+`a --since render` on `IF-074`), and the other thirteen are `X rather than Y`
+stating a **class B fail-loud guarantee or a class C exclusion** — the two
+remainder kinds `WI-512` itself named. `IF-101`/`IF-116`'s *"raising on an
+absent or malformed mark rather than degrading to zero"*, `IF-122`'s
+*"REFUSES loudly rather than scanning as empty"*, `IF-114`'s *"refuses rather
+than rendering a dash"*, `IF-102`'s *"RAISING when both exist rather than
+resolving by precedence"*: a contrast is the natural English for a fail-loud
+guarantee, and the connective heuristic cannot tell it from an argument. So the
+27 → 17 drop IS real cleanup, and the 17 that remain measure the SHAPE of a
+kept remainder rather than any argument left in the cell — precision **0 of
+17** on the cleaned population, the same shape as the (d) tripwire's 1-in-7.
+Whoever rules the placement question should not read the residue as work
+outstanding.
+
 **Two advisory drops are NOT rot repairs and must not be read as any.** The
 (d) tripwire's already-adjudicated false positives on `IF-072`
 (`SCAFFOLD_OMISSIONS`) and `IF-132` (`registries/source`) stop firing only

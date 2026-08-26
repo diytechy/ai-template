@@ -34,6 +34,19 @@ cell. Disclosed rather than netted out.
 
 <!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict-integrity" rev=bad71010 -->
 
+### The residual 17 advisories are 17 FALSE POSITIVES, and the count says so
+
+Classified against the committed tree rather than assumed: of the 17 surviving
+"Contract argues" fires, four are a temporal or flag-name `since` (`the one home
+since Phase 5`, `a --since render`) and thirteen are `X rather than Y` stating a
+class B fail-loud guarantee or a class C exclusion — `raising … rather than
+degrading to zero`, `REFUSES loudly rather than scanning as empty`, `refuses
+rather than rendering a dash`. **Precision on the cleaned population: 0 of 17.**
+A contrast is the natural English for a fail-loud guarantee, and the connective
+heuristic cannot tell one from an argument. The 27 → 17 drop is real cleanup;
+the residue measures the SHAPE of a kept remainder, not work outstanding, and
+the addendum says so where the placement ruler will read it.
+
 ### The destination has a declared grammar, and that is what decided the flags
 
 The kit template states `rationale`'s rule: *"the ARGUMENT, never the CITATION …
