@@ -365,3 +365,200 @@ ownership axis over clauses rather than a clause kind - `IF-116` is `D,B,F`,
 `IF-124` is `F,D` - and that a provider-side header CAN state a caller
 precondition (what it cannot do is keep the consumer synchronized). OI-63
 carries that qualification where it bears on the options.
+
+## WI-522 disposition addendum (2026-08-25) — the non-crossing cleanup, executed
+
+`OI-63` is RULED option (d) (owner, 2026-08-25; record:
+[../log.d/2026-08-25-owner-rulings-oi63-oi64.md](../log.d/2026-08-25-owner-rulings-oi63-oi64.md)):
+*"move information to rationale to clean up the contract text itself before
+further shuffle."* `WI-522` is that pass, and this section is its record so the
+placement re-ask reads ONE document. **RESTATEMENT and REMAINDER clauses were
+not touched** — that is what "before further shuffle" bounds — and no verdict
+line above is edited.
+
+**The verdict line was the starting claim, not the instruction.** All 46
+`nonx > 0` rows were re-read and re-judged at the CLAUSE before anything moved,
+which is why two come back as not-non-crossing at all and why the characters
+actually moved differ from the estimate: the verdicts are accurate to the
+clause, not to the character, by their own statement.
+
+### The destination has a declared grammar, and it decided eight rows
+
+`rationale` is the schema's own home for the argument, and the kit template
+states its grammar: *"the ARGUMENT, never the CITATION … no work-item id,
+ruling, sitting, review-round or open-item reference, decision id, edit verb or
+date stamp"*. So a non-crossing span that is a bare CITATION — a programme id, a
+ruling id, a plan-doc pointer, a dated amendment — cannot move there without
+importing a violation into the destination, and deleting it was not ruled. Those
+rows are FLAGGED and left exactly as they were. Every cell written by this pass
+was checked against the mechanical detector
+(`trace_text.provenance_tokens(cell, reason=True)`): **0 tokens over 36 cells.**
+
+**Two findings the executor owes the owner, from checking the destination before
+writing into it at scale:**
+
+1. **Nothing lints `rationale` on an IF row.** `trace.IF_REASON_CELLS` is
+   `("Notes", "SignalNote")`; `trace_text`'s three provenance column tables name
+   SN/SR/LLR/TC/CMP/EXT and no IF tier; no cap, no render and no reader touches
+   the cell by name (`IF_CONTRACT_MAX` is `Contract`-scoped and deliberately
+   so). The grammar the template declares for this cell is enforced by the
+   author and nothing else — the same "the largest pocket is the layer the rule
+   cannot see" shape `if_note_advisories`' own docstring names one cell over.
+   This pass moved 7,335 characters into that cell and held itself to the
+   grammar voluntarily.
+2. **An empty `rationale` is a HARD refusal**, not a warning: `spine_carrier`
+   raises on an empty-string cell at every live read. A row either carries the
+   key or omits it.
+
+### The dispositions, per row
+
+`nonx` is the verdict's estimate above. `before`/`after` are live `contract`
+characters; `=` means the cell was not edited. `rat` is the characters written
+into `rationale`.
+
+| row | nonx | before | after | rat | disposition |
+|---|---|---|---|---|---|
+| `IF-061` | 78 | 573 | = | - | **RE-JUDGED** — **NOT non-crossing, and the cross-review was right to flag it.** The 78-character span splits in two, verified in-tree: `legacy work-items.csv rows via dual-write` is ROT — `plan_artifacts.py` records the CSV append (`_registry_header`/`_append_csv_rows`) as retired at Phase 5 — while `ids allocated over BOTH homes` is LIVE, and `_existing_wi_nums` reads the stray CSV and the spec folder both. A stale claim is a correction, not a relocation; a live compatibility guarantee is class H remainder. Nothing moved; the rot is FLAGGED below. |
+| `IF-064` | 55 | 773 | 722 | 186 | **MOVED** — the `split out of agent_loop` extraction provenance. The re-export guarantee (class H) stays. |
+| `IF-076` | 60 | 671 | 561 | 165 | **MOVED** — the `split out of trace.py` provenance and `which is what makes the split provably behaviour-preserving`. Re-judged WIDER than the verdict's 60 characters — the second clause is the same class as the first. |
+| `IF-080` | 60 | 659 | = | - | **FLAGGED** — the whole non-crossing span is CITATION and no argument: `concurrency-restructure SS1.2/SS2.3`, plus `RULING-7` and `RULING-6` naming two of the checks. `rationale`'s declared grammar refuses a ruling id or a programme citation, so the clause cannot be moved there; deletion was not ruled. Left in place, flagged. |
+| `IF-090` | 40 | 555 | = | - | **FLAGGED** — `ruled decision 2` is a decision citation that, as the verdict already found, resolves to nothing a reader can reach. It cannot enter `rationale` and deletion was not ruled. Left in place, flagged. |
+| `IF-024` | 118 | 320 | 181 | 186 | **MOVED** — the siting clause — which function holds the registry read, and that the module inventory arrives via traj_parse.sw_modules over gen_arch_map.scan_inventory. |
+| `IF-028` | 100 | 432 | 231 | 199 | **MOVED** — the retired-parse succession and the IF-117 sibling contrast (`two oracles for two questions`). |
+| `IF-037` | 42 | 496 | 450 | 104 | **MOVED** — the retired dispatcher-era `docs/run-state` note. The exclusion it explains (`No next-work or run-phase pointer is read`) stays: that is a class C remainder. |
+| `IF-041` | 62 | 274 | 210 | 115 | **MOVED** — the `because the OS may reparse it via cmd.exe` argument. The refusal itself stays. |
+| `IF-052` | 118 | 378 | 246 | 130 | **MOVED** — the `_stage_value` / `process_panel` call path (M). |
+| `IF-056` | 330 | 768 | 379 | 380 | **MOVED** — 330+ characters distinguishing this row from IF-071 and naming the three split siblings. |
+| `IF-068` | 48 | 383 | 332 | 106 | **MOVED** — `so the agent-resume launchers need no dial copies`. The retired jobs dial stays — the verdict reads it as R3 restatement of `docs/stack.ini`'s own header, and restatement is out of this pass's scope. |
+| `IF-071` | 367 | 785 | 404 | 409 | **MOVED** — the guarded-import siting, the IF-085/IF-056 contrasts and the derived-once attribution. The one-ranker guarantee was re-cast into the crossing sentence it qualifies rather than lost. |
+| `IF-072` | 230 | 705 | 436 | 272 | **MOVED** — `the seam exists because a second reader needs the same facts` and the whole shared-home argument. Side effect, disclosed: this carries the `SCAFFOLD_OMISSIONS` token out of `contract`, so the (d) tripwire's already-adjudicated false positive on this row stops firing. |
+| `IF-075` | 390 | 768 | 388 | 384 | **MOVED** — the extraction argument and the component-tagging argument, 370 characters. The byte-identical proof stays. |
+| `IF-077` | 143 | 622 | 455 | 243 | **MOVED** — the pre-commit-hook reasoning and the IF-056 cross-reference. |
+| `IF-078` | 34 | 241 | = | - | **RE-JUDGED** — **NOT non-crossing.** `the folder half of IF-061's write seam` names which half of a two-row write seam this row holds — a scope narrowing on the crossing statement itself, the same idiom IF-082–IF-085 use. Left in place. |
+| `IF-082` | 200 | 413 | 282 | 179 | **MOVED** — `this row exists because a seam is declared per importing module and the import moved`. `The CONTRACT is IF-056's` STAYS — a pointer to the row of record is the crossing statement's own scope, not bookkeeping. |
+| `IF-083` | 110 | 316 | 271 | 152 | **MOVED** — the `as HELD by the split sibling that now carries the import` frame. Same reading as IF-082. |
+| `IF-084` | 175 | 402 | 190 | 316 | **MOVED** — the split-sibling frame plus the pending-owner-actions relocation note and its IF-138 pointer. |
+| `IF-085` | 250 | 463 | 418 | 146 | **MOVED** — the split-sibling frame. The guarded-import siting is this row's own crossing and stays. |
+| `IF-088` | 94 | 459 | 413 | 52 | **MOVED+FLAGGED** — `Deferred import, paid only at an exit banner` MOVED. `(docs/concurrency-v2.md §A4, the 2026-08-01 amendment)` NOT moved — it carries a date stamp, which `rationale` refuses; left in place, flagged. |
+| `IF-089` | 48 | 467 | = | - | **FLAGGED** — `(docs/concurrency-v2.md §A4 ladder rung 1 / §A5.2)` is a bare plan-doc citation carrying no argument. Left in place, flagged. |
+| `IF-093` | 166 | 536 | 424 | 108 | **MOVED** — `instead of drifting as folklore` — the argument for reading the vocabulary from its own module. |
+| `IF-094` | 40 | 278 | = | - | **FLAGGED** — `the ruled A1/A8 tables` — a ruling citation naming tables the cell gives no route to. Left in place, flagged. |
+| `IF-099` | 90 | 489 | 367 | 151 | **MOVED** — the `because a missing template must be a named PREFLIGHT refusal` argument. The never-at-import rule stays. |
+| `IF-101` | 140 | 487 | 327 | 159 | **MOVED** — `Shared rather than duplicated because the mint and the checker must agree on what an id is`. |
+| `IF-106` | 210 | 492 | 264 | 227 | **MOVED** — the whole read-through-the-carrier argument (bundle drift rather than silence). |
+| `IF-108` | 230 | 494 | 268 | 225 | **MOVED** — the feeds-a-MODEL-not-a-check asymmetry argument. |
+| `IF-109` | 130 | 546 | 417 | 128 | **MOVED** — `A cell lost in translation would either skip a required round or narrow what the model was told`. |
+| `IF-111` | 165 | 512 | 343 | 168 | **MOVED** — the phantom-`SN-000` incident and the `which is why the seam is declared` conclusion it carries. |
+| `IF-112` | 330 | 468 | 129 | 338 | **MOVED** — 330 characters — the clearest changelog exhibit in the population. It moves rather than being flagged because it argues: the heading-arm failure mode IS what breaks without this seam. |
+| `IF-113` | 175 | 697 | 450 | 252 | **MOVED** — `whose both-ways strictness is load-bearing HERE rather than merely tidy` and the thin-evidence-section argument. The `PromptError` → REFUSAL rule stays. |
+| `IF-114` | 240 | 561 | 307 | 308 | **MOVED** — the carrier-cutover argument and the dash-reads-as-not-applicable argument. The every-cell-REQUIRED refusal stays. |
+| `IF-116` | 45 | 760 | 649 | 104 | **MOVED** — `Shared rather than duplicated for IF-101's reason`. Both mint formulae and the caller-side bump ordering stay. |
+| `IF-117` | 300 | 724 | = | - | **FLAGGED** — **ROT, not relocatable.** Three false claims re-verified at this pass: `the committed module map is a PUBLIC-API view` is present-tense for `docs/architecture.md`, retired; `the sym: tier keeps reading the artifact` is false (`load_symbol_oracle` reads `scan_inventory`); `149 live LLR rows` is stale against 187 live today. Moving false text into `rationale` would launder rot into a new home. The row is a CORRECTION candidate; correction was not ruled here. Left in place, flagged. |
+| `IF-118` | 200 | 593 | 390 | 244 | **MOVED** — the `0 pending decisions` incident narrative. The fail-closed rule it justifies was re-stated in the crossing sentence rather than lost. |
+| `IF-119` | 195 | 553 | 339 | 308 | **MOVED** — the declared-header-is-a-carrier-property argument and the `{} reads as a consent decision` argument. Both refusals stay. |
+| `IF-120` | 200 | 371 | 161 | 209 | **MOVED** — the `SN-008` silent-skip argument. |
+| `IF-127` | 17 | 472 | = | - | **FLAGGED** — `Imported LAZILY.` is 16 characters of module internal whose standing REASON already lives in this row's own `notes` (`keeps trace off the import path of the loop modules`). Moving the bare fact would put it in a third cell of the same row. Left in place, flagged as a de-duplication for the re-ask. |
+| `IF-131` | 265 | 503 | 265 | 273 | **MOVED** — the retired-map contrast and the one-walk-one-grammar continuity argument. |
+| `IF-132` | 78 | 327 | 187 | 147 | **MOVED** — the retired-parse replacement clause. Side effect, disclosed: this carries the `registries/source` token out of `contract`, so the (d) tripwire's already-adjudicated false positive on this row stops firing. |
+| `IF-136` | 32 | 478 | = | - | **FLAGGED** — `(docs/concurrency-v2.md §A4.2)` is a bare plan-doc citation. Left in place, flagged. |
+| `IF-137` | 30 | 444 | = | - | **FLAGGED** — `(docs/concurrency-v2.md §A3)` is a bare plan-doc citation. Left in place, flagged. |
+| `IF-138` | 165 | 398 | 356 | 129 | **MOVED** — the read-model-carries-the-import frame. |
+| `IF-143` | 120 | 396 | 263 | 133 | **MOVED** — `a second reconciliation would be a second answer waiting to disagree`. The one-normalizer guarantee stays. |
+
+### The buckets
+
+| disposition | rows |
+|---|---|
+| **MOVED** — M/X clauses left `contract` for `rationale` | **35** |
+| **MOVED + FLAGGED** — part moved, a dated citation left in place | **1** (`IF-088`) |
+| **FLAGGED** — citation-only or rot; not movable, deletion not ruled | **8** (`IF-080`, `IF-089`, `IF-090`, `IF-094`, `IF-117`, `IF-127`, `IF-136`, `IF-137`) |
+| **RE-JUDGED not non-crossing** | **2** (`IF-061`, `IF-078`) |
+| total | **46** |
+
+### The measurement, taken not estimated
+
+| | before | after |
+|---|---|---|
+| `contract` characters over the 108-row population | 43,995 | **37,859** (−6,136, **−13.9%**) |
+| `contract` characters over the 36 edited rows | 18,611 | **12,475** (−6,136, **−33.0%**) |
+| rows carrying a `rationale` | 1 | **37** |
+| `rationale` characters | 156 | **7,491** (+7,335) |
+| `trace.py` "Contract argues" advisory | 27 rows | **17 rows** |
+| `trace.py` over-ceiling (500) advisory | 30 rows | **17 rows** |
+| all `IF` row advisories from `trace.py` | 67 | **42** |
+
+<!-- fig: cmd="python project-trajectory/scripts/trace.py --root . --strict-integrity" rev=bad71010 -->
+
+**The moved text got LONGER than the text removed** — 7,335 characters written
+against 6,136 removed, +1,199. A clause cut from the middle of a contract
+sentence has to become a sentence to stand alone in a reason cell; that is
+authoring, and it is disclosed rather than netted out. `OI-63`'s brief sized the
+non-crossing population at **6,715** characters over 46 rows: **6,136 of it left
+`contract`** (91.4%), and the remaining **679** is the ten rows flagged or
+re-judged above.
+
+**Two advisory drops are NOT rot repairs and must not be read as any.** The
+(d) tripwire's already-adjudicated false positives on `IF-072`
+(`SCAFFOLD_OMISSIONS`) and `IF-132` (`registries/source`) stop firing only
+because those tokens rode their clauses into `rationale`, which the arm does not
+scan. Live tripwire findings after this pass: `IF-055`'s `SCHED_*` (the known
+real rot, untouched) and `IF-143`'s two placeholder paths.
+
+### The three cross-review re-adjudications
+
+- **`IF-050` — the reviewer is RIGHT, and it is out of this pass's scope.**
+  `kitlib/stage.py`'s own "WHO THE FRESHNESS GUARANTEE COVERS" block states that
+  `traj_parse._stage_value` and `traj_status._stage_facts` deliberately parse the
+  recorded file directly, so the cell's *"every consumer reads it through
+  kitlib.stage.read_stage"* is a FALSE UNIVERSAL — the honest sentence names the
+  SELECTION/APPROVAL consumer class, which is what that block does. Verified
+  in-tree at adjudication. But a false universal is a CORRECTION, not a
+  relocation: the clause is crossing content that is wrong, not non-crossing
+  content in the wrong cell. `nonx` stays 0, no span moved, and the correction
+  is owed to whoever rules the placement re-ask.
+- **`IF-061` — the reviewer is RIGHT, and it changes the row's class.** See its
+  table row above: the span splits into a live compatibility guarantee (class H
+  remainder) and rot. `nonx` re-judged **78 → 0**.
+- **`IF-098` — the reviewer is RIGHT, and here is the remeasurement asked for.**
+  Of 290 characters: `(key, file, slots, digest)` per shipped prompt (47) and
+  `render()` is pure (18) both appear in `catalog_rows()`'s and `render()`'s
+  harvested one-line summaries — R2, confirmed by running
+  `gen_arch_map.scan_inventory` over the declared source root — so they are
+  RESTATEMENT, not remainder. The crossing statement is 46. What survives as
+  remainder is the `and nothing else` exclusion (16) and the never-disagree
+  guarantee (65): **81 characters, against the 219 recorded.** The trailing
+  `--check`-and-write-path clause (85) counts as remainder only because R2 is
+  defined as the HARVESTED SUMMARY and the summary truncates — `render()`'s full
+  docstring states it. So 81 on the strict reading, 166 on the pass's own R2
+  definition, against 219 recorded. `nonx` stays 0 and nothing moved.
+
+### Flagged for the owner — deletion candidates, NOT deleted
+
+Deletion was not ruled, so every one of these is still in its cell. Each is
+non-crossing content `rationale` cannot legally take:
+
+- **Bare plan-doc / programme citations:** `IF-080`
+  (`concurrency-restructure SS1.2/SS2.3`, plus `RULING-6`/`RULING-7` naming two
+  of its checks), `IF-088` (`docs/concurrency-v2.md §A4, the 2026-08-01
+  amendment`), `IF-089` (`§A4 ladder rung 1 / §A5.2`), `IF-136` (`§A4.2`),
+  `IF-137` (`§A3`).
+- **Citations that resolve to nothing a reader can reach** — the `IF-080` class
+  the measuring pass named as finding 6: `IF-090` (`ruled decision 2`),
+  `IF-094` (`the ruled A1/A8 tables`).
+- **Rot, needing correction rather than relocation:** `IF-117` (three false
+  claims, re-verified here), `IF-061` (`legacy work-items.csv rows via
+  dual-write`, retired at Phase 5).
+- **A row-internal duplicate:** `IF-127`'s `Imported LAZILY.`, whose standing
+  reason already sits in the row's own `notes`.
+
+One more, found while reading and belonging to no bucket: **`IF-082`, `IF-083`
+and `IF-084` carry `wI-280` in `notes`** — a work-item id the citation-frame
+detector misses because `_WI_TOKEN_RE` is case-sensitive. Reported, not fixed:
+it is a detector question, not this row's.
+
+### What this pass did NOT do
+
+No `contract` cell lost a restatement clause or a remainder clause. No row's
+`status` moved (all 135 read `Drafted`, checked before the first edit). No
+kit-side file, script or test changed — the placement question, the contract
+header convention, and the `rationale` lint gap above are all still open.
