@@ -2540,7 +2540,24 @@ These are the same contract seen from three sides. Ruling them separately would 
 
 ### What is NOT being proposed
 
-No consolidation work is filed against this. Building a shared finding module before the obligation is stated installs a mechanism ahead of its requirement, which is the inversion the process exists to prevent - so the remap program filed this row and stopped, rather than minting module work off a requirements finding."""
+No consolidation work is filed against this. Building a shared finding module before the obligation is stated installs a mechanism ahead of its requirement, which is the inversion the process exists to prevent - so the remap program filed this row and stopped, rather than minting module work off a requirements finding.
+
+### THE MEASUREMENT IS RUN (2026-08-25) - option (c)'s read, filed, nothing edited
+
+Record: docs/plans/2026-08-25-oi64-checker-uniformity.md. Owner-directed sitting; no checker, registry cell or severity was touched, and this row stays PENDING because the measure-vs-state choice was always the ruling, not the measurement.
+
+Method: an AST census of all 430 finding-emission sites across the 14 shipped checkers plus the two rule libraries that feed `trace`, every site read and classified; then every checker driven twice, once on an EMPTY root and once on this repo, recording exit code and output.
+
+THE RESULT, in one line: the PROTOCOL is honoured; the VOCABULARY is not.
+
+- LOCATION: 158 per-finding sites; 141 (89.2%) name a row id, `file:line`, file or module path. 11 are population-level (a count or a set - no at-fault row exists) and 6 are thin (a location exists and is not named). Both exception sets are enumerated by site in the record.
+- ADVISORY NEVER GATES: unanimous. `trace.exit_code` composes from named finding classes only; seven modules carry the phrase "never the exit code" / "never gating" 25 times between them.
+- VACUITY: 12 of 14 exit 0 on an absent optional input AND NAME the absence. `check_flows` fails by design (its doc is required from DevStg-Tests and it has no warn tier); `trace` reports a real integrity finding on an empty tree rather than breaching vacuity.
+- SEVERITY VOCABULARY: 12 distinct label tokens for four dispositions - `OK`/`clean`; `SKIP`/`skipped`/an unlabelled sentence; `WARN`/`WARNING (advisory)`/`ADVISORY`/`UNTRACED`/`note`/`hint`; `FAIL`/`ERROR`/`FINDING (<class>)`. Escalation is six flag spellings (`--strict`, `--strict-orphans`, `--strict-integrity`, `--strict-schema`, `--strict-backlinks`, plus one `--strict` accepted and inert by declaration), four checkers with no promotion path, and two per-row mechanisms (`check_perf`'s `Gate=`, `check_trajectory`'s per-rule `hard`). Findings go to stdout in seven checkers and mostly stderr in `check_trajectory`.
+
+WHAT IT DOES TO THE OPTIONS: (a) mints THREE GREEN CLAUSES and ONE RED one. Location (with a population-level carve-out), advisory-never-gates and vacuity are already honoured; a closed severity vocabulary is red on every checker at once - and red only in spelling, since no behaviour would have to change to satisfy it. The measurement therefore does not send the question to (b) as the fallback anticipated: the ragged half is nameable and cheap, and the corpus's own parse-honesty idiom (five allow-file readers, one protocol, per-host severity each stating its reason) is the worked precedent for "state the protocol, leave the disposition per row".
+
+WHAT IT DOES NOT SETTLE: where the row would live. The owner's direction puts the mint target at the INTERFACE tier, and OI-63's re-ask has not yet said where interface contracts live. That sequencing is the owner's call and the record does not prejudge it."""
 blast_radius = """ONE ROW TO MINT OR DECLINE, AND A CITATION SWEEP IF IT IS MINTED. Minting is cheap in itself - one SR at the requirement tier, with its LLR/TC decomposition following the ordinary machinery under the declared dial. What is not free is the sweep: each of the thirteen restating rows would want its fragment replaced by a citation, and every one of them is Approved, so each edit is an amendment that overrides an attestation and re-opens the approval surface for that row. That is the owner's act by construction, and it is the reason this is a ruling rather than a task.
 
 DOES IT CROSS THE KIT LINE? Yes, if minted: the contract is a property of the DELIVERED harness, not of this repository's instance, so the row ships and every adopter inherits the obligation. Against that: the behaviour it describes is already what the shipped checkers do, so the row would be stating a delivered property rather than requiring new work. The measurable risk is the opposite one - a row that states a contract the shipped checkers do not uniformly honour would be minting a known-red requirement, and nothing has measured uniformity across all thirteen.
@@ -2553,6 +2570,10 @@ options = """- (a) MINT THE ROW, SWEEP THE CITATIONS. One SR stating the contrac
 recommendation = """OWNER DIRECTION (2026-08-25, in session - recorded verbatim; the row stays PENDING because the measure-vs-state choice is still the owner's to make): *"yes this is also my concern. Technically a 'contract' is a requirement, but specifically an interface type. Interfaces can be numerous, so I don't think it needs to be elevated to an LLR, and interfaces already trace back to their LLRs, but either way the method should be consistent. Either the interface contract (whereever it lives) defines the interface expectations, or the LLR does."*
 
 What the direction changes about the options: the mint target in (a)/(b) is re-read at the INTERFACE tier - the contract would be stated as an interface contract (wherever OI-63's re-ask puts contracts), NOT minted as a new SR or elevated to an LLR - and any statement must honour the one-definer rule: for a given interface expectation, EITHER the interface contract defines it OR the LLR does, never both. (c)'s uniformity measurement is unchanged by the direction and still precedes any statement that claims to be green.
+
+(c) IS DISCHARGED (2026-08-25): the measurement is run and filed - see "THE MEASUREMENT IS RUN" in the brief above and docs/plans/2026-08-25-oi64-checker-uniformity.md. What is left to rule is (a) vs (b) vs (d), now with the numbers the recommendation below was written without. The measurement did NOT come back ragged in the way that would have sent it to (b): three of (a)'s four clauses are already green across the harness, and the fourth is red in spelling only.
+
+--- the pre-measurement recommendation, kept verbatim below ---
 
 RECOMMENDED: (c) then (a) - measure, then mint, with (b) as the fallback if the measurement comes back ragged.
 

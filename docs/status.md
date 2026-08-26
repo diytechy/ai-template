@@ -217,6 +217,20 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   **WHAT REMAINS ON THE REMAP ROW IS OWNER-OWED AND ONLY THAT:** `OI-64`'s
   ruling, and the blessing of the four `Drafted` rows. It stays ACTIVE
   deliberately — closing it would strand the ruling with no row to return to.
+  **`OI-64`'s option (c) measurement IS RUN and the ruling now has numbers**
+  (2026-08-25, owner-directed; nothing edited — no checker, no cell, no
+  severity; record:
+  [plans/2026-08-25-oi64-checker-uniformity.md](plans/2026-08-25-oi64-checker-uniformity.md)).
+  Across 430 emission sites and a two-way drive of every shipped checker: the
+  **PROTOCOL is honoured, the VOCABULARY is not** — 141 of 158 finding sites
+  (89.2%) name a location, no advisory anywhere reaches an exit code, 12 of 14
+  checkers pass vacuously on an absent optional input *and say so* — against
+  **12 severity words for four dispositions** and six escalation-flag
+  spellings. So (a) would mint **three green clauses and one red**, the red
+  being spelling only. What is left to rule is (a) vs (b) vs (d), and it is
+  entangled with `OI-63`'s placement re-ask above: the owner's direction puts
+  the mint target at the interface tier, and where interface contracts live is
+  what that re-ask decides.
 - **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
   (2026-08-25; record:
   [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.d/2026-08-25-wi521-slice1-acceptance-record.md)).
