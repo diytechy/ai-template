@@ -744,9 +744,9 @@ LADDER_RUNGS = _kitladder.LADDER_RUNGS
 # declaration of it would be a rival answer that agrees until someone edits one.
 #
 # NO NEW KEY AND NO NEW ENUM: authority over a status cell in registry R is
-# whether R's stage rung is human-held under the EXISTING dial. At this repo's
-# dial of 4 the effect is identical to the prose it replaces — derived rather
-# than declared.
+# whether R's stage rung is human-held under the EXISTING dial — derived rather
+# than declared. WHICH registries that holds is the dial's answer, not a fixed
+# list: at a dial holding every rung it is all of them, at this repo's none.
 #
 # AN UNMAPPED APPROVAL-CARRYING REGISTRY IS HELD. The map is small and the
 # registries are optional, so "I do not know which rung governs this" must
@@ -815,7 +815,7 @@ def human_approves(docs, registry):
 
     THREE ARMS, and only the third is new thinking:
       * MAPPED and its rung is human-held under `human_approval_through`
-        -> True (held). This is every registry at this repo's dial of 4.
+        -> True (held). At this repo's `DevStg-Needs` dial that is none.
       * MAPPED and its rung is not held -> False (a loop session may write it,
         because the project has declared that rung machine-approvable).
       * UNMAPPED -> True (held), FAIL-SAFE. A status-carrying registry nobody has

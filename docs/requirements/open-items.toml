@@ -2676,3 +2676,95 @@ recommendation = """RULED (a) GO by the owner 2026-08-29 (record: docs/log.d/202
 - The required guard is binding: the harvester fix lands BEFORE any cell moves, and it carries the "no contracts, deliberately" decision with it.
 - The one number still not taken is the authoring cost of the 71-row cell pass. It is measured as the pass runs rather than sampled first, because (d) was not the option ruled."""
 wi_refs = ["WI-525"]
+
+[open_item.OI-67]
+title = """The interface row shape: one row, one direction, one kind of information — and which cells go"""
+status = "ruled"
+ruled_date = "2026-08-29"
+ruling_ref = "docs/log.d/2026-08-29-oi67-ruled-a.md"
+raised = "2026-08-29"
+one_line = """RULED (a) 2026-08-29 — the owner: "feel free to start implementing the OI-67 recommendation". Original brief: rule the shape of an interface row; recommend (a): a row is one direction of one kind of information — the providing side, its consumers, and a typed data cell — with `provider`, `req_refs` and the prose `contract` removed, and the module header built at WI-527 the only home for the definition."""
+decision = """The owner, reading the registry after the contract header landed (2026-08-29): an interface should say what the information plugs into, who it serves, and what the data is — an enumeration for a CLI return value, a file's schema — and nothing else. One row is ONE DIRECTION of ONE KIND of information. A request and its answer are two rows. A row that reads one file and writes another is two rows. The registry today describes two-way communication in places, and that is where the churn has come from.
+
+The question: what does the vision (README — maintainable, requirement-traced, trustworthy, gated) actually LOSE if `provider`, `req_refs` and `contract` are removed outright and the row becomes owner + consumers + data details?
+
+### What each cell does today — measured over the 136 live rows
+
+- **`provider`** is read by the component graph (`gen_components.seam_placement`), the rule that fails a cross-component import with no declared interface (`check_trajectory._declared_seam_pairs`), the architecture map and the planning briefs. It is ABSENT on 106 rows, derived from the owner's design row through `kitlib.spine.seam_provider`. It is stated on 30: 21 modules (16 whose owner is a bare requirement, which names no module; 5 whose owner names several), 3 directories, 3 files and 3 `external:` parties. Nothing is lost by removing the cell IF the owner cell can name what those 30 name.
+- **`req_refs`** has ONE mechanical reader — `trace.interface_findings`, which fails a row whose list is empty or names an unknown requirement. Its stated purpose, that every seam links the spine and stays transitively test-covered, is met by `owner` alone (an SR and an LLR both sit on the spine); seam-to-test coverage joins the other way, on a TC's `Verifies`. On 88 of 136 rows the cell adds nothing the owner does not derive (31 name the SR owner itself, 56 name exactly the LLR owner's parents, 1 names a subset). The 48 that add a requirement are hand-written and verified by nothing; the consuming side's requirement is reachable by following consumer → module → design row → requirement, which is a join, not a cell.
+- **`contract`** is the ONLY place the payload is described. It is fed verbatim to the dual-plan LLM briefs (`plan_briefs.IF_SURFACE_COLUMNS`) as authority, used as a description by `gen_okf` and `intake`, and policed by five form rules plus a symbol/path-resolution check in `trace.py`. It is a REQUIRED cell. Removed with nothing behind it, a row is an edge with no schema.
+- **`signal`** is the only TYPED description of what crosses, and it reads `variable` on 127 of 136 rows. Eight of the nine `discrete` rows state no alphabet. It is not a schema.
+
+### Direction — every row read, not sampled
+
+- **87 rows are already one direction of one kind.**
+- **14 rows are two-way** — a request and its answer, or a read and a write, in one row (`IF-005`, `IF-020`, `IF-033`, `IF-039`, `IF-041`, `IF-047`, `IF-059`, `IF-060`, `IF-079`, `IF-101`, `IF-110`, `IF-116`, `IF-123`, `IF-135`). They become 35 rows.
+- **35 rows are one direction but several kinds** — a CLI plus the file it writes, a library plus its CLI, several registries read as one (`IF-021` alone names ten schemas). Split to one kind each they become 91 rows.
+- So the registry is 136 rows today, **157 if only the two-way rows split, 213 if every bundled kind gets its own row**. `carried_by` (22 rows ride a carrier today, 17 of them on `IF-102`) is the mechanism that keeps the second number from being a flat list: a constituent is still one direction of one kind, and the bundle is still declared once.
+
+### Where the providing side is not a Python module
+
+- 105 rows are provided by a module. **31 are not**: 21 are published files no cell names (the spine registries, `docs/stack.ini`, `docs/process.toml`, the `docs/work/` spec folder, `docs/runtime-flows.md`, the reviews folder, skill frontmatter, the open-items registry), 3 are files stated in `provider` (`performance-budgets.csv`, `agents.toml` + `agents-enabled`, `coverage-floors`), 4 are directories, 3 are `external:` parties.
+- **Nearly all of those files are hand-edited** — no kit module writes them (`docs/stage`, read on `IF-037`, is the one generated exception). A rule that sends a file's definition to the module that writes it would cover almost none of them.
+- The header scanner reads `*.py` docstrings only. The two git hooks (`IF-134`, `IF-135`) are extensionless shell and cannot declare anything today.
+
+### What the module header changes
+
+WI-527 built the home the owner's shape needs: a module declares its seams on a `Contracts:` line and states each as a `Contract IF-###:` block, harvested into `docs/interface-reference.md` under a freshness gate. Two rows use it. Under the owner's shape it is not an option beside the cell — it is the definition's only home, so a declared seam with no body is an interface with no definition, and the scanner must reach every provider kind above before the cell can go.
+
+### The far side
+
+29 rows name an `external:` consumer and 29 tie to a boundary row (`B-05` × 26, `B-04` × 3), whose `carries` cell already describes the payload at the boundary grain. Nothing below touches the boundary tier."""
+blast_radius = """### The shipped kit — every adopter takes a version bump and a registry migration
+
+- Format: `interfaces.template.toml` (146 lines), `INTERFACES.template.md` (114 lines), `PROCESS.md` §8 (the field list and the contract paragraph), `PROCESS_OPTIONS.md` "Intra-repo interfaces & the architecture graph" (82 lines), `RESYNC_PACK.md` (a migration entry with a converter), plus 39 references across the reference docs and shipped guides.
+- Code: `spine_carrier` (the IF schema and required-cell list), `kitlib.spine.seam_provider`, `trace.py` (`interface_findings`, `if_contract_advisories`, `contract_named_tokens`, `contract_symbol_surface`, `if_ownership_advisories`), `check_trajectory.py` (`interface_findings`, `_declared_seam_pairs`, `spec_interface_findings`), `gen_components.seam_placement`, `gen_arch_map` (`load_seam_modules`, `_seam_edges`, the contracts scanner), `plan_briefs.IF_SURFACE_COLUMNS`, `gen_okf`, `intake`, `gen_release_checklist`, `migrate_carrier`, `traj_views`.
+- Tests: 31 modules touch the IF tier.
+- The kit's own `docs/requirements/interfaces.toml` is the worked instance — 136 rows re-keyed, plus the rows that split, each new row minted `Drafted`.
+
+### What is at risk under each answer
+
+- Removing `provider` without widening `owner`: the 30 stated providers lose their edge, and the cross-component rule reports real imports as undeclared seams — a false FAIL on the pre-commit floor of every adopter with a file- or directory-provided seam.
+- Removing `contract` before the header reaches every provider kind: the 31 non-module seams have no home for their definition, and the planning briefs are handed rows with no payload.
+- Removing `req_refs`: impact analysis ("which seams does SR-X touch?") becomes a join instead of a grep. Nothing mechanical breaks.
+- The split: every `TC.Verifies`, `carried_by`, `Implements:` line and `Contracts:` marker that cites a split row is re-pointed, and the id watermark moves. Per-row authoring; it cannot be mechanised.
+- Doing nothing: the 71-row cell pass ruled at OI-66 is authoring against a shape the owner has just said is wrong, and a later ruling for (a) redoes it.
+
+### What does NOT change
+
+The requirements chain (SN → SR → LLR → TC) is untouched: no requirement row is added or removed. The boundary tier is untouched. The stage ladder reads nothing here. Every IF row is `Drafted`, so no approval is re-opened."""
+options = """### (a) The owner's shape — one row, one direction, one kind; three cells go
+
+Effect: `provider`, `req_refs` and the prose `contract` are REMOVED. `owner` is widened to name the providing thing — a design row (→ its module), a file path, a directory, or an `external:` party — replacing both today's `owner` and `provider`; the answerable requirement is found through it. `signal` is replaced by a `data` cell holding the typed description: an enumeration, a schema pointer, a file-format name. The definition lives in the module header (`Contract IF-###:`) and nowhere else, and a declared seam with no body FAILS. Two-way rows split; bundled kinds split or ride `carried_by`. The scanner widens to `#`-comment headers in TOML/INI/CSV files and to extensionless hooks, so the 31 non-module seams have a home.
+
+FOR: the row becomes three facts a human or an agent reads without prose. Every cell that could disagree with the code — a hand-copied contract, a hand-written requirement list, a provider the owner already implies — is gone, which is the rot `IF-055` and `IF-117` already cost. Direction stops being inferred from a sentence. The header mechanism exists; this is the shape that makes it load-bearing instead of optional.
+
+AGAINST: the largest migration the IF tier has had — three cells removed, one widened, one replaced, rows split, every adopter converted. The scanner widening is new, unpriced code. `owner` naming a file path puts the answerable requirement one join away instead of on the row; the Q1 ruling (2026-08-15) refused a derived owner once on the ground that a derived view only surfaces what is encoded — weaker now that a path IS encoded, but not gone.
+
+### (b) The owner's shape, but the schema stays a cell
+
+Effect: as (a) for `provider`, `req_refs`, direction and the split — but the payload stays in the registry as a structured `data` cell, and the header stays opt-in as built.
+
+FOR: no scanner widening; the 31 non-module seams have a home on day one; the planning briefs keep a payload column. AGAINST: it keeps the one cell that rots — a hand-typed schema beside code nothing checks it against — which is the defect the header was built to remove, and it leaves two homes for one definition, the state OI-65 was raised to end.
+
+### (c) Remove `req_refs` only
+
+Effect: `req_refs` becomes optional — dropped on the 88 rows where the owner derives it, kept on the 48 where it adds something. Everything else stays. FOR: the exact precedent of the `provider` shed (OI-60 ruled (a)); one cell, one check, one migration entry. AGAINST: it does nothing about two-way rows, the prose contract or the `variable` shrug; the churn continues, and the 71-row cell pass proceeds against a shape the owner has rejected.
+
+### (d) Status quo — finish the 71-row cell pass as ruled at OI-66
+
+Effect: nothing changes shape; the remaining cells move their detail into module headers as planned. FOR: already ruled, already priced, no adopter migration. AGAINST: it spends the authoring on a shape whose cells are two-thirds redundant and whose direction lives in prose; a later ruling for (a) redoes the pass."""
+recommendation = """RULED (a) by the owner 2026-08-29 (record: docs/log.d/2026-08-29-oi67-ruled-a.md; program plan: docs/plans/2026-08-29-if-row-shape-plan.md). The driver recommended (a), sequenced so nothing is removed before its replacement exists.
+
+The vision loses NOTHING structural under (a): every seam still traces to the spine through `owner`, the component-boundary rule still has both endpoints, and the payload description moves to the one place a check can hold it to the code. What it loses is convenience — a join instead of a grep for impact analysis, and a payload column in the planning briefs that is read from the generated reference instead.
+
+The sequence, each step green before the next:
+
+- **Rule the shape here** — the three cells named, `owner` widened, `data` replacing `signal`, the one-direction rule stated in `PROCESS.md` §8.
+- **Widen the header's reach** so every provider kind has a home: extensionless hooks and `#`-comment headers in registry and config files. Price it the way WI-525 priced the header.
+- **Split the rows** — 14 two-way rows first (they are wrong under any option), then the 35 bundled rows, each either split or declared once with constituents on `carried_by`. New ids minted, citations re-pointed. This is the same per-row authoring the 71-row cell pass would have spent, spent on the right shape.
+- **Convert** — a `migrate_carrier` arm that drops the three cells, folds `provider` into `owner`, and fills `data` from `signal` + `signal_note` where an alphabet is stated; a `RESYNC_PACK.md` entry; the kit's own registry as the worked instance.
+- **Arm the gate** — a declared seam with no `Contract IF-###:` body fails, once the kit's own tree is clean.
+
+Do not take (c) as an interim: it is a second migration on the same cells within weeks. If (a) is beyond appetite, (d) is the honest fallback — but rule it, so the 71-row pass is not authoring against a shape nobody has agreed to. The pass is HELD until this is ruled."""
+wi_refs = ["WI-527"]

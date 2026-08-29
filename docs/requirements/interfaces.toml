@@ -26,9 +26,9 @@
 #                    rows whose owner is a design row naming exactly one
 #                    `module`, that module IS the provider, and a derivable cell
 #                    is a second spelling of a fact that already has a home.
-#                    It SURVIVES on 29 rows, each for a stated reason: 12 are
+#                    It SURVIVES on 30 rows, each for a stated reason: 12 are
 #                    the requirement-owned `Provides` rows the SR-owned-Provides
-#                    report is about; 12 are requirement-owned rows whose
+#                    report is about; 13 are requirement-owned rows whose
 #                    provider is a file medium, a directory or an `external:`
 #                    party (no design row is any of those); and 5 have a
 #                    multi-module owner, which derives a SET rather than the
@@ -53,8 +53,9 @@
 #                    AND NOT A RESTATEMENT OF ITS OWNER (OI-61 ruled (a),
 #                    2026-08-23, declared as the first step toward emptying the
 #                    prose cell registry-wide). The 27 rows delivering a shipped
-#                    script's CLI now state the CROSSING and stop — "SR-006's
-#                    obligation delivered as a CLI at check.py; crosses B-05" —
+#                    script's CLI — of 136 live rows — now state the CROSSING
+#                    and stop — "SR-006's obligation delivered as a CLI at
+#                    check.py; crosses B-05" —
 #                    what crosses, who answers for it, which boundary. The flags
 #                    and exit codes are read from the owner row, the module, and
 #                    the generated CLI reference, all three of which are held to
@@ -67,10 +68,21 @@
 #                    MEASURED and not rewritten, and the NON-CROSSING half of
 #                    what that measurement found has since left this cell for
 #                    `rationale` on 36 of them (OI-63 ruled (d), 2026-08-25).
-#                    What stays here is the crossing statement plus its
-#                    irreducible remainder; whether that remainder moves to a
-#                    component-side header is the placement question, re-asked
-#                    on the cleaned cells and still open.
+#                    PLACEMENT IS RULED AND THE MECHANISM IS BUILT (OI-66 ruled
+#                    (a), 2026-08-29, WI-527): the remainder BELONGS in the
+#                    module beside the code. A module declares its seams on a
+#                    line OPENING `Contracts: IF-###, ...` and states each one
+#                    as a `Contract IF-###:` block under it (that exact opener —
+#                    a bare `IF-###:` is ordinary prose); `gen_arch_map.py
+#                    --contracts-doc` harvests those into the committed,
+#                    freshness-gated `docs/interface-reference.md`, and the cell
+#                    then states what crosses and stops. WHAT IS BUILT IS THE
+#                    MECHANISM, NOT THE MOVE: 2 rows of 136 carry a stated
+#                    contract today (`IF-013`, `IF-144`), the other ~69 with
+#                    unique content have not moved, and the reference's
+#                    "Declared, not stated" section IS that debt list. Nothing
+#                    fails on an unstated seam — the coverage finding for one
+#                    was deliberately deferred.
 #
 #                    A NAMED SYMBOL OR PATH IN THIS CELL IS CHECKED (OI-61 ruled
 #                    (d), folded in): a `SCHED_*`, `Foo.bar` or `CONSTANT_NAME`
@@ -93,16 +105,27 @@
 #                    the CITATION, in prose that stands alone, with no
 #                    work-item id, ruling, sitting, review-round or open-item
 #                    reference, decision id, edit verb or date stamp; that
-#                    history belongs in the log (process.md §3). Filled on 37
-#                    rows. TWO TRAPS: an EMPTY string is a hard carrier refusal
+#                    history belongs in the log (process.md §3). Filled on 38
+#                    rows. ONE TRAP: an EMPTY string is a hard carrier refusal
 #                    (`spine_carrier` raises), so a row either carries the key
-#                    or omits it; and NOTHING CHECKS THE GRAMMAR ABOVE on this
-#                    cell today — `trace.py`'s IF citation-frame arm reads
-#                    `notes` and `signal_note` only, so the discipline here is
-#                    the author's until that arm widens.
+#                    or omits it. The grammar above IS checked — `trace.py`'s IF
+#                    citation-frame arm reads this cell alongside `notes` and
+#                    `signal_note` (`IF_REASON_CELLS`, widened by OI-65 ruling
+#                    (iv)), warn-first and token-scoped.
 #
 #   req_refs         EVERY requirement the seam realizes or relies on. Several
-#                    is normal — 21 rows list more than one.
+#                    is normal — 25 rows list more than one.
+#
+#                    ONE MECHANICAL READER: `trace.py`'s back-link check, which
+#                    fails a row whose cell is empty or names an unknown SR, so
+#                    every seam links the spine and stays transitively
+#                    TC-covered. Nothing joins on it beyond that (seam-to-test
+#                    coverage joins the other way, on a TC's `Verifies`), and on
+#                    88 of 136 rows the cell repeats what `owner` already
+#                    derives — 31 name the SR owner itself, 57 name exactly the
+#                    parents of the LLR owner. The 48 that carry a requirement
+#                    the owner does NOT derive are the ones stating the seam's
+#                    RELIES-ON side, which parentage cannot reach.
 #
 #   owner            The ONE row ANSWERABLE for the interface, id-typed and
 #                    POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`,
@@ -165,9 +188,14 @@
 #                    gates on the architecture tier — is not human-held under the
 #                    `[attestation] human_approval_through` dial. The
 #                    predicate is `agent_common.human_approves(docs,
-#                    "interfaces")`. At this repo's dial of 4 that means every
-#                    cell here is the OWNER'S to flip, in a reviewed
-#                    Status-change commit: no loop, no LLM verdict, no script.
+#                    "interfaces")`. READ THE DIAL, DO NOT ASSUME IT: this repo
+#                    runs `DevStg-Needs`-held only, so DevStg-Arch is NOT held
+#                    and the predicate answers FALSE — the hold this paragraph
+#                    once claimed is not in force. What keeps the cells the
+#                    owner's today is that the kit ships NO automated writer for
+#                    an off-spine `status`: they are hand-edited, in a reviewed
+#                    Status-change commit. The predicate exists so the first
+#                    such writer cannot be added without consulting it.
 #
 #                    Every live row reads `Drafted`, and that is a deliberate
 #                    non-claim rather than a backlog: nothing here has been
@@ -1739,7 +1767,7 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 [interface.IF-144]
 provider = "project-trajectory/scripts"
 consumers = ["external:downstream adopter"]
-contract = """Every delivered checker reports findings on one protocol: a finding NAMES its location - the at-fault row and cell, `file:line`, or the module - unless it is population-level and no single location exists; it carries a severity from the closed set OK / SKIP / WARN / FAIL; an advisory class never reaches the exit code; a declared strict flag is the only promotion from warning to failure; and an absent optional input exits zero and names the absence. Crosses B-05."""
+contract = """SR-157's obligation delivered as the reporting protocol every delivered checker honours, stated at check.py; crosses B-05."""
 signal = "discrete"
 signal_note = """The exit code is the bounded part of the crossing; the finding prose carrying the locations and severities is the unbounded part, and both are this seam."""
 req_refs = ["SR-149", "SR-150", "SR-157", "SR-158", "SR-159", "SR-162", "SR-163", "SR-167", "SR-180", "SR-182"]

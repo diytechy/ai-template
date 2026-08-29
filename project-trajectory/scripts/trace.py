@@ -2546,7 +2546,7 @@ def if_ownership_advisories(ifs, sr_ids, llr_ids):
     naming nobody, and naming several.
 
     It is not the same question as `Req-Refs`. That cell lists every requirement
-    the seam realizes or relies on — 21 of this repo's 115 rows list more than
+    the seam realizes or relies on — 25 of this repo's 136 rows list more than
     one — and none of them is thereby answerable FOR the seam. `Owner` names the
     one that is. Deriving it instead was the plan's first recommendation and Q1
     overturned it: a derived view can only surface what is already encoded, and

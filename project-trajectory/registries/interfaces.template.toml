@@ -5,13 +5,6 @@
 # flags and exit codes, or the file schema.
 #
 # WHAT A CONTRACT MUST NOT BE IS A RESTATEMENT OF ITS OWNER. Where the seam's
-# The contract may instead live BESIDE THE CODE: a module declares its seams on
-# a line OPENING with `Contracts: IF-###, ...` and may state each contract as an
-# `Contract IF-###:` block under it (that exact opener - a bare `IF-###:` is
-# ordinary prose and is deliberately NOT a body). `gen_arch_map.py --contracts-doc` harvests those into
-# a committed, freshness-gated interface reference, and the cell then states what
-# crosses and points there. Opt-in — a repo with no such file pays nothing.
-#
 # detail already lives on the `owner` row and in the module itself, the contract
 # states the CROSSING and stops:
 #
@@ -24,6 +17,14 @@
 # written artifact, a fail-loud guarantee, an exclusion in a comparison); a
 # clause you could have copied from the owner is one you will later have to
 # maintain in two places.
+#
+# THE DETAIL MAY LIVE BESIDE THE CODE. A module declares its seams on a line
+# OPENING with `Contracts: IF-###, ...` and may state each contract as a
+# `Contract IF-###:` block under it (that exact opener — a bare `IF-###:` is
+# ordinary prose and is deliberately NOT a body). `gen_arch_map.py
+# --contracts-doc` harvests those into a committed, freshness-gated interface
+# reference, and the cell then states what crosses and points there. Opt-in —
+# a repo with no such file pays nothing.
 #
 # BOUNDARY vs INTERNAL, and it is the distinction worth learning first. A
 # crossing of your SYSTEM boundary is a row in registries/external.template.toml,
