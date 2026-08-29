@@ -233,7 +233,10 @@ BASELINE = {
     # sections the reference renders (unreadable modules, stated contracts, the
     # declared-not-stated debt list). Reviewed, reason in
     # docs/log.d/2026-08-29-wi527-contract-header.md.
-    ("gen_arch_map.py", "module_contract_bodies"): 12,
+    (
+        "gen_arch_map.py",
+        "module_contract_bodies",
+    ): 14,  # +2 2026-08-29 the adversarial round: a body is ordered against the marker that declares ITS id (a per-id map, not the first marker in the file), and a marker line now ends a body so a declaration written below one is never swallowed into its prose. Both are branches in the walk itself. Reviewed bump.
     ("gen_arch_map.py", "build_contract_reference"): 12,
     (
         "gen_arch_map.py",

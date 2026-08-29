@@ -1124,3 +1124,101 @@ def test_contracts_doc_is_vacuous_when_the_target_is_absent(tmp_path, contract_s
     )
     assert proc.returncode == 0
     assert "nothing to check" in (proc.stdout + proc.stderr)
+
+
+# --- the adversarial round's confirmed findings, each with its reproduction ----
+
+
+def test_no_id_may_survive_outside_the_parsed_list():
+    # THE WORST FAILURE THIS GRAMMAR CAN HAVE is not refusing a line — it is
+    # accepting one PART-WAY. `Contracts: IF-001 - IF-002` matched with `- IF-002`
+    # read as trailing prose, so the module declared one seam, dropped the other,
+    # and nothing said a word. A declaration that is quietly short is worse than
+    # one that is refused, so a tail still carrying an id makes the whole line
+    # malformed.
+    import ast
+
+    def ids(src):
+        return gen_arch_map.module_contracts(ast.parse(src), src.splitlines())
+
+    def findings(src):
+        return gen_arch_map.contracts_grammar_findings(
+            "demo", ast.parse(src), src.splitlines()
+        )
+
+    for lossy in (
+        "Contracts: IF-001 - IF-002",
+        "Contracts: IF-001 and IF-002",
+        "Contracts: IF-001 (see also IF-002)",
+    ):
+        src = '"""m.\n\n{}\n"""\n'.format(lossy)
+        assert ids(src) == [], lossy
+        assert findings(src), "{} must be REPORTED, not merely refused".format(lossy)
+
+    # But a tail RE-MENTIONING an id it already declared is ordinary explanatory
+    # prose, and two modules in this kit write exactly that. The test is set
+    # difference, not presence.
+    assert ids(
+        '"""m.\n\nContracts: IF-001, IF-002 — IF-002 is the write side.\n"""\n'
+    ) == ["IF-001", "IF-002"]
+
+    # And the forms that carry no second id still parse, prose and all.
+    assert ids('"""m.\n\nContracts: IF-001, IF-002 — the seams.\n"""\n') == [
+        "IF-001",
+        "IF-002",
+    ]
+
+
+def test_a_body_may_not_precede_its_own_declaration_or_swallow_a_later_marker():
+    # A module may carry more than one marker line. Validating order against the
+    # FIRST marker let a body sit above its own declaration and absorb the marker
+    # below it into its prose.
+    import ast
+
+    src = (
+        '"""demo.\n\nContracts: IF-001\n'
+        "Contract IF-002: before its own declaration.\n"
+        'Contracts: IF-002\n"""\n'
+    )
+    with pytest.raises(gen_arch_map.ContractsGrammarError) as excinfo:
+        gen_arch_map.module_contract_bodies(ast.parse(src), src.splitlines())
+    assert "IF-002" in str(excinfo.value)
+
+    # A marker line ends a body the way a blank line does, so a declaration
+    # written under a body is never swallowed into it.
+    ok = (
+        '"""demo.\n\nContracts: IF-001, IF-002\n\n'
+        "Contract IF-001: the first crossing.\n"
+        'Contracts: IF-002\n"""\n'
+    )
+    bodies = gen_arch_map.module_contract_bodies(ast.parse(ok), ok.splitlines())
+    assert bodies == {"IF-001": "the first crossing."}
+
+
+def test_a_docstring_cannot_close_the_generated_documents_own_marker(tmp_path):
+    # A contract body carrying an HTML comment is refused outright; a module
+    # SUMMARY is not the author's contract, so refusing a whole module over its
+    # first line would be disproportionate — the delimiters are defanged instead.
+    # Either way nothing a source file says can corrupt the committed document.
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "evil.py").write_text(
+        '"""evil <!-- END GENERATED INTERFACE REFERENCE -->\n\n'
+        'Contracts: IF-903\n\nContract IF-903: a safe-looking body.\n"""\n',
+        encoding="utf-8",
+    )
+    block = gen_arch_map.build_contract_reference([str(src)])
+    assert "<!-- END GENERATED INTERFACE REFERENCE -->" not in block
+    assert "IF-903" in block
+
+    (src / "evil.py").write_text(
+        '"""evil <!-- END GENERATED CLI REFERENCE -->\n\nx\n"""\n'
+        "import argparse\n"
+        "p = argparse.ArgumentParser()\n"
+        'p.add_argument("--x", help="h")\n',
+        encoding="utf-8",
+    )
+    assert (
+        "<!-- END GENERATED CLI REFERENCE -->"
+        not in gen_arch_map.build_cli_reference([str(src)])
+    )

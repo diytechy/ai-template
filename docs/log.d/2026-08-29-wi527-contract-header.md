@@ -79,6 +79,42 @@ structurally cannot see them. Recorded, not papered over.
 on the wrong module passes. The review named it; it is a real gap and it is not
 this slice's.
 
+### CORRECTIONS: three claims above were wrong when written
+
+A second adversarial round ran against the FINISHED build and reproduced five
+defects. Three invalidated claims made earlier in this fragment, and the
+corrections are recorded here rather than by editing the claims away:
+
+- **"No adopter loses a declaration in silence" was FALSE.**
+  `Contracts: IF-001 - IF-002` matched with `- IF-002` read as trailing prose:
+  the module declared ONE seam, dropped the other, and no finding fired. A
+  declaration that is quietly short is worse than one refused. Fixed — no id may
+  survive outside the parsed list, which covers `-`, `and` and `(see also ...)`
+  under one rule.
+- **"A false green closed for the whole kit" was OVERSTATED.** The arm read
+  `git ls-files`, which is the INDEX, and a STAGED deletion has already left it —
+  so it went quiet on the commit-bound case and caught only the unstaged one
+  `git diff` already showed. Fixed — it reads HEAD as well.
+- **The "body before the marker" refusal was INCOMPLETE.** Order was validated
+  against the FIRST marker line, so with two markers a body could precede its own
+  declaration and swallow the later marker into its prose. Fixed — each id is
+  ordered against the marker that declares IT, and a marker line now ends a body.
+
+Two more, neither previously claimed: the module SUMMARY could inject the
+reference's own end marker (bodies were guarded, summaries were not, in BOTH
+generated references), and `interfaces.template.toml` documented an `IF-###:`
+opener the code ignores — contradictory shipped instructions that no test would
+have caught.
+
+Each fix has a test naming the reproduction.
+
+**One of those fixes then had to be narrowed, and the detector caught it.** The
+first "no id in the tail" rule refused ids the list ALREADY carried, and
+`check_trajectory.py` and `gen_trajectory.py` both re-mention their declared ids
+in the prose after the em dash — the reference fell 137 -> 128 seams before
+`contracts_grammar_findings` named both modules by name. The rule is now set
+difference: an id in the tail the list does not carry. 137 restored, 0 findings.
+
 ### The adversarial round
 
 Record: `docs/reviews/2026-08-29-oi66-build-round/`. OPENAI-SOL at medium

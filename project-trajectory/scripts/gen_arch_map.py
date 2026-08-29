@@ -434,7 +434,18 @@ def _marker_ids(line):
     text = _marker_text(line)
     m = _MARKER_RE.match(text)
     if m:
-        return [i.strip() for i in re.split(r"[,;]", m.group("ids"))]
+        # NO **UNDECLARED** ID MAY SURVIVE IN THE TAIL. `Contracts: IF-001 - IF-002`
+        # matches with `- IF-002` as trailing prose, which would declare one seam
+        # and drop the other in silence — a PARTIAL parse, worse than refusing,
+        # because the author sees a declaration that is quietly short. But the
+        # tail RE-MENTIONING an id it already declared is ordinary explanatory
+        # prose (check_trajectory.py and gen_trajectory.py both do it), so the
+        # test is set difference, not presence: an id in the tail that the list
+        # does not carry is what makes the line malformed.
+        declared = [i.strip() for i in re.split(r"[,;]", m.group("ids"))]
+        if set(CONTRACTS_RE.findall(m.group("rest") or "")) - set(declared):
+            return []
+        return declared
     if _MARKER_LOOKALIKE_RE.match(text):
         return []
     return None
@@ -502,8 +513,11 @@ def contracts_grammar_findings(module, tree, source_lines):
         if _marker_ids(line) == []:
             out.append(
                 "{}: `{}` is marker-shaped but declares no parsable id list — "
-                "the grammar is `Contracts: IF-###[, IF-###]...` and this line "
-                "declares nothing".format(module, text[:90])
+                "the grammar is `Contracts: IF-###[, IF-###]...` (comma or "
+                "semicolon) and this line declares nothing. An id after the "
+                "list, as in `IF-001 - IF-002`, is refused rather than parsed "
+                "part-way: a declaration that is quietly short is worse than "
+                "one that is refused".format(module, text[:90])
             )
         elif (
             _marker_ids(line) is None
@@ -550,7 +564,14 @@ def module_contract_bodies(tree, source_lines):
     declared = set(module_contracts(tree, source_lines))
     doc = ast.get_docstring(tree) or ""
     lines = doc.splitlines()
-    marker_at = next((i for i, line in enumerate(lines) if _marker_ids(line)), None)
+    # WHERE EACH ID WAS DECLARED, not merely where the first marker sits: a
+    # module may carry more than one marker line, and a body must follow the one
+    # that declares ITS id — otherwise a body can precede its own declaration
+    # and swallow the marker that follows it.
+    declared_at = {}
+    for i, line in enumerate(lines):
+        for iid in _marker_ids(line) or ():
+            declared_at.setdefault(iid, i)
     bodies, current, buf = {}, None, []
 
     def flush():
@@ -575,7 +596,7 @@ def module_contract_bodies(tree, source_lines):
         if m:
             flush()
             current, buf = m.group(1), [m.group(2)]
-            if marker_at is None or i < marker_at:
+            if current not in declared_at or i < declared_at[current]:
                 raise ContractsGrammarError(
                     "{} states a contract body before this module's "
                     "`Contracts:` marker line — the marker declares, the body "
@@ -596,7 +617,9 @@ def module_contract_bodies(tree, source_lines):
             continue
         if current is None:
             continue
-        if not line.strip():
+        # A marker line ends a body as firmly as a blank line does; otherwise a
+        # declaration written below a body is swallowed into that body's prose.
+        if not line.strip() or _marker_ids(line) is not None:
             flush()
             current, buf = None, []
             continue
@@ -896,7 +919,7 @@ def build_map(src_roots):
     for rel, summary, imports, contracts, rows in records:
         sections.append("\n### `{}`".format(rel))
         if summary:
-            sections.append("_{}_".format(summary.replace("|", "\\|")))
+            sections.append("_{}_".format(_md_safe(summary)))
         if imports:
             # check_trajectory.arch_inventory parses this line (backticked bare
             # stems) as the cross-CMP rule's edge source (WI-064) — keep the
@@ -1035,7 +1058,7 @@ def build_cli_reference(src_roots):
     for rel, summary, contracts, options in records:
         sections.append("\n### `{}`".format(rel))
         if summary:
-            sections.append("_{}_".format(summary.replace("|", "\\|")))
+            sections.append("_{}_".format(_md_safe(summary)))
         if contracts:
             sections.append("Contracts (interfaces): {}".format(", ".join(contracts)))
         sections.append("\n| Option | Help |\n|---|---|")
@@ -1047,6 +1070,17 @@ def build_cli_reference(src_roots):
                 )
             )
     return "\n".join(sections)
+
+
+def _md_safe(text):
+    """Text safe to splice into the generated Markdown.
+
+    A body that carries an HTML comment is REFUSED at parse time, but a module
+    SUMMARY is not the author's contract and refusing a whole module over its
+    first docstring line would be disproportionate — so the comment delimiters
+    are defanged here instead. Either way nothing a source file says can close
+    this document's own end marker."""
+    return text.replace("|", "\\|").replace("<!--", "&lt;!--").replace("-->", "--&gt;")
 
 
 def scan_contracts(src_roots):
@@ -1129,7 +1163,7 @@ def build_contract_reference(src_roots):
             continue
         sections.append("\n### `{}`".format(rel))
         if summary:
-            sections.append("_{}_".format(summary.replace("|", "\\|")))
+            sections.append("_{}_".format(_md_safe(summary)))
         for iid in ids:
             if iid in bodies:
                 sections.append("\n**{}** — {}".format(iid, bodies[iid]))

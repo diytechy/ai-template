@@ -1662,9 +1662,15 @@ def staged_divergence(root=".", strict=False):
     # module says a detector must not. Prefix rows (docs/okf/, docs/ratify/) are
     # directories a prefix declaration satisfies vacuously, and one of them —
     # docs/okf/ — is absent precisely because its dial is off.
+    # HEAD as well as the index. `git ls-files` reads the INDEX, and a STAGED
+    # deletion has already left it — so reading the index alone went quiet on
+    # exactly the commit-bound case this arm exists for, while catching only the
+    # unstaged one `git diff` already showed.
     tracked = _git_out(root, ["ls-files", "-z"])
-    if tracked is not None:
-        known = {p for p in tracked.split("\0") if p}
+    at_head = _git_out(root, ["ls-tree", "-r", "-z", "--name-only", "HEAD"])
+    if tracked is not None or at_head is not None:
+        known = {p for p in (tracked or "").split("\0") if p}
+        known |= {p for p in (at_head or "").split("\0") if p}
         deleted = sorted(
             entry
             for entry in census
