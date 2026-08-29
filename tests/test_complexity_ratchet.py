@@ -217,11 +217,28 @@ BASELINE = {
     # RE-STAMPED DOWN -3 (14 -> 11) 2026-08-23, WI-455: the declared-seam edge
     # walk went out to `_seam_edges` when the consumers side became a list —
     # decomposition rather than the bump the nesting would otherwise have cost.
+    # NEW at 11, 2026-08-29, WI-527 (OI-66 ruled (a)): the tracked-but-absent arm.
+    # A `[generated]` row naming a file git tracks and the worktree lacks read GREEN
+    # for every declared artifact, because each freshness step is vacuous on an
+    # absent target. The branch is one guarded loop inside the function that already
+    # holds the census and the git handle; extracting it would move the branch, not
+    # remove it. Reviewed, reason in docs/log.d/2026-08-29-wi527-contract-header.md.
+    ("check.py", "staged_divergence"): 11,
     ("gen_arch_map.py", "build_dependency_diagram"): 11,
+    # NEW at 12, 2026-08-29, WI-527 (OI-66 ruled (a)). Both are line-walkers over
+    # one docstring and their branches ARE the grammar, so extracting a helper
+    # would move branches rather than remove them: `module_contract_bodies`
+    # carries the body opener plus its four refusals (before-marker, undeclared,
+    # duplicate, HTML comment), and `build_contract_reference` carries the three
+    # sections the reference renders (unreadable modules, stated contracts, the
+    # declared-not-stated debt list). Reviewed, reason in
+    # docs/log.d/2026-08-29-wi527-contract-header.md.
+    ("gen_arch_map.py", "module_contract_bodies"): 12,
+    ("gen_arch_map.py", "build_contract_reference"): 12,
     (
         "gen_arch_map.py",
         "main",
-    ): 20,  # +1 2026-08-24 WI-512 (OI-61 ruled (a), second step): the `--cli-doc` report mode returns before the `--doc`/MODULE MAP contract below it, so the dispatch is one `if` at the top of main() — the same shape `--backlink-coverage` took, and for a sharper reason: the CLI-reference target carries the CLI block and NOT the module map that retired at WI-455, so demanding a MODULE MAP marker pair would refuse the one document this mode exists to write. The mode itself is already extracted (`_cli_doc_exit`). Reviewed bump. Earlier +1 2026-08-20 WI-486 (OI-42 ruled (e)): the `--backlink-coverage` report mode returns before every --doc/marker contract below it, so the dispatch is one `if` at the top of main(). It cannot be decomposed away — the whole point is that the report reads the source tree and writes NOTHING, so it must exit before the splice-target refusal asks for a document the measurement never touches; the report itself is already extracted (`_backlink_exit`). Reviewed bump. Earlier +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
+    ): 21,  # +1 2026-08-29 WI-527 (OI-66 ruled (a)): the `--contracts-doc` report mode dispatches beside `--cli-doc` as one `if` at the top of main(), for the identical reason — the target carries the INTERFACE REFERENCE block and not the module map, so demanding a MODULE MAP marker pair would refuse the one document this mode exists to write. The mode itself is already extracted (`_contracts_doc_exit`). Reviewed bump. Earlier +1 2026-08-24 WI-512 (OI-61 ruled (a), second step): the `--cli-doc` report mode returns before the `--doc`/MODULE MAP contract below it, so the dispatch is one `if` at the top of main() — the same shape `--backlink-coverage` took, and for a sharper reason: the CLI-reference target carries the CLI block and NOT the module map that retired at WI-455, so demanding a MODULE MAP marker pair would refuse the one document this mode exists to write. The mode itself is already extracted (`_cli_doc_exit`). Reviewed bump. Earlier +1 2026-08-20 WI-486 (OI-42 ruled (e)): the `--backlink-coverage` report mode returns before every --doc/marker contract below it, so the dispatch is one `if` at the top of main(). It cannot be decomposed away — the whole point is that the report reads the source tree and writes NOTHING, so it must exit before the splice-target refusal asks for a document the measurement never touches; the report itself is already extracted (`_backlink_exit`). Reviewed bump. Earlier +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
     ("gen_cases.py", "all_pairs"): 13,
     ("gen_cases.py", "main"): 12,
     ("gen_okf.py", "_doc_title_and_summary"): 13,

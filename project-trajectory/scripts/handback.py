@@ -63,8 +63,8 @@ true by moving the report's SHAPE down to `kitlib/station.py`, below both
 modules, rather than by softening the sentence. `dispatch.py` calls both — it
 decides which outcome a cycle reached, and the writes live here.
 
-No `Contracts:` line, deliberately: the integrator seam this extends is IF-080,
-whose row already sits in the interface registry with NO script declaring it —
+This module declares no seam, deliberately. The integrator seam it extends is
+IF-080, whose row already sits in the interface registry with NO script declaring it —
 part of the drift `docs/concurrency-v2.md` §A9.1 hands to the program-close row
 rather than to any single builder. Declaring it here, from the sibling rather
 than from `scripts/integrate` the row names as its provider, would paper over

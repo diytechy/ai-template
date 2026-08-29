@@ -1177,6 +1177,24 @@ contract **never restates its `Owner`** — where the detail lives on the owner
 row and in the module, state the crossing and stop (`SR-006's obligation
 delivered as a CLI at check.py; crosses B-05`), keeping a clause only for a
 typed fact the owner does not carry.
+**The contract may live BESIDE THE CODE, and the row points at it.** A module
+declares the seams it provides on one `Contracts: IF-###, ...` marker line — the
+line must OPEN with the marker, so prose that merely mentions it (`No
+`Contracts:` line, deliberately …`) declares nothing — and may then state the
+contract itself, one block per seam, opening `Contract IF-###:` — a form
+ordinary prose does not resemble, which is what makes hard-failing it safe. Four
+refusals keep the two halves honest: a body before the marker, a body for an
+undeclared id, a second body for one id, and a body carrying an HTML comment
+(the text is spliced into generated Markdown). The marker line stays the one
+declaration site, and its own grammar is anchored — `Contracts:` then a
+comma-separated id list — so a marker-shaped line that will not parse, or one
+carrying ids mid-line, is REPORTED rather than silently declaring nothing. `gen_arch_map.py --contracts-doc` harvests
+those bodies into a committed `interface-reference.md`, freshness-gated like the
+CLI reference, so the registry cell states what crosses and points at the
+module rather than restating what the module already says. This is opt-in: a
+repo with no such file pays nothing, and a declared seam that states no body is
+listed in the reference as unstated rather than dropped.
+
 `Status` (`Drafted` · `Approved`) is the row's **one** maturity field, shared
 with the boundary tier — the spine's own vocabulary (§7) minus `Founded`, which
 never applies here: an approval says the seam is agreed, not demonstrated. A row ties back to a declared boundary crossing — a

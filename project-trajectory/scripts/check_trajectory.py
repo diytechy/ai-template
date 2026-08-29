@@ -156,6 +156,7 @@ Contracts: IF-009, IF-023, IF-077, IF-131 — the interface seams this module de
 """
 
 import argparse
+import ast
 import configparser
 import csv
 import difflib
@@ -849,6 +850,37 @@ def load_seams(root):
     )
 
 
+def _contracts_grammar_findings(root):
+    """Marker-grammar findings over the declared scan root, or `[]` where the
+    tree cannot be read.
+
+    Degrades to silence on a missing `gen_arch_map`, files-mode or an absent
+    scan root, exactly as `arch_inventory` does — a detector that crashed in a
+    scaffold would be removed from the floor, which is the same outcome as not
+    having it."""
+    if gen_arch_map is None or not hasattr(gen_arch_map, "contracts_grammar_findings"):
+        return []
+    src, mode = _arch_scan_profile(root)
+    if mode == "files":
+        return []
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    if not src_dir.is_dir():
+        return []
+    found = []
+    for path in sorted(src_dir.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+            tree = ast.parse(text)
+        except (OSError, UnicodeDecodeError, SyntaxError):
+            continue
+        found.extend(
+            gen_arch_map.contracts_grammar_findings(path.name, tree, text.splitlines())
+        )
+    return found
+
+
 def arch_inventory(root):
     """`(module_names, {module: {IF ids}}, {module: {imported stems}})` derived
     STRAIGHT from the source tree under the declared arch-map scan root
@@ -999,6 +1031,15 @@ def interface_findings(root):
                 len(uncited), " — first 5" if len(uncited) > 5 else "", shown
             )
         )
+
+    # Marker-grammar honesty (OI-66): the `Contracts:` marker must OPEN its line
+    # and parse as an id list, which is what stops prose that DENIES a
+    # declaration from making one. Tightening a shipped grammar may not lose an
+    # adopter's seams in silence, so both lossy forms — a marker-shaped line
+    # whose id list will not parse, and a `Contracts:` carrying ids mid-line —
+    # are reported by name. Warn-first: on this repo the count is zero, and on
+    # an upgrading repo it is the migration list.
+    out.extend(_contracts_grammar_findings(root))
 
     # Docstring citation: a `Contracts: IF-###` a script declares (harvested into
     # the arch-map) must exist in the registry; and, once the convention is in

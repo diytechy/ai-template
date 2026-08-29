@@ -377,8 +377,11 @@ def test_zero_modules_from_a_hidden_only_src_warns(scaffold):
 def test_contracts_and_if_edges(tmp_path):
     src = tmp_path / "src"
     src.mkdir()
+    # The marker OPENS its own line since OI-66: the mid-line form this fixture
+    # used to carry declares nothing now, and
+    # test_a_midline_marker_is_reported_not_silently_dropped covers that path.
     (src / "a.py").write_text(
-        '"""Module A. Contracts: IF-003, IF-004"""\n\n\ndef run():\n    """go"""\n',
+        '"""Module A.\n\nContracts: IF-003, IF-004\n"""\n\n\ndef run():\n    """go"""\n',
         encoding="utf-8",
     )
     (src / "b.py").write_text(
@@ -880,3 +883,234 @@ def test_cli_doc_is_vacuous_when_the_target_is_absent(tmp_path, cli_src):
     )
     assert proc.returncode == 0
     assert "nothing to check" in proc.stdout
+
+
+# --- OI-66 ruled (a): the component-side contract header -----------------------
+
+CONTRACT_MOD = '''"""widget.py — the demo seam holder.
+
+Contracts: IF-901, IF-902 — the seams this module declares.
+
+Contract IF-901: consumes load(path) -> rows; the caller owns the parse, so a
+    file that will not parse costs that module's rule rather than the run.
+Contract IF-902: writes report.md; the exit code is the bounded part of the crossing.
+"""
+'''
+
+
+@pytest.fixture()
+def contract_src(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "widget.py").write_text(CONTRACT_MOD, encoding="utf-8")
+    return src
+
+
+def test_a_negated_contracts_line_is_not_a_declaration():
+    # The defect this build was gated on: handback.py says "No `Contracts:`
+    # line, deliberately: ... IF-080" and the old containment test harvested
+    # IF-080 out of the denial. Line-start, not "contains the word".
+    import ast
+
+    def ids(src):
+        return gen_arch_map.module_contracts(ast.parse(src), src.splitlines())
+
+    assert ids('"""m.\n\nContracts: IF-001, IF-002 — the seams.\n"""\n') == [
+        "IF-001",
+        "IF-002",
+    ]
+    # A denial declares nothing, however it names the id.
+    assert (
+        ids('"""m.\n\nNo `Contracts:` line, deliberately: it extends IF-080.\n"""\n')
+        == []
+    )
+    assert ids('"""m.\n\nSee the Contracts section for IF-003.\n"""\n') == []
+    # Line-start alone was NOT enough: this opens correctly and must still
+    # declare nothing, because the id list does not parse.
+    assert (
+        ids('"""m.\n\nContracts: not IF-080; an example, not a declaration.\n"""\n')
+        == []
+    )
+    # A separator style the tree already uses is not prose and must survive.
+    assert ids('"""m.\n\nContracts: IF-061; IF-078 — semicolons.\n"""\n') == [
+        "IF-061",
+        "IF-078",
+    ]
+    # The top-of-file comment form reads the same, leading `#` and all.
+    assert ids("# Contracts: IF-004 — the comment form.\nx = 1\n") == ["IF-004"]
+    assert ids("# No Contracts: line here; IF-005 lives elsewhere.\nx = 1\n") == []
+
+
+def test_a_contract_body_is_harvested_per_declared_seam():
+    import ast
+
+    bodies = gen_arch_map.module_contract_bodies(
+        ast.parse(CONTRACT_MOD), CONTRACT_MOD.splitlines()
+    )
+    assert set(bodies) == {"IF-901", "IF-902"}
+    # Wrapped lines join into one paragraph.
+    assert bodies["IF-901"].startswith("consumes load(path) -> rows")
+    assert "costs that module's rule rather than the run." in bodies["IF-901"]
+    assert bodies["IF-902"] == (
+        "writes report.md; the exit code is the bounded part of the crossing."
+    )
+
+
+def test_a_midline_marker_is_reported_not_silently_dropped():
+    # Tightening a shipped grammar may not lose an adopter's declarations in
+    # silence. Both lossy forms are NAMED so an upgrade tells you what stopped
+    # declaring.
+    import ast
+
+    def findings(src):
+        return gen_arch_map.contracts_grammar_findings(
+            "demo", ast.parse(src), src.splitlines()
+        )
+
+    mid = '"""Module A. Contracts: IF-003, IF-004"""\n'
+    assert any("MID-LINE" in f for f in findings(mid))
+
+    malformed = '"""m.\n\nContracts: not IF-080; an example.\n"""\n'
+    assert any("no parsable id list" in f for f in findings(malformed))
+
+    # A clean declaration, and a denial that no longer mentions the marker,
+    # both report nothing.
+    assert findings('"""m.\n\nContracts: IF-001 — fine.\n"""\n') == []
+    assert findings('"""m.\n\nThis module declares no seam, deliberately.\n"""\n') == []
+
+
+def test_the_body_opener_does_not_collide_with_ordinary_prose():
+    # A bare `IF-###:` is ordinary docstring prose — a mapping row, an example,
+    # a compatibility note. Only `Contract IF-###:` opens a body, which is what
+    # makes hard-failing the malformed cases safe.
+    import ast
+
+    src = (
+        '"""m.\n\nContracts: IF-001\n\n'
+        'IF-001: legacy identifier retained for compatibility.\n"""\n'
+    )
+    assert gen_arch_map.module_contract_bodies(ast.parse(src), src.splitlines()) == {}
+
+
+def test_the_four_body_refusals(tmp_path):
+    import ast
+
+    def refuse(src):
+        with pytest.raises(gen_arch_map.ContractsGrammarError) as e:
+            gen_arch_map.module_contract_bodies(ast.parse(src), src.splitlines())
+        return str(e.value)
+
+    # Before the marker: the marker declares, the body elaborates, and the order
+    # is what says which is which.
+    assert "before" in refuse(
+        '"""m.\n\nContract IF-001: early.\n\nContracts: IF-001\n"""\n'
+    )
+    # Twice for one seam: silently keeping the last is how two contracts become
+    # one.
+    assert "more than one" in refuse(
+        '"""m.\n\nContracts: IF-001\n\nContract IF-001: a.\n\nContract IF-001: b.\n"""\n'
+    )
+    # An opener that states nothing.
+    assert "states nothing" in refuse(
+        '"""m.\n\nContracts: IF-001\n\nContract IF-001:\n"""\n'
+    )
+    # The body is spliced into generated Markdown and must not be able to close
+    # its own end marker.
+    assert "HTML comment" in refuse(
+        '"""m.\n\nContracts: IF-001\n\nContract IF-001: x <!-- END GENERATED INTERFACE REFERENCE --> y.\n"""\n'
+    )
+
+
+def test_a_module_the_scan_cannot_read_is_named_in_the_reference(tmp_path):
+    # A reference that silently omitted a module it failed to parse would report
+    # a clean, fresh document over a tree it had not actually read.
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "good.py").write_text(
+        '"""good.py — a seam.\n\nContracts: IF-905\n\nContract IF-905: crosses.\n"""\n',
+        encoding="utf-8",
+    )
+    (src / "broken.py").write_text("def (((\n", encoding="utf-8")
+    block = gen_arch_map.build_contract_reference([str(src)])
+    assert "could not read" in block
+    assert "broken" in block
+    assert "IF-905" in block
+
+
+def test_a_body_for_an_undeclared_seam_is_refused():
+    # The marker line stays the ONE declaration site — the same rule
+    # _refuse_ambiguous_continuation enforces a line up. A body may elaborate a
+    # declared id; it may never declare a new one.
+    import ast
+
+    src = CONTRACT_MOD.replace("Contracts: IF-901, IF-902", "Contracts: IF-901")
+    with pytest.raises(gen_arch_map.ContractsGrammarError) as excinfo:
+        gen_arch_map.module_contract_bodies(ast.parse(src), src.splitlines())
+    assert "IF-902" in str(excinfo.value)
+
+
+def test_the_reference_lists_a_declared_seam_that_states_no_contract(tmp_path):
+    # An anchor without a body is a real gap; the reference SHOWS it rather than
+    # dropping the id, so "declared" and "stated" never silently diverge.
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "bare.py").write_text(
+        '"""bare.py — declares a seam, states nothing.\n\n'
+        'Contracts: IF-903 — the seam.\n"""\n',
+        encoding="utf-8",
+    )
+    block = gen_arch_map.build_contract_reference([str(src)])
+    # Named in the compact debt list, never dropped and never a paragraph each.
+    assert "IF-903" in block
+    assert "Declared, not stated" in block
+    assert "declare 1 seam(s); 0 carry a stated contract" in block
+
+
+def test_contracts_doc_splices_and_check_reds_on_drift(tmp_path, contract_src):
+    from conftest import run_py
+
+    doc = tmp_path / "interface-reference.md"
+    doc.write_text(
+        "# Interfaces\n\n<!-- BEGIN GENERATED INTERFACE REFERENCE -->\n"
+        "<!-- END GENERATED INTERFACE REFERENCE -->\n",
+        encoding="utf-8",
+    )
+    script = Path(gen_arch_map.__file__)
+    args = ["--src", str(contract_src), "--contracts-doc", str(doc)]
+
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert "IF-901" in doc.read_text(encoding="utf-8")
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+    # Edit the contract in the module and the committed block is STALE — which
+    # is the whole reason the body lives beside the code.
+    (contract_src / "widget.py").write_text(
+        CONTRACT_MOD.replace("writes report.md", "writes summary.md"),
+        encoding="utf-8",
+    )
+    red = run_py([script] + args + ["--check"], cwd=tmp_path)
+    assert red.returncode == 1
+    assert "STALE" in (red.stdout + red.stderr)
+
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+
+def test_contracts_doc_is_vacuous_when_the_target_is_absent(tmp_path, contract_src):
+    # Same opt-in posture as --cli-doc: a repo that has not adopted the
+    # reference has no file to be stale and pays nothing for the step.
+    from conftest import run_py
+
+    proc = run_py(
+        [
+            Path(gen_arch_map.__file__),
+            "--src",
+            str(contract_src),
+            "--contracts-doc",
+            str(tmp_path / "absent.md"),
+            "--check",
+        ],
+        cwd=tmp_path,
+    )
+    assert proc.returncode == 0
+    assert "nothing to check" in (proc.stdout + proc.stderr)

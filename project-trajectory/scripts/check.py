@@ -111,7 +111,21 @@ exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
 
-Contracts: IF-013, IF-022, IF-040 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-013, IF-022, IF-040, IF-144 — the interface seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-013: SR-006's obligation delivered as a CLI here. Runs a gate's declared
+    steps as subprocesses and exits nonzero on any required failure,
+    degrading only to a reported SKIP — never to a silent pass.
+Contract IF-144: the reporting protocol every delivered checker honours, composed here
+    into one verdict. A finding names its location — the at-fault row and
+    cell, `file:line`, or the module — unless it is population-level and no
+    single location exists; it carries a severity from the closed set
+    OK / SKIP / WARN / FAIL; an advisory class never reaches the exit code; a
+    declared strict flag is the only promotion from warning to failure; and an
+    absent optional input exits zero and names the absence. Per-class severity
+    stays each requirement's own declaration — this fixes the protocol, never
+    the disposition.
 """
 
 import argparse
@@ -166,6 +180,7 @@ TESTS = "tests"  # test root ([paths] tests)
 # step all have to name the same file, and three spellings of one path is how
 # a freshness gate ends up watching a document nobody writes.
 CLI_REFERENCE_DOC = "docs/cli-reference.md"
+INTERFACE_REFERENCE_DOC = "docs/interface-reference.md"
 COVERAGE_THRESHOLD = 80  # line-coverage %, enforced at full/release (process.md)
 
 # The declared product toolchain (Thread 30), read at repo root when present.
@@ -237,6 +252,7 @@ BUILTIN_STEP_NAMES = frozenset(
         "open-items",
         "component-view",
         "cli-reference",
+        "interface-reference",
         "okf",
         "approval-fresh",
         "skills-sync",
@@ -998,6 +1014,27 @@ def steps(coverage, tier, stage, phase=None, profile=None):
             _kitladder.STAGE_IMPL,
             "process",
         ),
+        # Interface-reference freshness (OI-66 ruled (a)): docs/interface-reference.md
+        # carries the contract each module states for the seams it declares. Same
+        # shape and same reasoning as cli-reference above — the reference is worth
+        # having only while it cannot drift, and this step IS "cannot drift".
+        # Vacuous when the doc is absent, so a scaffold and a non-adopter pay
+        # nothing.
+        (
+            "interface-reference",
+            (),
+            [
+                sys.executable,
+                str(_SCRIPTS / "gen_arch_map.py"),
+                "--src",
+                src,
+                "--contracts-doc",
+                INTERFACE_REFERENCE_DOC,
+                "--check",
+            ],
+            _kitladder.STAGE_IMPL,
+            "process",
+        ),
         # OKF knowledge-bundle freshness (Thread 48): docs/okf/ is a generated
         # export of the spine registries (never a parallel source of truth) —
         # gen_okf.py --check regenerates in memory and byte-compares like
@@ -1482,7 +1519,7 @@ _COVERAGE_ENV_VARS = (
 # be asked to commit the derived block.
 _TRUNK_FRESHNESS_STEPS = frozenset(
     "derived-stage trajectory-map status-map open-items component-view okf "
-    "approval-fresh cli-reference".split()
+    "approval-fresh cli-reference interface-reference".split()
 )
 
 # `_work_branch` shells out to git; unmemoized it would run once per step. Keyed
@@ -1614,6 +1651,38 @@ def staged_divergence(root=".", strict=False):
             "index.".format(Path(root).resolve(), top.strip())
         )
         return 0
+    # A declared artifact git TRACKS and the worktree no longer has. Every
+    # freshness step is deliberately vacuous on an absent target — that is what
+    # makes the kit opt-in — so deleting a declared artifact disarms its own gate
+    # in silence, and nothing else notices.
+    #
+    # TRACKED, not merely missing, and the difference is the whole correctness of
+    # this arm: a scaffold that has not generated its artifacts yet has nothing
+    # tracked and must stay silent, or the detector dies exactly where this
+    # module says a detector must not. Prefix rows (docs/okf/, docs/ratify/) are
+    # directories a prefix declaration satisfies vacuously, and one of them —
+    # docs/okf/ — is absent precisely because its dial is off.
+    tracked = _git_out(root, ["ls-files", "-z"])
+    if tracked is not None:
+        known = {p for p in tracked.split("\0") if p}
+        deleted = sorted(
+            entry
+            for entry in census
+            if not entry.endswith("/")
+            and entry in known
+            and not (Path(root) / entry).is_file()
+        )
+        if deleted:
+            for entry in deleted:
+                print(
+                    "  FAIL  staged-divergence  docs/stack.ini [generated] "
+                    "declares {} and it is tracked but absent from the worktree "
+                    "— an absent artifact makes its own freshness step vacuous, "
+                    "so the gate would pass over nothing. Restore or regenerate "
+                    "it, or drop the declaration.".format(entry)
+                )
+            return 1
+
     # -z: NUL-separated and UNQUOTED, so a path with an unusual byte is compared
     # as itself rather than as git's C-quoted rendering of it (which would match
     # no census row and under-report silently).

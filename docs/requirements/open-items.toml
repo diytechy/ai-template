@@ -2633,7 +2633,9 @@ wi_refs = ["WI-516", "WI-522"]
 
 [open_item.OI-66]
 title = """Is the component-side contract header worth its build price, or does the remainder stay in the cell"""
-status = "pending"
+status = "ruled"
+ruled_date = "2026-08-29"
+ruling_ref = "docs/log.d/2026-08-29-oi66-ruled-go.md"
 raised = "2026-08-28"
 one_line = """The header build is priced at roughly one WI-512, about 2,000 changed lines across 35 files. Decide go or no-go; the ruled fallback is that the content stays in the cell."""
 decision = """The question: with the build priced, does the unique interface content move to a component-side contract header, or does it stay in the cell?
@@ -2668,9 +2670,9 @@ options = """- **(a) GO.** Effect: commissions the generated reference, its gene
 - **(b) NO-GO, return to keep-in-cell.** Effect: nothing is built; OI-62's deletion pass then runs in the cell. FOR: no adopter migration, no new gate to maintain, and the deletion pass shrinks the surface that can rot even without moving it. AGAINST: accepts the rot class permanently - the cell keeps being held to the code by nobody.
 - **(c) GO on a reduced scope.** Effect: fix the harvester and author the 21 missing anchors; defer the generated reference and its gate. FOR: the harvester bug is worth fixing whichever way this is ruled, and the anchors are useful on their own. AGAINST: half a mechanism holds nothing to the code - without the committed reference the cell has nothing to point at, so it buys tidiness rather than the property that motivated (b).
 - **(d) GO, but sample first.** Effect: author five rows of the cell pass, measure what a contract body actually costs to write, then commit the rest. FOR: it prices the one item the analogue cannot, and five rows is cheap. AGAINST: a fourth act on this question, and the sample can only refine a decision the other numbers already support."""
-recommendation = """Recommend (a) GO, and fix the harvester first whichever way this is ruled.
+recommendation = """RULED (a) GO by the owner 2026-08-29 (record: docs/log.d/2026-08-29-oi66-ruled-go.md). Build the component-side contract header, its generated reference and its freshness gate; execution row WI-527.
 
-- The deciding reason: the argument that carried both prior rulings - that (b)'s precondition was an unpriced, unbuilt, possibly unbounded artifact - does not survive the record. WI-512 built the same artifact from nothing inside one work item, and this build is the same size with a bigger cell pass and a smaller mechanism, because the anchor already exists.
-- Required guard: the harvester fix lands before any cell moves, and it carries the "no contracts, deliberately" decision with it. A mechanism that reads a negated declaration as a declaration cannot be the thing 71 rows point at.
-- If the appetite for adopter-visible change is lower than (a): (d), not (c). A five-row sample answers the one open number; (c) buys tidiness without the property that motivated the move."""
+- The deciding reason stands: the argument that carried two prior rulings - that (b)'s precondition was an unpriced, possibly unbounded artifact - does not survive the record. WI-512 built the same artifact from nothing inside one work item.
+- The required guard is binding: the harvester fix lands BEFORE any cell moves, and it carries the "no contracts, deliberately" decision with it.
+- The one number still not taken is the authoring cost of the 71-row cell pass. It is measured as the pass runs rather than sampled first, because (d) was not the option ruled."""
 wi_refs = ["WI-525"]

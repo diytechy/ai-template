@@ -47,6 +47,10 @@ WIRED = {
     # is what the registry's thinned CLI `contract` cells now point at instead
     # of paraphrasing the flags by hand.
     "cli": "cli-reference",
+    # OI-66 ruled (a): the module-declared interface reference, which is what a
+    # thinned `contract` cell points at instead of restating what the providing
+    # module already says.
+    "interface-reference": "interface-reference",
 }
 
 # The kinds whose enforcer is NOT a check.py step, each named with its reason.

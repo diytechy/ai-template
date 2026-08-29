@@ -50,11 +50,13 @@ second formatter and a second place for the wording to drift; the `kind` is what
 the one caller that discriminates (the dispatcher, which excludes the pause)
 needs, and it is a FIELD rather than a substring match on the prose.
 
-Contracts: IF-088, IF-125 — the seams this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml). IF-088 is the dispatcher's
+Contracts: IF-088, IF-125, IF-138 — the seams this module declares (process.md §8;
+rows of record in docs/requirements/interfaces.toml). IF-088 is the dispatcher's
 exit-banner read of the pending projection, whose counterpart moved here with
 the derivation; IF-125 is the READ-ONLY consumption of the `last_approved`
-baseline (IF-123), which came down from `traj_status` with `spine_pending`.
+baseline (IF-123), which came down from `traj_status` with `spine_pending`. IF-138 is the derivation-loader seam this module holds: the blocked half of the
+projection is derived through the validator's own loaders, so the surfaces and
+validation can never disagree about what is blocked.
 
 Stdlib only, cross-platform, deterministic (sorted rows, no clocks) so every
 gated region derived from it is byte-stable.

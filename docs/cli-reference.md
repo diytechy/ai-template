@@ -95,7 +95,7 @@ Contracts (interfaces): IF-014, IF-039
 
 ### `scripts/check`
 _The check harness — one command that runs every quality gate locally and in CI._
-Contracts (interfaces): IF-013, IF-022, IF-040
+Contracts (interfaces): IF-013, IF-022, IF-040, IF-144
 
 | Option | Help |
 |---|---|
@@ -278,6 +278,7 @@ Contracts (interfaces): IF-010, IF-025
 | `--src` | source root to scan (repeatable; default: src) |
 | `--doc` | file(s) to update; repeatable, REQUIRED (the scaffolded docs/architecture.md default retired at WI-455). Point at AGENTS.md / CLAUDE.md to route the map where agents read. |
 | `--cli-doc` | REPORT MODE (needs no --doc): file(s) carrying the CLI REFERENCE marker pair, spliced with the argparse surface of every scanned module (repeatable). Honours --check. |
+| `--contracts-doc` | REPORT MODE (needs no --doc): file(s) carrying the INTERFACE REFERENCE marker pair, spliced with the contract each module states for the seams it declares (repeatable). Honours --check. |
 | `--flow` | entry/orchestrator function whose call sequence fills the GENERATED FLOW markers (e.g. 'run' or 'mod:run') |
 | `--mode` | symbols (default: Python-AST symbol map + diagram/flow) or files (stack-neutral one-row-per-file fallback) |
 | `--comment-prefix` | comment token whose first line is a file's summary in --mode files (repeatable; default: # // --) |

@@ -3972,6 +3972,68 @@ the old home for the amendment or mirror rules.
 
 ---
 
+### The contract may live beside the code, and the `Contracts:` marker tightens [since 8cf9e23d]
+
+*(Anchored at the preceding commit — an entry cannot know its own SHA.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/gen_arch_map.py`,
+`scripts/check.py`, `scripts/trunk_step.py`, `registries/interfaces.template.toml`.
+
+**(a) READ THIS ONE EVEN IF YOU ADOPT NOTHING BELOW — the `Contracts:` marker
+now has to OPEN its line.** It used to be "the line contains the word
+`Contracts`", which harvested ids out of prose that DENIED a declaration: the
+kit's own `handback.py` says *"No `Contracts:` line, deliberately: the integrator
+seam this extends is IF-080"* and the old rule read that as declaring `IF-080`.
+The new rule strips a leading `#` and requires the line to PARSE:
+`Contracts:` followed by a comma-separated `IF-###` list, optionally then prose
+after an em dash, hyphen, colon or parenthesis. Line-start alone was not enough —
+`Contracts: not IF-080; an example, not a declaration` opens correctly and would
+still have leaked IF-080 under a "harvest every IF token on the line" rule.
+
+*What this costs you:* a module whose marker sits MID-LINE — e.g.
+`"""Module A. Contracts: IF-003, IF-004"""` — no longer declares anything.
+All 57 anchors in the kit's own tree already open their line, so the kit saw no
+loss; your repo may differ. **Find yours before upgrading:**
+
+```
+grep -rn "Contracts:" --include="*.py" . | grep -v ":Contracts:" | grep "IF-"
+```
+
+Anything that prints and is a real declaration must move the marker to the start
+of its own line. A hit that is prose (a denial, a cross-reference) is now
+correctly ignored — that is the fix, not a regression.
+
+**You are not left to find them by grep alone.** `gen_arch_map` reports both
+lossy forms by name — a marker-shaped line whose id list will not parse, and a
+`Contracts:` carrying ids mid-line — so an upgrade tells you what stopped
+declaring instead of dropping it in silence. Do not bump each IF row's
+`version`: the marker syntax changed, the interface semantics did not.
+
+**(b) Adopt the generated interface reference, or don't.** `gen_arch_map.py`
+gains `--contracts-doc FILE` (repeatable, honours `--check`), the exact shape of
+`--cli-doc`. After its marker line a module may state each contract as a block
+opening `Contract IF-###:`, running to the next such line, a blank line, or the
+end of the docstring; wrapped lines join into one paragraph. The opener is
+`Contract IF-###:` and not a bare `IF-###:` on purpose — a bare id-colon is
+ordinary docstring prose (`IF-001: legacy identifier retained`, a mapping table,
+an example), and only a form nobody writes by accident is safe to hard-fail on.
+Four things raise `ContractsGrammarError`: a body before the marker line, a body
+for an id NOT on it, a second body for one id, and a body carrying an HTML
+comment (the text is spliced into generated Markdown and must not be able to
+close its own end marker). To adopt: create the doc with a
+`<!-- BEGIN GENERATED INTERFACE REFERENCE -->` / `<!-- END ... -->` pair, add a
+`[generated]` row of kind `interface-reference` naming it with its markers, and
+the shipped `interface-reference` check step plus `trunk_step.py --regen` pick it
+up. Skip all of it and the step is vacuous — a missing target prints a notice and
+exits 0.
+
+*What it buys:* the contract sits beside the code that must honour it, so a
+rename moves the two together and the registry cell can state what crosses and
+point rather than restate. *What it costs:* a declared seam with no body is
+listed in the reference as unstated rather than dropped, so adopting the doc
+before writing any bodies produces a document that is mostly gaps — which is the
+honest picture, and the reason it is opt-in.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

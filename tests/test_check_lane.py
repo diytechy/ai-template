@@ -278,6 +278,10 @@ def test_every_declared_freshness_step_is_skipped(check, tmp_path, monkeypatch):
         # that can fix it (the test `skills-index`/`prompt-catalog` fail, and
         # the reason they stay out of this set).
         "cli-reference",
+        # OI-66 ruled (a): the interface reference is a trunk-owned generated
+        # artifact on exactly cli-reference's footing, so it answers to the
+        # trunk and a work branch is told, not failed.
+        "interface-reference",
     }
     for name in check._TRUNK_FRESHNESS_STEPS:
         assert check.run_step(name, (), FAILING, lenient=False)[0] == "SKIP", name

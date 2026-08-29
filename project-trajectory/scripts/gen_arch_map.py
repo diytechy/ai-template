@@ -75,6 +75,7 @@ Usage:
                                    [--mode symbols|files] [--comment-prefix TOK ...]
                                    [--check] [--strict-parse]
     python scripts/gen_arch_map.py --cli-doc FILE [--src SRC ...] [--check]
+    python scripts/gen_arch_map.py --contracts-doc FILE [--src SRC ...] [--check]
     python scripts/gen_arch_map.py --backlink-coverage [--src SRC ...]
                                    [--root DIR] [--backlink-ext .EXT ...]
                                    [--strict-backlinks]
@@ -82,6 +83,8 @@ Usage:
     --src            One or more source roots to scan (default: src). Repeatable.
     --doc            File(s) to update in place (required; repeatable) — each
                      must contain the MODULE MAP marker pair.
+    --contracts-doc  File(s) carrying the INTERFACE REFERENCE marker pair,
+                     spliced with each module's stated contracts.
     --cli-doc        File(s) carrying the CLI REFERENCE marker pair, spliced
                      with every scanned module's argparse surface (repeatable).
                      Its own mode: it needs no --doc, since the module map it
@@ -101,6 +104,7 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED FLOW -->        ... <!-- END GENERATED FLOW -->          (optional; used by --flow)
     <!-- BEGIN GENERATED DEPENDENCY DIAGRAM --> ... <!-- END GENERATED DEPENDENCY DIAGRAM -->  (optional)
     <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
+    <!-- BEGIN GENERATED INTERFACE REFERENCE --> ... <!-- END GENERATED INTERFACE REFERENCE --> (required per --contracts-doc)
 
 Contracts: IF-010, IF-025 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
@@ -152,6 +156,8 @@ END_DIAGRAM = "<!-- END GENERATED DEPENDENCY DIAGRAM -->"
 # deliberately retired.
 BEGIN_CLI = "<!-- BEGIN GENERATED CLI REFERENCE -->"
 END_CLI = "<!-- END GENERATED CLI REFERENCE -->"
+BEGIN_CONTRACTS = "<!-- BEGIN GENERATED INTERFACE REFERENCE -->"
+END_CONTRACTS = "<!-- END GENERATED INTERFACE REFERENCE -->"
 # THE TWO PARSING GRAMMARS IN THIS MODULE ARE SEPARATE, and deliberately so.
 # `Implements:` (below) is a SYMBOL-level back-link declaration over the four
 # spine tiers; `Contracts:` (further down) is a MODULE-level interface-seam
@@ -394,6 +400,44 @@ class ContractsGrammarError(ValueError):
 _LEADING_ID_RE = re.compile(r"^(IF-\d+)\b")
 
 
+# The marker line's WHOLE grammar, anchored: `Contracts:` then a comma-separated
+# id list, then optional trailing prose introduced by an em dash, a hyphen or a
+# parenthesis. Anchored rather than "starts right, then harvest every IF token
+# on the line", because that weaker rule still read `Contracts: not IF-080; an
+# example, not a declaration` as declaring IF-080 — the same defect one step
+# down. An id list is either well formed or it is not a declaration.
+# Comma OR semicolon: the kit's own tree uses both (plan_artifacts.py is
+# semicolon-separated), and this grammar tightens against PROSE, never
+# against a separator style someone already writes.
+_MARKER_RE = re.compile(
+    r"^Contracts:\s*(?P<ids>IF-\d+(?:\s*[,;]\s*IF-\d+)*)\s*(?P<rest>[\u2014(:-].*)?$"
+)
+# What LOOKS like a marker: used only to tell a malformed declaration apart from
+# ordinary prose, so the first can be reported instead of silently dropped.
+_MARKER_LOOKALIKE_RE = re.compile(r"^Contracts\s*:")
+
+
+def _marker_text(line):
+    """`line` with a leading `#` and surrounding space stripped, so the
+    docstring and top-of-file-comment forms read through one grammar."""
+    return line.strip().lstrip("#").strip()
+
+
+def _marker_ids(line):
+    """The ids this line DECLARES, or None when it is not a marker line at all.
+
+    An empty list means the line is marker-shaped but declares nothing — a
+    finding, never a silent drop.
+    """
+    text = _marker_text(line)
+    m = _MARKER_RE.match(text)
+    if m:
+        return [i.strip() for i in re.split(r"[,;]", m.group("ids"))]
+    if _MARKER_LOOKALIKE_RE.match(text):
+        return []
+    return None
+
+
 def _refuse_ambiguous_continuation(lines, ids):
     """Raise ContractsGrammarError if any `lines` (the text following a
     Contracts marker line, up to the first blank line) opens with a bare
@@ -427,14 +471,136 @@ def module_contracts(tree, source_lines):
     doc = ast.get_docstring(tree) or ""
     doc_lines = doc.splitlines()
     for i, line in enumerate(doc_lines):
-        if "Contracts" in line:
-            ids.update(CONTRACTS_RE.findall(line))
+        found = _marker_ids(line)
+        if found:
+            ids.update(found)
             _refuse_ambiguous_continuation(doc_lines[i + 1 :], ids)
     for i, line in enumerate(source_lines[:8]):
-        if "Contracts" in line and line.lstrip().startswith("#"):
-            ids.update(CONTRACTS_RE.findall(line))
+        if not line.lstrip().startswith("#"):
+            continue
+        found = _marker_ids(line)
+        if found:
+            ids.update(found)
             _refuse_ambiguous_continuation(source_lines[i + 1 : 8], ids)
     return sorted(ids)
+
+
+def contracts_grammar_findings(module, tree, source_lines):
+    """Named findings for a line that LOOKS like a declaration and is not one.
+
+    The point is that a tightened grammar must never drop a declaration in
+    silence: a marker-shaped line whose id list will not parse, and a mid-line
+    `Contracts:` carrying ids (the form that declared something before the
+    grammar was anchored), are both REPORTED here so an upgrading repo is told
+    rather than quietly losing its seams."""
+    out, seen = [], set()
+    doc = ast.get_docstring(tree) or ""
+    for line in dict.fromkeys(list(doc.splitlines()) + list(source_lines[:8])):
+        text = _marker_text(line)
+        if _marker_ids(line) == []:
+            out.append(
+                "{}: `{}` is marker-shaped but declares no parsable id list — "
+                "the grammar is `Contracts: IF-###[, IF-###]...` and this line "
+                "declares nothing".format(module, text[:90])
+            )
+        elif (
+            _marker_ids(line) is None
+            and "Contracts:" in text
+            and CONTRACTS_RE.search(text)
+        ):
+            out.append(
+                "{}: `{}` carries `Contracts:` and an IF id MID-LINE — the "
+                "marker must open its own line, so this declares nothing; move "
+                "it to the start of a line".format(module, text[:90])
+            )
+    for line in out:
+        seen.add(line)
+    return sorted(seen)
+
+
+_BODY_OPEN_RE = re.compile(r"^Contract\s+(IF-\d+):\s*(.*)$")
+
+
+def module_contract_bodies(tree, source_lines):
+    """`{IF-###: body}` — the contract text a module states for each seam it
+    declares, harvested from its own docstring.
+
+    THE GRAMMAR. A body opens on a line whose first token is `Contract IF-###:`
+    and runs to the next such line, a blank line, or the end of the docstring;
+    wrapped lines join into one paragraph. The opener is `Contract IF-###:`
+    rather than a bare `IF-###:` deliberately — a bare id-colon is ordinary
+    docstring prose (`IF-001: legacy identifier retained`, a mapping table, an
+    example), and a grammar that cannot be written by accident is the only kind
+    safe to hard-fail on.
+
+    FOUR REFUSALS, each a `ContractsGrammarError`: a body before the marker
+    line, because the marker is what declares; a body for an undeclared id,
+    because the marker line stays the ONE declaration site; a second body for
+    one id, because silently keeping the last is how two contracts become one;
+    and a body carrying an HTML comment, because the text is spliced into a
+    generated Markdown document and could otherwise close its own end marker.
+
+    Why the module and not the registry cell: the declaration then sits beside
+    the code that must honour it, so a rename or a retirement moves the two
+    together. The registry row states what CROSSES and points here; this states
+    what the providing side promises.
+    """
+    declared = set(module_contracts(tree, source_lines))
+    doc = ast.get_docstring(tree) or ""
+    lines = doc.splitlines()
+    marker_at = next((i for i, line in enumerate(lines) if _marker_ids(line)), None)
+    bodies, current, buf = {}, None, []
+
+    def flush():
+        if not current:
+            return
+        text = " ".join(part.strip() for part in buf if part.strip())
+        if not text:
+            raise ContractsGrammarError(
+                "{} opens a contract body and states nothing — write the "
+                "contract or drop the opener.".format(current)
+            )
+        if "<!--" in text or "-->" in text:
+            raise ContractsGrammarError(
+                "{}'s contract body carries an HTML comment; the text is "
+                "spliced into a generated Markdown document and must not be "
+                "able to close its own markers.".format(current)
+            )
+        bodies[current] = text
+
+    for i, line in enumerate(lines):
+        m = _BODY_OPEN_RE.match(line.strip())
+        if m:
+            flush()
+            current, buf = m.group(1), [m.group(2)]
+            if marker_at is None or i < marker_at:
+                raise ContractsGrammarError(
+                    "{} states a contract body before this module's "
+                    "`Contracts:` marker line — the marker declares, the body "
+                    "elaborates, and the order says which is which.".format(current)
+                )
+            if current not in declared:
+                raise ContractsGrammarError(
+                    "{} carries a contract body but is not declared on this "
+                    "module's `Contracts:` line — the marker line is the one "
+                    "declaration site; add the id there or drop the "
+                    "body.".format(current)
+                )
+            if current in bodies:
+                raise ContractsGrammarError(
+                    "{} carries more than one contract body — one seam states "
+                    "one contract.".format(current)
+                )
+            continue
+        if current is None:
+            continue
+        if not line.strip():
+            flush()
+            current, buf = None, []
+            continue
+        buf.append(line)
+    flush()
+    return bodies
 
 
 # A module path reduced to a naming-convention-neutral key (strip a leading
@@ -879,6 +1045,142 @@ def build_cli_reference(src_roots):
                 )
             )
     return "\n".join(sections)
+
+
+def scan_contracts(src_roots):
+    """`([(module, summary, ids, bodies)], [unreadable])` — every module
+    declaring a seam, sorted by module path so the rendered block is byte-stable,
+    plus the modules the scan could NOT read.
+
+    The second half of that tuple is the point: a reference that silently
+    omitted a module it failed to parse would report a clean, fresh document
+    over a source tree it had not actually read. The caller renders the list."""
+    out, unreadable = [], []
+    for _root, base, path in _walk_roots(src_roots, "*.py"):
+        rel = path.relative_to(base).with_suffix("").as_posix()
+        try:
+            text = path.read_text(encoding="utf-8")
+            tree = ast.parse(text)
+        except (UnicodeDecodeError, OSError, SyntaxError) as exc:
+            unreadable.append((rel, type(exc).__name__))
+            continue
+        lines = text.splitlines()
+        ids = module_contracts(tree, lines)
+        if not ids:
+            continue
+        out.append(
+            (
+                rel,
+                first_line(ast.get_docstring(tree)),
+                ids,
+                module_contract_bodies(tree, lines),
+            )
+        )
+    return out, unreadable
+
+
+def build_contract_reference(src_roots):
+    """The rendered interface-reference block: the contracts modules STATE, then
+    a compact list of the seams they declare and do not state.
+
+    Stated contracts lead because they are what the document is for. The
+    unstated ones are one line per module rather than a placeholder paragraph
+    each — a real debt list stays readable, and 130-odd repeated "not stated
+    here" paragraphs would bury the contracts a reader came for. Neither is
+    dropped: a declared seam with no contract is debt, and debt that cannot be
+    seen is what this whole build exists to stop."""
+    note = (
+        "_Generated by `scripts/gen_arch_map.py --contracts-doc` from each "
+        "module's `Contracts:` declaration and `Contract IF-###:` bodies (AST, "
+        "no import). Do not edit by hand; run the check harness to refresh._"
+    )
+    records, unreadable = scan_contracts(src_roots)
+    if not records and not unreadable:
+        return note + "\n\n_(no declared interface seams scanned)_"
+
+    stated = sum(len(b) for _r, _s, _i, b in records)
+    declared = sum(len(i) for _r, _s, i, _b in records)
+    sections = [
+        note,
+        "",
+        "_{} module(s) declare {} seam(s); {} carry a stated contract._".format(
+            len(records), declared, stated
+        ),
+    ]
+
+    if unreadable:
+        # Loud, and in the document itself: the alternative is a green check
+        # over a tree the generator could not read.
+        sections.append("\n## Modules the scan could not read")
+        sections.append(
+            "_These are NOT covered below. A contract they declare is invisible "
+            "to this reference._\n"
+        )
+        for rel, why in unreadable:
+            sections.append("- `{}` — {}".format(rel, why))
+
+    sections.append("\n## Stated contracts")
+    if not stated:
+        sections.append("\n_No module states a contract yet._")
+    for rel, summary, ids, bodies in records:
+        if not bodies:
+            continue
+        sections.append("\n### `{}`".format(rel))
+        if summary:
+            sections.append("_{}_".format(summary.replace("|", "\\|")))
+        for iid in ids:
+            if iid in bodies:
+                sections.append("\n**{}** — {}".format(iid, bodies[iid]))
+
+    gaps = [
+        (rel, [i for i in ids if i not in bodies]) for rel, _s, ids, bodies in records
+    ]
+    gaps = [(rel, missing) for rel, missing in gaps if missing]
+    if gaps:
+        sections.append("\n## Declared, not stated")
+        sections.append(
+            "_The seam is declared here and its contract is not. One line per "
+            "module; this is the debt list, not an error._\n"
+        )
+        for rel, missing in gaps:
+            sections.append("- `{}` — {}".format(rel, ", ".join(missing)))
+    return "\n".join(sections)
+
+
+def _contracts_doc_exit(src_roots, args):
+    """Splice (or `--check`) the interface reference into each
+    `--contracts-doc` target; the process exit code.
+
+    Vacuous on an absent target, on `--cli-doc`'s reasoning: a repo that has
+    not adopted the reference has no file to be stale and the harness step must
+    cost it nothing. What that trades away is the same and is stated the same
+    way — deleting the doc disarms this gate silently, and what catches THAT is
+    the `[generated]` declaration plus the links into it, not this run."""
+    generated = build_contract_reference(src_roots)
+    stale = False
+    for doc in [Path(d) for d in args.contracts_doc]:
+        if not doc.exists():
+            print("no interface reference at {} — nothing to check.".format(doc))
+            continue
+        current = doc.read_text(encoding="utf-8")
+        updated = splice_region(
+            current, BEGIN_CONTRACTS, END_CONTRACTS, generated, doc, True
+        )
+        if args.check:
+            if updated != current:
+                stale = True
+                print(
+                    "Interface reference STALE in {}: run `python "
+                    "scripts/gen_arch_map.py --contracts-doc {}`".format(doc, doc),
+                    file=sys.stderr,
+                )
+        elif updated != current:
+            with doc.open("w", encoding="utf-8", newline="\n") as fh:
+                fh.write(updated)
+            print("wrote interface reference -> {}".format(doc))
+        else:
+            print("interface reference up to date.")
+    return 1 if stale else 0
 
 
 def _cli_doc_exit(src_roots, args):
@@ -1486,6 +1788,14 @@ def main():
         "module (repeatable). Honours --check.",
     )
     ap.add_argument(
+        "--contracts-doc",
+        action="append",
+        default=None,
+        help="REPORT MODE (needs no --doc): file(s) carrying the INTERFACE "
+        "REFERENCE marker pair, spliced with the contract each module states "
+        "for the seams it declares (repeatable). Honours --check.",
+    )
+    ap.add_argument(
         "--flow",
         default=None,
         help="entry/orchestrator function whose call sequence fills "
@@ -1559,6 +1869,8 @@ def main():
         sys.exit(_backlink_exit(src_roots, args))
     if args.cli_doc:
         sys.exit(_cli_doc_exit(src_roots, args))
+    if args.contracts_doc:
+        sys.exit(_contracts_doc_exit(src_roots, args))
     if not args.doc:
         raise SystemExit(
             "gen_arch_map: pass --doc <file carrying the MODULE MAP marker "

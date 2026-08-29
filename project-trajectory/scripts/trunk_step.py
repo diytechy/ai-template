@@ -407,6 +407,34 @@ def _components(root):
 
 
 CLI_REFERENCE_REL = "docs/cli-reference.md"
+INTERFACE_REFERENCE_REL = "docs/interface-reference.md"
+
+
+def _interface_reference(root):
+    """Opt-in on the same reading as `_cli_reference`: no doc or no markers
+    means nothing to splice, so the step does not apply."""
+    path = Path(root) / INTERFACE_REFERENCE_REL
+    if not path.exists():
+        return False
+    return "BEGIN GENERATED INTERFACE REFERENCE" in path.read_text(
+        encoding="utf-8", errors="replace"
+    )
+
+
+def _interface_reference_cmd(root):
+    """Its own argv builder, for `_cli_reference_cmd`'s reason: this generator
+    scans SOURCE, so it needs the declared `[paths] src`."""
+    src = _pget(_profile(root), "paths", "src", "src")
+    return [
+        sys.executable,
+        str(_SCRIPTS / "gen_arch_map.py"),
+        "--root",
+        ".",
+        "--src",
+        src,
+        "--contracts-doc",
+        INTERFACE_REFERENCE_REL,
+    ]
 
 
 def _cli_reference(root):
@@ -516,6 +544,12 @@ REGEN_STEPS = (
         _cli_reference,
         _cli_reference_cmd,
         "docs/cli-reference.md absent or carries no CLI REFERENCE markers",
+    ),
+    (
+        "interface-reference",
+        _interface_reference,
+        _interface_reference_cmd,
+        "docs/interface-reference.md absent or carries no INTERFACE REFERENCE markers",
     ),
 )
 
