@@ -99,26 +99,22 @@ def _fixture_repo(root):
     # here deliberately: they are cells the surface must NOT carry.
     (req / "interfaces.toml").write_text(
         "[interface.IF-059]\n"
-        'direction = "Consumes"\n'
-        'this_project = "scripts/plan_briefs"\n'
-        'counterpart = "docs/requirements/interfaces.toml"\n'
-        'contract = "{}"\n'
-        'signal = "variable"\n'
+        'owner = "docs/requirements/interfaces.toml"\n'
+        'consumers = ["scripts/plan_briefs"]\n'
+        'channel = "file"\n'
+        'data = "{}"\n'
         'rationale = "{}"\n'
-        'sr_refs = ["SR-061"]\n'
         'version = "v1"\n'
-        'approval = "draft"\n'
+        'status = "Drafted"\n'
         'component = "CMP-004"\n'
         'notes = "note"\n\n'
         "[interface.IF-000]\n"
-        'direction = "Provides"\n'
-        'this_project = "scripts/example"\n'
-        'counterpart = "scripts/other"\n'
-        'contract = "example stub"\n'
-        'signal = "discrete"\n'
-        'sr_refs = ["SR-000"]\n'
+        'owner = "scripts/example"\n'
+        'consumers = ["scripts/other"]\n'
+        'channel = "call"\n'
+        'data = "example stub"\n'
         'version = "v1"\n'
-        'approval = "draft"\n'.format(IF_CONTRACT, IF_RATIONALE),
+        'status = "Drafted"\n'.format(IF_CONTRACT, IF_RATIONALE),
         encoding="utf-8",
     )
     return root
@@ -207,14 +203,17 @@ def test_if_surface_no_longer_hands_a_planner_the_retired_status_column():
     answers "who serves this seam"; before it, a planning model was handed
     `Direction` + `ThisProject` + `Counterpart` — three cells whose meanings
     swapped on the first — and told they were fact. WI-455 retired those three
-    for `Provider` + `Consumers`, which read the same way on every row; the pin
-    moved with them."""
+    for `Provider` + `Consumers`; OI-67 made `Owner` the providing thing
+    itself, the far side `Requestors` or `Consumers` (the key is the
+    direction), and the typed `Channel` + `Data` pair the only statement a
+    planner is handed — the prose `Contract` left the surface with the cell."""
     assert pb.IF_SURFACE_COLUMNS == (
         "IF-ID",
         "Owner",
-        "Provider",
+        "Requestors",
         "Consumers",
-        "Contract",
+        "Channel",
+        "Data",
     )
     assert "Status" not in pb.IF_SURFACE_COLUMNS
 

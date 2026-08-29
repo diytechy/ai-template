@@ -182,12 +182,10 @@ def test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING(scaffold):
     _frame(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"
-        'direction = "Provides"\n'
-        'this_project = "src/demo"\n'
-        'counterpart = "downstream adopter"\n'
-        'contract = "the package"\n'
-        'signal = "discrete"\n'
-        'sr_refs = ["SR-001"]\n'
+        'owner = "src/demo"\n'
+        'consumers = ["external:downstream adopter"]\n'
+        'channel = "bytes"\n'
+        'data = "the package"\n'
         'version = "v1"\n'
         'status = "Drafted"\n'
         'interface_to_external = "B-99"\n',
@@ -264,12 +262,10 @@ def test_a_tieback_is_vacuous_when_no_crossing_is_declared(scaffold):
     _frame(scaffold, '[entity.EXT-001]\nname = "A"\nclass = "operational"\n')
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"
-        'direction = "Provides"\n'
-        'this_project = "src/demo"\n'
-        'counterpart = "downstream adopter"\n'
-        'contract = "the package"\n'
-        'signal = "discrete"\n'
-        'sr_refs = ["SR-001"]\n'
+        'owner = "src/demo"\n'
+        'consumers = ["external:downstream adopter"]\n'
+        'channel = "bytes"\n'
+        'data = "the package"\n'
         'version = "v1"\n'
         'status = "Drafted"\n'
         'interface_to_external = "B-99"\n',

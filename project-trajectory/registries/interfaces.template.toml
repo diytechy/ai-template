@@ -1,30 +1,23 @@
 # interfaces.template.toml — INTERFACE DEFINITIONS. Copy to
 # docs/requirements/interfaces.toml and replace the `-000` example row.
 #
-# An IF row states what one interface concretely IS — one testable line: CLI
-# flags and exit codes, or the file schema.
+# ONE ROW IS ONE OWNER, ITS FAR SIDE, AND A TYPED STATEMENT OF THE INFORMATION.
+# An interface says what the information plugs into, who is on the other end
+# and which way it runs, and what the data is — and nothing else. A call is
+# one row (its requestors send the arguments and get the return); a CLI's
+# arguments and its exit code are two rows (requestors in, consumers out). A
+# module that reads one file and writes another is two rows. A seam that
+# bundles several kinds is split, or declared once with its constituents on
+# `carried_by`.
 #
-# WHAT A CONTRACT MUST NOT BE IS A RESTATEMENT OF ITS OWNER. Where the seam's
-# detail already lives on the `owner` row and in the module itself, the contract
-# states the CROSSING and stops:
-#
-#     contract = """SR-006's obligation delivered as a CLI at check.py; crosses B-05."""
-#
-# What crosses, who answers for it, which boundary — and a reader who needs the
-# flags reads the owner row, the module, or the generated CLI reference, each of
-# which is checked against the code in a way a hand-copied paragraph is not.
-# Keep a clause past that only for a typed fact the owner row does NOT state (a
-# written artifact, a fail-loud guarantee, an exclusion in a comparison); a
-# clause you could have copied from the owner is one you will later have to
-# maintain in two places.
-#
-# THE DETAIL MAY LIVE BESIDE THE CODE. A module declares its seams on a line
-# OPENING with `Contracts: IF-###, ...` and may state each contract as a
-# `Contract IF-###:` block under it (that exact opener — a bare `IF-###:` is
-# ordinary prose and is deliberately NOT a body). `gen_arch_map.py
-# --contracts-doc` harvests those into a committed, freshness-gated interface
-# reference, and the cell then states what crosses and points there. Opt-in —
-# a repo with no such file pays nothing.
+# THE DEFINITION LIVES BESIDE THE CODE, NOT IN A CELL. What the owner promises
+# — the flags, the schema, the guarantees — is stated once, in the owner's own
+# header: a module declares its seams on a line OPENING `Contracts: IF-###,
+# ...` and states each as a `Contract IF-###:` block under it (that exact
+# opener — a bare `IF-###:` is ordinary prose). A registry, config or hook file
+# carries the same marker and bodies in a `#` header at its top.
+# `gen_arch_map.py --contracts-doc` harvests them into a committed,
+# freshness-gated interface reference. The row declares the seam and stops.
 #
 # BOUNDARY vs INTERNAL, and it is the distinction worth learning first. A
 # crossing of your SYSTEM boundary is a row in registries/external.template.toml,
@@ -38,104 +31,93 @@
 # A row with neither key is an internal seam. That absence IS the statement —
 # there is no column to set to "internal" and get wrong.
 #
-# THE TWO SIDES ARE `provider` AND `consumers`, and the row is read
-# provider -> consumers. `consumers` is a LIST and is required; `provider` is a
-# single endpoint and is OMITTED wherever `owner` derives it (see DERIVABILITY
-# below).
+# THE FIELDS.
 #
-# ENDPOINTS ARE VALIDATED AGAINST THE TREE. Both cells are checked, warn-first,
-# against the arch-map modules and then against the files and directories that
-# actually exist; an endpoint that resolves to NOTHING is named individually,
-# because a spine file that migrated (`.csv` -> `.toml`) and left its seam row
-# behind is the failure this rule was written for.
+# owner — REQUIRED. The providing THING, in the one spelling `consumers` uses:
+# a module path (`scripts/check`), a file or directory path (`docs/stack.ini`,
+# `docs/work/`), or an `external:` party (`external:git`). NEVER a requirement
+# or design id: the requirement the seam answers to is REACHED through the
+# owner — the design rows whose `module` names it, or the `Implements:` line
+# in its header — and is not stated on the row. An id-shaped owner is a
+# finding; a module-shaped owner that reaches no requirement is a warning. A
+# GENERATED FILE IS OWNED BY THE MODULE THAT WRITES IT; a hand-edited file is
+# owned as itself and declares in its own header.
 #
-#     consumers = ["external:downstream adopter"]
+# requestors / consumers — THE FAR SIDE NAMES THE DIRECTION; exactly ONE of the
+# two is set, a LIST either way. `requestors` put information INTO the surface
+# the owner defines (they call the function, invoke the CLI, set the env var,
+# write the file); `consumers` take what the owner emits (they read the file,
+# the exit code, the stdout). The owner defines the surface in both cases; the
+# key says which way the information runs, so one row is one direction by
+# construction. Both or neither is a finding. Name the sides you have
+# MEASURED, and an open-ended class as `external:<class>`. Every endpoint cell
+# is validated against the tree, warn-first: an endpoint that resolves to
+# nothing is named individually. The `external:` PREFIX says an endpoint is
+# deliberately outside this tree; a path your `docs/declared-absences`
+# declares counts as resolved.
 #
-# The `external:` PREFIX is how a row says an endpoint is deliberately outside
-# this tree — an adopter, `git`, an agent CLI, an upstream doc set. It is a value
-# convention rather than a column so that it rides the carrier unchanged and
-# cannot drift out of sync with the endpoint it qualifies. Mark the ones that are
-# genuinely external; leave everything else resolvable, and fix it when it is not.
-# A path your `docs/declared-absences` already declares (an opt-in layer you have
-# switched off) counts as resolved — the reason is stated there, once.
+# channel — REQUIRED, CLOSED: what crosses, typed.
+#     cli        an invocation surface: argv flags and arguments
+#     exit-code  a finite code alphabet a process returns
+#     stdout     text a process emits: findings, a report, a verdict line
+#     file       a file or directory medium with a schema
+#     call       an in-process API another module imports
+#     env        an environment variable or launcher slot
+#     git        repository state: refs, trailers, a staged diff, hook argv
+#     bytes      opaque content: fetched sources, a vendored tree
+# A dial read from a config file is `file` (the medium is the file; `data`
+# names the key). A source tree walked by AST is `file`.
 #
-# `consumers` names EVERY consuming side the contract really has — one seam
-# read by three modules is one row with three consumers, not three rows copying
-# one `contract`. Name the readers you have MEASURED, not everything that might
-# read it. A published medium whose readers are open-ended names the class
-# (`external:downstream adopter`) alongside the in-tree readers.
+# data — OPTIONAL: the finite alphabet when there is one (`0 pass · 1 fail · 2
+# usage`, `off | ask | deny`) or a one-clause schema pointer. 160 characters at
+# most; no work-item id, no decision citation, no rationale connective; a named
+# symbol or path must resolve (warn-first). The row's typed summary — not the
+# definition, which lives in the header.
 #
-# OWNER is the ONE row that is answerable for this interface, id-typed, and it is
-# POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`, resolved against whichever
-# registry the prefix names. Both resolve, but they are not equally right:
-# point `owner` at the DESIGN tier wherever a design row exists for the
-# owner-side endpoint — the design row is what concretely serves the seam —
-# and fall back to the `SR-###` only while no design row exists yet. Exactly
-# one — naming nobody and naming several are both findings.
+# rationale — OPTIONAL: WHY the seam is drawn here. It takes the ARGUMENT,
+# never the CITATION — no work-item id, ruling, review-round or open-item
+# reference, decision id, edit verb or date stamp; that history belongs in the
+# log. An EMPTY string is a hard carrier refusal: carry the key or omit it.
 #
-# `owner` is NOT `req_refs`. `req_refs` lists every requirement the seam realizes
-# or relies on, and several is normal; `owner` names the one that ANSWERS for it.
-# Reading who serves a seam used to take three cells (a `direction` flag plus two
-# endpoint cells whose meanings swapped on it). This is that answer in one cell.
-#
-# ON A ROW WHOSE MEDIUM IS CONSUMED, `owner` NAMES THE PROVIDER OF THAT MEDIUM —
-# never the module that merely holds the consuming code. One row per medium, with
-# its verified readers in `consumers`, beats one row per reader.
-#
-# DERIVABILITY — WHEN TO OMIT `provider`. Where `owner` is a design row naming
-# exactly ONE module, that module IS the provider, so the cell is left OUT: a
-# derivable cell is a second spelling of a fact that already has a home, and the
-# two spellings can disagree. State `provider` only where the derivation cannot
-# run — an `SR-###` owner (a requirement names no module) or an owner whose
-# `module` names several (which derives a SET, not the fact) — or where the
-# provider is a file medium or an `external:` party, which no design row is.
-# A warn-only advisory names any row that states a provider its owner derives.
-#
-# THERE IS NO DIRECTION COLUMN, deliberately. Flow is the SHAPE of the row
-# (provider -> consumers), not a flag beside it — and a "provide" implies
-# orientation without meaning the interface is actually directional: a bolted
-# joint, a mated connector and a thermal path each have an owner and no flow at
-# all. What a `Consumes` row used to declare — this cross-component edge is
-# INTENDED, and this row discharges it — is unchanged and is read off the
-# endpoint pair. Ownership lives in `owner`, and only there.
-#
-# VERIFIED_BY is OPTIONAL, and LEAVING IT EMPTY IS A REAL ANSWER: "this seam is
+# verified_by — OPTIONAL, and LEAVING IT EMPTY IS A REAL ANSWER: "this seam is
 # verified in its own right". Fill it only for a LOW-LEVEL seam whose honest
-# answer is that the parent functionality's tests are what cover it — a
-# `TC-###` (the test) or an `LLR-###` (the parent design row that carries one).
-# Building blocks are not thereby forced into a test each, and the position stops
-# being unsayable: without this cell an IF row has no verification column at all,
-# so "covered by the parent" could only be left silent. What is checked is that
-# the pointer RESOLVES, warn-first — nothing reads whether the named test really
-# exercises the seam, which is a judgement, not a grammar. DELETE the key unless
-# this seam really rides its parent's coverage.
+# answer is that the parent functionality's tests cover it — a `TC-###` or an
+# `LLR-###`. Checked to RESOLVE, warn-first; nothing reads whether the named
+# test really exercises the seam. DELETE the key unless this seam really rides
+# its parent's coverage.
 #
-# CARRIED_BY is OPTIONAL interface composition: a constituent naming the bundle
-# that carries it (`carried_by = "IF-###"`). Six seams riding one larger seam
-# name the same carrier id, so granularity stops being a forced choice — declare
-# the bundle AND its parts and decompose only as far as is useful. The carriage
-# graph must resolve and must be acyclic, and depth past 2 warns. Most rows carry
-# nothing, and an empty cell IS "this is not a constituent".
+# carried_by — OPTIONAL interface composition: a constituent naming the bundle
+# that carries it (`carried_by = "IF-###"`). A constituent is still one owner
+# and one channel; the bundle is the unit a consumer pins. The carriage graph
+# must resolve and be acyclic; depth past 2 warns. An empty cell IS "not a
+# constituent".
 #
-# STATUS is the one maturity field, and it is the SPINE'S field and words: a
-# CLOSED vocabulary, `Drafted` | `Approved`, shared with external.toml.
-# `Founded` is NOT APPLICABLE to this tier and never will be — it means
-# settled AND DEMONSTRATED, and an approval says the seam is AGREED, not that
-# it was demonstrated. Flipping a cell to `Approved` is a human act in a
-# reviewed commit. Do NOT carry a second maturity column beside it; the whole
-# reason this tier has one field is that it once had two that meant different
-# things on the same row (the retired `Stability`, and a `Status` column that
-# shipped undeclared — this field carries that name honestly now).
+# version — the contract version the other side codes against.
+#
+# status — the one maturity field, the SPINE'S words: `Drafted` | `Approved`,
+# shared with external.toml. `Founded` is NOT APPLICABLE to this tier — it
+# means settled AND DEMONSTRATED, and an approval says the seam is AGREED.
+# Flipping a cell to `Approved` is a human act in a reviewed commit.
+#
+# component — OPTIONAL `CMP-###` membership tag.
+#
+# notes — OPTIONAL free prose; argument, never citation. Honesty valve: the
+# FIRST word `source` (produces output, consumes nothing declared) marks the
+# row's owner, `sink` (consumes, produces nothing) marks its far side,
+# silencing the missing-seam coverage warn for that side.
+#
+# A `contract` cell is LEGACY — the prose definition rows carried before the
+# header existed. A row still carrying one is counted by a warning; move its
+# content into the owner's `Contract IF-###:` body and delete the cell.
 
 [interface.IF-000]
-provider = "EXAMPLE - delete on first real entry"
-consumers = ["another-module-or-file-or-external-actor"]
-contract = """One seam, one testable line: CLI flags + exit codes, or the file schema. Provider is the side the contract is served FROM - a module path, or the file medium itself (module->file->module dataflow, so a shared file like docs/stack.ini is a hub node many modules read); consumers are the sides that read it - modules, or an external actor (downstream adopter / git / agent CLI). Provider is OMITTED on a row whose owner derives it."""
-signal = "discrete"
-signal_note = """Signal is a CLOSED vocabulary: discrete (a finite enumerable alphabet - exit code, gate name, status enum, dial) or variable (unbounded content - prose, file bytes, a count, a duration). If BOTH cross, the row is variable, and this cell says why."""
-rationale = """WHY the seam is drawn here - the argument that would otherwise squat in Contract. Empty is allowed; a Contract cell that argues (because / rather than / so that / since) is what this column exists to take. It takes the ARGUMENT, never the CITATION: state what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3)."""
-req_refs = ["SR-000"]
-owner = "SR-000"
+owner = "EXAMPLE - delete on first real entry"
+requestors = ["a-side-that-puts-information-INTO-the-owner - set THIS or consumers, never both"]
+consumers = ["a-side-that-takes-what-the-owner-emits - set THIS or requestors, never both"]
+channel = "exit-code"
+data = "0 pass | 1 fail | 2 usage - the alphabet when finite, else a schema pointer, 160 chars at most"
+contract = "LEGACY - the prose definition rows carried before the header existed; a row still carrying one is counted by a warning. Delete this key."
+rationale = """WHY the seam is drawn here - the argument, never the citation: what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3). Empty is allowed; delete the key rather than leaving it blank."""
 verified_by = "TC-000"
 carried_by = "IF-000"
 version = "v1"
@@ -143,4 +125,4 @@ status = "Drafted"
 interface_from_external = "B-000"
 interface_to_external = "B-000"
 component = "CMP-000"
-notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-seam coverage warn - source marks this row's provider, sink marks its consumers. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the crossing direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""
+notes = """`carried_by` here names IF-000 only because a template declares every column the schema states and IF-000 is the only id in this file - a row may NOT carry itself, and the check says so. DELETE the key unless this seam really rides a larger one. Honesty valve: put the word source (produces output, consumes nothing declared) or sink (consumes, produces nothing) here to silence the missing-seam coverage warn - source marks this row's owner, sink marks its consumers. The example carries BOTH tie-back keys because a template declares every column the schema states - a real row carries only the crossing direction(s) it realizes, and MOST rows carry neither, so delete them unless this row really realizes a declared boundary crossing. A tie-back on an internal seam is the one error this schema cannot catch for you: a crossing id that resolves is indistinguishable from a crossing id that belongs."""

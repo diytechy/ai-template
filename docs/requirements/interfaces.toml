@@ -1,403 +1,293 @@
 # docs/requirements/interfaces.toml — INTERFACE DEFINITIONS, the kit's own.
 #
-# An IF row states what one interface concretely IS — one testable line. A
-# crossing of the SYSTEM boundary is not a row here: those live in
+# ONE ROW IS ONE OWNER, ITS CONSUMERS, AND A TYPED STATEMENT OF THE INFORMATION
+# (OI-67 ruled (a), 2026-08-29). An interface says what the information plugs
+# into, who it serves, and what the data is — and nothing else. A request and
+# its answer are two rows. A module that reads one file and writes another is
+# two rows. A crossing of the SYSTEM boundary is not a row here: those live in
 # `docs/requirements/external.toml`, and a row here ties BACK to one only when
 # it realizes a crossing. Everything else is an internal seam.
 #
 # THE FIELDS — what each one is, and how it is used.
 #
-#   provider         The side the contract is served FROM, and
-#   consumers        the sides that read it — a LIST, and the required cell.
-#                    The row is read `provider -> consumers`: THERE IS NO
-#                    DIRECTION COLUMN (WI-455 shed it, OI-60 ruled (a),
-#                    2026-08-23 — flow is the SHAPE of the row, not a flag
-#                    beside it, and what a `Consumes` row used to declare, that
-#                    a cross-component edge is INTENDED and this row discharges
-#                    it, is read off the endpoint pair exactly as before).
-#                    Both cells are validated against the tree, warn-first: an
-#                    endpoint that resolves to nothing is named individually.
-#                    The `external:` prefix says an endpoint is deliberately
-#                    outside this tree (an adopter, `git`, an agent CLI) — a
-#                    value convention rather than a column, so it rides the
-#                    carrier and cannot drift from the endpoint it qualifies.
+#   owner            REQUIRED. The providing THING — the thing the information
+#                    plugs into — in the ONE spelling `consumers` uses: a module
+#                    path (`scripts/check`), a file or directory path
+#                    (`docs/stack.ini`, `docs/work/`), or an `external:` party
+#                    (`external:git`). NEVER a requirement or design id: the
+#                    requirement this seam answers to is REACHED through the
+#                    owner — the design rows whose `module` names it, or the
+#                    `Implements:` line in its header — and is not stated on the
+#                    row. `trace.py` fails a row whose owner is id-shaped or
+#                    names several things, and WARNS (never gates) on a
+#                    module-shaped owner that reaches no requirement either way.
+#                    A file- or directory-owned seam legitimately has no design
+#                    row; 31 rows are owned that way today.
 #
-#                    `provider` IS OMITTED WHERE `owner` DERIVES IT — on the 85
-#                    rows whose owner is a design row naming exactly one
-#                    `module`, that module IS the provider, and a derivable cell
-#                    is a second spelling of a fact that already has a home.
-#                    It SURVIVES on 30 rows, each for a stated reason: 12 are
-#                    the requirement-owned `Provides` rows the SR-owned-Provides
-#                    report is about; 13 are requirement-owned rows whose
-#                    provider is a file medium, a directory or an `external:`
-#                    party (no design row is any of those); and 5 have a
-#                    multi-module owner, which derives a SET rather than the
-#                    fact (`IF-088`, `IF-117`, `IF-131`, `IF-132`, `IF-141`). `trace.py`'s Provider
-#                    derivability advisory names any row that states one its
-#                    owner already derives — the executable half of re-pointing
-#                    those owners at the design tier.
+#                    A GENERATED FILE IS OWNED BY THE MODULE THAT WRITES IT —
+#                    the writer is the one home a check can hold to the code;
+#                    a hand-edited file (a registry, `stack.ini`, `process.toml`)
+#                    is owned as itself and declares in its own header.
 #
-#                    21 ROWS STATE NO PROVIDER AT ALL, and that is the honest
-#                    reading rather than a gap the shed opened: on a published
-#                    medium (`IF-021`'s spine registries, `IF-029`'s runtime-flows
-#                    doc, the 16 rows facing `external:downstream adopter`) the
-#                    row records the measured READERS, and the medium itself is
-#                    named in `contract` — no endpoint cell ever claimed it.
-#                    Recording those media as providers would be new authoring,
-#                    per row, not a rename; it is left to whoever does it.
+#   requestors /     THE FAR SIDE NAMES THE DIRECTION. Exactly ONE of the two
+#   consumers        is set, a LIST either way. `requestors` are the sides that
+#                    put information INTO the surface the owner defines — they
+#                    call the function, invoke the CLI, set the env var, write
+#                    the file. `consumers` are the sides that take what the
+#                    owner emits — they read the file, the exit code, the
+#                    stdout. The owner DEFINES the surface in both cases; the
+#                    key says which way the information runs, so one row is one
+#                    direction by construction. A row naming both or neither is
+#                    a `trace.py` finding. Name the sides you have MEASURED, and
+#                    an open-ended class as `external:<class>`. Every endpoint
+#                    cell is validated against the tree, warn-first. THE SEEDED
+#                    CHOICE ON THIS TREE FOLLOWS THE CHANNEL (`cli`, `env` and
+#                    `call` rows name requestors; the rest name consumers) and
+#                    is confirmed row by row as the definitions move.
 #
-#   contract         What the seam IS, in one testable line: CLI flags and exit
-#                    codes, or the file schema. Not the argument for it — that
-#                    is `rationale`'s job where a row carries one.
+#   channel          REQUIRED, CLOSED (`kitlib.spine.IF_CHANNELS`): what
+#                    crosses, typed —
+#                      cli        an invocation surface: argv flags and arguments
+#                      exit-code  a finite code alphabet a process returns
+#                      stdout     text a process emits: findings, a report
+#                      file       a file or directory medium with a schema
+#                      call       an in-process API another module imports
+#                      env        an environment variable or launcher slot
+#                      git        repository state: refs, trailers, a staged diff
+#                      bytes      opaque content: fetched sources, a vendored tree
+#                    A dial read from a config file is `file` (the medium is the
+#                    file; `data` names the key). A source tree walked by AST is
+#                    `file`. THE SEEDED VALUES ON THIS TREE ARE A CLASSIFICATION,
+#                    NOT A READING: every row's channel was seeded mechanically
+#                    from a per-row read on 2026-08-29 and is confirmed row by
+#                    row as the definitions move (below).
 #
-#                    AND NOT A RESTATEMENT OF ITS OWNER (OI-61 ruled (a),
-#                    2026-08-23, declared as the first step toward emptying the
-#                    prose cell registry-wide). The 27 rows delivering a shipped
-#                    script's CLI — of 136 live rows — now state the CROSSING
-#                    and stop — "SR-006's obligation delivered as a CLI at
-#                    check.py; crosses B-05" —
-#                    what crosses, who answers for it, which boundary. The flags
-#                    and exit codes are read from the owner row, the module, and
-#                    the generated CLI reference, all three of which are held to
-#                    the code by a check; a hand-copied paragraph is held to it
-#                    by nobody, which is how two of this registry's cells came
-#                    to name deleted code. A clause survives past the crossing
-#                    statement only where it carries a typed fact the owner row
-#                    does NOT state: a written artifact, a fail-loud guarantee,
-#                    an exclusion in a comparison. The other 108 rows were
-#                    MEASURED and not rewritten, and the NON-CROSSING half of
-#                    what that measurement found has since left this cell for
-#                    `rationale` on 36 of them (OI-63 ruled (d), 2026-08-25).
-#                    PLACEMENT IS RULED AND THE MECHANISM IS BUILT (OI-66 ruled
-#                    (a), 2026-08-29, WI-527): the remainder BELONGS in the
-#                    module beside the code. A module declares its seams on a
-#                    line OPENING `Contracts: IF-###, ...` and states each one
-#                    as a `Contract IF-###:` block under it (that exact opener —
-#                    a bare `IF-###:` is ordinary prose); `gen_arch_map.py
-#                    --contracts-doc` harvests those into the committed,
-#                    freshness-gated `docs/interface-reference.md`, and the cell
-#                    then states what crosses and stops. WHAT IS BUILT IS THE
-#                    MECHANISM, NOT THE MOVE: 2 rows of 136 carry a stated
-#                    contract today (`IF-013`, `IF-144`), the other ~69 with
-#                    unique content have not moved, and the reference's
-#                    "Declared, not stated" section IS that debt list. Nothing
-#                    fails on an unstated seam — the coverage finding for one
-#                    was deliberately deferred.
+#   data             OPTIONAL — the finite alphabet when there is one
+#                    (`0 pass · 1 fail · 2 usage`, `off | ask | deny`) or a
+#                    one-clause schema pointer. Ceiling 160 characters; no
+#                    work-item id, no decision citation, no rationale
+#                    connective; a named symbol or path must resolve
+#                    (warn-first, `trace.py`). It is the row's typed summary,
+#                    not the definition.
 #
-#                    A NAMED SYMBOL OR PATH IN THIS CELL IS CHECKED (OI-61 ruled
-#                    (d), folded in): a `SCHED_*`, `Foo.bar` or `CONSTANT_NAME`
-#                    token must resolve in the declared source surface, and a
-#                    named path must exist. Warn-first.
+#   THE DEFINITION LIVES BESIDE THE CODE. What the owner promises — the flags,
+#   the schema, the guarantees — is the `Contract IF-###:` body under the
+#   owner's `Contracts:` marker (a module docstring, or a `#` header at the top
+#   of a registry, config or hook file), harvested into
+#   `docs/interface-reference.md` under a freshness gate. It is stated ONCE,
+#   there; a row points at it by declaring the seam and stops.
 #
-#   signal           CLOSED vocabulary: `discrete` (a finite enumerable alphabet
-#                    — exit code, gate name, status enum, dial) or `variable`
-#                    (unbounded content — prose, file bytes, a count, a
-#                    duration). If both cross, the row is `variable`.
-#   signal_note      OPTIONAL — why a row is `variable` when it looks discrete,
-#                    or what the alphabet is. A reason cell: it takes the
-#                    argument, never the citation.
+#   contract         LEGACY, on its way out: the prose definition the cell held
+#                    before OI-67. Every row still carrying one is counted by
+#                    `trace.py` (one summarizing warning), its content moves into
+#                    the owner's `Contract IF-###:` body row by row, and the
+#                    arming slice turns the cell into a schema finding. Do NOT
+#                    author into it.
 #
-#   rationale        OPTIONAL — WHY the seam is drawn HERE, and the argument
-#                    that would otherwise squat in `contract`: what breaks
-#                    without the seam, which alternative lost, which module
-#                    internal the shape turns on. A reason cell like
-#                    `signal_note` and `notes` — it takes the ARGUMENT, never
-#                    the CITATION, in prose that stands alone, with no
-#                    work-item id, ruling, sitting, review-round or open-item
-#                    reference, decision id, edit verb or date stamp; that
-#                    history belongs in the log (process.md §3). Filled on 38
-#                    rows. ONE TRAP: an EMPTY string is a hard carrier refusal
-#                    (`spine_carrier` raises), so a row either carries the key
-#                    or omits it. The grammar above IS checked — `trace.py`'s IF
-#                    citation-frame arm reads this cell alongside `notes` and
-#                    `signal_note` (`IF_REASON_CELLS`, widened by OI-65 ruling
-#                    (iv)), warn-first and token-scoped.
-#
-#   req_refs         EVERY requirement the seam realizes or relies on. Several
-#                    is normal — 25 rows list more than one.
-#
-#                    ONE MECHANICAL READER: `trace.py`'s back-link check, which
-#                    fails a row whose cell is empty or names an unknown SR, so
-#                    every seam links the spine and stays transitively
-#                    TC-covered. Nothing joins on it beyond that (seam-to-test
-#                    coverage joins the other way, on a TC's `Verifies`), and on
-#                    88 of 136 rows the cell repeats what `owner` already
-#                    derives — 31 name the SR owner itself, 57 name exactly the
-#                    parents of the LLR owner. The 48 that carry a requirement
-#                    the owner does NOT derive are the ones stating the seam's
-#                    RELIES-ON side, which parentage cannot reach.
-#
-#   owner            The ONE row ANSWERABLE for the interface, id-typed and
-#                    POLYMORPHIC: an `SR-###` or a design-tier `LLR-###`,
-#                    resolved against whichever registry the prefix names.
-#                    Exactly one per row — naming nobody and naming several are
-#                    both findings. Prefer the DESIGN tier wherever a design row
-#                    exists for the owner-side endpoint; fall back to the SR only
-#                    while none does. This is NOT `req_refs`: `req_refs` lists
-#                    who uses the seam, `owner` names who answers for it.
-#
-#                    WHICH SIDE OWNS A `Consumes` ROW — RULED (owner, 2026-08-22),
-#                    recorded here 2026-08-23 so no author re-derives it from a
-#                    log: `owner` names the PROVIDER of the medium that is
-#                    consumed, never the module that merely holds the consuming
-#                    code; the consumer side carries the VERIFIED readers —
-#                    modules measured to read the medium, not every module that
-#                    might. The two readings point ~20 rows at different owners,
-#                    and the provider reading is the one that keeps ONE row per
-#                    medium instead of one row per reader. On a `Provides` row
-#                    nothing changes: this side is the provider already. The
-#                    corollary an author feels: when the medium is a FILE and no
-#                    design row decomposes that file, there is no design row to
-#                    prefer, so the owner legitimately falls back to the
-#                    requirement stating the file's own invariant — `IF-031` is
-#                    the worked example, corrected to `SR-015` on 2026-08-23.
-#                    Since WI-455 the owner also CARRIES the provider on every
-#                    row where the design tier can name it: re-pointing an owner
-#                    at a design row is what makes that row's `provider` cell
-#                    derivable and therefore droppable.
+#   rationale        OPTIONAL — WHY the seam is drawn HERE: what breaks without
+#                    it, which alternative lost. A reason cell like `notes` — it
+#                    takes the ARGUMENT, never the CITATION: no work-item id,
+#                    ruling, review-round or open-item reference, decision id,
+#                    edit verb or date stamp; that history belongs in the log
+#                    (process.md §3). `trace.py`'s IF citation-frame arm reads
+#                    it, warn-first. An EMPTY string is a hard carrier refusal:
+#                    a row either carries the key or omits it.
 #
 #   verified_by      OPTIONAL, and an EMPTY cell is the ordinary answer: this
 #                    seam is verified in its own right. Filled, it names the
 #                    parent whose tests cover a low-level seam — a `TC-###` or
-#                    an `LLR-###` — which is the position the `Verification`
-#                    vocabulary cannot state at all (its one exemption is
-#                    LLR-exemption on an SR, and an IF row carries no
-#                    `Verification` cell). Warn-first that the pointer resolves;
-#                    nothing reads whether the named test really exercises the
-#                    seam. No live row here claims it yet.
+#                    an `LLR-###`. Warn-first that the pointer resolves; nothing
+#                    reads whether the named test really exercises the seam.
 #
 #   carried_by       OPTIONAL interface composition: a constituent naming the
-#                    bundle that carries it (`carried_by = "IF-###"`). Several
-#                    seams riding one larger seam name the same carrier id, so
-#                    granularity stops being a forced choice. The carriage graph
-#                    must resolve and be acyclic; depth past 2 warns. Most rows
-#                    carry nothing, and an empty cell IS "not a constituent".
+#                    bundle that carries it (`carried_by = "IF-###"`). A
+#                    constituent is still one owner and one channel; the bundle
+#                    is the unit a consumer pins. The carriage graph must
+#                    resolve and be acyclic; depth past 2 warns.
 #
 #   version          The contract's own version string, this row's to set.
 #
-#   status           The ONE maturity field, and it is the spine's field and
-#                    words: a CLOSED vocabulary, `Drafted` | `Approved`, shared
-#                    with `external.toml`. `Founded` is NOT APPLICABLE to this
-#                    tier — it means settled AND demonstrated, while an approval
-#                    says the seam is AGREED. `spine_rules.BIF_MATURITY` reads
-#                    the drafted rung.
+#   status           The ONE maturity field, the spine's words: `Drafted` |
+#                    `Approved`, shared with `external.toml`. `Founded` is NOT
+#                    APPLICABLE here — it means settled AND demonstrated, while
+#                    an approval says the seam is AGREED.
 #
 #                    FLIP AUTHORITY IS DERIVED, NOT DECLARED: a `status` cell
 #                    here may be machine-flipped only when this registry's stage
-#                    rung — DevStg-Arch, the rung `spine_rules.arch_incomplete`
-#                    gates on the architecture tier — is not human-held under the
-#                    `[attestation] human_approval_through` dial. The
-#                    predicate is `agent_common.human_approves(docs,
-#                    "interfaces")`. READ THE DIAL, DO NOT ASSUME IT: this repo
-#                    runs `DevStg-Needs`-held only, so DevStg-Arch is NOT held
-#                    and the predicate answers FALSE — the hold this paragraph
-#                    once claimed is not in force. What keeps the cells the
-#                    owner's today is that the kit ships NO automated writer for
-#                    an off-spine `status`: they are hand-edited, in a reviewed
-#                    Status-change commit. The predicate exists so the first
-#                    such writer cannot be added without consulting it.
-#
-#                    Every live row reads `Drafted`, and that is a deliberate
-#                    non-claim rather than a backlog: nothing here has been
-#                    signed.
+#                    rung — DevStg-Arch — is not human-held under the
+#                    `[attestation] human_approval_through` dial; the predicate
+#                    is `agent_common.human_approves(docs, "interfaces")`. READ
+#                    THE DIAL, DO NOT ASSUME IT: this repo runs `DevStg-Needs`-
+#                    held only, so the predicate answers FALSE here. What keeps
+#                    the cells the owner's today is that the kit ships NO
+#                    automated writer for an off-spine `status` — they are
+#                    hand-edited, in a reviewed Status-change commit. Every live
+#                    row reads `Drafted`: a deliberate non-claim, not a backlog.
 #
 #   interface_from_external / interface_to_external
 #                    OPTIONAL and directional — `"B-##"`, naming the boundary
 #                    crossing in `external.toml` this row REALIZES: `_from_` for
-#                    a crossing that comes in, `_to_` for one that goes out, both
-#                    for in/out. A row with neither key is an internal seam, and
-#                    that ABSENCE is the statement — there is no cell to set to
-#                    "internal" and get wrong.
+#                    a crossing that comes in, `_to_` for one that goes out. A
+#                    row with neither key is an internal seam, and that ABSENCE
+#                    is the statement.
 #
-#                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING, recorded
-#                    here so the next reader does not file it as an omission:
-#                    `B-02` (authority in — rulings, attestations and Status
-#                    flips) has no port of its own. Authority enters as CONTENT
-#                    on B-01's write path: a human edits a Status cell and
-#                    commits, and the hook floor admits that write exactly as it
-#                    admits any other. Minting a row for it would manufacture a
-#                    surface that does not exist. The condition that changes the
-#                    answer is concrete — when the recorder requiring an
-#                    acceptance to be stamped on the accepted artifact's own row
-#                    ships (`SR-140`), its contract IS an admission surface for
-#                    authority, because it can refuse an attestation whose digest
-#                    does not match. Until then there is nothing to state a
-#                    contract about, and `trace.py`'s advisory naming B-02
-#                    unrealized is reporting a deliberate state.
+#                    ONE CROSSING IS DELIBERATELY REALIZED BY NOTHING: `B-02`
+#                    (authority in — rulings, attestations and Status flips)
+#                    has no port of its own. Authority enters as CONTENT on
+#                    B-01's write path: a human edits a Status cell and commits,
+#                    and the hook floor admits that write as it admits any
+#                    other. The condition that changes the answer is concrete —
+#                    when the recorder requiring an acceptance to be stamped on
+#                    the accepted artifact's own row ships (`SR-140`), its
+#                    contract IS an admission surface for authority. Until then
+#                    `trace.py`'s advisory naming B-02 unrealized reports a
+#                    deliberate state.
 #
-#   component        OPTIONAL — the `CMP-###` this seam belongs to, the same
-#                    membership tag the primitive tiers carry.
+#   component        OPTIONAL — the `CMP-###` this seam belongs to.
 #
 #   notes            OPTIONAL free prose about the row. A reason cell: argument,
 #                    never citation. Honesty valve — the word `source` (produces
 #                    output, consumes nothing declared) or `sink` (consumes,
 #                    produces nothing) silences the missing-seam coverage
-#                    warning: `source` marks the row's PROVIDER, `sink` marks its
-#                    CONSUMERS, which is what both words meant when they were
-#                    read off one `this_project` cell.
+#                    warning: `source` marks the row's OWNER, `sink` marks its
+#                    far side.
+#
+#   ONE ROW, ONE KIND — the discipline the shape asks for and the tree does not
+#   yet meet: 14 rows still describe a request and its answer, or a read and a
+#   write, together, and 35 bundle several kinds (a CLI plus the file it writes;
+#   ten registries read as one). They split, or declare once with constituents
+#   on `carried_by`, as the definitions move.
 
 [interface.IF-001]
-provider = "scripts/trace"
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """SR-157's obligation delivered as a CLI at trace.py, which writes docs/test/report.md."""
-signal = "variable"
-signal_note = """The exit code is one bounded part of an unbounded output: the run emits finding prose naming rows and cells, and writes a report file."""
-req_refs = ["SR-157"]
-owner = "SR-157"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-002]
 consumers = ["scripts/check"]
+channel = "exit-code"
 contract = """LLR-012's obligation delivered as a CLI at check_docs.py."""
-signal = "discrete"
-req_refs = ["SR-158"]
-owner = "LLR-012"
+owner = "scripts/check_docs"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-003]
 consumers = ["scripts/check"]
+channel = "exit-code"
 contract = """LLR-013's obligation delivered as a CLI at check_flows.py."""
-signal = "discrete"
-req_refs = ["SR-158"]
-owner = "LLR-013"
+owner = "scripts/check_flows"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-004]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-014's obligation delivered as a CLI at check_perf.py."""
-signal = "variable"
-signal_note = """A measured metric value and its tolerance comparison are unbounded numbers, and the finding quotes them."""
-req_refs = ["SR-167", "SR-006", "SR-015"]
-owner = "LLR-014"
+owner = "scripts/check_perf"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-005]
-provider = "scripts/check_privacy"
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """SR-017's obligation delivered as a CLI at check_privacy.py; the secret floor is always on and the identity/PII classes are gated by docs/privacy-check."""
-signal = "variable"
-signal_note = """A finding names the matched file, line and class, which is unbounded content."""
-req_refs = ["SR-017", "SR-018"]
-owner = "SR-017"
+owner = "scripts/check_privacy"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-006]
 consumers = ["scripts/check"]
+channel = "exit-code"
 contract = """LLR-016's obligation delivered as a CLI at check_stubs.py."""
-signal = "discrete"
-req_refs = ["SR-006"]
-owner = "LLR-016"
+owner = "scripts/check_stubs"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-008]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-038's obligation delivered as a CLI at check_doc_refs.py."""
-signal = "variable"
-signal_note = """A finding quotes the offending backticked token and its file, which is unbounded content."""
-req_refs = ["SR-158"]
-owner = "LLR-038"
+owner = "scripts/check_doc_refs"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-009]
-provider = "scripts/check_trajectory"
 consumers = ["scripts/check"]
+channel = "exit-code"
 contract = """SR-157's obligation delivered as a CLI at check_trajectory.py; R-A coherence gates every run, R-B..R-E gate only under --strict, connectivity coverage never gates."""
-signal = "discrete"
-req_refs = ["SR-157", "SR-159"]
-owner = "SR-157"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-010]
-consumers = ["scripts/check"]
+requestors = ["scripts/check"]
+channel = "call"
 contract = """LLR-023's obligation delivered as a library plus CLI at gen_arch_map.py: scan_inventory() is the one AST harvest the derived-architecture readers consume, and the CLI splices its rendered blocks into opt-in marker pairs."""
-signal = "variable"
-signal_note = """The harvested per-module records and the rendered block are unbounded content, not an alphabet."""
-req_refs = ["SR-070"]
-owner = "LLR-023"
+owner = "scripts/gen_arch_map"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-011]
-provider = "scripts/gen_trajectory"
 consumers = ["scripts/check"]
+channel = "exit-code"
 contract = """SR-070's obligation delivered as a CLI at gen_trajectory.py; the --check byte-compare excludes the git as-of line."""
-signal = "discrete"
-req_refs = ["SR-070"]
-owner = "SR-070"
+owner = "scripts/gen_trajectory"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-012]
 consumers = ["scripts/check"]
+channel = "bytes"
 contract = """LLR-039's obligation delivered as a CLI at gen_okf.py."""
-signal = "variable"
-signal_note = """The bundle's file bytes cross, not an enumerable outcome."""
-req_refs = ["SR-070"]
-owner = "LLR-039"
+owner = "scripts/gen_okf"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-013]
-provider = "scripts/check"
 consumers = ["external:downstream adopter"]
+channel = "exit-code"
 contract = """SR-006's obligation delivered as a CLI at check.py; crosses B-05."""
-signal = "discrete"
-req_refs = ["SR-006", "SR-007"]
-owner = "SR-006"
+owner = "scripts/check"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 notes = """owner = SR-006, not SR-007: the contract's central claim — running a gate's declared steps as subprocesses and exiting nonzero on any required failure, degrading only to a reported SKIP — restates SR-006's own requirement text almost verbatim ("run the required steps of the gate ... fail that gate when a required tool is missing, reporting SKIP(missing) rather than silently passing"). SR-007 governs a different observable (the declared stack profile's own validity, refused when malformed) that this contract never states; SR-007's own rationale draws the same line ("a missing declared binary fails under SR-006"). req_refs correctly cites both parents this seam realizes/relies on; owner names the one answerable for THIS contract's central claim. This row is one of the twelve requirement-owned provider-side rows with no LLR owning scripts/check outright, so a design-tier owner is not yet available; a future re-point pass that finds or mints one would supersede this pick."""
 
 [interface.IF-014]
-provider = "scripts/bootstrap"
 consumers = ["external:downstream adopter"]
+channel = "bytes"
 contract = """SR-010's obligation delivered as a CLI at bootstrap.py; crosses B-05. Idempotent without --force, and it stamps the kit version it wrote."""
-signal = "variable"
-req_refs = ["SR-009", "SR-010", "SR-011"]
-owner = "SR-010"
+owner = "scripts/bootstrap"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 
 [interface.IF-015]
-provider = "scripts/agent_loop"
 consumers = ["external:downstream adopter"]
+channel = "git"
 contract = """SR-026's obligation delivered as a CLI at agent_loop.py; crosses B-05. A plain launch drives the claim/work/merge cycle and never pushes; the per-checkout lock refuses a second coordinator."""
-signal = "variable"
-signal_note = """A session's branch state, trailer evidence and refusal text are unbounded content."""
-req_refs = ["SR-026", "SR-027", "SR-028"]
-owner = "SR-026"
+owner = "scripts/agent_loop"
 version = "v3"
 status = "Drafted"
 interface_to_external = "B-05"
 
 [interface.IF-016]
 consumers = ["external:downstream adopter"]
+channel = "stdout"
 contract = """LLR-022's obligation delivered as a CLI at check_vendored.py; crosses B-05. Network-gated and warn-first."""
-signal = "variable"
-signal_note = """A drift report names the vendored doc and quotes what moved."""
-req_refs = ["SR-022"]
-owner = "LLR-022"
+owner = "scripts/check_vendored"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 
 [interface.IF-017]
 consumers = ["external:downstream adopter"]
+channel = "stdout"
 contract = """LLR-024's obligation delivered as a CLI at gen_cases.py; crosses B-05."""
-signal = "variable"
-signal_note = """The expanded case set printed to stdout is unbounded in size and content."""
-req_refs = ["SR-024"]
-owner = "LLR-024"
+owner = "scripts/gen_cases"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -405,40 +295,35 @@ notes = "source"
 
 [interface.IF-018]
 consumers = ["external:downstream adopter"]
+channel = "stdout"
 contract = """LLR-033's obligation delivered as a CLI at gen_release_checklist.py; crosses B-05."""
-signal = "variable"
-req_refs = ["SR-033"]
-owner = "LLR-033"
+owner = "scripts/gen_release_checklist"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 
 [interface.IF-019]
 consumers = ["skills/INDEX.csv"]
+channel = "file"
 contract = """LLR-025's obligation delivered as a CLI at gen_skills_index.py."""
-signal = "variable"
-req_refs = ["SR-112"]
-owner = "LLR-025"
+owner = "scripts/gen_skills_index"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-020]
 consumers = ["external:agent CLI"]
+channel = "exit-code"
 contract = """subagent_gate.py PreToolUse contract: reads the tool-call JSON on stdin and emits a permissionDecision (deny -> exit 2) per docs/process.toml [checks] subagent_gate; fails open on any error"""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-043"]
-owner = "LLR-040"
+owner = "scripts/subagent_gate"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-04"
 
 [interface.IF-021]
 consumers = ["scripts/trace", "external:downstream adopter"]
+channel = "file"
 contract = """reads the SN/SR/LLR/TC spine plus the off-spine PB/REPO/PART/ASSET/CMP/IF registries under docs/requirements + docs/test and joins them by id"""
-signal = "variable"
-req_refs = ["SR-157"]
-owner = "SR-157"
+owner = "docs/requirements/"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -446,10 +331,9 @@ notes = """Published contract, not a single consumer: 14+ kit scripts independen
 
 [interface.IF-022]
 consumers = ["scripts/check", "external:downstream adopter"]
+channel = "file"
 contract = """reads the declared toolchain (format/lint/test commands, tiers, coverage, arch-map mode, extra [step:*] from-stage thresholds) and docs/stage for the effective stage the plan selects at"""
-signal = "variable"
-req_refs = ["SR-007", "SR-006"]
-owner = "SR-007"
+owner = "docs/stack.ini"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -457,21 +341,19 @@ notes = """Published contract, not a single consumer: 9 kit scripts read docs/st
 
 [interface.IF-023]
 consumers = ["scripts/check_trajectory", "external:downstream adopter"]
+channel = "file"
 contract = """reads the WI registry - the docs/work/ spec folder, the one home since Phase 5 (a stray legacy work-items.csv is its own integrity finding) - (ids/predecessors/status/Deliverable/SpecRef) and cross-reads docs/status.md, docs/stack.ini and interfaces.toml plus the declared [paths] src source tree for the SSOT + connectivity coverage; also reads the `## Interfaces` section of the doc"""
-signal = "variable"
-req_refs = ["SR-157", "SR-159"]
-owner = "SR-157"
+owner = "docs/work/"
 version = "v3"
 status = "Drafted"
 interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: at least 9 kit scripts walk the docs/work/ spec folder through the shared kitlib.registry/agent_common readers (check_trajectory, gen_trajectory, schedule, wi_convert, intake, dispatch, traj_panels, traj_status and more), and every downstream adopter's own WI registry is content they author - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-058]
-consumers = ["scripts/plan_runner"]
+requestors = ["scripts/plan_runner"]
+channel = "call"
 contract = """pure dual-plan round-lifecycle library: new_round/ready_steps/record/disposition/page_action - typed steps (PLAN/COVERAGE/REPAIR/CRITIQUE/REVISE/ARBITER), hard caps raised as RoundCapError (n=1 critique, one revision each, one coverage repair per plan per stage), a round-budget ledger, the position-swap x2 agreement rule, and JSON-able state for crash-resumable rounds"""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "LLR-070"
+owner = "scripts/plan_round"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -479,10 +361,9 @@ notes = """source - a pure library: consumes nothing, the coordinator feeds resu
 
 [interface.IF-059]
 consumers = ["scripts/plan_briefs", "external:downstream adopter"]
+channel = "file"
 contract = """reads system-requirements (SR-ID/Title/Requirement) and interfaces.toml (the IF-ID/Owner/Provider/Consumers/Contract excerpt) to build the allowlist-only SR surface + IF registry the dual-plan planner/critic/arbiter briefs embed, and registers the three hat prompt-map keys (DUALPLAN-PLANNER/CRITIC/ARBITER) on --prompt-map/AGENT_PROMPT_MAP with a kit-template fallback; the two-file read IS the redaction boundary - status.md/log.md/self-assessments are unreachable by construction"""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "SR-155"
+owner = "docs/requirements/"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -491,10 +372,9 @@ notes = """sink - the assembled briefs feed the round's fresh sessions (agent_lo
 
 [interface.IF-060]
 consumers = ["scripts/plan_coverage_step"]
+channel = "exit-code"
 contract = """run_coverage invokes the scripts/plan_coverage CLI headless (sys.executable, --goal/--root/--out) and consumes its report/exit contract - 0 clean, 1 findings (FAIL - <planfile>: lines parsed to implicated true plan keys via a caller-supplied plan_key_of), 2 malformed (its own flag; both bounce, empty implicated = both plans re-run, fail-closed); returns the typed {exit, findings, malformed, implicated, report} projected onto plan_round's STEP_COVERAGE via to_record_kwargs; the captured report is the payload the critic/arbiter briefs embed"""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "LLR-069"
+owner = "scripts/plan_coverage"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -502,11 +382,9 @@ notes = """sink - the typed result feeds the coordinator's record() call (agent_
 
 [interface.IF-061]
 consumers = ["scripts/plan_runner"]
+channel = "bytes"
 contract = """round artifact write-side: allocate_round_dir (next docs/plans/DP-NNN-<slug>/), write_stage (stable-named UTF-8 stage artifacts), append_log_summary (verdict block -> docs/log.md), and file_selected_wis (the selected Plan-WI rows -> queued registry entries (docs/work/queued/ spec files, the one registry home): fresh ids, mapped predecessors + the round's parent, empty Deliverable, SpecRef, BuildTier) such that check_trajectory.py passes; csv-module append preserves the file's line-ending convention"""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-155"]
-owner = "LLR-074"
+owner = "scripts/plan_artifacts"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
@@ -514,10 +392,9 @@ notes = """source - the coordinator (agent_loop) drives these effects; nearest e
 
 [interface.IF-057]
 consumers = ["scripts/plan_coverage", "external:downstream adopter"]
+channel = "file"
 contract = """reads interfaces.toml (IF-ID column) and system-requirements.csv (SR-ID column) to resolve a proposed plan's per-WI Interfaces/Covers cites - the dual-plan coverage pre-pass (process-options.md "Dual-plan decomposition"); registries absent = refs unvalidated with an honest note, never findings"""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "SR-155"
+owner = "docs/requirements/interfaces.toml"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -526,98 +403,84 @@ notes = """sink - the coverage report feeds the dual-plan round's critique/arbit
 
 [interface.IF-024]
 consumers = ["scripts/gen_trajectory", "external:downstream adopter"]
+channel = "file"
 contract = """reads the WI registry (the docs/work/ spec folder, the one home since Phase 5) for the roadmap DAG and the declared [paths] src tree's AST inventory for the How-SW module/graph view"""
 rationale = """The registry read stays in the gen_trajectory facade's own main(), and the module inventory comes from traj_parse.sw_modules over gen_arch_map.scan_inventory rather than being read here."""
-signal = "variable"
-req_refs = ["SR-168", "SR-169"]
-owner = "SR-168"
+owner = "docs/work/"
 version = "v3"
 status = "Drafted"
 interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: same population as IF-023/054/079 - the WI registry is read directly by gen_trajectory's own facade main() (this read stays local, unlike the docs/stage read it delegates to traj_parse, IF-052) alongside 8+ other kit scripts, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-025]
-provider = "project-trajectory/scripts"
 consumers = ["scripts/gen_arch_map"]
+channel = "file"
 contract = """walks the Python source tree (AST) for the symbol map + internal-import diagram and reads interfaces.toml to merge the IF-### seam edges"""
-signal = "variable"
-req_refs = ["SR-070"]
-owner = "SR-070"
+owner = "project-trajectory/scripts"
 version = "v1"
 status = "Drafted"
 notes = """The provider side of this seam is the SOURCE TREE ITSELF, at the declared src root (docs/stack.ini [paths] src) - not a module, so the endpoint is that directory. Naming the row's own module there said only that it talks to itself, which is no far side at all. gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory."""
 
 [interface.IF-026]
-provider = "project-trajectory/scripts"
 consumers = ["scripts/check_stubs"]
+channel = "file"
 contract = """parses each *.py under the declared src root (AST) for stub-bodied public symbols at the gate"""
-signal = "variable"
-req_refs = ["SR-006"]
-owner = "SR-006"
+owner = "project-trajectory/scripts"
 version = "v1"
 status = "Drafted"
 notes = """The far side is the declared src root itself (docs/stack.ini [paths] src), the directory this row's contract describes - not this row's own module, which named no far side. check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way."""
 
 [interface.IF-028]
-provider = "scripts/gen_arch_map"
-consumers = ["scripts/check_doc_refs"]
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
 contract = """the sym: ORACLE seam: consumes gen_arch_map.scan_inventory over the declared [paths] src root as the public-symbol inventory sym:<module>.<name> references are held to, and scans root + docs/*.md for dangling path / sym: references"""
 rationale = """Successor to the retired docs/architecture.md MODULE MAP parse. Sibling of IF-117, which consumes module_bindings for the LLR CodeSymbol anchor rule: two oracles for two questions, both now AST-side."""
-signal = "variable"
-req_refs = ["SR-158"]
-owner = "SR-158"
+owner = "scripts/gen_arch_map"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-029]
 consumers = ["scripts/check_flows", "scripts/gen_okf", "scripts/traj_parse"]
+channel = "file"
 contract = """reads the Runtime flows section (mermaid sequence blocks) of the authored flows doc (docs/runtime-flows.md) and the registries to validate the authored flow ids"""
-signal = "variable"
-req_refs = ["SR-158"]
-owner = "SR-158"
+owner = "docs/runtime-flows.md"
 version = "v1"
 status = "Drafted"
 notes = """Low fan-out: exactly three direct readers of the moved doc - check_flows (this row, --strict structural validation), gen_okf (title/summary extraction into the okf bundle) and traj_parse (dashboard render). A closed, nameable set, not a published contract."""
 
 [interface.IF-030]
 consumers = ["scripts/check_docs", "external:downstream adopter"]
+channel = "file"
 contract = """reads root *.md + docs/**/*.md for the link graph, the PROJECT-VISION tag, the SN inventory, and generated-doc staleness under --stale"""
-signal = "variable"
-req_refs = ["SR-158"]
-owner = "SR-158"
+owner = "docs/"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: this row and check_doc_refs each walk the whole docs tree for their own purpose, and check_vocab/check_privacy sweep it as part of a broader whole-repo scan - an open, ever-growing population as every downstream adopter authors their own docs tree and validates it with the same shipped checker. Ties to B-05 as the template's own delivered doc-tree convention."""
 
 [interface.IF-031]
-provider = "docs/requirements/performance-budgets.csv"
 consumers = ["scripts/check_perf"]
+channel = "file"
 contract = """reads the PB-### budgets registry and a measured-metrics JSON, comparing each in-tier metric to its budget/baseline"""
-signal = "variable"
-req_refs = ["SR-167", "SR-006", "SR-015"]
-owner = "SR-015"
+owner = "docs/requirements/performance-budgets.csv"
 version = "v1"
 status = "Drafted"
 notes = """owner = SR-015, not LLR-014: where a medium is consumed the owner is the party answerable for that medium, and the medium here is the PB-### budgets registry, not the comparator that reads it. LLR-014 is check_perf.py - the module holding the CONSUMING code, which is the reading this registry does not use. No design row exists whose module is the budgets registry (nothing decomposes the file itself), so the owner falls back to the requirement that states the registry's own invariant, and SR-015 is already among this row's req_refs. Cost of the correction, stated: the row leaves the derivability advisory's population, because a requirement carries no Module cell to join against - the same gap the twelve requirement-owned provider-side rows have, and the reason the report on them exists."""
 
 [interface.IF-032]
-provider = "external:git"
 consumers = ["scripts/check_privacy"]
+channel = "git"
 contract = """reads the staged diff / commit message / outgoing range via git and docs/privacy-check + docs/secrets-scan for the active leak classes"""
-signal = "variable"
-req_refs = ["SR-017", "SR-031"]
-owner = "SR-017"
+owner = "external:git"
 version = "v1"
 status = "Drafted"
 notes = """No tie-back, and the absence is the statement. `git` is not a party of its own in the boundary frame - the entity that holds the checkout absorbs it - so reading a staged range through git is this system reading the session's own working copy, not an exchange with a fourth party. What crosses at the hook floor is the admission verdict, and the hook-facing rows carry that tie-back; this row states the scanner's INPUT to that floor, which is machinery behind the crossing rather than the crossing."""
 
 [interface.IF-033]
 consumers = ["scripts/gen_okf", "external:downstream adopter"]
+channel = "file"
 contract = """reads the spine registries and the present process docs to emit the docs/okf typed-concept bundle"""
-signal = "variable"
-req_refs = ["SR-070"]
-owner = "SR-070"
+owner = "docs/requirements/"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -625,10 +488,9 @@ notes = """Published contract, not a single consumer: same population as IF-021 
 
 [interface.IF-034]
 consumers = ["scripts/gen_release_checklist", "external:downstream adopter"]
+channel = "file"
 contract = "reads the SN core-needs table and the PB budgets registry to build the release checklist"
-signal = "variable"
-req_refs = ["SR-033"]
-owner = "SR-033"
+owner = "docs/requirements/"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -636,42 +498,37 @@ notes = """Published contract, not a single consumer: 11 kit scripts read the SN
 
 [interface.IF-035]
 consumers = ["scripts/gen_skills_index", "scripts/bootstrap"]
+channel = "file"
 contract = """reads each <skill>/SKILL.md applicability frontmatter (name/scope/stacks/domains/phases/tags)"""
-signal = "variable"
-req_refs = ["SR-112"]
-owner = "SR-112"
+owner = "project-trajectory/skills/"
 version = "v1"
 status = "Drafted"
 notes = """Low fan-out: two direct walkers of <skill>/SKILL.md - bootstrap (select_skills, scaffold-time filtering) and gen_skills_index (this row, the INDEX.csv generator). A closed, nameable set."""
 
 [interface.IF-036]
-provider = "external:upstream docs"
 consumers = ["scripts/check_vendored"]
+channel = "bytes"
 contract = """reads the UPSTREAM manifest and fetches each declared upstream source over the network (network-gated), comparing bytes"""
-signal = "variable"
-req_refs = ["SR-022"]
-owner = "SR-022"
+owner = "external:upstream docs"
 version = "v1"
 status = "Drafted"
 notes = """No tie-back, and the gap is in the FRAME rather than in this row: the far side is a network source the locked boundary table names no entity for, so there is no crossing id this row could honestly point at. The `external:` marker therefore records only that the endpoint is outside this tree. Whether a vendored-source upstream is a party the frame should carry is a live question for the frame's owner; until it is answered this row must not manufacture a tie-back to a crossing that describes something else."""
 
 [interface.IF-037]
 consumers = ["scripts/agent_common", "scripts/gen_okf", "scripts/traj_status"]
+channel = "file"
 contract = """reads the declared policy surfaces through the shared declared-line parse - docs/process.toml (the one policy home), docs/stage (the generated stage record, read through the common reader rather than scraped) and the legacy one-word docs/*-policy files still honoured in the migration window - and, from docs/status.md, only the `## Current State` excerpt a stopping coordinator surfaces in its exit banner. No next-work or run-phase pointer is read."""
 rationale = """The dispatcher-era docs/run-state a next-work or run-phase pointer would have been read from is retired."""
-signal = "variable"
-req_refs = ["SR-026", "SR-031"]
-owner = "SR-031"
+owner = "docs/process.toml"
 version = "v1"
 status = "Drafted"
 notes = """Low fan-out, MEASURED OVER ONE SURFACE and stated so: the three direct readers of the `## Current State` excerpt this row's own function discloses - agent_common (this row, current_state_excerpt), gen_okf (process-guide summary) and traj_status (dashboard splice). agent_loop calls agent_common's function rather than reading docs/status.md itself. The fan-out is NOT over docs/process.toml, which the contract names first among the surfaces this reader touches: that file has nine direct kit readers and is the reason IF-038 converted to a published-contract row. A closed, nameable set for the excerpt; a wide one for the policy home."""
 
 [interface.IF-038]
 consumers = ["scripts/subagent_gate", "external:downstream adopter"]
+channel = "file"
 contract = """reads the subagent-spawn policy (off|ask|deny) from docs/process.toml [checks] subagent_gate via the shared declared-line parse, and honours the SUBAGENT_GATE launcher override"""
-signal = "variable"
-req_refs = ["SR-043"]
-owner = "SR-043"
+owner = "docs/process.toml"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -679,114 +536,96 @@ notes = """Published contract, not a single consumer: 9 kit scripts read docs/pr
 
 [interface.IF-039]
 consumers = ["scripts/bootstrap"]
+channel = "bytes"
 contract = """reads the kit template tree (registries, skills, docs, hooks) and the target repo's existing files (idempotent skip) to write the scaffold"""
-signal = "variable"
-req_refs = ["SR-009", "SR-010"]
-owner = "LLR-171"
+owner = "registries"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-040]
 consumers = ["project-trajectory/hooks/pre-commit"]
+channel = "exit-code"
 contract = """the pre-commit floor runs check.py --run-steps okf,trajectory-map,... (the full freshness-floor step list, project-trajectory/hooks/pre-commit) to block a commit that staled a generated artifact (the freshness floor)"""
-signal = "variable"
-req_refs = ["SR-019", "SR-070"]
-owner = "LLR-006"
+owner = "scripts/check"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-041]
-provider = "external:agent CLI"
-consumers = ["scripts/agent_session"]
+requestors = ["scripts/agent_session"]
+channel = "cli"
 contract = """invokes the configured agent CLI headless (build_argv substitutes {model}/{prompt}; on Windows it refuses prompt-in-argv through a .cmd/.bat shim) per the in-process phase and captures the typed session outcome"""
 rationale = """The Windows refusal is there because the OS may reparse a prompt carried in argv via cmd.exe even with shell=False."""
-signal = "variable"
-req_refs = ["SR-026", "SR-040"]
-owner = "SR-040"
+owner = "external:agent CLI"
 version = "v1"
 status = "Drafted"
 notes = """No tie-back, and the frame already states the reason: the model-runner surface is an external-to-external relationship touching the SESSION and not the system, so invoking a configured agent CLI crosses no boundary of this system. Contrast the subagent-gate row, which faces the same CLI and DOES tie back - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act."""
 
 [interface.IF-042]
 consumers = ["project-trajectory/hooks/pre-commit"]
+channel = "exit-code"
 contract = """the pre-commit floor runs trace.py --strict-integrity on staged content and blocks the commit on any duplicate/malformed id or mis-columned row"""
-signal = "variable"
-req_refs = ["SR-019"]
-owner = "LLR-002"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-043]
 consumers = ["project-trajectory/hooks/pre-push"]
+channel = "exit-code"
 contract = """the pre-push hook runs check_privacy.py --range over the outgoing commit range and blocks a push that would publish a secret or a gated identity"""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-020"]
-owner = "LLR-017"
+owner = "scripts/check_privacy"
 version = "v1"
 status = "Drafted"
 notes = """ONE engine, two layers, which is what answers the half-contract reading of this seam. check_privacy.Scanner — LLR-017's own code_symbol — compiles BOTH leak classes for a run (the always-on secrets floor, and the privacy/identity classes into the SAME scanner when the privacy dial is on), and scan_diff_text walks the `git log -p` output yielding the one verdict whose exit code this hook reads; both branches of hooks/pre-push (privacy on and off) invoke that same --range scan. So the cell stays LLR-017 as the row whose symbol PRODUCES the crossing verdict, a ruled split rather than an oversight: LLR-017 answers for the engine and the always-on secrets half, LLR-018 (same module; EXEMPT_EMAILS/email_ok) for the identity/PII class content behind the contract's "gated identity" clause — which only crosses when the declared dial arms it."""
 
 [interface.IF-044]
-provider = "scripts/agent_route"
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """SR-154's obligation delivered as a module plus CLI at agent_route.py; selection is pure and returns its reason as data, the coordinator owning every launch."""
-signal = "variable"
-req_refs = ["SR-154", "SR-155"]
-owner = "SR-154"
+owner = "scripts/agent_route"
 version = "v1"
 status = "Drafted"
 notes = """owner = SR-154, not SR-155: of the seven named call surfaces, five (load_registry/load_enabled, resolve_enabled, parse_env, select, escalate/failure_action) serve the general cross-family review-routing capability SR-154 states verbatim ("obtain each review or critique verdict ... resolved ... from the delivered agent registry's declared ... rows ... drawn from a different model family wherever one is configured"). Only planner_pair()/planner_fallback() serve SR-155's contested-planning round, and there as one input function among several the round also needs (briefs, cross-critique, arbitration — none of which this module carries) — SR-155's own fan-out rationale names the round's children as "the successive phases of that single round", of which planner selection is one step, not the round itself. The majority-surface owner is SR-154. req_refs correctly cites both parents; owner names the one answerable for THIS module's contract as a whole. This row is one of the twelve requirement-owned provider-side rows with no LLR owning scripts/agent_route outright, so a design-tier owner is not yet available; a future re-point pass that finds or mints one would supersede this pick."""
 
 [interface.IF-045]
-provider = "docs/agents.toml; docs/agents-enabled"
 consumers = ["scripts/agent_route"]
+channel = "file"
 contract = """reads the docs/agents pair-row model registry (Id/Family/Model/Version/Tier/CmdTemplate/Env; one row = one model x route pair; legacy Provider read as Family) and the ordered docs/agents-enabled enable-list to compose the selectable pool; absent enable-list = routing off"""
-signal = "variable"
-req_refs = ["SR-154"]
-owner = "SR-154"
+owner = "docs/agents.toml"
 version = "v1"
 status = "Drafted"
 notes = """The provider side is the two declared files, which is the medium consumed; this row's own module named no far side. FAN-OUT IS NOT 1, correcting the earlier cell: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
 
 [interface.IF-046]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """LLR-046's obligation delivered as a module plus CLI at score_reviews.py."""
-signal = "variable"
-signal_note = """Component scores, decay history and the round record are unbounded content."""
-req_refs = ["SR-154"]
-owner = "LLR-046"
+owner = "scripts/score_reviews"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-047]
 consumers = ["scripts/score_reviews", "scripts/check_trajectory", "scripts/integrate"]
+channel = "file"
 contract = """reads the docs/reviews/*.md verdict files (log.md block + the VERDICT machine line) and maintains docs/reviews/scoreboard.txt - advisory decayed per-provider tallies + the round history the escalation policy reads"""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-154"]
-owner = "SR-154"
+owner = "docs/reviews/"
 version = "v1"
 status = "Drafted"
 notes = """Low fan-out: three direct content readers - check_trajectory (_latest_critique_verdict), integrate (git-shows the review blob then calls score_reviews.parse_verdict) and score_reviews (this row, read_scoreboard/record_round). agent_loop calls score_reviews.record_round rather than reading a review file itself. A closed, nameable set."""
 
 [interface.IF-048]
 consumers = ["external:run.* launchers"]
+channel = "stdout"
 contract = """LLR-047's obligation delivered as a CLI at run_menu.py; crosses B-05."""
-signal = "variable"
-signal_note = """The launched child's own output and exit code pass through, and neither is drawn from a fixed alphabet."""
-req_refs = ["SR-046"]
-owner = "LLR-047"
+owner = "scripts/run_menu"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 
 [interface.IF-049]
 consumers = ["scripts/run_menu", "external:downstream adopter"]
+channel = "file"
 contract = """reads the [run] section (one <name> = <command> line per capability plus an optional <name>.desc) declaring the launch capabilities the run.* launchers present"""
-signal = "variable"
-req_refs = ["SR-046"]
-owner = "SR-046"
+owner = "docs/stack.ini"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -794,20 +633,18 @@ notes = """Published contract, not a single consumer: same population as IF-022/
 
 [interface.IF-050]
 consumers = ["scripts/check"]
+channel = "file"
 contract = """docs/stage derived record: derive_stage writes the computed rung and its per-phase breakdown as key=value fields (with an input fingerprint); every consumer reads it through kitlib.stage.read_stage, which re-verifies the fingerprint and derives fresh in memory rather than trusting a stale copy; --check is the freshness gate"""
-signal = "variable"
-req_refs = ["SR-049"]
-owner = "LLR-186"
+owner = "scripts/derive_stage"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 
 [interface.IF-051]
 consumers = ["scripts/spine_rules", "external:downstream adopter"]
+channel = "file"
 contract = """reads SR/LLR/TC Status + the SN section-state to compute per-artifact maturity (also low-level-requirements, test-cases, stakeholder-needs)"""
-signal = "variable"
-req_refs = ["SR-049"]
-owner = "SR-049"
+owner = "docs/requirements/"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -815,35 +652,30 @@ component = "CMP-006"
 notes = """Published contract, not a single consumer: same population as IF-021/033 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-052]
-provider = "scripts/traj_parse"
-consumers = ["scripts/gen_trajectory"]
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
 contract = """reads the recorded derived stage (the `stage` field of docs/stage, addressed by name) as the Process tab's render condition and current-rung highlight; an absent or unreadable docs/stage omits the tab so a stage-less repo renders byte-identically"""
 rationale = """The read is traj_parse._stage_value and the tab traj_panels.process_panel, both re-exported by the facade that declares this seam."""
-signal = "variable"
-req_refs = ["SR-168"]
-owner = "SR-168"
+owner = "scripts/traj_parse"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """gen_trajectory does not read docs/stage directly - that read moved into traj_parse._stage_value, which the facade calls (the contract's own text already says so). Re-pointed at the actual module boundary rather than the file it wraps."""
 
 [interface.IF-053]
-provider = "scripts/schedule"
-consumers = ["scripts/check_trajectory"]
+requestors = ["scripts/check_trajectory"]
+channel = "call"
 contract = """SR-148's obligation delivered as a library plus CLI at schedule.py; pure and side-effect-free — it never mutates the registry, spawns a worker, or touches git."""
-signal = "variable"
-req_refs = ["SR-148"]
-owner = "SR-148"
+owner = "scripts/schedule"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-054]
 consumers = ["scripts/schedule", "external:downstream adopter"]
+channel = "file"
 contract = """reads the WI registry - Status + hard/soft Predecessors + the optional Priority/Exclusive/BlockRef/EstTokens/SafetyClass columns (frontmatter keys in the folder home) - to derive readiness; an absent optional column reads as its documented default (SafetyClass absent => unclassified, fail-closed; Priority => 0; Exclusive => empty)."""
-signal = "variable"
-req_refs = ["SR-148"]
-owner = "SR-148"
+owner = "docs/work/"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
@@ -851,65 +683,55 @@ interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: same population as IF-023/024/079 - 9+ kit scripts walk the WI registry, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
 [interface.IF-055]
-consumers = ["scripts/integrate"]
+requestors = ["scripts/integrate"]
+channel = "call"
 contract = """the integrator's claim derives the ready frontier + class eligibility through the pure library (load_wis/evaluate + the SCHED_* classification constants) and claims only positively-classified ordinary work - unclassified or non-ordinary refuses per WI; the integrator owns the claim commit and the branch cut, the library stays side-effect-free (Phase 5: the retired dispatcher was this seam's prior consumer)."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-156"]
-owner = "LLR-058"
+owner = "scripts/schedule"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-056]
-consumers = ["scripts/gen_trajectory"]
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
 contract = """gen_trajectory's DERIVATION-loader sibling: the dashboard derives THROUGH the validator's loaders/joins (read_rows/load_wis/_split_refs/_norm_module/load_ifs/component_top_view/_cycles + the registry path constants) so ranking/derivation rules live in one home and the render can never disagree with validation; the two scripts always ship + re-sync together (bootstrap MAPPING)."""
 rationale = """This is the DERIVATION seam (validate); the dashboard's ready-frontier DECISION is read SEPARATELY from schedule.py via IF-071 (decide), and the two are distinct concerns. The facade imports the validator; the split siblings that now carry their own imports declare the same seam as IF-082 (traj_parse) / IF-083 (traj_views) / IF-084 (traj_status) - one contract stated once here."""
-signal = "variable"
-req_refs = ["SR-070", "SR-159"]
-owner = "LLR-049"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 
 [interface.IF-064]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """agent_session.py module: build_argv(template, model, prompt) -> (argv, stdin_input) deciding prompt delivery (a {prompt} placeholder rides argv except a Windows .cmd/.bat shim is refused; omitted = the prompt is piped to the child's STDIN, immune to command-line caps and batch-shell re-parsing); run_session(argv, root, timeout, env, on_line, stdin_input) -> (exit_code, output, timed_out) - one fresh headless session, stdin closed or fed-then-closed (never an interactive wait, SN-016), reader-thread pumped, per-session timeout, codex --output-last-message read back as the result; plus parse_json_result and the console echo/LiveStatus renderers. agent_loop re-exports these names, so its public surface is unchanged."""
 rationale = """The module is the session-launch layer split out of agent_loop, which is why the crossing states a re-export guarantee at all: the extraction owes its caller an unchanged public surface."""
-signal = "variable"
-req_refs = ["SR-026"]
-owner = "LLR-026"
+owner = "scripts/agent_session"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-065]
-provider = "scripts/agent_common"
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """agent_common.py module: the shared coordinator primitives split out of agent_loop - typed exit codes + END_STATES; git/head_sha[_full] wrappers; the declared-surface reads (read_declared/pause_reason/the blackout window) + stop_banner; the per-worktree kernel advisory lock (acquire_lock/release_lock - the held descriptor lives HERE, one lock namespace per process); worker-assignment primitives (WI token/train slug/registry/trailer-evidence readers); parse_map; preflight (SR-027 launchability refusal); and the session-log family (size-bounded logs, regenerated iteration index, telemetry commit) + the generated run-state write. agent_loop re-exports the historical names, so its public surface is unchanged."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-026"]
-owner = "SR-026"
+owner = "scripts/agent_common"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-066]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """plan_runner.py module: the dual-plan round runner split out of agent_loop - wi_plan_mode(row) reads the registry PlanMode signal; run_dual_plan_round(root, wi, row, template, model, timeout, prompt_map) drives the dual-plan round-lifecycle and round-artifact modules through the headless session layer and returns (SELECTED|PAGE, detail), with routing-ON planner pairs (tag-rank-aware resolve), the one runtime-nonresponse fallback, and the position-swapped arbiter pair. agent_loop re-exports wi_plan_mode/PLAN_MODE_DUAL/run_dual_plan_round (+ _dp_* helpers), so its public surface is unchanged."""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "LLR-076"
+owner = "scripts/plan_runner"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-068]
 consumers = ["scripts/agent_loop", "external:downstream adopter"]
+channel = "file"
 contract = """the session dial read: agent_loop reads the docs/stack.ini [agent-loop] section (fallback model / model-map) at boot via agent_common.read_agent_loop_config, resolving each dial with precedence CLI flag > AGENT_* env > declared file > built-in default. (The dispatcher-era jobs dial retired at Phase 5; a declared value is ignored.)"""
 rationale = """One declared home for the dials is what lets the agent-resume launchers carry no dial copies of their own."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-026"]
-owner = "SR-026"
+owner = "docs/stack.ini"
 version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -917,32 +739,27 @@ notes = "built and consumed together; same population as IF-022/049 - this row's
 
 [interface.IF-069]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-098's obligation delivered as a CLI at check_coverage.py."""
-signal = "variable"
-signal_note = """A finding names the module and its measured percentage against the floor."""
-req_refs = ["SR-006"]
-owner = "LLR-098"
+owner = "scripts/check_coverage"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-070]
-provider = "docs/coverage-floors"
 consumers = ["scripts/check_coverage"]
+channel = "file"
 contract = """reads the pytest-cov JSON report (per-file summary.percent_covered, path-normalized) and the docs/coverage-floors census (module + min percent; blank/# lines ignored)"""
-signal = "variable"
-req_refs = ["SR-006"]
-owner = "SR-006"
+owner = "docs/coverage-floors"
 version = "v1"
 status = "Drafted"
 notes = """The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here, correcting the earlier cell: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format."""
 
 [interface.IF-071]
-consumers = ["scripts/gen_trajectory"]
+requestors = ["scripts/gen_trajectory"]
+channel = "call"
 contract = """the gen_trajectory FAMILY reads the scheduler's ready-frontier for the generated STATUS block + the landing Next-work card (schedule.load_registry_rows/load_wis/frontier/evaluate), so the dashboard shows the SAME dependency-ready ordering the dispatcher acts on and the ranking is never recomputed in a second ranker; degrades to an empty frontier block when schedule.py is absent (a guarded try/except)."""
 rationale = """The frontier DECISION seam, distinct from the derivation-loader seam to check_trajectory (IF-056). The guarded `import schedule` has its ONE home in traj_parse.py (IF-085 is that module-level row) and traj_status/traj_panels read it as traj_parse.schedule; this row remains the seam as the facade declares it. The ordering is derived once in schedule.py, which IF-053 already names as shared by the dashboard."""
-signal = "variable"
-req_refs = ["SR-168", "SR-148"]
-owner = "LLR-058"
+owner = "scripts/schedule"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
@@ -950,21 +767,19 @@ notes = """Completes the dashboard side IF-053 already names: the import was wir
 
 [interface.IF-072]
 consumers = ["scripts/check_doc_refs", "scripts/trace", "tests/test_dogfood_sync.py"]
+channel = "file"
 contract = """the declared-absence read: check_doc_refs reads an optional `<path> — <reason>` file (--declared-absences, default docs/declared-absences) and reclassifies a reference to any listed path as UNTRACED with the DECLARED reason quoted back, rather than dangling. Fail-soft in the safe direction: an absent file, or a line carrying no separator, declares nothing and leaves the path dangling, so a malformed entry can never silence real rot."""
 rationale = """The seam exists because a second reader needs the same facts: tests/test_dogfood_sync.py loads the file as its SCAFFOLD_OMISSIONS declaration, so the file - not an import - is the shared home, which keeps the stdlib-only kit script free of any dependency on a test module."""
-signal = "variable"
-req_refs = ["SR-158"]
-owner = "SR-158"
+owner = "docs/declared-absences"
 version = "v1"
 status = "Drafted"
 notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader - the reader the contract text already names and the cell used to omit. check_vocab is NOT one, correcting the earlier cell: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 consumers = ["scripts/gen_open_items", "external:downstream adopter"]
+channel = "file"
 contract = """the owner decision registry read: gen_open_items loads one row per decision (OI-ID/Title/Status/OneLine/Decision/BlastRadius/Options/Recommendation/WI-Refs) and renders every Status=pending row as a brief card. A ruled row is history, not a decision, and is deliberately NOT rendered - the Decisions log in docs/log.md is its record. -000 example rows are dropped, the copy-ready placeholder convention every other registry uses; an absent registry renders an empty queue rather than failing, so a repo carrying no decisions still has a surface."""
-signal = "variable"
-req_refs = ["SR-026"]
-owner = "SR-026"
+owner = "docs/requirements/open-items.toml"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -972,65 +787,58 @@ notes = "built and consumed together; published contract, not a single consumer 
 
 [interface.IF-074]
 consumers = ["docs/open-items.html"]
+channel = "file"
 contract = """the generated owner surface: the ONLY document a human reads for pending decisions plus every Draft/Modified spine row's per-cell before/after. Contract of the emitted file: it carries an attestation-baseline stamp that --check re-reads (so a --since render is reproducible by the freshness gate), and a machine-local advisory region between explicit markers that --check MASKS before comparing (refs/llm/* facts do not transport with clone/push). The depth itself is computed by trace.reattest_model and the pending pointers by gen_trajectory.pending_block; this module renders, and if it ever disagrees with `trace.py --approve` the brief is authoritative."""
-signal = "variable"
-req_refs = ["SR-026"]
-owner = "LLR-118"
+owner = "scripts/gen_open_items"
 version = "v1"
 status = "Drafted"
 notes = "built with its consumer"
 
 [interface.IF-075]
-consumers = ["scripts/gen_open_items"]
+requestors = ["scripts/gen_open_items"]
+channel = "call"
 contract = """the attestation-model seam: gen_open_items imports trace.reattest_model — the SINGLE computation of what a Draft/Modified spine row's chain looks like against its attested baseline (git archaeology + per-cell comparison) — and renders it as HTML, while trace.reattest_lines renders the same model as the markdown brief. The markdown output was proven byte-identical across the extraction."""
 rationale = """Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
-signal = "variable"
-req_refs = ["SR-049"]
-owner = "LLR-001"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 notes = "built and consumed together"
 
 [interface.IF-076]
-provider = "scripts/trace_text"
-consumers = ["scripts/trace"]
+requestors = ["scripts/trace"]
+channel = "call"
 contract = """trace_text.py module: four PURE predicates (rows in, findings out, no I/O) plus the row primitives they share. provenance_findings(srs,llrs,tcs) and form_findings(srs,llrs,tcs) return gating findings that join trace's --strict exit_code; ac_advisories(srs) and paraphrase_advisories(srs,llrs) return warn-only advisories that never join a failure set; refs/is_example/is_draft are the shared row primitives, homed here as the lower layer so the dependency runs one way. Finding STRINGS are part of the contract: the three golden files assert them byte-for-byte."""
 rationale = """The module is the spine-row TEXT layer split out of trace.py, and the byte-for-byte finding-string assertions are what make that split provably behaviour-preserving."""
-signal = "variable"
-req_refs = ["SR-157"]
-owner = "SR-157"
+owner = "scripts/trace_text"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - trace_text consumes NOTHING by design: it is the pure predicate layer (rows in, findings out; no I/O, no git, no filesystem, no argv), which is what makes it testable in isolation and what the pure-core / I-O-shell split asks for. A consumed medium here would mean the extraction failed to separate the concerns."""
 
 [interface.IF-077]
-consumers = ["scripts/check_trajectory"]
+requestors = ["scripts/check_trajectory"]
+channel = "call"
 contract = """check_trajectory resolves the ANCHOR half of an open WI's `doc#anchor` SpecRef THROUGH check_docs' markdown parser (parse_doc -> the doc's anchor set, which applies check_docs' slugifier), so ONE slugifier defines what an anchor is in both homes and the same reference can never pass as a SpecRef while failing as a link. Lazy import that degrades to path-only when check_docs is absent; the two scripts always ship + re-sync together (bootstrap MAPPING)."""
 rationale = """The import is lazy and degrades to path-only because this module runs in the SHIPPED pre-commit hook, where a hard requirement would block an adopter's every commit. The ship-and-re-sync-together obligation is the same ground IF-056 stands on."""
-signal = "variable"
-req_refs = ["SR-157", "SR-158"]
-owner = "LLR-012"
+owner = "scripts/check_docs"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 
 [interface.IF-078]
-consumers = ["scripts/plan_artifacts"]
+requestors = ["scripts/plan_artifacts"]
+channel = "call"
 contract = """sibling import for the registry write side: the filing-home resolution and write_spec_file(row) when file_selected_wis files selected Plan-WIs as docs/work/queued/ spec files - the folder half of IF-061's write seam; CSV mode byte-unchanged."""
-signal = "variable"
-req_refs = ["SR-129"]
-owner = "LLR-136"
+owner = "scripts/wi_convert"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-079]
 consumers = ["scripts/wi_convert", "external:downstream adopter"]
+channel = "file"
 contract = """reads either registry FORM - the live docs/work/ spec folder and/or a legacy docs/requirements/work-items.csv being migrated - to convert between them (the CSV is interchange format only since Phase 5); --verify round-trips in a temp dir and never writes either live home."""
-signal = "variable"
-req_refs = ["SR-129"]
-owner = "SR-129"
+owner = "docs/work/"
 version = "v2"
 status = "Drafted"
 component = "CMP-006"
@@ -1039,72 +847,63 @@ notes = """Published contract, not a single consumer: same population as IF-023/
 
 [interface.IF-080]
 consumers = ["external:downstream adopter"]
+channel = "exit-code"
 contract = """integrate.py CLI (the local integration seam): `claim` performs the serial trunk claim (queued spec -> docs/work/active/<branch>/ in one bookkeeping commit, branch cut from it; refusal ladder: paused / dirty / branch-exists / unsafe-name / non-ordinary / off-frontier), `integrate` runs the serial fail-closed merge queue (--no-ff onto a candidate worktree, trunk step folded in, the DECLARED bar on the composed tree - missing/empty declaration or any SKIP refuses - and the RULING-7 verdict gate with git-derived freshness before the ff-only trunk advance), `audit` is the RULING-6 non-merge-product-commit window check."""
-signal = "discrete"
-req_refs = ["SR-156"]
-owner = "LLR-140"
+owner = "scripts/integrate"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
 
 [interface.IF-081]
-provider = "scripts/trunk_step"
 consumers = ["external:downstream adopter"]
+channel = "bytes"
 contract = """trunk_step.py CLI (the serial trunk lane's shared-surface steps, concurrency-restructure SS5.1/SS5.2): --compile-log validates and appends docs/log.d/ fragments to docs/log.md in git add-time order (all-or-nothing, links rebased, fragments deleted); --regen re-derives the generated document families in REGEN_STEPS order (okf, derived-stage BEFORE the dashboards whose input it is, trajectory, status, open-items). Fail-loud: a red trunk lane halts claiming."""
-signal = "variable"
-req_refs = ["SR-170"]
-owner = "SR-170"
+owner = "scripts/trunk_step"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
 
 [interface.IF-082]
-consumers = ["scripts/traj_parse"]
+requestors = ["scripts/traj_parse"]
+channel = "call"
 contract = """IF-056's derivation-loader seam as held here: traj_parse.py is gen_trajectory's registry/doc/git source layer and reads the validator's loaders + path constants (read_rows/_split_refs/_norm_module/load_ifs/SR_CSV) directly. The CONTRACT is IF-056's, unchanged and stated once there."""
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling - so the row is held here rather than on the facade."""
-signal = "variable"
-req_refs = ["SR-070", "SR-159"]
-owner = "LLR-049"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink — gen_trajectory.py's decomposition moved the import, not the seam. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-083]
-consumers = ["scripts/traj_views"]
+requestors = ["scripts/traj_views"]
+channel = "call"
 contract = """IF-056's derivation-loader seam as held here: traj_views.py renders the What/When/How-SW views through the validator's joins (component_top_view/load_ifs/_norm_module/_split_refs/read_rows), so the picture and the right-sizing rule can never disagree. Contract: IF-056's."""
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the views it serves."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-070"]
-owner = "LLR-049"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink — the import moved with the views; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-084]
-consumers = ["scripts/traj_status"]
+requestors = ["scripts/traj_status"]
+channel = "call"
 contract = """IF-056's derivation-loader seam as held here: traj_status.py derives the status snapshot through the validator's loaders (read_rows/read_registry_rows/load_wis/load_ifs). Contract: IF-056's."""
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling with the --status layer. The pending-owner-actions projection is not this module's: it took its own loader read with it, and pending.py holds that endpoint as IF-138, the same IF-056 shape."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract text types nothing either way, so the row defaults to the wider value - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-070", "SR-159"]
-owner = "LLR-049"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink — the import moved with the --status layer; the seam is IF-056's. Provides nothing across a component boundary: its only consumer is the gen_trajectory facade in the same CMP-009."""
 
 [interface.IF-085]
-consumers = ["scripts/traj_parse"]
+requestors = ["scripts/traj_parse"]
+channel = "call"
 contract = """IF-071's frontier DECISION seam as held here: traj_parse.py is the guarded `import schedule` block's ONE home in this module family (traj_status's Ready-frontier block and traj_panels' Next-work card both read it as traj_parse.schedule), so the dashboard and status.md project the SAME dependency-ready ordering. Contract: IF-071's; OPTIONAL by construction — a scaffold without schedule.py degrades to an empty block."""
 rationale = """A seam is declared per importing module, and the guarded import that holds IF-071's frontier DECISION seam has its one home in this split sibling."""
-signal = "variable"
-req_refs = ["SR-168", "SR-148"]
-owner = "LLR-058"
+owner = "scripts/schedule"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
@@ -1112,162 +911,145 @@ notes = """The guarded import lives in traj_parse, its one home, so the seam is 
 
 [interface.IF-086]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-146's obligation delivered as a CLI at check_figures.py."""
-signal = "variable"
-signal_note = """A finding quotes the offending marker line."""
-req_refs = ["SR-158"]
-owner = "LLR-146"
+owner = "scripts/check_figures"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-087]
-consumers = ["scripts/check_figures"]
+requestors = ["scripts/check_figures"]
+channel = "call"
 contract = """reuses doc_files (the root *.md + docs/**/*.md walk with the linguist-generated prefix skip) and authored_lines (the GENERATED-marker-block skip) - so the two doc checks agree on the scanned surface and the authored-lines rule instead of each declaring its own"""
-signal = "variable"
-req_refs = ["SR-158"]
-owner = "LLR-038"
+owner = "scripts/check_doc_refs"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-088]
-provider = "scripts/pending"
-consumers = ["scripts/dispatch"]
+requestors = ["scripts/dispatch"]
+channel = "call"
 contract = """the dispatcher's exit-banner pending read: _pending_cards calls pending.owner_cards(root) - the pending_items(root) read model the dashboard and open-items.html also render, minus the tracked-pause kind, whose pause has its own earlier exit - so the queue-drained / approvals-waiting banners can never disagree with the owner surfaces about what is blocking."""
 rationale = """The import is deferred, paid only at an exit banner."""
-signal = "variable"
-req_refs = ["SR-148"]
-owner = "LLR-198"
+owner = "scripts/pending"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """sink — the banner renders what the read model derives, and the provider is the read model rather than the dashboard facade that used to re-export it: a scheduling composer reaching through a render family for two private functions is a crossing a seam registry can only record, never make sound, so the derivation sits below all three of its readers instead. The crossing itself, the CMP-008 to CMP-009 pair and the never-disagree contract are unchanged by that siting"""
 
 [interface.IF-089]
-consumers = ["scripts/census"]
+requestors = ["scripts/census"]
+channel = "call"
 contract = """the empty-frontier gap census: gap_census calls trace.load_registries + trace.analyze (phase unfiltered, require_verified on) and reports findings.orphans + findings.status_findings + the draft SN ids — the registry gaps trace already names, reused not re-derived. The list is the intake mint helper's handoff (it mints concrete gap-closure rows from it; the dispatcher itself never mints — no silent planner mints)."""
-signal = "variable"
-req_refs = ["SR-148"]
-owner = "LLR-001"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it. The endpoint is the census module rather than the dispatcher because the derivation has three readers and two of them sit below the dispatcher; the crossing, the component pair and the contract are the same ones the seam always carried"""
 
 [interface.IF-090]
-consumers = ["scripts/integrate"]
+requestors = ["scripts/integrate"]
+channel = "call"
 contract = """the unified trunk-side intake mint: intake_after_merge(root, before, after, outcomes, branch) mints the merge's forced rows (amendment adjudication, handback disposition, ## Dispositions drafts) as one bookkeeping commit inside the held slot; mint_gap_rows(root, census) is the dispatcher's rung-1 arm; flip_verified/adjudication_action flip a no-scope-moved spine row to Approved, or recommend only while the tier is human-held; context_block(root, wi_row) renders the advisory joins agent_loop's worker prompt consumes; all-or-nothing, idempotent by exact-title dedup (the sweep/census/adjudicate CLI is the recovery path)"""
-signal = "variable"
-req_refs = ["SR-174"]
-owner = "LLR-153"
+owner = "scripts/intake"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-091]
-consumers = ["scripts/intake"]
+requestors = ["scripts/intake"]
+channel = "call"
 contract = """reads the spine-amendment seam as-is - staged_spine_amendments(root, before, after) per-row {approved, traced} cell dicts with before/after over a rev pair - plus SPINE_CSVS for the flip's registry walk; only the routed traced subset (SN-Refs, Verifies, LLR SR-Refs) mints, the rest stays silent by ruling"""
-signal = "variable"
-req_refs = ["SR-174"]
-owner = "LLR-158"
+owner = "scripts/acceptance_record"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-092]
-consumers = ["scripts/intake"]
+requestors = ["scripts/intake"]
+channel = "call"
 contract = """sibling import for the registry write side (the IF-078 shape): COLUMNS (the 18-column schema the minted row dict is keyed by) and write_spec_file(row) - the format's single writer, self-verifying at write - materialize every minted spec under docs/work/queued/; ConvertError is the mint's all-or-nothing refusal input"""
-signal = "variable"
-req_refs = ["SR-170"]
-owner = "LLR-136"
+owner = "scripts/wi_convert"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-093]
-consumers = ["scripts/traj_panels"]
+requestors = ["scripts/traj_panels"]
+channel = "call"
 contract = """sibling import for the station-cycle render's derived vocabulary, the IF-092/IF-078 constants shape: OUTCOME_DIRS - the A3 terminal outcomes keyed by the spec directories that declare them, the same one-home table the merge slot classifies a finished lane by - draws the Process tab's outcome cards and their notes, and BAR_GREEN (the refresh attestation trailer label) the refresh note; constants only, no call and no write"""
 rationale = """The dashboard's outcome vocabulary is READ from the vocabulary's own module instead of drifting as folklore."""
-signal = "variable"
-req_refs = ["SR-168"]
-owner = "LLR-182"
+owner = "scripts/kitlib/station"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink - a render leaf: provides nothing across components (consumed only inside CMP-009 by the gen_trajectory facade); seam driven by TC-056's station sync pins. The provider was the merge coordinator until the vocabulary was given its own module below both: a render leaf reaching into a service that claims lanes and moves specs is the direction a layered system forbids, and that import was an edge of the runtime scripts' strongly connected component. The seam stays POLICED across the same component pair, because the new provider carries a single owning component rather than the shared kernel's usage tag"""
 
 [interface.IF-094]
-consumers = ["scripts/traj_panels"]
+requestors = ["scripts/traj_panels"]
+channel = "call"
 contract = """sibling import for the station-cycle render's derived vocabulary: _KIND_CONCURRENCY/_KIND_RANK/CONCURRENCY_EXCLUSIVE derive the exclusive-kind list the spine-barrier glyph and the escalation notes name, in rank order, read as constants; no call, no write"""
-signal = "variable"
-req_refs = ["SR-168"]
-owner = "LLR-152"
+owner = "scripts/schedule"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """seam driven by TC-056's station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)"""
 
 [interface.IF-097]
-consumers = ["scripts/agent_loop", "scripts/plan_briefs", "scripts/plan_runner"]
+requestors = ["scripts/agent_loop", "scripts/plan_briefs", "scripts/plan_runner"]
+channel = "call"
 contract = """The prompt LOADER seam (SN-032): `load(key, override)` returns one shipped template's text or raises a named `PromptError`; `fill(key, text, values)` refuses an unknown slot and a declared-but-unfilled slot rather than launching a silently empty instruction; `preflight(keys, overrides)` turns a missing template into a launch-time refusal instead of a first-session crash; `digest(text)` fingerprints a template over NORMALIZED line endings, so a CRLF checkout is not a change. `KIT_PROMPTS` is the declared key->file map and the only vocabulary a caller may use."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-162"
+owner = "scripts/prompts"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "source: the templates are files under project-trajectory/prompts/, not code."
 
 [interface.IF-098]
-consumers = ["scripts/gen_prompt_catalog"]
+requestors = ["scripts/gen_prompt_catalog"]
+channel = "call"
 contract = """The generated catalogue reads `catalog_rows()` — `(key, file, slots, digest)` per shipped prompt — and nothing else, so the catalogue cannot disagree with the loader about what ships. `render()` is pure, which is what lets `--check` and the write path share one answer to 'what is current'."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-162"
+owner = "scripts/prompts"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """sink: its output is a generated DOCUMENT, not an API any module calls. Freshness-gated and declared in docs/stack.ini [generated]."""
 
 [interface.IF-099]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """The coordinator side of the prompt loader (SN-032, the IF-097 seam consumed): `agent_loop._kit_prompt` resolves WORKER/REVIEWER/CRITIQUE lazily and caches per key for the process lifetime — never at import; `plan_briefs` reads the dual-plan hats the same way. Both fill with the single-brace `{slot}` vocabulary, which is also every operator override file's contract."""
 rationale = """Resolution is never at import because a missing template must be a named PREFLIGHT refusal rather than an ImportError for every consumer of the module."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-162"
+owner = "scripts/prompts"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = "intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097."
 
 [interface.IF-100]
-consumers = ["scripts/plan_briefs"]
+requestors = ["scripts/plan_briefs"]
+channel = "call"
 contract = """The dual-plan hats' side of the prompt loader (SN-032, the IF-097 seam consumed): `plan_briefs` loads the planner, critic and arbiter templates through `prompts.load`/`fill` with the same strict slot rules the session prompts take — an unknown slot and a declared slot left unfilled are both refusals, never a silently empty instruction to a planner."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-162"
+owner = "scripts/prompts"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. The dual-plan templates are NOT yet in prompts.KIT_PROMPTS, so they are absent from CATALOG.md and from the per-session prompt-sha telemetry - tracked, not silently omitted."""
 
 [interface.IF-101]
-consumers = ["scripts/intake"]
+requestors = ["scripts/intake"]
+channel = "call"
 contract = """reads the id watermark so a mint counts from the RECORD, not from the live tree - read_watermark(root) -> {space: int}, raising on an absent or malformed mark rather than degrading to zero, and bump_watermark(root) to raise the marks in the same commit that files the specs. next_wi_id mints max(watermark, live filenames) + 1."""
 rationale = """Shared rather than duplicated because the mint and the checker must agree on what an id is: a second copy of that rule is the defect the check exists to catch."""
-signal = "variable"
-req_refs = ["SR-174"]
-owner = "LLR-002"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-102]
-consumers = ["scripts/trace"]
+requestors = ["scripts/trace"]
+channel = "call"
 contract = """spine_carrier.py module: the requirement spine's registry CARRIER. SPINE_TABLE maps an id column to its TOML tier table (SR-ID->requirement, LLR-ID->design, TC-ID->test); SPINE_COLUMN maps a carrier key to today's COLUMN NAME and is the exact inverse of migrate_carrier.KEY. rows_from_text(text, id_col, carrier) -> {id: row} under today's column names, or None when a TOML text does not parse (absent, never empty); rows_from_toml / rows_from_csv are the two arms. carriers(rel) -> both suffixed paths, for an applicability test that must span the cutover. resolve(path) -> the live carrier file, RAISING when both exist rather than resolving by precedence; load(path, id_col) -> rows in file order, the shape csv.DictReader returns, raising on a carrier that exists and will not parse. The `-000` example filter is NOT applied here - that is trace_text's rule."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1275,22 +1057,19 @@ notes = """source - spine_carrier consumes nothing by design, the trace_text pat
 
 [interface.IF-103]
 consumers = ["docs/requirements"]
+channel = "bytes"
 contract = """LLR-165's obligation delivered as a CLI at migrate_carrier.py; a lossy conversion refuses to write, with or without --check."""
-signal = "variable"
-signal_note = """The written TOML bytes and the per-cell round-trip findings are both unbounded."""
-req_refs = ["SR-147"]
-owner = "LLR-165"
+owner = "scripts/migrate_carrier"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """source - reads the registries and writes beside them; consumes no kit module. It ships to adopters because every adopting repo migrates too and the round-trip proof is the migration's evidence (SR-129's 140-cell lesson). NOT one-shot, and NOT awaiting retirement: a downstream repo re-syncing onto a newer kit AFTER the carrier cutover still holds its registries on a legacy carrier, so this converter is the standing path for that conversion and has no terminus to wait for. The CSV fallback in spine_carrier does expire - once no supported baseline predates the migration - and this module does not expire with it, which is why its maturity is its own affair rather than the conversion programme's."""
 
 [interface.IF-104]
-consumers = ["scripts/check_doc_refs"]
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the Evidence-class pointer scan over TC.Evidence and LLR.Module/CodeSymbol/TestRefs answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.resolve/spine_carrier.load. resolve() is called first so an absent registry still SKIPS the tier cleanly rather than reporting every pointer in it as dangling - the pre-spine rung this checker has always tolerated."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1298,11 +1077,10 @@ component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-105]
-consumers = ["scripts/check_flows"]
+requestors = ["scripts/check_flows"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the known-id sets the runtime-flow citation check validates against answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load. The one consumer that needs no column vocabulary at all: under TOML an id is the TABLE KEY, so this seam reads keys and nothing else."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1310,12 +1088,11 @@ component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-106]
-consumers = ["scripts/gen_okf"]
+requestors = ["scripts/gen_okf"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the SR/LLR/TC rows the OKF knowledge bundle exports answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load."""
 rationale = """The bundle is generated and --check-gated, so a cell this seam failed to hand over would surface as bundle drift rather than silently - which is why the export reads through the carrier rather than keeping a private CSV reader."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1323,11 +1100,10 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-107]
-consumers = ["scripts/gen_release_checklist"]
+requestors = ["scripts/gen_release_checklist"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the SR/TC/LLR rows the release checklist groups by phase answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load. Phase arrives as an INT from the TOML carrier and as a string from CSV; the carrier renders both to the same cell text, which is what keeps the checklist's grouping stable across the migration."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1335,12 +1111,11 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-108]
-consumers = ["scripts/plan_briefs"]
+requestors = ["scripts/plan_briefs"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the SR surface handed verbatim to an LLM planning brief answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load."""
 rationale = """This seam feeds a MODEL, not a check: a cell the reader failed to map would not fail loudly, it would quietly narrow what the planner was told. That asymmetry is the reason the vocabulary has one home rather than a copy here."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1348,12 +1123,11 @@ component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006, so the import needs a seam of record. The vocabulary has one home rather than a copy per script: a duplicated VOCABULARY fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-109]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the SR rows behind the critique gate and the artifact recipe answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. This seam feeds an LLM brief and a GATE at once: agent_loop reads SR Verification to decide whether a critique round is owed, and lifts SR/TC prose verbatim into the brief."""
 rationale = """A cell lost in translation would either skip a required round or narrow what the model was told - neither of which fails loudly."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1361,11 +1135,10 @@ component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-110]
-consumers = ["scripts/intake"]
+requestors = ["scripts/intake"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the LLR/TC rows the unified mint reads to place a new row answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. The mint reads the spine to decide what already exists. It also WRITES Status back (the Modified->Verified flip), so this seam is the read half of a read-modify-write and the carrier must answer both consistently."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1373,13 +1146,11 @@ component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-111]
-consumers = ["scripts/traj_parse"]
+requestors = ["scripts/traj_parse"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102) instead of csv.DictReader, so the stakeholder-need rows the dashboard renders answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Reads the NEED tier specifically, through spine_carrier.folded_needs - the one home the edge-case fold now has."""
 rationale = """This module held one of the three copies that drifted and rendered a phantom SN-000 root in the icicle, which is why the seam is declared rather than left as an import."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1387,12 +1158,11 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The vocabulary has one home rather than a copy per script: a duplicated vocabulary fails silently, handing back a row with a cell missing instead of raising."""
 
 [interface.IF-112]
-consumers = ["scripts/check_docs"]
+requestors = ["scripts/check_docs"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102): the stakeholder-need rows behind the README Must/Should coverage floor."""
 rationale = """Replaces a markdown table walk that discovered its `Priority` column by header text and tracked draft-ness by heading - both shapes the markdown carrier forced. The heading arm is the one that mattered: over a TOML file it finds no headings, so NO need reads as draft, and every draft need would be ADDED to a floor that gates the README."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1400,24 +1170,22 @@ component = "CMP-007"
 notes = """cross-component crossing declared per the architecture rule. Existence checking stays this module's own whole-file scrape, byte-for-byte the rule trace.py uses — only the Must/Should floor moved to the carrier."""
 
 [interface.IF-113]
-consumers = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief"]
+channel = "call"
 contract = """The adjudicator side of the prompt loader (the IF-097 seam consumed): `adjudicate_brief.compose` resolves the brief its row's declared `Brief` cell names through `prompts.load` (an operator `--prompt-map` override under the same key wins) and fills it with `prompts.fill`: an unknown slot or a declared slot left unfilled is a `PromptError`, which this module turns into a REFUSAL to dispatch, not into a brief with a hole where the evidence belongs."""
 rationale = """The loader's both-ways strictness is load-bearing here rather than merely tidy: a judge's brief whose evidence section is thin reads as an investigation that was run and found nothing, so there is deliberately no partially-filled path across this seam."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-162"
+owner = "scripts/prompts"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """intra-component: both endpoints are CMP-008 under the narrow-waist partition, which puts the coordinator and the prompt loader in one unit, so the architecture rule no longer demands this row; it stands as the declared consumption of the loader contract, whose provider side is IF-097. Sibling of IF-099 (the session engine's own use of the same loader): the difference is that a failed fill here HOLDS the work item for a human rather than degrading, because the alternative brief would be the implementer's."""
 
 [interface.IF-114]
-consumers = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief"]
+channel = "call"
 contract = """reads the requirement spine through the CARRIER (IF-102): the TC rows a red-TC brief lists (Verifies/Status/Method/Expected/Evidence) and the SR `Requirement` / LLR `Detail` text naming the obligation each case covers. Every cell it lists is REQUIRED: a row missing one refuses rather than rendering a dash."""
 rationale = """Read through the carrier rather than a path with a suffix because the brief must assemble identically either side of the carrier cutover. Every listed cell is required rather than dash-filled, since a dash in an evidence listing reads as "checked, not applicable" when the truth is "the registry never said"."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1425,47 +1193,42 @@ component = "CMP-008"
 notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Read-only: this module never writes a registry - the flip a verdict may earn is the mechanical tool's act, which is also what the briefs themselves tell the session."""
 
 [interface.IF-115]
-consumers = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop"]
+channel = "call"
 contract = """The adjudicator-brief seam the session engine composes from: `compose(root, row, verdict_path, prompt_templates) -> (text, None) | (None, reason)`, selected by the row's DECLARED `Brief` cell rather than inferred from `SpecRef` (that inference is ambiguous - an amended test-case row and a red-TC census row carry the same one). The seam is ALL-OR-NOTHING and that is its whole contract: every assembler fills its template's slots from a real derivation or returns a reason, so the caller never receives a partially-filled judge's brief. What the caller owes in return is the fail-closed half - a row that DECLARES a brief this seam cannot compose must be held for a human, never dispatched with the worker assignment, because a judge briefed as a builder ends its session DONE like any other and the miss is silent."""
-signal = "variable"
-req_refs = ["SR-146"]
-owner = "LLR-167"
+owner = "scripts/adjudicate_brief"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
 
 [interface.IF-116]
-consumers = ["scripts/plan_artifacts"]
+requestors = ["scripts/plan_artifacts"]
+channel = "call"
 contract = """reads the id watermark so BOTH of this module's mints count from the RECORD, not from the live tree (the IF-101 seam, second consumer): read_watermark(root) -> {space: int}, raising on an absent or malformed mark rather than degrading to zero, and bump_watermark(root) to raise the marks in the same act that writes the artifacts. allocate_round_dir mints max(live DP directories, DP mark) + 1; file_selected_wis mints max(live spec ids over both homes, WI mark) + 1. The bump sits on the CALLER's side by construction: bump_watermark reads the live tree, so it runs only after the directory or the specs exist, or it records a number nothing holds."""
 rationale = """Shared rather than duplicated for IF-101's reason: the mint and the checker must agree on what an id is."""
-signal = "variable"
-req_refs = ["SR-155"]
-owner = "LLR-002"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared because these two mints sit off max(live) + 1, which would otherwise re-issue the id of anything deleted."""
 
 [interface.IF-117]
-provider = "scripts/gen_arch_map"
-consumers = ["scripts/check_doc_refs"]
+requestors = ["scripts/check_doc_refs"]
+channel = "call"
 contract = """the SYMBOL-BINDING seam behind the LLR `CodeSymbol` anchor rule. Consumes gen_arch_map.module_bindings(tree) -> the set of names a module binds at module scope plus its class-level def names; the caller owns the parse, so the seam is pure and a module that will not parse costs that module's rule rather than the run. Deliberately NOT a public-API view: that selection drops every _-prefixed name and every module constant, which LLR rows name, so answering from it would report real code as missing. The sym: tier asks the narrower question and derives its own oracle from gen_arch_map.scan_inventory - two oracles for two questions."""
-signal = "variable"
-req_refs = ["SR-180"]
-owner = "LLR-180"
+owner = "scripts/gen_arch_map"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
 notes = """the cross-component edge CMP-007 -> CMP-006, declared per the architecture rule. WHY AN IMPORT AND NOT A COPY: a second AST symbol parser in the consumer is the duplicated-derivation hazard in its dangerous form - a copy that has not learned a node type does not crash, it silently answers that symbol does not exist about live code, which on this seam means a false RED on the spine. gen_arch_map already owns AST symbol extraction, so the binding set lives there and the two walks inside that one file are pinned against each other by tests/test_gen_arch_map.py. THE OWNER-SIDE CELL NOW HOLDS A DESIGN ROW, and the standing no-design-row note it used to carry is withdrawn rather than merely deleted: LLR-180 names module_bindings beside symbol_findings, so the providing endpoint of this seam is answerable by a design row for the first time (LLR-023 answers only for the rendered arch-map splice/drift — exactly the artifact this contract DISCLAIMS — and LLR-080 for sw_graph/build_html;build_module_map, which is why neither could take it). The requirement side moved with it: SR-180 states the discharge obligation this seam realizes, which SR-147 never did (it states one machine-parseable carrier, not a symbol-binding oracle) and SR-158 never did (its acceptance names the verdict shape alone — the doc-refs step: dangling gates, untraced counted). Both new rows are Drafted and await approval; the pointers here are traced cells and move ahead of that."""
 
 [interface.IF-118]
-consumers = ["scripts/gen_open_items"]
+requestors = ["scripts/gen_open_items"]
+channel = "call"
 contract = """reads the OWNER DECISION REGISTRY through the CARRIER (IF-102) instead of csv.DictReader, so `docs/requirements/open-items` answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load + spine_carrier.resolve. load raises on a registry that exists and will not parse, and returns [] only when the registry is genuinely absent."""
 rationale = """The fail-closed half is what this seam is FOR: read directly, a registry that existed and would not parse came back as no rows, and this view then published "0 pending decisions" - which on a decision queue reads as "nothing is waiting on you"."""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1473,12 +1236,11 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1), which moved open-items onto the spine's carrier."""
 
 [interface.IF-119]
-consumers = ["scripts/agent_route"]
+requestors = ["scripts/agent_route"]
+channel = "call"
 contract = """reads the MODEL REGISTRY through the CARRIER (IF-102), so `docs/agents` answers whichever of TOML/CSV is live and a pair row arrives under today's column names either way. Consumes spine_carrier.resolve + spine_carrier.rows_seq_from_text; the CSV branch keeps its own header check. An unparseable registry is an ERROR, never an empty pool."""
 rationale = """The CSV branch keeps its own header check because a declared-header schema is a property of that carrier and TOML's analogue is a decode failure. An empty pool is refused rather than returned because {} under managed routing reads as a consent decision rather than a broken file, so the human is never paged."""
-signal = "variable"
-req_refs = ["SR-154"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1486,13 +1248,11 @@ component = "CMP-008"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 and spine_carrier is CMP-006. Added by the batch-2 carrier sweep (repo-lock section 8.1). The `# tag-rank:` line load_tag_rank parses is a TOML comment now and survives byte-for-byte; only finding the file changed."""
 
 [interface.IF-120]
-consumers = ["scripts/trunk_step"]
+requestors = ["scripts/trunk_step"]
+channel = "call"
 contract = """asks the CARRIER (IF-102) one question - which carrier of a registry is live - for the open-items step's applicability predicate. Consumes spine_carrier.resolve."""
 rationale = """Naming a suffix inline instead would make the step SKIP silently on a migrated repo, and a skipped freshness step is the shape SN-008 forbids: the generated surface stops being regenerated and nothing says so."""
-signal = "variable"
-signal_note = """DERIVED, NOT HAND-TYPED: the Contract names BOTH a typed outcome and unbounded content, and any unbounded part makes the whole crossing variable - re-type it by hand when this row is next touched (B1)"""
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1501,130 +1261,106 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 
 [interface.IF-121]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-170's obligation delivered as a CLI at check_need_form.py."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content (the offending phrases), and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-150"]
-owner = "LLR-170"
+owner = "scripts/check_need_form"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-122]
-consumers = ["scripts/check_need_form"]
+requestors = ["scripts/check_need_form"]
+channel = "call"
 contract = """reads the stakeholder-needs registry through the CARRIER (IF-102): consumes spine_carrier.load_needs + spine_carrier.resolve, so the need tier answers whichever of TOML/legacy-markdown is live and an unreadable registry REFUSES loudly (SystemExit) rather than scanning as empty; a registry PRESENT but yielding zero scannable need cells reports VACUOUS, never clean, while absent stays the pre-scaffold clean skip - zero need cells reading as a clean tier on exactly the registry this check exists to guard is the false green SN-008 forbids."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-150"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-007 (LLR-170) and spine_carrier is CMP-006 (LLR-166). The IF-118/119/120 carrier-consumption shape."""
 
 [interface.IF-123]
-consumers = ["scripts/intake"]
+requestors = ["scripts/intake"]
+channel = "call"
 contract = """baseline_snapshot.py: the `last_approved` baseline. copy_live(root, seed=False) -> paths written; byte-for-byte mirror of SNAPSHOTTED into docs/archive/last_approved/; stale carriers deleted; SystemExit without seed=True. load_all(root) -> {(stem, id col): {id: row}}; None when absent; RAISES on an unparseable file; rows_for collapses that None to {}. exists(root) -> bool; stamp(root) -> (rev, date); is_drifted / drifted_cells -> approved cells only; unanchored_findings -> advisory strings."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names typed outcomes plus unbounded content (the finding strings, the copied registry text), and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140"]
-owner = "LLR-173"
+owner = "scripts/baseline_snapshot"
 version = "v1"
 status = "Drafted"
 notes = """Design of record: docs/plans/2026-08-15-baseline-snapshot-design.md. THE REFUSALS ARE THE CONTRACT, and each replaces a convenient degrade. The first snapshot blesses whatever text is in the tree, so it must ride the owner's reviewed signing commit: copy_live will not CREATE the directory, and --seed is reachable only from `intake.py snapshot --seed`. None and {} are opposite claims and the empty one reads as "re-bless everything with no diff shown", which is why an unparseable file raises and rows_for is the ONE place the sentinel collapses. The copy preserves repo-relative paths under the snapshot root, so `snapshot_root / rel` reuses every existing resolver verbatim. COUNTERPART IS intake, THE WRITER: exactly two callers of copy_live are sanctioned (intake._apply_flips, after the status write, and `intake.py snapshot`), and nothing may wire the copy into a freshness step — the snapshot is deliberately behind live whenever an amendment is pending, and that lag IS the signal. OWNER is the DESIGN row, not SR-140, on the Q1 polymorphism: SR-140 states the obligation and is answerable for both halves of it, while this row is one module's concrete surface. PROVISIONAL, for the review sitting to overturn."""
 
 [interface.IF-124]
-consumers = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief"]
+channel = "call"
 contract = """reads the approval baseline through IF-123: consumes baseline_snapshot.exists, SNAPSHOT_DIR and stamp, so the re-attestation brief measures an amendment against an anchor that is not the text under judgement. The half the CONSUMER owes is the refusal: with no snapshot the brief HOLDS and names a FIRST-APPROVAL question, never fabricating an anchor and never rendering a before/after with an empty before. The stamp is advisory - off git, the baseline line omits the date."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content (the refusal prose), and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140"]
-owner = "LLR-173"
+owner = "scripts/baseline_snapshot"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Covered by TC-161's amendment arm."""
 
 [interface.IF-125]
-consumers = ["scripts/pending"]
+requestors = ["scripts/pending"]
+channel = "call"
 contract = """reads the approval baseline through IF-123 so the generated status and dashboard surface reports pending amendments against what was blessed, not against HEAD. Consumes the READ half only - load_all, rows_for, is_drifted and the SNAPSHOT_DIR constant - and never copy_live. Vacuous by absence: with no snapshot the surface reports nothing approved, never everything drifted."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded rendered content, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140"]
-owner = "LLR-173"
+owner = "scripts/baseline_snapshot"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). The endpoint is the pending read model rather than the dashboard sibling, because the drift arm that performs this read lives there — an endpoint names the module that makes the call, not the one that renders its answer. Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Cited by no TC today, which the 'IF seams cited by no TC' advisory names."""
 
 [interface.IF-126]
-consumers = ["scripts/gen_open_items"]
+requestors = ["scripts/gen_open_items"]
+channel = "call"
 contract = """reads the approval baseline through IF-123 so the generated open-items surface can say which decision rows have moved after the last signing. Consumes the READ half only - load_all, rows_for and the SNAPSHOT_DIR constant - never copy_live. An absent snapshot is the clean pre-signing skip, never an empty baseline."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded rendered content, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140"]
-owner = "LLR-173"
+owner = "scripts/baseline_snapshot"
 carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Cited by no TC today."""
 
 [interface.IF-127]
-provider = "scripts/trace"
-consumers = ["scripts/adjudicate_brief"]
+requestors = ["scripts/adjudicate_brief"]
+channel = "call"
 contract = """reads the re-attestation MODEL through trace: consumes trace.load_registries and trace.reattest_model, so the adjudication brief is composed from the same rows, the same snapshot baseline and the same approved/traced split that `trace.py --approve` renders. An EMPTY model is a refusal, not an empty brief: no spine row differing from its snapshot copy and none awaiting a first approval means there is nothing to judge, and the caller is told so by name."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content (the composed brief), and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140"]
-owner = "SR-140"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 notes = """Declared for an edge that was already undeclared: check_trajectory had been naming scripts/adjudicate_brief (CMP-008) -> scripts/trace (CMP-006) as a cross-component import with no seam of record. ONE model, two renderers, and that is the point — a brief built from a second traversal of the registries could disagree with the document the owner is signing. The lazy import keeps trace off the import path of the loop modules that need only this module's other seams. Owner is SR-140, not a design row: the seam carries the re-attestation obligation itself, not one module's surface (contrast IF-123, owned by LLR-173). No trace design row is answerable for it — LLR-001's code_symbol is `main`, the join/orphan rule, and no trace design row names load_registries or reattest_model — so the SR keeps the cell. adjudicate_brief imports trace lazily inside the composing function and calls load_registries + reattest_model exactly as the contract states, with the empty-model refusal named to the caller. Covered by TC-161's amendment arm."""
 
 [interface.IF-128]
-consumers = ["scripts/baseline_snapshot"]
+requestors = ["scripts/baseline_snapshot"]
+channel = "call"
 contract = """reads and RESOLVES every snapshotted registry through the CARRIER (IF-102): consumes spine_carrier.resolve / carriers / stem / load / load_needs / CARRIERS / NEED_CARRIERS. `snapshot_root / rel` reuses every existing resolver verbatim, carrier fallback included, and a snapshot taken under one carrier and read under another joins on the carrier-STRIPPED stem. Two refusals ride this seam: resolve() RAISES on a stem present under both carriers, load() on a file that will not parse."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names typed outcomes plus unbounded registry content, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-140", "SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
 notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. The owner-side endpoint of this row is its provider — scripts/spine_carrier — and its one design row LLR-166 (the carrier's one reader: resolve/load and the dual-home refusal) DEFINES both refusals this contract names, which is the IF-129 rule applied: the answerable row defines the behavior; the reader merely consumes it. LLR-173 is the consuming module's own row and answers for the snapshot record through IF-124/IF-129, not for this seam. OFFSPINE_TABLE is deliberately absent from the consumed-symbol list: baseline_snapshot cites that constant only in a comment (the SNAPSHOT_TIERS explanation), never in code, so listing it as consumed would be a false claim."""
 
 [interface.IF-129]
-consumers = ["scripts/baseline_snapshot"]
+requestors = ["scripts/baseline_snapshot"]
+channel = "call"
 contract = """reads the ONE cell-comparison basis (LLR-158): consumes check_trajectory.split_changed_cells(rel, id_col, before, live_row) -> {"approved": {cell: (before, after)}, "traced": {...}}, the drift basis for is_drifted and drifted_cells, which arm on the APPROVED half alone. The id column and Status are excluded structurally by the callee. The import runs THIS way only: there is no back-import from check_trajectory into baseline_snapshot."""
-signal = "discrete"
-req_refs = ["SR-140"]
-owner = "LLR-158"
+owner = "scripts/acceptance_record"
 version = "v1"
 status = "Drafted"
 notes = """intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is approved. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it."""
 
 [interface.IF-131]
-provider = "scripts/gen_arch_map"
-consumers = ["scripts/check_trajectory"]
+requestors = ["scripts/check_trajectory"]
+channel = "call"
 contract = """the ARCH-INVENTORY seam behind arch_inventory: consumes gen_arch_map.scan_inventory(src_roots) -> the per-module (rel, summary, imports, contracts, rows) records of the declared [paths] src tree, so the coverage/containment/cross-CMP rules read the LIVE source AST."""
 rationale = """The rules read the live source AST instead of parsing the retired docs/architecture.md MODULE MAP block back. One walk, one grammar: the module keys and import names are exactly what the map rendered, so every downstream join (stem resolution, CMP membership) is unchanged."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names unbounded content (the scanned records), which makes the whole crossing variable (B1)"""
-req_refs = ["SR-147"]
-owner = "LLR-080"
+owner = "scripts/gen_arch_map"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
 notes = """intra-CMP-006 import, declared anyway because gen_arch_map is multi-tagged (CMP-006/CMP-009 via LLR-080) and the multi-tag advisory names an undeclared edge into such a module; the seam of record is honest coverage, not silence. The IF-117 why-an-import-and-not-a-copy reasoning applies verbatim: a second AST walk in the consumer is the silent-divergence hazard a duplicated parser always is."""
 
 [interface.IF-132]
-provider = "scripts/gen_arch_map"
-consumers = ["scripts/traj_parse"]
+requestors = ["scripts/traj_parse"]
+channel = "call"
 contract = """the dashboard's How-SW module source: sw_modules consumes gen_arch_map.scan_inventory(src_roots) over the declared [paths] src root and keeps only modules with >=1 public function symbol."""
 rationale = """The read replaces the retired parse of docs/architecture.md's committed MODULE MAP block - registries/source -> dashboard, no markdown way-station."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names unbounded content (the scanned records), which makes the whole crossing variable (B1)"""
-req_refs = ["SR-147"]
-owner = "LLR-080"
+owner = "scripts/gen_arch_map"
 carried_by = "IF-131"
 version = "v1"
 status = "Drafted"
@@ -1632,12 +1368,10 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and gen_arch_map straddles CMP-006/CMP-009 (LLR-080). Same scan_inventory seam as IF-131; declared separately because the two consumers sit in different components and the rule covers PAIRS."""
 
 [interface.IF-133]
-consumers = ["scripts/hats"]
+requestors = ["scripts/hats"]
+channel = "call"
 contract = """reads the STAKEHOLDER-NEED tier through the CARRIER (IF-102) for the `audit` worksheet: consumes spine_carrier.load_needs, resolve, NEED_CARRIERS, stem and folded, so `docs/requirements/stakeholder-needs` answers whichever of TOML or legacy markdown is live and each need arrives under today's column names. An ABSENT registry is [] and the audit prints VACUOUS; a carrier that EXISTS and will not parse raises SystemExit, never zero rows."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus unbounded content, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1646,11 +1380,9 @@ notes = """cross-component crossing declared per the architecture rule: this mod
 
 [interface.IF-134]
 consumers = ["external:git"]
+channel = "exit-code"
 contract = """git invokes this hook at commit time with no arguments; exit 0 admits the staged write into governed state, any nonzero exit refuses the commit, and the failing check is named on stderr. `git commit --no-verify` skips the invocation entirely, so this seam admits only the writes a session routes through it."""
-signal = "variable"
-signal_note = """typed at mint: the admission verdict is a two-value alphabet, but the refusal names the failing check in unbounded text on the same act, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-019", "SR-137"]
-owner = "LLR-019"
+owner = "hooks/pre-commit"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
@@ -1660,11 +1392,9 @@ notes = """The FACING row for the hook floor, and it is deliberately separate fr
 
 [interface.IF-135]
 consumers = ["external:git"]
+channel = "exit-code"
 contract = """git invokes this hook before a push with the remote name and URL on argv and the outgoing ref pairs on stdin; exit 0 releases the push and any nonzero exit refuses it, naming the offending range on stderr. `git push --no-verify` skips the invocation, so the refusal binds only a session that routes through it."""
-signal = "variable"
-signal_note = """typed at mint: the release/refuse verdict is a two-value alphabet, but the refusal names the offending range in unbounded text on the same act, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-020"]
-owner = "LLR-020"
+owner = "hooks/pre-push"
 version = "v1"
 status = "Drafted"
 component = "CMP-007"
@@ -1672,35 +1402,31 @@ interface_to_external = "B-04"
 notes = """Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution."""
 
 [interface.IF-136]
-consumers = ["scripts/dispatch"]
+requestors = ["scripts/dispatch"]
+channel = "call"
 contract = """the dispatcher's lane-mechanics seam: the admitted lane table calls lane.ensure_worktree/spawn_worker/spawn_refresh to run one claimed branch's worker session and the station refresh as their own subprocesses, then reads back only the tree-derived signal (specs moved out of active/<branch>/) plus each subprocess's exit code - no state file, no back-channel. dispatch.py decides what an exit or a red refresh MEANS; lane.py only runs and reports."""
-signal = "variable"
-req_refs = ["SR-156"]
-owner = "LLR-150"
+owner = "scripts/lane"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """A program-close connectivity mint: the seam was already load-bearing (the extraction that split it out is what the design's §A4.2 describes) but carried no IF row of its own, and lane.py's own docstring says so rather than paper over the drift by declaring it from the extracted half."""
 
 [interface.IF-137]
-consumers = ["scripts/dispatch"]
+requestors = ["scripts/dispatch"]
+channel = "call"
 contract = """the dispatcher's terminal-outcome writes seam: dispatch.py decides which of the three outcomes a lane reached (merged/cancelled/handback); handback.py owns the WRITES for the two non-merge closes - close_partial (the immutable per-close report + the terminal partial/ move) and quarantine (the reverted, bar-inert red-arm close) - so decision and write stay in separate modules and every lane still ends in a merge."""
-signal = "variable"
-req_refs = ["SR-156"]
-owner = "LLR-144"
+owner = "scripts/handback"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """A program-close connectivity mint, same posture as IF-080: handback.py's own docstring says declaring this seam from the sibling would paper over the drift, since it belongs to the module that runs it."""
 
 [interface.IF-138]
-consumers = ["scripts/pending"]
+requestors = ["scripts/pending"]
+channel = "call"
 contract = """IF-056's derivation-loader seam as held here: pending.py derives the blocked-work-item half of the pending-owner-action projection through the validator's loaders (read_registry_rows/load_wis + the WI registry path constant), so what the owner surfaces call blocked is the same derivation validation uses and the two can never disagree. Contract: IF-056's."""
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam is carried by this read model."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus the unbounded rendered pointer line built from it, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-168"]
-owner = "LLR-049"
+owner = "scripts/check_trajectory"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
@@ -1708,42 +1434,36 @@ notes = """sink - a read model: it provides nothing across a component boundary,
 
 [interface.IF-139]
 consumers = ["scripts/check"]
+channel = "stdout"
 contract = """LLR-199's obligation delivered as a CLI at gen_components.py."""
-signal = "variable"
-signal_note = """typed at mint: the Contract names a typed outcome plus the unbounded STALE line built from the artifact path, and any unbounded part makes the whole crossing variable (B1)"""
-req_refs = ["SR-070"]
-owner = "LLR-199"
+owner = "scripts/gen_components"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-140]
 consumers = ["docs/requirements/components.derived.toml"]
+channel = "file"
 contract = """the derived component view itself: a TOML document carrying one census table, one component_view table per declared component (name, sr_refs, sr_shared_refs, llr_refs, hat_refs, modules, seam_internal_refs, seam_boundary_refs) and one unplaced table naming the requirements and seams that reach no component. Deterministic, LF, no clock; NO maturity or approval cell, ever (OI-30 D3)"""
-signal = "variable"
-req_refs = ["SR-070"]
-owner = "LLR-199"
+owner = "scripts/gen_components"
 version = "v1"
 status = "Drafted"
 
 [interface.IF-141]
-provider = "scripts/trace"
-consumers = ["scripts/gen_components"]
+requestors = ["scripts/gen_components"]
+channel = "call"
 contract = """consumes trace.effective_hats(row, sr_by_id) -> sorted hat names: one member design row's perspective set, its own refs unioned with those of its SR parents"""
 rationale = """The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit."""
-signal = "variable"
-req_refs = ["SR-161"]
-owner = "LLR-183"
+owner = "scripts/trace"
 version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace is CMP-006. The IF-075 shape (gen_open_items -> trace), applied again"""
 
 [interface.IF-142]
-consumers = ["scripts/gen_components"]
+requestors = ["scripts/gen_components"]
+channel = "call"
 contract = """reads all four source registries through the CARRIER (IF-102) - components, system-requirements, low-level-requirements and interfaces - so each answers whichever of TOML/CSV is live and the rows arrive under today's column names either way. Consumes spine_carrier.load with keep_examples off, so a scaffold's inert -000 rows never enter the view"""
-signal = "variable"
-req_refs = ["SR-147"]
-owner = "LLR-166"
+owner = "scripts/spine_carrier"
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
@@ -1751,13 +1471,11 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and spine_carrier is CMP-006. The IF-106/IF-118 shape, applied again"""
 
 [interface.IF-143]
-provider = "scripts/trace_text"
-consumers = ["scripts/gen_components"]
+requestors = ["scripts/gen_components"]
+channel = "call"
 contract = """consumes trace_text.norm_module to reconcile the two module-naming conventions - scripts/x on a seam endpoint, project-trajectory/scripts/x.py on a design row - when placing an interface row into a component. The SAME normalizer trace.interface_findings joins on."""
 rationale = """A second reconciliation would be a second answer waiting to disagree with the advisory that already reports an unresolvable endpoint."""
-signal = "variable"
-req_refs = ["SR-159"]
-owner = "SR-157"
+owner = "scripts/trace_text"
 carried_by = "IF-076"
 version = "v1"
 status = "Drafted"
@@ -1765,13 +1483,10 @@ component = "CMP-009"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and trace_text is CMP-006"""
 
 [interface.IF-144]
-provider = "project-trajectory/scripts"
 consumers = ["external:downstream adopter"]
+channel = "exit-code"
 contract = """SR-157's obligation delivered as the reporting protocol every delivered checker honours, stated at check.py; crosses B-05."""
-signal = "discrete"
-signal_note = """The exit code is the bounded part of the crossing; the finding prose carrying the locations and severities is the unbounded part, and both are this seam."""
-req_refs = ["SR-149", "SR-150", "SR-157", "SR-158", "SR-159", "SR-162", "SR-163", "SR-167", "SR-180", "SR-182"]
-owner = "SR-157"
+owner = "scripts/check"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"

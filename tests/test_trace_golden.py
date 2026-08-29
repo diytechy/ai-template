@@ -89,15 +89,17 @@ notes = "demo component"
 # ruled (a), 2026-08-23) — it had read `out`, the depth-0 BOUNDARY tier's
 # vocabulary leaked into an interface fixture, until the 2026-08-15 enum close
 # caught it; now flow is the shape of the row and there is no cell to leak into.
-# The consumer is a cross-repo endpoint, so it carries the external marker
-# rather than reading as a dangling path.
+# OI-67 (ruled (a), 2026-08-29) took the rest: `owner` is the providing THING
+# (the module LLR-001's `Module` names, so the row reaches the spine through it
+# and the reachability advisory stays silent), `channel` types what crosses and
+# `data` is the typed statement `contract` used to hold in prose; `provider`,
+# `req_refs` and `signal` left the row. The consumer is a cross-repo endpoint, so
+# it carries the external marker rather than reading as a dangling path.
 RICH_IFS = """[interface.IF-001]
-provider = "src/demo"
+owner = "src/demo"
 consumers = ["external:acme/widget"]
-contract = "call"
-signal = "discrete"
-req_refs = ["SR-001"]
-owner = "SR-001"
+channel = "call"
+data = "two numbers in, their sum out"
 version = "1"
 status = "Approved"
 component = "CMP-001"

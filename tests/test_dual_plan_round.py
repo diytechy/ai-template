@@ -115,8 +115,7 @@ def make_fixture(tmp_path, plan_mode="dual"):
         encoding="utf-8",
     )
     (root / "docs" / "requirements" / "interfaces.csv").write_text(
-        "IF-ID,Provider,Consumers,Contract,Req-Refs,Version,"
-        "Stability,Status,Component,Notes\n",
+        "IF-ID,Owner,Consumers,Channel,Data,Version,Status,Component,Notes\n",
         encoding="utf-8",
     )
     # The spec-folder registry home (the only home after Phase 5): one done

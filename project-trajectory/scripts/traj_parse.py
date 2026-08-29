@@ -398,8 +398,7 @@ def frame_context(root):
         endpoint = next(
             (
                 e
-                for e in [(r.get("Provider") or "").strip()]
-                + ct._kitspine.seam_consumers(r)
+                for e in [ct._kitspine.seam_owner(r)] + ct._kitspine.seam_far_side(r)[1]
                 if e.startswith("external:")
             ),
             "",

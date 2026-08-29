@@ -22,7 +22,7 @@ design_rows = 187
 seam_rows = 136
 requirements_placed = 71
 requirements_unplaced = 4
-seams_unplaced = 1
+seams_unplaced = 0
 
 [component_view.CMP-006]
 name = "W1 Registry & conformance"
@@ -341,6 +341,7 @@ seam_boundary_refs = [
   "IF-134",
   "IF-135",
   "IF-139",
+  "IF-144",
 ]
 
 [component_view.CMP-008]
@@ -711,6 +712,4 @@ sr_refs = [
   "SR-114",
   "SR-181",
 ]
-seam_refs = [
-  "IF-144",
-]
+seam_refs = []

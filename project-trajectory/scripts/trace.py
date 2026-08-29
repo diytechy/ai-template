@@ -147,7 +147,6 @@ try:
         allow_key,
         ears_advisories,
         form_findings,
-        if_provider_advisories,
         is_allowed,
         is_drafted,
         is_example,
@@ -186,7 +185,6 @@ except ImportError:  # pragma: no cover - in-process fallback
         allow_key,
         ears_advisories,
         form_findings,
-        if_provider_advisories,
         is_allowed,
         is_drafted,
         is_example,
@@ -390,16 +388,19 @@ REQUIRED_FIELDS = {
     # would demand every internal seam claim to be a boundary.
     # WI-455 executed the held removal (OI-60 ruled (a), 2026-08-23):
     # `Direction`/`ThisProject`/`Counterpart` are GONE and `Consumers` is the
-    # required endpoint cell. `Provider` is deliberately NOT required — it is
-    # present only where `Owner`→LLR→`Module` does not derive it, so demanding
-    # it everywhere would re-introduce the derivable cell the shed removed.
+    # required endpoint cell. OI-67 (ruled (a), 2026-08-29) took the row to ONE
+    # OWNER, ITS CONSUMERS AND A TYPED STATEMENT: `Owner` is the providing
+    # thing (a path or an `external:` party, required), `Channel` the closed
+    # vocabulary of what crosses (required), `Data` the optional alphabet.
+    # `Provider`, `Req-Refs`, `Signal` and `SignalNote` left the row; `Contract`
+    # is a LEGACY cell, optional and counted, until every definition has moved
+    # into its owner's `Contract IF-###:` body.
+    # `Requestors`/`Consumers` are NOT in this list: exactly one of the two is
+    # required, which is `interface_findings`' rule, not a per-cell one.
     "IF": [
         "IF-ID",
-        "Consumers",
-        "Contract",
-        "Signal",
-        "Req-Refs",
         "Owner",
+        "Channel",
         "Version",
         "Status",
     ],
@@ -506,7 +507,7 @@ ENUM_FIELDS = {
     # coverage half a `Consumes` row carried is unharmed — `_declared_seam_pairs`
     # reads the endpoint pair, which the header always said it took both ways.
     "IF": {
-        "Signal": {"discrete", "variable"},
+        "Channel": set(check_trajectory._kitspine.IF_CHANNELS),
         "Status": {"Drafted", "Approved"},
     },
     "CMP": {
@@ -547,7 +548,7 @@ _IF_WI_RE = re.compile(r"\bWI-\d+\b")
 # the repo-lock decision citation, and that is what this matches.
 _IF_DECISION_RE = re.compile(r"\bD-\d+\b")
 _IF_CONNECTIVE_RE = re.compile(r"\b(because|rather than|so that|since)\b", re.I)
-IF_CONTRACT_MAX = 500
+IF_DATA_MAX = 160
 
 # --- the FIFTH rule: does the surviving prose name anything that is GONE? ------
 # The four rules above read FORM only, which is why a contract can name a
@@ -1488,49 +1489,109 @@ def triangle_findings(tcs, llrs):
 
 
 # The module-path normalizer MOVED TO trace_text.py at re-tier v2 S5 (WI-464),
-# unchanged: `if_provider_advisories` compares the same two naming conventions
-# and is a pure row predicate, so keeping one home there beat a fourth copy here.
-# Aliased back under the private name so this module's call sites read as before.
+# unchanged: `module_endpoints` and the endpoint classifier there read the same
+# two naming conventions this module's seam rules do, so one home there beat a
+# fourth copy here. Aliased back under the private name so this module's call
+# sites read as before.
 _norm_module = norm_module
 
 
-def interface_findings(ifs, sr_ids, module_ids):
-    """The IF-### seam tier's back-link checks (process.md §8), closing the gap
-    where trace.py never read the interface catalog (WI-056). Returns
-    ``(findings, advisories)``: *findings* join the --strict failure set like PB's
-    back-links (an IF row's Req-Refs is empty or names an unknown SR — every seam
-    links the spine so it stays transitively TC-covered); *advisories* are
-    warn-only (an IF row's stated Provider endpoint resolves to no LLR Module
-    after normalization). The endpoint join is best-effort: the LLR Module set is a
-    partial, differently-named inventory, so the authoritative module-coverage
-    check lives in check_trajectory against the full arch-map.
+def interface_findings(ifs, module_ids, root=None):
+    """The IF-### seam tier's own integrity rules (process.md §8), as
+    ``(findings, advisories)``.
+
+    *findings* join the --strict failure set: an `Owner` cell that names a
+    requirement or design ID, or several endpoints, is the wrong SHAPE — since
+    OI-67 (ruled (a), 2026-08-29) the owner is the providing THING, in the one
+    spelling `Consumers` uses (a module path, a file or directory path, or an
+    `external:` party), and the requirement it answers to is REACHED through
+    it, never stated on the row. *advisories* are warn-only: a row naming both
+    `Requestors` and `Consumers`, or neither, has no direction (incomplete, as
+    an empty required cell is — warn-first for the same migration reason); a
+    module-shaped owner that no design row's `Module` names and whose header
+    declares no `Implements:` line traces to no requirement — reported, never gated,
+    because a file- or external-owned seam legitimately has no design row and
+    the class that does is a debt list, not a gate.
+
+    The `Req-Refs` back-link this function once policed left with the cell;
+    seam-to-test coverage was never on it (it joins on a TC's `Verifies`).
 
     Implements: SR-159, LLR-041
     """
     findings, advisories = [], []
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
+    implementers = _implementing_modules(root)
     for r in ifs:
         iid = r["IF-ID"]
-        srrefs = refs(r.get("Req-Refs"))
-        if not srrefs:
-            findings.append(f"IF {iid} links no SR (Req-Refs is empty)")
-        for x in srrefs:
-            if x not in sr_ids:
-                findings.append(f"IF {iid} references unknown {x}")
-        # MODULE-shaped endpoints only (`trace_text.module_endpoints`): since
-        # WI-455 the cell this ranges over is `Provider`, which legitimately
-        # holds a file medium or an `external:` party on a requirement-owned
-        # row, and "docs/coverage-floors matches no LLR Module" is noise by
-        # construction — the LLR inventory holds modules.
-        for endpoint in module_endpoints(r.get("Provider")):
-            if norm_modules and _norm_module(endpoint) not in norm_modules:
-                advisories.append(
-                    f"IF {iid} Provider={endpoint!r} matches no LLR Module "
-                    "(best-effort join; a module with no LLR is legitimate — "
-                    "check_trajectory's arch-map coverage is the full check)"
-                )
+        has_req = bool((r.get("Requestors") or "").strip())
+        has_con = bool((r.get("Consumers") or "").strip())
+        if has_req == has_con:
+            # Warn-first like the required-cell rule it is a form of: a row
+            # with no far side is INCOMPLETE (an adopter mid-migration), where
+            # an id-shaped owner below is WRONG — the retired meaning, stated.
+            advisories.append(
+                f"IF {iid} names {'both' if has_req else 'neither'} Requestors "
+                "and Consumers — the far side names the DIRECTION (requestors "
+                "put information into the owner's surface, consumers take what "
+                "it emits), so a row carries exactly one of the two"
+            )
+        cell = (r.get("Owner") or "").strip()
+        if not cell:
+            continue  # the required-field rule already says this
+        ends = [e.strip() for e in cell.split(";") if e.strip()]
+        if len(ends) != 1:
+            findings.append(
+                f"IF {iid} Owner={cell!r} names {len(ends)} endpoints — one row "
+                "has ONE owner, the thing the information plugs into"
+            )
+            continue
+        owner = ends[0]
+        if _ID_SHAPED_RE.match(owner):
+            findings.append(
+                f"IF {iid} Owner={owner!r} names a requirement or design id — the "
+                "owner is the providing THING (a module path, a file or "
+                "directory path, or `external:<party>`); the requirement is "
+                "reached through it, never stated on the row"
+            )
+            continue
+        if owner.startswith(EXTERNAL_ENDPOINT_PREFIX):
+            continue
+        if owner.endswith("/") or not module_endpoints(owner):
+            continue  # a file or directory medium: no design row is expected
+        norm = _norm_module(owner)
+        if norm_modules and norm not in norm_modules and norm not in implementers:
+            advisories.append(
+                f"IF {iid} owner {owner!r} is named by no design row's Module and "
+                "declares no `Implements:` line — this seam traces to no "
+                "requirement (warn-only; name the module on a design row, or "
+                "declare its parents in the module header)"
+            )
     return findings, advisories
+
+
+# An `Owner` cell that is an ID rather than a thing: the shape OI-67 retired.
+_ID_SHAPED_RE = re.compile(r"^(?:SN|SR|LLR|TC|IF|CMP|B|EXT|REL)-\d+$")
+
+
+def _implementing_modules(root):
+    """The normalized module keys whose header declares an `Implements:` line —
+    the second way an owner reaches the spine — or an empty set when there is
+    no source surface to read (no root, `files` mode, a copied script)."""
+    if gen_arch_map is None or root is None:
+        return set()
+    try:
+        src, mode = check_trajectory._arch_scan_profile(root)
+    except (OSError, ValueError):  # pragma: no cover - not this rule's finding
+        return set()
+    if mode == "files":
+        return set()
+    src = src.strip().replace("\\", "/").rstrip("/")
+    src_dir = root / src
+    if not src_dir.exists():
+        return set()
+    sites, _known = gen_arch_map.implements_report([src_dir])
+    return {_norm_module(src + "/" + rel) for rel in sites}
 
 
 def placeholder_findings(label, raw_rows):
@@ -2124,7 +2185,7 @@ def _if_named_symbol_advisories(iid, cell, root, surface, absences):
         for token in symbols:
             if not _symbol_resolves(token, names, tails, modules):
                 out.append(
-                    f"IF {iid} Contract names {token} — no such symbol exists "
+                    f"IF {iid} Data names {token} — no such symbol exists "
                     "in the declared source surface. A contract that names code "
                     "that is gone reads as authority and is not: re-point it at "
                     "what the module has now, or drop the name."
@@ -2138,15 +2199,16 @@ def _if_named_symbol_advisories(iid, cell, root, surface, absences):
             continue
         if not _resolves_in_tree(root, token):
             out.append(
-                f"IF {iid} Contract names path {token} — nothing at that path "
+                f"IF {iid} Data names path {token} — nothing at that path "
                 "exists. Re-point it, or drop it."
             )
     return out
 
 
-def if_contract_advisories(ifs, root=None):
-    """The four ruled negative rules on an IF `Contract` cell (WI-443) plus the
-    named-symbol/named-path tripwire (OI-61 ruled (d), folded in), all
+def if_data_advisories(ifs, root=None):
+    """The four ruled negative rules (WI-443) plus the named-symbol/named-path
+    tripwire (OI-61 ruled (d)), on the IF `Data` cell since OI-67 — the short
+    alphabet or schema pointer that replaced the prose `Contract`. All
     warn-first. See the `_IF_*` constants above for why form is what the first
     four can honestly read, and why the fifth needs the AST surface.
 
@@ -2157,41 +2219,63 @@ def if_contract_advisories(ifs, root=None):
     absences = _declared_absences(root) if root is not None else frozenset()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
-        cell = (r.get("Contract") or "").strip()
+        cell = (r.get("Data") or "").strip()
         if not cell:
             continue
         out += _if_named_symbol_advisories(iid, cell, root, surface, absences)
         for token in dict.fromkeys(_IF_WI_RE.findall(cell)):
             out.append(
-                f"IF {iid} Contract names {token} — a work-item id belongs in the "
-                "log, not in a live contract cell: it ages, and a cancelled id "
+                f"IF {iid} Data names {token} — a work-item id belongs in the "
+                "log, not in a live seam cell: it ages, and a cancelled id "
                 "still reads as authority. Drop it; the log holds the account."
             )
         for token in dict.fromkeys(_IF_DECISION_RE.findall(cell)):
             out.append(
-                f"IF {iid} Contract cites decision {token} — a contract states "
-                "what crosses, not which ruling shaped it. Drop the citation; the "
+                f"IF {iid} Data cites decision {token} — the cell states what "
+                "crosses, not which ruling shaped it. Drop the citation; the "
                 "log's Decisions is its home."
             )
         connective = _IF_CONNECTIVE_RE.search(cell)
         if connective:
             out.append(
-                f"IF {iid} Contract argues ({connective.group(0)!r}) — that "
+                f"IF {iid} Data argues ({connective.group(0)!r}) — that "
                 "sentence is a rationale; move the ARGUMENT to the Rationale "
                 "column, and any citation inside it to the log (process.md §8)."
             )
-        if len(cell) > IF_CONTRACT_MAX:
+        if len(cell) > IF_DATA_MAX:
             out.append(
-                f"IF {iid} Contract is {len(cell)} characters (ceiling "
-                f"{IF_CONTRACT_MAX}) — an interface states what crosses, typed; "
-                "at this length it is carrying something else."
+                f"IF {iid} Data is {len(cell)} characters (ceiling "
+                f"{IF_DATA_MAX}) — the alphabet or the schema pointer, typed; "
+                "the definition belongs in the owner's `Contract IF-###:` body."
             )
     return out
 
 
+def if_legacy_contract_advisories(ifs):
+    """ONE summarizing line for the rows still carrying the legacy `Contract`
+    cell (OI-67 ruled (a)): the definition it holds belongs in the owner's
+    `Contract IF-###:` body, and the count is the number that has to fall. Warn
+    only; the arming slice turns the cell into a schema finding."""
+    legacy = [
+        r.get("IF-ID") or "(unnamed row)"
+        for r in ifs
+        if (r.get("Contract") or "").strip()
+    ]
+    if not legacy:
+        return []
+    shown = ", ".join(legacy[:5])
+    return [
+        "{} IF row(s) still carry a legacy `contract` cell — its definition "
+        "belongs in the owner's `Contract IF-###:` body, harvested into the "
+        "interface reference (OI-67){}: {}".format(
+            len(legacy), " — first 5" if len(legacy) > 5 else "", shown
+        )
+    ]
+
+
 # The IF tier's three REASON cells. `Notes` records why a crossing is shaped as
 # it is; `SignalNote` the discrete/variable call; `Rationale` the argument.
-IF_REASON_CELLS = ("Notes", "SignalNote", "Rationale")
+IF_REASON_CELLS = ("Notes", "Rationale")
 
 # The reviewed exception list for the citation-frame advisory, in the same
 # one-entry-per-line ` — <reason>` idiom `docs/need-form-allow` established. The
@@ -2472,8 +2556,8 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     modules. So a green from either rule said nothing at all about these rows.
 
     THE RULE, since the 2026-08-15 rework (plan step 2): an endpoint — in
-    `Provider` **or** `Consumers` (`ThisProject`/`Counterpart` until WI-455
-    renamed them) — that resolves to no module, no file and
+    `Owner`, `Requestors` **or** `Consumers` (`ThisProject`/`Counterpart` until WI-455,
+    `Provider` until OI-67) — that resolves to no module, no file and
     no directory AND carries no `external:` marker is a NAMED finding. A
     file/directory endpoint and a marked external one are both legitimate and
     stay counted-not-named; the summary still reports every class, because the
@@ -2489,7 +2573,7 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
     files, external, unknown, rows_hit = [], [], [], set()
     for r in ifs:
         iid = r.get("IF-ID") or "(unnamed row)"
-        for col in ("Provider", "Consumers"):
+        for col in ("Owner", "Requestors", "Consumers"):
             # A `;`-joined cell is SEVERAL endpoints, and reading it as one is
             # how a real seam gets reported as a dangling path (IF-097 names
             # three modules). Split on `;` only — an endpoint may legitimately
@@ -2529,61 +2613,6 @@ def if_endpoint_class_advisories(ifs, module_ids, root):
             "real endpoint, or mark it `{}<actor>` if it is deliberately "
             "outside this tree".format(iid, col, endpoint, EXTERNAL_ENDPOINT_PREFIX)
         )
-    return out
-
-
-def if_ownership_advisories(ifs, sr_ids, llr_ids):
-    """The `Owner` cell's resolution + uniqueness rules, warn-first (Q1, ruled
-    2026-08-15a; plan step 5).
-
-    THE INVARIANT IS "EXACTLY ONE OWNER PER INTERFACE", and the ruling is what
-    makes it hard to state in a column type: an owner may be a requirement
-    (`SR-###`) **or** a design row (`LLR-###`), because *"requirements are just
-    decomposition of needs into measurable objectives, and modules are just
-    physical implementations at a lower level that do the same thing"*. So the
-    cell is id-typed and POLYMORPHIC, resolved against whichever registry its
-    prefix names, and the two failure modes are the two halves of "exactly one":
-    naming nobody, and naming several.
-
-    It is not the same question as `Req-Refs`. That cell lists every requirement
-    the seam realizes or relies on — 25 of this repo's 136 rows list more than
-    one — and none of them is thereby answerable FOR the seam. `Owner` names the
-    one that is. Deriving it instead was the plan's first recommendation and Q1
-    overturned it: a derived view can only surface what is already encoded, and
-    an endpoint cell holds a module PATH, not a resolvable id.
-
-    Warn-first, with the whole set: the cells were seeded mechanically from
-    `Req-Refs` and every multi-ref pick is a provisional judgement recorded in
-    the log, so a gate that reds on them would be gating on a guess."""
-    out = []
-    for r in ifs:
-        iid = r.get("IF-ID") or "(unnamed row)"
-        cell = (r.get("Owner") or "").strip()
-        if not cell:
-            continue  # the empty-required-field rule already says this
-        owners = refs(cell)
-        if len(owners) != 1:
-            out.append(
-                "IF {} Owner={!r} names {} owners — exactly one row is "
-                "answerable for an interface (Q1, 2026-08-15); Req-Refs is "
-                "where the several requirements it realizes or relies on "
-                "go".format(iid, cell, len(owners))
-            )
-            continue
-        oid = owners[0]
-        if ID_PATTERNS["SR"].match(oid):
-            known, tier = sr_ids, "system-requirements"
-        elif ID_PATTERNS["LLR"].match(oid):
-            known, tier = llr_ids, "low-level-requirements"
-        else:
-            out.append(
-                "IF {} Owner={!r} is not an SR-### or LLR-### id — an owner is "
-                "a requirement or a design row, id-typed (Q1, "
-                "2026-08-15)".format(iid, oid)
-            )
-            continue
-        if oid not in known:
-            out.append(f"IF {iid} Owner references unknown {oid} ({tier})")
     return out
 
 
@@ -4261,7 +4290,6 @@ class Findings:
     provenance_advis: list = field(default_factory=list)
     sr_fanout_advis: list = field(default_factory=list)
     verif_coherence_advis: list = field(default_factory=list)
-    if_provider_advis: list = field(default_factory=list)
     budget_findings: list = field(default_factory=list)
     module_findings: list = field(default_factory=list)
     component_findings: list = field(default_factory=list)
@@ -4631,11 +4659,11 @@ def analyze(reg, args):
     )
     knowledge_advisories = knowledge_pack_advisories(cmps, docs)
 
-    # Interface seams (IF-###, process.md §8): Req-Refs back-links join the
-    # --strict failure set like PB's; the Provider-vs-LLR-Module endpoint join
-    # is a warn-only advisory (module_ids reused from the PB back-link check above).
+    # Interface seams (IF-###, process.md §8): an owner of the wrong SHAPE joins
+    # the --strict failure set; an owner that reaches no requirement is a
+    # warn-only advisory (module_ids reused from the PB back-link check above).
     interface_backlink_findings, interface_advisories = interface_findings(
-        ifs, sr_ids, module_ids
+        ifs, module_ids, docs.parent
     )
     # The depth-0 FRAME's own resolution rules (WI-442): a crossing's Entity and
     # a relationship's From/To must name declared entities, and an IF row's
@@ -4675,20 +4703,13 @@ def analyze(reg, args):
         + schema_advisories("REL", rels)
         + sr_frame_advisories
         + hat_advisories
-        + if_contract_advisories(ifs, docs.parent)
+        + if_data_advisories(ifs, docs.parent)
+        + if_legacy_contract_advisories(ifs)
         + if_note_advisories(ifs, prov_allow)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
-        + if_ownership_advisories(ifs, sr_ids, llr_ids)
         + if_verified_by_advisories(ifs, {t["TC-ID"] for t in tcs}, llr_ids)
         + if_carriage_advisories(ifs)
     )
-    # Warn-only, always on (re-tier v2 R4, owner ruling 2026-08-15; WI-455
-    # executed the removal it counted down to): an IF row that STATES a
-    # `Provider` its owner LLR's `Module` already derives. Its OWN pipe rather
-    # than the interface-advisory bundle above, for the reason the S2 pair got
-    # theirs: it reports on the SCHEMA — a cell that should no longer exist on
-    # that row — and not on one more seam lint. Never joins a failure set below.
-    if_provider_advis = if_provider_advisories(ifs, llrs)
 
     # The delivery filter and the two rules scoped by it. `verification_basis`
     # runs unconditionally (the footprint is always visible); the status
@@ -4794,7 +4815,6 @@ def analyze(reg, args):
         provenance_advis=provenance_advis,
         sr_fanout_advis=sr_fanout_advis,
         verif_coherence_advis=verif_coherence_advis,
-        if_provider_advis=if_provider_advis,
         budget_findings=budget_findings,
         module_findings=module_findings,
         component_findings=component_findings,
@@ -4842,7 +4862,6 @@ def render_report(reg, findings, args, forest):
     provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
-    if_provider_advis = findings.if_provider_advis
     budget_findings = findings.budget_findings
     module_findings = findings.module_findings
     component_findings = findings.component_findings
@@ -5076,15 +5095,6 @@ def render_report(reg, findings, args, forest):
         if not sr_fanout_advis
         else [f"- {f}" for f in sr_fanout_advis]
     )
-    # Warn-only (re-tier v2 R4, executed at WI-455): the column WENT, and this
-    # is what the countdown became — every row still STATING a provider its
-    # owner already derives, redundantly or contradictorily.
-    lines += ["", "## Provider derivability advisories (warn-only)", ""]
-    lines += (
-        ["None. No row states a Provider that its owner LLR's Module already derives."]
-        if not if_provider_advis
-        else [f"- {f}" for f in if_provider_advis]
-    )
     # Verification-basis surface (process.md §4): make the project's trust
     # footprint auditable — of what is `Approved`, how much rests on a runnable
     # check (Test), on a human observing an outcome (Demonstration/Manual/Analysis/
@@ -5187,9 +5197,9 @@ def render_report(reg, findings, args, forest):
             lines += ["", "### Knowledge-pack advisories (warn-only)", ""]
             lines += [f"- {a}" for a in knowledge_advisories]
     if ifs:
-        lines += ["", "## Interface seams (process.md §8 back-links)", ""]
+        lines += ["", "## Interface seams (process.md §8)", ""]
         lines += (
-            [f"{len(ifs)} interface-seam row(s); every Req-Refs resolves to a real SR."]
+            [f"{len(ifs)} interface-seam row(s); every Owner is one providing thing."]
             if not interface_backlink_findings
             else [f"- {f}" for f in interface_backlink_findings]
         )
@@ -5247,7 +5257,6 @@ def render_console(reg, findings, args, out, html_out):
     provenance_advis = findings.provenance_advis
     sr_fanout_advis = findings.sr_fanout_advis
     verif_coherence_advis = findings.verif_coherence_advis
-    if_provider_advis = findings.if_provider_advis
     watermark_advis = findings.watermark_advisories
     snapshot_findings = findings.snapshot_findings
     mechanized_verified = findings.mechanized_verified
@@ -5282,7 +5291,6 @@ def render_console(reg, findings, args, out, html_out):
         + provenance_advis
         + sr_fanout_advis
         + verif_coherence_advis
-        + if_provider_advis
         + watermark_advis
     ):
         print(f"WARNING (advisory): {a}")

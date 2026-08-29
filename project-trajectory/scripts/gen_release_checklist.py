@@ -197,7 +197,18 @@ def main():
         )
         and tc_in_scope(r)
     ]
-    provided_ifs = [r for r in ifs if r.get("Direction", "") == "Provides"]
+    # A cross-project contract is a seam this tree OWNS and an `external:`
+    # party reads (OI-67: the row is owner -> consumers, and there is no
+    # direction column to key on).
+    provided_ifs = [
+        r
+        for r in ifs
+        if not (r.get("Owner") or "").strip().startswith("external:")
+        and any(
+            c.strip().startswith("external:")
+            for c in (r.get("Requestors") or r.get("Consumers") or "").split(";")
+        )
+    ]
 
     stamp = args.version or "(unreleased)"
     if phases:
@@ -260,12 +271,13 @@ def main():
         for r in provided_ifs:
             L.append(
                 "- [ ] **{}** ({} {}) — {} still satisfies the published "
-                "contract (refs {})".format(
+                "contract ({} to {})".format(
                     r["IF-ID"],
                     r.get("Version", ""),
                     r.get("Status", ""),
-                    r.get("Counterpart", ""),
-                    r.get("Req-Refs", ""),
+                    r.get("Owner", ""),
+                    r.get("Channel", ""),
+                    r.get("Requestors") or r.get("Consumers", ""),
                 )
             )
 

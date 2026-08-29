@@ -708,8 +708,9 @@ def test_require_verified_passes_EVERY_blessed_value(scaffold):
 
 # --- WI-056: the IF-### interface-seam tier (process.md §8) ---------------------
 # trace.py now reads the interface catalog (the SR-002-era gap): IF id integrity,
-# the SR-Refs back-link (a --strict finding, like PB's), and a warn-only endpoint
-# advisory. The full architecture-connectivity coverage lives in check_trajectory.
+# the owner-SHAPE findings (a --strict finding, like PB's), and a warn-only
+# reachability advisory. The full architecture-connectivity coverage lives in
+# check_trajectory.
 
 IF_HEADER = (
     "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
@@ -729,13 +730,17 @@ def _ifs_toml(body):
     import csv as _csv
     import io as _io
 
-    # WI-455: the fixture bodies keep the CSV's three-cell shape because that is
-    # what the legacy carrier holds; the translation applies the rename the
-    # registry took — `Direction` is DROPPED (flow is the shape of the row),
-    # `ThisProject` becomes the provider and `Counterpart` the consumers list.
+    # The fixture bodies keep the legacy CSV's column shape because that is what
+    # the legacy carrier holds; the translation applies the renames the registry
+    # took. OI-67 (ruled (a), 2026-08-29) is the latest: the row is ONE OWNER,
+    # ITS CONSUMERS AND A TYPED STATEMENT, so `ThisProject` is now the `owner`
+    # (the providing THING, in the one spelling `consumers` uses) and `Contract`
+    # is the `data` summary. `Direction` and `Req-Refs` translate to NOTHING —
+    # flow is the shape of the row, and the spine link is reached THROUGH the
+    # owner rather than stated on it.
     keys = [
-        ("ThisProject", "provider"),
-        ("Contract", "contract"),
+        ("ThisProject", "owner"),
+        ("Contract", "data"),
         ("Version", "version"),
         ("Stability", "status"),
         ("Component", "component"),
@@ -747,7 +752,10 @@ def _ifs_toml(body):
         if not rid:
             continue
         out.append("[interface.{}]".format(rid))
-        out.append('signal = "discrete"')
+        # `channel` is REQUIRED and closed. The bodies below are module-to-module
+        # seams, so `call` is the honest seed; a test about the vocabulary itself
+        # writes TOML directly.
+        out.append('channel = "call"')
         consumers = [
             c.strip() for c in (r.get("Counterpart") or "").split(";") if c.strip()
         ]
@@ -760,15 +768,6 @@ def _ifs_toml(body):
             value = (r.get(col) or "").strip()
             if value:
                 out.append('{} = """{}"""'.format(key, value))
-        refs = [t for t in (r.get("Req-Refs") or "").split(";") if t.strip()]
-        # `owner` is REQUIRED since the 2026-08-15 rework and every body below
-        # names one requirement, so it seeds from the first ref — the same
-        # mechanical rule the live registry's 94 single-ref rows were seeded
-        # by. A test that wants a bad owner writes TOML directly.
-        if refs:
-            out.append('owner = "%s"' % refs[0].strip())
-        if refs:
-            out.append("req_refs = [{}]".format(", ".join('"%s"' % t for t in refs)))
         out.append("")
     return "\n".join(out) + "\n"
 
@@ -786,7 +785,7 @@ def _report(scaffold):
 
 def test_if_tier_integrity(scaffold):
     make_minimal_project(scaffold)
-    # A clean seam: SR-Refs resolves (SR-001), ThisProject matches LLR Module.
+    # A clean seam: the owner is a module path LLR-001's `Module` names.
     _write_ifs(
         scaffold,
         'IF-001,Provides,src/demo,downstream adopter,"cli --help exits 0",'
@@ -796,19 +795,25 @@ def test_if_tier_integrity(scaffold):
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "interfaces=1 interface-findings=0" in proc.stdout
 
-    # Empty SR-Refs -> a --strict finding (every seam links the spine, PB idiom).
-    _write_ifs(scaffold, 'IF-001,Provides,src/demo,git,"pushes",,v1,Stable,Active,,\n')
+    # An ID-SHAPED owner -> a --strict finding. This was the `Req-Refs` back-link
+    # rule until OI-67 (ruled (a), 2026-08-29): the spine link is REACHED through
+    # the owner now, so stating a requirement id in the cell that must hold the
+    # providing THING is the wrong shape rather than a missing link.
+    _write_ifs(scaffold, 'IF-001,Provides,SR-001,git,"pushes",,v1,Stable,Active,,\n')
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
-    assert "IF IF-001 links no SR" in _report(scaffold)
-
-    # Unresolvable SR-Ref -> a finding naming the missing id.
-    _write_ifs(
-        scaffold, 'IF-001,Provides,src/demo,git,"pushes",SR-999,v1,Stable,Active,,\n'
+    assert "IF IF-001 Owner='SR-001' names a requirement or design id" in _report(
+        scaffold
     )
+
+    # And it is the SHAPE that is wrong, not the resolution: an id nothing
+    # resolves reports the same finding, in the same words.
+    _write_ifs(scaffold, 'IF-001,Provides,LLR-999,git,"pushes",,v1,Stable,Active,,\n')
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1
-    assert "IF IF-001 references unknown SR-999" in _report(scaffold)
+    assert "IF IF-001 Owner='LLR-999' names a requirement or design id" in _report(
+        scaffold
+    )
 
     # A malformed IF id joins the always-on integrity floor (--strict-integrity).
     _write_ifs(
@@ -820,16 +825,25 @@ def test_if_tier_integrity(scaffold):
 
 
 def test_if_endpoint_advisory_is_warn_only(scaffold):
-    # A ThisProject matching no LLR Module is a warn-only advisory (the LLR Module
-    # inventory is partial + differently named), never a failure.
+    # A module-shaped owner that no design row's `Module` names and whose header
+    # declares no `Implements:` line traces to no requirement — warn-only since
+    # OI-67, because a file-owned or external-owned seam legitimately reaches no
+    # design row and the class that does is a debt list, not a gate.
     make_minimal_project(scaffold)
     _write_ifs(
         scaffold, 'IF-001,Provides,src/nowhere,git,"x",SR-001,v1,Stable,Active,,\n'
     )
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "matches no LLR Module" in proc.stdout
+    assert "this seam traces to no requirement" in proc.stdout
     assert "endpoint advisories" in _report(scaffold).lower()
+    # The other half: the SAME body owned by the module LLR-001 names is silent,
+    # so the advisory is the reachability judgement and not a rule that fires on
+    # every row.
+    _write_ifs(scaffold, 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,,\n')
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "traces to no requirement" not in proc.stdout
 
 
 # --- WI-443 / OI-14 part B: the IF+CMP schema tier, WARN-FIRST -----------------
@@ -861,30 +875,31 @@ def test_clean_if_row_trips_none_of_the_new_rules(scaffold):
     make_minimal_project(scaffold)
     out = _warn_run(scaffold, CLEAN_IF)
     for noise in (
-        "Contract names WI-",
+        "Data names WI-",
         "cites decision",
-        "Contract argues",
-        "ceiling 500",
+        "Data argues",
+        "ceiling 160",
         "has empty required field",
         "closed vocabulary",
         "resolves to no module, file or directory",
+        "legacy `contract` cell",
     ):
         assert noise not in out, noise
 
 
-def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
-    # The owner's ruled typing is a CLOSED vocabulary. Written straight to TOML:
-    # `_write_ifs` supplies `signal = "discrete"`, and the point here is a value
-    # the vocabulary does not contain.
+def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
+    # The owner's ruled typing is a CLOSED vocabulary — `Channel` since OI-67,
+    # which subsumed `Signal`'s discrete/variable pair (`exit-code` and `env` are
+    # the discrete kinds; the rest are unbounded). Written straight to TOML:
+    # `_write_ifs` supplies `channel = "call"`, and the point here is a value the
+    # vocabulary does not contain.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"
-        'direction = "Provides"\n'
-        'this_project = "src/demo"\n'
-        'counterpart = "git"\n'
-        'contract = "reads the ref state"\n'
-        'signal = "analog"\n'
-        'req_refs = ["SR-001"]\n'
+        'owner = "src/demo"\n'
+        'consumers = ["external:git"]\n'
+        'channel = "analog"\n'
+        'data = "reads the ref state"\n'
         'version = "v1"\n'
         'status = "Approved"\n',
         encoding="utf-8",
@@ -892,9 +907,9 @@ def test_signal_refuses_an_unknown_value_as_a_warn(scaffold):
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr  # warn-first
-    assert "IF IF-001 has Signal='analog'" in proc.stdout
+    assert "IF IF-001 has Channel='analog'" in proc.stdout
     assert "not in the closed vocabulary" in proc.stdout
-    assert "discrete, variable" in proc.stdout
+    assert "bytes, call, cli, env, exit-code, file, git, stdout" in proc.stdout
 
 
 def test_approval_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -976,40 +991,40 @@ def test_missing_required_if_field_is_a_warn(scaffold):
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"
-        'direction = "Provides"\n'
-        'this_project = "src/demo"\n'
-        'counterpart = "git"\n'
-        'contract = "reads the ref state"\n'
-        'req_refs = ["SR-001"]\n'
+        'owner = "src/demo"\n'
+        'consumers = ["external:git"]\n'
+        'data = "reads the ref state"\n'
         'version = "v1"\n'
-        'status = "Approved"\n',  # no `signal`
+        'status = "Approved"\n',  # no `channel`
         encoding="utf-8",
     )
     record_ids(scaffold)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "IF IF-001 has empty required field Signal" in proc.stdout
+    assert "IF IF-001 has empty required field Channel" in proc.stdout
 
 
-def test_work_item_id_in_contract_is_a_refuse_class_warn(scaffold):
-    # ~24% of live rows today. A work-item id AGES, and a cancelled row's id
-    # sitting in a Contract cell still reads as authority.
+def test_work_item_id_in_data_is_a_refuse_class_warn(scaffold):
+    # ~24% of live rows carried one when the rule was written. A work-item id
+    # AGES, and a cancelled row's id sitting in the cell still reads as
+    # authority. The four form rules moved from `Contract` to `Data` unchanged
+    # at OI-67 — the cell they police is the row's typed statement now.
     make_minimal_project(scaffold)
     out = _warn_run(
         scaffold,
         CLEAN_IF.replace("reads the ref state", "reads the ref state (WI-374)"),
     )
-    assert "IF IF-001 Contract names WI-374" in out
+    assert "IF IF-001 Data names WI-374" in out
     assert "belongs in the log" in out
 
 
-def test_decision_citation_in_contract_is_a_refuse_class_warn(scaffold):
+def test_decision_citation_in_data_is_a_refuse_class_warn(scaffold):
     make_minimal_project(scaffold)
     out = _warn_run(
         scaffold,
         CLEAN_IF.replace("reads the ref state", "reads the ref state per D-9"),
     )
-    assert "IF IF-001 Contract cites decision D-9" in out
+    assert "IF IF-001 Data cites decision D-9" in out
 
 
 def test_a_crossing_id_is_not_read_as_a_decision(scaffold):
@@ -1023,14 +1038,14 @@ def test_a_crossing_id_is_not_read_as_a_decision(scaffold):
     assert "cites decision" not in out
 
 
-def test_rationale_connective_in_contract_warns(scaffold):
+def test_rationale_connective_in_data_warns(scaffold):
     make_minimal_project(scaffold)
     for word in ("because", "rather than", "so that", "since"):
         out = _warn_run(
             scaffold,
             CLEAN_IF.replace("reads the ref state", "reads it " + word + " it must"),
         )
-        assert "Contract argues ('{}')".format(word) in out, word
+        assert "Data argues ('{}')".format(word) in out, word
         assert "move the ARGUMENT to the Rationale column" in out
         # The CITATION half now points at the log, not at Rationale: the owner
         # ruling forbids a citation frame in any living registry cell, so the
@@ -1039,14 +1054,16 @@ def test_rationale_connective_in_contract_warns(scaffold):
         assert "any citation inside it to the log" in out
 
 
-def test_contract_over_the_length_ceiling_warns(scaffold):
-    # 34 live rows exceed 500 characters; the longest is 968.
+def test_data_over_the_length_ceiling_warns(scaffold):
+    # The ceiling came DOWN from 500 to 160 with the cell (OI-67): `Data` is the
+    # alphabet or a one-clause schema pointer, and the definition it used to hold
+    # lives in the owner's `Contract IF-###:` body.
     make_minimal_project(scaffold)
-    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "x" * 501))
-    assert "IF IF-001 Contract is 501 characters (ceiling 500)" in out
-    # ...and 500 exactly is inside the ceiling (a boundary, not an off-by-one).
-    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "y" * 500))
-    assert "ceiling 500" not in out
+    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "x" * 161))
+    assert "IF IF-001 Data is 161 characters (ceiling 160)" in out
+    # ...and 160 exactly is inside the ceiling (a boundary, not an off-by-one).
+    out = _warn_run(scaffold, CLEAN_IF.replace("reads the ref state", "y" * 160))
+    assert "ceiling 160" not in out
 
 
 def test_untagged_endpoint_advisory_classifies_instead_of_staying_silent(scaffold):
@@ -1131,31 +1148,30 @@ def test_a_bare_external_marker_names_nobody_and_still_warns(scaffold):
     assert "IF IF-001 Consumers='external:' resolves to no module" in out
 
 
-def test_this_project_endpoint_is_validated_too_not_just_counterpart(scaffold):
+def test_the_owner_endpoint_is_validated_too_not_just_consumers(scaffold):
     make_minimal_project(scaffold)
     out = _warn_run(
         scaffold,
         'IF-001,Provides,src/gone,docs/status.md,"x",SR-001,v1,Stable,Active,,\n',
     )
-    assert "IF IF-001 Provider='src/gone' resolves to no module" in out
+    assert "IF IF-001 Owner='src/gone' resolves to no module" in out
 
 
-# --- 2026-08-15 interface rework, steps 5 + 7: the Owner cell and carriage -----
-# Q1 (an owner may be a requirement OR a design row, exactly one) and Q3 (an IF
-# may name another IF as the bundle carrying it, and that graph must be acyclic
-# and bounded). Both warn-first: the owner cells were seeded mechanically and
-# every multi-ref pick is a provisional judgement, so gating on them would gate
-# on a guess.
+# --- OI-67 ruled (a): the Owner cell is the providing THING, plus carriage -----
+# The owner is one endpoint in the one spelling `consumers` uses — a module path,
+# a file or directory path, or an `external:` party — and the SHAPE is a --strict
+# finding, because an id-typed owner and a path-typed provider were the same fact
+# in two spellings and only one of them survived. Q3's carriage rules (an IF may
+# name another IF as the bundle carrying it, and that graph must be acyclic and
+# bounded) stay warn-first beside it: the bound is provisional.
 
 
 def _if_row(**kw):
     base = {
-        "provider": "src/demo",
+        "owner": "src/demo",
         "consumers": '["external:git"]',
-        "contract": "reads the ref state",
-        "signal": "discrete",
-        "req_refs": '["SR-001"]',
-        "owner": '"SR-001"',
+        "channel": "call",
+        "data": "reads the ref state",
         "version": '"v1"',
         "status": '"Drafted"',
     }
@@ -1166,48 +1182,80 @@ def _if_row(**kw):
     return "\n".join(lines) + "\n"
 
 
-def _toml_warn_run(scaffold, text):
+def _toml_write(scaffold, text):
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         text, encoding="utf-8"
     )
     record_ids(scaffold)
+
+
+def _toml_warn_run(scaffold, text):
+    _toml_write(scaffold, text)
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr  # warn-first, always
     return proc.stdout
 
 
-def test_owner_may_be_a_requirement_or_a_design_row(scaffold):
-    # Q1's whole content: BOTH tiers are legitimate, because requirements and
-    # design rows decompose the same thing at different levels.
+def _toml_finding_run(scaffold, text):
+    """`--strict` over one IF row that is expected to FAIL, returning stdout.
+
+    The owner-shape rules are the one arm of this tier that GATES, so their call
+    sites assert the nonzero exit as loudly as the warn-first sites assert the
+    zero one — a finding that stopped joining the failure set would otherwise
+    read as a passing test."""
+    _toml_write(scaffold, text)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    return proc.stdout
+
+
+def test_an_owner_that_names_a_requirement_or_design_row_is_a_finding(scaffold):
+    # The shape OI-67 retired, and BOTH tiers are wrong for the same reason: a
+    # design row's module IS the providing thing, so naming the row instead of
+    # the thing states a derivable fact in a second spelling.
     make_minimal_project(scaffold)
     for oid in ('"SR-001"', '"LLR-001"'):
-        out = _toml_warn_run(scaffold, _if_row(owner=oid))
-        assert "Owner" not in out, oid
+        out = _toml_finding_run(scaffold, _if_row(owner=oid))
+        assert "names a requirement or design id" in out, oid
+        assert "the owner is the providing THING" in out, oid
 
 
-def test_owner_naming_several_rows_is_a_warn(scaffold):
+def test_an_owner_that_is_a_path_is_the_clean_shape(scaffold):
+    # The other half, and the one that keeps the rule from firing on everything:
+    # a module path, a file path and a marked external party are the three
+    # legitimate spellings, and none of them reports.
     make_minimal_project(scaffold)
-    out = _toml_warn_run(scaffold, _if_row(owner='"SR-001;LLR-001"'))
-    assert "names 2 owners" in out
-    assert "exactly one row is answerable" in out
+    for owner in ("src/demo", "docs/status.md", "external:git"):
+        out = _toml_warn_run(scaffold, _if_row(owner='"%s"' % owner))
+        assert "Owner=" not in out, owner
 
 
-def test_owner_that_resolves_to_nothing_is_a_warn(scaffold):
+def test_an_owner_naming_several_endpoints_is_a_finding(scaffold):
+    # One row has ONE owner: a `;`-joined cell is a bundle wearing one row's
+    # clothes, and the ruling splits it or declares a carrier on `carried_by`.
     make_minimal_project(scaffold)
-    assert "Owner references unknown SR-404" in _toml_warn_run(
-        scaffold, _if_row(owner='"SR-404"')
-    )
-    assert "Owner references unknown LLR-404" in _toml_warn_run(
-        scaffold, _if_row(owner='"LLR-404"')
-    )
+    out = _toml_finding_run(scaffold, _if_row(owner='"src/demo;src/helper"'))
+    assert "names 2 endpoints" in out
+    assert "one row has ONE owner" in out
 
 
-def test_owner_that_is_not_an_id_is_a_warn(scaffold):
-    # `this_project` holds a module PATH, which is exactly why Q1 overturned
-    # "derive the owner": a path cannot express "SR-012 owns this".
+def test_the_far_side_names_the_direction_and_both_or_neither_is_a_warn(scaffold):
+    # THE FAR SIDE IS EXACTLY ONE OF `requestors` / `consumers` (OI-67, the
+    # owner's own addition): the key name is the direction. Both or neither is
+    # reported WARN-FIRST — the same tier as an empty required cell, because a
+    # row with no far side is incomplete (an adopter mid-migration), where an
+    # id-shaped owner is wrong (the retired meaning, stated) and gates.
     make_minimal_project(scaffold)
-    out = _toml_warn_run(scaffold, _if_row(owner='"src/demo"'))
-    assert "is not an SR-### or LLR-### id" in out
+    consumers_line = 'consumers = ["external:git"]\n'
+    neither = _if_row().replace(consumers_line, "")
+    out = _toml_warn_run(scaffold, neither)
+    assert "IF IF-001 names neither Requestors and Consumers" in out
+    both = _if_row(requestors='["src/helper"]')
+    out = _toml_warn_run(scaffold, both)
+    assert "IF IF-001 names both Requestors and Consumers" in out
+    # ...and a requestors-only row is the clean shape, exactly as consumers-only is.
+    only = _if_row(requestors='["src/helper"]').replace(consumers_line, "")
+    assert "Requestors and Consumers" not in _toml_warn_run(scaffold, only)
 
 
 def test_a_missing_owner_is_the_required_field_rule_not_a_second_one(scaffold):
@@ -1215,9 +1263,9 @@ def test_a_missing_owner_is_the_required_field_rule_not_a_second_one(scaffold):
     # field Owner", and saying it twice teaches the reader there are two rules.
     make_minimal_project(scaffold)
     text = _if_row()
-    out = _toml_warn_run(scaffold, text.replace('owner = "SR-001"\n', ""))
+    out = _toml_warn_run(scaffold, text.replace('owner = "src/demo"\n', ""))
     assert "IF IF-001 has empty required field Owner" in out
-    assert "answerable" not in out
+    assert "Owner=" not in out
 
 
 def test_carried_by_resolves_and_a_self_carrier_is_named_as_such(scaffold):
@@ -1299,7 +1347,7 @@ def test_a_declared_absence_is_not_a_dangling_endpoint(scaffold):
 def test_the_retired_direction_column_closes_no_vocabulary_here(scaffold):
     # Step 1 closed `Direction`'s vocabulary — the one IF column process.md §8
     # stated and nothing checked. WI-455 then retired the column itself (OI-60
-    # ruled (a)): flow is the SHAPE of the row, provider -> consumers. The
+    # ruled (a)): flow is the SHAPE of the row, owner -> consumers. The
     # vocabulary must go WITH it, or the tier keeps refusing values for a cell
     # no row is allowed to carry — and the enum survives, correctly, on the
     # BOUNDARY tier, which is the collision the shed closed.
@@ -1933,7 +1981,7 @@ def test_this_repos_own_provenance_allow_entries_all_still_bite():
         ("SR-ID", ("Title", "Requirement", "Rationale", "AcceptanceCriteria")),
         ("LLR-ID", ("Title", "Detail", "Rationale")),
         ("TC-ID", ("Method", "Expected", "Parameters")),
-        ("IF-ID", ("Notes", "SignalNote")),
+        ("IF-ID", ("Notes", "Rationale")),
         ("CMP-ID", ("Name", "Notes")),
         ("EXT-ID", ("Name", "Description", "Notes")),
     )

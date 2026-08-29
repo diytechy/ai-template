@@ -556,11 +556,15 @@ def context_repo(tmp_path):
         encoding="utf-8",
         newline="\n",
     )
+    # `Owner` and `Channel` are the required endpoint/typing cells since OI-67.
+    # The `Contract` column stays because it is the LEGACY cell an adopter's
+    # registry still carries, and `_seam_lines` falls back to it when a row
+    # states no `Data` — this fixture is the only place that fallback runs.
     (req / "interfaces.csv").write_text(
-        "IF-ID,Provider,Consumers,Contract,Req-Refs,Version,"
-        "Stability,Status,Component,Notes\n"
-        'IF-001,scripts/widget,scripts/check,"widget CLI: exits 1 on '
-        'a bad widget",SR-001,v1,Stable,Active,CMP-001,\n',
+        "IF-ID,Owner,Consumers,Channel,Contract,Version,"
+        "Status,Component,Notes\n"
+        'IF-001,scripts/widget,scripts/check,cli,"widget CLI: exits 1 on '
+        'a bad widget",v1,Approved,CMP-001,\n',
         encoding="utf-8",
         newline="\n",
     )

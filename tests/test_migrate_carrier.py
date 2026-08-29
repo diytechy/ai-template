@@ -126,31 +126,32 @@ def test_the_meta_repos_own_registries_convert_losslessly():
 
 # --- WI-443 / OI-14 part B: the last two registries onto the carrier ----------
 
+# The row's shape since OI-67 (ruled (a), 2026-08-29): one owner, its consumers
+# and a typed statement. `Provider`/`Signal`/`SignalNote`/`Req-Refs` left the
+# vocabulary with that ruling, so a legacy CSV carrying them keys them as
+# themselves — the degrade `test_a_retired_endpoint_column_converts_under_its_own_name`
+# pins for the WI-455 pair.
 IF_HEADER = [
     "IF-ID",
-    "Provider",
+    "Owner",
     "Consumers",
-    "Contract",
-    "Signal",
-    "SignalNote",
+    "Channel",
+    "Data",
     "Rationale",
-    "SR-Refs",
     "Version",
-    "Stability",
+    "Status",
     "Component",
     "Notes",
 ]
 IF_ROW = {
     "IF-ID": "IF-001",
-    "Provider": "scripts/trace",
+    "Owner": "scripts/trace",
     "Consumers": "scripts/check;scripts/gen_okf",
-    "Contract": 'trace.py CLI: --strict exits 1 on an orphan; writes "report.md"',
-    "Signal": "discrete",
-    "SignalNote": "",
+    "Channel": "exit-code",
+    "Data": '0 clean | 1 a finding; writes "report.md"',
     "Rationale": "",
-    "SR-Refs": "SR-001;SR-002",
     "Version": "v1",
-    "Stability": "Stable",
+    "Status": "Drafted",
     "Component": "",
     "Notes": "source - consumes nothing declared",
 }
@@ -196,16 +197,18 @@ def test_the_two_new_tiers_round_trip_cell_for_cell(table, id_col, header, row):
     assert mc.compare("f", table, expected, text) == []
     parsed = tomllib.loads(text)[table][row[id_col]]
     # The empty cells did not become empty strings.
-    for absent in ("signal_note", "rationale", "component", "superseded_by", "part_of"):
+    for absent in ("rationale", "component", "superseded_by", "part_of"):
         assert absent not in parsed or parsed[absent], absent
-    # ...and the ref cell is a typed array, not a `;`-joined string.
     if table == "interface":
-        assert parsed["sr_refs"] == ["SR-001", "SR-002"]
-        # `Consumers` is a typed array too since WI-455 — the cell always held
+        # The owner is one endpoint in the consumers' own spelling (OI-67)...
+        assert parsed["owner"] == "scripts/trace"
+        # ...`Consumers` is a typed array (WI-455) — the cell always held
         # several `;`-joined endpoints on the rows that have several, and the
-        # reader splits on `;` alone, so the array is what it already meant.
+        # reader splits on `;` alone, so the array is what it already meant...
         assert parsed["consumers"] == ["scripts/check", "scripts/gen_okf"]
-        assert parsed["signal"] == "discrete"
+        # ...and the typed statement rides as two plain cells.
+        assert parsed["channel"] == "exit-code"
+        assert parsed["data"].startswith("0 clean")
 
 
 def test_a_retired_endpoint_column_converts_under_its_own_name():
@@ -255,7 +258,7 @@ def test_the_if_tier_has_exactly_ONE_declared_maturity_key():
     carrier = load_script("spine_carrier")
     keys = carrier.REGISTRY_KEYS["IF-ID"]
     assert "status" in keys
-    assert "signal" in keys
+    assert "channel" in keys
     assert "rationale" in keys
     # The two retired spellings must not come back BESIDE it — two maturity keys
     # on one row is the defect, not the name.

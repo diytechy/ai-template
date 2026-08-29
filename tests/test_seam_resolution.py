@@ -1,26 +1,30 @@
-"""The IF tier's two-cell shape and the derivations it rests on (WI-455).
+"""The IF tier's row shape and the invariants it rests on (OI-67 ruled (a)).
 
-`OI-60` ruled (a) on 2026-08-23 and ordered its two clauses: rename
-`counterpart` into a consumers list FIRST, shed `direction` (and the derivable
-provider cell) immediately behind it. The shed is only lossless while three
-things hold, so they are asserted here over the LIVE registry rather than
-argued in a log:
+One row is ONE OWNER, its CONSUMERS and a TYPED STATEMENT: `owner` is the
+providing thing in the one spelling `consumers` uses, `channel` is closed, and
+nothing on the row is derived from a design row any more. The shape is only
+honest while four things hold, so they are asserted here over the LIVE
+registry rather than argued in a log:
 
-* **flow is recoverable** — every row resolves to a provider and a consumer
-  set, so the producer -> consumer orientation the three seam readers need is
-  read off the row instead of a retired flag;
-* **the provider is recoverable** — absent from a row exactly when
-  `owner` -> LLR -> `Module` derives it UNIQUELY, and stated otherwise;
-* **the rows that cannot derive it still carry it** — the twelve
-  requirement-owned provider-side seams the SR-owned-`Provides` report is
-  about, whose `owner` is a requirement and therefore names no module.
+* **no retired cell survives** — a row still carrying `provider`, `req_refs`,
+  `signal` or `signal_note` (or the WI-455 trio before them) would read as
+  empty to every updated reader while looking authored to a human;
+* **the far side is exactly one of `requestors` / `consumers`** — the key is
+  the direction, and a row naming both or neither has none;
+* **every owner is one THING, never an id** — the requirement a seam answers
+  to is reached through the owner, and an `SR-###`/`LLR-###` in the cell is
+  the shape the ruling retired;
+* **every owner resolves** — a module in the tree, a file or directory that
+  exists, or a marked `external:` party — and is never on its own consumer
+  side, which would be a module talking to itself;
+* **every channel is in the closed set**, so the typed statement types.
 
-The 21 rows that state NO provider are declared here by id, because "a row with
-one known side" is a real shape (a published medium whose readers are the fact
-the row records) and an UNDECLARED one would be indistinguishable from a cell
-the transform dropped by accident.
+The legacy `contract` cell is deliberately NOT asserted absent here: it is
+counted by `trace.py` and leaves row by row as the definitions move into the
+owners' headers; the arming slice is where its absence becomes a rule.
 """
 
+import re
 import tomllib
 
 from conftest import ROOT, load_script
@@ -32,56 +36,18 @@ CARRIER = load_script("spine_carrier")
 from kitlib import spine as KIT  # noqa: E402
 
 LIVE_IFS = ROOT / "docs" / "requirements" / "interfaces.toml"
-LIVE_LLRS = ROOT / "docs" / "requirements" / "low-level-requirements.toml"
 
-# The report's twelve: `owner` is a requirement, which carries no `Module`, so
-# `provider` is the ONLY record anywhere of which module serves the seam.
-REQUIREMENT_OWNED_PROVIDERS = frozenset(
-    {
-        "IF-001",
-        "IF-005",
-        "IF-009",
-        "IF-011",
-        "IF-013",
-        "IF-014",
-        "IF-015",
-        "IF-044",
-        "IF-053",
-        "IF-065",
-        "IF-076",
-        "IF-081",
-    }
-)
-
-# The published-medium rows: what crosses is a file the `contract` names, and
-# what the row RECORDS is the measured reader set — the 16 facing the adopter
-# class plus the five `WI-469` reader-set rows. No endpoint cell ever claimed
-# the medium, so none states a provider.
-NO_PROVIDER = frozenset(
-    {
-        "IF-021",
-        "IF-022",
-        "IF-023",
-        "IF-024",
-        "IF-029",
-        "IF-030",
-        "IF-033",
-        "IF-034",
-        "IF-035",
-        "IF-037",
-        "IF-038",
-        "IF-047",
-        "IF-049",
-        "IF-051",
-        "IF-054",
-        "IF-057",
-        "IF-059",
-        "IF-068",
-        "IF-072",
-        "IF-073",
-        "IF-079",
-    }
-)
+RETIRED = {
+    "provider",
+    "req_refs",
+    "signal",
+    "signal_note",
+    "direction",
+    "this_project",
+    "counterpart",
+}
+_ID_SHAPED = re.compile(r"^(?:SN|SR|LLR|TC|IF|CMP|B|EXT|REL)-\d+$")
+_SUFFIXES = ("", ".py", ".md", ".toml", ".csv", ".ini", ".html", ".yml")
 
 
 def _live_rows():
@@ -92,97 +58,71 @@ def _live_rows():
     ]
 
 
-def _live_modules():
-    return CARRIER.llr_modules(ROOT)
+def _resolves(endpoint):
+    if endpoint.startswith("external:"):
+        return bool(endpoint[len("external:") :].strip())
+    for base in (endpoint, "project-trajectory/" + endpoint):
+        for suffix in _SUFFIXES:
+            if (ROOT / (base + suffix)).exists():
+                return True
+    return False
 
 
-def test_no_live_row_carries_a_retired_endpoint_cell():
-    # The rename is COMPLETE or it is a second vocabulary: a row still carrying
-    # `direction`/`this_project`/`counterpart` would read as empty to every
-    # updated reader while looking authored to a human.
+def test_no_live_row_carries_a_retired_cell():
     raw = tomllib.loads(LIVE_IFS.read_text(encoding="utf-8"))["interface"]
     retired = {
-        rid: sorted(set(cells) & {"direction", "this_project", "counterpart"})
+        rid: sorted(set(cells) & RETIRED)
         for rid, cells in raw.items()
-        if set(cells) & {"direction", "this_project", "counterpart"}
+        if set(cells) & RETIRED
     }
     assert retired == {}
-    # And every row carries the cell that replaced them, as a LIST.
-    assert [rid for rid, cells in raw.items() if not cells.get("consumers")] == []
+    # And every row carries the two required endpoint cells, the consumers as
+    # a LIST and the channel as a plain string.
+    assert [rid for rid, cells in raw.items() if not cells.get("owner")] == []
+    # The far side is EXACTLY one of the two keys, and a list either way.
     assert [
-        rid for rid, cells in raw.items() if not isinstance(cells["consumers"], list)
+        rid
+        for rid, cells in raw.items()
+        if bool(cells.get("requestors")) == bool(cells.get("consumers"))
     ] == []
+    assert [
+        rid
+        for rid, cells in raw.items()
+        if not isinstance(cells.get("requestors") or cells.get("consumers"), list)
+    ] == []
+    assert [rid for rid, cells in raw.items() if not cells.get("channel")] == []
 
 
-def test_flow_is_recoverable_on_every_row():
-    # What the three orienting readers (`check_trajectory.interface_findings`,
-    # `traj_views`' two seam graphs, `gen_arch_map`'s dotted edges) need is the
-    # producer -> consumer pair, not the retired flag. Every row answers it.
-    modules = _live_modules()
+def test_every_owner_is_one_thing_that_resolves_and_is_not_its_own_consumer():
     for row in _live_rows():
         rid = row["IF-ID"]
-        consumers = KIT.seam_consumers(row)
-        assert consumers, rid
-        provider = KIT.seam_provider(row, modules)
-        assert bool(provider) is (rid not in NO_PROVIDER), rid
+        owner = KIT.seam_owner(row)
+        assert owner and ";" not in owner, rid
+        assert not _ID_SHAPED.match(owner), rid
+        assert _resolves(owner), (rid, owner)
+        _inbound, far = KIT.seam_far_side(row)
+        assert far, rid
         # An endpoint is never on both sides of its own seam: that reads as a
         # module talking to itself, which is no seam at all.
-        if provider:
-            assert KIT.norm_module(provider) not in {
-                KIT.norm_module(c) for c in consumers
-            }, rid
+        assert KIT.norm_module(owner) not in {KIT.norm_module(c) for c in far}, rid
 
 
-def test_the_provider_cell_is_present_exactly_where_it_is_underivable():
-    # The shed's rule, stated executably: the cell dies where `owner` -> LLR ->
-    # `Module` derives it UNIQUELY, and survives everywhere else. A multi-module
-    # owner derives a SET, which is not the fact, so those rows keep it.
-    modules = _live_modules()
+def test_every_channel_is_in_the_closed_set():
     for row in _live_rows():
-        rid = row["IF-ID"]
-        owners = KIT.refs(row.get("Owner"))
-        derivable = (
-            len(owners) == 1
-            and owners[0].startswith("LLR-")
-            and len(KIT.seam_endpoints(modules.get(owners[0], ""))) == 1
-        )
-        stated = bool((row.get("Provider") or "").strip())
-        if derivable:
-            assert not stated, rid  # a derivable cell is a second spelling
-        else:
-            assert stated or rid in NO_PROVIDER, rid
+        assert (row.get("Channel") or "").strip() in KIT.IF_CHANNELS, row["IF-ID"]
 
 
-def test_the_report_s_twelve_still_carry_their_provider_fact():
-    # `OI-60` (a) keeps the provider-side endpoint on these rows until their
-    # owners are re-pointed at the design tier. Losing the cell here deletes the
-    # providing module outright — with it the module's producer credit in the
-    # connectivity advisory and the source end of its declared seam pair.
-    rows = {r["IF-ID"]: r for r in _live_rows()}
-    for rid in sorted(REQUIREMENT_OWNED_PROVIDERS):
-        row = rows[rid]
-        assert KIT.refs(row["Owner"])[0].startswith("SR-"), rid
-        assert (row.get("Provider") or "").strip(), rid
-
-
-def test_seam_provider_prefers_the_stated_cell_over_the_derivation():
-    # Precedence, pinned: a row that states a provider is answered from its own
-    # cell. The derivation is the FALLBACK, so a re-pointed owner can never
-    # silently overrule an endpoint an author wrote down — `if_provider_advisories`
-    # reports that disagreement instead of resolving it.
-    modules = {"LLR-001": "project-trajectory/scripts/a.py"}
-    row = {"IF-ID": "IF-001", "Owner": "LLR-001", "Provider": "scripts/b"}
-    assert KIT.seam_provider(row, modules) == "scripts/b"
-    assert KIT.seam_provider({"IF-ID": "IF-001", "Owner": "LLR-001"}, modules) == (
-        "project-trajectory/scripts/a.py"
+def test_seam_owner_reads_the_cell_verbatim_and_derives_nothing():
+    # Precedence is gone with the derivation: the cell IS the answer. A row
+    # with no cell answers '' — the required-field rule's finding, never this
+    # reader's guess.
+    assert KIT.seam_owner({"IF-ID": "IF-001", "Owner": "scripts/b"}) == "scripts/b"
+    assert KIT.seam_owner({"IF-ID": "IF-001", "Owner": "  docs/stack.ini "}) == (
+        "docs/stack.ini"
     )
-    # Neither a stated cell nor a derivable owner: '' — the published-medium
-    # shape, never a crash and never a guess.
-    assert KIT.seam_provider({"IF-ID": "IF-001", "Owner": "SR-001"}, modules) == ""
-    assert (
-        KIT.seam_provider(
-            {"IF-ID": "IF-001", "Owner": "LLR-002"},
-            {"LLR-002": "a.py;b.py"},
-        )
-        == ""
-    )
+    assert KIT.seam_owner({"IF-ID": "IF-001"}) == ""
+    assert not hasattr(KIT, "seam_provider")
+    # The far side comes back with its direction, requestors first.
+    assert KIT.seam_far_side({"Requestors": "a;b"}) == (True, ["a", "b"])
+    assert KIT.seam_far_side({"Consumers": "c"}) == (False, ["c"])
+    assert KIT.seam_far_side({}) == (False, [])

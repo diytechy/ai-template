@@ -123,7 +123,7 @@ def test_how_sw_graph_renders_seams(tmp_path):
     write_arch_src(tmp_path)
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
         if_row("IF-001", "src/m", "downstream adopter", "cli")
-        + if_row("IF-002", "docs/stack.ini", "src/m", "reads"),
+        + if_row("IF-002", "docs/stack.ini", "src/m", "file"),
         encoding="utf-8",
     )
     assert gen(tmp_path).returncode == 0
@@ -209,7 +209,7 @@ def test_context_view_states_an_untied_external_endpoint_with_its_reason(tmp_pat
     write_frame(tmp_path)
     reason = "No tie-back: git is not a party of its own in this frame."
     (tmp_path / "docs" / "requirements" / "interfaces.toml").write_text(
-        if_row("IF-002", "external:git", "src/m", "reads", notes=reason),
+        if_row("IF-002", "external:git", "src/m", "git", notes=reason),
         encoding="utf-8",
     )
     assert gen(tmp_path).returncode == 0

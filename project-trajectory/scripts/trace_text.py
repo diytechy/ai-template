@@ -16,7 +16,6 @@ Split out of `trace.py`, which owns the JOIN — this module owns the question
 | `sn_artifact_advisories`    | advisory | a need's acceptance names an artifact  |
 | `sr_fanout_advisories`      | advisory | an SR's direct-LLR fan-out is merged   |
 | `ears_advisories`           | advisory | a condition stated outside EARS        |
-| `if_provider_advisories`    | advisory | a stated Provider its owner derives    |
 
 They are PURE predicates — rows in, findings out. No I/O, no git, no
 filesystem, no argv — which is the pure-core / I-O-shell split process.md §3
@@ -402,7 +401,7 @@ _PROVENANCE_SHAPES = (
 
 # The cells whose whole job is argument. A date is provenance in these outright;
 # elsewhere it needs an edit verb in front of it.
-REASON_CELLS = frozenset({"Rationale", "why", "Notes", "SignalNote"})
+REASON_CELLS = frozenset({"Rationale", "why", "Notes"})
 
 
 def _in_path_token(cell, start, end):
@@ -1227,7 +1226,8 @@ def sr_fanout_advisories(srs, llrs, bound=SR_FANOUT_MAX):
 
 def _module_shaped(endpoint):
     """Is this endpoint a MODULE reference at all — the only class the
-    derivability question ranges over?
+    reachability question (`trace.interface_findings`: does a module-shaped
+    owner reach a requirement?) ranges over?
 
     Everything else in the endpoint grammar (module-or-path-or-`external:`) is
     wi455's counterpart-TRANSFORM business, not a disagreement: 45 of 122
@@ -1263,76 +1263,3 @@ def module_endpoints(cell):
     reported as a disagreement (IF-097 names three modules)."""
     parts = (p.strip() for p in (cell or "").split(";"))
     return [p for p in parts if _module_shaped(p)]
-
-
-def _owner_llr_module(row, modules):
-    """``(owner_id, module)`` for a row owned by exactly one LLR, else ``("", "")``.
-
-    Deliberately silent in three cases, each already owned by another rule: an
-    `SR-###` owner (the SR tier names no module, so nothing is derivable and
-    nothing disagrees), a cell naming zero or several owners
-    (`if_ownership_advisories`' "exactly one owner" arm), and an owner id that
-    resolves to NO LLR row or to a row with an empty `Module`
-    (`if_ownership_advisories` reports the dangling owner by name, and the
-    required-field rule reports the empty cell — a second message here would be
-    one defect reported twice under two headings)."""
-    owners = refs(row.get("Owner"))
-    if len(owners) != 1 or not owners[0].startswith("LLR-"):
-        return "", ""
-    return owners[0], modules.get(owners[0], "")
-
-
-def if_provider_advisories(ifs, llrs):
-    """Warn-only: an IF row that STATES a `Provider` its owner already derives —
-    redundantly (the two agree) or contradictorily (they do not).
-
-    THE RULE THE SHED LEFT BEHIND. Until WI-455 this compared the owner-side
-    endpoint against the owner LLR's `Module` and counted down to deleting a
-    column. The column is gone (OI-60 ruled (a), 2026-08-23): a seam's provider
-    is `owner`->LLR->`module` wherever the owner is a design row naming ONE
-    module, and `Provider` survives only where that derivation cannot run — a
-    requirement owner (a requirement names no module) or a multi-module owner
-    (which derives a SET, not the fact).
-
-    So the disagreement this rule always policed is now a PRESENCE question, and
-    it is the executable half of the twelve-row re-point the SR-owned-`Provides`
-    report describes: re-point such a row's owner at the design row that
-    implements the provider, and this advisory says the cell has become
-    derivable and should go. Its silence is the invariant *no row states what
-    the registry already knows*.
-
-    Both sides are normalized (`norm_module`) and the owner's `Module` splits on
-    `;`, so the arch-map short form and the full repo path with its extension
-    read as one module rather than as a disagreement.
-
-    Warn-only, never the exit code: dropping a now-derivable cell is an
-    authoring act with a judgement in it (the report's twelve are exactly that
-    judgement), not something a gate should force."""
-    modules = {rid: (r.get("Module") or "").strip() for rid, r in _real(llrs, "LLR-ID")}
-    out = []
-    for r in ifs:
-        iid = (r.get("IF-ID") or "").strip()
-        stated = (r.get("Provider") or "").strip()
-        oid, module = _owner_llr_module(r, modules)
-        if not iid or is_example(iid) or not stated or not module:
-            continue
-        want = {norm_module(m) for m in module.split(";") if m.strip()}
-        if len(want) != 1:
-            continue  # a multi-module owner derives a SET; the cell IS the fact
-        endpoints = module_endpoints(stated)
-        if endpoints and all(norm_module(e) not in want for e in endpoints):
-            out.append(
-                "IF {} Provider={!r} names no module matching owner {}'s LLR "
-                "Module {!r} — the provider is the endpoint this owner answers "
-                "for, so the two must agree: re-point Owner at the LLR that "
-                "implements this provider, or correct the cell (warn-only, "
-                "never the exit code)".format(iid, stated, oid, module)
-            )
-            continue
-        out.append(
-            "IF {} states Provider={!r}, which owner {}'s LLR Module {!r} "
-            "already derives — a derivable cell is a second spelling of a fact "
-            "that has a home (WI-455): drop it (warn-only, never the exit "
-            "code)".format(iid, stated, oid, module)
-        )
-    return out

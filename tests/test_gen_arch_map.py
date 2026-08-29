@@ -394,19 +394,25 @@ def test_contracts_and_if_edges(tmp_path):
 
     # A module<->module IF row becomes a dotted, labeled edge, distinct from the
     # solid import arrows.
-    if_rows = [{"IF-ID": "IF-003", "Provider": "src/a", "Consumers": "src/b"}]
+    if_rows = [{"IF-ID": "IF-003", "Owner": "src/a", "Consumers": "src/b"}]
     diag = gen_arch_map.build_dependency_diagram([str(src)], if_rows)
     assert "-. IF-003 .->" in diag
 
-    # A row that states NO provider derives one from its owner's design row —
-    # the shape 85 of the kit's 135 rows take since WI-455, and the reason the
-    # LLR module map is passed in beside the seams.
-    derived = [{"IF-ID": "IF-006", "Owner": "LLR-001", "Consumers": "src/b"}]
-    assert "-. IF-006 .->" in gen_arch_map.build_dependency_diagram(
-        [str(src)], derived, {"LLR-001": "src/a.py"}
-    )
-    # ...and with no map to join, it draws nothing rather than guessing.
-    assert "IF-006" not in gen_arch_map.build_dependency_diagram([str(src)], derived)
+    # The arrow runs the way the information does (OI-67): out of the owner on
+    # a consumers row, INTO it on a requestors row — same two modules, the
+    # edge reversed.
+    def _edge(rows):
+        return gen_arch_map._seam_edges(rows, {"a": "A", "b": "B"})
+
+    assert _edge([{"IF-ID": "IF-006", "Owner": "a", "Consumers": "b"}]) == {
+        ("A", "B", "IF-006")
+    }
+    assert _edge([{"IF-ID": "IF-006", "Owner": "a", "Requestors": "b"}]) == {
+        ("B", "A", "IF-006")
+    }
+    # An owner is a PATH now, never a design id: an id-shaped owner is trace's
+    # finding, and here it simply resolves to no node and draws nothing.
+    assert _edge([{"IF-ID": "IF-006", "Owner": "LLR-001", "Consumers": "b"}]) == set()
 
     # A seam to a file / external actor is a How-SW dashboard node, not a code
     # edge — it is skipped here.

@@ -221,21 +221,25 @@ OFFSPINE_COLUMN = {
     # `provider` (optional — absent wherever `owner`→LLR→`module` derives it)
     # and `consumers` (the list the far side always was). Flow is no longer a
     # column: it is provider→consumers, read off the row.
-    # `req_refs` IS THE IF TIER'S OWN REQUIREMENT LINK, and it is here rather
-    # than sharing the spine's `sr_refs` because the two are different
-    # relationships wearing one name (the 2026-08-15 rework, D6). An LLR's
-    # `SR-Refs` names its PARENT — the requirement it decomposes, one tier up.
-    # An IF row's names the requirements that REALIZE OR RELY ON the seam, which
-    # is neither parentage nor a single tier: under the Q1 ruling (2026-08-15a)
-    # a requirement and a design row are both legitimate answers, so the column
-    # is `Req-Refs` and not `SR-Refs`. D-3's one-name-one-meaning rule is what
-    # forces the split rather than permitting it.
-    "req_refs": "Req-Refs",
-    # The Q1 ruling's ONE answerable row (2026-08-15a), id-typed and POLYMORPHIC:
-    # an `SR-###` or an `LLR-###`, resolved against whichever registry its prefix
-    # names. It is not a second `req_refs` — that cell lists everything the seam
-    # realizes or relies on; this one names the row that answers for it.
+    # `provider`, `req_refs`, `signal` and `signal_note` LEFT THE ROW at OI-67
+    # (ruled (a), 2026-08-29): the row is one owner, its consumers and a typed
+    # statement. A legacy carrier still carrying them keys them as themselves
+    # (`KEY.get(col, col)`) and the schema tier names them — the same degrade
+    # `Status`, `Stability` and `ThisProject` took before them.
+    #
+    # `owner` is the providing THING — a module path, a file or directory path,
+    # or an `external:` party, the spelling `consumers` already uses — and no
+    # longer a requirement id. The id-typed owner and the path-typed provider
+    # were one fact in two spellings; the path is the one that survived, and
+    # the spine link is DERIVED from it (the design rows whose `Module` names
+    # it) rather than stated on the row.
     "owner": "Owner",
+    # The closed vocabulary of what crosses (`kitlib.spine.IF_CHANNELS`), and
+    # the optional short alphabet or schema pointer beside it. `channel`, not
+    # `kind`: `kind` is the relationship tier's column, and one name carries
+    # one meaning repo-wide (D-3).
+    "channel": "Channel",
+    "data": "Data",
     # OI-61's sub-question, sanctioned 2026-08-23: the OPTIONAL seam-tier
     # verification pointer. A `TC-###` or an `LLR-###`; empty means "verified in
     # its own right". It is not a second `Verification` column — the IF tier has
@@ -245,13 +249,16 @@ OFFSPINE_COLUMN = {
     # Q3: a constituent names the bundle that carries it. Optional by design —
     # most seams ride nothing, and an empty cell IS "this is not a constituent".
     "carried_by": "CarriedBy",
-    "provider": "Provider",
+    # The far side names the DIRECTION: `requestors` put information into the
+    # surface the owner defines, `consumers` take what it emits — exactly one
+    # per row (OI-67, the owner's own addition).
+    "requestors": "Requestors",
     "consumers": "Consumers",
+    # LEGACY, read and counted until the definition on every row has moved into
+    # its owner's `Contract IF-###:` body; retires with the arming slice.
     "contract": "Contract",
     "interface_from_external": "InterfaceFromExternal",
     "interface_to_external": "InterfaceToExternal",
-    "signal": "Signal",
-    "signal_note": "SignalNote",
     # external (EXT-###/B-##/REL-###, the depth-0 frame; WI-442, sitting-2
     # §1R). Shared columns already declared above (`name`, `notes`) are NOT
     # repeated — one column name, one meaning, repo-wide (D-3).
@@ -557,25 +564,6 @@ def load(path, id_col, keep_examples=True):
         for r in rows
         if keep_examples or not str(r.get(id_col) or "").endswith("-000")
     ]
-
-
-def llr_modules(root):
-    """`{LLR-###: Module cell}` for the design tier under `root` — the join
-    every IF seam reader needs since WI-455 shed the derivable provider cell.
-
-    ONE HOME rather than seven: `trace`, `trace_text`, `check_trajectory`,
-    `traj_views`, `gen_arch_map` and `gen_components` all resolve a seam's
-    provider through `kitlib.spine.seam_provider`, which takes this map. `{}`
-    when the registry is absent, so a repo with no design tier reads every
-    provider off the row's own cell and nothing crashes."""
-    import pathlib
-
-    rel = "docs/requirements/low-level-requirements.toml"
-    return {
-        (r.get("LLR-ID") or "").strip(): (r.get("Module") or "").strip()
-        for r in load(pathlib.Path(root) / rel, "LLR-ID")
-        if (r.get("LLR-ID") or "").strip()
-    }
 
 
 def columns(path, id_col):

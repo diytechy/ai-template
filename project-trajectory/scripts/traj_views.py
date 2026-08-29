@@ -483,14 +483,17 @@ def sw_graph(root, mods):
     module_norm = {ct._norm_module(m["name"]): m["name"] for m in mods}
     nodes, edges = {}, []
     for r in ifs:
-        if not r["provider"]:
-            continue  # a published-medium row states no provider; no arrow to draw
-        pk, pkey, pdisp = _sw_node(r["provider"], module_norm)
-        nodes.setdefault(pkey, {"display": pdisp, "kind": pk})
-        for consumer in r["consumers"]:
-            ck, ckey, cdisp = _sw_node(consumer, module_norm)
-            nodes.setdefault(ckey, {"display": cdisp, "kind": ck})
-            edges.append((pkey, ckey, r["id"]))  # always producer -> consumer
+        if not r["owner"]:
+            continue  # an ownerless row is the required-field rule's finding
+        ok, okey, odisp = _sw_node(r["owner"], module_norm)
+        nodes.setdefault(okey, {"display": odisp, "kind": ok})
+        inbound = bool(r["requestors"])
+        for endpoint in r["far"]:
+            fk, fkey, fdisp = _sw_node(endpoint, module_norm)
+            nodes.setdefault(fkey, {"display": fdisp, "kind": fk})
+            # The arrow runs the way the information does: into the owner on a
+            # requestors row, out of it on a consumers row.
+            edges.append((fkey, okey, r["id"]) if inbound else (okey, fkey, r["id"]))
     if not nodes:
         return None
 
@@ -621,13 +624,15 @@ def _layer_edges(ifs, inv, block_of, in_scope, allow_boundary):
     becomes one deduped wire."""
     agg, externals = {}, {}
     for r in ifs:
-        if not r["provider"]:
-            continue  # a published-medium row states no provider; no wire to run
-        producer = _sw_node(r["provider"], inv)
-        for consumer in r["consumers"]:
+        if not r["owner"]:
+            continue  # an ownerless row is the required-field rule's finding
+        owner_node = _sw_node(r["owner"], inv)
+        inbound = bool(r["requestors"])
+        for endpoint in r["far"]:
+            far_node = _sw_node(endpoint, inv)
             blocks = _wire_blocks(
-                producer,
-                _sw_node(consumer, inv),
+                far_node if inbound else owner_node,
+                owner_node if inbound else far_node,
                 block_of,
                 in_scope,
                 allow_boundary,

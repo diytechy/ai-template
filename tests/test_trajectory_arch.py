@@ -164,9 +164,10 @@ IF_HDR = (
 # former sibling `test_spec_interfaces_experimental_needs_rationale` was
 # replaced at WI-442 by the test that pins that arm's REMOVAL.)
 #
-# `Status` is DROPPED here, since it retired with the ruling: a body that set
-# `Status=Proposed` is translated to `approval = "draft"`, which is the rung
-# that value became once WI-442 replaced `Stability` with `Approval`.
+# The two maturity columns these bodies carry collapse into the ONE the tier
+# has: a body that reads `Stability=draft`, or `Status=Proposed` with no
+# `Stability`, translates to `status = "Drafted"`; anything else to
+# `status = "Approved"` (OI-67 put the spine's own two words on the row).
 def _csv_body_to_toml(header, table, body):
     import csv as _csv
     import io as _io
@@ -175,12 +176,15 @@ def _csv_body_to_toml(header, table, body):
     # carrier holds); the translation applies the rename the registry took —
     # `Direction` DROPPED, `ThisProject` -> `provider`, `Counterpart` ->
     # `consumers` (a list, emitted below).
+    #
+    # OI-67 moved the same three cells again: `provider` became `owner` (one
+    # spelling for both endpoints, read verbatim), `contract` became the typed
+    # `data`, and `Req-Refs` is DROPPED because the seam reaches the spine
+    # through its owner rather than by stating a ref.
     keys = {
-        "ThisProject": "provider",
-        "Contract": "contract",
-        "Req-Refs": "req_refs",
+        "ThisProject": "owner",
+        "Contract": "data",
         "Version": "version",
-        "Stability": "approval",
         "Component": "component",
         "Notes": "notes",
         "Name": "name",
@@ -203,15 +207,19 @@ def _csv_body_to_toml(header, table, body):
         # `approved`, so re-keying the rule on `approval == "approved"` passed
         # the whole file). A fixture translator that rewrites the cell under
         # test is a test that cannot fail.
-        if not (row.get("Stability") or "").strip():
-            row["Stability"] = (
-                "draft"
-                if (row.get("Status") or "").strip().lower() == "proposed"
-                else "approved"
-            )
+        maturity = (row.get("Stability") or "").strip() or (
+            "draft"
+            if (row.get("Status") or "").strip().lower() == "proposed"
+            else "approved"
+        )
         out.append("[{}.{}]".format(table, rid))
         if table == "interface":
-            out.append('signal = "discrete"')
+            # `channel` is REQUIRED and closed since OI-67, and the bodies here
+            # state none: `call` is the honest default for a module<->module
+            # seam, which is what every fixture in this module declares. The
+            # maturity lands on `status` in the spine's own two words — the
+            # column these bodies spell `Stability`, kept caller-first above.
+            out.append('channel = "call"')
             consumers = [
                 c.strip()
                 for c in (row.get("Counterpart") or "").split(";")
@@ -220,11 +228,18 @@ def _csv_body_to_toml(header, table, body):
             out.append(
                 "consumers = [{}]".format(", ".join('"%s"' % c for c in consumers))
             )
+            out.append(
+                'status = "{}"'.format(
+                    "Drafted"
+                    if maturity.lower() in ("draft", "drafted", "proposed")
+                    else "Approved"
+                )
+            )
         for col, key in keys.items():
             value = (row.get(col) or "").strip()
             if not value:
                 continue
-            if key in ("req_refs", "superseded_by", "part_of"):
+            if key in ("superseded_by", "part_of"):
                 items = ", ".join('"{}"'.format(t) for t in value.split(";") if t)
                 out.append("{} = [{}]".format(key, items))
             else:

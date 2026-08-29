@@ -807,12 +807,13 @@ _MODULE_EXTS = _kitspine.MODULE_EXTS
 _norm_module = _kitspine.norm_module
 
 
-def load_ifs(rows, llr_modules=None):
+def load_ifs(rows):
     """Real (non-`-000`) IF-### interface rows as dicts, each already RESOLVED
-    into its two sides — `provider` (one endpoint, possibly `''`) and
-    `consumers` (a list). Lenient — `trace.py` owns IF integrity (malformed ids,
-    SR-Ref resolution); this loader only feeds the warn-first coverage views, so
-    a malformed id is simply skipped here.
+    into its two sides — `owner` (one endpoint, possibly `''`) and the far side
+    as `requestors` / `consumers` (lists; exactly one is meant to be set — the
+    key name is the direction) plus `far`, whichever of the two it is. Lenient — `trace.py` owns IF integrity (malformed ids, owner
+    shape); this loader only feeds the warn-first coverage views, so a
+    malformed id is simply skipped here.
 
     `approval` is the tier's ONE maturity field. It replaced `stability` at
     WI-442, which had itself replaced `status` at WI-443 — the same defect twice
@@ -821,9 +822,8 @@ def load_ifs(rows, llr_modules=None):
     (a)): flow is no longer a column but the shape of the row, so RESOLUTION
     happens here, once, and every view downstream (this module's connectivity
     credit and declared pairs, `traj_views`' seam graphs) reads the same two
-    keys instead of re-deriving the orientation from a flag. `llr_modules` is
-    the design tier's `{id: Module}` — pass it, or a row whose provider is
-    derivable reads as having none."""
+    keys instead of re-deriving the orientation from a flag. Since OI-67 the
+    owner side is the row's own `owner` cell, one spelling, nothing derived."""
     out = []
     for r in rows:
         iid = (r.get("IF-ID") or "").strip()
@@ -832,8 +832,10 @@ def load_ifs(rows, llr_modules=None):
         out.append(
             {
                 "id": iid,
-                "provider": _kitspine.seam_provider(r, llr_modules or {}),
+                "owner": _kitspine.seam_owner(r),
+                "requestors": _kitspine.seam_requestors(r),
                 "consumers": _kitspine.seam_consumers(r),
+                "far": _kitspine.seam_far_side(r)[1],
                 "approval": (r.get("Status") or "").strip().lower(),
                 "notes": (r.get("Notes") or "").strip().lower(),
             }
@@ -842,12 +844,8 @@ def load_ifs(rows, llr_modules=None):
 
 
 def load_seams(root):
-    """`load_ifs` over the live registry with the design tier's modules joined —
-    the one call every seam view makes, so no consumer forgets the join and
-    silently loses the derivable providers."""
-    return load_ifs(
-        spine_carrier.load(root / IF_CSV, "IF-ID"), spine_carrier.llr_modules(root)
-    )
+    """`load_ifs` over the live registry — the one call every seam view makes."""
+    return load_ifs(spine_carrier.load(root / IF_CSV, "IF-ID"))
 
 
 def _contracts_grammar_findings(root):
@@ -950,8 +948,8 @@ def interface_findings(root):
     endpoints, provides, consumes = set(), set(), set()
     sources, sinks = set(), set()
     for r in ifs:
-        producer = _norm_module(r["provider"])
-        consumer_ns = {_norm_module(c) for c in r["consumers"]} & set(inv_norm)
+        producer = _norm_module(r["owner"])
+        consumer_ns = {_norm_module(c) for c in r["far"]} & set(inv_norm)
         endpoints.update(consumer_ns)
         if producer in inv_norm:
             endpoints.add(producer)
@@ -959,14 +957,14 @@ def interface_findings(root):
         # row's own side a deliberate source (consumes nothing) / sink (provides
         # nothing), so it doesn't breed a boilerplate opposite-facing row. Since
         # WI-455 the marked side is named by the ROLE rather than by a column:
-        # `source` marks the PROVIDER, `sink` marks the CONSUMERS — which is what
+        # `source` marks the OWNER, `sink` marks the CONSUMERS — which is what
         # the two words meant when both were read off `ThisProject`.
         marker = r["notes"].split()
         first = marker[0].rstrip(":;,.") if marker else ""
         if first == "source":
             sources.add(producer)
         elif first == "sink":
-            sinks.update(_norm_module(c) for c in r["consumers"])
+            sinks.update(_norm_module(c) for c in r["far"])
         # Producer -> consumer credit, read off the resolved sides.
         if producer in inv_norm:
             provides.add(producer)
@@ -1716,7 +1714,7 @@ def _declared_seam_pairs(root):
     endpoints."""
     covered = set()
     for r in load_seams(root):
-        ends = _norm_endpoints([r["provider"]] + r["consumers"])
+        ends = _norm_endpoints([r["owner"]] + r["far"])
         for a in ends:
             for b in ends:
                 if a != b:

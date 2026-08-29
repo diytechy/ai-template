@@ -446,15 +446,19 @@ def _seam_lines(root, llrs):
         if (r.get("Module") or "").strip()
     }
     return [
-        "- {} {} -> {}: {}".format(
+        "- {} {} {} {}: {}".format(
             i.get("IF-ID"),
-            i.get("Provider") or "(derived from owner)",
-            i.get("Consumers"),
-            _clip(i.get("Contract"), 110),
+            i.get("Owner"),
+            "<-" if i.get("Requestors") else "->",
+            i.get("Requestors") or i.get("Consumers"),
+            "{} {}".format(i.get("Channel"), _clip(i.get("Data"), 110)),
         )
         for i in spine_carrier.load(root / "docs/requirements/interfaces.toml", "IF-ID")
-        if Path(i.get("Provider") or "").name in stems
-        or any(Path(c).name in stems for c in (i.get("Consumers") or "").split(";"))
+        if Path(i.get("Owner") or "").name in stems
+        or any(
+            Path(c).name in stems
+            for c in (i.get("Requestors") or i.get("Consumers") or "").split(";")
+        )
     ]
 
 

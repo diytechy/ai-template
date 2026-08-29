@@ -232,6 +232,18 @@ tree is clean under the armed gate and a planted violation fires.
 7. **Bundles split OR carry**, per row, not by rule (§1, slice 4). Beat:
    always split (213 rows, the spine registries as ten seams nobody pins
    separately) and always carry (hides the two-way rows inside carriers).
+8. **The far side names the direction** (`requestors` | `consumers`, exactly
+   one) — the owner's proposal. Beat: one far-side list with the direction
+   implied by `channel` (the shape slice 1 first built; it had no cell for an
+   owner that receives what it defines). Seeded from the channel — `cli`,
+   `env`, `call` name requestors — and confirmed row by row in slice 3.
+9. **Header-first for parallel work** (slice 5, PROCESS.md §8): a WI that
+   mints a module mints its seam rows and the module's stub header with the
+   `Contract IF-###:` bodies BEFORE any code, so workers coding against it
+   read the same home the finished module will have. The "declared, not
+   stated" line is the signal that a definition is not written yet. Beat:
+   carrying the expected inputs/outputs in the WI spec (a second copy that
+   drifts at close).
 
 ## 5. Measured baseline (2026-08-29, before slice 1)
 

@@ -265,8 +265,8 @@ def test_the_off_spine_living_registries_get_the_same_citation_frame_sweep():
 
 
 def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
-    # The IF tier's `Notes`/`SignalNote`, the pocket the Contract-only rule could
-    # not see: 216 provenance tokens over 76 rows, 118 of them in `Notes`.
+    # The IF tier's REASON cells, the pocket the Contract-only rule could not
+    # see: 216 provenance tokens over 76 rows, 118 of them in `Notes`.
     from conftest import load_script
 
     trace = load_script("trace")
@@ -277,10 +277,15 @@ def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
 
     assert flags({"Notes": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
     assert flags({"Notes": "One home is an owner ruling (2026-08-10, repo-lock D-6)."})
-    assert flags({"SignalNote": "derived at the WI-443 conversion: unbounded."})
-    # The Contract cell is NOT this arm's: one token, one finding, one home.
-    assert not flags({"Contract": "consumes load(path) -> rows (WI-443)."})
-    # A `Notes` cell ARGUING is that cell working correctly — the Contract arm's
+    # `SignalNote` RETIRED WITH ITS COLUMN at OI-67 (ruled (a), 2026-08-29), so
+    # this arm no longer sweeps it — a rule ranging over a cell no row may carry
+    # is a rule reporting about nothing. Pinned rather than deleted: the cell
+    # leaving the sweep is the change, and a silent one would be indistinguishable
+    # from the detector losing an arm.
+    assert not flags({"SignalNote": "derived at the WI-443 conversion: unbounded."})
+    # The `Data` cell is NOT this arm's: one token, one finding, one home.
+    assert not flags({"Data": "consumes load(path) -> rows (WI-443)."})
+    # A `Notes` cell ARGUING is that cell working correctly — the `Data` arm's
     # connective and length rules must not follow it here.
     assert not flags({"Notes": "Declared because a copy diverges silently."})
     assert not flags({"Notes": "x" * 900})
@@ -320,7 +325,7 @@ def test_the_if_rationale_cell_is_swept_too_since_wi523():
     assert flags({"Rationale": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
     assert flags({"Rationale": "Split at the WI-443 conversion."})
     # And the cell doing its job stays silent: `Rationale` is where the argument
-    # the Contract cell may not hold is SUPPOSED to live, so arguing, connectives
+    # the `Data` cell may not hold is SUPPOSED to live, so arguing, connectives
     # and length must not fire here.
     assert not flags({"Rationale": "Declared because a copy diverges silently."})
     assert not flags({"Rationale": "Kept rather than retired; the ruling stands."})
@@ -1302,158 +1307,15 @@ def test_the_two_tiering_detectors_warn_but_never_gate():
         assert trace.exit_code(loud, ns()) == 0
 
 
-# --- Re-tier v2 R4, EXECUTED: no row states a provider its owner derives ------
-# Owner ruling 2026-08-15 (log `2026-08-15p`) staged it; `OI-60` (a) ordered it
-# behind the counterpart-to-consumers rename and WI-455 ran both (2026-08-23).
-# `Provider` is now ABSENT wherever `owner` -> LLR -> `Module` derives it, and
-# this advisory is what holds that state: a row that states one anyway is
-# reported as redundant, and one that CONTRADICTS its owner as a disagreement.
-
-_LLR = {"LLR-014": "project-trajectory/scripts/check_perf.py"}
-
-
-def _if_row(**over):
-    row = {
-        "IF-ID": "IF-101",
-        "Provider": "scripts/check_perf",
-        "Consumers": "scripts/check",
-        "Owner": "LLR-014",
-    }
-    row.update(over)
-    return row
-
-
-def test_a_provider_that_disagrees_with_its_owner_llrs_module_warns():
-    from conftest import load_script
-
-    trace = load_script("trace")
-    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
-
-    # The owner answers for the PROVIDER side, and this row names a different
-    # module than the owner LLR implements — the derivation the shed rests on
-    # would silently change the row's meaning.
-    fires = trace.if_provider_advisories(
-        [_if_row(Provider="scripts/spine_rules")], llrs
-    )
-    assert len(fires) == 1
-    assert "IF-101" in fires[0] and "Provider='scripts/spine_rules'" in fires[0]
-    assert "LLR-014" in fires[0] and "check_perf.py" in fires[0]
-    assert "the two must agree" in fires[0]
-    assert "warn-only, never the exit code" in fires[0]
-
-    # AGREEMENT IS NOT SILENT — IT IS THE OTHER FINDING. The cell restates what
-    # the owner already derives, which is exactly the cell WI-455 removed, so
-    # the rule asks for it to go rather than nodding at it. Both spellings read
-    # as one module (the arch-map short form and the full repo path with its
-    # extension), or every correctly-filed row would report a disagreement.
-    for spelling in ("scripts/check_perf", "project-trajectory/scripts/check_perf.py"):
-        fires = trace.if_provider_advisories([_if_row(Provider=spelling)], llrs)
-        assert len(fires) == 1 and "already derives" in fires[0], spelling
-        assert "drop it" in fires[0]
-
-    # A ROW THAT STATES NO PROVIDER IS THE NORMAL SHAPE and is silent — that is
-    # what 85 of the kit's 135 rows look like after the shed.
-    assert trace.if_provider_advisories([_if_row(Provider="")], llrs) == []
-
-
-def test_a_bundle_moduled_owner_keeps_its_provider_cell():
-    from conftest import load_script
-
-    trace = load_script("trace")
-    # A MULTI-MODULE OWNER DERIVES A SET, NOT THE FACT (the live IF-088 /
-    # IF-117 / IF-131 / IF-132 / IF-141 shape), so those rows KEEP the cell and
-    # this rule must not ask them to drop it — nor read the bundle as a
-    # disagreement, which is what an unsplit `norm_module` over the whole cell
-    # would do.
-    llrs = [
-        {
-            "LLR-ID": "LLR-014",
-            "Module": "project-trajectory/scripts/check_perf.py;"
-            "project-trajectory/scripts/spine_rules.py",
-        }
-    ]
-    assert trace.if_provider_advisories([_if_row()], llrs) == []
-    assert trace.if_provider_advisories([_if_row(Provider="scripts/trace")], llrs) == []
-
-
-def test_the_derivability_advisory_ranges_over_llr_owned_module_endpoints_only():
-    from conftest import load_script
-
-    trace = load_script("trace")
-    llrs = [{"LLR-ID": k, "Module": v} for k, v in _LLR.items()]
-
-    # An SR owner names no module, so nothing is derivable and the cell is the
-    # only record of the provider — the 24 requirement-owned rows keep it.
-    assert (
-        trace.if_provider_advisories(
-            [_if_row(Owner="SR-014", Provider="scripts/spine_rules")], llrs
-        )
-        == []
-    )
-    # A dangling owner is `if_ownership_advisories`' finding ("Owner references
-    # unknown LLR-999"), and reporting it twice under two headings would make one
-    # defect look like two.
-    assert (
-        trace.if_provider_advisories(
-            [_if_row(Owner="LLR-999", Provider="scripts/spine_rules")], llrs
-        )
-        == []
-    )
-    # NON-MODULE PROVIDERS ARE NOT A DISAGREEMENT — a file medium, a directory
-    # or a named external party is a legitimate provider that no design row can
-    # ever be, so the module comparison does not range over them. They read as
-    # the redundancy arm's "no module-shaped endpoint to compare", which is the
-    # quiet answer, not an accusation.
-    for endpoint in (
-        "docs/requirements/performance-budgets.csv",
-        "docs/stage",
-        "external:downstream adopter",
-        "agent CLI",
-        ".github/workflows/check.yml",
-    ):
-        fires = trace.if_provider_advisories([_if_row(Provider=endpoint)], llrs)
-        assert all("names no module matching" not in f for f in fires), endpoint
-    # An owner LLR with no Module cell is the required-field rule's finding.
-    assert (
-        trace.if_provider_advisories(
-            [_if_row(Provider="scripts/spine_rules")], [{"LLR-ID": "LLR-014"}]
-        )
-        == []
-    )
-    # A `-000` example row is a blank form, not a seam.
-    assert (
-        trace.if_provider_advisories(
-            [_if_row(**{"IF-ID": "IF-000", "Provider": "scripts/spine_rules"})], llrs
-        )
-        == []
-    )
-
-
-def test_the_derivability_advisory_warns_but_never_gates():
-    # The same never-gates half the S2 detectors carry, for the same reason: the
-    # live registry trips it today, and clearing it means re-pointing owners across
-    # the corpus — the campaign's schedule, not the checker's.
-    import argparse
-
-    from conftest import load_script
-
-    trace = load_script("trace")
-
-    def ns(strict=False, strict_integrity=False):
-        return argparse.Namespace(strict=strict, strict_integrity=strict_integrity)
-
-    loud = _findings_stub(trace, if_provider_advis=["IF-101 disagrees with its owner"])
-    assert trace.exit_code(loud, ns(strict=True)) == 0
-    assert trace.exit_code(loud, ns(strict_integrity=True)) == 0
-    assert trace.exit_code(loud, ns()) == 0
-
-
 # --- OI-61 ruled (d): the named-symbol / named-path tripwire ------------------
-# The four form rules on a `Contract` cell cannot see CONTENT, which is how a
-# live row named the deleted `SCHED_*` classification constants for weeks while
-# the presence-only module back-link reported 27/27 complete over it. This rule
+# The four form rules on the cell cannot see CONTENT, which is how a live row
+# named the deleted `SCHED_*` classification constants for weeks while the
+# presence-only module back-link reported 27/27 complete over it. This rule
 # reads the one thing a grammar honestly can: a token that CLAIMS to be a symbol
-# or a path must resolve.
+# or a path must resolve. All five moved from `Contract` to `Data` unchanged at
+# OI-67 (ruled (a), 2026-08-29) — the cell they police is the row's typed
+# statement of what crosses, and the prose definition they were written for now
+# lives in the owner's `Contract IF-###:` body.
 
 
 def _surface_root(tmp_path, body):
@@ -1482,13 +1344,11 @@ _LIVE_MODULE = (
 )
 
 
-def _contract_advisories(trace, root, contract):
-    return trace.if_contract_advisories(
-        [{"IF-ID": "IF-101", "Contract": contract}], root
-    )
+def _data_advisories(trace, root, data):
+    return trace.if_data_advisories([{"IF-ID": "IF-101", "Data": data}], root)
 
 
-def test_a_contract_naming_a_deleted_symbol_family_is_reported(tmp_path):
+def test_a_data_cell_naming_a_deleted_symbol_family_is_reported(tmp_path):
     # THE ACCEPTANCE CASE, and it is the live exhibit's own shape: `SCHED_*` is
     # a FAMILY, so a rule that only read whole names would have missed the very
     # defect it was ruled for. Driven both ways round on one tree — the family
@@ -1498,12 +1358,12 @@ def test_a_contract_naming_a_deleted_symbol_family_is_reported(tmp_path):
     trace = load_script("trace")
 
     root = _surface_root(tmp_path, _LIVE_MODULE)
-    assert _contract_advisories(trace, root, "emits the SCHED_* states") == []
+    assert _data_advisories(trace, root, "emits the SCHED_* states") == []
 
     (root / "src" / "widget.py").write_text(
         _LIVE_MODULE.replace("SCHED_READY = 'ready'\n", ""), encoding="utf-8"
     )
-    fires = _contract_advisories(trace, root, "emits the SCHED_* states")
+    fires = _data_advisories(trace, root, "emits the SCHED_* states")
     assert len(fires) == 1
     assert "IF-101" in fires[0] and "SCHED_*" in fires[0]
     assert "no such symbol exists" in fires[0]
@@ -1524,7 +1384,7 @@ def test_the_tripwire_reads_calls_constants_and_dotted_names(tmp_path):
         "Router.route picks the pair",
         "widget.harvest is the entry point",
     ):
-        assert _contract_advisories(trace, root, good) == [], good
+        assert _data_advisories(trace, root, good) == [], good
 
     # And every shape that does NOT resolve is named individually.
     for dead, token in (
@@ -1532,7 +1392,7 @@ def test_the_tripwire_reads_calls_constants_and_dotted_names(tmp_path):
         ("DEAD_CONSTANT bounds the run", "DEAD_CONSTANT"),
         ("Router.gone picks the pair", "Router.gone"),
     ):
-        fires = _contract_advisories(trace, root, dead)
+        fires = _data_advisories(trace, root, dead)
         assert len(fires) == 1 and token in fires[0], dead
 
 
@@ -1553,7 +1413,7 @@ def test_the_tripwire_declines_to_judge_names_that_are_not_ours(tmp_path):
         "drives the claim/work/merge cycle",
         "delivered as a library plus CLI at widget.py",
     ):
-        assert _contract_advisories(trace, root, benign) == [], benign
+        assert _data_advisories(trace, root, benign) == [], benign
 
 
 def test_a_named_path_must_exist_unless_the_repo_declares_its_absence(tmp_path):
@@ -1564,8 +1424,8 @@ def test_a_named_path_must_exist_unless_the_repo_declares_its_absence(tmp_path):
 
     # A path whose first segment is a real directory is judged; sentence
     # punctuation is not part of it.
-    assert _contract_advisories(trace, root, "writes docs/stack.ini.") == []
-    fires = _contract_advisories(trace, root, "writes docs/report.md.")
+    assert _data_advisories(trace, root, "writes docs/stack.ini.") == []
+    fires = _data_advisories(trace, root, "writes docs/report.md.")
     assert len(fires) == 1 and "docs/report.md" in fires[0]
     assert "nothing at that path exists" in fires[0]
 
@@ -1574,12 +1434,12 @@ def test_a_named_path_must_exist_unless_the_repo_declares_its_absence(tmp_path):
     (root / "docs" / "declared-absences").write_text(
         "docs/report.md — the layer is off here\n", encoding="utf-8"
     )
-    assert _contract_advisories(trace, root, "writes docs/report.md.") == []
+    assert _data_advisories(trace, root, "writes docs/report.md.") == []
 
     # A token whose top-level directory does not exist at all is NOT judged: the
     # one test that separates a path from an English slash needs no extension
     # list, and this is the cost it pays, stated rather than hidden.
-    assert _contract_advisories(trace, root, "writes nowhere/at/all.md") == []
+    assert _data_advisories(trace, root, "writes nowhere/at/all.md") == []
 
 
 def test_the_tripwire_is_vacuous_with_no_source_surface(tmp_path):
@@ -1590,16 +1450,32 @@ def test_the_tripwire_is_vacuous_with_no_source_surface(tmp_path):
 
     trace = load_script("trace")
 
-    assert _contract_advisories(trace, None, "emits the SCHED_* states") == []
+    assert _data_advisories(trace, None, "emits the SCHED_* states") == []
 
     root = _surface_root(tmp_path, _LIVE_MODULE)
     (root / "docs" / "stack.ini").write_text(
         "[paths]\nsrc = src\n\n[arch-map]\nmode = files\n", encoding="utf-8"
     )
-    assert _contract_advisories(trace, root, "emits the SCHED_* states") == []
+    assert _data_advisories(trace, root, "emits the SCHED_* states") == []
 
 
 # --- OI-61's sub-question: the `VerifiedBy` seam-tier pointer -----------------
+
+
+def _if_row(**over):
+    """One IF row in the shape OI-67 ruled (a) left: an owner that is the
+    providing THING, its consumers, and nothing derivable beside them.
+
+    It used to seed the provider-derivability fixtures too; those retired with
+    the rule, and what survives is the one caller below."""
+    row = {
+        "IF-ID": "IF-101",
+        "Owner": "scripts/check_perf",
+        "Consumers": "scripts/check",
+        "Channel": "call",
+    }
+    row.update(over)
+    return row
 
 
 def test_verified_by_is_optional_and_its_pointer_must_resolve():

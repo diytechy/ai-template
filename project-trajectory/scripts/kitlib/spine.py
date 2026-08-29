@@ -186,40 +186,57 @@ def seam_endpoints(cell):
     return [e.strip() for e in (cell or "").split(";") if e.strip()]
 
 
-def seam_provider(row, llr_modules):
-    """An IF row's PROVIDER-side endpoint — the one home every seam reader
-    joins on (WI-455, OI-60 ruled (a)).
+# The closed `channel` vocabulary (OI-67 ruled (a)): what crosses the seam,
+# typed. `exit-code` and `env` are the finite-alphabet kinds; the rest are
+# unbounded. A dial read from a config file is `file` (the medium is the
+# file; `data` names the key); a source tree walked by AST is `file`.
+IF_CHANNELS = frozenset(
+    {"cli", "exit-code", "stdout", "file", "call", "env", "git", "bytes"}
+)
 
-    The registry states the provider only where it is NOT derivable: the cell
-    is present on a row whose `Owner` is a requirement (a requirement names no
-    module) or whose owner LLR names SEVERAL modules (which derives a SET, not
-    the fact). Everywhere else the provider IS the owner design row's single
-    `Module`, and the cell is absent because a derivable cell is a second
-    spelling of a fact that already has a home.
 
-    `''` when the row records no provider and derives none — the legitimate
-    shape of a published-medium row whose far side is its reader SET (the seam
-    relates each reader to a file the registry names in `Contract`, and no
-    endpoint cell ever claimed the file).
+def seam_owner(row):
+    """An IF row's OWNER-side endpoint — the providing thing, read off the cell
+    (OI-67 ruled (a), 2026-08-29).
+
+    ONE SPELLING, the same one `consumers` uses: a module path, a file or
+    directory path, or an `external:` party. Nothing is derived — the
+    `owner` -> LLR -> `Module` join that `seam_provider` ran until this ruling
+    retired with the id-typed owner it read, because a design row's module IS
+    the providing thing and a derivable cell was a second spelling of it.
 
     Contract:
       Inputs:  row: dict — one IF row under today's column names
-               llr_modules: {llr_id: module_cell} — the design tier's modules
-      Outputs: str — the provider endpoint, or ''
+      Outputs: str — the owner endpoint, or '' when the cell is absent (the
+               required-field rule's finding, never this reader's)
     """
-    stated = (row.get("Provider") or "").strip()
-    if stated:
-        return stated
-    owners = refs(row.get("Owner"))
-    if len(owners) != 1 or not owners[0].startswith("LLR-"):
-        return ""
-    modules = seam_endpoints(llr_modules.get(owners[0], ""))
-    return modules[0] if len(modules) == 1 else ""
+    return (row.get("Owner") or "").strip()
+
+
+def seam_requestors(row):
+    """The sides that put information INTO the surface the owner defines —
+    they call the function, invoke the CLI, set the env var, write the file."""
+    return seam_endpoints(row.get("Requestors"))
 
 
 def seam_consumers(row):
-    """An IF row's consuming side, as a list of endpoints."""
+    """The sides that take what the owner emits — they read the file, the exit
+    code, the stdout."""
     return seam_endpoints(row.get("Consumers"))
+
+
+def seam_far_side(row):
+    """`(inbound, endpoints)` — the row's far side and which way the
+    information runs. THE KEY NAME IS THE DIRECTION: a row names `requestors`
+    (information flows far side -> owner) or `consumers` (owner -> far side),
+    exactly one, so one row is one direction by construction rather than by
+    discipline. A row naming both or neither is `trace.py`'s finding; this
+    reader answers the requestors first so a malformed row still draws one
+    way rather than none."""
+    requestors = seam_requestors(row)
+    if requestors:
+        return True, requestors
+    return False, seam_consumers(row)
 
 
 def is_example(rid):
@@ -488,19 +505,22 @@ OFFSPINE_KEYS = {
     # below), `this_project`/`counterpart` are GONE, and the seam's two sides
     # are `provider` (OPTIONAL — omitted wherever `owner`→LLR→`module` derives
     # it uniquely) and `consumers` (a LIST, required).
+    # THE ROW IS ONE OWNER, ITS CONSUMERS AND A TYPED STATEMENT (OI-67 ruled
+    # (a), 2026-08-29): `owner` is the providing THING — a module path, a file
+    # or directory path, or an `external:` party, the same spelling `consumers`
+    # uses — never a requirement id; `channel` is the closed vocabulary of what
+    # crosses; `data` the optional short alphabet. `provider`, `req_refs`,
+    # `signal` and `signal_note` LEFT the row at that ruling. `contract` is a
+    # LEGACY cell, read and counted until every definition has moved into its
+    # owner's `Contract IF-###:` body; the arming slice retires it.
     "IF-ID": (
-        "provider",
-        "consumers",
-        "contract",
-        "signal",
-        "signal_note",
-        "rationale",
-        # RENAMED from `sr_refs` at the 2026-08-15 rework (D6): the spine's
-        # `sr_refs` names a row's PARENT requirement, this one names the
-        # requirements a seam realizes or relies on, and one name for two
-        # relationships is the defect D-3 forbids.
-        "req_refs",
         "owner",
+        "requestors",
+        "consumers",
+        "channel",
+        "data",
+        "contract",
+        "rationale",
         # OPTIONAL, and its EMPTINESS is the ordinary answer: "this seam is
         # verified in its own right". Filled, it names the parent whose tests
         # cover a low-level seam — a `TC-###` or an `LLR-###` — which is the

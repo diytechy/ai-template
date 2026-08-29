@@ -143,7 +143,7 @@ def module_components(llrs):
     return out
 
 
-def seam_placement(row, mod_comps, llr_modules=None):
+def seam_placement(row, mod_comps):
     """One IF row as `(placed, internal)` — the components it touches, and the
     subset it is INTERNAL to.
 
@@ -153,15 +153,15 @@ def seam_placement(row, mod_comps, llr_modules=None):
     inside). Empty `placed` means the row is unplaceable — reported, never
     dropped.
 
-    The two sides are the provider and the consumers (WI-455). The provider is
-    resolved through `llr_modules` when the row states none, so a row whose
-    provider is derivable is placed exactly as it was when the cell was there."""
-    provider = _kitspine.seam_provider(row, llr_modules or {})
+    The two sides are the owner and its far side — requestors or consumers,
+    whichever the row names (OI-67): both read off the row's own cells, in one
+    spelling, with nothing derived. Placement is direction-blind."""
+    owner = _kitspine.seam_owner(row)
     ends = [
-        set(mod_comps.get(trace_text.norm_module(provider), ())),
+        set(mod_comps.get(trace_text.norm_module(owner), ())),
         {
             cid
-            for consumer in _kitspine.seam_consumers(row)
+            for consumer in _kitspine.seam_far_side(row)[1]
             for cid in mod_comps.get(trace_text.norm_module(consumer), ())
         },
     ]
@@ -209,11 +209,11 @@ def _add_members(view, srs, llrs):
     return sr_components
 
 
-def _add_seams(view, ifs, mod_comps, llr_modules):
+def _add_seams(view, ifs, mod_comps):
     """Fold the seam tier into `view` and return the ids it could not place."""
     unplaced = []
     for row in ifs:
-        placed, internal = seam_placement(row, mod_comps, llr_modules)
+        placed, internal = seam_placement(row, mod_comps)
         placed &= set(view)
         if not placed:
             unplaced.append(row["IF-ID"])
@@ -230,15 +230,7 @@ def build(cmps, srs, llrs, ifs):
     back out of a string."""
     view = {r["CMP-ID"]: _blank((r.get("Name") or "").strip()) for r in cmps}
     sr_components = _add_members(view, srs, llrs)
-    unplaced_seams = _add_seams(
-        view,
-        ifs,
-        module_components(llrs),
-        {
-            (r.get("LLR-ID") or "").strip(): (r.get("Module") or "").strip()
-            for r in llrs
-        },
-    )
+    unplaced_seams = _add_seams(view, ifs, module_components(llrs))
     unplaced_srs = sorted(r["SR-ID"] for r in srs if r["SR-ID"] not in sr_components)
     return view, {"sr_refs": unplaced_srs, "seam_refs": sorted(unplaced_seams)}
 

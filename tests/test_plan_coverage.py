@@ -38,14 +38,11 @@ PLAN_B = """| Plan-WI | Title | Covers | Interfaces | Predecessors |
 
 IFS = (
     "[interface.IF-001]\n"
-    'direction = "Provides"\n'
-    'this_project = "scripts/a"\n'
-    'counterpart = "scripts/b"\n'
-    'contract = "contract"\n'
-    'signal = "discrete"\n'
-    'sr_refs = ["SR-001"]\n'
+    'owner = "scripts/a"\n'
+    'consumers = ["scripts/b"]\n'
+    'channel = "call"\n'
     'version = "v1"\n'
-    'approval = "approved"\n'
+    'status = "Approved"\n'
 )
 SRS = "SR-ID,Title,Requirement\nSR-001,One,shall\n"
 

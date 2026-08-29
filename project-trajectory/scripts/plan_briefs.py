@@ -151,9 +151,10 @@ IF_CSV = "docs/requirements/interfaces.toml"
 IF_SURFACE_COLUMNS = (
     "IF-ID",
     "Owner",
-    "Provider",
+    "Requestors",
     "Consumers",
-    "Contract",
+    "Channel",
+    "Data",
 )
 
 # A `{{NAME}}` slot placeholder (NAME is word chars, as the shipped templates use).

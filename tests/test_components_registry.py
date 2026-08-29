@@ -236,16 +236,15 @@ def test_knowledge_ref_mixed_cell_checks_only_the_pack(scaffold):
 
 def write_if(root, component):
     (root / "docs" / "requirements" / "interfaces.toml").write_text(
+        # The OI-67 shape: the owner is the providing THING (`src/demo`, which
+        # LLR-001's Module names, so the seam reaches the spine through it),
+        # never the requirement id the pre-OI-67 row carried.
         "[interface.IF-001]\n"
-        'direction = "Provides"\n'
-        'this_project = "src/demo"\n'
-        'counterpart = "external:downstream"\n'
-        'contract = "call"\n'
-        'signal = "discrete"\n'
-        'req_refs = ["SR-001"]\n'
-        'owner = "SR-001"\n'
+        'owner = "src/demo"\n'
+        'consumers = ["external:downstream"]\n'
+        'channel = "call"\n'
         'version = "v1"\n'
-        'approval = "approved"\n'
+        'status = "Approved"\n'
         'component = "{}"\n'.format(component),
         encoding="utf-8",
     )

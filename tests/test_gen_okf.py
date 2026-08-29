@@ -171,8 +171,9 @@ def test_an_IF_one_pager_exports_the_live_approval_value(scaffold):
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").write_text(
-        '[interface.IF-001]\nname = "Seam"\ncontract = "contract text"\n'
-        'status = "Drafted"\n',
+        '[interface.IF-001]\nname = "Seam"\nowner = "src/demo"\n'
+        'consumers = ["external:downstream"]\nchannel = "call"\n'
+        'data = "0 pass | 1 fail"\nstatus = "Drafted"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0
@@ -185,8 +186,9 @@ def test_prune_removes_emptied_tier_directory(scaffold):
     make_minimal_project(scaffold)
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").write_text(
-        '[interface.IF-001]\nname = "Seam"\ncontract = "contract text"\n'
-        'approval = "approved"\n',
+        '[interface.IF-001]\nname = "Seam"\nowner = "src/demo"\n'
+        'consumers = ["external:downstream"]\nchannel = "call"\n'
+        'status = "Approved"\n',
         encoding="utf-8",
     )
     assert okf(scaffold).returncode == 0

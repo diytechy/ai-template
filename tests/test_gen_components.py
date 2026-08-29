@@ -73,19 +73,19 @@ status = "Approved"
 """
 
 IFS = """[interface.IF-001]
-provider = "scripts/alpha"
+owner = "scripts/alpha"
 consumers = ["scripts/beta"]
-req_refs = ["SR-001"]
+channel = "call"
 
 [interface.IF-002]
-provider = "scripts/alpha"
+owner = "scripts/alpha"
 consumers = ["scripts/alpha"]
-req_refs = ["SR-002"]
+channel = "call"
 
 [interface.IF-003]
-provider = "external:somebody"
+owner = "external:somebody"
 consumers = ["external:somebody-else"]
-req_refs = ["SR-002"]
+channel = "bytes"
 """
 
 

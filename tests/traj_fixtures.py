@@ -230,26 +230,26 @@ def write_frame(root, text=FRAME):
     return root
 
 
-def if_row(iid, provider, consumers, contract="call", **cells):
+def if_row(iid, owner, consumers, channel="call", **cells):
     """One `[interface.IF-###]` TOML table (the carrier since WI-443).
 
     A helper rather than a header constant: under TOML there IS no header, an
     absent key IS the empty cell, and building rows by hand in six fixtures is
-    how a schema change quietly diverges between them. Since WI-455 the seam is
-    `provider` -> `consumers` (a list; a bare string is taken as one endpoint)
-    and there is no direction cell to pass.
+    how a schema change quietly diverges between them. Since OI-67 the row is
+    one `owner` — the providing thing, read verbatim, in the same spelling
+    `consumers` uses (a list; a bare string is taken as one endpoint) — plus a
+    `channel` from the closed vocabulary; `provider`, `req_refs`, `signal` and
+    `sr_refs` left the row entirely, and `status` is its one maturity cell.
     """
     if isinstance(consumers, str):
         consumers = [consumers]
     lines = [
         "[interface.{}]".format(iid),
-        'provider = "{}"'.format(provider),
+        'owner = "{}"'.format(owner),
         "consumers = [{}]".format(", ".join('"%s"' % c for c in consumers)),
-        'contract = "{}"'.format(contract),
-        'signal = "{}"'.format(cells.pop("signal", "discrete")),
-        'sr_refs = ["{}"]'.format(cells.pop("sr_refs", "SR-001")),
+        'channel = "{}"'.format(channel),
         'version = "v1"',
-        'approval = "{}"'.format(cells.pop("approval", "approved")),
+        'status = "{}"'.format(cells.pop("status", "Approved")),
     ]
     lines += ['{} = "{}"'.format(k, v) for k, v in sorted(cells.items())]
     return "\n".join(lines) + "\n\n"
@@ -342,7 +342,7 @@ CONT_IFS = (
     if_row("IF-001", "scripts/mod_a", "scripts/mod_c")
     + if_row("IF-002", "scripts/mod_b", "scripts/mod_c")
     + if_row("IF-003", "scripts/mod_a", "scripts/mod_b")
-    + if_row("IF-004", "docs/stack.ini", "scripts/mod_a", "reads")
+    + if_row("IF-004", "docs/stack.ini", "scripts/mod_a", "file")
 )
 
 
@@ -524,7 +524,7 @@ def _how_sw_flat(root):
     write_arch_src(root)
     (root / "docs" / "requirements" / "interfaces.toml").write_text(
         if_row("IF-001", "src/m", "downstream adopter", "cli")
-        + if_row("IF-002", "docs/stack.ini", "src/m", "reads"),
+        + if_row("IF-002", "docs/stack.ini", "src/m", "file"),
         encoding="utf-8",
     )
     return root

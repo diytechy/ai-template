@@ -117,7 +117,6 @@ OFFSPINE = {
 REF_COLS = {
     "SN-Refs",
     "SR-Refs",
-    "Req-Refs",
     "Boundary-Refs",
     # WI-484: a typed array like every other multi-ref cell. A hat NAME carries no
     # comma or semicolon (`hats.py` keys are upper-case, `-`-joined), so the
@@ -130,6 +129,7 @@ REF_COLS = {
     # `;`-joined endpoints on the rows that have several, and the reader
     # (`kitlib.spine.seam_endpoints`) splits on `;` alone, so the typed array is
     # what the cell already meant.
+    "Requestors",
     "Consumers",
 }
 INT_COLS = {"Phase"}
@@ -210,20 +210,24 @@ KEY = {
     # (`KEY.get(col, col)`) and the schema tier names them, exactly as a stray
     # `Status` cell is handled: convert the carrier first, then rename the cells
     # (RESYNC_PACK.md).
-    "Req-Refs": "req_refs",
+    # `Req-Refs`, `Provider`, `Signal` and `SignalNote` LEFT this block at OI-67
+    # (ruled (a), 2026-08-29) with the row shape they described; a legacy CSV
+    # still carrying them keys them as themselves and the schema tier names
+    # them. `Owner` is the providing thing now, a path, and `Channel`/`Data`
+    # are the typed statement beside it.
     "Owner": "owner",
+    "Channel": "channel",
+    "Data": "data",
     # The optional seam-tier verification pointer (OI-61's sub-question,
     # sanctioned 2026-08-23). A legacy CSV will not carry it; a converter that
     # did not map it would silently drop the cell on the one repo that did.
     "VerifiedBy": "verified_by",
     "CarriedBy": "carried_by",
-    "Provider": "provider",
+    "Requestors": "requestors",
     "Consumers": "consumers",
     "Contract": "contract",
     "InterfaceFromExternal": "interface_from_external",
     "InterfaceToExternal": "interface_to_external",
-    "Signal": "signal",
-    "SignalNote": "signal_note",
     # components (WI-443). `Notes`/`SupersededBy` are ALREADY above.
     "Name": "name",
     "Category": "category",

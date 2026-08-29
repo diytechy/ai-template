@@ -467,7 +467,11 @@ def emit(root):
         entries = []
         for r in ifs:
             cid = r["IF-ID"].strip()
-            desc = (r.get("Contract") or r.get("Description") or "").strip()
+            # The typed statement first; the legacy `Contract` cell while any
+            # row still carries one (OI-67); `Description` for a foreign row.
+            desc = (
+                r.get("Data") or r.get("Contract") or r.get("Description") or ""
+            ).strip()
             out["interfaces/{}.md".format(cid)] = concept(
                 "interfaces",
                 cid,
