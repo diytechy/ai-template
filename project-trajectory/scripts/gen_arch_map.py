@@ -492,9 +492,15 @@ def contracts_grammar_findings(module, tree, source_lines):
     `Contracts:` carrying ids (the form that declared something before the
     grammar was anchored), are both REPORTED here so an upgrading repo is told
     rather than quietly losing its seams."""
-    out, seen = [], set()
     doc = ast.get_docstring(tree) or ""
-    for line in dict.fromkeys(list(doc.splitlines()) + list(source_lines[:8])):
+    return _grammar_findings_over(
+        module, list(doc.splitlines()) + list(source_lines[:8])
+    )
+
+
+def _grammar_findings_over(module, lines):
+    out, seen = [], set()
+    for line in dict.fromkeys(lines):
         text = _marker_text(line)
         if _marker_ids(line) == []:
             out.append(
@@ -549,7 +555,14 @@ def module_contract_bodies(tree, source_lines):
     """
     declared = set(module_contracts(tree, source_lines))
     doc = ast.get_docstring(tree) or ""
-    lines = doc.splitlines()
+    return _contract_bodies(doc.splitlines(), declared)
+
+
+def _contract_bodies(lines, declared):
+    """The body grammar over a list of LINES — a module docstring's, or a
+    non-Python file's comment header with its markers stripped
+    (`header_lines`). One grammar, two carriers: a registry, a config file or
+    a git hook states its contracts exactly as a module does."""
     # WHERE EACH ID WAS DECLARED, not merely where the first marker sits: a
     # module may carry more than one marker line, and a body must follow the one
     # that declares ITS id — otherwise a body can precede its own declaration
@@ -612,6 +625,105 @@ def module_contract_bodies(tree, source_lines):
         buf.append(line)
     flush()
     return bodies
+
+
+# Files whose leading comment block is `#`-prefixed lines. Anything else that
+# is not Markdown is read the same way, so a shell hook, an INI file and an
+# extensionless config all declare through one grammar.
+_MARKDOWN_SUFFIXES = (".md", ".markdown", ".html")
+
+
+def header_lines(path):
+    """The leading comment block of a NON-Python file, its comment markers
+    stripped, as the lines the marker and body grammar read.
+
+    Two carriers: `#`-prefixed lines at the top of a TOML/INI/CSV/shell/
+    extensionless file (a `#!` shebang on line 1 is skipped; the block ends at
+    the first line that is not a `#` comment), or the FIRST `<!-- ... -->`
+    block at the top of a Markdown file. `[]` when the file opens with anything
+    else — a header is the first thing in the file or it is not a header."""
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return []
+    if path.suffix.lower() in _MARKDOWN_SUFFIXES:
+        i = 0
+        while i < len(lines) and not lines[i].strip():
+            i += 1
+        if i >= len(lines) or not lines[i].lstrip().startswith("<!--"):
+            return []
+        out, first = [], lines[i].lstrip()[4:]
+        rest = [first] + lines[i + 1 :]
+        for line in rest:
+            if "-->" in line:
+                out.append(line[: line.index("-->")].strip())
+                break
+            out.append(line.strip())
+        return out
+    out = []
+    for j, line in enumerate(lines):
+        s = line.strip()
+        if j == 0 and s.startswith("#!"):
+            continue
+        if not s.startswith("#"):
+            break
+        out.append(s.lstrip("#").strip())
+    return out
+
+
+def file_contracts(path):
+    """`(ids, bodies)` a non-Python file declares through its header — the same
+    `Contracts:` marker and `Contract IF-###:` bodies a module docstring
+    carries, so a registry, a config file or a git hook is an owner that
+    declares exactly as a module does (OI-67). `([], {})` for a file with no
+    header or no marker. Grammar errors raise as they do for a module."""
+    lines = header_lines(path)
+    ids = set()
+    for i, line in enumerate(lines):
+        found = _marker_ids(line)
+        if found:
+            ids.update(found)
+            _refuse_ambiguous_continuation(lines[i + 1 :], ids)
+    return sorted(ids), (_contract_bodies(lines, ids) if ids else {})
+
+
+def _resolve_owner_path(root, owner):
+    """The tree path an IF owner names, or None: tried verbatim under `root`
+    and under the kit's own home, the two spellings the registry uses."""
+    for base in (owner, "project-trajectory/" + owner):
+        candidate = root / base
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def owner_files(root, if_rows):
+    """`[(owner_as_written, path)]` for every IF row whose owner is a FILE in
+    the tree rather than a Python module or an `external:` party — the files
+    the contract scan reads beside the module walk. A directory owner declares
+    through its `README.md` when it has one and is skipped otherwise; a `.py`
+    owner is the module walk's, not this list's. Sorted, deduplicated."""
+    seen, out = set(), []
+    for r in if_rows or []:
+        owner = _kitspine.seam_owner(r)
+        if not owner or owner.startswith("external:") or owner in seen:
+            continue
+        path = _resolve_owner_path(Path(root), owner)
+        if path is None or path.suffix == ".py":
+            continue
+        if path.is_dir():
+            path = path / "README.md"
+            if not path.is_file():
+                continue
+        seen.add(owner)
+        out.append((owner, path))
+    return sorted(out)
+
+
+def file_grammar_findings(owner, path):
+    """`contracts_grammar_findings` over a file header: the lossy marker forms
+    are reported by name for a registry or a hook exactly as for a module."""
+    return _grammar_findings_over(owner, header_lines(path))
 
 
 # A module path reduced to a naming-convention-neutral key (strip a leading
@@ -1069,15 +1181,29 @@ def _md_safe(text):
     return text.replace("|", "\\|").replace("<!--", "&lt;!--").replace("-->", "--&gt;")
 
 
-def scan_contracts(src_roots):
-    """`([(module, summary, ids, bodies)], [unreadable])` — every module
-    declaring a seam, sorted by module path so the rendered block is byte-stable,
-    plus the modules the scan could NOT read.
+def scan_contracts(src_roots, owner_files=()):
+    """`([(source, summary, ids, bodies)], [unreadable])` — every module AND
+    every file owner declaring a seam, sorted by path so the rendered block is
+    byte-stable, plus the sources the scan could NOT read.
 
-    The second half of that tuple is the point: a reference that silently
-    omitted a module it failed to parse would report a clean, fresh document
-    over a source tree it had not actually read. The caller renders the list."""
+    `owner_files` is `owner_files()`'s list — the registries, config files and
+    hooks the IF registry names as owners — read through `file_contracts` so a
+    non-Python owner is listed beside the modules, under the path the registry
+    spells. The second half of the tuple is the point: a reference that
+    silently omitted a source it failed to parse would report a clean, fresh
+    document over a tree it had not actually read. The caller renders the list."""
     out, unreadable = [], []
+    for owner, path in owner_files:
+        try:
+            ids, bodies = file_contracts(path)
+        except (UnicodeDecodeError, OSError) as exc:
+            unreadable.append((owner, type(exc).__name__))
+            continue
+        if ids:
+            head = next(
+                (ln for ln in header_lines(path) if ln and _marker_ids(ln) is None), ""
+            )
+            out.append((owner, head, ids, bodies))
     for _root, base, path in _walk_roots(src_roots, "*.py"):
         rel = path.relative_to(base).with_suffix("").as_posix()
         try:
@@ -1098,10 +1224,10 @@ def scan_contracts(src_roots):
                 module_contract_bodies(tree, lines),
             )
         )
-    return out, unreadable
+    return sorted(out), unreadable
 
 
-def build_contract_reference(src_roots):
+def build_contract_reference(src_roots, owner_files=()):
     """The rendered interface-reference block: the contracts modules STATE, then
     a compact list of the seams they declare and do not state.
 
@@ -1113,10 +1239,12 @@ def build_contract_reference(src_roots):
     seen is what this whole build exists to stop."""
     note = (
         "_Generated by `scripts/gen_arch_map.py --contracts-doc` from each "
-        "module's `Contracts:` declaration and `Contract IF-###:` bodies (AST, "
-        "no import). Do not edit by hand; run the check harness to refresh._"
+        "owner's `Contracts:` declaration and `Contract IF-###:` bodies — a "
+        "module docstring (AST, no import) or a registry, config or hook "
+        "file's comment header. Do not edit by hand; run the check harness to "
+        "refresh._"
     )
-    records, unreadable = scan_contracts(src_roots)
+    records, unreadable = scan_contracts(src_roots, owner_files)
     if not records and not unreadable:
         return note + "\n\n_(no declared interface seams scanned)_"
 
@@ -1125,7 +1253,7 @@ def build_contract_reference(src_roots):
     sections = [
         note,
         "",
-        "_{} module(s) declare {} seam(s); {} carry a stated contract._".format(
+        "_{} source(s) declare {} seam(s); {} carry a stated contract._".format(
             len(records), declared, stated
         ),
     ]
@@ -1178,7 +1306,13 @@ def _contracts_doc_exit(src_roots, args):
     cost it nothing. What that trades away is the same and is stated the same
     way — deleting the doc disarms this gate silently, and what catches THAT is
     the `[generated]` declaration plus the links into it, not this run."""
-    generated = build_contract_reference(src_roots)
+    # The file owners come from the registry the same flag names for the
+    # diagram; its home is `docs/requirements/`, two levels under the root.
+    registry = Path(args.interfaces)
+    root = registry.resolve().parent.parent.parent
+    generated = build_contract_reference(
+        src_roots, owner_files(root, load_interfaces(registry))
+    )
     stale = False
     for doc in [Path(d) for d in args.contracts_doc]:
         if not doc.exists():

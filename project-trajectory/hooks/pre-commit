@@ -1,6 +1,14 @@
 #!/bin/sh
 # Pre-commit hook — the agent-neutral *process floor*.
 #
+# Contracts: IF-134 — the seam this hook declares (process.md §8; row of record
+# in docs/requirements/interfaces.toml).
+# Contract IF-134: git invokes this hook at commit time with no arguments; exit 0
+#     admits the staged write into governed state, any nonzero exit refuses the
+#     commit, and the failing check is named on stderr. `git commit --no-verify`
+#     skips the invocation entirely, so this seam admits only the writes a
+#     session routes through git's own floor.
+#
 # Runs only the fast, always-valid kit checks so a stale code map, a duplicated
 # or malformed requirement id, or unformatted code never lands in a commit —
 # regardless of which agent (or human) made it. Enforcement lives here (git) and

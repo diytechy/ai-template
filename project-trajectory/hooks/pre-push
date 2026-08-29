@@ -1,6 +1,14 @@
 #!/bin/sh
 # Pre-push hook — the privacy-review backstop for privacy-checked repos.
 #
+# Contracts: IF-135 — the seam this hook declares (process.md §8; row of record
+# in docs/requirements/interfaces.toml).
+# Contract IF-135: git invokes this hook before a push with the remote name and
+#     URL on argv and the outgoing ref pairs on stdin; exit 0 releases the push
+#     and any nonzero exit refuses it, naming the offending range on stderr.
+#     `git push --no-verify` skips the invocation, so the refusal binds only a
+#     session that routes through git's own floor.
+#
 # Publication is where a privacy leak becomes harmful and effectively
 # unrecallable (mirrors, caches), so an privacy-checked repo gets one last look at
 # the FULL outgoing history — diffs *and* commit messages of every commit in

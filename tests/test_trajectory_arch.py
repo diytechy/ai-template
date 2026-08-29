@@ -424,7 +424,32 @@ def test_contracts_docstring_citation_warns(tmp_path):
     proc = run_traj(tmp_path)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "declares Contracts: IF-003 but no such IF-### row" in proc.stderr
-    assert "no script declares it via a Contracts" in proc.stderr
+    # OWNER-EXACT since OI-67 slice 2: IF-001 is owned by mod_a, whose marker
+    # names IF-003 only, so the warn names the OWNER — not "no script".
+    assert (
+        "IF IF-001 is owned by 'scripts/mod_a', but that module's Contracts: "
+        "line does not declare it" in proc.stderr
+    )
+
+
+def test_a_seam_declared_on_the_wrong_module_is_named(tmp_path):
+    # The id-global hole the OI-66 build round named: IF-001 declared on mod_a
+    # while the registry owns it to mod_b used to PASS. The owner is the one
+    # declaration site, so the mismatch is named; the id-global fallback stays
+    # only for an owner the tree cannot resolve.
+    arch = ARCH_2MOD.replace("_A._\n", "_A._\nContracts (interfaces): IF-001\n")
+    write_arch(tmp_path, arch)
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+    )
+    proc = run_traj(tmp_path)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "IF IF-001 is owned by 'scripts/mod_b', but that module's Contracts: "
+        "line does not declare it" in proc.stderr
+    )
+    assert "no source declares it" not in proc.stderr
 
 
 def test_interface_warns_never_fail_strict(tmp_path):

@@ -1228,3 +1228,99 @@ def test_a_docstring_cannot_close_the_generated_documents_own_marker(tmp_path):
         "<!-- END GENERATED CLI REFERENCE -->"
         not in gen_arch_map.build_cli_reference([str(src)])
     )
+
+
+# --- OI-67 slice 2: a non-Python owner declares through its comment header ----
+
+TOML_HEADER = (
+    "# docs/stack.ini — the declared toolchain.\n"
+    "#\n"
+    "# Contracts: IF-950 — the seam this file declares.\n"
+    "# Contract IF-950: the [paths]/[gate-*] sections, one key per line;\n"
+    "#     a missing section reads as the shipped default.\n"
+    "#\n"
+    "# prose after the blank comment line is not part of the body\n"
+    "[paths]\n"
+    "src = scripts\n"
+)
+
+
+def test_a_non_python_owner_declares_through_its_comment_header(tmp_path):
+    # ONE GRAMMAR, TWO CARRIERS: the `#` header of a config file reads exactly
+    # as a module docstring — marker line, `Contract IF-###:` body, a blank
+    # comment line ending the body.
+    ini = tmp_path / "stack.ini"
+    ini.write_text(TOML_HEADER, encoding="utf-8")
+    ids, bodies = gen_arch_map.file_contracts(ini)
+    assert ids == ["IF-950"]
+    assert bodies == {
+        "IF-950": "the [paths]/[gate-*] sections, one key per line; a missing "
+        "section reads as the shipped default."
+    }
+    # A shebang on line 1 is skipped, so a git hook declares the same way.
+    hook = tmp_path / "pre-commit"
+    hook.write_text(
+        "#!/bin/sh\n# Contracts: IF-951\n# Contract IF-951: exit 0 admits.\nset -e\n",
+        encoding="utf-8",
+    )
+    assert gen_arch_map.file_contracts(hook) == (
+        ["IF-951"],
+        {"IF-951": "exit 0 admits."},
+    )
+    # Markdown carries the same header inside its FIRST HTML comment.
+    md = tmp_path / "flows.md"
+    md.write_text(
+        "<!-- Contracts: IF-952\nContract IF-952: mermaid sequence blocks.\n-->\n# Flows\n",
+        encoding="utf-8",
+    )
+    assert gen_arch_map.file_contracts(md) == (
+        ["IF-952"],
+        {"IF-952": "mermaid sequence blocks."},
+    )
+    # A header is the FIRST thing in the file or it is not a header.
+    late = tmp_path / "late.toml"
+    late.write_text("[table]\n# Contracts: IF-953\n", encoding="utf-8")
+    assert gen_arch_map.file_contracts(late) == ([], {})
+
+
+def test_the_reference_lists_a_file_owner_beside_the_modules(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "mod.py").write_text('"""mod.\n\nContracts: IF-960\n"""\n', encoding="utf-8")
+    ini = tmp_path / "docs" / "stack.ini"
+    ini.parent.mkdir()
+    ini.write_text(TOML_HEADER, encoding="utf-8")
+    block = gen_arch_map.build_contract_reference([str(src)], [("docs/stack.ini", ini)])
+    assert "2 source(s) declare 2 seam(s); 1 carry a stated contract" in block
+    assert "### `docs/stack.ini`" in block and "**IF-950**" in block
+    assert "IF-960" in block and "Declared, not stated" in block
+
+
+def test_owner_files_names_the_files_and_readmes_the_registry_owns(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stack.ini").write_text("# x\n", encoding="utf-8")
+    (tmp_path / "docs" / "work").mkdir()
+    (tmp_path / "docs" / "work" / "README.md").write_text("# w\n", encoding="utf-8")
+    (tmp_path / "docs" / "bare").mkdir()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "m.py").write_text("x = 1\n", encoding="utf-8")
+    rows = [
+        {"IF-ID": "IF-001", "Owner": "docs/stack.ini"},
+        {"IF-ID": "IF-002", "Owner": "docs/work/"},  # a dir with a README
+        {"IF-ID": "IF-003", "Owner": "docs/bare"},  # a dir without one: skipped
+        {"IF-ID": "IF-004", "Owner": "src/m"},  # a module: the AST walk's
+        {"IF-ID": "IF-005", "Owner": "external:git"},  # nothing to scan
+        {"IF-ID": "IF-006", "Owner": "docs/stack.ini"},  # deduplicated
+    ]
+    assert gen_arch_map.owner_files(tmp_path, rows) == [
+        ("docs/stack.ini", tmp_path / "docs" / "stack.ini"),
+        ("docs/work/", tmp_path / "docs" / "work" / "README.md"),
+    ]
+
+
+def test_a_lossy_marker_in_a_file_header_is_reported_by_name(tmp_path):
+    ini = tmp_path / "x.toml"
+    ini.write_text("# Contracts: IF-970 - IF-971\n[t]\n", encoding="utf-8")
+    found = gen_arch_map.file_grammar_findings("docs/x.toml", ini)
+    assert len(found) == 1 and "docs/x.toml" in found[0]
+    assert "declares no parsable id list" in found[0]

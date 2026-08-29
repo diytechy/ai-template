@@ -876,7 +876,35 @@ def _contracts_grammar_findings(root):
         found.extend(
             gen_arch_map.contracts_grammar_findings(path.name, tree, text.splitlines())
         )
+    # The file owners — registries, config, hooks — read through the same
+    # grammar (OI-67 slice 2), so a lossy marker in a header is named too.
+    if hasattr(gen_arch_map, "file_grammar_findings"):
+        for owner, path in _owner_files(root):
+            found.extend(gen_arch_map.file_grammar_findings(owner, path))
     return found
+
+
+def _owner_files(root):
+    """`gen_arch_map.owner_files` over the live registry; `[]` when the
+    generator is absent or predates the file-owner scan."""
+    if gen_arch_map is None or not hasattr(gen_arch_map, "owner_files"):
+        return []
+    return gen_arch_map.owner_files(root, spine_carrier.load(root / IF_CSV, "IF-ID"))
+
+
+def _file_owner_declarations(root, out):
+    """`{owner: {IF ids}}` declared by the file owners' headers; a header the
+    grammar refuses is reported into `out` and read as declaring nothing."""
+    declared = {}
+    for owner, path in _owner_files(root):
+        try:
+            ids, _bodies = gen_arch_map.file_contracts(path)
+        except gen_arch_map.ContractsGrammarError as exc:
+            out.append("{}: {}".format(owner, exc))
+            continue
+        if ids:
+            declared[owner] = set(ids)
+    return declared
 
 
 def arch_inventory(root):
@@ -1041,22 +1069,72 @@ def interface_findings(root):
 
     # Docstring citation: a `Contracts: IF-###` a script declares (harvested into
     # the arch-map) must exist in the registry; and, once the convention is in
-    # use, a registry IF whose module declares no matching citation warns too.
+    # use, a registry IF whose OWNER declares no matching citation warns too.
     registry_ids = {r["id"] for r in ifs}
+    file_declared = _file_owner_declarations(root, out)
     for module, ids in sorted(declared_contracts.items()):
         for iid in sorted(ids - registry_ids):
             out.append(
                 "module {!r} docstring declares Contracts: {} but no such IF-### "
                 "row exists".format(module, iid)
             )
-    if declared_contracts:  # reverse direction only "where sensible" — once opted in
-        all_declared = set().union(*declared_contracts.values())
-        for r in ifs:
-            if r["id"] not in all_declared:
+    for owner, ids in sorted(file_declared.items()):
+        for iid in sorted(ids - registry_ids):
+            out.append(
+                "{!r} header declares Contracts: {} but no such IF-### row "
+                "exists".format(owner, iid)
+            )
+    if declared_contracts or file_declared:  # reverse direction, once opted in
+        out.extend(
+            _owner_exact_findings(
+                ifs,
+                inv_norm,
+                declared_contracts,
+                file_declared,
+                dict(_owner_files(root)),
+            )
+        )
+    return out
+
+
+def _owner_exact_findings(
+    ifs, inv_norm, declared_contracts, file_declared, file_owners
+):
+    """OWNER-EXACT (OI-67 slice 2): the row's owner is the source that must
+    declare it — a module's `Contracts:` line, or a file's header. An id
+    declared on some OTHER module used to pass; that is the id-global hole the
+    build round named, closed here. Every module in the INVENTORY is judged,
+    not only the declaring ones — an owner that declares nothing at all is the
+    plainest miss. An `external:` owner has nothing to scan; a directory with
+    no README or an owner the tree cannot resolve falls back to the id-global
+    read rather than warning about a header nobody could write."""
+    out = []
+    by_module = {_norm_module(m): ids for m, ids in declared_contracts.items()}
+    all_declared = set().union(*declared_contracts.values(), *file_declared.values())
+    for r in ifs:
+        owner, iid = r["owner"], r["id"]
+        if not owner or owner.startswith("external:"):
+            continue
+        norm = _norm_module(owner)
+        if norm in inv_norm:
+            if iid not in by_module.get(norm, set()):
                 out.append(
-                    "IF {} is in the registry but no script declares it via a "
-                    "Contracts: docstring line".format(r["id"])
+                    "IF {} is owned by {!r}, but that module's Contracts: line "
+                    "does not declare it — the owner is the one declaration "
+                    "site".format(iid, owner)
                 )
+        elif owner in file_owners:
+            if iid not in file_declared.get(owner, set()):
+                out.append(
+                    "IF {} is owned by {!r}, but that file's header declares "
+                    "no Contracts: line naming it — the owner is the one "
+                    "declaration site".format(iid, owner)
+                )
+        elif iid not in all_declared:
+            out.append(
+                "IF {} is in the registry but no source declares it via a "
+                "Contracts: line".format(iid)
+            )
     return out
 
 
