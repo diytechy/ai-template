@@ -47,13 +47,16 @@ namespace, parallel to SN/SR/LLR/TC).
 
 ## Rules (keep links from rotting)
 
-- **One contract, one home.** The owning side (`Provides`) holds the
-  authoritative spec; the consuming side links it by `IF-ID` and never re-states
-  it. If both repos describe the shape, they will diverge — link instead.
-- **Every interface is backed by an SR and a TC.** A `Provides` interface needs
-  a contract test that asserts the published shape; a `Consumes` interface needs
-  a test (or recorded fixture/mock pinned to `Version`) proving we read it
-  correctly. No interface ships untested.
+- **One definition, one home.** The owner's header holds the authoritative
+  definition (`Contracts:` marker + `Contract IF-###:` bodies); the far side
+  links it by `IF-ID` and never re-states it. If both repos describe the shape,
+  they will diverge — link instead.
+- **Every interface is backed by a TC.** A seam this repo owns needs a contract
+  test that asserts the published shape; a seam an `external:` owner serves
+  needs a test (or recorded fixture/mock pinned to `Version`) proving we read or
+  request it correctly. No interface ships untested. The requirement a seam
+  answers to is reached through its owner — a design row naming the module, or
+  the module's `Implements:` line — not stated on the row.
 - **`IF-` ids are repo-local — never reuse an id across repos.** Each repo owns
   its own `IF-###` space, so `IF-007` in two repos are *different* interfaces
   that merely share a string (MULTI_REPO.md §3.3 — they would collide the
@@ -61,7 +64,7 @@ namespace, parallel to SN/SR/LLR/TC).
   therefore carry **different local ids** (exactly as the snippet below shows),
   and a foreign seam is cited as the **qualified pair** — the counterpart repo
   (its name or `REPO-###` row) **plus** its local `IF-###` and pinned version —
-  written in `Consumers` and `Contract`/`Notes`, **never in the `IF-ID`
+  written in the far-side cell and `Data`/`Notes`, **never in the `IF-ID`
   column** (`trace.py`'s `^IF-\d+$` integrity pattern rejects any qualified
   form there). Under a coordinator repo, the one stable global handle is the
   coordinator-level `CIF-###` (MULTI_REPO.md §3.3). Honesty note: no tool
@@ -71,41 +74,40 @@ namespace, parallel to SN/SR/LLR/TC).
 - **Approval gates change.** Changing an `Approved` contract requires a notice
   to the counterpart and a version bump; a `Drafted` one may change freely. Note
   breaking changes in the audit log and bump `Version`.
-- **The `Owner` cell's side closes the read.** The row named in `Owner` is
-  answerable for the contract's correctness and closes the final read on it; a
-  consuming side verifies against the pinned version. (This replaces "Direction
-  drives ownership. Only the `Provides` side may close the owner's final read",
-  which fused two facts — and the `Direction` column it named is gone: flow is
-  the shape of the row, `Provider` → `Consumers`, and ownership has its own
-  cell.)
+- **The owner's side closes the read.** The thing named in `Owner` defines the
+  surface and answers for its correctness; a far side verifies against the
+  pinned version. There is no direction column: the far-side KEY is the
+  direction (`Requestors` into the owner, `Consumers` out of it), and ownership
+  is the owner cell.
 
 ## Worked snippet
 
 ```toml
+# In billing-api's registry — it OWNS the route (its module defines it) and
+# reporting-etl REQUESTS it; the schema itself is stated in the handler's
+# `Contract IF-001:` body, not here.
 [interface.IF-001]
-provider = "billing-api"
-consumers = ["reporting-etl"]
-contract = "GET /v1/invoices returns the documented JSON schema (see docs/openapi.yaml#/Invoice)."
-signal = "variable"
+owner = "src/api/invoices"
+requestors = ["external:reporting-etl"]
+channel = "call"
+data = "GET /v1/invoices -> JSON per docs/openapi.yaml#/Invoice"
 rationale = "One read model for invoices; the ETL must not re-derive totals."
-req_refs = ["SR-014"]
-owner = "SR-014"
 version = "v1"
 status = "Approved"
 
+# In reporting-etl's registry — the same seam from the far end: the owner is
+# the OTHER repo, this repo's module is the requestor, and the pin is stated.
 [interface.IF-002]
-provider = "billing-api"
-consumers = ["reporting-etl"]
-contract = "Reads GET /v1/invoices; depends on IF-001 v1 schema (pinned fixture in tests/fixtures/invoice_v1.json)."
-signal = "variable"
-req_refs = ["SR-031"]
-owner = "SR-031"
+owner = "external:billing-api"
+requestors = ["src/etl/invoices"]
+channel = "call"
+data = "GET /v1/invoices, billing-api IF-001 v1; fixture tests/fixtures/invoice_v1.json"
 version = "v1"
 status = "Approved"
 ```
 
 Read together: `billing-api` publishes `IF-001` (with a contract test on the
-schema); `reporting-etl` consumes the same contract as `IF-002`, pins `v1`, and
+schema); `reporting-etl` requests the same contract as `IF-002`, pins `v1`, and
 tests against a recorded fixture. Grep `IF-001` across both repos to see the full
 link. If `billing-api` needs a breaking change it bumps to `v2`, notifies
 `reporting-etl`, and both rows move to the new version deliberately — never by

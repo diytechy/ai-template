@@ -420,6 +420,7 @@ Contracts (interfaces): IF-103
 |---|---|
 | `--root` |  |
 | `--check` | convert in memory and verify the round-trip; write nothing |
+| `--if-shape` | rewrite an old-shape interfaces.toml in place (OI-67): owner / requestors\|consumers / channel / data; --check reports without writing |
 
 ### `scripts/plan_briefs`
 _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_

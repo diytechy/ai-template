@@ -2204,20 +2204,24 @@ an `IF-###`; the same registry serves an **intra-repo** seam (module→module,
 module→file, module→external-actor) exactly as it serves a cross-project one — one
 `interfaces.toml`, two uses.
 
-**The model — one row per seam, read `Provider` → `Consumers`.** `Provider` =
-the side it is served from, OMITTED where `Owner` derives it (a design row
-naming one `Module` IS the provider); `Consumers` = a **list** of the sides that
-read it — modules, a **file path** (giving module→file→module dataflow, so a
-shared file like `docs/stack.ini` is a hub node many modules read), or an
-**external actor** (`downstream adopter`, `git`, `agent CLI`); `Contract` = one
-testable line (CLI flags + exit codes, or the file schema); `req_refs` links the
-spine so every seam is transitively TC-covered. There is no direction column:
-flow is the shape of the row (WI-455 shed it), and what a `Consumes` row used to
-declare — this cross-component edge is intended, and this row discharges it — is
-read off the endpoint pair. `trace.py` integrity-checks the tier (id shape, the
-`req_refs` back-link under `--strict`, a best-effort `Provider`↔`LLR.Module`
-advisory, and a warn when a row states a provider its owner already derives) —
-WI-056 closed the SR-002-era gap where trace never read the IF tier.
+**The model — one row per seam: an owner, its far side, a typed statement.**
+`Owner` = the providing thing — a module path, a **file path** (giving
+module→file→module dataflow, so a shared file like `docs/stack.ini` is a hub
+node many modules read), or an **`external:` actor** (`downstream adopter`,
+`git`, `agent CLI`) — never a requirement id; `Requestors` or `Consumers`
+(exactly one, a **list**) = the far side, and the key IS the direction:
+requestors put information into the owner's surface, consumers take what it
+emits; `Channel` = what crosses, closed; `Data` = the optional alphabet or
+schema pointer; the definition itself lives in the owner's header (PROCESS.md
+§8). There is no direction column and no requirement column: what a `Consumes`
+row used to declare — this cross-component edge is intended, and this row
+discharges it — is read off the endpoint pair, and the requirement a seam
+answers to is reached through the owner. `trace.py` integrity-checks the tier
+(id shape; an id-shaped or multi-endpoint owner fails under `--strict`; a row
+naming both far sides or neither warns; a module-shaped owner that no design
+row's `Module` names and whose header declares no `Implements:` warns; every
+endpoint is resolved against the tree, warn-first) — WI-056 closed the
+SR-002-era gap where trace never read the IF tier.
 
 **Opt-out, default-on (ruled).** By default a contract IF must define how the
 architecture connects, so the **coverage warn runs even when `interfaces.toml` is
@@ -2261,20 +2265,23 @@ discharges.
 **sink** (consumes, produces nothing) would otherwise breed a boilerplate
 opposite-facing row. Mark it instead: make the `Notes` cell of one of that
 module's IF rows **begin** with the word `source` or `sink`, and the missing-seam
-warn is suppressed for that side — `source` marks the row's `Provider`, `sink`
-its `Consumers`.
+warn is suppressed for that side — `source` marks the row's `Owner`, `sink`
+its far side.
 
 **The graph.** When real seams exist, `gen_trajectory.py`'s How-SW panel renders
-them as a directed graph (module / file / external-actor nodes, IF-labeled edges,
-reusing the WI-DAG layouter) above the symbol table, and `gen_arch_map.py` merges
+them as a directed graph (module / file / external-actor nodes, IF-labeled edges
+drawn the way the information runs — into the owner on a requestors row — reusing
+the WI-DAG layouter) above the symbol table, and `gen_arch_map.py` merges
 module↔module seams into the dependency diagram as distinctly-styled dotted edges.
 
 **Risk — the maintenance surface.** A fully-declared repo is ~30–35 hand-authored
-IF rows whose `Contract` text has **no mechanical oracle** (a renamed flag the row
-misses). The joins bound the rot to that one column; CLI contracts are already
-pinned by the never-break-downstream rule. Declare seams because the connectivity
-view earns its keep, not for completeness — and lean on the source/sink valve so a
-pure sink doesn't cost a row.
+IF rows. The prose that used to rot in a `Contract` cell (a renamed flag the row
+misses) now lives in the owner's header, where a rename moves the two together
+and the reverse check names a declared seam with no body; what stays on the row
+is a link list plus a short `Data` cell whose named symbols and paths are checked
+against the tree. Declare seams because the connectivity view earns its keep, not
+for completeness — and lean on the source/sink valve so a pure sink doesn't cost
+a row.
 
 ## Research track & knowledge packs
 

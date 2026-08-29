@@ -753,6 +753,174 @@ def _convert_offspine(root, write, written):
     return findings
 
 
+# --- the IF row's SHAPE change (OI-67 ruled (a), 2026-08-29) -------------------
+# Not a carrier change: the registry is already TOML. A row that carried
+# `provider` / `req_refs` / `signal` / `signal_note` and an id-typed `owner`
+# becomes one owner, its far side and a typed statement. The mechanical half is
+# done here IN PLACE — comments, order and every other cell kept — and the
+# judgement half (which far side, which channel, the owner no cell ever named)
+# is REPORTED beside its row rather than guessed silently.
+IF_REL = "docs/requirements/interfaces.toml"
+LLR_REL = "docs/requirements/low-level-requirements.toml"
+IF_RETIRED = ("provider", "req_refs", "signal", "signal_note")
+_ID_OWNER_RE = re.compile(r'^owner = "((?:SR|LLR)-\d+)"$')
+_KEY_RE = re.compile(r"^([a-z_]+)\s*=\s*(.*)$")
+
+
+def _short_module(module):
+    m = module.strip().replace("\\", "/")
+    if m.startswith("project-trajectory/"):
+        m = m[len("project-trajectory/") :]
+    return m[:-3] if m.endswith(".py") else m
+
+
+def _llr_single_modules(root):
+    """`{LLR-###: module}` for the design rows naming exactly ONE module — the
+    only ones an id-typed owner can be folded through without guessing."""
+    path = root / LLR_REL
+    if not path.is_file():
+        return {}
+    out = {}
+    for rid, row in (
+        tomllib.loads(path.read_text(encoding="utf-8")).get("design", {}).items()
+    ):
+        mods = [
+            m.strip()
+            for m in (row.get("module") or "").replace(";", ",").split(",")
+            if m.strip()
+        ]
+        if len(mods) == 1:
+            out[rid] = _short_module(mods[0])
+    return out
+
+
+def _seed_channel(owner):
+    if owner.startswith("external:"):
+        return "bytes"
+    if owner.endswith("/") or "." in owner.rsplit("/", 1)[-1]:
+        return "file"
+    return "call"
+
+
+def _if_block_cells(lines):
+    """`{key: (start, end)}` line spans of one `[interface.IF-###]` block,
+    multi-line strings included."""
+    cells, i = {}, 1
+    while i < len(lines):
+        km = _KEY_RE.match(lines[i])
+        if km:
+            start, val = i, km.group(2)
+            if val.startswith('"""') and val.count('"""') == 1:
+                i += 1
+                while '"""' not in lines[i]:
+                    i += 1
+            cells[km.group(1)] = (start, i)
+        i += 1
+    return cells
+
+
+def _fold_owner(raw, rid, llr_modules, report):
+    """The new `owner` for one old-shape row, or None when nothing derives it:
+    the stated `provider` wins, else the owner design row's single module; an
+    id-typed owner with neither is REPORTED for the adopter to name by hand."""
+    owner = (raw.get("owner") or "").strip()
+    provider = (raw.get("provider") or "").strip()
+    if provider:
+        return provider
+    if owner in llr_modules:
+        return llr_modules[owner]
+    if re.match(r"^(SR|LLR)-\d+$", owner):
+        report.append(
+            "{}: owner {!r} could not be derived (no provider, no single-module "
+            "design row) — name the medium this seam plugs into by hand".format(
+                rid, owner
+            )
+        )
+    return None
+
+
+def _rewrite_if_lines(lines, cells, new_owner, channel):
+    """The block's lines with the retired cells dropped, the owner replaced
+    and `channel` inserted after the far side (or after the owner when the
+    row names none)."""
+    skip = set()
+    for key in IF_RETIRED:
+        if key in cells:
+            s, e = cells[key]
+            skip.update(range(s, e + 1))
+    owner_at = cells.get("owner", (-1, -1))[0]
+    far_at = cells.get("consumers", (-1, -1))[0]
+    channel_line = 'channel = "{}"\n'.format(channel)
+    out = []
+    for idx, line in enumerate(lines):
+        if idx in skip:
+            continue
+        out.append(
+            'owner = "{}"\n'.format(new_owner)
+            if new_owner and idx == owner_at
+            else line
+        )
+        if idx == far_at or (far_at < 0 and idx == owner_at):
+            out.append(channel_line)
+    return out
+
+
+def _convert_if_block(blk, rid, llr_modules, report):
+    """One row's rewrite, or the block unchanged when it already has the shape."""
+    raw = tomllib.loads(blk)["interface"][rid]
+    if "channel" in raw and not any(k in raw for k in IF_RETIRED):
+        return blk
+    lines = blk.splitlines(keepends=True)
+    new_owner = _fold_owner(raw, rid, llr_modules, report)
+    if raw.get("req_refs"):
+        report.append(
+            "{}: req_refs {} dropped — the requirement is reached through the "
+            "owner, never stated on the row".format(rid, list(raw["req_refs"]))
+        )
+    channel = _seed_channel(new_owner or (raw.get("owner") or "").strip())
+    report.append(
+        "{}: channel seeded {!r} from the owner's kind — confirm it, and move "
+        "`consumers` to `requestors` where the far side puts information INTO "
+        "the owner".format(rid, channel)
+    )
+    return "".join(_rewrite_if_lines(lines, _if_block_cells(lines), new_owner, channel))
+
+
+def convert_if_shape(root, write):
+    """Rewrite an old-shape `interfaces.toml` in place. Returns
+    `(report_lines, written_paths)`; the report is informational (every
+    judgement the converter did NOT make), never a refusal — an unparsable
+    registry is the one hard failure, raised."""
+    path = root / IF_REL
+    if not path.is_file():
+        return [], []
+    text = path.read_text(encoding="utf-8")
+    llr_modules = _llr_single_modules(root)
+    blocks = re.split(r"(?m)^(?=\[interface\.)", text)
+    report, out, changed = [], [], 0
+    for blk in blocks:
+        m = re.match(r"\[interface\.(IF-\d+)\]", blk)
+        if not m or m.group(1).endswith("-000"):
+            out.append(blk)
+            continue
+        new = _convert_if_block(blk, m.group(1), llr_modules, report)
+        changed += new != blk
+        out.append(new)
+    new_text = "".join(out)
+    tomllib.loads(new_text)  # the rewrite must still parse, or nothing is written
+    written = []
+    if changed and write:
+        path.write_bytes(new_text.encode("utf-8").replace(b"\r\n", b"\n"))
+        written.append(path)
+    report.insert(
+        0,
+        "{}: {} row(s) rewritten to the owner / far side / channel shape".format(
+            IF_REL, changed
+        ),
+    )
+    return report, written
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="CSV/markdown registries -> TOML (OI-12)")
     ap.add_argument("--root", default=".")
@@ -761,8 +929,24 @@ def main(argv=None):
         action="store_true",
         help="convert in memory and verify the round-trip; write nothing",
     )
+    ap.add_argument(
+        "--if-shape",
+        action="store_true",
+        help="rewrite an old-shape interfaces.toml in place (OI-67): owner / "
+        "requestors|consumers / channel / data; --check reports without writing",
+    )
     args = ap.parse_args(argv)
     root = Path(args.root).resolve()
+    if args.if_shape:
+        report, written = convert_if_shape(root, write=not args.check)
+        for line in report:
+            print("migrate_carrier: " + line)
+        print(
+            "migrate_carrier: {}".format(
+                "wrote " + written[0].as_posix() if written else "nothing written"
+            )
+        )
+        return 0
     findings, _ = convert(root, write=not args.check)
     for f in findings:
         print("migrate_carrier: LOSSY - {}".format(f), file=sys.stderr)

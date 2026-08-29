@@ -4034,6 +4034,65 @@ listed in the reference as unstated rather than dropped, so adopting the doc
 before writing any bodies produces a document that is mostly gaps — which is the
 honest picture, and the reason it is opt-in.
 
+### The interface row becomes one owner, its far side and a typed statement [since 088a6cca]
+
+**Kit-owned files — overwrite and move on:** `scripts/kitlib/spine.py`,
+`scripts/spine_carrier.py`, `scripts/migrate_carrier.py`, `scripts/trace.py`,
+`scripts/trace_text.py`, `scripts/check_trajectory.py`, `scripts/gen_arch_map.py`,
+`scripts/gen_components.py`, `scripts/gen_okf.py`, `scripts/gen_release_checklist.py`,
+`scripts/intake.py`, `scripts/plan_briefs.py`, `scripts/traj_parse.py`,
+`scripts/traj_views.py`, `registries/interfaces.template.toml`,
+`INTERFACES.template.md`, `PROCESS.md`, `PROCESS_OPTIONS.md`.
+
+**Your registry changes SHAPE, and the converter does the mechanical half.**
+An `IF-###` row is now `owner` (the providing THING — a module path, a file or
+directory path, or `external:<party>`; **never** an `SR-###`/`LLR-###`),
+exactly one of `requestors` / `consumers` (the key IS the direction: requestors
+put information into the owner's surface, consumers take what it emits),
+`channel` (closed: `cli` `exit-code` `stdout` `file` `call` `env` `git`
+`bytes`), an optional `data` (≤160 characters, the alphabet or schema pointer)
+and the unchanged `version` / `status` / `rationale` / `verified_by` /
+`carried_by` / tie-backs / `component` / `notes`. **Four cells leave:**
+`provider` (folded into `owner`), `req_refs` (the requirement is reached
+through the owner — the design rows whose `module` names it, or the module's
+`Implements:` line), `signal` and `signal_note` (subsumed by `channel`).
+`contract` stays as a LEGACY cell, read and counted by one warning, until its
+content has moved into the owner's `Contract IF-###:` body; the arming slice
+retires it. Run, from your repo root, with the kit checkout you are syncing to:
+
+```
+python <kit>/scripts/migrate_carrier.py --if-shape --check   # report only
+python <kit>/scripts/migrate_carrier.py --if-shape           # rewrite in place
+```
+
+It rewrites each old-shape row in place (comments and order kept): `owner` from
+the stated `provider`, else from the owner design row's single `module`;
+`channel` SEEDED from the owner's kind (`call` for a module, `file` for a file
+or directory, `bytes` for an `external:` party) — a seed, and the report says
+so per row; `consumers` kept as `consumers`; the four retired cells dropped.
+**Nothing leaves unseen:** every dropped `req_refs` value is printed in the
+report beside its row, and every row whose owner could not be derived (an
+`SR-###` owner with no `provider` — a published medium no cell ever named) is
+listed for you to name by hand; until you do, `trace.py --strict` names it.
+Then read each row once: move `consumers` to `requestors` where the far side
+puts information INTO the owner (callers, invokers, writers), and confirm the
+seeded `channel`. **Find the rows the converter could not finish:**
+
+```
+grep -n "^owner = \"\(SR\|LLR\)-" docs/requirements/interfaces.toml
+```
+
+*What replaces the `req_refs` grep* ("which seams does SR-012 touch?"): join
+the other way — the SR's design rows name modules, and those modules own
+rows — or read the module's `Contracts:` marker. The planning briefs now hand
+a planner `Owner`, the far side, `Channel` and `Data` instead of the prose
+`Contract`. Do not bump each row's `version`: the row's shape changed, the
+interface semantics did not.
+
+**Mint header-first from now on** (PROCESS.md §8): a work item that creates a
+module mints its seam rows and the module's stub header before any code, so
+parallel workers read the same home the finished module will have.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

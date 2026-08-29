@@ -741,3 +741,132 @@ def test_the_meta_repos_own_off_spine_registries_are_already_converted():
     assert findings == [], findings[:5]
     for rel in ("docs/requirements/open-items.csv", "docs/agents.csv"):
         assert not (ROOT / rel).exists(), rel
+
+
+# --- OI-67: the IF row's SHAPE change, converted in place ---------------------
+
+OLD_SHAPE_IFS = """# a header comment that must survive
+[interface.IF-001]
+provider = "scripts/trace"
+consumers = ["scripts/check"]
+contract = \"\"\"trace.py CLI: --strict exits 1 on an orphan.\"\"\"
+signal = "discrete"
+signal_note = \"\"\"the exit code is the
+bounded part\"\"\"
+req_refs = ["SR-001", "SR-002"]
+owner = "SR-001"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-002]
+consumers = ["scripts/check"]
+contract = "reads the budgets registry"
+signal = "variable"
+req_refs = ["SR-003"]
+owner = "LLR-001"
+version = "v1"
+status = "Drafted"
+notes = "kept verbatim"
+
+[interface.IF-003]
+consumers = ["scripts/check_perf"]
+contract = "a published medium no cell ever named"
+signal = "variable"
+req_refs = ["SR-004"]
+owner = "SR-004"
+version = "v1"
+status = "Drafted"
+"""
+
+OLD_SHAPE_LLRS = """[design.LLR-001]
+sr_refs = ["SR-003"]
+title = "the budgets reader"
+module = "project-trajectory/scripts/check_perf.py"
+status = "Drafted"
+"""
+
+
+def _if_shape_repo(tmp_path, ifs=OLD_SHAPE_IFS):
+    req = tmp_path / "docs" / "requirements"
+    req.mkdir(parents=True)
+    (req / "interfaces.toml").write_text(ifs, encoding="utf-8")
+    (req / "low-level-requirements.toml").write_text(OLD_SHAPE_LLRS, encoding="utf-8")
+    return tmp_path
+
+
+def test_the_if_shape_converter_folds_the_owner_and_drops_the_four_retired_cells(
+    tmp_path,
+):
+    root = _if_shape_repo(tmp_path)
+    report, written = mc.convert_if_shape(root, write=True)
+    assert [p.name for p in written] == ["interfaces.toml"]
+    text = (root / "docs/requirements/interfaces.toml").read_text(encoding="utf-8")
+    rows = tomllib.loads(text)["interface"]
+    # The stated provider wins; the LLR owner folds to its single module (in the
+    # short spelling the far side already uses); nothing retired survives.
+    assert rows["IF-001"]["owner"] == "scripts/trace"
+    assert rows["IF-002"]["owner"] == "scripts/check_perf"
+    for rid in ("IF-001", "IF-002", "IF-003"):
+        assert not set(rows[rid]) & set(mc.IF_RETIRED), rid
+        assert rows[rid]["channel"] in ("call", "file", "bytes"), rid
+        assert rows[rid]["consumers"], rid  # the far side is KEPT as consumers
+    # The legacy cell and every other cell survive verbatim.
+    assert rows["IF-001"]["contract"].startswith("trace.py CLI")
+    assert rows["IF-002"]["notes"] == "kept verbatim"
+    assert text.startswith("# a header comment that must survive\n")
+    # The one owner nobody can derive is left AS IS and reported, never guessed.
+    assert rows["IF-003"]["owner"] == "SR-004"
+    assert any("IF-003: owner 'SR-004' could not be derived" in r for r in report)
+    # Nothing leaves unseen: the dropped req_refs are printed beside their row.
+    assert any("IF-001: req_refs ['SR-001', 'SR-002'] dropped" in r for r in report)
+    assert any("IF-002: channel seeded 'call'" in r for r in report)
+    assert report[0].startswith("docs/requirements/interfaces.toml: 3 row(s) rewritten")
+
+
+def test_the_if_shape_converter_is_a_no_op_on_the_new_shape_and_check_writes_nothing(
+    tmp_path,
+):
+    root = _if_shape_repo(tmp_path)
+    before = (root / "docs/requirements/interfaces.toml").read_bytes()
+    report, written = mc.convert_if_shape(root, write=False)
+    assert written == []
+    assert (root / "docs/requirements/interfaces.toml").read_bytes() == before
+    assert report[0].endswith(
+        "3 row(s) rewritten to the owner / far side / channel shape"
+    )
+    # Converted once, the registry is the new shape and a second pass rewrites nothing.
+    mc.convert_if_shape(root, write=True)
+    after = (root / "docs/requirements/interfaces.toml").read_bytes()
+    report2, written2 = mc.convert_if_shape(root, write=True)
+    assert written2 == [] and report2 == [
+        "docs/requirements/interfaces.toml: 0 row(s) rewritten to the owner / far side / channel shape"
+    ]
+    assert (root / "docs/requirements/interfaces.toml").read_bytes() == after
+
+
+def test_the_meta_repos_own_registry_is_already_the_new_shape():
+    # The dogfood: the kit's registry converted at WI-528, and the converter
+    # agrees — reads only.
+    report, written = mc.convert_if_shape(ROOT, write=False)
+    assert written == [] and report[0].endswith(
+        "0 row(s) rewritten to the owner / far side / channel shape"
+    )
+
+
+def test_the_if_shape_cli_reports_and_honours_check(tmp_path):
+    import subprocess
+    import sys
+
+    root = _if_shape_repo(tmp_path)
+    script = ROOT / "project-trajectory" / "scripts" / "migrate_carrier.py"
+    proc = subprocess.run(
+        [sys.executable, str(script), "--root", str(root), "--if-shape", "--check"],
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "3 row(s) rewritten" in proc.stdout and "nothing written" in proc.stdout
+    assert "owner 'SR-004' could not be derived" in proc.stdout
+    assert 'provider = "scripts/trace"' in (
+        root / "docs/requirements/interfaces.toml"
+    ).read_text(encoding="utf-8")

@@ -1135,77 +1135,75 @@ repo in one command. See `EXAMPLE.md` for a complete worked SN→SR→LLR→TC c
 
 ## 8. Interface seams — cross-project and intra-repo
 
-When this project provides or consumes a contract — shared with another repo, or
+When this project provides or consumes a surface — shared with another repo, or
 between its **own modules** — record each seam once in
-`requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`):
-`Provider` and `Consumers` (modules, a file medium, or an external actor),
-contract, its signal type, the `Req-Refs` that realize/rely on it, its `Owner`, a
-rationale, a version, and its `Status`. `Owner` is the **one** row
-answerable for the seam — an `SR-###` or a design-tier id, exactly one, and the
-cell that answers "who serves this" without reading three others. **Flow is the
-shape of the row**, `Provider` → `Consumers`, never a column beside it: a
-provision implies orientation but not that the seam is actually directional (a
-mated connector has an owner and no flow), and naming a consumer declares that
-its cross-component edge is intended and that this row discharges it. Omit
-`Provider` where the `Owner` derives it (a design row naming one module IS the
-provider). The `Owner`'s side holds the authoritative spec and
-closes the final read; a consuming side links the same
-`IF-###` and pins the version. A seam may also name the bundle that carries it
-(`CarriedBy`), so one contract can be declared at both grains. Every interface is backed by an SR and a
-contract/fixture test — or, for a **low-level** seam whose parent functionality
-is what the tests exercise, by an optional `VerifiedBy` pointer (a `TC-###` or
-an `LLR-###`, warn-first that it resolves; empty means "verified in its own
-right"), so building blocks are not forced into a test each. This keeps interlinked projects — and a repo's own modules
-— from silently drifting apart without imposing a build system. Single-module
-standalone projects skip this section; a multi-repo or multi-module repo declares
-its seams the same way, and the architecture-connectivity coverage over them is
+`requirements/interfaces.toml` as an `IF-###` (see `INTERFACES.template.md`).
+**One row is one owner, its far side, and a typed statement of the
+information.** `Owner` is the providing THING — what the information plugs
+into — in the one spelling the far side uses: a module path, a file or
+directory path, or `external:<party>`; **never a requirement or design id**.
+The requirement a seam answers to is REACHED through the owner (the design rows
+whose `Module` names it, or the `Implements:` line in its header), not stated
+on the row. The far side names the DIRECTION, and exactly one is set:
+`Requestors` put information *into* the surface the owner defines (they call
+the function, invoke the CLI, set the env var, write the file); `Consumers`
+take what the owner emits (they read the file, the exit code, the stdout). A
+call is one row; a CLI's arguments and its exit code are two; a module that
+reads one file and writes another is two. `Channel` is closed — `cli` ·
+`exit-code` · `stdout` · `file` · `call` · `env` · `git` · `bytes` — and
+`Data` is the optional short alphabet or schema pointer (≤160 characters; no
+work-item id, no decision citation, no rationale connective; a named symbol or
+path must resolve). A generated file is owned by the module that writes it; a
+hand-edited file is owned as itself and declares in its own header. A seam may
+name the bundle that carries it (`CarriedBy` — a constituent is still one
+owner and one channel), and a low-level seam may say the parent's tests cover
+it (`VerifiedBy`: a `TC-###` or an `LLR-###`, warn-first that it resolves;
+empty means "verified in its own right"). `Version` and `Status` (`Drafted` ·
+`Approved` — the spine's words minus `Founded`, which never applies: an
+approval says the seam is agreed, not demonstrated) complete the row. The
+owner's side closes the final read; a consuming side links the same `IF-###`
+and pins the version. A row ties back to a declared boundary crossing (`B-##`
+in `requirements/external.toml`, §4) via `interface_from_external` /
+`interface_to_external` only when it REALIZES one; a row with neither is an
+internal seam. Every interface is backed by a contract/fixture test cited from
+a TC's `Verifies`. This keeps interlinked projects — and a repo's own modules —
+from silently drifting apart without imposing a build system. Single-module
+standalone projects skip this section; a multi-module repo declares its seams
+the same way, and the architecture-connectivity coverage over them is
 **opt-out/default-on** (process-options.md "Intra-repo interfaces & the
 architecture graph").
 
-**An IF row is an INTERFACE ONLY** (ruled, OI-14 part B). `Contract` states just
-*what crosses, typed*: the surface, plus a `Signal` of `discrete` (a finite
-enumerable alphabet — exit code, gate name, status enum, dial) or `variable`
-(unbounded content — prose, file bytes, a count, a duration). The **why** goes in
-`Rationale`, never in `Contract`; history goes in the log. Four warn-first rules
-police the difference by FORM, since no check reads intent: no work-item id and
-no decision citation in `Contract` (both age — a cancelled id still reads as
-authority), no rationale connective (*because* / *rather than* / *so that* /
-*since* — that sentence belongs in `Rationale`), and a 500-character ceiling. A
-fifth reads CONTENT at the one resolution a grammar can: a `SCHED_*` /
-`Foo.bar` / `CONSTANT_NAME` token, or a named path, must still resolve. And a
-contract **never restates its `Owner`** — where the detail lives on the owner
-row and in the module, state the crossing and stop (`SR-006's obligation
-delivered as a CLI at check.py; crosses B-05`), keeping a clause only for a
-typed fact the owner does not carry.
-**The contract may live BESIDE THE CODE, and the row points at it.** A module
-declares the seams it provides on one `Contracts: IF-###, ...` marker line — the
-line must OPEN with the marker, so prose that merely mentions it (`No
-`Contracts:` line, deliberately …`) declares nothing — and may then state the
-contract itself, one block per seam, opening `Contract IF-###:` — a form
-ordinary prose does not resemble, which is what makes hard-failing it safe. Four
-refusals keep the two halves honest: a body before the marker, a body for an
-undeclared id, a second body for one id, and a body carrying an HTML comment
-(the text is spliced into generated Markdown). The marker line stays the one
-declaration site, and its own grammar is anchored — `Contracts:` then a
-comma-separated id list — so a marker-shaped line that will not parse, or one
-carrying ids mid-line, is REPORTED rather than silently declaring nothing. `gen_arch_map.py --contracts-doc` harvests
-those bodies into a committed `interface-reference.md`, freshness-gated like the
-CLI reference, so the registry cell states what crosses and points at the
-module rather than restating what the module already says. This is opt-in: a
-repo with no such file pays nothing, and a declared seam that states no body is
-listed in the reference as unstated rather than dropped.
+**The definition lives beside the code, and only there.** What the owner
+promises — the flags, the schema, the guarantees — is stated once, in the
+owner's own header: a module declares the seams it owns on one `Contracts:
+IF-###, ...` marker line (it must OPEN its line and parse as an id list; a
+marker-shaped line that will not parse, or one carrying ids mid-line, is
+REPORTED rather than silently declaring nothing) and states each contract as a
+block opening `Contract IF-###:` — a form ordinary prose does not resemble,
+which is what makes hard-failing its four refusals safe: a body before the
+marker, a body for an undeclared id, a second body for one id, an HTML comment
+in a body. A registry, config or hook file carries the same marker and bodies
+in a `#` header at its top. `gen_arch_map.py --contracts-doc` harvests them
+into a committed `interface-reference.md`, freshness-gated like the CLI
+reference; a declared seam with no body is listed there as unstated. The row
+is the cross-validated link: it declares the seam and stops. **Mint
+header-first.** A work item that creates a module mints its seam rows and the
+module's stub header — marker and bodies — BEFORE any code, so a worker
+building against it reads the same home the finished module will have;
+"declared, not stated" is the signal that a definition is not written yet.
+The legacy `Contract` cell (the prose definition rows carried before the
+header) is read and counted by one warning until its content has moved; do
+not author into it.
 
-`Status` (`Drafted` · `Approved`) is the row's **one** maturity field, shared
-with the boundary tier — the spine's own vocabulary (§7) minus `Founded`, which
-never applies here: an approval says the seam is agreed, not demonstrated. A row ties back to a declared boundary crossing — a
-`B-##` row in `requirements/external.toml` (§4, "The frame is a registry"),
-via `interface_from_external` / `interface_to_external` — only when it
-REALIZES one; a row with neither is an internal seam.
+**Reason cells take the argument, never the citation.** `Rationale` is why the
+seam is drawn here; `Notes` is free prose; neither carries a work-item id,
+ruling, review round, decision id, edit verb or date stamp — history goes in
+the log, and `trace.py`'s citation-frame arm reads both, warn-first.
 
 **An IF row is machine-consumed, not just read.** `plan_briefs.IF_SURFACE_COLUMNS`
-feeds the row's surface — `Contract` included — **verbatim** into the dual-plan
-LLM planning briefs, so every cell is handed to a planner as authority. Write
-them as contract, never as narrative or changelog.
+feeds the row's surface — `Owner`, the far side, `Channel`, `Data` —
+**verbatim** into the dual-plan LLM planning briefs, so every cell is handed to
+a planner as authority. Write them as a link list, never as narrative.
 
 A **purchased/external part** the product buys rather than builds (a motor, board,
 camera) is owned the same way — a repo/coordinator-held `IF-###` is its

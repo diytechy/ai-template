@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,827 | 2026-08-23 | -4: WI-499 — the `human_ratification_through` mention in the repo-map paragraph re-keys to `human_approval_through` |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,906 | 2026-08-24 | +28: WI-512 re-stamped the PROCESS.md row below (+692) and this row. Earlier +39: WI-455 |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,883 | 2026-08-29 | WI-532 re-stamped both watched rows below (−367 / +449) and this row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
@@ -46,8 +46,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 86,676 | 2026-08-24 | **+692** FLAGGED: WI-512 (OI-61) — §8 gains the optional `VerifiedBy` pointer, the fifth `Contract` rule (a named symbol/path must resolve) and the no-restatement instruction. Earlier **+122** WI-455: the `Provider`/`Consumers` field list |
-| `project-trajectory/PROCESS_OPTIONS.md` | 178,760 | 2026-08-24 | **+453** FLAGGED: WI-455 — the intra-repo seam model becomes `Provider` -> `Consumers` and the source/sink valve marks a role rather than a cell |
+| `project-trajectory/PROCESS.md` | 87,651 | 2026-08-29 | **−367** FLAGGED: WI-532 (OI-67) — §8 rewritten for the one-owner row (owner, far side, channel, data; the definition beside the code; mint header-first). Absorbs WI-527's unflagged +1,342 (86,676 → 88,018) |
+| `project-trajectory/PROCESS_OPTIONS.md` | 179,209 | 2026-08-29 | **+449** FLAGGED: WI-532 (OI-67) — the intra-repo seam model becomes owner / far side / channel, and the risk paragraph moves the rot to the header where it is checked |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in
