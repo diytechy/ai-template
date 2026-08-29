@@ -84,7 +84,7 @@ re-pointed at `test_channel_refuses_an_unknown_value_as_a_warn`. Ratchets:
 same commit.
 
 **Gates.** Commit bar (smoke tier + budget + `check_docs --stale`) and the
-full suite: totals recorded below at close.
+full suite, both green; totals at the foot of this entry.
 
 **Deviations from spec:** the far-side pair (`requestors`/`consumers`) is
 NOT in the ruled brief or the plan's first cut — it is the owner's in-session
@@ -93,4 +93,4 @@ classifications, confirmed in slice 3, not readings.
 
 **Byte deltas on budgeted files:** none touched.
 
-**pytest totals:** FILLED-AT-CLOSE
+**pytest totals:** full suite `python -m pytest -q -n auto`: 3068 passed, 15 skipped in 581.27s (0:09:41); smoke tier: 1362 passed, 6 skipped in 19.61s; `check_smoke_budget.py --mode enforce`: 21.3s and 23.9s vs 60s -> within (one earlier reading of 95.7s came straight after the full suite on the same box and was not reproduced — one machine, one data point; the budget is not moved). `check.py` harness: PASS.
