@@ -52,4 +52,4 @@ onto `_contract_bodies`, the walk it moved into unchanged.
 
 **Byte deltas on budgeted files:** none touched.
 
-**pytest totals:** FILLED-AT-CLOSE
+**pytest totals:** full suite `python -m pytest -q -n auto`: 3077 passed, 15 skipped in 591.19s (0:09:51); smoke tier: 1366 passed, 6 skipped in 25.99s; `check_smoke_budget.py --mode enforce`: 21.3s and 24.3s vs 60s -> within (a reading of 88.4s taken straight after the full suite on the same box was not reproduced — the second time this session; one machine, one data point, the budget is not moved). `check.py` harness: PASS; `check_docs --stale`: 0 broken.
