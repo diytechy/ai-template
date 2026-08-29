@@ -2189,9 +2189,9 @@ def if_contract_advisories(ifs, root=None):
     return out
 
 
-# The IF tier's two REASON cells. `Notes` is where a crossing records why it is
-# shaped as it is; `SignalNote` does the same for its discrete/variable call.
-IF_REASON_CELLS = ("Notes", "SignalNote")
+# The IF tier's three REASON cells. `Notes` records why a crossing is shaped as
+# it is; `SignalNote` the discrete/variable call; `Rationale` the argument.
+IF_REASON_CELLS = ("Notes", "SignalNote", "Rationale")
 
 # The reviewed exception list for the citation-frame advisory, in the same
 # one-entry-per-line ` — <reason>` idiom `docs/need-form-allow` established. The

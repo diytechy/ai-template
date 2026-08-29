@@ -2513,7 +2513,9 @@ Cross-family second opinion (OPENAI-SOL, 2026-08-25; record: docs/reviews/2026-0
 
 [open_item.OI-64]
 title = """Do the rules every checker already follows get stated once, or does each checker keep its own wording"""
-status = "pending"
+status = "ruled"
+ruled_date = "2026-08-28"
+ruling_ref = "docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md"
 raised = "2026-08-25"
 one_line = """Every shipped checker follows the same unwritten rules for reporting a problem; no requirement states them. Recommend stating them once, because a new checker can break them today and nothing fails."""
 decision = """The question: state the reporting rules once, or let each checker keep its own wording? Nothing else is being proposed - no module, no refactor.
@@ -2550,16 +2552,19 @@ options = """- **(a) State the contract, then remove the wording it replaces.** 
 - **(b) State the contract, change nothing else.** Effect: adds 1 interface contract; consolidates nothing; still changes checker wording and tests if the contract fixes a severity vocabulary. FOR: banks the rule now at no re-approval cost, and new rows cite instead of restate. AGAINST: ten rows keep their own wording, and one that drifts now contradicts the contract rather than merely repeating it.
 - **(d) Decline. Record it as a coding convention.** Effect: adds nothing, consolidates nothing, changes no code. FOR: severity genuinely is a per-check decision and each row's is already explicit. AGAINST: nothing constrains a new checker.
 - (c) MEASURE FIRST is closed - run 2026-08-25, no longer a choice."""
-recommendation = """Recommend (b) now, with (a) available later if a citation field is added.
+recommendation = """RULED (b) by the owner 2026-08-28 and EXECUTED the same day as IF-144 (record: docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md). The protocol is stated once at the interface tier; no existing row was edited.
 
-- Deciding reason: (a) and (b) state the same contract. (a)'s only extra gain is removing six clauses, and it cannot be done at all until an SR row can cite an interface. (b) gets the rule stated at no re-approval cost.
-- Required guard: leave "every degrade is named" out of the contract unless SR-181 is corrected first. It is the one clause that would land red.
-- Sequencing: rule OI-65 first so the contract is written into a home that is not about to move. This row's policy choice can be made in either order."""
+- THE SHAPE QUESTION RESOLVED ON THE EVIDENCE, not by a further ruling. The contract is not a module-to-module seam - it is what the delivered harness presents at its package boundary, and all ten restating rows cite B-05 unanimously. IF-144 therefore takes `interface_to_external = "B-05"`, the shape 28 interface rows already use, which is also what the owner's own direction anticipated in saying an external far side is a boundary-line interface.
+- The guard held: IF-144 does NOT state "every degrade is named, never silent". SR-181's acceptance permits a silent degrade while SN-008 forbids one, and the row records that contradiction rather than legislating over it.
+- The closed set is four DISPOSITIONS, not twelve tokens. The checkers spell four outcomes with twelve labels; the row states the contract they already honour, not a rename they do not.
+- Option (a)'s sweep stays available and unruled, and is still not executable: an SR row has no field for citing an interface."""
 wi_refs = ["WI-508"]
 
 [open_item.OI-65]
 title = """Where interface contract text lives, ten passages with no legal home, and the cell nothing lints"""
-status = "pending"
+status = "ruled"
+ruled_date = "2026-08-28"
+ruling_ref = "docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md"
 raised = "2026-08-25"
 one_line = """Decide whether interface facts not stated elsewhere stay in the 108 contract cells or move beside the code, plus ten passages to delete and one lint gap. Recommend pricing the move first."""
 decision = """Three questions that can be ruled separately. None of them adds or removes a requirement row: no SR, no LLR and no interface row is created or deleted by any option below. All 135 interface rows are Drafted, so editing them needs no re-approval.
@@ -2618,9 +2623,54 @@ options = """### 1. Placement
 
 - **(iv) Add `rationale` to the lint, and match WI ids case-insensitively.** Effect: two edits in `trace.py` and `trace_text.py` plus tests; no registry change. Driven on the current tree: 0 new findings from `rationale`, 3 from the case fix. FOR: nearly free, and it closes a gap the cleanup itself opened. AGAINST: adopters may see new warnings on a cell they use their own way.
 - **(v) Leave it.** Effect: nothing. FOR: no adopter-visible change. AGAINST: the cell that gained the most content is the one nothing reads."""
-recommendation = """Recommend (b') for placement, (i) for the ten passages, (iv) for the lint.
+recommendation = """RULED by the owner 2026-08-28 (record: docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md): (b') for placement, (i) for the ten passages, (iv) for the lint.
 
-- Deciding reason: (b) is the better destination and its precondition has stayed unbuilt through two rulings. Pricing it first is the only form that neither commissions an unbounded build nor settles the question by default. If the price is beyond appetite, (a) with the deletion pass is the honest second.
-- Required guard: price the harvester fix with it. The `handback.py` false positive means the header mechanism cannot be costed as though the existing harvester works.
-- Sequencing: rule this row before OI-64's placement, so that contract is not written into a home this ruling may move. Nothing here depends on OI-64's outcome."""
+- (b') commits to the component-side header IN PRINCIPLE. No cell moves and no code changes until WI-525 prices the build and the owner accepts the price at OI-66. If the price is beyond appetite the row returns to (a); that fallback is ruled, not a later re-opening.
+- The pricing must include the harvester fix. `gen_arch_map.module_contracts` already reads `handback.py` as declaring IF-080 although its docstring says "No `Contracts:` line, deliberately", so (b) cannot be costed as though the harvester works.
+- (i) deletes the eight provenance and duplicate spans and CORRECTS IF-117 and IF-061 rather than deleting them into silence. Execution: WI-524.
+- (iv) widens the lint and fixes the case-sensitive WI match. Driven, not estimated: 0 findings from the 37 `rationale` cells, 3 from the case fix. Execution: WI-523."""
 wi_refs = ["WI-516", "WI-522"]
+
+[open_item.OI-66]
+title = """Is the component-side contract header worth its build price, or does the remainder stay in the cell"""
+status = "pending"
+raised = "2026-08-28"
+one_line = """The header build is priced at roughly one WI-512, about 2,000 changed lines across 35 files. Decide go or no-go; the ruled fallback is that the content stays in the cell."""
+decision = """The question: with the build priced, does the unique interface content move to a component-side contract header, or does it stay in the cell?
+
+OI-65 ruled the header direction in principle and owed a price before anything moved. WI-525 has now taken it. Record: docs/plans/2026-08-28-header-build-price.md.
+
+### The price, taken by analogue rather than estimated
+
+WI-512 built the same shape of mechanism - thin the cells to their crossing, harvest the removed content into a committed generated reference, freshness-gate it, ship the convention to adopters. Its cost is a measured diff: **+2,024 / -156 across 36 files**.
+
+- The reference itself: 566 lines. Its generator: 189. Its freshness gate: 79 across `check.py`, `trunk_step.py` and `docs/stack.ini`. Registry-side reader and checks: 239. Tests: 334. Adopter-facing kit surfaces: about 110.
+- This build differs in four ways: the cell pass is **71 rows against 27** (the one item that scales, roughly 2.6x on the registry line alone); **21 of 78 modules carry no `Contracts:` anchor** and each needs one authored; the **harvester is broken** and fixing it is a precondition; and it is *less* work in one place, because the anchor, its grammar and its citation check already exist - WI-512 built those.
+
+**Order 2,000 changed lines across about 35 files. One work item of a size this repo has absorbed before, not a program.**
+
+### The correction that makes this rulable
+
+Both OI-63 and OI-65 recorded that option (b)'s precondition was unbuilt, and cited WI-512 as the precedent that worked *because* a committed `docs/cli-reference.md` already existed. That is not what happened: `git log --diff-filter=A` puts the creation of that file **in WI-512's own commit**. The precedent built its reference from nothing. So the missing artifact is a cost, not an unbounded prerequisite - which is a different answer from the one both prior rulings assumed.
+
+### What is still not priced
+
+The authoring judgement inside the cell pass. WI-512 harvested the CLI surface mechanically from `argparse`; a contract body is written by a person reading the code, and 71 rows of that is not a line count. A five-row sample tranche would produce the only honest number.
+
+### The harvester bug, which needs a decision either way
+
+`gen_arch_map.module_contracts` returns `['IF-080']` for `handback.py`, whose docstring says "No `Contracts:` line, deliberately". Its guard admits any line carrying the word `Contracts`, and a negated declaration carries it. Fixing it raises a question the bug exposes: whether a module may declare "no contracts, deliberately" as a first-class state."""
+blast_radius = """- RULING GO: about 2,000 changed lines, roughly 35 files, one work item. Every adopting repo takes a version bump for the header convention and its gate. The 21 unanchored modules and the 71-row authoring pass are the parts that cannot be mechanised.
+- RULING NO-GO: costs nothing to execute and returns placement to keep-in-cell. What it accepts is that the cell stays held to the code by nobody - IF-055's stale names and IF-117's three false claims are what that has already cost, and IF-117 was corrected by hand at WI-524 rather than by any check.
+- DEFERRING: OI-62's deletion pass removes restatement "in place", and "in place" stays undefined until placement is settled, so that pass cannot run either way.
+- REVERSING after GO: the generated reference and its gate would have to be retired the way the module map was at WI-455, and the content moved back into cells. Cheaper than the build, but not free."""
+options = """- **(a) GO.** Effect: commissions the generated reference, its generator, its freshness gate, the registry-side reader, the 21 missing anchors, the harvester fix and the adopter migration - about 2,000 lines over ~35 files. FOR: the declaration lands beside the code it describes, which is the only version of this that makes the rot self-correcting rather than caught after the fact; the price is now a measured analogue rather than an unknown. AGAINST: the largest adopter-visible change on the table, and the 71-row authoring pass inside it is the part no number covers.
+- **(b) NO-GO, return to keep-in-cell.** Effect: nothing is built; OI-62's deletion pass then runs in the cell. FOR: no adopter migration, no new gate to maintain, and the deletion pass shrinks the surface that can rot even without moving it. AGAINST: accepts the rot class permanently - the cell keeps being held to the code by nobody.
+- **(c) GO on a reduced scope.** Effect: fix the harvester and author the 21 missing anchors; defer the generated reference and its gate. FOR: the harvester bug is worth fixing whichever way this is ruled, and the anchors are useful on their own. AGAINST: half a mechanism holds nothing to the code - without the committed reference the cell has nothing to point at, so it buys tidiness rather than the property that motivated (b).
+- **(d) GO, but sample first.** Effect: author five rows of the cell pass, measure what a contract body actually costs to write, then commit the rest. FOR: it prices the one item the analogue cannot, and five rows is cheap. AGAINST: a fourth act on this question, and the sample can only refine a decision the other numbers already support."""
+recommendation = """Recommend (a) GO, and fix the harvester first whichever way this is ruled.
+
+- The deciding reason: the argument that carried both prior rulings - that (b)'s precondition was an unpriced, unbuilt, possibly unbounded artifact - does not survive the record. WI-512 built the same artifact from nothing inside one work item, and this build is the same size with a bigger cell pass and a smaller mechanism, because the anchor already exists.
+- Required guard: the harvester fix lands before any cell moves, and it carries the "no contracts, deliberately" decision with it. A mechanism that reads a negated declaration as a declaration cannot be the thing 71 rows point at.
+- If the appetite for adopter-visible change is lower than (a): (d), not (c). A five-row sample answers the one open number; (c) buys tidiness without the property that motivated the move."""
+wi_refs = ["WI-525"]

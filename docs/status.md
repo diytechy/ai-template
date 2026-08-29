@@ -78,45 +78,39 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   workaround: pointing `--basetemp` at D: roughly **doubles** the smoke tier's
   wall time (26 s on the declared command, 60 s with the redirect), so redirect
   it only when C: is genuinely short.
-- **THE INTERFACE `contract` CELLS ARE CLEANED, AND THE PLACEMENT QUESTION IS
-  THE NEXT OWNER ACT.** `OI-63` is RULED (d) and executed: the non-crossing
-  (M/X) content left `contract` for `rationale` on 36 rows, `contract` over the
-  108-row population fell **43,995 → 37,859 characters** and the rows carrying a
-  `rationale` went **1 → 37**. The one record to read is the per-row disposition
-  addendum on
-  [plans/2026-08-25-if-contract-verdicts.md](plans/2026-08-25-if-contract-verdicts.md)
-  (the measured verdicts above it, the dispositions below).
-  **What is owed the owner next is now CARRIED BY A ROW — `OI-65`, filed
-  2026-08-25**, because a ruled row leaves the decision surface and the re-ask
-  had no carrier but this prose. Its three parts, in order:
-  1. **The placement re-ask** — does the unique remainder move to a
-     component-side contract header, on cells that now hold only crossing
-     content? It is weighed with the correction the owner made in the same act
-     (a file far side IS the interface and its format is the producing side's
-     to define; an external far side is a boundary-tier row) and with the
-     one-definer rule from `OI-64` (the interface contract defines an
-     expectation, or the LLR does, never both). The target `(b)` needs is still
-     unbuilt: nothing committed and freshness-gated succeeded the module map
-     that the interface-schema work retired, so a header convention would have
-     to build the reference and its gate, not only adopt a docstring line.
-     **Two corrections from the 2026-08-28 review** (record:
-     [reviews/2026-08-28-oi64-oi65-sol-round/](reviews/2026-08-28-oi64-oi65-sol-round/)):
-     the anchor count is **57 of 78 modules, leaving 21** (not 57 of 76), and
-     `gen_arch_map.module_contracts` **already miscounts** — it reads
-     `handback.py` as declaring `IF-080` although that docstring says "No
-     `Contracts:` line, deliberately", so a negated declaration is read as a
-     declaration. `(b)` cannot be priced as though the harvester works. The
-     character figures (8,975 remainder / 28,305 restatement) are per-clause
-     judgements, not measured spans; the row counts are the exact part.
-  2. **The deletion queue** — ten rows carry non-crossing spans that could NOT
-     move, because `rationale`'s declared grammar refuses a citation and
-     deletion was not ruled. Bare plan-doc/programme citations, two citations
-     resolving to nothing a reader can reach, and rot on `IF-117` and `IF-061`.
-     The addendum's "Flagged for the owner" list is the queue.
-  3. **The lint gap** — nothing checks an IF `rationale` at all
-     (`IF_REASON_CELLS` is `Notes`/`SignalNote`), on a cell that just went from
-     1 user to 37. Widening the arm is an executable change and was not taken
-     on a registry-only row.
+- **`OI-65` IS RULED AND EXECUTED; WHAT IS OWED THE OWNER NOW IS `OI-66`, AND IT
+  IS PRICED.** Ruled 2026-08-28 (record:
+  [log.d/2026-08-28-owner-rulings-oi64-oi65.md](log.d/2026-08-28-owner-rulings-oi64-oi65.md)):
+  (b') for placement, (i) for the ten passages, (iv) for the lint. All three
+  executed the same day; the work items are named in the log.
+  - **The lint arm exists now.** `IF_REASON_CELLS` carries `Rationale` and the
+    WI-id detector is case-blind. Both pre-ruling predictions held: **0**
+    findings from the 37 `rationale` cells, exactly **3** from the case fix
+    (`wI-280` on `IF-082`/`IF-083`/`IF-084`, invisible to three prior rounds),
+    all three fixed rather than silenced.
+  - **The ten passages are cleared.** Eight provenance or duplicate spans
+    deleted; `IF-117` and `IF-061` corrected against the tree rather than
+    against their own cells. `contract` over the 135-row registry
+    **40,472 → 40,137**.
+  - **The header build is priced, and the claim that deferred it twice does not
+    survive the record.** `OI-63` and `OI-65` both held that (b)'s precondition
+    was unbuilt, citing the CLI relocation as working *because* a committed
+    `docs/cli-reference.md` already existed. `git log --diff-filter=A` puts that
+    file's creation in **that same relocation's own commit** — the precedent
+    built its reference from nothing, inside one work item. So the price is an
+    analogue, not a guess: **+2,024 / −156 over 36 files**, and this build is the same
+    shape with a bigger cell pass (71 rows against 27), 21 of 78 modules needing
+    an anchor first, a broken harvester to fix, and a smaller mechanism because
+    the anchor already exists. **Order 2,000 lines across ~35 files — one work
+    item, not a program.** Record:
+    [plans/2026-08-28-header-build-price.md](plans/2026-08-28-header-build-price.md).
+  **`OI-66` IS THE NEXT OWNER ACT:** go or no-go on that price, with the ruled
+  fallback that the content stays in the cell. Its required guard is the
+  harvester — `gen_arch_map.module_contracts` reads `handback.py` as declaring
+  `IF-080` although that docstring says "No `Contracts:` line, deliberately", and
+  a mechanism that reads a negated declaration as a declaration cannot be the
+  thing 71 rows point at. What is still unpriced and says so: the authoring
+  judgement inside the cell pass, which a five-row sample would settle.
   `OI-61`'s (c) stays deferred and was NOT re-raised.
 - **The interface tier's end-state schema is LANDED.**
   A seam row now reads `provider -> consumers`: no direction
@@ -225,26 +219,34 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
   test-tree sensor gap rides with them, carried but not executed (its axis is
   under an unruled owner question). **The remap row's close now has nothing to
   re-point.**
-  **WHAT REMAINS ON THE REMAP ROW IS OWNER-OWED AND ONLY THAT:** `OI-64`'s
-  ruling, and the blessing of the four `Drafted` rows. It stays ACTIVE
-  deliberately — closing it would strand the ruling with no row to return to.
-  **`OI-64`'s measurement is run, and the row was rewritten plainly on
-  2026-08-28** after a cross-family review (record:
-  [reviews/2026-08-28-oi64-oi65-sol-round/](reviews/2026-08-28-oi64-oi65-sol-round/);
-  measurement:
-  [plans/2026-08-25-oi64-checker-uniformity.md](plans/2026-08-25-oi64-checker-uniformity.md)).
-  The checkers already follow one reporting protocol; only the wording is
-  ragged — 12 severity words for four outcomes and six spellings of the strict
-  flag. Three corrections came out of the review and are now on the row:
-  the restating rows number **ten, not thirteen** (`SR-015` and `SR-164` state
-  none of the protocol); **at most six clauses are removable**, because four
-  rows make severity part of the obligation itself; and `SR-158` does **not**
-  declare itself unsatisfied — it states a condition the measurement found met.
-  Two facts now block option (a) outright: an SR row has **no field for citing
-  an interface**, and `SR-181`'s acceptance permits a **silent degrade**, so a
-  contract carrying *every degrade is named* would land red on an Approved row.
-  What is left to rule is (a) vs (b) vs (d); rule `OI-65` first so the contract
-  is written into a home that is not about to move.
+  **`OI-64` IS RULED (b) AND EXECUTED — the remap row's owner-owed ruling is
+  discharged**; what remains on it is the blessing of the four `Drafted` rows.
+  The reporting protocol is now stated once as **`IF-144`**: a
+  finding names its location, carries a severity from a closed four-value set,
+  never lets an advisory reach the exit code, promotes to failure only under a
+  declared strict flag, and exits zero naming the absence when an optional input
+  is missing. No existing row was edited — (b) is state-and-sweep-nothing.
+  - **The shape resolved on the evidence, not by a second ruling.** It read at
+    first as a blocker (one `provider` or one `component` per row, against
+    fourteen providers splitting five and five across `CMP-006`/`CMP-007`), but
+    that was the wrong axis: the protocol is what the harness presents at its
+    **package boundary**, and all ten restating rows cite **`B-05` unanimously**.
+    28 rows already use that shape.
+  - **Two clauses deliberately absent, recorded on the row.** *Every degrade is
+    named* is not stated, because `SR-181`'s acceptance permits a silent degrade
+    while `SN-008` forbids one — it would red an `Approved` row on day one. And
+    the closed set is four *dispositions*, not the twelve tokens the checkers
+    spell them with.
+  - **The row honours the rules it states.** First draft tripped four of the
+    registry's own advisories (732 characters against a 500 ceiling, an argument
+    in `contract`, a date stamp in `notes`); thinned to **466** with the argument
+    moved to `rationale`.
+  Three corrections from the 2026-08-28 review stand on the row (record:
+  [reviews/2026-08-28-oi64-oi65-sol-round/](reviews/2026-08-28-oi64-oi65-sol-round/)):
+  the restating rows number **ten, not thirteen**; at most **six** clauses are
+  removable; and `SR-158` does **not** declare itself unsatisfied. Option (a)'s
+  sweep stays unruled and is still not executable — an SR row has **no field for
+  citing an interface**.
 - **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
   (2026-08-25; record:
   [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.d/2026-08-25-wi521-slice1-acceptance-record.md)).
@@ -312,10 +314,9 @@ deeper (OI-55 ruled (a), 2026-08-22) — same registry, same reader, dashboard
 _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` — do not hand-edit; cite the spine registries + `docs/stage`, not this rendering (the forward-only intent below is hand-authored)._
 
 - **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
-- **Spine:** **SN=27 SR=75 LLR=187 TC=184** (6 drafts) · 135 seams · 4 components.
+- **Spine:** **SN=27 SR=75 LLR=187 TC=184** (6 drafts) · 136 seams · 4 components.
 - **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
-  - **OI-64** — Every shipped checker follows the same unwritten rules for reporting a problem; no requirement states them. Recommend stating them once, because a new checker can break them today and nothing fails.
-  - **OI-65** — Decide whether interface facts not stated elsewhere stay in the 108 contract cells or move beside the code, plus ten passages to delete and one lint gap. Recommend pricing the move first.
+  - **OI-66** — The header build is priced at roughly one WI-512, about 2,000 changed lines across 35 files. Decide go or no-go; the ruled fallback is that the content stays in the cell.
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
   - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
   - **WI-508** `P2` — The architectural remapping program: blind minimal-map re-derivation, divergences filed a…

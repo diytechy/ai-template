@@ -269,7 +269,11 @@ def ac_advisories(srs):
     return out
 
 
-_WI_TOKEN_RE = re.compile(r"\bWI-\d+")
+# Case-INSENSITIVE since WI-523 (OI-65 ruled (iv)): `IF-082`/`IF-083`/`IF-084`
+# carried `wI-280` for three rounds because a shift key defeated the detector.
+# The token SHAPE is unchanged - this only stops the case of the two letters
+# deciding whether provenance is seen at all.
+_WI_TOKEN_RE = re.compile(r"\bWI-\d+", re.IGNORECASE)
 _PROCESS_DOC_RE = re.compile(r"\bprocess(?:-options)?\.md\b", re.IGNORECASE)
 
 # --- The wider provenance vocabulary (owner ruling: NO provenance citation in

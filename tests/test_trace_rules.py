@@ -298,6 +298,61 @@ def test_the_if_reason_cells_are_swept_for_citation_frames_warn_only():
     assert flags({"Notes": "Minted 2026-08-15."}, allow={"IF-101 Notes"})
 
 
+def test_the_if_rationale_cell_is_swept_too_since_wi523():
+    # WI-523 (OI-65 ruled (iv)). WI-522's cleanup moved non-crossing content out
+    # of `Contract` and into `Rationale` on 36 rows in one pass, taking that cell
+    # from 1 user to 37 — and until this arm was widened, `Rationale` was the one
+    # cell in the registry that nothing read. Driven over the 37 live cells when
+    # the change landed: 0 findings, so the widening lights up the class without
+    # handing anyone a cleanup list.
+    from conftest import load_script
+
+    trace = load_script("trace")
+
+    assert "Rationale" in trace.IF_REASON_CELLS
+
+    def flags(row, allow=()):
+        row.setdefault("IF-ID", "IF-101")
+        return trace.if_note_advisories([row], allow)
+
+    # A citation frame in `Rationale` is now reported, on the same terms as
+    # `Notes` — same severity, same wording, same exception list.
+    assert flags({"Rationale": "MINTED 2026-08-15 (log 2026-08-15h) with LLR-173."})
+    assert flags({"Rationale": "Split at the WI-443 conversion."})
+    # And the cell doing its job stays silent: `Rationale` is where the argument
+    # the Contract cell may not hold is SUPPOSED to live, so arguing, connectives
+    # and length must not fire here.
+    assert not flags({"Rationale": "Declared because a copy diverges silently."})
+    assert not flags({"Rationale": "Kept rather than retired; the ruling stands."})
+    assert not flags({"Rationale": "x" * 900})
+    # Placeholder rows and token-scoped exceptions behave as they do for `Notes`.
+    assert not flags({"IF-ID": "IF-000", "Rationale": "Minted 2026-08-15."})
+    assert not flags(
+        {"Rationale": "Minted 2026-08-15."},
+        allow={trace.allow_key("IF-101", "Rationale", "Minted 2026-08-15")},
+    )
+
+
+def test_a_work_item_citation_is_found_whatever_its_capitalisation():
+    # WI-523 (OI-65 ruled (iv)). `IF-082`/`IF-083`/`IF-084` carried `wI-280` in
+    # `Notes` through three rounds of this arm without being seen, because the
+    # detector was case-sensitive. A detector a shift key defeats is not a
+    # detector; the token SHAPE is unchanged, only the case-blindness is new.
+    from conftest import load_script
+
+    trace_text = load_script("trace_text")
+
+    for spelling in ("WI-280", "wI-280", "Wi-280", "wi-280"):
+        assert trace_text._WI_TOKEN_RE.search(
+            "sink - {} slice 11: the import moved.".format(spelling)
+        ), spelling
+
+    # Still a bounded token, not a substring match: no digits, no word boundary,
+    # no finding.
+    assert not trace_text._WI_TOKEN_RE.search("SWI-280 is a different token")
+    assert not trace_text._WI_TOKEN_RE.search("WI- is not an id")
+
+
 def test_a_condition_stated_outside_the_ears_patterns_warns_but_never_gates():
     # process.md section 3, "The statement pattern is EARS". Measured over this
     # repo's 70 SRs before shipping: two rows opened on a non-EARS condition

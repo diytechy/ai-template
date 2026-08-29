@@ -19,10 +19,10 @@
 [derived]
 components = 4
 design_rows = 187
-seam_rows = 135
+seam_rows = 136
 requirements_placed = 71
 requirements_unplaced = 4
-seams_unplaced = 0
+seams_unplaced = 1
 
 [component_view.CMP-006]
 name = "W1 Registry & conformance"
@@ -711,4 +711,6 @@ sr_refs = [
   "SR-114",
   "SR-181",
 ]
-seam_refs = []
+seam_refs = [
+  "IF-144",
+]
