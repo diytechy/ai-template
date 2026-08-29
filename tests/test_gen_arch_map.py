@@ -931,6 +931,16 @@ def test_a_negated_contracts_line_is_not_a_declaration():
         ids('"""m.\n\nContracts: not IF-080; an example, not a declaration.\n"""\n')
         == []
     )
+    # A trailing full stop is ordinary writing and must not cost a declaration.
+    # It is safe where a trailing `and`/comma is not: nothing can follow it, so
+    # accepting it cannot drop an id.
+    assert ids('"""m.\n\nContracts: IF-001, IF-002.\n"""\n') == [
+        "IF-001",
+        "IF-002",
+    ]
+    # `and` stays rejected precisely because accepting it would declare IF-001
+    # and silently drop IF-002 — a partial parse is worse than none.
+    assert ids('"""m.\n\nContracts: IF-001 and IF-002\n"""\n') == []
     # A separator style the tree already uses is not prose and must survive.
     assert ids('"""m.\n\nContracts: IF-061; IF-078 — semicolons.\n"""\n') == [
         "IF-061",

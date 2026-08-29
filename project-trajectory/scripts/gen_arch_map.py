@@ -408,9 +408,11 @@ _LEADING_ID_RE = re.compile(r"^(IF-\d+)\b")
 # down. An id list is either well formed or it is not a declaration.
 # Comma OR semicolon: the kit's own tree uses both (plan_artifacts.py is
 # semicolon-separated), and this grammar tightens against PROSE, never
-# against a separator style someone already writes.
+# against a separator style someone already writes. A trailing full stop is
+# allowed for the same reason and is safe where a trailing `and`/comma is not:
+# nothing can follow it, so no id can be dropped by accepting it.
 _MARKER_RE = re.compile(
-    r"^Contracts:\s*(?P<ids>IF-\d+(?:\s*[,;]\s*IF-\d+)*)\s*(?P<rest>[\u2014(:-].*)?$"
+    r"^Contracts:\s*(?P<ids>IF-\d+(?:\s*[,;]\s*IF-\d+)*)\.?\s*(?P<rest>[\u2014(:-].*)?$"
 )
 # What LOOKS like a marker: used only to tell a malformed declaration apart from
 # ordinary prose, so the first can be reported instead of silently dropped.
