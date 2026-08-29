@@ -57,16 +57,16 @@ the floors file pays nothing.
 Contracts: IF-069 — the interface seam this module declares (process.md §8;
 row of record in docs/requirements/interfaces.toml).
 
-Contract IF-069: LLR-098's obligation delivered as a CLI here. It grades each
-    declared per-module coverage floor against the report and names every module
-    it judged. FAIL-CLOSED in four directions: a module below its floor, a
-    DECLARED floor whose module is absent from the report, a malformed floors
-    file, and a corrupt report each exit nonzero — a declaration whose subject
-    vanished from measurement must never quietly pass. Exit 0 when every floor
-    holds, when none is declared, when the report is absent because the run
-    measured nothing, and when the selected tier does not measure coverage — and
-    that tier skip is taken WITHOUT reading the report, so a stale one left by an
-    earlier run cannot be graded as a current pass.
+Contract IF-069: LLR-098's obligation delivered as a CLI here — the gate verdict
+    the harness reads back. FAIL-CLOSED in four directions, each exiting 1: a
+    declared module measured below its floor, a DECLARED floor whose module is
+    absent from the report, a malformed floors file, and a corrupt report — a
+    declaration whose subject vanished from measurement must never quietly
+    pass. 0 is returned when every floor holds, when none is declared, when the
+    report is absent because the run measured nothing, and when `--tier` names
+    one of `--skip-tiers` — that tier skip taken WITHOUT reading the report, so
+    a stale one an earlier covered run left behind cannot be graded as a current
+    pass. Every module judged is named on stdout, but the verdict is the code.
 """
 
 import argparse

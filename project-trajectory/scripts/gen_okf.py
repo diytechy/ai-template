@@ -34,19 +34,27 @@ a non-adopter pay nothing.
 Usage:  python scripts/gen_okf.py [--root .] [--check]
 Exit codes: 0 clean / vacuous / opted-out, 1 stale bundle under --check.
 
-Contracts: IF-012 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-012, IF-149 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-012: this module is the sole writer of the `docs/okf/` bundle, and
-    the bytes it emits are the contract. The bundle is a pure function of the
-    registries and the pinned spec version — sorted rows, no clock, no
-    timestamp field — so regenerating an unchanged tree reproduces it exactly.
-    `--check` regenerates in memory and byte-compares: a differing file, a
-    missing one, and an EXTRA file under the output dir all count as stale and
-    exit 1, and the write mode prunes the extras plus any directory they
-    emptied. Every emitted file opens with a GENERATED banner naming it a
-    reference copy, its source registry and the regen command, so no bundle
-    file can be mistaken for the reviewed truth. Opted out, or with no real
-    registry rows and no bundle on disk, it emits nothing and exits 0.
+Contract IF-012: the freshness verdict `--check` returns to the harness. It
+    regenerates the bundle in memory, writes nothing, and byte-compares against
+    the tree: a differing file, a missing one and an EXTRA file under the
+    output dir each exit 1, naming the first twenty on stderr; every byte
+    matching exits 0. 0 is also the answer when the export is opted out
+    (`docs/process.toml` `[checks] okf_export`, or the legacy `docs/okf-export`
+    carrying the word `off`) and when there are no real registry rows and no
+    bundle on disk, so a fresh scaffold and a non-adopter pay nothing. The
+    write mode returns 0 whatever it wrote or pruned.
+Contract IF-149: `docs/okf/`, the bundle this module is the sole writer of —
+    one markdown file per concept under a per-tier directory, with JSON-scalar
+    YAML frontmatter, the spine links rendered as ordinary markdown links,
+    per-tier `index.md` tables, a root `index.md`, and `UPSTREAM.md` pinning
+    the targeted spec version. Every file opens with a GENERATED banner naming
+    it a reference copy, its source registry and the regen command, so no
+    bundle file can be mistaken for the reviewed truth. Sorted rows and no
+    clock or timestamp field, so an unchanged tree reproduces the bytes
+    exactly; the write mode prunes files the registries no longer produce and
+    removes any directory they empty.
 """
 
 import argparse

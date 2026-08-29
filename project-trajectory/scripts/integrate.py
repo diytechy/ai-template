@@ -102,8 +102,8 @@ first — mechanical bookkeeping must not stale an honest APPROVE).
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
 own bar passed on this exact tree.
 
-Contracts: IF-080 — the interface seam this module declares
-(process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-080, IF-154 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-080: this module's CLI is the local integration seam, and each
     subcommand's refusal is the contract. `claim` performs the serial trunk
@@ -121,6 +121,13 @@ Contract IF-080: this module's CLI is the local integration seam, and each
     exactly the tree being advanced, and nothing here ever pushes. Every
     subcommand exits nonzero on refusal with the reason named; the caller
     needs no other channel to know what happened.
+Contract IF-154: the argv surface, one required subcommand deep. `--root`
+    (default the cwd) precedes the subcommand; `claim` requires `--wi` (one id,
+    or several `;`-separated) and `--branch`; `refresh` requires `--branch` and
+    takes `--tier` (default `all`, the full gate bar); `integrate` takes
+    `--tier` alone and drains every finished claimed branch there is; `audit`
+    requires `--since`, the window's base revision. Nothing here accepts a
+    remote, push or force option: the only repository it can move is `--root`.
 """
 
 from __future__ import annotations

@@ -1,6 +1,7 @@
 <!--
-Contracts: IF-023, IF-024, IF-054, IF-079 — the interface seams this directory
-declares (process.md §8; rows of record in ../requirements/interfaces.toml).
+Contracts: IF-023, IF-024, IF-054, IF-079, IF-159 — the interface seams this
+directory declares (process.md §8; rows of record in
+../requirements/interfaces.toml).
 
 Contract IF-023: the work-item registry as the validated registry. One row is
     one Markdown spec file whose `+++` frontmatter carries `id`, `title`,
@@ -27,11 +28,18 @@ Contract IF-054: the same registry read for READINESS. A row offers its status,
 Contract IF-079: the registry as one of the two interchangeable FORMS. The
     frontmatter keys, the filename rule and the status-by-directory bijection
     are this format's definition, and the legacy row-per-line CSV is the other
-    form, kept for migrating in and exporting out. A conversion re-reads and
-    re-parses every file it writes before moving on, and the verify mode
-    round-trips the whole registry through a temporary directory and compares
-    cell-exact, writing to neither live home; byte identity is reported, never
-    asserted.
+    form, kept for migrating in and exporting out. The verify mode round-trips
+    the whole registry through a temporary directory and compares cell-exact,
+    writing to neither live home; byte identity is reported, never asserted.
+Contract IF-159: the WRITE side of this directory, and the format's single
+    writer — one registry row rendered as one spec file under the row's status
+    directory, the filename repeating the id, UTF-8 with LF endings on every
+    platform. The file is RE-READ and re-parsed before its path is returned: a
+    spec whose frontmatter does not reconstruct its source row cell-exact, the
+    order key included, raises instead of being left on disk. Bulk conversion
+    and single-item filing both go through it, so no spec is produced by a path
+    that skips that check. Moving a file between the status directories is a
+    state change, not a write of this format.
 -->
 
 # The work-item registry (`docs/work/`)

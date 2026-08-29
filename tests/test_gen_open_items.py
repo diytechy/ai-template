@@ -1110,8 +1110,11 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     data = if_path.read_bytes()
     # The prose `contract` cell left the row at OI-67; the typed `data` cell is
     # the one a census amendment is driven through now.
-    needle = b'data = "orphan, integrity, status and advisory findings; joined report at docs/test/report.md"'
-    assert needle in data, "fixture: IF-001's data cell not found"
+    # Keyed on the cell's SHAPE (the `data = "..."` line of IF-001's block),
+    # never on its text: a re-worded cell must not red a census test.
+    m = re.search(rb'(?ms)^\[interface\.IF-001\]\n.*?^(data = ".*?")$', data)
+    assert m, "fixture: IF-001's data cell not found"
+    needle = m.group(1)
     if_path.write_bytes(
         data.replace(needle, needle[:-1] + b" (amended)" + needle[-1:], 1)
     )

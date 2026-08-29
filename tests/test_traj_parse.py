@@ -304,7 +304,8 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # locked depth-0 table is 4 parties, 4 crossings and 3 relationships, `B-02`
     # is the one crossing deliberately left unrealized (SR-140's condition, stated
     # in the registry header), and WI-455 slice 2's adjudication left exactly
-    # three `external:` rows tied back to nothing, each with its reason on the row.
+    # three `external:` rows tied back to nothing, each with its reason on the row
+    # (seven since OI-67 slice 4, below).
     gt = load_script("gen_trajectory")
     frame = gt.traj_parse.frame_context(ROOT)
     assert len(frame["entities"]) == 4
@@ -314,5 +315,17 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     assert by_id["B-02"]["realized_by"] == []
     # the two rows slice 2 gave a facing, and the largest bundle in the frame
     assert {"IF-080", "IF-081"} <= {i for i, _side in by_id["B-05"]["realized_by"]}
-    assert [u["id"] for u in frame["untied"]] == ["IF-032", "IF-036", "IF-041"]
+    # OI-67 slice 4 added four: the agent CLI's stdin arm and the three argv
+    # arms an external party drives (the adopter's session, the launchers) —
+    # information coming IN from a party the frame declares no IN crossing
+    # for, each stating so on the row.
+    assert [u["id"] for u in frame["untied"]] == [
+        "IF-032",
+        "IF-036",
+        "IF-041",
+        "IF-151",
+        "IF-154",
+        "IF-155",
+        "IF-157",
+    ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

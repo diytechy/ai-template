@@ -60,13 +60,15 @@ Contracts: IF-053, IF-055, IF-071, IF-085, IF-094 — the interface seams this
 module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
-Contract IF-053: SR-148's obligation delivered here as a pure library with a CLI
-    over it. `load_registry_rows`/`load_wis` read the spec-folder work registry
-    into uniform rows; `kind_of`/`classify` answer the two safety axes;
-    `evaluate`, `frontier` and `simulate` derive readiness and the deterministic
-    order from those rows plus the reservations the caller passes in. Nothing
-    here mutates the registry, spawns a worker or touches git, so every caller
-    can derive the same answer at any time without racing another.
+Contract IF-053: SR-148's obligation delivered here as a pure library its
+    siblings import. `load_wis(rows)` (over `load_registry_rows`, or `_load`
+    for the whole read at once) turns the spec-folder work registry into
+    uniform rows — the census reads them that way; `frontier` and `kind_of`
+    give the dispatcher its ready set and each row's declared kind; and
+    `SAFETY_CLASSES` is the vocabulary the intake mint validates a drafted
+    row's kind against before it writes one. Nothing here mutates the registry,
+    spawns a worker or touches git, so every caller can derive the same answer
+    at any time without racing another.
 Contract IF-055: the claim-side derivation. `frontier` over the loaded rows
     returns the dependency-ready set in the deterministic order, and readiness
     already excludes a WI that is blocked, deferred, draft, cancelled, reserved,

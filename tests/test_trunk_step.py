@@ -397,3 +397,27 @@ def test_regen_never_commits_the_caller_owns_the_commit(tmp_path):
         "the green step's output must be left in the working tree "
         "for the caller's serial commit"
     )
+
+
+def test_the_directorys_readme_is_its_declaration_home_not_a_fragment(tmp_path):
+    # OI-67 slice 4: `docs/log.d/` owns an interface row (the fragment grammar
+    # trunk_step consumes), and a directory owner declares through its
+    # README.md. A README is not a session fragment: it is neither compiled
+    # into the log nor refused for its name — the one file the drop-box keeps
+    # beside `.gitkeep`. Any OTHER badly named file still refuses the whole
+    # compile, so the exemption is by name, not by shape.
+    root = repo(tmp_path)
+    fragment(
+        root,
+        "README.md",
+        "<!--\nContracts: IF-156\n\nContract IF-156: one fragment per session.\n-->\n"
+        "# The log drop-box\n",
+        when=1_000_050,
+    )
+    fragment(root, "WI-11-real.md", "## WI-11 — a real fragment\n", when=1_000_100)
+    assert [p.name for p in ts.fragment_paths(root)] == ["WI-11-real.md"]
+    assert ts.compile_log(root) == 0
+    assert "WI-11 — a real fragment" in log_text(root)
+    assert "The log drop-box" not in log_text(root)
+    assert (root / "docs" / "log.d" / "README.md").exists()
+    assert ts.fragment_paths(root) == []

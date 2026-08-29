@@ -51,12 +51,14 @@ Contract IF-046: agent_loop imports this module for the round's scoring pass
     breakdown; `merge_verdict(verdicts)` folds several reviewers into one
     verdict plus a contradiction flag; `fired_tripwires(...)` returns the
     non-scored hard stops; `record_round(path, round_info, provider_substance)`
-    appends the decayed tally to the scoreboard file. Every one of them is
-    ADVISORY: nothing here selects a route or fails a gate — the caller's
-    declared policy does — and the scoreboard is decayed advisory state, never
-    a source of truth. Severity hygiene and the anti-gaming tripwires are
-    returned as gates, never folded into a score, and length never scores
-    positively.
+    appends the decayed tally to the scoreboard file. `parse_verdict` has a
+    second importer: integrate's merge slot reads `.verdict` off it to require
+    an APPROVE per merged row, so this parse is load-bearing at a gate even
+    though the SCORES never are. Every one of them is ADVISORY: nothing here
+    selects a route or fails a gate — the caller's declared policy does — and
+    the scoreboard is decayed advisory state, never a source of truth. Severity
+    hygiene and the anti-gaming tripwires are returned as gates, never folded
+    into a score, and length never scores positively.
 """
 
 import argparse

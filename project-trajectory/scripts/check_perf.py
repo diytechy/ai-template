@@ -46,7 +46,7 @@ Usage:
 --root/--docs are the path flags shared with trace.py and check_docs.py: the
 four artifact paths default under <root>/docs unless given explicitly.
 
-Contracts: IF-004 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-004, IF-147 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-004: the harness runs this CLI as one gate step and reads what it
     prints. Every budget that is not clean gets one line — `check_perf:
@@ -58,7 +58,15 @@ Contract IF-004: the harness runs this CLI as one gate step and reads what it
     vacuous cases speak in the same voice rather than printing nothing: no
     budget rows is `OK - no performance budgets to compare`, and budgets with
     no metrics file is `SKIP -` naming the path the product measurement step
-    owes. Only a FAIL summary exits nonzero.
+    owes.
+Contract IF-147: the gate verdict the harness reads back from this CLI. 0
+    covers every non-breaching outcome — no budget rows at all, budgets with no
+    metrics file, a clean comparison, and any number of WARN or SKIP results,
+    including a `Gate=fail` budget this run did not measure. 1 is returned only
+    when at least one in-tier result is FAIL: a `Gate=fail` budget past its
+    absolute budget for its `Direction`, or regressed beyond its `Tolerance`
+    band against the committed baseline. The `--update-baseline` writer arm
+    compares nothing and returns 1 when there are no metrics to write from.
 """
 
 import argparse

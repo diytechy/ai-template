@@ -19,10 +19,11 @@ Contract IF-030: the hand-written documentation tree, offered as one navigable
 
 The hand-written half of the record. The **requirement spine** and its
 registries live in [`requirements/`](requirements/README.md) and
-[`test/`](test/); the
+[`test/`](test/README.md); the
 authored architecture narrative is [`runtime-flows.md`](runtime-flows.md); the
 forward-only working surface is [`status.md`](status.md) and the account of what
-happened is [`log.md`](log.md). Declared policy dials sit in
+happened is [`log.md`](log.md), compiled from the per-session fragments in
+[`log.d/`](log.d/README.md). Declared policy dials sit in
 [`process.toml`](process.toml) and the product toolchain in
 [`stack.ini`](stack.ini). Frozen design history is under
 [`archive/`](archive/README.md), and generated documents (the dashboard, the CLI

@@ -1,0 +1,182 @@
+{
+ "_about": "batch A of slice 4 — see slice4-brief.md; every field is explained there and in slice4-worklist.json",
+ "rows": [
+  {
+   "id": "IF-075",
+   "action": "edit",
+   "batch": "A",
+   "owner": "scripts/trace",
+   "far_key": "requestors",
+   "far": [
+    "scripts/gen_open_items",
+    "scripts/adjudicate_brief"
+   ],
+   "channel": "call",
+   "data": "reattest_model entries: chain rows, changed cells, baseline rev and date; an empty model is a valid answer",
+   "body_home": "project-trajectory/scripts/trace.py",
+   "why": "IF-127 collapses into this row: same owner surface (load_registries + reattest_model), differing only in requestor. Merge IF-127's body clauses (reached through load_registries; an EMPTY model is a real answer, handed back to refuse on) into IF-075's body; drop IF-127 from the marker and delete its body."
+  },
+  {
+   "id": "IF-127",
+   "action": "delete",
+   "batch": "A",
+   "into": "IF-075",
+   "why": "duplicate of IF-075 under the new shape (worker B's note)"
+  },
+  {
+   "id": "IF-101",
+   "action": "edit",
+   "batch": "A",
+   "owner": "scripts/trace",
+   "far_key": "requestors",
+   "far": [
+    "scripts/intake",
+    "scripts/plan_artifacts"
+   ],
+   "channel": "call",
+   "data": "read_watermark and bump_watermark over docs/id-watermark; a mint counts from max(mark, live) + 1",
+   "body_home": "project-trajectory/scripts/trace.py",
+   "why": "IF-116 collapses into this row: same two functions, differing only in requestor and which spaces are minted. Merge IF-116's body clauses (the mint formula max(mark, live maximum) + 1; bump only after the minted artifact exists) into IF-101's body; drop IF-116 from the marker and delete its body."
+  },
+  {
+   "id": "IF-116",
+   "action": "delete",
+   "batch": "A",
+   "into": "IF-101",
+   "why": "duplicate of IF-101 under the new shape (worker B's note)"
+  },
+  {
+   "id": "IF-145",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/trace",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check",
+    "project-trajectory/hooks/pre-commit"
+   ],
+   "channel": "exit-code",
+   "data": "0 clean · 1 a gating finding under --strict, or an integrity finding under --strict-integrity",
+   "body_home": "project-trajectory/scripts/trace.py",
+   "split_from": "IF-001",
+   "why": "check.py gates the traceability step on trace's return code (trace.exit_code); IF-001 is the stdout kind only. CONFIRM the far side: the hook's --strict-integrity run is IF-042's row already — if IF-042 fully covers the hook arm, name only scripts/check here and say so in your note."
+  },
+  {
+   "id": "IF-146",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/trace",
+   "far_key": "consumers",
+   "far": [
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "docs/test/report.md — metric counts, the orphan and finding lists, the joined SN -> SR -> LLR -> TC forest",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/trace.py",
+   "split_from": "IF-001",
+   "why": "the report file is a medium trace writes every run and no row declared; a generated document is owned by its writer and its far side is the class that reads it (no kit module parses report.md — CONFIRM by grep)."
+  },
+  {
+   "id": "IF-147",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/check_perf",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check"
+   ],
+   "channel": "exit-code",
+   "data": "0 OK, SKIP or WARN · 1 FAIL — a Gate=fail budget breached in the run tier",
+   "body_home": "project-trajectory/scripts/check_perf.py",
+   "split_from": "IF-004",
+   "why": "worker A's note: check.py gates on this CLI's exit code, a second kind no row carries. CONFIRM the alphabet against main()."
+  },
+  {
+   "id": "IF-148",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/check_privacy",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check"
+   ],
+   "channel": "exit-code",
+   "data": "0 clean or skipped · 1 findings · 2 usage or environment error",
+   "body_home": "project-trajectory/scripts/check_privacy.py",
+   "split_from": "IF-005",
+   "why": "worker A's note: check.py gates on the --repo run's exit code; IF-043 is the pre-push --range arm with the same alphabet, IF-005 the stdout kind. State the harness-facing arm."
+  },
+  {
+   "id": "IF-012",
+   "action": "edit",
+   "batch": "A",
+   "owner": "scripts/gen_okf",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check"
+   ],
+   "channel": "exit-code",
+   "data": "0 clean, vacuous or opted out · 1 stale, missing or extra bundle file under --check",
+   "body_home": "project-trajectory/scripts/gen_okf.py",
+   "why": "worker A's note: what scripts/check consumes is the --check exit code, not the bytes. Rewrite the IF-012 body to the exit-code contract; the bundle medium becomes IF-149."
+  },
+  {
+   "id": "IF-149",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/gen_okf",
+   "far_key": "consumers",
+   "far": [
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "docs/okf/ — one GENERATED-bannered file per concept, sorted, clockless; extras pruned on write",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/gen_okf.py",
+   "split_from": "IF-012",
+   "why": "the bundle is the medium gen_okf writes; owned by its writer, read by the adopter's knowledge tooling (no kit module reads it — CONFIRM)."
+  },
+  {
+   "id": "IF-150",
+   "action": "new",
+   "batch": "A",
+   "owner": "scripts/gen_arch_map",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check"
+   ],
+   "channel": "exit-code",
+   "data": "0 current · 1 a stale target under --check, or an unparseable module under --strict-parse",
+   "body_home": "project-trajectory/scripts/gen_arch_map.py",
+   "split_from": "IF-010",
+   "why": "worker C's note: IF-010 is the cli arm; check.py's freshness verdict reads the exit code and no row carries it. CONFIRM the alphabet (--backlink-coverage under --strict-backlinks too?)."
+  },
+  {
+   "id": "IF-069",
+   "action": "edit",
+   "batch": "A",
+   "owner": "scripts/check_coverage",
+   "far_key": "consumers",
+   "far": [
+    "scripts/check"
+   ],
+   "channel": "exit-code",
+   "data": "0 every floor holds or unmeasured · 1 below floor, absent module, or corrupt input",
+   "body_home": "project-trajectory/scripts/check_coverage.py",
+   "why": "its data is an exit alphabet and check.py reads the return code (worker B's family-inconsistency note); channel corrected stdout -> exit-code. Re-read the body: it must state the exit contract; if the body describes stdout lines the harness never parses, trim them to a clause."
+  },
+  {
+   "id": "IF-050",
+   "action": "edit",
+   "batch": "A",
+   "owner": "scripts/derive_stage",
+   "far_key": "consumers",
+   "far": "MEASURE",
+   "channel": "file",
+   "data": "docs/stage — key = value fields plus a sha256 fingerprint of the declared inputs",
+   "body_home": "project-trajectory/scripts/derive_stage.py",
+   "why": "worker C's note: docs/stage is also read by agent_common, check_trajectory, dispatch and intake through kitlib.stage.read_stage; consumers names only scripts/check. MEASURE the direct readers (grep read_stage / docs/stage) and report the list."
+  }
+ ]
+}

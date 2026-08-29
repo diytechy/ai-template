@@ -19,7 +19,7 @@
 [derived]
 components = 4
 design_rows = 187
-seam_rows = 136
+seam_rows = 154
 requirements_placed = 71
 requirements_unplaced = 4
 seams_unplaced = 0
@@ -148,6 +148,7 @@ modules = [
 ]
 seam_internal_refs = [
   "IF-028",
+  "IF-050",
   "IF-076",
   "IF-102",
   "IF-104",
@@ -164,11 +165,10 @@ seam_boundary_refs = [
   "IF-021",
   "IF-023",
   "IF-025",
+  "IF-037",
   "IF-042",
   "IF-047",
-  "IF-050",
   "IF-051",
-  "IF-053",
   "IF-056",
   "IF-057",
   "IF-060",
@@ -195,7 +195,6 @@ seam_boundary_refs = [
   "IF-111",
   "IF-112",
   "IF-114",
-  "IF-116",
   "IF-118",
   "IF-119",
   "IF-120",
@@ -204,13 +203,20 @@ seam_boundary_refs = [
   "IF-124",
   "IF-125",
   "IF-126",
-  "IF-127",
   "IF-132",
   "IF-133",
   "IF-138",
   "IF-141",
   "IF-142",
   "IF-143",
+  "IF-145",
+  "IF-146",
+  "IF-150",
+  "IF-152",
+  "IF-153",
+  "IF-159",
+  "IF-161",
+  "IF-163",
 ]
 
 [component_view.CMP-007]
@@ -309,6 +315,8 @@ seam_internal_refs = [
   "IF-086",
   "IF-087",
   "IF-121",
+  "IF-147",
+  "IF-148",
 ]
 seam_boundary_refs = [
   "IF-001",
@@ -327,6 +335,7 @@ seam_boundary_refs = [
   "IF-031",
   "IF-032",
   "IF-036",
+  "IF-037",
   "IF-038",
   "IF-042",
   "IF-050",
@@ -342,6 +351,11 @@ seam_boundary_refs = [
   "IF-135",
   "IF-139",
   "IF-144",
+  "IF-145",
+  "IF-150",
+  "IF-151",
+  "IF-161",
+  "IF-163",
 ]
 
 [component_view.CMP-008]
@@ -472,12 +486,14 @@ modules = [
 seam_internal_refs = [
   "IF-044",
   "IF-046",
+  "IF-053",
   "IF-055",
   "IF-058",
   "IF-061",
   "IF-064",
   "IF-065",
   "IF-066",
+  "IF-081",
   "IF-090",
   "IF-097",
   "IF-099",
@@ -486,22 +502,26 @@ seam_internal_refs = [
   "IF-115",
   "IF-136",
   "IF-137",
+  "IF-154",
+  "IF-155",
 ]
 seam_boundary_refs = [
+  "IF-010",
+  "IF-012",
   "IF-015",
   "IF-037",
   "IF-041",
   "IF-045",
   "IF-047",
-  "IF-053",
+  "IF-050",
   "IF-054",
   "IF-059",
   "IF-060",
   "IF-068",
   "IF-071",
+  "IF-075",
   "IF-078",
   "IF-080",
-  "IF-081",
   "IF-085",
   "IF-088",
   "IF-089",
@@ -515,13 +535,20 @@ seam_boundary_refs = [
   "IF-109",
   "IF-110",
   "IF-114",
-  "IF-116",
   "IF-119",
   "IF-120",
   "IF-123",
   "IF-124",
-  "IF-127",
   "IF-133",
+  "IF-150",
+  "IF-152",
+  "IF-153",
+  "IF-156",
+  "IF-160",
+  "IF-161",
+  "IF-162",
+  "IF-163",
+  "IF-164",
 ]
 
 [component_view.CMP-009]
@@ -657,6 +684,7 @@ seam_internal_refs = [
   "IF-039",
   "IF-052",
   "IF-132",
+  "IF-149",
 ]
 seam_boundary_refs = [
   "IF-010",
@@ -676,6 +704,7 @@ seam_boundary_refs = [
   "IF-037",
   "IF-048",
   "IF-049",
+  "IF-050",
   "IF-056",
   "IF-071",
   "IF-073",
@@ -689,6 +718,7 @@ seam_boundary_refs = [
   "IF-093",
   "IF-094",
   "IF-098",
+  "IF-102",
   "IF-106",
   "IF-107",
   "IF-111",
@@ -703,6 +733,12 @@ seam_boundary_refs = [
   "IF-141",
   "IF-142",
   "IF-143",
+  "IF-150",
+  "IF-157",
+  "IF-158",
+  "IF-161",
+  "IF-163",
+  "IF-164",
 ]
 
 [unplaced]

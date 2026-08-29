@@ -64,7 +64,7 @@ the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
 Exit codes: 0 clean/skipped, 1 findings, 2 usage or environment error.
 
-Contracts: IF-005, IF-043 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-005, IF-043, IF-148 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-005: the harness runs this CLI (`--repo`, the tracked-file sweep)
     and reads what it prints. Every leak is named on stdout as
@@ -84,6 +84,14 @@ Contract IF-043: the pre-push hook invokes this CLI with `--range` over the
     floor always, the identity/PII patterns when the privacy dial arms them —
     and scan_diff_text walks the `git log -p` output for the single verdict
     this exit code carries, so both hook branches read one engine.
+Contract IF-148: the gate verdict the harness reads back from the `--repo`
+    sweep. 0 is returned when both layers are disarmed and nothing is scanned,
+    and when the sweep over every tracked text file finds no leak; 1 when one
+    or more findings were printed. This arm cannot return 2: git is consulted
+    only to LIST the tracked files, and a tree that is not a checkout falls
+    back to a filesystem walk skipping the VCS and generated directories — the
+    file list changes, the verdict alphabet does not. Only 0 admits the gate
+    step.
 """
 
 import argparse

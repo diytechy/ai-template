@@ -1,0 +1,153 @@
+{
+ "_about": "batch C of slice 4 — see slice4-brief.md; every field is explained there and in slice4-worklist.json",
+ "rows": [
+  {
+   "id": "IF-159",
+   "action": "new",
+   "batch": "C",
+   "owner": "docs/work/",
+   "far_key": "requestors",
+   "far": [
+    "scripts/wi_convert"
+   ],
+   "channel": "file",
+   "data": "one spec file per row, written and read back cell-exact before its path is returned",
+   "component": "CMP-006",
+   "body_home": "docs/work/README.md",
+   "split_from": "IF-079",
+   "why": "worker D's note: IF-079 is two-way — --to-specs WRITES the folder while --to-csv reads it. wi_convert.write_spec_file is the format's single writer (plan_artifacts and intake write through it — CONFIRM); moves at claim/close are file moves, not format writes, and are not this row."
+  },
+  {
+   "id": "IF-160",
+   "action": "new",
+   "batch": "C",
+   "owner": "docs/reviews/",
+   "far_key": "requestors",
+   "far": [
+    "scripts/score_reviews"
+   ],
+   "channel": "file",
+   "data": "scoreboard.txt — the decayed per-provider substance tallies and the round history",
+   "body_home": "docs/reviews/README.md",
+   "split_from": "IF-047",
+   "why": "worker D's note: score_reviews also WRITES docs/reviews/scoreboard.txt. CONFIRM whether any other kit module writes into docs/reviews/ (the verdict files are written by the review sessions themselves)."
+  },
+  {
+   "id": "IF-161",
+   "action": "new",
+   "batch": "C",
+   "owner": "docs/test/",
+   "far_key": "consumers",
+   "far": "MEASURE",
+   "channel": "file",
+   "data": "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys",
+   "tie_to": "B-05",
+   "body_home": "docs/test/README.md (CREATE)",
+   "split_from": "IF-021",
+   "why": "worker D's note: IF-021 bundles docs/requirements and docs/test. The TC tier is its own medium. MEASURE the direct readers of docs/test/test-cases.toml (grep test-cases / TC_CSV across scripts) and name them plus external:downstream adopter; the README states the format (frontmatter-free TOML, verifies/method/expected/automated/evidence/status cells) and that docs/test/report.md beside it is trace's generated output, not part of the registry."
+  },
+  {
+   "id": "IF-162",
+   "action": "new",
+   "batch": "C",
+   "owner": "docs/agents-enabled",
+   "far_key": "consumers",
+   "far": [
+    "scripts/agent_route",
+    "scripts/dispatch"
+   ],
+   "channel": "file",
+   "data": "one registry id per line in preference order, optional <PHASE>=<weight> annotations; presence turns managed routing on",
+   "body_home": "docs/agents-enabled (a # header — the loader skips # lines; CONFIRM in agent_route.load_enabled_entries and dispatch's own read)",
+   "split_from": "IF-045",
+   "why": "worker D's note: IF-045 bundles agents.toml and the enable-list; dispatch reads the enable-list directly and is not on IF-045's consumer list. CONFIRM dispatch's read (dispatch.py ~line 149) and whether agent_loop/plan_runner read it directly or only through agent_route."
+  },
+  {
+   "id": "IF-163",
+   "action": "new",
+   "batch": "C",
+   "owner": "docs/status.md",
+   "far_key": "consumers",
+   "far": "MEASURE",
+   "channel": "file",
+   "data": "the forward-only blackboard; `## Current State` carries the generated block between its markers",
+   "body_home": "docs/status.md (an HTML-comment header as the FIRST thing in the file, before the H1)",
+   "split_from": "IF-037",
+   "why": "worker D's note: IF-037's consumers were measured over docs/status.md's excerpt, not over process.toml. MEASURE the kit modules that READ docs/status.md as data (agent_common.current_state_excerpt, gen_okf's guide summary, check_trajectory's status-prose and done-id rules, integrate's prose refusal, ...) — grep status.md across scripts and read each site; a module that only WRITES the generated block is IF-164's, not this row's."
+  },
+  {
+   "id": "IF-164",
+   "action": "new",
+   "batch": "C",
+   "owner": "MEASURE (the module that writes the generated block: scripts/traj_status or scripts/gen_trajectory — the one whose code performs the splice)",
+   "far_key": "consumers",
+   "far": [
+    "scripts/agent_common",
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "docs/status.md — the block between the GENERATED STATUS markers: derived stage, spine counts, the ready frontier",
+   "tie_to": "B-05",
+   "body_home": "the writer module's docstring (traj_status.py has no Contracts: marker yet — create one if it is the writer)",
+   "split_from": "IF-037",
+   "why": "a generated region is owned by its writer (plan decision 5). CONFIRM that agent_common.current_state_excerpt reads the section the block sits in; if no kit module reads the block as data, name only external:downstream adopter."
+  },
+  {
+   "id": "IF-037",
+   "action": "edit",
+   "batch": "C",
+   "owner": "docs/process.toml",
+   "far_key": "consumers",
+   "far": "MEASURE",
+   "channel": "file",
+   "data": "sections: attestation, policies, checks; one key = value per line",
+   "body_home": "docs/process.toml",
+   "why": "worker D's note: the consumer list is measured over the wrong medium. MEASURE the direct readers of docs/process.toml (grep process.toml / process_check / read_process across scripts; IF-038's note lists nine) and report them plus external:downstream adopter; the rationale cell is orphaned and is deleted (report rationale_moot=true)."
+  },
+  {
+   "id": "IF-019",
+   "action": "edit",
+   "batch": "C",
+   "owner": "scripts/gen_skills_index",
+   "far_key": "consumers",
+   "far": [
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "skills/INDEX.csv: banner comment, header, one row per skill (name, scope, stacks, domains, phases, tags, description)",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/gen_skills_index.py",
+   "why": "worker A's note: the far side names the WRITTEN ARTIFACT. Ruled for the shape: a generated document's far side is the class that reads it. CONFIRM no kit module reads INDEX.csv as data (bootstrap? check_trajectory skills-sync?) — if one does, name it too."
+  },
+  {
+   "id": "IF-074",
+   "action": "edit",
+   "batch": "C",
+   "owner": "scripts/gen_open_items",
+   "far_key": "consumers",
+   "far": [
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "docs/open-items.html — pending decisions, approval and re-attest chains, pending owner actions",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/gen_open_items.py",
+   "why": "same ruling as IF-019: the reader class, not the artifact. CONFIRM no kit module parses open-items.html."
+  },
+  {
+   "id": "IF-140",
+   "action": "edit",
+   "batch": "C",
+   "owner": "scripts/gen_components",
+   "far_key": "consumers",
+   "far": [
+    "external:downstream adopter"
+   ],
+   "channel": "file",
+   "data": "docs/requirements/components.derived.toml — [derived], [component_view.CMP-###] and [unplaced] tables",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/gen_components.py",
+   "why": "same ruling as IF-019 (worker C's note: no script reads this file as data; trunk_step only tests its existence). CONFIRM."
+  }
+ ]
+}

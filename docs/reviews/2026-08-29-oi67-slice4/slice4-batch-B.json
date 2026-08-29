@@ -1,0 +1,212 @@
+{
+ "_about": "batch B of slice 4 — see slice4-brief.md; every field is explained there and in slice4-worklist.json",
+ "rows": [
+  {
+   "id": "IF-151",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/subagent_gate",
+   "far_key": "requestors",
+   "far": [
+    "external:agent CLI"
+   ],
+   "channel": "cli",
+   "data": "the PreToolUse tool-call JSON on stdin",
+   "body_home": "project-trajectory/scripts/subagent_gate.py",
+   "split_from": "IF-020",
+   "notes": "No tie-back: the frame declares the verdict OUT (B-04, on IF-020) and no crossing for the tool call IN — invoking our hook is the session's own act, the reasoning IF-041 records.",
+   "why": "worker B's note: the agent CLI WRITES the tool-call JSON into this surface on stdin — a requestor arm no row declares. State the payload shape the hook reads (which keys) and what a malformed payload does."
+  },
+  {
+   "id": "IF-152",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/plan_coverage",
+   "far_key": "requestors",
+   "far": [
+    "scripts/plan_coverage_step"
+   ],
+   "channel": "cli",
+   "data": "--goal, --root, --out, then the plan paths",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/plan_coverage.py",
+   "split_from": "IF-060",
+   "why": "worker A's note: IF-060 bundles the argv, the exit alphabet and the --out report. This is the argv arm; IF-060 keeps the exit code."
+  },
+  {
+   "id": "IF-153",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/plan_coverage",
+   "far_key": "consumers",
+   "far": [
+    "scripts/plan_coverage_step"
+   ],
+   "channel": "file",
+   "data": "the --out coverage report: uncovered clauses per plan — the payload the critic and arbiter briefs embed",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/plan_coverage.py",
+   "split_from": "IF-060",
+   "why": "the report file arm; plan_coverage_step reads it back and returns it as the payload (CONFIRM in plan_coverage_step.py). Also trim the IF-060 body to the exit-code contract if it currently states the argv/report kinds."
+  },
+  {
+   "id": "IF-154",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/integrate",
+   "far_key": "requestors",
+   "far": "MEASURE",
+   "channel": "cli",
+   "data": "claim --branch · refresh --branch --tier · integrate · audit, each with --root",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/integrate.py",
+   "split_from": "IF-080",
+   "why": "worker A's note: the subcommand argv is a second kind no row carries. MEASURE who invokes integrate.py as a subprocess (lane.spawn_refresh runs `refresh`; the human/agent runs `claim` — name that as external:downstream adopter) and report the list; IF-080 keeps the exit code."
+  },
+  {
+   "id": "IF-081",
+   "action": "edit",
+   "batch": "B",
+   "owner": "scripts/trunk_step",
+   "far_key": "consumers",
+   "far": [
+    "scripts/integrate",
+    "scripts/intake",
+    "external:downstream adopter"
+   ],
+   "channel": "exit-code",
+   "data": "0 all clean · 1 any failure, the offending file named",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/trunk_step.py",
+   "why": "worker B's note: `bytes` fits none of trunk_step's surfaces. The row becomes the exit-code kind; CONFIRM the far side (integrate.py folds the step into the merge; intake.py runs --regen after a mint) and keep the tie-back to B-05."
+  },
+  {
+   "id": "IF-155",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/trunk_step",
+   "far_key": "requestors",
+   "far": [
+    "scripts/integrate",
+    "scripts/intake"
+   ],
+   "channel": "cli",
+   "data": "--compile-log · --regen, each with --root; --dry-run on the compile",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/trunk_step.py",
+   "split_from": "IF-081",
+   "why": "the argv arm of the trunk step. CONFIRM the flags against main()."
+  },
+  {
+   "id": "IF-156",
+   "action": "new",
+   "batch": "B",
+   "owner": "docs/log.d/",
+   "far_key": "consumers",
+   "far": [
+    "scripts/trunk_step"
+   ],
+   "channel": "file",
+   "data": "one fragment per session, <id>-<slug>.md, opening with a `## ` heading; links written relative to docs/log.d/",
+   "body_home": "docs/log.d/README.md (CREATE — the coordinator exempts README.md from fragment discovery)",
+   "split_from": "IF-081",
+   "why": "the fragment medium trunk_step consumes has a real grammar (name shape, opening heading, reserved headings, committed-only, link rebasing) and no row. Write the README with the HTML-comment header and a short paragraph; keep it under 30 lines."
+  },
+  {
+   "id": "IF-157",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/run_menu",
+   "far_key": "requestors",
+   "far": [
+    "external:run.* launchers"
+   ],
+   "channel": "cli",
+   "data": "no argument (the menu) · --list · <capability> [args...], the args appended as quoted data values",
+   "body_home": "project-trajectory/scripts/run_menu.py",
+   "split_from": "IF-048",
+   "why": "worker B's note: the launchers pass argv through (scripts/run.template.{sh,cmd,command} exec run_menu.py \"$@\"). No tie-back on a requestors row whose requestor is external (the frame declares no IN crossing for it)."
+  },
+  {
+   "id": "IF-158",
+   "action": "new",
+   "batch": "B",
+   "owner": "scripts/run_menu",
+   "far_key": "consumers",
+   "far": [
+    "external:run.* launchers"
+   ],
+   "channel": "exit-code",
+   "data": "the launched capability's own code passed through · 0 for --list or a menu exit · 1 no capability wired",
+   "tie_to": "B-05",
+   "body_home": "project-trajectory/scripts/run_menu.py",
+   "split_from": "IF-048",
+   "why": "the launchers `exec` run_menu so its exit code IS the launcher's; CONFIRM the alphabet in main()."
+  },
+  {
+   "id": "IF-053",
+   "action": "edit",
+   "batch": "B",
+   "owner": "scripts/schedule",
+   "far_key": "requestors",
+   "far": "MEASURE",
+   "channel": "call",
+   "data": "MEASURE — the symbols the measured requestors actually take",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/schedule.py",
+   "why": "worker B's note: check_trajectory imports no schedule symbol; the live importers with no row are census, dispatch and intake. MEASURE each importer's symbol set and report far + data; update the IF-053 body to name the measured requestors."
+  },
+  {
+   "id": "IF-046",
+   "action": "edit",
+   "batch": "B",
+   "owner": "scripts/score_reviews",
+   "far_key": "requestors",
+   "far": [
+    "scripts/agent_loop",
+    "scripts/integrate"
+   ],
+   "channel": "call",
+   "data": "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round; every result advisory",
+   "body_home": "project-trajectory/scripts/score_reviews.py",
+   "why": "worker A's note: integrate.py also calls parse_verdict. CONFIRM and add integrate's use to the body (one clause)."
+  },
+  {
+   "id": "IF-090",
+   "action": "edit",
+   "batch": "B",
+   "owner": "scripts/intake",
+   "far_key": "requestors",
+   "far": [
+    "scripts/integrate",
+    "scripts/dispatch"
+   ],
+   "channel": "call",
+   "data": "intake_after_merge, mint_gap_rows, adjudication_action, flip_verified, context_block",
+   "component": "CMP-008",
+   "body_home": "project-trajectory/scripts/intake.py",
+   "why": "worker B's note: mint_gap_rows' caller is dispatch, not integrate. MEASURE which of the five symbols each requestor takes; update the body."
+  },
+  {
+   "id": "IF-102",
+   "action": "edit",
+   "batch": "B",
+   "owner": "scripts/spine_carrier",
+   "far_key": "requestors",
+   "far": [
+    "scripts/trace",
+    "scripts/acceptance_record",
+    "scripts/check_trajectory",
+    "scripts/gen_arch_map",
+    "scripts/plan_coverage",
+    "scripts/spine_rules",
+    "scripts/traj_status"
+   ],
+   "channel": "call",
+   "data": "spine_carrier.load / rows_from_text / rows_seq_from_text / resolve / carriers; rows under today's column names, None on a TOML decode error",
+   "component": "CMP-006",
+   "body_home": "project-trajectory/scripts/spine_carrier.py",
+   "why": "worker A's note: six modules import spine_carrier with no row of their own. They JOIN this row's requestor list (the row's own note said they would) rather than minting six carried rows — a carried row exists where the cross-component rule demanded a seam of record. CONFIRM each import by grep; a body clause naming the joined readers is enough."
+  }
+ ]
+}

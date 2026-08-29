@@ -42,13 +42,16 @@ Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes th
     effective rung, its ordinal, the unfloored settled and live readings, the
     per-phase and per-phase-live breakdowns, the drafted count and a SHA-256
     FINGERPRINT of the declared derivation inputs, one `key = value` per line
-    under a comment header. The fingerprint is the contract: a consumer reads
-    the file through `kitlib.stage.read_stage`, which recomputes it and trusts
-    the recorded values only on a match, deriving fresh in memory otherwise, so
-    no selection or approval consumer can act on a stale rung. `--check`
-    verifies freshness without writing and exits nonzero when the record does
-    not match what the tree now derives. The record is DERIVED and never
-    hand-set: it moves by approving artifacts in a reviewed commit.
+    under a comment header. Every field is addressed BY NAME, so a reordered
+    record can never hand a reader the wrong value. The fingerprint is the
+    contract for the two reading postures: a selection or approval consumer
+    reads through `kitlib.stage.read_stage`, which recomputes the fingerprint
+    and trusts the recorded values only on a match, deriving fresh in memory
+    otherwise, so none can act on a stale rung; a render leaf parses the
+    committed record as it stands, so the page and the file it cites describe
+    one commit. The record is DERIVED and never hand-set: it moves by approving
+    artifacts in a reviewed commit, and a hand-edited or cross-ladder value
+    raises rather than reading as a rung.
 """
 
 import argparse

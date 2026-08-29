@@ -25,6 +25,7 @@ disk.
 # note with the tests it guards — it was authored in tests/test_trace.py, whose
 # git-backed tests are now all here.)
 
+import re
 import shutil
 
 from conftest import (
@@ -782,8 +783,11 @@ def test_offspine_census_names_the_interfaces_registry_after_an_IF_cell_changes(
     data = if_path.read_bytes()
     # The prose `contract` cell left the row at OI-67; the typed `data` cell is
     # the one a census amendment is driven through now.
-    needle = b'data = "orphan, integrity, status and advisory findings; joined report at docs/test/report.md"'
-    assert needle in data, "fixture: IF-001's data cell not found"
+    # Keyed on the cell's SHAPE (the `data = "..."` line of IF-001's block),
+    # never on its text: a re-worded cell must not red a census test.
+    m = re.search(rb'(?ms)^\[interface\.IF-001\]\n.*?^(data = ".*?")$', data)
+    assert m, "fixture: IF-001's data cell not found"
+    needle = m.group(1)
     if_path.write_bytes(
         data.replace(
             needle,

@@ -1,0 +1,264 @@
+[
+ {
+  "id": "IF-151",
+  "action": "new",
+  "owner": "scripts/subagent_gate",
+  "far_key": "requestors",
+  "far": [
+   "external:agent CLI"
+  ],
+  "channel": "cli",
+  "data": "the PreToolUse tool-call JSON on stdin; only tool_name (or toolName) is read",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "",
+  "notes": "No tie-back: the frame declares the verdict OUT (B-04, on IF-020) and no crossing for the tool call IN — invoking our hook is the session's own act, the reasoning IF-041 records.",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Read main(): stdin is json.loads'd (empty stdin -> {}) and only payload['tool_name'] / ['toolName'] is used; a JSON error is caught by the fail-open except and logged as allow. Data cell extended to name the one key read. Also trimmed IF-020's body so it no longer restates the stdin read — it keeps the verdict/exit arm."
+ },
+ {
+  "id": "IF-152",
+  "action": "new",
+  "owner": "scripts/plan_coverage",
+  "far_key": "requestors",
+  "far": [
+   "scripts/plan_coverage_step"
+  ],
+  "channel": "cli",
+  "data": "--goal, --root, --out, then the plan paths",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Confirmed against plan_coverage.main's argparse (plans positional nargs='+', --goal required, --root default '.', --out optional) and against plan_coverage_step.run_coverage, which builds exactly that argv under sys.executable. Batch data cell correct, echoed unchanged."
+ },
+ {
+  "id": "IF-153",
+  "action": "new",
+  "owner": "scripts/plan_coverage",
+  "far_key": "consumers",
+  "far": [
+   "scripts/plan_coverage_step"
+  ],
+  "channel": "file",
+  "data": "the --out coverage report: uncovered clauses per plan — the payload the critic and arbiter briefs embed",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "CONFIRMED in plan_coverage_step.run_coverage: it reads out_path back when the file exists and the run was not malformed, else falls back to captured stdout, and returns it as 'report' (never printed). In plan_coverage.main the --out write happens BEFORE the findings branch, so the file is written on exit 0 and exit 1 and never on exit 2 (which sys.exit(2)s earlier). IF-060's body was trimmed to the exit-code contract as instructed — it no longer states the argv or the report kinds."
+ },
+ {
+  "id": "IF-154",
+  "action": "new",
+  "owner": "scripts/integrate",
+  "far_key": "requestors",
+  "far": [
+   "scripts/lane",
+   "external:downstream adopter"
+  ],
+  "channel": "cli",
+  "data": "claim --wi --branch · refresh --branch --tier · integrate --tier · audit --since, each with --root",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "MEASURED subprocess invokers of integrate.py: scripts/lane only (lane.spawn_refresh line 161 — harness python, SCRIPTS/'integrate.py', --root, refresh, --branch, --tier), plus external:downstream adopter (a human/agent runs claim, integrate, audit; PROCESS_OPTIONS.md and README document that form). dispatch.py and handback.py IMPORT integrate and call claim/refresh/integrate/branch_outcomes in-process — a 'call' seam, not this cli row, and no row declares it today. Batch data cell CORRECTED: claim also requires --wi (';'-separated ids), integrate takes --tier only (no --branch at the CLI — the branches= argument is in-process), audit requires --since."
+ },
+ {
+  "id": "IF-081",
+  "action": "edit",
+  "owner": "scripts/trunk_step",
+  "far_key": "consumers",
+  "far": [
+   "scripts/integrate",
+   "scripts/intake",
+   "external:downstream adopter"
+  ],
+  "channel": "exit-code",
+  "data": "0 all clean · 1 any failure, the offending file named",
+  "tie_from": "",
+  "tie_to": "B-05",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Far side CONFIRMED: integrate.py invokes trunk_step twice — '--regen' inside claim (line ~794; a nonzero code resets the tree and refuses the claim) and the whole step in _run_trunk_step at refresh (line ~1466) — and intake._bookkeeping_commit runs '--regen' before the mint commit, restoring trunk on nonzero; both read the exit code alone. channel bytes -> exit-code. Body rewritten to the exit alphabet only (the flags moved to IF-155, the fragment grammar to IF-156)."
+ },
+ {
+  "id": "IF-155",
+  "action": "new",
+  "owner": "scripts/trunk_step",
+  "far_key": "requestors",
+  "far": [
+   "scripts/integrate",
+   "scripts/intake"
+  ],
+  "channel": "cli",
+  "data": "--compile-log · --regen · neither = both, compile first; --root and --dry-run on either",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Flags CONFIRMED against main(): --root (default cwd; not a directory = exit 1), --compile-log, --regen, --dry-run. Batch data cell CORRECTED on one point — --dry-run is NOT compile-only: main passes it to both compile_log(dry_run=) and regen(dry_run=), and regen honours it per step. Added: no operation flag runs BOTH, compile before regen. Far side left exactly as the batch gives it, but note that a human or a post-merge Action runs the same argv on trunk (the module docstring says so, and IF-081 lists external:downstream adopter as an exit-code consumer), so the coordinator may want external:downstream adopter here too for symmetry."
+ },
+ {
+  "id": "IF-156",
+  "action": "new",
+  "owner": "docs/log.d/",
+  "far_key": "consumers",
+  "far": [
+   "scripts/trunk_step"
+  ],
+  "channel": "file",
+  "data": "one fragment per session, <id>-<slug>.md, opening with a `## ` heading; links written relative to docs/log.d/",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "docs/log.d/README.md CREATED (27 lines): HTML-comment header, the IF-156 body, an H1 and one paragraph; file_contracts harvests ['IF-156'] with a body. Grammar taken from the code — FRAGMENT_NAME_RE (nonempty slug, .md), validate_fragment (must open '## '; must not claim RESERVED_HEADINGS = '## Sittings' / '## Decisions log' / '## Audit log'), added_at (order from the ADDING commit's date, filename ties, uncommitted refused), rebase_links (relative targets rebased one level up; anchors/URLs/root-absolute untouched), fragment_paths (dotfiles skipped, so .gitkeep is not a fragment) and compile_log (each compiled fragment unlink()ed). REMINDER: README.md does not match FRAGMENT_NAME_RE, so without the coordinator's exemption fragment_paths globs it and compile-log refuses."
+ },
+ {
+  "id": "IF-157",
+  "action": "new",
+  "owner": "scripts/run_menu",
+  "far_key": "requestors",
+  "far": [
+   "external:run.* launchers"
+  ],
+  "channel": "cli",
+  "data": "no argument (the menu) · --list · <capability> [args...] appended as quoted data values · --file docs/stack.ini",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "CONFIRMED: run.template.sh line 17 execs the module with \"$@\"; run.template.cmd line 28 passes %*; run.template.command execs run.sh with \"$@\" — argv passes through verbatim. Batch data cell extended with --file (argparse carries it, default docs/stack.ini), written as the real path so the data cell's symbol-resolution rule is satisfied. IF-048's body was retuned to its stdout kind alone (the --list listing, the numbered menu lines, the 'Running: <line>' echo, guidance to stderr) now that IF-157 and IF-158 carry the argv and exit arms."
+ },
+ {
+  "id": "IF-158",
+  "action": "new",
+  "owner": "scripts/run_menu",
+  "far_key": "consumers",
+  "far": [
+   "external:run.* launchers"
+  ],
+  "channel": "exit-code",
+  "data": "the launched capability's code passed through · 0 --list or a menu quit · 1 nothing declared or input closed · 2 unknown name",
+  "tie_from": "",
+  "tie_to": "B-05",
+  "component": "",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Alphabet MEASURED in main()/direct()/interactive_menu()/launch(): passthrough of subprocess.run(...).returncode; 0 for --list and for q/quit/blank at the prompt; 1 for an absent or empty [run] section, for a malformed stack.ini (sys.exit(str) exits 1) and for EOF on the prompt; 2 for a capability name that is not declared. The batch data cell was MISSING the 2 arm and the malformed/EOF cases — corrected above. run.sh execs the module so its code IS the launcher's; run.cmd captures %ERRORLEVEL% and exits /b with it after a pause."
+ },
+ {
+  "id": "IF-053",
+  "action": "edit",
+  "owner": "scripts/schedule",
+  "far_key": "requestors",
+  "far": [
+   "scripts/census",
+   "scripts/dispatch",
+   "scripts/intake"
+  ],
+  "channel": "call",
+  "data": "load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write, no spawn, no git",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "MEASURED far side and symbols. `import schedule` appears in census.py:52, dispatch.py:86, intake.py:103, integrate.py:678 (deferred — IF-055's claim side), traj_panels.py:26 and traj_parse.py:56/60 (IF-071/085/094). check_trajectory.py does NOT import schedule (prose mentions only), so the old requestors cell was wrong. Executable symbol use: census -> schedule.load_wis (line 219); dispatch -> schedule._load, schedule.frontier, schedule.kind_of (lines 954-956; the _KIND_RANK and _disposition hits at 309/477 are docstring/comment text); intake -> schedule.SAFETY_CLASSES (lines 1040 and 1263; every schedule.classify hit is prose). Body rewritten to name those three. FOR THE COORDINATOR: schedule's own CLI (`ready`/`simulate`) now has no row — dropping 'with a CLI over it' from a channel=call body leaves that surface undeclared."
+ },
+ {
+  "id": "IF-046",
+  "action": "edit",
+  "owner": "scripts/score_reviews",
+  "far_key": "requestors",
+  "far": [
+   "scripts/agent_loop",
+   "scripts/integrate"
+  ],
+  "channel": "call",
+  "data": "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round; every result advisory",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "CONFIRMED: integrate.py imports score_reviews at module scope (line 137) and calls score_reviews.parse_verdict(text).verdict in the RULING-7 verdict gate (line ~1273), requiring an APPROVE per merged row and a non-stale one. agent_loop uses all five names (lines 909, 2326, 2389, 2391, 2411). The body gained one clause naming integrate's use and recording that this parse is load-bearing AT A GATE while the scores stay advisory. data unchanged — integrate takes a strict subset."
+ },
+ {
+  "id": "IF-090",
+  "action": "edit",
+  "owner": "scripts/intake",
+  "far_key": "requestors",
+  "far": [
+   "scripts/integrate",
+   "scripts/dispatch",
+   "scripts/agent_loop"
+  ],
+  "channel": "call",
+  "data": "intake_after_merge (integrate) · mint_gap_rows (dispatch) · context_block (agent_loop, advisory)",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-008",
+  "notes": "",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "MEASURED per requestor: integrate.py takes ONLY intake_after_merge (deferred import line 2397, call 2399); dispatch.py takes ONLY mint_gap_rows (import line 83, call 1023); and a THIRD requestor the batch did not list — agent_loop.py takes context_block (lazy import line 410, call 414, wrapped so any failure is no join) — so scripts/agent_loop JOINS the far side. adjudication_action and flip_verified have NO in-tree importer: only intake's own `adjudicate` subcommand (_cmd_adjudicate, parser at line 1932) and tests reach them, so they leave the data cell and are named in the body as CLI-driven. Body held to 12 lines so intake.py stays at exactly its 1977-line ratchet baseline."
+ },
+ {
+  "id": "IF-102",
+  "action": "edit",
+  "owner": "scripts/spine_carrier",
+  "far_key": "requestors",
+  "far": [
+   "scripts/trace",
+   "scripts/acceptance_record",
+   "scripts/check_trajectory",
+   "scripts/gen_arch_map",
+   "scripts/plan_coverage",
+   "scripts/spine_rules",
+   "scripts/traj_status"
+  ],
+  "channel": "call",
+  "data": "spine_carrier.load / resolve / stem / carriers / rows_from_text; rows under today's column names, None on a TOML decode error",
+  "tie_from": "",
+  "tie_to": "",
+  "component": "CMP-006",
+  "notes": "source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly.",
+  "rationale_moot": false,
+  "notes_moot": false,
+  "body_written": true,
+  "note": "Every import CONFIRMED by grep, with the symbols each takes: trace (load x13, resolve x3, stem, load_needs x2, needs_from_text, folded, folded_needs, draft_ids_from_text x3, SPINE_TABLE, SPINE_COLUMN, NEED_CARRIERS); acceptance_record (rows_from_text, carriers, stem x3, SPINE_TABLE, SPINE_COLUMN); check_trajectory (load x17, resolve x3, stem); gen_arch_map (load x2); plan_coverage (load, resolve); spine_rules (load x4, resolve x2, draft_ids_from_text x3, CARRIERS, NEED_CARRIERS); traj_status reaches it as ct.spine_carrier (resolve x2, load x2, stem) rather than through its own import statement — flagged in case the coordinator wants the indirect reader stated differently. data CORRECTED: rows_seq_from_text is taken by NO row on this list (its only caller is agent_route.py:297, which is IF-119's), and stem is taken by four of the seven, so stem replaces it. notes TRIMMED rather than deleted — the 'source' honesty valve and the one-module-not-eleven-copies argument stay; the stale tail ('The consumers cell names trace as the first importer; check_trajectory imports it too, and the remaining spine readers join as they convert') is dropped now that they have joined."
+ }
+]

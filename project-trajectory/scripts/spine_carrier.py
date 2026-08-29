@@ -52,15 +52,19 @@ Every caller does its own reading, so a script keeps deciding its own I/O.
 Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142 — the seams this module declares (process.md §8; rows of record
 in docs/requirements/interfaces.toml).
 
-Contract IF-102: the carrier's whole read surface, as trace.py imports it.
-    SPINE_TABLE maps an id column to its TOML tier table (SR-ID -> requirement,
-    LLR-ID -> design, TC-ID -> test) and SPINE_COLUMN maps a carrier key to
-    today's column name. rows_from_text(text, id_col, carrier) returns
-    {id: row} under those names, or None — never {} — when a TOML text does not
-    parse; rows_seq_from_text keeps file order and duplicates, so a duplicated
-    id under the CSV fallback still reaches an integrity check as two rows.
-    carriers(rel) names both suffixed paths, for an applicability test that has
-    to span the cutover commit. resolve(path) returns the live carrier file and
+Contract IF-102: the carrier's whole read surface, as trace.py imports it — and
+    as the spine readers that JOINED it read it rather than each restating the
+    vocabulary: acceptance_record, check_trajectory, gen_arch_map,
+    plan_coverage, spine_rules, and traj_status through check_trajectory's
+    module attribute. SPINE_TABLE maps an id column to its TOML tier table
+    (SR-ID -> requirement, LLR-ID -> design, TC-ID -> test) and SPINE_COLUMN
+    maps a carrier key to today's column name. rows_from_text(text, id_col,
+    carrier) returns {id: row} under those names, or None — never {} — when a
+    TOML text does not parse; rows_seq_from_text keeps file order and
+    duplicates, so a duplicated id under the CSV fallback still reaches an
+    integrity check as two rows. stem(rel) strips the suffix and carriers(rel)
+    names both suffixed paths, for an applicability test that has to span the
+    cutover commit. resolve(path) returns the live carrier file and
     RAISES when a stem exists under both, rather than resolving by precedence;
     load(path, id_col) returns rows in file order, the shape csv.DictReader
     returns, [] when the registry is absent and SystemExit when it exists and

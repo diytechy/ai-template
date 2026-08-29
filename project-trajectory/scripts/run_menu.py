@@ -53,20 +53,32 @@ convenience layer, not the dispatcher): cmd.exe still expands a `%VAR%` (and a
 caret processing and a single `cmd /c` line cannot suppress it. The recipe lines
 themselves stay trusted shell text.
 
-Contracts: IF-048 — the interface seam this module declares (process.md §8;
-row of record in docs/requirements/interfaces.toml).
+Contracts: IF-048, IF-157, IF-158 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-048: LLR-047's obligation delivered as a CLI here — the one surface
-    the platform launchers delegate to. With no arguments it prints a numbered
-    interactive menu; with a capability name it runs that capability's declared
-    shell line and passes the child's exit code through; `--list` prints one
-    capability per line as name, tab, description in declaration order, a
-    parse-stable listing that exits 0 with empty output when nothing is
-    declared. The other two paths instead print the "no run capability wired
-    yet" guidance and exit 1 on an absent or empty declaration. Trailing
-    arguments are appended as QUOTED DATA VALUES, never as shell text, so a
-    value carrying spaces, quotes or a shell operator reaches the program as one
-    literal argument on both platforms.
+Contract IF-048: the text this surface emits. `--list` prints one capability
+    per line as name, TAB, description (the description empty when none is
+    declared) in declaration order — parse-stable, and empty output rather
+    than prose when nothing is declared, so an agent reads zero lines instead
+    of guidance. The menu path instead prints a numbered list, one capability
+    per line with its description after an em dash, and re-prompts on an
+    invalid pick; a launch echoes the composed shell line as `Running: <line>`
+    before handing it to the shell. The "no run capability wired yet" guidance
+    and an unknown-name report go to stderr, never to the listing.
+Contract IF-157: the argv the platform launchers forward verbatim. No argument
+    opens the interactive menu; `--list` selects the machine listing; a bare
+    `<capability>` name launches that capability, and everything after it is
+    trailing DATA — appended to the declared shell line quoted for the platform
+    shell, so a value carrying spaces, quotes or a shell operator arrives as
+    one literal argument instead of splitting or executing. `--file` overrides
+    which stack.ini the `[run]` section is read from (default docs/stack.ini).
+Contract IF-158: the exit code the launchers hand back as their own. A launched
+    capability's own code passes straight through, unexamined. `--list` exits
+    0, and so does quitting the menu with `q`/`quit`/an empty pick. 1 means
+    nothing could be launched: no `[run]` section, an empty one, a malformed
+    stack.ini, or a menu whose input closed before a pick. 2 means the named
+    capability is not declared, and the declared names are reported. Nothing
+    here maps a child's failure onto a code of its own.
 """
 
 import argparse

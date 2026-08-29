@@ -18,9 +18,9 @@
 # GRAMMAR: one `IF-###` id per non-blank, non-comment line, optionally followed
 # by ` — <reason>`. A line whose first token does not parse as an IF-### id
 # declares nothing and is dropped (fail-soft in the loud direction — the
-# `docs/provenance-allow` rule). The 120 entries below carry no per-line reason
-# because they share ONE reason, stated once here rather than 120 times: they
-# are the SEEDED baseline, not a judgment call made row by row. A reason
+# `docs/provenance-allow` rule). The 118 seeded entries below carry no per-line
+# reason because they share ONE reason, stated once here rather than 118 times:
+# they are the SEEDED baseline, not a judgment call made row by row. A reason
 # stamped on a FUTURE addition should say what it says for every other ratchet
 # in this repo — why the seam is legitimately still untested and what would
 # close it.
@@ -29,10 +29,10 @@
 # review, W-4): the key below names how many of the entries are the seeded
 # baseline. Everything past it is an ADDITION — it must carry its own
 # ` — <reason>` or it suppresses nothing, and `if_tc_allow_hygiene_findings`
-# reports the growth either way. The exact 120-id set is also pinned in
+# reports the growth either way. The exact 118-id set is also pinned in
 # tests/test_trajectory_arch.py, so a silent swap inside the baseline is a
 # failing test rather than a diff nobody reads.
-# seed-count: 120
+# seed-count: 118
 #
 # THE SEEDING MEASUREMENT (basis for the count below): 120 of 130 live IF
 # seams cited by no TC, reproduced with:
@@ -126,7 +126,6 @@ IF-071
 IF-072
 IF-073
 IF-074
-IF-075
 IF-076
 IF-077
 IF-078
@@ -160,7 +159,6 @@ IF-112
 IF-113
 IF-114
 IF-115
-IF-116
 IF-117
 IF-118
 IF-119
@@ -177,3 +175,35 @@ IF-134
 IF-135
 IF-136
 IF-137
+
+# --- ADDITIONS PAST THE SEED (OI-67 slice 4, the split, 2026-08-29) ---------
+# Each row below was minted by splitting a two-way or bundled row into one row
+# per kind, or by giving a bundled medium its own owner. The seam's TEST STATE
+# is its parent's: none of these is a new behaviour, each is a kind the parent
+# row already described and no TC cited separately. What closes an entry: a TC
+# whose `Verifies` cites the split row — the parent's TC widened to name both
+# kinds, or a focused seam test. Two seed entries were PRUNED in the same
+# commit: IF-075 gained TC-161's citation (re-pointed from the collapsed
+# IF-127) and IF-116 collapsed into IF-101 (its citation rides IF-101's).
+IF-145 — split from IF-001 (trace's exit code to the harness); covered when a TC cites the checker-exit seam
+IF-146 — split from IF-001 (docs/test/report.md, the report medium); covered when a TC cites the report's shape
+IF-147 — split from IF-004 (check_perf's exit code); covered when a TC cites the checker-exit seam
+IF-148 — split from IF-005 (check_privacy's --repo exit code); covered when a TC cites the checker-exit seam
+IF-149 — split from IF-012 (the docs/okf/ bundle medium); covered when a TC cites the bundle's shape
+IF-150 — split from IF-010 (gen_arch_map's --check exit code); covered when a TC cites the checker-exit seam
+IF-151 — split from IF-020 (the PreToolUse payload on stdin); covered when a TC cites the hook's input arm
+IF-152 — split from IF-060 (plan_coverage's argv); covered when a TC cites the coverage step's invocation
+IF-153 — split from IF-060 (the --out coverage report); covered when a TC cites the report read-back
+IF-154 — split from IF-080 (integrate's subcommand argv); covered when a TC cites the integrator's invocation arm
+IF-155 — split from IF-081 (trunk_step's argv); covered when a TC cites the trunk step's invocation arm
+IF-156 — split from IF-081 (the docs/log.d/ fragment medium); covered when a TC cites the fragment grammar
+IF-157 — split from IF-048 (the launchers' argv into run_menu); covered when a TC cites the launcher arm
+IF-158 — split from IF-048 (run_menu's exit code to the launchers); covered when a TC cites the launcher arm
+IF-159 — split from IF-079 (the write side of docs/work/); covered when a TC cites the spec writer's read-back
+IF-160 — split from IF-047 (the scoreboard write into docs/reviews/); covered when a TC cites the scoreboard's shape
+IF-161 — split from IF-021 (docs/test/ as its own medium); covered when a TC cites the TC registry's format
+IF-162 — split from IF-045 (docs/agents-enabled as its own medium); covered when a TC cites the enable-list grammar
+IF-163 — split from IF-037 (docs/status.md as a read medium); covered when a TC cites the blackboard's excerpt read
+IF-164 — split from IF-037 (the generated status block, writer-owned); covered when a TC cites the block's shape
+# --- INHERITED, closed by a reasoned entry at the same sitting: -------------
+IF-144 — the reporting protocol stated once (check.py's exit-code row); no single TC cites it because the property is measured across every checker's own tests, and a TC for the protocol census has not been minted; closes when one is

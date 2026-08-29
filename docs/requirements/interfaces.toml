@@ -172,9 +172,26 @@
 owner = "scripts/trace"
 consumers = ["scripts/check"]
 channel = "stdout"
-data = "orphan, integrity, status and advisory findings; joined report at docs/test/report.md"
+data = "orphan, integrity, status and advisory findings, printed whole for the harness to relay"
 version = "v1"
 status = "Drafted"
+
+[interface.IF-145]
+owner = "scripts/trace"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean · 1 a finding under --strict, an integrity finding under --strict-integrity, or a stale brief under --approve modified --check"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-146]
+owner = "scripts/trace"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/report.md — metric counts, the orphan and finding lists, the joined SN -> SR -> LLR -> TC forest"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-002]
 owner = "scripts/check_docs"
@@ -200,11 +217,27 @@ data = "check_perf: OK - <summary> or FAIL - <summary>, plus one <status> - <PB-
 version = "v1"
 status = "Drafted"
 
+[interface.IF-147]
+owner = "scripts/check_perf"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics"
+version = "v1"
+status = "Drafted"
+
 [interface.IF-005]
 owner = "scripts/check_privacy"
 consumers = ["scripts/check"]
 channel = "stdout"
 data = "one line per leak: <location>: [<label>] <excerpt>, then one summary line naming the scan and the armed layers"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-148]
+owner = "scripts/check_privacy"
+consumers = ["scripts/check"]
+channel = "exit-code"
+data = "0 clean or both layers off · 1 one or more findings in the tracked-file sweep"
 version = "v1"
 status = "Drafted"
 
@@ -234,9 +267,17 @@ status = "Drafted"
 
 [interface.IF-010]
 owner = "scripts/gen_arch_map"
-requestors = ["scripts/check"]
+requestors = ["scripts/check", "scripts/trunk_step"]
 channel = "cli"
 data = "--doc | --cli-doc | --contracts-doc | --src | --mode | --check | --strict-parse | --backlink-coverage | --strict-backlinks"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-150]
+owner = "scripts/gen_arch_map"
+consumers = ["scripts/check", "scripts/trunk_step"]
+channel = "exit-code"
+data = "0 current · 1 a stale target under --check, an unparseable module under --strict-parse, or coverage below the bar under --strict-backlinks"
 version = "v1"
 status = "Drafted"
 
@@ -250,11 +291,20 @@ status = "Drafted"
 
 [interface.IF-012]
 owner = "scripts/gen_okf"
-consumers = ["scripts/check"]
-channel = "bytes"
-data = "docs/okf/ bundle files, byte-compared under --check; stale, missing and extra all count"
+consumers = ["scripts/check", "scripts/trunk_step"]
+channel = "exit-code"
+data = "0 clean, vacuous or opted out · 1 stale, missing or extra bundle file under --check"
 version = "v1"
 status = "Drafted"
+
+[interface.IF-149]
+owner = "scripts/gen_okf"
+consumers = ["scripts/traj_parse", "external:downstream adopter"]
+channel = "file"
+data = "docs/okf/ — one GENERATED-bannered file per concept, sorted, clockless; extras pruned on write"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-013]
 owner = "scripts/check"
@@ -313,11 +363,12 @@ interface_to_external = "B-05"
 
 [interface.IF-019]
 owner = "scripts/gen_skills_index"
-consumers = ["skills/INDEX.csv"]
+consumers = ["external:downstream adopter"]
 channel = "file"
 data = "skills/INDEX.csv: banner comment, header, one row per skill (name, scope, stacks, domains, phases, tags, description)"
 version = "v1"
 status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-020]
 owner = "scripts/subagent_gate"
@@ -328,6 +379,15 @@ version = "v1"
 status = "Drafted"
 interface_to_external = "B-04"
 
+[interface.IF-151]
+owner = "scripts/subagent_gate"
+requestors = ["external:agent CLI"]
+channel = "cli"
+data = "the PreToolUse tool-call JSON on stdin; only tool_name (or toolName) is read"
+version = "v1"
+status = "Drafted"
+notes = "No tie-back: the frame declares the verdict OUT (B-04, on IF-020) and no crossing for the tool call IN — invoking our hook is the session's own act, the reasoning IF-041 records."
+
 [interface.IF-021]
 owner = "docs/requirements/"
 consumers = ["scripts/trace", "external:downstream adopter"]
@@ -337,6 +397,15 @@ version = "v2"
 status = "Drafted"
 interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: 14+ kit scripts independently join the SR registry (trace, spine_rules, gen_okf, plan_briefs, check_trajectory, agent_loop and more), and every downstream adopter fills in their own copy and reads it with the same shipped scripts - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered spine-registry format."""
+
+[interface.IF-161]
+owner = "docs/test/"
+consumers = ["scripts/acceptance_record", "scripts/adjudicate_brief", "scripts/agent_loop", "scripts/baseline_snapshot", "scripts/check_doc_refs", "scripts/check_flows", "scripts/check_trajectory", "scripts/gen_okf", "scripts/gen_release_checklist", "scripts/intake", "scripts/spine_rules", "scripts/trace", "scripts/traj_parse", "external:downstream adopter"]
+channel = "file"
+data = "test-cases.toml: id-keyed TOML, one [test.TC-###] table per case; ids are the table keys"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-022]
 owner = "docs/stack.ini"
@@ -388,6 +457,24 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's provider is the external agent CLI, not a kit script), and approved out of Proposed once it was implemented and consumed"""
+
+[interface.IF-152]
+owner = "scripts/plan_coverage"
+requestors = ["scripts/plan_coverage_step"]
+channel = "cli"
+data = "--goal, --root, --out, then the plan paths"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
+[interface.IF-153]
+owner = "scripts/plan_coverage"
+consumers = ["scripts/plan_coverage_step"]
+channel = "file"
+data = "the --out coverage report: uncovered clauses per plan — the payload the critic and arbiter briefs embed"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
 
 [interface.IF-061]
 owner = "scripts/plan_artifacts"
@@ -521,12 +608,29 @@ notes = """No tie-back, and the gap is in the FRAME rather than in this row: the
 
 [interface.IF-037]
 owner = "docs/process.toml"
-consumers = ["scripts/agent_common", "scripts/gen_okf", "scripts/traj_status"]
+consumers = ["scripts/agent_common", "scripts/agent_loop", "scripts/bootstrap", "scripts/check_privacy", "scripts/check_trajectory", "scripts/dispatch", "scripts/gen_arch_map", "scripts/gen_okf", "scripts/integrate", "scripts/kitlib/config", "scripts/subagent_gate", "hooks/pre-commit", "hooks/commit-msg", "hooks/pre-push", "external:downstream adopter"]
 channel = "file"
 data = "sections: attestation, policies, checks; one key = value per line"
 version = "v1"
 status = "Drafted"
-notes = """Low fan-out, MEASURED OVER ONE SURFACE and stated so: the three direct readers of the `## Current State` excerpt this row's own function discloses - agent_common (this row, current_state_excerpt), gen_okf (process-guide summary) and traj_status (dashboard splice). agent_loop calls agent_common's function rather than reading docs/status.md itself. The fan-out is NOT over docs/process.toml, which the contract names first among the surfaces this reader touches: that file has nine direct kit readers and is the reason IF-038 converted to a published-contract row. A closed, nameable set for the excerpt; a wide one for the policy home."""
+interface_to_external = "B-05"
+
+[interface.IF-163]
+owner = "docs/status.md"
+consumers = ["scripts/agent_common", "scripts/check_docs", "scripts/check_trajectory", "scripts/gen_okf", "scripts/integrate", "scripts/trunk_step"]
+channel = "file"
+data = "the forward-only blackboard; `## Current State` carries the generated block between its markers"
+version = "v1"
+status = "Drafted"
+
+[interface.IF-164]
+owner = "scripts/traj_status"
+consumers = ["scripts/agent_common", "external:downstream adopter"]
+channel = "file"
+data = "docs/status.md — the block between the GENERATED STATUS markers: derived stage, spine counts, the ready frontier"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-038]
 owner = "docs/process.toml"
@@ -598,9 +702,17 @@ version = "v1"
 status = "Drafted"
 notes = """The provider side is the two declared files, which is the medium consumed; this row's own module named no far side. FAN-OUT IS NOT 1, correcting the earlier cell: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
 
+[interface.IF-162]
+owner = "docs/agents-enabled"
+consumers = ["scripts/agent_route", "scripts/dispatch"]
+channel = "file"
+data = "one registry id per line in preference order, optional <PHASE>=<weight> annotations; presence turns managed routing on"
+version = "v1"
+status = "Drafted"
+
 [interface.IF-046]
 owner = "scripts/score_reviews"
-requestors = ["scripts/agent_loop"]
+requestors = ["scripts/agent_loop", "scripts/integrate"]
 channel = "call"
 data = "score_reviews.parse_verdict, substance, merge_verdict, fired_tripwires, record_round; every result advisory"
 version = "v1"
@@ -615,11 +727,37 @@ version = "v1"
 status = "Drafted"
 notes = """Low fan-out: three direct content readers - check_trajectory (_latest_critique_verdict), integrate (git-shows the review blob then calls score_reviews.parse_verdict) and score_reviews (this row, read_scoreboard/record_round). agent_loop calls score_reviews.record_round rather than reading a review file itself. A closed, nameable set."""
 
+[interface.IF-160]
+owner = "docs/reviews/"
+requestors = ["scripts/score_reviews"]
+channel = "file"
+data = "scoreboard.txt — the decayed per-provider substance tallies and the round history"
+version = "v1"
+status = "Drafted"
+
 [interface.IF-048]
 owner = "scripts/run_menu"
 consumers = ["external:run.* launchers"]
 channel = "stdout"
 data = "one capability per line as name, tab, description, in declaration order"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+
+[interface.IF-157]
+owner = "scripts/run_menu"
+requestors = ["external:run.* launchers"]
+channel = "cli"
+data = "no argument (the menu) · --list · <capability> [args...] appended as quoted data values · --file docs/stack.ini"
+version = "v1"
+status = "Drafted"
+notes = """No tie-back: the launchers hand argv IN to the menu and the frame declares no IN crossing for an invocation — running the launcher is the session's own act; the delivered contract ties on the exit-code row."""
+
+[interface.IF-158]
+owner = "scripts/run_menu"
+consumers = ["external:run.* launchers"]
+channel = "exit-code"
+data = "the launched capability's code passed through · 0 --list or a menu quit · 1 nothing declared or input closed · 2 unknown name"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
@@ -636,7 +774,7 @@ notes = """Published contract, not a single consumer: same population as IF-022/
 
 [interface.IF-050]
 owner = "scripts/derive_stage"
-consumers = ["scripts/check"]
+consumers = ["scripts/check", "scripts/agent_common", "scripts/check_trajectory", "scripts/traj_parse", "scripts/intake"]
 channel = "file"
 data = "docs/stage — key = value fields plus a sha256 fingerprint of the declared inputs"
 version = "v1"
@@ -666,9 +804,9 @@ component = "CMP-009"
 
 [interface.IF-053]
 owner = "scripts/schedule"
-requestors = ["scripts/check_trajectory"]
+requestors = ["scripts/census", "scripts/dispatch", "scripts/intake"]
 channel = "call"
-data = "load_registry_rows, load_wis, classify, evaluate, frontier, simulate"
+data = "load_wis · _load, frontier, kind_of · SAFETY_CLASSES — the symbols census, dispatch and intake take; no write, no spawn, no git"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
@@ -742,7 +880,7 @@ notes = "built and consumed together; same population as IF-022/049 - this row's
 [interface.IF-069]
 owner = "scripts/check_coverage"
 consumers = ["scripts/check"]
-channel = "stdout"
+channel = "exit-code"
 data = "0 every floor holds or unmeasured · 1 below floor, absent module, or corrupt input"
 version = "v1"
 status = "Drafted"
@@ -789,22 +927,21 @@ notes = "built and consumed together; published contract, not a single consumer 
 
 [interface.IF-074]
 owner = "scripts/gen_open_items"
-consumers = ["docs/open-items.html"]
+consumers = ["external:downstream adopter"]
 channel = "file"
 data = "docs/open-items.html — pending decisions, approval and re-attest chains, pending owner actions"
 version = "v1"
 status = "Drafted"
-notes = "built with its consumer"
+interface_to_external = "B-05"
 
 [interface.IF-075]
 rationale = """Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators."""
 owner = "scripts/trace"
-requestors = ["scripts/gen_open_items"]
+requestors = ["scripts/gen_open_items", "scripts/adjudicate_brief"]
 channel = "call"
-data = "reattest_model entries: chain rows, changed cells, baseline rev and date"
+data = "reattest_model entries: chain rows, changed cells, baseline rev and date; an empty model is a valid answer"
 version = "v1"
 status = "Drafted"
-notes = "built and consumed together"
 
 [interface.IF-076]
 rationale = """The module is the spine-row TEXT layer split out of trace.py, and the byte-for-byte finding-string assertions are what make that split provably behaviour-preserving."""
@@ -847,6 +984,15 @@ component = "CMP-006"
 interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: same population as IF-023/024/054 - this row's own read_specs/spec_paths IS the format's definition module, and 8+ other kit scripts walk the same WI registry; every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format."""
 
+[interface.IF-159]
+owner = "docs/work/"
+requestors = ["scripts/wi_convert"]
+channel = "file"
+data = "one spec file per row, written and read back cell-exact before its path is returned"
+version = "v1"
+status = "Drafted"
+component = "CMP-006"
+
 [interface.IF-080]
 owner = "scripts/integrate"
 consumers = ["external:downstream adopter"]
@@ -857,15 +1003,43 @@ status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
 
-[interface.IF-081]
-owner = "scripts/trunk_step"
-consumers = ["external:downstream adopter"]
-channel = "bytes"
-data = "0 all clean · 1 any failure, the offending file named"
+[interface.IF-154]
+owner = "scripts/integrate"
+requestors = ["scripts/lane", "external:downstream adopter"]
+channel = "cli"
+data = "claim --wi --branch · refresh --branch --tier · integrate --tier · audit --since, each with --root"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
+notes = """No tie-back: the argv comes IN from the adopter's own session (a claim, an audit) or from the dispatcher's lane, and the frame declares no IN crossing for an invocation — driving our integrator is the session's own act, the reasoning the agent-CLI row records; the delivered contract ties on the exit-code row."""
+
+[interface.IF-081]
+owner = "scripts/trunk_step"
+consumers = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
+channel = "exit-code"
+data = "0 all clean · 1 any failure, the offending file named"
+version = "v1"
+status = "Drafted"
 interface_to_external = "B-05"
+component = "CMP-008"
+
+[interface.IF-155]
+owner = "scripts/trunk_step"
+requestors = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
+channel = "cli"
+data = "--compile-log · --regen · neither = both, compile first; --root and --dry-run on either"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = """No tie-back: the trunk step's argv comes IN from the integrator, the mint, or the adopter running it by hand, and the frame declares no IN crossing for an invocation; the delivered contract ties on the exit-code row."""
+
+[interface.IF-156]
+owner = "docs/log.d/"
+consumers = ["scripts/trunk_step"]
+channel = "file"
+data = "one fragment per session, <id>-<slug>.md, opening with a `## ` heading; links written relative to docs/log.d/"
+version = "v1"
+status = "Drafted"
 
 [interface.IF-082]
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling - so the row is held here rather than on the facade."""
@@ -950,9 +1124,9 @@ notes = """sink — the census consumes the validator's one orphan/status engine
 
 [interface.IF-090]
 owner = "scripts/intake"
-requestors = ["scripts/integrate"]
+requestors = ["scripts/integrate", "scripts/dispatch", "scripts/agent_loop"]
 channel = "call"
-data = "intake_after_merge, mint_gap_rows, adjudication_action, flip_verified, context_block"
+data = "intake_after_merge (integrate) · mint_gap_rows (dispatch) · context_block (agent_loop, advisory)"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
@@ -1040,18 +1214,18 @@ notes = """intra-component: both endpoints are CMP-008 under the narrow-waist pa
 [interface.IF-101]
 rationale = """Shared rather than duplicated because the mint and the checker must agree on what an id is: a second copy of that rule is the defect the check exists to catch."""
 owner = "scripts/trace"
-requestors = ["scripts/intake"]
+requestors = ["scripts/intake", "scripts/plan_artifacts"]
 channel = "call"
-data = "read_watermark and bump_watermark over docs/id-watermark"
+data = "read_watermark and bump_watermark over docs/id-watermark; a mint counts from max(mark, live) + 1"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
 
 [interface.IF-102]
 owner = "scripts/spine_carrier"
-requestors = ["scripts/trace"]
+requestors = ["scripts/trace", "scripts/acceptance_record", "scripts/check_trajectory", "scripts/gen_arch_map", "scripts/plan_coverage", "scripts/spine_rules", "scripts/traj_status"]
 channel = "call"
-data = "spine_carrier.load / rows_from_text / rows_seq_from_text / resolve / carriers; rows under today's column names, None on a TOML decode error"
+data = "spine_carrier.load / resolve / stem / carriers / rows_from_text; rows under today's column names, None on a TOML decode error"
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
@@ -1204,17 +1378,6 @@ status = "Drafted"
 component = "CMP-008"
 notes = """intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header."""
 
-[interface.IF-116]
-rationale = """Shared rather than duplicated for IF-101's reason: the mint and the checker must agree on what an id is."""
-owner = "scripts/trace"
-requestors = ["scripts/plan_artifacts"]
-channel = "call"
-data = "read_watermark and bump_watermark over docs/id-watermark, for two mints"
-version = "v1"
-status = "Drafted"
-component = "CMP-008"
-notes = """the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared because these two mints sit off max(live) + 1, which would otherwise re-issue the id of anything deleted."""
-
 [interface.IF-117]
 owner = "scripts/gen_arch_map"
 requestors = ["scripts/check_doc_refs"]
@@ -1315,14 +1478,6 @@ carried_by = "IF-123"
 version = "v1"
 status = "Drafted"
 notes = """cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Cited by no TC today."""
-
-[interface.IF-127]
-owner = "scripts/trace"
-requestors = ["scripts/adjudicate_brief"]
-channel = "call"
-data = "load_registries then reattest_model; an empty model is a valid answer"
-version = "v1"
-status = "Drafted"
 
 [interface.IF-128]
 owner = "scripts/spine_carrier"
@@ -1438,11 +1593,12 @@ status = "Drafted"
 
 [interface.IF-140]
 owner = "scripts/gen_components"
-consumers = ["docs/requirements/components.derived.toml"]
+consumers = ["external:downstream adopter"]
 channel = "file"
 data = "docs/requirements/components.derived.toml — [derived], [component_view.CMP-###] and [unplaced] tables"
 version = "v1"
 status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-141]
 rationale = """The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit."""

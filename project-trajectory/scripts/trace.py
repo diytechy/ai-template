@@ -78,30 +78,34 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-116, IF-127, IF-141 — the
+Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-001: SR-157's obligation delivered as a CLI here. Joins the
-    SN -> SR -> LLR -> TC spine with the off-spine registries under `--docs`,
-    writes `docs/test/report.md`, and prints the orphan, integrity, status and
-    advisory findings on stdout for the harness to capture and print whole,
-    never summarised away. An absent optional registry and a `-000` example row
-    are ignored, so a fresh scaffold reports clean instead of failing.
+    SN -> SR -> LLR -> TC spine with the off-spine registries under `--docs`
+    and prints the orphan, integrity, status and advisory findings on stdout
+    for the harness to capture and print whole, never summarised away. An
+    absent optional registry and a `-000` example row are ignored, so a fresh
+    scaffold reports clean instead of failing.
 Contract IF-042: the always-valid integrity floor, run over staged content.
     `--strict-integrity` exits 1 when an integrity finding exists — a duplicate
     or malformed id, a data row whose column count differs from its header, an
     incoherent SR;LLR citation pair, an id-watermark breach — and 0 otherwise.
     Orphan and status findings are gate-scoped and never gate this flag, so the
     floor is safe to run on every commit at any stage.
-Contract IF-075: `reattest_model(root, srs, llrs, tcs, snapshot=...)` — the ONE
-    computation of what a spine row owing a human act looks like against its
-    copy in `docs/archive/last_approved/`: the chain rows, each row's changed
-    cells before and after, and the baseline revision and date. It returns
-    structured entries rather than text, so a renderer consumes the model and
-    never re-derives it; `reattest_lines` renders these same entries as the
-    markdown brief. `snapshot=None` compares against nothing and falls back to
-    the first-approval arm alone.
+Contract IF-075: `reattest_model(root, srs, llrs, tcs, snapshot=...)`, reached
+    through `load_registries(docs)` — the ONE computation of what a spine row
+    owing a human act looks like against its copy in
+    `docs/archive/last_approved/`: the chain rows, each row's changed cells
+    before and after, and the baseline revision and date. It returns structured
+    entries rather than text, so every renderer consumes this model and none
+    re-derives it; `reattest_lines` renders the same entries as the markdown
+    brief. `snapshot=None` compares against nothing and falls back to the
+    first-approval arm alone. An EMPTY model is a real answer, not a failure —
+    no row differing from its snapshot copy and none awaiting a first approval
+    means there is nothing to judge — and the caller is handed that emptiness
+    to refuse on instead of a fabricated brief.
 Contract IF-089: `load_registries(docs)` then `analyze(reg, AnalysisFlags(...))`
     — the single orphan/status engine offered as a library call.
     `load_registries` loads and analyses nothing; `analyze` is pure over the
@@ -111,29 +115,39 @@ Contract IF-089: `load_registries(docs)` then `analyze(reg, AnalysisFlags(...))`
 Contract IF-101: `read_watermark(root) -> {space: int}` reads
     `docs/id-watermark`, the only record of which ids have ever been allocated,
     and RAISES on an absent or malformed file rather than degrading to zero —
-    the degrade would free every id space at once. `bump_watermark(root) ->
-    (marks, raised)` raises every mark to the live maximum, propagating a
+    the degrade would free every id space at once. It supplies the floor a mint
+    counts from: the next id in a space is `max(mark, live maximum) + 1`, so an
+    id held anywhere is an id taken. `bump_watermark(root) -> (marks, raised)`
+    records the result, raising every mark to the live maximum, propagating a
     malformed file's error and starting from zero only on the file's first
-    creation, so a mark only ever rises and a deleted id is never re-minted.
-Contract IF-116: the same two marks as a minting caller uses them.
-    `read_watermark` supplies the floor a mint counts from — the id is
-    `max(mark, live maximum) + 1`, so an id held anywhere is an id taken — and
-    `bump_watermark` records the result. The order is forced by what
-    `bump_watermark` reads: it takes the LIVE maximum, so it can only run after
-    the artifact being minted exists, or it records a number nothing holds.
-Contract IF-127: the attestation model reached through `load_registries` plus
-    `reattest_model`, so a composed brief is built from the same rows, the same
-    snapshot baseline and the same approved/traced split `--approve` renders.
-    An EMPTY model is a real answer, not a failure: no row differing from its
-    snapshot copy and none awaiting a first approval means there is nothing to
-    judge, and the caller is handed that emptiness to refuse on rather than a
-    fabricated brief.
+    creation, so a mark only ever rises and a deleted id is never re-minted. It
+    reads the LIVE tree, so a minting caller may only call it once the minted
+    artifact is on disk, or it records a number nothing holds.
 Contract IF-141: `effective_hats(row, sr_by_id) -> sorted hat names` — one
     design row's effective perspective set: its own `Hat-Refs` unioned with
     those of its SR parents, derived on every read instead of copied down at
     authoring time, so a re-ruled parent propagates with no child edit. A
     dangling `SR-Refs` contributes nothing and does not raise; unresolved
     parentage is the orphan pass's finding, not this derivation's.
+Contract IF-145: the gate verdict the harness reads back from this CLI. Every
+    checking arm answers in 0 and 1: `--strict` exits 1 when any orphan,
+    status, integrity, placeholder, schema or off-spine finding exists;
+    `--strict-integrity` exits 1 on an integrity finding alone, leaving the
+    gate-scoped classes ungated; `--approve modified --check` exits 1 only when
+    a brief exists, a row still owes a human act, and the rendered text differs
+    from the file. Without a strict flag a checking run exits 0 having still
+    printed every finding, so a harness reading the code alone must pass one.
+    The writer arms (`--bump-ids`, `--correct-mark`, `--mint-approval-brief`)
+    run no checks and exit on their own refusal instead.
+Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
+    under `--docs`. It carries the metric counts, the SR -> LLR -> TC matrix,
+    the orphan, integrity, status and advisory sections, the flag-gated
+    off-spine, draft, area and status sections, the attested-vs-mechanized
+    approval split, and two renderings of one join: a line-reviewable
+    SN -> SR -> LLR -> TC outline and a small, diff-friendly Mermaid DAG
+    coloured by orphan and draft state. It is a composite artifact written for
+    reading, never a parsing surface: no reader is promised a stable grammar,
+    and the reviewed truth stays the registries it joins.
 """
 
 import argparse
@@ -602,7 +616,9 @@ _IF_WI_RE = re.compile(r"\bWI-\d+\b")
 # as rulings, which is a check inventing a rule nobody wrote. What was ruled is
 # the repo-lock decision citation, and that is what this matches.
 _IF_DECISION_RE = re.compile(r"\bD-\d+\b")
-_IF_CONNECTIVE_RE = re.compile(r"\b(because|rather than|so that|since)\b", re.I)
+# `(?<!-)`: a FLAG spelled `--since` is an argv token, not an argument — a cli
+# row's `Data` cell legitimately lists it, and the form rule reads form only.
+_IF_CONNECTIVE_RE = re.compile(r"(?<!-)\b(because|rather than|so that|since)\b", re.I)
 IF_DATA_MAX = 160
 
 # --- the FIFTH rule: does the surviving prose name anything that is GONE? ------

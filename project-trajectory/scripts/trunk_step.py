@@ -54,21 +54,27 @@ Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry
         (no operation flag = both, compile first, then regen)
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
 
-Contracts: IF-081 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-081, IF-155 — the interface seams this module declares (process.md
+§8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-081: the serial trunk lane's two steps as one CLI. `--compile-log`
-    validates EVERY committed log fragment before writing anything — its name
-    shape, its opening heading, that it claims no reserved heading, and that it
-    is committed — then appends them oldest-first by the commit that added each
-    file, rebasing each fragment's relative links one directory up and leaving
-    anchors and absolute paths alone; all-or-nothing, so a half-compiled log
-    cannot exist. `--regen` re-derives the generated document families in
-    dependency order, so a generator that reads another's output runs after it,
-    and skips with a PRINTED notice any family this repo does not carry. It
-    never commits: staging and committing belong to the caller. Exit 0 all
-    clean, 1 on any failure with the offending file named, because a red trunk
-    lane must halt claiming rather than fail open.
+Contract IF-081: the serial trunk lane's exit alphabet, and there are only two
+    letters in it. 0 is all clean — every selected operation finished, or found
+    nothing to do, which is the same answer here because a second run on a
+    clean trunk is a no-op. 1 is ANY failure, with the offending file named on
+    stderr: a fragment that fails validation, an unreadable merge order (off
+    git the order cannot be read and is never invented), or a generator that
+    returned nonzero and stopped the rest. There is no partial success to
+    report — the compile is all-or-nothing and the regen halts at the first
+    failure — because a red trunk lane must halt claiming rather than fail
+    open. It never commits, so the caller reading this code owns what is left
+    staged.
+Contract IF-155: the argv surface of the trunk step. `--root` (default the cwd)
+    names the repository; `--compile-log` selects the fold and `--regen` the
+    re-derivation, and NEITHER flag runs both — compile first, because it can
+    move docs/log.md, which the generators then read. `--dry-run` applies to
+    whichever operations are selected: each prints what it would do and writes
+    nothing. No flag selects a subset of fragments or of generated families,
+    and none of them commits.
 """
 
 import argparse
@@ -160,12 +166,21 @@ def _err(message):
 
 def fragment_paths(root):
     """The fragment files awaiting compilation, filename-sorted. Dotfiles are
-    skipped so the scaffold marker (`.gitkeep`) is never mistaken for one."""
+    skipped so the scaffold marker (`.gitkeep`) is never mistaken for one, and
+    so is the directory's own `README.md` — the declaration home of the
+    `docs/log.d/` interface row (a directory owner states its contract in its
+    README), which is neither a session fragment nor a name the fragment
+    grammar could accept. By NAME, exactly, so any other badly named file still
+    refuses the whole compile."""
     d = Path(root) / LOG_D
     if not d.is_dir():
         return []
     return sorted(
-        (p for p in d.glob("*.md") if p.is_file() and not p.name.startswith(".")),
+        (
+            p
+            for p in d.glob("*.md")
+            if p.is_file() and not p.name.startswith(".") and p.name != "README.md"
+        ),
         key=lambda p: p.name,
     )
 

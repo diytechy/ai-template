@@ -1369,6 +1369,19 @@ def test_a_data_cell_naming_a_deleted_symbol_family_is_reported(tmp_path):
     assert "no such symbol exists" in fires[0]
 
 
+def test_a_flag_spelled_like_a_connective_is_not_an_argument(tmp_path):
+    # OI-67 slice 4: a `cli` row's `Data` cell lists argv, and `audit --since`
+    # is a flag, not the connective the rationale rule reads for. The rule is
+    # form-only, so the form it reads must be a WORD — a token opening with a
+    # hyphen is not one. The bare word still fires.
+    from conftest import load_script
+
+    trace = load_script("trace")
+    assert _data_advisories(trace, None, "claim --wi · audit --since") == []
+    fires = _data_advisories(trace, None, "refuses since the tree is dirty")
+    assert len(fires) == 1 and "argues" in fires[0]
+
+
 def test_the_tripwire_reads_calls_constants_and_dotted_names(tmp_path):
     from conftest import load_script
 

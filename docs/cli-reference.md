@@ -189,7 +189,7 @@ Contracts (interfaces): IF-121
 
 ### `scripts/check_perf`
 _Performance budget & regression comparator: track the numbers, alert on drift._
-Contracts (interfaces): IF-004
+Contracts (interfaces): IF-004, IF-147
 
 | Option | Help |
 |---|---|
@@ -204,7 +204,7 @@ Contracts (interfaces): IF-004
 
 ### `scripts/check_privacy`
 _Secrets + privacy-leak lint — the deterministic floor (stdlib only)._
-Contracts (interfaces): IF-005, IF-043
+Contracts (interfaces): IF-005, IF-043, IF-148
 
 | Option | Help |
 |---|---|
@@ -271,7 +271,7 @@ Contracts (interfaces): IF-050
 
 ### `scripts/gen_arch_map`
 _The module/function AST walk behind the DERIVED architecture (WI-455)._
-Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132
+Contracts (interfaces): IF-010, IF-028, IF-117, IF-131, IF-132, IF-150
 
 | Option | Help |
 |---|---|
@@ -314,7 +314,7 @@ Contracts (interfaces): IF-139, IF-140
 
 ### `scripts/gen_okf`
 _OKF export — the traceability graph as a portable knowledge bundle (Thread 48)._
-Contracts (interfaces): IF-012
+Contracts (interfaces): IF-012, IF-149
 
 | Option | Help |
 |---|---|
@@ -398,7 +398,7 @@ Contracts (interfaces): IF-090
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Contracts (interfaces): IF-080
+Contracts (interfaces): IF-080, IF-154
 
 | Option | Help |
 |---|---|
@@ -429,7 +429,7 @@ _Redacted dual-plan brief assembler + the three hat prompt-map keys (DP-001_
 
 ### `scripts/plan_coverage`
 _Dual-plan coverage pre-pass: make rival WI decompositions mechanically_
-Contracts (interfaces): IF-060
+Contracts (interfaces): IF-060, IF-152, IF-153
 
 | Option | Help |
 |---|---|
@@ -469,7 +469,7 @@ _Record the test evidence — the harness driver that makes `DevStg-Release`_
 
 ### `scripts/run_menu`
 _The run capability menu — one launcher that presents every major capability._
-Contracts (interfaces): IF-048
+Contracts (interfaces): IF-048, IF-157, IF-158
 
 | Option | Help |
 |---|---|
@@ -517,7 +517,7 @@ _spec_move.py — the link-aware spec-move ritual: move a registry/spec file and
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
-Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-116, IF-127, IF-141
+Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146
 
 | Option | Help |
 |---|---|
@@ -540,7 +540,7 @@ Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-116, IF-127, 
 
 ### `scripts/trunk_step`
 _The serial trunk step — compile the log fragments, regenerate the trunk artifacts._
-Contracts (interfaces): IF-081
+Contracts (interfaces): IF-081, IF-155
 
 | Option | Help |
 |---|---|

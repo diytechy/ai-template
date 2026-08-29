@@ -1,6 +1,6 @@
 # Enabled agent routing (WI-107) — the CONSENT surface: this file's PRESENCE
 # turns managed model selection ON (agent_loop.py). The ids below, in preference
-# order, are resolved against docs/agents.csv; an unresolvable id fails preflight
+# order, are resolved against docs/agents.toml; an unresolvable id fails preflight
 # loudly (never a silent fall-back to the legacy single-model path). Removing or
 # renaming this file returns the loop to today's AGENT_CMD/AGENT_MODEL behavior
 # byte-for-byte — consent is this list plus the declared routing rules, and the
@@ -9,7 +9,7 @@
 # launchers' AGENT_TIER_MAP/AGENT_PREFER_MAP are EMPTY, so this list's order
 # decides. Owner directive 2026-07-22: Opus takes BOTH strong and medium — the
 # owner has no Fable access, so ANTHROPIC-FABLE is dropped from this list and
-# ANTHROPIC-OPUS-STRONG (opus @ strong, docs/agents.csv) leads the strong tier,
+# ANTHROPIC-OPUS-STRONG (opus @ strong, docs/agents.toml) leads the strong tier,
 # with ANTHROPIC-OPUS still leading medium (retiring the WI-160/WI-161 Sol pin;
 # reviewer/critic heterogeneity still wins). Re-add ANTHROPIC-FABLE here to
 # restore Fable at strong when access returns.
@@ -20,6 +20,22 @@
 # everywhere (today's behavior); e.g. `OPENAI-TERRA  REVIEW=4` draws OpenAI ~4x
 # as often as the weight-1 reviewers. See process-options.md "Unattended
 # operation" -> routing for the full rule (0 = fallback-only; malformed = fail).
+#
+# Contracts: IF-162 — the interface seam this file declares (process.md §8; row
+# of record in docs/requirements/interfaces.toml).
+#
+# Contract IF-162: the enable-list, and the CONSENT surface for managed model
+#     selection — routing is on when this file holds at least one entry line and
+#     off when it is absent, empty or all comments. One entry per line in
+#     preference order: a registry id, or a version-less token resolved against
+#     the model registry to the exact id, else the newest row in its
+#     Family-Model line; optionally followed by whitespace-separated
+#     `<PHASE>=<int>` draw weights over BUILD|REVIEW|CRITIQUE|DESIGN-CHECK, an
+#     unannotated entry weighing 1 everywhere. Blank lines and `#` lines are
+#     skipped, so this header is not part of the list. An unresolvable token, a
+#     malformed annotation and two lines resolving to one id with different
+#     weights each fail preflight loudly, naming the offending line — never a
+#     silent fall-back to the single-model path.
 ANTHROPIC-OPUS-STRONG
 OPENAI-SOL
 OPENCODE-KIMI

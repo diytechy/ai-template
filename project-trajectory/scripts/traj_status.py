@@ -9,6 +9,21 @@ which this module is one, so the dispatcher and the generated owner surface
 each had to import the `gen_trajectory` facade — a render family — to reach a
 state query, and the dispatcher reached in for two PRIVATE names. Those were the
 2026-08-19 review's two documented bad edges (H-02, M-02).
+
+Contracts: IF-164 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-164: the generated region of `docs/status.md` — the block between
+    the GENERATED STATUS markers, and nothing outside them. It carries derived
+    facts only: a banner naming the command that regenerates it, the derived
+    stage line with its per-phase detail, one spine line (SN/SR/LLR/TC counts,
+    drafts, seams, components), the pending open-item one-liners, and the
+    dependency-ready frontier in build order, so a closed row drops out of the
+    file on the next run. Deterministic — sorted inputs, no clock — and written
+    LF on every platform, so `--check` byte-compares it and reports STALE rather
+    than writing. A status.md that is absent or carries no marker pair is left
+    untouched and passes vacuously; a duplicated marker is refused rather than
+    spliced ambiguously.
 """
 
 import re

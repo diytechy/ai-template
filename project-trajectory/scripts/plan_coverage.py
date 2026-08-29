@@ -36,19 +36,31 @@ Uncovered clauses are the report's *payload*, never findings — showing the
 gap to the critics and the arbiter is the tool's purpose. Malformed inputs
 (no clauses in the goal, no plan table) exit 2.
 
-Contracts: IF-060 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-060, IF-152, IF-153 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
-Contract IF-060: the round's coverage step invokes this CLI headless
-    (`--goal`, `--root`, `--out`, the plan paths) and decides on the exit code
-    alone: 0 clean, 1 findings, 2 malformed input. The three are kept distinct
-    because they mean different things to a round — 1 says the plans were read
-    and something in them is wrong, so the `plan_coverage: FAIL - <planfile>:`
-    lines on stdout name which plan is implicated; 2 says the inputs could not
-    be read at all (no numbered clauses in the goal, no `Plan-WI` table in a
-    plan), no report file is written for that run, and the caller bounces both
-    plans rather than reading a stale one. Uncovered clauses are the report's
-    payload and never a finding, so a plan can be honestly incomplete and still
-    exit 0.
+Contract IF-060: the exit alphabet the coverage step decides on. 0 clean, 1
+    findings, 2 malformed input, and the three are kept distinct because they
+    mean different things to a round — 1 says the plans were read and something
+    in them is wrong, so the `plan_coverage: FAIL - <planfile>:` lines on
+    stdout name which plan is implicated; 2 says the inputs could not be read
+    at all (no numbered clauses in the goal, a missing file, no `Plan-WI` table
+    in a plan) and the caller bounces both plans rather than reading a stale
+    report. Uncovered clauses are never a finding, so a plan can be honestly
+    incomplete and still exit 0.
+Contract IF-152: the headless argv surface. `--goal GOAL.md` is required and
+    one or more plan paths are positional; `--root` (default `.`) names the
+    repo root holding docs/requirements/ for the SR and IF reference checks,
+    and `--out` names a file to write the report to as well as stdout. No
+    other flag exists, and an absent goal or plan file is a malformed run
+    rather than a finding.
+Contract IF-153: the `--out` report file. It is the same markdown the run
+    prints — per-plan rows, covered and UNCOVERED clause lists, multi-covered
+    clauses, then a pairwise `only A / only B / both / neither` diff — with the
+    FAIL, OK and note lines deliberately left out, so it is the clean payload a
+    critic or arbiter brief embeds. It is written on a clean or findings run
+    and NOT on a malformed one, which is why a leftover file from an earlier
+    stage must never be read as this run's.
 """
 
 import argparse

@@ -575,17 +575,20 @@ SEEDED_IF_TC_ALLOW = (
     # the list's FUTURE is reviewed. Pruning an entry whose seam gained a TC is
     # the intended end state — when you prune, lower `seed-count` in the file
     # and delete the id here, in the same commit, and say so in the log.
+    # PRUNED 2026-08-29 (OI-67 slice 4): IF-075, whose seam gained TC-161's
+    # citation when IF-127 collapsed into it, and IF-116, which collapsed into
+    # IF-101 — 120 -> 118, seed-count lowered in the same commit.
     "IF-001 IF-002 IF-003 IF-004 IF-005 IF-006 IF-008 IF-009 IF-010 IF-011 "
     "IF-012 IF-013 IF-014 IF-015 IF-016 IF-017 IF-018 IF-019 IF-020 IF-021 "
     "IF-022 IF-023 IF-024 IF-025 IF-026 IF-028 IF-029 IF-030 IF-031 IF-032 "
     "IF-033 IF-034 IF-035 IF-036 IF-037 IF-038 IF-039 IF-040 IF-041 IF-042 "
     "IF-043 IF-044 IF-045 IF-046 IF-047 IF-048 IF-049 IF-050 IF-051 IF-052 "
     "IF-053 IF-054 IF-055 IF-056 IF-057 IF-058 IF-059 IF-060 IF-061 IF-064 "
-    "IF-065 IF-066 IF-068 IF-069 IF-070 IF-071 IF-072 IF-073 IF-074 IF-075 "
+    "IF-065 IF-066 IF-068 IF-069 IF-070 IF-071 IF-072 IF-073 IF-074 "
     "IF-076 IF-077 IF-078 IF-079 IF-080 IF-081 IF-082 IF-083 IF-084 IF-085 "
     "IF-086 IF-087 IF-088 IF-089 IF-092 IF-097 IF-098 IF-099 IF-100 IF-102 "
     "IF-103 IF-104 IF-105 IF-106 IF-107 IF-108 IF-109 IF-110 IF-111 IF-112 "
-    "IF-113 IF-114 IF-115 IF-116 IF-117 IF-118 IF-119 IF-120 IF-121 IF-122 "
+    "IF-113 IF-114 IF-115 IF-117 IF-118 IF-119 IF-120 IF-121 IF-122 "
     "IF-125 IF-126 IF-130 IF-131 IF-132 IF-133 IF-134 IF-135 IF-136 IF-137"
 ).split()
 
@@ -612,13 +615,13 @@ def test_this_repos_seam_tc_allowlist_is_exactly_its_seeded_set():
     entries, seed = check_trajectory.parse_if_tc_allow(
         (ROOT / "docs" / "if-tc-coverage-allow").read_text(encoding="utf-8")
     )
-    assert seed == 120, "the declared seed-count moved without this pin moving"
-    assert len(SEEDED_IF_TC_ALLOW) == 120
-    assert [i for i, _ in entries[:120]] == SEEDED_IF_TC_ALLOW
+    assert seed == 118, "the declared seed-count moved without this pin moving"
+    assert len(SEEDED_IF_TC_ALLOW) == 118
+    assert [i for i, _ in entries[:118]] == SEEDED_IF_TC_ALLOW
     # And every entry past the seed carries its reason, or it suppresses
     # nothing — the reader drops it, so this is a statement about the FILE
     # being honest rather than about the reader being lenient.
-    assert all(reason for _id, reason in entries[120:]), entries[120:]
+    assert all(reason for _id, reason in entries[118:]), entries[118:]
 
 
 def test_a_bare_addition_past_the_seed_suppresses_nothing(tmp_path):
