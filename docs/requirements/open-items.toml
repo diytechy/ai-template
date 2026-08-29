@@ -2512,186 +2512,115 @@ The remainder/non-crossing character counts are spans of the clauses judged, not
 Cross-family second opinion (OPENAI-SOL, 2026-08-25; record: docs/reviews/2026-08-25-oi63-brief-round/): the table's arithmetic re-summed EXACT, both rot exhibits re-verified, 12 of 15 spot-checked rows AGREE. Three rows are flagged for re-adjudication before the exact percentages are leaned on: IF-050 (its "every consumer reads it through kitlib.stage.read_stage" is a false universal - kitlib/stage.py itself names the display surfaces that deliberately do not), IF-061 (a retired dual-write described as live), IF-098 (remainder partly recoverable from public docstrings). The reviewer also holds that class F is an ownership axis rather than a clause kind. Its verdict: the measurement stands, with those qualifications, as a basis for ruling."""
 
 [open_item.OI-64]
-title = """The finding/severity/exit contract is restated in eleven-to-thirteen requirement rows and stated by none - does it become a requirement, or is the restatement accepted"""
+title = """Do the rules every checker already follows get stated once, or does each checker keep its own wording"""
 status = "pending"
 raised = "2026-08-25"
-one_line = """WI-508's blind architectural remap ran on two independent axes and both returned a module owning ZERO requirements, for the same subject: the shape of a finding, its severity class, strict-mode escalation, vacuity when an optional input is absent, declared carve-out markers, and how findings compose into an exit code. Eleven-to-thirteen SR rows each state a fragment of it as a secondary clause; no row takes it as its subject, so a new checker can violate it without failing anything."""
-decision = """### Where this came from, and why it is not a worker's call
+one_line = """Every shipped checker follows the same unwritten rules for reporting a problem; no requirement states them. Recommend stating them once, because a new checker can break them today and nothing fails."""
+decision = """The question: state the reporting rules once, or let each checker keep its own wording? Nothing else is being proposed - no module, no refactor.
 
-The remap's method is a blind re-derivation: an agent derives the minimal module map from the requirements alone, blind to the live layout, and the live map is diffed against it. Two agents ran it on deliberately different axes - one working backwards from the declared boundary outputs, one clustering obligations by shared signal and failure mode. They agree on 97.2% of SR pairs. Their single most striking agreement is one the arithmetic cannot even see, because it cannot be matched on requirement overlap: BOTH returned a module that owns no requirement at all, and both named the same subject.
+The rules, as the checkers actually behave: a finding names where the problem is; it carries a severity; a warning never changes the exit code; `--strict` promotes some warnings to failures; a missing optional input exits clean and says so.
 
-Record: docs/plans/2026-08-25-blind-minimal-map-derivation.md (the returns and the measured agreement); docs/plans/2026-08-25-remap-alignment.md section 6 (this row's origin in the alignment pass).
+### What the measurement found (2026-08-25)
 
-### The restating rows
+Record: docs/plans/2026-08-25-oi64-checker-uniformity.md. 430 emission sites read, all 14 checkers driven twice.
 
-Both teams enumerated them independently and the lists overlap almost exactly. The union: SR-149, SR-150, SR-157, SR-158, SR-159, SR-162, SR-163, SR-164, SR-167, SR-180, SR-181, SR-182, SR-015. Each invents its own phrasing for the same protocol - "warns by default and fails under --strict", "advisory classes never change the exit code", "the declared warn-or-gate severity for each class", "warn-first with --strict gating", "each as an advisory", "the declared warning-to-gating policy", "never gating".
+- Behaviour is uniform. No advisory anywhere reaches an exit code.
+- 141 of 158 finding sites name a location. 11 have no single row to name; 6 have one and omit it.
+- 12 of 14 checkers exit 0 on an absent optional input and name the absence.
+- Wording is not uniform: 12 severity words for four outcomes, six spellings of the strict flag.
 
-### The corpus concedes the hole in its own words
+So the rules are already followed. Only the wording is ragged.
 
-SR-158's acceptance already says it: "A class whose severity is stated at no declaration site is undeclared, and this row is unsatisfied until it is declared there." That is a row declaring itself unsatisfied for want of a declaration surface no row owns.
+### Corrections to this row as first drafted
 
-### Three adjacent restatements the same teams counted, which a ruling should decide with it
+- The count of rows restating a fragment was "eleven-to-thirteen". It is ten: SR-149, SR-150, SR-157, SR-158, SR-159, SR-162, SR-163, SR-167, SR-180, SR-182. SR-015 states no severity, location or vacuity rule at all, and SR-164 states only "naming the row"; neither belongs in the list.
+- Four of the ten (SR-167, SR-180, SR-181, SR-182) make severity or exit behaviour part of the obligation itself, not a side clause. That text cannot be replaced by a citation without losing the requirement. At most six clauses are removable.
+- SR-158 does not declare itself unsatisfied. It states a condition - a class whose severity is declared nowhere is unsatisfied - and the measurement found the per-class declarations. The row is Approved.
 
-- "Naming the at-fault row and cell" - one behaviour, fifteen phrasings (SR-137, SR-138, SR-144, SR-149, SR-150, SR-157, SR-158, SR-159, SR-162, SR-163, SR-164, SR-165, SR-180, SR-181, SR-182).
-- "Every degrade is named, never silent" - eight rows (SR-006, SR-043, SR-138, SR-152, SR-154, SR-167, SR-173, SR-180), which is SN-008's honesty property and the single most-restated obligation in the corpus.
-- Vacuity, "an absent optional input costs nothing" - a clause in eight rows (SR-009, SR-070, SR-157, SR-159, SR-162, SR-167, SR-173, SR-180), the subject of none; SN-012 is the parent need.
+### Two facts that block implementation today
 
-These are the same contract seen from three sides. Ruling them separately would produce three partial rows.
+- An SR row has no field for citing an interface. Its keys are title, sn_refs, boundary_refs, hat_refs, requirement, rationale, acceptance_criteria, priority, verification, status, phase, aspect. Option (a)'s sweep has no legal mechanism until one is added.
+- SR-181's acceptance says its rule "degrades silently (reports nothing) when no prior committed state is available". If the stated contract includes "every degrade is named", it lands red on an Approved row on day one. That clause was never measured."""
+blast_radius = """- MINTING: one contract at the interface tier per the owner's direction, not a new SR and not an LLR. Its provider, consumers, owner and req_refs are undecided; the contract has 14 providers and no single consumer, which is not the shape an interface row currently takes.
+- SWEEPING (option (a) only): up to six clauses across Approved rows. Each edit overrides an attestation and re-opens that row's approval. It also needs an SR-to-interface citation field, which does not exist.
+- CODE: fixing the severity words is output text and its tests across 14 checkers. No behaviour changes. The 6 findings that omit an available location are separate small fixes.
+- DOWNSTREAM: the contract describes the delivered harness, so it ships and every adopter inherits it.
+- LEAVING IT: a new checker can invent a severity word, gate an advisory, or pass silently on an absent input, and nothing fails."""
+options = """- **(a) State the contract, then remove the wording it replaces.** Effect: adds 1 interface contract; consolidates up to 6 clauses across Approved SR rows; changes checker output wording and its tests. FOR: the rule gets a subject and the duplication can shrink. AGAINST: not executable today - an SR has no way to cite an interface - and every edited row needs re-approval.
+- **(b) State the contract, change nothing else.** Effect: adds 1 interface contract; consolidates nothing; still changes checker wording and tests if the contract fixes a severity vocabulary. FOR: banks the rule now at no re-approval cost, and new rows cite instead of restate. AGAINST: ten rows keep their own wording, and one that drifts now contradicts the contract rather than merely repeating it.
+- **(d) Decline. Record it as a coding convention.** Effect: adds nothing, consolidates nothing, changes no code. FOR: severity genuinely is a per-check decision and each row's is already explicit. AGAINST: nothing constrains a new checker.
+- (c) MEASURE FIRST is closed - run 2026-08-25, no longer a choice."""
+recommendation = """Recommend (b) now, with (a) available later if a citation field is added.
 
-### What is NOT being proposed
-
-No consolidation work is filed against this. Building a shared finding module before the obligation is stated installs a mechanism ahead of its requirement, which is the inversion the process exists to prevent - so the remap program filed this row and stopped, rather than minting module work off a requirements finding.
-
-### THE MEASUREMENT IS RUN (2026-08-25) - option (c)'s read, filed, nothing edited
-
-Record: docs/plans/2026-08-25-oi64-checker-uniformity.md. Owner-directed sitting; no checker, registry cell or severity was touched, and this row stays PENDING because the measure-vs-state choice was always the ruling, not the measurement.
-
-Method: an AST census of all 430 finding-emission sites across the 14 shipped checkers plus the two rule libraries that feed `trace`, every site read and classified; then every checker driven twice, once on an EMPTY root and once on this repo, recording exit code and output.
-
-THE RESULT, in one line: the PROTOCOL is honoured; the VOCABULARY is not.
-
-- LOCATION: 158 per-finding sites; 141 (89.2%) name a row id, `file:line`, file or module path. 11 are population-level (a count or a set - no at-fault row exists) and 6 are thin (a location exists and is not named). Both exception sets are enumerated by site in the record.
-- ADVISORY NEVER GATES: unanimous. `trace.exit_code` composes from named finding classes only; seven modules carry the phrase "never the exit code" / "never gating" 25 times between them.
-- VACUITY: 12 of 14 exit 0 on an absent optional input AND NAME the absence. `check_flows` fails by design (its doc is required from DevStg-Tests and it has no warn tier); `trace` reports a real integrity finding on an empty tree rather than breaching vacuity.
-- SEVERITY VOCABULARY: 12 distinct label tokens for four dispositions - `OK`/`clean`; `SKIP`/`skipped`/an unlabelled sentence; `WARN`/`WARNING (advisory)`/`ADVISORY`/`UNTRACED`/`note`/`hint`; `FAIL`/`ERROR`/`FINDING (<class>)`. Escalation is six flag spellings (`--strict`, `--strict-orphans`, `--strict-integrity`, `--strict-schema`, `--strict-backlinks`, plus one `--strict` accepted and inert by declaration), four checkers with no promotion path, and two per-row mechanisms (`check_perf`'s `Gate=`, `check_trajectory`'s per-rule `hard`). Findings go to stdout in seven checkers and mostly stderr in `check_trajectory`.
-
-WHAT IT DOES TO THE OPTIONS: (a) mints THREE GREEN CLAUSES and ONE RED one. Location (with a population-level carve-out), advisory-never-gates and vacuity are already honoured; a closed severity vocabulary is red on every checker at once - and red only in spelling, since no behaviour would have to change to satisfy it. The measurement therefore does not send the question to (b) as the fallback anticipated: the ragged half is nameable and cheap, and the corpus's own parse-honesty idiom (five allow-file readers, one protocol, per-host severity each stating its reason) is the worked precedent for "state the protocol, leave the disposition per row".
-
-WHAT IT DOES NOT SETTLE: where the row would live. The owner's direction puts the mint target at the INTERFACE tier, and OI-63's re-ask has not yet said where interface contracts live. That sequencing is the owner's call and the record does not prejudge it."""
-blast_radius = """ONE ROW TO MINT OR DECLINE, AND A CITATION SWEEP IF IT IS MINTED. Minting is cheap in itself - one SR at the requirement tier, with its LLR/TC decomposition following the ordinary machinery under the declared dial. What is not free is the sweep: each of the thirteen restating rows would want its fragment replaced by a citation, and every one of them is Approved, so each edit is an amendment that overrides an attestation and re-opens the approval surface for that row. That is the owner's act by construction, and it is the reason this is a ruling rather than a task.
-
-DOES IT CROSS THE KIT LINE? Yes, if minted: the contract is a property of the DELIVERED harness, not of this repository's instance, so the row ships and every adopter inherits the obligation. Against that: the behaviour it describes is already what the shipped checkers do, so the row would be stating a delivered property rather than requiring new work. The measurable risk is the opposite one - a row that states a contract the shipped checkers do not uniformly honour would be minting a known-red requirement, and nothing has measured uniformity across all thirteen.
-
-WHAT IT COSTS TO LEAVE IT: the property every checking row assumes is enforced by nobody. A new checker can attribute a finding to no location, invent a fourth severity word, gate an advisory, or pass silently on an absent input, and no row fails - which is exactly the TEST-ENGINEER failure class (an obligation with no enforcer) applied to the enforcement layer itself. There is also a live instance of the same class one level down, found by this pass: three of the five declared exception-list readers drop a malformed declaring line silently while two report it, and the two record in their own docstrings why the three are wrong (filed as WI-519)."""
-options = """- (a) MINT THE ROW, SWEEP THE CITATIONS. One SR stating the contract - location attribution, a severity class from a closed vocabulary, one strict-mode escalation rule, declared carve-out markers, vacuity, and an exit code composed only from the gating classes - then replace each fragment with a citation as its row is next amended anyway. FOR: the most-restated obligation in the corpus gets a subject, and the restatements can then shrink instead of multiplying; it is what both independent derivations concluded. AGAINST: thirteen Approved rows eventually want an amendment each, and uniformity across the shipped checkers has not been measured, so the row could land red.
-- (b) MINT THE ROW, SWEEP NOTHING. State the contract, leave every existing fragment exactly where it is, and let new rows cite instead of restate. FOR: banks the subject at almost no cost and no re-attestation; the duplication stops GROWING even if it does not shrink. AGAINST: the corpus keeps thirteen statements of one thing, so the retrieval collision the doctrine names is unrelieved, and a fragment that drifts from the new row is now a contradiction rather than a repetition.
-- (c) MEASURE FIRST, THEN RULE. Before minting anything, measure whether the shipped checkers actually honour one contract - the severity words in use, whether every finding names a location, what each does with an absent optional input - and file the numbers. FOR: the WI-516 precedent for exactly this shape (measure, do not rewrite); it answers whether (a) would mint a green row or a red one, which no option above can currently say. AGAINST: a third pass before the question is answered, and the pattern where a measured number with no row to rule on becomes a forgotten one.
-- (d) DECLINE, AND RECORD WHY. Rule that the contract is a coding convention rather than a requirement, and that thirteen rows each stating their own disposition is the correct shape because disposition is genuinely per-row. FOR: it is a defensible position - the severity of a given class IS a per-row decision, and a single row could over-constrain rows whose needs differ; it costs nothing and closes the question honestly. AGAINST: it accepts that the property every checking row assumes has no enforcer, and it leaves SR-158 declaring itself unsatisfied with no path to satisfaction."""
-recommendation = """OWNER DIRECTION (2026-08-25, in session - recorded verbatim; the row stays PENDING because the measure-vs-state choice is still the owner's to make): *"yes this is also my concern. Technically a 'contract' is a requirement, but specifically an interface type. Interfaces can be numerous, so I don't think it needs to be elevated to an LLR, and interfaces already trace back to their LLRs, but either way the method should be consistent. Either the interface contract (whereever it lives) defines the interface expectations, or the LLR does."*
-
-What the direction changes about the options: the mint target in (a)/(b) is re-read at the INTERFACE tier - the contract would be stated as an interface contract (wherever OI-63's re-ask puts contracts), NOT minted as a new SR or elevated to an LLR - and any statement must honour the one-definer rule: for a given interface expectation, EITHER the interface contract defines it OR the LLR does, never both. (c)'s uniformity measurement is unchanged by the direction and still precedes any statement that claims to be green.
-
-(c) IS DISCHARGED (2026-08-25): the measurement is run and filed - see "THE MEASUREMENT IS RUN" in the brief above and docs/plans/2026-08-25-oi64-checker-uniformity.md. What is left to rule is (a) vs (b) vs (d), now with the numbers the recommendation below was written without. The measurement did NOT come back ragged in the way that would have sent it to (b): three of (a)'s four clauses are already green across the harness, and the fourth is red in spelling only.
-
-SEQUENCING, AND THE ROW THIS ONE WAITS ON (2026-08-25): the placement re-ask is now FILED as OI-65, so this row's *"wherever OI-63's re-ask puts contracts"* names a live row instead of a question nobody carries. OI-65 recommends being ruled FIRST, and the argument is symmetric to this row's own direction: minting a protocol contract at the interface tier before the interface tier's home is settled means minting into a home the other ruling may move, and the one-definer rule makes that passage worse rather than harmless - a contract stated in the cell and later moved to a header passes through a state where either could be read as the definer. Nothing in OI-65 depends on this row's outcome, so the reverse order costs nothing. A ruler who disagrees can rule this row first: the cost is a re-home, not a re-decision.
-
-WHAT REMAINS UNMEASURED IN THIS ROW'S OWN SCOPE. The brief bundles four restatements as "the same contract seen from three sides". The 2026-08-25 measurement covered three - the finding/severity/exit protocol, at-fault-row naming, and vacuity. It did NOT sweep the fourth, "every degrade is named, never silent" (SR-006, SR-043, SR-138, SR-152, SR-154, SR-167, SR-173, SR-180; SN-008's honesty property). What it saw incidentally was ragged: ONE class of environment absence - git unavailable - resolved three ways across the harness (`check_privacy` exits 2, `check_docs` and `check_doc_refs` name the skip and continue). A crude shape count over the same population finds 69 `except` handlers of which roughly half swallow and continue with a default; that is a population estimate, not a read, and it is stated here only to say the clause is not obviously green. If the row is minted covering all four sides, that fourth clause is the one nobody has measured - a half-day read in the same shape as the one already run, not a program.
-
---- the pre-measurement recommendation, kept verbatim below ---
-
-RECOMMENDED: (c) then (a) - measure, then mint, with (b) as the fallback if the measurement comes back ragged.
-
-The reason is that (a)'s single unanswered question is decisive and cheap to answer. Everything about (a) is attractive except one thing nobody has measured: whether the thirteen rows describe ONE contract or three similar ones. If the shipped checkers already agree - same severity vocabulary, location on every finding, the same treatment of an absent input - then (a) mints a row that is green on the day it lands and the sweep is bookkeeping. If they do not, (a) mints a requirement the delivered harness fails, and the honest response to that discovery is a different piece of work entirely. The measurement is a read over the checkers this repository already ships, in the WI-516 shape that has now been run twice successfully.
-
-(b) is the right answer for a ruler who wants the subject banked without opening thirteen attestations, and it is strictly better than (d) at the same price: a row that exists and is cited by new work stops the growth even if it never shrinks the backlog.
-
-(d) should not be dismissed. Its argument is real - disposition IS per-row, and a contract row that fixed severity per class would over-constrain. But it can be answered within (a): the contract to state is the PROTOCOL (a finding names its location, its class comes from a closed vocabulary, an advisory never reaches the exit code, an absent optional input is vacuous and says so), not the per-class severity, which stays each row's own declaration. That distinction is what makes the row statable at all, and it is why the recommendation is not (d).
-
-WHAT THE PROGRAM WILL NOT DO WITHOUT A RULING: file module work against this. Two independent derivations agreeing that a module belongs here is evidence about the REQUIREMENTS, not a licence to build the module - and the remap's own record says so, so that a later reader cannot mistake this row for a deferred refactor."""
+- Deciding reason: (a) and (b) state the same contract. (a)'s only extra gain is removing six clauses, and it cannot be done at all until an SR row can cite an interface. (b) gets the rule stated at no re-approval cost.
+- Required guard: leave "every degrade is named" out of the contract unless SR-181 is corrected first. It is the one clause that would land red.
+- Sequencing: rule OI-65 first so the contract is written into a home that is not about to move. This row's policy choice can be made in either order."""
 wi_refs = ["WI-508"]
 
 [open_item.OI-65]
-title = """The placement re-ask, on cells that now hold only crossing content: does the interface `contract`'s irreducible remainder move to a component-side contract header, or stay in the cell - plus the ten rows the cleanup could not move and the lint arm it left unbuilt"""
+title = """Where interface contract text lives, ten passages with no legal home, and the cell nothing lints"""
 status = "pending"
 raised = "2026-08-25"
-one_line = """OI-63's re-ask, FILED so that it has a row. Ruling (d) cleaned the cells - 36 rows changed, `contract` over the 108-row population 43,995 -> 37,859 characters, rows carrying a `rationale` 1 -> 37 - and deferred placement until the cells held only crossing facts. They now do. This row re-asks placement with the owner's file-far-side correction and OI-64's one-definer rule in hand, and carries the two sub-decisions the cleanup could not take: ten rows of non-crossing content `rationale`'s grammar refuses, and an IF `rationale` cell that went from 1 user to 37 with no lint arm reading it."""
-decision = """### Why this row exists at all
+one_line = """Decide whether interface facts not stated elsewhere stay in the 108 contract cells or move beside the code, plus ten passages to delete and one lint gap. Recommend pricing the move first."""
+decision = """Three questions that can be ruled separately. None of them adds or removes a requirement row: no SR, no LLR and no interface row is created or deleted by any option below. All 135 interface rows are Drafted, so editing them needs no re-approval.
 
-OI-63 was RULED (d) on 2026-08-25 and executed the same day (WI-522). A ruled row leaves the decision surface, so the question its own ruling deferred - *"the placement question is re-asked on the cleaned cells"* - was left standing in two places, neither of them a row an owner is handed: the prose of a ruled brief, and a numbered list in `docs/status.md`. WI-522 closed declaring `Deferred open items: none`, which was defensible for its own scope and left the re-ask carried by nothing.
+### 1. Placement
 
-That is the failure OI-62 named in its own words: *"a measured number with no row to rule on is how a deferred question becomes a forgotten one."* The measured number is 43,995 -> 37,859. This row is the missing carrier. Filed 2026-08-25 at the owner's direction, after the same gap was found while checking whether OI-64 carried its full context.
+Each interface row's `contract` cell holds prose. Some of it restates what the code or another registry already says; the rest is unique to the cell. The question is whether that unique part moves into the owning module's docstring header, next to the code it describes, or stays in the cell.
 
-### What has changed since OI-63 was ruled, and what has not
+- 71 of 108 rows carry unique content, estimated at 8,975 characters. Those figures are per-clause judgements, not measured spans, and two rows have since been reclassified. Treat them as approximate; the row counts are exact.
+- 57 of 78 modules already carry a `Contracts:` header line. 21 do not.
+- Moving needs a committed generated reference for the cells to point at. Nothing succeeded the module map retired at WI-455, so that artifact and its freshness gate would have to be built. Neither has been priced, through two rulings.
+- The harvester is not yet reliable. `gen_arch_map.module_contracts` reads `handback.py` as declaring IF-080, although its docstring says "No `Contracts:` line, deliberately". A negated declaration is counted as a declaration.
+- What staying costs is already visible: IF-055 carries stale names and IF-117 carries three false claims.
 
-CHANGED - the cells. The non-crossing (M/X) content left `contract` for `rationale` on 36 rows. The population the placement question is asked about is now, as nearly as a read can make it, crossing content only. That was (d)'s whole argument: *"it makes the placement question honest, because the cells compared would then contain only the content the question is about."*
+### 2. Ten passages with no legal home
 
-CHANGED - the strongest objection to relocating `Consumes` rows. The owner corrected it in the ruling act, verbatim: *"note that C says '(the far side is often a file or an external party with no module to hold a header)' but that indicates the file is itself the interface, and can still be defined / set by the owning header contract, so long as others refer back to it, and an external party should just be a boundary line interface."* A file far side does NOT lack a header home - the file's format is the producing side's contract to define, with consumers referring back to it - and an external far side resolves to the boundary tier. Option (c)'s central plank is gone, which moves weight to (a) and (b) rather than to (c).
+Ten rows hold content that is neither a crossing fact nor admissible in `rationale`. Source: the flagged list in docs/plans/2026-08-25-if-contract-verdicts.md.
 
-CHANGED - a second rule now binds any answer. OI-64's owner direction: for a given interface expectation there is ONE definer - the interface contract or the LLR, never both. A header convention that restated an LLR's obligation would breach it as surely as a cell that does.
+- Bare plan-doc citations: IF-080, IF-088, IF-089, IF-136, IF-137.
+- Citations resolving to nothing a reader can reach: IF-090, IF-094.
+- Rot needing correction rather than deletion: IF-117 (three false claims), IF-061 (a retired dual-write described as live).
+- A duplicate of the row's own notes: IF-127.
 
-NOT CHANGED - the sizes. WI-522 moved only non-crossing content; no RESTATEMENT clause and no REMAINDER clause was touched, by its spec and by its record. So OI-63's authoring numbers stand unamended: **8,975 characters of remainder over 71 rows** would move to headers; **28,305 characters of restatement** are deleted wherever the deferred editing pass (OI-62's option (b), still unrun) runs; the `Contracts:` anchor already exists on **57 of 76** modules and 19 would need one first.
+### 3. The cell nothing lints
 
-NOT CHANGED - the unbuilt target. The CLI precedent (WI-512) worked because a committed, freshness-gated `docs/cli-reference.md` exists. The committed module map retired at WI-455 and nothing succeeded it: `gen_arch_map.py` can harvest each public symbol on demand, but there is no committed reference for a cell to point AT. Ruling for headers means building that artifact and its gate, not only agreeing a docstring line. This is the same finding OI-63 recorded, re-verified: it has not been built since.
+`IF_REASON_CELLS` is `("Notes", "SignalNote")` (trace.py:2194), so no content lint reads `rationale` - the cell that went from 1 row to 37 in one pass. Driven over the current 37 cells, adding `rationale` produces 0 findings today. Separately, `_WI_TOKEN_RE` (trace_text.py:272) is case-sensitive, so the `wI-280` on IF-082, IF-083 and IF-084 is invisible to it."""
+blast_radius = """### Placement
 
-NOT CHANGED - the rot exposure that argues for moving. IF-055 (stale `SCHED_*` names, caught by the (d) tripwire) and IF-117 (three falsehoods the tripwire structurally cannot reach). Both still live at the time of filing; IF-117 is also in this row's deletion queue below.
+- (a) touches this repository's registry only.
+- (b), (b'), (c) and (e) change the shipped kit: PROCESS.md section 8's field list, `interfaces.template.toml`, `INTERFACES.template.md`, `gen_arch_map.py`, `check_trajectory.py`'s citation check, a new generated reference with its `check.py` freshness step and `docs/stack.ini` row, `tests/test_dogfood_sync.py` parity, and a `RESYNC_PACK.md` entry. Every adopting repo takes a version bump.
+- Unpriced: the generated reference, its gate, and the harvester fix. Ruling for (b) without pricing these is ruling for an unbounded build.
+- Deferring costs: OI-62's deletion pass removes restatement "in place", and "in place" is undefined until placement is ruled.
 
-### Part 2 of this row - the deletion queue, ten rows
+### Ten passages
 
-The cleanup could not move these: `rationale`'s declared grammar refuses a citation, and deletion was not ruled. Each is non-crossing content sitting in a `contract` cell with no legal destination. Source: the "Flagged for the owner" list in docs/plans/2026-08-25-if-contract-verdicts.md.
+Ten Drafted rows, this repository only, no kit surface, no re-approval. Reversible only through the log. Two of the ten are false claims rather than misplaced provenance, so deleting without correcting leaves the cell quieter rather than more honest.
 
-- BARE PLAN-DOC / PROGRAMME CITATIONS: `IF-080`, `IF-088`, `IF-089`, `IF-136`, `IF-137`.
-- CITATIONS RESOLVING TO NOTHING A READER CAN REACH: `IF-090` (`ruled decision 2`), `IF-094` (`the ruled A1/A8 tables`).
-- ROT, needing CORRECTION rather than relocation: `IF-117` (three false claims), `IF-061` (a retired dual-write described as live).
-- A ROW-INTERNAL DUPLICATE: `IF-127`'s `Imported LAZILY.`, whose standing reason already sits in the row's own `notes`.
+### The lint
 
-### Part 3 of this row - the lint arm nobody built
+Two lines and their tests, shipped to adopters. The radius is entirely in what it lights up: on the current tree, 0 rows from `rationale` and 3 from the case fix."""
+options = """### 1. Placement
 
-`trace.py`'s `IF_REASON_CELLS` is `("Notes", "SignalNote")` (trace.py:2194). Nothing reads an IF `rationale` at all - on a cell that just went from 1 user to 37 in one pass. The content moved there was judged by hand, once; there is no arm to hold it. Widening the tuple is an executable change and was deliberately not taken on a registry-only row.
+- **(a) Keep the facts in the cells.** Effect: edits existing interface rows only; adds no row, builds no artifact, changes no code, ships nothing to adopters. FOR: the only option executable in one pass here, and it needs nothing built first. AGAINST: nothing holds the cell to the code, which is what IF-055 and IF-117 already cost.
+- **(b) Move them to module headers.** Effect: edits the same rows, changes module docstrings, the generator, `check.py`, tests, two templates and PROCESS.md, and adds one generated reference plus its freshness gate. Adds no requirement row. FOR: the declaration sits beside the code, so it rots visibly; WI-512 did this for the CLI and it held. AGAINST: unpriced, and its harvester currently miscounts.
+- **(b') Commit to (b), price it first.** Effect: adds one work item; changes no cell and no code until the estimate is accepted. FOR: the honest form of (b), whose precondition has stayed unbuilt through two rulings. AGAINST: a third act on the same question. Set the cost limit, and say whether exceeding it returns the choice to (a).
+- **(c) Move on Provides rows, keep on Consumes rows.** Effect: the same shipped surfaces as (b), on a subset of rows. FOR: the per-family numbers still differ. AGAINST: its main argument - that a Consumes far side has no header home - was retired by the owner, and it revives a distinction WI-455 deleted.
+- **(e) Move only the fail-loud and written-artifact clauses.** Effect: an unspecified subset of rows and headers. FOR: those are the clauses whose staleness is dangerous. AGAINST: a per-clause rule is the hardest to apply consistently, and the clause counts were never taken.
 
-Riding in the same arm, found while reading and reported unfixed: `IF-082`, `IF-083` and `IF-084` carry `wI-280` in `notes`, which the citation-frame detector misses because its `_WI_TOKEN_RE` is case-sensitive (trace_text.py:272). A detector that a typo's capitalization defeats is a detector question, and it belongs with this one."""
-blast_radius = """### Part 1 - placement
+### 2. Ten passages
 
-WHICH OPTIONS CROSS THE KIT LINE. (a) stays inside this repo's own registry. (b), (c) and (e) cross it: a contract-header convention lives in the SHIPPED kit - PROCESS.md section 8's field list, the `interfaces.template.toml` header, `INTERFACES.template.md`, `gen_arch_map.py`'s harvester, `check_trajectory.py`'s both-directions citation check, a NEW generated reference plus its `check.py` freshness step and its `docs/stack.ini` `[generated]` row, `tests/test_dogfood_sync.py` parity between kit template and this repo's instance, and a `RESYNC_PACK.md` entry on the OI-12/OI-13 precedent. Every adopting repo inherits it: a kit version bump.
+- **(i) Delete the eight, correct the two.** Effect: edits 10 Drafted rows; deletes content from 8; corrects IF-117 and IF-061; no code change. FOR: the cell states the system and its standing reason, never its own history. AGAINST: needs the true replacement text written for the two, or the cell just goes quiet.
+- **(ii) Let `rationale` accept a citation.** Effect: changes the shipped field grammar and moves an unspecified subset of the ten. FOR: nothing is lost. AGAINST: it re-admits the citation frame just evicted, one field over, and it does not fix the two false claims.
+- **(iii) Leave them.** Effect: nothing. FOR: free. AGAINST: IF-117 keeps three false claims in a live cell.
 
-WHAT IS STILL UNPRICED. The new generated reference and its gate. No estimate has been produced since OI-63 said so, and a ruling for (b) that does not price it is a ruling for an unbounded build.
+### 3. The lint
 
-WHAT IT COSTS TO LEAVE IT. The deferred editing pass has nowhere to run: OI-62's option (b) deletes restatement IN PLACE, and "in place" is undefined until placement is ruled. So 28,305 characters of restatement and their rot exposure stay, and the two exhibits stay with them.
+- **(iv) Add `rationale` to the lint, and match WI ids case-insensitively.** Effect: two edits in `trace.py` and `trace_text.py` plus tests; no registry change. Driven on the current tree: 0 new findings from `rationale`, 3 from the case fix. FOR: nearly free, and it closes a gap the cleanup itself opened. AGAINST: adopters may see new warnings on a cell they use their own way.
+- **(v) Leave it.** Effect: nothing. FOR: no adopter-visible change. AGAINST: the cell that gained the most content is the one nothing reads."""
+recommendation = """Recommend (b') for placement, (i) for the ten passages, (iv) for the lint.
 
-### Part 2 - the deletion queue
-
-TEN ROWS, THIS REPO ONLY, no kit surface. Deleting is a registry edit on `Drafted` rows and needs no re-attestation. The one thing deletion is not is reversible without the log: two of the ten (`IF-117`, `IF-061`) are ROT rather than provenance, so a delete-without-correct would remove a false claim and leave the cell silent about the true one.
-
-### Part 3 - the lint arm
-
-SMALL BUT SHIPPED. Widening `IF_REASON_CELLS` changes what every adopter's `trace.py` warns about on a cell they may already be using differently from this repo. It is one tuple and one test, and its blast radius is entirely in what it LIGHTS UP: 37 cells here received content in one pass, and nobody has driven the widened arm to see how many of them it flags. Fixing the case-sensitive `_WI_TOKEN_RE` is a one-character class change with the same shape of consequence - it can only ever find MORE."""
-options = """### Part 1 - placement
-
-**(a) STAY IN THE CELL.** `contract` remains the home for the remainder; the deferred editing pass deletes restatement in place.
-- FOR: zero kit/adopter radius, no new artifact and no new gate; the readers of the registry already look there; the only option executable in one pass over this repo alone; and it is the option the unbuilt target does not block.
-- AGAINST: the cell stays held to the code by nobody, and IF-055/IF-117 are what that costs; it settles the owner's original question by default rather than by decision.
-
-**(b) RELOCATE THE REMAINDER TO A COMPONENT-SIDE CONTRACT HEADER.** The `Contracts: IF-###` docstring line grows a structured body; `gen_arch_map.py` harvests it into a NEW committed generated reference; `check.py` freshness-gates it; the cell states the crossing and points.
-- FOR: the declaration sits beside the code that must honour it - the one change that makes the rot class self-correcting instead of checkable-after-the-fact; WI-512's CLI relocation is the worked precedent and it held; doctrinally consistent (decompose-don't-paraphrase, generated-not-hand-maintained); 57 of 76 modules already carry the anchor; and the owner's file-far-side correction removes the objection that `Consumes` rows have nowhere to go.
-- AGAINST: the largest radius here and every adopter inherits it; the new artifact and gate are unpriced and unbuilt; on the rows carrying no remainder it moves nothing.
-
-**(b') RULE (b) IN PRINCIPLE, PRICE IT FIRST.** Same destination, sequenced: the ruling commits to the header, and a WI prices the generated reference plus its gate before any cell moves; if the price comes back beyond appetite, the row returns for (a).
-- FOR: it is the honest form of (b) given that its precondition has been unbuilt through two rulings; it commits the direction without commissioning an unbounded build.
-- AGAINST: a third act on the same question, and a priced-but-unbuilt commitment can decay exactly like a deferred one.
-
-**(c) SPLIT BY FAMILY.** Relocate on `Provides`, stay in the cell on `Consumes`.
-- FOR: the per-family numbers still differ (remainder 21.2% vs 20.2%; non-crossing was 2.9% vs 19.0% before the cleanup took it).
-- AGAINST: its central argument was the Consumes far side having no header home, and the owner's correction retired that; it also re-introduces as a convention the Provides/Consumes distinction WI-455 deleted as a column.
-
-**(e) RELOCATE ONLY THE FAIL-LOUD AND WRITTEN-ARTIFACT CLASSES (A AND B).**
-- FOR: those are the classes a module can assert about itself, and their staleness is the dangerous kind (a refusal that no longer refuses); much smaller than (b) and needs no new generated artifact if the header stays prose.
-- AGAINST: a per-clause rule is the hardest to teach and the easiest to apply inconsistently; the cell keeps most of what it carries.
-
-### Part 2 - the deletion queue
-
-- **(i) DELETE, AND CORRECT THE TWO THAT ARE ROT.** The eight provenance/duplicate spans go; `IF-117` and `IF-061` are corrected to what is true now rather than deleted into silence. FOR: the living-cell doctrine already ruled elsewhere - a cell states the system and its standing reason, never its own history - and the log holds the account. AGAINST: it discards the only pointer some readers have to why a row exists.
-- **(ii) WIDEN `rationale`'s GRAMMAR TO ADMIT A CITATION.** FOR: nothing is lost and the content lands somewhere legal. AGAINST: it re-imports the citation frame the cleanup just evicted, one field to the right.
-- **(iii) LEAVE THEM.** FOR: costs nothing today. AGAINST: the cleanup's own record then reads as complete when ten rows are not, and `IF-117` keeps three false claims in a live cell.
-
-### Part 3 - the lint arm
-
-- **(iv) WIDEN `IF_REASON_CELLS` TO INCLUDE `rationale`, AND DRIVE IT BEFORE COMMITTING.** FOR: 37 cells acquired content in one pass with no arm on them; the widened arm is one tuple, and driving it first turns "how many light up" from a guess into a number. AGAINST: adopters inherit a new WARN on a cell they may use their own way.
-- **(v) LEAVE THE ARM AS IT IS.** FOR: no adopter-visible change. AGAINST: the cell with the most new content in the registry is the one cell nothing reads."""
-recommendation = """### Recommend (b') for placement, (i) for the queue, (iv) for the arm - and rule this row BEFORE OI-64
-
-**Placement.** The field is now (a) versus (b), because the owner's own correction retired (c)'s central argument and (e) was always the hardest to teach for the least gain. Between them, one fact has survived two rulings unchanged: **(b) is the better destination and its precondition is still not built.** Ruling plain (b) today rules for a mechanism that does not exist, on a build nobody has priced - which is how the last two rulings arrived here. Ruling (a) accepts, with open eyes, that a cell nobody holds to the code will rot again; IF-055 and IF-117 are what that already cost, and IF-117's three falsehoods are the kind the (d) tripwire structurally cannot reach.
-
-So the recommendation is (b') - commit the direction, price the build, and let the price decide the pace. It is the only form of the answer that neither commissions an unbounded artifact nor settles the owner's question by default. If the owner's appetite for adopter-visible change is lower than that, (a) WITH the editing pass is the honest second: deleting 28,305 characters of restatement shrinks the surface that can rot even if it does not move what remains.
-
-**The queue.** (i), and the split inside it matters more than the choice between options: eight spans are provenance and should go, but `IF-117` and `IF-061` are ROT, and deleting a false claim without writing the true one leaves a cell that is merely quieter, not more honest.
-
-**The arm.** (iv), with the drive before the commit. This one is nearly free and it closes a gap the cleanup itself opened: the pass moved content into the only cell in the registry that nothing reads. Fix `_WI_TOKEN_RE`'s case sensitivity in the same act - `IF-082`/`IF-083`/`IF-084` are carrying `wI-280` today, and a detector a shift key defeats is not a detector.
-
-### The sequencing claim, stated so it can be disagreed with
-
-**This row should be ruled before OI-64.** OI-64's owner direction puts its mint target at the INTERFACE tier - the contract stated as an interface contract, *"wherever OI-63's re-ask puts contracts"*. That is this row. Ruling OI-64 first means minting a protocol contract into a home that this ruling may move, and the one-definer rule makes that worse rather than harmless: a contract stated in the cell and later moved to a header passes through a state where both could be read as the definer.
-
-The reverse order costs nothing. Nothing in this row depends on OI-64's outcome; it depends only on the one-definer rule, which is already directed and does not need a ruling to bind.
-
-### What this recommendation does not rest on
-
-The exact per-family percentages. The cross-family review flagged `IF-050`, `IF-061` and `IF-098` for re-adjudication before the numbers are leaned on, and that has not happened. Nothing above turns on a percentage: it turns on 71 rows carrying a remainder, an unbuilt target, and two demonstrated rot exhibits, all three of which are row counts or facts about the tree."""
+- Deciding reason: (b) is the better destination and its precondition has stayed unbuilt through two rulings. Pricing it first is the only form that neither commissions an unbounded build nor settles the question by default. If the price is beyond appetite, (a) with the deletion pass is the honest second.
+- Required guard: price the harvester fix with it. The `handback.py` false positive means the header mechanism cannot be costed as though the existing harvester works.
+- Sequencing: rule this row before OI-64's placement, so that contract is not written into a home this ruling may move. Nothing here depends on OI-64's outcome."""
+wi_refs = ["WI-516", "WI-522"]
