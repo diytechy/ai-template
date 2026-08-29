@@ -102,17 +102,25 @@ first — mechanical bookkeeping must not stale an honest APPROVE).
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
 own bar passed on this exact tree.
 
-Contracts: IF-055, IF-080 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml). IF-055
-is the `claim` operation's read through schedule.py's pure frontier/class
-library (load_wis/evaluate + the SCHED_* constants) — this module owns the
-claim commit and branch cut, the library stays side-effect-free. IF-080 is
-this module's own CLI (`claim`/`refresh`/`integrate`/`audit`), which
-dispatch.py's docstring already cites inline and handback.py's docstring
-declines to declare on the sibling's behalf. Both rows sat undeclared —
-part of the drift docs/concurrency-v2.md §A9.1 hands to the WI-390
-program-close row rather than to any single builder; declared here now that
-the program is closing.
+Contracts: IF-080 — the interface seam this module declares
+(process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-080: this module's CLI is the local integration seam, and each
+    subcommand's refusal is the contract. `claim` performs the serial trunk
+    claim — a queued spec moves to `docs/work/active/<branch>/` in one
+    bookkeeping commit and the branch is cut from that commit — refusing
+    before it writes anything on a declared pause, a dirty tree, an existing
+    branch, an unsafe branch name, a non-ordinary spec or an off-frontier row.
+    `refresh` runs the station refresh on a claimed branch. `integrate` is the
+    serial fail-closed merge queue: a `--no-ff` merge onto a candidate
+    worktree, the trunk step folded in, then the DECLARED bar on the composed
+    tree — a missing or empty declaration, or any SKIP in it, refuses — and
+    the verdict gate with git-derived freshness before the fast-forward-only
+    trunk advance. `audit` is the non-merge product-commit window check. The
+    trunk only ever moves inside the slot, to a branch whose own bar passed on
+    exactly the tree being advanced, and nothing here ever pushes. Every
+    subcommand exits nonzero on refusal with the reason named; the caller
+    needs no other channel to know what happened.
 """
 
 from __future__ import annotations

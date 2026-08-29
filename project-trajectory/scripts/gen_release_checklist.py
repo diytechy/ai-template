@@ -31,7 +31,22 @@ Usage:
     --out      Explicit output path (overrides the default/--version location).
     default    Writes docs/release-checklist.md.
 
-Contracts: IF-018, IF-034, IF-107 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-018 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-018: the human release checklist, written as a Markdown document
+    whose every item is `- [ ] <ID> — <what to confirm> (refs)`. It collects
+    exactly the rows a machine cannot honestly close: stakeholder needs and
+    their acceptance intent, system requirements whose Verification is
+    Demonstration, Manual or Inspection, release-tier and manual test cases,
+    the declared interface seams, and the performance budgets whose runtime
+    tier never fails a gate. `--phase` narrows to the listed phases while the
+    foundation phase is never deferred; `--version` files the output under
+    `docs/releases/checklist-<X>.md`, `--out` overrides the path, and the
+    default is `docs/release-checklist.md`. Every optional registry is
+    absent-tolerant, so a repo without one simply has no section for it. The
+    output is a generated RECORD: regenerate it per release and keep the ticked
+    copy as the sign-off artifact.
 """
 
 import argparse

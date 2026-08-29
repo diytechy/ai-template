@@ -46,7 +46,19 @@ Usage:
 --root/--docs are the path flags shared with trace.py and check_docs.py: the
 four artifact paths default under <root>/docs unless given explicitly.
 
-Contracts: IF-004, IF-031 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-004 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-004: the harness runs this CLI as one gate step and reads what it
+    prints. Every budget that is not clean gets one line — `check_perf:
+    <status> - <PB-ID> <metric>: <reason>` — naming its absolute or regression
+    verdict and the measured number against the budget or the baseline band; a
+    `Gate=fail` budget with no measurement this run is reported WARN rather
+    than passing over in silence. The run then closes on exactly one summary
+    line, `check_perf: OK - <summary>` or `check_perf: FAIL - <summary>`. The
+    vacuous cases speak in the same voice rather than printing nothing: no
+    budget rows is `OK - no performance budgets to compare`, and budgets with
+    no metrics file is `SKIP -` naming the path the product measurement step
+    owes. Only a FAIL summary exits nonzero.
 """
 
 import argparse

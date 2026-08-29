@@ -49,8 +49,144 @@ the only filesystem it touches is `resolve()`'s existence check — because the
 one thing that MUST NOT be duplicated eleven ways is the dual-home refusal.
 Every caller does its own reading, so a script keeps deciding its own I/O.
 
-Contracts: IF-102 — the seam this module declares (process.md §8; row of record
+Contracts: IF-102, IF-104, IF-105, IF-106, IF-107, IF-108, IF-109, IF-110, IF-111, IF-112, IF-114, IF-118, IF-119, IF-120, IF-122, IF-128, IF-133, IF-142 — the seams this module declares (process.md §8; rows of record
 in docs/requirements/interfaces.toml).
+
+Contract IF-102: the carrier's whole read surface, as trace.py imports it.
+    SPINE_TABLE maps an id column to its TOML tier table (SR-ID -> requirement,
+    LLR-ID -> design, TC-ID -> test) and SPINE_COLUMN maps a carrier key to
+    today's column name. rows_from_text(text, id_col, carrier) returns
+    {id: row} under those names, or None — never {} — when a TOML text does not
+    parse; rows_seq_from_text keeps file order and duplicates, so a duplicated
+    id under the CSV fallback still reaches an integrity check as two rows.
+    carriers(rel) names both suffixed paths, for an applicability test that has
+    to span the cutover commit. resolve(path) returns the live carrier file and
+    RAISES when a stem exists under both, rather than resolving by precedence;
+    load(path, id_col) returns rows in file order, the shape csv.DictReader
+    returns, [] when the registry is absent and SystemExit when it exists and
+    will not parse. The `-000` example filter is NOT applied here.
+
+Contract IF-104: check_doc_refs reads the spine through resolve() and load()
+    for its Evidence-class pointer scan. resolve() is asked first, so an absent
+    tier SKIPs cleanly instead of reporting every pointer in it as dangling;
+    load() then hands back the TC and LLR rows under today's column names
+    (Evidence, Module, CodeSymbol, TestRefs) whichever carrier is live, and
+    raises rather than returning [] on a registry that exists and will not
+    parse.
+
+Contract IF-105: check_flows needs id UNIVERSES, not cells. load(path, id_col)
+    supplies the SR/LLR/SN/TC keys a runtime-flow diagram's citations are
+    validated against — under TOML an id is the table key, so this is the one
+    consumer that needs no column vocabulary at all — and
+    resolve(path, NEED_CARRIERS) says which need carrier is live, so a
+    markdown-era needs registry is still found.
+
+Contract IF-106: gen_okf exports the SR, LLR, TC and IF tiers through load()
+    and the need tier through needs_for_root(root), which folds each need onto
+    the core four with the `-000` examples dropped and the rows id-sorted.
+    resolve(), stem(), CARRIERS and NEED_CARRIERS give each emitted source
+    pointer the live carrier's own suffix, so a bundle file names the registry
+    that exists rather than the one the migration is heading for.
+
+Contract IF-107: gen_release_checklist groups the SR, TC, LLR and IF rows it
+    lists by phase through load(), and reads the need tier through
+    folded_needs(). Phase arrives as an int from the TOML carrier and as a
+    string from CSV; value_to_cell renders both to the same cell text, so the
+    grouping is identical either side of the carrier cutover.
+
+Contract IF-108: plan_briefs reads the system-requirements and interfaces
+    registries through load(root / rel, id_col) — the rows a dual-plan planning
+    brief embeds VERBATIM. They arrive in file order under today's column names
+    under either carrier; an absent registry is [], and one that exists and
+    will not parse raises instead of quietly narrowing what the planner is told.
+
+Contract IF-109: agent_loop reads SR and TC rows through load() for two
+    purposes at once — the SR Verification cell decides whether a critique
+    round is owed, and SR/TC prose is lifted verbatim into the session brief.
+    Both take the same rows under the same column names, so a gate decision and
+    the brief beside it can never be drawn from different vocabularies.
+
+Contract IF-110: the unified mint reads the LLR, TC, IF, CMP and open-item
+    registries through load() to decide what already exists before it places a
+    new row; resolve(), stem(), CARRIERS and NEED_CARRIERS name the live
+    carrier of each registry it reports on, and SPINE_TABLE names a tier's TOML
+    table. This is the READ half of a read-modify-write — the mint also writes
+    Status back — so the carrier must answer the read and the write about the
+    same file.
+
+Contract IF-111: traj_parse renders the dashboard's need tier from
+    needs_for_root(root) — folded onto the core four, `-000` rows dropped,
+    id-sorted, markdown emphasis stripped — and its row and off-spine tiers
+    from load(root / rel, col). The fold has one home here, so two renderers
+    cannot disagree about which needs exist.
+
+Contract IF-112: check_docs holds the root README to the need tier through
+    needs_from_text(text) and is_draft_need(need): the Must/Should coverage
+    floor reads each need's own priority and status fields rather than a
+    table's header text, and resolve(path, NEED_CARRIERS) decides whether there
+    is a registry to hold the README to at all. The same module reads the
+    open-items registry through resolve() and load() for its deferred-decision
+    detector. Existence checking of cited ids stays check_docs' own whole-file
+    scrape; only the floor and the open-items read cross this seam.
+
+Contract IF-114: adjudicate_brief lists a red-TC brief's cases from
+    load(root / rel, id_col): the TC rows (Verifies, Status, Method, Expected,
+    Evidence) and the SR Requirement / LLR Detail text naming the obligation
+    each case covers. Every cell it lists is REQUIRED — a row missing one
+    refuses rather than rendering a dash. Read-only: nothing on this seam
+    writes a registry.
+
+Contract IF-118: the owner decision view reads docs/requirements/open-items
+    through resolve() and load(), so it answers whichever carrier is live and
+    the rows arrive under today's column names. load() returns [] only when the
+    registry is genuinely absent and raises on one that exists and will not
+    parse, so an unreadable decision queue can never be published as "0 pending
+    decisions".
+
+Contract IF-119: agent_route reads the model registry docs/agents through
+    resolve() and rows_seq_from_text(text, id_col, carrier), so a pair row
+    arrives under today's column names whichever carrier is live; the CSV
+    branch keeps its own declared-header check, which TOML answers as a decode
+    failure instead. An unparseable registry is an ERROR here, never an empty
+    routing pool. The `# tag-rank:` line the router parses survives as an
+    ordinary TOML comment.
+
+Contract IF-120: trunk_step asks the carrier one question — resolve(path):
+    which carrier of a registry is live — as the applicability predicate for
+    its components and open-items freshness steps. None means the registry is
+    absent and the step is inapplicable; a stem present under both carriers
+    raises rather than being resolved by precedence.
+
+Contract IF-122: check_need_form scans the need tier through load_needs(path),
+    with resolve(path, NEED_CARRIERS) as its presence test, so it reads
+    whichever of TOML or legacy markdown is live. Three outcomes stay distinct:
+    an unreadable carrier REFUSES loudly (SystemExit), a registry present but
+    yielding zero scannable need cells is VACUOUS, and an absent registry is
+    the pre-scaffold clean skip.
+
+Contract IF-128: baseline_snapshot resolves and reads every snapshotted
+    registry through resolve(), carriers(), stem(), load(), load_needs(),
+    CARRIERS and NEED_CARRIERS, so a snapshot root reuses each live resolver
+    verbatim, carrier fallback included, and a snapshot taken under one carrier
+    and read under another joins on the carrier-STRIPPED stem. Two refusals
+    ride this seam: resolve() raises on a stem present under both carriers,
+    load() on a file that exists and will not parse.
+
+Contract IF-133: the hats audit worksheet reads the stakeholder-need tier
+    through load_needs(), resolve(), NEED_CARRIERS, stem() and folded(), so
+    each need arrives under today's column names whichever of TOML or legacy
+    markdown is live. An ABSENT registry is [] and the audit prints VACUOUS; a
+    carrier that exists and will not parse raises SystemExit, never zero rows.
+    The roster read beside it goes to tomllib directly and is no tier of this
+    carrier's.
+
+Contract IF-142: gen_components reads all four of its source registries —
+    components, system-requirements, low-level-requirements and interfaces —
+    through load(), so each answers whichever carrier is live and the rows
+    arrive under today's column names. The placement view passes
+    keep_examples=False so a scaffold's inert `-000` rows never enter it; the
+    "does this repo name any component at all" probe keeps them and filters by
+    id itself.
 
 Requirements: SR-147 (one machine-parseable carrier for the spine).
 """

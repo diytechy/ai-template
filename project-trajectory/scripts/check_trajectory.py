@@ -152,7 +152,43 @@ exit-code change, at any stage); vacuous on a single-phase repo with no anchors
 Usage:  python scripts/check_trajectory.py [--root .] [--strict] [--staged]
 Exit codes: 0 clean / vacuous / opted-out, 1 a hard error, 2 usage/environment.
 
-Contracts: IF-009, IF-023, IF-077, IF-131 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml). IF-131 (WI-455) is the arch-inventory seam: arch_inventory consumes gen_arch_map.scan_inventory over the declared src root, replacing the retired committed-map parse. IF-077 (WI-354) is the ANCHOR-resolution seam: R-E resolves a SpecRef's `#anchor` through check_docs.parse_doc so one slugifier defines an anchor in both homes — a lazy import that degrades to path-only, since this module runs in the shipped pre-commit hook.
+Contracts: IF-009, IF-056, IF-082, IF-083, IF-084, IF-138 — the interface seams
+this module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+
+Contract IF-009: the work-item registry's verdict, delivered as a CLI. Exit 0 when
+    the registry is clean, absent, placeholder-only or opted out; 1 on a hard
+    integrity error — a malformed or duplicated `WI-###`, a predecessor that
+    resolves to nothing, a cycle over the hard edges, a stray `work-items.csv`,
+    or a `Deliverable` that disagrees with `Status` (R-A); 2 on usage or
+    environment. R-A gates every run. R-D, R-E, R-F, the promotable seam-TC
+    coverage half and the How-SW top-view bound are WARN plain and ERROR under
+    `--strict`. Architecture-connectivity coverage, allowlist hygiene, the
+    soft-edge cycle warn, the long-Title warn and the phase-drop detector are
+    advisory at every stage and never reach the exit code.
+Contract IF-056: the derivation-loader surface the dashboard renders THROUGH.
+    `gen_trajectory` imports this module and takes `validate`,
+    `read_registry_rows`, `load_wis`, `load_known_srs`,
+    `read_trajectory_enabled`, `WI_CSV` and `TOP_VIEW_MAX` from it, so the
+    registry parse, the validity verdict and the right-sizing bound have one
+    home and the render can never disagree with the check. The loaders are
+    importable without side effects and the two modules are re-synced together.
+Contract IF-082: the same loader surface as taken by `traj_parse`, the dashboard's
+    registry/doc/git source layer: `read_rows`, `spine_carrier`, `SR_CSV` and
+    `_arch_scan_profile` — the declared source-root profile the How-SW scan
+    walks. One parse of the spine registries feeds both validation and the view.
+Contract IF-083: the same loader surface as taken by `traj_views`, the
+    What/When/How-SW renderer: `read_rows`, `load_seams`, `component_top_view`,
+    `_norm_module`, `_split_refs`, `SR_CSV` and `TOP_VIEW_MAX`. The picture and
+    the top-view bound this module enforces are computed by one join, so a
+    diagram that renders cannot contradict the finding that would fail it.
+Contract IF-084: the same loader surface as taken by `traj_status`, the `--status`
+    snapshot layer: `load_ifs`, `IF_CSV` and `spine_carrier`. The seam rows the
+    generated status block reports are the rows validation reads.
+Contract IF-138: the same loader surface as taken by `pending`, the blocked-work
+    read model: `read_registry_rows`, `load_wis` and `WI_CSV`. What the owner
+    surfaces call blocked is the derivation validation performs, never a second
+    opinion about the same rows.
 """
 
 import argparse

@@ -68,22 +68,6 @@ Explicitly NOT here, by spec: worktree pools, reservations, train grouping,
 run-state files, disposition arms. If a change starts to grow this module
 toward the deleted dispatcher's shape, stop and escalate as a written case
 (process-options.md, the design-escalation clause).
-
-Contracts: IF-015, IF-088, IF-136, IF-137 — the interface seams this
-module declares (process.md §8; rows of record in
-docs/requirements/interfaces.toml). IF-015 is the plain-launch drive mode,
-agent_loop.py's seam (this module is its implementation, invoked only via
-agent_loop or in-process). IF-088 is the exit-banner pending read — the
-`pending.py` read model, the one derivation the owner surfaces share; its
-counterpart moved off the gen_trajectory facade with the derivation at WI-483
-slice 3. IF-089, the empty-frontier gap census's read of trace's
-registry analysis, LEFT with the census itself: the derivation now lives in
-the sibling census.py, below the three modules that read it, and this module
-calls it at ladder rung 1 like any other caller. IF-136 and IF-137 are the
-two seams onto the lane/handback siblings this docstring's table already named
-inline (IF-080's own posture) but that carried no IF row of their own — minted at
-the WI-390 program close (docs/concurrency-v2.md §A9.1), which is the row
-that owns connectivity no single builder could.
 """
 
 from __future__ import annotations

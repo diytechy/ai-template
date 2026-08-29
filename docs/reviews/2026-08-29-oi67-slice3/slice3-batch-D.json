@@ -1,0 +1,648 @@
+{
+ "files": {
+  "docs/requirements/": [
+   {
+    "id": "IF-021",
+    "owner": "docs/requirements/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/trace",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the SN/SR/LLR/TC spine plus the off-spine PB/REPO/PART/ASSET/CMP/IF registries under docs/requirements + docs/test and joins them by id",
+    "data": "",
+    "notes": "Published contract, not a single consumer: 14+ kit scripts independently join the SR registry (trace, spine_rules, gen_okf, plan_briefs, check_trajectory, agent_loop and more), and every downstream adopter fills in their own copy and reads it with the same shipped scripts - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/trace.py"
+    ]
+   },
+   {
+    "id": "IF-059",
+    "owner": "docs/requirements/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/plan_briefs",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads system-requirements (SR-ID/Title/Requirement) and interfaces.toml (the IF-ID/Owner/Provider/Consumers/Contract excerpt) to build the allowlist-only SR surface + IF registry the dual-plan planner/critic/arbiter briefs embed, and registers the three hat prompt-map keys (DUALPLAN-PLANNER/CRITIC/ARBITER) on --prompt-map/AGENT_PROMPT_MAP with a kit-template fallback; the two-file read IS the redaction boundary - status.md/log.md/self-assessments are unreachable by construction",
+    "data": "",
+    "notes": "sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly), and approved out of Proposed once it was implemented and consumed. Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/plan_briefs.py"
+    ]
+   },
+   {
+    "id": "IF-033",
+    "owner": "docs/requirements/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_okf",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the spine registries and the present process docs to emit the docs/okf typed-concept bundle",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-021 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_okf.py"
+    ]
+   },
+   {
+    "id": "IF-034",
+    "owner": "docs/requirements/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_release_checklist",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the SN core-needs table and the PB budgets registry to build the release checklist",
+    "data": "",
+    "notes": "Published contract, not a single consumer: 11 kit scripts read the SN registry directly (baseline_snapshot, check_docs, check_flows, check_need_form, spine_rules, gen_okf, hats, migrate_carrier, trace, traj_parse, plus this row), and every downstream adopter authors their own stakeholder-needs. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_release_checklist.py"
+    ]
+   },
+   {
+    "id": "IF-051",
+    "owner": "docs/requirements/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/spine_rules",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads SR/LLR/TC Status + the SN section-state to compute per-artifact maturity (also low-level-requirements, test-cases, stakeholder-needs)",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-021/033 - 14+ kit scripts join the SR registry, and every downstream adopter fills in their own copy. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/spine_rules.py"
+    ]
+   }
+  ],
+  "docs/stack.ini": [
+   {
+    "id": "IF-022",
+    "owner": "docs/stack.ini",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the declared toolchain (format/lint/test commands, tiers, coverage, arch-map mode, extra [step:*] from-stage thresholds) and docs/stage for the effective stage the plan selects at",
+    "data": "",
+    "notes": "Published contract, not a single consumer: 9 kit scripts read docs/stack.ini directly (check, agent_common, dispatch, check_doc_refs, check_trajectory, integrate, run_menu, trunk_step, plus this row), and every downstream adopter authors their own copy - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered declared-policy format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check.py"
+    ]
+   },
+   {
+    "id": "IF-049",
+    "owner": "docs/stack.ini",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/run_menu",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the [run] section (one <name> = <command> line per capability plus an optional <name>.desc) declaring the launch capabilities the run.* launchers present",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-022/068 - 9 kit scripts read docs/stack.ini directly, and every downstream adopter authors their own [run] section. Ties to B-05 as the template's own delivered declared-policy format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/run_menu.py"
+    ]
+   },
+   {
+    "id": "IF-068",
+    "owner": "docs/stack.ini",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/agent_loop",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "the session dial read: agent_loop reads the docs/stack.ini [agent-loop] section (fallback model / model-map) at boot via agent_common.read_agent_loop_config, resolving each dial with precedence CLI flag > AGENT_* env > declared file > built-in default. (The dispatcher-era jobs dial retired at Phase 5; a declared value is ignored.)",
+    "data": "",
+    "notes": "built and consumed together; same population as IF-022/049 - this row's own read routes through agent_common.read_agent_loop_config rather than a bespoke parse, but docs/stack.ini remains the same 9-plus-reader published contract, and every downstream adopter authors their own copy. Ties to B-05 as the template's own delivered declared-policy format.",
+    "rationale": "One declared home for the dials is what lets the agent-resume launchers carry no dial copies of their own.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/agent_loop.py"
+    ]
+   }
+  ],
+  "docs/work/": [
+   {
+    "id": "IF-023",
+    "owner": "docs/work/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_trajectory",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the WI registry - the docs/work/ spec folder, the one home since Phase 5 (a stray legacy work-items.csv is its own integrity finding) - (ids/predecessors/status/Deliverable/SpecRef) and cross-reads docs/status.md, docs/stack.ini and interfaces.toml plus the declared [paths] src source tree for the SSOT + connectivity coverage; also reads the `## Interfaces` section of the doc",
+    "data": "",
+    "notes": "Published contract, not a single consumer: at least 9 kit scripts walk the docs/work/ spec folder through the shared kitlib.registry/agent_common readers (check_trajectory, gen_trajectory, schedule, wi_convert, intake, dispatch, traj_panels, traj_status and more), and every downstream adopter's own WI registry is content they author - naming one reader would misstate the file's role. Ties to B-05 as the template's own delivered work-item format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_trajectory.py"
+    ]
+   },
+   {
+    "id": "IF-024",
+    "owner": "docs/work/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_trajectory",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the WI registry (the docs/work/ spec folder, the one home since Phase 5) for the roadmap DAG and the declared [paths] src tree's AST inventory for the How-SW module/graph view",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-023/054/079 - the WI registry is read directly by gen_trajectory's own facade main() (this read stays local, unlike the docs/stage read it delegates to traj_parse, IF-052) alongside 8+ other kit scripts, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format.",
+    "rationale": "The registry read stays in the gen_trajectory facade's own main(), and the module inventory comes from traj_parse.sw_modules over gen_arch_map.scan_inventory rather than being read here.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_trajectory.py"
+    ]
+   },
+   {
+    "id": "IF-054",
+    "owner": "docs/work/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/schedule",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the WI registry - Status + hard/soft Predecessors + the optional Priority/Exclusive/BlockRef/EstTokens/SafetyClass columns (frontmatter keys in the folder home) - to derive readiness; an absent optional column reads as its documented default (SafetyClass absent => unclassified, fail-closed; Priority => 0; Exclusive => empty).",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-023/024/079 - 9+ kit scripts walk the WI registry, and every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/schedule.py"
+    ]
+   },
+   {
+    "id": "IF-079",
+    "owner": "docs/work/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/wi_convert",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads either registry FORM - the live docs/work/ spec folder and/or a legacy docs/requirements/work-items.csv being migrated - to convert between them (the CSV is interchange format only since Phase 5); --verify round-trips in a temp dir and never writes either live home.",
+    "data": "",
+    "notes": "Published contract, not a single consumer: same population as IF-023/024/054 - this row's own read_specs/spec_paths IS the format's definition module, and 8+ other kit scripts walk the same WI registry; every downstream adopter's own registry is content they author. Ties to B-05 as the template's own delivered work-item format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/wi_convert.py"
+    ]
+   }
+  ],
+  "docs/requirements/interfaces.toml": [
+   {
+    "id": "IF-057",
+    "owner": "docs/requirements/interfaces.toml",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/plan_coverage",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads interfaces.toml (IF-ID column) and system-requirements.csv (SR-ID column) to resolve a proposed plan's per-WI Interfaces/Covers cites - the dual-plan coverage pre-pass (process-options.md \"Dual-plan decomposition\"); registries absent = refs unvalidated with an honest note, never findings",
+    "data": "",
+    "notes": "sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is IF-060's to declare); nearest existing seam is IF-023 (check_trajectory also joins IF cites) - distinct module needs its own endpoint row. Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/plan_coverage.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts": [
+   {
+    "id": "IF-025",
+    "owner": "project-trajectory/scripts",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_arch_map"
+    ],
+    "channel": "file",
+    "contract": "walks the Python source tree (AST) for the symbol map + internal-import diagram and reads interfaces.toml to merge the IF-### seam edges",
+    "data": "",
+    "notes": "The provider side of this seam is the SOURCE TREE ITSELF, at the declared src root (docs/stack.ini [paths] src) - not a module, so the endpoint is that directory. Naming the row's own module there said only that it talks to itself, which is no far side at all. gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_arch_map.py"
+    ]
+   },
+   {
+    "id": "IF-026",
+    "owner": "project-trajectory/scripts",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_stubs"
+    ],
+    "channel": "file",
+    "contract": "parses each *.py under the declared src root (AST) for stub-bodied public symbols at the gate",
+    "data": "",
+    "notes": "The far side is the declared src root itself (docs/stack.ini [paths] src), the directory this row's contract describes - not this row's own module, which named no far side. check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_stubs.py"
+    ]
+   }
+  ],
+  "docs/runtime-flows.md": [
+   {
+    "id": "IF-029",
+    "owner": "docs/runtime-flows.md",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_flows",
+     "scripts/gen_okf",
+     "scripts/traj_parse"
+    ],
+    "channel": "file",
+    "contract": "reads the Runtime flows section (mermaid sequence blocks) of the authored flows doc (docs/runtime-flows.md) and the registries to validate the authored flow ids",
+    "data": "",
+    "notes": "Low fan-out: exactly three direct readers of the moved doc - check_flows (this row, --strict structural validation), gen_okf (title/summary extraction into the okf bundle) and traj_parse (dashboard render). A closed, nameable set, not a published contract.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_flows.py"
+    ]
+   }
+  ],
+  "docs/": [
+   {
+    "id": "IF-030",
+    "owner": "docs/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_docs",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads root *.md + docs/**/*.md for the link graph, the PROJECT-VISION tag, the SN inventory, and generated-doc staleness under --stale",
+    "data": "",
+    "notes": "Published contract, not a single consumer: this row and check_doc_refs each walk the whole docs tree for their own purpose, and check_vocab/check_privacy sweep it as part of a broader whole-repo scan - an open, ever-growing population as every downstream adopter authors their own docs tree and validates it with the same shipped checker. Ties to B-05 as the template's own delivered doc-tree convention.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_docs.py"
+    ]
+   }
+  ],
+  "docs/requirements/performance-budgets.csv": [
+   {
+    "id": "IF-031",
+    "owner": "docs/requirements/performance-budgets.csv",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_perf"
+    ],
+    "channel": "file",
+    "contract": "reads the PB-### budgets registry and a measured-metrics JSON, comparing each in-tier metric to its budget/baseline",
+    "data": "",
+    "notes": "owner = SR-015, not LLR-014: where a medium is consumed the owner is the party answerable for that medium, and the medium here is the PB-### budgets registry, not the comparator that reads it. LLR-014 is check_perf.py - the module holding the CONSUMING code, which is the reading this registry does not use. No design row exists whose module is the budgets registry (nothing decomposes the file itself), so the owner falls back to the requirement that states the registry's own invariant, and SR-015 is already among this row's req_refs. Cost of the correction, stated: the row leaves the derivability advisory's population, because a requirement carries no Module cell to join against - the same gap the twelve requirement-owned provider-side rows have, and the reason the report on them exists.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_perf.py"
+    ]
+   }
+  ],
+  "external:git": [
+   {
+    "id": "IF-032",
+    "owner": "external:git",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_privacy"
+    ],
+    "channel": "git",
+    "contract": "reads the staged diff / commit message / outgoing range via git and docs/privacy-check + docs/secrets-scan for the active leak classes",
+    "data": "",
+    "notes": "No tie-back, and the absence is the statement. `git` is not a party of its own in the boundary frame - the entity that holds the checkout absorbs it - so reading a staged range through git is this system reading the session's own working copy, not an exchange with a fourth party. What crosses at the hook floor is the admission verdict, and the hook-facing rows carry that tie-back; this row states the scanner's INPUT to that floor, which is machinery behind the crossing rather than the crossing.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_privacy.py"
+    ]
+   }
+  ],
+  "project-trajectory/skills/": [
+   {
+    "id": "IF-035",
+    "owner": "project-trajectory/skills/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_skills_index",
+     "scripts/bootstrap"
+    ],
+    "channel": "file",
+    "contract": "reads each <skill>/SKILL.md applicability frontmatter (name/scope/stacks/domains/phases/tags)",
+    "data": "",
+    "notes": "Low fan-out: two direct walkers of <skill>/SKILL.md - bootstrap (select_skills, scaffold-time filtering) and gen_skills_index (this row, the INDEX.csv generator). A closed, nameable set.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_skills_index.py"
+    ]
+   }
+  ],
+  "external:upstream docs": [
+   {
+    "id": "IF-036",
+    "owner": "external:upstream docs",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_vendored"
+    ],
+    "channel": "bytes",
+    "contract": "reads the UPSTREAM manifest and fetches each declared upstream source over the network (network-gated), comparing bytes",
+    "data": "",
+    "notes": "No tie-back, and the gap is in the FRAME rather than in this row: the far side is a network source the locked boundary table names no entity for, so there is no crossing id this row could honestly point at. The `external:` marker therefore records only that the endpoint is outside this tree. Whether a vendored-source upstream is a party the frame should carry is a live question for the frame's owner; until it is answered this row must not manufacture a tie-back to a crossing that describes something else.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_vendored.py"
+    ]
+   }
+  ],
+  "docs/process.toml": [
+   {
+    "id": "IF-037",
+    "owner": "docs/process.toml",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/agent_common",
+     "scripts/gen_okf",
+     "scripts/traj_status"
+    ],
+    "channel": "file",
+    "contract": "reads the declared policy surfaces through the shared declared-line parse - docs/process.toml (the one policy home), docs/stage (the generated stage record, read through the common reader rather than scraped) and the legacy one-word docs/*-policy files still honoured in the migration window - and, from docs/status.md, only the `## Current State` excerpt a stopping coordinator surfaces in its exit banner. No next-work or run-phase pointer is read.",
+    "data": "",
+    "notes": "Low fan-out, MEASURED OVER ONE SURFACE and stated so: the three direct readers of the `## Current State` excerpt this row's own function discloses - agent_common (this row, current_state_excerpt), gen_okf (process-guide summary) and traj_status (dashboard splice). agent_loop calls agent_common's function rather than reading docs/status.md itself. The fan-out is NOT over docs/process.toml, which the contract names first among the surfaces this reader touches: that file has nine direct kit readers and is the reason IF-038 converted to a published-contract row. A closed, nameable set for the excerpt; a wide one for the policy home.",
+    "rationale": "The dispatcher-era docs/run-state a next-work or run-phase pointer would have been read from is retired.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/agent_common.py"
+    ]
+   },
+   {
+    "id": "IF-038",
+    "owner": "docs/process.toml",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/subagent_gate",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "reads the subagent-spawn policy (off|ask|deny) from docs/process.toml [checks] subagent_gate via the shared declared-line parse, and honours the SUBAGENT_GATE launcher override",
+    "data": "",
+    "notes": "Published contract, not a single consumer: 9 kit scripts read docs/process.toml directly (agent_common, agent_loop, bootstrap, check_privacy, check_trajectory, dispatch, gen_arch_map, gen_okf, plus this row), and every downstream adopter authors their own dials (gate_policy, push, review_rounds, subagent_gate). Ties to B-05 as the template's own delivered declared-policy format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/subagent_gate.py"
+    ]
+   }
+  ],
+  "project-trajectory/registries": [
+   {
+    "id": "IF-039",
+    "owner": "registries",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/bootstrap"
+    ],
+    "channel": "bytes",
+    "contract": "reads the kit template tree (registries, skills, docs, hooks) and the target repo's existing files (idempotent skip) to write the scaffold",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/bootstrap.py"
+    ]
+   }
+  ],
+  "external:agent CLI": [
+   {
+    "id": "IF-041",
+    "owner": "external:agent CLI",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/agent_session"
+    ],
+    "channel": "cli",
+    "contract": "invokes the configured agent CLI headless (build_argv substitutes {model}/{prompt}; on Windows it refuses prompt-in-argv through a .cmd/.bat shim) per the in-process phase and captures the typed session outcome",
+    "data": "",
+    "notes": "No tie-back, and the frame already states the reason: the model-runner surface is an external-to-external relationship touching the SESSION and not the system, so invoking a configured agent CLI crosses no boundary of this system. Contrast the subagent-gate row, which faces the same CLI and DOES tie back - what crosses there is a guardrail verdict this system emits, and that is a system output whoever consumes it. Consuming an external tool and emitting a verdict to one are not the same act.",
+    "rationale": "The Windows refusal is there because the OS may reparse a prompt carried in argv via cmd.exe even with shell=False.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/agent_session.py"
+    ]
+   }
+  ],
+  "docs/agents.toml": [
+   {
+    "id": "IF-045",
+    "owner": "docs/agents.toml",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/agent_route"
+    ],
+    "channel": "file",
+    "contract": "reads the docs/agents pair-row model registry (Id/Family/Model/Version/Tier/CmdTemplate/Env; one row = one model x route pair; legacy Provider read as Family) and the ordered docs/agents-enabled enable-list to compose the selectable pool; absent enable-list = routing off",
+    "data": "",
+    "notes": "The provider side is the two declared files, which is the medium consumed; this row's own module named no far side. FAN-OUT IS NOT 1, correcting the earlier cell: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/agent_route.py"
+    ]
+   }
+  ],
+  "docs/reviews/": [
+   {
+    "id": "IF-047",
+    "owner": "docs/reviews/",
+    "is_dir": true,
+    "far_key": "consumers",
+    "far": [
+     "scripts/score_reviews",
+     "scripts/check_trajectory",
+     "scripts/integrate"
+    ],
+    "channel": "file",
+    "contract": "reads the docs/reviews/*.md verdict files (log.md block + the VERDICT machine line) and maintains docs/reviews/scoreboard.txt - advisory decayed per-provider tallies + the round history the escalation policy reads",
+    "data": "",
+    "notes": "Low fan-out: three direct content readers - check_trajectory (_latest_critique_verdict), integrate (git-shows the review blob then calls score_reviews.parse_verdict) and score_reviews (this row, read_scoreboard/record_round). agent_loop calls score_reviews.record_round rather than reading a review file itself. A closed, nameable set.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/score_reviews.py"
+    ]
+   }
+  ],
+  "docs/coverage-floors": [
+   {
+    "id": "IF-070",
+    "owner": "docs/coverage-floors",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_coverage"
+    ],
+    "channel": "file",
+    "contract": "reads the pytest-cov JSON report (per-file summary.percent_covered, path-normalized) and the docs/coverage-floors census (module + min percent; blank/# lines ignored)",
+    "data": "",
+    "notes": "The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here, correcting the earlier cell: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_coverage.py"
+    ]
+   }
+  ],
+  "docs/declared-absences": [
+   {
+    "id": "IF-072",
+    "owner": "docs/declared-absences",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check_doc_refs",
+     "scripts/trace",
+     "tests/test_dogfood_sync.py"
+    ],
+    "channel": "file",
+    "contract": "the declared-absence read: check_doc_refs reads an optional `<path> — <reason>` file (--declared-absences, default docs/declared-absences) and reclassifies a reference to any listed path as UNTRACED with the DECLARED reason quoted back, rather than dangling. Fail-soft in the safe direction: an absent file, or a line carrying no separator, declares nothing and leaves the path dangling, so a malformed entry can never silence real rot.",
+    "data": "",
+    "notes": "Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader - the reader the contract text already names and the cell used to omit. check_vocab is NOT one, correcting the earlier cell: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read.",
+    "rationale": "The seam exists because a second reader needs the same facts: tests/test_dogfood_sync.py loads the file as its SCAFFOLD_OMISSIONS declaration, so the file - not an import - is the shared home, which keeps the stdlib-only kit script free of any dependency on a test module.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_doc_refs.py"
+    ]
+   }
+  ],
+  "docs/requirements/open-items.toml": [
+   {
+    "id": "IF-073",
+    "owner": "docs/requirements/open-items.toml",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/gen_open_items",
+     "external:downstream adopter"
+    ],
+    "channel": "file",
+    "contract": "the owner decision registry read: gen_open_items loads one row per decision (OI-ID/Title/Status/OneLine/Decision/BlastRadius/Options/Recommendation/WI-Refs) and renders every Status=pending row as a brief card. A ruled row is history, not a decision, and is deliberately NOT rendered - the Decisions log in docs/log.md is its record. -000 example rows are dropped, the copy-ready placeholder convention every other registry uses; an absent registry renders an empty queue rather than failing, so a repo carrying no decisions still has a surface.",
+    "data": "",
+    "notes": "built and consumed together; published contract, not a single consumer - 7 kit scripts read the OI registry directly (check_docs, check_trajectory, gen_open_items, intake, migrate_carrier, trace, traj_status), and every downstream adopter authors their own decisions. Ties to B-05 as the template's own delivered spine-registry format.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_open_items.py"
+    ]
+   }
+  ],
+  "project-trajectory/hooks/pre-commit": [
+   {
+    "id": "IF-134",
+    "owner": "hooks/pre-commit",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:git"
+    ],
+    "channel": "exit-code",
+    "contract": "git invokes this hook at commit time with no arguments; exit 0 admits the staged write into governed state, any nonzero exit refuses the commit, and the failing check is named on stderr. `git commit --no-verify` skips the invocation entirely, so this seam admits only the writes a session routes through it.",
+    "data": "",
+    "notes": "The FACING row for the hook floor, and it is deliberately separate from the rows that model the floor's COMPOSITION. Those state which script the hook runs - an internal call between two in-tree endpoints - while the crossing is the contract git holds the hook to: git invokes, the exit code admits or refuses. A tie-back on an internal-call row would claim a realization that row's own contract does not state, so the gap was never a missing surface but a missing FACING. The bypass rides the contract rather than hiding behind it: what discharges `no unchecked write enters governed state` is this seam PAIRED with a re-run of the same bar away from the bypass, never this seam alone.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/hooks/pre-commit"
+    ]
+   }
+  ],
+  "project-trajectory/hooks/pre-push": [
+   {
+    "id": "IF-135",
+    "owner": "hooks/pre-push",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:git"
+    ],
+    "channel": "exit-code",
+    "contract": "git invokes this hook before a push with the remote name and URL on argv and the outgoing ref pairs on stdin; exit 0 releases the push and any nonzero exit refuses it, naming the offending range on stderr. `git push --no-verify` skips the invocation, so the refusal binds only a session that routes through it.",
+    "data": "",
+    "notes": "Ties back to the VERDICT crossing only, and the asymmetry with the commit-side hook is recorded rather than smoothed away. SR-020 carries both the write-in and the verdict-out crossing, but what this hook gates is content LEAVING the machine, while the write-in crossing describes the one write path INTO governed state; claiming it here would widen that crossing by assertion instead of by a frame decision. If the frame intends its write-in crossing to cover the whole git hook floor in both directions, the crossing's own text is what needs widening, not this row's attribution.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/hooks/pre-push"
+    ]
+   }
+  ]
+ },
+ "remove_from_markers": {}
+}

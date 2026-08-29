@@ -50,10 +50,25 @@ clone.
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 gated compare is byte-stable.
 
-Contracts: IF-073, IF-074, IF-075, IF-118, IF-126 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
-IF-126 is the READ-ONLY consumption of the `last_approved` baseline whose
-provider row is IF-123: this is a generator, so it reads what was blessed and
-never refreshes it.
+Contracts: IF-074 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-074: the generated owner decision surface at `docs/open-items.html` —
+    the one document a human reads to rule. It carries, in this order: a card
+    per `Status=pending` open-item row (the one-line, the blast radius, the
+    options, the recommendation and the work items that carry it); an approval
+    and re-attestation section listing every SR that owes a first approval or
+    whose chain has drifted from the approved snapshot, with the whole chain's
+    per-cell before/after, unchanged runs collapsible, additions and deletions
+    marked, and THE BASELINE REVISION PRINTED ON EVERY SECTION so an empty
+    section reads as *check the baseline* and never as *nothing changed*; and
+    the pending-owner-actions pointer projection. It renders and owns no second
+    opinion: the archaeology and cell comparison come from `trace.reattest_model`
+    and the pointers from `pending.pending_block`, so where this view and the
+    `trace.py --approve` brief disagree the brief is authoritative and this is
+    the bug. `--check` byte-compares the regenerated document against the
+    committed one — a pure function of the committed tree, deterministic and
+    LF, so the compare holds in any clone.
 """
 
 import argparse

@@ -3,10 +3,6 @@
 The spine icicle, the flat work-item DAG, the tiered When roadmap, and the
 How-SW seam graph / containment drill, plus their tab panels. The facade
 re-exports, so consumers are unchanged.
-
-Contracts: IF-083 — the seam this module declares (process.md §8; row of record in
-docs/requirements/interfaces.toml): IF-056's derivation-loader read of
-check_trajectory, as held by the sibling that now carries the import.
 """
 
 import html

@@ -22,11 +22,24 @@ writes live. There is deliberately no back-channel and no state file: the
 worker subprocess, the refresh subprocess and the spec moves are the whole
 protocol (§A4.2 — "the handshake the sketch worried about does not exist").
 
-No `Contracts:` line, deliberately — the same posture as handback.py: the
-dispatcher seam this module serves has no IF row yet (part of the drift
-docs/concurrency-v2.md §A9.1 hands to the program-close row WI-390 rather
-than to any single builder), and declaring a row here from the extracted
-half would paper over that drift instead of recording it.
+Contracts: IF-136 — the seam this module declares (process.md §8; row of
+record in docs/requirements/interfaces.toml).
+
+Contract IF-136: the dispatcher's admitted lane table calls three functions
+    here and reads nothing else. `ensure_worktree(root, branch)` returns
+    `(path, error)` for the worktree holding a claimed branch, creating it if
+    needed — the one path both the worker and the refresh use, by construction
+    rather than by two matching literals. `spawn_worker(root, branch, wi_ids,
+    args)` returns `(Popen, None)` or `(None, refusal)` for one worker session
+    on that worktree, non-blocking and with stdio inherited, the resolved
+    session dials forwarded as explicit flags so nothing a launcher set is
+    silently dropped. `spawn_refresh(root, branch, tier)` returns a Popen
+    running the station refresh as its own subprocess, so N lanes' bars run
+    concurrently instead of queueing at the dispatcher. What comes back is
+    only the tree-derived signal — the specs moved out of `active/<branch>/` —
+    plus each subprocess's exit code: no state file and no back-channel. This
+    module runs and reports; what an exit code or a red refresh MEANS is the
+    caller's to decide.
 """
 
 from __future__ import annotations

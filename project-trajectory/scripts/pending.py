@@ -50,13 +50,19 @@ second formatter and a second place for the wording to drift; the `kind` is what
 the one caller that discriminates (the dispatcher, which excludes the pause)
 needs, and it is a FIELD rather than a substring match on the prose.
 
-Contracts: IF-088, IF-125, IF-138 — the seams this module declares (process.md §8;
-rows of record in docs/requirements/interfaces.toml). IF-088 is the dispatcher's
-exit-banner read of the pending projection, whose counterpart moved here with
-the derivation; IF-125 is the READ-ONLY consumption of the `last_approved`
-baseline (IF-123), which came down from `traj_status` with `spine_pending`. IF-138 is the derivation-loader seam this module holds: the blocked half of the
-projection is derived through the validator's own loaders, so the surfaces and
-validation can never disagree about what is blocked.
+Contracts: IF-088 — the seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-088: the dispatcher's exit banner calls `owner_cards(root)` — the
+    same `pending_items(root)` read model the dashboard and the generated
+    open-items surface render, minus the tracked-pause kind, whose pause has
+    its own earlier exit. Each item is a `PendingItem(kind, line)`: a `kind` of
+    `blocked` or `spine`, and the rendered markdown bullet a human reads. The
+    kind is a FIELD, so the one caller that discriminates never parses prose to
+    make a control-flow decision. The derivation is a pure function of the
+    committed tree — sorted, no clocks — so the banner and the owner surfaces
+    can never disagree about what is blocking, and the import is deferred: this
+    seam costs nothing until an exit banner asks for it.
 
 Stdlib only, cross-platform, deterministic (sorted rows, no clocks) so every
 gated region derived from it is byte-stable.

@@ -56,8 +56,43 @@ Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit
 independently-copyable-script convention (the F5 rule): schedule.py stays a
 self-contained drop-in, never importing the sibling engines.
 
-Contracts: IF-053, IF-054 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-053, IF-055, IF-071, IF-085, IF-094 — the interface seams this
+module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+
+Contract IF-053: SR-148's obligation delivered here as a pure library with a CLI
+    over it. `load_registry_rows`/`load_wis` read the spec-folder work registry
+    into uniform rows; `kind_of`/`classify` answer the two safety axes;
+    `evaluate`, `frontier` and `simulate` derive readiness and the deterministic
+    order from those rows plus the reservations the caller passes in. Nothing
+    here mutates the registry, spawns a worker or touches git, so every caller
+    can derive the same answer at any time without racing another.
+Contract IF-055: the claim-side derivation. `frontier` over the loaded rows
+    returns the dependency-ready set in the deterministic order, and readiness
+    already excludes a WI that is blocked, deferred, draft, cancelled, reserved,
+    or whose declared kind is missing, unknown or contradicted by its structural
+    evidence — an unclassified WI fails closed and is never on the frontier,
+    without stopping disjoint classified work. The library derives and stops:
+    the claim commit and the branch cut belong to the caller, because this side
+    writes nothing.
+Contract IF-071: the frontier read a generated surface projects. The same
+    loaders and `frontier`/`evaluate` give a renderer the ordering an integrator
+    acts on, so the ranking is derived ONCE here and never recomputed in a
+    second ranker that could disagree. OPTIONAL by construction: this module may
+    be absent from a scaffold, and a guarded import that yields nothing must
+    degrade to an empty frontier block rather than an error.
+Contract IF-085: the same frontier read held at ONE import site for a family of
+    readers. Importing this module has no side effects — it defines constants
+    and functions and runs nothing, its CLI entry sitting behind the main guard
+    — so a single guarded import may be shared by siblings that read it through
+    that one home, and the absent case is a plain `None` every reader can test.
+Contract IF-094: the classification TABLES as read-only vocabulary.
+    `_KIND_CONCURRENCY` maps a declared kind to `parallel` or
+    `CONCURRENCY_EXCLUSIVE` and `_KIND_RANK` maps the same kinds to their
+    integer order; the two are keyed alike and read from each other never, so a
+    caller can derive the exclusive kinds in rank order instead of restating the
+    list. Constants only: no call, no write, and a re-ruled kind moves every
+    derived rendering with no second edit.
 """
 
 import argparse

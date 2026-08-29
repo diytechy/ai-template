@@ -78,7 +78,62 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-021, IF-042 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-116, IF-127, IF-141 — the
+interface seams this module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+
+Contract IF-001: SR-157's obligation delivered as a CLI here. Joins the
+    SN -> SR -> LLR -> TC spine with the off-spine registries under `--docs`,
+    writes `docs/test/report.md`, and prints the orphan, integrity, status and
+    advisory findings on stdout for the harness to capture and print whole,
+    never summarised away. An absent optional registry and a `-000` example row
+    are ignored, so a fresh scaffold reports clean instead of failing.
+Contract IF-042: the always-valid integrity floor, run over staged content.
+    `--strict-integrity` exits 1 when an integrity finding exists — a duplicate
+    or malformed id, a data row whose column count differs from its header, an
+    incoherent SR;LLR citation pair, an id-watermark breach — and 0 otherwise.
+    Orphan and status findings are gate-scoped and never gate this flag, so the
+    floor is safe to run on every commit at any stage.
+Contract IF-075: `reattest_model(root, srs, llrs, tcs, snapshot=...)` — the ONE
+    computation of what a spine row owing a human act looks like against its
+    copy in `docs/archive/last_approved/`: the chain rows, each row's changed
+    cells before and after, and the baseline revision and date. It returns
+    structured entries rather than text, so a renderer consumes the model and
+    never re-derives it; `reattest_lines` renders these same entries as the
+    markdown brief. `snapshot=None` compares against nothing and falls back to
+    the first-approval arm alone.
+Contract IF-089: `load_registries(docs)` then `analyze(reg, AnalysisFlags(...))`
+    — the single orphan/status engine offered as a library call.
+    `load_registries` loads and analyses nothing; `analyze` is pure over the
+    loaded bag, does no I/O, and returns the findings bag whose `orphans` and
+    `status_findings` name the registry gaps. Absent optional registries load
+    empty, so a scaffold with no spine yields no findings rather than an error.
+Contract IF-101: `read_watermark(root) -> {space: int}` reads
+    `docs/id-watermark`, the only record of which ids have ever been allocated,
+    and RAISES on an absent or malformed file rather than degrading to zero —
+    the degrade would free every id space at once. `bump_watermark(root) ->
+    (marks, raised)` raises every mark to the live maximum, propagating a
+    malformed file's error and starting from zero only on the file's first
+    creation, so a mark only ever rises and a deleted id is never re-minted.
+Contract IF-116: the same two marks as a minting caller uses them.
+    `read_watermark` supplies the floor a mint counts from — the id is
+    `max(mark, live maximum) + 1`, so an id held anywhere is an id taken — and
+    `bump_watermark` records the result. The order is forced by what
+    `bump_watermark` reads: it takes the LIVE maximum, so it can only run after
+    the artifact being minted exists, or it records a number nothing holds.
+Contract IF-127: the attestation model reached through `load_registries` plus
+    `reattest_model`, so a composed brief is built from the same rows, the same
+    snapshot baseline and the same approved/traced split `--approve` renders.
+    An EMPTY model is a real answer, not a failure: no row differing from its
+    snapshot copy and none awaiting a first approval means there is nothing to
+    judge, and the caller is handed that emptiness to refuse on rather than a
+    fabricated brief.
+Contract IF-141: `effective_hats(row, sr_by_id) -> sorted hat names` — one
+    design row's effective perspective set: its own `Hat-Refs` unioned with
+    those of its SR parents, derived on every read instead of copied down at
+    authoring time, so a re-ruled parent propagates with no child edit. A
+    dangling `SR-Refs` contributes nothing and does not raise; unresolved
+    parentage is the orphan pass's finding, not this derivation's.
 """
 
 import argparse

@@ -1,3 +1,39 @@
+<!--
+Contracts: IF-023, IF-024, IF-054, IF-079 — the interface seams this directory
+declares (process.md §8; rows of record in ../requirements/interfaces.toml).
+
+Contract IF-023: the work-item registry as the validated registry. One row is
+    one Markdown spec file whose `+++` frontmatter carries `id`, `title`,
+    `workstream`, `sr_refs`, `needs` and the optional scheduling keys, and whose
+    `## Deliverable` body is the backward-only record; the filename repeats the
+    id. STATUS IS THE DIRECTORY, so a spec under a directory outside the
+    declared set RAISES rather than being skipped — inventing a folder takes
+    rows out of the registry instead of adding a state to it. This directory
+    holds the rows still in flight and `../archive/work/` the three terminal
+    states; both are read as ONE registry, so a closed row is still a
+    predecessor, a trace link and a counted row.
+Contract IF-024: the same registry read as the roadmap DAG — each row's id,
+    title and `needs` edges, with status taken from the directory — so a
+    rendered roadmap shows what is queued, claimed, deferred and closed without
+    a second statement of state anywhere.
+Contract IF-054: the same registry read for READINESS. A row offers its status,
+    its `needs` edges (an entry prefixed `~` is a SOFT edge and never blocks)
+    and the optional `priority`, `exclusive`, `blockref`, `est_tokens` and
+    `safety_class` keys. An absent optional key reads as its documented default,
+    and the defaults are chosen to fail closed: an absent safety class is
+    `unclassified` and is never scheduled, an absent priority is 0, an absent
+    exclusive is empty. A hard edge is satisfied only by an integrated `done`
+    predecessor — a cancelled one never satisfies it.
+Contract IF-079: the registry as one of the two interchangeable FORMS. The
+    frontmatter keys, the filename rule and the status-by-directory bijection
+    are this format's definition, and the legacy row-per-line CSV is the other
+    form, kept for migrating in and exporting out. A conversion re-reads and
+    re-parses every file it writes before moving on, and the verify mode
+    round-trips the whole registry through a temporary directory and compares
+    cell-exact, writing to neither live home; byte identity is reported, never
+    asserted.
+-->
+
 # The work-item registry (`docs/work/`)
 
 One work item is one Markdown spec file in this folder, and **status is the

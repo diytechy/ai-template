@@ -66,7 +66,22 @@ ship as legible per-repo-overridable defaults (calibration values, not spine
 facts); the scoreboard (`score_reviews.py`) stays **advisory** — the declared
 policy picks, nothing auto-optimizes.
 
-Contracts: IF-044, IF-045, IF-119 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-044 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-044: model routing as a PURE selection library the coordinator calls.
+    `load_registry` reads the declared pair-row model registry and
+    `load_enabled` / `load_enabled_entries` the enable-list; `resolve_token` and
+    `resolve_enabled` turn those tokens into registry rows; `parse_env` turns a
+    row's `Env` cell into the environment a launch merges over its own;
+    `select` returns the chosen row TOGETHER WITH ITS REASON as data;
+    `escalate` and `failure_action` return the declared next move; `cool` and
+    `available` carry the cooldown. Nothing here launches a session, writes a
+    file or touches git — the coordinator owns every launch, which is what
+    makes each choice auditable and testable without a model. An ABSENT
+    enable-list is the off switch: managed routing does not engage and the
+    caller keeps its single declared agent command, so a fresh scaffold can
+    never suffer a silent model swap.
 """
 
 import argparse

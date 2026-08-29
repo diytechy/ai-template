@@ -39,6 +39,21 @@ silently drops a cell fails here rather than in a gate three commits later.
 Contracts: IF-103 — the seam this module declares (process.md §8; row of record
 in docs/requirements/interfaces.toml).
 
+Contract IF-103: this CLI rewrites the registries under
+    `docs/requirements` in place, and the bytes it writes are the whole seam —
+    it reads them and writes beside them, consuming no other kit module. The
+    default arm converts each `.md`/`.csv` registry to its `.toml` carrier;
+    `--if-shape` rewrites an old-shape `interfaces.toml` to the owner /
+    requestors-or-consumers / channel / data shape. EVERY conversion is
+    round-tripped against an oracle built from the RAW source, never from the
+    converter's own parse: each cell that does not survive is printed as a
+    `migrate_carrier: LOSSY - ...` line on stderr and the run exits 1, so a
+    dropped cell is named at the conversion rather than in a gate three commits
+    later. `--check` performs that same conversion and comparison in memory and
+    writes nothing. Carrier only: a Status word the converter does not
+    recognize is COPIED, never mapped, so a conversion can never launder a
+    re-blessing a human still owes.
+
 Requirements: SR-147 (one machine-parseable carrier for the spine).
 """
 

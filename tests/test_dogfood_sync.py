@@ -787,9 +787,23 @@ BOILERPLATE_COPIES = {
 }
 
 
+def _without_contract_header(data):
+    """The bytes with a LEADING `<!-- ... -->` block removed. A directory owner
+    declares its interface seams in its README's first HTML comment (OI-67
+    slice 2), and that header is this repo's — the kit's own seam ids — not
+    boilerplate the template could carry; everything after it must still match
+    the template byte for byte."""
+    text = data.lstrip()
+    if not text.startswith(b"<!--"):
+        return data
+    end = text.find(b"-->")
+    return text[end + 3 :].lstrip(b"\r\n") if end >= 0 else data
+
+
 @pytest.mark.parametrize("live_rel,tmpl_rel", sorted(BOILERPLATE_COPIES.items()))
 def test_dogfooded_boilerplate_matches_template(live_rel, tmpl_rel):
-    assert (ROOT / live_rel).read_bytes() == (ROOT / tmpl_rel).read_bytes(), (
+    live = _without_contract_header((ROOT / live_rel).read_bytes())
+    assert live == (ROOT / tmpl_rel).read_bytes(), (
         "{} drifted from {} — re-copy it (or demote this entry with a recorded "
         "reason)".format(live_rel, tmpl_rel)
     )

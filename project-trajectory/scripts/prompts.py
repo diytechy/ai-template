@@ -41,8 +41,44 @@ where `scripts/` sits at the root — it is `<repo>/prompts/`, which
 `bootstrap.py` copies. An in-process caller passing an unrelated temp root
 therefore still resolves the shipped template.
 
-Contracts: IF-097 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-097, IF-098, IF-099, IF-100, IF-113 — the interface seams this
+module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+
+Contract IF-097: the prompt LOADER. `KIT_PROMPTS` is the declared key-to-file map
+    and the only vocabulary a caller may name. `load(key, override)` returns one
+    template's text with its operator-notes block stripped and its trailing
+    newline dropped, or raises `PromptError` naming the path — an unreadable or
+    empty template is never an empty brief. `fill(key, text, values)` refuses
+    both an unknown slot and a declared slot left unfilled. `preflight(keys,
+    overrides)` turns a missing template into a launch-time refusal string
+    instead of a first-session crash. `digest(text)` fingerprints over
+    normalized line endings, so a CRLF checkout is not a change. Resolution is
+    script-relative (`KIT/prompts/`), so an unrelated caller root still finds the
+    shipped template.
+Contract IF-098: the generated prompt catalogue's row source. `catalog_rows()`
+    returns `(key, file, slots, digest)` for every shipped prompt whose file is
+    present, sorted by key, and the catalogue reads nothing else — so the
+    document cannot disagree with the loader about what ships or with what
+    slots. A key whose file is absent is omitted from the rows and reported by
+    `preflight`, not rendered as a blank entry.
+Contract IF-099: the session engine's side of the loader. `WORKER`, `REVIEWER` and
+    `CRITIQUE` are resolved by CALL, never at import, so a missing shipped
+    template is a named `PromptError` the coordinator's preflight reports rather
+    than an ImportError every consumer of the module pays. `WORKER` is
+    deliberately absent from the `--prompt-map` override vocabulary: changing
+    the worker brief is a reviewed edit to the template file.
+Contract IF-100: the dual-plan hats' side of the loader. `plan_briefs` delegates
+    `strip_dispatcher_block` here and calls `strict_check` for its `{{NAME}}`
+    fill, passing its own historical exception type, so both slot syntaxes get
+    one implementation of "an unknown slot and an unfilled slot are both
+    refusals". The hat templates themselves are not in `KIT_PROMPTS`, so they
+    are absent from the catalogue and from the per-session digest telemetry.
+Contract IF-113: the adjudicator's side of the loader. The four `ADJUDICATE-*`
+    keys resolve through `load`, an operator `--prompt-map` override under the
+    same key winning, and fill through `fill`; a `PromptError` from either is
+    the caller's cue to REFUSE to dispatch rather than to send a brief with a
+    hole where the evidence belongs.
 """
 
 from __future__ import annotations

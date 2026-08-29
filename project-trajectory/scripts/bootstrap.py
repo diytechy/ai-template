@@ -320,7 +320,20 @@ decision 8.)
 After running: open AGENTS.md and docs/status.md, fill the PROJECT BRIEF, then
 start gate DevStg-Reqs (see docs/process.md).
 
-Contracts: IF-014, IF-039 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-014 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-014: SR-010's obligation delivered as a CLI here — the kit's
+    crossing into a downstream repo. It copies the templates into the
+    destination under their working names, renaming `*.template.*` and creating
+    the layout the process expects, and is IDEMPOTENT without `--force`: an
+    existing file is never overwritten, so re-running to pick up kit updates
+    cannot clobber a filled-in registry. Every run STAMPS what it wrote — the
+    kit's committed identity and the resolved profile — and refuses to stamp a
+    real revision from a dirty or non-checkout kit tree, so a scaffold's
+    provenance is either true or plainly unknown. Omission never renumbers: an
+    omitted section keeps its heading and a resolvable stub, so a citation to a
+    numbered section means the same thing in every adopted repo.
 """
 
 import argparse

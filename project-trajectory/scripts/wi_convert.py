@@ -74,7 +74,26 @@ ruling D-8, `OI-16`): the console guard, the spec-folder read side and the TOML
 emitter all live in the shipped `kitlib` package now, and this module imports
 them. It is still a drop-in — `kitlib` copies with it, as ADOPTING.md §6 says.
 
-Contracts: IF-079 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-078, IF-092 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-078: plan_artifacts files a selected Plan-WI as a spec through this
+    module's write side — `work_dir_for(csv_path)` and `spec_paths(work_dir)`
+    to find the folder and what is already in it, then
+    `write_spec_file(work_dir, row)` to materialize the row. The filing home is
+    resolved from the row's own Status by `status_dir`, so a selected plan row
+    lands under `docs/work/queued/`; an unrecognized Status raises ConvertError
+    rather than being filed under a catch-all. Every write self-verifies —
+    the file is read back and reconstructed against the source row before the
+    relative path is returned — so a caller never receives the path of a spec
+    that does not read back as what it was given.
+
+Contract IF-092: the unified mint builds its row against COLUMNS, the
+    18-column schema this module owns, and materializes it with
+    `write_spec_file(work_dir, row)` — the format's single writer, so no spec
+    can be produced by a path that skips the read-back verification. A row this
+    module cannot file raises ConvertError, which is the mint's
+    all-or-nothing refusal input: nothing partially written, nothing filed
+    under a status the format does not know.
 """
 
 import argparse

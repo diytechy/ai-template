@@ -88,7 +88,23 @@ three stripped before parsing — frontmatter is typed data, so a `title` quotin
 a link is describing one, not making one). Anchors are only validated against
 Markdown targets the script can parse.
 
-Contracts: IF-002, IF-030, IF-112 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-002, IF-077 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-002: LLR-012's obligation delivered as a CLI here. Exits 1 on a
+    broken intra-repo link, a root-README finding, or — under
+    `--strict-orphans` — a genuine orphan, and 0 otherwise; every other class
+    this scan reports (orphan warnings, the staleness hint, the status-surface
+    structure warnings) prints and never touches the exit code. An absent
+    optional input is a clean skip, not a failure, so a fresh scaffold passes.
+Contract IF-077: `parse_doc(path) -> {"links": ..., "anchors": ...}` — one
+    Markdown document's outbound links and the anchor set it exposes, the
+    anchors produced by THIS module's slugifier. A caller resolving the anchor
+    half of a `doc#anchor` reference joins on that set rather than writing a
+    second slugifier, so the same reference can never resolve here and dangle
+    there. The import is safely OPTIONAL: this module is absent from a partial
+    scaffold, and a caller that cannot import it is expected to degrade to the
+    path half alone rather than fail.
 """
 
 import argparse

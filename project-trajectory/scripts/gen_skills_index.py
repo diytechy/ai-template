@@ -21,7 +21,20 @@ Usage:
               like `gen_arch_map.py --check`. Use in CI / a gate.
     default   (Re)write skills/INDEX.csv from the SKILL.md files.
 
-Contracts: IF-019, IF-035 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-019 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-019: this module is the sole writer of `skills/INDEX.csv`, and the
+    file's shape is the contract: a one-line GENERATED banner comment, then a
+    header row and one data row per skill under the fixed COLUMNS order —
+    name, scope, stacks, domains, phases, tags, description — list values
+    rendered space-joined. Rows come from the `SKILL.md` frontmatter alone, so
+    the index is a pure function of the source tree and never a second place to
+    author applicability. It is written as bytes with LF endings on every
+    platform, keeping the committed file diff-free across checkouts.
+    `--check` re-renders in memory, compares with line endings normalized —
+    row content, not the checkout's newline convention — and exits 1 with a
+    STALE line naming the path when they differ. An absent skills directory is
+    reported and exits 0, so a repo that vendors no skills pays nothing.
 """
 
 import argparse

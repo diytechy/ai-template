@@ -23,6 +23,19 @@
 # holds the OTHER branches' claim dirs (WI-369) — while `check_doc_refs.py`
 # still classifies prose naming it when absent. Everything unmarked keeps the
 # exact guard, including every retired surface.
+#
+# Contracts: IF-072 — the interface seam this file declares (process.md §8; row of
+# record in docs/requirements/interfaces.toml).
+#
+# Contract IF-072: the paths this repo deliberately does not carry, one
+#     `<path> — <reason>` entry per line, with blank lines and `#` comments
+#     ignored. A reference in prose to a listed path is reclassified as untraced
+#     with the declared reason quoted back, in place of dangling. Fail-soft in the
+#     safe direction: an absent file, and a line carrying no separator, declare
+#     nothing and leave the path dangling, so a malformed entry can never silence
+#     real rot. A reason opening `LIFECYCLE:` declares a path whose presence is a
+#     legal state and is exempt from the materialize guard; any other listed path
+#     that exists on disk is a finding.
 
 docs/requirements/work-items.csv — retired at the Phase 2c authority flip (concurrency-restructure §2/§7): the work-item registry is the docs/work/ spec folder; prose naming the CSV before 2026-07-29 is history, and a migrating adopter converts theirs with scripts/wi_convert.py.
 docs/work/archive/ — retired at WI-384's state-model flip (concurrency-v2 §B2): the folder held BOTH terminal states and so needed a `disposition` attribute to tell them apart, and splitting it into docs/work/complete/ and docs/work/cancelled/ is what deleted that attribute, its validator and both raise paths. Prose naming archive/ before 2026-08-01 is history. Deliberately NOT marked LIFECYCLE: this path must never materialize again, so the honesty guard here is the same reconciliation signal the loaders enforce — a spec closed into archive/ by a branch cut before the flip is a named, loud error, not a silent skip.

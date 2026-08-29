@@ -40,11 +40,6 @@ parser in separate modules is a contract nothing checks. Everything else on the
 seam is free prose a human reads, and the mint keys off it only through
 `parse_red_tc`.
 
-Contracts: IF-089 — the empty-frontier gap census's read of trace's registry
-analysis (process.md §8; row of record in docs/requirements/interfaces.toml).
-The seam moved here with the census itself; the dispatcher still calls it, but
-it no longer owns it.
-
 Implements: SR-148, LLR-159, LLR-188
 """
 

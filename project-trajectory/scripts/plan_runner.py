@@ -19,7 +19,26 @@ agent_loop re-exports `wi_plan_mode`/`PLAN_MODE_DUAL`/`run_dual_plan_round`
 
 Stdlib only, Python 3.11+, Windows/POSIX.
 
-Contracts: IF-066 — the interface seam this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-066 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-066: agent_loop imports two names from this module and re-exports
+    them, so its own public surface is unchanged. `wi_plan_mode(row)` returns
+    the work item's declared PlanMode as a lowered token — only `dual` fires a
+    round, and an absent column, an empty cell or an unknown word are ordinary
+    BUILD dispatch, never an error. `run_dual_plan_round(root, wi, row,
+    template, model, timeout, prompt_map)` drives the whole round — two planner
+    sessions, the coverage pre-pass, one cross-critique and revision, the
+    position-swapped arbiter pair — through the headless session layer and
+    returns `(outcome, detail)` where outcome is `SELECTED` (verdict recorded,
+    the chosen plan's rows filed as queued work items) or `PAGE` (the reason,
+    for the caller to map onto its approval level). Every refusal on the way in
+    — no resolvable goal brief, no rubric, an unreadable hat template, an
+    unusable roster, nothing routable — returns PAGE with its reason rather
+    than falling through to a direct build. Routing-on
+    resolves planner pairs tag-rank-aware with one runtime-nonresponse
+    fallback; routing-off drives every hat from the one template, the recorded
+    degraded mode. Every session launched inherits the declared per-session
+    limits; nothing here writes the spine.
 """
 
 import os

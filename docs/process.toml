@@ -45,6 +45,30 @@
 # (bootstrap and the downstream re-sync run it for you). Running with BOTH
 # sources live is REFUSED, not silently resolved — a mixed config is exactly
 # the state where two readers disagree about the same policy.
+#
+# Contracts: IF-037, IF-038 — the interface seams this file declares (process.md
+# §8; rows of record in docs/requirements/interfaces.toml).
+#
+# Contract IF-037: the one home for this repo's policy dials. `[attestation]`
+#     carries the human-approval rung and the review holds, `[policies]` the
+#     push, review-round, privacy and secrets dials, and `[checks]` the
+#     check-enablement toggles. Every value is one `key = value` per line inside a
+#     `[section]`, with no dotted key, inline table or multi-line string, so the
+#     hooks' pure-sh keyed match and the tomllib read see the same declaration; a
+#     shape that breaks that agreement is refused rather than parsed. A dial
+#     resolves to this file first, then to its legacy one-word file for the length
+#     of the migration window, then to the built-in default — and a repo declaring
+#     one dial in both homes is refused at preflight rather than silently
+#     resolved. A value of the wrong type is refused at the same point.
+#
+# Contract IF-038: the subagent-spawn policy, `[checks] subagent_gate`, over the
+#     closed alphabet `off` allows every spawn, `ask` defers each spawn to
+#     approval, `deny` refuses it. It ships visible at `off` — an opt-in dial
+#     readable without being armed — and an undeclared key reads as `off`. A file
+#     that is present but does not parse reads `ask`, resolved against any legacy
+#     one-word declaration to whichever of the two is more restrictive; an absent
+#     file allows. The `SUBAGENT_GATE=allow` launcher environment slot overrides
+#     the declaration for a deliberately supervised run.
 
 [attestation]
 # THE HIGHEST STAGE RUNG A HUMAN STILL APPROVES, cumulatively ("through" this

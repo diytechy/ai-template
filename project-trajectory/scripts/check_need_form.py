@@ -75,8 +75,22 @@ ruling that has not been made (WI-454's scope guard): a form heuristic over
 stakeholder prose must not block work on the strength of a regex. `--strict`
 exists for a repo that makes that ruling for itself.
 
-Contracts: IF-121, IF-122 — the seams this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-121 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml).
+
+Contract IF-121: the need-form verdict, delivered as a CLI. It scans SN `need`
+    cells only — never `why`, never `acceptance`, never a `-000` example — and
+    reports the row and the offending phrase for each of three token classes:
+    an internal repo path, an implementation-only identifier, and a process
+    citation. A token listed in `docs/need-form-allow` with a reason is
+    silenced; a malformed allow line declares nothing, so a broken entry can
+    only fail to silence a finding and never silence one by accident. An absent
+    registry is a clean skip; a registry that is present but yields zero
+    scannable `need` cells is reported VACUOUS, never clean, because zero rows
+    reading as a clean tier on exactly the registry this guards is the false
+    green the harness exists to prevent. Severity is WARN-FIRST at every stage
+    in the shipped wiring — exit 0 with findings printed; `--strict` is a
+    per-repo choice and exits 1.
 """
 
 import argparse

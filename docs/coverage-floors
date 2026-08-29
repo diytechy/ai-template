@@ -22,6 +22,18 @@
 # RAISE a floor only alongside the focused behavioral tests that earn it, in the
 # same commit — never a drive-by bump (the ratchet-only-tightens discipline the
 # complexity/size ratchets already keep).
+#
+# Contracts: IF-070 — the interface seam this file declares (process.md §8; row of
+# record in docs/requirements/interfaces.toml).
+#
+# Contract IF-070: the per-module line-coverage census. One non-comment line is a
+#     repo-relative module path, whitespace, and the minimum line-coverage
+#     percent; blank lines and `#` comments, whole-line or trailing, are ignored,
+#     so a floor can carry its why-note. A declared module measured below its
+#     floor fails the comparator, and so does a declared module absent from the
+#     coverage report — a floor whose module vanished from measurement is never a
+#     quiet pass. A malformed line fails it too. No declared floor at all, an
+#     absent report, or a run at a tier that measures no coverage exits zero.
 
 # The Windows batch-shim command-injection boundary (repo-review H-1) — a
 # security control (still ~81% even after the H-1 regressions). EXTRA headroom

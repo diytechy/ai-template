@@ -82,17 +82,46 @@ replaced wholesale at each signing and never migrated in place, and why the
 first seed happens AFTER the rename (step 6) and the UNANCHORED rule is armed
 only after that (step 7).
 
-Contracts: IF-123, IF-128, IF-129 — the seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml). IF-123 is what this
-module PROVIDES; IF-128 and IF-129 are what it consumes — the registry CARRIER
-and the ONE cell-comparison basis. MINTED 2026-08-15 (log 2026-08-15h) with the
-design row LLR-173 and TC-167, closing the gap the previous version of this line
-recorded honestly: the module shipped with no spine coverage of any kind. The
-three rows that consume it are IF-124 (adjudicate_brief), IF-125 (traj_status)
-and IF-126 (gen_open_items), each declared by its own module; `intake` is the
-WRITER and is named as IF-123's counterpart. Everything here is PROVISIONAL —
-the parent SR and the owner cells are recorded picks for the sitting to
-overturn.
+Contracts: IF-123, IF-124, IF-125, IF-126 — the seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-123: the `last_approved` baseline, write side and whole read side.
+    `copy_live(root, seed=False, approves=None)` mirrors every snapshotted
+    registry byte-for-byte into `docs/archive/last_approved/`, deletes any
+    other-carrier copy of the same stem in the same act, and returns the sorted
+    repo-relative paths written. It REFUSES to create the directory without
+    `seed=True`, and refuses to refresh approved text without a `Status` flip in
+    the same registry or an explicit `approves` ref, because the copy it takes
+    is the text a signature blesses. `load_all(root)` parses the snapshot into
+    `{(stem, id column): {id: row}}`, returns None — never `{}` — when there is
+    no snapshot, and RAISES on a file that exists and will not parse;
+    `rows_for` is the ONE place that None collapses to `{}`. `exists`, `stamp`,
+    `is_drifted`/`drifted_cells` over approved cells only, and
+    `unanchored_findings` complete the read side. Nothing may wire `copy_live`
+    into a freshness step: the snapshot is deliberately behind live while an
+    amendment is pending, and that lag IS the signal.
+Contract IF-124: the anchor read a composed brief takes — `exists`, `stamp` and
+    `SNAPSHOT_DIR` — so an amendment is measured against text that is not the
+    text under judgement. `exists` answers the vacuous case truthfully rather
+    than conveniently: before the first signing there is no anchor at all, and
+    the honest response is a held first-approval question, never a before/after
+    rendered with an empty before. `stamp` is ADVISORY and derived from git; off
+    a checkout it returns empty strings rather than raising, so a missing date
+    costs a reader one line and nothing more.
+Contract IF-125: the drift read — `load_all`, `rows_for`, `is_drifted` and
+    `SNAPSHOT_DIR`, and never `copy_live`. Drift is asked only of a row that
+    CLAIMS approval-or-above and is present in the snapshot; a row below
+    approval answers False because it has made no claim to fall from, and a
+    claiming row absent from the snapshot answers False because that is the
+    harder unanchored finding, owned elsewhere. With no snapshot `load_all`
+    returns None and `rows_for` collapses it to `{}`, so a reader reports
+    nothing approved rather than everything drifted.
+Contract IF-126: the stamp read — `stamp(root)` and `SNAPSHOT_DIR` — so a
+    generated surface can name WHICH baseline the reader is being shown and
+    where it lives. Advisory and read-only in both directions: the stamp is
+    derived from git and degrades to empty strings off a checkout, and this side
+    never calls `copy_live`, because a generator that refreshed the baseline
+    would erase the very lag it exists to report.
 """
 
 from __future__ import annotations

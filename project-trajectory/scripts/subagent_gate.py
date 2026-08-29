@@ -53,7 +53,19 @@ Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
 Adapted — stdlib re-implementation — from brefledev/stop-subagent-fanout (MIT).
 
-Contracts: IF-020, IF-038 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-020 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-020: the PreToolUse hook contract. It reads the tool-call JSON on
+    stdin, resolves the declared policy, and prints a
+    `hookSpecificOutput.permissionDecision` payload carrying `allow`, `ask` or
+    `deny` with its reason; `deny` also exits 2, every other decision exits 0,
+    and a deferred call prints nothing at all. It FAILS OPEN by design: a
+    malformed payload or any other internal error allows the call and records
+    why, because a broken gate must never wedge the tools. Supervision, not
+    security — a model that can edit files can remove this. Every decision
+    appends to a gitignored log, best-effort, so the paper trail can never block
+    a call.
 """
 
 import json

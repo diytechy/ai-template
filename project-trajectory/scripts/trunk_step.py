@@ -54,11 +54,21 @@ Usage:  python scripts/trunk_step.py [--root .] [--compile-log] [--regen] [--dry
         (no operation flag = both, compile first, then regen)
 Exit codes: 0 all clean, 1 any failure (the §5.5 loud-block contract).
 
-Contracts: IF-081, IF-120 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml). IF-081 is this
-module's own CLI (`--compile-log`/`--regen`), sitting undeclared as part of the
-drift docs/concurrency-v2.md §A9.1 hands to the WI-390 program-close row rather
-than to any single builder; declared here now that the program is closing.
+Contracts: IF-081 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-081: the serial trunk lane's two steps as one CLI. `--compile-log`
+    validates EVERY committed log fragment before writing anything — its name
+    shape, its opening heading, that it claims no reserved heading, and that it
+    is committed — then appends them oldest-first by the commit that added each
+    file, rebasing each fragment's relative links one directory up and leaving
+    anchors and absolute paths alone; all-or-nothing, so a half-compiled log
+    cannot exist. `--regen` re-derives the generated document families in
+    dependency order, so a generator that reads another's output runs after it,
+    and skips with a PRINTED notice any family this repo does not carry. It
+    never commits: staging and committing belong to the caller. Exit 0 all
+    clean, 1 on any failure with the offending file named, because a red trunk
+    lane must halt claiming rather than fail open.
 """
 
 import argparse

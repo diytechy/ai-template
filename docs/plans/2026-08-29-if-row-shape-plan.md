@@ -12,6 +12,22 @@ The owner's shape, in the owner's words: an interface says *what the
 information plugs into, who it serves, and what the data is* — one row is one
 direction of one kind of information. Everything below serves that sentence.
 
+## 0. Where the program stands (2026-08-29, end of the first session)
+
+Landed, in this order, on `contract_split`: **slice 1** (WI-528, the shape in
+code and the registry converted), **slice 5** (WI-532, PROCESS.md §8, the
+templates, the RESYNC entry, `migrate_carrier --if-shape`), **slice 2** (WI-529,
+headers in non-Python owners and hooks, the owner-exact reverse check),
+**slice 3** (WI-530, the four-worker cell pass — 132 of 136 definitions stated
+beside their owners; the round at `docs/reviews/2026-08-29-oi67-slice3/`).
+Remaining: **slice 4** (WI-531, the split — its per-row worklist is the `note`
+field of each worker report in that folder, summarised in the WI-530 log
+fragment) and **slice 6** (WI-533, arm the gate), plus two things slice 3 could
+not place: the CSV loaders must skip a leading `#` header before `IF-031`'s
+owner can declare, and a rule is owed for where our READING of an
+`external:`-owned surface lives (`IF-032`, `IF-036`, `IF-041` keep their
+legacy `contract` cell until then). Resume from `docs/status.md`.
+
 ## 1. The row, after
 
 ```toml

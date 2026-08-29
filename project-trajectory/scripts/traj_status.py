@@ -9,18 +9,6 @@ which this module is one, so the dispatcher and the generated owner surface
 each had to import the `gen_trajectory` facade — a render family — to reach a
 state query, and the dispatcher reached in for two PRIVATE names. Those were the
 2026-08-19 review's two documented bad edges (H-02, M-02).
-
-Contracts: IF-084 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.toml): IF-056's derivation-loader read of
-check_trajectory, as held by the sibling that now carries the import. IF-125,
-the READ-ONLY consumption of the `last_approved` baseline (IF-123), moved to
-`pending.py` with the drift arm that reads it; a THIRD seam retired at WI-498
-slice 5 with the bar axis it rendered.
-`_stage_line` called the derivation engine's release-ceiling renderer for the ONE
-wording of that note, and `DevStg-Release` is now derived by nothing, so there is
-no withheld top value left to word; the row is out of the registry. This module
-imports no derivation engine at all any more — the WI-483 render-leaf direction,
-completed.
 """
 
 import re

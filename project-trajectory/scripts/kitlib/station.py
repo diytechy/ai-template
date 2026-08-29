@@ -54,6 +54,22 @@ Stdlib only, and import-clean of the rest of `scripts/`, like every `kitlib`
 module. That is why the frontmatter read below calls `tomllib` directly instead
 of `agent_common.read_toml_text`: the four-line guard is the price of the
 package rule, and it is the same guard.
+
+Contracts: IF-093 — the seam this module declares (process.md §8; row of record
+in docs/requirements/interfaces.toml).
+
+Contract IF-093: the terminal-outcome vocabulary as CONSTANTS a render may
+    import. `OUTCOME_DIRS` is the immutable mapping of declaring `docs/work/`
+    status directory to the outcome it asserts — `complete` -> MERGED,
+    `cancelled` -> CANCELLED, `partial` -> PARTIAL — and only those three: the
+    open folders are absent on purpose, so a lane closing into one names no
+    outcome and the merge slot refuses it. `BAR_GREEN` is the refresh
+    attestation's git-trailer label. Constants only — no call into a service, no
+    write — and the module depends on nothing else in `scripts/`, which is what
+    lets a view read the vocabulary without importing the coordinator that
+    claims lanes, merges branches and moves specs. It is the same table the
+    merge slot classifies a finished lane by, so the picture and the decision
+    cannot drift apart.
 """
 
 from __future__ import annotations

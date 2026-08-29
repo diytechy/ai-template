@@ -31,7 +31,22 @@ parser is duplicated here (never a sibling import — the kit's independently
 copy-able-script convention, F5); this one only needs id/title/predecessors, so
 it stays deliberately smaller than `plan_coverage.parse_plan`.
 
-Contracts: IF-061; IF-078; IF-116 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-061 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-061: the planning round's artifact WRITE side.
+    `allocate_round_dir(root, slug)` creates and returns the next round
+    directory, its number the maximum of the live directories and the recorded
+    mark plus one. `write_stage(round_dir, name, text)` writes one stable-named
+    UTF-8 artifact verbatim, so the committed file is byte-stable across
+    platforms. `append_log_summary(root, text)` appends the caller's verdict
+    block to the log, preserving the log's existing line-ending convention.
+    `file_selected_wis` files the selected plan rows as QUEUED spec files in the
+    registry's one home — fresh sequential ids, plan-local edges mapped onto
+    those ids plus the round's parent on every row, empty deliverable and
+    reference cells — such that the work-registry validator passes over the
+    result. It fails closed on damaged input: a plan repeating a local id raises
+    rather than minting one real id for two rows.
 """
 
 import csv

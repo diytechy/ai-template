@@ -119,14 +119,22 @@ docs/privacy-check is enabled and the effective git author email is not in the
 exempt allowlist — an unattended run under a private identity is the
 history-leak disaster case (process-options.md "Commit identity & privacy").
 
-Contracts: IF-015, IF-068, IF-099, IF-109 — the interface seams this module declares
-(process.md §8; rows of record in docs/requirements/interfaces.toml). IF-068
-(WI-274 part B) is the coordinator-dial read: main() resolves model/model-map
-from docs/stack.ini [agent-loop] (via agent_common.read_agent_loop_config)
-with precedence CLI flag > AGENT_* env > declared file > built-in default.
-The WI-218 split re-homed IF-041 (agent-CLI invocation) to agent_session.py
-and IF-037 (declared-surface reads) to agent_common.py; the split-out layers
-provide back over IF-064..IF-067.
+Contracts: IF-015 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-015: the unattended coordinator's effect on the repository it runs
+    in. A plain launch drives the claim / work / merge cycle by COMMITTING to
+    its own checkout and never pushing while the declared push policy is
+    `human`, which is what ships — advancing the remote stays a human act. A
+    per-checkout kernel advisory lock refuses a second coordinator in the same
+    worktree rather than letting two of them interleave commits. The stop is
+    always named by an exit code: 0 DONE, 2 preflight or config failure, 3
+    BLOCKED, 4 stall abort, 5 WAITING on a rate limit, 6 iteration budget
+    exhausted while still running, 7 NEEDS-HUMAN, 8 paused on the tracked pause
+    file. Preflight refuses to start iteration 1 — rather than hanging or
+    committing under a wrong identity — when the agent executable is missing,
+    the working directory is not a git repository, or a privacy-checked repo's
+    effective author email is not in the exempt allowlist.
 """
 
 import argparse

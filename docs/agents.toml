@@ -1,6 +1,23 @@
 # The ai-template META-repo's own routing registry (WI-107; cross-provider WI-109; owner re-lineup WI-113; provider-CLI swap + Sol builder preference WI-160 2026-07-14b). One row = one (model x route) PAIR. Two families: ANTHROPIC (Fable/Opus/Sonnet = strong/medium/quick) via the claude CLI, OPENAI (GPT-5.6 Sol/Terra/Luna = strong/medium/quick) via the provider's own codex CLI (WI-160 - replaced opencode, which sometimes did not respond) - both named required dev tools (scripts/dev-setup.sh --install offers each) and preflight-enforced at boot; reviews get real family diversity (same-family stays the documented degraded-legal mode). Tier vocabulary: strong|medium|quick (legacy `weak` reads as `quick`). Notes is the FAILURE-CONTEXT home (WI-109): echoed at preflight missing-CLI, error-cooldown, and the no-routable page - keep the install/sign-in hint there. ANTHROPIC rows pin CLAUDE_CODE_EFFORT_LEVEL via Env: FABLE/SONNET=high, OPUS-STRONG=medium, OPUS(medium)=high (WI-331 re-sweep 2026-07-29: the WI-110 xhigh dial-up on the BUILD/medium row was set for an earlier model generation and carried over - current models deliver BUILD at high. Owner directive 2026-08-02 then dialed OPUS-STRONG from xhigh to medium for the small well-scoped queue, so NO row draws xhigh today and the strong row sits BELOW the medium row - an intentional, reversible inversion the router does not derive anything from, since Env effort and Tier are independent columns; the CLI reads the value session-scoped, telemetry effort field reads it back, WI-124 s/turn is the before/after sensor). OpenAI reasoning effort is NOT an env var - codex exposes it as `-c model_reasoning_effort=<level>` (CmdTemplate not Env; the pre-WI-160 note said opencode `--variant`); left unwired (no s/turn telemetry parity to measure it - WI-110). Per-phase effort map + computed selection stay deferred (WI-110 spec). claude carries --dangerously-skip-permissions and codex carries --dangerously-bypass-approvals-and-sandbox because this repo IS the unattended run - consent is explicit (docs/agents-enabled + the launcher CONSENT banner).
 # tag-rank: ga>preview>beta>exp
 # BOTH families deliver the prompt on STDIN - the CmdTemplates carry NO {prompt}, so build_argv pipes it (run_session) and a large prompt never hits the OS command-line cap (Windows: 8191 chars on a codex.CMD shim under cmd.exe, 32767 via CreateProcess - the round's ~70k critic briefs exceed even that as argv, dying at launch as apparent nonresponse). claude -p and codex exec both read the prompt from stdin when the arg is omitted (WI-216/217, both verified live). codex sessions ADDITIONALLY capture -o/--output-last-message as the result, since codex echoes its banner + the whole prompt into stdout (WI-217).
+#
+# Contracts: IF-045 — the interface seam this file declares (process.md §8; row of
+# record in docs/requirements/interfaces.toml).
+#
+# Contract IF-045: the pair-row model registry — one `[agent.<ID>]` table per
+#     model-by-route pair. `family` is the identity key (who trained the model),
+#     with `model` and `version` beside it; `tier` is `strong`, `medium` or
+#     `quick`, and a legacy `weak` reads as `quick`; `cmd_template` carries the
+#     `{model}` and optional `{prompt}` substitution slots, and a template with no
+#     `{prompt}` takes the prompt on stdin; `env` is a `KEY=value` list merged over
+#     the inherited environment, where empty means the ambient environment; `notes`
+#     is the failure-context text echoed at a missing-CLI or cooldown page. The
+#     table IS the allow matrix: a second account or router is a second pair row
+#     with its own id and its own independent cooldown. The id is a join key and is
+#     never parsed, and a legacy `Provider` column reads as `family`. The
+#     selectable pool is this registry composed against the ordered enable-list
+#     file; an absent enable-list turns managed routing off.
 
 [agent.ANTHROPIC-FABLE]
 family = "ANTHROPIC"

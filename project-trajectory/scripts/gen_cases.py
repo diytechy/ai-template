@@ -47,7 +47,19 @@ Examples:
     python scripts/gen_cases.py --spec "size=range[0..2GiB]; field=set{plain,comma,quote,newline}; enc=set{utf8,utf16}"
     python scripts/gen_cases.py --spec "mode=set{Mirror,HashAddressed}; compress=bool; count=range[0..1e6]" --format params
 
-Contracts: IF-017 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-017 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-017: LLR-024's obligation delivered as a CLI here, and a crossing
+    out of the kit. Given one `--spec` string it derives the values worth
+    testing per dimension — a range contributes its bounds plus any listed
+    interior points, a set one representative per class, a bool both — and
+    combines them by the declared strategy, defaulting to pairwise above two
+    dimensions. The cases are printed on stdout in the requested format and
+    nothing is written: the output is text for a human or a registry to take up.
+    The spec grammar is the one the requirement registry's permutations cell
+    uses, so a cell lifts straight into `--spec`, and the same spec always
+    yields the same cases.
 """
 
 import argparse

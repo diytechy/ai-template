@@ -18,8 +18,6 @@ the 2,500-line merge coordinator — an edge of the seven-module import cycle th
 system forbids outright, since a render leaf writes nothing and must not be able
 to. The vocabulary moved DOWN to `kitlib/station.py`, below both. The rule is
 asserted, not merely written here: `tests/test_import_layers.py`.
-
-Contracts: IF-093, IF-094 — the constants-only Consumes seams on kitlib.station (OUTCOME_DIRS, BAR_GREEN) and schedule (the kind tables); rows of record in docs/requirements/interfaces.toml.
 """
 
 import html

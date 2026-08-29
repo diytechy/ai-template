@@ -25,7 +25,19 @@ Usage:
     python scripts/check_vendored.py [--root .] [--manifest docs/guardrails/UPSTREAM]
                                      [--strict] [--timeout 10]
 
-Contracts: IF-016, IF-036 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-016 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-016: an adopting repo runs this CLI and reads what it prints. Each
+    vendored file that does not match its pinned upstream gets one line —
+    `check_vendored: WARN - vendored file missing: <path>`, or a drift line
+    naming the local path and the upstream it was compared against — and the
+    run closes on one summary line: OK when every copy matches, a finding count
+    when it does not, `FAIL` only under `--strict`. Warn-first is the default
+    posture: drift exits 0 unless `--strict` is passed. Nothing is fetched into
+    the workspace and nothing is auto-updated — the comparison is in memory,
+    and a fetch failure degrades to a clean per-file skip, so an offline run or
+    a CI without egress reports the same shape rather than blocking. An absent
+    manifest, or one declaring no files, prints its reason and exits 0.
 """
 
 import argparse

@@ -1108,10 +1108,12 @@ def test_offspine_census_names_the_interfaces_registry_in_the_html_view(tmp_path
     snap.copy_live(root, seed=True)
     if_path = root / "docs" / "requirements" / "interfaces.toml"
     data = if_path.read_bytes()
-    needle = b'contract = """SR-157\'s obligation delivered as a CLI at trace.py, which writes docs/test/report.md."""'
-    assert needle in data, "fixture: IF-001's contract cell not found"
+    # The prose `contract` cell left the row at OI-67; the typed `data` cell is
+    # the one a census amendment is driven through now.
+    needle = b'data = "orphan, integrity, status and advisory findings; joined report at docs/test/report.md"'
+    assert needle in data, "fixture: IF-001's data cell not found"
     if_path.write_bytes(
-        data.replace(needle, needle[:-3] + b" (amended)" + needle[-3:], 1)
+        data.replace(needle, needle[:-1] + b" (amended)" + needle[-1:], 1)
     )
     proc = gen(root)
     assert proc.returncode == 0, proc.stdout + proc.stderr

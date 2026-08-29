@@ -54,7 +54,21 @@ deterministic (the amendment title carries its sha pair), so a recovery re-run
 — `python intake.py sweep --before <sha> --after <sha>` — is idempotent by
 exact-title dedup.
 
-Contracts: IF-090, IF-091, IF-092, IF-101, IF-110 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-090 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-090: the trunk-side intake mint. `intake_after_merge(root, before,
+    after, outcomes, branch)` mints one landed merge's forced rows — the
+    amendment adjudications, the close dispositions and the drafts a close names
+    — as ONE bookkeeping commit inside the slot the caller already holds, and
+    returns the minted rows with a refusal slot. `mint_gap_rows(root, lines)` is
+    the empty-frontier arm over a census. `adjudication_action` and
+    `flip_verified` decide and enact the cheap adjudication outcome, recommending
+    and touching nothing while the tier is human-held. `context_block(root,
+    wi_row)` renders the advisory joins a worker prompt consumes.
+    ALL-OR-NOTHING: any refusal mints nothing and restores trunk while the merge
+    itself stands, and every derived title is deterministic, so the CLI recovery
+    re-run is idempotent by exact-title dedup.
 """
 
 from __future__ import annotations

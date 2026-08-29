@@ -76,20 +76,22 @@ built:
     under judgement: the mirror invariant proves it was copied in a reviewed
     approval commit, and nothing but a copy can write it.
 
-Contracts: IF-113, IF-114, IF-115, IF-124, IF-127 — the interface seams this
-module declares (process.md §8; rows of record in
-docs/requirements/interfaces.toml). Four are CONSUMED sides: IF-113 is the
-prompt loader whose strict fill becomes this module's refusal (the provider side
-is IF-097), IF-114 is the spine carrier the red-TC evidence is read through,
-IF-124 is the `last_approved` baseline (IF-123) this module measures an
-amendment against, and IF-127 is the re-attestation MODEL read lazily through
-`trace` so the brief and the document the owner signs are one traversal rather
-than two that could disagree. IF-115 is what this module PROVIDES to
-`agent_loop.session_body`, its one caller — and the half of that contract the
-CALLER owes is the fail-closed rule: a row declaring a brief this seam cannot
-compose is held for a human, never dispatched as a build. IF-124/IF-127 were
-minted 2026-08-15 (log 2026-08-15h); the IF-127 edge had been undeclared since
-before that session.
+Contracts: IF-115 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-115: `compose(root, row, verdict_path, prompt_templates)` returns
+    `(text, None)` when the row's brief could be filled IN FULL, else
+    `(None, reason)`. The brief is chosen by the row's DECLARED brief cell, not
+    inferred from its reference cell, because that inference is ambiguous — two
+    different judgements can carry the same reference. ALL-OR-NOTHING is the
+    whole contract: every assembler fills its template's slots from a real
+    derivation or returns a reason, an operator override that declares slots the
+    evidence cannot fill is a refusal too, and the caller therefore never
+    receives a partially-filled judge's brief. The reason is named so the caller
+    can act on it, and what the caller owes in return is the fail-closed half: a
+    row declaring a brief this cannot compose is HELD for a human, never
+    dispatched as ordinary work, because a judge briefed as a builder ends its
+    session done like any other and the miss is silent.
 """
 
 from __future__ import annotations

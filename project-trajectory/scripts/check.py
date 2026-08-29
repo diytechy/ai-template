@@ -111,12 +111,20 @@ exists — CI, the pre-commit hook, and setup.* delegate there instead of each
 restating a command. Absent that file, the built-in Python-reference defaults
 below apply (identical values), so a profile-less repo is unchanged.
 
-Contracts: IF-013, IF-022, IF-040, IF-144 — the interface seams this module
+Contracts: IF-013, IF-040, IF-144 — the interface seams this module
 declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-013: SR-006's obligation delivered as a CLI here. Runs a gate's declared
     steps as subprocesses and exits nonzero on any required failure,
     degrading only to a reported SKIP — never to a silent pass.
+Contract IF-040: the freshness/integrity floor a git hook consumes as an exit
+    code. `--run-steps a,b,...` runs the named steps concurrently under
+    `--run-step`'s lenient semantics and reports EVERY step's result, exiting 1
+    if any FAILs and 0 otherwise; `--run-step NAME` is the same for one step. A
+    missing tool is SKIP and exits 0, so a repo whose toolchain is not installed
+    can still commit, while a staled generated artifact or a failed integrity
+    step refuses the commit. An explicit `--stage` builds the step at that rung;
+    otherwise the plan is built at `all`.
 Contract IF-144: the reporting protocol every delivered checker honours, composed here
     into one verdict. A finding names its location — the at-fault row and
     cell, `file:line`, or the module — unless it is population-level and no

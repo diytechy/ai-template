@@ -57,6 +57,30 @@ no caller moved and its CLI behaviour is byte-identical; the `Implements:` tags
 travel with the code they annotate.
 
 Stdlib only.
+
+Contracts: IF-091, IF-129 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-091: the staged spine-amendment set, offered as a call.
+    `staged_spine_amendments(root, base, head)` returns one record per
+    approved-text spine row amended between the two trees WITHOUT its status
+    moving — `{"registry", "id", "approved": {cell: (before, after)},
+    "traced": {...}}` — and `SPINE_CSVS` names the registries and id columns
+    that walk covers. Which two trees is a parameter, so the same call answers
+    the index-against-HEAD question and the commit-against-commit one. It
+    classifies and stops: which traced cells oblige an act is the caller's
+    ruling, not this module's. A new row is not an amendment, a row whose
+    status moved is a deliberate call this does not second-guess, and any
+    missing git context degrades to `[]` rather than raising.
+Contract IF-129: the ONE cell-comparison basis.
+    `split_changed_cells(registry_path, id_col, before_row, live_row)` returns
+    `{"approved": {cell: (before, after)}, "traced": {cell: (before, after)}}`
+    for a single row, excluding the id column (a join key, not content) and
+    `Status` (the flip the caller is asking about) structurally, at the callee.
+    Every reader of "what changed on this row" joins here, so the staged
+    amendment guard and a snapshot comparison cannot disagree about which cells
+    are content or which half of the remainder arms an act. The dependency runs
+    one way only: nothing in this module imports the readers that call it.
 """
 
 try:

@@ -33,8 +33,23 @@ copy-able-script convention (F5). Usage (the CLI is a documentation aid):
 
     python scripts/plan_round.py walk [--budget N]   # print the happy path
 
-Contracts: IF-058 — the interface seam this module declares (process.md §8;
-rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-058 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-058: the dual-plan round lifecycle as a pure library the coordinator
+    drives. `new_round(slug, budget=...)` mints JSON-able state; `ready_steps`
+    says what may legally run now; `record` folds one typed step result back in
+    (`STEP_PLAN`, `STEP_COVERAGE`, `STEP_REPAIR`, `STEP_CRITIQUE`,
+    `STEP_REVISE`, `STEP_ARBITER`); `disposition` answers `CONTINUE`,
+    `SELECTED` or `PAGE`; `page_action` maps a `PAGE` onto the caller's
+    session-hold semantics. The protocol's hard caps are enforced HERE, not by
+    the caller — one cross-critique ever, at most one revision per plan and
+    only against CHANGES-REQUESTED, one coverage repair per plan per stage, the
+    position-swapped arbiter pair whose agreement is required, and the round
+    budget — and a caller that attempts to exceed one gets `RoundCapError`,
+    because that is a coordinator bug and never a legal transition. It launches
+    no session, touches no git and writes no file, so a crashed coordinator
+    persists the state and resumes the round.
 """
 
 import argparse

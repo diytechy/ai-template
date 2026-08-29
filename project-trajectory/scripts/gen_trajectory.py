@@ -69,7 +69,20 @@ each re-exported here, so
 `import gen_trajectory` stays the one consumer seam and the render is
 byte-identical across the split.
 
-Contracts: IF-011, IF-024, IF-052, IF-056, IF-071 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml). IF-071 (WI-290) is the frontier DECISION seam: gen_trajectory reads schedule.frontier for the generated STATUS block + Process-tab loop — distinct from IF-056's derivation-loader seam to check_trajectory (validate vs decide).
+Contracts: IF-011 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-011: the dashboard generator's verdict, delivered as a CLI. A plain
+    run regenerates the root `PROJECT_STATE.html` from the work-item registry,
+    the spine registries and the live source tree. `--check` writes nothing and
+    exits 1 when the registry is invalid or the committed HTML is stale.
+    `--status` splices the derived-facts snapshot and the pending-owner-actions
+    projection into the marked blocks of `docs/status.md`, byte-comparing both
+    under `--check` and passing vacuously per file when the file is absent or
+    has no marker pair. The freshness compare EXCLUDES the git-derived as-of
+    stamp, so re-rendering at a later commit is not a change; everything else is
+    deterministic (sorted inputs, fixed layout passes, no clock). An absent or
+    placeholder-only registry renders nothing and exits 0.
 """
 
 import argparse

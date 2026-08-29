@@ -1,3 +1,18 @@
+<!--
+Contracts: IF-035 — the interface seam this directory declares (process.md §8;
+row of record in the adopting repo's interfaces registry).
+
+Contract IF-035: one skill is one directory holding a `SKILL.md` whose leading
+    `---` frontmatter block carries the agent-facing `name` (lowercase-hyphen,
+    equal to the directory name) and `description`, plus this kit's
+    applicability axes `scope`, `stacks`, `domains`, `phases` and `tags`. A list
+    value is written `[a, b, c]` and a scalar is bare; only that shape is
+    parsed, so a skill needing richer YAML is out of scope for both readers. The
+    set is walked at scaffold time to select which skills a repo receives, and
+    scanned again to regenerate the flat `INDEX.csv`, one row per skill, so
+    applicability can be read without opening every `SKILL.md`.
+-->
+
 # Skills — portable accelerators (opt-in, per-agent materialized)
 
 Agent-neutral **skill** definitions the kit ships, plus the contract for adding

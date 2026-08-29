@@ -25,9 +25,6 @@ about a session they are debugging.
 
 Stack-agnostic, standard library only (Python 3.11+, Windows/POSIX).
 
-Contracts: IF-098 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
-
 Usage:
     python scripts/gen_prompt_catalog.py            # write prompts/CATALOG.md
     python scripts/gen_prompt_catalog.py --check    # exit 1 if stale

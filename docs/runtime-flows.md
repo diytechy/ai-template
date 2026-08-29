@@ -1,3 +1,18 @@
+<!--
+Contracts: IF-029 — the interface seam this document declares (process.md §8;
+row of record in requirements/interfaces.toml).
+
+Contract IF-029: the authored runtime-flow narrative, read as a checked
+    structure. A heading named "Runtime flows" INSIDE the document opens the
+    section (the document title does not count), the section holds at least one
+    fenced mermaid diagram, and every diagram cites at least one SR or LLR id
+    that exists in the registries. A cited `-000` placeholder id satisfies the
+    citation rule and is never resolved, so a fresh scaffold starts green; the
+    no-placeholders mode instead flags every such cite. Each heading owning a
+    mermaid fence is one titled flow, which is the unit the dashboard embeds
+    and the export summarizes.
+-->
+
 # Runtime flows — the kit meta-repo (self-adoption)
 
 The kit's **authored architecture narrative**: the behaviors most easily

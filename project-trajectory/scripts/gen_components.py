@@ -60,9 +60,26 @@ indistinguishable from one with a bug):
 Stdlib only, cross-platform, deterministic (sorted inputs, no clocks) so the
 `--check` byte-compare is stable in any clone.
 
-Contracts: IF-139, IF-140, IF-141, IF-142, IF-143 — the interface seams this
-module declares (process.md §8; rows of record in
-docs/requirements/interfaces.toml).
+Contracts: IF-139, IF-140 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-139: the derived view's generator, delivered as a CLI. A plain run
+    writes the view with explicit LF endings and exits 0, printing where it
+    wrote or that the file was already current. `--check` writes nothing and
+    exits 1 when the committed view is missing or stale — naming the command
+    that regenerates it — and 0 when it is current. A repo that declares no
+    real `CMP-###` row and carries no view is VACUOUS: exit 0, nothing written,
+    so an optional layer nobody opted into can never red a gate. `--root` and
+    `--out` relocate the read and the write.
+Contract IF-140: the derived view itself — a TOML document carrying one
+    `[derived]` census table, one `[component_view.CMP-###]` table per declared
+    component (`name`, `sr_refs`, `sr_shared_refs`, `llr_refs`, `hat_refs`,
+    `modules`, `seam_internal_refs`, `seam_boundary_refs`) and one `[unplaced]`
+    table naming the requirements and seams that reach no component. Every
+    collection is sorted and nothing reads a clock or the environment, so the
+    byte-compare behind `--check` is stable in any clone. It carries no
+    maturity, standing or approval cell, ever, and nothing in it may be cited
+    as evidence that a human blessed anything.
 """
 
 import argparse

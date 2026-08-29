@@ -64,7 +64,26 @@ the pre-push reviewer / sync scrub; deep secrets scanning is a named external
 category (gitleaks, trufflehog — product-layer, never rebuilt in the kit).
 Exit codes: 0 clean/skipped, 1 findings, 2 usage or environment error.
 
-Contracts: IF-005, IF-032, IF-043 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-005, IF-043 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-005: the harness runs this CLI (`--repo`, the tracked-file sweep)
+    and reads what it prints. Every leak is named on stdout as
+    `<location>: [<label>] <excerpt>` — the location being `<path>:<line>`, a
+    `commit message:<n>`, or the scanned range — followed by one summary line
+    that states the finding count and which layers ran. A clean run prints one
+    line naming the scan and the layers, never silence: the always-on secrets
+    floor and the identity/PII classes each report whether they were armed
+    (`docs/process.toml` `[policies] secrets_scan` / `privacy_check`), so a
+    dark run cannot be mistaken for a clean one.
+
+Contract IF-043: the pre-push hook invokes this CLI with `--range` over the
+    outgoing commit range and blocks on the exit code alone: 0 clean, 1 one or
+    more findings, 2 the scan could not be performed (git refused the range, an
+    unreadable message file, an unresolvable author identity). Only 0 admits
+    the push. One Scanner compiles both leak classes for the run — the secrets
+    floor always, the identity/PII patterns when the privacy dial arms them —
+    and scan_diff_text walks the `git log -p` output for the single verdict
+    this exit code carries, so both hook branches read one engine.
 """
 
 import argparse

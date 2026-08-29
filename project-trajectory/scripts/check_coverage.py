@@ -54,7 +54,19 @@ AFTER `tests+coverage` produces the JSON (check.py's plan orders extra steps
 after the test step). Opt-in like the dup-code gate: a repo without the step and
 the floors file pays nothing.
 
-Contracts: IF-069, IF-070 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-069 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-069: LLR-098's obligation delivered as a CLI here. It grades each
+    declared per-module coverage floor against the report and names every module
+    it judged. FAIL-CLOSED in four directions: a module below its floor, a
+    DECLARED floor whose module is absent from the report, a malformed floors
+    file, and a corrupt report each exit nonzero — a declaration whose subject
+    vanished from measurement must never quietly pass. Exit 0 when every floor
+    holds, when none is declared, when the report is absent because the run
+    measured nothing, and when the selected tier does not measure coverage — and
+    that tier skip is taken WITHOUT reading the report, so a stale one left by an
+    earlier run cannot be graded as a current pass.
 """
 
 import argparse

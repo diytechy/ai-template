@@ -34,6 +34,21 @@ module is the half that needs the carrier: it loads the spine through
 rung predicates so that the two axes can never disagree about what a Drafted row
 is. When slice 3 re-discriminates the ladder it edits ONE fall-through
 (`spine_rules.spine_stage`) and both files follow.
+
+Contracts: IF-050 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes the
+    effective rung, its ordinal, the unfloored settled and live readings, the
+    per-phase and per-phase-live breakdowns, the drafted count and a SHA-256
+    FINGERPRINT of the declared derivation inputs, one `key = value` per line
+    under a comment header. The fingerprint is the contract: a consumer reads
+    the file through `kitlib.stage.read_stage`, which recomputes it and trusts
+    the recorded values only on a match, deriving fresh in memory otherwise, so
+    no selection or approval consumer can act on a stale rung. `--check`
+    verifies freshness without writing and exits nonzero when the record does
+    not match what the tree now derives. The record is DERIVED and never
+    hand-set: it moves by approving artifacts in a reviewed commit.
 """
 
 import argparse

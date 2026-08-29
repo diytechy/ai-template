@@ -30,7 +30,17 @@ Placeholder ids ending in "-000" (the templates' examples) satisfy the
 --no-placeholders (wire it in from DevStg-Tests on) instead *flags* every cited "-000"
 id, so a real authored flow can't keep citing the template's example ids.
 
-Contracts: IF-003, IF-029, IF-105 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-003 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-003: the harness runs this CLI as one gate step and reads its exit
+    code: 0 the Runtime flows section is present, carries at least `--require`
+    mermaid diagrams, every diagram cites an SR or LLR id, and every cited
+    SR/LLR/SN/TC id exists in the registries; 1 any of those fails, with one
+    `check_flows: FAIL - ...` line per problem naming it; 2 a usage error. A
+    missing doc and a doc whose section heading was deleted both fail — the
+    document TITLE does not satisfy the heading — so the step cannot pass by
+    finding nothing to check. `-000` placeholder ids satisfy the cites-an-id
+    rule and are never validated, until `--no-placeholders` flags them instead.
 """
 
 import argparse

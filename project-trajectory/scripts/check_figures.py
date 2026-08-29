@@ -76,7 +76,20 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 
 Stdlib only.
 
-Contracts: IF-086, IF-087 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-086 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-086: the declared-figure provenance verdict, delivered as a CLI. It
+    reports every `fig:` marker that does not name its provenance — a measured
+    figure missing `cmd=` or `rev=`, a derived figure missing `derived=` — over
+    the root and `docs/**` Markdown surface plus `docs/stack.ini`, naming the
+    file and line of each. It ships WARN-FIRST: exit 0 with the findings
+    printed, exit 1 only under `--strict`. The claim it makes is DECLARED
+    figures carry provenance, never that all figures do: detection is opt-in by
+    marker, an unmarked figure is out of scope, a `fig-ok` line is prose about
+    the convention, and a marker whose values are wholly placeholder tokens
+    declares nothing. It never runs a recorded command and never re-derives a
+    number — presence, never truth.
 """
 
 import argparse

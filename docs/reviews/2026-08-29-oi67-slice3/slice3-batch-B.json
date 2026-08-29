@@ -1,0 +1,769 @@
+{
+ "files": {
+  "project-trajectory/scripts/trace.py": [
+   {
+    "id": "IF-001",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check"
+    ],
+    "channel": "stdout",
+    "contract": "SR-157's obligation delivered as a CLI at trace.py, which writes docs/test/report.md.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/trace.py"
+    ]
+   },
+   {
+    "id": "IF-042",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "project-trajectory/hooks/pre-commit"
+    ],
+    "channel": "exit-code",
+    "contract": "the pre-commit floor runs trace.py --strict-integrity on staged content and blocks the commit on any duplicate/malformed id or mis-columned row",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/trace.py"
+    ]
+   },
+   {
+    "id": "IF-075",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/gen_open_items"
+    ],
+    "channel": "call",
+    "contract": "the attestation-model seam: gen_open_items imports trace.reattest_model — the SINGLE computation of what a Draft/Modified spine row's chain looks like against its attested baseline (git archaeology + per-cell comparison) — and renders it as HTML, while trace.reattest_lines renders the same model as the markdown brief. The markdown output was proven byte-identical across the extraction.",
+    "data": "",
+    "notes": "built and consumed together",
+    "rationale": "Split out of reattest_lines rather than reimplemented, because a second copy of the baseline derivation in a second module is the paraphrase-not-decompose failure this kit exists to prevent. The cross-component import (Generators -> Traceability core) is declared here rather than retagged: the model belongs with the registries it reads, and the renderer belongs with the generators.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_open_items.py"
+    ]
+   },
+   {
+    "id": "IF-089",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/census"
+    ],
+    "channel": "call",
+    "contract": "the empty-frontier gap census: gap_census calls trace.load_registries + trace.analyze (phase unfiltered, require_verified on) and reports findings.orphans + findings.status_findings + the draft SN ids — the registry gaps trace already names, reused not re-derived. The list is the intake mint helper's handoff (it mints concrete gap-closure rows from it; the dispatcher itself never mints — no silent planner mints).",
+    "data": "",
+    "notes": "sink — the census consumes the validator's one orphan/status engine; deferred import inside gap_census so the tick loop never pays it. The endpoint is the census module rather than the dispatcher because the derivation has three readers and two of them sit below the dispatcher; the crossing, the component pair and the contract are the same ones the seam always carried",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/census.py"
+    ]
+   },
+   {
+    "id": "IF-101",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/intake"
+    ],
+    "channel": "call",
+    "contract": "reads the id watermark so a mint counts from the RECORD, not from the live tree - read_watermark(root) -> {space: int}, raising on an absent or malformed mark rather than degrading to zero, and bump_watermark(root) to raise the marks in the same commit that files the specs. next_wi_id mints max(watermark, live filenames) + 1.",
+    "data": "",
+    "notes": "",
+    "rationale": "Shared rather than duplicated because the mint and the checker must agree on what an id is: a second copy of that rule is the defect the check exists to catch.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/intake.py"
+    ]
+   },
+   {
+    "id": "IF-116",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/plan_artifacts"
+    ],
+    "channel": "call",
+    "contract": "reads the id watermark so BOTH of this module's mints count from the RECORD, not from the live tree (the IF-101 seam, second consumer): read_watermark(root) -> {space: int}, raising on an absent or malformed mark rather than degrading to zero, and bump_watermark(root) to raise the marks in the same act that writes the artifacts. allocate_round_dir mints max(live DP directories, DP mark) + 1; file_selected_wis mints max(live spec ids over both homes, WI mark) + 1. The bump sits on the CALLER's side by construction: bump_watermark reads the live tree, so it runs only after the directory or the specs exist, or it records a number nothing holds.",
+    "data": "",
+    "notes": "the cross-component edge CMP-008 -> CMP-006, declared per the architecture rule. Sibling of IF-101 (scripts/intake's use of the same seam): the difference is only which spaces are minted - DP and WI here, WI there. Declared because these two mints sit off max(live) + 1, which would otherwise re-issue the id of anything deleted.",
+    "rationale": "Shared rather than duplicated for IF-101's reason: the mint and the checker must agree on what an id is.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/plan_artifacts.py"
+    ]
+   },
+   {
+    "id": "IF-127",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/adjudicate_brief"
+    ],
+    "channel": "call",
+    "contract": "reads the re-attestation MODEL through trace: consumes trace.load_registries and trace.reattest_model, so the adjudication brief is composed from the same rows, the same snapshot baseline and the same approved/traced split that `trace.py --approve` renders. An EMPTY model is a refusal, not an empty brief: no spine row differing from its snapshot copy and none awaiting a first approval means there is nothing to judge, and the caller is told so by name.",
+    "data": "",
+    "notes": "Declared for an edge that was already undeclared: check_trajectory had been naming scripts/adjudicate_brief (CMP-008) -> scripts/trace (CMP-006) as a cross-component import with no seam of record. ONE model, two renderers, and that is the point — a brief built from a second traversal of the registries could disagree with the document the owner is signing. The lazy import keeps trace off the import path of the loop modules that need only this module's other seams. Owner is SR-140, not a design row: the seam carries the re-attestation obligation itself, not one module's surface (contrast IF-123, owned by LLR-173). No trace design row is answerable for it — LLR-001's code_symbol is `main`, the join/orphan rule, and no trace design row names load_registries or reattest_model — so the SR keeps the cell. adjudicate_brief imports trace lazily inside the composing function and calls load_registries + reattest_model exactly as the contract states, with the empty-model refusal named to the caller. Covered by TC-161's amendment arm.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/adjudicate_brief.py"
+    ]
+   },
+   {
+    "id": "IF-141",
+    "owner": "scripts/trace",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/gen_components"
+    ],
+    "channel": "call",
+    "contract": "consumes trace.effective_hats(row, sr_by_id) -> sorted hat names: one member design row's perspective set, its own refs unioned with those of its SR parents",
+    "data": "",
+    "notes": "cross-component crossing declared per the architecture rule: this module is CMP-009 and trace is CMP-006. The IF-075 shape (gen_open_items -> trace), applied again",
+    "rationale": "The derivation is IMPORTED, not re-implemented: a second copy would be a second answer, and the whole point of the cell is that a parent re-ruling propagates with no child edit.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_components.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/schedule.py": [
+   {
+    "id": "IF-053",
+    "owner": "scripts/schedule",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/check_trajectory"
+    ],
+    "channel": "call",
+    "contract": "SR-148's obligation delivered as a library plus CLI at schedule.py; pure and side-effect-free — it never mutates the registry, spawns a worker, or touches git.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/schedule.py"
+    ]
+   },
+   {
+    "id": "IF-055",
+    "owner": "scripts/schedule",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/integrate"
+    ],
+    "channel": "call",
+    "contract": "the integrator's claim derives the ready frontier + class eligibility through the pure library (load_wis/evaluate + the SCHED_* classification constants) and claims only positively-classified ordinary work - unclassified or non-ordinary refuses per WI; the integrator owns the claim commit and the branch cut, the library stays side-effect-free (Phase 5: the retired dispatcher was this seam's prior consumer).",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/integrate.py"
+    ]
+   },
+   {
+    "id": "IF-071",
+    "owner": "scripts/schedule",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/gen_trajectory"
+    ],
+    "channel": "call",
+    "contract": "the gen_trajectory FAMILY reads the scheduler's ready-frontier for the generated STATUS block + the landing Next-work card (schedule.load_registry_rows/load_wis/frontier/evaluate), so the dashboard shows the SAME dependency-ready ordering the dispatcher acts on and the ranking is never recomputed in a second ranker; degrades to an empty frontier block when schedule.py is absent (a guarded try/except).",
+    "data": "",
+    "notes": "Completes the dashboard side IF-053 already names: the import was wired without this row.",
+    "rationale": "The frontier DECISION seam, distinct from the derivation-loader seam to check_trajectory (IF-056). The guarded `import schedule` has its ONE home in traj_parse.py (IF-085 is that module-level row) and traj_status/traj_panels read it as traj_parse.schedule; this row remains the seam as the facade declares it. The ordering is derived once in schedule.py, which IF-053 already names as shared by the dashboard.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_trajectory.py"
+    ]
+   },
+   {
+    "id": "IF-085",
+    "owner": "scripts/schedule",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/traj_parse"
+    ],
+    "channel": "call",
+    "contract": "IF-071's frontier DECISION seam as held here: traj_parse.py is the guarded `import schedule` block's ONE home in this module family (traj_status's Ready-frontier block and traj_panels' Next-work card both read it as traj_parse.schedule), so the dashboard and status.md project the SAME dependency-ready ordering. Contract: IF-071's; OPTIONAL by construction — a scaffold without schedule.py degrades to an empty block.",
+    "data": "",
+    "notes": "The guarded import lives in traj_parse, its one home, so the seam is IF-071's.",
+    "rationale": "A seam is declared per importing module, and the guarded import that holds IF-071's frontier DECISION seam has its one home in this split sibling.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/traj_parse.py"
+    ]
+   },
+   {
+    "id": "IF-094",
+    "owner": "scripts/schedule",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/traj_panels"
+    ],
+    "channel": "call",
+    "contract": "sibling import for the station-cycle render's derived vocabulary: _KIND_CONCURRENCY/_KIND_RANK/CONCURRENCY_EXCLUSIVE derive the exclusive-kind list the spine-barrier glyph and the escalation notes name, in rank order, read as constants; no call, no write",
+    "data": "",
+    "notes": "seam driven by TC-056's station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/traj_panels.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/baseline_snapshot.py": [
+   {
+    "id": "IF-123",
+    "owner": "scripts/baseline_snapshot",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/intake"
+    ],
+    "channel": "call",
+    "contract": "baseline_snapshot.py: the `last_approved` baseline. copy_live(root, seed=False) -> paths written; byte-for-byte mirror of SNAPSHOTTED into docs/archive/last_approved/; stale carriers deleted; SystemExit without seed=True. load_all(root) -> {(stem, id col): {id: row}}; None when absent; RAISES on an unparseable file; rows_for collapses that None to {}. exists(root) -> bool; stamp(root) -> (rev, date); is_drifted / drifted_cells -> approved cells only; unanchored_findings -> advisory strings.",
+    "data": "",
+    "notes": "Design of record: docs/plans/2026-08-15-baseline-snapshot-design.md. THE REFUSALS ARE THE CONTRACT, and each replaces a convenient degrade. The first snapshot blesses whatever text is in the tree, so it must ride the owner's reviewed signing commit: copy_live will not CREATE the directory, and --seed is reachable only from `intake.py snapshot --seed`. None and {} are opposite claims and the empty one reads as \"re-bless everything with no diff shown\", which is why an unparseable file raises and rows_for is the ONE place the sentinel collapses. The copy preserves repo-relative paths under the snapshot root, so `snapshot_root / rel` reuses every existing resolver verbatim. COUNTERPART IS intake, THE WRITER: exactly two callers of copy_live are sanctioned (intake._apply_flips, after the status write, and `intake.py snapshot`), and nothing may wire the copy into a freshness step — the snapshot is deliberately behind live whenever an amendment is pending, and that lag IS the signal. OWNER is the DESIGN row, not SR-140, on the Q1 polymorphism: SR-140 states the obligation and is answerable for both halves of it, while this row is one module's concrete surface. PROVISIONAL, for the review sitting to overturn.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/baseline_snapshot.py"
+    ]
+   },
+   {
+    "id": "IF-124",
+    "owner": "scripts/baseline_snapshot",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/adjudicate_brief"
+    ],
+    "channel": "call",
+    "contract": "reads the approval baseline through IF-123: consumes baseline_snapshot.exists, SNAPSHOT_DIR and stamp, so the re-attestation brief measures an amendment against an anchor that is not the text under judgement. The half the CONSUMER owes is the refusal: with no snapshot the brief HOLDS and names a FIRST-APPROVAL question, never fabricating an anchor and never rendering a before/after with an empty before. The stamp is advisory - off git, the baseline line omits the date.",
+    "data": "",
+    "notes": "cross-component crossing declared per the architecture rule: this module is CMP-008 (LLR-159) and baseline_snapshot is CMP-006 (LLR-173). The IF-104/IF-122 consumption shape. The anchor is PROVABLY not the text under judgement: the mirror invariant (check_trajectory.staged_snapshot_findings) proves the copy rode a reviewed approval commit, and nothing but a copy can write it. Covered by TC-161's amendment arm.",
+    "rationale": "",
+    "carried_by": "IF-123",
+    "declared_on": [
+     "project-trajectory/scripts/adjudicate_brief.py"
+    ]
+   },
+   {
+    "id": "IF-125",
+    "owner": "scripts/baseline_snapshot",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/pending"
+    ],
+    "channel": "call",
+    "contract": "reads the approval baseline through IF-123 so the generated status and dashboard surface reports pending amendments against what was blessed, not against HEAD. Consumes the READ half only - load_all, rows_for, is_drifted and the SNAPSHOT_DIR constant - and never copy_live. Vacuous by absence: with no snapshot the surface reports nothing approved, never everything drifted.",
+    "data": "",
+    "notes": "cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). The endpoint is the pending read model rather than the dashboard sibling, because the drift arm that performs this read lives there — an endpoint names the module that makes the call, not the one that renders its answer. Read-only side of IF-123; the write half is intake's alone. A generator that REFRESHED the snapshot would defeat the mechanism — the lag between the snapshot and live is the very signal it renders. Cited by no TC today, which the 'IF seams cited by no TC' advisory names.",
+    "rationale": "",
+    "carried_by": "IF-123",
+    "declared_on": [
+     "project-trajectory/scripts/pending.py"
+    ]
+   },
+   {
+    "id": "IF-126",
+    "owner": "scripts/baseline_snapshot",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/gen_open_items"
+    ],
+    "channel": "call",
+    "contract": "reads the approval baseline through IF-123 so the generated open-items surface can say which decision rows have moved after the last signing. Consumes the READ half only - load_all, rows_for and the SNAPSHOT_DIR constant - never copy_live. An absent snapshot is the clean pre-signing skip, never an empty baseline.",
+    "data": "",
+    "notes": "cross-component crossing declared per the architecture rule: this module is CMP-009 and baseline_snapshot is CMP-006 (LLR-173). Read-only side of IF-123, for the reason IF-125 records: a generator that refreshed the baseline would erase the lag it exists to report. Cited by no TC today.",
+    "rationale": "",
+    "carried_by": "IF-123",
+    "declared_on": [
+     "project-trajectory/scripts/gen_open_items.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/check_docs.py": [
+   {
+    "id": "IF-002",
+    "owner": "scripts/check_docs",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check"
+    ],
+    "channel": "exit-code",
+    "contract": "LLR-012's obligation delivered as a CLI at check_docs.py.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_docs.py"
+    ]
+   },
+   {
+    "id": "IF-077",
+    "owner": "scripts/check_docs",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/check_trajectory"
+    ],
+    "channel": "call",
+    "contract": "check_trajectory resolves the ANCHOR half of an open WI's `doc#anchor` SpecRef THROUGH check_docs' markdown parser (parse_doc -> the doc's anchor set, which applies check_docs' slugifier), so ONE slugifier defines what an anchor is in both homes and the same reference can never pass as a SpecRef while failing as a link. Lazy import that degrades to path-only when check_docs is absent; the two scripts always ship + re-sync together (bootstrap MAPPING).",
+    "data": "",
+    "notes": "",
+    "rationale": "The import is lazy and degrades to path-only because this module runs in the SHIPPED pre-commit hook, where a hard requirement would block an adopter's every commit. The ship-and-re-sync-together obligation is the same ground IF-056 stands on.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_trajectory.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/check_doc_refs.py": [
+   {
+    "id": "IF-008",
+    "owner": "scripts/check_doc_refs",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check"
+    ],
+    "channel": "stdout",
+    "contract": "LLR-038's obligation delivered as a CLI at check_doc_refs.py.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_doc_refs.py"
+    ]
+   },
+   {
+    "id": "IF-087",
+    "owner": "scripts/check_doc_refs",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/check_figures"
+    ],
+    "channel": "call",
+    "contract": "reuses doc_files (the root *.md + docs/**/*.md walk with the linguist-generated prefix skip) and authored_lines (the GENERATED-marker-block skip) - so the two doc checks agree on the scanned surface and the authored-lines rule instead of each declaring its own",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_figures.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/acceptance_record.py": [
+   {
+    "id": "IF-091",
+    "owner": "scripts/acceptance_record",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/intake"
+    ],
+    "channel": "call",
+    "contract": "reads the spine-amendment seam as-is - staged_spine_amendments(root, before, after) per-row {approved, traced} cell dicts with before/after over a rev pair - plus SPINE_CSVS for the flip's registry walk; only the routed traced subset (SN-Refs, Verifies, LLR SR-Refs) mints, the rest stays silent by ruling",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/intake.py"
+    ]
+   },
+   {
+    "id": "IF-129",
+    "owner": "scripts/acceptance_record",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/baseline_snapshot"
+    ],
+    "channel": "call",
+    "contract": "reads the ONE cell-comparison basis (LLR-158): consumes check_trajectory.split_changed_cells(rel, id_col, before, live_row) -> {\"approved\": {cell: (before, after)}, \"traced\": {...}}, the drift basis for is_drifted and drifted_cells, which arm on the APPROVED half alone. The id column and Status are excluded structurally by the callee. The import runs THIS way only: there is no back-import from check_trajectory into baseline_snapshot.",
+    "data": "",
+    "notes": "intra-component (both endpoints are CMP-006), declared for the same reason as IF-128: the module consumes, and a `source` marker would be false. There is no second answer to disagree with — the staged-amendment guard and the snapshot comparison call the same function, so they cannot diverge on which cells are content (the id is a join key, Status is the marker) or on which of the remainder is approved. The one-way import is deliberate: a back-import would make the checker depend on the snapshot reader it exists to guard. Owner is LLR-158, not LLR-173 — the row answerable for this contract is the one that DEFINES the comparison, not the one that reads it.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/baseline_snapshot.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/check_stubs.py": [
+   {
+    "id": "IF-006",
+    "owner": "scripts/check_stubs",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check"
+    ],
+    "channel": "exit-code",
+    "contract": "LLR-016's obligation delivered as a CLI at check_stubs.py.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_stubs.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/bootstrap.py": [
+   {
+    "id": "IF-014",
+    "owner": "scripts/bootstrap",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:downstream adopter"
+    ],
+    "channel": "bytes",
+    "contract": "SR-010's obligation delivered as a CLI at bootstrap.py; crosses B-05. Idempotent without --force, and it stamps the kit version it wrote.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/bootstrap.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/gen_cases.py": [
+   {
+    "id": "IF-017",
+    "owner": "scripts/gen_cases",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:downstream adopter"
+    ],
+    "channel": "stdout",
+    "contract": "LLR-024's obligation delivered as a CLI at gen_cases.py; crosses B-05.",
+    "data": "",
+    "notes": "source",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/gen_cases.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/subagent_gate.py": [
+   {
+    "id": "IF-020",
+    "owner": "scripts/subagent_gate",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:agent CLI"
+    ],
+    "channel": "exit-code",
+    "contract": "subagent_gate.py PreToolUse contract: reads the tool-call JSON on stdin and emits a permissionDecision (deny -> exit 2) per docs/process.toml [checks] subagent_gate; fails open on any error",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/subagent_gate.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/plan_artifacts.py": [
+   {
+    "id": "IF-061",
+    "owner": "scripts/plan_artifacts",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/plan_runner"
+    ],
+    "channel": "bytes",
+    "contract": "round artifact write-side: allocate_round_dir (next docs/plans/DP-NNN-<slug>/), write_stage (stable-named UTF-8 stage artifacts), append_log_summary (verdict block -> docs/log.md), and file_selected_wis (the selected Plan-WI rows -> queued registry entries (docs/work/queued/ spec files, the one registry home): fresh ids, mapped predecessors + the round's parent, empty Deliverable, SpecRef, BuildTier) such that check_trajectory.py passes; csv-module append preserves the file's line-ending convention",
+    "data": "",
+    "notes": "source - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts, and approved out of Proposed once it was implemented and consumed",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/plan_artifacts.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/run_menu.py": [
+   {
+    "id": "IF-048",
+    "owner": "scripts/run_menu",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:run.* launchers"
+    ],
+    "channel": "stdout",
+    "contract": "LLR-047's obligation delivered as a CLI at run_menu.py; crosses B-05.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/run_menu.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/agent_session.py": [
+   {
+    "id": "IF-064",
+    "owner": "scripts/agent_session",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/agent_loop"
+    ],
+    "channel": "call",
+    "contract": "agent_session.py module: build_argv(template, model, prompt) -> (argv, stdin_input) deciding prompt delivery (a {prompt} placeholder rides argv except a Windows .cmd/.bat shim is refused; omitted = the prompt is piped to the child's STDIN, immune to command-line caps and batch-shell re-parsing); run_session(argv, root, timeout, env, on_line, stdin_input) -> (exit_code, output, timed_out) - one fresh headless session, stdin closed or fed-then-closed (never an interactive wait, SN-016), reader-thread pumped, per-session timeout, codex --output-last-message read back as the result; plus parse_json_result and the console echo/LiveStatus renderers. agent_loop re-exports these names, so its public surface is unchanged.",
+    "data": "",
+    "notes": "",
+    "rationale": "The module is the session-launch layer split out of agent_loop, which is why the crossing states a re-export guarantee at all: the extraction owes its caller an unchanged public surface.",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/agent_session.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/check_coverage.py": [
+   {
+    "id": "IF-069",
+    "owner": "scripts/check_coverage",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "scripts/check"
+    ],
+    "channel": "stdout",
+    "contract": "LLR-098's obligation delivered as a CLI at check_coverage.py.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/check_coverage.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/trunk_step.py": [
+   {
+    "id": "IF-081",
+    "owner": "scripts/trunk_step",
+    "is_dir": false,
+    "far_key": "consumers",
+    "far": [
+     "external:downstream adopter"
+    ],
+    "channel": "bytes",
+    "contract": "trunk_step.py CLI (the serial trunk lane's shared-surface steps, concurrency-restructure SS5.1/SS5.2): --compile-log validates and appends docs/log.d/ fragments to docs/log.md in git add-time order (all-or-nothing, links rebased, fragments deleted); --regen re-derives the generated document families in REGEN_STEPS order (okf, derived-stage BEFORE the dashboards whose input it is, trajectory, status, open-items). Fail-loud: a red trunk lane halts claiming.",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/trunk_step.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/intake.py": [
+   {
+    "id": "IF-090",
+    "owner": "scripts/intake",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/integrate"
+    ],
+    "channel": "call",
+    "contract": "the unified trunk-side intake mint: intake_after_merge(root, before, after, outcomes, branch) mints the merge's forced rows (amendment adjudication, handback disposition, ## Dispositions drafts) as one bookkeeping commit inside the held slot; mint_gap_rows(root, census) is the dispatcher's rung-1 arm; flip_verified/adjudication_action flip a no-scope-moved spine row to Approved, or recommend only while the tier is human-held; context_block(root, wi_row) renders the advisory joins agent_loop's worker prompt consumes; all-or-nothing, idempotent by exact-title dedup (the sweep/census/adjudicate CLI is the recovery path)",
+    "data": "",
+    "notes": "",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/intake.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/adjudicate_brief.py": [
+   {
+    "id": "IF-115",
+    "owner": "scripts/adjudicate_brief",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/agent_loop"
+    ],
+    "channel": "call",
+    "contract": "The adjudicator-brief seam the session engine composes from: `compose(root, row, verdict_path, prompt_templates) -> (text, None) | (None, reason)`, selected by the row's DECLARED `Brief` cell rather than inferred from `SpecRef` (that inference is ambiguous - an amended test-case row and a red-TC census row carry the same one). The seam is ALL-OR-NOTHING and that is its whole contract: every assembler fills its template's slots from a real derivation or returns a reason, so the caller never receives a partially-filled judge's brief. What the caller owes in return is the fail-closed half - a row that DECLARES a brief this seam cannot compose must be held for a human, never dispatched with the worker assignment, because a judge briefed as a builder ends its session DONE like any other and the miss is silent.",
+    "data": "",
+    "notes": "intra-component (both CMP-008), declared because the fail-closed obligation lives on the CALLER and would otherwise be recorded nowhere. `ROUTED` names the briefs with an assembler today; `conflict` and `amendment` are deliberately absent, each with its missing derivation named in the module header.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/adjudicate_brief.py"
+    ]
+   }
+  ],
+  "project-trajectory/scripts/handback.py": [
+   {
+    "id": "IF-137",
+    "owner": "scripts/handback",
+    "is_dir": false,
+    "far_key": "requestors",
+    "far": [
+     "scripts/dispatch"
+    ],
+    "channel": "call",
+    "contract": "the dispatcher's terminal-outcome writes seam: dispatch.py decides which of the three outcomes a lane reached (merged/cancelled/handback); handback.py owns the WRITES for the two non-merge closes - close_partial (the immutable per-close report + the terminal partial/ move) and quarantine (the reverted, bar-inert red-arm close) - so decision and write stay in separate modules and every lane still ends in a merge.",
+    "data": "",
+    "notes": "A program-close connectivity mint, same posture as IF-080: handback.py's own docstring says declaring this seam from the sibling would paper over the drift, since it belongs to the module that runs it.",
+    "rationale": "",
+    "carried_by": "",
+    "declared_on": [
+     "project-trajectory/scripts/dispatch.py"
+    ]
+   }
+  ]
+ },
+ "remove_from_markers": {
+  "project-trajectory/scripts/dispatch.py": [
+   "IF-015",
+   "IF-088",
+   "IF-136",
+   "IF-137"
+  ],
+  "project-trajectory/scripts/trace.py": [
+   "IF-021"
+  ],
+  "project-trajectory/scripts/plan_briefs.py": [
+   "IF-059",
+   "IF-100",
+   "IF-108"
+  ],
+  "project-trajectory/scripts/plan_coverage_step.py": [
+   "IF-060"
+  ],
+  "project-trajectory/scripts/check_stubs.py": [
+   "IF-026"
+  ],
+  "project-trajectory/scripts/check_doc_refs.py": [
+   "IF-028",
+   "IF-072",
+   "IF-104",
+   "IF-117"
+  ],
+  "project-trajectory/scripts/check_docs.py": [
+   "IF-030",
+   "IF-112"
+  ],
+  "project-trajectory/scripts/subagent_gate.py": [
+   "IF-038"
+  ],
+  "project-trajectory/scripts/bootstrap.py": [
+   "IF-039"
+  ],
+  "project-trajectory/scripts/agent_session.py": [
+   "IF-041"
+  ],
+  "project-trajectory/scripts/run_menu.py": [
+   "IF-049"
+  ],
+  "project-trajectory/scripts/spine_rules.py": [
+   "IF-050",
+   "IF-051"
+  ],
+  "project-trajectory/scripts/schedule.py": [
+   "IF-054"
+  ],
+  "project-trajectory/scripts/check_coverage.py": [
+   "IF-070"
+  ],
+  "project-trajectory/scripts/plan_artifacts.py": [
+   "IF-078",
+   "IF-116"
+  ],
+  "project-trajectory/scripts/traj_views.py": [
+   "IF-083"
+  ],
+  "project-trajectory/scripts/traj_status.py": [
+   "IF-084"
+  ],
+  "project-trajectory/scripts/census.py": [
+   "IF-089"
+  ],
+  "project-trajectory/scripts/intake.py": [
+   "IF-091",
+   "IF-092",
+   "IF-101",
+   "IF-110"
+  ],
+  "project-trajectory/scripts/traj_panels.py": [
+   "IF-093",
+   "IF-094"
+  ],
+  "project-trajectory/scripts/gen_prompt_catalog.py": [
+   "IF-098"
+  ],
+  "project-trajectory/scripts/adjudicate_brief.py": [
+   "IF-113",
+   "IF-114",
+   "IF-124",
+   "IF-127"
+  ],
+  "project-trajectory/scripts/check_vocab.py": [
+   "IF-118"
+  ],
+  "project-trajectory/scripts/trunk_step.py": [
+   "IF-120"
+  ],
+  "project-trajectory/scripts/baseline_snapshot.py": [
+   "IF-128",
+   "IF-129"
+  ],
+  "project-trajectory/scripts/hats.py": [
+   "IF-133"
+  ]
+ }
+}

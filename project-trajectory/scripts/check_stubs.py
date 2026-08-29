@@ -43,7 +43,17 @@ Usage:
     python scripts/check_stubs.py [--src src] [--report docs/test/stub-report.md]
                                   [--exclude GLOB ...] [--strict]
 
-Contracts: IF-006, IF-026 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-006 — the interface seam this module declares (process.md §8;
+row of record in docs/requirements/interfaces.toml).
+
+Contract IF-006: LLR-016's obligation delivered as a CLI here. It lists the
+    public symbols whose bodies do nothing, writes a composite report, and
+    prints one WARN line per finding. WARN-FIRST: findings exit 0, and only
+    `--strict` turns the same findings into exit 1, because the real call is the
+    human inspection the criterion names and a legitimately tiny pure function
+    must not be mistaken for an unfinished one. A stub's shape is
+    language-specific, so this ships product-layer, outside the required floor —
+    a repo that does not wire it pays nothing.
 """
 
 import argparse

@@ -74,7 +74,24 @@ unless --strict; NOT wired into check.py's required floor. Opt in per repo:
 Scan surface = root *.md + docs/**/*.md (the check_docs surface) + the spine
 registries' Evidence-class cells (tier 3). Stdlib only.
 
-Contracts: IF-008, IF-028, IF-072, IF-104, IF-117 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-008, IF-087 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-008: LLR-038's obligation delivered as a CLI here. Prints the
+    dangling findings it can defend, the untraced count it cannot, and the
+    per-tier totals, naming every finding by `file:line` and the token at
+    fault. WARN-FIRST: the run exits 0 with findings printed unless `--strict`,
+    which gates on DANGLING alone — an untraced path is counted and reported and
+    never gates. A tier with no scannable input skips cleanly rather than
+    failing, so a non-Python stack and a scaffold with no registries both pass.
+Contract IF-087: the scanned-surface pair, offered so a sibling doc lint agrees
+    with this one instead of declaring its own. `doc_files(root)` is the root
+    `*.md` plus `docs/**/*.md` walk with the generated-tree prefixes skipped —
+    their freshness is their generator's `--check`, not a doc lint's.
+    `authored_lines(doc)` yields `(lineno, line)` for the HAND-AUTHORED lines
+    only, dropping everything inside a BEGIN GENERATED / END GENERATED marker
+    block, because a generated block's tokens are not prose and must not be
+    judged as if they were.
 """
 
 import argparse

@@ -5,13 +5,20 @@ The spine/OKF/arch-map/gate readers, the one subprocess capture seam
 WI-280 split of gen_trajectory.py; the facade re-exports, so consumers are
 unchanged.
 
-Contracts: IF-082, IF-085, IF-111, IF-132 — the seams this module declares (process.md §8; rows of
-record in docs/requirements/interfaces.toml). The first two are the sibling-held halves of
-gen_trajectory's own seams: IF-082 is IF-056's derivation-loader read of
-check_trajectory, IF-085 is IF-071's frontier read of schedule (whose guarded import
-has its ONE home here). IF-132 (WI-455) is the How-SW module source: sw_modules
-consumes gen_arch_map.scan_inventory over the declared src root, replacing the
-retired parse of docs/architecture.md's committed MODULE MAP block.
+Contracts: IF-052 — the seam this module declares (process.md §8; row of
+record in docs/requirements/interfaces.toml).
+
+Contract IF-052: the dashboard's Process tab reads the recorded derived stage
+    through `_stage_value(root)`, which the gen_trajectory facade re-exports
+    and traj_panels.process_panel calls. It returns the `stage` field of
+    `docs/stage`, addressed BY NAME rather than by line position, and None in
+    every case where the repo has no readable stage record — the file absent,
+    or carrying a value the stage vocabulary does not know. None is the tab's
+    OMIT condition, so a stage-less repo renders byte-identically instead of
+    showing a blank rung. The read is of the COMMITTED record and never of a
+    fresh derivation: this module is a source for a generated artifact whose
+    freshness is gated elsewhere, so the page and the file it cites always
+    describe one commit.
 """
 
 import json

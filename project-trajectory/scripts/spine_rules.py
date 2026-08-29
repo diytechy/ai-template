@@ -69,8 +69,6 @@ Stack-agnostic, standard-library only. The row vocabulary this module used to
 duplicate from `trace.py` under the retired F5 rule now has ONE home,
 `kitlib.spine`, and is re-exported below (WI-448 slice 3) — this still never
 imports the joined-spine engine.
-
-Contracts: IF-050, IF-051 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 """
 
 import sys

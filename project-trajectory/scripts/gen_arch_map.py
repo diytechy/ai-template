@@ -106,7 +106,46 @@ Marker pairs (the templates ship with them):
     <!-- BEGIN GENERATED CLI REFERENCE -->  ... <!-- END GENERATED CLI REFERENCE -->  (required per --cli-doc)
     <!-- BEGIN GENERATED INTERFACE REFERENCE --> ... <!-- END GENERATED INTERFACE REFERENCE --> (required per --contracts-doc)
 
-Contracts: IF-010, IF-025 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-010, IF-028, IF-117, IF-131, IF-132 — the interface seams this
+module declares (process.md §8; rows of record in
+docs/requirements/interfaces.toml).
+
+Contract IF-010: this generator's own invocation surface. `--doc`, `--cli-doc` and
+    `--contracts-doc` are repeatable targets, each spliced in place between its
+    marker pair; `--src` is repeatable and defaults to `src`; `--mode files`
+    fills the same MODULE MAP block from file rows when no parser is handy.
+    `--check` writes nothing and exits 1 when any target is stale;
+    `--strict-parse` exits 1 on any unparseable module independently of
+    staleness; `--backlink-coverage` reports reverse `Implements:` coverage
+    against the declared `[checks] backlink_coverage_min` bar and fails only
+    under `--strict-backlinks`.
+Contract IF-028: the `sym:` ORACLE. `scan_inventory(src_roots, strict=False)`
+    yields one `(rel, summary, imports, contracts, rows)` record per module of
+    the declared src tree; its public FUNCTION rows are the inventory a
+    `sym:<module>.<name>` reference is held to. A module that cannot be read or
+    parsed is recorded as a parse error instead of ending the walk, so one
+    broken file costs its own rows rather than the run.
+Contract IF-117: the SYMBOL-BINDING oracle behind the LLR `CodeSymbol` anchor
+    rule. `module_bindings(tree)` returns every name a module binds at module
+    scope plus its class-level `def` names — private helpers and module
+    constants included, both of which the rendered public-API view drops and
+    live design rows name. The caller owns the parse, so the function is pure
+    and a file that will not parse costs that one row's rule, not the run. It is
+    deliberately not answered from the rendered map: that view would report real
+    code as missing.
+Contract IF-131: the ARCH-INVENTORY and seam-declaration grammar the spine checks
+    read. `scan_inventory(src_roots)` hands the coverage, containment and
+    cross-component rules the live source AST, and
+    `contracts_grammar_findings`, `file_contracts`, `file_grammar_findings`,
+    `owner_files` and `ContractsGrammarError` hand them the `Contracts:` marker
+    and `Contract IF-###:` body grammar. Every entry point is optional at the
+    call site: an absent or older copy of this module degrades those rules to
+    silence rather than breaking a run that also serves the pre-commit hook.
+Contract IF-132: the dashboard's How-SW module source — `scan_inventory(src_roots)`
+    over the declared src root, from which the view keeps the modules carrying
+    at least one public function symbol. Files mode and an absent src root
+    yield no inventory, and the view omits itself rather than rendering half a
+    picture.
 """
 
 import argparse

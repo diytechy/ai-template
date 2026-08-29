@@ -34,7 +34,19 @@ a non-adopter pay nothing.
 Usage:  python scripts/gen_okf.py [--root .] [--check]
 Exit codes: 0 clean / vacuous / opted-out, 1 stale bundle under --check.
 
-Contracts: IF-012, IF-033, IF-106 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-012 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+
+Contract IF-012: this module is the sole writer of the `docs/okf/` bundle, and
+    the bytes it emits are the contract. The bundle is a pure function of the
+    registries and the pinned spec version — sorted rows, no clock, no
+    timestamp field — so regenerating an unchanged tree reproduces it exactly.
+    `--check` regenerates in memory and byte-compares: a differing file, a
+    missing one, and an EXTRA file under the output dir all count as stale and
+    exit 1, and the write mode prunes the extras plus any directory they
+    emptied. Every emitted file opens with a GENERATED banner naming it a
+    reference copy, its source registry and the regen command, so no bundle
+    file can be mistaken for the reviewed truth. Opted out, or with no real
+    registry rows and no bundle on disk, it emits nothing and exits 0.
 """
 
 import argparse

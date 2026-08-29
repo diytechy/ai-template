@@ -74,9 +74,6 @@ should see every site without being blocked; a repo past its requirements bar ha
 no excuse. `--list-scope` prints the scope decision for every file it considered,
 so an argument about whether a surface is live or historical is settled by running
 the tool rather than by reading this docstring.
-
-Contracts: IF-118 — the interface seam this module declares (process.md §8; rows
-of record in docs/requirements/interfaces.toml).
 """
 
 import argparse

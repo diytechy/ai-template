@@ -63,12 +63,21 @@ true by moving the report's SHAPE down to `kitlib/station.py`, below both
 modules, rather than by softening the sentence. `dispatch.py` calls both — it
 decides which outcome a cycle reached, and the writes live here.
 
-This module declares no seam, deliberately. The integrator seam it extends is
-IF-080, whose row already sits in the interface registry with NO script declaring it —
-part of the drift `docs/concurrency-v2.md` §A9.1 hands to the program-close row
-rather than to any single builder. Declaring it here, from the sibling rather
-than from `scripts/integrate` the row names as its provider, would paper over
-that drift instead of recording it.
+Contracts: IF-137 — the interface seam this module declares (process.md §8; row
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-137: the terminal-outcome WRITES for the two lane closes that are
+    not a clean merge. `close_partial(root, branch, reason, fields)` commits the
+    lane's work as-is, writes an IMMUTABLE per-close report under
+    `docs/handbacks/` in the SAME commit as the move, and moves every claimed
+    spec to the terminal `partial/` folder; it returns `(closed WI ids, None)`
+    or `(None, refusal)` and refuses rather than half-closing.
+    `quarantine(root, branch, why)` is the ruled red arm: the failing diff is
+    kept as a bar-inert `.patch` under the work tree, every non-bookkeeping path
+    is reverted to the lane's merge base, and it returns a refusal string or
+    None. Neither function DECIDES which outcome a lane reached — that judgement
+    is the caller's — so decision and write stay in separate modules and every
+    lane still ends in a merge.
 """
 
 from __future__ import annotations

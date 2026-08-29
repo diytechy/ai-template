@@ -32,8 +32,29 @@ as a whole directory so a partial copy ImportErrors rather than degrading. What
 stays true of this file is the narrower claim: it is one module's own TEXT core,
 imported by that one module (ADOPTING.md §6).
 
-Contracts: IF-076 — the seam this module declares (process.md §8; row of record
-in docs/requirements/interfaces.toml).
+Contracts: IF-076, IF-143 — the seams this module declares (process.md §8; rows
+of record in docs/requirements/interfaces.toml).
+
+Contract IF-076: the spine-row TEXT predicate surface `trace.py` imports. Rows in,
+    findings out, and nothing else: no I/O, no git, no filesystem, no argv.
+    `provenance_findings(srs, llrs, tcs)` and `form_findings(srs, llrs, tcs)`
+    return GATING findings that join `trace.py --strict`'s exit code;
+    `ac_advisories`, `paraphrase_advisories`, `provenance_advisories`,
+    `off_spine_advisories`, `sr_artifact_advisories`, `sn_artifact_advisories`,
+    `sr_fanout_advisories` and `ears_advisories` return warn-only advisories
+    that never join a failure set. `refs`, `is_example` and `is_drafted` are the
+    shared row primitives, re-exported from `kitlib.spine` so the dependency
+    runs one way. The finding STRINGS are part of this promise — the golden
+    files assert them byte for byte, so a reworded finding is a deliberate,
+    reviewed change.
+Contract IF-143: `norm_module(endpoint)` — the naming-convention-neutral module
+    key, re-exported here from `kitlib.spine`: a leading `project-trajectory/`,
+    any source extension and a trailing `/__init__` are stripped, so
+    `scripts/x` on a seam endpoint and `project-trajectory/scripts/x.py` on a
+    design row reduce to one key. It is the SAME normalizer
+    `trace.interface_findings` joins on, so a component placement and the
+    advisory that reports an unresolvable endpoint can never answer
+    differently.
 
 Requirements: LLR-004 (ac_advisories), LLR-133 (provenance_findings),
 LLR-134 (form_findings), LLR-135 (paraphrase_advisories),
