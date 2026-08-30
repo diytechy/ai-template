@@ -1,0 +1,489 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 010
+# date: 2026-08-30 12:04
+# train: wi-537-complexity-sensor-report-only
+# base: 127fdd3e
+# phase: REVIEW-A
+# wi: WI-537
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: ERROR
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 240
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2816
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:8cb8d8b6a849
+# exit-code: 1
+# ---
+Reading prompt from stdin...
+2026-08-30T17:00:34.944044Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only
+model: gpt-5.6-terra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a0539d-a483-7a61-80c3-c1a8f5adaf72
+--------
+user
+You are an INDEPENDENT reviewer launched by the unattended coordinator (scripts/agent_loop.py) — a fresh context that did NOT write this code. Assume the implementer was careful but missed something, and hunt for it. Review ONLY (1) the diff of the work under review — run `git log` / `git diff` yourself to see it — and (2) the requirement surface it must satisfy: AGENTS.md, docs/process.md, the docs/requirements registries, and the docs/specs spec-of-record for the open work item. If this diff adds or changes requirement rows (SN/SR/TC under docs/requirements), also sweep them against the EXISTING registries — the new rows AND the historical rows they touch — for any contradiction, overlap, or attribute/limit conflict, and raise each as a finding (mark it 'for clarity' at MINOR when it is a wording ambiguity sharper SN/SR/TC language would resolve, not a defect). If the diff under review is a DevStg-Reqs/DevStg-Tests approval (a Status-change commit closing a `[phase]-[g*]` gate), the batch-scoped approval hierarchy is a REQUIRED input: generate it with `scripts/trace.py --approve <phase>` and confirm the approved SN->SR->LLR/TC batch — its Requirement/AC, LLR Detail, TC Method/Expected, and any cited rubric — is coherent and complete before endorsing the gate. Flag status.md prose that contradicts a declared policy file's current value as a finding. Do NOT read or trust the implementer's own session notes or self-assessment — a leaked self-assessment collapses review finding-rates several-fold. Run the harness yourself (python scripts/check.py, scripts/trace.py) and quote real output; believe nothing you did not observe. Drive the diff's REAL shipped code paths — construct the scenario and run the actual function or flow it changes; primitive probes and plausibility reading are supporting evidence, never the verdict's basis. Before hunting, name the worst failure classes THIS change admits (silent wrong content, fail-open, data loss) and hunt those first, severity-ordered. An APPROVE must mean you tried to break it and failed: map each spec Done-when item to its covering test or call it UNCOVERED, and where the diff adds a regression test for a fixed defect, confirm that test fails on the pre-fix behavior. This is an INDEPENDENT parallel review — do not debate another reviewer. Write your verdict to C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\docs\reviews\wi-537-complexity-sensor-report-only\010-REVIEW-A-a16af88.md in the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <file:line> -> issue -> the concrete change -> @owner` line per finding, then exactly one machine line:
+    VERDICT: APPROVE|CHANGES-REQUESTED findings=N
+Commit that verdict file (a review is a recorded verdict — its one home) and stop. Do not edit the code you are reviewing.
+codex
+I’ll independently inspect the committed change and its governing requirements, then exercise the actual changed paths and record a committed verdict. I’m using the repository’s session, registry-hygiene, and root-cause review guidance because this is a formal WI review.
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command 'Get-Content -Raw CLAUDE.md; "`n--- SESSION SKILL ---"; Get-Content -Raw .agents/skills/session-protocol/SKILL.md; "`n--- REGISTRY SKILL ---"; Get-Content -Raw .agents/skills/registry-hygiene/SKILL.md; "`n--- ANTIDOTE SKILL ---"; Get-Content -Raw .agents/skills/antidote/SKILL.md' in C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only
+ succeeded in 399ms:
+# CLAUDE.md — Working in this template repo
+
+This repo is a **meta-project**: its product is the reusable kit in
+[`project-trajectory/`](project-trajectory/) that *other* repos copy in to run a
+gated, requirement-traced development process. So work here improves templates
+and scripts, not a downstream application.
+
+> Looking for the agent guide that ships **to** new projects? That's
+> [`project-trajectory/AGENTS.template.md`](project-trajectory/AGENTS.template.md)
+> (scaffolds to `AGENTS.md`, with thin `CLAUDE.md`/`GEMINI.md` stubs pointing at
+> it). Don't confuse the two: this file governs editing the kit; that one governs
+> using the kit.
+
+> **`OWNER_SCRATCHPAD.md` is owner-only** — never read, cite, or act on it. It
+> holds the human owner's free-form notes; the working surfaces are
+> `docs/status.md`, the registries, and `docs/log.md`.
+
+---
+
+## What we're optimizing for
+
+The canonical purpose statement is the `PROJECT-VISION:` tag opening the root
+[README.md](README.md) — the same one-home pattern the kit ships downstream.
+In short: the kit exists to make downstream code **maintainable and
+trustworthy** — readable for humans and agents alike, deeply tested, and
+advanced only through explicit approval gates. Every change here should make
+that easier to achieve in a real project — or get out of the way.
+
+## Principles for editing the kit
+
+- **Dogfood the philosophy.** The templates preach single-source-of-truth,
+  decompose-don't-paraphrase, and generated-not-hand-maintained. Hold the kit to
+  the same bar: don't restate a rule in five files — state it in
+  [`PROCESS.md`](project-trajectory/PROCESS.md) and link to it.
+- **Keep scripts stdlib-preferred and cross-platform; dependencies need a
+  ledger row.** The kit's own scripts run on a clean Python 3.11+ on Windows
+  and POSIX, and today import stdlib only. The rule is "no *unargued*
+  dependencies," not "no dependencies": a genuinely better tool may enter via a
+
+[... 6342 line(s) elided — full stream in out/run-logs/ ...]
+
+        elif isinstance(child, ast.Assign):
+            names += [t.id for t in child.targets if isinstance(t, ast.Name)]
+        elif isinstance(child, _BLOCKS):
+            _bound(child, names)
+
+
+def _public(tree):
+    """Public module symbols, deduplicated — a `try/except` fallback that binds
+    one name in both arms is one symbol, not two."""
+    names, seen, out = [], set(), []
+    _bound(tree, names)
+    for name in names:
+        if not name.startswith("_") and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
+
+
+def _paths(root, includes):
+    seen = set()
+    for pattern in includes:
+        for path in sorted(root.glob(pattern)):
+            rel = path.relative_to(root).as_posix()
+            if PYCACHE not in path.parts and path.is_file() and rel not in seen:
+                seen.add(rel)
+                yield rel, path
+
+
+def census(root, includes):
+    """`(rows, modules)` — every function as `(path, name, cognitive, sloc)`
+
+--- DECLARED SOURCE / BASELINE POLICY ---
+125-# are tests/test_wi_folder_loaders.py (51) and the new half of
+126-# tests/test_wi_loader_sync.py (6) — the guards over the registry's SECOND home
+127-# and the drift guard that keeps its three F5-duplicated readers equal. They are
+128-# in the bar deliberately: this is a swap of the loader every other check reads
+129:# through, so "is it basically alive?" now includes "does the registry still
+130-# load". Almost all of them are in-process; the module pays two `run_py`
+131-# subprocesses and a handful of tiny `git init` fixtures, which is why the
+132-# measured wall barely moved. Measured at the re-stamp with the command above:
+133-# 597 tests / 25.8 s wall. 640 is ~7% headroom over that — the same margin and
+--
+423-# retired hat is introduced by an ordinary-looking deletion in another file, so
+424-# the sensor has to sit where that deletion is made.
+425-# THE WALL READING IS OVER THE CEILING ON THIS BOX AND IS REPORTED, NOT
+426-# BUDGETED AGAINST: measured at this re-stamp 1282 collected / 72.5 s wall at
+427:# -n auto (at 1282 collected) — but that run also carried four RED ratchets (this one included), so
+428-# it is not a clean reading; the clean re-run after the stamp is recorded in the
+429-# WI log. Against the previous stamp's 46.97 s and the one before it at
+430-# 54.9/64.0/55.7 s on this same box, the spread remains this box's load. The
+431-# seconds budget is NOT touched here — twenty-one pure in-process tests cannot cost
+--
+650-# rule, the trunk-step README exemption, the connective flag) — the WI-122 intent,
+651-# each a unit test over one rule. +12 over the measured 1378 keeps the small
+652-# headroom every stamp above holds. THE SECONDS BUDGET STAYS 60 AND IS NOT TOUCHED.
+653-# fig: cmd="python -m pytest -q -n auto -m smoke --collect-only" rev=f6ea6254
+654:# Re-stamped 2026-08-30 (WI-537, OI-68 phase 1): 1390 -> 1440. The complexity
+655:# census's METRIC tests joined the tier — tests/test_check_complexity.py, pure
+656-# in-process cases over the counting function (the two traps, the Sonar oracle
+657-# battery, SLOC, the baseline round-trip), no subprocess and no scaffold, i.e.
+658-# exactly the WI-122 growth this sensor allows. Its subprocess CLI drives
+659:# (tests/test_check_complexity_cli.py) are re-tiered into conftest.SLOW_MODULES
+660-# and do NOT count here. +12 over the measured 1428 keeps the small headroom
+661-# every stamp above holds. THE SECONDS BUDGET STAYS 60 AND IS NOT TOUCHED.
+662-# fig: cmd="python -m pytest -q -n auto -m smoke --collect-only" rev=05880fe4-dirty
+663-max-tests = 1440
+
+--- CURRENT STAGE ---
+# DERIVED STAGE — generated by scripts/derive_stage.py (do not hand-edit).
+#
+# `stage` is the EFFECTIVE stage: the rung the SETTLED spine has earned,
+# folded as the min over the phases that have earned one, then floored to
+# DevStg-Reqs so that a repo below the floor still selects its integrity
+# checks. It is a SELECTION value and it is not the only truth here:
+#   live-stage   the honest reading over ALL rows, drafts included and
+#                unfloored — what is actually in work right now.
+#   settled-stage the same fold as `stage`, before the floor.
+#   per-phase    each phase's settled stage; DevStg-Below means that phase
+#                has nothing settled yet (it is a sentinel, never a rung).
+#   per-phase-live the same over all rows — where the drafts are.
+#   drafted      how many rows are pending, i.e. how much `live-stage` and
+#                `stage` are allowed to differ by.
+#
+# `fingerprint` is a SHA-256 over the LF-normalized content of the declared
+# derivation inputs (kitlib/stage.py DECLARED_INPUTS). A reader recomputes
+# it and trusts the values above ONLY on a match, deriving fresh in memory
+# otherwise — so no SELECTION or APPROVAL consumer can read a stale
+# stage, on any lane. THE DISPLAY SURFACES ARE THE NAMED EXCEPTION and read
+# the recorded values directly, on purpose: PROJECT_STATE.html and the
+# generated block in docs/status.md describe the commit they ship with, so
+# on a tree whose inputs have moved they render THIS file's rung while the
+# harness derives fresh. That is the design; it is not a guarantee, so the
+# sentence above says which consumers it covers.
+#
+# HOW IT MOVES: by approving artifacts in a reviewed commit, never by editing
+# this file. Regenerate: python scripts/derive_stage.py
+# Freshness is guarded by `--check` (a pre-commit + gate step).
+#
+stage = DevStg-LLReqs
+stage-ord = 4
+stage-of = 8
+floored = no
+settled-stage = DevStg-LLReqs
+live-stage = DevStg-LLReqs
+phase = 5
+per-phase = 1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs
+per-phase-live = 1=DevStg-LLReqs;3=DevStg-Impl;4=DevStg-LLReqs;5=DevStg-LLReqs
+drafted = 6
+fingerprint = sha256:af73802713f3673162116134c245ae86924fc30e3b760fd24e387c624fcd94cb
+# computed 2026-08-30 (as-of 1050f5c8)
+
+
+--- CHECK HARNESS USAGE ---
+usage: check.py [-h]
+                [--stage {DevStg-Needs,DevStg-Boundary,DevStg-Reqs,DevStg-Arch,DevStg-LLReqs,DevStg-Tests,DevStg-Impl,DevStg-Release,all}]
+                [--tier {smoke,full,release,all}] [--coverage COVERAGE]
+                [--phase PHASE] [--lenient] [--trunk-lane] [--list]
+                [--run-step NAME] [--run-steps NAMES] [--staged-divergence]
+                [--strict] [--approval-immutable] [--jobs N]
+
+The check harness — one command that runs every quality gate locally and in CI.
+
+Stack-agnostic kit, **Python reference implementation**. This is the runnable
+version of the "harness contract" in `process.md §7`: format · lint · tests ·
+coverage · derived-stage freshness · traceability · doc-navigability · perf-budgets
+· work-item trajectory. Wire it to your stack in ONE declared file, `docs/stack.ini`: swap
+the format/lint/test commands + `src`/`tests` paths (the "EDIT FOR YOUR STACK"
+block just under the imports is the identical built-in fallback), and add any
+project-specific gate as a `[step:<name>]` section (see extra_steps) — so this
+file stays take-wholesale across a kit re-sync. The contract is the *gates and
+exit code*, not the specific tools. For a non-Python project, replace the
+format/lint/test commands with your own (or drop the ones you don't have); keep
+the traceability/flows/doc-navigability/perf-budgets steps — they're
+stdlib-only and stack-agnostic.
+
+Design choices that keep it honest and CI-friendly:
+    - **Never a false green.** Any failing required step makes the whole run exit
+      nonzero. We print the real command output; we do not summarize it away.
+    - **Missing tool != pass.** If a step's required module isn't importable, or
+      its command's executable can't be found (a rewired non-Python toolchain
+      that isn't installed), the step is reported SKIP(missing) and (outside
+      --lenient) fails the run, so CI can't silently skip linting. On the hook
+      path, where the skip is deliberately allowed (`--run-step`/`--run-steps`
+      run lenient so a not-yet-set-up repo can commit), a SKIPped PRODUCT-layer
+      step — one whose command this repo itself declared in docs/stack.ini —
+      also raises `missing_tool_banner`, because a dim SKIP line repeated on
+      every commit of a branch is how two of this kit's four late defects hid.
+    - **One interpreter.** Tools run as `python -m ruff` / `python -m pytest` with
+      the same interpreter running this script, so the launchers' venv python is
+      enough — no activated venv or PATH entry required.
+    - **Stage-scoped, at or above.** `--stage DevStg-Tests` runs every step whose
+      declared threshold that rung is at or above. The default is the repo's
+      DERIVED effective stage (`docs/stage`), which is computed over the SETTLED
+      spine — so drafting a requirement can never drop a check that was running.
+    - **Tiered tests.** `--tier smoke` runs only the fast subset so you can check
+      every iteration; `release` runs everything including slow/hardware tests.
+      Tiers map to pytest markers (`-m`); the `Tier` field in test-cases.toml is
+      the registry source of truth. An **unmarked test runs in `full` and above**,
+      so a forgotten marker can never drop a test from the pre-merge suite. The
+      coverage threshold applies at `full`/`release` only — the smoke subset alone
+      isn't expected to meet it. CI typically runs `smoke` on push, `full` on PR,
+      and `release`/`all` on a release tag.
+    - **Lane-aware freshness.** The generated-artifact freshness gates are the
+      TRUNK lane's (concurrency-restructure.md §5.2). On a claimed work branch —
+      one with a `docs/work/active/<branch>/` spec directory — each is reported
+      SKIP with its reason instead of running. Fail-closed: off git, on a
+      detached HEAD, or unclaimed, the full bar applies. See
+      `_TRUNK_FRESHNESS_STEPS`. `--trunk-lane` forces them ON: the station
+      refresh (`integrate.py refresh`) regenerates on the branch and then bars
+      it, and that tree IS the tree that becomes trunk, so the branch stands in
+      the trunk lane for exactly that one run.
+    - **Non-interactive.** No prompts; deterministic exit codes for automation.
+
+Usage:
+    python scripts/check.py [--stage DevStg-Needs|...|DevStg-Release|all] [--tier smoke|full|release|all]
+                            [--coverage N] [--phase LIST] [--lenient] [--list]
+                            [--jobs N] [--run-step NAME] [--run-steps A,B,...]
+                            [--staged-divergence [--strict]]
+
+    --stage     The rung the repo is IN. Every step whose declared threshold
+                this rung is AT OR ABOVE runs — "when is it relevant to run
+                these checks", not "what did I pass that permits them" (OI-51).
+                Default: the repo's **derived effective stage** from
+                `docs/stage`, computed by derive_stage.py over the SETTLED spine
+                and never hand-set; `all` when no stage file exists. This keeps a
+                young project's CI green-and-honest: it enforces what the project
+                has reached, not the end-state. From DevStg-Impl on, traceability
+                also requires every Verification=Test SR to be Status=Approved
+                (trace.py --require-verified). `--gate` is the accepted prior
+                spelling; `--stage-cleared` is accepted and warns.
+    --tier      Which test tier to run (default: all). Mark fast critical-path
+                tests @pytest.mark.smoke and expensive ones @pytest.mark.release
+                (markers registered in pytest.ini); leave ordinary tests unmarked —
+                they run in the full/release tiers automatically.
+    --coverage  Line-coverage threshold percent (default: 80; see COVERAGE_THRESHOLD).
+                Enforced for the full/release/all tiers, not smoke.
+    --lenient   Treat missing tools as SKIP instead of failure (local dev only).
+    --list      Print the step plan for the stage and exit; each step is tagged
+                [process] (kit-owned, stdlib, identical everywhere) or [product]
+                (language-specific — you wire it to your stack). See process.md
+                §7 "process vs product checks".
+    --run-step  Run just one named step (e.g. `format`) and exit with its
+                status; a missing tool is SKIP (exit 0), a real failure exit 1.
+                The pre-commit hook uses it to source its format check from the
+                declared profile rather than restating the command.
+                An explicit --stage builds the step AT that rung (else `all`).
+    --run-steps Run several named steps concurrently with --run-step's lenient
+                semantics, reporting EVERY step's result (exit 1 if any FAILs) —
+                the pre-commit hook's batched freshness/integrity floor, one
+                interpreter spawn instead of a chain that stops at the first
+                stale artifact.
+    --staged-divergence
+                Run only the OI-31 detector: which declared `[generated]`
+                artifact is modified in the worktree but absent from the index?
+                Every freshness step here reads the tree ON DISK, so a
+                regenerated-but-unstaged artifact passes them all and lands
+                stale. Warn-only (exit 0) unless --strict; skips cleanly off
+                git. It does NOT catch an artifact staged while stale.
+    --jobs      Run the plan's steps on N concurrent workers (0 = one per
+                step; default 1 = sequential, streamed output, byte-identical
+                to the historical behavior). Parallel-safe by construction:
+                steps are read-only or write disjoint artifacts, and the two
+                trace.py steps that share docs/test/report.md run chained in
+                one lane. Output is captured per step and printed whole, so
+                nothing interleaves.
+
+The product toolchain (format/lint/test commands, src/tests paths, tier
+expressions, coverage threshold) is declared ONCE in `docs/stack.ini` when it
+exists — CI, the pre-commit hook, and setup.* delegate there instead of each
+restating a command. Absent that file, the built-in Python-reference defaults
+below apply (identical values), so a profile-less repo is unchanged.
+
+Contracts: IF-013, IF-040, IF-144 — the interface seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+
+Contract IF-013: SR-006's obligation delivered as a CLI here. Runs a gate's declared
+    steps as subprocesses and exits nonzero on any required failure,
+    degrading only to a reported SKIP — never to a silent pass.
+Contract IF-040: the freshness/integrity floor a git hook consumes as an exit
+    code. `--run-steps a,b,...` runs the named steps concurrently under
+    `--run-step`'s lenient semantics and reports EVERY step's result, exiting 1
+    if any FAILs and 0 otherwise; `--run-step NAME` is the same for one step. A
+    missing tool is SKIP and exits 0, so a repo whose toolchain is not installed
+    can still commit, while a staled generated artifact or a failed integrity
+    step refuses the commit. An explicit `--stage` builds the step at that rung;
+    otherwise the plan is built at `all`.
+Contract IF-144: the reporting protocol every delivered checker honours, composed here
+    into one verdict. A finding names its location — the at-fault row and
+    cell, `file:line`, or the module — unless it is population-level and no
+    single location exists; it carries a severity from the closed set
+    OK / SKIP / WARN / FAIL; an advisory class never reaches the exit code; a
+    declared strict flag is the only promotion from warning to failure; and an
+    absent optional input exits zero and names the absence. Per-class severity
+    stays each requirement's own declaration — this fixes the protocol, never
+    the disposition.
+
+options:
+  -h, --help            show this help message and exit
+  --stage {DevStg-Needs,DevStg-Boundary,DevStg-Reqs,DevStg-Arch,DevStg-LLReqs,DevStg-Tests,DevStg-Impl,DevStg-Release,all}, --stage-cleared {DevStg-Needs,DevStg-Boundary,DevStg-Reqs,DevStg-Arch,DevStg-LLReqs,DevStg-Tests,DevStg-Impl,DevStg-Release,all}, --gate {DevStg-Needs,DevStg-Boundary,DevStg-Reqs,DevStg-Arch,DevStg-LLReqs,DevStg-Tests,DevStg-Impl,DevStg-Release,all}
+                        the rung the repo is IN: every step whose threshold
+                        this rung is AT OR ABOVE runs (default: the derived
+                        effective stage in docs/stage, else all). Drafting a
+                        row cannot lower it — the derivation reads the SETTLED
+                        spine — so there is no dial that turns product checks
+                        off by opening an approval window. The retired
+                        G1/G2/G3 and DevBar-* value spellings are accepted as
+                        aliases and warn; `--gate` is accepted silently as the
+                        prior flag name, `--stage-cleared` warns.
+  --tier {smoke,full,release,all}
+  --coverage COVERAGE   line-coverage threshold % (default: docs/stack.ini
+                        [coverage] threshold, else 80)
+  --phase PHASE         delivery phase(s) in scope, e.g. v1 or v1,v2 — scopes
+                        the DevStg-Impl approval criterion to that phase
+                        (process.md §4 'Phased delivery')
+  --lenient             treat missing tools as SKIP (local dev only)
+  --trunk-lane          run the generated-artifact freshness gates even on a
+                        claimed work branch — the station refresh's bar
+                        (integrate.py refresh), where the branch tree IS the
+                        tree that becomes trunk
+  --list                print the plan (with [process]/[product] layer tags)
+                        and exit
+  --run-step NAME       run just the named step (e.g. 'format') and exit with
+                        its status; a missing tool is SKIP (exit 0), a real
+                        failure exits 1 (the pre-commit hook uses this to
+                        source its format check from docs/stack.ini)
+  --run-steps NAMES     run the named steps (comma-separated, e.g.
+                        'okf,trajectory-map') concurrently with the same
+                        lenient semantics as --run-step, reporting every
+                        step's result — so a commit with several stale
+                        artifacts names them all in one pass (the pre-commit
+                        hook's batched floor); exits 1 if any step FAILs
+  --staged-divergence   run ONLY the staged-vs-worktree divergence detector
+                        and exit (OI-31): report every declared [generated]
+                        artifact modified in the worktree but absent from the
+                        index. Warn-only — exit 0 — unless --strict. This is
+                        the self-invoked body of the 'staged-divergence' step,
+                        not a separate contract
+  --strict              with --staged-divergence: exit 1 on a divergent
+                        artifact instead of warning. The ruled promotion path
+                        (OI-31: error 'once it has run clean for a program');
+                        the step itself does NOT pass it today
+  --approval-immutable  run ONLY the re-attestation-brief immutability
+                        enforcer and exit (WI-503): refuse a STAGED change
+                        (other than a plain add) to an existing
+                        docs/ratify/<date>-*.md. Fail-closed by default — no
+                        --strict, no warn mode. This is the self-invoked body
+                        of the 'approval-immutable' step, not a separate
+                        contract
+  --jobs N              run the plan's steps concurrently on N workers (0 =
+                        one per step); every step is read-only or writes a
+                        distinct artifact, except the two trace.py steps,
+                        which share a lane. Default 1: sequential, with each
+                        step's output streamed live exactly as before
+
+2026-08-30T17:04:09.209415Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+exec
+"C:\\Program Files\\PowerShell\\7\\pwsh.exe" -Command '$reviewOut = Join-Path $env:TEMP '"'wi537-review-check.out'; "'$reviewErr = Join-Path $env:TEMP '"'wi537-review-check.err'; Remove-Item -LiteralPath "'$reviewOut,$reviewErr -Force -ErrorAction SilentlyContinue; $proc = Start-Process -FilePath python -ArgumentList @('"'project-trajectory/scripts/check.py','--jobs','0') -WorkingDirectory 'C:\\Projects\\ai-template-drive\\wi-537-complexity-sensor-report-only' -RedirectStandardOutput "'$reviewOut -RedirectStandardError $reviewErr -PassThru -WindowStyle Hidden; "PID=$($proc.Id)"; python project-trajectory/scripts/trace.py --strict-integrity; "TRACE_INTEGRITY_EXIT=$LASTEXITCODE"; python project-trajectory/scripts/trace.py --strict; "TRACE_STRICT_EXIT=$LASTEXITCODE"; @'"'
+from pathlib import Path
+import sys
+sys.path.insert(0, 'project-trajectory/scripts')
+import check_complexity as cc
+rows, modules = cc.census(Path('.'), cc.DEFAULT_INCLUDE)
+over = [row for row in rows if row[2] > cc.DEFAULT_THRESHOLD]
+print(f'CENSUS_ROWS={len(rows)} MODULES={len(modules)} OVER_{cc.DEFAULT_THRESHOLD}={len(over)}')
+print(f'FIRST_ROW={rows[0]}')
+print(f'LAST_ROW={rows[-1]}')
+'@ | python -; python project-trajectory/scripts/check_complexity.py --root . --mode enforce; \"ENFORCE_GREEN_EXIT="'$LASTEXITCODE"; python project-trajectory/scripts/check_complexity.py --root . --report | Select-Object -First 4; "REPORT_EXIT=$LASTEXITCODE"; python project-trajectory/scripts/check_complexity.py --root . --mode enforce --threshold 100000 2>&1 | Select-Object -First 4; "ENFORCE_DIVERGENCE_EXIT=$LASTEXITCODE"' in C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only
+2026-08-30T17:04:31.468477Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+ succeeded in 10196ms:
+PID=90852
+WARNING (advisory): IF IF-025 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-026 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-164 owner 'scripts/traj_status' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-052 owner 'scripts/traj_parse' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): boundary crossing(s) realized by NO interface row: B-02 — decision 6's question, deferred by ruling; reported, never gated
+WARNING (advisory): hat coverage: 4 of 264 requirement/design row(s) are attributable to no declared perspective — counted over EFFECTIVE sets, so a design row inheriting its parent's hats is covered; an unattributed row reads as NOT RECORDED and never as 'no perspective applied'
+WARNING (advisory): declared hat(s) attributed to NO row: SAFETY — a perspective every decomposition faces and no requirement is traceable to is either unrecorded or ceremony
+WARNING (advisory): IF endpoint coverage: 75 of 163 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 49 resolve to a file or directory in the tree, 52 are marked `external:`, 0 resolve to nothing
+WARNING (advisory): LLR LLR-007 Detail mostly re-words SR-007 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-020 Detail mostly re-words SR-020 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-027 Detail mostly re-words SR-027 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-181 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', edit-history stamp 'confirmed 2026-08-13', date stamp '2026-08-12') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Detail carries a citation frame (work-item id 'WI-448') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', date stamp '2026-08-19') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): SR SR-168 has 8 direct LLR children, over the declared bound of 7 — a DETECTOR for a row that merged several decisions, not a cap (capping children invites merging LLRs to slip under it): split the row by observable class, or record a per-row 'fan-out re-stamp: <reason>' in Rationale (process.md §3 'one decision per row'; warn-only, never the exit code)
+FINDING (spine stand-alone): LLR LLR-197 Detail cites 'WI-448' — a spine row states the system, not its own history: move provenance to the log, and obey the process rather than citing it
+Traceability: SN=27 SR=76 LLR=188 TC=186 orphans=2 integrity=0 verified-mechanized=72 verified-demonstrated=3 verified-attested=0 drafts=10 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=163 interface-findings=0 provenance-findings=1 paraphrase-advisories=3. Report -> docs\test\report.md
+TRACE_INTEGRITY_EXIT=0
+WARNING (advisory): IF IF-025 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-026 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-164 owner 'scripts/traj_status' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-052 owner 'scripts/traj_parse' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): boundary crossing(s) realized by NO interface row: B-02 — decision 6's question, deferred by ruling; reported, never gated
+WARNING (advisory): hat coverage: 4 of 264 requirement/design row(s) are attributable to no declared perspective — counted over EFFECTIVE sets, so a design row inheriting its parent's hats is covered; an unattributed row reads as NOT RECORDED and never as 'no perspective applied'
+WARNING (advisory): declared hat(s) attributed to NO row: SAFETY — a perspective every decomposition faces and no requirement is traceable to is either unrecorded or ceremony
+WARNING (advisory): IF endpoint coverage: 75 of 163 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 49 resolve to a file or directory in the tree, 52 are marked `external:`, 0 resolve to nothing
+WARNING (advisory): LLR LLR-007 Detail mostly re-words SR-007 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-020 Detail mostly re-words SR-020 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-027 Detail mostly re-words SR-027 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-181 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', edit-history stamp 'confirmed 2026-08-13', date stamp '2026-08-12') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Detail carries a citation frame (work-item id 'WI-448') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', date stamp '2026-08-19') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): SR SR-168 has 8 direct LLR children, over the declared bound of 7 — a DETECTOR for a row that merged several decisions, not a cap (capping children invites merging LLRs to slip under it): split the row by observable class, or record a per-row 'fan-out re-stamp: <reason>' in Rationale (process.md §3 'one decision per row'; warn-only, never the exit code)
+FINDING (spine stand-alone): LLR LLR-197 Detail cites 'WI-448' — a spine row states the system, not its own history: move provenance to the log, and obey the process rather than citing it
+FINDING (orphan): SR SR-181 has no LLR (and Verification not in Analysis/Inspection/Attest)
+FINDING (orphan): SR SR-181 has no test (TC)
+Traceability: SN=27 SR=76 LLR=188 TC=186 orphans=2 integrity=0 verified-mechanized=72 verified-demonstrated=3 verified-attested=0 drafts=10 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=163 interface-findings=0 provenance-findings=1 paraphrase-advisories=3. Report -> docs\test\report.md
+TRACE_STRICT_EXIT=1
+CENSUS_ROWS=1581 MODULES=79 OVER_15=179
+FIRST_ROW=('project-trajectory/scripts/acceptance_record.py', '_snapshot_survives', 3, 8)
+LAST_ROW=('project-trajectory/scripts/wi_convert.py', 'write_spec_file', 0, 7)
+check_complexity: OK - 179 row(s) over 15, unchanged from baseline.
+ENFORCE_GREEN_EXIT=0
+# path	function	cognitive	sloc
+project-trajectory/scripts/acceptance_record.py	_snapshot_survives	3	8
+project-trajectory/scripts/acceptance_record.py	_snapshot_write_revs	7	16
+project-trajectory/scripts/acceptance_record.py	_spine_revs	5	13
+REPORT_EXIT=0
+check_complexity: FAIL - project-trajectory/scripts/acceptance_record.py::staged_spine_amendments cognitive 26 -> None. RE-STAMP DOWNWARD (or delete the row) in this same commit, so the ratchet only ever tightens; `--restamp` writes it.
+check_complexity: FAIL - project-trajectory/scripts/adjudicate_brief.py::amendment_values cognitive 20 -> None. RE-STAMP DOWNWARD (or delete the row) in this same commit, so the ratchet only ever tightens; `--restamp` writes it.
+check_complexity: FAIL - project-trajectory/scripts/agent_common.py::approval_through cognitive 31 -> None. RE-STAMP DOWNWARD (or delete the row) in this same commit, so the ratchet only ever tightens; `--restamp` writes it.
+check_complexity: FAIL - project-trajectory/scripts/agent_common.py::latest_trailer_evidence cognitive 17 -> None. RE-STAMP DOWNWARD (or delete the row) in this same commit, so the ratchet only ever tightens; `--restamp` writes it.
+ENFORCE_DIVERGENCE_EXIT=0
+Traceback (most recent call last):
+  File "C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check_complexity.py", line 470, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check_complexity.py", line 442, in main
+    _report(rows, modules, args.threshold)
+  File "C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check_complexity.py", line 418, in _report
+    print("\t".join(str(cell) for cell in row))
+OSError: [Errno 22] Invalid argument
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+OSError: [Errno 22] Invalid argument
+
+2026-08-30T17:04:33.370262Z ERROR codex_models_manager::manager: failed to renew cache TTL: missing field `base_instructions` at line 97 column 5
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 1:34 PM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 1:34 PM.
+tokens used
+116,760
