@@ -322,3 +322,18 @@ one APPROVE on the third family after eight cross-family CHANGES-REQUESTED
 rounds whose every finding was either taken or refuted with the instrument;
 the loop's own escalation ladder would have paged a human here, and the
 delegation is why it did not.
+
+## 16. The two OPENCODE command templates in `docs/agents.toml` gained `--dir .`
+
+Decision 14's finding made concrete before relaunching the loop: with OpenAI
+at its usage limit, the loop's reviewer draw falls to the OPENCODE rows, and
+without `--dir` an opencode session in a lane worktree reviews TRUNK. Probed:
+from the lane's cwd, `opencode run --dir . …` answers `git rev-parse
+--abbrev-ref HEAD` with the lane branch, and the session engine already runs
+every child with `cwd=<worktree>`. So the two enabled OPENCODE templates read
+`opencode run --dir . -m {model} --auto` — a value in this repo's routing
+registry (`docs/agents.toml`), not the enable-list, not `[policies]`, and the
+shipped `agents.template.toml` carries no opencode row to mirror. Smoke tier
+1378 passed / budget 28.8 s. **For the owner:** if the template is meant to
+ship the fix, the kit's own opencode rows (wherever they are seeded) want the
+same token.
