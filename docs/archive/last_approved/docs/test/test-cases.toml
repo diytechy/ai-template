@@ -1294,7 +1294,7 @@ method = """Run the integrator suite: each claim refusal fires by name and the g
 tier = "Full"
 expected = "Satisfies SR-156 AcceptanceCriteria via the LLR-140 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py"
+evidence = "tests/test_integrate.py; tests/test_integrate_admission.py; tests/test_integrate_station.py"
 status = "Approved"
 phase = 4
 
@@ -1437,7 +1437,7 @@ method = """Run the schedule + integrate suites' adjudication cases: the kind cl
 tier = "Full"
 expected = "Satisfies SR-148 AcceptanceCriteria via the LLR-152 adjudication-kind detail contract"
 automated = "Yes"
-evidence = "tests/test_schedule.py; tests/test_integrate.py"
+evidence = "tests/test_schedule.py; tests/test_integrate_station.py"
 status = "Approved"
 phase = 4
 
@@ -1459,7 +1459,7 @@ method = """Run the integrator + dispatcher suites' intake-arm cases: a merged b
 tier = "Full"
 expected = "Satisfies SR-174 AcceptanceCriteria via the LLR-154 detail contract"
 automated = "Yes"
-evidence = "tests/test_integrate.py; tests/test_dispatch.py"
+evidence = "tests/test_integrate_station.py; tests/test_dispatch.py"
 status = "Approved"
 phase = 4
 
@@ -1596,7 +1596,7 @@ status = "Approved"
 phase = 5
 
 [test.TC-161]
-verifies = ["LLR-167", "IF-124", "IF-127"]
+verifies = ["LLR-167", "IF-124", "IF-075"]
 level = "Integration"
 method = """Drive the real loop against a fake agent CLI over throwaway git repos, one per routed brief, and capture what the session was actually handed. Assert the composed brief carries each slot's real derivation (the lane's report verbatim, the closed spec, the commit facts; the live census joined to the TC row and to the obligation it covers), that no `{slot}` survives in the output, and that the typed verdict line the brief demands is written to the path the brief named and committed with the result trailer. Then drive the refusals: a clean close (no per-close report), a report with no typed `commit_range`, and a census that has come clean each fall back to the worker assignment with the reason printed. Pin the discriminator: two rows with an identical SpecRef and different declared `Brief` cells compose differently. Pin the two unrouted briefs as unrouted, naming themselves in the refusal. The amendment arm covers two seams: IF-124, the `last_approved` baseline read - the brief carries the snapshot as its anchor, only approved cells reach the judge, and with no snapshot the brief holds and says FIRST APPROVAL rather than fabricating an anchor; and IF-127, the lazily imported re-attestation model."""
 tier = "Smoke"
@@ -1833,7 +1833,7 @@ method = """Five claims, one per severity the row declares, driven over a scaffo
 tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-187 (parent SR-162)"
 automated = "Yes"
-evidence = """tests/test_external_frame.py::test_a_clean_frame_produces_no_finding; tests/test_external_frame.py::test_a_crossing_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_a_relationship_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING; tests/test_external_frame.py::test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass; tests/test_external_frame.py::test_a_frame_declaring_NOTHING_stays_vacuous; tests/test_external_frame.py::test_the_frame_rules_are_VACUOUS_without_the_registry; tests/test_external_frame.py::test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding; tests/test_external_frame.py::test_an_SR_naming_a_DECLARED_crossing_is_clean; tests/test_external_frame.py::test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error; tests/test_external_frame.py::test_the_realization_gap_is_REPORTED_and_never_gated; tests/test_external_frame.py::test_the_SR_boundary_rule_is_vacuous_without_a_frame; tests/test_trace.py::test_signal_refuses_an_unknown_value_as_a_warn"""
+evidence = """tests/test_external_frame.py::test_a_clean_frame_produces_no_finding; tests/test_external_frame.py::test_a_crossing_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_a_relationship_naming_an_undeclared_entity_is_a_FINDING; tests/test_external_frame.py::test_an_IF_tieback_naming_an_undeclared_crossing_is_a_FINDING; tests/test_external_frame.py::test_crossings_with_NO_entity_declared_is_a_FINDING_not_a_vacuous_pass; tests/test_external_frame.py::test_a_frame_declaring_NOTHING_stays_vacuous; tests/test_external_frame.py::test_the_frame_rules_are_VACUOUS_without_the_registry; tests/test_external_frame.py::test_an_SR_naming_an_undeclared_crossing_is_a_HARD_finding; tests/test_external_frame.py::test_an_SR_naming_a_DECLARED_crossing_is_clean; tests/test_external_frame.py::test_SR_boundary_COVERAGE_is_a_summary_advisory_and_never_an_error; tests/test_external_frame.py::test_the_realization_gap_is_REPORTED_and_never_gated; tests/test_external_frame.py::test_the_SR_boundary_rule_is_vacuous_without_a_frame; tests/test_trace.py::test_channel_refuses_an_unknown_value_as_a_warn"""
 status = "Approved"
 phase = 5
 
@@ -2009,4 +2009,37 @@ expected = "Satisfies the acceptance folded into LLR-202 (parent SR-161)"
 automated = "Yes"
 evidence = """tests/test_trajectory_staged.py::test_amending_approved_cells_without_moving_hat_refs_warns; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_only_traced_cells_move; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_when_the_cell_moves_with_the_amendment; tests/test_trajectory_staged.py::test_hat_refs_arm_is_vacuous_where_a_row_has_no_baseline; tests/test_trajectory_staged.py::test_hat_refs_arm_is_silent_on_a_tier_that_carries_no_such_column"""
 status = "Approved"
+phase = 5
+
+[test.TC-199]
+verifies = ["SR-163", "LLR-203"]
+level = "Integration"
+method = """The inventory's two delivered finding classes, driven where each one can actually fail. THE DOGFOOD DIRECTION, in process against the live MAPPING literal: a declared destination that this repository neither carries nor serves in place out of the kit tree, and which no absence declaration covers, is reported by name; a declared absence whose destination has materialized is reported as stale, with the lifecycle marker exempting only the paths whose presence is a legal state; and the walk is bite-proofed by removing one declared entry and asserting its destination reappears in the finding set, so a walk that had quietly stopped looking could not pass. THE PACKAGE DIRECTION, asked of a REAL bootstrapped scaffold rather than of the kit tree, because the kit's own scripts directory holds every file and a partial copy reads green there: the copied helper package must hold exactly the kit's module set - a missing or stale MAPPING row is named as the cause - and must import from where a shipped script sits; and a shipped script importing a sibling the inventory omits is reported against the MAPPING literal read as an AST, never as a whole-file regex, so a comment naming a module cannot mark it mapped."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-203 (parent SR-163)"
+automated = "Yes"
+evidence = """tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
+status = "Approved"
+phase = 5
+
+[test.TC-200]
+verifies = ["SR-163", "LLR-204"]
+level = "Integration"
+method = """The grammar and the policy, separately, because they fail separately. THE GRAMMAR, driven directly on the shared function both the map column and the coverage percentage read, so a divergence between the two is unrepresentable: a declaration token opening a line yields its spine ids; prose naming ids without the token yields none; a token PRECEDED by prose yields none, including the two shapes that had previously harvested a sentence denying a link as a declaration of it; whitespace, comment markers and quote characters may precede the token and nothing else may; a wrapped list continuation line declares nothing. THE POLICY, driven through the real command line on a real bootstrapped scaffold rather than by reading the code: with a threshold declared in the policy home and a live design row that no source declaration names, the report prints the shortfall and exits ZERO, and only the explicit strict arm turns the same reading into a nonzero exit - which is what makes the threshold a gate a repository opts into rather than one the delivered package arms on its behalf."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-204 (parent SR-163)"
+automated = "Yes"
+evidence = """tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand"""
+status = "Approved"
+phase = 5
+
+[test.TC-201]
+verifies = ["SR-017", "SR-176", "LLR-205"]
+level = "Integration"
+method = """Drives check_privacy.py's Scanner (secrets floor) and agent_common.py's redact_secrets against a shared sample set, three ways. FIRST, a five-sample driven table: a PEM private-key block now catches on both sides (was floor-catch/redactor-miss); a Bearer token, a short GitHub token and a short API key stay floor-miss/redactor-catch, the three DELIBERATE threshold asymmetries kitlib.secret_classes.SECRET_CLASSES states per class rather than leaving as a side effect of two literals. SECOND, one canonical positive sample per declared class, proving each side's claimed pattern actually reaches its consumer (TOKEN_RES/KEY_RE and _SECRET_RES are comprehensions over the shared table, not hand copies, so a class dropped from a consumer's derivation fails even if the table still looks right). THIRD, a frozen, independent record of every pattern each module compiled BEFORE this table existed, compared by matching behavior (not string equality, since one class's two spellings differ only in a character-class member order proven immaterial) over threshold-straddling probes per class - the regression witness that nothing caught before is caught less after."""
+tier = "Full"
+expected = "Satisfies SR-017's and SR-176's acceptance for the mechanized classes via the LLR-205 detail contract; asserting one side's list contains the other's is explicitly not the test, since the thresholds differ by recorded decision"
+automated = "Yes"
+evidence = """tests/test_kitlib_secret_classes.py"""
+status = "Drafted"
 phase = 5

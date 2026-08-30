@@ -2019,7 +2019,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-203 (parent SR-163)"
 automated = "Yes"
 evidence = """tests/test_dogfood_sync.py::test_scaffold_mapping_covered_or_declared; tests/test_dogfood_sync.py::test_scaffold_omissions_list_is_current; tests/test_dogfood_sync.py::test_bite_scaffold_walk_catches_an_undeclared_absence; tests/test_bootstrap.py::test_the_common_package_ships_complete; tests/test_bootstrap.py::test_every_sibling_imported_module_is_shipped_by_mapping"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-200]
@@ -2030,7 +2030,7 @@ tier = "Full"
 expected = "Satisfies the acceptance folded into LLR-204 (parent SR-163)"
 automated = "Yes"
 evidence = """tests/test_gen_arch_map.py::test_backlink_ids_is_the_one_definition_of_a_declaration; tests/test_gen_arch_map.py::test_backlink_cli_is_warn_first_and_strict_only_on_demand"""
-status = "Drafted"
+status = "Approved"
 phase = 5
 
 [test.TC-201]

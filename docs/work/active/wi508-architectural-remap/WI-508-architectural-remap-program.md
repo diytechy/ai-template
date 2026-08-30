@@ -410,3 +410,29 @@ HEAD on 2026-08-30 so the dispatcher resumes it as a parked lane.
 
 Record:
 [../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).
+
+### SLICE 6 LANDED 2026-08-30 — the four rows blessed, the row closed
+
+The delegated close ran. `OI-64` was already discharged (ruled (b), executed
+2026-08-28); the remaining owed act was the four `Drafted` rows this program
+authored in slice 1. Under the declared dial only the `DevStg-Needs` rung is
+human-held, so `LLR-203`/`LLR-204`/`TC-199`/`TC-200` are loop-held and a recorded
+LLM verdict carries approval authority.
+
+**Adjudicated then flipped.** Read the four rows off the re-attestation surface,
+ran the 7 test node ids `TC-199`/`TC-200` cite (**7 passed**), and confirmed the
+two LLRs name delivered, tested mechanisms while stating their undischarged halves
+on-row. `Status` **`Drafted` → `Approved`** on all four — exactly four pairs, no
+other cell moved — anchored by `intake.py snapshot` in the same act.
+
+**Off-spine re-seed, disclosed.** The wholesale snapshot re-baselined the off-spine
+registries to their already-merged state; the authority gate blocked on one
+loop-held cell — `components.toml` `CMP-006` `Notes`, WI-520's merged
+`secret_classes.py`/`LLR-205` kitlib listing — so the copy was named with
+`--approves`. `LLR-205`/`TC-201` (WI-520's) were left `Drafted`, correctly still
+owing.
+
+**Closed.** Nothing agent-executable remained; the ratchet pointer already lives on
+`WI-521` (slice 5), so the close re-points nothing. The spec moves to
+`docs/work/complete/`. Record:
+[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../../log.md#2026-08-30--wi-508-slice-6-the-four-spine-rows-blessed-the-row-closed).
