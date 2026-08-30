@@ -1190,10 +1190,11 @@ is the cross-validated link: it declares the seam and stops. **Mint
 header-first.** A work item that creates a module mints its seam rows and the
 module's stub header — marker and bodies — BEFORE any code, so a worker
 building against it reads the same home the finished module will have;
-"declared, not stated" is the signal that a definition is not written yet.
-The legacy `Contract` cell (the prose definition rows carried before the
-header) is read and counted by one warning until its content has moved; do
-not author into it.
+"declared, not stated" is the signal that a definition is not written yet —
+and a finding under `--strict`: a row with no stated body, an owner that
+declares nothing, a source declaring another owner's row, or a retired cell
+(`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`) still on a row.
+An `external:`-owned row is stated by the kit module on its far side.
 
 **Reason cells take the argument, never the citation.** `Rationale` is why the
 seam is drawn here; `Notes` is free prose; neither carries a work-item id,

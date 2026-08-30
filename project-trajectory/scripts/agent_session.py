@@ -23,7 +23,7 @@ Stdlib only, Python 3.11+, Windows/POSIX. agent_loop.py (the coordinator) and
 plan_runner.py (the dual-plan round) drive sessions exclusively through this
 module; agent_loop re-exports these names so its public surface is unchanged.
 
-Contracts: IF-064 — the interface seam this module declares (process.md §8; row
+Contracts: IF-041, IF-064 — the interface seams this module declares (process.md §8; rows
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-064: the session-launch surface. `build_argv(template, model,
@@ -39,6 +39,19 @@ Contract IF-064: the session-launch surface. `build_argv(template, model,
     and a last-message file is read back as the result where the CLI writes one.
     `parse_json_result` and the console renderers complete the surface, and the
     caller re-exports these names, so its own public surface is unchanged.
+
+Contract IF-041: our reading of the configured agent CLI, stated here because
+    the CLI's own header is not ours to write. The registry row's command
+    template is substituted per token: `{model}` with the routed model and,
+    where the template carries `{prompt}`, the prompt on the command line;
+    with no `{prompt}` the prompt is piped to the child's stdin, which is the
+    path every shipped template takes. A Windows `.cmd`/`.bat` shim with a
+    prompt in argv is refused before launch, because cmd.exe may reparse it.
+    The session is one headless child: its exit code, captured output and a
+    timed-out flag come back, and the typed result is read from the CLI's
+    JSON output (a stream-json result line, or the last-message file) — a
+    child that emits none is a session with no typed outcome, reported as
+    such rather than guessed.
 """
 
 import json

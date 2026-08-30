@@ -65,6 +65,8 @@ import sys
 import tomllib
 from pathlib import Path
 
+from kitlib import spine as _kitspine
+
 # The id prefix stays in the key (`[requirement.SR-137]`, bare — TOML allows
 # `-` in a bare key). It is redundant inside a file already named
 # system-requirements.toml, and that redundancy is exactly the point: the
@@ -240,7 +242,6 @@ KEY = {
     "CarriedBy": "carried_by",
     "Requestors": "requestors",
     "Consumers": "consumers",
-    "Contract": "contract",
     "InterfaceFromExternal": "interface_from_external",
     "InterfaceToExternal": "interface_to_external",
     # components (WI-443). `Notes`/`SupersededBy` are ALREADY above.
@@ -704,10 +705,11 @@ def convert(root, write):
         src = root / rel
         if not src.is_file():
             continue
-        with src.open(newline="", encoding="utf-8-sig", errors="replace") as fh:
-            reader = csv.DictReader(fh)
-            header = list(reader.fieldnames or [])
-            rows = [r for r in reader if (r.get(id_col) or "").strip()]
+        reader = _kitspine.csv_reader(
+            src.read_text(encoding="utf-8-sig", errors="replace")
+        )
+        header = list(reader.fieldnames or [])
+        rows = [r for r in reader if (r.get(id_col) or "").strip()]
         text = rows_to_toml(table, id_col, rows, header)
         # THE ORACLE READS THE RAW SOURCE, never the converter's own parse.
         # The cell text here is exactly what `csv` handed back — unstripped, so
@@ -883,6 +885,14 @@ def _rewrite_if_lines(lines, cells, new_owner, channel):
 def _convert_if_block(blk, rid, llr_modules, report):
     """One row's rewrite, or the block unchanged when it already has the shape."""
     raw = tomllib.loads(blk)["interface"][rid]
+    if raw.get("contract"):
+        # Not dropped: its content has no mechanical home. Reported, and the
+        # armed gate names the row under `trace.py --strict` until it moves.
+        report.append(
+            "{}: still carries a `contract` cell — move its definition into the "
+            "owner's `Contract IF-###:` body and delete the cell; `trace.py "
+            "--strict` names the row until then".format(rid)
+        )
     if "channel" in raw and not any(k in raw for k in IF_RETIRED):
         return blk
     lines = blk.splitlines(keepends=True)

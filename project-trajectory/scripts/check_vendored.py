@@ -25,7 +25,7 @@ Usage:
     python scripts/check_vendored.py [--root .] [--manifest docs/guardrails/UPSTREAM]
                                      [--strict] [--timeout 10]
 
-Contracts: IF-016 — the interface seam this module declares (process.md §8; row of record in docs/requirements/interfaces.toml).
+Contracts: IF-016, IF-036 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-016: an adopting repo runs this CLI and reads what it prints. Each
     vendored file that does not match its pinned upstream gets one line —
@@ -38,6 +38,16 @@ Contract IF-016: an adopting repo runs this CLI and reads what it prints. Each
     and a fetch failure degrades to a clean per-file skip, so an offline run or
     a CI without egress reports the same shape rather than blocking. An absent
     manifest, or one declaring no files, prints its reason and exits 0.
+
+Contract IF-036: our reading of the upstream sources, stated here because
+    the upstream's header is not ours to write. The manifest
+    (`docs/guardrails/UPSTREAM` by default) declares a raw URL base and one
+    `<local path> <upstream path>` pair per vendored file; each upstream is
+    fetched over HTTPS with a timeout and compared to the local copy by
+    content digest, line endings canonicalised for text so a checkout's CRLF
+    is not drift. A fetch that fails for any network reason is reported by
+    name as unverified, never counted as drift; an absent manifest, or one
+    declaring no files, prints its reason and exits 0.
 """
 
 import argparse

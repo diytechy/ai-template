@@ -7,8 +7,9 @@ not as rulings owed.
 **Summary.** The interface registry reads one row, one direction, one kind.
 Twenty rows were minted (`IF-145`–`IF-164`) from the split worklist the
 slice-3 workers' notes produced; two duplicate pairs collapsed (`IF-127` into
-`IF-075`, `IF-116` into `IF-101`); three channels and eight far sides were
-corrected from the code; the three generated-document rows name their reader
+`IF-075`, `IF-116` into `IF-101`); three channels and nine far sides were
+corrected from the code (counted as the ordinary corrections — the collapses
+and the generated-document re-points aside); the three generated-document rows name their reader
 class instead of the artifact. **136 rows became 154**, and the reference
 reads **73 sources declare 150 seams; 150 carry a stated contract** (from
 68 / 132 / 132 at slice 3's close — the four legacy rows are the difference).

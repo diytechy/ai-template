@@ -152,6 +152,7 @@ Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
 
 import argparse
 import csv
+import io
 import datetime
 import re
 import sys
@@ -365,23 +366,27 @@ def structure_findings(path, display=None):
         return []
     name = display or path.name
     out = []
-    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
-        reader = csv.reader(f)
-        header = next(reader, None)
-        if header is None:
-            return out
-        expected = len(header)
-        for row in reader:
-            if not any(cell.strip() for cell in row):
-                continue
-            if len(row) != expected:
-                rid = (row[0].strip() if row else "") or "(no id)"
-                out.append(
-                    "{}: row {} (line {}) parses to {} column(s); header has "
-                    "{} — quote any cell containing a comma".format(
-                        name, rid, reader.line_num, len(row), expected
-                    )
+    # The same reader every other CSV consumer uses: a leading `#` declaration
+    # header is a header, never the header row — else the comment lines would
+    # count as one-column rows against a one-column "header".
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    skipped = len(text.splitlines()) - len(_spine.csv_body(text).splitlines())
+    reader = csv.reader(io.StringIO(_spine.csv_body(text)))
+    header = next(reader, None)
+    if header is None:
+        return out
+    expected = len(header)
+    for row in reader:
+        if not any(cell.strip() for cell in row):
+            continue
+        if len(row) != expected:
+            rid = (row[0].strip() if row else "") or "(no id)"
+            out.append(
+                "{}: row {} (line {}) parses to {} column(s); header has "
+                "{} — quote any cell containing a comma".format(
+                    name, rid, reader.line_num + skipped, len(row), expected
                 )
+            )
     return out
 
 
@@ -461,9 +466,8 @@ REQUIRED_FIELDS = {
     # OWNER, ITS CONSUMERS AND A TYPED STATEMENT: `Owner` is the providing
     # thing (a path or an `external:` party, required), `Channel` the closed
     # vocabulary of what crosses (required), `Data` the optional alphabet.
-    # `Provider`, `Req-Refs`, `Signal` and `SignalNote` left the row; `Contract`
-    # is a LEGACY cell, optional and counted, until every definition has moved
-    # into its owner's `Contract IF-###:` body.
+    # `Provider`, `Req-Refs`, `Signal`, `SignalNote` and `Contract` LEFT the
+    # row — a row still carrying one is `interface_findings`' strict finding.
     # `Requestors`/`Consumers` are NOT in this list: exactly one of the two is
     # required, which is `interface_findings`' rule, not a per-cell one.
     "IF": [
@@ -1585,7 +1589,12 @@ def interface_findings(ifs, module_ids, root=None):
     the class that does is a debt list, not a gate.
 
     The `Req-Refs` back-link this function once policed left with the cell;
-    seam-to-test coverage was never on it (it joins on a TC's `Verifies`).
+    seam-to-test coverage was never on it (it joins on a TC's `Verifies`). A
+    row still carrying one of the five RETIRED cells (`Contract`, `Provider`,
+    `Req-Refs`, `Signal`, `SignalNote`) is a finding too — the wrong SHAPE, as
+    an id-shaped owner is: the definition lives in the owner's `Contract
+    IF-###:` body and the other four are derived or subsumed, so a value in
+    any of them is a second, unread copy of a fact that has one home.
 
     Implements: SR-159, LLR-041
     """
@@ -1595,6 +1604,14 @@ def interface_findings(ifs, module_ids, root=None):
     implementers = _implementing_modules(root)
     for r in ifs:
         iid = r["IF-ID"]
+        for column, key in _IF_RETIRED_CELLS:
+            if _cell_present(r.get(column)) or _cell_present(r.get(key)):
+                findings.append(
+                    f"IF {iid} carries the retired `{key}` cell — the definition "
+                    "lives in the owner's `Contract IF-###:` body and the row "
+                    "is one owner, its far side, a channel and an optional "
+                    "`data`; delete the cell (process.md §8)"
+                )
         has_req = bool((r.get("Requestors") or "").strip())
         has_con = bool((r.get("Consumers") or "").strip())
         if has_req == has_con:
@@ -1643,6 +1660,26 @@ def interface_findings(ifs, module_ids, root=None):
 
 # An `Owner` cell that is an ID rather than a thing: the shape OI-67 retired.
 _ID_SHAPED_RE = re.compile(r"^(?:SN|SR|LLR|TC|IF|CMP|B|EXT|REL)-\d+$")
+
+# The five cells OI-67 took off the row, as (carrier column, TOML key): a
+# carrier that still maps the column hands the row the column name, one that
+# no longer maps it hands the key back as itself, and both spellings are the
+# same retired cell.
+_IF_RETIRED_CELLS = (
+    ("Contract", "contract"),
+    ("Provider", "provider"),
+    ("Req-Refs", "req_refs"),
+    ("Signal", "signal"),
+    ("SignalNote", "signal_note"),
+)
+
+
+def _cell_present(value):
+    """A cell carries a value: a non-blank string, or a non-empty list (the
+    TOML carrier hands `req_refs` back as an array)."""
+    if isinstance(value, str):
+        return bool(value.strip())
+    return bool(value)
 
 
 def _implementing_modules(root):
@@ -2320,28 +2357,6 @@ def if_data_advisories(ifs, root=None):
                 "the definition belongs in the owner's `Contract IF-###:` body."
             )
     return out
-
-
-def if_legacy_contract_advisories(ifs):
-    """ONE summarizing line for the rows still carrying the legacy `Contract`
-    cell (OI-67 ruled (a)): the definition it holds belongs in the owner's
-    `Contract IF-###:` body, and the count is the number that has to fall. Warn
-    only; the arming slice turns the cell into a schema finding."""
-    legacy = [
-        r.get("IF-ID") or "(unnamed row)"
-        for r in ifs
-        if (r.get("Contract") or "").strip()
-    ]
-    if not legacy:
-        return []
-    shown = ", ".join(legacy[:5])
-    return [
-        "{} IF row(s) still carry a legacy `contract` cell — its definition "
-        "belongs in the owner's `Contract IF-###:` body, harvested into the "
-        "interface reference (OI-67){}: {}".format(
-            len(legacy), " — first 5" if len(legacy) > 5 else "", shown
-        )
-    ]
 
 
 # The IF tier's three REASON cells. `Notes` records why a crossing is shaped as
@@ -4775,7 +4790,6 @@ def analyze(reg, args):
         + sr_frame_advisories
         + hat_advisories
         + if_data_advisories(ifs, docs.parent)
-        + if_legacy_contract_advisories(ifs)
         + if_note_advisories(ifs, prov_allow)
         + if_endpoint_class_advisories(ifs, module_ids, docs.parent)
         + if_verified_by_advisories(ifs, {t["TC-ID"] for t in tcs}, llr_ids)

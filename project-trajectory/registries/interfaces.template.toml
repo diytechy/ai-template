@@ -106,9 +106,15 @@
 # row's owner, `sink` (consumes, produces nothing) marks its far side,
 # silencing the missing-seam coverage warn for that side.
 #
-# A `contract` cell is LEGACY — the prose definition rows carried before the
-# header existed. A row still carrying one is counted by a warning; move its
-# content into the owner's `Contract IF-###:` body and delete the cell.
+# THE GATE IS ARMED: a row whose owner declares it but states no `Contract
+# IF-###:` body, or whose owner declares nothing, is a `check_trajectory
+# --strict` finding — an interface with no definition. An `external:`-owned
+# row is stated by the kit module on its FAR SIDE (the consumer that reads the
+# external surface, or the requestor that drives it), the one in-tree home of
+# our reading of that surface. The retired cells — `contract`, `provider`,
+# `req_refs`, `signal`, `signal_note` — are `trace.py --strict` findings
+# wherever they still appear. A CSV registry may carry the same `#` header:
+# every kit reader strips a leading comment block before the header row.
 
 [interface.IF-000]
 owner = "EXAMPLE - delete on first real entry"
@@ -116,7 +122,6 @@ requestors = ["a-side-that-puts-information-INTO-the-owner - set THIS or consume
 consumers = ["a-side-that-takes-what-the-owner-emits - set THIS or requestors, never both"]
 channel = "exit-code"
 data = "0 pass | 1 fail | 2 usage - the alphabet when finite, else a schema pointer, 160 chars at most"
-contract = "LEGACY - the prose definition rows carried before the header existed; a row still carrying one is counted by a warning. Delete this key."
 rationale = """WHY the seam is drawn here - the argument, never the citation: what breaks without the seam and which alternative lost, in prose that stands alone, with no work-item id, ruling, sitting, review-round or open-item reference, decision id, edit verb or date stamp - that history belongs in the log (process.md section 3). Empty is allowed; delete the key rather than leaving it blank."""
 verified_by = "TC-000"
 carried_by = "IF-000"

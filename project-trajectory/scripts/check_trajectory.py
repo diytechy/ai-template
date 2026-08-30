@@ -194,7 +194,6 @@ Contract IF-138: the same loader surface as taken by `pending`, the blocked-work
 import argparse
 import ast
 import configparser
-import csv
 import difflib
 import re
 import sys
@@ -461,8 +460,7 @@ def read_rows(path):
     reads plain utf-8 unchanged."""
     if not path.exists():
         return []
-    with path.open(encoding="utf-8-sig", newline="") as fh:
-        return list(csv.DictReader(fh))
+    return _kitspine.csv_rows(path.read_text(encoding="utf-8-sig"))
 
 
 # --- the spec-folder registry reader: ONE home since WI-448 -------------------
@@ -1170,6 +1168,160 @@ def _owner_exact_findings(
             out.append(
                 "IF {} is in the registry but no source declares it via a "
                 "Contracts: line".format(iid)
+            )
+    return out
+
+
+# --- the armed definition gate (OI-67 slice 6) --------------------------------
+
+
+def _declaration_sites(root):
+    """`({key: (source_as_written, ids, bodies)}, problems)` — every source in
+    the tree that declares a seam, read through the one harvester the
+    interface reference uses (`gen_arch_map.scan_contracts`): the modules under
+    the declared scan root, keyed by normalized module path (`scripts/check`),
+    and the file owners the registry names, keyed by the owner as the registry
+    spells it (`docs/stack.ini`, `hooks/pre-commit`). `problems` names a
+    source the scan could not read or a header the grammar refused, so a
+    refusal is reported rather than read as "declares nothing". `(None,
+    problems)` when there is no surface to read — files-mode, an absent scan
+    root, no generator beside this script — the `arch_inventory` posture."""
+    if gen_arch_map is None or not hasattr(gen_arch_map, "scan_contracts"):
+        return None, []
+    src, mode = _arch_scan_profile(root)
+    if mode == "files":
+        return None, []
+    src_dir = root / src.strip().replace("\\", "/").rstrip("/")
+    if not src_dir.is_dir():
+        return None, []
+    owner_files = _owner_files(root)
+    try:
+        records, unreadable = gen_arch_map.scan_contracts([src_dir], owner_files)
+    except gen_arch_map.ContractsGrammarError:
+        return None, []  # the marker-grammar arm reports the refusal, once
+    file_names = {owner for owner, _path in owner_files}
+    sites = {}
+    for rel, _summary, ids, bodies in records:
+        key = rel if rel in file_names else _norm_module(rel)
+        sites[key] = (rel, set(ids), set(bodies))
+    # An unreadable source is the reference's own "could not read" list and
+    # `arch_inventory`'s skip, never this gate's finding.
+    return sites, [rel for rel, _why in unreadable]
+
+
+def contract_body_findings(root):
+    """THE ARMED DEFINITION GATE (OI-67 slice 6). Every interface row must be
+    STATED — declared on its owner's `Contracts:` marker and given a
+    `Contract IF-###:` body there — because under the one-owner shape the body
+    is the definition's only home: a row with no body is an interface with no
+    definition. Returns finding strings; the caller prints them WARN plain and
+    promotes them to ERROR under `--strict`, the `if_tc_coverage_findings`
+    idiom, sharing its `[checks] interfaces_check` opt-out.
+
+    ONE RULE, THREE SHAPES. (1) The owner declares the id and states no body —
+    "declared, not stated", the reference's own debt line, now a finding.
+    (2) An `external:`-owned row is declared and stated by the kit module on
+    its FAR SIDE — the consumer that reads the external surface, or the
+    requestor that drives it — because the external party's header is not
+    ours to write and that module is the one in-tree home of OUR READING of
+    the surface; where the far side names several kit modules any one of them
+    may state it. (3) A stray declaration — a source declaring an id the
+    registry owns to a different in-tree source — because the owner is the
+    ONE declaration site and a second copy is a second definition waiting to
+    disagree; a far-side module stating an external-owned row is not stray.
+
+    WHAT STAYS A WARN, on record: an owner that declares NOTHING is the
+    owner-exact reverse check's finding (`_owner_exact_findings`, warn-only),
+    not this gate's — the ruled rule is "a DECLARED seam with no body", and
+    promoting the undeclared case would red every fixture and adopter row
+    whose owner has not yet been headed at all, which is the migration list
+    rather than a defect in a stated definition. The dodge that leaves —
+    never declare, never owe a body — is visible in that warn and in the
+    reference's summary line, and is the owner's to promote. Vacuous where
+    there is no surface (files-mode, an absent scan root), the
+    `arch_inventory` posture; an unreadable source is the reference's own
+    list, not a finding here."""
+    if not read_interfaces_check_enabled(root):
+        return []
+    sites, _unreadable = _declaration_sites(root)
+    if sites is None:
+        return []
+    out = []
+    ifs = load_seams(root)
+    file_names = {owner for owner, _path in _owner_files(root)}
+
+    def site_key(owner):
+        return owner if owner in file_names else _norm_module(owner)
+
+    owner_key = {}
+    for r in ifs:
+        if r["owner"] and not r["owner"].startswith("external:"):
+            owner_key.setdefault(r["id"], site_key(r["owner"]))
+    external_far = {}
+    for r in ifs:
+        iid, owner = r["id"], r["owner"]
+        if not owner:
+            continue  # trace.py's required-cell finding
+        if owner.startswith("external:"):
+            far = [site_key(e) for e in r["far"] if not e.startswith("external:")]
+            external_far[iid] = set(far)
+            out.extend(_external_body_findings(sites, iid, owner, far))
+            continue
+        site = sites.get(site_key(owner))
+        if site is None:
+            continue  # declares nothing, or unresolvable: the reverse check's warn
+        rel, ids, bodies = site
+        if iid in ids and iid not in bodies:
+            out.append(
+                "IF {} is declared by its owner {!r} but states no `Contract {}:` "
+                "body there — an interface with no definition".format(iid, rel, iid)
+            )
+    out.extend(_stray_declaration_findings(sites, owner_key, external_far))
+    return out
+
+
+def _external_body_findings(sites, iid, owner, far):
+    """The external arm of `contract_body_findings`: `far` is the row's far
+    side as site keys (kit modules only); silent when none faces it or one
+    states the body, a finding otherwise."""
+    if not far or any(k in sites and iid in sites[k][2] for k in far):
+        return []
+    declared = [sites[k][0] for k in far if k in sites and iid in sites[k][1]]
+    if declared:
+        return [
+            "IF {} is owned by {!r}; its far side {!r} declares it but states no "
+            "`Contract {}:` body — our reading of an external surface is stated "
+            "by the kit module that faces it".format(iid, owner, declared[0], iid)
+        ]
+    return [
+        "IF {} is owned by {!r} and no far-side kit module states it — our "
+        "reading of an external surface lives in the header of the module that "
+        "faces it ({})".format(iid, owner, ", ".join(sorted(far)) or "none named")
+    ]
+
+
+def _stray_declaration_findings(sites, owner_key, external_far):
+    """The stray arm of `contract_body_findings`: a source declaring an id the
+    registry owns to a different in-tree source, or an external-owned id whose
+    far side it is not."""
+    out = []
+    for key, (rel, ids, _bodies) in sorted(sites.items()):
+        for iid in sorted(ids):
+            if iid in external_far:
+                if key not in external_far[iid]:
+                    out.append(
+                        "{!r} declares IF {}, an external-owned seam whose far side "
+                        "it is not — our reading of an external surface is stated "
+                        "by the module that faces it".format(rel, iid)
+                    )
+                continue
+            home = owner_key.get(iid)
+            if home is None or home == key or home not in sites:
+                continue  # unowned (trace's finding), the owner, or unresolvable
+            out.append(
+                "{!r} declares IF {}, which the registry owns to {!r} — the owner is "
+                "the one declaration site; a second copy is a second "
+                "definition".format(rel, iid, sites[home][0])
             )
     return out
 
@@ -4323,7 +4475,13 @@ def main():
     # does: the finding is a property of the arch-map + interfaces + TCs, not of
     # the WI registry, so a repo with no work items still gets it.
     if_tc_errors = []
-    for msg in if_tc_coverage_findings(root) + if_tc_allow_parse_findings(root):
+    # ...and the armed definition gate (OI-67 slice 6) rides the same
+    # severity: a row with no stated body is an interface with no definition.
+    for msg in (
+        if_tc_coverage_findings(root)
+        + if_tc_allow_parse_findings(root)
+        + contract_body_findings(root)
+    ):
         if args.strict:
             if_tc_errors.append(msg)
         else:

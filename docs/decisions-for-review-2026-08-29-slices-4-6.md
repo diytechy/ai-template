@@ -117,4 +117,75 @@ form only, so the form must be a word. One lookbehind, one test.
 
 ## Slice 6 — arm the gate (WI-533)
 
-_(filled as the slice lands)_
+### 6.1 Our reading of an external surface lives in the far-side module's header
+
+**Decided:** an `external:`-owned row is declared and stated by the kit
+module on its far side — the consumer that reads the surface (`check_privacy`
+for git, `check_vendored` for the upstream docs) or the requestor that drives
+it (`agent_session` for the agent CLI) — and a module that is not the far side
+may not state it (a strict finding). The body is written as "our reading of":
+what is read or sent, what is assumed, what a failure does.
+
+**The alternative:** the `data` cell (160 characters — too short for a
+definition), or a dedicated `docs/external/` document per party (a second
+home, hand-maintained, that no check ties to the code that faces the surface).
+
+**Why:** the far-side module is the one in-tree place a check can hold to the
+code; the header moves with the code that honours the reading.
+
+**Reversal cost:** three bodies move; one arm of the gate changes.
+
+### 6.2 The strict arm is the ruled rule — declared-not-stated; an undeclared owner stays a warn
+
+**Decided:** `contract_body_findings` fails (under `--strict`) a row its
+owner DECLARES but does not state, an external-owned row no far side states,
+and a stray declaration. An owner that declares nothing stays the owner-exact
+reverse check's warn.
+
+**The alternative:** promote the undeclared case too, closing the dodge
+"never declare, never owe a body". Built first, then withdrawn: it reds every
+fixture and adopter row whose owner has not been headed at all — the migration
+list, not a defect in a stated definition — and the plan's words are "a
+declared seam with no body".
+
+**What it leaves:** the dodge is visible (the reverse check's warn, the
+reference's summary line) but not gated. **This is the entry most worth a
+second opinion.** Reversal cost: one branch in the gate and one test.
+
+### 6.3 One CSV reader, and a header on a CSV is a header everywhere
+
+**Decided:** `kitlib.spine.csv_body` / `csv_reader` / `csv_rows`, and every
+kit reader of a CSV — twelve sites, `trace.structure_findings`' raw-line
+column counter included — goes through it. The shipped budgets template stays
+headerless (a spreadsheet opens it clean); a copy with a header reads
+identically.
+
+**The alternative:** fix the five loaders slice 3 named. Rejected: the sixth
+(trace's integrity counter) broke the moment the header landed, which is what
+"five" was hiding.
+
+### 6.4 The converter reports a lingering `contract` cell and never drops it
+
+**Decided:** `migrate_carrier --if-shape` names every row still carrying a
+`contract` cell on every pass; the cell's content has no mechanical home, so
+dropping it would lose the definition. `trace.py --strict` names the row until
+it moves. The RESYNC entry gives the two commands that list what will red.
+
+### 6.5 The retired cells are strict in `trace`, both spellings
+
+**Decided:** `Contract`/`contract`, `Provider`/`provider`, `Req-Refs`/`req_refs`,
+`Signal`/`signal`, `SignalNote`/`signal_note` — a carrier that still maps the
+column hands the column name, one that no longer maps it hands the key back
+as itself; both are the same retired cell. `contract` left the schema, so the
+dogfood three-leg rule (template = schema ⊇ live) holds with the cell gone.
+
+### 6.6 Slice-4 verdict corrections folded, five findings deferred with reasons
+
+**Decided:** six cheap findings applied here (bodies made true, an overlap
+narrowed, a clause moved, a case-fold, a count); five deferred: two row mints
+(`IF-156`'s deletion arm, `IF-020`'s stdout and log kinds — the next
+worklist, with the arms the split surfaced), three non-conforming tracked
+fragments (the trunk lane's), the approved `TC-161` prose (the owner's), and
+"strict allows invalid ownership/body states" (this slice's gate). The
+slice-6 round itself is owed, not skipped: the sitting closed at the commit
+bar plus the full suite.

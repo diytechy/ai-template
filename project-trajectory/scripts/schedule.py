@@ -98,7 +98,6 @@ Contract IF-094: the classification TABLES as read-only vocabulary.
 """
 
 import argparse
-import csv
 import json
 import re
 import sys
@@ -209,8 +208,9 @@ _NEVER_READY = ("deferred", "draft")
 def load_rows(path):
     if not Path(path).exists():
         return []
-    with Path(path).open(newline="", encoding="utf-8-sig") as fh:
-        return list(csv.DictReader(fh))
+    from kitlib import spine as _kitspine
+
+    return _kitspine.csv_rows(Path(path).read_text(encoding="utf-8-sig"))
 
 
 # --- the spec-folder registry reader: ONE home since WI-448 -------------------

@@ -41,7 +41,6 @@ Contract IF-065: the shared coordinator primitives the session engine and the
     this layer adds a home without changing a public surface.
 """
 
-import csv
 import datetime
 import hashlib
 import errno
@@ -69,6 +68,7 @@ try:
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
+    from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -76,6 +76,7 @@ except ImportError:  # pragma: no cover - in-process fallback
     from kitlib import ladder as _kitladder
     from kitlib import registry as _kitregistry
     from kitlib import secret_classes as _kitsecrets
+    from kitlib import spine as _kitspine
     from kitlib import stage as _kitstage
 
 # This module's own directory, so `spine_stage_of` can spawn the sibling
@@ -1910,10 +1911,10 @@ def _read_csv_rows(path):
     handle (newline="") also keeps quoted multi-line cells parseable, unlike
     the old splitlines() feed."""
     try:
-        with Path(path).open(newline="", encoding="utf-8-sig", errors="replace") as fh:
-            return list(csv.DictReader(fh))
+        text = Path(path).read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
         return []
+    return _kitspine.csv_rows(text)
 
 
 def _refs(cell):

@@ -77,12 +77,19 @@
 #   `docs/interface-reference.md` under a freshness gate. It is stated ONCE,
 #   there; a row points at it by declaring the seam and stops.
 #
-#   contract         LEGACY, on its way out: the prose definition the cell held
-#                    before OI-67. Every row still carrying one is counted by
-#                    `trace.py` (one summarizing warning), its content moves into
-#                    the owner's `Contract IF-###:` body row by row, and the
-#                    arming slice turns the cell into a schema finding. Do NOT
-#                    author into it.
+#   THE GATE IS ARMED. A row whose owner declares it but states no `Contract
+#                    IF-###:` body, or whose owner declares nothing, is a
+#                    `check_trajectory --strict` finding — an interface with no
+#                    definition. An `external:`-owned row is stated by the kit
+#                    module on its FAR SIDE (the consumer that reads the external
+#                    surface, or the requestor that drives it): the external
+#                    party's header is not ours to write, and that module is the
+#                    one in-tree home of OUR READING of the surface. A source
+#                    declaring a row the registry owns to another in-tree source
+#                    is a finding too — the owner is the one declaration site.
+#                    The retired cells (`contract`, `provider`, `req_refs`,
+#                    `signal`, `signal_note`) are `trace.py --strict` findings
+#                    wherever they still appear.
 #
 #   rationale        OPTIONAL — WHY the seam is drawn HERE: what breaks without
 #                    it, which alternative lost. A reason cell like `notes` — it
@@ -152,11 +159,13 @@
 #                    warning: `source` marks the row's OWNER, `sink` marks its
 #                    far side.
 #
-#   ONE ROW, ONE KIND — the discipline the shape asks for and the tree does not
-#   yet meet: 14 rows still describe a request and its answer, or a read and a
-#   write, together, and 35 bundle several kinds (a CLI plus the file it writes;
-#   ten registries read as one). They split, or declare once with constituents
-#   on `carried_by`, as the definitions move.
+#   ONE ROW, ONE KIND. A request and its answer are two rows with one owner (a
+#   `cli` row in, an `exit-code` row out); a read and a write of one medium are
+#   two rows; a bundle a consumer really pins is declared once with its
+#   constituents on `carried_by`. The one class deliberately left un-split is
+#   the harness's argv into each checker it runs: `scripts/check`'s step table
+#   is the single requestor of all of them, and the exit-code rows are where
+#   its decision plugs in.
 #
 # Contracts: IF-057 — the interface seam this file declares (process.md §8; row of
 # record in docs/requirements/interfaces.toml).
@@ -435,7 +444,7 @@ data = "disposition: CONTINUE · SELECTED · PAGE"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - a pure library: consumes nothing, the coordinator feeds results in; nearest existing seam is IF-053 (schedule.py, the same side-effect-free-library-to-dispatcher shape) but wrong provider module and wrong contract (frontier/classification, not round lifecycle), and approved out of Proposed once it was implemented and consumed"""
+notes = """source - a pure library: consumes nothing, the coordinator feeds results in"""
 
 [interface.IF-059]
 owner = "docs/requirements/"
@@ -446,7 +455,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-008"
 interface_to_external = "B-05"
-notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Nearest existing seam is IF-057 (plan_coverage also Consumes the same registries) but wrong provider module and different purpose (coverage arithmetic, not redacted brief assembly), and approved out of Proposed once it was implemented and consumed. Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
+notes = """sink - the assembled briefs feed the round's fresh sessions (agent_loop.run_dual_plan_round drives it in-process). Published contract, not a single consumer: reads both the SR registry (14+ readers, IF-021's population) and interfaces.toml (11 readers, IF-057's population); every downstream adopter fills in their own copies. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-060]
 owner = "scripts/plan_coverage"
@@ -456,7 +465,7 @@ data = "0 clean | 1 findings | 2 malformed input"
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process). The adapter seam between plan_coverage (IF-057) and plan_round (IF-058) that plan-B-rev P4 left open: no declared seam has the coordinator as plan_coverage's consumer (IF-057 is the checker's own read side; IF-041's provider is the external agent CLI, not a kit script), and approved out of Proposed once it was implemented and consumed"""
+notes = """sink - the typed result feeds the coordinator's record() call (agent_loop.run_dual_plan_round drives it in-process)."""
 
 [interface.IF-152]
 owner = "scripts/plan_coverage"
@@ -484,7 +493,7 @@ data = "allocate_round_dir, write_stage, append_log_summary, file_selected_wis"
 version = "v2"
 status = "Drafted"
 component = "CMP-008"
-notes = """source - the coordinator (agent_loop) drives these effects; nearest existing seams IF-054 and IF-023 are READ-side consumers of work-items.csv (wrong direction) - this is the WRITE seam that must satisfy those readers' contracts, and approved out of Proposed once it was implemented and consumed"""
+notes = """source - the coordinator (agent_loop) drives these effects"""
 
 [interface.IF-057]
 owner = "docs/requirements/interfaces.toml"
@@ -495,7 +504,7 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 interface_to_external = "B-05"
-notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is IF-060's to declare); nearest existing seam is IF-023 (check_trajectory also joins IF cites) - distinct module needs its own endpoint row. Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
+notes = """sink - the coverage report feeds the dual-plan round's critique/arbiter sessions and the human, not a kit module (the agent_loop consumer seam is IF-060's to declare). Published contract, not a single consumer: 11 kit scripts join interfaces.toml directly (baseline_snapshot, check_trajectory, gen_arch_map, gen_okf, gen_release_checklist, intake, migrate_carrier, plan_briefs, trace, traj_status, traj_views, plus this row), and every downstream adopter fills in their own IF registry. Ties to B-05 as the template's own delivered spine-registry format."""
 
 [interface.IF-024]
 owner = "docs/work/"
@@ -512,7 +521,7 @@ consumers = ["scripts/gen_arch_map"]
 channel = "file"
 version = "v1"
 status = "Drafted"
-notes = """The provider side of this seam is the SOURCE TREE ITSELF, at the declared src root (docs/stack.ini [paths] src) - not a module, so the endpoint is that directory. Naming the row's own module there said only that it talks to itself, which is no far side at all. gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory."""
+notes = """gen_arch_map.scan_inventory is the sole direct AST walker of the tree; check_doc_refs/check_trajectory/traj_parse consume its computed OUTPUT (a separate script-to-script seam, IF-028 and its siblings), not the raw directory."""
 
 [interface.IF-026]
 owner = "project-trajectory/scripts"
@@ -520,7 +529,7 @@ consumers = ["scripts/check_stubs"]
 channel = "file"
 version = "v1"
 status = "Drafted"
-notes = """The far side is the declared src root itself (docs/stack.ini [paths] src), the directory this row's contract describes - not this row's own module, which named no far side. check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way."""
+notes = """check_stubs runs its own independent AST walk of it, distinct from gen_arch_map's inventory (IF-025): two separate walkers of the same tree for two different questions, and nothing else reads the raw directory this way."""
 
 [interface.IF-028]
 rationale = """Successor to the retired docs/architecture.md MODULE MAP parse. Sibling of IF-117, which consumes module_bindings for the LLR CodeSymbol anchor rule: two oracles for two questions, both now AST-side."""
@@ -551,7 +560,6 @@ interface_to_external = "B-05"
 notes = """Published contract, not a single consumer: this row and check_doc_refs each walk the whole docs tree for their own purpose, and check_vocab/check_privacy sweep it as part of a broader whole-repo scan - an open, ever-growing population as every downstream adopter authors their own docs tree and validates it with the same shipped checker. Ties to B-05 as the template's own delivered doc-tree convention."""
 
 [interface.IF-031]
-contract = """reads the PB-### budgets registry and a measured-metrics JSON, comparing each in-tier metric to its budget/baseline"""
 owner = "docs/requirements/performance-budgets.csv"
 consumers = ["scripts/check_perf"]
 channel = "file"
@@ -560,7 +568,6 @@ version = "v1"
 status = "Drafted"
 
 [interface.IF-032]
-contract = """reads the staged diff / commit message / outgoing range via git and docs/privacy-check + docs/secrets-scan for the active leak classes"""
 owner = "external:git"
 consumers = ["scripts/check_privacy"]
 channel = "git"
@@ -597,7 +604,6 @@ status = "Drafted"
 notes = """Low fan-out: two direct walkers of <skill>/SKILL.md - bootstrap (select_skills, scaffold-time filtering) and gen_skills_index (this row, the INDEX.csv generator). A closed, nameable set."""
 
 [interface.IF-036]
-contract = """reads the UPSTREAM manifest and fetches each declared upstream source over the network (network-gated), comparing bytes"""
 owner = "external:upstream docs"
 consumers = ["scripts/check_vendored"]
 channel = "bytes"
@@ -619,7 +625,7 @@ interface_to_external = "B-05"
 owner = "docs/status.md"
 consumers = ["scripts/agent_common", "scripts/check_docs", "scripts/check_trajectory", "scripts/gen_okf", "scripts/integrate", "scripts/trunk_step"]
 channel = "file"
-data = "the forward-only blackboard; `## Current State` carries the generated block between its markers"
+data = "the hand-authored blackboard outside the GENERATED STATUS marker pair; the block between the markers is its writer's row"
 version = "v1"
 status = "Drafted"
 
@@ -659,7 +665,6 @@ version = "v1"
 status = "Drafted"
 
 [interface.IF-041]
-contract = """invokes the configured agent CLI headless (build_argv substitutes {model}/{prompt}; on Windows it refuses prompt-in-argv through a .cmd/.bat shim) per the in-process phase and captures the typed session outcome"""
 rationale = """The Windows refusal is there because the OS may reparse a prompt carried in argv via cmd.exe even with shell=False."""
 owner = "external:agent CLI"
 requestors = ["scripts/agent_session"]
@@ -700,7 +705,7 @@ channel = "file"
 data = "Id, Family, Model, Version, Tier, CmdTemplate, Env, Notes; Tier: strong | medium | quick"
 version = "v1"
 status = "Drafted"
-notes = """The provider side is the two declared files, which is the medium consumed; this row's own module named no far side. FAN-OUT IS NOT 1, correcting the earlier cell: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
+notes = """FAN-OUT IS NOT 1: agent_route is the sole reader of the pair-row MODEL registry, but dispatch reads docs/agents-enabled DIRECTLY - its own bytes-and-lines parse, deciding whether routing is wired at all, with no call into agent_route - and migrate_carrier names the registry in its carrier table. agent_loop and plan_runner do call agent_route's load_registry/load_enabled/load_tag_rank API (a script-to-script seam, IF-044 and plan_runner's analogue) rather than reading the files themselves."""
 
 [interface.IF-162]
 owner = "docs/agents-enabled"
@@ -892,7 +897,7 @@ channel = "file"
 data = "one line: module path then minimum percent"
 version = "v1"
 status = "Drafted"
-notes = """The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here, correcting the earlier cell: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format."""
+notes = """The far side is the declared census file; the pytest-cov JSON is the run artifact the contract also names, and it is transient (check.py clears it before a covered run). check_coverage is the SOLE parser of the JSON content. check.py is deliberately NOT an endpoint here: it touches the report only as a constant and an unlink - lifecycle ownership, not content consumption - and a dependency analysis that sent a coverage-format change to check.py on the strength of this row would send it to a module that never parses the format."""
 
 [interface.IF-071]
 rationale = """The frontier DECISION seam, distinct from the derivation-loader seam to check_trajectory (IF-056). The guarded `import schedule` has its ONE home in traj_parse.py (IF-085 is that module-level row) and traj_status/traj_panels read it as traj_parse.schedule; this row remains the seam as the facade declares it. The ordering is derived once in schedule.py, which IF-053 already names as shared by the dashboard."""
@@ -913,7 +918,7 @@ channel = "file"
 data = "one line: path then em dash then reason"
 version = "v1"
 status = "Drafted"
-notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader - the reader the contract text already names and the cell used to omit. check_vocab is NOT one, correcting the earlier cell: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
+notes = """Built and consumed together. The endpoints are the OTHER readers of the declared-absence grammar: trace (_declared_absences) and tests/test_dogfood_sync.py, which loads the file as its SCAFFOLD_OMISSIONS declaration through this row's own loader. check_vocab is NOT one: it carries the filename in a byte-scan inclusion set (TEXT_NAMES) and never parses the `<path> - <reason>` grammar this contract defines. check_need_form.py compares prose only, not a read."""
 
 [interface.IF-073]
 owner = "docs/requirements/open-items.toml"
@@ -1110,7 +1115,7 @@ data = "pending.owner_cards -> PendingItem(kind, line) with kind blocked or spin
 version = "v1"
 status = "Drafted"
 component = "CMP-008"
-notes = """sink — the banner renders what the read model derives, and the provider is the read model rather than the dashboard facade that used to re-export it: a scheduling composer reaching through a render family for two private functions is a crossing a seam registry can only record, never make sound, so the derivation sits below all three of its readers instead. The crossing itself, the CMP-008 to CMP-009 pair and the never-disagree contract are unchanged by that siting"""
+notes = """sink — the banner renders what the read model derives; a scheduling composer reaching through a render family for two private functions is a crossing a seam registry can only record, never make sound, so the derivation sits below all three of its readers. The crossing, the CMP-008 to CMP-009 pair and the never-disagree contract are unchanged by that siting"""
 
 [interface.IF-089]
 owner = "scripts/trace"
@@ -1229,7 +1234,7 @@ data = "spine_carrier.load / resolve / stem / carriers / rows_from_text; rows un
 version = "v1"
 status = "Drafted"
 component = "CMP-006"
-notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly. The consumers cell names trace as the first importer; check_trajectory imports it too, and the remaining spine readers join as they convert."""
+notes = """source - spine_carrier consumes nothing by design, the trace_text pattern: text in, rows out, with resolve()'s existence check the single deliberate exception because the dual-home refusal must have one home. ONE module rather than eleven copies, which is the one admitted exception to the rejection of a shared _kitcommon: F5 buys cross-script copy-ability and was written for small stable plumbing, but a duplicated VOCABULARY fails silently rather than visibly."""
 
 [interface.IF-103]
 owner = "scripts/migrate_carrier"
@@ -1487,7 +1492,7 @@ data = "spine_carrier.resolve, carriers, stem, load, load_needs, CARRIERS, NEED_
 carried_by = "IF-102"
 version = "v1"
 status = "Drafted"
-notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. The owner-side endpoint of this row is its provider — scripts/spine_carrier — and its one design row LLR-166 (the carrier's one reader: resolve/load and the dual-home refusal) DEFINES both refusals this contract names, which is the IF-129 rule applied: the answerable row defines the behavior; the reader merely consumes it. LLR-173 is the consuming module's own row and answers for the snapshot record through IF-124/IF-129, not for this seam. OFFSPINE_TABLE is deliberately absent from the consumed-symbol list: baseline_snapshot cites that constant only in a comment (the SNAPSHOT_TIERS explanation), never in code, so listing it as consumed would be a false claim."""
+notes = """intra-component (both endpoints are CMP-006), so the cross-component rule never demanded this row; it is declared as the module genuinely consumes, and a `source` marker would have been a false claim. The IF-104/IF-118/IF-122 carrier-consumption shape. The dual-carrier refusal is what makes copy_live delete the stale carrier file in the same act. The unparseable-file refusal is the right answer for a snapshot precisely where it would be wrong for git history: a snapshot is on disk and a person can fix it. OFFSPINE_TABLE is deliberately absent from the consumed-symbol list: baseline_snapshot cites that constant only in a comment (the SNAPSHOT_TIERS explanation), never in code, so listing it as consumed would be a false claim."""
 
 [interface.IF-129]
 owner = "scripts/acceptance_record"
@@ -1642,9 +1647,7 @@ data = "severity: OK · SKIP · WARN · FAIL"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
-rationale = """Stated once: ten requirement rows each carry a fragment of this protocol as a secondary clause and none takes it as its subject, so a new checker can violate it without failing anything. SR-157 owns the row, being the one that already states the most of it - row-level attribution, a declared gate, and advisory classes never joining the exit code - and the one-definer rule makes a single owner mandatory.
-
-The PROTOCOL is fixed here, never the DISPOSITION: per-class severity stays each requirement's own declaration, and fixing it here would over-constrain rows whose needs differ.
+rationale = """The PROTOCOL is fixed here, never the DISPOSITION: per-class severity stays each requirement's own declaration, and fixing it here would over-constrain rows whose needs differ.
 
 Two clauses are deliberately absent. "Every degrade is named, never silent" is not stated: SR-181's acceptance permits a silent degrade where no prior committed state exists while SN-008 forbids one, so stating it would red an Approved row on the day this one landed. And the closed set is four DISPOSITIONS, not twelve exact tokens: the delivered checkers spell those four with twelve labels, and this row states the contract they already honour, not a rename they do not."""
 notes = """A census of 430 emission sites plus a two-way drive of every shipped checker found the protocol already honoured: 141 of 158 per-finding sites name a location (11 population-level, 6 thin), no advisory anywhere reaches an exit code, and 12 of 14 checkers exit zero on an absent optional input and name it. This row states a delivered property, not new work."""

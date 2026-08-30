@@ -61,12 +61,16 @@ Stdlib only, and import-clean of the rest of `scripts/`, like every module here.
 """
 
 import csv
+import io
 import re
 
 __all__ = [
     "LLR_EXEMPT",
     "MODULE_EXTS",
     "load_csv",
+    "csv_body",
+    "csv_reader",
+    "csv_rows",
     "norm_module",
     "refs",
     "is_example",
@@ -100,13 +104,47 @@ __all__ = [
 LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Attest"})
 
 
+def csv_body(text):
+    """The CSV text with its leading `#`-comment header removed — the header
+    ROW is the first line that is not a comment.
+
+    A registry CSV may open with the same `#` declaration header a TOML or INI
+    registry carries (the `Contracts:` marker and `Contract IF-###:` bodies of
+    the interface shape): `performance-budgets.csv` is such an owner.
+    `csv.DictReader` knows nothing of comments and would take the first `#`
+    line as the header row, which makes every real column — `PB-ID` first —
+    unaddressable in every reader at once. Only LEADING comment lines are
+    dropped: a `#` opening a data line, or one inside a quoted multi-line
+    cell, is data and stays. A BOM is stripped first, for the reason
+    `spine_carrier.rows_from_text` states: a BOM'd header glues to the first
+    column name and every row hides."""
+    lines = text.lstrip("\ufeff").splitlines(keepends=True)
+    i = 0
+    while i < len(lines) and lines[i].lstrip().startswith("#"):
+        i += 1
+    return "".join(lines[i:])
+
+
+def csv_reader(text):
+    """`csv.DictReader` over `csv_body(text)` — the ONE way a kit reader turns
+    registry CSV text into rows, so a header-carrying registry reads
+    identically everywhere; callers that need `fieldnames` take this one."""
+    return csv.DictReader(io.StringIO(csv_body(text)))
+
+
+def csv_rows(text):
+    """`csv_reader(text)` as a list."""
+    return list(csv_reader(text))
+
+
 def load_csv(path):
     """A registry CSV as a list of dict rows, or `[]` when the file is absent.
 
     `utf-8-sig` because a spreadsheet round-trip leaves a BOM on the first
     header cell, which would otherwise make the id column unaddressable, and
     `errors="replace"` so one mis-encoded cell degrades to a visible replacement
-    character rather than crashing a check.
+    character rather than crashing a check. Read through `csv_rows`, so a
+    leading `#` declaration header is a header and never the header row.
 
     Contract:
       Inputs:  path: `pathlib.Path` to a registry CSV (may not exist)
@@ -114,8 +152,7 @@ def load_csv(path):
     """
     if not path.exists():
         return []
-    with path.open(newline="", encoding="utf-8-sig", errors="replace") as f:
-        return list(csv.DictReader(f))
+    return csv_rows(path.read_text(encoding="utf-8-sig", errors="replace"))
 
 
 def refs(value):
@@ -510,16 +547,16 @@ OFFSPINE_KEYS = {
     # or directory path, or an `external:` party, the same spelling `consumers`
     # uses — never a requirement id; `channel` is the closed vocabulary of what
     # crosses; `data` the optional short alphabet. `provider`, `req_refs`,
-    # `signal` and `signal_note` LEFT the row at that ruling. `contract` is a
-    # LEGACY cell, read and counted until every definition has moved into its
-    # owner's `Contract IF-###:` body; the arming slice retires it.
+    # `signal` and `signal_note` LEFT the row at that ruling, and `contract`
+    # left with them once every definition had moved into its owner's
+    # `Contract IF-###:` body: a row still carrying any of the five is
+    # `trace.py`'s strict finding.
     "IF-ID": (
         "owner",
         "requestors",
         "consumers",
         "channel",
         "data",
-        "contract",
         "rationale",
         # OPTIONAL, and its EMPTINESS is the ordinary answer: "this seam is
         # verified in its own right". Filled, it names the parent whose tests

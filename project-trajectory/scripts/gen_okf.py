@@ -58,7 +58,6 @@ Contract IF-149: `docs/okf/`, the bundle this module is the sole writer of —
 """
 
 import argparse
-import csv
 import json
 import re
 import sys
@@ -130,8 +129,7 @@ posture applied to a spec instead of a doc set).
 def read_rows(path):
     if not path.exists():
         return []
-    with path.open(encoding="utf-8", newline="") as fh:
-        return list(csv.DictReader(fh))
+    return _kitspine.csv_rows(path.read_text(encoding="utf-8"))
 
 
 # The multi-ref cell split — ONE HOME since WI-448 slice 4
@@ -276,6 +274,7 @@ def _doc_title_and_summary(path):
     HTML comments, tables, quotes, fences and list markers are skipped; inline
     links are reduced to their text so nothing dangles in the bundle."""
     title, para, started, in_fm = "", [], False, False
+    in_comment = False
     for i, raw in enumerate(
         path.read_text(encoding="utf-8", errors="replace").splitlines()
     ):
@@ -287,7 +286,21 @@ def _doc_title_and_summary(path):
             if ln == "---":
                 in_fm = False
             continue
-        if not ln or ln.startswith("<!--"):
+        # An HTML comment is skipped WHOLE — the leading `<!-- ... -->` block a
+        # doc carries as its contract header (OI-67) spans lines, and reading
+        # its interior as the first paragraph made a seam definition the guide's
+        # summary.
+        if in_comment:
+            if "-->" in ln:
+                in_comment = False
+            continue
+        if ln.startswith("<!--"):
+            if "-->" not in ln:
+                in_comment = True
+            if started:
+                break
+            continue
+        if not ln:
             if started:
                 break
             continue
@@ -489,9 +502,7 @@ def emit(root):
             cid = r["IF-ID"].strip()
             # The typed statement first; the legacy `Contract` cell while any
             # row still carries one (OI-67); `Description` for a foreign row.
-            desc = (
-                r.get("Data") or r.get("Contract") or r.get("Description") or ""
-            ).strip()
+            desc = (r.get("Data") or r.get("Description") or "").strip()
             out["interfaces/{}.md".format(cid)] = concept(
                 "interfaces",
                 cid,

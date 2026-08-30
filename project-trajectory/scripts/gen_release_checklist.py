@@ -50,7 +50,6 @@ Contract IF-018: the human release checklist, written as a Markdown document
 """
 
 import argparse
-import csv
 import datetime
 import re
 import sys
@@ -78,10 +77,11 @@ HUMAN_METHODS = {"Demonstration", "Manual", "Inspection"}
 
 
 def load_csv(path):
+    """The off-spine rows of a registry CSV, `[]` when absent; a leading `#`
+    declaration header is skipped by the one shared reader."""
     if not path.exists():
         return []
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        return list(csv.DictReader(f))
+    return _kitspine.csv_rows(path.read_text(encoding="utf-8-sig"))
 
 
 # The `-000` placeholder-row convention. THE THIRD HOME, retired at WI-448

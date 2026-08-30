@@ -501,15 +501,14 @@ def load_csv(path):
     """The registry's rows, header-preserving. Refuses a header that is not the
     declared 18-column schema — a converter that guesses at an unknown shape is
     how a column gets dropped."""
-    with Path(path).open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
-        header = reader.fieldnames or []
-        if header != COLUMNS:
-            raise ConvertError(
-                "{}: header is not the declared work-item schema.\n"
-                "  expected: {}\n  found:    {}".format(path, COLUMNS, header)
-            )
-        return [dict(row) for row in reader]
+    reader = _kitspine.csv_reader(Path(path).read_text(encoding="utf-8-sig"))
+    header = reader.fieldnames or []
+    if header != COLUMNS:
+        raise ConvertError(
+            "{}: header is not the declared work-item schema.\n"
+            "  expected: {}\n  found:    {}".format(path, COLUMNS, header)
+        )
+    return [dict(row) for row in reader]
 
 
 def write_csv(path, rows):

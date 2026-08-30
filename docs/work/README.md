@@ -36,7 +36,8 @@ Contract IF-159: the WRITE side of this directory, and the format's single
     directory, the filename repeating the id, UTF-8 with LF endings on every
     platform. The file is RE-READ and re-parsed before its path is returned: a
     spec whose frontmatter does not reconstruct its source row cell-exact, the
-    order key included, raises instead of being left on disk. Bulk conversion
+    order key included, raises — the mismatching file stays where the caller
+    can inspect it, and no path is returned for it. Bulk conversion
     and single-item filing both go through it, so no spec is produced by a path
     that skips that check. Moving a file between the status directories is a
     state change, not a write of this format.

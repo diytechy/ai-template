@@ -43,14 +43,20 @@ namespace, parallel to SN/SR/LLR/TC).
 | `interface_from_external` / `interface_to_external` | The directional tie-back to a `B-##` crossing in `external.toml`, present **only** when this row REALIZES one — `from` for an IN crossing, `to` for an OUT one, both for in/out. A row with neither is an internal seam; that absence IS the statement. |
 | `Component` | Optional `CMP-###` membership tag for the component layer; empty when unused. |
 | `Notes` | Free-form; argument, never citation. The `source`/`sink` honesty valve lives here — `source` marks the row's `Owner`, `sink` its far side, silencing the missing-seam coverage warn for that side (see the registry's `-000` row). |
-| `Contract` | **Legacy.** The prose definition rows carried before the header existed. A row still carrying one is counted by a warning; move its content into the owner's `Contract IF-###:` body and delete the cell. |
 
 ## Rules (keep links from rotting)
 
 - **One definition, one home.** The owner's header holds the authoritative
   definition (`Contracts:` marker + `Contract IF-###:` bodies); the far side
   links it by `IF-ID` and never re-states it. If both repos describe the shape,
-  they will diverge — link instead.
+  they will diverge — link instead. **The gate is armed:** a row whose owner
+  declares it but states no body, or whose owner declares nothing, is a
+  `check_trajectory --strict` finding; a source declaring a row another
+  in-tree source owns is one too. An `external:`-owned row is stated by the
+  kit module on its far side — our reading of a surface we do not own. The
+  retired cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`)
+  are `trace.py --strict` findings wherever they still appear. A CSV registry
+  may carry the same `#` header; every kit reader strips it.
 - **Every interface is backed by a TC.** A seam this repo owns needs a contract
   test that asserts the published shape; a seam an `external:` owner serves
   needs a test (or recorded fixture/mock pinned to `Version`) proving we read or

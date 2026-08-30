@@ -838,9 +838,16 @@ def test_the_if_shape_converter_is_a_no_op_on_the_new_shape_and_check_writes_not
     mc.convert_if_shape(root, write=True)
     after = (root / "docs/requirements/interfaces.toml").read_bytes()
     report2, written2 = mc.convert_if_shape(root, write=True)
-    assert written2 == [] and report2 == [
-        "docs/requirements/interfaces.toml: 0 row(s) rewritten to the owner / far side / channel shape"
-    ]
+    assert written2 == []
+    assert report2[0] == (
+        "docs/requirements/interfaces.toml: 0 row(s) rewritten to the owner / "
+        "far side / channel shape"
+    )
+    # The armed gate's migration list: a `contract` cell is never dropped (its
+    # content has no mechanical home), so every pass names each row still
+    # carrying one, and nothing else.
+    assert [r.split(":")[0] for r in report2[1:]] == ["IF-001", "IF-002", "IF-003"]
+    assert all("still carries a `contract` cell" in r for r in report2[1:])
     assert (root / "docs/requirements/interfaces.toml").read_bytes() == after
 
 

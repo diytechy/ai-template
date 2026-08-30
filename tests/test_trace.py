@@ -882,9 +882,49 @@ def test_clean_if_row_trips_none_of_the_new_rules(scaffold):
         "has empty required field",
         "closed vocabulary",
         "resolves to no module, file or directory",
-        "legacy `contract` cell",
+        "carries the retired",
     ):
         assert noise not in out, noise
+
+
+def test_a_retired_cell_is_a_strict_finding(scaffold):
+    # OI-67 slice 6, the armed gate's registry half: the five cells the ruling
+    # took off the row are the wrong SHAPE wherever they still appear — a
+    # `contract` (the definition has one home, the owner's header), a
+    # `provider`/`req_refs`/`signal`/`signal_note` (derived or subsumed). Each
+    # is named by key; the legacy summarizing warning is gone.
+    make_minimal_project(scaffold)
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'owner = "src/demo"\n'
+        'consumers = ["external:git"]\n'
+        'channel = "call"\n'
+        'contract = "the definition, in the wrong home"\n'
+        'req_refs = ["SR-001"]\n'
+        'version = "v1"\n'
+        'status = "Drafted"\n',
+        encoding="utf-8",
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = _report(scaffold)
+    assert "IF IF-001 carries the retired `contract` cell" in report
+    assert "IF IF-001 carries the retired `req_refs` cell" in report
+    assert "legacy `contract` cell" not in proc.stdout
+    # Delete them and the row is clean: the finding is the cell, not the row.
+    (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
+        "[interface.IF-001]\n"
+        'owner = "src/demo"\n'
+        'consumers = ["external:git"]\n'
+        'channel = "call"\n'
+        'version = "v1"\n'
+        'status = "Drafted"\n',
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "carries the retired" not in _report(scaffold)
 
 
 def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -1382,8 +1422,11 @@ def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
         "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
         "Stability,Status,Component\n"
     )
+    # The retired columns stay in the legacy HEADER (that is the carrier's
+    # shape) with EMPTY cells: a value in one is the armed gate's strict
+    # finding since OI-67 slice 6, and this test is about the carrier.
     (req / "interfaces.csv").write_text(
-        legacy + 'IF-001,Provides,src/demo,git,"x",SR-001,v1,Stable,Active,\n',
+        legacy + "IF-001,Provides,src/demo,git,,,v1,Stable,Active,\n",
         encoding="utf-8",
     )
     record_ids(scaffold)

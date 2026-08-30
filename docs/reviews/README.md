@@ -16,8 +16,9 @@ Contract IF-160: `scoreboard.txt` in this directory, written by the review
     tripwire= contradiction=` line per recorded round in order. Recording a
     round rewrites the whole file — the standing tallies decayed by a declared
     factor, the new round appended — LF on every platform, so the same inputs
-    give the same bytes. It is ADVISORY state: the escalation policy reads it,
-    nothing here auto-selects the next round's routing, and no gate takes it as
+    give the same bytes. Recording a round first reads the standing tallies
+    back (the read side is the directory's read row), then rewrites the whole
+    file. It is ADVISORY state: nothing here auto-selects the next round's routing, and no gate takes it as
     evidence.
 -->
 

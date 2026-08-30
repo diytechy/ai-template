@@ -4093,6 +4093,44 @@ interface semantics did not.
 module mints its seam rows and the module's stub header before any code, so
 parallel workers read the same home the finished module will have.
 
+### The definition gate is armed [since 816090cd]
+
+**Kit-owned files — overwrite and move on:** `scripts/kitlib/spine.py`,
+`scripts/trace.py`, `scripts/check_trajectory.py`, `scripts/migrate_carrier.py`,
+`scripts/gen_okf.py`, every CSV-reading script, `registries/interfaces.template.toml`,
+`INTERFACES.template.md`, `PROCESS.md`.
+
+**What reds now, and where.** `check_trajectory --strict` fails an interface
+row with no stated definition: its owner declares it on a `Contracts:` line but
+states no `Contract IF-###:` body ("declared, not stated"), or its owner
+declares nothing, or a source declares a row the registry owns to another
+in-tree source. `trace.py --strict` fails a row still carrying any of the five
+retired cells — `contract` included, which the previous entry left as a
+counted warning. Both share the `[checks] interfaces_check` opt-out. **Find
+the rows that will red before you upgrade:**
+
+```
+python <kit>/scripts/migrate_carrier.py --if-shape --check   # every row still carrying `contract`
+python <kit>/scripts/gen_arch_map.py --src <src> --contracts-doc docs/interface-reference.md   # the "Declared, not stated" list
+```
+
+Each `contract` cell's text moves into the owner's header as its `Contract
+IF-###:` body, then the cell is deleted; the converter reports the rows and
+never drops the cell, because its content has no mechanical home.
+
+**Where an `external:`-owned row is stated:** by the kit module on its far
+side — the consumer that reads the external surface, or the requestor that
+drives it — since the external party's header is not yours to write. Add the
+row's id to that module's `Contracts:` marker and write the body there as
+"our reading of" the surface: what is read or sent, what is assumed, what a
+failure does. A module that is not the far side may not state it.
+
+**A CSV registry may now carry the `#` header** (a `Contracts:` marker and
+bodies at the top of `performance-budgets.csv`, say): every kit reader strips
+a leading comment block before the header row, through the one shared reader
+`kitlib.spine.csv_body`. A CSV your OWN tooling reads must skip it the same
+way, or add no header to that file.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

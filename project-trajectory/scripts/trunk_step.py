@@ -170,8 +170,9 @@ def fragment_paths(root):
     so is the directory's own `README.md` — the declaration home of the
     `docs/log.d/` interface row (a directory owner states its contract in its
     README), which is neither a session fragment nor a name the fragment
-    grammar could accept. By NAME, exactly, so any other badly named file still
-    refuses the whole compile."""
+    grammar could accept. By NAME (case-folded, since a Windows checkout may
+    spell it either way), so any other badly named file still refuses the whole
+    compile."""
     d = Path(root) / LOG_D
     if not d.is_dir():
         return []
@@ -179,7 +180,9 @@ def fragment_paths(root):
         (
             p
             for p in d.glob("*.md")
-            if p.is_file() and not p.name.startswith(".") and p.name != "README.md"
+            if p.is_file()
+            and not p.name.startswith(".")
+            and p.name.lower() != "readme.md"
         ),
         key=lambda p: p.name,
     )

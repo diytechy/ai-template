@@ -127,6 +127,38 @@ def test_process_guides_emit_with_derived_summaries(scaffold):
     assert "type:" not in arch.read_text(encoding="utf-8").splitlines()[0]
 
 
+def test_a_leading_html_comment_block_never_becomes_the_guide_summary(scaffold):
+    # OI-67: a Markdown owner carries its `Contracts:` header as the FIRST HTML
+    # comment in the file, spanning lines. The summary is DERIVED from the
+    # doc's first prose paragraph, and the comment's interior is not prose —
+    # skipping only its first line made a seam definition the guide's summary.
+    make_minimal_project(scaffold)
+    doc = scaffold / "docs" / "runtime-flows.md"
+    doc.write_text(
+        "<!--\n"
+        "Contracts: IF-950 — the seam this file declares.\n"
+        "\n"
+        "Contract IF-950: THE CONTRACT BODY, which is not a summary.\n"
+        "-->\n"
+        "\n"
+        "# Runtime flows\n"
+        "\n"
+        "The real first paragraph of the document.\n"
+        + doc.read_text(encoding="utf-8").split("\n", 1)[1],
+        encoding="utf-8",
+    )
+    from conftest import load_script
+
+    okf_mod = load_script("gen_okf")
+    title, summary = okf_mod._doc_title_and_summary(doc)
+    assert title == "Runtime flows"
+    assert summary.startswith("The real first paragraph")
+    assert "THE CONTRACT BODY" not in summary
+    # A one-line comment still reads as before.
+    doc.write_text("<!-- one line -->\n# T\n\nPara.\n", encoding="utf-8")
+    assert okf_mod._doc_title_and_summary(doc) == ("T", "Para.")
+
+
 def test_process_guides_skip_absent_docs(scaffold):
     # A doc a given repo doesn't carry is skipped (like the off-spine tiers), so
     # the shipped candidate list is generous without minting dangling concepts.

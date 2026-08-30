@@ -244,7 +244,18 @@ BASELINE = {
     ): 21,  # +1 2026-08-29 WI-527 (OI-66 ruled (a)): the `--contracts-doc` report mode dispatches beside `--cli-doc` as one `if` at the top of main(), for the identical reason — the target carries the INTERFACE REFERENCE block and not the module map, so demanding a MODULE MAP marker pair would refuse the one document this mode exists to write. The mode itself is already extracted (`_contracts_doc_exit`). Reviewed bump. Earlier +1 2026-08-24 WI-512 (OI-61 ruled (a), second step): the `--cli-doc` report mode returns before the `--doc`/MODULE MAP contract below it, so the dispatch is one `if` at the top of main() — the same shape `--backlink-coverage` took, and for a sharper reason: the CLI-reference target carries the CLI block and NOT the module map that retired at WI-455, so demanding a MODULE MAP marker pair would refuse the one document this mode exists to write. The mode itself is already extracted (`_cli_doc_exit`). Reviewed bump. Earlier +1 2026-08-20 WI-486 (OI-42 ruled (e)): the `--backlink-coverage` report mode returns before every --doc/marker contract below it, so the dispatch is one `if` at the top of main(). It cannot be decomposed away — the whole point is that the report reads the source tree and writes NOTHING, so it must exit before the splice-target refusal asks for a document the measurement never touches; the report itself is already extracted (`_backlink_exit`). Reviewed bump. Earlier +1 2026-08-14 WI-455: the required---doc refusal (the scaffolded docs/architecture.md default retired; a bare run must say where the map now lives, not write to a ghost path) — reviewed bump, reason in the log fragment
     ("gen_cases.py", "all_pairs"): 13,
     ("gen_cases.py", "main"): 12,
-    ("gen_okf.py", "_doc_title_and_summary"): 13,
+    (
+        "gen_okf.py",
+        "_doc_title_and_summary",
+    ): 18,  # +5 (13 -> 18) 2026-08-29 WI-533 (OI-67 slice 6): a leading HTML comment is skipped WHOLE — the `in_comment` state and its two transitions (a multi-line `<!--` opens it, a `-->` closes it) join the line classifier, because a Markdown owner's `Contracts:` header spans lines and its interior was being read as the guide's first paragraph. Reviewed bump, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    (
+        "check_trajectory.py",
+        "contract_body_findings",
+    ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the armed definition gate — the opt-out, the vacuity, the per-row split between an external-owned row (its own helper) and an in-tree owner (declared-not-stated), and the stray arm (its own helper). Two arms were extracted to land at 11 rather than the 18 the first cut measured. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    (
+        "trace.py",
+        "interface_findings",
+    ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the retired-cell arm (one loop over the five (column, key) pairs) joins the owner-shape and far-side rules in the one IF integrity function, taking it from 10 to 11. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
     # -4 (29 -> 25), WI-328: the LLR's new Rationale column would have been the
     # FIFTH `if cell: body.append("**Label.** ...")` inside emit, and the ratchet
     # caught it at +1. Extracted as the `field()` helper — the `links()` sibling

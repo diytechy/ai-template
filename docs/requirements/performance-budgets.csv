@@ -1,3 +1,19 @@
+# docs/requirements/performance-budgets.csv — the PB-### budget registry.
+#
+# Contracts: IF-031 — the interface seam this file declares (process.md §8;
+# row of record in docs/requirements/interfaces.toml).
+#
+# Contract IF-031: the performance-budget registry as a CSV medium. One row
+#     per budget under the header `PB-ID, Metric, Refs, Budget, Unit,
+#     Tolerance, Direction, Tier, Gate, Owner, Notes`; `Refs` back-links the
+#     SR, LLR or module path the budget bounds and an unknown ref is a
+#     finding; `Direction` is `lower-better` or `higher-better`; `Gate` is
+#     `warn` or `fail`; `Tier` names the run tier the budget is compared in
+#     (Smoke, Full or Release). The comparator reads each in-tier row
+#     against the measured-metrics JSON and the committed baseline; a
+#     `-000` id is the shipped example and inert; an absent file is no
+#     budgets. This leading `#` block is a comment header every kit reader
+#     strips before the header row, never data.
 PB-ID,Metric,Refs,Budget,Unit,Tolerance,Direction,Tier,Gate,Owner,Notes
 PB-001,trace.py full-analysis wall-clock (--strict --no-placeholders --html --require-verified --strict-schema),LLR-001;LLR-002;LLR-003;LLR-005,5,s,50%,lower-better,Release,warn,Integration,"The heaviest single check in the DevStg-Impl gate plan (docs/stack.ini ""traceability"" step; the BAR_RELEASE constant this Notes cell once named was retired with the bar axis at WI-498 slice 5): the full join/orphan/integrity/placeholder/schema pass over the whole spine (repo-review 2026-08-19 M-16). Measured 0.97s on this box (Windows 11, 24 cores, .venv Python 3.11.9; single-machine observation, not universal per the standing status.md rule -- re-measure locally before budgeting against it elsewhere). Budget carries ~5x headroom; Gate=warn because wall-clock is a noisy runtime metric (docs/stack.ini convention). No perf-metrics.json producer is wired yet (WI-481 seeds the registry only, per its own scope) -- this Notes figure is the manual measurement basis, not an automated baseline. fig: cmd="".venv/Scripts/python.exe project-trajectory/scripts/trace.py --root . --strict --no-placeholders --html --require-verified --strict-schema"" rev=94489f7a"
 PB-002,derive_stage.py --check + gen_trajectory.py --check combined wall-clock,SR-173,20,s,50%,lower-better,Release,warn,Integration,"The dashboard-regeneration pair named in repo-review 2026-08-19 M-16, re-keyed at the WI-498 stage unification (derive_gate retired; derive_stage is the successor freshness recompute): derive_stage.py's fingerprint recompute feeds the PROJECT_STATE.html freshness recompute gen_trajectory.py performs next, which dominates the pair (the AST arch-map scan over all four spine registries). Both run in --check mode (compare-only, no write), matching the actual docs/stack.ini `derived-stage`/`trajectory-map` steps and the pre-commit hook's run-steps. Re-measured 6.82s median (6.79/6.82/6.93 over three warm runs) on this box (Windows 11, 24 cores, .venv Python 3.11.9; single-machine, not universal) -- within noise of the pre-unification 6.46s. Budget carries ~3x headroom; Gate=warn (noisy runtime metric). No perf-metrics.json producer is wired (WI-481 scope: registry rows + basis only). fig: cmd="".venv/Scripts/python.exe project-trajectory/scripts/derive_stage.py --root . --check && .venv/Scripts/python.exe project-trajectory/scripts/gen_trajectory.py --root . --check"" rev=73663c3d"

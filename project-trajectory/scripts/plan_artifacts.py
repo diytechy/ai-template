@@ -49,7 +49,6 @@ Contract IF-061: the planning round's artifact WRITE side.
     rather than minting one real id for two rows.
 """
 
-import csv
 import re
 import sys
 from pathlib import Path
@@ -183,11 +182,10 @@ def _existing_wi_nums(csv_path):
         # utf-8-sig: a BOM'd registry (Excel) renamed the first header key, so
         # ZERO existing ids were found and fresh children minted from WI-001
         # straight into collisions (repo-review 2026-07-21 M-33).
-        with csv_path.open(encoding="utf-8-sig", newline="") as fh:
-            for r in csv.DictReader(fh):
-                m = WI_ID_RE.match((r.get("WI-ID") or "").strip())
-                if m:
-                    nums.add(int(m.group(1)))
+        for r in _kitspine.csv_reader(csv_path.read_text(encoding="utf-8-sig")):
+            m = WI_ID_RE.match((r.get("WI-ID") or "").strip())
+            if m:
+                nums.add(int(m.group(1)))
     for path in wi_convert.spec_paths(wi_convert.work_dir_for(csv_path)):
         m = WI_FILE_RE.match(path.name)
         if m:

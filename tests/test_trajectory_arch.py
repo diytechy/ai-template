@@ -299,7 +299,15 @@ def write_arch(root, text):
         if doc or mod["contracts"]:
             body += '"""' + doc
             if mod["contracts"]:
-                body += "\n\nContracts: " + ", ".join(mod["contracts"])
+                # Declared AND stated (OI-67 slice 6): the armed definition
+                # gate reds a declared seam with no body, and these fixtures
+                # are about coverage, containment and seams — not about that
+                # gate, which has its own scenarios below.
+                body += "\n\nContracts: " + ", ".join(mod["contracts"]) + "\n"
+                for iid in mod["contracts"]:
+                    body += "\nContract {}: the fixture's contract for {}.".format(
+                        iid, iid
+                    )
             body += '"""\n'
         for imp in mod["imports"]:
             body += "import {}\n".format(imp)
@@ -701,6 +709,154 @@ def test_if_tc_allow_parse_honesty_shares_the_interfaces_check_opt_out(tmp_path)
     )
     (tmp_path / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
     assert check_trajectory.if_tc_allow_parse_findings(tmp_path) == []
+
+
+# --- OI-67 slice 6: the armed definition gate -------------------------------
+# A row is STATED — declared on its owner's `Contracts:` marker with a
+# `Contract IF-###:` body there — or it is an interface with no definition.
+# WARN plain, ERROR under `--strict`, the `if_tc_coverage_findings` idiom.
+
+
+def _gate_repo(
+    tmp_path,
+    mod_a_doc,
+    mod_b_doc='"""B.\n\nContracts: IF-002\n\nContract IF-002: b states it."""\n',
+):
+    write_arch(tmp_path, ARCH_2MOD)
+    (tmp_path / "scripts" / "mod_a.py").write_text(
+        mod_a_doc + "\n\ndef run():\n    return None\n", encoding="utf-8"
+    )
+    (tmp_path / "scripts" / "mod_b.py").write_text(
+        mod_b_doc + "\n\ndef go():\n    return None\n", encoding="utf-8"
+    )
+    write_ifs(
+        tmp_path,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n',
+    )
+    (tmp_path / "docs" / "test").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001;IF-002,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_a_declared_seam_with_no_body_warns_plain_and_fails_strict(tmp_path):
+    root = _gate_repo(tmp_path, '"""A.\n\nContracts: IF-001"""\n')
+    proc = run_traj(root)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "WARN - IF IF-001 is declared by its owner 'scripts/mod_a' but states no "
+        "`Contract IF-001:` body there" in proc.stderr
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "ERROR - IF IF-001 is declared by its owner 'scripts/mod_a'" in proc.stderr
+    assert "IF-002" not in [ln for ln in proc.stderr.splitlines() if "ERROR" in ln][0]
+
+
+def test_a_stated_seam_is_silent_under_the_gate(tmp_path):
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "states no `Contract" not in proc.stderr
+    assert "neither declares nor states" not in proc.stderr
+
+
+def test_an_owner_that_never_declares_is_the_reverse_checks_warn_not_the_gates(
+    tmp_path,
+):
+    # The ruled rule is "a DECLARED seam with no body". An owner that declares
+    # nothing is the owner-exact reverse check's warn (the migration list, not a
+    # defect in a stated definition) — the dodge that leaves is on record in
+    # the gate's docstring and is the owner's to promote.
+    root = _gate_repo(tmp_path, '"""A, silent."""\n')
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert (
+        "WARN - IF IF-001 is owned by 'scripts/mod_a', but that module's "
+        "Contracts: line does not declare it" in proc.stderr
+    )
+    assert check_trajectory.contract_body_findings(root) == []
+
+
+def test_an_external_owned_seam_is_stated_by_its_far_side(tmp_path):
+    # An external party's header is not ours to write: OUR READING of its
+    # surface is stated by the kit module on the row's far side, and a module
+    # that is not the far side may not state it.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a."""\n'
+    )
+    write_ifs(
+        root,
+        'IF-001,Provides,scripts/mod_a,scripts/mod_b,"a to b",SR-001,v1,approved,Active,,\n'
+        'IF-002,Provides,scripts/mod_b,scripts/mod_a,"b to a",SR-001,v1,approved,Active,,\n'
+        'IF-003,Provides,external:git,scripts/mod_b,"refs",SR-001,v1,approved,Active,,\n',
+    )
+    (root / "docs" / "test" / "test-cases.csv").write_text(
+        "TC-ID,Verifies,Level,Method,Tier,Parameters,Expected,Automated,Evidence,Status\n"
+        "TC-001,SR-001;IF-001;IF-002;IF-003,Integration,seam,Full,,ok,Yes,tests/x.py,Approved\n",
+        encoding="utf-8",
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert (
+        "ERROR - IF IF-003 is owned by 'external:git' and no far-side kit module "
+        "states it" in proc.stderr
+    )
+    # The far side declares it: stated, and silent.
+    (root / "scripts" / "mod_b.py").write_text(
+        '"""B.\n\nContracts: IF-002, IF-003\n\nContract IF-002: b.\n'
+        'Contract IF-003: our reading of git."""\n\ndef go():\n    return None\n',
+        encoding="utf-8",
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    # A module that is NOT the far side stating it is a stray declaration.
+    (root / "scripts" / "mod_a.py").write_text(
+        '"""A.\n\nContracts: IF-001, IF-003\n\nContract IF-001: a.\n'
+        'Contract IF-003: not mine to state."""\n\ndef run():\n    return None\n',
+        encoding="utf-8",
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert (
+        "ERROR - 'scripts/mod_a' declares IF IF-003, an external-owned seam whose "
+        "far side it is not" in proc.stderr
+    )
+
+
+def test_a_stray_declaration_on_the_wrong_module_is_a_finding(tmp_path):
+    # The owner is the ONE declaration site; a second copy on another module
+    # is a second definition waiting to disagree.
+    root = _gate_repo(
+        tmp_path,
+        '"""A.\n\nContracts: IF-001, IF-002\n\nContract IF-001: a.\nContract IF-002: a copy."""\n',
+    )
+    proc = run_traj(root, "--strict")
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert (
+        "ERROR - 'scripts/mod_a' declares IF IF-002, which the registry owns to "
+        "'scripts/mod_b'" in proc.stderr
+    )
+
+
+def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity(
+    tmp_path,
+):
+    root = _gate_repo(tmp_path, '"""A.\n\nContracts: IF-001"""\n')
+    (root / "docs" / "interfaces-check").write_text("off\n", encoding="utf-8")
+    assert check_trajectory.contract_body_findings(root) == []
+    (root / "docs" / "interfaces-check").unlink()
+    assert check_trajectory.contract_body_findings(root)
+    (root / "docs" / "stack.ini").write_text(
+        "[paths]\nsrc = scripts\n[arch-map]\nmode = files\n", encoding="utf-8"
+    )
+    assert check_trajectory.contract_body_findings(root) == []
 
 
 def test_if_tc_allow_malformed_line_is_reported_end_to_end(tmp_path):

@@ -204,7 +204,7 @@ Contracts (interfaces): IF-004, IF-147
 
 ### `scripts/check_privacy`
 _Secrets + privacy-leak lint — the deterministic floor (stdlib only)._
-Contracts (interfaces): IF-005, IF-043, IF-148
+Contracts (interfaces): IF-005, IF-032, IF-043, IF-148
 
 | Option | Help |
 |---|---|
@@ -238,7 +238,7 @@ Contracts (interfaces): IF-009, IF-056, IF-082, IF-083, IF-084, IF-138
 
 ### `scripts/check_vendored`
 _Drift check for vendored third-party docs (stdlib only, network-gated, warn-first)._
-Contracts (interfaces): IF-016
+Contracts (interfaces): IF-016, IF-036
 
 | Option | Help |
 |---|---|

@@ -60,9 +60,8 @@ Contract IF-102: the carrier's whole read surface, as trace.py imports it — an
     (SR-ID -> requirement, LLR-ID -> design, TC-ID -> test) and SPINE_COLUMN
     maps a carrier key to today's column name. rows_from_text(text, id_col,
     carrier) returns {id: row} under those names, or None — never {} — when a
-    TOML text does not parse; rows_seq_from_text keeps file order and
-    duplicates, so a duplicated id under the CSV fallback still reaches an
-    integrity check as two rows. stem(rel) strips the suffix and carriers(rel)
+    TOML text does not parse (the file-order, duplicates-kept read is the
+    model registry's own row). stem(rel) strips the suffix and carriers(rel)
     names both suffixed paths, for an applicability test that has to span the
     cutover commit. resolve(path) returns the live carrier file and
     RAISES when a stem exists under both, rather than resolving by precedence;
@@ -394,9 +393,9 @@ OFFSPINE_COLUMN = {
     # per row (OI-67, the owner's own addition).
     "requestors": "Requestors",
     "consumers": "Consumers",
-    # LEGACY, read and counted until the definition on every row has moved into
-    # its owner's `Contract IF-###:` body; retires with the arming slice.
-    "contract": "Contract",
+    # `contract` LEFT the row with them once every definition had moved into
+    # its owner's `Contract IF-###:` body: a legacy carrier still carrying it
+    # keys it as itself, and `trace.interface_findings` names the row.
     "interface_from_external": "InterfaceFromExternal",
     "interface_to_external": "InterfaceToExternal",
     # external (EXT-###/B-##/REL-###, the depth-0 frame; WI-442, sitting-2
@@ -562,8 +561,10 @@ def rows_from_csv(text, id_col):
     Parsed over the FULL text, never line-split: spine cells are long and
     RFC-4180 quoting spans lines. Callers strip a BOM first (adversarial-review
     F4 — `git show` preserves a committed BOM, and a BOM'd header glues to the
-    first column name so every row hides)."""
-    return {r[id_col]: r for r in csv.DictReader(io.StringIO(text)) if r.get(id_col)}
+    first column name so every row hides). A leading `#` declaration header
+    — the OI-67 marker and bodies a CSV owner carries — is skipped by the one
+    shared reader, never read as the header row."""
+    return {r[id_col]: r for r in _kitspine.csv_reader(text) if r.get(id_col)}
 
 
 def rows_from_text(text, id_col, carrier):
@@ -602,7 +603,7 @@ def rows_seq_from_text(text, id_col, carrier):
     if carrier == ".toml":
         rows = rows_from_toml(text, id_col)
         return None if rows is None else list(rows.values())
-    return [r for r in csv.DictReader(io.StringIO(text)) if r.get(id_col)]
+    return [r for r in _kitspine.csv_reader(text) if r.get(id_col)]
 
 
 def resolve(path, suffixes=CARRIERS):

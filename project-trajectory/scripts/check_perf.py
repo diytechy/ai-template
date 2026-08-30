@@ -70,7 +70,6 @@ Contract IF-147: the gate verdict the harness reads back from this CLI. 0
 """
 
 import argparse
-import csv
 import json
 import sys
 from pathlib import Path
@@ -78,6 +77,7 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+from kitlib import spine as _kitspine
 
 
 # Cumulative tiers (process.md §4): a row is in scope at run tier R when its own
@@ -92,8 +92,7 @@ def load_budgets(path):
     everywhere else; the registry is optional, so a missing file = no budgets)."""
     if not path.exists():
         return []
-    with path.open(newline="", encoding="utf-8-sig") as f:
-        rows = list(csv.DictReader(f))
+    rows = _kitspine.csv_rows(path.read_text(encoding="utf-8-sig"))
     return [r for r in rows if r.get("PB-ID") and not r["PB-ID"].endswith("-000")]
 
 
