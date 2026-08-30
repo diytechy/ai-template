@@ -83,5 +83,19 @@ pytest tests/test_dependency_ledger.py      -> 5 passed (stdlib claim proven)
 pytest tests/test_smoke_budget.py tests/test_smoke_tier.py
        tests/test_generated_freshness_wiring.py tests/test_dogfood_sync.py
                                             -> 53 passed, 1 skipped
-pytest -n auto  (FULL SUITE)                -> (pasted below at close)
+pytest -n auto  (FULL SUITE)                -> 1 failed, 3160 passed, 16 skipped in 657.55s
 ```
+
+**The one full-suite failure is expected generated-artifact staleness, not a defect.**
+`tests/test_derive_stage.py::test_this_repo_s_committed_stage_is_current` fails
+because the committed `docs/stage` fingerprint no longer matches: adding the four
+**Drafted** spine rows (SR-183/LLR-206/TC-202/TC-203) moved `drafted` 6 → 10 and
+pulled phase-5's *live* reading to DevStg-Reqs. The EFFECTIVE selection `stage` is
+unchanged (DevStg-LLReqs, settled). `docs/stage` is a declared generated artifact
+whose `derived-stage` freshness step SKIPs on a work branch ("generated freshness
+is the trunk lane's, §5.2"), and `test_derive_stage` is in `conftest.SLOW_MODULES`
+— which is why the commit bar is green and only the close/CI full suite surfaces
+it. The trunk lane regenerates `docs/stage` after the merge; committing it here
+would do the trunk lane's job on the branch and churn against the concurrent
+spine-touching lanes (WI-538/WI-539 share this plan). So it is deliberately left
+for trunk. Every other test passes.
