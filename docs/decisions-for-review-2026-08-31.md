@@ -508,3 +508,21 @@ before the commit. Closed with `spec_move.py` as decision 21 describes.
 **For the owner:** the adjudication brief should say WHERE the draft goes
 and that it is top-level keys — two adjudicators in one run each missed one
 of those.
+
+## 25. A kit defect found by the `WI-544` review round, fixed on trunk: `intake._draft_row` never wrote a successor's `supersedes` — every minted successor lost its lineage
+
+The round's BLOCKER: the asserted lineage and scope would be lost at the
+mint because `_draft_row` emits `Supersedes=''`. Verified on trunk: `WI-545`
+(minted from `WI-542`'s draft, `supersedes = "WI-521"` in the draft) carries
+no `supersedes` at all. The row schema has the column (`wi_convert.COLUMNS`,
+`kitlib/registry.py`) and `_DRAFT_KEYS` accepts the key; the writer simply
+never copied it. **Fixed with one assignment** and a unit test
+(`test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint`), the
+module-size ratchet baseline for `intake.py` re-stamped 1984 → 1985 with the
+reason on the entry (a reviewed bump, not a sanction), and `WI-545`'s queued
+frontmatter repaired with `supersedes = "WI-521"` — a triage edit to a queued
+row, not a move. The mint runs from trunk's `intake.py` at the merge, so the
+fix had to land on trunk BEFORE the `WI-544` merge for its successor to keep
+`supersedes = "WI-484"`. The review's other two findings: stale generated
+artifacts on the lane (the refresh's regen) and trailing whitespace the
+session telemetry wrote into the clipped log (stripped).
