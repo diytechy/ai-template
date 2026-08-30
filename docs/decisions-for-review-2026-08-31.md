@@ -601,3 +601,21 @@ review round over an unchanged tree. **For the owner:** the worker brief
 should tell a lane that mints spine rows to render the brief before it closes,
 or `trunk_step --regen` should own that render like the other derived
 surfaces; either removes this stop.
+
+## 31. `WI-546` built (the delegated residue) but its worker never wrote the `WI:` trailer — no review was scheduled and the row was re-dispatched; closed by the supervisor, review drawn by hand
+
+Four Opus build sessions committed the two delegated items — `docs/requirements/hats.toml`
+`knowledge` values (re-pointed to `docs/knowledge/` packs, drafts marked) and the 17
+approved-cell `Rationale` attribution deletions, every touched cell listed in the lane
+fragment for the owner's review at return — and then sat waiting on a backgrounded full
+suite until their turns ended; none of the five work commits carries the `WI: WI-546`
+trailer the loop keys on (`worker_endstate`, `schedule_review_round`), so the loop
+scheduled no review, kept re-launching BUILD sessions that found nothing to do, and was
+two no-commits from the stall guard when stopped. Closed as decisions 21/29 describe
+(Deliverable moved BEFORE Context — the worker had put it after, which R-A clips to
+empty; SpecRef cleared; `spec_move.py`; the fragment heading dated; the re-attestation
+brief regenerated for the amended approved cells and the ten drafts), the close commit
+carrying the trailer. **For the owner, in the brief:** 17 amended `Rationale` cells on
+Approved SR rows and the `hats.toml` drafts — the delegation put the cut at return;
+read `docs/ratify/CURRENT.md` before blessing. Review drawn by hand on the third family
+(OpenAI limited until 18:34 UTC), compiled as before.
