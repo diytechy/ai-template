@@ -2110,8 +2110,9 @@ compute boards) and wants their status and source tracked in-repo.
 
 **One row per bought part, owned by an interface row.** A purchased part that *no
 repo builds* still has a contract of record — its datasheet, vendor, pinned
-version — and §8's rule already places that: a **coordinator/repo-held `IF-###`
-row is the owner-of-record** for such a part (MULTI_REPO.md §3.3). The
+version — and §8's rule already places that: an **`external:`-owned `IF-###` row
+in the repo that uses the part, stated by the module that faces it,** is its
+owner-of-record (MULTI_REPO.md §3.3). The
 `procurement.csv` registry (`PART-###`) sits **alongside** that, adding only the
 **acquisition** facts the interface row doesn't carry: `PART-ID, Name, IF-Ref,
 Vendor, Cost, Status, Quantity, Notes`, where `IF-Ref` back-links the owning

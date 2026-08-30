@@ -6,7 +6,10 @@
 # its answer are two rows. A module that reads one file and writes another is
 # two rows. A crossing of the SYSTEM boundary is not a row here: those live in
 # `docs/requirements/external.toml`, and a row here ties BACK to one only when
-# it realizes a crossing. Everything else is an internal seam.
+# it realizes a crossing. Everything else is an internal seam. A row whose
+# owner AND far side are all `external:` parties has no in-tree endpoint — no
+# kit module whose header can hold our reading of the surface — so it is not
+# a seam of this system, and `trace.py --strict` refuses it.
 #
 # THE FIELDS — what each one is, and how it is used.
 #

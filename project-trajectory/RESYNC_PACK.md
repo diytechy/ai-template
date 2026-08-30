@@ -4133,6 +4133,84 @@ a leading comment block before the header row, through the one shared reader
 `kitlib.spine.csv_body`. A CSV your OWN tooling reads must skip it the same
 way, or add no header to that file.
 
+### The armed gate's blind spots close: a refused header, a retired column, a row with no in-tree endpoint [since 7fc42a5a]
+
+*(Two commits: a cross-family adversarial round over the arming slice, then the
+follow-on that minted the arms it surfaced — the kit's own registry grew to 163
+rows there, which is the kit's spine and changes nothing in yours.)*
+
+**Kit-owned files — overwrite and move on:** `scripts/trace.py`,
+`scripts/check_trajectory.py`, `scripts/gen_arch_map.py`,
+`scripts/kitlib/spine.py`, `scripts/spine_carrier.py`, `scripts/agent_route.py`,
+`scripts/intake.py`, `scripts/check_flows.py`, `scripts/gen_okf.py`,
+`scripts/schedule.py`, `scripts/derive_stage.py`, `scripts/check_perf.py`,
+`scripts/integrate.py`, `scripts/subagent_gate.py`,
+`registries/interfaces.template.toml`, `INTERFACES.template.md`, `EXAMPLE.md`,
+`PROCESS.md`, `gitignore.template`.
+
+**(a) One refused header used to disarm the WHOLE gate.** A source whose
+`Contracts:` header the contract grammar refuses — an empty `Contract IF-###:`
+opener, a body before its marker, a duplicate body, an HTML comment in a body —
+was caught for the whole scan and answered "no surface", so one malformed
+docstring anywhere in your tree made `check_trajectory --strict` exit 0 with
+output byte-identical to a clean tree. A refusal is now the gate's FOURTH
+finding shape, naming the source, and the scan continues past it;
+`gen_arch_map --contracts-doc` still raises on the same header. **And,
+correcting the previous entry, which overclaimed it: an owner that declares
+nothing only WARNS** — the migration list, visible in the reference's summary
+line, not a finding.
+
+**(b) The five retired cells are found by KEY PRESENCE, per registry.**
+`contract`, `provider`, `req_refs`, `signal`, `signal_note`: a TOML row that
+sets one — even to `""` — or a legacy `interfaces.csv` whose HEADER still
+declares the column is one `trace.py --strict` finding per retired key, naming
+the rows, or the header column once. The old rule read VALUES, so an empty
+retired column in a CSV header passed forever. The remedy is a one-line edit
+either way: delete the key, delete the column.
+
+**(c) A row with no in-tree endpoint is refused**, as the template header now
+states it: "A row whose owner AND far side are all `external:` parties has no
+in-tree endpoint — no module whose header can hold our reading of the surface —
+so it is not a seam of this repo, and `trace.py --strict` refuses it." Such a
+row owed its definition nowhere. State a repo-to-repo seam in the OWNING repo
+and link it from the consuming repo as an `external:`-owned row with an in-tree
+far side; a true crossing of your system boundary is a row in `external.toml`.
+
+**Find the rows that will red before you upgrade:**
+
+```
+python project-trajectory/scripts/trace.py --root . --strict            # the retired-key and no-in-tree-endpoint lines
+python project-trajectory/scripts/check_trajectory.py --root . --strict # "refused by the contract grammar"
+grep -rn '^Contract IF-[0-9]*:\s*$' --include="*.py" .                  # an opener whose body is empty
+```
+
+**Four smaller changes in the same range.** `kitlib.spine.csv_body` treats
+BLANK lines before the header as preamble — a blank between a `#` header block
+and the header row used to become the header itself, hiding every column — and
+it finally reaches every kit reader, which the previous entry claimed before it
+was true: `agent_route` (the agents CSV carrier), `intake`'s legacy carrier read
+and `spine_carrier.columns` were still raw, so a `#`-headed CSV now reads
+identically everywhere. **`gen_arch_map.py` changes behaviour for any script of
+yours that combines its flags:** one invocation naming several of
+`--backlink-coverage`, `--cli-doc`, `--contracts-doc` runs EVERY named mode, in
+that order, and exits with the worst code — before, only the first ran, so
+`--check` could report a green over a stale target. `schedule.py` refuses
+`simulate --jobs` below 1 with exit 2 through argparse instead of a `ValueError`
+traceback, and its Usage puts `--root` before the subcommand, where argparse
+always required it. `gen_okf` reads the text after a comment's `-->` on the same
+line when it derives a Process Guide summary from a doc; it used to drop it.
+
+**One line to copy by hand:** `gitignore.template` gains `out/subagent-gate.log`,
+the PreToolUse spawn gate's best-effort decision log, an untracked cache — and
+`.gitignore` is merged by hand (ADOPTING.md).
+
+**Shipped texts re-stated, worth re-reading if you teach from them.**
+`EXAMPLE.md` §9 and §10 show the one-owner row shape: the header body beside the
+code, and the coordinator rows as `external:`-owned rows with an in-tree far
+side. `INTERFACES.template.md`, `registries/interfaces.template.toml` and
+`PROCESS.md` §8 say the undeclared owner warns and name the refused-header
+shape; the two template headers state the no-in-tree-endpoint rule.
+
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

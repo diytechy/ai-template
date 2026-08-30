@@ -96,21 +96,26 @@ decomposes into a *coordinator-local* LLR.
 
 ### 3.3 Interface catalog = pointers, not copies
 
-Every interface's spec lives **once, in its owner** (single source of truth, the §8
-ICD model):
+Every interface's spec lives **once, beside the code that states it** (single source
+of truth, the §8 ICD model):
 
-- for a surface some repo **builds**, that repo's `IF-###` is the authoritative spec;
-- for a **purchased / external / reused** part that *no repo builds*, a
-  **coordinator-held `IF-###`** row *is* the owner of record — it links the datasheet /
-  part / vendor contract. Acquisition state for such a part (vendor, cost, order
-  status, quantity) lives in the optional `procurement.csv` (`PART-###`) registry,
-  each row's `IF-Ref` back-linking this owner `IF-###` (process-options.md
-  "purchased parts"). It is minimal by design — a flat parts list, not a bill of
-  materials; full BOM tracking is a deferred extension.
+- for a surface some repo **builds**, that repo's `IF-###` is the authoritative spec,
+  stated in the owning module's header;
+- for a **purchased / external / reused** part that *no repo builds*, the row lives in
+  the repo that **uses** it, owned `external:<party>` — its definition is **our
+  reading** of the vendor surface, and §8's rule places it: an `external:`-owned row
+  is stated by the kit module on its far side, the one in-tree home a surface with no
+  header of ours can have. (So a row whose owner *and* far side are all `external:`
+  parties has no in-tree endpoint at all, and `trace.py --strict` refuses it.)
+  Acquisition state for such a part (vendor, cost, order status, quantity), and the
+  link to the datasheet / part / vendor contract, live in the optional
+  `procurement.csv` (`PART-###`) registry, each row's `IF-Ref` back-linking that
+  `IF-###` (process-options.md "purchased parts"). It is minimal by design — a flat
+  parts list, not a bill of materials; full BOM tracking is a deferred extension.
 
-The coordinator's **catalog references** those owner `IF-###` ids and adds only
-assembly-level **connection** information (which module's provided surface wires to
-which consumer, at which pinned version). It never copies a spec. Interface
+The coordinator's **catalog references** those `IF-###` ids where they live and adds
+only assembly-level **connection** information (which module's provided surface wires
+to which consumer, at which pinned version). It never copies a spec. Interface
 proliferation is expected (the "there are 16 competing standards" reality) and managed
 by **owner-of-record**, not central control.
 

@@ -29,7 +29,10 @@
 #     (both, when the crossing is in/out)
 #
 # A row with neither key is an internal seam. That absence IS the statement —
-# there is no column to set to "internal" and get wrong.
+# there is no column to set to "internal" and get wrong. A row whose owner AND
+# far side are all `external:` parties has no in-tree endpoint — no module
+# whose header can hold our reading of the surface — so it is not a seam of
+# this repo, and `trace.py --strict` refuses it.
 #
 # THE FIELDS.
 #

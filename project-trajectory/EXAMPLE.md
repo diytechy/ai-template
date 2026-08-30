@@ -477,7 +477,7 @@ REPO-ID,Name,Repo,DelegatedSRs,Version,Type,Owner,Notes
 REPO-001,export,https://git.example/acme/export,SR-009,v2,owned,Integration,"CSV export, promoted to its own repo."
 REPO-002,delivery,https://git.example/acme/delivery,SR-010,v1,owned,Integration,"Uploads a completed export to the destination."
 REPO-003,plant,https://git.example/acme/plant,SR-011,v1,owned,Integration,"Integration/plant repo: assembles export+delivery and runs the end-to-end demonstration."
-REPO-004,object-store,—,,vendor-2024,external,Integration,"Purchased S3-compatible store; no repo builds it. Referenced via the catalog IF-### (owner of record = coordinator); delegates no functional SR."
+REPO-004,object-store,—,,vendor-2024,external,Integration,"Purchased S3-compatible store; no repo builds it. Referenced via the catalog IF-### (the row lives in the repo that uses it — `delivery`'s IF-011); delegates no functional SR."
 ```
 
 `trace.py` keeps `DelegatedSRs` honest **within the coordinator repo**: `SR-009/010/011`

@@ -30,8 +30,8 @@ before you edit and again before you commit.
 | File | Hard cap | Baseline | Stamped | Latest change |
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
-| `CLAUDE.md` | **8,500** | 7,827 | 2026-08-23 | -4: WI-499 — the `human_ratification_through` mention in the repo-map paragraph re-keys to `human_approval_through` |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,795 | 2026-08-29 | the slice-6 round re-stamped the PROCESS.md row (+54) and this row |
+| `CLAUDE.md` | **8,500** | 7,886 | 2026-08-29 | +59: the full-suite wall time re-measured (~10 min quiet, 3–4× loaded; was "~6 min") |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,938 | 2026-08-29 | the slice-6 round re-stamped the PROCESS.md row (+54) and this row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
@@ -46,8 +46,8 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 87,836 | 2026-08-29 | **+54** FLAGGED: the OI-67 slice-6 round — §8 says an undeclared owner only warns. Earlier: **+131** WI-533, **−367** WI-532 |
-| `project-trajectory/PROCESS_OPTIONS.md` | 179,209 | 2026-08-29 | **+449** FLAGGED: WI-532 (OI-67) — the intra-repo seam model becomes owner / far side / channel, and the risk paragraph moves the rot to the header where it is checked |
+| `project-trajectory/PROCESS.md` | 87,871 | 2026-08-29 | **+89** FLAGGED: the OI-67 slice-6 round and its docs pass — §8 says an undeclared owner only warns, a purchased part's row is held by the repo that uses it. Earlier: **+131** WI-533, **−367** WI-532 |
+| `project-trajectory/PROCESS_OPTIONS.md` | 179,258 | 2026-08-29 | **+49** FLAGGED: the OI-67 docs pass — the purchased-part row is held by the repo that uses it. Earlier: **+449** WI-532 (OI-67) — the intra-repo seam model becomes owner / far side / channel, and the risk paragraph moves the rot to the header where it is checked |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped
 warn-only S-1 line budget (default 120, `docs/status-lint` overrides) in

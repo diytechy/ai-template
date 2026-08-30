@@ -1208,8 +1208,9 @@ feeds the row's surface — `Owner`, the far side, `Channel`, `Data` —
 a planner as authority. Write them as a link list, never as narrative.
 
 A **purchased/external part** the product buys rather than builds (a motor, board,
-camera) is owned the same way — a repo/coordinator-held `IF-###` is its
-owner-of-record (MULTI_REPO.md §3.3) — with acquisition facts (vendor, cost,
+camera) is owned the same way — an `external:`-owned `IF-###` in the repo that
+uses it, stated by the module that faces it (MULTI_REPO.md §3.3) — with
+acquisition facts (vendor, cost,
 status, quantity) in the optional `requirements/procurement.csv` (`PART-###`).
 Minimal by design; full BOM tracking is deferred. See
 [`process-options.md`](process-options.md#8-purchased-parts).

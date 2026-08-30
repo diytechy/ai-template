@@ -28,6 +28,25 @@ owner can declare, and a rule is owed for where our READING of an
 `external:`-owned surface lives (`IF-032`, `IF-036`, `IF-041` keep their
 legacy `contract` cell until then). Resume from `docs/status.md`.
 
+**Program complete (2026-08-29, end of the third sitting).** Both remaining
+slices landed: **slice 4** (WI-531, the split — one row, one direction, one
+kind: twenty rows minted, two duplicate pairs collapsed, 136 → 154) and
+**slice 6** (WI-533, the gate armed — every declared seam states its body, the
+retired cells are strict findings, one CSV reader for every loader, and the
+rule this section left owed: our reading of an `external:`-owned surface lives
+in the header of the kit module that faces it, a row with no in-tree endpoint
+at all being refused). The slice-6 cross-family adversarial round ran — eleven
+findings, nine folded at the root (record
+[../log.d/2026-08-29-oi67-slice6-round.md](../log.d/2026-08-29-oi67-slice6-round.md),
+dispositions
+[../reviews/2026-08-29-oi67-slice6/README.md](../reviews/2026-08-29-oi67-slice6/README.md)).
+The arms the split surfaced landed as **WI-534** (nine rows `IF-165`–`IF-173`,
+154 → 163; the reference at 74 / 163 / 163 — record
+[../log.d/2026-08-29-wi534-if-arms.md](../log.d/2026-08-29-wi534-if-arms.md)).
+The four decisions flagged for the owner (4.1, 6.2, 6.7, 6.8) were accepted
+([../log.d/2026-08-29-owner-rulings-oi67-decisions.md](../log.d/2026-08-29-owner-rulings-oi67-decisions.md)).
+Nothing remains on this plan; what stands after it is on `docs/status.md`.
+
 ## 1. The row, after
 
 ```toml

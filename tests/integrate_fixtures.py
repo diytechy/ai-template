@@ -289,12 +289,13 @@ def scaffolded_closed_branch(tmp_path):
         ruff, so it would red the format/lint/test steps of the very bar these
         tests need to pass honestly. The fallback lands on THIS suite's
         interpreter, which is floor-satisfying and carries the pinned tools.
-      * `out/` is gitignored by the fixture. `integrate()` opens its coordinator
-        lock at `out/integrate.lock` BEFORE checking the trunk is clean, and the
-        shipped `gitignore.template` covers only `out/run-logs/` and
-        `out/agent-loop.lock` — so on a stock scaffold the queue refuses itself
-        as "dirty" on its own lock file (reported as a finding, not patched
-        here).
+      * `out/` is gitignored by the fixture wholesale, where the shipped
+        `gitignore.template` names its paths one by one (`out/run-logs/`,
+        `out/agent-loop.lock`, `out/integrate.lock`, `out/subagent-gate.log`).
+        `integrate()` opens its coordinator lock at `out/integrate.lock` BEFORE
+        checking the trunk is clean; the lock's own line entered the template
+        after this fixture first recorded a stock scaffold refusing itself as
+        "dirty" on that file.
     """
     skip_without_env_gates("git")
     repo = tmp_path / "repo"
