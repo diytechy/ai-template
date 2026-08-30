@@ -2166,3 +2166,15 @@ test_refs = "(see TC-201)"
 status = "Drafted"
 component = "CMP-006"
 phase = 5
+
+[design.LLR-206]
+sr_refs = ["SR-183"]
+title = "Per-function cognitive-complexity and SLOC census against a central TSV baseline, both directions"
+module = "project-trajectory/scripts/check_complexity.py"
+code_symbol = "cognitive/census/main"
+detail = """cognitive() walks one function's body by recursive descent carrying a nesting level (not ast.walk, which loses depth), adding 1 + nesting for each If/For/AsyncFor/While/ExceptHandler/IfExp/Match, 1 flat for a real else, a nesting increment with no base increment for a nested FunctionDef/AsyncFunctionDef/Lambda, one per RUN of like operators inside a BoolOp, and 1 for a recursive call. An elif chain is FLATTENED before descent: the parser nests it inside orelse, so a naive recursion both double-counts and over-nests every ladder. census() walks the declared source paths (excluding __pycache__), keying each function on (relative path, qualified name) so a module move is spelled rather than double-counted, and returns rows over the threshold plus a per-module public-symbol count that is emitted and never compared. main() reads docs/complexity-baseline as tab-separated rows, compares by exact equality in both directions, prints the three sanctioned remedies on a finding, and honours no per-site suppression token from the scanned source; --report always exits 0, --restamp rewrites the baseline and compares nothing, --mode warn (the default) reports a divergence but still exits 0, and --mode enforce returns nonzero on a divergence in either direction. Standard library only. Ships REPORT-ONLY: no [step:] is wired in docs/stack.ini, so nothing runs the enforce path as a gate; arming it (an opt-in [step:complexity], layer=product, from-stage=DevStg-Impl) is a separate act, and the enforce capability is exercised only by this module's own tests until then."""
+rationale = """The counting rules are pinned in this module's own docstring rather than delegated, because a census whose rules live in a third-party tool has a baseline that is a property of that tool's version: an upgrade that began counting a new construct would invalidate every entry at once, with no code having changed. Keying on (path, qualified name) rather than on the bare name is what lets a function move between modules as one re-keyed row instead of appearing twice. The absence of a per-site suppression token is stated here rather than left to the implementation because it is the clause most likely to be added later as a convenience: scattered opt-outs self-replicate as new code copies them, and a central file is the only form of this escape hatch that stays auditable in one read. Landing Drafted because its parent SR-183 is itself Drafted and approving this design is the owner's act."""
+test_refs = "(see TC-202)"
+status = "Drafted"
+component = "CMP-007"
+phase = 5

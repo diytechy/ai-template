@@ -62,3 +62,8 @@ took, and the file's own header says so.
 Retiring any existing sensor (the line ratchet) — phase 2. Shipping downstream
 (the `bootstrap.MAPPING` row, the `stack.ini.template` step, the RESYNC entry) —
 phase 3. The relative-churn sensor — separate, and unfiled.
+
+**Spine landed (Drafted, owner to approve):** `SR-183` (the requirement),
+`LLR-206` (the design), and — because the tests split by tier — `TC-202` (Smoke,
+the in-process metric) and `TC-203` (Full, the CLI drives). The census seed reads
+179 functions over cognitive 15 across `project-trajectory/scripts/**/*.py`.

@@ -2043,3 +2043,25 @@ automated = "Yes"
 evidence = """tests/test_kitlib_secret_classes.py"""
 status = "Drafted"
 phase = 5
+
+[test.TC-202]
+verifies = ["SR-183", "LLR-206"]
+level = "Unit"
+method = """In-process unit cases over the counting function, pinning the metric a naive implementation gets wrong. The two traps: an elif ladder of n arms scores n rather than the inflated nested figure (and, in reverse, a written-out else:-if genuinely nests and scores strictly more), and a BoolOp scores per RUN of like operators — a and b and c is one, a and b or c is two. A nested def takes a nesting increment with no base increment and produces no census row of its own, while Appendix A's decorator shape is exempt; a flat else is one increment with no nesting. An oracle battery transliterates the Sonar white paper's own worked examples (Appendix C overriddenSymbolFrom = 19, WildcardPattern.toRegexp = 20, sumOfPrimes = 6 after the label-jump the Python form cannot express), the only external check on a metric with no reference suite. SLOC excludes blanks, comments and docstrings; the public-symbol count ignores underscored names. The baseline round-trips LF-only under a debt-statement header, preserves the reason column across a re-stamp, and the census does not list the checker's own module above the threshold."""
+tier = "Smoke"
+expected = "Satisfies the acceptance folded into LLR-206 (parent SR-183) for the metric and the baseline round-trip"
+automated = "Yes"
+evidence = "tests/test_check_complexity.py"
+status = "Drafted"
+phase = 5
+
+[test.TC-203]
+verifies = ["SR-183", "LLR-206"]
+level = "Integration"
+method = """Synthetic project-trajectory/scripts/ fixtures under tmp_path, run through check_complexity.py as a subprocess the way an adopter's stack.ini would: --report prints the bare census of every function and exits 0; a census matching a stamped baseline reports OK unchanged and exits 0 under --mode enforce; a function pushed above its entry is reported with the delta and the three sanctioned remedies and exits nonzero under enforce; a function simplified below its entry, and a baselined function that no longer exists, are each reported as an invitation to re-stamp downward and exit nonzero under enforce; a suppression-shaped comment in the fixture source changes no score (there is no inline pragma); repeated --include globs widen the scanned surface; and an absent source directory is vacuously OK. Re-tiered into conftest.SLOW_MODULES because each case pays interpreter startup — the in-process metric is TC-202's."""
+tier = "Full"
+expected = "Satisfies the acceptance folded into LLR-206 (parent SR-183) for the CLI modes and exit codes"
+automated = "Yes"
+evidence = "tests/test_check_complexity_cli.py"
+status = "Drafted"
+phase = 5
