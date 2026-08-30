@@ -259,3 +259,17 @@ archived Deliverable says so, and round 014 was drawn on the result.
 **For the owner:** `SR-163` now needs a row that files the complete
 file→requirement→need join over the whole shipped universe as a TC; no queued
 row owns it. Filing it is a decision about scope the run did not take.
+
+## 12. `WI-508` rounds 014–015: two more spine-hygiene findings on the Drafted TCs, both taken
+
+Round 014 (MINOR): the two `Expected` cells still foregrounded `SR-163` —
+reworded to say each covers its LLR arm only. Round 015 (MAJOR): `TC-199`
+cited two `tests/test_bootstrap.py` ids that are `TC-176`'s evidence for
+`LLR-181`/`SR-166`, folding SR-166's materialization checks into SR-163's
+coverage — the two ids removed, the method's "package direction" paragraph
+replaced by a sentence naming TC-176 as its home. Both are corrections to
+rows minted 2026-08-25 that the lane's own edits had put under the
+reviewer's eye; each is a real spine-hygiene improvement and neither changes
+what ships. Round 016 drawn on the result. Seven rounds and counting is the
+price of RULING-7 on a lane whose close touched the spine; recorded so the
+owner can weigh whether a Drafted-row edit should buy a full round.
