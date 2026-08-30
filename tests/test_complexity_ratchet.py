@@ -247,15 +247,21 @@ BASELINE = {
     (
         "gen_okf.py",
         "_doc_title_and_summary",
-    ): 18,  # +5 (13 -> 18) 2026-08-29 WI-533 (OI-67 slice 6): a leading HTML comment is skipped WHOLE — the `in_comment` state and its two transitions (a multi-line `<!--` opens it, a `-->` closes it) join the line classifier, because a Markdown owner's `Contracts:` header spans lines and its interior was being read as the guide's first paragraph. Reviewed bump, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    ): 14,  # -4 (18 -> 14) 2026-08-29, WI-533 follow-up (cross-family review F9): `_strip_html_comments` EXTRACTED, which is the FIX and not a refactor — the whole-line skip dropped everything after a `-->`, so a doc whose contract header shares a line with its heading lost its title. A comment is a SPAN: the helper takes the `in_comment` state and its two transitions out of the line classifier, hands back what the line states outside the comment, and the classifier reads that remainder like any other line. Re-stamped DOWNWARD in the same commit, as this file requires. Earlier +5 (13 -> 18) 2026-08-29 WI-533 (OI-67 slice 6): a leading HTML comment is skipped WHOLE — the `in_comment` state and its two transitions (a multi-line `<!--` opens it, a `-->` closes it) join the line classifier, because a Markdown owner's `Contracts:` header spans lines and its interior was being read as the guide's first paragraph. Reviewed bump, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
     (
         "check_trajectory.py",
         "contract_body_findings",
     ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the armed definition gate — the opt-out, the vacuity, the per-row split between an external-owned row (its own helper) and an in-tree owner (declared-not-stated), and the stray arm (its own helper). Two arms were extracted to land at 11 rather than the 18 the first cut measured. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
-    (
-        "trace.py",
-        "interface_findings",
-    ): 11,  # NEW 2026-08-29 WI-533 (OI-67 slice 6): the retired-cell arm (one loop over the five (column, key) pairs) joins the owner-shape and far-side rules in the one IF integrity function, taking it from 10 to 11. Reviewed entry, reason in docs/log.d/2026-08-29-wi533-arm-the-gate.md.
+    # ENTRY DELETED (11 -> under the limit) 2026-08-29, WI-533 follow-up
+    # (cross-family review F7): the retired-cell arm that put `trace.py`'s
+    # `interface_findings` on this census left it. The rule was per-ROW and
+    # value-keyed — the wrong question twice over, since the retired shape is
+    # the KEY'S PRESENCE and presence is a property of the REGISTRY — so it
+    # became `_retired_cell_findings`, one call over `spine_carrier.columns`.
+    # The F2 arm added in the same commit (a row with no in-tree endpoint) is
+    # one branch inside the `external:` exit that was already there, so the net
+    # is DOWN. Re-stamped downward by deletion in the same commit, per this
+    # file's rule.
     # -4 (29 -> 25), WI-328: the LLR's new Rationale column would have been the
     # FIFTH `if cell: body.append("**Label.** ...")` inside emit, and the ratchet
     # caught it at +1. Extracted as the `field()` helper — the `links()` sibling

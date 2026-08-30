@@ -189,3 +189,39 @@ fragments (the trunk lane's), the approved `TC-161` prose (the owner's), and
 "strict allows invalid ownership/body states" (this slice's gate). The
 slice-6 round itself is owed, not skipped: the sitting closed at the commit
 bar plus the full suite.
+
+### 6.7 The definition gate rides the severity ladder — where "armed" bites
+
+**Decided:** `contract_body_findings` is WARN on the pre-commit floor and
+ERROR only where `check.py` promotes `check_trajectory` to `--strict` — at or
+above `DevStg-Impl`, the seam-TC promotion's idiom — plus any direct `--strict`
+run. This tree derives `DevStg-LLReqs`, so on it the gate errors only when run
+by hand, which every close in this program did; the cross-family round named
+this as a MAJOR ("the ordinary harness is not running the armed mode").
+
+**The alternative:** an always-strict harness step with its own opt-out,
+independent of the maturity ladder.
+
+**Why:** plan decision 9 (header-first) makes "declared, not stated" a
+sanctioned TRANSIENT state for a work item in flight — a floor that reds it
+would refuse the very commit that mints the stub header — and a deleted or
+malformed body already fails the floor through the reference freshness step
+(`gen_arch_map --contracts-doc --check` reads STALE; measured at the round).
+What it leaves: a stray declaration and an unstated external row are warns at
+the floor until the Impl rung. **Reversal cost:** one condition in `check.py`.
+
+### 6.8 A row with no in-tree endpoint is a strict finding
+
+**Decided:** `trace.interface_findings` fails an `external:`-owned row whose
+far side names no kit module — it has no home for a definition and is not a
+seam of this system (a crossing between two external parties is
+`external.toml`'s). Found by the round: such a row passed the armed gate
+unstated, because the external arm is silent when no module faces the surface.
+
+**The alternative:** let it stand unstated, or invent a document owner.
+
+**What it costs the coordinator sketch** (`EXAMPLE.md` §10, `MULTI_REPO.md`):
+a repo-to-repo seam is stated in the owning repo and linked from the consuming
+one as an `external:`-owned row with an in-tree far side, so no registry row is
+external→external; the deferred `CIF-###` catalog would need its own carve-out
+if it ever became a checked registry. **Reversal cost:** one rule and one test.

@@ -1191,9 +1191,10 @@ header-first.** A work item that creates a module mints its seam rows and the
 module's stub header — marker and bodies — BEFORE any code, so a worker
 building against it reads the same home the finished module will have;
 "declared, not stated" is the signal that a definition is not written yet —
-and a finding under `--strict`: a row with no stated body, an owner that
-declares nothing, a source declaring another owner's row, or a retired cell
-(`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`) still on a row.
+and a finding under `--strict`: a row with no stated body, a source whose
+header the grammar refuses, a source declaring another owner's row, or a
+retired cell (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`) still
+on a row; an owner that declares nothing only warns.
 An `external:`-owned row is stated by the kit module on its far side.
 
 **Reason cells take the argument, never the citation.** `Rationale` is why the

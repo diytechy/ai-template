@@ -389,49 +389,52 @@ status = "Approved"
 
 The boundary between the two is a **contract**, so it is an `IF-###` (process.md
 §8) — which applies *within* a repo just as across repos, the endpoints naming
-**modules** rather than repos, both rows in the one `interfaces.toml`:
+**modules** rather than repos. One row is one owner, its far side and a typed
+statement of what crosses — the write and the read are not two rows, because
+the owner defines the surface and the far-side key says which way the
+information runs:
 
 ```toml
 [interface.IF-001]
-provider = "export"
-consumers = ["delivery"]
-contract = "Writes an RFC-4180 CSV at the agreed path with the documented schema (per SR-001)."
-signal = "variable"
-rationale = "One writer for the export file; delivery must not re-derive its schema."
-req_refs = ["SR-001"]
-owner = "SR-001"
-version = "v1"
-status = "Approved"
-
-[interface.IF-002]
-provider = "export"
-consumers = ["delivery"]
-contract = "Reads the export file produced per IF-001 v1 before uploading it."
-signal = "variable"
-req_refs = ["SR-050"]
-owner = "SR-050"
+owner = "src/export"
+consumers = ["src/delivery"]
+channel = "file"
+data = "the export file: RFC-4180 CSV at the configured path, header row first"
 version = "v1"
 status = "Approved"
 ```
 
-`owner` is the **one** row answerable for each seam — exactly one, and it
-prefers the **design tier**: point it at the `LLR-###` that concretely serves
-the seam wherever a design row exists for the owner-side endpoint (here the
-module LLRs are omitted to keep the seam in focus, so the SRs stand in).
+`owner` is the providing **thing** — the module the information plugs into, in
+the one spelling the far side uses — never a requirement id: the requirement the
+seam answers to is reached through the owner (the design rows whose `module`
+names it, or the `Implements:` line in its header). The definition itself lives
+**beside the code**, in the owner's header; the row declares the seam and stops:
+
+```python
+"""Export — writes the completed export file.
+
+Contracts: IF-001 — the interface seam this module declares (process.md §8).
+
+Contract IF-001: writes the export file at the configured path as RFC-4180 CSV —
+    header row first, one record per row, UTF-8 — rewritten whole on every run;
+    an unwritable path fails loud (exit 1), never a partial file. Delivery reads
+    this file and re-derives nothing about its schema.
+"""
+```
 
 And the seam gets its **own** integration TC — covered by neither module's internal
 unit tests — so the boundary is a tested contract, not a gap between two green
 modules (process.md §10). (A *low-level* seam, where the parent functionality's
 tests are honestly what cover it, says so instead: `verified_by = "TC-050"` on
-the IF row, warn-first that the pointer resolves. Empty — as both rows above
-leave it — means "verified in its own right", which is what a seam at this grain
+the IF row, warn-first that the pointer resolves. Empty — as the row above
+leaves it — means "verified in its own right", which is what a seam at this grain
 is.) It verifies the consuming SR (`SR-050`, the side that
-relies on the contract; `IF-002` links the interface to that SR, and the TC covers
-the SR):
+relies on the contract) and cites the seam itself, which is what the seam-TC
+coverage check counts:
 
 ```toml
 [test.TC-050]
-verifies = ["SR-050"]
+verifies = ["SR-050", "IF-001"]
 level = "Integration"
 method = """Run export then delivery end-to-end; assert the delivered file matches the RFC-4180 contract IF-001 publishes, and that a forced upload failure is retried and surfaced"""
 tier = "Full"
@@ -496,40 +499,43 @@ single `trace.py` run validates it — that reconciliation is the deferred cross
 join (`MULTI_REPO.md` §7).
 
 **Interfaces are pointers, not copies** (process.md §8, applied across repos). Each
-contract's spec lives once in its **owner**; the coordinator's catalog only references
-the owner `IF-###`:
+contract's definition lives once, beside the code in the repo that **owns** the
+surface; the repo on the far side names that owner as an `external:` party and
+links the id, and the coordinator's catalog only references the owner `IF-###`.
+In the `delivery` repo's own `interfaces.toml`:
 
 ```toml
 [interface.IF-010]
-provider = "export"
-consumers = ["delivery"]
-contract = "RFC-4180 CSV at the agreed path (spec owned by the export repo, per its SR-009)."
-signal = "variable"
-req_refs = ["SR-009"]
-owner = "SR-009"
+owner = "external:export repo"
+consumers = ["src/delivery"]
+channel = "file"
+data = "RFC-4180 CSV at the agreed path, header row first — stated once, in the export repo"
 version = "v2"
 status = "Approved"
 
 [interface.IF-011]
-provider = "object-store"
-consumers = ["delivery"]
-contract = "S3 PutObject API of the purchased store; the coordinator catalog is the owner of record and links the vendor datasheet."
-signal = "variable"
-req_refs = ["SR-010"]
-owner = "SR-010"
+owner = "external:object-store"
+requestors = ["src/delivery"]
+channel = "call"
+data = "S3 PutObject of the purchased store; the vendor datasheet is the definition of record"
 version = "vendor-2024"
 status = "Approved"
 ```
 
-`IF-010`'s spec is owned by a repo that **builds** the surface (`export`); `IF-011` is
-a **purchased part no repo builds**, so its owner of record is a **coordinator-held**
-catalog row linking the datasheet.
+`IF-010`'s definition is owned by a repo that **builds** the surface (`export` — its
+`IF-001` above, stated in that repo's `src/export` header); `IF-011` is a **purchased
+part no repo builds**, so what `delivery` states in its own `src/delivery` header is
+**our reading** of the vendor surface — what is sent, what is assumed, what a failure
+does — the one in-tree home for a contract whose other side has no header of ours to
+write. A row with no in-tree endpoint at all (both sides `external:`) is not a seam of
+the repo that carries it, and `trace.py --strict` refuses it: a repo-to-repo seam is
+stated once, in the owning repo, and linked from the consuming one.
 
 These `IF-###` ids are **owner-local** — each repo has its own `IF-001…`, so the
 coordinator references them by a stable coordinator-level id (`CIF-###`) that also
 records the owner's current version and each consumer's pin. That mapping is what lets
-the coordinator catch **drift**: if the `export` repo ships `IF-010@v3` while `delivery`
-still pins `@v2`, the coordinator flags the stale pin (weighted by `Status`) and
+the coordinator catch **drift**: if the `export` repo ships its row at `v3` while
+`delivery`'s `IF-010` still pins `v2`, the coordinator flags the stale pin (weighted by `Status`) and
 sequences `delivery`'s contract-test re-run against v3 — the interface's own §8 fixture
 judges actual compatibility, the human signs a real break. The catalog registry and
 that check are deferred tooling (`MULTI_REPO.md` §3.3, §3.7, §7).

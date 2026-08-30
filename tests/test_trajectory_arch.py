@@ -21,6 +21,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import pytest
+
 
 from conftest import ROOT, SCRIPTS, load_script, run_py
 
@@ -843,6 +845,102 @@ def test_a_stray_declaration_on_the_wrong_module_is_a_finding(tmp_path):
         "ERROR - 'scripts/mod_a' declares IF IF-002, which the registry owns to "
         "'scripts/mod_b'" in proc.stderr
     )
+
+
+# The FOURTH shape (adversarial review 2026-08-29, F1): a header the contract
+# GRAMMAR refuses. It used to be caught for the whole scan and answered with
+# "no declaration surface", so ONE malformed body anywhere in the tree — an
+# empty `Contract IF-###:` opener, a body before its marker, a duplicate, a
+# body carrying an HTML comment — silently disarmed the gate for EVERY row.
+
+
+def test_a_refused_header_is_a_finding_and_does_not_disarm_the_other_sources(
+    tmp_path,
+):
+    # mod_a's body opens and states nothing (the grammar refuses it); mod_b
+    # declares IF-002 and states no body at all. BOTH must be reported: the
+    # regression is not "the refusal is missed", it is "the refusal takes every
+    # other source's verdict down with it".
+    root = _gate_repo(
+        tmp_path,
+        '"""A.\n\nContracts: IF-001\n\nContract IF-001:"""\n',
+        mod_b_doc='"""B.\n\nContracts: IF-002"""\n',
+    )
+    findings = check_trajectory.contract_body_findings(root)
+    assert any(
+        "'scripts/mod_a' declares seams but its header is refused by the "
+        "contract grammar"
+        in f
+        and "opens a contract body and states nothing" in f
+        and "its declared rows count as unstated" in f
+        for f in findings
+    ), findings
+    assert any(
+        "IF IF-002 is declared by its owner 'scripts/mod_b' but states no "
+        "`Contract IF-002:` body there" in f
+        for f in findings
+    ), findings
+    # ...and the refused source is NOT entered as "declares nothing": that
+    # would hand its rows to the owner-exact reverse check's warn instead.
+    sites, refused = check_trajectory._declaration_sites(root)
+    assert "scripts/mod_a" not in sites, sites
+    assert [rel for rel, _msg in refused] == ["scripts/mod_a"], refused
+
+
+def test_a_refused_header_reds_the_cli_under_strict(tmp_path):
+    # End-to-end through the real `main()` wiring, at the WARN-plain /
+    # ERROR-under-`--strict` severity the gate's other three shapes ride.
+    root = _gate_repo(
+        tmp_path,
+        '"""A.\n\nContracts: IF-001\n\nContract IF-001:"""\n',
+    )
+    plain = run_traj(root)
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert (
+        "WARN - 'scripts/mod_a' declares seams but its header is refused by "
+        "the contract grammar" in plain.stderr
+    )
+    strict = run_traj(root, "--strict")
+    assert strict.returncode == 1, strict.stdout + strict.stderr
+    assert (
+        "ERROR - 'scripts/mod_a' declares seams but its header is refused by "
+        "the contract grammar" in strict.stderr
+    )
+
+
+def test_the_reference_generators_scan_still_raises_without_the_arm(tmp_path):
+    # The per-source arm is OPT-IN. `--contracts-doc` must keep failing loudly
+    # on a refused header — a reference that silently omitted a source would
+    # report a clean, fresh document over a tree it had not actually read.
+    root = _gate_repo(
+        tmp_path,
+        '"""A.\n\nContracts: IF-001\n\nContract IF-001:"""\n',
+    )
+    gen_arch_map = load_script("gen_arch_map")
+    with pytest.raises(gen_arch_map.ContractsGrammarError):
+        gen_arch_map.scan_contracts([root / "scripts"])
+    collected = []
+    records, unreadable = gen_arch_map.scan_contracts(
+        [root / "scripts"], grammar_errors=collected
+    )
+    assert [rel for rel, _msg in collected] == ["scripts/mod_a"], collected
+    assert unreadable == []
+    assert [rel for rel, _s, _i, _b in records] == ["scripts/mod_b"], records
+
+
+def test_an_unreadable_source_is_still_not_a_finding(tmp_path):
+    # Unchanged by the refusal arm: a source the scan could not PARSE is the
+    # reference's own "could not read" list and `arch_inventory`'s skip, never
+    # this gate's finding — the two live in different halves of the tuple on
+    # purpose.
+    root = _gate_repo(
+        tmp_path, '"""A.\n\nContracts: IF-001\n\nContract IF-001: a states it."""\n'
+    )
+    (root / "scripts" / "broken.py").write_text("def (:\n", encoding="utf-8")
+    assert check_trajectory.contract_body_findings(root) == []
+    sites, refused = check_trajectory._declaration_sites(root)
+    assert refused == []
+    assert "scripts/broken" not in sites
 
 
 def test_the_gate_shares_the_interfaces_check_opt_out_and_the_files_mode_vacuity(

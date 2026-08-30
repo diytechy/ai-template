@@ -267,6 +267,35 @@ def _strip_md_links(text):
     return text
 
 
+def _strip_html_comments(line, in_comment):
+    """`(text, still_open)` — the line with its HTML-comment SPANS removed, and
+    whether a comment is still open when the line ends.
+
+    A comment is a SPAN, not a line. `<!-- contracts --> # Runtime flows` closes
+    its comment and then states the doc's title, and the line a multi-line block
+    closes on can carry the first prose paragraph after its `-->`. Skipping the
+    whole line past a close dropped that text, so a doc whose contract header
+    shares a line with its heading lost its title in the Process Guide. What
+    survives here is everything OUTSIDE the comment spans — `<!-- a --> <!-- b
+    --> text` reduces to `text` — and the caller reads that remainder with the
+    same per-line rules it applies to any other line."""
+    kept, rest = [], line
+    while rest:
+        if in_comment:
+            close = rest.find("-->")
+            if close < 0:
+                break  # the whole remainder is comment interior
+            rest, in_comment = rest[close + 3 :], False
+            continue
+        opener = rest.find("<!--")
+        if opener < 0:
+            kept.append(rest)
+            break
+        kept.append(rest[:opener])
+        rest, in_comment = rest[opener + 4 :], True
+    return "".join(kept).strip(), in_comment
+
+
 def _doc_title_and_summary(path):
     """(title, one-line summary) DERIVED from a markdown doc — its first heading
     and its first prose paragraph — so a Process Guide concept regenerates from
@@ -286,20 +315,16 @@ def _doc_title_and_summary(path):
             if ln == "---":
                 in_fm = False
             continue
-        # An HTML comment is skipped WHOLE — the leading `<!-- ... -->` block a
-        # doc carries as its contract header (OI-67) spans lines, and reading
-        # its interior as the first paragraph made a seam definition the guide's
-        # summary.
-        if in_comment:
-            if "-->" in ln:
-                in_comment = False
-            continue
-        if ln.startswith("<!--"):
-            if "-->" not in ln:
-                in_comment = True
-            if started:
-                break
-            continue
+        # An HTML comment is skipped as a SPAN — the leading `<!-- ... -->`
+        # block a doc carries as its contract header (OI-67) spans lines, and
+        # reading its interior as the first paragraph made a seam definition the
+        # guide's summary. Only the comment goes: whatever the line states
+        # outside it is read below exactly like any other line, which is how a
+        # title sharing the closing line keeps being the title. A line that is
+        # nothing but comment reduces to "" and lands on the blank-line arm,
+        # which ends a started paragraph just as the whole-line skip did.
+        if in_comment or "<!--" in ln:
+            ln, in_comment = _strip_html_comments(ln, in_comment)
         if not ln:
             if started:
                 break

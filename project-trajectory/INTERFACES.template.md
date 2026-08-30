@@ -50,9 +50,11 @@ namespace, parallel to SN/SR/LLR/TC).
   definition (`Contracts:` marker + `Contract IF-###:` bodies); the far side
   links it by `IF-ID` and never re-states it. If both repos describe the shape,
   they will diverge — link instead. **The gate is armed:** a row whose owner
-  declares it but states no body, or whose owner declares nothing, is a
-  `check_trajectory --strict` finding; a source declaring a row another
-  in-tree source owns is one too. An `external:`-owned row is stated by the
+  declares it but states no body is a `check_trajectory --strict` finding, and
+  so is a source whose header the contract grammar refuses; a source declaring
+  a row another in-tree source owns is one too. An owner that declares nothing
+  only warns (the migration list, visible in the reference's summary line). An
+  `external:`-owned row is stated by the
   kit module on its far side — our reading of a surface we do not own. The
   retired cells (`Contract`, `Provider`, `Req-Refs`, `Signal`, `SignalNote`)
   are `trace.py --strict` findings wherever they still appear. A CSV registry

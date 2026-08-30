@@ -4102,11 +4102,13 @@ parallel workers read the same home the finished module will have.
 
 **What reds now, and where.** `check_trajectory --strict` fails an interface
 row with no stated definition: its owner declares it on a `Contracts:` line but
-states no `Contract IF-###:` body ("declared, not stated"), or its owner
-declares nothing, or a source declares a row the registry owns to another
-in-tree source. `trace.py --strict` fails a row still carrying any of the five
-retired cells — `contract` included, which the previous entry left as a
-counted warning. Both share the `[checks] interfaces_check` opt-out. **Find
+states no `Contract IF-###:` body ("declared, not stated"), or its header is
+refused by the contract grammar, or a source declares a row the registry owns
+to another in-tree source; an owner that declares nothing only warns (the
+migration list). `trace.py --strict` fails a registry still carrying any of the
+five retired cells, by KEY PRESENCE — a TOML row that sets one, even empty, or
+a legacy CSV header that still declares the column (delete it) — `contract`
+included, which the previous entry left as a counted warning. Both share the `[checks] interfaces_check` opt-out. **Find
 the rows that will red before you upgrade:**
 
 ```

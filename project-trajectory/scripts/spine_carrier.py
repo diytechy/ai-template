@@ -722,13 +722,17 @@ def columns(path, id_col):
     Callers that check a registry against a shipped template want exactly this,
     and want it stated in ONE place — the three that asked it independently were
     each reading the CSV header with `csv.reader`, which over a TOML file
-    returns the first line, `[requirement.SR-001]`, as a column name."""
+    returns the first line, `[requirement.SR-001]`, as a column name.
+
+    The CSV arm reads through `kitlib.spine.csv_body`, like every other reader
+    in the kit, so a `#` declaration header is a header here too — read raw, the
+    comment's cells would come back AS the column names."""
     live = resolve(path)
     if live is None:
         return []
     text = live.read_text(encoding="utf-8-sig", errors="replace").lstrip("﻿")
     if live.suffix != ".toml":
-        header = next(csv.reader(io.StringIO(text)), [])
+        header = next(csv.reader(io.StringIO(_kitspine.csv_body(text))), [])
         return [c for c in header if c]
     rows = rows_from_toml(text, id_col)
     if rows is None:

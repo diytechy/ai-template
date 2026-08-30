@@ -105,8 +105,8 @@ LLR_EXEMPT = frozenset({"Analysis", "Inspection", "Attest"})
 
 
 def csv_body(text):
-    """The CSV text with its leading `#`-comment header removed — the header
-    ROW is the first line that is not a comment.
+    """The CSV text with its leading `#`-comment PREAMBLE removed — the header
+    ROW is the first line that is neither a comment nor blank.
 
     A registry CSV may open with the same `#` declaration header a TOML or INI
     registry carries (the `Contracts:` marker and `Contract IF-###:` bodies of
@@ -117,10 +117,21 @@ def csv_body(text):
     dropped: a `#` opening a data line, or one inside a quoted multi-line
     cell, is data and stays. A BOM is stripped first, for the reason
     `spine_carrier.rows_from_text` states: a BOM'd header glues to the first
-    column name and every row hides."""
+    column name and every row hides.
+
+    A BLANK LINE BELONGS TO THAT PREAMBLE, and dropping it is the same rule
+    rather than a second one: a hand-written header block ends with a blank
+    line before the columns, and leaving it in hands `csv.DictReader` the BLANK
+    line as its header row — every real column unaddressable again, the exact
+    failure this function exists to prevent, one line further down. Only the
+    LEADING run is dropped: a blank line AFTER the header row is `csv`'s own
+    business and is untouched. An all-comment, all-blank or empty file still
+    yields no rows."""
     lines = text.lstrip("\ufeff").splitlines(keepends=True)
     i = 0
-    while i < len(lines) and lines[i].lstrip().startswith("#"):
+    while i < len(lines) and (
+        not lines[i].strip() or lines[i].lstrip().startswith("#")
+    ):
         i += 1
     return "".join(lines[i:])
 

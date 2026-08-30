@@ -5,10 +5,12 @@ the header row for every kit consumer, so `performance-budgets.csv` can declare
 its seam without any loader losing `PB-ID`.
 """
 
+import re
 from pathlib import Path
 
 from conftest import (
     ROOT,
+    SCRIPTS,
     load_script,
     make_minimal_project,
     record_ids,
@@ -46,6 +48,108 @@ def test_csv_body_strips_only_the_leading_comment_block():
     assert rows[0]["Notes"] == "line one\n# line two"
     assert KIT.csv_rows("") == [] and KIT.csv_rows(HEADER) == []
     assert KIT.csv_reader(HEADER + PB_HEADER).fieldnames == PB_HEADER.strip().split(",")
+
+
+CSV_CALL = re.compile(r"csv\.(reader|DictReader)\(")
+
+# The kit scripts allowed to parse CSV without `csv_body`, and WHY. A file
+# earns a row here by having a reason that is TRUE OF ITS FILE, stated in its
+# own code as well — never by being inconvenient to convert.
+RAW_CSV_EXCEPTIONS = {
+    "migrate_carrier.py": (
+        "a comment is a RECORD in the file it migrates, not noise: it recovers "
+        "raw lines by `csv.reader.line_num` and re-emits them into the TOML "
+        "carrier, so a reader that dropped the leading block would drop content"
+    ),
+}
+
+
+def test_ONE_reader_is_a_census_not_a_claim():
+    """WI-533 claimed "one CSV reader for every loader" and nothing held the
+    claim: four raw readers stayed behind it, each one taking a `#` declaration
+    header AS its header row. This is the census that makes the claim checkable
+    — every CSV parse in the kit's scripts takes `csv_body` on the call line, or
+    is a named exception whose reason is stated here and in its own code."""
+    raw = [
+        "{}:{}: {}".format(path.name, n, line.strip())
+        for path in sorted(SCRIPTS.rglob("*.py"))
+        if path.name not in RAW_CSV_EXCEPTIONS
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if CSV_CALL.search(line) and "csv_body" not in line
+    ]
+    assert raw == [], (
+        "a registry CSV may open with a `#` declaration header — these readers "
+        "would take its first line as the header row, making every real column "
+        "unaddressable. Read through `kitlib.spine.csv_body` (or `csv_reader`), "
+        "or state the exception above with its reason:\n" + "\n".join(raw)
+    )
+    # And each exception is a live file that still argues its case in code.
+    for name in RAW_CSV_EXCEPTIONS:
+        src = (SCRIPTS / name).read_text(encoding="utf-8")
+        assert CSV_CALL.search(src), "{} no longer parses CSV at all".format(name)
+        assert "WHY NOT `csv.DictReader`" in src and "line_num" in src, name
+
+
+def test_the_blank_line_after_the_comment_block_is_preamble_too():
+    # THE HEADER BLOCK A HUMAN WRITES ENDS WITH A BLANK LINE. Keeping it made
+    # `csv.DictReader` take the BLANK line as the header row — `{None: [...]}`
+    # per row and every real column unaddressable, which is the exact failure
+    # `csv_body` exists to prevent, one line further down.
+    assert KIT.csv_rows("# c\n\na,b\n1,2\n") == [{"a": "1", "b": "2"}]
+    assert KIT.csv_body(HEADER + "\n" + PB_HEADER + PB_ROW) == PB_HEADER + PB_ROW
+    headed = KIT.csv_rows(HEADER + "\n\n" + PB_HEADER + PB_ROW)
+    assert [r["PB-ID"] for r in headed] == ["PB-001"]
+    # A blank-LED file with no comments at all reads the same way.
+    assert KIT.csv_rows("\n" + PB_HEADER + PB_ROW)[0]["PB-ID"] == "PB-001"
+    # A file that is only preamble — comments, blanks, or nothing — has no rows.
+    assert KIT.csv_rows(HEADER + "\n") == [] and KIT.csv_rows("\n\n") == []
+    # ...and a blank line AFTER the header is `csv`'s own business, untouched:
+    # the body still carries it, and DictReader skips the empty record itself.
+    assert KIT.csv_body(HEADER + PB_HEADER + "\n" + PB_ROW) == (
+        PB_HEADER + "\n" + PB_ROW
+    )
+    after = KIT.csv_rows(HEADER + PB_HEADER + "\n" + PB_ROW)
+    assert [r["PB-ID"] for r in after] == ["PB-001"]
+
+
+def test_the_reader_leaves_data_that_merely_LOOKS_like_preamble_alone():
+    # The probes that must keep holding while the preamble rule widens: a `#`
+    # inside a quoted cell, a first cell that BEGINS with `#`, a BOM, CRLF, a
+    # `#` line in the MIDDLE of the data, empty, and header-only.
+    quoted = PB_HEADER + '"#PB-9",m,SR-001,1,s,5%,lower-better,Full,warn,x,"a\n# b"\n'
+    assert KIT.csv_body(quoted) == quoted
+    rows = KIT.csv_rows("﻿" + HEADER + "\n" + quoted)
+    assert [r["PB-ID"] for r in rows] == ["#PB-9"] and rows[0]["Notes"] == "a\n# b"
+    # A `#` line in the MIDDLE of the data is DATA — only the leading run goes.
+    mid = PB_HEADER + PB_ROW + "# not a comment here\n" + PB_ROW
+    assert KIT.csv_body(HEADER + "\n" + mid) == mid
+    assert [r["PB-ID"] for r in KIT.csv_rows(HEADER + mid)] == [
+        "PB-001",
+        "# not a comment here",
+        "PB-001",
+    ]
+    # CRLF survives byte-for-byte past the preamble, and still parses.
+    crlf = (HEADER + "\n" + PB_HEADER + PB_ROW).replace("\n", "\r\n")
+    assert KIT.csv_body(crlf) == (PB_HEADER + PB_ROW).replace("\n", "\r\n")
+    assert [r["PB-ID"] for r in KIT.csv_rows(crlf)] == ["PB-001"]
+    # Empty and header-only.
+    assert KIT.csv_body("") == "" and KIT.csv_rows("") == []
+    assert KIT.csv_rows(HEADER + "\n" + PB_HEADER) == []
+
+
+def test_spine_carrier_columns_reads_the_real_header_not_the_comment(tmp_path):
+    # `columns()` answers "which columns does this registry use" for every
+    # live-against-template check. It read the CSV header RAW, so a `#`
+    # declaration header handed back the comment's cells AS the column names —
+    # the one CSV-carrier reader WI-533 did not convert.
+    path = tmp_path / "performance-budgets.csv"
+    path.write_text(HEADER + "\n" + PB_HEADER + PB_ROW, encoding="utf-8", newline="\n")
+    assert CARRIER.columns(path, "PB-ID") == PB_HEADER.strip().split(",")
+    plain = tmp_path / "plain.csv"
+    plain.write_text(PB_HEADER + PB_ROW, encoding="utf-8", newline="\n")
+    assert CARRIER.columns(plain, "PB-ID") == CARRIER.columns(path, "PB-ID")
+    # An absent registry still answers `[]`.
+    assert CARRIER.columns(tmp_path / "nope.csv", "PB-ID") == []
 
 
 def test_load_csv_and_every_registry_reader_skip_the_header(tmp_path):

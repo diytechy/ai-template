@@ -834,6 +834,35 @@ def test_a_row_already_at_the_written_value_is_the_ONE_silent_skip(tmp_path):
     assert sr_csv.read_bytes() == before
 
 
+def test_a_declaration_header_on_the_csv_carrier_still_locates_the_row(tmp_path):
+    """OI-67: a registry CSV may open with a `#` declaration header, and the ONE
+    comment-skipping reader (`kitlib.spine.csv_body`) strips it before the header
+    row for every kit loader. This locator read its CSV carrier RAW, so the
+    comment's first line became `rows[0]` — no `Status` column in it, every
+    staged row read as ABSENT, and the brief reported nothing to adjudicate over
+    a registry that stages two rows."""
+    root = _policy_repo(tmp_path, kit_stage.BELOW)
+    sr_csv = root / "docs" / "requirements" / "system-requirements.csv"
+    plain, _ = intake._locate_spine_rows(root, {"SR-001", "SR-002"})
+    sr_csv.write_text(
+        "# the system-requirements registry — the OI-67 declaration header\n"
+        "# Contracts: IF-999\n"
+        "\n" + sr_csv.read_text(encoding="utf-8"),
+        encoding="utf-8",
+        newline="\n",
+    )
+    located, tables = intake._locate_spine_rows(root, {"SR-001", "SR-002"})
+    assert sorted(located) == ["SR-001", "SR-002"]
+    rel, status, row, status_ix = located["SR-001"]
+    assert status == "Drafted" and row[0] == "SR-001" and row[status_ix] == "Drafted"
+    # ...the header the locator indexed is the REAL one, not the comment...
+    assert tables[rel][1][0][0] == "SR-ID"
+    # ...and the answer is identical to the same registry without the header.
+    assert {k: v[:2] for k, v in located.items()} == {
+        k: v[:2] for k, v in plain.items()
+    }
+
+
 SR_TOML = (
     "# The system requirements. Comments here are LOAD-BEARING for this test.\n"
     "\n"

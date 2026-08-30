@@ -412,6 +412,47 @@ def test_registry_missing_family_and_provider_is_a_finding(tmp_path):
     assert reg == {} and any("Family" in e for e in errors)
 
 
+def _fields(reg):
+    """The registry as plain comparable cells (`Model` has no `__eq__`)."""
+    return {
+        mid: (m.family, m.model, m.version, m.tier, m.cmd_template, m.env, m.notes)
+        for mid, m in reg.items()
+    }
+
+
+def test_a_declaration_header_is_a_header_and_never_the_column_row(tmp_path):
+    # OI-67: a registry CSV may open with a `#` declaration header, and the ONE
+    # comment-skipping reader (`kitlib.spine.csv_body`) strips it for every kit
+    # loader. Read raw here, the comment's FIRST LINE became the header row —
+    # a header with no `CmdTemplate`, so this loader PAGED over a registry that
+    # declares one and the whole pool vanished behind a false finding.
+    headed = tmp_path / "headed"
+    headed.mkdir()
+    p = headed / "agents.csv"
+    p.write_text(
+        "# the model registry — the OI-67 declaration header\n"
+        "# Contracts: IF-041\n" + REGISTRY_CSV,
+        encoding="utf-8",
+    )
+    reg, errors = route.load_registry(p)
+    assert errors == []
+    assert _fields(reg) == _fields(_registry(tmp_path)[0])
+    # A row whose id BEGINS with `#` is still a commented ROW, not a header:
+    # only the leading run is preamble.
+    assert "ANTHROPIC-OPUS-4.8" in reg and "AGENTS-EXAMPLE-000" not in reg
+    # ...and the header check still PAGES on a genuinely missing column, read
+    # off the real header rather than off the comment.
+    short = tmp_path / "short"
+    short.mkdir()
+    q = short / "agents.csv"
+    q.write_text(
+        "# declared header\nId,Family,Model,Version,Tier\nX-M-1,F,m,1,strong\n",
+        encoding="utf-8",
+    )
+    reg, errors = route.load_registry(q)
+    assert reg == {} and any("CmdTemplate" in e for e in errors), errors
+
+
 def test_resolve_exact_id_precedence(tmp_path):
     reg, tr = _pair_registry(tmp_path)
     # An exact id resolves to itself even though a newer version exists.

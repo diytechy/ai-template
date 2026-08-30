@@ -1588,13 +1588,21 @@ def interface_findings(ifs, module_ids, root=None):
     because a file- or external-owned seam legitimately has no design row and
     the class that does is a debt list, not a gate.
 
+    A row whose owner is `external:` and whose far side names no in-tree
+    endpoint is a finding of the same strict class: it is not a seam of THIS
+    system at all — a crossing between two external parties lives in
+    `external.toml` — and, mechanically, a row with no kit module on either
+    side has nowhere to put its definition, since the definition's one home is
+    an owner's header and an external party's header is not ours to write.
+
     The `Req-Refs` back-link this function once policed left with the cell;
     seam-to-test coverage was never on it (it joins on a TC's `Verifies`). A
-    row still carrying one of the five RETIRED cells (`Contract`, `Provider`,
-    `Req-Refs`, `Signal`, `SignalNote`) is a finding too — the wrong SHAPE, as
-    an id-shaped owner is: the definition lives in the owner's `Contract
-    IF-###:` body and the other four are derived or subsumed, so a value in
-    any of them is a second, unread copy of a fact that has one home.
+    registry still carrying one of the five RETIRED cells (`Contract`,
+    `Provider`, `Req-Refs`, `Signal`, `SignalNote`) is a finding too — the
+    wrong SHAPE, as an id-shaped owner is: the definition lives in the owner's
+    `Contract IF-###:` body and the other four are derived or subsumed, so a
+    value in any of them is a second, unread copy of a fact that has one home.
+    Detected by PRESENCE, per registry — see `_retired_cell_findings`.
 
     Implements: SR-159, LLR-041
     """
@@ -1602,16 +1610,9 @@ def interface_findings(ifs, module_ids, root=None):
     norm_modules = {_norm_module(m) for m in module_ids}
     norm_modules.discard("")
     implementers = _implementing_modules(root)
+    findings.extend(_retired_cell_findings(ifs, root))
     for r in ifs:
         iid = r["IF-ID"]
-        for column, key in _IF_RETIRED_CELLS:
-            if _cell_present(r.get(column)) or _cell_present(r.get(key)):
-                findings.append(
-                    f"IF {iid} carries the retired `{key}` cell — the definition "
-                    "lives in the owner's `Contract IF-###:` body and the row "
-                    "is one owner, its far side, a channel and an optional "
-                    "`data`; delete the cell (process.md §8)"
-                )
         has_req = bool((r.get("Requestors") or "").strip())
         has_con = bool((r.get("Consumers") or "").strip())
         if has_req == has_con:
@@ -1644,6 +1645,23 @@ def interface_findings(ifs, module_ids, root=None):
             )
             continue
         if owner.startswith(EXTERNAL_ENDPOINT_PREFIX):
+            # NO IN-TREE ENDPOINT ON EITHER SIDE. The external arm of the
+            # definition gate states our reading of an external surface in the
+            # header of the kit module that FACES it — so a row whose far side
+            # is external too has no such module, owes its definition nowhere,
+            # and passed every rule on this tier (adversarial review
+            # 2026-08-29, F2). A row with NO far side at all is deliberately
+            # left to the warn-first advisory above: that is one incompleteness
+            # and it is reported once, at the severity the migration was ruled.
+            far = _far_endpoints(r)
+            if far and all(e.startswith(EXTERNAL_ENDPOINT_PREFIX) for e in far):
+                findings.append(
+                    f"IF {iid} has no in-tree endpoint — owner {owner!r} and "
+                    "its far side are all `external:`; a crossing between two "
+                    "external parties is not a seam of this system "
+                    "(external.toml), and a row with no kit module on either "
+                    "side has no home for its definition"
+                )
             continue
         if owner.endswith("/") or not module_endpoints(owner):
             continue  # a file or directory medium: no design row is expected
@@ -1674,12 +1692,80 @@ _IF_RETIRED_CELLS = (
 )
 
 
-def _cell_present(value):
-    """A cell carries a value: a non-blank string, or a non-empty list (the
-    TOML carrier hands `req_refs` back as an array)."""
-    if isinstance(value, str):
-        return bool(value.strip())
-    return bool(value)
+def _far_endpoints(row):
+    """A row's far side as a list of endpoints — `Requestors` or `Consumers`,
+    whichever is set, in that order (the row carries exactly one; a row
+    carrying both is the advisory's finding, and reading the first is enough
+    to answer "is anything in-tree on the other side").
+
+    BOTH CARRIERS ARRIVE HERE AS A `;`-JOINED STRING, measured rather than
+    assumed: the far side is a LIST under TOML, but `spine_carrier.load` maps
+    every value through `value_to_cell`, which joins an array on `;` — the
+    separator the CSV cells already used. So one split reads both, and no
+    list-shaped arm is written for a shape that cannot arrive (the two
+    `Requestors`/`Consumers` reads directly above already assume the string,
+    and a second, more tolerant reader here would only disagree with them)."""
+    for key in ("Requestors", "Consumers"):
+        ends = [e.strip() for e in (row.get(key) or "").split(";") if e.strip()]
+        if ends:
+            return ends
+    return []
+
+
+def _retired_cell_findings(ifs, root):
+    """One finding per RETIRED cell the interface registry still carries — by
+    the KEY'S PRESENCE, not by its value, and once per registry rather than
+    once per row.
+
+    THE RETIRED SHAPE IS THE KEY, NOT ITS VALUE. The rule until the 2026-08-29
+    adversarial review (F7) tested the value, per row, and that asks the wrong
+    question twice: a key can be present and empty, and presence is a property
+    of the REGISTRY rather than of any one row. On the legacy CSV carrier that
+    is a live hole — a retired column sits in the HEADER of every row, so a
+    value test reads it as absent for as long as nobody fills it in, and the
+    registry can carry it indefinitely by keeping it blank.
+    `spine_carrier.columns` is the one reader that answers "which columns does
+    this registry use" for both carriers — the union of the keys rows set under
+    TOML, the header row under CSV — so the rule is stated once and cannot
+    answer differently per carrier.
+
+    TWO SHAPES ARE DELIBERATELY NOT RE-CHECKED HERE, because `spine_carrier`
+    already refuses them over every TOML registry it loads, this tier included:
+    an explicit `provider = ""` (`empty_value_findings` — under that carrier an
+    unset cell is an ABSENT key, and an explicit empty is the third state the
+    readers disagree about) and a cell that is itself a table,
+    `[interface.IF-002.legacy]` (`nested_table_findings`). Both land as a hard
+    refusal carrying their own text, so `--strict` reds either way; a second
+    copy of a rule that already fires is what the 0→A→B rule forbids.
+
+    `root` is None only for a caller passing rows with no tree behind them; the
+    union of the rows' own keys is then the honest answer (it is exactly what
+    `columns` computes under TOML, and a CSV row carries every header column)."""
+    live = None
+    if root is not None:
+        live = spine_carrier.resolve(Path(root) / "docs/requirements/interfaces.toml")
+    if live is None:
+        present, header_carrier = {c for r in ifs for c in r}, False
+    else:
+        present = set(spine_carrier.columns(live, "IF-ID"))
+        header_carrier = live.suffix != ".toml"
+    out = []
+    for column, key in _IF_RETIRED_CELLS:
+        spellings = {column, key} & present
+        if not spellings:
+            continue
+        if header_carrier:
+            where = "the header column `{}`".format("`, `".join(sorted(spellings)))
+        else:
+            rows = sorted(str(r.get("IF-ID") or "") for r in ifs if spellings & set(r))
+            where = "set on " + (", ".join(rows) if rows else "an example row only")
+        out.append(
+            f"the interface registry carries the retired `{key}` cell ({where}) "
+            "— the definition lives in the owner's `Contract IF-###:` body and "
+            "the row is one owner, its far side, a channel and an optional "
+            "`data`; delete the cell (process.md §8)"
+        )
+    return out
 
 
 def _implementing_modules(root):

@@ -44,7 +44,6 @@ Contract IF-003: the harness runs this CLI as one gate step and reads its exit
 """
 
 import argparse
-import csv
 import re
 import sys
 from pathlib import Path
@@ -72,12 +71,6 @@ SECTION_TITLE = "runtime flows"
 
 def load_ids(docs):
     """Collect the known ids per kind from the registries (trace.py's sources)."""
-
-    def col(path, key):
-        if not path.exists():
-            return set()
-        with path.open(newline="", encoding="utf-8-sig") as f:
-            return {r[key] for r in csv.DictReader(f) if r.get(key)}
 
     def spine_col(path, key):
         """The id set of a spine tier, through the carrier, so it answers

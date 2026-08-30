@@ -31,7 +31,7 @@ before you edit and again before you commit.
 |---|---|---|---|---|
 | `project-trajectory/AGENTS.template.md` | **10,000** (≥2k under Gemini's ~12k cap) | 9,980 | 2026-08-22 | +39: WI-507 — the dedup bullet gains the consolidation pointer (0→A→B) |
 | `CLAUDE.md` | **8,500** | 7,827 | 2026-08-23 | -4: WI-499 — the `human_ratification_through` mention in the repo-map paragraph re-keys to `human_approval_through` |
-| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,792 | 2026-08-29 | WI-533 re-stamped the PROCESS.md row (+131) and this row |
+| `project-trajectory/skills/byte-budget-guard/SKILL.md` | **5,000** | 4,795 | 2026-08-29 | the slice-6 round re-stamped the PROCESS.md row (+54) and this row |
 
 **`AGENTS.template.md` and this file are parked at their caps** (~1% free
 each); `CLAUDE.md` holds ~8%. Those two are what you hit first, and the DOC is
@@ -46,7 +46,7 @@ WI-498 slice 5 measured them, so re-stamp on the way past.
 
 | File | Baseline | Stamped | Latest change |
 |---|---|---|---|
-| `project-trajectory/PROCESS.md` | 87,782 | 2026-08-29 | **+131** FLAGGED: WI-533 (OI-67 slice 6) — §8's legacy-`Contract` sentence became the armed-gate sentence. Earlier: **−367** WI-532 |
+| `project-trajectory/PROCESS.md` | 87,836 | 2026-08-29 | **+54** FLAGGED: the OI-67 slice-6 round — §8 says an undeclared owner only warns. Earlier: **+131** WI-533, **−367** WI-532 |
 | `project-trajectory/PROCESS_OPTIONS.md` | 179,209 | 2026-08-29 | **+449** FLAGGED: WI-532 (OI-67) — the intra-repo seam model becomes owner / far side / channel, and the risk paragraph moves the rot to the header where it is checked |
 
 `docs/status.md` is deliberately **not** here: its length is the kit's shipped

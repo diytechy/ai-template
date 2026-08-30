@@ -846,6 +846,45 @@ def test_if_endpoint_advisory_is_warn_only(scaffold):
     assert "traces to no requirement" not in proc.stdout
 
 
+def test_a_row_with_no_in_tree_endpoint_is_a_strict_finding(scaffold):
+    # Adversarial review 2026-08-29, F2. An `external:` owner is exempt from
+    # the reachability advisory (an external party has no design row) — and
+    # that exemption used to be the row's LAST rule, so a row whose far side
+    # was `external:` too owed nothing to anybody: not a design row, not a
+    # `Contract IF-###:` body (the armed gate states our reading of an external
+    # surface in the header of the kit module that FACES it, and here there is
+    # none). A crossing between two external parties is `external.toml`'s row,
+    # not this tier's.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    all_external = (
+        "[interface.IF-001]\n"
+        'owner = "external:git"\n'
+        'consumers = ["external:downstream adopter"]\n'
+        'channel = "git"\n'
+        'data = "the ref state"\n'
+        'status = "Drafted"\n'
+    )
+    (req / "interfaces.toml").write_text(all_external, encoding="utf-8")
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    assert "IF IF-001 has no in-tree endpoint" in _report(scaffold)
+
+    # The other half: ONE kit module on the far side and the row is a seam of
+    # this system again — the rule is "no endpoint in the tree", not "the owner
+    # is external".
+    (req / "interfaces.toml").write_text(
+        all_external.replace(
+            'consumers = ["external:downstream adopter"]', 'consumers = ["src/demo"]'
+        ),
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "no in-tree endpoint" not in _report(scaffold)
+
+
 # --- WI-443 / OI-14 part B: the IF+CMP schema tier, WARN-FIRST -----------------
 # The ruled sequencing is advisory-until-the-corpus-converges, so EVERY test in
 # this section asserts the WARN TEXT and `returncode == 0` under `--strict`. A
@@ -892,7 +931,10 @@ def test_a_retired_cell_is_a_strict_finding(scaffold):
     # took off the row are the wrong SHAPE wherever they still appear — a
     # `contract` (the definition has one home, the owner's header), a
     # `provider`/`req_refs`/`signal`/`signal_note` (derived or subsumed). Each
-    # is named by key; the legacy summarizing warning is gone.
+    # is named by key; the legacy summarizing warning is gone. ONE finding per
+    # retired KEY, naming the rows that carry it (adversarial review
+    # 2026-08-29, F7) — the registry is what carries a retired column, and a
+    # per-row copy of one column's finding says the same thing N times.
     make_minimal_project(scaffold)
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
         "[interface.IF-001]\n"
@@ -909,8 +951,8 @@ def test_a_retired_cell_is_a_strict_finding(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     report = _report(scaffold)
-    assert "IF IF-001 carries the retired `contract` cell" in report
-    assert "IF IF-001 carries the retired `req_refs` cell" in report
+    assert "carries the retired `contract` cell (set on IF-001)" in report
+    assert "carries the retired `req_refs` cell (set on IF-001)" in report
     assert "legacy `contract` cell" not in proc.stdout
     # Delete them and the row is clean: the finding is the cell, not the row.
     (scaffold / "docs" / "requirements" / "interfaces.toml").write_text(
@@ -925,6 +967,83 @@ def test_a_retired_cell_is_a_strict_finding(scaffold):
     proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "carries the retired" not in _report(scaffold)
+
+
+def test_a_retired_column_in_a_legacy_csv_header_is_a_strict_finding(scaffold):
+    # THE HOLE THE PRESENCE RULE CLOSES (adversarial review 2026-08-29, F7).
+    # The retired SHAPE is the key, not its value: under the legacy CSV carrier
+    # a header column is present on EVERY row whether or not anyone filled it
+    # in, so a value test read a retired column with empty cells as absent and
+    # a registry could carry it indefinitely by keeping it blank. Reported ONCE
+    # per column, naming the header — not once per row, which would say the
+    # same thing as many times as the registry has rows.
+    make_minimal_project(scaffold)
+    req = scaffold / "docs" / "requirements"
+    (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Owner,Consumers,Channel,Data,Contract,Version,Status\n"
+        "IF-001,src/demo,external:git,call,the ref state,,v1,Drafted\n"
+        "IF-002,src/demo,external:git,call,the commit range,,v1,Drafted\n",
+        encoding="utf-8",
+    )
+    record_ids(scaffold)
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 1, proc.stdout + proc.stderr
+    report = _report(scaffold)
+    assert (
+        "carries the retired `contract` cell (the header column `Contract`)" in report
+    )
+    assert report.count("carries the retired") == 1, report
+    # Drop the column and the registry is clean — the finding is the column.
+    (req / "interfaces.csv").write_text(
+        "IF-ID,Owner,Consumers,Channel,Data,Version,Status\n"
+        "IF-001,src/demo,external:git,call,the ref state,v1,Drafted\n"
+        "IF-002,src/demo,external:git,call,the commit range,v1,Drafted\n",
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "carries the retired" not in _report(scaffold)
+
+
+def test_an_empty_retired_cell_and_a_nested_sub_table_are_refused_by_the_carrier(
+    scaffold,
+):
+    # The other two shapes the 2026-08-29 review named, PINNED HERE rather than
+    # re-implemented in `interface_findings`: `spine_carrier.load` already
+    # refuses both over every TOML registry it reads, this tier included, and a
+    # second copy of a rule that already fires is exactly what the 0→A→B rule
+    # forbids. `provider = ""` is the explicit-empty refusal (under this
+    # carrier an unset cell is an ABSENT key); `[interface.IF-002.legacy]` is
+    # the nested-table refusal (a cell that is itself a table is not a cell).
+    # Both land as a REFUSAL rather than a report — the fail-closed half of the
+    # carrier fork — so `--strict` reds either way.
+    make_minimal_project(scaffold)
+    ifs = scaffold / "docs" / "requirements" / "interfaces.toml"
+    clean = (
+        "[interface.IF-001]\n"
+        'owner = "src/demo"\n'
+        'consumers = ["external:git"]\n'
+        'channel = "call"\n'
+        'data = "the ref state"\n'
+        'status = "Drafted"\n'
+    )
+    ifs.write_text(clean, encoding="utf-8")
+    record_ids(scaffold)
+    assert run_py(["scripts/trace.py", "--strict"], cwd=scaffold).returncode == 0
+
+    ifs.write_text(clean + 'provider = ""\n', encoding="utf-8")
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "IF-001 sets `provider` to an EMPTY STRING" in proc.stdout + proc.stderr
+
+    ifs.write_text(
+        clean + '\n[interface.IF-001.legacy]\ncontract = "an old body"\n',
+        encoding="utf-8",
+    )
+    proc = run_py(["scripts/trace.py", "--strict"], cwd=scaffold)
+    assert proc.returncode != 0, proc.stdout + proc.stderr
+    assert "IF-001.legacy is a TABLE, not a cell" in proc.stdout + proc.stderr
 
 
 def test_channel_refuses_an_unknown_value_as_a_warn(scaffold):
@@ -1265,9 +1384,19 @@ def test_an_owner_that_is_a_path_is_the_clean_shape(scaffold):
     # a module path, a file path and a marked external party are the three
     # legitimate spellings, and none of them reports.
     make_minimal_project(scaffold)
-    for owner in ("src/demo", "docs/status.md", "external:git"):
-        out = _toml_warn_run(scaffold, _if_row(owner='"%s"' % owner))
+    for owner, extra in (
+        ("src/demo", {}),
+        ("docs/status.md", {}),
+        # An `external:` owner needs a kit module on its FAR SIDE to be a seam
+        # of this system at all — the default `consumers` cell is itself
+        # `external:git`, which is
+        # `test_a_row_with_no_in_tree_endpoint_is_a_strict_finding`'s subject
+        # and not this test's. The owner spelling is what is under test here.
+        ("external:git", {"consumers": '["src/demo"]'}),
+    ):
+        out = _toml_warn_run(scaffold, _if_row(owner='"%s"' % owner, **extra))
         assert "Owner=" not in out, owner
+        assert "no in-tree endpoint" not in out, owner
 
 
 def test_an_owner_naming_several_endpoints_is_a_finding(scaffold):
@@ -1419,14 +1548,18 @@ def test_legacy_interfaces_csv_still_reads_through_the_carrier(scaffold):
     req = scaffold / "docs" / "requirements"
     (req / "interfaces.toml").unlink()  # the CSV is the ONLY home, not a second
     legacy = (
-        "IF-ID,Direction,ThisProject,Counterpart,Contract,Req-Refs,Version,"
-        "Stability,Status,Component\n"
+        "IF-ID,Direction,ThisProject,Counterpart,Version,Stability,Status,Component\n"
     )
-    # The retired columns stay in the legacy HEADER (that is the carrier's
-    # shape) with EMPTY cells: a value in one is the armed gate's strict
-    # finding since OI-67 slice 6, and this test is about the carrier.
+    # The RETIRED columns are gone from the header, and that is the rule rather
+    # than tidiness: since the presence fix (2026-08-29) a retired column is a
+    # strict finding wherever it is DECLARED, and a CSV header declares it on
+    # every row (test_a_retired_column_in_a_legacy_csv_header_is_a_strict_finding).
+    # What this test is about survives unchanged — the columns the tier retired
+    # but never banned (`Direction`, `ThisProject`, `Counterpart`, `Stability`)
+    # are simply carried, a pre-WI-056 file with no Notes column still reads,
+    # and nothing crashes.
     (req / "interfaces.csv").write_text(
-        legacy + "IF-001,Provides,src/demo,git,,,v1,Stable,Active,\n",
+        legacy + "IF-001,Provides,src/demo,git,v1,Stable,Active,\n",
         encoding="utf-8",
     )
     record_ids(scaffold)

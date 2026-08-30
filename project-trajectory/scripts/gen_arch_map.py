@@ -1230,7 +1230,18 @@ def _md_safe(text):
     return text.replace("|", "\\|").replace("<!--", "&lt;!--").replace("-->", "--&gt;")
 
 
-def scan_contracts(src_roots, owner_files=()):
+def _grammar_refusal(grammar_errors, source, exc):
+    """The per-source grammar arm, ONE policy for both carriers `scan_contracts`
+    walks: record the refusal against `source` when the caller opened a list for
+    it, and re-raise when it did not. Extracted rather than written twice so the
+    two carriers cannot drift into two postures — and so the walk keeps the
+    branch count the complexity ratchet froze."""
+    if grammar_errors is None:
+        raise exc
+    grammar_errors.append((source, str(exc)))
+
+
+def scan_contracts(src_roots, owner_files=(), grammar_errors=None):
     """`([(source, summary, ids, bodies)], [unreadable])` — every module AND
     every file owner declaring a seam, sorted by path so the rendered block is
     byte-stable, plus the sources the scan could NOT read.
@@ -1240,13 +1251,28 @@ def scan_contracts(src_roots, owner_files=()):
     non-Python owner is listed beside the modules, under the path the registry
     spells. The second half of the tuple is the point: a reference that
     silently omitted a source it failed to parse would report a clean, fresh
-    document over a tree it had not actually read. The caller renders the list."""
+    document over a tree it had not actually read. The caller renders the list.
+
+    `grammar_errors` IS THE PER-SOURCE ARM, and it exists because the grammar's
+    refusals are whole-scan by default. Pass a list and a
+    `ContractsGrammarError` raised for ONE source is appended to it as
+    `(source, message)` and the walk continues; pass nothing and it propagates
+    exactly as it always did. The default is the REFERENCE generator's path,
+    where one refused header must stop the document rather than leave a source
+    silently missing from it. A CHECKER needs the other posture: it reads this
+    harvest to decide whether every declared seam is stated, so one malformed
+    body must cost that source's verdict and nothing else — swallowing the
+    refusal there disarms the whole gate (`check_trajectory._declaration_sites`
+    did exactly that until the arm existed)."""
     out, unreadable = [], []
     for owner, path in owner_files:
         try:
             ids, bodies = file_contracts(path)
         except (UnicodeDecodeError, OSError) as exc:
             unreadable.append((owner, type(exc).__name__))
+            continue
+        except ContractsGrammarError as exc:
+            _grammar_refusal(grammar_errors, owner, exc)
             continue
         if ids:
             head = next(
@@ -1262,17 +1288,21 @@ def scan_contracts(src_roots, owner_files=()):
             unreadable.append((rel, type(exc).__name__))
             continue
         lines = text.splitlines()
-        ids = module_contracts(tree, lines)
-        if not ids:
+        # Both halves of the grammar are inside the arm: the marker line refuses
+        # an id that only a continuation line declares, and the body parser
+        # refuses four shapes of its own. The ORDER is unchanged — a module that
+        # declares nothing is skipped before its bodies are read — so a lone
+        # `Contract IF-###:` in an undeclaring module stays as invisible to this
+        # walk as it has always been, rather than becoming a refusal here.
+        try:
+            ids = module_contracts(tree, lines)
+            if not ids:
+                continue
+            bodies = module_contract_bodies(tree, lines)
+        except ContractsGrammarError as exc:
+            _grammar_refusal(grammar_errors, rel, exc)
             continue
-        out.append(
-            (
-                rel,
-                first_line(ast.get_docstring(tree)),
-                ids,
-                module_contract_bodies(tree, lines),
-            )
-        )
+        out.append((rel, first_line(ast.get_docstring(tree)), ids, bodies))
     return sorted(out), unreadable
 
 

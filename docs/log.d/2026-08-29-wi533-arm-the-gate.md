@@ -60,14 +60,16 @@ byte-exact).
 **Also closed.** `gen_okf._doc_title_and_summary` skips a leading HTML
 comment WHOLE (slice 3's latent defect, live for `docs/status.md` since slice
 4 — a seam definition was one dial away from becoming a process-guide
-summary); sixteen half-moot reason cells trimmed by a worker (the ownership
-and nearest-seam arguments the owner-as-path made moot; the honesty valves and
-the measured reader sets kept; zero IF citation-frame warnings remain); the
-slice-4 Sol round's six cheap findings applied (`IF-159`/`IF-160` bodies made
-true, `IF-102`'s `rows_seq_from_text` clause removed — it is `IF-119`'s —
-`IF-163` narrowed to the hand-authored bytes so it no longer overlaps
-`IF-164`, the README exemption case-folded, the fragment's count corrected
-to nine).
+summary); fourteen half-moot reason cells trimmed by a worker — thirteen
+`notes` and `IF-144`'s `rationale`, where the sitting wrote sixteen — (the
+ownership and nearest-seam arguments the owner-as-path made moot; the honesty
+valves and the measured reader sets kept; zero IF citation-frame warnings
+remain); the slice-4 Sol round's six cheap findings applied (`IF-159`/`IF-160`
+bodies made true, `IF-102`'s `rows_seq_from_text` clause removed — it is
+`IF-119`'s — `IF-163` narrowed to the hand-authored bytes so it no longer
+overlaps `IF-164`, the README exemption case-folded, the fragment's count
+corrected to nine).
+<!-- fig: cmd="git show 87c1fc38^:docs/requirements/interfaces.toml and 87c1fc38:docs/requirements/interfaces.toml parsed, rows whose notes or rationale cell differs" rev=87c1fc38 -->
 
 **Ratchets.** `check_trajectory.py` +158 (4480 → 4638, the gate and its
 docstring), `trace.py` +14 net (5898 → 5912; the legacy advisory's 19 lines
@@ -88,6 +90,31 @@ row's), `TC-161`'s approved `method` prose naming `IF-127` (the owner's).
 exit code, `schedule.py`'s CLI, `integrate`'s in-process surface,
 `report.html` / `perf-report.md`), and `gen_arch_map.py` still processes only
 the first of `--cli-doc` / `--contracts-doc` on one invocation.
+
+**Corrected at this slice's cross-family round** (run the sitting after —
+the round and its dispositions are
+[../reviews/2026-08-29-oi67-slice6/README.md](../reviews/2026-08-29-oi67-slice6/README.md)):
+three claims above did not hold and were fixed at their root in that round's
+commit. (1) One malformed body disarmed the WHOLE gate — `_declaration_sites`
+swallowed the grammar error and returned no surface — so an empty
+`Contract IF-069:` opener passed `--strict`; a refused header is now the
+gate's fourth finding shape and the scan continues past it. (2) "Every kit
+reader goes through" the one CSV reader was false by three sites
+(`agent_route._rows_from_csv`, `intake._locate_spine_rows`' legacy carrier
+read, `spine_carrier.columns`) plus an unused fourth (`check_flows.col`),
+routed or deleted; and the reader itself took a blank line after the comment
+block as the header. (3) The retired-cell check read VALUES, not presence — a retired COLUMN in a
+legacy CSV header stayed silent while its cells were empty, and a test pinned
+that as correct (the reviewer's two plants, an empty `provider` and a nested
+table, were in fact refused by the carrier on stderr) — and an
+`external:`-owned row whose far side is all external owed no body anywhere —
+now `trace --strict` findings. The shipped `EXAMPLE.md` still taught the
+retired row shape, and six shipped and live texts said an owner that
+declares nothing is a strict finding where decision 6.2 keeps it a warn —
+all corrected. The "armed" claim is qualified on record (decision 6.7): the
+gate rides the severity ladder, so on this tree it errors only when run by
+hand or at the Impl rung; the reference freshness step is the floor that
+catches a deleted or malformed body today.
 
 **Deviations from spec:** the undeclared-owner case stays a warn (above, with
 the reason); the `gen_okf` fix and the slice-4 verdict corrections were folded

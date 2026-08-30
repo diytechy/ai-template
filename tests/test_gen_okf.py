@@ -159,6 +159,42 @@ def test_a_leading_html_comment_block_never_becomes_the_guide_summary(scaffold):
     assert okf_mod._doc_title_and_summary(doc) == ("T", "Para.")
 
 
+def test_a_comment_is_a_SPAN_so_the_rest_of_its_line_is_still_read(scaffold):
+    # The whole-line skip lost everything after a `-->`: a doc whose contract
+    # header shares a line with its heading had NO title in its Process Guide,
+    # and a paragraph after a multi-line close was dropped the same way. A
+    # comment is a span — what the line states outside it is read like any
+    # other line.
+    make_minimal_project(scaffold)
+    doc = scaffold / "docs" / "runtime-flows.md"
+    from conftest import load_script
+
+    okf_mod = load_script("gen_okf")
+
+    def read(text):
+        doc.write_text(text, encoding="utf-8")
+        return okf_mod._doc_title_and_summary(doc)
+
+    assert read("<!-- hidden --> # Real\nPara\n") == ("Real", "Para")
+    # Text after the close of a MULTI-LINE comment is read too.
+    assert read("<!--\nContracts: IF-950\n--> # Real\n\nPara text.\n") == (
+        "Real",
+        "Para text.",
+    )
+    # Several spans on one line reduce to what is left between and after them.
+    assert read("<!-- a --> <!-- b --> text\n") == ("", "text")
+    # The cases that already held keep holding: two leading comments, a comment
+    # after a blank, comment-only, an unclosed comment (nothing after it is
+    # prose), and a `#` heading INSIDE a comment (never the title).
+    assert read("<!-- a -->\n<!-- b -->\n# T\n\nPara.\n") == ("T", "Para.")
+    assert read("\n<!-- c -->\n# T\n\nPara.\n") == ("T", "Para.")
+    assert read("<!-- only -->\n") == ("", "")
+    assert read("<!-- unclosed\n# T\nPara\n") == ("", "")
+    assert read("<!--\n# not a heading\n-->\n# T\n\nPara.\n") == ("T", "Para.")
+    # ...and frontmatter is still stripped ahead of all of it.
+    assert read('---\ntype: "x"\n---\n# T\n\nPara.\n') == ("T", "Para.")
+
+
 def test_process_guides_skip_absent_docs(scaffold):
     # A doc a given repo doesn't carry is skipped (like the off-spine tiers), so
     # the shipped candidate list is generous without minting dangling concepts.

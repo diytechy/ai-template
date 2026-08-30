@@ -92,9 +92,11 @@ except ImportError:  # pragma: no cover - in-process fallback
 # one — the parse rule has exactly one home either way.
 try:
     from kitlib import stage as kitstage
+    from kitlib import spine as _spine
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from kitlib import stage as kitstage
+    from kitlib import spine as _spine
 
 import acceptance_record
 import agent_common as ac
@@ -1569,6 +1571,7 @@ def _locate_spine_rows(root, wanted):
     `row`/`status_ix` are None on the TOML arm, and `tables` holds the live
     path so the writer never re-guesses the suffix."""
     import csv
+    import io
 
     located, tables = {}, {}
     for rel, id_col in acceptance_record.SPINE_CSVS:
@@ -1596,8 +1599,12 @@ def _locate_spine_rows(root, wanted):
                         None,
                     )
             continue
-        with live.open(newline="", encoding="utf-8-sig") as fh:
-            rows = list(csv.reader(fh))
+        # Through the ONE comment-skipping reader (WI-533): a CSV carrier may
+        # open with a `#` declaration header, and reading it raw would take that
+        # header's first line as `rows[0]` — the id column then holds a comment
+        # and every staged row reads as absent.
+        text = live.read_text(encoding="utf-8-sig", errors="replace")
+        rows = list(csv.reader(io.StringIO(_spine.csv_body(text))))
         tables[rel] = (live, rows)
         header = rows[0] if rows else []
         status_ix = header.index("Status") if "Status" in header else None

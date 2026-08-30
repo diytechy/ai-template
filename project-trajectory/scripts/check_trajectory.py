@@ -1181,11 +1181,19 @@ def _declaration_sites(root):
     interface reference uses (`gen_arch_map.scan_contracts`): the modules under
     the declared scan root, keyed by normalized module path (`scripts/check`),
     and the file owners the registry names, keyed by the owner as the registry
-    spells it (`docs/stack.ini`, `hooks/pre-commit`). `problems` names a
-    source the scan could not read or a header the grammar refused, so a
-    refusal is reported rather than read as "declares nothing". `(None,
-    problems)` when there is no surface to read — files-mode, an absent scan
-    root, no generator beside this script — the `arch_inventory` posture."""
+    spells it (`docs/stack.ini`, `hooks/pre-commit`). `problems` is
+    `[(source, message)]` for every header the contract GRAMMAR refused, so a
+    refusal is reported rather than read as "declares nothing" — and, above
+    all, rather than DISARMING the gate: the refusal used to be caught for the
+    whole scan and answered with `(None, [])`, so one malformed body anywhere
+    in the tree silenced every other row's verdict too (adversarial review
+    2026-08-29, F1). A refused source is absent from `sites` rather than
+    entered as declaring nothing, which would hand its rows to the reverse
+    check's warn instead of this gate's finding. A source the scan could not
+    READ is deliberately NOT in `problems`: that is the reference's own "could
+    not read" list and `arch_inventory`'s skip. `(None, problems)` when there
+    is no surface to read — files-mode, an absent scan root, no generator
+    beside this script — the `arch_inventory` posture."""
     if gen_arch_map is None or not hasattr(gen_arch_map, "scan_contracts"):
         return None, []
     src, mode = _arch_scan_profile(root)
@@ -1195,18 +1203,16 @@ def _declaration_sites(root):
     if not src_dir.is_dir():
         return None, []
     owner_files = _owner_files(root)
-    try:
-        records, unreadable = gen_arch_map.scan_contracts([src_dir], owner_files)
-    except gen_arch_map.ContractsGrammarError:
-        return None, []  # the marker-grammar arm reports the refusal, once
+    refused = []
+    records, _unreadable = gen_arch_map.scan_contracts(
+        [src_dir], owner_files, grammar_errors=refused
+    )
     file_names = {owner for owner, _path in owner_files}
     sites = {}
     for rel, _summary, ids, bodies in records:
         key = rel if rel in file_names else _norm_module(rel)
         sites[key] = (rel, set(ids), set(bodies))
-    # An unreadable source is the reference's own "could not read" list and
-    # `arch_inventory`'s skip, never this gate's finding.
-    return sites, [rel for rel, _why in unreadable]
+    return sites, refused
 
 
 def contract_body_findings(root):
@@ -1218,7 +1224,7 @@ def contract_body_findings(root):
     promotes them to ERROR under `--strict`, the `if_tc_coverage_findings`
     idiom, sharing its `[checks] interfaces_check` opt-out.
 
-    ONE RULE, THREE SHAPES. (1) The owner declares the id and states no body —
+    ONE RULE, FOUR SHAPES. (1) The owner declares the id and states no body —
     "declared, not stated", the reference's own debt line, now a finding.
     (2) An `external:`-owned row is declared and stated by the kit module on
     its FAR SIDE — the consumer that reads the external surface, or the
@@ -1229,6 +1235,11 @@ def contract_body_findings(root):
     registry owns to a different in-tree source — because the owner is the
     ONE declaration site and a second copy is a second definition waiting to
     disagree; a far-side module stating an external-owned row is not stray.
+    (4) A source whose header the contract GRAMMAR refuses — an empty
+    `Contract IF-###:` opener, a body before its marker, a duplicate body, a
+    body carrying an HTML comment — because nobody can read what it states:
+    its declared rows count as unstated, and the refusal is named once per
+    source rather than once per row it takes down with it.
 
     WHAT STAYS A WARN, on record: an owner that declares NOTHING is the
     owner-exact reverse check's finding (`_owner_exact_findings`, warn-only),
@@ -1243,10 +1254,14 @@ def contract_body_findings(root):
     list, not a finding here."""
     if not read_interfaces_check_enabled(root):
         return []
-    sites, _unreadable = _declaration_sites(root)
+    sites, refused = _declaration_sites(root)
     if sites is None:
         return []
-    out = []
+    out = [
+        "{!r} declares seams but its header is refused by the contract "
+        "grammar: {} — its declared rows count as unstated".format(rel, msg)
+        for rel, msg in refused
+    ]
     ifs = load_seams(root)
     file_names = {owner for owner, _path in _owner_files(root)}
 

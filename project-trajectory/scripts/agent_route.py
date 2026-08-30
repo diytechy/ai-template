@@ -86,6 +86,7 @@ Contract IF-044: model routing as a PURE selection library the coordinator calls
 
 import argparse
 import csv
+import io
 import os
 import re
 import sys
@@ -94,6 +95,12 @@ from pathlib import Path
 # The console guard's one home is the shipped package (WI-448 / D-8);
 # aliased to the module-local name so no call site changes.
 from kitlib.config import utf8_console as _utf8_console
+
+# The ONE comment-skipping CSV reader (WI-533): a registry CSV may open with a
+# `#` declaration header, and a raw `csv.reader` here would read that header's
+# first line as the column row — the header check below would then page over a
+# missing `CmdTemplate` the registry actually declares.
+from kitlib import spine as _spine
 
 # Sibling: the registry CARRIER (repo-lock D-6 — the vocabulary gets ONE home
 # and the readers import it; a re-sync copies this file with its declared
@@ -233,7 +240,7 @@ def _rows_from_csv(text, name):
     empty cell — so its analogue is "the file does not parse", which the TOML
     branch raises instead."""
     errors = []
-    rows = list(csv.reader(text.splitlines()))
+    rows = list(csv.reader(io.StringIO(_spine.csv_body(text))))
     if not rows:
         return [], []
     header = [h.strip() for h in rows[0]]

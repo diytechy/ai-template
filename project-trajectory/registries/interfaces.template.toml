@@ -107,8 +107,11 @@
 # silencing the missing-seam coverage warn for that side.
 #
 # THE GATE IS ARMED: a row whose owner declares it but states no `Contract
-# IF-###:` body, or whose owner declares nothing, is a `check_trajectory
-# --strict` finding — an interface with no definition. An `external:`-owned
+# IF-###:` body is a `check_trajectory --strict` finding — an interface with
+# no definition — and so is a source whose header the contract grammar refuses
+# (its declared rows count as unstated). An owner that declares NOTHING only
+# WARNS: the row is on the migration list, visible in the reference's summary
+# line, and is not gated. An `external:`-owned
 # row is stated by the kit module on its FAR SIDE (the consumer that reads the
 # external surface, or the requestor that drives it), the one in-tree home of
 # our reading of that surface. The retired cells — `contract`, `provider`,
