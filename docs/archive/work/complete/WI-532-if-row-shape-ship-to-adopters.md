@@ -12,7 +12,7 @@ priority = 2
 ## Deliverable
 
 The shipped kit describes the row the code reads. Record:
-[../../../log.d/2026-08-29-wi532-if-row-shape-shipped.md](../../../log.d/2026-08-29-wi532-if-row-shape-shipped.md).
+[../../../log.d/2026-08-29-wi532-if-row-shape-shipped.md](../../../log.md#2026-08-29--wi-532-the-interface-row-shape-ships-to-adopters-oi-67-slice-5).
 
 `PROCESS.md` §8 rewritten for the one-owner row inside its watched budget
 (−367 bytes): owner as the providing thing, the far side naming the direction,

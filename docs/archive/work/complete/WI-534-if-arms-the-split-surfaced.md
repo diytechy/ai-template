@@ -13,7 +13,7 @@ priority = 2
 
 The nine arms the split surfaced are rows, each stated beside its owner, and
 `gen_arch_map` runs every target it is named. Record:
-[../../../log.d/2026-08-29-wi534-if-arms.md](../../../log.d/2026-08-29-wi534-if-arms.md).
+[../../../log.d/2026-08-29-wi534-if-arms.md](../../../log.md#2026-08-29--wi-534-the-arms-the-split-surfaced--nine-rows-minted-and-stated-oi-67-follow-on).
 
 `IF-165` `derive_stage`'s exit code (three measured consumers: `check`,
 `trunk_step`, `kitlib/stage`); `IF-166` `docs/test/report.html` (`trace

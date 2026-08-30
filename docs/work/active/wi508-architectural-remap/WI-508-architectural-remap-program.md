@@ -170,7 +170,7 @@ approval act is claimed and none was needed.
 
 **Watermarks** `LLR` 202 → 204, `TC` 198 → 200, via `trace.py
 --bump-ids`. Record:
-[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md).
+[../../../log.d/2026-08-25-wi508-slice1-sr163-decomposition.md](../../../log.md#2026-08-25--wi-508-slice-1-the-row-re-validated-the-lane-claimed-and--decomposed).
 
 ### SLICE 2 LANDED 2026-08-25 — the blind derivation ran, on two axes
 
@@ -234,7 +234,7 @@ keep the requirement-level findings out of the module-work pile.
 
 **Deferred to the owner: nothing new.** The derivation commissions no act; it is
 one half of a diff. Record:
-[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md).
+[../../../log.d/2026-08-25-wi508-slice2-blind-derivation.md](../../../log.md#2026-08-25--wi-508-slice-2-the-blind-derivation-runs-on-two-axes-and-both-teams-disclose-the-same-breach).
 
 ### SLICES 3 AND 4 LANDED 2026-08-25 — the alignment, one WI filed, one question to the owner
 
@@ -395,5 +395,18 @@ ruling with no row to return to, and there is no pause file. When `OI-64` is
 ruled and the four rows are blessed, the close is a bookkeeping act — and it
 needs to re-point nothing.
 
+### DELEGATED FOR THE UNATTENDED RUN (owner, 2026-08-30)
+
+Item 1 is discharged: `OI-64` was ruled (b) and executed on 2026-08-28
+(`docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md`). Item 2 is not the
+owner's act under the declared dial — `docs/process.toml` holds only the
+`DevStg-Needs` rung human-held, so LLR/TC approval proceeds under ordinary
+review: the lane that resumes this row approves the four `Drafted` rows through
+the ordinary adjudication flow (the re-attestation brief is the surface, the
+snapshot diff the record), closes the row as the bookkeeping act above, and
+lists the flip in its fragment for the owner's later review. The owner is away
+and has delegated this in session; the lane's branch ref was re-cut at trunk
+HEAD on 2026-08-30 so the dispatcher resumes it as a parked lane.
+
 Record:
-[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md).
+[../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.md#2026-08-25--wi-508-slice-5-the-dispersion-survey-completes-one-more-row-is-earned-and-the-inherited-debt-gets-an-owner-that-outlives-this-program).

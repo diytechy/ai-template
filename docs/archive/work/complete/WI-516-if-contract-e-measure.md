@@ -53,7 +53,7 @@ further stale claims (`IF-057`, `IF-061`). `OI-61`'s (c) is NOT re-raised.
 ## Context
 
 `OI-62` ruled (e) (owner, in session 2026-08-24; record:
-[../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md)):
+[../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)):
 MEASURE, DO NOT REWRITE. This row is that pass. It READS the 108 non-CLI
 `contract` cells (`docs/requirements/interfaces.toml` — the 135 live rows minus
 the 27 the WI-512 pass already thinned) with the same per-row discipline

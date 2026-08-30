@@ -170,3 +170,20 @@ sitting rather than racing it (priority 2). If the schema work surfaces
 anything that IS attestation-bearing, stop and raise it rather than folding
 it in. `safety_class = "spine"` because the field lands on SR/LLR rows and
 the schema of record moves, even though the cells it adds are informative.
+
+### DELEGATED FOR THE UNATTENDED RUN (owner, 2026-08-30)
+
+The two items above that defer to the owner are delegated, with the owner's
+review moved to RETURN rather than to the act. **Phase 4:** the lane drafts the
+`knowledge` values into `docs/requirements/hats.toml` — re-pointing each hat at
+the existing packs under `docs/knowledge/` where one carries its perspective,
+and drafting a pack only where none does, each marked as a draft in its own
+header — because the roster's header already says the owner cuts at return; a
+roster drafted by an agent and READ by the owner is what that header asks for.
+**Phase 2's duplication:** the 17 approved `Rationale` cells may lose the
+attribution prose the `hat_refs` cell now carries — under the declared dial
+(`DevStg-Needs` human-held only) an SR/LLR amendment proceeds under ordinary
+review, and the snapshot diff plus the re-attestation brief record every
+touched cell for the owner. List both in the fragment under a heading the
+owner can find. The lane's branch ref was re-cut at trunk HEAD on 2026-08-30 so
+the dispatcher resumes it as a parked lane.

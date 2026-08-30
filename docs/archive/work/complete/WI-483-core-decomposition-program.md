@@ -65,7 +65,7 @@ text for the checker.
 split RIDES ALONG with a subsystem decomposition and a standalone split slice is
 out of scope; every subsystem this program decomposed was checked and none
 needed one. They belong to the next decomposition, `WI-508`. Record:
-[../../../log.d/2026-08-24-wi483-layering-close.md](../../../log.d/2026-08-24-wi483-layering-close.md).
+[../../../log.d/2026-08-24-wi483-layering-close.md](../../../log.md#2026-08-24--wi-483-slice-7-the-layering-measured-rather-than-assumed--decided-and-the-row-closed).
 
 ## Context
 

@@ -45,7 +45,7 @@ the seams it owns).
   reviewers' own executed attacks, record in
   [reviews/2026-08-21-program-grind-close/RESUME.md](reviews/2026-08-21-program-grind-close/RESUME.md).
   Five of the six queued briefs RULED (2026-08-21; record:
-  [log.d/2026-08-21-owner-rulings-oi48-52.md](log.d/2026-08-21-owner-rulings-oi48-52.md);
+  [log.d/2026-08-21-owner-rulings-oi48-52.md](log.md#2026-08-21--four-of-the-six-queued-briefs-rule-in-one-owner-message-the-floor-question-is-answered-but-deliberately-not-yet-ruled);
   execution rows in the generated frontier below) — the largest being the
   **stage unification program**, whose six ruled slices are all BUILT per
   [plans/2026-08-21-stage-unification-plan.md](plans/2026-08-21-stage-unification-plan.md)
@@ -82,7 +82,7 @@ the seams it owns).
   the owner's in-session act, from the corrected brief the three preceding
   fixes produced — the dated copy he signed from is
   [ratify/2026-08-24-spine-approval.md](ratify/2026-08-24-spine-approval.md);
-  record: [log.d/2026-08-24-oi62-rule-and-spine-approval.md](log.d/2026-08-24-oi62-rule-and-spine-approval.md)):
+  record: [log.d/2026-08-24-oi62-rule-and-spine-approval.md](log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)):
   `docs/stage`'s draft count was taken to **zero**, the re-attest window closed
   (`trace.py --approve modified --check` exit 0), and **phase 4 climbed back
   to `DevStg-Impl`** — the reopened-phase warning its minted drafts held open
@@ -97,7 +97,7 @@ the seams it owns).
   wall time (26 s on the declared command, 60 s with the redirect), so redirect
   it only when C: is genuinely short.
 - **`OI-68` AND `OI-69` ARE RULED (2026-08-30)** — record
-  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.d/2026-08-30-owner-rulings-oi68-oi69.md).
+  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.md#2026-08-30--the-owner-rules-oi-68-1c-a-sloc-based-line-ratchet--2a--3a--4a-and-oi-69-a1--b1--c2--d1--e1-once-the-dial-is-on-five-rows-filed-with-their-edges).
   `OI-68` (the complexity sensor): (1c) BOTH sensors stay armed and the
   module-size line ratchet is RE-BASED to SLOC — non-blank, non-comment,
   non-docstring lines, one definition shared with the sensor — (2a) the sensor
@@ -120,7 +120,7 @@ the seams it owns).
   owner's edit of one number afterwards. **Before the grind starts: the
   bar** — the full suite's floor is one 304 s test and nine 60–90 s dispatch
   lanes (measured 2026-08-30,
-  [log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md](log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md));
+  [log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md](log.md#2026-08-30--docs-the-oi-67-programs-shipped-and-reference-docs-brought-level-with-the-tree-and-the-bars-wall-time-measured-piece-by-piece));
   a row for it when the work is ready to start, ideally driven by the sensor's
   first census.
 - **THE INTERFACE ROW IS BEING RESHAPED — `OI-67` RULED (a), 2026-08-29.**
@@ -130,21 +130,21 @@ the seams it owns).
   is [plans/2026-08-29-if-row-shape-plan.md](plans/2026-08-29-if-row-shape-plan.md)
   (six slices, sequenced by `needs`; the rows are in `docs/work/queued/` and
   the generated frontier below names them — **slice 1 is LANDED**, record
-  [log.d/2026-08-29-wi528-if-row-shape.md](log.d/2026-08-29-wi528-if-row-shape.md):
+  [log.d/2026-08-29-wi528-if-row-shape.md](log.md#2026-08-29--wi-528-the-interface-row-shape-in-code-oi-67-slice-1):
   the row reads `owner` + `requestors`|`consumers` + `channel` + `data`, the
   kit's registry is converted, and the far side names the direction — the
   owner's in-session addition; **slice 5 is LANDED too**, out of plan order so
   the shipped `PROCESS.md` §8 and templates stopped describing cells the code
   no longer reads — record
-  [log.d/2026-08-29-wi532-if-row-shape-shipped.md](log.d/2026-08-29-wi532-if-row-shape-shipped.md),
+  [log.d/2026-08-29-wi532-if-row-shape-shipped.md](log.md#2026-08-29--wi-532-the-interface-row-shape-ships-to-adopters-oi-67-slice-5),
   converter `migrate_carrier.py --if-shape`; **slice 2 is LANDED** — a
   registry, config or hook file declares through its comment header, the two
   git hooks declare, and the reverse check is owner-exact, record
-  [log.d/2026-08-29-wi529-header-non-python.md](log.d/2026-08-29-wi529-header-non-python.md);
+  [log.d/2026-08-29-wi529-header-non-python.md](log.md#2026-08-29--wi-529-the-contract-header-reaches-every-owner-oi-67-slice-2);
   the 67 owner-exact warnings it surfaces were slice 3's worklist; **slice 3 is
   LANDED** — 132 of 136 definitions stated beside their owners by a four-worker
   round, record
-  [log.d/2026-08-29-wi530-cell-pass.md](log.d/2026-08-29-wi530-cell-pass.md),
+  [log.d/2026-08-29-wi530-cell-pass.md](log.md#2026-08-29--wi-530-the-cell-pass-on-the-new-shape-oi-67-slice-3),
   the round itself at
   [reviews/2026-08-29-oi67-slice3/](reviews/2026-08-29-oi67-slice3/README.md)).
   **slice 4 is LANDED** — one row, one direction, one kind: twenty rows
@@ -152,7 +152,7 @@ the seams it owns).
   the reference at 73 sources / 150 seams / 150 stated, by a three-worker
   round recorded at
   [reviews/2026-08-29-oi67-slice4/](reviews/2026-08-29-oi67-slice4/README.md),
-  record [log.d/2026-08-29-wi531-if-row-split.md](log.d/2026-08-29-wi531-if-row-split.md).
+  record [log.d/2026-08-29-wi531-if-row-split.md](log.md#2026-08-29--wi-531-the-split--one-row-one-direction-one-kind-oi-67-slice-4).
   **slice 6 is LANDED — THE PROGRAM'S SIX SLICES ARE ALL BUILT:** the gate is
   armed (a declared seam with no body, an external-owned row no far-side
   module states, a stray declaration, and any retired cell are `--strict`
@@ -160,24 +160,24 @@ the seams it owns).
   the CSV loaders read through one comment-skipping reader so `IF-031`'s
   owner declares in its own header, and the three `external:`-owned rows are
   stated by their far side — record
-  [log.d/2026-08-29-wi533-arm-the-gate.md](log.d/2026-08-29-wi533-arm-the-gate.md).
+  [log.d/2026-08-29-wi533-arm-the-gate.md](log.md#2026-08-29--wi-533-the-gate-is-armed-oi-67-slice-6).
   **Slice 6's cross-family round RAN** (gpt-5.6-sol, eleven findings, nine
   folded at the root — the gate's grammar arm, the no-in-tree-endpoint rule,
   presence-based retired cells, four raw CSV readers, the blank preamble line
-  — record [log.d/2026-08-29-oi67-slice6-round.md](log.d/2026-08-29-oi67-slice6-round.md),
+  — record [log.d/2026-08-29-oi67-slice6-round.md](log.md#2026-08-29--review-the-oi-67-slice-6-cross-family-round--eleven-findings-nine-folded-at-the-root),
   dispositions [reviews/2026-08-29-oi67-slice6/](reviews/2026-08-29-oi67-slice6/README.md)),
   and **the arms the split surfaced are DONE** — nine rows (`IF-165`–`IF-173`),
   154 → 163, the reference at 74 / 163 / 163, `gen_arch_map` running every
   target it is named — record
-  [log.d/2026-08-29-wi534-if-arms.md](log.d/2026-08-29-wi534-if-arms.md).
+  [log.d/2026-08-29-wi534-if-arms.md](log.md#2026-08-29--wi-534-the-arms-the-split-surfaced--nine-rows-minted-and-stated-oi-67-follow-on).
   **The owner accepted decisions 4.1, 6.2, 6.7 and 6.8** — record
-  [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md);
+  [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code);
   the first session's decisions file (below) is still unread. **RESUME
   HERE:** (1) the smoke budget read **40.7 s → within** on 2026-08-30 once
   the other sessions went quiet, after two days of OVER readings (88–180 s)
   on a box they held at 50–90 %; the budget is untouched and the quiet number
   is on record in
-  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.d/2026-08-30-owner-rulings-oi68-oi69.md);
+  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.md#2026-08-30--the-owner-rules-oi-68-1c-a-sloc-based-line-ratchet--2a--3a--4a-and-oi-69-a1--b1--c2--d1--e1-once-the-dial-is-on-five-rows-filed-with-their-edges);
   (2) left standing,
   each recorded in the two fragments:
   the three tracked fragments opening with `#`/`###` (the trunk lane's),
@@ -186,11 +186,11 @@ the seams it owns).
   allowlist entries the arms added past the seed (the burn-down), and a
   repo-wide `ruff check tests/` red on two pre-existing F401s. The ruling
   record is
-  [log.d/2026-08-29-oi67-ruled-a.md](log.d/2026-08-29-oi67-ruled-a.md). The
+  [log.d/2026-08-29-oi67-ruled-a.md](log.md#2026-08-29--the-owner-rules-oi-67-a-one-row-one-direction-one-kind--the-cells-go). The
   contract header from `OI-66` stays and becomes load-bearing: a module states each contract beside the code as a
   `Contract IF-###:` block, and `docs/interface-reference.md` harvests them
   under a freshness gate that sits on the pre-commit floor. Records:
-  [log.d/2026-08-29-wi527-contract-header.md](log.d/2026-08-29-wi527-contract-header.md),
+  [log.d/2026-08-29-wi527-contract-header.md](log.md#2026-08-29--wi-527-the-component-side-contract-header-built-and-adversarially-reviewed),
   and the decisions this session took unconsulted are filed for review at
   [decisions-for-review-2026-08-29.md](decisions-for-review-2026-08-29.md);
   slices 4 and 6's are at
@@ -353,7 +353,7 @@ the seams it owns).
   citing an interface**.
 - **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
   (2026-08-25; record:
-  [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.d/2026-08-25-wi521-slice1-acceptance-record.md)).
+  [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.md#2026-08-25--wi-521-slice-1-the-acceptance-record-leaves-the-checker)).
   The acceptance record left the checker: 677 lines moved VERBATIM into
   `project-trajectory/scripts/acceptance_record.py`, `check_trajectory.py`
   re-stamped **4,963 → 4,327**, every name re-exported so no caller moved, the
@@ -365,7 +365,7 @@ the seams it owns).
   order. **The row does not close** — it is the standing debt owner and the
   ratchet still points at it. **Slice 2 took M-06's largest monolith
   standalone** (record:
-  [log.d/2026-08-25-wi521-slice2-integrate-test-split.md](log.d/2026-08-25-wi521-slice2-integrate-test-split.md)):
+  [log.d/2026-08-25-wi521-slice2-integrate-test-split.md](log.md#2026-08-25--wi-521-slice-2-m-06s-largest-monolith-split-standalone)):
   `tests/test_integrate.py` 3,520 lines → four modules along its OWN seven
   banner sections plus `tests/integrate_fixtures.py`, proven by node-id SET
   equality against the monolith (133 ids, diff empty) rather than by a green,

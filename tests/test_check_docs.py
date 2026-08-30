@@ -127,6 +127,26 @@ def test_parse_doc_strips_multiline_inline_code_span(tmp_path):
     assert check.parse_doc(doc)["links"] == []
 
 
+def test_parse_doc_blanks_html_comments_before_inline_code(tmp_path):
+    # A lone backtick inside an HTML comment (a `<!-- fig: cmd="grep '^### `x'"
+    # -->` marker) is not an inline-code opener: nothing in a comment renders.
+    # Before the comment strip it paired with the next backtick in the file and
+    # hid every heading in between from the anchor set, so a `doc#anchor` link
+    # to a real heading read as broken. The comment's own link is not a link.
+    check = load_script("check_docs")
+    doc = tmp_path / "d.md"
+    doc.write_text(
+        "<!-- fig: cmd=\"grep -c '^### `x' a.md\" [not](gone.md) -->\n"
+        "## Real heading\n"
+        "text with `code` and [real](real.md)\n",
+        encoding="utf-8",
+    )
+    info = check.parse_doc(doc)
+    assert "real-heading" in info["anchors"]
+    assert [dest for _ln, dest in info["links"]] == ["real.md"]
+    assert info["links"][0][0] == 3  # line numbers survive the blanking
+
+
 def test_parse_doc_ignores_links_inside_spec_frontmatter(tmp_path):
     # A `docs/work/` spec opens with typed TOML, and a `title` that QUOTES a
     # markdown link is describing one, not making one. Parsed as body it became a

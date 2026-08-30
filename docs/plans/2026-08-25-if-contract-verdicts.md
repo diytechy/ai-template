@@ -2,7 +2,7 @@
 
 **WI-516**, executing `OI-62`'s ruling (option (e), MEASURE DON'T REWRITE — owner,
 2026-08-24; record:
-[../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
+[../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)).
 This document is obligation 1 of that ruling: the per-row verdicts recorded
 DURABLY as the follow-on pass's input, one line per row, findable by IF id.
 **No `contract` cell was edited by this pass**, and none may be edited on its
@@ -12,7 +12,7 @@ The population: the 108 live rows of
 [../requirements/interfaces.toml](../requirements/interfaces.toml) that the
 `WI-512` CLI pass did not thin (135 live − 27). The comparison figure it is
 measured against is `WI-512`'s own
-([../log.d/2026-08-24-wi512-contract-generalization.md](../log.d/2026-08-24-wi512-contract-generalization.md)):
+([../log.d/2026-08-24-wi512-contract-generalization.md](../log.md#2026-08-24--wi-512-the-interface--stops-restating-its-owner-and-two-new-warn-first-rules-read-what-the-old-four-could-not)):
 **87.7% restatement by characters, 11 of 27 rows (40.7%) carrying a remainder.**
 
 ## THE NUMBERS
@@ -369,7 +369,7 @@ carries that qualification where it bears on the options.
 ## WI-522 disposition addendum (2026-08-25) — the non-crossing cleanup, executed
 
 `OI-63` is RULED option (d) (owner, 2026-08-25; record:
-[../log.d/2026-08-25-owner-rulings-oi63-oi64.md](../log.d/2026-08-25-owner-rulings-oi63-oi64.md)):
+[../log.d/2026-08-25-owner-rulings-oi63-oi64.md](../log.md#2026-08-25--the-owner-rules-oi-63-d-and-directs-oi-64-to-the-interface-tier)):
 *"move information to rationale to clean up the contract text itself before
 further shuffle."* `WI-522` is that pass, and this section is its record so the
 placement re-ask reads ONE document. **RESTATEMENT and REMAINDER clauses were

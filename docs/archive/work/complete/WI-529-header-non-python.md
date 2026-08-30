@@ -12,7 +12,7 @@ priority = 2
 ## Deliverable
 
 Every owner can declare. Record:
-[../../../log.d/2026-08-29-wi529-header-non-python.md](../../../log.d/2026-08-29-wi529-header-non-python.md).
+[../../../log.d/2026-08-29-wi529-header-non-python.md](../../../log.md#2026-08-29--wi-529-the-contract-header-reaches-every-owner-oi-67-slice-2).
 
 `gen_arch_map.header_lines` / `file_contracts` read a non-Python file's leading
 comment header — `#` lines (shebang skipped) or a Markdown file's first HTML
