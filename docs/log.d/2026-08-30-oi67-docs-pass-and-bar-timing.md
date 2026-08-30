@@ -82,7 +82,7 @@ the next session, not here.
 **One incident, owned and repaired.** The profiling worktree borrowed the
 main checkout's `.venv` through a directory junction; the junction's own
 removal failed silently on a quoting error, and `git worktree remove
---force` then followed it and emptied `C:\Projectsi-template\.venv` —
+--force` then followed it and emptied `C:/Projects/ai-template/.venv` —
 no tracked file was touched (`git ls-files -d` reads 0). Rebuilt on the
 spot from `requirements-dev.txt` (Python 3.11.9; ruff 0.15.22, pytest 9.1.1,
 pytest-cov 7.1.0, pytest-xdist 3.8.0), verified by the hook's format step
