@@ -86,7 +86,7 @@ family = "OPENCODE"
 model = "opencode-go/kimi-k3"
 version = "3"
 tier = "strong"
-cmd_template = "opencode run -m {model} --auto"
+cmd_template = "opencode run --dir . -m {model} --auto"
 notes = """Kimi K3 (Moonshot; GA 2026-07-16; frontier-class per Artificial Analysis debut) - intended judge/CRITIQUE draw + strong review leg; install: curl -fsSL https://opencode.ai/install | bash (or npm i -g opencode-ai / scoop install opencode); sign in: opencode auth login with MOONSHOT_API_KEY (platform.moonshot.ai; OpenAI-compatible) or OPENROUTER_API_KEY; pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
 
 [agent.OPENCODE-GROK]
@@ -94,6 +94,6 @@ family = "OPENCODE"
 model = "opencode-go/grok-4.6"
 version = "4.5"
 tier = "medium"
-cmd_template = "opencode run -m {model} --auto"
+cmd_template = "opencode run --dir . -m {model} --auto"
 notes = """Grok 4.5 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
 

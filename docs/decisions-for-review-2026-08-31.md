@@ -240,3 +240,127 @@ repeats it, the supervisor stops drawing rounds**: the lane stays a finished
 branch on `wi508-architectural-remap` for the owner's own verdict rather than
 be merged on a reviewer the record could not satisfy or an APPROVE nobody
 wrote.
+
+## 11. `WI-508` rounds 012–013: the two remaining findings were TAKEN, including the one decision 10 had refuted
+
+Round 012 (terra) dropped the snapshot point and asked for two things: the
+trunk `status.md` recap removed (done on trunk, `c9643450`) and the commit
+bar run on the record commit (done, `f4addf13`; then the station refresh
+`c225c34d`, bar PASS 11/11). Round 013 (terra, on the refreshed tip) left
+exactly one: `TC-199`/`TC-200` still formally verify `SR-163`, so `trace.py`
+reads the SR as covered whatever the rows' `Status`. **Decision 10's
+refutation of that point is reversed** — it had argued cost (the orphan count
+rises by one), which is not a refutation of the claim; three independent
+rounds and the instrument agree on the claim. The SR-163 targets are removed
+(`docs/test/test-cases.toml`, lane commit after `c225c34d`), `SR-163` is an
+honest orphan ("has no test (TC)" — verification owed and unscheduled), the
+archived Deliverable says so, and round 014 was drawn on the result.
+
+**For the owner:** `SR-163` now needs a row that files the complete
+file→requirement→need join over the whole shipped universe as a TC; no queued
+row owns it. Filing it is a decision about scope the run did not take.
+
+## 12. `WI-508` rounds 014–015: two more spine-hygiene findings on the Drafted TCs, both taken
+
+Round 014 (MINOR): the two `Expected` cells still foregrounded `SR-163` —
+reworded to say each covers its LLR arm only. Round 015 (MAJOR): `TC-199`
+cited two `tests/test_bootstrap.py` ids that are `TC-176`'s evidence for
+`LLR-181`/`SR-166`, folding SR-166's materialization checks into SR-163's
+coverage — the two ids removed, the method's "package direction" paragraph
+replaced by a sentence naming TC-176 as its home. Both are corrections to
+rows minted 2026-08-25 that the lane's own edits had put under the
+reviewer's eye; each is a real spine-hygiene improvement and neither changes
+what ships. Round 016 drawn on the result. Seven rounds and counting is the
+price of RULING-7 on a lane whose close touched the spine; recorded so the
+owner can weigh whether a Drafted-row edit should buy a full round.
+
+## 13. `WI-508` round 016: the package-direction arm returned to `TC-199` with its shared evidence attributed, rather than amending the Approved `LLR-203`
+
+Round 016 found that removing the package-direction tests from `TC-199`
+(round 015's ask) left `LLR-203`'s delivered MISSING-FILES arm with no TC —
+and drove it: a scaffold with `scripts/kitlib/config.py` removed fails
+`check.py` with `ModuleNotFoundError` while all three dogfood nodes pass. The
+reviewer offered two remedies: make LLR-203 dogfood-only (an amendment to an
+APPROVED row's Detail — drift, re-attestation, the owner's surface), or trace
+the package arm without asserting it is SR-166 evidence. **The second was
+taken:** `TC-199` cites the two `tests/test_bootstrap.py` nodes again, and its
+method states that the same nodes are `TC-176`'s evidence for LLR-181/SR-166's
+materialization claim while TC-199 reads them for LLR-203's missing-files arm
+and asserts nothing about SR-166. One test, two arms, each traced to its
+owner. The Approved LLR was not touched. Round 017 drawn.
+
+## 14. Round 017 could not be drawn on OpenAI (usage limit until 13:34 UTC) and the third family reviews the WRONG TREE without `--dir` — a kit finding
+
+`codex exec` returned "You've hit your usage limit … try again at 8:34 AM"
+mid-run (all seven prior rounds were OpenAI). The loop's registry names the
+OPENCODE family as review leg 3, so round 017 was redrawn on `OPENCODE-GROK`
+— and `opencode run` resolved its project root by walking up from the lane
+worktree to the MAIN repo: the reviewer's first command printed `On branch
+contract_split` and it began reviewing trunk. Killed before it wrote or
+committed anything (trunk `git status` clean). Probed: `opencode run --dir
+<lane>` answers `git rev-parse --abbrev-ref HEAD` with the lane branch, so the
+supervisor's driver passes `--dir` for opencode templates. **For the owner:**
+the shipped `OPENCODE-*` command templates (`docs/agents.toml`) carry no
+`--dir`, so every loop-drawn opencode review of a lane worktree reviews trunk
+instead — add `--dir {worktree}`-style support or drop the family from review
+legs until the template can name the lane. `--wait-on-limit` covers the
+OpenAI limit for the loop itself; the supervisor-driven rounds have no such
+sleep and were re-routed instead.
+
+## 15. `WI-508` round 017 APPROVEd on the third family; the supervisor compiled `docs/reviews/WI-508-REVIEW-A.md` from the ten round files
+
+Round 017 (`OPENCODE-GROK`, `grok-4.6`, run with `--dir` at the lane) returned
+`VERDICT: APPROVE findings=0` after running the cited test nodes, `trace.py`,
+a scaffold drive of TC-199's package arm, `check.py --jobs 0`, the smoke tier,
+the budget and `check_docs` (transcript kept in the session scratchpad;
+verdict commit `899352b7`). The WI-level file the merge slot reads is a
+compilation — ten rounds, every finding and machine line quoted from its
+round file, the governing line last — committed on the lane as a record
+(`docs/reviews/` is outside the verdict-freshness window by design). **The
+owner should read the governing round with the grain of salt it deserves:**
+one APPROVE on the third family after eight cross-family CHANGES-REQUESTED
+rounds whose every finding was either taken or refuted with the instrument;
+the loop's own escalation ladder would have paged a human here, and the
+delegation is why it did not.
+
+## 16. The two OPENCODE command templates in `docs/agents.toml` gained `--dir .`
+
+Decision 14's finding made concrete before relaunching the loop: with OpenAI
+at its usage limit, the loop's reviewer draw falls to the OPENCODE rows, and
+without `--dir` an opencode session in a lane worktree reviews TRUNK. Probed:
+from the lane's cwd, `opencode run --dir . …` answers `git rev-parse
+--abbrev-ref HEAD` with the lane branch, and the session engine already runs
+every child with `cwd=<worktree>`. So the two enabled OPENCODE templates read
+`opencode run --dir . -m {model} --auto` — a value in this repo's routing
+registry (`docs/agents.toml`), not the enable-list, not `[policies]`, and the
+shipped `agents.template.toml` carries no opencode row to mirror. Smoke tier
+1378 passed / budget 28.8 s. **For the owner:** if the template is meant to
+ship the fix, the kit's own opencode rows (wherever they are seeded) want the
+same token.
+
+## 17. `WI-521` closed `partial` by the stall guard after its review round could not be drawn — the merge stands, the lane is unloaded, `WI-542` is its disposition
+
+Run 3 resumed the parked debt-owner lane; its Opus build committed a slice
+(`56e7e52b..adfc1204`, 33 min). The REVIEW-A draw then failed three ways in
+a row: OPENAI-TERRA at its usage limit (ERROR, 3 s), the re-route to
+OPENCODE-GROK ran the cited tests and `trace.py` and then went silent until
+the 7200 s session timeout (TIMEOUT), OPENAI-TERRA again (ERROR). Three
+non-committing sessions is the stall limit, the worker exited 4, and the
+dispatcher — correctly by its own contract — closed the row `partial`
+(`b38d2cf4`), refreshed, merged it (`ab3b260b`, bar PASS 11/11) and minted
+the disposition row `WI-542`. The slice's work is on trunk UNREVIEWED; the
+keep/discard split is `WI-542`'s to judge, and the standing-debt-owner role
+the row carried (the module-size ratchet's pointer names it) needs a
+SUCCESSOR from that disposition — the ratchet's own rule says the pointer
+moves in the same commit a debt owner closes, and this close did not move
+it. The run then exited 1 on UNLOAD INCOMPLETE (the lane worktree held an
+ignored `out/run-logs/` stream); the streams were copied to the session
+scratchpad (their clipped copies are tracked under `docs/iteration/`) and
+the worktree and branch removed with the integrator's printed remedy.
+
+**The alternative:** keep the lane open by hand-reverting the partial close.
+Rejected: a hand-moved spec. **What the owner should weigh:** a stall guard
+that counts a reviewer's outage as the builder's stall turns a provider
+limit into a handback of finished work; the hang on the third family is a
+second sample of OPENCODE-GROK's unreliability after decision 14's
+wrong-tree finding.
