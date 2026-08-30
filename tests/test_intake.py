@@ -463,7 +463,8 @@ planmode = "dual"
 specref = "seed.txt"
 ```
 
-Scope: only the amended clause; the untouched acceptance arm is excluded.
+    Scope: only the amended clause; the untouched acceptance arm is excluded.
+- a list item the successor must keep as a list item
 """
 
 
@@ -504,7 +505,13 @@ def test_a_merged_adjudication_rows_dispositions_are_minted_at_its_merge(tmp_pat
     # narrows the adjudicated work (WI-544 review round 2, 2026-08-30).
     spec = (root / minted[0][1]).read_text(encoding="utf-8")
     assert "Drafted by WI-008" in spec
-    assert "only the amended clause; the untouched acceptance arm is excluded" in spec
+    # Verbatim means verbatim: Markdown-significant whitespace (an indented
+    # first line, a list item) survives — only the fence-delimiting newlines go
+    # (WI-544 review round 3).
+    assert (
+        "\n    Scope: only the amended clause; the untouched acceptance arm is "
+        "excluded.\n- a list item the successor must keep as a list item\n"
+    ) in spec
 
 
 def test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint():

@@ -1022,7 +1022,7 @@ def parse_dispositions(text, where):
         draft["kind"] = draft.pop("safety_class", "") or (
             "" if draft.get("planmode") == "dual" else "ordinary"
         )
-        draft["scope"] = prose[index - 1].strip() if index <= len(prose) else ""
+        draft["scope"] = prose[index - 1].strip("\n") if index <= len(prose) else ""
         drafts.append(draft)
     return drafts, None
 
