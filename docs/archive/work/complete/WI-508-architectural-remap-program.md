@@ -25,10 +25,16 @@ requirements alone, diffed against the live map, and every divergence adjudicate
   undischarged half on-row (the file→requirement join, and the direction/universe
   gaps). The two **LLRs are `Approved`**; the two **TCs are `Drafted`** — slice 6
   blessed all four, but REVIEW-A found the TCs over-claimed `SR-163` (they verify
-  only their LLRs' delivered arms, not the parent's full join and universe), so
-  the rework reverted `TC-199`/`TC-200` to `Drafted`. `SR-163`'s requirement is
-  approved; its verification stays honestly owed and is carried by the filed
-  consolidation WIs. `SR-163` left the orphan list.
+  only the delivered LLR arms, not the parent's full join and universe), so the
+  rework reverted `TC-199`/`TC-200` to `Drafted`. Their formal `verifies` lists
+  still cite both `SR-163` and their LLRs, but while the TCs are `Drafted` those
+  direct `SR-163` links are non-evidence: the cited tests exercise the delivered
+  inventory/grammar/policy arms only. `SR-163`'s requirement is approved; its
+  full verification remains honestly owed and **unscheduled**. No active or
+  queued WI owns the complete file→requirement join and shipped-universe
+  acceptance criteria; in particular, `WI-519`/`WI-520`/`WI-521` carry distinct
+  consolidation findings, have empty `sr_refs`, and do not carry `SR-163`,
+  `LLR-203`, or `LLR-204`. `SR-163` left the structural orphan list.
 - **The blind derivation ran on two axes (slice 2).** Brief written and recorded
   before either agent ran; two agents (A worked backward from boundary outputs, B
   clustered obligations by shared signal) each partitioned all 75 SRs from a
@@ -485,4 +491,4 @@ owing.
 **Closed.** Nothing agent-executable remained; the ratchet pointer already lives on
 `WI-521` (slice 5), so the close re-points nothing. The spec moves to
 `docs/work/complete/`. Record:
-[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../../log.md#2026-08-30--wi-508-slice-6-the-four-spine-rows-blessed-the-row-closed).
+[../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md](../../../log.d/2026-08-30-wi508-slice6-spine-approval-and-close.md).
