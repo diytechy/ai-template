@@ -890,28 +890,39 @@ def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
         assert note and "ROUTES NOTHING" in note[0] and need in note[0], out
 
 
+def _knowledge_value_ok(value):
+    """One roster `knowledge` value is a pack: a repo-relative
+    `docs/knowledge/*.md` path whose RESOLVED target sits below the packs
+    directory (so `docs/knowledge/../status.md`, an absolute path and a
+    drive-letter path all fail even where the file exists) and exists."""
+    if not (value.startswith("docs/knowledge/") and value.endswith(".md")):
+        return False
+    packs = (ROOT / "docs" / "knowledge").resolve()
+    target = (ROOT / value).resolve()
+    return packs in target.parents and target.is_file()
+
+
+def test_the_knowledge_guard_refuses_traversal_absolute_and_non_pack_paths():
+    # Adversarial values, each of which names a file that EXISTS — existence
+    # alone must not pass (rounds 2 and 3: `C:\Windows\System32\cmd.exe`
+    # and `docs/knowledge/../status.md` were both ACCEPTED by earlier guards).
+    assert not _knowledge_value_ok("docs/knowledge/../status.md")
+    assert not _knowledge_value_ok("C:/Windows/System32/cmd.exe")
+    assert not _knowledge_value_ok("docs/status.md")
+    assert _knowledge_value_ok("docs/knowledge/README.md")
+
+
 def test_live_roster_knowledge_values_resolve_and_the_drafted_packs_say_DRAFT():
     """The WI-546 value-pass Done-when, held by test rather than by claim
-    (REVIEW-A round 1): every `knowledge` value on the LIVE roster resolves to
-    a real file under the repo root — the loader validates shape, not
-    existence, so a typo'd path would otherwise ride into every brief — and
-    each pack the pass DRAFTED (rather than re-pointed) still carries the
-    DRAFT marker in its own header until the owner cuts it."""
+    (REVIEW-A rounds 1-3): every `knowledge` value on the LIVE roster is a
+    real pack below docs/knowledge/ — resolved, not string-matched — and each
+    pack the pass DRAFTED (rather than re-pointed) still carries the DRAFT
+    marker in its own header until the owner cuts it."""
     live = hats.load(ROOT)
     values = [v for hat in live for v in hat.get("knowledge", ())]
     assert values, "the value-pass populated at least one knowledge cell"
     for value in values:
-        # Repo-relative pack paths ONLY: an absolute value, a traversal, or a
-        # path outside docs/knowledge/ must fail even if the file exists
-        # (round 2: `C:\Windows\System32\cmd.exe` passed the bare is_file()).
-        assert value.startswith("docs/knowledge/") and value.endswith(".md"), (
-            "knowledge value is not a docs/knowledge/*.md pack path: " + value
-        )
-        target = (ROOT / value).resolve()
-        assert ROOT.resolve() in target.parents, (
-            "knowledge value escapes the repo: " + value
-        )
-        assert target.is_file(), "knowledge value does not resolve: " + value
+        assert _knowledge_value_ok(value), "not a resolvable pack path: " + value
     drafted = (
         "crash-atomicity-recovery",
         "cross-platform-scripting",
