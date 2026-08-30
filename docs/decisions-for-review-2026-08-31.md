@@ -402,3 +402,38 @@ reviewer's ask; moving it to `queued/` is the owner's one-line act.
 the queued rows and could be claimed this run) or refute the finding (it is
 correct: an Approved Test SR with no TC is exactly what the orphan rule
 exists to name). Neither is better.
+
+## 20. STOP RULE APPLIED: the `wi508` lane is HELD for the owner's own verdict — its ref renamed, nothing deleted, the rest of the grind unblocked
+
+Round 019 (terra, on the refreshed tip carrying `WI-543`) returned three
+MAJORs: (1) put a TC back on `SR-163` — the opposite of round 013's finding,
+which removed it; (2) the re-attestation brief renders a `Drafted` row as
+"_approved — re-attestation owed_"; (3) the brief truncates a changed Method
+cell. Findings 2 and 3 are defects of `trace.py --approve modified` on trunk,
+not of this lane; finding 1 is the inherent tension an Approved `Test`
+requirement without a complete TC must land on one side of — orphan or
+false coverage — and two rounds of the same reviewer have now asked for each
+side. Eleven rounds on one lane is the point at which the loop's own ladder
+pages a human, and decision 10 said the supervisor would stop drawing rounds
+rather than keep redrawing until one reviewer did not notice.
+
+**Done:** `git branch -m wi508-architectural-remap
+wi508-architectural-remap-HELD-for-owner-verdict`. The dispatcher reads
+finished and parked lanes off the ref, so the lane leaves the merge queue
+(the merge slot would otherwise refuse it on the verdict rung and stop the
+whole run) while every commit, every round file and the compiled
+`docs/reviews/WI-508-REVIEW-A.md` stay exactly where they were; the claim
+directory `docs/work/active/wi508-architectural-remap/` stays on trunk. To
+resume: rename the ref back and either run one more round the owner is
+willing to accept, or take the owner's own verdict and merge through
+`integrate.py integrate`.
+
+**For the owner, in one line each:** the two brief-renderer defects (rows
+`Drafted` shown as re-attestation; Method cells truncated); the SR-163
+tension (queue `WI-543`, or amend the SR's verification class — an Approved
+cell, so the owner's); and whether a lane whose remaining findings are
+contradictory or trunk-side should be mergeable on the record.
+
+**The alternative:** keep redrawing (each round ~10 min, each on a new
+objection), or refute round 019 finding 1 with round 013's own text. The
+first is not review; the second is arguing with a gate.
