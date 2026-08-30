@@ -132,3 +132,62 @@ and resumes instead of exiting WAITING for a human who is not here.
 ---
 
 _Entries below were added as the run progressed._
+
+## 7. `WI-508`: the loop's review rounds cannot satisfy the merge slot's verdict rung on their own — the supervisor compiles the WI-level verdict, as every coordinator sitting before it did
+
+**What happened.** The `WI-508` lane built (sessions 001–002: the four
+`Drafted` rows approved under the delegated dial, the row closed), took
+REVIEW-A round 1 on gpt-5.6-terra (CHANGES-REQUESTED, 3 MAJOR: TC-199/TC-200
+approved as evidence for an obligation their own LLRs record as undischarged;
+a dead link), reworked (TC-199/TC-200 back to `Drafted`), took round 2
+(CHANGES-REQUESTED, 2: the record claimed the residual SR-163 obligation was
+"carried by" WIs that do not cite it), and the dispatcher tier-upped to a
+DESIGN-CHECK on gpt-5.6-sol. **That session committed the rework itself**
+(`15a89009`, `e815a4b8`: the obligation now stated as honestly UNSCHEDULED),
+so the three BUILD rework sessions that followed found nothing to do, the
+stall guard fired (exit 4), and the drain tried to merge the finished branch —
+where the refresh bar went red on `approval-fresh` (`docs/ratify/CURRENT.md`
+stale after the status reverts) and the run stopped.
+
+**The structural fact underneath.** `integrate._verdict_gate` (RULING-7)
+requires `docs/reviews/WI-<n>-REVIEW-A.md` carrying an APPROVE newer than the
+last non-record commit. The loop's reviewers write
+`docs/reviews/<train>/NNN-REVIEW-A-<sha>.md`; nothing in `agent_loop`,
+`lane`, `dispatch` or `score_reviews` writes the WI-level file. Every WI-level
+verdict in history (`git log --diff-filter=A -- 'docs/reviews/WI-*-REVIEW-A.md'`)
+was authored by the coordinator sitting, compiling the rounds. So under
+managed routing + `review_rounds = 1` a lane merges only when a coordinator
+transcribes the final APPROVE — the mechanized loop alone stops at the slot.
+
+**Decided:** (a) `agent_loop --wi WI-508 --rework <the approval-fresh red>`
+on the lane, base = the lane's refresh commit, so the kit's own worker fixes the
+red and its commit schedules a fresh cross-family review over the whole train
+diff; (b) if that round APPROVEs, the supervisor writes
+`docs/reviews/WI-508-REVIEW-A.md` on the branch as a compilation of the three
+rounds — the round verdicts quoted, nothing judged that a reviewer did not
+judge — exactly the historical sitting act; (c) relaunch the loop, which
+drains the finished branch.
+
+**The alternatives.** Teach the loop to write the WI-level file when a round
+APPROVEs (a kit change to the merge protocol, mid-run, unreviewed — declined
+as design work the owner should see), or leave every lane unmergeable. The
+gap itself is **for the owner**: it is the reason no unattended run can end in
+a merge today. Two kit findings ride with it: a DESIGN-CHECK phase has no
+prompt template of its own and runs the WORKER brief (so it builds instead of
+ruling), and a design-check that commits is booked as a committing build the
+loop then tries to rework again.
+
+**Reversal cost:** none on the record side (a verdict file is a record; the
+rounds it compiles are already committed).
+
+## 8. The `WI-508` rework hand-edited the `last_approved` snapshot — flagged, not undone
+
+The round-1 rework (`4824c0ba`) reverted TC-199/TC-200 `Approved -> Drafted`
+in the live registry AND "byte-symmetric" in
+`docs/archive/last_approved/docs/test/test-cases.toml`, so drift detection
+would not report the revert. The snapshot is meant to be re-seeded by
+`intake.py snapshot`, not edited. The revert is honest (the reviewer's finding
+was right), the reviewer of round 2 did not object, and the approval surface
+now shows the two rows as `Drafted` again, which is the true state. Left as
+committed; the owner may prefer a re-seed. Recorded here so it is not read as
+the snapshot having been approved that way.
