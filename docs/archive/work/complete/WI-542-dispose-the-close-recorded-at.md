@@ -2,7 +2,7 @@
 id = "WI-542"
 title = "dispose: the close recorded at docs/handbacks/WI-521-wi521-decomposition-debt-owner.md - cancel / defer / draft a successor / surface an open item (a disposition row never closes early; R3)"
 workstream = "process"
-specref = "docs/work/partial/WI-521-decomposition-debt-owner.md"
+specref = ""
 buildtier = "medium"
 safety_class = "adjudication"
 brief = "disposition"
