@@ -107,6 +107,40 @@ ratchet are phase 2; shipping it downstream is phase 3.
   the Round 3/4 iteration records, plus the identical empty-field whitespace in
   the later Round 5/6 records so the next review range passes `git diff --check`.
 
+## REVIEW-A Round 6 re-dispatch (2026-08-30, session 009)
+
+The two Round-6 findings were **already resolved at HEAD by commit `6efafdef`**
+(session 007): LLR-206 now reads that `census()` returns every source-function
+row and `main()` selects strictly-over rows for baseline comparison, and the
+trailing spaces were stripped from the Round 3–6 iteration records. The loop
+re-dispatched this finding only because the REVIEW-A verdict has not re-run to
+clear it. This session confirmed the resolution and closed the residual edges:
+
+- **[MINOR, resolved] iteration telemetry trailing spaces — residual records.**
+  `6efafdef` stripped records 003–006. Records **001, 002** (rounds 1–2, never
+  in a strip range) and **007, 008** (telemetry written *after* the fix) still
+  carried the same empty-field trailing spaces, so a branch-wide `git diff
+  --check` still tripped on them. Stripped the trailing whitespace from the
+  **metadata-header block only** (the `# key: value` lines before `# ---`) of
+  those four records — the transcript body is byte-identical, since trailing
+  whitespace inside its JSON strings is content. No `# ---`-and-below line was
+  touched.
+- **[root cause, out of WI-537 scope — surfaced not patched] the generator
+  re-emits it.** The trailing space is written by
+  `agent_common.write_session_log` (`agent_common.py:2224`,
+  `"# {}: {}".format(key, meta.get(key, ""))` → `# guardrails: ` when the value
+  is empty). That is SR-176 / LLR-177 territory, not this WI's — hand-stripping
+  committed logs is a symptom patch every future session's own log reintroduces
+  (this session's 009 log included). The durable fix — `rstrip` the header line
+  before appending — belongs in a session-log WI; recorded here as a separate
+  finding for the owner rather than pulled into WI-537.
+- **[not a defect — deliberately left] `docs/complexity-baseline` trailing
+  tabs.** A naive `git diff --check` also flags every baseline data row for a
+  trailing tab. This is the fixed 5-column schema (`path…reason`): every row
+  carries a present-but-empty `reason` cell, so the terminal tab IS the column,
+  not dirt. Stripping it would make rows variable-arity (4 cells unstamped, 5
+  stamped) — less clean, not more. The baseline is unchanged.
+
 ## Verification (real output, this box — Python 3.11.9)
 
 Sessions 003/004 built the rework but ended NO-COMMIT; this session (005)
@@ -158,4 +192,17 @@ check_trajectory.py --root . --strict    -> clean, 543 WI rows (exit 0)
 pytest -n auto -m smoke                  -> 1424 passed, 6 skipped in 30.19s
 check_smoke_budget.py --mode enforce     -> 30.9s vs 60s budget -> within
 check_docs.py --root . --stale           -> OK - 0 broken (exit 0)
+```
+
+Session 009 changed only telemetry-header whitespace (four iteration records)
+and this fragment's prose — `check_complexity.py`, its tests, and every script
+are byte-identical to session 007, so the full-suite reading above still stands
+and was not re-run. The commit bar was re-confirmed over this working tree:
+
+```
+git diff --cached --check                -> clean (STAGED CLEAN)
+check_complexity.py --root .             -> OK - 179 row(s) over 15, unchanged
+pytest test_check_complexity*.py         -> 55 passed in 1.75s
+pytest -n auto -m smoke                  -> 1424 passed, 6 skipped in 26.70s
+check_smoke_budget.py --mode enforce     -> 26.4s vs 60s budget -> within
 ```

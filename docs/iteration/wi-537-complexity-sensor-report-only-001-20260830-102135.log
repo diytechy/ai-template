@@ -6,7 +6,7 @@
 # phase: BUILD
 # wi: WI-537
 # model: opus
-# guardrails: 
+# guardrails:
 # outcome: COMMITTED
 # commits: 127fdd3e..41c44e6b
 # tokens: 19179+82552

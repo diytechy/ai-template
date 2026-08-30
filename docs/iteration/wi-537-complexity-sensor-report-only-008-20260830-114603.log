@@ -6,9 +6,9 @@
 # phase: BUILD
 # wi: WI-537
 # model: opus
-# guardrails: 
+# guardrails:
 # outcome: NO-COMMIT
-# commits: 
+# commits:
 # tokens: 5459+9131
 # cost-usd: 0.8746855000000001
 # wall-secs: 185

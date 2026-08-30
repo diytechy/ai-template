@@ -6,19 +6,19 @@
 # phase: REVIEW-A
 # wi: WI-537
 # model: gpt-5.6-terra
-# guardrails: 
+# guardrails:
 # outcome: COMMITTED
 # commits: 3356633e..614e7cd1
-# tokens: 
-# cost-usd: 
+# tokens:
+# cost-usd:
 # wall-secs: 523
-# api-secs: 
-# turns: 
-# ttft-secs: 
-# cache-read: 
-# cache-create: 
-# effort: 
-# fast: 
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
 # prompt-chars: 2816
 # prompt-template: kit:REVIEW-A
 # prompt-sha: sha256:0593ec63af3d

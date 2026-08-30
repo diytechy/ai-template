@@ -6,19 +6,19 @@
 # phase: DESIGN-CHECK
 # wi: WI-537
 # model: gpt-5.6-sol
-# guardrails: 
+# guardrails:
 # outcome: COMMITTED
 # commits: 49074bc0..6efafdef
-# tokens: 
-# cost-usd: 
+# tokens:
+# cost-usd:
 # wall-secs: 421
-# api-secs: 
-# turns: 
-# ttft-secs: 
-# cache-read: 
-# cache-create: 
-# effort: 
-# fast: 
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
 # prompt-chars: 5649
 # prompt-template: kit:DESIGN-CHECK
 # prompt-sha: sha256:26eaa2de3142
