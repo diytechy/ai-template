@@ -120,6 +120,37 @@ def test_no_source_dir_is_vacuously_ok(tmp_path):
     assert "OK" in proc.stdout
 
 
+CONTROL_FLOW_DEFS = """
+for _i in range(1):
+    def hidden_by_for(a):
+        if a:
+            return 1
+
+while False:
+    def hidden_by_while(a):
+        return a
+
+match 0:
+    case 0:
+        def hidden_by_match(a):
+            return a
+"""
+
+
+def test_functions_under_control_flow_are_censused(tmp_path):
+    """Regression: a module-level `def` wrapped in `for`/`while`/`match` (not
+    just `if`/`try`/`with`) is a real module symbol and must appear in the
+    census, both as a row and in the module's public-symbol count."""
+    target = tmp_path / "project-trajectory" / "scripts"
+    target.mkdir(parents=True)
+    (target / "mod.py").write_text(CONTROL_FLOW_DEFS, encoding="utf-8")
+    proc = drive(tmp_path, "--report")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    for name in ("hidden_by_for", "hidden_by_while", "hidden_by_match"):
+        assert "\t{}\t".format(name) in proc.stdout, name
+    assert "# module\tproject-trajectory/scripts/mod.py\t3\t" in proc.stdout
+
+
 def test_include_globs_are_repeatable(tmp_path):
     _write_sample_repo(tmp_path)
     (tmp_path / "tests").mkdir()

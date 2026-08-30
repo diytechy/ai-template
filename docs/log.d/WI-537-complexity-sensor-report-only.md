@@ -66,24 +66,56 @@ ratchet are phase 2; shipping it downstream is phase 3.
   findings (orphans and provenance-findings counts unchanged before/after), and
   the gate bar uses `--strict-integrity` (integrity=0, passes).
 
+## REVIEW-A rework (2026-08-30, 41c44e6 findings)
+
+- **[MAJOR] `_collect` dropped functions under `for`/`while`/`match`.** The old
+  descent whitelisted only `If`/`Try`/`With` container types, so a module-level
+  `def` wrapped in any other control flow (and its public-symbol contribution)
+  was silently omitted from the census. Replaced the type whitelist with a
+  descent through **every statement container** (`_BLOCKS` = `ast.stmt` +
+  `ast.excepthandler` + `ast.match_case`) via `ast.iter_child_nodes`, still
+  stopping at a def/class body so a nested def keeps being scored INTO its
+  enclosing function rather than earning its own row. `_public` had the same
+  blind spot (it only read `tree.body`); it now shares the descent via a `_bound`
+  helper and **deduplicates**, so a `try/except` import fallback binding one name
+  in both arms counts once. Regressions: `test_collect_descends_through_every_
+  control_flow_container` (in-process) and `test_functions_under_control_flow_are_
+  censused` (subprocess, `--report`, asserts the row AND the module public count
+  of 3). The real-tree census is **unchanged at 179 rows** — the kit has no
+  module-level def under a loop/match — so no baseline re-stamp.
+- **[MINOR] boundary wording split `reaches` (SR) vs `over` (LLR/impl).** Chose
+  the exclusive `>` boundary already carried by LLR-206, the implementation, and
+  the baseline's over-threshold rows, and rewrote SR-183's AC from "reaches" to
+  "strictly OVER ... a function scoring exactly the threshold is under it and is
+  not reported". Pinned with `test_threshold_boundary_is_exclusive` (`tangled`
+  scores exactly 21: threshold 21 excludes it, 20 includes it). TC-202's method
+  now STATES the boundary too — "pinned EXCLUSIVE (`>`) ... exactly the threshold
+  is under it" — so the finding's "state one boundary across SR/LLR/TC" is met on
+  all three tiers (LLR-206 already reads "over the threshold"). SR-183/LLR-206
+  remain Drafted — this tightens their wording for the owner's approval, it does
+  not approve them.
+
 ## Verification (real output, this box — Python 3.11.9)
 
+Sessions 003/004 built the rework but ended NO-COMMIT; this session (005)
+committed that standing state and re-confirmed the bars over the same working
+tree, unchanged:
+
 ```
-check_complexity.py --root . --restamp      -> re-stamped 179 row(s)
 check_complexity.py --root .                -> OK - 179 row(s) over 15, unchanged (exit 0)
-pytest tests/test_check_complexity.py       -> 44 passed in 0.22s
-pytest tests/test_check_complexity_cli.py   -> 8 passed in 2.62s
-pytest -n auto -m smoke                     -> 1422 passed, 6 skipped in 23.91s
-check_smoke_budget.py --mode enforce        -> 21.9s vs 60s budget -> within
+pytest tests/test_check_complexity.py tests/test_check_complexity_cli.py
+                                            -> 55 passed in 6.40s
+pytest -n auto -m smoke                     -> 1424 passed, 6 skipped in 25.47s
+check_smoke_budget.py --mode enforce        -> 26.4s vs 60s budget -> within
 check_docs.py --root . --stale             -> OK - 0 broken (exit 0)
-trace.py --root . --strict                 -> SN=27 SR=76 LLR=188 TC=186, integrity=0
-                                              (exit 1 on the two pre-existing findings above)
-check_trajectory.py --root . --strict      -> clean (exit 0)
-pytest tests/test_dependency_ledger.py      -> 5 passed (stdlib claim proven)
-pytest tests/test_smoke_budget.py tests/test_smoke_tier.py
-       tests/test_generated_freshness_wiring.py tests/test_dogfood_sync.py
-                                            -> 53 passed, 1 skipped
+check_doc_refs.py --root . --strict        -> exit 0 (advisories only)
+trace.py --root . --strict-integrity       -> SN=27 SR=76 LLR=188 TC=186, integrity=0 (exit 0)
+                                              (--strict still exits 1 on the two pre-existing
+                                              findings above: LLR-197 WI-448 frame, SR-181 orphan)
 pytest -n auto  (FULL SUITE)                -> 1 failed, 3160 passed, 16 skipped in 657.55s
+                                              (session-003 reading; session-004 delta is
+                                              prose-only — TC-202 method + this fragment — so
+                                              behavior is identical; re-run recorded below)
 ```
 
 **The one full-suite failure is expected generated-artifact staleness, not a defect.**

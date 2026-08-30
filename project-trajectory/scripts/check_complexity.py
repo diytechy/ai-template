@@ -66,6 +66,13 @@ FIXES = (
 _LOOPS = (ast.For, ast.AsyncFor, ast.While)
 _COMPS = (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
 _DEFS = (ast.FunctionDef, ast.AsyncFunctionDef)
+# Statement containers to descend into when collecting module/class-scope
+# symbols — every stmt (control flow), plus the two block-bearing non-stmt
+# nodes: an except clause and a match case. A `def` under `for`/`while`/`match`
+# is a real module symbol, so the descent must not stop at `if`/`try`/`with`.
+_BLOCKS = (ast.stmt, ast.excepthandler) + (
+    (ast.match_case,) if hasattr(ast, "match_case") else ()
+)
 
 
 def _kids(node, nesting, ctx):
@@ -279,25 +286,45 @@ def sloc(node, lines, doc_lines):
 
 
 def _collect(node, prefix, out):
-    """Every module-level function and method, qualified `Class.method`."""
-    for field in ("body", "orelse", "finalbody", "handlers"):
-        for child in getattr(node, field, None) or []:
-            if isinstance(child, ast.ClassDef):
-                _collect(child, prefix + child.name + ".", out)
-            elif isinstance(child, _DEFS):
-                out.append((prefix + child.name, child))
-            elif isinstance(child, (ast.If, ast.Try, ast.With)):
-                _collect(child, prefix, out)
+    """Every module-level function and method, qualified `Class.method`.
+
+    Descends through every statement container at module/class scope — control
+    flow (`for`/`while`/`if`/`with`/`try`/`match`) can legally wrap a `def`, and
+    a whitelist of only `if`/`try`/`with` silently drops the rest — but never
+    into a function body: a nested def is scored INTO its enclosing function
+    (`cognitive`), not given its own census row."""
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, ast.ClassDef):
+            _collect(child, prefix + child.name + ".", out)
+        elif isinstance(child, _DEFS):
+            out.append((prefix + child.name, child))
+        elif isinstance(child, _BLOCKS):
+            _collect(child, prefix, out)
+
+
+def _bound(node, names):
+    """Names bound in module (or block) scope, descending through control flow
+    the same way `_collect` does but never into a def/class body — whose names
+    are not the module's surface."""
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, (ast.ClassDef,) + _DEFS):
+            names.append(child.name)
+        elif isinstance(child, ast.Assign):
+            names += [t.id for t in child.targets if isinstance(t, ast.Name)]
+        elif isinstance(child, _BLOCKS):
+            _bound(child, names)
 
 
 def _public(tree):
-    names = []
-    for node in tree.body:
-        if isinstance(node, (ast.ClassDef,) + _DEFS):
-            names.append(node.name)
-        elif isinstance(node, ast.Assign):
-            names += [t.id for t in node.targets if isinstance(t, ast.Name)]
-    return [n for n in names if not n.startswith("_")]
+    """Public module symbols, deduplicated — a `try/except` fallback that binds
+    one name in both arms is one symbol, not two."""
+    names, seen, out = [], set(), []
+    _bound(tree, names)
+    for name in names:
+        if not name.startswith("_") and name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out
 
 
 def _paths(root, includes):

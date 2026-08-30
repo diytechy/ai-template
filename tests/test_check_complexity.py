@@ -507,6 +507,37 @@ def test_baseline_round_trip_preserves_the_reason_column(repo):
     )
 
 
+def test_threshold_boundary_is_exclusive(repo):
+    """The boundary is strictly OVER (`>`), not "reaches" (`>=`): a function
+    scoring exactly the threshold is UNDER it and is not baselined. Pins the one
+    reading shared by SR-183, LLR-206 and the baseline's over-threshold rows.
+    `tangled` scores exactly 21."""
+    key = ("project-trajectory/scripts/mod.py", "tangled")
+    assert cc.main(["--root", str(repo), "--threshold", "21", "--restamp"]) == 0
+    assert key not in cc.read_baseline(repo / cc.BASELINE), "at threshold: not over"
+    assert cc.main(["--root", str(repo), "--threshold", "20", "--restamp"]) == 0
+    assert key in cc.read_baseline(repo / cc.BASELINE), "one below threshold: over"
+
+
+def test_collect_descends_through_every_control_flow_container():
+    """A module-level `def` under `for`/`while`/`match` — not only `if`/`try`/
+    `with` — is a real symbol and must be collected, without descending into a
+    function body."""
+    src = """
+for _i in range(1):
+    def under_for(a):
+        def nested(b):
+            return b
+        return a
+while False:
+    def under_while(a):
+        return a
+"""
+    found = []
+    cc._collect(ast.parse(src), "", found)
+    assert sorted(n for n, _ in found) == ["under_for", "under_while"]
+
+
 def test_threshold_is_a_dial(repo):
     assert cc.main(["--root", str(repo), "--threshold", "1000", "--restamp"]) == 0
     baseline = repo / cc.BASELINE
