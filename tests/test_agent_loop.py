@@ -1620,6 +1620,21 @@ def test_read_csv_rows_tolerates_a_bom(tmp_path):
     assert rows[0]["Title"] == "two\nline title"  # quoted newline survives
 
 
+def test_session_log_header_carries_no_trailing_whitespace(tmp_path):
+    # An empty header value used to render as `# guardrails: ` — a trailing
+    # space in a TRACKED file, so every reviewer running `git diff --check`
+    # over a lane range flagged the loop's own telemetry (three lanes in a
+    # row on 2026-08-30). The header line is right-stripped.
+    ac = load_script("agent_common")
+    meta = {"session": "007", "stamp": "test", "guardrails": "", "commits": ""}
+    path = ac.write_session_log(tmp_path, meta, "transcript\n")
+    text = path.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        if line.startswith("# "):
+            assert line == line.rstrip(), repr(line)
+    assert "# guardrails:\n" in text
+
+
 def test_session_log_redacts_credential_shapes(tmp_path):
     # M-19: session transcripts are committed to tracked history; well-known
     # credential shapes must not land there verbatim (a CLI auth error echoing
