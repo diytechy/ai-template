@@ -703,3 +703,80 @@ dial unmeasured (the plan explicitly asks for measurement).
 
 **Reversal cost:** (b) and (d) are one-file edits; (c) restores with the old
 test text; (a) is spent at merge.
+
+## 36. The stall-guard row landed at round 5 on gpt-5.6-terra with the reasoning-effort dial — five rounds, every finding taken at the root
+
+**What happened.** Rounds 1–4 each found one real hole and each was reworked
+rather than argued: the plan's own C4 fake-route test was uncovered (four
+probe-driven tests added); a resumed owed round forgot the builder's family
+and the brief named scaffold-only script paths (`family=` rides the marker,
+`{scripts}` is the fourth rendered slot); the owed marker was the only
+evidence and its write could fail silently (owed-ness now derives from
+COMMITTED facts — built trailers, no verdict naming HEAD — the marker is
+advisory and loud on failure); the unload shed a directory rather than the
+loop's own stream NAMES (a foreign neighbour now refuses by name). Round 5:
+`APPROVE findings=0`. Merged through `integrate.py integrate` under the
+pause (in-slot refresh, bar PASS 11/11, unloaded clean), the spot-check
+disposition row minted by the `complete_review = "sample"` dial.
+
+**The effort-dial measurement (C7 item 5):** the TERRA review leg ran with
+`-c model_reasoning_effort=medium` at 202 / 320 / 316 / 351 / 350 s wall
+against the ~10-minute unpinned rounds recorded on 2026-08-30 — roughly a
+third of the wall per round, with substantive findings on every round that
+had one to find. **Decided:** the dial stays on the row (a value in this
+repo's registry). **The alternative:** revert to the unpinned template.
+**Reversal cost:** one line.
+
+**Not exercised live at this merge:** the C6 unload shed — the supervisor
+drew the rounds through a helper that writes no `out/run-logs/` stream, so
+the lane held nothing to shed; the shed is proven by its tests (a properly
+named stream and the marker go, a foreign neighbour refuses) and will be
+proven live by the first loop-driven lane after the unpause.
+
+## 37. Two "silent hangs" this session were the supervisor's own renderer, not the provider — recorded as such, and the kit hardened
+
+The first round draw went silent for 55 minutes and was killed by hand; the
+redraw went silent and was killed by the new idle deadline at 909 s. Both
+had the same cause, found in the transcript: the helper's console `print`
+hit a cp1252 `UnicodeEncodeError` on a `→`, the exception killed
+`run_session`'s pump thread, and the codex child blocked on its full
+stdout pipe. Neither was a TERRA hang, and the earlier reading of the first
+one as a provider hang was wrong. **Decided:** the pump outlives its
+renderer (`_pump_stdout` swallows a renderer exception; a test drives a
+renderer that raises on every line), landed inside the row because it is
+the C3 failure class exactly — a session that reads as silent when nothing
+is wrong with the provider. The idle deadline did its job at 909 s, which
+is the C3 acceptance on a real sample. **For the owner:** the two 2026-08-30
+opencode "hangs" (decisions 14, 17, 32) predate this finding and were
+observed through the loop's own UTF-8 console, so they stand as recorded;
+but the class "pump death reads as a hang" is now closed for both.
+
+## 38. A pre-existing resume defect was fixed INSIDE the row: a resumed worker's integration base defaulted to HEAD
+
+Driving round 3's regression (the owed round must survive a lost marker)
+showed the derivation could never fire in production: a resumed worker with
+no `--base` took HEAD as its base, so `base..HEAD` evidence was always empty
+on resume — the built trailers, the owed round and the resume itself were
+invisible. That is the mechanism under decisions 21, 29 and 31 ("the resumed
+session finds nothing to do"). **Decided:** `default_base` is the merge-base
+with the trunk (the claim commit in a lane worktree; HEAD, exactly as
+before, when the primary checkout is the branch itself), pinned by a
+worktree test. **The alternative:** file it as its own row and ship C2 as a
+dead letter until then. Rejected: the reviewer's finding was about exactly
+this restart, and the fix is nine lines with a test. **Reversal cost:** one
+function; every adopter's resumed lanes start seeing their own evidence.
+
+## 39. The pause STAYS — the owner's mid-run instruction; the loop was not relaunched
+
+**Owner instruction (2026-08-30, in session):** keep the pause in place and
+ask for confirmation before removing it — the owner is disconnecting from
+the network and wants no session interrupted. **Decided:** step 2 of the
+sitting's brief (delete the pause, relaunch `agent-resume`) is NOT taken;
+the repo is left merged, drained and quiet with the pause armed, no agent
+process running, the held `wi508` branch untouched. The frontier behind the
+pause now reads: the spot-check disposition of the stall-guard row's own
+clean close (minted by the sample dial at the merge — an adjudication row,
+strong route, and the first lane the C6 close ritual and the C2/C4/C5
+machinery will run on), then the seven rows the previous sitting queued.
+**Unpausing is the owner's one-line act after this confirmation, or the
+next session's on the owner's word.**
