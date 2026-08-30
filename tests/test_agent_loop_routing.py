@@ -388,3 +388,93 @@ def test_routingstate_cool_marks_the_route_suspect():
     assert st.suspect_routes == set()
     st.cool("PROV-1", now=0.0)
     assert "PROV-1" in st.suspect_routes
+
+
+# --- C4: the pre-dispatch liveness probe, driven on fake routes -------------
+# (WI-548 round 1 asked for exactly this coverage: a cooled route's non-OK or
+# limit probe is cooled and skipped, a valid OK probe proceeds, a clean route
+# is never probed.) Each fake route's CmdTemplate is a JSON-array python
+# one-liner that reads the probe prompt on stdin and answers; the "never"
+# shape exits 9 so a probe that should not have happened is observable.
+
+_PROBE_ANSWERS = {
+    "ok": "import sys; sys.stdin.read(); print('OK')",
+    "limit": (
+        "import sys; sys.stdin.read(); "
+        "print('You have hit your usage limit - resets 3:45pm'); sys.exit(1)"
+    ),
+    "unreachable": (
+        "import sys; sys.stdin.read(); print('fatal: endpoint unreachable'); sys.exit(2)"
+    ),
+    "never": "import sys; sys.exit(9)",
+}
+
+
+def _probe_ctx(tmp_path, rows):
+    """`(ctx, al)` for `rows = [(id, family, answer), ...]` in enable order."""
+    import json
+    import sys
+    import types
+
+    al = load_script("agent_loop")
+    registry = {}
+    for rid, family, answer in rows:
+        tmpl = json.dumps([sys.executable, "-c", _PROBE_ANSWERS[answer]])
+        registry[rid] = al.agent_route.Model(
+            rid, family, "m-" + rid, "1", "medium", tmpl
+        )
+    ctx = types.SimpleNamespace(
+        enabled=[rid for rid, _f, _a in rows],
+        registry=registry,
+        weight_map={},
+        draw_iter_dirs=[],
+        root=tmp_path,
+    )
+    return ctx, al
+
+
+def test_select_with_probe_never_probes_a_clean_route(tmp_path):
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", "never")])
+    st = _rs()
+    route_id, reason = al.select_with_probe(
+        ctx, st, "REVIEW-A", "medium", set(), False, (), 0.0
+    )
+    assert route_id == "A", reason
+    assert "A" not in st.cooldowns  # a probe would have cooled it (exit 9)
+    assert "probe" not in reason
+
+
+def test_select_with_probe_cools_a_limited_suspect_and_moves_on(tmp_path, capsys):
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", "limit"), ("B", "FB", "ok")])
+    st = _rs()
+    st.suspect_routes.add("A")  # cooled earlier this run, cooldown since expired
+    route_id, reason = al.select_with_probe(
+        ctx, st, "REVIEW-A", "medium", set(), False, (), 0.0
+    )
+    assert route_id == "B", reason
+    assert st.cooldowns.get("A", 0.0) > 0.0, "the limited route must be cooled"
+    assert "probe [A]: limit" in capsys.readouterr().out
+
+
+def test_select_with_probe_launches_a_suspect_that_answers_ok(tmp_path):
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", "ok")])
+    st = _rs()
+    st.suspect_routes.add("A")
+    route_id, reason = al.select_with_probe(
+        ctx, st, "REVIEW-A", "medium", set(), False, (), 0.0
+    )
+    assert route_id == "A", reason
+    assert reason.endswith("(probe OK)")
+    assert "A" not in st.suspect_routes  # its history is clean again
+
+
+def test_select_with_probe_cools_an_unreachable_suspect_by_default(tmp_path, capsys):
+    ctx, al = _probe_ctx(tmp_path, [("A", "FA", "unreachable")])
+    st = _rs()
+    st.suspect_routes.add("A")
+    route_id, reason = al.select_with_probe(
+        ctx, st, "REVIEW-A", "medium", set(), False, (), 0.0
+    )
+    assert route_id is None
+    assert st.cooldowns.get("A", 0.0) >= 900.0  # the default cooldown, from now=0
+    assert "probe [A]: unreachable, cooled ~900s" in capsys.readouterr().out
