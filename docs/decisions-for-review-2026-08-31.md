@@ -540,3 +540,11 @@ lands in the minted spec. `intake.py` ratchet re-stamped 1985 → 1990 with the
 reason on the entry. `WI-545`'s own Context is NOT rewritten (its scope is
 one link away in `WI-542`'s archived `## Dispositions`); the owner may prefer
 to copy it in.
+
+## 27. `WI-544` round 3 (MINOR): the scope prose is now kept verbatim — `strip()` had eaten an indented first line
+
+Taken as asked: only the fence-delimiting newlines are dropped; the replay
+test carries an indented line and a list item and asserts they land
+byte-for-byte (`1309a426`). Three review rounds on a disposition lane have
+each found a real defect in the same twenty lines of intake — the mint path
+for drafted successors had never been driven end to end. Round 4 drawn.
