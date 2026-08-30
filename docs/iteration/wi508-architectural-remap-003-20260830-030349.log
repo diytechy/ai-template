@@ -1,0 +1,33 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-08-30 03:09
+# train: wi508-architectural-remap
+# base: 7e2d3f82
+# phase: REVIEW-A
+# wi: WI-508
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: bfacdd02..86f41db3
+# tokens: 
+# cost-usd: 
+# wall-secs: 356
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2794
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:dd83f6f1f730
+# exit-code: 0
+# ---
+CHANGES-REQUESTED — 3 findings recorded and committed.
+
+Verdict: [003-REVIEW-A-f179a0b.md](C:/Projects/ai-template-drive/wi508-architectural-remap/docs/reviews/wi508-architectural-remap/003-REVIEW-A-f179a0b.md)
+
+Commit: `86f41db3 review: record WI-508 changes-requested verdict`
+
+The stage harness fails on the newly added broken link; the two approved TCs also overclaim SR-163 coverage despite their LLRs documenting the required join/universe as unimplemented.
