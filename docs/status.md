@@ -236,29 +236,36 @@ the seams it owns).
   record an approval by refreshing it. The standing rule survives the closes
   around it: a `Drafted` row is approved on its own merits, from the rendered
   brief — never bulk-flipped to tidy a surface.
-- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`, 2026-08-30)
-  UNTIL THE STALL-GUARD CHANGES LAND.** The next session builds the plan of
-  record `C:\Projects\ai-template-plans\stall-guard\PLAN.md` FIRST (C1
-  route-aware stall counters, C2 "review owed" as a parked state, C3 an idle
-  deadline, C4 a pre-dispatch probe, C5 the same-family reviewer fallback, C6
-  the worker/adjudicator close ritual and the unload, C7 the review brief's
-  reading scope), by hand on a claim branch through `integrate.py claim` —
-  never letting the loop build the loop — then deletes the pause in a reviewed
-  commit and relaunches `agent-resume`. **What the owner reads first:**
-  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
-  (31 decisions taken under delegation, each with its alternative and a
-  "for the owner" line) and the sitting's record in
-  [log.md](log.md) ("the unattended run, supervised"). **Owner acts waiting:**
-  the `wi508-architectural-remap-HELD-for-owner-verdict` branch (closed
-  complete, compiled APPROVE at round 10, held after round 11 — rename the ref
-  back and merge on your own verdict, or draw one more round you will accept);
-  the re-attestation brief [ratify/CURRENT.md](ratify/CURRENT.md) carrying the
-  17 amended approved `Rationale` cells and the `hats.toml` `knowledge` drafts
-  the delegated residue lane landed, plus the ten Drafted rows; the deferred `SR-163` verification-owner row
-  to queue or not; the successor of
-  the debt-owner row (queued) whose first commit moves the module-size ratchet
-  pointer. Approval authority is whatever [process.toml](process.toml)
-  `human_approval_through` declares — do not paraphrase it here.
+- **RESUME HERE — THE STALL-GUARD CHANGES ARE LANDED, AND THE FRONTIER STAYS
+  PAUSED (tracked `docs/work/pause`) UNTIL THE OWNER CONFIRMS THE UNPAUSE.**
+  The plan of record
+  [plans/2026-08-30-stall-guard-plan.md](plans/2026-08-30-stall-guard-plan.md)
+  is built and merged — C1 route-aware stall counters, C2 "review owed" as a
+  parked state (exit code 9), C3 the idle deadline, C4 the pre-dispatch probe,
+  C5 the relaxed reviewer rung (recorded), C6 the close rituals in the shipped
+  briefs and the unload of the loop's own streams, C7 the review brief's
+  reading scope with `{trunk}` / `{process_doc}` / `{scripts}` as rendered
+  slots — five cross-family rounds, merged through the slot under the pause;
+  record
+  [log.md — the sitting](log.md#2026-08-30--sitting-the-stall-guard-row-lands-under-the-pause-in-five-rounds-and-the-pause-stays-by-owner-direction)
+  and the row's own compiled entry above it; the decisions taken under
+  delegation this sitting are 33–39 of
+  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md).
+  **Owner acts waiting:** (1) **confirm the unpause** — delete `docs/work/pause`
+  in a reviewed commit, then `agent-resume.cmd --wait-on-limit 14400` from
+  PowerShell by absolute path; the first row the loop claims is the
+  sample-dial spot-check of the stall-guard row's own clean close (an
+  adjudication row — the first lane the new close ritual and the C2/C4/C5
+  machinery run on live), then the rows the generated frontier below names;
+  (2) the TERRA reasoning-effort dial, kept on measurement (decision 36 —
+  revert is one line in [agents.toml](agents.toml)); (3) as before: the
+  `wi508-architectural-remap-HELD-for-owner-verdict` branch, the
+  re-attestation brief [ratify/CURRENT.md](ratify/CURRENT.md), the deferred
+  `SR-163` verification-owner row, the module-size ratchet pointer the debt
+  owner's successor moves in its first commit; (4) a quiet-box re-measure of
+  the smoke budget (decision 33 — every commit this sitting read OVER on a
+  box the owner was gaming on; the budget is untouched). Approval authority
+  is whatever [process.toml](process.toml) `human_approval_through` declares.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the
