@@ -1,0 +1,5 @@
+## 2026-08-30 — WI-537 REVIEW-A (41c44e6)
+
+- [MAJOR] project-trajectory/scripts/check_complexity.py:289 -> `_collect` descends through only `If`, `Try`, and `With`, so valid module-level functions under `For`/`While`/`Match` (and their public symbols) are silently omitted from the census; a driven fixture with `for ...: def hidden(...):` produced no `hidden` row and a module public count of 0 -> recurse through every non-function statement container at module/class scope while still excluding nested function bodies, and add a subprocess regression covering the omitted function -> @owner
+- [MINOR] docs/requirements/system-requirements.toml:1035 -> for clarity: the new AC says complexity that “reaches” the threshold is reported, while its baseline clause, LLR-206, and the implementation use strictly “over” (`>`); a driven complexity-15 function at threshold 15 was omitted from the stamped baseline -> choose and state one inclusive/exclusive boundary across SR/LLR/TC, then pin it with a threshold-equality test -> @owner
+VERDICT: CHANGES-REQUESTED findings=2
