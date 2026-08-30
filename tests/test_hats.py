@@ -890,6 +890,34 @@ def test_the_live_audit_runs_clean_and_reports_the_repos_own_shape(capsys):
         assert note and "ROUTES NOTHING" in note[0] and need in note[0], out
 
 
+def test_live_roster_knowledge_values_resolve_and_the_drafted_packs_say_DRAFT():
+    """The WI-546 value-pass Done-when, held by test rather than by claim
+    (REVIEW-A round 1): every `knowledge` value on the LIVE roster resolves to
+    a real file under the repo root — the loader validates shape, not
+    existence, so a typo'd path would otherwise ride into every brief — and
+    each pack the pass DRAFTED (rather than re-pointed) still carries the
+    DRAFT marker in its own header until the owner cuts it."""
+    live = hats.load(ROOT)
+    values = [v for hat in live for v in hat.get("knowledge", ())]
+    assert values, "the value-pass populated at least one knowledge cell"
+    for value in values:
+        assert (ROOT / value).is_file(), "knowledge value does not resolve: " + value
+    drafted = (
+        "crash-atomicity-recovery",
+        "cross-platform-scripting",
+        "rendered-surface-review",
+        "security-review",
+        "unattended-operation",
+    )
+    for name in drafted:
+        head = "\n".join(
+            (ROOT / "docs" / "knowledge" / (name + ".md"))
+            .read_text(encoding="utf-8")
+            .splitlines()[:4]
+        )
+        assert "DRAFT" in head, name + " lost its DRAFT marker"
+
+
 def test_multiline_roster_text_cannot_mint_a_markdown_heading(tmp_path):
     """A question spanning lines must not put `## ...` at column 0 in the
     composed block (review finding: brief-structure injection)."""
