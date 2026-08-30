@@ -1,0 +1,2 @@
+- [MAJOR] project-trajectory/scripts/intake.py:1082 -> `_disposition_drafts` replaces the disposition's only full successor-scope text with boilerplate; replaying WI-544 mints a successor that retains `Supersedes=WI-484` but omits its items-3-and-5 boundary, item-7 exclusion, and knowledge-pack rule, silently changing the adjudicated work -> transfer the approved successor-scope text into the minted spec and cover the full `intake_after_merge` WI-544-style replay, not only `_draft_row` -> @owner
+VERDICT: CHANGES-REQUESTED findings=1
