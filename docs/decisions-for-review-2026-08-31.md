@@ -437,3 +437,24 @@ contradictory or trunk-side should be mergeable on the record.
 **The alternative:** keep redrawing (each round ~10 min, each on a new
 objection), or refute round 019 finding 1 with round 013's own text. The
 first is not review; the second is arguing with a gate.
+
+## 21. An adjudication row has no closer — the lane was resumed in a cycle; the supervisor closed `WI-542` with the kit's own move tool
+
+`WI-542` (the `WI-521` disposition) ran two ADJUDICATE sessions on Opus,
+each ending DONE with a recorded verdict (`WI:` trailer present) and a
+`## Dispositions` successor draft — the brief's contract, which also says
+*"Never move a spec yourself"* and *"the machinery mints your draft at this
+row's own close"*. But no machinery performs that close: the spec stays in
+`active/<branch>/`, `integrate.finished_branches` does not list the lane, the
+dispatcher reads it as parked and resumes it — cycle 1, 2, 3 — each resume a
+fresh adjudication session (~5–12 min of Opus) that DONEs again. Stopped
+after the third resume. **Closed by the supervisor:** `## Deliverable`
+filled from the two verdicts (before `## Context`, R-A), the spec moved with
+`spec_move.py` — the kit's own link-aware close ritual, the one the worker
+brief names for a terminal move — to `docs/archive/work/complete/`,
+committed on the lane with the `WI: WI-542` trailer, so the drain merges it
+and intake mints the successor. `WI-544` (the `WI-484` disposition) will need
+the same act. **For the owner:** an adjudication lane needs a closer — either
+the brief lets the adjudicator make the terminal move, or the dispatcher
+closes an adjudication lane whose verdict is recorded. Until then every
+disposition row loops.
