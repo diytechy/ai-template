@@ -67,3 +67,10 @@ phase 3. The relative-churn sensor — separate, and unfiled.
 `LLR-206` (the design), and — because the tests split by tier — `TC-202` (Smoke,
 the in-process metric) and `TC-203` (Full, the CLI drives). The census seed reads
 179 functions over cognitive 15 across `project-trajectory/scripts/**/*.py`.
+
+**REVIEW-A re-affirmation.** SR-183's acceptance was tightened during rework —
+its threshold boundary now reads strictly OVER (`>`), aligning it with LLR-206,
+the implementation, and the baseline (see the log fragment's REVIEW-A section).
+This WI still answers SR-183 as amended: the boundary was always exclusive in the
+built code and the seeded baseline; the amendment only makes the SR say what the
+LLR and code already said. Scope and deliverable are unchanged.
