@@ -151,17 +151,17 @@ def test_unload_reports_a_dirty_worker_worktree_and_touches_nothing(tmp_path):
 def test_a_worktree_holding_only_gitignored_files_is_dirty(tmp_path):
     # The sharpest edge of the same lesson, and why the GC cannot read dirt with
     # `git status --porcelain` alone: the file that exists NOWHERE else is
-    # typically an IGNORED one — the unredacted `out/run-logs/` session stream, a
-    # local `.env`. To a tracked-only read the worktree looks pristine and
-    # `git worktree remove` deletes the lot without a word.
+    # typically an IGNORED one — a local `.env`. To a tracked-only read the
+    # worktree looks pristine and `git worktree remove` deletes the lot without
+    # a word. (The planted file was an out/run-logs/ session stream until
+    # 2026-08-30 — that path is now DECLARED residue, the loop's own artifact
+    # with a tracked clipped copy, C6/WI-548 — so the sole-copy example here is
+    # the other canonical one.)
     repo = merged_branch_repo(tmp_path, ignore="out/\n.env\n")
     worker = tmp_path / "worker"
     _git(repo, "worktree", "add", str(worker), "wi-401")
-    logs = worker / "out" / "run-logs"
-    logs.mkdir(parents=True)
-    (logs / "session.md").write_text(
-        "the only copy of this session\n", encoding="utf-8", newline="\n"
-    )
+    secret = worker / ".env"
+    secret.write_text("the only copy of this key\n", encoding="utf-8", newline="\n")
 
     # The tracked-only read really does see nothing — this is the trap, pinned.
     assert integ.ac.working_tree_dirty(worker) == []
@@ -170,10 +170,7 @@ def test_a_worktree_holding_only_gitignored_files_is_dirty(tmp_path):
     unloaded, note = integ._unload_branch(repo, "wi-401")
     assert not unloaded
     assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
-    assert (logs / "session.md").read_text(encoding="utf-8") == (
-        "the only copy of this session\n"
-    )
-    assert "wi-401" in _branches(repo)
+    assert secret.read_text(encoding="utf-8") == "the only copy of this key\n"
 
 
 # The 2026-08-01 drain's holding set, verbatim (docs/archive/history/backlog-plan-2026-08-01.md
@@ -249,27 +246,33 @@ def test_one_undeclared_file_beside_the_residue_still_refuses_named(tmp_path):
     assert "wi-401" in _branches(repo)
 
 
-def test_the_shed_never_touches_an_ignored_stream_or_the_root_out(tmp_path):
-    # Two boundaries at once. An ignored `out/run-logs/` session stream is
-    # UNDECLARED — the 2026-07-26 lesson's canonical sole-copy file — so the
-    # unload still refuses over it and the stream survives byte-for-byte. And
-    # the shed operates only inside the lane: the repo-root `out/` (home of
-    # WI-398's refresh-refused-<branch>.log, which lives OUTSIDE any lane
-    # worktree) is never reached.
+def test_the_shed_covers_the_loops_own_stream_but_never_the_root_out(tmp_path):
+    # DELIBERATELY OVERTURNED 2026-08-30 (C6, the stall-guard plan; WI-548):
+    # the ignored out/run-logs/ session stream is the LOOP'S OWN artifact —
+    # its clipped copy is tracked under docs/iteration/ — and every mechanized
+    # lane of the 2026-08-30 run ended UNLOAD INCOMPLETE over exactly it,
+    # ending the run after every merge. It is now DECLARED residue (so is the
+    # C2 out/review-owed marker, moot once the lane merged): the lane unloads
+    # clean and both go with it. The other boundary STANDS: the shed operates
+    # only inside the lane, so the repo-root out/ (WI-398's
+    # refresh-refused-<branch>.log lives OUTSIDE any lane worktree) is never
+    # reached.
     repo, worker = residue_lane(tmp_path)
     stream = worker / "out" / "run-logs" / "session.md"
     stream.parent.mkdir(parents=True)
-    stream.write_text("the only copy of this session\n", encoding="utf-8", newline="\n")
+    stream.write_text("the loop's own stream\n", encoding="utf-8", newline="\n")
+    (worker / "out" / "review-owed").write_text(
+        "train = wi-401\n", encoding="utf-8", newline="\n"
+    )
     root_log = repo / "out" / "run-logs" / "refresh-refused-wi-401.log"
     root_log.parent.mkdir(parents=True)
     root_log.write_text("refresh refused\n", encoding="utf-8", newline="\n")
 
     unloaded, note = integ._unload_branch(repo, "wi-401")
-    assert not unloaded
-    assert "UNLOAD INCOMPLETE" in note and "DIRTY" in note
-    assert stream.read_text(encoding="utf-8") == "the only copy of this session\n"
+    assert unloaded, note
+    assert not worker.exists()
     assert root_log.read_text(encoding="utf-8") == "refresh refused\n"
-    assert "wi-401" in _branches(repo)
+    assert "wi-401" not in _branches(repo)
 
 
 def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
@@ -284,12 +287,17 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     # unload. Same class as report.md — rebuilt by the next bar run, sole-copy
     # evidence never (WI-407, REVIEW-A finding 2).
     assert integ._is_declared_residue("docs/test/report.html")
+    # C6 (2026-08-30, WI-548): the loop's OWN artifacts joined the declared
+    # set on measurement — every mechanized lane refused unload over its own
+    # session stream, whose clipped copy is tracked under docs/iteration/.
+    assert integ._is_declared_residue("out/run-logs/session.md")
+    assert integ._is_declared_residue("out/review-owed")
     for rel in (
-        "out/run-logs/session.md",
         ".env",
         "orphan.txt",
         "docs/test/notes.md",
         "src/widget.pyc",
+        "out/other-file.txt",
     ):
         assert not integ._is_declared_residue(rel), rel
 

@@ -20,11 +20,11 @@ is a refusal rather than a silently empty instruction.
 |---|---|---|---|
 | `ADJUDICATE-AMENDMENT` | [adjudicate-amendment.template.md](adjudicate-amendment.template.md) | `sha256:b002346788d8` | `{baseline}`, `{rows}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-CONFLICT` | [adjudicate-conflict.template.md](adjudicate-conflict.template.md) | `sha256:19eb35c3acd3` | `{candidate}`, `{digests}`, `{mechanical}`, `{open_rows}`, `{spine}`, `{verdict}`, `{wi}` |
-| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:78fbd44f9078` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
+| `ADJUDICATE-DISPOSITION` | [adjudicate-disposition.template.md](adjudicate-disposition.template.md) | `sha256:025b9f3d1f64` | `{evidence}`, `{report}`, `{spec}`, `{verdict}`, `{wi}` |
 | `ADJUDICATE-RED-TC` | [adjudicate-red-tc.template.md](adjudicate-red-tc.template.md) | `sha256:6c33cffc9727` | `{spine}`, `{tcs}`, `{verdict}`, `{wi}` |
 | `CRITIQUE` | [critique.template.md](critique.template.md) | `sha256:ae826fef3e73` | `{brief}`, `{verdict}` |
-| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:684609719ede` | `{verdict}` |
-| `WORKER` | [worker.template.md](worker.template.md) | `sha256:9dfaf4ea9a70` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
+| `REVIEWER` | [reviewer.template.md](reviewer.template.md) | `sha256:394e1b384222` | `{process_doc}`, `{trunk}`, `{verdict}` |
+| `WORKER` | [worker.template.md](worker.template.md) | `sha256:75c02ad3d24e` | `{base}`, `{context_block}`, `{diff_block}`, `{pred_block}`, `{rework_block}`, `{specref}`, `{srs}`, `{title}`, `{train}`, `{wi}` |
 
 An operator override replaces a template per phase (`--prompt-map`); an
 overridden session's `# prompt-template:` names the override path, so the

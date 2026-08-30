@@ -68,8 +68,8 @@ family = "OPENAI"
 model = "gpt-5.6-terra"
 version = "5.6"
 tier = "medium"
-cmd_template = "codex exec --model {model} --dangerously-bypass-approvals-and-sandbox"
-notes = """GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login"""
+cmd_template = "codex exec -c model_reasoning_effort=medium --model {model} --dangerously-bypass-approvals-and-sandbox"
+notes = """GPT-5.6 balanced (Terra) - the cross-family review leg; provider CLI (codex) replaces opencode (WI-160); install: npm i -g @openai/codex; sign in: codex login. C7 EXPERIMENT (2026-08-30, WI-548): -c model_reasoning_effort=medium pins the review leg's reasoning effort (codex has no env dial; CmdTemplate is the declared home) - measure round wall + the codex `tokens used` line against the ~10-min unpinned rounds of 2026-08-30 and keep or revert on the numbers"""
 
 [agent.OPENAI-LUNA]
 family = "OPENAI"

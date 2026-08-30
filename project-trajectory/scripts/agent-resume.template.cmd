@@ -55,6 +55,12 @@ REM Per-session wall-clock bound (seconds) so one hung CLI cannot wedge a
 REM lane forever - the walk-away guarantee. Blank the slot to disable
 REM (engine default 0 = no timeout). Keep agent-resume.sh in sync.
 if not defined AGENT_SESSION_TIMEOUT set "AGENT_SESSION_TIMEOUT=7200"
+REM Per-session IDLE bound (seconds): a child that stops emitting output is
+REM killed this long after its last line, instead of being discovered at the
+REM wall deadline above (C3, the stall-guard plan). Blank the slot to fall
+REM through to the engine default (900); 0 disables the idle kill entirely.
+REM Keep agent-resume.sh in sync.
+if not defined AGENT_SESSION_IDLE_TIMEOUT set "AGENT_SESSION_IDLE_TIMEOUT=900"
 REM ----------------------------------------------------------------------------
 
 cd /d "%~dp0"
@@ -97,6 +103,9 @@ if defined AGENT_SESSION_TIMEOUT (
   set "TIMEOUT_ARGS=--session-timeout %AGENT_SESSION_TIMEOUT%"
 ) else (
   set "TIMEOUT_ARGS="
+)
+if defined AGENT_SESSION_IDLE_TIMEOUT (
+  set "TIMEOUT_ARGS=%TIMEOUT_ARGS% --session-idle-timeout %AGENT_SESSION_IDLE_TIMEOUT%"
 )
 call %PY% scripts\agent_loop.py %TIMEOUT_ARGS% %*
 set "EXITCODE=%ERRORLEVEL%"

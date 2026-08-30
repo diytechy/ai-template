@@ -703,6 +703,21 @@ control input — was retired):
   concurrency-restructure Phase 5 — git history and the integrator's own
   refusals are the durable record). **A wrong DONE is a false green** (§4);
   a worker's exit code and committed trailers are its whole result channel.
+- **REVIEW-OWED parking** is **exit code 9** (`EXIT_REVIEW_OWED`, appended at
+  the end of the exit alphabet 2026-08-30, the stall-guard change set): the
+  build is committed but no review verdict could be drawn — every reviewer
+  route errored, hung or cooled. The dispatcher treats it like a crash, not a
+  decided outcome: the lane stays parked with its work (marker
+  `out/review-owed`) and the next cycle resumes it to draw the round, so a
+  reviewer outage never closes finished work `partial`. The reviewer ladder
+  ends same-family: when every cross-family candidate is exhausted, the draw
+  relaxes heterogeneity and RECORDS it (`-relaxed` on the verdict filename,
+  `heterogeneity: relaxed` in the session telemetry) — fresh context is the
+  invariant; family diversity is best-effort policy, and a single-family
+  roster was always "relaxed" by construction, now honestly labelled. A route
+  that failed earlier in the run must answer a 30 s `OK` liveness probe on
+  its own command template before another real session is spent on it; a
+  route with a clean history is never probed (recovery aid, not a tax).
 - **The resume-from-`status.md` prompt is retired** with the path: the
   generated `status.md` block (`gen_trajectory.py --status`) is a snapshot for
   humans, never a session's input — the hand-authored remainder stays the
@@ -1089,6 +1104,15 @@ names an **unavailable agent**, not a stuck task, and points at the fix — an
 unsupported model is repointed by hand (`--model` / the model map). Auto-fallback
 to a substitute model is deliberately **not** done: the human consented to a
 specific tier, and a silent swap could run an unlisted (unguarded) model.
+
+**A reviewer outage is not the builder's stall** (2026-08-30): the stall
+guard counts only non-committing BUILD-side sessions; failed REVIEW/CRITIQUE
+draws are counted on their own streak and bounded by the REVIEW-OWED exit
+above, never by a `partial` close of committed work. **Sessions carry two
+deadlines**: the wall (`--session-timeout` / `AGENT_SESSION_TIMEOUT`) and an
+idle deadline (`--session-idle-timeout` / `AGENT_SESSION_IDLE_TIMEOUT`,
+default 900 s; 0 disables) that kills a child this long after its LAST output
+line — a silent hang is discovered in minutes, not at the two-hour wall.
 
 **Consent is unmissable.** Unattended mode passes the agent CLI's
 permission-bypass flag. The human consents by (1) filling the launcher's

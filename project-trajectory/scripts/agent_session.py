@@ -63,6 +63,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 
@@ -385,7 +386,9 @@ def _codex_lastmsg_read(path):
     return text
 
 
-def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
+def run_session(
+    argv, root, timeout, env=None, on_line=None, stdin_input=None, idle_timeout=None
+):
     """One fresh headless driver session. Returns (exit_code, output,
     timed_out). stdin is closed so a CLI that would wait on it can't hang —
     UNLESS `stdin_input` is given, in which case that fixed text is written to the
@@ -444,10 +447,17 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     # buffer while the main thread waits — the same shape subprocess.run uses
     # internally, opened up so each line can be echoed as it arrives.
     lines = []
+    # The idle deadline's clock (C3, docs/plans/2026-08-30-stall-guard-plan.md):
+    # the reader thread stamps the last time the child SAID anything, so the
+    # waiter below can kill a session that has gone silent without waiting for
+    # the wall deadline. A one-element list, not a bare float — the pump thread
+    # rebinding a closure-captured float would be invisible to the waiter.
+    last_line = [time.time()]
 
     def _pump():
         for line in proc.stdout:
             lines.append(line)
+            last_line[0] = time.time()
             if on_line is not None:
                 on_line(line)
         proc.stdout.close()
@@ -474,9 +484,44 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
 
     if stdin_input is not None:
         threading.Thread(target=_feed, daemon=True).start()
+    # TWO deadlines (C3, docs/plans/2026-08-30-stall-guard-plan.md): `timeout`
+    # bounds the WALL, `idle_timeout` bounds SILENCE. A child that stops
+    # emitting used to be discovered only at the wall — two silent hangs on
+    # 2026-08-30 each went quiet minutes in and burned a 7200 s wall slot. The
+    # waiter polls in one-second slices only when a deadline exists; with
+    # neither, it blocks exactly as before.
+    wall_deadline = (time.time() + timeout) if timeout else None
+    killed = ""
+    killed_kind = False
     try:
-        proc.wait(timeout=timeout or None)
-    except subprocess.TimeoutExpired:
+        while True:
+            try:
+                slice_ = 1.0 if (wall_deadline is not None or idle_timeout) else None
+                proc.wait(timeout=slice_)
+                break
+            except subprocess.TimeoutExpired:
+                now = time.time()
+                if wall_deadline is not None and now >= wall_deadline:
+                    killed = "session timed out after {}s".format(timeout)
+                    killed_kind = True  # wall — the historical value
+                    break
+                if idle_timeout and now - last_line[0] >= idle_timeout:
+                    killed = (
+                        "session idle-timed out after {}s of silence "
+                        "(idle-timeout {}s, wall {}s)".format(
+                            int(now - last_line[0]), idle_timeout, timeout
+                        )
+                    )
+                    killed_kind = "idle"  # truthy, so every timeout read holds
+                    break
+    except (KeyboardInterrupt, SystemExit):
+        # An interrupted coordinator must not leave a live agent tree editing
+        # the worktree (start_new_session detaches the child from the terminal
+        # group, so Ctrl+C no longer reaches it implicitly — kill explicitly).
+        _kill_tree(proc)
+        proc.wait()
+        raise
+    if killed:
         _kill_tree(proc)
         proc.wait()
         pump.join(5)
@@ -485,17 +530,9 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
         )  # cleanup; a timed-out session has no usable result
         return (
             -1,
-            "".join(lines)
-            + "\ncoordinator: session timed out after {}s".format(timeout),
-            True,
+            "".join(lines) + "\ncoordinator: " + killed,
+            killed_kind,
         )
-    except (KeyboardInterrupt, SystemExit):
-        # An interrupted coordinator must not leave a live agent tree editing
-        # the worktree (start_new_session detaches the child from the terminal
-        # group, so Ctrl+C no longer reaches it implicitly — kill explicitly).
-        _kill_tree(proc)
-        proc.wait()
-        raise
     pump.join(5)
     output = "".join(lines)
     last = _codex_lastmsg_read(codex_lastmsg)

@@ -2352,6 +2352,27 @@ locally forked worker brief must reapply this clause by hand) and the
 regenerated `prompts/CATALOG.md` (`gen_prompt_catalog.py`, `--check` fails
 until you do).
 
+### `check_docs.py` blanks HTML comments before the inline-code strip [since 59f52549]
+
+A lone backtick inside an HTML comment used to open an inline-code span that
+swallowed headings for thousands of lines — 226 of one compiled log's 555
+headings vanished from the anchor set, and every `#anchor` link into the range
+read as broken. Comments are now blanked to a single space before the
+inline-code strip (a comment QUOTED inside inline code keeps its backticks).
+**Take:** the updated `scripts/check_docs.py` on re-sync; nothing else moves.
+The change only widens what resolves — a repo that was green stays green.
+
+### An opencode registry row needs `--dir .` [since 59ab2951]
+
+An ADOPTER-SIDE check, not a file to take: the kit's own
+`agents.template.toml` ships no opencode row, but if your `docs/agents.toml`
+carries one, `opencode run` resolves its project root by walking UP from the
+cwd — from a lane worktree it lands on the MAIN repo and the session reads
+the wrong tree (a reviewer drawn on a lane reviewed trunk, live, 2026-08-30).
+Add `--dir .` to the row's `cmd_template` (`opencode run --dir . -m {model}
+--auto`); the session engine runs every child with `cwd=<worktree>`, so `.`
+is always the lane.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

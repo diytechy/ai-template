@@ -357,3 +357,34 @@ def test_routingstate_note_session_and_stall_verdict():
 def test_classify_outcome_ladder(args, expected):
     al = load_script("agent_loop")
     assert al.classify_outcome(*args) == expected
+
+
+def test_routingstate_review_draw_failures_never_stall_the_builder():
+    # C1 (docs/plans/2026-08-30-stall-guard-plan.md): a BUILD commit followed
+    # by three failed review draws is NOT a stall — one shared counter closed
+    # finished, committed work partial over a reviewer outage (WI-521).
+    st = _rs()
+    st.note_session(committed=True, errored=False)
+    for _ in range(3):
+        st.note_session(committed=False, errored=True, judging=True)
+        st.note_review_draw_failure()
+    assert st.stall == 0 and st.errors == 0
+    assert st.stall_verdict(3) is None
+    assert st.review_draw_failures == 3
+    # A recorded verdict resets the draw streak.
+    st.review_queue = ["REVIEW-A"]
+    st.record_review_verdict("REVIEW-A", object(), "FAM", "FAM-1")
+    assert st.review_draw_failures == 0
+    # Three BUILD no-commits still stall — the guard is split, not weakened.
+    for _ in range(3):
+        st.note_session(committed=False, errored=False)
+    assert st.stall_verdict(3) == "stall"
+
+
+def test_routingstate_cool_marks_the_route_suspect():
+    # C4: a cooled route must answer the liveness probe before the next real
+    # session is spent on it; a route with a clean history is never probed.
+    st = _rs()
+    assert st.suspect_routes == set()
+    st.cool("PROV-1", now=0.0)
+    assert "PROV-1" in st.suspect_routes

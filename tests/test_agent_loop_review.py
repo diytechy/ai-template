@@ -866,3 +866,147 @@ def test_winstay_biases_the_next_review_draw_over_the_weighted_baseline(
     # the baseline genuinely rotates and round 2's PROVB was the override, not a
     # baseline that always picks PROVB.
     assert "PROVD-REV-1" in review_a[2], review_a
+
+
+# --- WI-548 (the 2026-08-30 stall-guard plan): C2 / C5 / C7 -------------------
+
+# A reviewer fake whose EVERY reviewer session writes no verdict while
+# ctl/skip_all exists — the whole-ladder outage under test — and records each
+# session's KIND so a resume's first session is observable. Builders behave
+# like FAKE with done_after=2.
+FAKE_REVIEWER_TOGGLE = r"""
+import argparse, pathlib, re, subprocess, sys
+ap = argparse.ArgumentParser()
+ap.add_argument("--control", required=True)
+ap.add_argument("--model", default="")
+ap.add_argument("-p", "--prompt", default="")
+args, _ = ap.parse_known_args()
+ctl = pathlib.Path(args.control)
+with open(str(ctl / "models.txt"), "a", encoding="utf-8") as fh:
+    fh.write(args.model + "\n")
+is_review = "Write your verdict to" in args.prompt
+with open(str(ctl / "kinds.txt"), "a", encoding="utf-8") as fh:
+    fh.write(("review" if is_review else "build") + "\n")
+
+
+def commit(path, msg):
+    subprocess.run(["git", "add", str(path)], check=True)
+    subprocess.run(["git", "commit", "-q", "-m", msg], check=True)
+
+
+m = re.search(r"Write your verdict to (\S+)", args.prompt)
+if m:
+    if (ctl / "skip_all").exists():
+        sys.exit(0)  # the outage: NO reviewer writes a verdict
+    vpath = pathlib.Path(m.group(1))
+    vpath.parent.mkdir(parents=True, exist_ok=True)
+    vpath.write_text("VERDICT: APPROVE findings=0\n", encoding="utf-8")
+    commit(vpath, "review verdict")
+    sys.exit(0)
+cf = ctl / "builds.txt"
+n = len(cf.read_text(encoding="utf-8").splitlines()) if cf.exists() else 0
+with open(str(cf), "a", encoding="utf-8") as fh:
+    fh.write("b\n")
+pathlib.Path("work.txt").write_text("build " + str(n), encoding="utf-8")
+if n + 1 >= 2:
+    commit("work.txt", "build " + str(n) + "\n\nWI: WI-201")
+else:
+    commit("work.txt", "build " + str(n))
+sys.exit(0)
+"""
+
+
+def _write_registry(repo, cmd, rows):
+    table = [["Id", "Provider", "Model", "Version", "Tier", "CmdTemplate", "Notes"]]
+    table += [[rid, fam, model, "1", tier, cmd, ""] for rid, fam, model, tier in rows]
+    with open(
+        str(repo / "docs" / "agents.csv"), "w", encoding="utf-8", newline=""
+    ) as fh:
+        csv.writer(fh).writerows(table)
+    (repo / "docs" / "agents-enabled").write_text(
+        "".join(rid + "\n" for rid, _f, _m, _t in rows), encoding="utf-8"
+    )
+
+
+def test_reviewer_outage_parks_review_owed_then_resume_draws_the_round(
+    managed_repo, tmp_path
+):
+    # C1+C2 end to end: the build commits, every review draw fails, and the
+    # run ends EXIT_REVIEW_OWED (9) with the lane's work committed and the
+    # out/review-owed marker written — never a stall abort of finished work.
+    # A relaunch (the dispatcher's resume) schedules the OWED ROUND first and
+    # ends DONE once a reviewer answers.
+    repo, ctl, cmd = managed_repo
+    fake = tmp_path / "fake_toggle.py"
+    fake.write_text(FAKE_REVIEWER_TOGGLE, encoding="utf-8")
+    cmd2 = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    _write_registry(
+        repo,
+        cmd2,
+        [
+            ("PROVA-BUILD-1", "PROVA", "builda", "medium"),
+            ("PROVB-REV-1", "PROVB", "revb", "medium"),
+            ("PROVC-REV-1", "PROVC", "revc", "medium"),
+        ],
+    )
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "skip_all").write_text("on\n", encoding="utf-8")
+
+    proc = _loop(repo, cmd2, "--stall-limit", "2")
+    assert proc.returncode == 9, proc.stdout + proc.stderr
+    assert "REVIEW OWED" in proc.stdout
+    assert (repo / "out" / "review-owed").is_file()
+    kinds = (ctl / "kinds.txt").read_text(encoding="utf-8").split()
+    assert kinds[:2] == ["build", "build"]
+
+    # The outage ends; the resumed worker owes the ROUND, not another build.
+    (ctl / "skip_all").unlink()
+    boundary = len(kinds)
+    proc2 = _loop(repo, cmd2, "--stall-limit", "2")
+    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
+    kinds2 = (ctl / "kinds.txt").read_text(encoding="utf-8").split()
+    assert kinds2[boundary] == "review", kinds2
+    assert not (repo / "out" / "review-owed").exists()
+
+
+def test_single_family_pool_review_is_drawn_relaxed_and_recorded(managed_repo):
+    # C5: with only one family enabled, the cross-family ladder is empty by
+    # construction — the draw is legal, and now RECORDED: the verdict filename
+    # carries -relaxed and the round line says heterogeneity=relaxed.
+    repo, ctl, cmd = managed_repo
+    _write_registry(
+        repo,
+        cmd,
+        [
+            ("PROVA-BUILD-1", "PROVA", "builda", "medium"),
+            ("PROVA-REV-1", "PROVA", "reva", "medium"),
+        ],
+    )
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    relaxed = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*-relaxed.md"))
+    assert relaxed, list((repo / "docs" / "reviews" / "t1").glob("*"))
+    assert "heterogeneity=relaxed" in proc.stdout
+
+
+def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
+    # C7: the brief's reading scope renders per repo — the trunk name and the
+    # process-doc path are SLOTS resolved at composition (this fixture has no
+    # docs/process.md, so the kit-master fallback renders), and the rendered
+    # text carries the three-dot diff with its telemetry/generated exclusions.
+    repo, ctl, cmd = managed_repo
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "done_after").write_text("2", encoding="utf-8")
+    proc = _loop(repo, cmd)
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    prompts = (ctl / "prompts.txt").read_text(encoding="utf-8")
+    rev_block = prompts.split("=== revb ===\n", 1)[1].split("\n=== ", 1)[0]
+    assert "{trunk}" not in rev_block and "{process_doc}" not in rev_block
+    assert "git diff llm/train/t1...HEAD" in rev_block
+    assert "':(exclude)docs/iteration'" in rev_block
+    assert "project-trajectory/PROCESS.md" in rev_block

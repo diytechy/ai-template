@@ -1724,6 +1724,15 @@ def _worktree_dirt(wt):
 # bar run, sole-copy evidence never.
 _RESIDUE_DIR_NAMES = frozenset({".pytest_cache", ".ruff_cache", "__pycache__"})
 _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
+# The loop's OWN artifacts (C6, docs/plans/2026-08-30-stall-guard-plan.md):
+# out/run-logs/ holds the raw per-session streams agent_loop itself wrote for
+# THIS lane (their clipped, tracked copies live under docs/iteration/), and
+# out/review-owed is the C2 parked-state marker, moot once the lane merged.
+# Measured 2026-08-30: every mechanized lane ended UNLOAD INCOMPLETE over
+# exactly these, ending the run after every merge. Same double lock as the
+# caches: ignored by git AND declared here — never sole-copy evidence.
+_RESIDUE_PREFIXES = ("out/run-logs/",)
+_RESIDUE_OUT_FILES = frozenset({"out/review-owed"})
 
 
 def _is_declared_residue(rel):
@@ -1735,7 +1744,9 @@ def _is_declared_residue(rel):
     `.pytest_cache/` at the rootdir). The file's own NAME never matches - a
     file merely named `.pytest_cache` is a surprise, and a surprise is
     evidence."""
-    if rel in _RESIDUE_FILES:
+    if rel in _RESIDUE_FILES or rel in _RESIDUE_OUT_FILES:
+        return True
+    if any(rel.startswith(prefix) for prefix in _RESIDUE_PREFIXES):
         return True
     return any(part in _RESIDUE_DIR_NAMES for part in rel.split("/")[:-1])
 
@@ -1789,8 +1800,17 @@ def _sweep_residue_dirs(wt):
         if directory == wt:
             continue
         rel_parts = directory.relative_to(wt).parts
-        if ".git" in rel_parts or not any(
-            part in _RESIDUE_DIR_NAMES for part in rel_parts
+        rel_posix = "/".join(rel_parts) + "/"
+        # A directory inside a declared prefix (out/run-logs/) — or an
+        # ancestor of one (out/ itself, once the streams are shed and nothing
+        # else lives there) — is sweepable exactly like the named cache trees;
+        # rmdir still refuses anything non-empty, so a surprise survives.
+        declared_prefix = any(
+            rel_posix.startswith(p) or p.startswith(rel_posix)
+            for p in _RESIDUE_PREFIXES
+        )
+        if ".git" in rel_parts or not (
+            declared_prefix or any(part in _RESIDUE_DIR_NAMES for part in rel_parts)
         ):
             continue
         if ac.git(wt, "check-ignore", "-q", "--", "/".join(rel_parts))[0] != 0:
