@@ -306,3 +306,19 @@ instead — add `--dir {worktree}`-style support or drop the family from review
 legs until the template can name the lane. `--wait-on-limit` covers the
 OpenAI limit for the loop itself; the supervisor-driven rounds have no such
 sleep and were re-routed instead.
+
+## 15. `WI-508` round 017 APPROVEd on the third family; the supervisor compiled `docs/reviews/WI-508-REVIEW-A.md` from the ten round files
+
+Round 017 (`OPENCODE-GROK`, `grok-4.6`, run with `--dir` at the lane) returned
+`VERDICT: APPROVE findings=0` after running the cited test nodes, `trace.py`,
+a scaffold drive of TC-199's package arm, `check.py --jobs 0`, the smoke tier,
+the budget and `check_docs` (transcript kept in the session scratchpad;
+verdict commit `899352b7`). The WI-level file the merge slot reads is a
+compilation — ten rounds, every finding and machine line quoted from its
+round file, the governing line last — committed on the lane as a record
+(`docs/reviews/` is outside the verdict-freshness window by design). **The
+owner should read the governing round with the grain of salt it deserves:**
+one APPROVE on the third family after eight cross-family CHANGES-REQUESTED
+rounds whose every finding was either taken or refuted with the instrument;
+the loop's own escalation ladder would have paged a human here, and the
+delegation is why it did not.
