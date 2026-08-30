@@ -458,3 +458,33 @@ the same act. **For the owner:** an adjudication lane needs a closer — either
 the brief lets the adjudicator make the terminal move, or the dispatcher
 closes an adjudication lane whose verdict is recorded. Until then every
 disposition row loops.
+
+## 22. `WI-542` merged: one cross-family round drawn on the adjudication lane and compiled as its WI-level verdict; `WI-545` is the debt owner's successor
+
+The merge slot refused `WI-542` for lacking `docs/reviews/WI-542-REVIEW-A.md`
+— RULING-7 applies to every `merged` outcome, adjudication rows included, and
+history shows disposition rows were only ever closed by owner sittings on
+trunk (`WI-457`, 2026-08-15), never through the slot. Rather than write an
+APPROVE nobody wrote, one REVIEW-A round was drawn (OPENAI-TERRA) over the
+lane's diff: `APPROVE findings=0` after running the R-F tests, the strict
+trajectory checker, the harness (`RESULT: PASS`) and the smoke budget
+(21.5 s). The WI-level file compiles the two concurring ADJUDICATE verdicts
+(`OUTCOME: PARTIAL successors=1`, both) and that round; the slot merged
+(`d869f48a`) and intake minted **`WI-545`** — the decomposition debt owner
+(cont.), `supersedes = "WI-521"`, whose first commit must move the
+module-size ratchet pointer. **For the owner:** whether an adjudication row
+should owe a REVIEW-A at all (its product is a verdict) is a protocol
+question; today it does, and only a compiled file satisfies it.
+
+## 23. Every mechanized lane ends the run with `UNLOAD INCOMPLETE` — the loop's own session stream is counted as unique data
+
+`integrate.unload` refuses to remove a merged lane's worktree while it holds
+an ignored `out/run-logs/` stream — which the loop itself wrote for that
+lane's sessions — and reports INCOMPLETE with exit 1, ending the run after
+every merge (`WI-521`, `WI-542`; `WI-484` unloaded clean only because the
+supervisor had emptied its `out/` first). The streams' clipped copies are
+tracked under `docs/iteration/`; the full streams were copied to the session
+scratchpad each time and the worktree removed with the integrator's own
+printed remedy. **For the owner:** a walk-away run cannot survive its first
+merge under this rule; either the unload sheds the loop's own `out/run-logs/`
+(it knows it wrote them) or the exit code stops meaning "stop".
