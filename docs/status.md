@@ -143,12 +143,13 @@ the seams it owns).
   154 → 163, the reference at 74 / 163 / 163, `gen_arch_map` running every
   target it is named — record
   [log.d/2026-08-29-wi534-if-arms.md](log.d/2026-08-29-wi534-if-arms.md).
-  **RESUME HERE:** (1) the owner reads the two decision files (below) and
-  rules on decisions 4.1 (the harness-argv class), 6.2 (the undeclared-owner
-  case) and 6.7 (the gate rides the severity ladder); (2) the smoke budget is
-  still owed a reading ALONE on a quiet box — every reading this sitting
-  (112.7 / 123.6 / 103.5 s against 60) was taken with other sessions holding
-  52–79 % of the box; (3) left standing, each recorded in the two fragments:
+  **The owner accepted decisions 4.1, 6.2, 6.7 and 6.8** — record
+  [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md);
+  the first session's decisions file (below) is still unread. **RESUME
+  HERE:** (1) the smoke budget is still owed a reading ALONE on a quiet box —
+  every reading this sitting (112.7 / 123.6 / 103.5 / 88.8 s against 60) was
+  taken with other sessions holding 50–80 % of the box; (2) left standing,
+  each recorded in the two fragments:
   the three tracked fragments opening with `#`/`###` (the trunk lane's),
   `TC-161`'s approved prose naming `IF-127` (the owner's), the seven
   `_`-prefixed names crossing `IF-173` (a rename to file), the ten seam-TC
