@@ -240,3 +240,22 @@ repeats it, the supervisor stops drawing rounds**: the lane stays a finished
 branch on `wi508-architectural-remap` for the owner's own verdict rather than
 be merged on a reviewer the record could not satisfy or an APPROVE nobody
 wrote.
+
+## 11. `WI-508` rounds 012–013: the two remaining findings were TAKEN, including the one decision 10 had refuted
+
+Round 012 (terra) dropped the snapshot point and asked for two things: the
+trunk `status.md` recap removed (done on trunk, `c9643450`) and the commit
+bar run on the record commit (done, `f4addf13`; then the station refresh
+`c225c34d`, bar PASS 11/11). Round 013 (terra, on the refreshed tip) left
+exactly one: `TC-199`/`TC-200` still formally verify `SR-163`, so `trace.py`
+reads the SR as covered whatever the rows' `Status`. **Decision 10's
+refutation of that point is reversed** — it had argued cost (the orphan count
+rises by one), which is not a refutation of the claim; three independent
+rounds and the instrument agree on the claim. The SR-163 targets are removed
+(`docs/test/test-cases.toml`, lane commit after `c225c34d`), `SR-163` is an
+honest orphan ("has no test (TC)" — verification owed and unscheduled), the
+archived Deliverable says so, and round 014 was drawn on the result.
+
+**For the owner:** `SR-163` now needs a row that files the complete
+file→requirement→need join over the whole shipped universe as a TC; no queued
+row owns it. Filing it is a decision about scope the run did not take.
