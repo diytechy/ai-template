@@ -337,3 +337,30 @@ shipped `agents.template.toml` carries no opencode row to mirror. Smoke tier
 1378 passed / budget 28.8 s. **For the owner:** if the template is meant to
 ship the fix, the kit's own opencode rows (wherever they are seeded) want the
 same token.
+
+## 17. `WI-521` closed `partial` by the stall guard after its review round could not be drawn — the merge stands, the lane is unloaded, `WI-542` is its disposition
+
+Run 3 resumed the parked debt-owner lane; its Opus build committed a slice
+(`56e7e52b..adfc1204`, 33 min). The REVIEW-A draw then failed three ways in
+a row: OPENAI-TERRA at its usage limit (ERROR, 3 s), the re-route to
+OPENCODE-GROK ran the cited tests and `trace.py` and then went silent until
+the 7200 s session timeout (TIMEOUT), OPENAI-TERRA again (ERROR). Three
+non-committing sessions is the stall limit, the worker exited 4, and the
+dispatcher — correctly by its own contract — closed the row `partial`
+(`b38d2cf4`), refreshed, merged it (`ab3b260b`, bar PASS 11/11) and minted
+the disposition row `WI-542`. The slice's work is on trunk UNREVIEWED; the
+keep/discard split is `WI-542`'s to judge, and the standing-debt-owner role
+the row carried (the module-size ratchet's pointer names it) needs a
+SUCCESSOR from that disposition — the ratchet's own rule says the pointer
+moves in the same commit a debt owner closes, and this close did not move
+it. The run then exited 1 on UNLOAD INCOMPLETE (the lane worktree held an
+ignored `out/run-logs/` stream); the streams were copied to the session
+scratchpad (their clipped copies are tracked under `docs/iteration/`) and
+the worktree and branch removed with the integrator's printed remedy.
+
+**The alternative:** keep the lane open by hand-reverting the partial close.
+Rejected: a hand-moved spec. **What the owner should weigh:** a stall guard
+that counts a reviewer's outage as the builder's stall turns a provider
+limit into a handback of finished work; the hang on the third family is a
+second sample of OPENCODE-GROK's unreliability after decision 14's
+wrong-tree finding.
