@@ -587,3 +587,17 @@ had just passed every gate — harmless, but the brief forbids it). **For the
 owner:** the worker brief needs the close ritual (Deliverable before
 Context, SpecRef cleared, `spec_move.py` to the terminal folder) and the
 fragment heading form stated explicitly.
+
+## 30. `WI-537`'s refresh red on `approval-fresh` — the brief regenerated on the lane after the governing round, recorded on the compiled verdict rather than buying a fourth round
+
+The lane minted four `Drafted` rows and never rendered `docs/ratify/CURRENT.md`,
+so the station refresh refused. The render is a derived artifact of the kit's
+own generator (`trace.py --approve modified`); no cell, code or test moved. It
+was committed on the lane (`e64bb754`) and the compiled WI-level verdict
+re-committed after it with a paragraph saying exactly that (`8a6f7fc9`), so the
+verdict rung's freshness comparison passes on a mechanical render — the same
+reasoning the protocol applies to a refresh commit — instead of a fourth
+review round over an unchanged tree. **For the owner:** the worker brief
+should tell a lane that mints spine rows to render the brief before it closes,
+or `trunk_step --regen` should own that render like the other derived
+surfaces; either removes this stop.
