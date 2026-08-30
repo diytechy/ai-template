@@ -236,49 +236,29 @@ the seams it owns).
   record an approval by refreshing it. The standing rule survives the closes
   around it: a `Drafted` row is approved on its own merits, from the rendered
   brief — never bulk-flipped to tidy a surface.
-- **THE UNATTENDED RUN OF 2026-08-30 IS SUPERVISED UNDER DELEGATED AUTHORITY**
-  — every decision it took in the owner's stead, with its alternative, is in
-  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md);
-  read that file first at return. Approval authority is whatever
-  [process.toml](process.toml) `human_approval_through` declares — do not
-  paraphrase it here; the two owner-owed lanes were delegated for the run
-  (record: [log.md — the delegation sitting](log.md#2026-08-30--sitting-the-three-stranded-claims-become-parked-lanes-again-and-the-two-owner-owed-rows-carry-the-owners-delegation-for-an-unattended-run)).
-  **Next for the concern/hat program:** its lane closed `partial` (the worker
-  read a branch spec the delegation had not reached — its per-close report
-  lands under [handbacks/](handbacks/README.md) when that branch merges);
-  the disposition row intake mints for that report is where the work
-  continues, by drafting a SUCCESSOR whose body carries the delegation in its
-  first paragraph: the `knowledge` values into `hats.toml` (re-point to
-  `docs/knowledge/` packs, draft only where none carries the perspective,
-  mark drafts) and the 17 duplicated `Rationale` attributions trimmed under
-  ordinary review. **Next for the remap program:** nothing — its lane is
-  closed complete on its branch and merges when its verdict round clears;
-  what it leaves the owner is in the decisions file (the snapshot-vocabulary
-  finding, the blind-derivation census correction).
-- **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
-  (2026-08-25; record:
-  [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.md#2026-08-25--wi-521-slice-1-the-acceptance-record-leaves-the-checker)).
-  The acceptance record left the checker: 677 lines moved VERBATIM into
-  `project-trajectory/scripts/acceptance_record.py`, `check_trajectory.py`
-  re-stamped **4,963 → 4,327**, every name re-exported so no caller moved, the
-  CLI byte-identical across nine driven paths and 56 API probes, and `intake.py`
-  no longer importing a ~5,000-line validator at all. **Before trusting the
-  fusion table this row inherited, read the re-derivation that corrects it:** 13
-  of the 71 SRs have a TIED live module and `agent_loop`'s head position rests
-  on one of them, so the table says WHICH modules fuse obligations, not in what
-  order. **The row does not close** — it is the standing debt owner and the
-  ratchet still points at it. **Slice 2 took M-06's largest monolith
-  standalone** (record:
-  [log.d/2026-08-25-wi521-slice2-integrate-test-split.md](log.md#2026-08-25--wi-521-slice-2-m-06s-largest-monolith-split-standalone)):
-  `tests/test_integrate.py` 3,520 lines → four modules along its OWN seven
-  banner sections plus `tests/integrate_fixtures.py`, proven by node-id SET
-  equality against the monolith (133 ids, diff empty) rather than by a green,
-  and with smoke membership unmoved at 1,369 because all three new modules were
-  re-tiered into `conftest.SLOW_MODULES`. Next, in that order: the rest of
-  `check_trajectory`, then `agent_common` / `bootstrap` / `agent_loop`, then
-  M-06's remaining three (`test_trace` 2,099, `test_trajectory_arch` 1,993,
-  `test_agent_loop` 1,640). The test-tree sensor gap stays CARRIED, its axis
-  still under an unruled owner question.
+- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`, 2026-08-30)
+  UNTIL THE STALL-GUARD CHANGES LAND.** The next session builds the plan of
+  record `C:\Projects\ai-template-plans\stall-guard\PLAN.md` FIRST (C1
+  route-aware stall counters, C2 "review owed" as a parked state, C3 an idle
+  deadline, C4 a pre-dispatch probe, C5 the same-family reviewer fallback, C6
+  the worker/adjudicator close ritual and the unload, C7 the review brief's
+  reading scope), by hand on a claim branch through `integrate.py claim` —
+  never letting the loop build the loop — then deletes the pause in a reviewed
+  commit and relaunches `agent-resume`. **What the owner reads first:**
+  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
+  (31 decisions taken under delegation, each with its alternative and a
+  "for the owner" line) and the sitting's record in
+  [log.md](log.md) ("the unattended run, supervised"). **Owner acts waiting:**
+  the `wi508-architectural-remap-HELD-for-owner-verdict` branch (closed
+  complete, compiled APPROVE at round 10, held after round 11 — rename the ref
+  back and merge on your own verdict, or draw one more round you will accept);
+  the re-attestation brief [ratify/CURRENT.md](ratify/CURRENT.md) carrying the
+  17 amended approved `Rationale` cells and the `hats.toml` `knowledge` drafts
+  the delegated residue lane landed, plus the ten Drafted rows; the deferred `SR-163` verification-owner row
+  to queue or not; the successor of
+  the debt-owner row (queued) whose first commit moves the module-size ratchet
+  pointer. Approval authority is whatever [process.toml](process.toml)
+  `human_approval_through` declares — do not paraphrase it here.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
   and this branch (`push = "human"`). Known residue, kept deliberately: the
