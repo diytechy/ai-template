@@ -395,5 +395,18 @@ ruling with no row to return to, and there is no pause file. When `OI-64` is
 ruled and the four rows are blessed, the close is a bookkeeping act — and it
 needs to re-point nothing.
 
+### DELEGATED FOR THE UNATTENDED RUN (owner, 2026-08-30)
+
+Item 1 is discharged: `OI-64` was ruled (b) and executed on 2026-08-28
+(`docs/log.d/2026-08-28-owner-rulings-oi64-oi65.md`). Item 2 is not the
+owner's act under the declared dial — `docs/process.toml` holds only the
+`DevStg-Needs` rung human-held, so LLR/TC approval proceeds under ordinary
+review: the lane that resumes this row approves the four `Drafted` rows through
+the ordinary adjudication flow (the re-attestation brief is the surface, the
+snapshot diff the record), closes the row as the bookkeeping act above, and
+lists the flip in its fragment for the owner's later review. The owner is away
+and has delegated this in session; the lane's branch ref was re-cut at trunk
+HEAD on 2026-08-30 so the dispatcher resumes it as a parked lane.
+
 Record:
 [../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md](../../../log.d/2026-08-25-wi508-slice5-families-and-debt-routing.md).
