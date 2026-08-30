@@ -619,3 +619,26 @@ carrying the trailer. **For the owner, in the brief:** 17 amended `Rationale` ce
 Approved SR rows and the `hats.toml` drafts — the delegation put the cut at return;
 read `docs/ratify/CURRENT.md` before blessing. Review drawn by hand on the third family
 (OpenAI limited until 18:34 UTC), compiled as before.
+
+## 32. `WI-546` merged at round 4; the run is drained, paused and quiet — the state the owner asked for
+
+Rounds 1–3 (terra) each found a real hole in the delegated residue's own
+verification — a dangling "lenses named above" in `SR-175`'s thinned
+rationale, then the value-pass guard accepting an absolute path, then a
+traversal (`docs/knowledge/../status.md`) — each taken with a test; round 4
+APPROVEd with no findings. Two grok draws before that were aborted: one died
+on a doubled `--dir` (the supervisor's helper plus the fixed template — the
+helper now injects only when the template lacks it), one went silent five
+minutes in and was killed at the 46-minute mark by hand (the second C3
+sample). One supervisor defect on the record too: the first compiled
+`WI-546-REVIEW-A.md` ordered its rounds ALPHABETICALLY by round-file sha, so
+the governing line mid-file read CHANGES-REQUESTED — caught by re-parsing
+before any merge attempt, recompiled in time order (`a4b862e7`). The merge
+ran through `integrate.py integrate` directly because the pause stops the
+dispatcher BEFORE its drain (the pause doctrine says a pause ends "fully
+merged and quiet"; the dispatcher exits 8 first — a small kit finding for
+the C-series). At the merge, intake's amendment arm minted **`WI-547`**
+(adjudicate the 17 amended approved SR `Rationale` cells — the ordinary
+mechanism reading the delegated deletions; it queues behind the pause).
+End state: trunk `fd45628a`, no active claims, the held remap branch aside,
+eight rows queued, the pause armed, no agent process running.
