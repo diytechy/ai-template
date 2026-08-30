@@ -13,7 +13,7 @@ priority = 2
 
 The interface row is ONE OWNER, its FAR SIDE, and a TYPED STATEMENT, and every
 reader and check reads it that way. Record:
-[../../../log.d/2026-08-29-wi528-if-row-shape.md](../../../log.d/2026-08-29-wi528-if-row-shape.md);
+[../../../log.d/2026-08-29-wi528-if-row-shape.md](../../../log.md#2026-08-29--wi-528-the-interface-row-shape-in-code-oi-67-slice-1);
 the shape of record is the plan's §1, whose decisions 8 (the far side names
 the direction — `requestors` | `consumers`, exactly one, the owner's own
 addition mid-slice) and 9 (header-first for parallel work) this slice added.

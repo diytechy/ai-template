@@ -1,6 +1,6 @@
 # OI-67 slice 6 — the cross-family adversarial round (2026-08-29)
 
-The round the WI-533 close owed ([the fragment](../../log.d/2026-08-29-wi533-arm-the-gate.md),
+The round the WI-533 close owed ([the fragment](../../log.md#2026-08-29--wi-533-the-gate-is-armed-oi-67-slice-6),
 "Owed, stated"): the slice-4 adversarial prompt re-targeted at the slice-6
 build — the armed definition gate, the retired cells, the one CSV reader, the
 external rule, the `gen_okf` fix, the slice-4 dispositions — and run by a

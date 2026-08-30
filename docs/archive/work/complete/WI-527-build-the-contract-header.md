@@ -13,7 +13,7 @@ priority = 2
 
 The mechanism `OI-66` ruled: a module states each contract beside the code, and
 a committed, freshness-gated `docs/interface-reference.md` harvests them. Record:
-[../../../log.d/2026-08-29-wi527-contract-header.md](../../../log.d/2026-08-29-wi527-contract-header.md);
+[../../../log.d/2026-08-29-wi527-contract-header.md](../../../log.md#2026-08-29--wi-527-the-component-side-contract-header-built-and-adversarially-reviewed);
 adversarial round in
 [../../../reviews/2026-08-29-oi66-build-round/](../../../reviews/2026-08-29-oi66-build-round/).
 

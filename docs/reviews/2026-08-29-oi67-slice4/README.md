@@ -6,7 +6,7 @@ owner-file batches with a serial fold into the registry — the slice-3 shape
 to the split worklist the slice-3 workers' notes produced. This folder is the
 record: what each worker was told, what it was given, what it reported, and
 the script that folded the reports. Read it from
-[the log fragment](../../log.d/2026-08-29-wi531-if-row-split.md).
+[the log fragment](../../log.md#2026-08-29--wi-531-the-split--one-row-one-direction-one-kind-oi-67-slice-4).
 
 - `slice4-brief.md` — the shared worker brief: what a `new` / `edit` /
   `delete` action means, the body rules for a split row, what a worker may

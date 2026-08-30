@@ -52,7 +52,7 @@ re-verified to parse to exactly what they parsed to before this row on the
 full bar; no existing entry needed an edit. `project-trajectory/RESYNC_PACK.md`
 gained an entry (all three touched modules ship). `tests/test_module_size_ratchet.py`
 re-stamped `check_trajectory.py` 4903 -> 4963 (+60), reason recorded at the
-site. Record: [../../log.d/2026-08-25-wi519-allow-file-parse-honesty.md](../../../log.d/2026-08-25-wi519-allow-file-parse-honesty.md).
+site. Record: [../../log.d/2026-08-25-wi519-allow-file-parse-honesty.md](../../../log.md#2026-08-25--wi-519-the-allow-file-parse-honesty-arm-reaches-the-last-three-declared-exception-readers).
 
 ## Context
 

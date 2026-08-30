@@ -12,7 +12,7 @@ priority = 2
 ## Deliverable
 
 The registry reads one row, one direction, one kind. Record:
-[../../../log.d/2026-08-29-wi531-if-row-split.md](../../../log.d/2026-08-29-wi531-if-row-split.md);
+[../../../log.d/2026-08-29-wi531-if-row-split.md](../../../log.md#2026-08-29--wi-531-the-split--one-row-one-direction-one-kind-oi-67-slice-4);
 the three-worker round whole at
 [../../../reviews/2026-08-29-oi67-slice4/](../../../reviews/2026-08-29-oi67-slice4/README.md).
 

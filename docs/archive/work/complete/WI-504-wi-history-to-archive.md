@@ -58,7 +58,7 @@ the move, then the sweep, matching the ruled order:
 Done-count invariant held: 472 done / 21 cancelled / 507 total, unchanged by
 the move (`check_trajectory.py --strict` exit 0 before and after). Full
 session record, file-by-file reader list and the driven figures:
-[docs/log.d/2026-08-22-wi504-history-relocation.md](../../../log.d/2026-08-22-wi504-history-relocation.md).
+[docs/log.d/2026-08-22-wi504-history-relocation.md](../../../log.md#2026-08-22--wi-504-terminal-wi-history-relocates-to-docsarchivework).
 
 ## Context
 

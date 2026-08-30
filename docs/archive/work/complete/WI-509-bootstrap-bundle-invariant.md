@@ -39,7 +39,7 @@ was considered and declined by the ruling. `RESYNC_PACK.md` gained a §3/§4
 boundary entry recording the change for re-syncing adopters.
 
 Full detail, gate output and byte deltas:
-[../../../log.d/2026-08-23-wi509-kit-path-invariant.md](../../../log.d/2026-08-23-wi509-kit-path-invariant.md).
+[../../../log.d/2026-08-23-wi509-kit-path-invariant.md](../../../log.md#2026-08-23--wi-509-pin-the-kit-path-invariant-and-document-where-the-machinery-lives).
 
 ## Context
 

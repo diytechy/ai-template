@@ -12,7 +12,7 @@ priority = 3
 ## Deliverable
 
 `OI-61`'s ruling executed in full, in the order the ruling states. Record:
-[../../../log.d/2026-08-24-wi512-contract-generalization.md](../../../log.d/2026-08-24-wi512-contract-generalization.md).
+[../../../log.d/2026-08-24-wi512-contract-generalization.md](../../../log.md#2026-08-24--wi-512-the-interface--stops-restating-its-owner-and-two-new-warn-first-rules-read-what-the-old-four-could-not).
 
 **The census, re-measured first.** `WI-455` moved the IF schema between this
 brief's writing and its execution, so nothing was designed against the brief's
@@ -95,7 +95,7 @@ still unreached by anything shipped here.
 Executes `OI-61`'s ruling in full (owner, in session 2026-08-23, verbatim:
 *"OI-61: I agree with the recommendation, let's see where it lands, and I
 approve of the other spine changes surfaced in open-items.html"*). Record:
-[../../../log.d/2026-08-23-oi61-rule-and-spine-approval.md](../../../log.d/2026-08-23-oi61-rule-and-spine-approval.md).
+[../../../log.d/2026-08-23-oi61-rule-and-spine-approval.md](../../../log.md#2026-08-23--oi-61-ruled-the-surfaced-spine-set-approved-and-nineteen-drafts-the-owner-surface-never-showed).
 `buildtier = "strong"` deliberately, not `medium`: the row re-authors 27 cells
 of a SHIPPED registry, adds a cell to its schema, and touches
 `INTERFACES.template.md` / `registries/interfaces.template.toml` / `PROCESS.md`

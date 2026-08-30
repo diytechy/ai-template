@@ -13,7 +13,7 @@ priority = 2
 `trace.reattest_model`'s `owes(sr)` widened past its SR-only test — the
 2026-08-23 sitting's finding, executed under the owner's chosen path
 ("fix the surface first, approve from a corrected brief"). Record:
-[../../../log.d/2026-08-24-owes-widening-and-b-brief.md](../../../log.d/2026-08-24-owes-widening-and-b-brief.md).
+[../../../log.d/2026-08-24-owes-widening-and-b-brief.md](../../../log.md#2026-08-24--wi-513-widens--past-the-sr-only-test-and-oi-62-files-the-b-gono-go).
 
 **The widening** (`project-trajectory/scripts/trace.py`). `owes()` used to
 read `is_drafted(sr) or sr_chain_drifts(...)` — the SR row only, which is
