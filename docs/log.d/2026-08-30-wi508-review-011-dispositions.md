@@ -68,5 +68,4 @@ above were reverted before this commit, and the tree is byte-identical to
 
 **Byte deltas on budgeted files:** none touched.
 
-**pytest totals:** not re-run for a record-only commit; `trace.py
---strict-integrity` on the reverted tree: `integrity=0 approval-record=0`.
+**pytest totals:** smoke tier on this tree **1378 passed, 6 skipped in 24.63 s**; the budget read **28.7 s vs 60 s -> within**; `check_docs --stale`: 0 broken; `trace.py --strict-integrity` on the reverted tree: `integrity=0 approval-record=0`. (Round 012 asked for the commit bar on the record commit; here it is, run alone on the box.)
