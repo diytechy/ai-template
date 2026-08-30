@@ -1010,3 +1010,43 @@ def test_reviewer_prompt_renders_trunk_and_process_doc_slots(managed_repo):
     assert "git diff llm/train/t1...HEAD" in rev_block
     assert "':(exclude)docs/iteration'" in rev_block
     assert "project-trajectory/PROCESS.md" in rev_block
+    # Round 2: the script directory is the same hazard — this fixture has no
+    # scripts/ dir, so the kit's own directory renders; nothing literal.
+    assert "{scripts}" not in rev_block
+    assert "python project-trajectory/scripts/check.py --jobs 0" in rev_block
+
+
+def test_review_owed_resume_keeps_the_relaxed_audit_trail(managed_repo, tmp_path):
+    # Round 2 finding: a REVIEW OWED restart used to reconstruct only the
+    # train range and the queue, so the resumed draw forgot the build's
+    # family and a same-family reviewer wrote an UNMARKED verdict. The marker
+    # now carries the family; on a single-family roster the resumed round is
+    # drawn relaxed and RECORDED as such.
+    repo, ctl, cmd = managed_repo
+    fake = tmp_path / "fake_toggle_single.py"
+    fake.write_text(FAKE_REVIEWER_TOGGLE, encoding="utf-8")
+    cmd2 = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    _write_registry(
+        repo,
+        cmd2,
+        [
+            ("PROVA-BUILD-1", "PROVA", "builda", "medium"),
+            ("PROVA-REV-1", "PROVA", "reva", "medium"),
+        ],
+    )
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "skip_all").write_text("on\n", encoding="utf-8")
+
+    proc = _loop(repo, cmd2, "--stall-limit", "2")
+    assert proc.returncode == 9, proc.stdout + proc.stderr
+    marker = (repo / "out" / "review-owed").read_text(encoding="utf-8")
+    assert "family = PROVA" in marker
+
+    (ctl / "skip_all").unlink()
+    proc2 = _loop(repo, cmd2, "--stall-limit", "2")
+    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
+    relaxed = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*-relaxed.md"))
+    assert relaxed, list((repo / "docs" / "reviews" / "t1").glob("*"))
+    assert "heterogeneity=relaxed" in proc2.stdout

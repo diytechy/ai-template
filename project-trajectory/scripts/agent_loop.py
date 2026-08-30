@@ -578,9 +578,10 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
 
     C7 (docs/plans/2026-08-30-stall-guard-plan.md): the brief's reading scope
     renders per repo — `{trunk}` (the primary checkout's branch, the
-    integration trunk) and `{process_doc}` (docs/process.md where bootstrap
+    integration trunk), `{process_doc}` (docs/process.md where bootstrap
     materialized one; this meta-repo's masters live under project-trajectory/,
-    so a literal would be right downstream and wrong here) are SLOTS. An
+    so a literal would be right downstream and wrong here) and `{scripts}`
+    (the kit scripts' directory, the same hazard) are SLOTS. An
     operator override file may carry the same slots; one without them renders
     unchanged, and a caller without a root (a bare template read) leaves them
     unrendered rather than guessing.
@@ -592,6 +593,7 @@ def reviewer_prompt(prompt_templates, phase, verdict_path, root=None, worker=Non
     if root is not None:
         text = text.replace("{process_doc}", process_doc_path(root))
         text = text.replace("{trunk}", trunk_name(root, worker))
+        text = text.replace("{scripts}", scripts_dir(root))
     return text
 
 
@@ -605,6 +607,18 @@ def process_doc_path(root):
         "docs/process.md"
         if (Path(root) / "docs" / "process.md").is_file()
         else "project-trajectory/PROCESS.md"
+    )
+
+
+def scripts_dir(root):
+    """The directory the review brief names for the kit scripts: `scripts`
+    where the scaffold materialized them (every adopter), else the kit's own
+    `project-trajectory/scripts` (this meta-repo — round 2 found every
+    reviewer here failing the harness read on the scaffold path)."""
+    return (
+        "scripts"
+        if (Path(root) / "scripts" / "check.py").is_file()
+        else "project-trajectory/scripts"
     )
 
 
@@ -3073,15 +3087,37 @@ def write_review_owed(root, worker, st, detail):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             "# review owed (C2) — written by agent_loop; cleared when a round"
-            " completes\ntrain = {}\nbase = {}\ndraw_failures = {}\n"
-            "detail = {}\n".format(
-                worker["train"], worker["base"], st.review_draw_failures, detail
+            " completes\ntrain = {}\nbase = {}\nfamily = {}\n"
+            "draw_failures = {}\ndetail = {}\n".format(
+                worker["train"],
+                worker["base"],
+                st.last_impl_family or "",
+                st.review_draw_failures,
+                detail,
             ),
             encoding="utf-8",
             newline="\n",
         )
     except OSError:
         pass
+
+
+def read_review_owed(root):
+    """The marker's `key = value` lines as a dict ({} when absent/unreadable).
+    The one field a resume MUST restore is `family`: the committed build's
+    family is the C5 heterogeneity key, and a fresh process has no memory of
+    it — without it the first resumed draw would treat the builder's own
+    family as cross-family and write an unmarked verdict (round 2 finding)."""
+    try:
+        text = review_owed_marker(root).read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    fields = {}
+    for line in text.splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            key, _sep, value = line.partition("=")
+            fields[key.strip()] = value.strip()
+    return fields
 
 
 def clear_review_owed(root):
@@ -3857,6 +3893,9 @@ def main():
         and review_owed_marker(root).exists()
     ):
         st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
+        # The build's family rides the marker: it is the C5 heterogeneity
+        # key, and the draw below must exclude — or, relaxed, RECORD — it.
+        st.last_impl_family = read_review_owed(root).get("family") or None
         queued_round = st.schedule_review_round()
         print(
             "resume: out/review-owed present — scheduling review round {} "
