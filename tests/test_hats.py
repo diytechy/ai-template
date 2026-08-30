@@ -901,7 +901,17 @@ def test_live_roster_knowledge_values_resolve_and_the_drafted_packs_say_DRAFT():
     values = [v for hat in live for v in hat.get("knowledge", ())]
     assert values, "the value-pass populated at least one knowledge cell"
     for value in values:
-        assert (ROOT / value).is_file(), "knowledge value does not resolve: " + value
+        # Repo-relative pack paths ONLY: an absolute value, a traversal, or a
+        # path outside docs/knowledge/ must fail even if the file exists
+        # (round 2: `C:\Windows\System32\cmd.exe` passed the bare is_file()).
+        assert value.startswith("docs/knowledge/") and value.endswith(".md"), (
+            "knowledge value is not a docs/knowledge/*.md pack path: " + value
+        )
+        target = (ROOT / value).resolve()
+        assert ROOT.resolve() in target.parents, (
+            "knowledge value escapes the repo: " + value
+        )
+        assert target.is_file(), "knowledge value does not resolve: " + value
     drafted = (
         "crash-atomicity-recovery",
         "cross-platform-scripting",
