@@ -6,7 +6,7 @@
 # phase: ADJUDICATE
 # wi: WI-544
 # model: opus
-# guardrails: 
+# guardrails:
 # outcome: COMMITTED
 # commits: a6a6748a..451e198a
 # tokens: 5331+12213
