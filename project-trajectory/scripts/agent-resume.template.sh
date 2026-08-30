@@ -54,6 +54,12 @@ AGENT_CMD_INTERACTIVE=""
 # forever — the walk-away guarantee. Blank to disable (engine default 0 = no
 # timeout). Keep agent-resume.cmd in sync.
 AGENT_SESSION_TIMEOUT="${AGENT_SESSION_TIMEOUT:-7200}"
+# Per-session IDLE bound (seconds): a child that stops emitting output is
+# killed this long after its last line, instead of being discovered at the
+# wall deadline above (C3, the stall-guard plan). Blank the slot to fall
+# through to the engine default (900); 0 disables the idle kill entirely.
+# Keep the twin launcher in sync.
+AGENT_SESSION_IDLE_TIMEOUT="${AGENT_SESSION_IDLE_TIMEOUT:-900}"
 # ------------------------------------------------------------------------------
 
 cd "$(dirname "$0")" || exit 1
@@ -105,5 +111,8 @@ if [ -z "$PY" ]; then
 fi
 if [ -n "$AGENT_SESSION_TIMEOUT" ]; then
   set -- --session-timeout "$AGENT_SESSION_TIMEOUT" "$@"
+fi
+if [ -n "$AGENT_SESSION_IDLE_TIMEOUT" ]; then
+  set -- --session-idle-timeout "$AGENT_SESSION_IDLE_TIMEOUT" "$@"
 fi
 exec "$PY" scripts/agent_loop.py "$@"

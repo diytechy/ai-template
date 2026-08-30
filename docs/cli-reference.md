@@ -55,6 +55,7 @@ Contracts (interfaces): IF-015
 | `--tier-map` | per-phase tier map "BUILD=medium,PLAN=strong" (strong\|medium\|quick; legacy `weak` reads as quick) used by the docs/agents.toml router when the enable-list is present; falls back to the built-in phase->tier defaults (default: AGENT_TIER_MAP env var) |
 | `--prefer-map` | per-phase within-tier preference map "BUILD=OPENAI-SOL"; the preferred id is tried before docs/agents-enabled order without changing tier, and unknown/cooling ids fall through (default: AGENT_PREFER_MAP env var) |
 | `--session-timeout` | per-session timeout in seconds so a hung session can't wedge the loop (0 = none) |
+| `--session-idle-timeout` | kill a session this many seconds after its LAST output line (C3, the stall-guard plan; default: the AGENT_SESSION_IDLE_TIMEOUT env slot, else 900; 0 disables) — --session-timeout stays the outer wall bound |
 | `--pause` | seconds between sessions (default 10) |
 | `--no-session-echo` | silence the live echo of session output on the coordinator console (WI-125; the full stream is still captured to the session log and out/run-logs either way) |
 | `--live-status` | upgrade the scrolling session echo to one in-place status line per workstream (WI-136) — only when stdout is a TTY (a pipe / CI log keeps the append-only scroll); also enabled by docs/process.toml [checks] live_status = true. Overridden by --no-session-echo. |

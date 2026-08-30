@@ -272,3 +272,60 @@ def test_kill_tree_targets_the_whole_process_tree(monkeypatch):
         )
         ases._kill_tree(fake)
         assert calls == [(999, ases.signal.SIGKILL)]
+
+
+SLEEPY_AFTER_ONE_LINE = [
+    sys.executable,
+    "-c",
+    "import sys, time; print('hello'); sys.stdout.flush(); time.sleep(60)",
+]
+
+
+def test_run_session_idle_deadline_kills_a_silent_child(tmp_path):
+    # C3 (docs/plans/2026-08-30-stall-guard-plan.md): a child that stops
+    # emitting is killed at the IDLE deadline, not discovered at the wall —
+    # two silent hangs on 2026-08-30 each burned a 7200 s wall slot.
+    import time as _time
+
+    t0 = _time.time()
+    code, output, timed_out = al.run_session(
+        SLEEPY_AFTER_ONE_LINE, tmp_path, 55, idle_timeout=2
+    )
+    wall = _time.time() - t0
+    assert timed_out == "idle"
+    assert code == -1
+    assert "idle-timed out" in output and "hello" in output
+    assert wall < 40, "killed at the idle deadline, not the wall ({}s)".format(wall)
+
+
+def test_run_session_wall_timeout_keeps_its_historical_shape(tmp_path):
+    # The wall kill still reports timed_out is True (the historical value) so
+    # every existing truthiness read holds; only the idle kill says "idle".
+    code, output, timed_out = al.run_session(
+        SLEEPY_AFTER_ONE_LINE, tmp_path, 2, idle_timeout=None
+    )
+    assert timed_out is True
+    assert code == -1
+    assert "timed out after 2s" in output
+
+
+def test_a_raising_renderer_never_stops_the_pump(tmp_path):
+    # C3 hardening (2026-08-30, WI-548): an `on_line` renderer that raises —
+    # a cp1252 console meeting a non-encodable character was the live case —
+    # used to kill the pump thread; the child then blocked on a full pipe and
+    # the session read as a silent hang until a deadline fired. The pump must
+    # outlive its renderer: the session completes, the output is captured.
+    chatty = [
+        sys.executable,
+        "-c",
+        "import sys\nfor i in range(20000): print('line', i)",
+    ]
+
+    def boom(line):
+        raise UnicodeEncodeError("cp1252", line, 0, 1, "renderer failed")
+
+    code, output, timed_out = al.run_session(
+        chatty, tmp_path, 60, on_line=boom, idle_timeout=20
+    )
+    assert code == 0 and not timed_out, output[-300:]
+    assert output.count("line") == 20000

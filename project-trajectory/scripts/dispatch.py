@@ -526,6 +526,19 @@ def _lane_close(root, branch, code):
             "rather than handing back over the top of it.".format(branch, code)
         )
         return None
+    if code == ac.EXIT_REVIEW_OWED:
+        # C2 (docs/plans/2026-08-30-stall-guard-plan.md): the build is
+        # committed and no reviewer could be drawn. Deliberately parked, not
+        # decided — the next cycle resumes the lane, whose worker schedules
+        # the owed round first (the out/review-owed marker). A reviewer
+        # outage never hands finished work back (owner direction 2026-08-30).
+        _say(
+            "worker on {} exited REVIEW OWED (exit {}) - the build is "
+            "committed and no reviewer could be drawn; the lane stays parked "
+            "with its work and the next cycle resumes it to draw the "
+            "round.".format(branch, code)
+        )
+        return None
     if code not in _WORKER_OUTCOMES:
         _say(
             "worker on {} CRASHED (exit {}) - the claim stays in active/{}/ "

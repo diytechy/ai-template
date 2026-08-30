@@ -137,6 +137,16 @@ EXIT_NEEDS_HUMAN = 7
 EXIT_PAUSED = 8
 
 
+# REVIEW OWED (C2, docs/plans/2026-08-30-stall-guard-plan.md): the build is
+# committed but a review verdict could not be drawn — every route on the
+# reviewer ladder errored, hung or was cooled. Deliberately NOT a decided
+# worker outcome (dispatch._WORKER_OUTCOMES): the lane parks with its work,
+# like a crash, and the next cycle resumes it to draw the round — finished
+# work is never handed back over a reviewer outage (owner direction
+# 2026-08-30). Appended at the END of the exit alphabet; 10 stays retired.
+EXIT_REVIEW_OWED = 9
+
+
 # (EXIT_TRAIN_END = 10 retired with session grouping — WI-383, §A6.1: it ended a
 # PACKED assignment early when the §7 continuation re-check refused the next
 # constituent, and nothing packs. The number stays retired rather than reused —
@@ -2219,6 +2229,14 @@ def write_session_log(iter_dir, meta, transcript):
         # not authenticate, and a full digest per row would dominate the header.
         "prompt-template",
         "prompt-sha",
+        # Which deadline ended a TIMEOUT session — "wall" or "idle" (C3), ""
+        # for every session that finished on its own. The label makes the two
+        # kill classes distinguishable in telemetry without a transcript read.
+        "timeout",
+        # "relaxed" when a review verdict was drawn same-family under the C5
+        # fallback rung (heterogeneity relaxed, recorded, never silent); ""
+        # for every other session.
+        "heterogeneity",
         "exit-code",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())

@@ -85,6 +85,8 @@ def worker_argv(root, wt, branch, wi_ids, args):
         argv += ["--agent-cmd", args.agent_cmd]
     if args.session_timeout:
         argv += ["--session-timeout", str(args.session_timeout)]
+    if args.session_idle_timeout is not None:
+        argv += ["--session-idle-timeout", str(args.session_idle_timeout)]
     if args.no_session_echo:
         argv += ["--no-session-echo"]
     if args.live_status:

@@ -99,7 +99,6 @@ BASELINE = {
     # validation both carriers share. Re-stamped DOWNWARD, which is the
     # direction this ratchet exists to hold.
     ("agent_route.py", "load_registry"): 14,
-    ("agent_session.py", "run_session"): 14,
     # WI-280 slice 10 (subsuming the retired WI-082): `main` (41 — the largest
     # single function in the kit, and the one an adopter's FIRST command runs)
     # is DECOMPOSED into named phases — build_parser / resolve_profile /

@@ -2352,6 +2352,64 @@ locally forked worker brief must reapply this clause by hand) and the
 regenerated `prompts/CATALOG.md` (`gen_prompt_catalog.py`, `--check` fails
 until you do).
 
+### `check_docs.py` blanks HTML comments before the inline-code strip [since 59f52549]
+
+A lone backtick inside an HTML comment used to open an inline-code span that
+swallowed headings for thousands of lines — 226 of one compiled log's 555
+headings vanished from the anchor set, and every `#anchor` link into the range
+read as broken. Comments are now blanked to a single space before the
+inline-code strip (a comment QUOTED inside inline code keeps its backticks).
+**Take:** the updated `scripts/check_docs.py` on re-sync; nothing else moves.
+The change only widens what resolves — a repo that was green stays green.
+
+### An opencode registry row needs `--dir .` [since 59ab2951]
+
+An ADOPTER-SIDE check, not a file to take: the kit's own
+`agents.template.toml` ships no opencode row, but if your `docs/agents.toml`
+carries one, `opencode run` resolves its project root by walking UP from the
+cwd — from a lane worktree it lands on the MAIN repo and the session reads
+the wrong tree (a reviewer drawn on a lane reviewed trunk, live, 2026-08-30).
+Add `--dir .` to the row's `cmd_template` (`opencode run --dir . -m {model}
+--auto`); the session engine runs every child with `cwd=<worktree>`, so `.`
+is always the lane.
+
+### The stall-guard change set: exit 9, the idle deadline, the probe, the relaxed rung, the close rituals, the brief slots [since 959c5996]
+
+A reviewer outage no longer closes finished work `partial` (the 2026-08-30
+incident class). Six contract-visible pieces ship together; the scripts and
+prompts are kit-owned copies, so a plain re-sync takes them — what needs YOUR
+attention:
+
+1. **Exit code 9 (`EXIT_REVIEW_OWED`)** joins the loop's alphabet (appended at
+   the end; 10 stays retired). A wrapper of yours that switches on worker exit
+   codes must treat 9 as *parked, resumable* — like a crash, never a decided
+   outcome.
+2. **The launchers gain `AGENT_SESSION_IDLE_TIMEOUT`** (default 900 s; blank =
+   engine default, 0 disables) beside `AGENT_SESSION_TIMEOUT`, passed as
+   `--session-idle-timeout`. The launchers are near-verbatim copies — re-take
+   them, or add the slot + flag to your edited copy by hand (structural parity
+   is what `test_dogfood_sync` pins in the kit repo). An unedited launcher
+   still gets the engine default: silent hangs are killed ~15 min after their
+   last output line instead of at the wall.
+3. **The reviewer brief carries three slots now** — `{verdict}`, `{trunk}`,
+   `{process_doc}` — rendered by the loop. A `--prompt-map` override file of
+   yours keeps working (missing slots render unchanged), but consider adopting
+   the new reading-scope text: three-dot diff against the current trunk with
+   telemetry/generated exclusions, summary-only harness reads.
+4. **The worker and adjudicate-disposition briefs state the close ritual**
+   (Deliverable before Context, specref cleared, `spec_move.py`, the `WI:`
+   trailer; the adjudicator closes its OWN row). Without it, a mechanized lane
+   parks its finished spec in `active/` forever.
+5. **`integrate` unload sheds the loop's own `out/run-logs/` streams and the
+   `out/review-owed` marker** as declared residue (their clipped copies are
+   tracked under `docs/iteration/`). If you relied on the unload refusing over
+   a session stream, that refusal is gone — anything else in the worktree
+   still refuses by name.
+6. The same-family review fallback is legal AND recorded (`-relaxed` verdict
+   filename, `heterogeneity: relaxed` telemetry); a single-family roster was
+   always same-family — now it says so. The 30 s liveness probe runs only on
+   routes that already failed this run.
+
 ## 4. Translation helper — concept renames
 
 A rename reads to a diff as an unrelated deletion plus an unrelated addition, which

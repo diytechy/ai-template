@@ -63,6 +63,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 
@@ -385,7 +386,66 @@ def _codex_lastmsg_read(path):
     return text
 
 
-def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
+def _pump_stdout(proc, lines, last_line, on_line):
+    """The reader thread's body: pump every stdout line into `lines`, stamp
+    `last_line[0]` (the idle deadline's clock, C3), and hand the line to the
+    optional renderer. A module-level function, not a closure — the C901 trap
+    charges a nested def to its enclosing function. The renderer is a
+    convenience; the pump is load-bearing: a renderer that raises (a cp1252
+    console meeting a `→`, measured 2026-08-30) must not stop the pump, or an
+    unpumped pipe fills, the child blocks on its next write, and the session
+    reads as a silent hang until a deadline fires."""
+    for line in proc.stdout:
+        lines.append(line)
+        last_line[0] = time.time()
+        if on_line is not None:
+            try:
+                on_line(line)
+            except Exception:
+                pass
+    proc.stdout.close()
+
+
+def _wait_for_exit(proc, timeout, idle_timeout, last_line):
+    """Wait out ONE session under its two deadlines (C3, the stall-guard
+    plan): `timeout` bounds the WALL, `idle_timeout` bounds SILENCE against
+    `last_line` (the reader thread's stamp of the child's most recent output).
+    Returns `(killed_message, killed_kind)` — `("", False)` for a child that
+    exited on its own, kind `True` for the wall (the historical timed_out
+    value, so every truthiness read holds) and `"idle"` for the idle kill.
+    Polls in one-second slices only when a deadline exists; with neither it
+    blocks exactly as the pre-C3 wait did. A KeyboardInterrupt kills the whole
+    tree and re-raises — an interrupted coordinator must not leave a live
+    agent editing the worktree (start_new_session detaches the child from the
+    terminal group, so Ctrl+C no longer reaches it implicitly)."""
+    wall_deadline = (time.time() + timeout) if timeout else None
+    try:
+        while True:
+            try:
+                slice_ = 1.0 if (wall_deadline is not None or idle_timeout) else None
+                proc.wait(timeout=slice_)
+                return "", False
+            except subprocess.TimeoutExpired:
+                now = time.time()
+                if wall_deadline is not None and now >= wall_deadline:
+                    return "session timed out after {}s".format(timeout), True
+                if idle_timeout and now - last_line[0] >= idle_timeout:
+                    return (
+                        "session idle-timed out after {}s of silence "
+                        "(idle-timeout {}s, wall {}s)".format(
+                            int(now - last_line[0]), idle_timeout, timeout
+                        ),
+                        "idle",
+                    )
+    except (KeyboardInterrupt, SystemExit):
+        _kill_tree(proc)
+        proc.wait()
+        raise
+
+
+def run_session(
+    argv, root, timeout, env=None, on_line=None, stdin_input=None, idle_timeout=None
+):
     """One fresh headless driver session. Returns (exit_code, output,
     timed_out). stdin is closed so a CLI that would wait on it can't hang —
     UNLESS `stdin_input` is given, in which case that fixed text is written to the
@@ -444,15 +504,16 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
     # buffer while the main thread waits — the same shape subprocess.run uses
     # internally, opened up so each line can be echoed as it arrives.
     lines = []
+    # The idle deadline's clock (C3, docs/plans/2026-08-30-stall-guard-plan.md):
+    # the reader thread stamps the last time the child SAID anything, so the
+    # waiter below can kill a session that has gone silent without waiting for
+    # the wall deadline. A one-element list, not a bare float — the pump thread
+    # rebinding a closure-captured float would be invisible to the waiter.
+    last_line = [time.time()]
 
-    def _pump():
-        for line in proc.stdout:
-            lines.append(line)
-            if on_line is not None:
-                on_line(line)
-        proc.stdout.close()
-
-    pump = threading.Thread(target=_pump, daemon=True)
+    pump = threading.Thread(
+        target=_pump_stdout, args=(proc, lines, last_line, on_line), daemon=True
+    )
     pump.start()
 
     # Deliver the prompt on stdin from a DAEMON thread, then close so the child
@@ -474,9 +535,14 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
 
     if stdin_input is not None:
         threading.Thread(target=_feed, daemon=True).start()
-    try:
-        proc.wait(timeout=timeout or None)
-    except subprocess.TimeoutExpired:
+    # TWO deadlines (C3, docs/plans/2026-08-30-stall-guard-plan.md): `timeout`
+    # bounds the WALL, `idle_timeout` bounds SILENCE. A child that stops
+    # emitting used to be discovered only at the wall — two silent hangs on
+    # 2026-08-30 each went quiet minutes in and burned a 7200 s wall slot. The
+    # waiter polls in one-second slices only when a deadline exists; with
+    # neither, it blocks exactly as before.
+    killed, killed_kind = _wait_for_exit(proc, timeout, idle_timeout, last_line)
+    if killed:
         _kill_tree(proc)
         proc.wait()
         pump.join(5)
@@ -485,17 +551,9 @@ def run_session(argv, root, timeout, env=None, on_line=None, stdin_input=None):
         )  # cleanup; a timed-out session has no usable result
         return (
             -1,
-            "".join(lines)
-            + "\ncoordinator: session timed out after {}s".format(timeout),
-            True,
+            "".join(lines) + "\ncoordinator: " + killed,
+            killed_kind,
         )
-    except (KeyboardInterrupt, SystemExit):
-        # An interrupted coordinator must not leave a live agent tree editing
-        # the worktree (start_new_session detaches the child from the terminal
-        # group, so Ctrl+C no longer reaches it implicitly — kill explicitly).
-        _kill_tree(proc)
-        proc.wait()
-        raise
     pump.join(5)
     output = "".join(lines)
     last = _codex_lastmsg_read(codex_lastmsg)

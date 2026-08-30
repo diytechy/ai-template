@@ -1020,3 +1020,25 @@ def test_plain_agent_loop_launch_enters_the_drive_mode(tmp_path, monkeypatch):
     assert proc.returncode == 0, out
     assert "queue drained" in out
     assert "no role given" not in out
+
+
+def test_a_review_owed_worker_stays_parked_and_the_next_cycle_resumes_it(
+    tmp_path, capfd
+):
+    # C2 (docs/plans/2026-08-30-stall-guard-plan.md): exit 9 is NOT a decided
+    # outcome — the lane parks with its committed work (no handback report,
+    # spec still in active/) and the next cycle resumes it; the dispatcher's
+    # own trunk-unmoved stall guard still bounds a lane that never lands its
+    # round, WITHOUT closing it partial.
+    root = parked_repo(tmp_path)
+    worker = Recorder(outcomes=(drv.ac.EXIT_REVIEW_OWED, drv.ac.EXIT_REVIEW_OWED))
+
+    rc = drv.run(root, drive_args(stall_limit=2), worker=worker)
+    assert rc == 4
+    captured = capfd.readouterr()
+    assert "REVIEW OWED" in captured.out
+    assert "STALL" in captured.err
+    assert len(worker.calls) == 2
+    assert (root / "docs" / "work" / "active" / "wi-401" / "WI-401-widget.md").is_file()
+    assert not (root / "docs" / "handbacks").exists()
+    assert "wi-401" in _git(root, "branch", "--format=%(refname:short)")
