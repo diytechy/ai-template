@@ -1,0 +1,31 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 005
+# date: 2026-08-30 03:30
+# train: wi508-architectural-remap
+# base: 7e2d3f82
+# phase: REVIEW-A
+# wi: WI-508
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: COMMITTED
+# commits: 66cb536b..f4dcd8c8
+# tokens: 
+# cost-usd: 
+# wall-secs: 458
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2794
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:dc202353e7a4
+# exit-code: 0
+# ---
+Recorded and committed `CHANGES-REQUESTED` with 2 findings.
+
+[Verdict](C:\Projects\ai-template-drive\wi508-architectural-remap\docs\reviews\wi508-architectural-remap\005-REVIEW-A-82fb76a.md) · commit `f4dcd8c8`
+
+Evidence: shipped harness `RESULT: PASS`; cited-path tests `7 passed`; smoke `1354 passed, 30 skipped`. The docs-check broken anchor was confirmed pre-existing.
