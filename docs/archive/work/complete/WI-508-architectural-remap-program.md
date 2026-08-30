@@ -17,13 +17,18 @@ requirements alone, diffed against the live map, and every divergence adjudicate
 — consolidations filed as their own rows rather than merged in place. Six slices,
 2026-08-25 → 2026-08-30.
 
-- **`SR-163` decomposed (slice 1).** Four rows minted and now `Approved`:
-  `LLR-203`/`TC-199` (the shipped-file inventory `bootstrap.py::MAPPING` and its
-  declared exclusions) and `LLR-204`/`TC-200` (the purpose-reference grammar
+- **`SR-163` decomposed (slice 1).** Four rows minted: `LLR-203`/`TC-199` (the
+  shipped-file inventory `bootstrap.py::MAPPING` and its declared exclusions) and
+  `LLR-204`/`TC-200` (the purpose-reference grammar
   `gen_arch_map.py::backlink_ids`/`scan_backlinks`/`read_backlink_min` and its
   warn-to-gate dial). Each LLR names a delivered, tested mechanism and states its
   undischarged half on-row (the file→requirement join, and the direction/universe
-  gaps). `SR-163` left the orphan list.
+  gaps). The two **LLRs are `Approved`**; the two **TCs are `Drafted`** — slice 6
+  blessed all four, but REVIEW-A found the TCs over-claimed `SR-163` (they verify
+  only their LLRs' delivered arms, not the parent's full join and universe), so
+  the rework reverted `TC-199`/`TC-200` to `Drafted`. `SR-163`'s requirement is
+  approved; its verification stays honestly owed and is carried by the filed
+  consolidation WIs. `SR-163` left the orphan list.
 - **The blind derivation ran on two axes (slice 2).** Brief written and recorded
   before either agent ran; two agents (A worked backward from boundary outputs, B
   clustered obligations by shared signal) each partitioned all 75 SRs from a
@@ -43,11 +48,17 @@ requirements alone, diffed against the live map, and every divergence adjudicate
   re-points nothing.
 - **`OI-64` raised and discharged.** The zero-SR module both teams derived was
   routed to the owner as a requirement gap; ruled (b) and executed 2026-08-28.
-- **Closed (slice 6, delegated unattended run).** The four `Drafted` slice-1 rows
-  were adjudicated off the re-attestation surface (the 7 cited node ids ran, 7
-  passed) and blessed `Drafted → Approved` under the loop-held dial; the row moved
-  to `docs/archive/work/complete/`. The census instrument's structural-duplication
-  blind spot and the test-tree sensor gap are recorded, deliberately not filed.
+- **Closed (slice 6, delegated unattended run), then reworked on REVIEW-A.**
+  Slice 6 adjudicated the four `Drafted` slice-1 rows off the re-attestation
+  surface (the 7 cited node ids ran, 7 passed) and blessed all four
+  `Drafted → Approved` under the loop-held dial; the row moved to
+  `docs/archive/work/complete/`. REVIEW-A (`003`) then returned CHANGES-REQUESTED:
+  approving `TC-199`/`TC-200` as `SR-163` evidence falsely marked the full mapping
+  obligation verified. The rework reverted the two TCs to `Drafted` (live and
+  snapshot) and fixed a dead `OI-64` link — see
+  `docs/log.d/2026-08-30-wi508-rework-review-a-changes-requested.md`. The census
+  instrument's structural-duplication blind spot and the test-tree sensor gap are
+  recorded, deliberately not filed.
 
 ## Context
 
