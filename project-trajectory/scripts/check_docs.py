@@ -141,6 +141,14 @@ SPEC_FENCE = "+++"
 # when the span's own text contains backticks — a single-backtick regex mis-splits
 # it and leaks `[](y)` as a phantom broken link (WI-174).
 INLINE_CODE_RE = re.compile(r"(?<!`)(`+)(?:(?!\1).)*?\1(?!`)", re.DOTALL)
+# An HTML comment renders nothing, so nothing inside it is a link, a heading
+# or an inline-code delimiter. Blanked BEFORE the inline-code strip (newlines
+# kept so line numbers hold): a lone backtick inside a `<!-- fig: cmd="grep
+# '^### `x'" -->` marker otherwise opens an inline-code span the regex closes
+# at the next backtick thousands of lines on, hiding every heading in between
+# from the anchor set — the compiled docs/log.md carried two such markers and
+# the checker silently saw 226 fewer headings than the file has.
+HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 # ATX heading: 1-6 leading #, optional trailing #s.
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 # Inline link: optional leading ! (image), [text](dest "optional title").
@@ -262,8 +270,14 @@ def parse_doc(path):
     # Strip spans over the whole document because CommonMark permits inline code
     # to cross a line boundary. Preserve its newlines so finding line numbers do
     # not shift when a multiline span precedes a real link.
+    # A single space stands in for the comment: a comment QUOTED inside inline
+    # code (`<!-- BEGIN GENERATED STATUS -->`) must not collapse its backticks
+    # into an adjacent pair, which would read as a double-backtick opener.
+    uncommented = HTML_COMMENT_RE.sub(
+        lambda match: " " + "\n" * match.group(0).count("\n"), unfenced
+    )
     cleaned_text = INLINE_CODE_RE.sub(
-        lambda match: "\n" * match.group(0).count("\n"), unfenced
+        lambda match: "\n" * match.group(0).count("\n"), uncommented
     )
     for i, line in enumerate(cleaned_text.splitlines(), 1):
         for m in HTML_ANCHOR_RE.finditer(line):

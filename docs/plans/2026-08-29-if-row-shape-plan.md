@@ -2,7 +2,7 @@
 
 **Status: plan of record.** `OI-67` was ruled (a) by the owner on 2026-08-29
 (record:
-[../log.d/2026-08-29-oi67-ruled-a.md](../log.d/2026-08-29-oi67-ruled-a.md)).
+[../log.d/2026-08-29-oi67-ruled-a.md](../log.md#2026-08-29--the-owner-rules-oi-67-a-one-row-one-direction-one-kind--the-cells-go)).
 This document turns the ruling into six sequenced slices, states the
 decisions the ruling left to the driver with the alternative each one beat,
 and is the `specref` every slice's row points at. The rows are filed under
@@ -37,14 +37,14 @@ rule this section left owed: our reading of an `external:`-owned surface lives
 in the header of the kit module that faces it, a row with no in-tree endpoint
 at all being refused). The slice-6 cross-family adversarial round ran — eleven
 findings, nine folded at the root (record
-[../log.d/2026-08-29-oi67-slice6-round.md](../log.d/2026-08-29-oi67-slice6-round.md),
+[../log.d/2026-08-29-oi67-slice6-round.md](../log.md#2026-08-29--review-the-oi-67-slice-6-cross-family-round--eleven-findings-nine-folded-at-the-root),
 dispositions
 [../reviews/2026-08-29-oi67-slice6/README.md](../reviews/2026-08-29-oi67-slice6/README.md)).
 The arms the split surfaced landed as **WI-534** (nine rows `IF-165`–`IF-173`,
 154 → 163; the reference at 74 / 163 / 163 — record
-[../log.d/2026-08-29-wi534-if-arms.md](../log.d/2026-08-29-wi534-if-arms.md)).
+[../log.d/2026-08-29-wi534-if-arms.md](../log.md#2026-08-29--wi-534-the-arms-the-split-surfaced--nine-rows-minted-and-stated-oi-67-follow-on)).
 The four decisions flagged for the owner (4.1, 6.2, 6.7, 6.8) were accepted
-([../log.d/2026-08-29-owner-rulings-oi67-decisions.md](../log.d/2026-08-29-owner-rulings-oi67-decisions.md)).
+([../log.d/2026-08-29-owner-rulings-oi67-decisions.md](../log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code)).
 Nothing remains on this plan; what stands after it is on `docs/status.md`.
 
 ## 1. The row, after

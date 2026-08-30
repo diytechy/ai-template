@@ -16,7 +16,7 @@ the owner's record.
 
 ### 4.1 The harness's argv into each checker is NOT a row — recorded as a class
 
-**RULED 2026-08-29: accepted** — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md).
+**RULED 2026-08-29: accepted** — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code).
 
 **Decided:** `check.py`'s step table invokes some twenty checkers and
 generators with flags; that argv arm gets no `cli` row per checker. The
@@ -140,7 +140,7 @@ code; the header moves with the code that honours the reading.
 
 ### 6.2 The strict arm is the ruled rule — declared-not-stated; an undeclared owner stays a warn
 
-**RULED 2026-08-29: accepted as built** (the reading corrected on record: the whole absence warns, a declared-not-stated row errors) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md).
+**RULED 2026-08-29: accepted as built** (the reading corrected on record: the whole absence warns, a declared-not-stated row errors) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code).
 
 **Decided:** `contract_body_findings` fails (under `--strict`) a row its
 owner DECLARES but does not state, an external-owned row no far side states,
@@ -197,7 +197,7 @@ bar plus the full suite.
 
 ### 6.7 The definition gate rides the severity ladder — where "armed" bites
 
-**RULED 2026-08-29: accepted** (not a consequence of 6.2 — which shapes vs when they error) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md).
+**RULED 2026-08-29: accepted** (not a consequence of 6.2 — which shapes vs when they error) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code).
 
 **Decided:** `contract_body_findings` is WARN on the pre-commit floor and
 ERROR only where `check.py` promotes `check_trajectory` to `--strict` — at or
@@ -219,7 +219,7 @@ the floor until the Impl rung. **Reversal cost:** one condition in `check.py`.
 
 ### 6.8 A row with no in-tree endpoint is a strict finding
 
-**RULED 2026-08-29: accepted**; the hash/tag-on-the-row idea declined (git's own record plus the `version` cell) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md).
+**RULED 2026-08-29: accepted**; the hash/tag-on-the-row idea declined (git's own record plus the `version` cell) — [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.md#2026-08-29--the-owner-accepts-decisions-41-62-67-and-68-of-the-oi-67-slices--recorded-nothing-changes-in-code).
 
 **Decided:** `trace.interface_findings` fails an `external:`-owned row whose
 far side names no kit module — it has no home for a definition and is not a

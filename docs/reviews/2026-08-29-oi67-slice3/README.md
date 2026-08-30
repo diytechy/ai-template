@@ -4,7 +4,7 @@ The per-row authoring of WI-530, run as four parallel Opus workers over
 disjoint owner-file batches with a serial fold into the registry. This folder
 is the record: what each worker was told, what it was given, what it reported,
 and the script that folded the reports. Read it from
-[the log fragment](../../log.d/2026-08-29-wi530-cell-pass.md).
+[the log fragment](../../log.md#2026-08-29--wi-530-the-cell-pass-on-the-new-shape-oi-67-slice-3).
 
 - `slice3-brief.md` — the shared worker brief: the row shape, the header
   grammar, what a body must state, what a worker may and may not touch, the

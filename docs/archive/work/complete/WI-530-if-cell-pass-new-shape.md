@@ -12,7 +12,7 @@ priority = 2
 ## Deliverable
 
 Every interface definition lives beside the code. Record:
-[../../../log.d/2026-08-29-wi530-cell-pass.md](../../../log.d/2026-08-29-wi530-cell-pass.md);
+[../../../log.d/2026-08-29-wi530-cell-pass.md](../../../log.md#2026-08-29--wi-530-the-cell-pass-on-the-new-shape-oi-67-slice-3);
 the four-worker round whole at
 [../../../reviews/2026-08-29-oi67-slice3/](../../../reviews/2026-08-29-oi67-slice3/README.md).
 
