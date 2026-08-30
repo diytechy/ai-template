@@ -1,7 +1,7 @@
 +++
 id = "WI-537"
 title = "check_complexity.py: a stdlib cognitive-complexity and SLOC census with a TSV baseline, report-only (OI-68 phase 1)"
-specref = "docs/plans/2026-08-29-complexity-sensor-plan.md#phase-1--the-sensor-report-only"
+specref = ""
 workstream = "process"
 sr_refs = ["SR-183"]
 needs = []
@@ -9,6 +9,43 @@ buildtier = "strong"
 safety_class = "spine"
 priority = 2
 +++
+
+## Deliverable
+
+Phase 1 of the OI-68 complexity-sensor program, **report-only**: the sensor
+shipped, tested, and seeded — nothing in this repo wires it as a gate (arming
+and the line-ratchet re-base are phase 2, `WI-538`; shipping downstream is
+phase 3, `WI-539`).
+
+- `project-trajectory/scripts/check_complexity.py` — a stdlib-`ast` census of
+  every function in the declared source surface: SonarSource cognitive
+  complexity and SLOC per function, plus a reported-never-gated per-module
+  public-symbol count. Modes `--report`, `--restamp`, `--mode warn` (default),
+  `--mode enforce`. The census descends every statement container (a def under
+  `for`/`while`/`match` is censused; a nested def scores into its enclosing
+  function). The threshold boundary is strictly OVER (`>`) on all three tiers.
+- `docs/complexity-baseline` — TSV, one row per over-threshold function, seeded
+  from THIS script's first run on this repo: **179 functions over cognitive 15**
+  across `project-trajectory/scripts/**/*.py`. A debt statement, not an
+  approval, as its header says.
+- `tests/test_check_complexity.py` (44 in-process cases, the commit-bar smoke
+  tier: the elif and operator-run traps, the nested-def battery, the Sonar
+  oracle battery, the control-flow descent, the exclusive boundary) and
+  `tests/test_check_complexity_cli.py` (8 subprocess drives, re-tiered into
+  `conftest.SLOW_MODULES`). `[smoke-budget] max-tests` re-stamped 1390 → 1440
+  for the in-process growth, the seconds budget untouched.
+- Spine rows minted `Drafted`: `SR-183`, `LLR-206`, `TC-202` (Smoke), `TC-203`
+  (Full); watermark raised through `trace.py --bump-ids`. No `IF-` row.
+- Review: three cross-family rounds (two CHANGES-REQUESTED, reworked on the lane
+  — the control-flow descent, the boundary wording, the LLR's census/selection
+  split — and an APPROVE at `a16af888`); one MINOR carried to the owner: a
+  missing baseline is compared as empty under `warn`/`enforce`. Record:
+  the lane fragment and `docs/reviews/WI-537-REVIEW-A.md`.
+
+The terminal move of this row is the supervising session's act under the
+delegated unattended run: the worker brief the loop ships carries no closing
+step, so the lane exited DONE with its spec still in `active/` (decision 29 of
+`docs/decisions-for-review-2026-08-31.md`).
 
 ## Context
 

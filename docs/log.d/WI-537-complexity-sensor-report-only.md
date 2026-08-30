@@ -1,4 +1,6 @@
-# WI-537 — check_complexity.py: a stdlib cognitive-complexity + SLOC census, report-only (OI-68 phase 1)
+## 2026-08-30 — WI-537: check_complexity.py, a stdlib cognitive-complexity + SLOC census, report-only (OI-68 phase 1)
+
+Deferred open items: none — the one carried MINOR (a missing baseline compared as empty) is on the owner's list in the unattended run's decisions file, not owed a ruling.
 
 **Branch:** `wi-537-complexity-sensor-report-only` · integration base `127fdd3e`.
 **SpecRef:** `docs/plans/2026-08-29-complexity-sensor-plan.md#phase-1--the-sensor-report-only`.
