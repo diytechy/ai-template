@@ -35,8 +35,8 @@ rung predicates so that the two axes can never disagree about what a Drafted row
 is. When slice 3 re-discriminates the ladder it edits ONE fall-through
 (`spine_rules.spine_stage`) and both files follow.
 
-Contracts: IF-050 — the interface seam this module declares (process.md §8; row
-of record in docs/requirements/interfaces.toml).
+Contracts: IF-050, IF-165 — the interface seams this module declares
+(process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes the
     effective rung, its ordinal, the unfloored settled and live readings, the
@@ -52,6 +52,13 @@ Contract IF-050: the derived stage RECORD at `docs/stage`. A plain run writes th
     one commit. The record is DERIVED and never hand-set: it moves by approving
     artifacts in a reviewed commit, and a hand-edited or cross-ladder value
     raises rather than reading as a rung.
+Contract IF-165: the verdict every arm of this CLI answers in, 0 and 1 alone.
+    `--check` returns 1 on an ABSENT `docs/stage` and on a record the recompute
+    no longer reproduces, and 0 both on a record that still holds and on a file
+    carrying no stage field — the scaffold placeholder, never derived and stale
+    relative to nothing. The write run, `--print` and `--next-phase` return 0
+    having done their work; `--phase-rule` returns 0 on a warned finding and 1
+    only under `--strict`.
 """
 
 import argparse

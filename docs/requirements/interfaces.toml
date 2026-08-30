@@ -206,6 +206,15 @@ version = "v1"
 status = "Drafted"
 interface_to_external = "B-05"
 
+[interface.IF-166]
+owner = "scripts/trace"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/report.html — a self-contained collapsible <details> tree of the SN -> SR -> LLR -> TC forest, written only under --html"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
+
 [interface.IF-002]
 owner = "scripts/check_docs"
 consumers = ["scripts/check"]
@@ -237,6 +246,15 @@ channel = "exit-code"
 data = "0 OK, SKIP or WARN · 1 a Gate=fail budget breached in the run tier, or --update-baseline with no metrics"
 version = "v1"
 status = "Drafted"
+
+[interface.IF-167]
+owner = "scripts/check_perf"
+consumers = ["external:downstream adopter"]
+channel = "file"
+data = "docs/test/perf-report.md — one row per in-tier budget: status, PB id, metric, measured, baseline, delta, budget, direction, gate, plus a findings list"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-005]
 owner = "scripts/check_privacy"
@@ -391,6 +409,24 @@ data = "0 allow, ask or defer · 2 deny"
 version = "v1"
 status = "Drafted"
 interface_to_external = "B-04"
+
+[interface.IF-169]
+owner = "scripts/subagent_gate"
+consumers = ["external:agent CLI"]
+channel = "stdout"
+data = "one JSON line: hookSpecificOutput with permissionDecision allow | ask | deny and its reason; a defer and the fail-open arm print nothing"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-04"
+
+[interface.IF-170]
+owner = "scripts/subagent_gate"
+consumers = ["scripts/agent_loop", "external:downstream adopter"]
+channel = "file"
+data = "one tab-separated line per non-deferred decision - tool, decision, reason - appended best-effort to the gate log under out/"
+version = "v1"
+status = "Drafted"
+interface_to_external = "B-05"
 
 [interface.IF-151]
 owner = "scripts/subagent_gate"
@@ -790,6 +826,14 @@ version = "v1"
 status = "Drafted"
 component = "CMP-006"
 
+[interface.IF-165]
+owner = "scripts/derive_stage"
+consumers = ["scripts/check", "scripts/trunk_step", "scripts/kitlib/stage"]
+channel = "exit-code"
+data = "0 fresh, placeholder, printed or written · 1 an absent or stale docs/stage under --check, or a --phase-rule finding under --strict"
+version = "v1"
+status = "Drafted"
+
 [interface.IF-051]
 owner = "docs/requirements/"
 consumers = ["scripts/spine_rules", "external:downstream adopter"]
@@ -1022,6 +1066,15 @@ status = "Drafted"
 component = "CMP-008"
 notes = """No tie-back: the argv comes IN from the adopter's own session (a claim, an audit) or from the dispatcher's lane, and the frame declares no IN crossing for an invocation — driving our integrator is the session's own act, the reasoning the agent-CLI row records; the delivered contract ties on the exit-code row."""
 
+[interface.IF-173]
+owner = "scripts/integrate"
+requestors = ["scripts/dispatch", "scripts/handback", "scripts/lane"]
+channel = "call"
+data = "claim, refresh, integrate, finished_branches, branch_outcomes, lane_worktree, the ACTIVE and WORK constants, seven _-prefixed readers"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+
 [interface.IF-081]
 owner = "scripts/trunk_step"
 consumers = ["scripts/integrate", "scripts/intake", "external:downstream adopter"]
@@ -1049,6 +1102,15 @@ channel = "file"
 data = "one fragment per session, <id>-<slug>.md, opening with a `## ` heading; links written relative to docs/log.d/"
 version = "v1"
 status = "Drafted"
+
+[interface.IF-168]
+owner = "docs/log.d/"
+requestors = ["scripts/trunk_step", "external:downstream adopter"]
+channel = "file"
+data = "a session adds one fragment; trunk_step --compile-log unlinks each fragment it appended, all-or-nothing, the caller committing the removal"
+version = "v1"
+status = "Drafted"
+notes = "No tie-back: a fragment enters through the same hook floor every governed write does, and that crossing's facing row is the hook's; this row states the mutation of the medium and stops."
 
 [interface.IF-082]
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling - so the row is held here rather than on the facade."""
@@ -1178,6 +1240,26 @@ version = "v1"
 status = "Drafted"
 component = "CMP-009"
 notes = """seam driven by TC-056's station sync pin (test_station_barrier_and_admission_arms_pin_to_the_dispatcher: the rendered exclusive-kind list must equal the schedule-derived one)"""
+
+[interface.IF-171]
+owner = "scripts/schedule"
+requestors = ["external:downstream adopter"]
+channel = "cli"
+data = "--root before the subcommand; ready --explain --format text|json; simulate --jobs N --format text|json; no write, no spawn, no git"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+notes = "No tie-back: the argv comes IN from the adopter's own session and the frame declares no IN crossing for an invocation - running the derivation is the session's own act; the delivered contract ties on the stdout row."
+
+[interface.IF-172]
+owner = "scripts/schedule"
+consumers = ["external:downstream adopter"]
+channel = "stdout"
+data = "the frontier or the simulation rounds: fixed-width text lines, or JSON - a record array for ready, a jobs/rounds object for simulate"
+version = "v1"
+status = "Drafted"
+component = "CMP-008"
+interface_to_external = "B-05"
 
 [interface.IF-097]
 owner = "scripts/prompts"

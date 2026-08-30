@@ -8,6 +8,8 @@ registry to pin the shared decision across the CLI surface."""
 
 import json
 
+import pytest
+
 from conftest import SCRIPTS, load_script, run_py
 
 sched = load_script("schedule")
@@ -554,6 +556,27 @@ def test_cli_simulate_serial_and_parallel(tmp_path):
         cwd=tmp_path,
     )
     assert json.loads(par.stdout)["rounds"] == [["WI-001", "WI-002"], ["WI-003"]]
+
+
+def test_cli_simulate_refuses_a_jobs_ceiling_below_one(tmp_path, capsys):
+    """`--jobs 0` leaves through argparse, not through `simulate()`'s raise.
+
+    `simulate(wis, jobs)` raises `ValueError` for `jobs < 1` — correct for a
+    library caller, and the wrong channel for the CLI: an out-of-range flag used
+    to escape `main` as an uncaught traceback and exit 1, while every other
+    malformed flag on this surface answers with a usage message and exit 2. The
+    `--jobs` type validator makes the refusal uniform, which is what IF-171's
+    body promises the caller.
+    """
+    _write_registry(tmp_path, [row("WI-001"), row("WI-002")])
+    with pytest.raises(SystemExit) as exc:
+        sched.main(["--root", str(tmp_path), "simulate", "--jobs", "0"])
+    assert exc.value.code == 2
+    err = capsys.readouterr().err
+    assert "usage:" in err and "--jobs" in err
+    # The neighbouring in-range value still derives and returns 0.
+    assert sched.main(["--root", str(tmp_path), "simulate", "--jobs", "1"]) == 0
+    assert "WI-001" in capsys.readouterr().out
 
 
 # --- SR-066 (WI-209): PlanMode=dual derives the `high-risk` kind --------------

@@ -102,7 +102,7 @@ first — mechanical bookkeeping must not stale an honest APPROVE).
 Never pushes; the trunk only ever moves inside the slot, to a branch whose
 own bar passed on this exact tree.
 
-Contracts: IF-080, IF-154 — the interface seams this module declares
+Contracts: IF-080, IF-154, IF-173 — the interface seams this module declares
 (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-080: this module's CLI is the local integration seam, and each
@@ -128,6 +128,20 @@ Contract IF-154: the argv surface, one required subcommand deep. `--root`
     `--tier` alone and drains every finished claimed branch there is; `audit`
     requires `--since`, the window's base revision. Nothing here accepts a
     remote, push or force option: the only repository it can move is `--root`.
+Contract IF-173: this module as the library its three siblings drive
+    in-process, the same ladder the CLI drives with no argv between. The
+    dispatcher takes the claim-and-merge vocabulary — `claim` (with
+    `dispatch_lock_held=True`, holding the coordinator lock itself),
+    `refresh`, `integrate`, `finished_branches`, `branch_outcomes`,
+    `_merge_ready`, `_claimed_wi_ids`, `_claimed_specs`, `_spec_frontmatter`,
+    `ACTIVE`. The handback takes the worktree and revision readers —
+    `lane_worktree`, `_worktree_holding`, `_head`, `_rev`, `_claimed_specs`,
+    `_spec_frontmatter`, `WORK`, `ACTIVE`. The lane takes `lane_worktree`
+    alone. Every refusal is a RETURN VALUE, never a raise: a code from `claim`
+    and `integrate`, a `(sha, refusal)` pair from `refresh`, a `(ready, why)`
+    pair from `_merge_ready`. The `_`-prefixed names above are named on the
+    row and are part of the promise, not private detail a caller reached
+    past; nothing here pushes, and the trunk moves only inside the slot.
 """
 
 from __future__ import annotations

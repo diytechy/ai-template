@@ -103,6 +103,7 @@ docs/work/pause — LIFECYCLE: present only while a pause is DECLARED; absence =
 docs/work/active/ — LIFECYCLE: holds per-branch claim directories only while work is claimed; empty/absent at a drained stop
 docs/test/report.md — LIFECYCLE: the traceability matrix trace.py writes on demand (gitignored, never committed — .gitignore "Generated reports"); prose naming it describes the generator's destination, and absence until a run writes it is the documented state
 docs/test/report.html — LIFECYCLE: the html render of the same matrix, written when the bar's check.py passes --html to the trace step at DevStg-Tests/DevStg-Impl (gitignored, never committed — the same .gitignore block); declared tool-residue since WI-407 (measured holding the wi-402 lane at unload, 2026-08-02), and absence until a bar run writes it is the documented state
+docs/test/perf-report.md — LIFECYCLE: the perf comparator's report (scripts/check_perf.py), rewritten by any run that reaches a comparison; this repo emits no docs/test/perf-metrics.json, so every run SKIPs before the write and the absence is the documented state until a product measurement step is wired
 tools/wi_convert.py — the converter's pre-2c meta-repo home, named as history in the spec; it moved to project-trajectory/scripts/wi_convert.py
 # The dispatcher split (concurrency-v2 SA4.2): drive.py renamed dispatch.py
 # with lane.py extracted; historical records (closed WI specs) and the

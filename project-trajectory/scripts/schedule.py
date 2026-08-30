@@ -49,15 +49,15 @@ every value as its documented default — `Priority=0`, empty `Exclusive`,
 `SafetyClass` absent => `unclassified` (empty is never silently `ordinary`).
 
 Usage:
-    python scripts/schedule.py ready [--explain] [--format text|json] [--root .]
-    python scripts/schedule.py simulate --jobs N [--root .] [--format text|json]
+    python scripts/schedule.py [--root .] ready [--explain] [--format text|json]
+    python scripts/schedule.py [--root .] simulate --jobs N [--format text|json]
 
 Small CSV loaders are duplicated from trace.py / check_trajectory.py per the kit's
 independently-copyable-script convention (the F5 rule): schedule.py stays a
 self-contained drop-in, never importing the sibling engines.
 
-Contracts: IF-053, IF-055, IF-071, IF-085, IF-094 — the interface seams this
-module declares (process.md §8; rows of record in
+Contracts: IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172 — the
+interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
 Contract IF-053: SR-148's obligation delivered here as a pure library its
@@ -95,6 +95,27 @@ Contract IF-094: the classification TABLES as read-only vocabulary.
     caller can derive the exclusive kinds in rank order instead of restating the
     list. Constants only: no call, no write, and a re-ruled kind moves every
     derived rendering with no second edit.
+Contract IF-171: the argv surface of the derivation, one required subcommand
+    deep. `--root` (default the cwd) belongs to the top-level parser and is
+    accepted ONLY before the subcommand; `ready` takes `--explain` (every WI
+    with its disposition and reason codes, not only the frontier) and
+    `--format text|json`; `simulate` takes `--jobs N` (default 2) and the same
+    `--format`. Nothing here writes, spawns or touches git — the surface
+    loads the work registry, derives, prints and exits. With no subcommand it
+    prints help and returns 2, the code an unknown subcommand or an unknown
+    flag also returns; a `--jobs` below 1 is refused with 2 like any malformed
+    flag.
+Contract IF-172: what the derivation PRINTS, two shapes over one computation.
+    `--format json` emits the same records the library returns: `ready` a JSON
+    array of per-WI objects keyed `id`, `status`, `concurrency`, `rank`,
+    `disposition`, `priority`, `downstream`, `hard_path`, `exclusive_keys` and
+    `reasons`, two-space indent with sorted keys, and `simulate` one object
+    carrying `jobs` and `rounds`, each round a list of WI ids. `--format text`
+    emits one fixed-width line per record — id, concurrency, rank, priority,
+    downstream count, hard-path length, with `--explain` adding the
+    disposition and the `;`-joined reason codes — or one `round N (k): ids`
+    line per simulated round. An empty answer is a printed sentence, never a
+    silent empty stream.
 """
 
 import argparse
@@ -749,6 +770,27 @@ def _cmd_simulate(args):
     return 0
 
 
+def _jobs(value):
+    """argparse `type=` for `--jobs`: a worker ceiling below 1 is an ARGV error.
+
+    `simulate()` raises `ValueError` for `jobs < 1`, which is right for a
+    library caller and wrong for the CLI: an out-of-range flag left through
+    the top of `main` as an uncaught traceback and exit 1, where every other
+    malformed flag on this surface is a usage message and exit 2. argparse
+    turns an `ArgumentTypeError` into exactly that, so the refusal is uniform
+    and the library's raise never reaches a shell.
+    """
+    try:
+        jobs = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "invalid int value: {!r}".format(value)
+        ) from None
+    if jobs < 1:
+        raise argparse.ArgumentTypeError("jobs must be >= 1, got {}".format(jobs))
+    return jobs
+
+
 def main(argv=None):
     _utf8_console()
     ap = argparse.ArgumentParser(
@@ -767,7 +809,7 @@ def main(argv=None):
     sim = sub.add_parser(
         "simulate", help="greedy list-schedule the frontier over N workers"
     )
-    sim.add_argument("--jobs", type=int, default=2, help="worker ceiling (default 2)")
+    sim.add_argument("--jobs", type=_jobs, default=2, help="worker ceiling (default 2)")
     sim.add_argument("--format", choices=("text", "json"), default="text")
     sim.set_defaults(func=_cmd_simulate)
 

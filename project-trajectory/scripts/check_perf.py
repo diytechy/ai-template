@@ -46,7 +46,7 @@ Usage:
 --root/--docs are the path flags shared with trace.py and check_docs.py: the
 four artifact paths default under <root>/docs unless given explicitly.
 
-Contracts: IF-004, IF-147 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-004, IF-147, IF-167 — the interface seams this module declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-004: the harness runs this CLI as one gate step and reads what it
     prints. Every budget that is not clean gets one line — `check_perf:
@@ -67,6 +67,14 @@ Contract IF-147: the gate verdict the harness reads back from this CLI. 0
     absolute budget for its `Direction`, or regressed beyond its `Tolerance`
     band against the committed baseline. The `--update-baseline` writer arm
     compares nothing and returns 1 when there are no metrics to write from.
+Contract IF-167: `docs/test/perf-report.md`, rewritten whole by every run that
+    reaches a comparison and written by no other — the no-budgets, no-metrics
+    and `--update-baseline` arms return before it. `--report` moves the path
+    and changes nothing else. It carries one table row per in-tier budget —
+    status, PB id, metric, measured, baseline, delta against baseline, budget,
+    direction, gate — then a findings list naming the reason for each FAIL and
+    WARN. A regenerated composite; the reviewed truth is the budgets registry
+    and the baseline diff.
 """
 
 import argparse

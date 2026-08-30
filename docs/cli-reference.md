@@ -189,7 +189,7 @@ Contracts (interfaces): IF-121
 
 ### `scripts/check_perf`
 _Performance budget & regression comparator: track the numbers, alert on drift._
-Contracts (interfaces): IF-004, IF-147
+Contracts (interfaces): IF-004, IF-147, IF-167
 
 | Option | Help |
 |---|---|
@@ -258,7 +258,7 @@ _Retired-vocabulary check: keep the retired `G*` gate tags, and the retired_
 
 ### `scripts/derive_stage`
 _Derive the EFFECTIVE STAGE from artifact states and cache it to `docs/stage`._
-Contracts (interfaces): IF-050
+Contracts (interfaces): IF-050, IF-165
 
 | Option | Help |
 |---|---|
@@ -398,7 +398,7 @@ Contracts (interfaces): IF-090
 
 ### `scripts/integrate`
 _integrate.py — the local integrator: the station protocol and its merge slot._
-Contracts (interfaces): IF-080, IF-154
+Contracts (interfaces): IF-080, IF-154, IF-173
 
 | Option | Help |
 |---|---|
@@ -480,7 +480,7 @@ Contracts (interfaces): IF-048, IF-157, IF-158
 
 ### `scripts/schedule`
 _Derive the dependency-ready WI frontier and its deterministic schedule._
-Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094
+Contracts (interfaces): IF-053, IF-055, IF-071, IF-085, IF-094, IF-171, IF-172
 
 | Option | Help |
 |---|---|
@@ -517,7 +517,7 @@ _spec_move.py — the link-aware spec-move ritual: move a registry/spec file and
 
 ### `scripts/trace`
 _Traceability join + orphan report for the SN->SR->LLR->TC registries._
-Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146
+Contracts (interfaces): IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166
 
 | Option | Help |
 |---|---|

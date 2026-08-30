@@ -305,7 +305,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # is the one crossing deliberately left unrealized (SR-140's condition, stated
     # in the registry header), and WI-455 slice 2's adjudication left exactly
     # three `external:` rows tied back to nothing, each with its reason on the row
-    # (seven since OI-67 slice 4, below).
+    # (seven since OI-67 slice 4, nine since WI-534, below).
     gt = load_script("gen_trajectory")
     frame = gt.traj_parse.frame_context(ROOT)
     assert len(frame["entities"]) == 4
@@ -318,7 +318,9 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
     # OI-67 slice 4 added four: the agent CLI's stdin arm and the three argv
     # arms an external party drives (the adopter's session, the launchers) —
     # information coming IN from a party the frame declares no IN crossing
-    # for, each stating so on the row.
+    # for, each stating so on the row. The arms round (WI-534) added two of
+    # the same kind: the fragment drop-box's write arm and schedule.py's own
+    # argv, both driven by the adopter's session.
     assert [u["id"] for u in frame["untied"]] == [
         "IF-032",
         "IF-036",
@@ -327,5 +329,7 @@ def test_frame_context_reads_this_repo_s_own_locked_frame():
         "IF-154",
         "IF-155",
         "IF-157",
+        "IF-168",
+        "IF-171",
     ]
     assert all(u["reason"].startswith("No tie-back") for u in frame["untied"])

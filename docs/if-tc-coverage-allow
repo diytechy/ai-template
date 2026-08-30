@@ -205,5 +205,14 @@ IF-161 — split from IF-021 (docs/test/ as its own medium); covered when a TC c
 IF-162 — split from IF-045 (docs/agents-enabled as its own medium); covered when a TC cites the enable-list grammar
 IF-163 — split from IF-037 (docs/status.md as a read medium); covered when a TC cites the blackboard's excerpt read
 IF-164 — split from IF-037 (the generated status block, writer-owned); covered when a TC cites the block's shape
+IF-165 — split from IF-050 (the derived-stage producer's exit code, a kind the file row never carried); TC-181's method already names the producer's own freshness contract and its evidence drives every arm; covered when a TC cites the derivation's exit alphabet
+IF-166 — split from IF-146 (docs/test/report.html, the --html render medium beside report.md); tests/test_trace.py::test_html_view_is_self_contained already pins the shape; covered when a TC cites the HTML render
+IF-167 — split from IF-004 (docs/test/perf-report.md, the comparator's report medium beside its stdout); TC-014's evidence already reads the file's text; covered when a TC cites the report medium
+IF-168 — split from IF-156 (the write/delete arm of the fragment drop-box); covered when a TC cites the compile's unlink
+IF-169 — split from IF-020 (the PreToolUse verdict payload on stdout); covered when a TC cites the printed decision
+IF-170 — split from IF-020 (the gate's decision log under out/); covered when a TC cites the log line format or the banner's count of it
+IF-171 — minted for a kind no row stated (schedule.py's own subcommand argv); covered when a TC cites the scheduler CLI's invocation arm
+IF-172 — minted for a kind no row stated (the frontier and simulation listings the scheduler prints); covered when a TC cites the printed frontier
+IF-173 — minted for a kind no row stated (integrate's in-process call surface, the reverse of IF-055); covered when a TC cites the dispatcher's or the handback's use of it
 # --- INHERITED, closed by a reasoned entry at the same sitting: -------------
 IF-144 — the reporting protocol stated once (check.py's exit-code row); no single TC cites it because the property is measured across every checker's own tests, and a TC for the protocol census has not been minted; closes when one is

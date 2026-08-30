@@ -42,3 +42,7 @@ out/run-logs/
 # (process-options.md "Parallel tracks").
 out/agent-loop.lock
 out/integrate.lock
+# PreToolUse spawn-gate decision log (scripts/subagent_gate.py) — a
+# best-effort, append-only trail of each verdict; an untracked cache, so
+# truncating it loses history and nothing else.
+out/subagent-gate.log

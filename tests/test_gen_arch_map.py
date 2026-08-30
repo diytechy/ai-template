@@ -1112,6 +1112,74 @@ def test_contracts_doc_splices_and_check_reds_on_drift(tmp_path, contract_src):
     assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
 
 
+def test_both_doc_targets_are_processed_on_one_invocation(tmp_path, contract_src):
+    # The modes COMPOSE. main() used to dispatch straight into `sys.exit` on the
+    # first mode an invocation named, so `--cli-doc A --contracts-doc B --check`
+    # reported A and exited 0 over a STALE B — a green verdict on a document
+    # nothing had opened. Every named mode runs and the verdict is the worst.
+    from conftest import run_py
+
+    cli_doc = tmp_path / "cli-reference.md"
+    cli_doc.write_text(
+        "# CLI\n\n<!-- BEGIN GENERATED CLI REFERENCE -->\n"
+        "<!-- END GENERATED CLI REFERENCE -->\n",
+        encoding="utf-8",
+    )
+    contracts_doc = tmp_path / "interface-reference.md"
+    contracts_doc.write_text(
+        "# Interfaces\n\n<!-- BEGIN GENERATED INTERFACE REFERENCE -->\n"
+        "<!-- END GENERATED INTERFACE REFERENCE -->\n",
+        encoding="utf-8",
+    )
+    script = Path(gen_arch_map.__file__)
+    args = [
+        "--src",
+        str(contract_src),
+        "--cli-doc",
+        str(cli_doc),
+        "--contracts-doc",
+        str(contracts_doc),
+    ]
+
+    # One invocation fills BOTH targets, and --check is then green on both.
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert "no command-line surface scanned" in cli_doc.read_text(encoding="utf-8")
+    assert "IF-901" in contracts_doc.read_text(encoding="utf-8")
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+    # Drift ONLY the contract body. The CLI reference is still fresh, so the
+    # first mode named is green — and the run must still red on the second.
+    (contract_src / "widget.py").write_text(
+        CONTRACT_MOD.replace("writes report.md", "writes summary.md"),
+        encoding="utf-8",
+    )
+    red = run_py([script] + args + ["--check"], cwd=tmp_path)
+    assert red.returncode == 1
+    assert "Interface reference STALE" in (red.stdout + red.stderr)
+
+    # Both stale: both are named, not just whichever mode ran first.
+    (contract_src / "tool.py").write_text(
+        '''"""tool.py — a command line beside the seam holder."""
+
+import argparse
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--tier", help="the tier to run")
+''',
+        encoding="utf-8",
+    )
+    both = run_py([script] + args + ["--check"], cwd=tmp_path)
+    assert both.returncode == 1
+    assert "CLI reference STALE" in (both.stdout + both.stderr)
+    assert "Interface reference STALE" in (both.stdout + both.stderr)
+
+    # And one regenerating run clears both.
+    assert run_py([script] + args, cwd=tmp_path).returncode == 0
+    assert run_py([script] + args + ["--check"], cwd=tmp_path).returncode == 0
+
+
 def test_contracts_doc_is_vacuous_when_the_target_is_absent(tmp_path, contract_src):
     # Same opt-in posture as --cli-doc: a repo that has not adopted the
     # reference has no file to be stale and pays nothing for the step.

@@ -78,7 +78,7 @@ endpoint that resolves to no LLR Module. The report always carries the
 attested-vs-mechanized approval split (process.md §4 "Attest") and, when the SR
 registry tags Aspect, a per-aspect count.
 
-Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146 — the
+Contracts: IF-001, IF-042, IF-075, IF-089, IF-101, IF-141, IF-145, IF-146, IF-166 — the
 interface seams this module declares (process.md §8; rows of record in
 docs/requirements/interfaces.toml).
 
@@ -148,6 +148,13 @@ Contract IF-146: `docs/test/report.md`, rewritten whole on every checking run
     coloured by orphan and draft state. It is a composite artifact written for
     reading, never a parsing surface: no reader is promised a stable grammar,
     and the reviewed truth stays the registries it joins.
+Contract IF-166: `docs/test/report.html`, written only under `--html` and
+    rewritten whole on every run that passes it — a run without the flag leaves
+    whatever the last one wrote. One self-contained page, inline CSS and zero
+    JS, carrying the SN -> SR -> LLR -> TC forest as a collapsible `<details>`
+    tree: every node labelled with its status, its orphan flag and its title,
+    orphan and draft nodes coloured. It renders the join `docs/test/report.md`
+    states and promises no parser a grammar.
 """
 
 import argparse

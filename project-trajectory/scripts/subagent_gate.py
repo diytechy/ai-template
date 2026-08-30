@@ -44,33 +44,49 @@ deliberately-supervised run.
 `PreToolUse` payload or any other internal error still allows the call and logs
 the reason, because a broken gate must never wedge the tools (SN-006's relaxed
 posture keeps this arm even after OI-46). A PRESENT-but-unparseable
-`docs/process.toml` is no longer in that list — see above. Every decision
-appends to `out/subagent-gate.log` (gitignored cache); `agent_loop.py`'s launch
-banner surfaces its line count (OI-46 ruled (2a), WI-491) so the paper trail is
-actually read somewhere, not just written.
+`docs/process.toml` is no longer in that list — see above. Every decision that
+is not a defer appends to `out/subagent-gate.log` (an untracked cache);
+`agent_loop.py`'s launch banner surfaces its line count (OI-46 ruled (2a),
+WI-491) so the paper trail is actually read somewhere, not just written.
 
 Materialized per-agent by `bootstrap.py --agents claude` (wired as a PreToolUse
 hook in `.claude/settings.json.example`); the agent-neutral floor stays git+CI.
 Adapted — stdlib re-implementation — from brefledev/stop-subagent-fanout (MIT).
 
-Contracts: IF-020, IF-151 — the interface seams this module declares (process.md
-§8; rows of record in docs/requirements/interfaces.toml).
+Contracts: IF-020, IF-151, IF-169, IF-170 — the interface seams this module
+declares (process.md §8; rows of record in docs/requirements/interfaces.toml).
 
 Contract IF-020: the PreToolUse hook's verdict. It resolves the declared policy
-    for the call and prints a `hookSpecificOutput.permissionDecision` payload
-    carrying `allow`, `ask` or `deny` with its reason; `deny` also exits 2,
-    every other decision exits 0, and a deferred call prints nothing at all. It
-    FAILS OPEN by design: any internal error resolves to `allow` and records
-    why, because a broken gate must never wedge the tools. Supervision, not
-    security — a model that can edit files can remove this. Every decision
-    appends to a gitignored log, best-effort, so the paper trail can never block
-    a call.
+    for the call; `deny` exits 2 and every other decision exits 0. It FAILS
+    OPEN by design: any internal error resolves to `allow` and records why,
+    because a broken gate must never wedge the tools. Supervision, not
+    security — a model that can edit files can remove this.
 Contract IF-151: the invocation surface the agent CLI drives. The hook takes no
     arguments; one PreToolUse tool-call JSON object arrives on stdin and only
     `tool_name` (its `toolName` spelling accepted) is read out of it — an empty
     stdin reads as `{}`, and a call naming no spawn tool is not this gate's
     business. A malformed payload never reaches a decision: the read is wrapped,
     so a JSON error allows the call and appends the reason to the log.
+Contract IF-169: the verdict as a payload the agent CLI reads. One line of
+    JSON on stdout: a `hookSpecificOutput` object carrying `hookEventName`
+    fixed at `PreToolUse`, `permissionDecision` set to `allow`, `ask` or
+    `deny`, and `permissionDecisionReason` naming the dial and the value it
+    read. Nothing at all is printed for a call this gate defers — a tool
+    outside the spawn set is not its business — and nothing is printed on the
+    fail-open path: an internal error leaves its reason in the decision log
+    and emits no payload. The payload IS the decision, so a consumer that
+    reads it needs no second channel.
+Contract IF-170: the decision trail, one line per decision. Each decision
+    that is not a defer appends one TAB-SEPARATED line — the PreToolUse tool
+    name, the decision word, the reason — to `subagent-gate.log` under the
+    kit's `out/` cache, UTF-8 with a single newline per record, the directory
+    created on first write. The fail-open arm writes `?` for the tool and
+    `allow` for the decision, with a reason opening `gate error, failing
+    open`: that token is the only thing separating it from a routine allow,
+    and the line count is the decision count. The append is BEST-EFFORT — an
+    OSError is swallowed and can never change the verdict, the exit code or
+    the payload. A cache, never a tracked artifact: truncating it loses
+    history and nothing else.
 """
 
 import json

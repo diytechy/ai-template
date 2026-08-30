@@ -2095,15 +2095,22 @@ def main():
     args = ap.parse_args()
 
     src_roots = args.src or ["src"]
-    # The report mode returns before every --doc/marker contract below: it reads
-    # the source tree and writes nothing, so requiring a splice target would be
-    # asking for a document the measurement never touches.
-    if args.backlink_coverage:
-        sys.exit(_backlink_exit(src_roots, args))
-    if args.cli_doc:
-        sys.exit(_cli_doc_exit(src_roots, args))
-    if args.contracts_doc:
-        sys.exit(_contracts_doc_exit(src_roots, args))
+    # The report/splice modes return before every --doc/marker contract below:
+    # each reads the source tree and its own named target, so requiring a MODULE
+    # MAP splice target would be asking for a document the measurement never
+    # touches. AND THEY COMPOSE. Dispatching straight into `sys.exit` on the
+    # first match ran only the FIRST mode an invocation named and left the rest
+    # unexamined: `--cli-doc X --contracts-doc Y --check` reported X and exited 0
+    # over a stale Y — a green verdict on a document nothing looked at. Every
+    # named mode runs, in this order, and the verdict is the worst of them.
+    modes = (
+        (args.backlink_coverage, _backlink_exit),
+        (args.cli_doc, _cli_doc_exit),
+        (args.contracts_doc, _contracts_doc_exit),
+    )
+    codes = [run(src_roots, args) for selected, run in modes if selected]
+    if codes:
+        sys.exit(max(codes))
     if not args.doc:
         raise SystemExit(
             "gen_arch_map: pass --doc <file carrying the MODULE MAP marker "
