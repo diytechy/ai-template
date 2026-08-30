@@ -642,3 +642,64 @@ the C-series). At the merge, intake's amendment arm minted **`WI-547`**
 mechanism reading the delegated deletions; it queues behind the pause).
 End state: trunk `fd45628a`, no active claims, the held remap branch aside,
 eight rows queued, the pause armed, no agent process running.
+
+## 33. The stall-guard build ran on a loaded box: the commit bar's RESULTS are enforced, its SECONDS are recorded OVER with the cause
+
+**Decided:** build WI-548 with the smoke tier's results enforced per commit
+(1426 passed, 6 skipped, every commit) while the budget step reads OVER
+(86-124 s vs 60 s): the box is not quiet — Halo Infinite held ~28 % of the
+CPU (Get-Counter, sampled at session start), and the instruction to run alone
+cannot be honoured against the owner's own foreground use of the machine.
+The budget is untouched; the quiet 40.7 s reading of 2026-08-30 stands; a
+quiet re-measure is owed before the loop relaunches (the WI-496 precedent:
+one box is one data point, and the budget is not moved to fit a loaded box).
+
+**The alternative:** wait for the box to go quiet (unbounded — the game is
+interactive use), or kill the process (not the supervisor's to do). Neither
+delivers the work the pause is holding the frontier for.
+
+**Reversal cost:** none — a re-measure on a quiet box either confirms the
+budget or is its own finding.
+
+## 34. The tracked pause was lifted for exactly one claim (WI-548) and re-armed in the next commit
+
+**Decided:** `docs/work/pause` deleted (`a0550168`), `integrate.py claim` run
+for WI-548, the byte-identical pause restored (`bf7c1938`) — the frontier was
+claimable for one serial commit window in a session whose only claim is the
+row the pause itself names as its lifting condition.
+
+**Why.** The claim rung refuses EVERY claim under a pause, including the
+stall-guard claim the pause exists to wait for — a catch-22 in the machinery
+(kit finding: a pause may need a named exception list, or the unpause could
+be required before the claim in the pause's own reason text). Building
+without a claim would bypass the integrator; leaving the pause down while
+building would open the frontier to any concurrent launch.
+
+**Reversal cost:** none; both commits are on trunk in sequence and the pause
+stands again.
+
+## 35. WI-548 shape choices: one row for C1-C7; the ADJUDICATOR closes its own row; two unload pins overturned; the TERRA effort dial applied as an experiment
+
+**Decided:** (a) one row instead of the plan §3's two — the pause lifts after
+a single reviewed merge, and C6 is the other half of the same defect; (b) C6's
+adjudication closer is the BRIEF instructing the adjudicator to close its own
+row (Deliverable, specref, spec_move.py, trailer) rather than a new dispatcher
+close path — a smaller diff, no new authority in dispatch, revisitable as its
+own row if the brief proves insufficient (the plan called the dispatcher path
+cleaner; this is the deliberate deviation); (c) the two shipped unload tests
+pinning "an ignored out/run-logs stream refuses the unload" are OVERTURNED
+with the behaviour, the overturn stated inside the rewritten tests (the
+stream is the loop's own artifact with a tracked clipped copy — decision 23's
+measurement); (d) `docs/agents.toml` OPENAI-TERRA carries
+`-c model_reasoning_effort=medium` as the C7 item-5 experiment, measured
+against the recorded ~10-minute unpinned rounds — keep or revert on numbers,
+noted on the row. Also bookkeeping: the plan drafted the row as "WI-547", but
+that id was already minted at the WI-546 merge; the allocator issued WI-548.
+
+**The alternatives:** two rows (more ceremony under a held frontier); a
+dispatcher-side closer (new machinery unreviewed by the owner); keeping the
+unload pins and shipping a dead letter (the C6 shed would never fire); the
+dial unmeasured (the plan explicitly asks for measurement).
+
+**Reversal cost:** (b) and (d) are one-file edits; (c) restores with the old
+test text; (a) is spent at merge.
