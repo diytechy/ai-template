@@ -96,29 +96,33 @@ the seams it owns).
   workaround: pointing `--basetemp` at D: roughly **doubles** the smoke tier's
   wall time (26 s on the declared command, 60 s with the redirect), so redirect
   it only when C: is genuinely short.
-- **TWO BRIEFS PENDING THE OWNER — `OI-68` and `OI-69` (filed 2026-08-30).**
-  `OI-68` rules the complexity sensor's shape before it is built (does a
-  stdlib cognitive-complexity ratchet replace the module-size line ratchet;
-  does it census `tests/`; armed here or report-only; the two metric
-  conventions and the threshold) — the plan of record is
-  [plans/2026-08-29-complexity-sensor-plan.md](plans/2026-08-29-complexity-sensor-plan.md),
-  its prototype and drafts stay outside the repo in `C:/Projects/ai-template-plans/`.
-  `OI-69` rules the opt-in adjudicator-session layer's settings (a retained
-  session transcript behind a context-percent dial — not a daemon; the rule-3
-  residual; keep-warm across the blackout; the dial's home; dedicated CLI
-  homes) — plan of record
-  [plans/2026-08-29-adjudicator-session-retention-plan.md](plans/2026-08-29-adjudicator-session-retention-plan.md),
-  the parked persistent design beside it as
-  [plans/2026-08-29-adjudicator-persistent-session-study.md](plans/2026-08-29-adjudicator-persistent-session-study.md).
-  Both render as cards in [open-items.html](open-items.html). Two rows are
-  queued and unblocked by either ruling — the adjudicator telemetry-first row
-  (dial off) and the knowledge-pack review's byte-paid edits
-  ([plans/2026-08-29-knowledge-pack-review-synthesis.md](plans/2026-08-29-knowledge-pack-review-synthesis.md)
-  §3, items 4–7, 13, 14 and its §6 kit findings); the generated frontier
-  below names them. **Before the grind starts: the bar** — the full suite's
-  floor is one 304 s test and nine 60–90 s dispatch lanes (measured
-  2026-08-30, [log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md](log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md));
-  a row for it when the work is ready to start.
+- **`OI-68` AND `OI-69` ARE RULED (2026-08-30)** — record
+  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.d/2026-08-30-owner-rulings-oi68-oi69.md).
+  `OI-68` (the complexity sensor): (1c) BOTH sensors stay armed and the
+  module-size line ratchet is RE-BASED to SLOC — non-blank, non-comment,
+  non-docstring lines, one definition shared with the sensor — (2a) the sensor
+  censuses `tests/` too, (3a) armed here, (4a) the prototype's conventions at
+  15; plan of record
+  [plans/2026-08-29-complexity-sensor-plan.md](plans/2026-08-29-complexity-sensor-plan.md)
+  (its phase 2 is now arm + re-base, nothing deleted; its byte arithmetic is a
+  day stale — measure, don't trust). `OI-69` (adjudicator session retention):
+  (a1) a retained transcript is not an actor, (b1) `reset_on_same_artifact =
+  false` with the fork hardening banked, (c2) keep-warm pings THROUGH the
+  blackout (≈ $1.20 a window against a ≈ $3 rewrite), (d1)
+  `process.toml [adjudicator]`, (e1) dedicated CLI homes once the dial is on;
+  plan of record
+  [plans/2026-08-29-adjudicator-session-retention-plan.md](plans/2026-08-29-adjudicator-session-retention-plan.md).
+  **RESUME HERE:** the generated frontier below names the queued rows and
+  their order — the sensor report-only (strong, spine) → arm-and-re-base
+  (soft-edged to the debt owner) → ship; the adjudicator telemetry-first row
+  → the retention layer → its on-box verification; and the knowledge-pack
+  review's byte-paid edits, unblocked by anything. Enabling the dial is the
+  owner's edit of one number afterwards. **Before the grind starts: the
+  bar** — the full suite's floor is one 304 s test and nine 60–90 s dispatch
+  lanes (measured 2026-08-30,
+  [log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md](log.d/2026-08-30-oi67-docs-pass-and-bar-timing.md));
+  a row for it when the work is ready to start, ideally driven by the sensor's
+  first census.
 - **THE INTERFACE ROW IS BEING RESHAPED — `OI-67` RULED (a), 2026-08-29.**
   One row is one owner, its consumers and a typed statement of the
   information; `provider`, `req_refs` and the prose `contract` leave the row
@@ -169,9 +173,12 @@ the seams it owns).
   **The owner accepted decisions 4.1, 6.2, 6.7 and 6.8** — record
   [log.d/2026-08-29-owner-rulings-oi67-decisions.md](log.d/2026-08-29-owner-rulings-oi67-decisions.md);
   the first session's decisions file (below) is still unread. **RESUME
-  HERE:** (1) the smoke budget is still owed a reading ALONE on a quiet box —
-  every reading this sitting (112.7 / 123.6 / 103.5 / 88.8 s against 60) was
-  taken with other sessions holding 50–80 % of the box; (2) left standing,
+  HERE:** (1) the smoke budget read **40.7 s → within** on 2026-08-30 once
+  the other sessions went quiet, after two days of OVER readings (88–180 s)
+  on a box they held at 50–90 %; the budget is untouched and the quiet number
+  is on record in
+  [log.d/2026-08-30-owner-rulings-oi68-oi69.md](log.d/2026-08-30-owner-rulings-oi68-oi69.md);
+  (2) left standing,
   each recorded in the two fragments:
   the three tracked fragments opening with `#`/`###` (the trunk lane's),
   `TC-161`'s approved prose naming `IF-127` (the owner's), the seven
@@ -412,14 +419,12 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
 
 - **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
 - **Spine:** **SN=27 SR=75 LLR=187 TC=184** (6 drafts) · 163 seams · 4 components.
-- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
-  - **OI-68** — rule the complexity sensor's shape before it is built - four questions in one sitting: (1) does a stdlib cognitive-complexity ratchet REPLACE the module-size line ratchet (the question banked in the 2026-08-20 log under the OI-16 correction), (2) does it census tests/ as well as the kit scripts, (3) does this repo run it ARMED or report-only, (4) do the two Sonar-spec conventions the prototype resolved stand (match = one increment; comprehension conditions nest) and is the threshold 15 or 14; recommendation is (1a) replace, (2a) yes, (3a) armed here, (4a) keep the prototype's conventions at 15
-  - **OI-69** — rule the opt-in adjudicator-session layer's settings before it is built - five questions in one sitting: (a) the layer retains a session TRANSCRIPT, not an actor, so the no-daemon doctrine stands - confirm the reading; (b) the rule-3 residual: reset_on_same_artifact = false by default, continuity on the same item over independence; (c) keep-warm pings across the blackout; (d) the dial's home is docs/process.toml [adjudicator]; (e) dedicated config homes for the orchestrator's CLIs - recommend confirm / false with the fork hardening banked / no pings in the blackout / process.toml / yes
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
+  - **WI-537** `P2` — check_complexity.py: a stdlib cognitive-complexity and SLOC census with a TSV baseline, r…
   - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
   - **WI-508** `P2` — The architectural remapping program: blind minimal-map re-derivation, divergences filed a…
-  - **WI-521** `P2` — The decomposition debt owner: four wide modules, M-06's four test monoliths, and no senso…
   - **WI-535** `P2` — Adjudicator telemetry first, dial off: session id and occupancy / window / percent per fa…
+  - **WI-521** `P2` — The decomposition debt owner: four wide modules, M-06's four test monoliths, and no senso…
   - **WI-536** `P2` — Agent-brief and scope: the knowledge-pack review's six byte-paid edits and two kit findin…
 <!-- END GENERATED STATUS -->
 
