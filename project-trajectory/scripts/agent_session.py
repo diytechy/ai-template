@@ -496,7 +496,15 @@ def run_session(
             lines.append(line)
             last_line[0] = time.time()
             if on_line is not None:
-                on_line(line)
+                try:
+                    on_line(line)
+                except Exception:
+                    # The renderer is a convenience; the pump is load-bearing.
+                    # A renderer that raises (a cp1252 console meeting a `→`,
+                    # measured 2026-08-30) must not stop the pump: an unpumped
+                    # pipe fills, the child blocks on its next write, and the
+                    # session reads as a silent hang until a deadline fires.
+                    pass
         proc.stdout.close()
 
     pump = threading.Thread(target=_pump, daemon=True)

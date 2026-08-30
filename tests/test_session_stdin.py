@@ -307,3 +307,25 @@ def test_run_session_wall_timeout_keeps_its_historical_shape(tmp_path):
     assert timed_out is True
     assert code == -1
     assert "timed out after 2s" in output
+
+
+def test_a_raising_renderer_never_stops_the_pump(tmp_path):
+    # C3 hardening (2026-08-30, WI-548): an `on_line` renderer that raises —
+    # a cp1252 console meeting a non-encodable character was the live case —
+    # used to kill the pump thread; the child then blocked on a full pipe and
+    # the session read as a silent hang until a deadline fired. The pump must
+    # outlive its renderer: the session completes, the output is captured.
+    chatty = [
+        sys.executable,
+        "-c",
+        "import sys\nfor i in range(20000): print('line', i)",
+    ]
+
+    def boom(line):
+        raise UnicodeEncodeError("cp1252", line, 0, 1, "renderer failed")
+
+    code, output, timed_out = al.run_session(
+        chatty, tmp_path, 60, on_line=boom, idle_timeout=20
+    )
+    assert code == 0 and not timed_out, output[-300:]
+    assert output.count("line") == 20000
