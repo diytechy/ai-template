@@ -1002,6 +1002,10 @@ def parse_dispositions(text, where):
             "{}: a ## Dispositions section with no ```toml draft block - "
             "nothing minted".format(where)
         )
+    # The prose after each block, up to the next one: the adjudicator's own
+    # statement of the successor's scope, which rides into the minted Context
+    # verbatim - the cells alone cannot carry a boundary or an exclusion.
+    prose = _TOML_FENCE_RE.split(section)[2::2]
     drafts = []
     for index, block in enumerate(blocks, 1):
         try:
@@ -1018,6 +1022,7 @@ def parse_dispositions(text, where):
         draft["kind"] = draft.pop("safety_class", "") or (
             "" if draft.get("planmode") == "dual" else "ordinary"
         )
+        draft["scope"] = prose[index - 1].strip() if index <= len(prose) else ""
         drafts.append(draft)
     return drafts, None
 
@@ -1082,7 +1087,7 @@ def _disposition_drafts(root, outcomes):
                 draft["context"] = (
                     "Drafted by {} (its ## Dispositions section) and minted at "
                     "its merge - drafts-not-mints, ruling R1/R3.".format(wi_id)
-                )
+                ) + ("\n\n" + draft["scope"] if draft.get("scope") else "")
                 drafts.append(draft)
     return drafts, None
 
