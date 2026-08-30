@@ -2784,3 +2784,207 @@ The sequence, each step green before the next:
 
 Do not take (c) as an interim: it is a second migration on the same cells within weeks. If (a) is beyond appetite, (d) is the honest fallback — but rule it, so the 71-row pass is not authoring against a shape nobody has agreed to. The pass is HELD until this is ruled."""
 wi_refs = ["WI-527"]
+
+[open_item.OI-68]
+title = """The complexity sensor and the line ratchet: does one replace the other, does it watch `tests/`, and is it armed here"""
+status = "pending"
+raised = "2026-08-29"
+one_line = """rule the complexity sensor's shape before it is built - four questions in one sitting: (1) does a stdlib cognitive-complexity ratchet REPLACE the module-size line ratchet (the question banked in the 2026-08-20 log under the OI-16 correction), (2) does it census `tests/` as well as the kit scripts, (3) does this repo run it ARMED or report-only, (4) do the two Sonar-spec conventions the prototype resolved stand (match = one increment; comprehension conditions nest) and is the threshold 15 or 14; recommendation is (1a) replace, (2a) yes, (3a) armed here, (4a) keep the prototype's conventions at 15"""
+
+decision = """WHY THIS IS ASKED NOW, AND WHY IT IS ONE SITTING RATHER THAN THREE. The owner has approved in principle a program to build `check_complexity.py` - a stdlib-`ast`, Sonar-style COGNITIVE COMPLEXITY plus SLOC census per function, with a central TSV baseline, exact equality both directions, and no inline suppression pragma. Nothing is built yet, deliberately: two of the three questions below decide the sensor's SCOPE and its POSTURE, and answering them after the code exists means writing the code twice. The third question - the retirement - is not new at all; it is the question this repo banked for the owner on 2026-08-20 and has been carrying ever since, and it is asked here because the program is the first thing that makes it answerable with a replacement in hand rather than as a bare deletion.
+
+THE STANDING RULINGS THIS BRIEF DOES NOT REOPEN, stated first so the options are read against them.
+
+- D-7 (2026-08-10): the GATING duplication census was torn down - one real catch at the one-time triage and none since, structurally blind to both drift incidents this repo actually suffered, and 93% of its census lines registering accepted idioms. F5 duplication is UNBOUNDED by ruling. NOTHING IN THIS BRIEF IS A DUPLICATION CHECK, and no option below re-arms one. What D-7 contributes here is its LESSON rather than its subject: a check whose findings are mostly noise earns the ignore, so a new sensor ships warn-first and its false-positive behaviour is measured before anything is claimed about it.
+- OI-16 (owner correction, 2026-08-12): "the monolith risk was really around function size / complexity, not strictly file size." That correction is the warrant for this whole program. It ruled the AXIS and did not rule the retirement, which is exactly what is asked below.
+
+THE FOUR QUESTIONS.
+
+### Q1 - Does the complexity sensor REPLACE `tests/test_module_size_ratchet.py`?
+
+This is the banked question, and it is banked in two homes so it cannot be lost. The 2026-08-20 grind log, in the WI's own words:
+
+> "Note the axis it wants ALREADY EXISTS unused-for-this-purpose: `tests/test_complexity_ratchet.py` runs ruff `C901` per function and, unlike the line ratchet, RECURSES into packages. NOT redesigned here, deliberately - filing it is the WI's instruction. The question for the owner is whether the line ratchet retires in favour of the complexity one, or the two keep different jobs with the line one demoted to advisory."
+
+and `tests/test_module_size_ratchet.py`'s own module docstring, which is the file arguing about itself:
+
+> "AND THE SENSOR MEASURES AN AXIS ITS OWN OWNER DISPUTES. ... `tests/test_complexity_ratchet.py` measures the disputed axis; this census recurses into packages too since 2026-08-21 (see `_all_modules`), so the two now cover the same files and differ only in what they measure about them. Whether the line ratchet retires in favour of the complexity one or the two keep different jobs is an open question for the owner, banked in the 2026-08-20 log; until it is ruled, this file stays armed, because an unruled axis is not a reason to stop sensing growth."
+
+TWO WORKED COUNTEREXAMPLES ARE ON RECORD, both from WI-448, and they run in opposite directions - which is what makes them evidence rather than an anecdote. `bootstrap.py` shed two duplicated helper BODIES, gained a MAPPING declaration block, and the line ratchet demanded a REVIEWED BUMP on a module that had got structurally simpler. In the same programme `agent_common` and `check_trajectory` each lost roughly 230 lines of pure duplication and the ratchet's only response was "re-stamp downward". Neither direction told anyone anything about complexity.
+
+WHAT THE LINE RATCHET IS ALSO MEASURING, and it is measurable rather than arguable: roughly half the kit-scripts tree is prose - comment lines plus docstring lines - because the house style puts paragraph-length rationales inside the baselines themselves. The module-size ratchet is itself among the largest files in the repo and the great majority of it is commentary explaining its own entries. A line sensor over this tree partly measures documentation, which is a second reason the owner's OI-16 correction was right. Measured at HEAD `7fc42a5a` (tokenize + ast, re-derivable by `prototype/`): 9,670 comment lines and 18,246 docstring lines of 60,646 non-blank lines in `project-trajectory/scripts/` - 46.0% prose; `tests/` is 35.0% prose (14,664 + 8,434 of 66,024).
+
+### Q2 - Does the sensor census `tests/` as well as `project-trajectory/scripts/`?
+
+`WI-521` - the module-size ratchet's own named debt owner - states the gap and then refuses to close it without this ruling:
+
+> "`tests/test_module_size_ratchet.py` censuses `SCRIPTS` only, so no armed sensor watches the test tree - which is why three of the four monoliths grew 5-36% between the 2026-08-19 review and the `WI-483` close with nothing saying so. Do not just extend the census. That file's own docstring banks an unruled owner question ... Extending a disputed axis to a second tree doubles whatever is wrong with it. The honest sequence is to raise the axis question with the measurement this row can now supply, and extend only what survives the answer."
+
+The measurement that makes the case (prototype census at HEAD `7fc42a5a`): `tests/` is 146 files and 77,074 lines, holding 3,635 functions, of which 20 exceed a cognitive complexity of 15 (10 exceed 25, 1 exceeds 50). The sharpest single instance: `tests/test_import_layers.py::import_graph` at cognitive 58 - the seventh most complex function in the whole repository, 36 SLOC long, living inside a complexity sensor; its sibling `strongly_connected` scores 41.
+
+### Q3 - Does THIS repo run it armed, or report-only?
+
+The shipped default is settled by the program and needs no ruling: downstream gets `--report` only, and arming is an opt-in `PROCESS_OPTIONS.md` layer. Google's static-analysis bar is under 10% effective false positives before a check becomes an error, and a metric that has never been run on anyone else's codebase has no false-positive evidence at all. What needs ruling is THIS repo's own posture, because it changes every future session's commit bar.
+
+The evidence for arming is this repo's own, and it is the strongest enforcement evidence available anywhere in the kit: over one 48-day window the byte-CAPPED doc grew +2.6% while the two byte-WATCHED docs grew +91% and +1,101% (derived in `docs/knowledge/instruction-file-adherence.md`). HARD LIMITS HOLD; WATCH-ONLY DOES NOT. Any proposal here that lands as "flag it in the log" should be assumed to fail.
+
+The evidence against is the seed size. At a Sonar-default threshold the baseline seeds at 179 entries over the kit scripts (of 1,549 functions), plus 20 over `tests/` if Q2 is ruled in - 199 in all, 67 of them over 25 and 9 over 50. A baseline that large is a debt statement, not an approval - which is precisely the stance `test_module_size_ratchet.py` took and defended for months, so it is a stance with precedent here rather than a novelty.
+
+### Q4 - Two metric conventions and the threshold
+
+The prototype (`C:/Projects/ai-template-plans/complexity-pushback/prototype/`, 49 tests green, 9 oracle cases transliterated from the Sonar white paper's own worked examples, 89.5% exact agreement with the `cognitive_complexity` 1.3.0 reference package over 5,184 functions) had to resolve two points the spec leaves to the implementer, and each moves the seed:
+
+- `match` statements: the spec is explicit that a switch is ONE increment for the whole statement, not one per case. The prototype follows the spec. The brief that proposed it had assumed per-case.
+- Comprehension `if` conditions: the prototype counts them WITH the nesting increment (a filter inside a nested comprehension reads as nested control flow). The reference package does not. This one choice is worth 199 vs 166 seeded rows, and it is a one-function change either way.
+- Threshold: at 15 (Sonar default) the sensor carries 43 of the 47 entries in `tests/test_complexity_ratchet.py`'s C901 baseline; two of the four drops sit EXACTLY on 15 and one is a nested `def` the new sensor folds into its parent by design. At 14 it would carry 45 of 47.
+
+WHAT IS DELIBERATELY NOT ASKED. Whether to build the sensor at all (approved in principle). Whether it is stdlib (a shipped check that needs a linter forces every adopter to install it, and `docs/dependencies.md`'s `shipped` tier already makes that the highest bar in the kit). Whether a duplication gate returns (D-7; it does not). Whether to import numeric method-size rules (rejected on measurement - this repo's longest function is 670 lines at cognitive 14, and a 4-argument rule would mint 98 findings in the kit scripts on day one, which is the exact shape D-7 tore down)."""
+
+blast_radius = """### Q1 - the retirement
+
+WHAT IS DELETED, and it is not only a test file. `tests/test_module_size_ratchet.py` is 2,055 lines of which roughly nine-tenths is reviewed commentary: every baseline entry carries the reason its bump or its shrink was accepted, naming the log entry that reviewed it. Deleting the file deletes that record from the tree; it survives only in `docs/log.md` and the fragments, which is where the convention says history belongs, but the retirement commit owes a sentence saying so.
+
+THREE THINGS MUST MOVE IN THE SAME COMMIT or the suite reds:
+- `docs/stack.ini` `[generated]` carries the row `tests/test_module_size_ratchet.py = linecounts`.
+- `tests/test_generated_freshness_wiring.py` carries `OTHERWISE_ENFORCED = {"linecounts": "tests/test_module_size_ratchet.py"}` - "the kinds whose enforcer is NOT a check.py step, each named with its reason".
+- `WI-521`'s debt-owner pointer, which that row's own standing rule says moves in the same commit if it ever closes or is re-homed.
+
+THREE DOCSTRINGS GO DANGLING and one of them is in a SHIPPED file: `tests/test_import_layers.py` ("the topology sibling of `test_module_size_ratchet.py`"), `tests/test_agent_loop.py`, and `project-trajectory/scripts/traj_context.py`, whose docstring explains that the view is its own module because it "would have pushed `traj_views` past the 1,500-line decomposition threshold (`tests/test_module_size_ratchet.py`), whose rule is decompose, never bump". That last one is a kit module citing a this-repo test and it is worth noticing on its own account.
+
+REVERSIBILITY IS ASYMMETRIC AND SHOULD DECIDE HOW CAREFULLY THIS IS RULED. Keeping the ratchet is free and reversible at any time. Retiring it is a one-way door in practice: `git revert` restores the file, but by then every baseline entry has diverged from the tree, so a revert lands a red ratchet needing a hand re-stamp with reasons nobody holds.
+
+DOWNSTREAM: NOTHING. The line ratchet is `tests/`-resident and `scope: this-repo`; no adopter has ever had it.
+
+### Q2 - the scope
+
+Widening to `tests/` adds only 20 seeded entries (179 -> 199) - the test tree is larger in lines but far flatter per function - so the cost objection is small. It also puts the sensor in a position to fire on the test-splitting work `WI-521` is doing, which is a feature and a friction at once: a split that moves a complex function between modules RE-KEYS an entry rather than changing a number, and the WI-521 slice-1 record shows the repo has already met and named that exact case ("The complexity entry for `committed_snapshot_findings` was RE-KEYED to the new file, not re-stamped - the function is byte-identical and this file keys on (path, name), so a move has to be spelled or the census reports the same 12 twice"). The new sensor must key the same way and its docstring must say so.
+
+NOT widening leaves `WI-521`'s §3 gap open on any axis, and the row has now carried it across three programmes.
+
+### Q3 - the posture
+
+ARMED here means the exact-equality contract runs at `DevStg-Impl` as `[step:complexity]` in `docs/stack.ini`, and every session that makes a function more complex must either simplify it or take a reviewed baseline bump with its reason in the log. It also means every session that makes one SIMPLER must re-stamp downward in the same commit - the improvement arm is not a courtesy, it is what stops the baseline becoming a floor. That is real friction on every future WI and it is the point.
+
+REPORT-ONLY here means the census prints and nothing enforces. On this repo's own 48-day evidence, that is the posture that does not hold.
+
+EITHER WAY the smoke tier and its budget are touched: the new test module joins the per-commit bar by default (tiering is opt-out) and `docs/stack.ini` `[smoke-budget]` `max-tests` is re-stamped with its reason. Measure the wall-seconds delta against the 60 s budget before claiming the bar is unmoved.
+
+### What does NOT change under any answer
+
+No requirement is retired and no gate rung moves. `tests/test_complexity_ratchet.py` (the ruff `C901` census) is UNTOUCHED by every option below - it is this repo's own dev-tool ratchet behind a `skipif`, and nothing here proposes deleting it; the new sensor is stdlib and measures a different, less size-correlated quantity. No adopter is migrated by Q1-Q3; the shipping decision is its own phase and its own surface."""
+
+options = """### Q1 - the line ratchet
+
+- (1a) RETIRE IT, and let the complexity sensor take the axis. FOR: it is the trade the owner's own OI-16 correction implies - one sensor replacing one sensor is a net-zero instrument count on a strictly better axis; the two now cover the same files and differ only in what they measure, so the line one is the redundant half; it does not fire on a module that got structurally simpler, which is the WI-448 counterexample; and it ends a dispute the repo has been carrying in two docstrings. AGAINST: line count is cheap, legible and has caught real growth, and a large file is still harder to hold in one head whatever its per-function complexity; the deletion takes ~1,900 lines of reviewed rationale out of the tree; and cognitive complexity is a modestly-validated metric with a failed replication behind it, so replacing a crude-but-honest sensor with a subtler one is not automatically an upgrade.
+- (1b) KEEP BOTH, and DEMOTE the line one to advisory (report, never gate). FOR: keeps the size signal visible without letting it demand bumps on files that got simpler - which is the specific defect WI-448 exhibited; costs one line of code. AGAINST: this repo's own 48-day measurement says an advisory sensor is a sensor nobody obeys; and it leaves two instruments on overlapping files, which is the state the trade was meant to end.
+- (1c) KEEP BOTH ARMED, different jobs. FOR: nothing is lost, and the two genuinely measure different things - a 6,000-line module of trivial functions is a real problem no complexity metric names. AGAINST: two ratchets on the same files means two re-stamps per structural change and two chances for a session to re-stamp instead of fix; and it leaves the axis dispute unresolved in the file that raises it.
+- (1d) RETIRE IT AND BUILD NOTHING. Not recommended, listed for completeness. FOR: fewest instruments. AGAINST: it drops the growth sensor on a tree that grew from under 2,000 to over 67,000 script lines in eleven weeks with roughly 95% of commits adding net lines.
+
+### Q2 - `tests/`
+
+- (2a) YES - census `tests/` and `project-trajectory/scripts/` alike. FOR: it closes `WI-521`'s §3 gap on the RIGHT axis, which is exactly the sequence that row asked for; the test tree is now larger than the script tree and is the one nothing watches; and the worst instance is a complex function inside a complexity sensor, which is the argument making itself. AGAINST: adds 20 seeded entries; test modules legitimately carry long parameterised fixtures, so the false-positive rate on that tree is unknown until measured.
+- (2b) NO - scripts only, for now. FOR: smallest seed, and the false-positive question is answered on the tree the kit actually ships before being extended. AGAINST: leaves the measured gap open a fourth time, and `WI-521` then still has no answer.
+- (2c) YES, BUT REPORT-ONLY ON `tests/` - armed on scripts, reported on tests. FOR: gets the signal without the friction on a tree whose false-positive behaviour is unmeasured; a natural next rung once the number is known. AGAINST: two postures in one instrument is a thing to explain forever, and the 48-day evidence says the reported half will not hold.
+
+### Q3 - this repo's posture
+
+- (3a) ARMED here, report-only downstream. FOR: caps hold and watches do not, measured here, on this repo's own docs; the kit's whole credibility rests on holding itself to its own standard (SN-007), so shipping a sensor this repo does not run would be the wrong way round; and an armed sensor here is what generates the false-positive evidence an adopter would need before arming theirs. AGAINST: friction on every future WI, and a seed of 179 entries (199 with `tests/`) is a large statement of debt to sign in one sitting.
+- (3b) REPORT-ONLY here too, for one measured window, then re-rule. FOR: the honest version of Google's bar - measure the false-positive rate before making it an error, on the corpus you have; nothing is claimed that has not been measured. AGAINST: this repo has run exactly that experiment on its own documentation and the answer was +91% and +1,101%; a re-rule that depends on a future session remembering is the shape `WI-521` was filed to end.
+- (3c) ARMED, but at a threshold above the Sonar default, so the seed is small. FOR: a short baseline is a readable one, and a sensor whose baseline nobody reads is a sensor nobody trusts; the escape from a large seed is a higher bar, not a softer posture. AGAINST: it hides the population the sensor exists to surface, and the threshold then needs its own justification and its own future ruling to lower.
+
+### Q4 - conventions and threshold
+
+- (4a) KEEP THE PROTOTYPE'S CONVENTIONS (match = one increment; comprehension conditions nest) AT THRESHOLD 15. FOR: match follows the spec's own text; nested comprehension filters are exactly the deeply-nested-not-widely-branched shape this axis exists to catch; 15 is the published default and needs no local justification; the two on-15 C901 drops are not over the bar and should not be pretended to be. AGAINST: 33 more seeded rows than the reference-package convention; a reader comparing against `cognitive_complexity` output sees 10.5% of functions score differently.
+- (4b) FOLLOW THE REFERENCE PACKAGE ON COMPREHENSIONS (no nesting increment), threshold 15. FOR: seed drops to 166; numbers match a tool people may run independently. AGAINST: the package is itself wrong against the spec on the `elif` ladder (scores 9 where spec arithmetic gives 8, pinned by a prototype test), so agreement with it is not agreement with the spec.
+- (4c) (4a) at threshold 14, so the C901 baseline carries over 45/47. FOR: a smoother hand-off from the ruff ratchet. AGAINST: a non-default threshold is a number to defend forever, for two functions."""
+
+recommendation = """(1a) RETIRE, (2a) INCLUDE `tests/`, (3a) ARMED HERE, (4a) THE PROTOTYPE'S CONVENTIONS AT 15. The first three answers are one position and the reasoning is shared; the fourth is a spec-fidelity call and is stated last.
+
+ON Q1, THE DECIDING ARGUMENT IS NOT THAT THE LINE RATCHET IS BAD - IT IS THAT THE TWO NOW OVERLAP. Since the line census started recursing into packages the two instruments cover the same files and differ only in what they measure about them, and the owner has already ruled which of the two quantities is the risk. Keeping both armed asks every structural change to satisfy two baselines, one of which the owner has said measures the wrong thing; keeping the line one advisory asks it to be obeyed by goodwill, which this repo has measured and found wanting. The honest form of the correction is a trade, and it is a trade only if the replacement lands first - which is why the retirement is sequenced into phase 2, after the sensor exists and is green, never as a bare deletion.
+
+THE STRONGEST CASE AGAINST THIS RECOMMENDATION, stated rather than hidden: a 6,000-line module of individually simple functions is a real maintenance problem that no per-function metric will ever name, and (1c) is the only option that keeps a sensor for it. A ruler who weights that highly should take (1c) and accept the double re-stamp. What tips it the other way is that the line sensor has never actually caught that shape here - what it has caught, twice on record, is a module getting SIMPLER and being asked to justify itself.
+
+ON Q2, `WI-521` ALREADY WROTE THE ANSWER'S CONDITION: extend only what survives the ruling. If Q1 is answered (1a), then what survives is the complexity axis, and extending THAT to `tests/` is not doubling a disputed measurement - it is closing a measured gap with the instrument the owner endorsed. The case is strongest in one fact, which the prototype must confirm before this is claimed: the seventh-worst function in the repository by cognitive complexity (`import_graph`, 58) lives inside a complexity sensor, and the sixteenth-worst (`strongly_connected`, 41) is its neighbour.
+
+ON Q3, THE EVIDENCE IS THIS REPO'S OWN AND IT IS UNUSUALLY CLEAN. One 48-day window, three always-loaded documents, one capped and two watched: +2.6% against +91% and +1,101%. That is a better-controlled result on the enforcement question than anything in the published literature, and it points one way. The seed size is the real objection and it is answered by precedent rather than by argument: `test_module_size_ratchet.py` seeded large, declared itself a debt statement rather than an approval, and the baseline came DOWN over the following months as the decomposition work landed. Do the same, and say so in the file's own header.
+
+WHAT THE DRIVER IS LEAST SURE OF, so a ruler can weigh it: cognitive complexity is a modestly-validated metric - about r = 0.54 against comprehension time in the best meta-analysis, with a published failure to outperform plain LOC in a later study, and NO controlled study anywhere showing that enforcing a complexity threshold reduces defects. The case for it over cyclomatic is narrower and firmer than the case for complexity metrics in general: on THIS tree, cyclomatic is largely explained by size while cognitive is much less so, so cognitive adds information the existing C901 census does not have. That is the whole claim, and it should not be inflated into a defect-prevention claim it cannot carry.
+
+SEQUENCING, so nothing is removed before its replacement exists:
+- Rule here. Nothing is built or deleted until this row reads `ruled`.
+- Phase 1 builds the sensor REPORT-ONLY, with its two correctness traps under test, and publishes the census in the log - re-derived by the shipped script, not borrowed from the research pass that proposed it.
+- Phase 2 arms it here at the scope Q2 ruled, and executes Q1's answer in the same commit as the pointer move.
+- Phase 3 ships it `--report` only, as an opt-in layer with an applies-when, and verifies by bootstrapping a real scaffold.
+
+ON Q4, follow the spec where it speaks (match) and the axis's purpose where it does not (comprehensions); pin both in the docstring and in tests so a future "why does this differ from tool X" has a one-line answer. Threshold 15, because the two functions a 14 would rescue are not over the bar.
+
+IF THIS IS BEYOND APPETITE, the honest fallback is (1c) + (2b) + (3b) + (4a) - change nothing, build the sensor as a reported census, and re-rule on its numbers. But rule it either way: the banked question has been carried in two docstrings since 2026-08-20, and a sensor whose own file argues against its own axis is telling every future author that the check is optional."""
+
+[open_item.OI-69]
+title = """Adjudicator session retention: a retained session behind a context-percent dial, its rule-3 residual, and four settings that need the owner's word"""
+status = "pending"
+raised = "2026-08-30"
+one_line = """rule the opt-in adjudicator-session layer's settings before it is built - five questions in one sitting: (a) the layer retains a session TRANSCRIPT, not an actor, so the no-daemon doctrine stands - confirm the reading; (b) the rule-3 residual: `reset_on_same_artifact = false` by default, continuity on the same item over independence; (c) keep-warm pings across the blackout; (d) the dial's home is `docs/process.toml [adjudicator]`; (e) dedicated config homes for the orchestrator's CLIs - recommend confirm / false with the fork hardening banked / no pings in the blackout / process.toml / yes"""
+decision = """WHY THIS IS ASKED. On 2026-08-29 the owner asked for a plan, not code, for an adjudicator session that stays open across work items so it can cross-section feedback rather than reload the spine per small WI - a prior unattended run had extreme usage from exactly that re-spin. Four investigations and a cross-family adversarial review (gpt-5.6-sol, 24 findings, dispositioned per finding) reduced the design to an OPT-IN LAYER, the plan of record at docs/plans/2026-08-29-adjudicator-session-retention-plan.md: every adjudication is still ONE bounded headless process (the same run_session, closed stdin, the 7200 s timeout, the tree kill), launched with the family's resume form against a session the orchestrator minted earlier; after each adjudication the orchestrator reads that family's context occupancy from the process's own telemetry, and at `context_reset_pct` the session is marked draining and retired at the next clear point - the adjudication after that starts fresh, which is today's path. `context_reset_pct = 0` ships and is today's behaviour. The fuller persistent design - a long-lived librarian session, a forked verdict child per ruling, an outcome-free knowledge store - is PARKED behind an A/B the review demanded (a fresh session plus a knowledge pack against the retained session) and lives at docs/plans/2026-08-29-adjudicator-persistent-session-study.md; nothing in this brief builds it.
+
+THE STANDING FACTS THIS BRIEF DOES NOT REOPEN. Rule 3 of the prompts README: a judge must not carry its own prior verdicts on the artifact it judges (the anchoring evidence is in the study's section 1). SN-016's no-wedge invariant, the walk-away timeout and IF-064's contract are untouched by the layer by construction - no open stdin, no server, no heartbeat process. The measured fact that makes the layer cheap: resume-by-id is cost-equivalent to a standing process under the one-hour prompt cache; the only thing a standing process would buy is about 4.5 s of spawn and replay per request.
+
+THE FIVE QUESTIONS.
+
+### (a) - Does this reverse the no-daemon doctrine?
+
+The plan's own step 2 asks for a "reversal of the 2026-07-09 no persistent actor ruling". Read against the record (docs/archive/AGENT_ROLES.md: "there is no daemon - every session starts"; the archived improvement plan: "not a long-lived coordinator ... bus / daemon"), the layer reverses nothing: what it retains is a transcript on disk that the next bounded process replays, not a resident actor. The question is whether the owner reads it the same way.
+
+### (b) - The rule-3 residual
+
+With the dial on and `reset_on_same_artifact = false`, the retained session WILL hold its prior verdict on an item it judges again after a worker round-trip (judge -> worker acts -> worker returns -> judge again). That continuity is the owner's stated purpose for the layer; it is also the anchoring shape rule 3 exists to prevent, measured on the disposition -> successor chain (WI-418). `true` restores the strict posture at the cost of the continuity; the fork-per-verdict hardening in the study is the way to have both, and it is not built.
+
+### (c) - Keep-warm across the blackout
+
+`keepwarm_minutes` (ANTHROPIC only) pings a retained session to hold the one-hour cache while the queue is non-empty; a ping costs about a tenth of a cold rewrite, so pinging every ~50 minutes pays for gaps up to ~20 hours. A blackout window is a gap the dial cannot see; the review (finding 17) named the boundary semantics as an owner ruling.
+
+### (d) - Where the dial lives
+
+`docs/process.toml [adjudicator]` (process policy, beside the approval and push dials) or `docs/stack.ini [agent-loop]` (toolchain). The plan chose process.toml on that file's own rule - the dial changes what the process DOES, not what tools it runs.
+
+### (e) - Dedicated homes
+
+Whether the orchestrator's CLIs run under their own config homes (`CODEX_HOME`, `CLAUDE_CONFIG_DIR`; opencode's equivalent unverified) so retained transcripts, which carry repository content, are isolated from the owner's interactive sessions and can be retained, sized and deleted on a policy.
+
+WHAT IS DELIBERATELY NOT ASKED. Whether to build persistence beyond the dial (parked behind the A/B). The fork semantics of each CLI (unverified; the hardening path's problem, and finding 1 of the review). The degradation point the owner has observed near 60 % (the dial's value is the owner's to set from the telemetry the first row lands)."""
+blast_radius = """### (a)
+Confirming costs nothing; if the owner reads the layer as a reversal, the ruling must say what invariant the doctrine protected and how the layer keeps it - the plan's answer is "no open stdin, no server, one bounded process per adjudication".
+
+### (b)
+`false`: every retained session carries a residual anchoring risk on repeat items, bounded by the dial and by brief-level redaction, and visible only in review quality. `true`: more resets (one per repeat item), and the round-trip continuity the layer was asked for is lost on exactly the items where it matters. Either way one config default, one test, no code path removed.
+
+### (c)
+Pinging through a blackout is a cost lever only - no verdict is issued, nothing wedges; the risk is a bill for a warm cache nobody used. Not pinging means one cold rewrite of the prefix after the window (Opus 5: a 300k prefix is about $3).
+
+### (d)
+Nothing downstream yet: the section ships with `context_reset_pct = 0` and the dogfood parity test pins the template's table. Moving it later is a rename across process.toml, its template and one reader.
+
+### (e)
+A per-orchestrator home isolates transcripts and cache state; it also means the orchestrator's CLIs no longer see the owner's interactive settings and skills unless they are materialized there - a scaffold step, not a one-liner."""
+options = """### (a)
+- (a1) CONFIRM: a retained transcript replayed by a bounded process is not a persistent actor; the no-daemon doctrine stands unchanged. FOR: matches the record and the plan's mechanics. AGAINST: none found.
+- (a2) TREAT AS A REVERSAL and re-rule the doctrine. FOR: the most conservative reading. AGAINST: rules on a thing the layer does not do.
+
+### (b)
+- (b1) `reset_on_same_artifact = false` by default, the fork hardening BANKED as the next rung if review quality shows the residual. FOR: the owner's stated purpose; one dial, no fork semantics to verify first. AGAINST: an accepted rule-3 residual on repeat items, measured elsewhere as real.
+- (b2) `true` by default. FOR: rule 3 intact. AGAINST: defeats the round-trip continuity on the same item; more resets.
+- (b3) Require the fork hardening from day one. FOR: both properties. AGAINST: fork isolation is unverified on all three families, and the study's design is parked behind an A/B.
+
+### (c)
+- (c1) NO PINGS during the blackout; accept one cold rewrite after it. FOR: nothing spent on a window nobody is judging in. AGAINST: one rewrite per blackout per retained family.
+- (c2) Ping through it. FOR: the successor turn is warm. AGAINST: pays hourly for an idle cache.
+
+### (d)
+- (d1) `docs/process.toml [adjudicator]`. FOR: policy beside policy. AGAINST: none of weight.
+- (d2) `docs/stack.ini [agent-loop]`. FOR: beside the other loop dials. AGAINST: stack.ini is toolchain, and the dial is not.
+
+### (e)
+- (e1) Dedicated homes per family, materialized by the scaffold. FOR: isolation, retention policy, sizing. AGAINST: a scaffold step and one more thing to keep in sync.
+- (e2) Shared homes, as today. FOR: nothing to build. AGAINST: retained transcripts with repository content sit in the owner's interactive config, un-policied."""
+recommendation = """(a1) confirm, (b1) false with the fork hardening banked, (c1) no pings across the blackout, (d1) process.toml, (e1) dedicated homes. The first is a reading, not a change. The second is the one that costs something, and the owner already chose its direction in session; the brief states the residual so the choice is made with eyes open, and the telemetry row that lands first (`context_pct`, `reset_reason`, `compacted` per adjudication) is what will show whether the residual matters. Sequence: the telemetry row is unblocked and lands with the dial off; the layer and its verification on this box follow the ruling; enabling is the owner's edit of one number, watched for a week against the earlier extreme-usage run as the baseline."""
+wi_refs = ["WI-535"]
