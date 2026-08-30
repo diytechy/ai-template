@@ -6,6 +6,7 @@ specref = "docs/plans/2026-08-25-remap-alignment.md"
 buildtier = "strong"
 priority = 2
 safety_class = "ordinary"
+supersedes = "WI-521"
 +++
 
 ## Context

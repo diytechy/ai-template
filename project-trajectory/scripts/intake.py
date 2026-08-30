@@ -1239,6 +1239,7 @@ def _draft_row(wi_id, draft):
     row["Bar"] = normalize_bar(draft.get("bar"))
     row["SR-Refs"] = ";".join(draft.get("sr_refs") or [])
     row["Predecessors"] = ";".join(draft.get("needs") or [])
+    row["Supersedes"] = str(draft.get("supersedes") or "")  # LLR-161 lineage
     if draft.get("priority") is not None:
         row["Priority"] = str(draft["priority"])
     return row

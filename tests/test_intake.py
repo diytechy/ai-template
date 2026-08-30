@@ -498,6 +498,24 @@ def test_a_merged_adjudication_rows_dispositions_are_minted_at_its_merge(tmp_pat
     assert row["SafetyClass"] == ""
 
 
+def test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint():
+    # LLR-161: `supersedes` is the one cell that keeps partial work's thread
+    # across the id change. `_draft_row` accepted the key (via `_DRAFT_KEYS`)
+    # and the row schema has the column, yet the writer dropped it — WI-545,
+    # minted from WI-542's draft on 2026-08-30, carried no lineage at all.
+    row = intake._draft_row(
+        "WI-999",
+        {"title": "successor", "supersedes": "WI-521", "kind": "ordinary"},
+    )
+    assert row["Supersedes"] == "WI-521"
+    assert (
+        intake._draft_row("WI-998", {"title": "fresh", "kind": "ordinary"})[
+            "Supersedes"
+        ]
+        == ""
+    )
+
+
 def test_a_malformed_disposition_block_refuses_and_mints_nothing(tmp_path):
     bad = DISPOSITIONS.replace('title = "Re-verify', '= "Re-verify')
     root = merged_adjudication_repo(tmp_path, body=bad)
