@@ -1,0 +1,2 @@
+- [MINOR] project-trajectory/scripts/intake.py:1025 -> `str.strip()` destroys leading indentation and trailing Markdown whitespace from scope prose that the minted successor must receive verbatim; an isolated WI-544 replay loses an indented first line -> preserve the captured prose exactly (removing only a fence-delimiting newline if needed) and add a full-flow regression using Markdown-significant whitespace -> @owner
+VERDICT: CHANGES-REQUESTED findings=1
