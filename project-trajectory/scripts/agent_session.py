@@ -386,6 +386,43 @@ def _codex_lastmsg_read(path):
     return text
 
 
+def _wait_for_exit(proc, timeout, idle_timeout, last_line):
+    """Wait out ONE session under its two deadlines (C3, the stall-guard
+    plan): `timeout` bounds the WALL, `idle_timeout` bounds SILENCE against
+    `last_line` (the reader thread's stamp of the child's most recent output).
+    Returns `(killed_message, killed_kind)` — `("", False)` for a child that
+    exited on its own, kind `True` for the wall (the historical timed_out
+    value, so every truthiness read holds) and `"idle"` for the idle kill.
+    Polls in one-second slices only when a deadline exists; with neither it
+    blocks exactly as the pre-C3 wait did. A KeyboardInterrupt kills the whole
+    tree and re-raises — an interrupted coordinator must not leave a live
+    agent editing the worktree (start_new_session detaches the child from the
+    terminal group, so Ctrl+C no longer reaches it implicitly)."""
+    wall_deadline = (time.time() + timeout) if timeout else None
+    try:
+        while True:
+            try:
+                slice_ = 1.0 if (wall_deadline is not None or idle_timeout) else None
+                proc.wait(timeout=slice_)
+                return "", False
+            except subprocess.TimeoutExpired:
+                now = time.time()
+                if wall_deadline is not None and now >= wall_deadline:
+                    return "session timed out after {}s".format(timeout), True
+                if idle_timeout and now - last_line[0] >= idle_timeout:
+                    return (
+                        "session idle-timed out after {}s of silence "
+                        "(idle-timeout {}s, wall {}s)".format(
+                            int(now - last_line[0]), idle_timeout, timeout
+                        ),
+                        "idle",
+                    )
+    except (KeyboardInterrupt, SystemExit):
+        _kill_tree(proc)
+        proc.wait()
+        raise
+
+
 def run_session(
     argv, root, timeout, env=None, on_line=None, stdin_input=None, idle_timeout=None
 ):
@@ -490,37 +527,7 @@ def run_session(
     # 2026-08-30 each went quiet minutes in and burned a 7200 s wall slot. The
     # waiter polls in one-second slices only when a deadline exists; with
     # neither, it blocks exactly as before.
-    wall_deadline = (time.time() + timeout) if timeout else None
-    killed = ""
-    killed_kind = False
-    try:
-        while True:
-            try:
-                slice_ = 1.0 if (wall_deadline is not None or idle_timeout) else None
-                proc.wait(timeout=slice_)
-                break
-            except subprocess.TimeoutExpired:
-                now = time.time()
-                if wall_deadline is not None and now >= wall_deadline:
-                    killed = "session timed out after {}s".format(timeout)
-                    killed_kind = True  # wall — the historical value
-                    break
-                if idle_timeout and now - last_line[0] >= idle_timeout:
-                    killed = (
-                        "session idle-timed out after {}s of silence "
-                        "(idle-timeout {}s, wall {}s)".format(
-                            int(now - last_line[0]), idle_timeout, timeout
-                        )
-                    )
-                    killed_kind = "idle"  # truthy, so every timeout read holds
-                    break
-    except (KeyboardInterrupt, SystemExit):
-        # An interrupted coordinator must not leave a live agent tree editing
-        # the worktree (start_new_session detaches the child from the terminal
-        # group, so Ctrl+C no longer reaches it implicitly — kill explicitly).
-        _kill_tree(proc)
-        proc.wait()
-        raise
+    killed, killed_kind = _wait_for_exit(proc, timeout, idle_timeout, last_line)
     if killed:
         _kill_tree(proc)
         proc.wait()

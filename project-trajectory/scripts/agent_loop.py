@@ -1235,6 +1235,15 @@ class RoutingState:
         self.stall = 0 if committed else self.stall + 1
         self.errors = self.errors + 1 if errored else 0
 
+    def note_review_family(self, family):
+        """C5: record whether this review draw shares the implementer's family
+        — the relaxed rung, however the draw got there — and return the fact
+        for the verdict filename. Derived from the typed family fact, never a
+        reason-string sniff."""
+        relaxed = bool(self.last_impl_family and family == self.last_impl_family)
+        self.round_relaxed = self.round_relaxed or relaxed
+        return relaxed
+
     def note_review_draw_failure(self):
         """One REVIEW/CRITIQUE draw failed (ERROR, TIMEOUT, no verdict, no
         routable candidate): count it toward the C2 review-owed bound. A
@@ -2145,61 +2154,11 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # Win-stay first -> it takes precedence over the static phase pin; both
         # only pin an id that survives the tier/heterogeneity pool filter.
         preferred_ids = list(winstay_pref) + list(phase_pin)
-        route_id, reason = select_with_probe(
+        route_id, reason, route_stop = draw_session_route(
             ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
         )
-        # Log the routing decision BEFORE launch (the no-silent-swap rule).
-        print("route [{}]: {}".format(phase or "—", reason))
-        if route_id is None and is_review:
-            # C5 rung 2 (docs/plans/2026-08-30-stall-guard-plan.md): the
-            # cross-family ladder is exhausted, so draw again with the
-            # heterogeneity exclusions relaxed — an independent same-family
-            # reviewer (fresh context is the invariant; family is policy)
-            # beats parking the lane. The relaxation is RECORDED on the
-            # verdict filename, the round line and the telemetry.
-            route_id, reason = select_with_probe(
-                ctx, st, phase, tier, set(), False, preferred_ids, now
-            )
-            if route_id is not None:
-                print(
-                    "route [{}]: heterogeneity RELAXED — {}".format(
-                        phase or "—", reason
-                    )
-                )
-        if route_id is None and is_review and worker:
-            # C2: a review round nobody can serve parks the lane with its
-            # committed work — never a NEEDS-HUMAN page the dispatcher would
-            # turn into a handback of finished work.
-            st.note_review_draw_failure()
-            write_review_owed(
-                root, worker, st, "no routable reviewer ({})".format(reason)
-            )
-            stop_banner(
-                status_path,
-                "REVIEW OWED — no routable reviewer",
-                reason + "; the build is committed, the lane parks with its "
-                "work (marker: out/review-owed) and the next cycle resumes "
-                "it to draw the round.\n"
-                + agent_route.pool_context(enabled, registry, st.cooldowns, now),
-            )
-            return EXIT_REVIEW_OWED
-        if route_id is None:
-            # Every enabled model at the preferred tier-or-stronger is cooling
-            # down or none is enabled: page rather than drop to a weaker tier.
-            # (A worker never writes run-state — its exit code is the page;
-            # the stop banner + exit code carry the outcome.)
-            stop_banner(
-                status_path,
-                "NEEDS-HUMAN — no routable model",
-                reason + " (add/enable a model of this tier, or wait for a "
-                "cooldown; the loop never silently drops to a weaker tier).\n"
-                # Per-row state + the Notes cell — the declared home for the
-                # provider's sign-in/install hint (e.g. `opencode auth
-                # login`), so the page says what to DO, not just that it
-                # paged (WI-109).
-                 + agent_route.pool_context(enabled, registry, st.cooldowns, now),
-            )
-            return EXIT_NEEDS_HUMAN
+        if route_stop is not None:
+            return route_stop
         m = registry[route_id]
         model = m.model or route_id
         route_family = m.family
@@ -2222,13 +2181,7 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
                 else head_sha(root)
             ) or ""
         if is_review:
-            # C5: a reviewer sharing the implementer's family IS the relaxed
-            # rung, however the draw got there (the explicit retry above, or
-            # select()'s own degraded fallback) — derived from the typed
-            # family fact, never from a reason-string sniff.
-            relaxed = bool(st.last_impl_family and route_family == st.last_impl_family)
-            if relaxed:
-                st.round_relaxed = True
+            relaxed = st.note_review_family(route_family)
             verdict_path = fresh_verdict_path(
                 reviews_dir,
                 "{}-{}-{}{}.md".format(
@@ -2815,6 +2768,14 @@ def current_assignment_wi(root, worker):
     )
 
 
+def stamp_session_meta(meta, plan, timed_out):
+    """C3/C5 telemetry: WHICH deadline killed a TIMEOUT session (`wall` or
+    `idle`), and whether a review verdict was drawn with heterogeneity
+    relaxed — typed header fields, so neither is a transcript grep later."""
+    meta["timeout"] = "idle" if timed_out == "idle" else ("wall" if timed_out else "")
+    meta["heterogeneity"] = "relaxed" if plan.get("relaxed") else ""
+
+
 def resolve_idle_timeout(args):
     """C3: --session-idle-timeout > AGENT_SESSION_IDLE_TIMEOUT > 900 (the
     S8-knob idiom). 0 or negative disables the idle kill; None on the flag
@@ -3042,6 +3003,60 @@ def select_with_probe(
     return None, "every candidate failed its liveness probe"
 
 
+def draw_session_route(
+    ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
+):
+    """One draw of the session route, with the review ladder's two extra rungs
+    (C2/C5, docs/plans/2026-08-30-stall-guard-plan.md): the probing select;
+    for a review phase whose cross-family pool is exhausted, the RELAXED retry
+    (heterogeneity dropped, recorded by the caller off the typed family fact);
+    and, when nothing is routable at all for a worker's review, the REVIEW
+    OWED park — never a NEEDS-HUMAN page the dispatcher would turn into a
+    handback of finished work. Returns `(route_id, reason, exit_code)`; a
+    non-None exit_code ends the run (the banner is already written)."""
+    is_review = phase in REVIEW_PHASES
+    route_id, reason = select_with_probe(
+        ctx, st, phase, tier, exclude, prefer_different, preferred_ids, now
+    )
+    # Log the routing decision BEFORE launch (the no-silent-swap rule).
+    print("route [{}]: {}".format(phase or "—", reason))
+    if route_id is None and is_review:
+        route_id, reason = select_with_probe(
+            ctx, st, phase, tier, set(), False, preferred_ids, now
+        )
+        if route_id is not None:
+            print("route [{}]: heterogeneity RELAXED — {}".format(phase or "—", reason))
+    if route_id is None and is_review and ctx.worker:
+        st.note_review_draw_failure()
+        write_review_owed(
+            ctx.root, ctx.worker, st, "no routable reviewer ({})".format(reason)
+        )
+        stop_banner(
+            ctx.status_path,
+            "REVIEW OWED — no routable reviewer",
+            reason + "; the build is committed, the lane parks with its "
+            "work (marker: out/review-owed) and the next cycle resumes "
+            "it to draw the round.\n"
+            + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
+        )
+        return None, reason, EXIT_REVIEW_OWED
+    if route_id is None:
+        # Every enabled model at the preferred tier-or-stronger is cooling
+        # down or none is enabled: page rather than drop to a weaker tier.
+        # (A worker never writes run-state — its exit code is the page; the
+        # stop banner + exit code carry the outcome. The Notes cell is the
+        # declared home for the provider's sign-in/install hint, WI-109.)
+        stop_banner(
+            ctx.status_path,
+            "NEEDS-HUMAN — no routable model",
+            reason + " (add/enable a model of this tier, or wait for a "
+            "cooldown; the loop never silently drops to a weaker tier).\n"
+            + agent_route.pool_context(ctx.enabled, ctx.registry, st.cooldowns, now),
+        )
+        return None, reason, EXIT_NEEDS_HUMAN
+    return route_id, reason, None
+
+
 def review_owed_marker(root):
     """The C2 parked-state marker: lane-local and gitignored, under out/ so it
     rides the lane worktree across worker restarts (the in-process
@@ -3063,6 +3078,7 @@ def write_review_owed(root, worker, st, detail):
                 worker["train"], worker["base"], st.review_draw_failures, detail
             ),
             encoding="utf-8",
+            newline="\n",
         )
     except OSError:
         pass
@@ -3268,11 +3284,7 @@ def run_iteration(ctx, i):
     meta = session_meta(
         ctx, plan, data, session, stamp, wi_label, outcome, commits, code, wall_secs
     )
-    # C3/C5 telemetry: WHICH deadline killed a TIMEOUT session, and whether a
-    # review verdict was drawn with heterogeneity relaxed — typed header
-    # fields, so neither is a transcript grep later.
-    meta["timeout"] = "idle" if timed_out == "idle" else ("wall" if timed_out else "")
-    meta["heterogeneity"] = "relaxed" if plan.get("relaxed") else ""
+    stamp_session_meta(meta, plan, timed_out)
     log_path = write_session_log(ctx.iter_dir, meta, output)
     # A worker never regenerates the iteration index: it is a GENERATED
     # root artifact the integrator rebuilds on the composed tree (spec
@@ -3305,14 +3317,8 @@ def run_iteration(ctx, i):
         return None
     if r is not None:
         return r
-    return after_session(
-        ctx,
-        i,
-        outcome,
-        reset_hint,
-        committed,
-        judging=plan["is_review"] or plan["is_critique"],
-    )
+    judging = plan["is_review"] or plan["is_critique"]
+    return after_session(ctx, i, outcome, reset_hint, committed, judging=judging)
 
 
 def _coordinator_lock(root):
