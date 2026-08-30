@@ -4,6 +4,12 @@
 
 **Final verdict: APPROVE at `a16af888` (round 3, `011-REVIEW-A-a16af88.md`, one MINOR carried: a missing baseline is compared as empty — for the owner's list).** Rounds 1–2 CHANGES-REQUESTED, both reworked on the lane.
 
+After the governing round, one derived artifact was regenerated on the lane by the kit's own
+generator and nothing else changed: `docs/ratify/CURRENT.md` (`trace.py --approve modified`,
+the re-attestation brief for the four minted `Drafted` rows), because the station refresh's
+`approval-fresh` step refused the stale render. No registry cell, no code, no test moved; the
+reviewed tree `a16af888` is the tree that merges, plus that render.
+
 ---
 
 ## Round 1 — at 41c44e6b (OPENAI-TERRA, `gpt-5.6-terra`; loop-drawn, after the build f9d3d687..41c44e6b)
