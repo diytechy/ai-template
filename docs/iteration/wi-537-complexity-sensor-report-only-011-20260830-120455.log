@@ -1,0 +1,489 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 011
+# date: 2026-08-30 12:16
+# train: wi-537-complexity-sensor-report-only
+# base: 127fdd3e
+# phase: REVIEW-A
+# wi: WI-537
+# model: opencode-go/grok-4.6
+# guardrails: 
+# outcome: COMMITTED
+# commits: 19610a03..6dc7dd31
+# tokens: 
+# cost-usd: 
+# wall-secs: 678
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2816
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:16b93821e134
+# exit-code: 0
+# ---
+[0m
+> build · grok-4.6
+[0m
+[0m→ [0mSkill "session-protocol"
+I'll review the diff independently: load the session protocol, inspect git history, and pull the requirement surface.
+[0m→ [0mRead CLAUDE.md[90m [limit=150][0m
+[0m
+[0m$ [0mgit log --oneline -20 && echo "---STATUS---" && git status && echo "---BRANCH---" && git branch -v && echo "---DIFFSTAT---" && git log --oneline -5 --format="%H %s"
+19610a03 telemetry: session wi-537-complexity-sensor-report-only-010 REVIEW-A ERROR
+e8f9bc18 telemetry: session wi-537-complexity-sensor-report-only-009 BUILD COMMITTED
+a16af888 WI-537: clear residual iteration-log header whitespace; record Round-6 resolution
+84e57951 telemetry: session wi-537-complexity-sensor-report-only-008 BUILD NO-COMMIT
+0b0426ef telemetry: session wi-537-complexity-sensor-report-only-007 DESIGN-CHECK COMMITTED
+6efafdef WI-537: align LLR-206 with the census boundary
+49074bc0 telemetry: session 006 review scoreboard
+6b75b862 telemetry: session wi-537-complexity-sensor-report-only-006 REVIEW-A COMMITTED
+0cc4a546 review: record WI-537 independent verdict
+8c6aacb0 telemetry: session wi-537-complexity-sensor-report-only-005 BUILD COMMITTED
+30c84a6e WI-537: re-affirm the WI spec against the amended SR-183 boundary
+f3a052d7 WI-537: REVIEW-A rework — census descends every control-flow container; boundary pinned exclusive
+1b293594 telemetry: session wi-537-complexity-sensor-report-only-004 BUILD NO-COMMIT
+7ca89fab telemetry: session wi-537-complexity-sensor-report-only-003 BUILD NO-COMMIT
+33d78261 telemetry: session 002 review scoreboard
+ca1b0843 telemetry: session wi-537-complexity-sensor-report-only-002 REVIEW-A COMMITTED
+614e7cd1 review: record WI-537 independent verdict
+3356633e telemetry: session wi-537-complexity-sensor-report-only-001 BUILD COMMITTED
+41c44e6b WI-537: record full-suite result in the log fragment
+f9d3d687 WI-537: check_complexity.py — stdlib cognitive-complexity + SLOC census, report-only
+---STATUS---
+On branch wi-537-complexity-sensor-report-only
+nothing to commit, working tree clean
+---BRANCH---
+  ConcurrencyTrainRewrite                          ee653340 Misc scratch + architecture update
+  MultiRepoSupport                                 2438e770 [behind 6] docs(review): archive the 2026-07-12 deep-review report; owner items inline in status.md
+  OpenCode                                         5a5a0eb8 [ahead 1] Concern bubble.
+  ProjectStateUI-Improvements-2                    3c5f8753 WI-435 review fixes: one ink per meaning, a fail-loud marker scope, no new debt
++ contract_split                                   51a003a6 [ahead 76] agent_common: the session-log header right-strips each line — an empty value no longer leaves a trailing space in a tracked file
+  derived-gate-model                               239e78c9 [ahead 1] Latest scratch
+  dualplan-routing-fix                             a30342ab Handoff
+  guardrails-fable-method                          4fc18dc0 WI-214: declare check_completion's interface seams (IF-062/IF-063)
+  infra/mechanized-loop                            f5267991 [behind 3] review: adversarial round (Opus) over all 28 of the day's commits - 18 findings, and one failure class behind five of them
+  main                                             3abeb636 Merge branch 'derived-gate-model'
+  mechanized-loop                                  ce55a7c7 Final adversarial review (OpenAI gpt-5.6-sol, medium): NOT SOUND ENOUGH TO HAND OVER
+  requirements/ears-and-quality-characteristics    37e2bba0 open-items: OI-65 files the placement re-ask, and OI-64 gets the sequencing it was missing
+  v3                                               d42a9a1e [ahead 1, behind 1] Fable's plan
+  v3-fable                                         1aab0816 Composite plan
+* wi-537-complexity-sensor-report-only             19610a03 telemetry: session wi-537-complexity-sensor-report-only-010 REVIEW-A ERROR
++ wi508-architectural-remap-HELD-for-owner-verdict fa3c99c4 review: record WI-508 independent verdict
+---DIFFSTAT---
+19610a03d575cb7da07545d97e444985053e1c7d telemetry: session wi-537-complexity-sensor-report-only-010 REVIEW-A ERROR
+e8f9bc183d51e2733221bfc8a548d4dd7c2cb002 telemetry: session wi-537-complexity-sensor-report-only-009 BUILD COMMITTED
+a16af888cae17c190e75088c1d83875bf5e0d6f6 WI-537: clear residual iteration-log header whitespace; record Round-6 resolution
+84e57951fa6fe1e222b94f3d0f0e3e32bef87033 telemetry: session wi-537-complexity-sensor-report-only-008 BUILD NO-COMMIT
+0b0426efff68d2db342809bd85560eedc0cf4a51 telemetry: session wi-537-complexity-sensor-report-only-007 DESIGN-CHECK COMMITTED
+[0m
+[0m✱ [0mGlob "docs/work/**/*537*"[90m 1 match[0m
+The review target is `a16af888`. Next I’ll pull that commit’s diff, the WI spec, and the requirement surface.
+[0m✱ [0mGlob "docs/reviews/wi-537-complexity-sensor-report-only/**"[90m 3 matches[0m
+[0m✱ [0mGlob "docs/work/**/*complexity*"[90m 2 matches[0m
+[0m
+
+[... 2375 line(s) elided — full stream in out/run-logs/ ...]
+
+# corrupt last data row to 2 cells
+parts = raw.splitlines()
+parts[-1] = 'only\ttwo'
+bl.write_text('\n'.join(parts)+'\n', encoding='utf-8', newline='\n')
+buf, err = io.StringIO(), io.StringIO()
+with redirect_stdout(buf), redirect_stderr(err):
+    rc = cc.main(['--root', str(td), '--mode', 'enforce'])
+print('corrupt-row enforce rc', rc)
+print('stderr', err.getvalue()[:300])
+print('stdout', buf.getvalue()[:200])
+
+print('--- syntax error ---')
+mod.write_text('def f(\n', encoding='utf-8')
+try:
+    cc.census(td, cc.DEFAULT_INCLUDE)
+    print('SYNTAX DID NOT RAISE')
+except Exception as e:
+    print(type(e).__name__, str(e)[:80])
+
+shutil.rmtree(td, ignore_errors=True)
+"
+
+--- collect containers ---
+['C.Inner.im', 'C.m', 'under_async_for', 'under_async_with', 'under_except', 'under_finally', 'under_for_else', 'under_if', 'under_if_else', 'under_try', 'under_try_else', 'under_with']
+--- module-level lambda ---
+lambda collect []
+lambda public ['f']
+--- default-arg IfExp omitted ---
+default (0, ['f'])
+--- decorator IfExp omitted ---
+deco (0, ['f'])
+--- two filters in comp ---
+two ifs (4, ['f'])
+--- nested generators ---
+nested for-comp (0, ['f'])
+--- unstamped over-threshold ---
+warn unstamped rc 0
+stdout 
+stderr check_complexity: FAIL - project-trajectory/scripts/mod.py::tangled cognitive None -> 21. SIMPLIFY; a bump is a reviewed baseline edit whose reason lands in the log, never a drive-by.
+  named escapes: decompose OUTWARD (a sibling function or a new module, never a nested def); express the branches as a data table (check.py::steps is 670 lines at cognitive 14); define the error out of existence so t
+enforce unstamped rc 1
+stderr starts check_complexity: FAIL - project-trajectory/scripts/mod.py::tangled cognitive None -> 21. SIMPLIFY; a bump is a reviewed baseline edit whose reason lands in the log, never a drive-by.
+  named escapes:
+report unstamped rc 0 has tangled True
+--- sloc-only change vs compare ---
+check_complexity: re-stamped 1 row(s) -> docs/complexity-baseline
+sloc-only enforce rc 0 stdout check_complexity: OK - 1 row(s) over 15, unchanged from baseline. stderr 
+--- restamp preserves reason on score change ---
+check_complexity: re-stamped 1 row(s) -> docs/complexity-baseline
+check_complexity: re-stamped 1 row(s) -> docs/complexity-baseline
+# docs/complexity-baseline — one row per function over the cognitive-complexity threshold when stamped.
+# A row is a DEBT STATEMENT, NOT AN APPROVAL: the reason column records why it is carried, and the
+# baseline only ever tightens — re-stamp DOWNWARD or delete a row, never up to clear a finding.
+# path	function	cognitive	sloc	reason
+project-trajectory/scripts/mod.py	tangled	22	10	seeded
+
+--- malformed baseline row dropped ---
+check_complexity: re-stamped 1 row(s) -> docs/complexity-baseline
+corrupt-row enforce rc 1
+stderr check_complexity: FAIL - project-trajectory/scripts/mod.py::tangled cognitive None -> 21. SIMPLIFY; a bump is a reviewed baseline edit whose reason lands in the log, never a drive-by.
+  named escapes: decompose OUTWARD (a sibling function or a new module, never a nested def); express the branches as
+stdout 
+--- syntax error ---
+SyntaxError '(' was never closed (<unknown>, line 1)
+[0m
+[0m✱ [0mGrep "check_complexity|complexity-baseline"[90m in project-trajectory/scripts/check.py · 9 matches[0m
+[0m✱ [0mGrep "check_complexity"[90m in docs/cli-reference.md · 91 matches[0m
+[0m→ [0mRead docs/requirements/low-level-requirements.toml[90m [offset=2170, limit=10][0m
+[0m
+[0m$ [0mgit diff f9d3d687^..a16af888 --stat -- docs/id-watermark docs/cli-reference.md project-trajectory/scripts/bootstrap.py tests/test_bootstrap.py docs/stack.ini project-trajectory/stack.ini.template
+docs/id-watermark |  8 ++++----
+ docs/stack.ini    | 11 ++++++++++-
+ 2 files changed, 14 insertions(+), 5 deletions(-)
+[0m
+[0m✱ [0mGrep "if not path.exists|unstamped|bare"[90m in project-trajectory/scripts/check_dupes_census.py · 100 matches[0m
+[0m→ [0mRead docs/reviews/wi-537-complexity-sensor-report-only/006-REVIEW-A-30c84a6.md
+[0m
+[0m$ [0mpython -c "
+import ast
+from pathlib import Path
+n_ann=n_unpack=n_lambda_assign=0
+examples=[]
+root=Path('project-trajectory/scripts')
+for p in root.rglob('*.py'):
+    if '__pycache__' in p.parts: continue
+    try: tree=ast.parse(p.read_text(encoding='utf-8'))
+    except Exception: continue
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and not node.target.id.startswith('_'):
+            n_ann+=1
+            if len(examples)<6: examples.append(('ann', p.name, node.target.id))
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, (ast.Tuple, ast.List)):
+                    n_unpack+=1
+                    if len(examples)<8: examples.append(('unpack', p.name, ast.dump(t)[:60]))
+                if isinstance(t, ast.Name) and isinstance(node.value, ast.Lambda):
+                    n_lambda_assign+=1
+                    examples.append(('lambda', p.name, t.id))
+print('module AnnAssign public', n_ann)
+print('module unpack', n_unpack)
+print('module lambda assign', n_lambda_assign)
+print('examples', examples)
+"
+
+module AnnAssign public 0
+module unpack 2
+module lambda assign 0
+examples [('unpack', 'pending.py', "Tuple(elts=[Name(id='BLOCKED', ctx=Store()), Name(id='SPINE'"), ('unpack', 'spine_rules.py', "Tuple(elts=[Name(id='DRAFTED', ctx=Store()), Name(id='APPROV")]
+[0m
+[0m$ [0mgit show f9d3d687:project-trajectory/scripts/check_complexity.py | python -c "
+import ast, sys
+src = sys.stdin.read()
+# extract old _collect by exec? just print the function
+start = src.find('def _collect')
+print(src[start:start+900])
+"
+
+def _collect(node, prefix, out):
+    """Every module-level function and method, qualified `Class.method`."""
+    for field in ("body", "orelse", "finalbody", "handlers"):
+        for child in getattr(node, field, None) or []:
+            if isinstance(child, ast.ClassDef):
+                _collect(child, prefix + child.name + ".", out)
+            elif isinstance(child, _DEFS):
+                out.append((prefix + child.name, child))
+            elif isinstance(child, (ast.If, ast.Try, ast.With)):
+                _collect(child, prefix, out)
+
+
+def _public(tree):
+    names = []
+    for node in tree.body:
+        if isinstance(node, (ast.ClassDef,) + _DEFS):
+            names.append(node.name)
+        elif isinstance(node, ast.Assign):
+            names += [t.id for t in node.targets if isinstance(t, ast.Name)]
+    return [n for n in names if not n.startswith("_")]
+
+
+def _paths(root, inclu
+[0m
+[0m✱ [0mGrep "gate_policy|push =|review_rounds|guardrails"[90m in docs/status.md · 100 matches[0m
+[0m→ [0mRead project-trajectory/scripts/check_dupes_census.py[90m [offset=1, limit=50][0m
+[0m✱ [0mGrep "missing|baseline|unstamped|bare"[90m in project-trajectory/scripts/check_dupes_census.py · 100 matches[0m
+[0m
+[0m$ [0mpython -m pytest -q tests/test_check_complexity.py tests/test_check_complexity_cli.py
+!! ENVIRONMENT GATE: 1 of 2 declared gates unsatisfied on this machine.
+     posix-shell (REQUIRED): every shell-driven test SKIPS — the pre-commit (8) and pre-push (18) hook suites that guard the commit floor itself, the dev-setup install path, and the commit-msg trailer hook
+       remedy: put C:\Program Files\Git\bin on PATH — sh.exe is already installed there; Git for Windows puts only Git\cmd on PATH
+   Those tests will SKIP, so this run is PARTIAL — a green here is not
+   a gate result. test_prereq_toolchain.py FAILS on a required gate at
+   slice close and in CI, where a gate result is actually claimed.
+
+.......................................................                  [100%]
+
+ENVIRONMENT-GATED SKIPS: 0 test(s) did not RUN because 1 of 2 declared gates are unsatisfied (posix-shell).
+  remedy (posix-shell): put C:\Program Files\Git\bin on PATH — sh.exe is already installed there; Git for Windows puts only Git\cmd on PATH
+  A pass total measured here is NOT comparable with one measured on a fully-gated machine.
+55 passed in 1.87s
+[0m
+[0m$ [0mpython project-trajectory/scripts/check_complexity.py --root . --mode enforce; echo EXIT:$LASTEXITCODE
+check_complexity: OK - 179 row(s) over 15, unchanged from baseline.
+EXIT:0
+[0m
+[0m$ [0mpython -c "
+import ast, sys
+from pathlib import Path
+src = Path('project-trajectory/scripts/check_complexity.py').read_text(encoding='utf-8')
+# simulate PRE-FIX _collect from f9d3d687
+_DEFS = (ast.FunctionDef, ast.AsyncFunctionDef)
+def old_collect(node, prefix, out):
+    for field in ('body', 'orelse', 'finalbody', 'handlers'):
+        for child in getattr(node, field, None) or []:
+            if isinstance(child, ast.ClassDef):
+                old_collect(child, prefix + child.name + '.', out)
+            elif isinstance(child, _DEFS):
+                out.append((prefix + child.name, child))
+            elif isinstance(child, (ast.If, ast.Try, ast.With)):
+                old_collect(child, prefix, out)
+code = '''
+for _i in range(1):
+    def under_for(a):
+        def nested(b):
+            return b
+        return a
+while False:
+    def under_while(a):
+        return a
+if True:
+    def under_if(a):
+        return a
+try:
+    def under_try(a):
+        return a
+except Exception:
+    pass
+with open(__file__) as f:
+    def under_with(a):
+        return a
+'''
+found=[]
+old_collect(ast.parse(code), '', found)
+print('old_collect names', sorted(n for n,_ in found))
+"
+
+old_collect names ['under_if', 'under_try', 'under_with']
+[0m
+[0m→ [0mRead docs/reviews/1-g3-WI-275-dfea/004-REVIEW-A-551c41f.md
+[0m✱ [0mGrep "SR-183|LLR-206|TC-202|TC-203"[90m in docs/id-watermark · 72 matches[0m
+[0m
+[0m$ [0mpython project-trajectory/scripts/trace.py --root . --strict-integrity 2>&1 | Select-Object -Last 20
+WARNING (advisory): IF IF-025 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-026 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-164 owner 'scripts/traj_status' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-052 owner 'scripts/traj_parse' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): boundary crossing(s) realized by NO interface row: B-02 — decision 6's question, deferred by ruling; reported, never gated
+WARNING (advisory): hat coverage: 4 of 264 requirement/design row(s) are attributable to no declared perspective — counted over EFFECTIVE sets, so a design row inheriting its parent's hats is covered; an unattributed row reads as NOT RECORDED and never as 'no perspective applied'
+WARNING (advisory): declared hat(s) attributed to NO row: SAFETY — a perspective every decomposition faces and no requirement is traceable to is either unrecorded or ceremony
+WARNING (advisory): IF endpoint coverage: 75 of 163 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 49 resolve to a file or directory in the tree, 52 are marked `external:`, 0 resolve to nothing
+WARNING (advisory): LLR LLR-007 Detail mostly re-words SR-007 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-020 Detail mostly re-words SR-020 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-027 Detail mostly re-words SR-027 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-181 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', edit-history stamp 'confirmed 2026-08-13', date stamp '2026-08-12') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Detail carries a citation frame (work-item id 'WI-448') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', date stamp '2026-08-19') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): SR SR-168 has 8 direct LLR children, over the declared bound of 7 — a DETECTOR for a row that merged several decisions, not a cap (capping children invites merging LLRs to slip under it): split the row by observable class, or record a per-row 'fan-out re-stamp: <reason>' in Rationale (process.md §3 'one decision per row'; warn-only, never the exit code)
+FINDING (spine stand-alone): LLR LLR-197 Detail cites 'WI-448' — a spine row states the system, not its own history: move provenance to the log, and obey the process rather than citing it
+Traceability: SN=27 SR=76 LLR=188 TC=186 orphans=2 integrity=0 verified-mechanized=72 verified-demonstrated=3 verified-attested=0 drafts=10 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=163 interface-findings=0 provenance-findings=1 paraphrase-advisories=3. Report -> docs\test\report.md
+[0m
+Pre-fix `_collect` missed `for`/`while`; live enforce matches 179 rows. Writing the verdict and committing it.
+[0m← [0mWrite docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md
+Wrote file successfully.
+[0m
+[0m$ [0mgit status; echo "====DIFF===="; git diff -- docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md; echo "====LOG===="; git log --oneline -8
+On branch wi-537-complexity-sensor-report-only
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md
+
+nothing added to commit but untracked files present (use "git add" to track)
+====DIFF====
+====LOG====
+19610a03 telemetry: session wi-537-complexity-sensor-report-only-010 REVIEW-A ERROR
+e8f9bc18 telemetry: session wi-537-complexity-sensor-report-only-009 BUILD COMMITTED
+a16af888 WI-537: clear residual iteration-log header whitespace; record Round-6 resolution
+84e57951 telemetry: session wi-537-complexity-sensor-report-only-008 BUILD NO-COMMIT
+0b0426ef telemetry: session wi-537-complexity-sensor-report-only-007 DESIGN-CHECK COMMITTED
+6efafdef WI-537: align LLR-206 with the census boundary
+49074bc0 telemetry: session 006 review scoreboard
+6b75b862 telemetry: session wi-537-complexity-sensor-report-only-006 REVIEW-A COMMITTED
+[0m
+[0m$ [0mgit add -- docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md; git commit -m "$(@'
+review: record WI-537 independent verdict
+
+REVIEW-A of a16af888. Driven: census 179 matches baseline, exclusive
+boundary, collect regression vs pre-fix If/Try/With, enforce green.
+One carried MINOR on the unstamped-census clause.
+
+VERDICT: APPROVE findings=1
+'@)"
+=== okf : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_okf.py --check ===
+okf: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  okf              work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== status-map : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_trajectory.py --status --check ===
+status-map: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  status-map       work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== trajectory-map : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_trajectory.py --check ===
+trajectory-map: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  trajectory-map   work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== cli-reference : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_arch_map.py --src project-trajectory/scripts --cli-doc docs/cli-reference.md --check ===
+cli-reference: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  cli-reference    work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== component-view : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_components.py --check ===
+component-view: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  component-view   work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== derived-stage : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\derive_stage.py --check ===
+derived-stage: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  derived-stage    work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== open-items : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_open_items.py --check ===
+open-items: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  open-items       work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== approval-fresh : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\trace.py --approve modified --check ===
+approval-fresh: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  approval-fresh   work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== interface-reference : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_arch_map.py --src project-trajectory/scripts --contracts-doc docs/interface-reference.md --check ===
+interface-reference: skipped (work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2)
+  SKIP  interface-reference work branch 'wi-537-complexity-sensor-report-only' — generated freshness is the trunk lane's, concurrency-restructure §5.2
+
+=== skills-index : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_skills_index.py --skills C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\skills --check ===
+gen_skills_index: OK - 29 skill(s), index fresh.
+  PASS  skills-index     0.1s
+
+=== prompt-catalog : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_prompt_catalog.py --check ===
+gen_prompt_catalog: fresh (7 prompts).
+  PASS  prompt-catalog   0.1s
+
+=== skills-sync : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\gen_skills_index.py --check-agents ===
+gen_skills_index: OK - 16 per-agent skill copy(ies) match source.
+  PASS  skills-sync      0.2s
+
+=== approval-immutable : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check.py --approval-immutable ===
+  ok    approval-immutable  no staged change touches an existing dated docs/ratify/ brief.
+  PASS  approval-immutable 0.2s
+
+=== staged-divergence : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check.py --staged-divergence --strict ===
+  ok    staged-divergence  none of the 12 declared generated artifact paths is modified-but-unstaged.
+  PASS  staged-divergence 0.3s
+
+=== registry-integrity : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\trace.py --strict-integrity ===
+WARNING (advisory): IF IF-025 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-026 owner 'project-trajectory/scripts' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-164 owner 'scripts/traj_status' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): IF IF-052 owner 'scripts/traj_parse' is named by no design row's Module and declares no `Implements:` line — this seam traces to no requirement (warn-only; name the module on a design row, or declare its parents in the module header)
+WARNING (advisory): boundary crossing(s) realized by NO interface row: B-02 — decision 6's question, deferred by ruling; reported, never gated
+WARNING (advisory): hat coverage: 4 of 264 requirement/design row(s) are attributable to no declared perspective — counted over EFFECTIVE sets, so a design row inheriting its parent's hats is covered; an unattributed row reads as NOT RECORDED and never as 'no perspective applied'
+WARNING (advisory): declared hat(s) attributed to NO row: SAFETY — a perspective every decomposition faces and no requirement is traceable to is either unrecorded or ceremony
+WARNING (advisory): IF endpoint coverage: 75 of 163 row(s) carry an endpoint that is not an arch-map module, so the cross-component rules are VACUOUS for them — 49 resolve to a file or directory in the tree, 52 are marked `external:`, 0 resolve to nothing
+WARNING (advisory): LLR LLR-007 Detail mostly re-words SR-007 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-020 Detail mostly re-words SR-020 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-027 Detail mostly re-words SR-027 — a child adds detail (module, mechanism, the decomposition choice); if it would repeat the parent, link instead
+WARNING (advisory): LLR LLR-181 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', edit-history stamp 'confirmed 2026-08-13', date stamp '2026-08-12') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Detail carries a citation frame (work-item id 'WI-448') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): LLR LLR-197 Rationale carries a citation frame (open-item reference 'OI-16', decision id 'D-8', date stamp '2026-08-19') — a living cell states the system and its standing reason, never its own history: drop the frame, KEEP the reason as prose that stands alone, and move the account to the log (process.md §3; warn-only, never the exit code)
+WARNING (advisory): SR SR-168 has 8 direct LLR children, over the declared bound of 7 — a DETECTOR for a row that merged several decisions, not a cap (capping children invites merging LLRs to slip under it): split the row by observable class, or record a per-row 'fan-out re-stamp: <reason>' in Rationale (process.md §3 'one decision per row'; warn-only, never the exit code)
+FINDING (spine stand-alone): LLR LLR-197 Detail cites 'WI-448' — a spine row states the system, not its own history: move provenance to the log, and obey the process rather than citing it
+Traceability: SN=27 SR=76 LLR=188 TC=186 orphans=2 integrity=0 verified-mechanized=72 verified-demonstrated=3 verified-attested=0 drafts=10 budgets=4 budget-findings=0 components=4 component-findings=0 interfaces=163 interface-findings=0 provenance-findings=1 paraphrase-advisories=3. Report -> docs\test\report.md
+  PASS  registry-integrity 3.5s
+
+=== trajectory : c:\Projects\ai-template\.venv\Scripts\python.exe C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\project-trajectory\scripts\check_trajectory.py ===
+check_trajectory: WARN - connectivity undeclared: module 'scripts/check_complexity' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/check_dupes_census' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/check_vocab' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/coherence' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - module 'scripts/derive_stage' declares no Consumes seam (mark it `source` in its IF row Notes if it deliberately consumes nothing)
+check_trajectory: WARN - module 'scripts/hats' declares no Provides seam (mark it `sink` in its IF row Notes if it deliberately provides nothing)
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - module 'scripts/kitlib/config' declares no Provides seam (mark it `sink` in its IF row Notes if it deliberately provides nothing)
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/evidence' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/git' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/ladder' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/registry' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/secret_classes' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/kitlib/spine' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - module 'scripts/kitlib/stage' declares no Provides seam (mark it `sink` in its IF row Notes if it deliberately provides nothing)
+check_trajectory: WARN - module 'scripts/kitlib/station' declares no Consumes seam (mark it `source` in its IF row Notes if it deliberately consumes nothing)
+check_trajectory: WARN - connectivity undeclared: module 'scripts/record_test_evidence' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/spec_move' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - module 'scripts/spine_rules' declares no Provides seam (mark it `sink` in its IF row Notes if it deliberately provides nothing)
+check_trajectory: WARN - connectivity undeclared: module 'scripts/traj_context' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/traj_graph' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - connectivity undeclared: module 'scripts/traj_render' is in the arch-map but no IF-### row names it
+check_trajectory: WARN - 147 IF seam(s) are cited by no TC (a seam should carry a contract/fixture test, process.md §8) — first 5: IF-001, IF-145, IF-146, IF-166, IF-002
+check_trajectory: WARN - 1 docs/if-tc-coverage-allow entries name no live IF-### row (retired/renumbered): IF-130
+check_trajectory: WARN - 30 docs/if-tc-coverage-allow entries stand past the declared seed of 118 — the list is a burn-down, so growth is a sitting's business: IF-145, IF-146, IF-147, IF-148, IF-149
+check_trajectory: WARN - LLR-155 tag at scripts/bootstrap.py:1158 encloses `_migrate_dial_key_name`, but the row's CodeSymbol claims `process_config/process_shape_findings/config_conflicts/approval_through/human_holds` (Module `project-trajectory/scripts/agent_common.py`)
+check_trajectory: WARN - LLR-156 tag at scripts/bootstrap.py:1202 encloses `_migrate_dial_ordinal`, but the row's CodeSymbol claims `migrate_legacy_config/_migrate_gate_policy/set_process_key/LEGACY_APPROVAL` (Module `project-trajectory/scripts/bootstrap.py`)
+check_trajectory: WARN - LLR-159 tag at scripts/census.py:43 encloses `(module scope)`, but the row's CodeSymbol claims `_judgement_first/_admission/red_tc_census/parse_red_tc/_implemented_ids` (Module `project-trajectory/scripts/dispatch.py`)
+check_trajectory: WARN - LLR-188 tag at scripts/census.py:43 encloses `(module scope)`, but the row's CodeSymbol claims `gap_census/red_tc_census/parse_red_tc/_implemented_ids` (Module `project-trajectory/scripts/census.py`)
+check_trajectory: WARN - LLR-159 tag at scripts/census.py:149 encloses `red_tc_census`, but the row's CodeSymbol claims `_judgement_first/_admission/red_tc_census/parse_red_tc/_implemented_ids` (Module `project-trajectory/scripts/dispatch.py`)
+check_trajectory: WARN - LLR-206 tag at scripts/check_complexity.py:35 encloses `(module scope)`, but the row's CodeSymbol claims `cognitive/census/main` (Module `project-trajectory/scripts/check_complexity.py`)
+check_trajectory: WARN - LLR-195 tag at scripts/check_dupes_census.py:33 encloses `(module scope)`, but the row's CodeSymbol claims `measure/main` (Module `project-trajectory/scripts/check_dupes_census.py`)
+check_trajectory: WARN - LLR-077 tag at scripts/check_trajectory.py:2764 encloses `specref_findings`, but the row's CodeSymbol claims `ssot_findings/spec_ref_findings` (Module `project-trajectory/scripts/check_trajectory.py`)
+check_trajectory: WARN - LLR-111 tag at scripts/gen_trajectory.py:285 encloses `HTML_TEMPLATE`, but the row's CodeSymbol `--nlabel/--nsub/--nhead + --tiny/--xsmall/--small/--body/--lead/--display/--hero + --rel` does not resolve to any def/class under the scanned source — unresolvable, not matched (Module `project-trajectory/scripts/gen_trajectory.py`)
+check_trajectory: WARN - LLR-117 tag at scripts/gen_trajectory.py:285 encloses `HTML_TEMPLATE`, but the row's CodeSymbol `HTML_TEMPLATE theme tokens + every emitter's paint` does not resolve to any def/class under the scanned source — unresolvable, not matched (Module `project-trajectory/scripts/gen_trajectory.py`)
+check_trajectory: WARN - LLR-139 tag at scripts/pending.py:70 encloses `(module scope)`, but the row's CodeSymbol claims `pause_pending/pending_block` (Module `project-trajectory/scripts/pending.py`)
+check_trajectory: WARN - LLR-198 tag at scripts/pending.py:70 encloses `(module scope)`, but the row's CodeSymbol claims `PendingItem/pending_items/owner_cards/blocked_pending/spine_pending/pending_block` (Module `project-trajectory/scripts/pending.py;project-trajectory/scripts/traj_status.py`)
+check_trajectory: WARN - phase '4' dropped to DevStg-LLReqs but its closed [4]-[DevStg-Impl] anchor recorded reach DevStg-Impl — new or reopened content entered; open a new [4]-[DevStg-<rung>] work item to structure it (derived model §9.3)
+check_trajectory: WARN - 1 open work item(s) carry a Title over 120 characters — keep the Title a concise name and put rationale in the body, not the registry cell: WI-545 (129 chars)
+check_trajectory: WARN - WI-508 and WI-543 are both open and both answer SR-163
+check_trajectory: WARN - WI-508 and WI-546 are both open and share one spec of record (docs/requirements/open-items.toml)
+check_trajectory: WARN - WI-535 and WI-540 are both open and share one spec of record (docs/plans/2026-08-29-adjudicator-session-retention-plan.md)
+check_trajectory: WARN - WI-535 and WI-541 are both open and share one spec of record (docs/plans/2026-08-29-adjudicator-session-retention-plan.md)
+check_trajectory: WARN - WI-537 and WI-538 are both open and share one spec of record (docs/plans/2026-08-29-complexity-sensor-plan.md)
+check_trajectory: WARN - WI-537 and WI-539 are both open and share one spec of record (docs/plans/2026-08-29-complexity-sensor-plan.md)
+check_trajectory: WARN - WI-538 and WI-539 are both open and share one spec of record (docs/plans/2026-08-29-complexity-sensor-plan.md)
+check_trajectory: WARN - WI-540 and WI-541 are both open and share one spec of record (docs/plans/2026-08-29-adjudicator-session-retention-plan.md)
+check_trajectory: WARN - completion WI-537: status=active but a commit reachable from HEAD carries a `WI: WI-537` trailer — a trailer CLAIMS the WI, it does not attest the work, so this is a prompt to reconcile, never a reason to close
+check_trajectory: clean (543 work item(s), 508 done (94%), 21 cancelled, graph acyclic).
+  PASS  trajectory       7.7s
+check_privacy: privacy check off (docs/process.toml [policies] privacy_check) — author not checked.
+check_privacy: clean (staged diff; secrets floor).
+
+=== format : c:\Projects\ai-template\.venv\Scripts\python.exe -m ruff format --check project-trajectory/scripts tests ===
+228 files already formatted
+  PASS  format           0.1s
+check_privacy: clean (commit message; secrets floor).
+[wi-537-complexity-sensor-report-only 6dc7dd31] review: record WI-537 independent verdict
+ 1 file changed, 4 insertions(+)
+ create mode 100644 docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md
+[0m
+VERDICT: APPROVE findings=1 — committed `docs/reviews/wi-537-complexity-sensor-report-only/011-REVIEW-A-a16af88.md`
