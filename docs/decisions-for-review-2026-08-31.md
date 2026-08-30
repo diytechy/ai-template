@@ -273,3 +273,18 @@ reviewer's eye; each is a real spine-hygiene improvement and neither changes
 what ships. Round 016 drawn on the result. Seven rounds and counting is the
 price of RULING-7 on a lane whose close touched the spine; recorded so the
 owner can weigh whether a Drafted-row edit should buy a full round.
+
+## 13. `WI-508` round 016: the package-direction arm returned to `TC-199` with its shared evidence attributed, rather than amending the Approved `LLR-203`
+
+Round 016 found that removing the package-direction tests from `TC-199`
+(round 015's ask) left `LLR-203`'s delivered MISSING-FILES arm with no TC —
+and drove it: a scaffold with `scripts/kitlib/config.py` removed fails
+`check.py` with `ModuleNotFoundError` while all three dogfood nodes pass. The
+reviewer offered two remedies: make LLR-203 dogfood-only (an amendment to an
+APPROVED row's Detail — drift, re-attestation, the owner's surface), or trace
+the package arm without asserting it is SR-166 evidence. **The second was
+taken:** `TC-199` cites the two `tests/test_bootstrap.py` nodes again, and its
+method states that the same nodes are `TC-176`'s evidence for LLR-181/SR-166's
+materialization claim while TC-199 reads them for LLR-203's missing-files arm
+and asserts nothing about SR-166. One test, two arms, each traced to its
+owner. The Approved LLR was not touched. Round 017 drawn.
