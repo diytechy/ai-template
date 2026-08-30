@@ -68,8 +68,14 @@ out of this WI's scope.
 These 17 rows are all `Approved`; the amendment proceeds under ordinary review
 (`DevStg-Needs` human-held only), and the snapshot diff against
 `docs/archive/last_approved/` carries the identical set for the re-attestation
-brief compiled at RETURN. The amend-without-flip guard warns (never gates) on
-each. **The two "poison" rows SR-015 and SR-040 (both `hat_refs = []`/absent)
+brief compiled at RETURN. The Phase-5 amend-without-flip guard warns (never
+gates) that a `Rationale` cell moved while `Hat-Refs` stayed put — which is
+EXACTLY what this WI does on purpose: the deletion removes only the duplicate
+attribution, the hats that reach each row are unchanged, and `hat_refs` is
+therefore correctly left as the record. The guard cannot tell attribution-
+removal from a substance change, so it fires; "leave it deliberately" (the
+guard's own second option) is the right call here, and this fragment is that
+record. **The two "poison" rows SR-015 and SR-040 (both `hat_refs = []`/absent)
 are NOT touched** — their `hat.PERFORMANCE`/`hat.UX-ENGINEER` prose is an argued
 *refusal* of attribution, the record itself, not a duplicate.
 
@@ -104,4 +110,19 @@ If the owner wants the `C-MNT-7` clause reference preserved, restore from
 
 ### Harness
 
-_(filled at close)_
+Both edits are TOML value/prose changes to the requirements spine; no script
+behaviour moved. `tests/test_hats.py` was widened (commit `ee0adb92`) to admit
+the optional `knowledge` key that `hats.py` `OPTIONAL_KEYS` already allowed.
+
+- Smoke tier + budget (the per-commit bar): `python -m pytest -q -n auto -m
+  smoke` → **1424 passed, 6 skipped, 32.24 s**; `python
+  scripts/check_smoke_budget.py --mode enforce` → **29.6 s vs 60 s budget →
+  within**.
+- Touched module: `python -m pytest -q tests/test_hats.py` → **55 passed**.
+- Spine validators: `python project-trajectory/scripts/trace.py` → **exit 0**
+  (the one `FINDING` names `LLR-197`/`WI-448`, present at the branch base
+  `751eb058` and untouched here); `python project-trajectory/scripts/check.py`
+  → **RESULT: PASS** (derived-stage / approval-fresh SKIP on a work branch by
+  design, concurrency-restructure §5.2).
+- Full unfiltered suite (`python -m pytest -q -n auto`): run at close before
+  claiming the WI done — result pasted in the closing commit.
