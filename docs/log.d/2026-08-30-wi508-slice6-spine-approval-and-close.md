@@ -78,3 +78,33 @@ the close signal the integrator reads.
 LLR-204, TC-199, TC-200), and a wholesale `last_approved` re-seed that absorbed
 WI-520's merged `CMP-006` `Notes` amendment under the `--approves` ref above.
 Nothing human-held was touched.
+
+### Correction: the close MOVE was never actually performed (follow-up session)
+
+The approval commit (`580df781`) landed the four flips and this fragment, but the
+prose above claims a spec move that the commit did **not** carry: the spec file
+stayed at `docs/work/active/wi508-architectural-remap/`, so under the
+directory-is-status rule (`docs/work/README.md`, IF-023/IF-159) **WI-508 read as
+still `active`, not `done`** — the close signal the integrator reads was never
+emitted. The four approvals were real and are unchanged; only the terminal
+state-change was missing.
+
+This follow-up session performs the owed close, which is more than the bare move
+the earlier prose implied — the terminal-state checks (`check_trajectory` R-A,
+R-F) are exactly why a lone `git mv` fails:
+
+1. **`git mv`** `WI-508-architectural-remap-program.md` from the claim directory
+   to `docs/archive/work/complete/` (the archive home terminal states moved to
+   under WI-504 — `docs/work/complete/` is now only a redirect README), and remove
+   the now-empty claim dir. Status is the directory, so this is the state-change
+   itself, not a re-render.
+2. **R-A** (ERROR at every run): a terminal WI's `## Deliverable` must be
+   non-empty. The spec carried only `## Context` and slice records, so a
+   `## Deliverable` summary of what the six slices shipped was added ahead of the
+   context — backward-only, no forward bridge.
+3. **R-F**: a terminal WI clears its `SpecRef`. `specref` moved from
+   `docs/requirements/open-items.toml#OI-58` to `""`. WI-508 has no `docs/specs/`
+   narrative to archive, so nothing else R-F governs applies.
+
+`check_trajectory` exits 0 after all three; the smoke bar is green; the row now
+reads `done` in the one place status lives.
