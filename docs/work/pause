@@ -1,5 +1,0 @@
-# Tracked pause (concurrency-restructure §5.6): the dispatcher stops CLAIMING at
-# the next session boundary; the in-flight lane finishes and merges. Unpausing is
-# a reviewed deletion commit of this file.
-reason = "Owner directive 2026-08-30: stop claiming after the in-flight lane (WI-546) returns; the next session lands the stall-guard/liveness/fallback changes (plan: C:/Projects/ai-template-plans/stall-guard/PLAN.md) BEFORE any further row is claimed, so provider outages stop closing finished work as partial."
-since = "2026-08-30"
