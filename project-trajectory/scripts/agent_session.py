@@ -386,6 +386,26 @@ def _codex_lastmsg_read(path):
     return text
 
 
+def _pump_stdout(proc, lines, last_line, on_line):
+    """The reader thread's body: pump every stdout line into `lines`, stamp
+    `last_line[0]` (the idle deadline's clock, C3), and hand the line to the
+    optional renderer. A module-level function, not a closure — the C901 trap
+    charges a nested def to its enclosing function. The renderer is a
+    convenience; the pump is load-bearing: a renderer that raises (a cp1252
+    console meeting a `→`, measured 2026-08-30) must not stop the pump, or an
+    unpumped pipe fills, the child blocks on its next write, and the session
+    reads as a silent hang until a deadline fires."""
+    for line in proc.stdout:
+        lines.append(line)
+        last_line[0] = time.time()
+        if on_line is not None:
+            try:
+                on_line(line)
+            except Exception:
+                pass
+    proc.stdout.close()
+
+
 def _wait_for_exit(proc, timeout, idle_timeout, last_line):
     """Wait out ONE session under its two deadlines (C3, the stall-guard
     plan): `timeout` bounds the WALL, `idle_timeout` bounds SILENCE against
@@ -491,23 +511,9 @@ def run_session(
     # rebinding a closure-captured float would be invisible to the waiter.
     last_line = [time.time()]
 
-    def _pump():
-        for line in proc.stdout:
-            lines.append(line)
-            last_line[0] = time.time()
-            if on_line is not None:
-                try:
-                    on_line(line)
-                except Exception:
-                    # The renderer is a convenience; the pump is load-bearing.
-                    # A renderer that raises (a cp1252 console meeting a `→`,
-                    # measured 2026-08-30) must not stop the pump: an unpumped
-                    # pipe fills, the child blocks on its next write, and the
-                    # session reads as a silent hang until a deadline fires.
-                    pass
-        proc.stdout.close()
-
-    pump = threading.Thread(target=_pump, daemon=True)
+    pump = threading.Thread(
+        target=_pump_stdout, args=(proc, lines, last_line, on_line), daemon=True
+    )
     pump.start()
 
     # Deliver the prompt on stdin from a DAEMON thread, then close so the child
