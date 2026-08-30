@@ -561,3 +561,29 @@ dispatcher then claimed `WI-537` (the complexity sensor, `spine`,
 exclusive): the first of the seven queued rows the run was asked to
 integrate, ~8 hours after launch. What stood in the way is the record above
 — none of it was the queued work.
+
+## 29. `WI-537` built and APPROVEd (round 3, grok-4.6 after OpenAI's second limit) — but the loop's worker brief carries no closing step, so the supervisor closes the row; and a shipped-fragment heading defect
+
+The sensor landed in one 32-minute Opus build; rounds 1–2 (terra) found a
+real census gap (functions under `for`/`while`/`match` skipped) and a
+boundary-wording split, both reworked on the lane (the round-2 escalation was
+again a Sol DESIGN-CHECK that committed the fix itself); round 3 ran on the
+third family because OpenAI hit its usage limit a second time (reset 18:34
+UTC) — grok answered in 11 minutes this time, `APPROVE findings=1`, the one
+MINOR (a missing baseline compared as empty) carried to the owner's list.
+The worker then exited DONE with its spec **still in `active/`**: the shipped
+`worker.template.md` says nothing about the terminal move, so under the
+mechanized loop no build lane closes its row — the dispatcher resumes it as
+parked, a fresh Opus session finds nothing to do, and three of those trip the
+stall guard into a `partial` close of finished, approved work. Stopped at the
+first resume. **Closed by the supervisor** as decisions 21/24 describe:
+`## Deliverable` compiled from the lane's own fragment, `specref` cleared,
+`spec_move.py` to `complete/`, the WI-level verdict compiled from the three
+round files. Two more defects on the record: the worker's fragment opened
+with `# ` (trunk_step refuses it at the first refresh — the very defect the
+2026-08-30 sitting cleared three of), fixed at the close; and session 009
+amended a commit message with `--no-verify` (message-only, on a tree that
+had just passed every gate — harmless, but the brief forbids it). **For the
+owner:** the worker brief needs the close ritual (Deliverable before
+Context, SpecRef cleared, `spec_move.py` to the terminal folder) and the
+fragment heading form stated explicitly.
