@@ -383,3 +383,22 @@ gate's rule and round 018 was drawn on the merged tip. **Lesson for the
 protocol text:** "never hand-merge trunk on a work branch" needs its
 corollary stated — never commit work on top of a refresh commit either;
 peel it first (reset to the work tip) or the next refresh will conflict.
+
+## 19. `WI-543` filed in `deferred/` as `SR-163`'s verification owner — the kit's allocator, the owner's queueing
+
+Round 018 (terra, on the merged tip) left one MAJOR: `SR-163` is an
+Approved `Test` requirement whose only TCs are Drafted and no longer cite it,
+so `trace.py --strict` names it an orphan after the close; the reviewer's
+remedy is *"file a successor owning SR-163"* and trace a complete TC before
+closing the owner. The row is filed (`docs/work/deferred/WI-543-…`, id from
+`intake.next_wi_id`, watermark raised by `trace.py --bump-ids` — no id
+invented), in `deferred/` deliberately: the join it asks for is a
+purpose-reference authoring pass over the whole shipped surface, a scope the
+owner should sequence against the queued programs rather than have a
+scheduler hand out unattended. An owner in the registry satisfies the
+reviewer's ask; moving it to `queued/` is the owner's one-line act.
+
+**The alternative:** queue it now (it would land on the frontier at P3 behind
+the queued rows and could be claimed this run) or refute the finding (it is
+correct: an Approved Test SR with no TC is exactly what the orphan rule
+exists to name). Neither is better.
