@@ -54,9 +54,53 @@ CONSISTENCY partial-fit above.
 
 ### Item 3 — the 17 approved-cell `Rationale` attribution deletions (FOR OWNER RE-ATTESTATION)
 
-_(filled at close: each of the 17 SR rows, its `hat_refs` cell, and the
-before→after of the deleted attribution prose — the snapshot diff against
-`docs/archive/last_approved/` carries the same set for the re-attestation brief)_
+The WI-484 slice-2 backfill left the deriving-hat attribution stated **twice** —
+once in the `hat_refs` cell (the record), once in the `Rationale` prose as a
+`Hat-derived (hat.X …)` note. This deletes the prose note; `hat_refs` is
+untouched and remains the record. **Amendment scope, deliberately narrow:** only
+the `Hat-derived (…)` attribution note is removed — the hat name(s), any
+clause-id (`C-SEC-2`…) and provenance-doc citation *inside that note*, and the
+cross-hat gloss. The substantive derivation reasoning that followed it is KEPT
+(recapitalised at the join). Clause-ids that sat in the *retained* reasoning were
+left as-is; Phase 0 already ruled they resolve nowhere, and re-writing them is
+out of this WI's scope.
+
+These 17 rows are all `Approved`; the amendment proceeds under ordinary review
+(`DevStg-Needs` human-held only), and the snapshot diff against
+`docs/archive/last_approved/` carries the identical set for the re-attestation
+brief compiled at RETURN. The amend-without-flip guard warns (never gates) on
+each. **The two "poison" rows SR-015 and SR-040 (both `hat_refs = []`/absent)
+are NOT touched** — their `hat.PERFORMANCE`/`hat.UX-ENGINEER` prose is an argued
+*refusal* of attribution, the record itself, not a duplicate.
+
+| SR | `hat_refs` (unchanged) | prose note removed |
+|---|---|---|
+| SR-024 | TEST-ENGINEER | `Hat-derived (hat.TEST-ENGINEER): ` label |
+| SR-033 | PERFORMANCE | `Hat-derived (hat.PERFORMANCE), and ` label |
+| SR-043 | SECURITY | `Hat-derived (hat.SECURITY): ` label |
+| SR-052 | ACCESSIBILITY | `Hat-derived (hat.ACCESSIBILITY): ` label |
+| SR-053 | CONSISTENCY | `Hat-derived (hat.CONSISTENCY): ` label |
+| SR-054 | UX-DESIGNER, UX-ENGINEER | `Hat-derived (hat.UX-DESIGNER + hat.UX-ENGINEER): ` label |
+| SR-111 | MAINTAINER | whole `Hat-derived (hat.MAINTAINER): C-MNT-7 … stands without the citation.` sentence pair — see note below |
+| SR-112 | MAINTAINER | whole `Hat-derived (hat.MAINTAINER): … stands without the citation.` sentence pair — see note below |
+| SR-129 | TEST-ENGINEER | `Hat-derived (hat.TEST-ENGINEER): ` label |
+| SR-144 | UNATTENDED-OPS | `Hat-derived (hat.UNATTENDED-OPS): ` label |
+| SR-146 | SECURITY | `Hat-derived (hat.SECURITY): ` label |
+| SR-147 | TEST-ENGINEER | `Hat-derived (hat.TEST-ENGINEER): ` label |
+| SR-149 | MAINTAINER | `Hat-derived (hat.MAINTAINER): ` label |
+| SR-167 | PERFORMANCE | `Hat-derived (hat.PERFORMANCE): ` label |
+| SR-175 | DATA-PROTECTION, LEGAL, SECURITY | leading `Hat-derived (hat.DATA-PROTECTION, with hat.SECURITY C-SEC-5 and hat.LEGAL C-LEG-3 … clause texts in docs/plans/…): ` parenthetical |
+| SR-176 | DATA-PROTECTION | leading `Hat-derived (hat.DATA-PROTECTION, C-DPR-2 — clause text in docs/plans/…): ` parenthetical |
+| SR-177 | PERFORMANCE | leading `Hat-derived (hat.PERFORMANCE, C-PRF-1 — clause text in docs/plans/…): ` parenthetical |
+
+**SR-111 / SR-112 exception, flagged for the owner:** these two removed the
+WHOLE attribution sentence pair rather than just the label, because each ends
+with its own admission that *"the sentence above stands without the citation"* —
+the `C-MNT-7` note there is self-described as removable commentary, and what it
+restated (a scaffold with no recorded origin cannot identify its kit version) is
+already the row's opening sentence. Nothing unique to the requirement was lost.
+If the owner wants the `C-MNT-7` clause reference preserved, restore from
+`docs/archive/last_approved/docs/requirements/system-requirements.toml`.
 
 ### Harness
 
