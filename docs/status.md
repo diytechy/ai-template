@@ -236,121 +236,25 @@ the seams it owns).
   record an approval by refreshing it. The standing rule survives the closes
   around it: a `Drafted` row is approved on its own merits, from the rendered
   brief — never bulk-flipped to tidy a surface.
-- **The `wi484-concern-refs-component-view` lane is OPEN with slice 5 landed**
-  (2026-08-23): phases 0, 1, **2**, 3 and 5 are done — the component view is
-  GENERATED (`components.derived.toml`, freshness-gated by the `component-view`
-  step), `detail_doc` is retired, the amend-without-flip guard carries a
-  `Hat-Refs` arm (warn-first, `--staged`), and phase 2's writer is now the
-  `spine-authoring` skill's own rule at SR §2(c2) + LLR §3 (the fork was ruled
-  for the minting tier; the Plan-WI brief mints no spine row, so it was declined
-  as a home). The row's spec Context lists what is still owed. **What remains
-  needs the owner or a mechanism, not a next slice:** phase 2's duplication (17
-  rows state the attribution twice, in an approved `Rationale` cell) is
-  owner-adjacent and deliberately unTAKEN.
-  **Phase 4's mechanism blocker is RESOLVED (2026-08-23):** `hats.py`
-  now declares an `OPTIONAL_KEYS` concept (`knowledge`, validated when
-  present, absent everywhere and fine), so the roster key can be added
-  without becoming mandatory on all 16 rows. What phase 4 still awaits is the
-  owner's own act, not a next slice: filling `knowledge` values into
-  `hats.toml`, which is declared owner text and was deliberately left empty.
-- **The `wi508-architectural-remap` lane is OPEN with slices 1–4 landed**
-  (2026-08-25). The framing act is done: the row was re-validated against
-  the amended `SR-163` — the sole amendment is the `MAINTAINER` lens, and
-  every normative cell is byte-identical to the text the row was minted
-  against — and against the four open items that reached its SpecRef file
-  since, none of which retask it. `SR-163` is now DECOMPOSED:
-  `LLR-203`/`TC-199` (the shipped-file inventory, its declared exclusions,
-  and the purpose reference it does not carry) and `LLR-204`/`TC-200` (the
-  `Implements:` grammar and the declared warn-to-gate dial, running the
-  OTHER direction). The orphan debt is therefore down to `SR-181` alone,
-  and **four `Drafted` rows are back on the approval surface** — the
-  ordinary consequence of a mint, moving no rung; the re-attestation brief
-  carries one section for them and blessing it is the owner's act.
-  **The blind derivation has RUN** (slice 2), on two axes, from a five-file
-  input set with the design tier, the component/interface registries and the
-  source tree held out — brief recorded before the answers at
-  [plans/2026-08-25-blind-minimal-map-brief.md](plans/2026-08-25-blind-minimal-map-brief.md),
-  both returns and the measured agreement at
-  [plans/2026-08-25-blind-minimal-map-derivation.md](plans/2026-08-25-blind-minimal-map-derivation.md).
-  24 modules against 23, **97.2%** pair agreement, 84% placed identically —
-  and the result neither axis could reach alone: **both invented the same
-  module owning ZERO requirements** (the finding/severity/exit contract), so
-  the corpus is missing a row that eleven-to-thirteen others each restate.
-  **That is a missing requirement, not module work.** Blindness was NOT total
-  and both teams disclosed it: the harness injects this repo's own instruction
-  file into a subagent's context, so a future run of this instrument must strip
-  the harness context and not only the input set.
-  **The alignment pass has RUN** (slices 3–4; record:
-  [plans/2026-08-25-remap-alignment.md](plans/2026-08-25-remap-alignment.md)),
-  and it spent most of its effort REFUTING the derived maps rather than executing
-  them. The live map is ~3.5x finer (83 named modules against 24 and 23), so the
-  test applied to every divergence is *calls, not lines*: does each home
-  re-implement the behaviour, or do they all call one home? Twelve dispositions —
-  **ten keep-with-recorded-reason, two keep-with-the-reason-absent, zero
-  consolidations** — because the twelve are exactly where the two blind maps
-  disagreed. Three consolidation families were dissolved by measurement (38
-  modules already import one declaration stage; merging the measurement
-  comparators would put `D-7` one refactor from being undone; each freshness
-  `--check` is three lines over its own renderer). **One survived and the
-  rationale made it smaller, and the row it was filed as has since closed** —
-  the allow-file parse-honesty arm reached the three declared-exception
-  readers that dropped a malformed line silently, each keeping its own
-  grammar, no parser merged. Closed: see
-  `docs/log.d/2026-08-25-wi519-allow-file-parse-honesty.md`.
-  Banked, not built: the duplication
-  census reads 0/0/0 because it hashes function BODIES, so structural repetition
-  is invisible to it by construction.
-  **THE SURVEY IS COMPLETE** (slice 5): all **18** dispersion families carry a
-  disposition — one consolidate, twelve keep, one partly upheld — and each keep
-  declares whether it rests on a mechanical shared-stage test or a read
-  rationale. Three derived-map merges were REFUSED with cause (the launcher
-  split is argued in `SR-160`'s own text and the shared piece would need a shell
-  library the kit deliberately does not ship; both converters are one-shot tools
-  whose migrations have already run; the manifest's shared signal already has one
-  home). **One consolidation row was filed and has since closed** (`priority 1`,
-  `high-risk`): the hook scanner and the transcript redactor had compiled two
-  credential-class lists independently, and **four of five driven samples
-  disagreed, both ways** — a PEM private-key block was refused at the commit
-  hook and passed UNREDACTED into a committed transcript, so the durable
-  artifact was less protected than the ephemeral one. Closed: see `docs/log.d/
-  2026-08-25-wi520-secret-class-vocabulary.md`.
-  **THE INHERITED DEBT NOW HAS AN OWNER THAT OUTLIVES THE PROGRAM: `WI-521`.**
-  The module-size ratchet's pointer MOVED off the remap row onto it — a
-  close-time re-point is a promise where a filed row is a fact, and the remap is
-  a consolidation program while that ratchet measures size, which is
-  decomposition. M-06's four test monoliths land there too, explicitly unbound
-  from a ride-along rule that failed to deliver across two programs; the
-  test-tree sensor gap rides with them, carried but not executed (its axis is
-  under an unruled owner question). **The remap row's close now has nothing to
-  re-point.**
-  **`OI-64` IS RULED (b) AND EXECUTED — the remap row's owner-owed ruling is
-  discharged**; what remains on it is the blessing of the four `Drafted` rows.
-  The reporting protocol is now stated once as **`IF-144`**: a
-  finding names its location, carries a severity from a closed four-value set,
-  never lets an advisory reach the exit code, promotes to failure only under a
-  declared strict flag, and exits zero naming the absence when an optional input
-  is missing. No existing row was edited — (b) is state-and-sweep-nothing.
-  - **The shape resolved on the evidence, not by a second ruling.** It read at
-    first as a blocker (one `provider` or one `component` per row, against
-    fourteen providers splitting five and five across `CMP-006`/`CMP-007`), but
-    that was the wrong axis: the protocol is what the harness presents at its
-    **package boundary**, and all ten restating rows cite **`B-05` unanimously**.
-    28 rows already use that shape.
-  - **Two clauses deliberately absent, recorded on the row.** *Every degrade is
-    named* is not stated, because `SR-181`'s acceptance permits a silent degrade
-    while `SN-008` forbids one — it would red an `Approved` row on day one. And
-    the closed set is four *dispositions*, not the twelve tokens the checkers
-    spell them with.
-  - **The row honours the rules it states.** First draft tripped four of the
-    registry's own advisories (732 characters against a 500 ceiling, an argument
-    in `contract`, a date stamp in `notes`); thinned to **466** with the argument
-    moved to `rationale`.
-  Three corrections from the 2026-08-28 review stand on the row (record:
-  [reviews/2026-08-28-oi64-oi65-sol-round/](reviews/2026-08-28-oi64-oi65-sol-round/)):
-  the restating rows number **ten, not thirteen**; at most **six** clauses are
-  removable; and `SR-158` does **not** declare itself unsatisfied. Option (a)'s
-  sweep stays unruled and is still not executable — an SR row has **no field for
-  citing an interface**.
+- **THE UNATTENDED RUN OF 2026-08-30 IS SUPERVISED UNDER DELEGATED AUTHORITY**
+  — every decision it took in the owner's stead, with its alternative, is in
+  [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md);
+  read that file first at return. Approval authority is whatever
+  [process.toml](process.toml) `human_approval_through` declares — do not
+  paraphrase it here; the two owner-owed lanes were delegated for the run
+  (record: [log.md — the delegation sitting](log.md#2026-08-30--sitting-the-three-stranded-claims-become-parked-lanes-again-and-the-two-owner-owed-rows-carry-the-owners-delegation-for-an-unattended-run)).
+  **Next for the concern/hat program:** its lane closed `partial` (the worker
+  read a branch spec the delegation had not reached — its per-close report
+  lands under [handbacks/](handbacks/README.md) when that branch merges);
+  the disposition row intake mints for that report is where the work
+  continues, by drafting a SUCCESSOR whose body carries the delegation in its
+  first paragraph: the `knowledge` values into `hats.toml` (re-point to
+  `docs/knowledge/` packs, draft only where none carries the perspective,
+  mark drafts) and the 17 duplicated `Rationale` attributions trimmed under
+  ordinary review. **Next for the remap program:** nothing — its lane is
+  closed complete on its branch and merges when its verdict round clears;
+  what it leaves the owner is in the decisions file (the snapshot-vocabulary
+  finding, the blind-derivation census correction).
 - **The `wi521-decomposition-debt-owner` lane is OPEN with slice 1 landed**
   (2026-08-25; record:
   [log.d/2026-08-25-wi521-slice1-acceptance-record.md](log.md#2026-08-25--wi-521-slice-1-the-acceptance-record-leaves-the-checker)).
@@ -424,7 +328,6 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
   - **WI-484** `P2` — Concern/hat references on SR and LLR rows and the generated component view: effective set…
   - **WI-508** `P2` — The architectural remapping program: blind minimal-map re-derivation, divergences filed a…
   - **WI-535** `P2` — Adjudicator telemetry first, dial off: session id and occupancy / window / percent per fa…
-  - **WI-521** `P2` — The decomposition debt owner: four wide modules, M-06's four test monoliths, and no senso…
   - **WI-536** `P2` — Agent-brief and scope: the knowledge-pack review's six byte-paid edits and two kit findin…
 <!-- END GENERATED STATUS -->
 
