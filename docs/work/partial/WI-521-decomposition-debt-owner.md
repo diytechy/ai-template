@@ -331,3 +331,85 @@ the sensor gap stays CARRIED — extending a disputed line-count axis to a secon
 tree still doubles whatever is wrong with it.
 
 **Deferred to the owner: nothing new.**
+
+### SLICE 3 LANDED 2026-08-30 — M-06's second monolith, and the sensor gap is now owner-ruled
+
+**The sensor gap this row's §3 CARRIED is no longer this row's to carry.** OI-68
+was ruled 2026-08-30 (log 2026-08-30, `WI-537`/`WI-538` filed): the disputed
+line-count axis §3 banked as an unruled owner question is settled — **(1c)** both
+sensors stay armed and the module-size ratchet is re-based to SLOC, **(2a)** the
+*complexity* sensor (not the line ratchet) is the one that censuses `tests/`, so
+"`WI-521`'s refusal to extend a disputed axis to a second tree is honoured". The
+test-tree sensor is the complexity sensor, filed as `WI-537` (report-only) →
+`WI-538` (arm + re-base). `WI-538` carries a SOFT edge to this row and **amends
+this §3** (IF-054: a hard edge on a standing debt owner would deadlock). So §3's
+"raise the axis question with the measurement this row can now supply, and extend
+only what survives" is discharged — the question was raised, ruled, and re-homed.
+Nothing on the sensor gap is owed by this slice.
+
+**So this slice is the M-06 work, and the target is re-measured, not inherited.**
+`test_trace.py` **2,323** (was 2,099 at slice 2 — it grew again, with nothing
+watching), `test_trajectory_arch.py` **2,290** (was 1,993), `test_agent_loop.py`
+**1,640**. The two that grew are the sensor gap in action, exactly what OI-68
+now closes.
+
+fig: cmd="python -c \"import pathlib; [print(len(pathlib.Path('tests',n).read_text(encoding='utf-8').splitlines()), n) for n in ('test_trace.py','test_trajectory_arch.py','test_agent_loop.py')]\"" rev=56e7e52b
+
+**The near-tie was broken by the boundary, per this row's own rule.** `test_trace`
+and `test_trajectory_arch` are 33 lines apart — no line-count winner — and the
+row splits "by stable behaviour boundary rather than by line count". `test_trace`
+splits along `trace.py`'s own tiers, and one is a genuinely self-contained
+subsystem: the **IF-### interface-seam tier** (`process.md` §8), with its own
+carrier (`interfaces.toml`/`.csv`), its own closed vocabularies, its own
+reachability advisory, and nine dedicated helpers used by nothing else in the
+file (`_ifs_toml`, `_write_ifs`, `_report`, `_warn_run`, `_if_row`,
+`_toml_write`, `_toml_warn_run`, `_toml_finding_run`, `_seam_scaffold`).
+`test_trajectory_arch`'s sections are heterogeneous rules with no comparable
+seam, so the boundary — not the 33 lines — chose `test_trace`.
+
+**The seam was FOUND, not carved.** The tier is one contiguous banner block
+(`WI-056` through the `WI-065` seam-citation tests), and its only cross-boundary
+tie was the two-line `_report` reader, which four core sites also used. `_report`
+moved WITH its cluster and those four sites were inlined to the trace family's
+own idiom (`tests/test_trace_rules.py` reads `report.md` inline the same way) —
+the only non-move edit in the slice, recorded rather than left unsaid.
+
+| module | subject | lines | tests |
+| --- | --- | --- | --- |
+| `test_trace.py` | the SN→SR→LLR→TC spine: orphan/strict gates, the four verification-category buckets, the schema-safe extra columns, the SN status vocabulary, the Drafted exemptions, the approved-phase rule | 1,370 | 52 |
+| `test_trace_interfaces.py` | the IF-### interface-seam tier: id integrity + owner-shape findings, the IF+CMP schema warns, the endpoint reachability advisory, the OI-67 owner/consumers reshape + carriage, the WI-065 seam citation | 978 | 40 |
+
+fig: derived="len(splitlines()) and the collected `::` count of each split module in this commit's tree; the pre-split `test_trace.py` was 2,323 lines / 92 tests at 56e7e52b, so the family is +25 lines (the new module's docstring + import block, plus ruff rewrapping the four inlined `_report` reads) and the 92 tests are conserved 52+40"
+
+**The proof is node-id set equality, not a green.** The sorted collected node-id
+sets of the two modules are **byte-identical as a set** to the pre-split
+`test_trace.py` at `56e7e52b` (92 ids, `diff` empty), and both run **91 passed /
+1 skipped** — the skip is the POSIX-only provenance-allow test on Windows,
+unchanged. Nothing was renamed, dropped or merged.
+
+fig: derived="the sorted collected node ids of tests/test_trace.py + tests/test_trace_interfaces.py in this commit, stripped to `::name`, diffed against the same for tests/test_trace.py at 56e7e52b — empty diff, 92 ids each side"
+
+**The commit bar is unmoved, deliberately.** `test_trace_interfaces` joins
+`conftest.SLOW_MODULES` beside `test_trace` — same heavy class (a real `trace.py`
+subprocess per test) — so both stay OUT of the `-m smoke` tier and smoke
+membership is unchanged (1,378 collected before and after). A split that added 40
+subprocess tests to the per-commit bar would have been a regression dressed as
+tidying.
+
+**Spine: three `Evidence` cells re-pointed, TRACED only, no row minted.** The
+live `TC` rows whose `evidence` named a moved test now name
+`tests/test_trace_interfaces.py` (`test_if_tier_integrity`,
+`test_channel_refuses_an_unknown_value_as_a_warn`,
+`test_missing_required_if_field_is_a_warn`); the sibling ids in those same cells
+that stayed (`test_out_of_vocabulary_aspect_is_a_schema_finding`,
+`test_critique_verification_value`) were left. `Evidence` is a TRACED cell, so no
+attested prose moved; `check_trajectory --strict` clean, `integrity=0`,
+`interface-findings=0`, `trace.py` findings unchanged (SR-181's orphan is the
+pre-existing one owned elsewhere).
+
+**M-06 after this slice: two of four done** (`test_integrate`, slice 2;
+`test_trace`, here). `test_trajectory_arch.py` (2,290) and `test_agent_loop.py`
+(1,640) remain.
+
+**Deferred to the owner: nothing new** — OI-68's ruling already re-homed §3's
+sensor/axis question to `WI-537`/`WI-538`.

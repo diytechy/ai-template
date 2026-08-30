@@ -136,6 +136,12 @@ SLOW_MODULES = frozenset(
         # in-process; putting it back in the bar is a separate MEASURED call.
         "test_trace_rules",  # pure registry-rule decisions
         "test_trace_briefs",  # re-attestation brief: git effect + freshness gate
+        # WI-521 slice 3 split the IF-### interface-seam tier out of test_trace.py
+        # (M-06). Every test still drives a real trace.py over a scaffold through
+        # run_py — the SAME heavy class as test_trace above — so it rides that
+        # tier rather than accreting into the commit bar; the split is
+        # behavior-preserving, not a re-tiering.
+        "test_trace_interfaces",  # the IF/CMP interface-seam tier subprocess runs
         "test_check_docs",  # check_docs on bootstrapped scaffolds
         "test_registry_checks",  # registry gates on scaffolds
         "test_check_privacy",  # privacy lint on scaffolds
