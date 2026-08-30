@@ -1,0 +1,31 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 006
+# date: 2026-08-30 11:38
+# train: wi-537-complexity-sensor-report-only
+# base: 127fdd3e
+# phase: REVIEW-A
+# wi: WI-537
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 8c6aacb0..0cc4a546
+# tokens:
+# cost-usd:
+# wall-secs: 428
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 2816
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:b215f27b38c0
+# exit-code: 0
+# ---
+Verdict recorded: CHANGES-REQUESTED (2 MINOR findings).
+
+[Review verdict](C:\Projects\ai-template-drive\wi-537-complexity-sensor-report-only\docs\reviews\wi-537-complexity-sensor-report-only\006-REVIEW-A-30c84a6.md) committed as `0cc4a546`.
+
+Validated the changed regressions (55 passed); the pre-fix collector fails their control-flow scenario. The repository harness passed at `DevStg-LLReqs`.

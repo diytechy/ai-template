@@ -113,6 +113,19 @@ Contracts (interfaces): IF-013, IF-040, IF-144
 | `--approval-immutable` | run ONLY the re-attestation-brief immutability enforcer and exit (WI-503): refuse a STAGED change (other than a plain add) to an existing docs/ratify/<date>-*.md. Fail-closed by default — no --strict, no warn mode. This is the self-invoked body of the 'approval-immutable' step, not a separate contract |
 | `--jobs` | run the plan's steps concurrently on N workers (0 = one per step); every step is read-only or writes a distinct artifact, except the two trace.py steps, which share a lane. Default 1: sequential, with each step's output streamed live exactly as before |
 
+### `scripts/check_complexity`
+_check_complexity.py — the stdlib cognitive-complexity + SLOC census._
+
+| Option | Help |
+|---|---|
+| `--root` | repo root (default: cwd) |
+| `--mode` |  |
+| `--report` | alias for --mode report |
+| `--restamp` | rewrite the baseline |
+| `--threshold` |  |
+| `--include` |  |
+| `--baseline` |  |
+
 ### `scripts/check_coverage`
 _Per-module coverage floors: stop the global floor hiding weak high-risk modules._
 Contracts (interfaces): IF-069

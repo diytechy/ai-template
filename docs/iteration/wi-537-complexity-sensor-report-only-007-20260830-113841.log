@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 007
+# date: 2026-08-30 11:45
+# train: wi-537-complexity-sensor-report-only
+# base: 127fdd3e
+# phase: DESIGN-CHECK
+# wi: WI-537
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 49074bc0..6efafdef
+# tokens:
+# cost-usd:
+# wall-secs: 421
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5649
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:26eaa2de3142
+# exit-code: 0
+# ---
+Implemented and committed Round 6 rework as `6efafdef`.
+
+- LLR-206 now states `census()` returns all function rows and `main()` applies the exclusive `>` threshold.
+- Removed requested trailing whitespace, including identical Round 5/6 telemetry.
+- Updated the WI context and session log.
+- Re-review diff passes `git diff --check`.
+- 55 targeted tests and 1,424 smoke tests passed; smoke budget, docs, trajectory, and registry-integrity checks passed.
+- Worktree is clean.
+- Final commit includes `WI: WI-537`.

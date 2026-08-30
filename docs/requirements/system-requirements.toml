@@ -1024,3 +1024,17 @@ verification = "Test"
 status = "Approved"
 phase = 5
 aspect = "process"
+
+[requirement.SR-183]
+title = "Per-function complexity is measured against a stamped baseline, and gated only where a repo opts in"
+sn_refs = ["SN-007", "SN-012"]
+boundary_refs = ["B-05"]
+hat_refs = ["CONSISTENCY", "MAINTAINER"]
+requirement = """The delivered harness shall report each source function's cognitive complexity against a stamped per-function baseline, failing a declared gate on any divergence from that baseline only where the repo has enabled the gating mode."""
+rationale = """Realizes SN-007 (the kit holds itself to its own standard) and SN-012 (a heavy layer costs a repo that does not use it nothing). Cognitive complexity rather than a branch count because the two are not interchangeable: charging an increment per level of NESTING separates a deeply nested function from a flat one with the same number of branches, which is the property a reader pays for and the one a branch count cannot express — a measured population of functions here scores far apart on the two. Standard library rather than a linter because the strictest form of the dependency rule applies to a check an adopter runs: a sensor that forced every adopter to install a tool is a sensor most adopters would disable, and a baseline coupled to a third-party tool's counting rules is a property of that tool's version rather than of the code. The response clause carries BOTH postures in one row because they are one contract read at two settings — the measurement and its baseline are identical either way, and only the exit code differs; a version that could not report would be a different requirement, but a version that can gate is this one enabled."""
+acceptance_criteria = """A fresh run over a declared source tree reports every function whose cognitive complexity is strictly OVER the declared threshold (the boundary is exclusive — a function scoring exactly the threshold is under it and is not reported, matching LLR-206 and the baseline's over-threshold rows), with its complexity and its source-line count, and a per-module public-symbol count that is reported and never graded. Compared against a stamped baseline (the current carrier: `docs/complexity-baseline`, one tab-separated row per over-threshold function with the reason for its entry) a function above its entry, and a function whose entry no longer exists, are each reported as a finding naming the delta; a function BELOW its entry is reported as an invitation to re-stamp downward; an unstamped repo reports the bare census. In reporting mode every one of those cases exits zero; in gating mode a divergence in either direction exits nonzero and the message names the three sanctioned remedies. A re-stamp mode rewrites the baseline from the current census and writes nothing else. No per-site suppression is honoured from the source tree."""
+priority = "S"
+verification = "Test"
+status = "Drafted"
+phase = 5
+aspect = "process"

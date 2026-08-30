@@ -249,6 +249,13 @@ SLOW_MODULES = frozenset(
         # Nothing here is deleted or weakened: all five still run in full at
         # slice/phase close and in CI. Re-stamped seconds/max-tests together
         # below with the reason (docs/log.d/2026-08-23-wi496-smoke-retier.md).
+        # WI-537: the complexity census's CLI drives. Each of the 8 cases spawns
+        # check_complexity.py as a subprocess against a synthetic scaffold, so it
+        # is the same interpreter-startup-dominated class as the sibling
+        # subprocess suites above — measured ~5 s for the module. The METRIC
+        # itself is pinned in-process in test_check_complexity.py, which stays in
+        # the commit bar; only the subprocess CLI half is re-tiered here.
+        "test_check_complexity_cli",  # check_complexity.py driven as a subprocess
     }
 )
 
