@@ -74,3 +74,10 @@ the implementation, and the baseline (see the log fragment's REVIEW-A section).
 This WI still answers SR-183 as amended: the boundary was always exclusive in the
 built code and the seeded baseline; the amendment only makes the SR say what the
 LLR and code already said. Scope and deliverable are unchanged.
+
+**REVIEW-A Round 6 clarification.** LLR-206 now names the implementation boundary
+exactly: `census()` returns every source-function row, while `main()` selects the
+strictly-over (`>`) rows for baseline comparison. This is a contract correction,
+not a behavior change. The Round 3/4 iteration records also have their four
+reviewer-named trailing spaces removed; the identical empty-field whitespace in
+the later Round 5/6 records is removed so the next review range is clean too.

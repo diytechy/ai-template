@@ -95,6 +95,18 @@ ratchet are phase 2; shipping it downstream is phase 3.
   remain Drafted — this tightens their wording for the owner's approval, it does
   not approve them.
 
+## REVIEW-A Round 6 rework (2026-08-30, 30c84a6 findings)
+
+- **[MINOR] LLR-206 assigned threshold selection to the wrong boundary.** The
+  implementation already has one unambiguous owner: `census()` returns all
+  source-function rows and `main()` selects rows strictly over (`>`) the
+  threshold before baseline comparison. LLR-206 now says exactly that; no code
+  or baseline changed.
+- **[MINOR] iteration telemetry carried trailing spaces.** Removed the four
+  reviewer-named spaces after the empty `guardrails` and `commits` fields in
+  the Round 3/4 iteration records, plus the identical empty-field whitespace in
+  the later Round 5/6 records so the next review range passes `git diff --check`.
+
 ## Verification (real output, this box — Python 3.11.9)
 
 Sessions 003/004 built the rework but ended NO-COMMIT; this session (005)
@@ -131,3 +143,19 @@ it. The trunk lane regenerates `docs/stage` after the merge; committing it here
 would do the trunk lane's job on the branch and churn against the concurrent
 spine-touching lanes (WI-538/WI-539 share this plan). So it is deliberately left
 for trunk. Every other test passes.
+
+Round 6 rework was re-verified with Git for Windows' `bin` directory on `PATH`,
+so the required POSIX-shell environment gate was exercised:
+
+```
+git diff --check 30c84a6                 -> clean (prospective re-review range)
+check_complexity.py --root .             -> OK - 179 row(s) over 15, unchanged
+pytest test_check_complexity*.py         -> 55 passed in 7.87s
+pytest tests/test_dependency_ledger.py   -> 5 passed in 4.11s
+trace.py --root . --strict-integrity     -> SN=27 SR=76 LLR=188 TC=186,
+                                             integrity=0 (exit 0)
+check_trajectory.py --root . --strict    -> clean, 543 WI rows (exit 0)
+pytest -n auto -m smoke                  -> 1424 passed, 6 skipped in 30.19s
+check_smoke_budget.py --mode enforce     -> 30.9s vs 60s budget -> within
+check_docs.py --root . --stale           -> OK - 0 broken (exit 0)
+```

@@ -6,19 +6,19 @@
 # phase: BUILD
 # wi: WI-537
 # model: opus
-# guardrails: 
+# guardrails:
 # outcome: COMMITTED
 # commits: 1b293594..30c84a6e
-# tokens: 
-# cost-usd: 
+# tokens:
+# cost-usd:
 # wall-secs: 877
-# api-secs: 
-# turns: 
-# ttft-secs: 
-# cache-read: 
-# cache-create: 
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
 # effort: medium
-# fast: 
+# fast:
 # prompt-chars: 5221
 # prompt-template: kit:BUILD
 # prompt-sha: sha256:7b6524e39f5b
