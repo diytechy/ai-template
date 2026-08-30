@@ -1,4 +1,4 @@
-# 2026-08-25 — the owner rules OI-63 (d) and directs OI-64 to the interface tier
+## 2026-08-25 — the owner rules OI-63 (d) and directs OI-64 to the interface tier
 
 Both statements were made in session, in one message, and are recorded
 verbatim on their rows. This fragment is the ruling record the rows'

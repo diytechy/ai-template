@@ -1,4 +1,4 @@
-### 2026-08-18 — shipped-docs prose pass (six owner-authorized audit fixes)
+## 2026-08-18 — shipped-docs prose pass (six owner-authorized audit fixes)
 
 Doc-only. No script, registry or test behaviour changed; the corrections all run
 the other way — prose that had drifted off what the code already does.

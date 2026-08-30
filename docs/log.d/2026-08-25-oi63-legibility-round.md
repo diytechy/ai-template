@@ -1,4 +1,4 @@
-# 2026-08-25 — the OI-63 legibility round: cross-family simplify + second opinion
+## 2026-08-25 — the OI-63 legibility round: cross-family simplify + second opinion
 
 Owner-requested in session: *"simplify the Open-items.toml text"* (what was
 found, the blast radius, the categories, the exact options and what they
