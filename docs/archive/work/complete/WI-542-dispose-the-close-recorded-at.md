@@ -8,6 +8,29 @@ safety_class = "adjudication"
 brief = "disposition"
 +++
 
+## Deliverable
+
+The close of `WI-521` recorded at
+`docs/handbacks/WI-521-wi521-decomposition-debt-owner.md` is adjudicated
+**PARTIAL — claim upheld; commit range `efcde754aa..378e90005b` KEEP, discard
+none; one successor drafted** (the `## Dispositions` block below, `supersedes =
+"WI-521"`, which intake mints at this row's merge). Two independent
+adjudication sessions reached the same four answers from the commit facts, not
+the report's prose: `001-ADJUDICATE-1058868.md` (`9cc57286`) and
+`002-ADJUDICATE-035dc13.md` (`8e9f9e14`), both under
+`docs/reviews/wi-542-dispose-the-close-recorded-at/`. The slice the lane
+landed (the IF-seam tier of `tests/test_trace.py` split to
+`tests/test_trace_interfaces.py`) is behaviour-preserving by node-id set
+equality against the pre-split file and green on trunk; the lane closed
+because three consecutive review draws failed on provider outage (a usage
+limit and a session timeout), not on the work. The standing debt-owner role
+and the module-size ratchet pointer transfer to the successor, whose first
+commit moves that pointer. This row's own move to `complete/` is the
+supervising session's act under the delegated run: the adjudication brief
+forbids the adjudicator to move a spec and no machinery closes an
+adjudication row, so the lane would otherwise be resumed indefinitely
+(decision 21 of `docs/decisions-for-review-2026-08-31.md`).
+
 ## Context
 
 The closed spec is `docs/work/partial/WI-521-decomposition-debt-owner.md`.
