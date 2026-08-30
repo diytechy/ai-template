@@ -57,7 +57,21 @@ stale hints are pre-existing, not in this diff). The two split modules alone:
 **91 passed, 1 skipped in 241.60 s**. `trace.py --strict` interface-findings=0 /
 integrity=0; `check_trajectory --strict` clean, graph acyclic.
 
-**Full suite:** _pending — recorded in the final commit._
+**Full suite** (`pytest -q -n auto`, Git Bash on Windows): **1 failed, 3107
+passed, 16 skipped in 618.70 s**. The single failure is
+`test_derive_stage.py::test_this_repo_s_committed_stage_is_current` — the
+expected work-branch generated-artifact staleness, NOT a defect: `docs/stage`'s
+fingerprint hashes `docs/test/test-cases.toml` bytes (a `kitlib.stage`
+DECLARED_INPUT), so this slice's Evidence re-point drifted the input hash.
+`derive_stage.py --check` confirms **every derived value is unchanged** (stage
+`DevStg-LLReqs`, all per-phase values identical) — only the input fingerprint
+moved. `docs/stage` is a generated artifact the trunk lane regenerates after
+each merge (§5.2), which is why the pre-commit hook SKIPS its freshness check on
+a work branch; it is not re-stamped here (editing a generated artifact on a work
+branch is forbidden and would only collide with the trunk lane's regen). The two
+split modules and everything else pass.
+
+fig: cmd="python -m pytest -q -n auto" rev=c9203f47
 
 **M-06 after this slice: two of four done** (`test_integrate`, slice 2;
 `test_trace`, here). `test_trajectory_arch.py` (2,290) and `test_agent_loop.py`
