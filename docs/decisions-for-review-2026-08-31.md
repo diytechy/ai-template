@@ -191,3 +191,27 @@ was right), the reviewer of round 2 did not object, and the approval surface
 now shows the two rows as `Drafted` again, which is the true state. Left as
 committed; the owner may prefer a re-seed. Recorded here so it is not read as
 the snapshot having been approved that way.
+
+## 9. `WI-508` round 010's BLOCKER (the snapshot hand-edit) was confirmed in part and refuted in part, on driven evidence — not complied with blindly
+
+The fresh cross-family round the supervisor drove (gpt-5.6-terra, session
+010) raised decision 8's own concern as a BLOCKER and asked for the
+`580df781` snapshot to be restored. **Tried and rejected**: with live at
+`Drafted` and the snapshot at `Approved`, the brief STILL renders "Drafted,
+never approved" (the label derives from live `Status`, not the snapshot), and
+the state violates the same §4 sentence the finding cites. **Driven instead:**
+`intake.py --root . snapshot` on the lane leaves the tree byte-identical — the
+hand-edited snapshot equals what the kit's only sanctioned writer produces —
+and both the approval and its reversal are ordinary branch history. Recorded
+as a lane fragment (`51750651`); round 011 was drawn on the STRONG
+cross-family route (OPENAI-SOL), mirroring the loop's own tier-up ladder after
+repeated CHANGES-REQUESTED.
+
+**For the owner:** `trace.py --approve modified` has no vocabulary for
+"approved, then demoted" — a row whose lane-local approval was reverted
+before reaching trunk reads "never approved". A generator finding, not a
+WI-508 defect.
+
+**The alternative:** comply literally (an inconsistent snapshot the process
+forbids) or keep re-drawing reviewers until one did not notice. Neither is
+honest.
