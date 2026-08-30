@@ -258,7 +258,7 @@ def test_the_shed_covers_the_loops_own_stream_but_never_the_root_out(tmp_path):
     # refresh-refused-<branch>.log lives OUTSIDE any lane worktree) is never
     # reached.
     repo, worker = residue_lane(tmp_path)
-    stream = worker / "out" / "run-logs" / "session.md"
+    stream = worker / "out" / "run-logs" / "wi-401-003-20260830-161822.log"
     stream.parent.mkdir(parents=True)
     stream.write_text("the loop's own stream\n", encoding="utf-8", newline="\n")
     (worker / "out" / "review-owed").write_text(
@@ -290,14 +290,19 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     # C6 (2026-08-30, WI-548): the loop's OWN artifacts joined the declared
     # set on measurement — every mechanized lane refused unload over its own
     # session stream, whose clipped copy is tracked under docs/iteration/.
-    assert integ._is_declared_residue("out/run-logs/session.md")
+    assert integ._is_declared_residue("out/run-logs/wi-401-003-20260830-161822.log")
     assert integ._is_declared_residue("out/review-owed")
+    # ... and ONLY the loop's own stream shape (round 4): a foreign file under
+    # the same directory is a surprise, and a surprise is evidence.
     for rel in (
         ".env",
         "orphan.txt",
         "docs/test/notes.md",
         "src/widget.pyc",
         "out/other-file.txt",
+        "out/run-logs/session.md",
+        "out/run-logs/operator-notes.txt",
+        "out/run-logs/wi-401-003.log",
     ):
         assert not integ._is_declared_residue(rel), rel
 
@@ -531,4 +536,31 @@ def test_the_queue_exits_nonzero_when_a_merged_branch_stays_held(tmp_path):
     assert _rev(repo, "HEAD") != trunk_before
     assert _git(repo, "log", "-1", "--format=%s").strip().startswith("integrate: merge")
     assert (worker / "orphan.txt").is_file()
+    assert "wi-401" in _branches(repo)
+
+
+def test_a_foreign_file_beside_the_loops_streams_refuses_by_name(tmp_path):
+    # Round 4 (WI-548): the shed reaches the loop's OWN streams by NAME, never
+    # the directory — an operator's sole-copy note beside them survives
+    # byte-for-byte, the unload refuses naming it, and the stream that IS the
+    # loop's is not what the refusal names.
+    repo, worker = residue_lane(tmp_path)
+    logs = worker / "out" / "run-logs"
+    logs.mkdir(parents=True)
+    (logs / "wi-401-003-20260830-161822.log").write_text(
+        "the loop's own stream\n", encoding="utf-8", newline="\n"
+    )
+    note = logs / "operator-notes.txt"
+    note.write_text("the only copy of these notes\n", encoding="utf-8", newline="\n")
+
+    unloaded, message = integ._unload_branch(repo, "wi-401")
+    assert not unloaded
+    assert "UNLOAD INCOMPLETE" in message and "DIRTY" in message
+    # git's ignored listing collapses an ignored directory to one entry, so the
+    # refusal names the holding `out/` (the same shape the other residue tests
+    # see) — never the stream that IS the loop's.
+    assert "out/" in message
+    assert "20260830-161822" not in message, message
+    assert note.read_text(encoding="utf-8") == "the only copy of these notes\n"
+    assert worker.exists()
     assert "wi-401" in _branches(repo)
