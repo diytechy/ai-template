@@ -548,3 +548,16 @@ test carries an indented line and a list item and asserts they land
 byte-for-byte (`1309a426`). Three review rounds on a disposition lane have
 each found a real defect in the same twenty lines of intake — the mint path
 for drafted successors had never been driven end to end. Round 4 drawn.
+
+## 28. `WI-544` merged at round 4; `WI-546` minted WITH lineage and scope — both intake fixes proven live; the grind reached `WI-537`
+
+Round 4 (terra) APPROVEd with no findings after the verbatim fix; the
+compiled WI-level file carries one adjudication and four rounds. The slot
+merged, unloaded clean (its `out/` had been salvaged and emptied first), and
+intake minted **`WI-546`** — `supersedes = "WI-484"` present, the items-3-
+and-5 boundary and the item-7 exclusion in its Context — the first
+successor the kit has minted with its thread and scope intact. The
+dispatcher then claimed `WI-537` (the complexity sensor, `spine`,
+exclusive): the first of the seven queued rows the run was asked to
+integrate, ~8 hours after launch. What stood in the way is the record above
+— none of it was the queued work.
