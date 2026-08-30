@@ -462,6 +462,8 @@ buildtier = "medium"
 planmode = "dual"
 specref = "seed.txt"
 ```
+
+Scope: only the amended clause; the untouched acceptance arm is excluded.
 """
 
 
@@ -496,6 +498,13 @@ def test_a_merged_adjudication_rows_dispositions_are_minted_at_its_merge(tmp_pat
     # from it (single-source): no second hand-set SafetyClass cell.
     assert row["PlanMode"] == "dual"
     assert row["SafetyClass"] == ""
+    # The adjudicator's scope prose after the block rides into the minted
+    # Context verbatim: the cells alone carry no boundary or exclusion, and a
+    # successor whose Context is only the provenance line silently widens or
+    # narrows the adjudicated work (WI-544 review round 2, 2026-08-30).
+    spec = (root / minted[0][1]).read_text(encoding="utf-8")
+    assert "Drafted by WI-008" in spec
+    assert "only the amended clause; the untouched acceptance arm is excluded" in spec
 
 
 def test_a_drafted_successor_keeps_its_supersedes_lineage_at_the_mint():

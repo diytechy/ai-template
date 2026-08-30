@@ -526,3 +526,17 @@ fix had to land on trunk BEFORE the `WI-544` merge for its successor to keep
 `supersedes = "WI-484"`. The review's other two findings: stale generated
 artifacts on the lane (the refresh's regen) and trailing whitespace the
 session telemetry wrote into the clipped log (stripped).
+
+## 26. `WI-544` round 2: a minted successor now carries the adjudicator's scope prose in its Context — a second small kit change on trunk
+
+Round 2 (terra) accepted the lineage fix and found the next hole: intake's
+`_disposition_drafts` gave every minted successor a one-line provenance
+Context, so the boundary the adjudicator wrote beside its draft (items 3
+and 5 only, item 7 excluded, the knowledge-pack rule) never reached the
+minted row — `WI-545`'s Context is that one line. Taken: `parse_dispositions`
+keeps the prose that follows each fenced draft, and the minted Context is the
+provenance line plus that prose verbatim; the replay test asserts the prose
+lands in the minted spec. `intake.py` ratchet re-stamped 1985 → 1990 with the
+reason on the entry. `WI-545`'s own Context is NOT rewritten (its scope is
+one link away in `WI-542`'s archived `## Dispositions`); the owner may prefer
+to copy it in.
