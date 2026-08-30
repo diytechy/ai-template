@@ -1,0 +1,2 @@
+- [MINOR] tests/test_hats.py:907 -> The new `docs/knowledge/`-only assertion admits `docs/knowledge/../status.md` (the real test body printed `traversal: ACCEPTED`), so the WI-546 value-pass remains false-green for a non-pack path. -> Resolve the target and require it to be below `(ROOT / "docs" / "knowledge").resolve()`, with an adversarial traversal value that must fail. -> @owner
+VERDICT: CHANGES-REQUESTED findings=1
