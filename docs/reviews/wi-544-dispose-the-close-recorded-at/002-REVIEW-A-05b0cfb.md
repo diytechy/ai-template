@@ -1,0 +1,4 @@
+- [BLOCKER] docs/archive/work/complete/WI-544-dispose-the-close-recorded-at.md:55 -> the asserted successor lineage and scope are lost by the actual disposition-intake flow: `_disposition_drafts` produces only generic context and `_draft_row` emits `Supersedes=''` -> preserve `supersedes` and the items-3-and-5 scope in the minted successor, with an end-to-end disposition-mint regression test -> @owner
+- [MAJOR] docs/status.md:329 -> the generated ready frontier still calls closed WI-544 ready (and PROJECT_STATE.html reports it as a second active item); `gen_trajectory.py --check` and `--status --check` both fail stale -> regenerate and commit both derived artifacts after the terminal move -> @owner
+- [MINOR] docs/iteration/wi-544-dispose-the-close-recorded-at-001-20260830-093126.log:9 -> the added trailing whitespace makes `git diff --check a6a6748a^..HEAD` fail -> remove the trailing space -> @owner
+VERDICT: CHANGES-REQUESTED findings=3
