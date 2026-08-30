@@ -1,4 +1,6 @@
-## WI-546 — WI-484 delegated residue: the hats.toml knowledge value-pass and the 17 approved-cell Rationale attribution deletions
+## 2026-08-30 — WI-546: the WI-484 delegated residue — the hats.toml knowledge value-pass and the 17 approved-cell Rationale attribution deletions
+
+Deferred open items: none — both edits are listed here for the owner's review at return, as the delegation asked; nothing is owed a ruling.
 
 Successor to WI-484 (drafts-not-mints, R1/R3), scope items **3 and 5 only** of
 WI-484's "Delegated for the unattended run" block (SpecRef
