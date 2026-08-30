@@ -18,9 +18,9 @@
 
 [derived]
 components = 4
-design_rows = 187
+design_rows = 188
 seam_rows = 163
-requirements_placed = 71
+requirements_placed = 72
 requirements_unplaced = 4
 seams_unplaced = 0
 
@@ -241,6 +241,7 @@ sr_refs = [
   "SR-167",
   "SR-170",
   "SR-182",
+  "SR-183",
 ]
 sr_shared_refs = [
   "SR-017",
@@ -272,6 +273,7 @@ llr_refs = [
   "LLR-190",
   "LLR-191",
   "LLR-195",
+  "LLR-206",
 ]
 hat_refs = [
   "CONSISTENCY",
@@ -289,6 +291,7 @@ modules = [
   "project-trajectory/hooks/pre-commit",
   "project-trajectory/hooks/pre-push",
   "project-trajectory/scripts/check.py",
+  "project-trajectory/scripts/check_complexity.py",
   "project-trajectory/scripts/check_coverage.py",
   "project-trajectory/scripts/check_doc_refs.py",
   "project-trajectory/scripts/check_docs.py",

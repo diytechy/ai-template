@@ -548,3 +548,56 @@ test carries an indented line and a list item and asserts they land
 byte-for-byte (`1309a426`). Three review rounds on a disposition lane have
 each found a real defect in the same twenty lines of intake — the mint path
 for drafted successors had never been driven end to end. Round 4 drawn.
+
+## 28. `WI-544` merged at round 4; `WI-546` minted WITH lineage and scope — both intake fixes proven live; the grind reached `WI-537`
+
+Round 4 (terra) APPROVEd with no findings after the verbatim fix; the
+compiled WI-level file carries one adjudication and four rounds. The slot
+merged, unloaded clean (its `out/` had been salvaged and emptied first), and
+intake minted **`WI-546`** — `supersedes = "WI-484"` present, the items-3-
+and-5 boundary and the item-7 exclusion in its Context — the first
+successor the kit has minted with its thread and scope intact. The
+dispatcher then claimed `WI-537` (the complexity sensor, `spine`,
+exclusive): the first of the seven queued rows the run was asked to
+integrate, ~8 hours after launch. What stood in the way is the record above
+— none of it was the queued work.
+
+## 29. `WI-537` built and APPROVEd (round 3, grok-4.6 after OpenAI's second limit) — but the loop's worker brief carries no closing step, so the supervisor closes the row; and a shipped-fragment heading defect
+
+The sensor landed in one 32-minute Opus build; rounds 1–2 (terra) found a
+real census gap (functions under `for`/`while`/`match` skipped) and a
+boundary-wording split, both reworked on the lane (the round-2 escalation was
+again a Sol DESIGN-CHECK that committed the fix itself); round 3 ran on the
+third family because OpenAI hit its usage limit a second time (reset 18:34
+UTC) — grok answered in 11 minutes this time, `APPROVE findings=1`, the one
+MINOR (a missing baseline compared as empty) carried to the owner's list.
+The worker then exited DONE with its spec **still in `active/`**: the shipped
+`worker.template.md` says nothing about the terminal move, so under the
+mechanized loop no build lane closes its row — the dispatcher resumes it as
+parked, a fresh Opus session finds nothing to do, and three of those trip the
+stall guard into a `partial` close of finished, approved work. Stopped at the
+first resume. **Closed by the supervisor** as decisions 21/24 describe:
+`## Deliverable` compiled from the lane's own fragment, `specref` cleared,
+`spec_move.py` to `complete/`, the WI-level verdict compiled from the three
+round files. Two more defects on the record: the worker's fragment opened
+with `# ` (trunk_step refuses it at the first refresh — the very defect the
+2026-08-30 sitting cleared three of), fixed at the close; and session 009
+amended a commit message with `--no-verify` (message-only, on a tree that
+had just passed every gate — harmless, but the brief forbids it). **For the
+owner:** the worker brief needs the close ritual (Deliverable before
+Context, SpecRef cleared, `spec_move.py` to the terminal folder) and the
+fragment heading form stated explicitly.
+
+## 30. `WI-537`'s refresh red on `approval-fresh` — the brief regenerated on the lane after the governing round, recorded on the compiled verdict rather than buying a fourth round
+
+The lane minted four `Drafted` rows and never rendered `docs/ratify/CURRENT.md`,
+so the station refresh refused. The render is a derived artifact of the kit's
+own generator (`trace.py --approve modified`); no cell, code or test moved. It
+was committed on the lane (`e64bb754`) and the compiled WI-level verdict
+re-committed after it with a paragraph saying exactly that (`8a6f7fc9`), so the
+verdict rung's freshness comparison passes on a mechanical render — the same
+reasoning the protocol applies to a refresh commit — instead of a fourth
+review round over an unchanged tree. **For the owner:** the worker brief
+should tell a lane that mints spine rows to render the brief before it closes,
+or `trunk_step --regen` should own that render like the other derived
+surfaces; either removes this stop.

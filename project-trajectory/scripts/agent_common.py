@@ -2221,7 +2221,7 @@ def write_session_log(iter_dir, meta, transcript):
         "prompt-sha",
         "exit-code",
     ):
-        header.append("# {}: {}".format(key, meta.get(key, "")))
+        header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())
     if redacted:
         header.append("# redacted: {} credential-shaped token(s)".format(redacted))
     header.append("# ---")
