@@ -1,6 +1,6 @@
 # Crash, atomicity and recovery: what the next reader finds after an interrupted write — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a ratified finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.INTEGRITY-RECOVERABILITY` roster entry has a `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack is what a reviewer wearing INTEGRITY-RECOVERABILITY looks for HERE. The
 charter's question — "interrupted mid-write, what does the next reader find, and
@@ -83,7 +83,7 @@ cannot be quietly rewritten.
 - The snapshot copy loop is intentionally non-atomic and defended by read-side
   guards only; whether that is the right trade for a *seven-file* record, versus a
   temp-dir-then-rename of the whole snapshot root, is an open design call — not a
-  ratified position. Flagged, not fixed.
+  settled position. Flagged, not fixed.
 - The advisory lock is best-effort across hosts (flock over NFS is unreliable) and
   degrades to unguarded on a filesystem that cannot lock (ENOLCK/ENOTSUP). That is
   a stated bound, not a hole to close silently.

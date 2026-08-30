@@ -1,6 +1,6 @@
 # Rendered-surface review: layout priority, robustness, and accessibility of this repo's generated owner surfaces — DRAFT
 
-> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UX-DESIGNER`, `hat.UX-ENGINEER` and `hat.ACCESSIBILITY` roster entries have a shared `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a ratified finding.
+> **DRAFT (agent-authored, WI-546, 2026-08-30).** Drafted by the unattended lane so the `hat.UX-DESIGNER`, `hat.UX-ENGINEER` and `hat.ACCESSIBILITY` roster entries have a shared `knowledge` value to point at; the owner reviews and cuts at RETURN, per the `hats.toml` header's own rule. This distills THIS repo's accumulated perspective from its own decisions and surfaces — it is not retrieved external research, and its claims are the drafter's reading, not a settled finding.
 
 This pack is shared because three hats review the same objects from three angles.
 The objects are this repo's **generated, owner-facing surfaces**: the root

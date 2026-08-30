@@ -445,15 +445,15 @@ def test_the_kit_template_and_the_live_roster_share_a_STRUCTURE():
     live = hats.load(ROOT)
     kit = hats.load(ROOT, rel=str(KIT_ROSTER.relative_to(ROOT)))
     assert live and kit
+    # The three required keys, plus the two hats.load() computes (name,
+    # condition). A row MAY additionally carry the optional `knowledge` key
+    # (WI-511) — the live roster's value pass populates it, the template does
+    # not — so the shape is "the base set, optionally widened by OPTIONAL_KEYS",
+    # never a bare equality that would forbid the documented optional key.
+    base = {"name", "applies_when", "asks", "listens_for", "condition"}
     for roster in (live, kit):
         for hat in roster:
-            assert set(hat) == {
-                "name",
-                "applies_when",
-                "asks",
-                "listens_for",
-                "condition",
-            }
+            assert base <= set(hat) <= base | set(hats.OPTIONAL_KEYS)
     # And the shipped form is not a blank one: a roster template with no hats
     # would be a form with nothing behind it (the reason it ships CONTENT).
     assert len(kit) >= 3
@@ -474,12 +474,18 @@ def test_template_and_instance_share_structure_and_the_template_ships_thirteen()
         (ROOT / "docs" / "requirements" / "hats.toml").read_text(encoding="utf-8")
     )
     tmpl = tomllib.loads(KIT_ROSTER.read_text(encoding="utf-8"))
+    required = set(hats.REQUIRED_KEYS)
+    allowed = required | set(hats.OPTIONAL_KEYS)
     for name, data in (("instance", inst), ("template", tmpl)):
         assert set(data) == {"hat"}, name + " declares only [hat.*]"
         assert data["hat"], name + " roster is empty — an empty roster is ceremony"
         for hid, row in data["hat"].items():
-            assert set(row) == {"applies_when", "asks", "listens_for"}, (
-                "%s [hat.%s] key set drifted" % (name, hid)
+            # Required keys always present; only the documented optional key
+            # (`knowledge`, WI-511) may additionally appear — the live roster's
+            # value pass carries it, the shipped template ships it blank.
+            assert required <= set(row) <= allowed, "%s [hat.%s] key set drifted" % (
+                name,
+                hid,
             )
     assert set(tmpl["hat"]) == set(LIVE_NAMES), (
         "the shipped template's thirteen-hat starting roster changed — reviewed edit?"
