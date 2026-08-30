@@ -288,3 +288,21 @@ method states that the same nodes are `TC-176`'s evidence for LLR-181/SR-166's
 materialization claim while TC-199 reads them for LLR-203's missing-files arm
 and asserts nothing about SR-166. One test, two arms, each traced to its
 owner. The Approved LLR was not touched. Round 017 drawn.
+
+## 14. Round 017 could not be drawn on OpenAI (usage limit until 13:34 UTC) and the third family reviews the WRONG TREE without `--dir` — a kit finding
+
+`codex exec` returned "You've hit your usage limit … try again at 8:34 AM"
+mid-run (all seven prior rounds were OpenAI). The loop's registry names the
+OPENCODE family as review leg 3, so round 017 was redrawn on `OPENCODE-GROK`
+— and `opencode run` resolved its project root by walking up from the lane
+worktree to the MAIN repo: the reviewer's first command printed `On branch
+contract_split` and it began reviewing trunk. Killed before it wrote or
+committed anything (trunk `git status` clean). Probed: `opencode run --dir
+<lane>` answers `git rev-parse --abbrev-ref HEAD` with the lane branch, so the
+supervisor's driver passes `--dir` for opencode templates. **For the owner:**
+the shipped `OPENCODE-*` command templates (`docs/agents.toml`) carry no
+`--dir`, so every loop-drawn opencode review of a lane worktree reviews trunk
+instead — add `--dir {worktree}`-style support or drop the family from review
+legs until the template can name the lane. `--wait-on-limit` covers the
+OpenAI limit for the loop itself; the supervisor-driven rounds have no such
+sleep and were re-routed instead.
