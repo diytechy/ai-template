@@ -215,3 +215,28 @@ WI-508 defect.
 **The alternative:** comply literally (an inconsistent snapshot the process
 forbids) or keep re-drawing reviewers until one did not notice. Neither is
 honest.
+
+## 10. `WI-508` round 011 (gpt-5.6-sol, 8 findings): two fixes were applied as asked, measured against the kit's own rules, and reverted — the lane's record now carries the instrument output
+
+Restoring the `580df781` snapshot beside a `Drafted` live row makes
+`trace.py --strict-integrity` red (`FINDING (integrity): … NOT byte-identical …
+may only ever be written by copying the live file`); dropping `SR-163` from
+TC-199/TC-200's `verifies` raises the orphan count the ladder is held on
+(`SR SR-163 has no test (TC)`). Both were tried, both reverted, both recorded
+with the command that decided them (lane fragment
+`2026-08-30-wi508-review-011-dispositions.md`, commit `5835bf42`). The three
+blind-derivation BLOCKERs concern 2026-08-25 trunk work outside this branch's
+diff (`git diff --stat 7e2d3f82..HEAD` touches none of those plans) — carried
+to the owner as findings against that record, with the Team-A census (25
+modules, not 24) a real MINOR to correct there. The stale-generated-artifacts
+MAJOR is the refresh's regen; the `status.md` MAJOR is the trunk lane's and is
+taken in this session's closing status edit.
+
+**Rounds so far on this lane:** 003 (terra, 3 MAJOR) → rework → 005 (terra, 2)
+→ Sol design-check that committed the rework itself → 010 (terra, 1 BLOCKER:
+snapshot) → 010/5175065 (sol, 8) → 012 pending. Two different reviewers have
+now asked for a snapshot state the integrity step refuses. **If round 012
+repeats it, the supervisor stops drawing rounds**: the lane stays a finished
+branch on `wi508-architectural-remap` for the owner's own verdict rather than
+be merged on a reviewer the record could not satisfy or an APPROVE nobody
+wrote.
