@@ -12,7 +12,7 @@ priority = 2
 ## Deliverable
 
 The gate is armed. Record:
-[../../../log.d/2026-08-29-wi533-arm-the-gate.md](../../../log.d/2026-08-29-wi533-arm-the-gate.md).
+[../../../log.d/2026-08-29-wi533-arm-the-gate.md](../../../log.md#2026-08-29--wi-533-the-gate-is-armed-oi-67-slice-6).
 
 `check_trajectory.contract_body_findings` fails, under `--strict`, a row its
 owner declares but does not state, an `external:`-owned row no far-side kit

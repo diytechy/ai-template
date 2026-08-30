@@ -1,0 +1,45 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-08-30 08:24
+# train: wi521-decomposition-debt-owner
+# base: 56e7e52b
+# phase: REVIEW-A
+# wi: WI-521
+# model: gpt-5.6-terra
+# guardrails: 
+# outcome: ERROR
+# commits: 
+# tokens: 
+# cost-usd: 
+# wall-secs: 3
+# api-secs: 
+# turns: 
+# ttft-secs: 
+# cache-read: 
+# cache-create: 
+# effort: 
+# fast: 
+# prompt-chars: 2804
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:e2898101e451
+# exit-code: 1
+# ---
+Reading prompt from stdin...
+2026-08-30T13:24:52.477995Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 97 column 5
+OpenAI Codex v0.144.4
+--------
+workdir: C:\Projects\ai-template-drive\wi521-decomposition-debt-owner
+model: gpt-5.6-terra
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 01a052d8-2771-77b1-8c5d-8d0f8166ec84
+--------
+user
+You are an INDEPENDENT reviewer launched by the unattended coordinator (scripts/agent_loop.py) — a fresh context that did NOT write this code. Assume the implementer was careful but missed something, and hunt for it. Review ONLY (1) the diff of the work under review — run `git log` / `git diff` yourself to see it — and (2) the requirement surface it must satisfy: AGENTS.md, docs/process.md, the docs/requirements registries, and the docs/specs spec-of-record for the open work item. If this diff adds or changes requirement rows (SN/SR/TC under docs/requirements), also sweep them against the EXISTING registries — the new rows AND the historical rows they touch — for any contradiction, overlap, or attribute/limit conflict, and raise each as a finding (mark it 'for clarity' at MINOR when it is a wording ambiguity sharper SN/SR/TC language would resolve, not a defect). If the diff under review is a DevStg-Reqs/DevStg-Tests approval (a Status-change commit closing a `[phase]-[g*]` gate), the batch-scoped approval hierarchy is a REQUIRED input: generate it with `scripts/trace.py --approve <phase>` and confirm the approved SN->SR->LLR/TC batch — its Requirement/AC, LLR Detail, TC Method/Expected, and any cited rubric — is coherent and complete before endorsing the gate. Flag status.md prose that contradicts a declared policy file's current value as a finding. Do NOT read or trust the implementer's own session notes or self-assessment — a leaked self-assessment collapses review finding-rates several-fold. Run the harness yourself (python scripts/check.py, scripts/trace.py) and quote real output; believe nothing you did not observe. Drive the diff's REAL shipped code paths — construct the scenario and run the actual function or flow it changes; primitive probes and plausibility reading are supporting evidence, never the verdict's basis. Before hunting, name the worst failure classes THIS change admits (silent wrong content, fail-open, data loss) and hunt those first, severity-ordered. An APPROVE must mean you tried to break it and failed: map each spec Done-when item to its covering test or call it UNCOVERED, and where the diff adds a regression test for a fixed defect, confirm that test fails on the pre-fix behavior. This is an INDEPENDENT parallel review — do not debate another reviewer. Write your verdict to C:\Projects\ai-template-drive\wi521-decomposition-debt-owner\docs\reviews\wi521-decomposition-debt-owner\004-REVIEW-A-adfc120.md in the log.md block format: one `- [BLOCKER|MAJOR|MINOR] <file:line> -> issue -> the concrete change -> @owner` line per finding, then exactly one machine line:
+    VERDICT: APPROVE|CHANGES-REQUESTED findings=N
+Commit that verdict file (a review is a recorded verdict — its one home) and stop. Do not edit the code you are reviewing.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 8:34 AM.
+ERROR: You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), visit https://chatgpt.com/codex/settings/usage to purchase more credits or try again at 8:34 AM.

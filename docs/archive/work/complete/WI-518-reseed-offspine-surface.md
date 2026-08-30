@@ -13,7 +13,7 @@ priority = 3
 
 The approval brief now discloses off-spine drift the spine-only rendering
 could never show. Record:
-[../../../log.d/2026-08-24-wi518-offspine-census.md](../../../log.d/2026-08-24-wi518-offspine-census.md).
+[../../../log.d/2026-08-24-wi518-offspine-census.md](../../../log.md#2026-08-24--wi-518-the-off-spine-census-closes-the-disclosure-hole-the-oi-62-sittings-adversarial-round-found).
 
 `trace.offspine_census_rows` (the data half) and `trace.offspine_census_lines`
 (the markdown renderer, wired into `reattest_lines` right after the derived
@@ -52,7 +52,7 @@ load condition, not a regression) are in the log fragment above.
 
 Found by the adversarial round on the 2026-08-24 OI-62 sitting (MAJOR-2 of
 that review; record:
-[../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
+[../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)).
 `intake.py snapshot` copies **all 7** snapshotted registries wholesale — the
 off-spine tiers (`interfaces.toml`, `external.toml`, `components.toml`)
 included — but `trace.py --approve modified` renders **one section per SR**:

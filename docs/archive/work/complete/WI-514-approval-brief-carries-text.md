@@ -12,7 +12,7 @@ priority = 2
 
 Both owner approval surfaces now render an owing SR's own Requirement (verbatim)
 and Rationale UNCONDITIONALLY — the gap SR-177 exposed. Record:
-[../../../log.d/2026-08-24-wi514-brief-carries-text.md](../../../log.d/2026-08-24-wi514-brief-carries-text.md).
+[../../../log.d/2026-08-24-wi514-brief-carries-text.md](../../../log.md#2026-08-24---puts-the-anchor-srs-own-reviewable-text-on-both-approval-surfaces).
 
 **The gap.** `trace.reattest_model` (widened by `WI-513` to ask the `Drafted`
 question of every chain row, not just the SR) already rendered a `Drafted`

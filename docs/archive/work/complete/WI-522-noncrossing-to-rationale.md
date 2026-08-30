@@ -49,7 +49,7 @@ header now documents the field, which it did not.
 ## Context
 
 `OI-63` is RULED (owner, in session 2026-08-25; record:
-[../../log.d/2026-08-25-owner-rulings-oi63-oi64.md](../../../log.d/2026-08-25-owner-rulings-oi63-oi64.md)):
+[../../log.d/2026-08-25-owner-rulings-oi63-oi64.md](../../../log.md#2026-08-25--the-owner-rules-oi-63-d-and-directs-oi-64-to-the-interface-tier)):
 option (d) — *"move information to rationale to clean up the contract text
 itself before further shuffle."* This row is that pass.
 

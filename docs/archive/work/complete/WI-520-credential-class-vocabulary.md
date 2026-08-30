@@ -18,7 +18,7 @@ One home for the credential class vocabulary:
 `KEY_RE`/`TOKEN_RES` and `agent_common.py`'s `_SECRET_RES` are now
 comprehensions over this one table rather than hand-copied literals, so the
 measured drift cannot reopen by one side forgetting to update its own copy.
-Record: [../../../log.d/2026-08-25-wi520-secret-class-vocabulary.md](../../../log.d/2026-08-25-wi520-secret-class-vocabulary.md).
+Record: [../../../log.d/2026-08-25-wi520-secret-class-vocabulary.md](../../../log.md#2026-08-25--wi-520-the-credential-class-vocabulary-gets-one-home).
 
 The fix: the PEM private-key class now reaches the redactor (was floor-catch,
 redactor-MISS; both catch now) — the one gap the spec named as the row's

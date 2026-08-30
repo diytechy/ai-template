@@ -14,7 +14,7 @@ The nineteen `Drafted` rows the owner must approve are shorter to read, and
 every suggestion behind that is dispositioned in writing. Dossier:
 [../../../reviews/2026-08-24-draft-wording-round/RESUME.md](../../../reviews/2026-08-24-draft-wording-round/RESUME.md).
 Record:
-[../../../log.d/2026-08-24-wi515-draft-wording-review.md](../../../log.d/2026-08-24-wi515-draft-wording-review.md).
+[../../../log.d/2026-08-24-wi515-draft-wording-review.md](../../../log.md#2026-08-24--wi-515-the-cross-family-wording-round-on-the-approval-pending-drafted-text).
 
 **The round.** Routed by PROVIDER, not gateway: `OPENAI-TERRA`
 (`gpt-5.6-terra` via `codex exec`) — the OpenAI-family entry the owner named,

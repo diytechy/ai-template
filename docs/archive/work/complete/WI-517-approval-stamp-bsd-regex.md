@@ -17,7 +17,7 @@ which mean the same thing under every regex engine git links against. Sweep
 of the whole tree (`*.py`, excluding `.venv`) for `-G`/`-S`/`--pickaxe` call
 sites found exactly one: `baseline_snapshot.py:310`, now fixed — no siblings
 existed. Record:
-[../../../log.d/2026-08-24-wi517-approval-stamp-bsd-regex.md](../../../log.d/2026-08-24-wi517-approval-stamp-bsd-regex.md).
+[../../../log.d/2026-08-24-wi517-approval-stamp-bsd-regex.md](../../../log.md#2026-08-24--wi-517-s--pattern-moves-off--onto-posix-classes).
 
 **CI-macOS open question, answered:** yes, inferred red on that test —
 `.github/workflows/test.yml`'s `test` matrix job runs the full unfiltered
@@ -32,7 +32,7 @@ versus inference.
 ## Context
 
 Found 2026-08-24, during the OI-62 sitting, on a macOS checkout (record:
-[../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md)).
+[../../../log.d/2026-08-24-oi62-rule-and-spine-approval.md](../../../log.md#2026-08-24--oi-62-ruled-e-and-the-nineteen-are-approved-from-the-corrected-brief)).
 `baseline_snapshot.approval_stamp` runs `git log -1 -G'^\s*(status|Status)\s*=\s*"'`
 over the snapshotted registries. `\s` is a GNU-regex extension: git's Windows
 build (glibc compat regex) honors it, while macOS's system BSD `regcomp` does
