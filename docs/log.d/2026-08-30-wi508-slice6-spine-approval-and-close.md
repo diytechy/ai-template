@@ -2,8 +2,8 @@
 
 The unattended lane the owner delegated on 2026-08-30 (the spec's *DELEGATED FOR
 THE UNATTENDED RUN* section). Item 1 (`OI-64`) was already discharged — ruled (b)
-and executed 2026-08-28
-([../log.d/2026-08-28-owner-rulings-oi64-oi65.md](../log.d/2026-08-28-owner-rulings-oi64-oi65.md)).
+and executed 2026-08-28 as `IF-144` (the ruling's durable home is the `OI-64` row
+in `docs/requirements/open-items.toml`; it was executed via `WI-523`–`WI-526`).
 Item 2 was mine: approve the four `Drafted` rows this program authored in slice 1
 through the ordinary adjudication flow, close the row as the bookkeeping act, and
 list the flip here for the owner's later review. Under
