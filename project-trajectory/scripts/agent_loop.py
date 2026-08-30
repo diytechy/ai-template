@@ -1759,6 +1759,24 @@ def map_preflight(
     return failures, prompt_templates
 
 
+def default_base(root):
+    """The integration base a worker assumes when --base is not given: the
+    merge-base of the lane's HEAD with the TRUNK (the primary checkout's
+    branch), else HEAD. It used to be HEAD unconditionally — right for a
+    fresh claim (HEAD IS the claim commit) and wrong for every RESUMED
+    worker, whose base..HEAD evidence then read empty: the built trailers,
+    the owed review round and the resume itself were invisible, which is the
+    "resumed session finds nothing to do" pattern of the 2026-08-30 run
+    (WI-548 round 3). A repo whose primary checkout is the branch itself
+    (a single-checkout attended run, the test fixtures) merges-bases to HEAD
+    and keeps the old behaviour exactly."""
+    trunk = trunk_name(root)
+    code, out = git(root, "merge-base", trunk, "HEAD")
+    if code == 0 and out.strip():
+        return out.strip()
+    return head_sha(root)
+
+
 def build_worker_assignment(args, root):
     """The explicit worker assignment (--wi, on a claimed branch): parse the
     WI list, fail closed on an unresolvable --base, and load the registry +
@@ -1791,7 +1809,7 @@ def build_worker_assignment(args, root):
                 file=sys.stderr,
             )
             return None, EXIT_PREFLIGHT
-        base = (args.base or "").strip() or head_sha(root)
+        base = (args.base or "").strip() or default_base(root)
         if not base:
             # An unborn HEAD (zero-commit repo) has no integration base to
             # build evidence against — fail closed, never crash (a claim is
@@ -3080,8 +3098,13 @@ def review_owed_marker(root):
 
 
 def write_review_owed(root, worker, st, detail):
-    """Best-effort persist of the owed state — the exit code carries it too;
-    the marker is what lets a RESUMED worker schedule the round first."""
+    """Persist the owed state's ADVISORY fields (the build's family for C5,
+    the detail for the banner). Returns whether the marker was written. The
+    marker is deliberately NOT the durable evidence — an untracked file
+    whose write can fail is no evidence at all (round 3 finding): a resumed
+    worker derives owed-ness from COMMITTED facts (`review_owed_by_evidence`)
+    and recovers the family from the build's own session log when the marker
+    is gone. A failed write is therefore loud, never silent."""
     path = review_owed_marker(root)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -3098,8 +3121,14 @@ def write_review_owed(root, worker, st, detail):
             encoding="utf-8",
             newline="\n",
         )
-    except OSError:
-        pass
+        return True
+    except OSError as exc:
+        print(
+            "agent_loop: WARNING - {} could not be written ({}); the owed round "
+            "is still derived from committed evidence at resume".format(path, exc),
+            file=sys.stderr,
+        )
+        return False
 
 
 def read_review_owed(root):
@@ -3118,6 +3147,72 @@ def read_review_owed(root):
             key, _sep, value = line.partition("=")
             fields[key.strip()] = value.strip()
     return fields
+
+
+def review_owed_by_evidence(root, worker, reviews_dir):
+    """COMMITTED evidence that a review round is owed: every assigned WI
+    carries its trailer on the branch, and no round verdict names the
+    current HEAD. This is what a resumed worker trusts (a worker reads
+    committed facts, never run-state) — the out/review-owed marker only adds
+    advisory fields. A verdict for HEAD, of either outcome, means the round
+    was served; a rework commit moves HEAD and owes a fresh one."""
+    if not worker:
+        return False
+    built, _blocked = train_evidence(root, worker["base"])
+    if not all(w in built for w in worker["assigned"]):
+        return False
+    head = (head_sha(root) or "")[:7]
+    if not head:
+        return False
+    return not any(Path(reviews_dir).glob("*-REVIEW-?-{}*.md".format(head)))
+
+
+def last_build_family(iter_dir, registry):
+    """The family of the most recent BUILD session recorded in the lane's
+    session logs (their `# phase:` / `# model:` headers, joined to the
+    registry) — the C5 heterogeneity key when the marker did not survive.
+    None when no build log names a registered model."""
+    for path in sorted(Path(iter_dir).glob("*.log"), reverse=True):
+        try:
+            head = path.read_text(encoding="utf-8", errors="replace")[:4000]
+        except OSError:
+            continue
+        phase = re.search(r"^# phase: ?(.*)$", head, re.M)
+        model = re.search(r"^# model: ?(.*)$", head, re.M)
+        if not (phase and model) or phase.group(1).strip() not in ("BUILD", ""):
+            continue
+        wanted = model.group(1).strip()
+        for row in registry.values():
+            if (row.model or row.id) == wanted:
+                return row.family
+    return None
+
+
+def resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir):
+    """C2 resume: a parked review-owed lane owes its ROUND, not another
+    build. Owed-ness is decided from committed evidence (the marker alone is
+    not trusted — its write can fail); the family comes from the marker when
+    it survived, else from the build's own session log, so C5's relaxed audit
+    trail survives the restart either way."""
+    if not (setup.routing.managed and rp_int >= 1 and setup.worker):
+        return
+    fields = read_review_owed(root)
+    if not fields and not review_owed_by_evidence(root, setup.worker, reviews_dir):
+        return
+    st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
+    st.last_impl_family = fields.get("family") or last_build_family(
+        iter_dir, setup.routing.registry
+    )
+    queued_round = st.schedule_review_round()
+    print(
+        "resume: review owed ({}) — scheduling review round {} over the parked "
+        "train diff before any build session".format(
+            "marker present"
+            if fields
+            else "committed evidence: built, no verdict for HEAD",
+            queued_round,
+        )
+    )
 
 
 def clear_review_owed(root):
@@ -3883,24 +3978,7 @@ def main():
     st = build_routing_state(docs, rp_int, setup.routing.managed)
     announce_critique_budget(setup.routing.managed, st)
 
-    # C2 resume: a parked review-owed lane owes its ROUND, not another build —
-    # the marker is what survives the worker restart (review_queue is
-    # in-process), so schedule the round over the parked train diff first.
-    if (
-        setup.routing.managed
-        and rp_int >= 1
-        and setup.worker
-        and review_owed_marker(root).exists()
-    ):
-        st.set_train_range("{}..{}".format(setup.worker["base"], head_sha(root)))
-        # The build's family rides the marker: it is the C5 heterogeneity
-        # key, and the draw below must exclude — or, relaxed, RECORD — it.
-        st.last_impl_family = read_review_owed(root).get("family") or None
-        queued_round = st.schedule_review_round()
-        print(
-            "resume: out/review-owed present — scheduling review round {} "
-            "over the parked train diff before any build session".format(queued_round)
-        )
+    resume_owed_round(root, setup, st, rp_int, iter_dir, reviews_dir)
 
     # --- WI-076: surface the loop-start dirty tree (ONCE) --------------------
     # start_dirty was snapshotted before the lock (above). A non-empty tree here

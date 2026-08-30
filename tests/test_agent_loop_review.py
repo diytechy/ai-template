@@ -1050,3 +1050,81 @@ def test_review_owed_resume_keeps_the_relaxed_audit_trail(managed_repo, tmp_path
     relaxed = list((repo / "docs" / "reviews" / "t1").glob("*-REVIEW-A-*-relaxed.md"))
     assert relaxed, list((repo / "docs" / "reviews" / "t1").glob("*"))
     assert "heterogeneity=relaxed" in proc2.stdout
+
+
+def test_review_owed_survives_a_failed_marker_write(managed_repo, tmp_path):
+    # Round 3 finding: the marker write used to be swallowed, and a resumed
+    # worker with no marker reported DONE ("review round approved") on
+    # unreviewed work. Owed-ness now rides COMMITTED evidence: with the marker
+    # path made unwritable (a directory sits on it), the run still parks
+    # REVIEW OWED loudly, and the resumed worker still draws the round FIRST
+    # and ends DONE only once a verdict names HEAD.
+    repo, ctl, cmd = managed_repo
+    fake = tmp_path / "fake_toggle_nomarker.py"
+    fake.write_text(FAKE_REVIEWER_TOGGLE, encoding="utf-8")
+    cmd2 = '"{}" "{}" --control "{}" --model {{model}} -p {{prompt}}'.format(
+        sys.executable, fake, ctl
+    )
+    _write_registry(
+        repo,
+        cmd2,
+        [
+            ("PROVA-BUILD-1", "PROVA", "builda", "medium"),
+            ("PROVB-REV-1", "PROVB", "revb", "medium"),
+            ("PROVC-REV-1", "PROVC", "revc", "medium"),
+        ],
+    )
+    (repo / "docs" / "review-policy").write_text("1\n", encoding="utf-8")
+    (ctl / "skip_all").write_text("on\n", encoding="utf-8")
+    (repo / "out" / "review-owed").mkdir(parents=True)  # the write cannot succeed
+    # The fixture's primary checkout IS the branch, so the merge-base default
+    # is HEAD; a real lane worktree merge-bases to the claim commit. Name the
+    # integration base the way the dispatcher's lane would resolve it.
+    _commit_config(repo)  # the fixture's own review-policy write is NOT the lane's diff
+    base = _git(repo, "rev-parse", "HEAD")
+
+    proc = _loop(repo, cmd2, "--stall-limit", "2", "--base", base)
+    assert proc.returncode == 9, proc.stdout + proc.stderr
+    assert "could not be written" in proc.stderr
+    assert (repo / "out" / "review-owed").is_dir()  # no marker survived
+
+    (ctl / "skip_all").unlink()
+    boundary = len((ctl / "kinds.txt").read_text(encoding="utf-8").split())
+    proc2 = _loop(repo, cmd2, "--stall-limit", "2", "--base", base)
+    assert proc2.returncode == 0, proc2.stdout + proc2.stderr
+    assert "committed evidence" in proc2.stdout
+    kinds2 = (ctl / "kinds.txt").read_text(encoding="utf-8").split()
+    assert kinds2[boundary] == "review", kinds2
+
+
+def test_default_base_is_the_merge_base_with_the_trunk(tmp_path):
+    # Round 3 (WI-548): a resumed worker's default base used to be HEAD, so
+    # its committed evidence read empty. In a lane WORKTREE the default is
+    # now the merge-base with the primary checkout's branch — the claim
+    # commit — while a single-checkout repo keeps HEAD.
+    import subprocess as _sp
+
+    trunk = tmp_path / "trunk"
+    trunk.mkdir()
+    _git(trunk, "init", "-q", "-b", "main")
+    pin_autocrlf(trunk)
+    _git(trunk, "config", "user.email", "t@example.com")
+    _git(trunk, "config", "user.name", "T")
+    (trunk / "seed.txt").write_text("seed\n", encoding="utf-8")
+    _git(trunk, "add", "-A")
+    _git(trunk, "commit", "-q", "-m", "seed")
+    seed = _git(trunk, "rev-parse", "HEAD")
+    lane = tmp_path / "lane"
+    _sp.run(
+        ["git", "-C", str(trunk), "worktree", "add", "-q", "-b", "wi-1", str(lane)],
+        check=True,
+        capture_output=True,
+    )
+    (lane / "work.txt").write_text("built\n", encoding="utf-8")
+    _git(lane, "add", "-A")
+    _git(lane, "commit", "-q", "-m", "build\n\nWI: WI-1")
+    al = load_script("agent_loop")
+    assert al.default_base(lane) == seed  # the lane: its claim commit
+    assert al.default_base(trunk) == seed  # the primary: HEAD, as before
+    built, _blocked = al.train_evidence(lane, al.default_base(lane))
+    assert "WI-1" in built
