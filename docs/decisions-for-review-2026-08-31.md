@@ -808,3 +808,68 @@ the supervisor is forbidden to hand-mint one — the precedent is the trunk-lane
 `check_docs` fix of 2026-08-30 (decision 1). **The alternative:** unload every
 merged lane by hand for the rest of the run and file the finding for a row.
 **Reversal cost:** one name in one set, one fixture line, one ratchet stamp.
+
+## 41. WI-547 (the seventeen-row amendment adjudication) was closed by the supervisor after the loop drew two identical APPROVE rounds and stalled; the close cost two more rounds
+
+**What the loop did (its first live lane after the unpause):** the Opus
+adjudicator ruled `VERDICT: CLARITY rows=17` in 96 s (every amended cell a
+`Rationale`; fifteen label strips, SR-111/SR-112's trailing C-MNT-7 sentences
+removed as provenance meta-text; the obligation unchanged everywhere) and
+committed it with the `WI:` trailer — then the worker exited `DONE` claiming
+"review round approved" with **no round drawn**. The dispatcher's resume
+derived "review owed (committed evidence: built, no verdict for HEAD)" — C2
+working as designed — and drew REVIEW-A on OPENAI-TERRA: `APPROVE
+findings=0`. The next resume derived the same thing AGAIN, because the
+loop's own telemetry/scoreboard commits had moved HEAD past the verdict, and
+drew a second identical round (`APPROVE 0`); the dispatcher's own
+trunk-unmoved stall then ended the run (exit 4). No handback, no partial
+close — C1/C2 held.
+
+**Decided:** close the row as before (Deliverable before Context, `specref`
+cleared, `spec_move.py` to `complete/`, `WI:` trailer), then take the verdict
+round LAST as the protocol orders: the post-close round returned a MINOR on
+my own closure wording (it said every amendment kept its charter clause; two
+had dropped sentences), corrected in `6627abe1`, and the round on the
+correction approved. The four rounds are compiled time-ordered into
+`docs/reviews/WI-547-REVIEW-A.md`; the lane merged through the slot
+(`efac96c4`). Nothing was flipped: all seventeen rows were already `Approved`
+(the amendment never demoted them), and no script consumes a `CLARITY`
+verdict — it is a record and a session-completion token.
+
+**Kit findings (not fixed — filed for the owner, none has a row):** (A) the
+in-process review schedule does not fire after an ADJUDICATE session (it did
+fire after WI-535's BUILD) — the round exists only because C2's resume
+derivation catches it; (B) that derivation compares the verdict against the
+raw branch tip, so the loop's own telemetry/scoreboard commits re-owe a round
+on every resume of an approved-but-unclosed lane; it should peel record
+commits the way the merge slot does; (C) only the disposition brief received
+the C6 close ritual — the amendment, conflict and red-TC briefs did not, so
+an amendment lane can never finish on its own. **The alternative:** let the
+dispatcher's stall bound the loop and close nothing — the row would never
+merge. **Reversal cost:** none; the close is a record and the merge stands.
+
+## 42. WI-549 (the sample-dial spot-check) closed ITSELF — the C6 worker ritual's first live proof — and was merged by hand through the slot after the run stopped on the owed WI-level verdict
+
+**What the loop did:** the medium Opus worker, on the ordinary brief (the
+row declares no adjudicator brief), audited WI-548's close, found every
+C1–C7 deliverable and adopter-compat surface in the tree, and closed its own
+row in one session (285 s): Deliverable before Context, `specref` cleared,
+spec moved to `complete/`, fragment written, `WI:` trailer — verdict "the
+close stands, no successor". Then, as with WI-547, it exited `DONE` without
+a review round; the dispatcher's drain refreshed the finished lane (bar PASS
+11/11) and stopped on `required verdict docs/reviews/WI-549-REVIEW-A.md is
+absent` (exit 1) — decision 7's owed compile.
+
+**Decided:** draw the cross-family round by hand on the same TERRA route
+(`APPROVE findings=0`, 156 s), compile the WI-level verdict, and merge
+through `integrate.py --root . integrate` rather than wait for the loop: the
+dispatcher drains a finished lane only before an *exclusive* claim or at the
+station exit, and the next row (WI-535, `ordinary`) had already been claimed
+over it. The first attempt refused — the trunk's new claim commit conflicted
+with the lane's earlier station refresh, which my two record commits had
+buried (the 2026-08-30 trap) — so the lane tip was rebuilt as the pre-refresh
+commit plus the two record-only commits and the slot redid its disposable
+refresh. Merged `1553f22f`, **unloaded clean** — the lane held
+`out/agent-loop.lock` plus a stream, the exact state decision 40's fix
+covers. **The alternative:** leave it for the next barrier drain (hours
+later, the same conflict waiting). **Reversal cost:** none.
