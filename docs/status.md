@@ -243,6 +243,16 @@ the seams it owns).
   and the decisions taken under delegation are 40–46 of
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md).
   **For the owner's review, in order of weight:**
+  (0) **THE QUEUE DID NOT MOVE ON ITS OWN, AND THE REASON IS A DESIGN
+  QUESTION** — plan of record
+  [plans/2026-08-31-verdict-record-and-queue-blockers.md](plans/2026-08-31-verdict-record-and-queue-blockers.md),
+  written at the owner's request: is `docs/reviews/WI-<n>-REVIEW-A.md` the
+  right carrier for a verdict (nothing in the kit writes it, it is not a
+  declared generated artifact, and it is the ONLY thing the merge gate reads
+  — so the gate trusts the least-anchored artifact in the chain), with three
+  alternatives, a recommendation, and the other eight things that stopped the
+  queue. The owner takes the breakdown in its own session; nothing is built
+  from it yet;
   (1) **decision 46 — the pause is re-armed at the session's end** so the
   repo is drained and quiet; deleting `docs/work/pause` in a reviewed
   commit resumes the generated frontier below (its first row is the
