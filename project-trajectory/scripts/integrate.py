@@ -1737,9 +1737,11 @@ _RESIDUE_FILES = frozenset({"docs/test/report.md", "docs/test/report.html"})
 # produces, and ONLY that shape is the loop's. Anything else under
 # out/run-logs/ — an operator's notes, a foreign log — is a surprise, and a
 # surprise is evidence that refuses the unload by name.
+# out/agent-loop.lock is the loop's OWN per-checkout coordinator lock, dead once
+# its process exited (measured 2026-08-31: it held WI-547's lane after the shed).
 _RESIDUE_STREAM_RE = re.compile(r"^out/run-logs/[^/]+-\d{3}-\d{8}-\d{6}\.log$")
 _RESIDUE_STREAM_DIRS = ("out/run-logs/",)
-_RESIDUE_OUT_FILES = frozenset({"out/review-owed"})
+_RESIDUE_OUT_FILES = frozenset({"out/review-owed", "out/agent-loop.lock"})
 
 
 def _is_declared_residue(rel):

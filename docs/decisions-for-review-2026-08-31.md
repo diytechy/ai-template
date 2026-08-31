@@ -780,3 +780,31 @@ strong route, and the first lane the C6 close ritual and the C2/C4/C5
 machinery will run on), then the seven rows the previous sitting queued.
 **Unpausing is the owner's one-line act after this confirmation, or the
 next session's on the owner's word.**
+
+## 40. The unpause, the quiet-box re-measure, and a one-name kit fix landed on the trunk lane after the first loop-driven merge
+
+**The unpause (owner-confirmed, no decision):** `docs/work/pause` deleted in
+`c7433820` with `docs/open-items.html` regenerated; smoke tier re-measured on
+a quiet box first (5–9 % CPU): **1426 passed, 6 skipped in 26.65 s;
+`check_smoke_budget.py --mode enforce` 25.2 s vs 60 s → within** — decision
+33's owed reading, the budget untouched.
+
+**Decided:** after the loop's first merge (WI-547) ended `UNLOAD INCOMPLETE`
+(exit 1, the merge standing), fix the cause on the trunk lane while the loop
+was stopped, in one reviewed commit with a test: `out/agent-loop.lock` — the
+loop's own per-checkout coordinator lock, which `release_lock` never unlinks —
+joins `integrate._RESIDUE_OUT_FILES`. The C6 shed had already removed the
+lane's three `out/run-logs/` streams (proven live); the lock alone held
+`out/`, so `rmdir` failed and the re-read named the collapsed `!! out/`. The
+fixture `residue_lane` now plants the lock (every real lane holds it), a
+focused test covers lock + stream, and the module-size ratchet is re-stamped
+2653 → 2655 for the two comment lines (reason on the entry).
+
+**Why on trunk and not a row:** every subsequent merged lane would stop the
+run at the same line (each merge = exit 1 + a manual `git worktree remove
+--force` + relaunch); the fix is one declared name whose class the code
+already states (`out/review-owed`); a work branch cannot mint an id (R1) and
+the supervisor is forbidden to hand-mint one — the precedent is the trunk-lane
+`check_docs` fix of 2026-08-30 (decision 1). **The alternative:** unload every
+merged lane by hand for the rest of the run and file the finding for a row.
+**Reversal cost:** one name in one set, one fixture line, one ratchet stamp.

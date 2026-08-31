@@ -209,6 +209,11 @@ def residue_lane(tmp_path):
         target = worker / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("tool residue\n", encoding="utf-8", newline="\n")
+    # Every REAL lane holds this one too: the lane's own worker loop took the
+    # per-checkout coordinator lock there, and the file outlives its process.
+    lock = worker / "out" / "agent-loop.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.write_text("", encoding="utf-8", newline="\n")
     return repo, worker
 
 
@@ -275,6 +280,35 @@ def test_the_shed_covers_the_loops_own_stream_but_never_the_root_out(tmp_path):
     assert "wi-401" not in _branches(repo)
 
 
+def test_the_loops_own_lock_file_is_shed_with_its_streams(tmp_path):
+    # Observed live 2026-08-31, the first loop-driven merge after WI-548: the
+    # shed took WI-547's three streams, then out/ could not rmdir because
+    # out/agent-loop.lock — the loop's own per-checkout coordinator lock, dead
+    # with the process that took it — was still sitting in it, and the re-read
+    # reported the collapsed `!! out/`. Every mechanized lane refused unload on
+    # exactly this file while the fixtures, which never planted it, stayed
+    # green. A lane whose out/ holds ONLY the lock and one properly-named
+    # stream unloads clean, and the repo-root out/ is still never reached.
+    repo = merged_branch_repo(tmp_path, ignore=LANE_IGNORE)
+    worker = tmp_path / "worker"
+    _git(repo, "worktree", "add", str(worker), "wi-401")
+    stream = worker / "out" / "run-logs" / "wi-401-001-20260831-004500.log"
+    stream.parent.mkdir(parents=True)
+    stream.write_text("the loop's own stream\n", encoding="utf-8", newline="\n")
+    (worker / "out" / "agent-loop.lock").write_text("", encoding="utf-8", newline="\n")
+    root_log = repo / "out" / "run-logs" / "refresh-refused-wi-401.log"
+    root_log.parent.mkdir(parents=True)
+    root_log.write_text("refresh refused\n", encoding="utf-8", newline="\n")
+    assert integ._worktree_dirt(worker), "fixture must start dirty to git"
+
+    unloaded, note = integ._unload_branch(repo, "wi-401")
+    assert unloaded, note
+    assert not worker.exists()
+    assert root_log.read_text(encoding="utf-8") == "refresh refused\n"
+    assert "wi-401" not in _branches(repo)
+    assert _worktree_count(repo) == 1
+
+
 def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     # The declaration, stated as data: every measured 2026-08-01 path is
     # declared residue; every name that CAN hold sole-copy evidence is not.
@@ -292,6 +326,9 @@ def test_the_declared_residue_set_is_exactly_the_bars_own_leavings():
     # session stream, whose clipped copy is tracked under docs/iteration/.
     assert integ._is_declared_residue("out/run-logs/wi-401-003-20260830-161822.log")
     assert integ._is_declared_residue("out/review-owed")
+    # ... and the loop's own per-checkout coordinator lock (2026-08-31): dead
+    # once its process exited, and it held WI-547's lane after the streams went.
+    assert integ._is_declared_residue("out/agent-loop.lock")
     # ... and ONLY the loop's own stream shape (round 4): a foreign file under
     # the same directory is a surprise, and a surprise is evidence.
     for rel in (
