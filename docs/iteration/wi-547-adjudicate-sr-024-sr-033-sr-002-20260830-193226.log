@@ -1,0 +1,33 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-08-30 19:34
+# train: wi-547-adjudicate-sr-024-sr-033-sr
+# base: fb0ed7c073c2
+# phase: REVIEW-A
+# wi: WI-547
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: a9226b76..0504fb7e
+# tokens:
+# cost-usd:
+# wall-secs: 97
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3669
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:2805c4d3f647
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# ---
+Verdict recorded and committed: [002-REVIEW-A-a9226b7.md](C:\Projects\ai-template-drive\wi-547-adjudicate-sr-024-sr-033-sr\docs\reviews\wi-547-adjudicate-sr-024-sr-033-sr\002-REVIEW-A-a9226b7.md)
+
+`VERDICT: APPROVE findings=0`
+
+Commit: `0504fb7e review: record WI-547 verdict`
