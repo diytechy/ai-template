@@ -52,4 +52,19 @@ the ratchet stay valid (the file stays); only `traj_context.py`'s pinned
 Deferred open items: none — the ruling (OI-68) is on record and this phase
 executes it; it files no new question.
 
-**Verification.** (to be filled at close — full suite, gate bar, arming green.)
+**Verification.**
+
+- **Arming (3a).** `check_complexity.py --root . --mode enforce` →
+  `OK - 200 row(s) over 15, unchanged from baseline.`, exit 0.
+- **Re-base units (1c/2a).** `tests/test_module_size_ratchet.py` +
+  `tests/test_check_complexity.py` → 50 passed.
+- **Commit bar.** `pytest -q -n auto -m smoke` → 1427 passed, 6 skipped (43.9s);
+  `check_smoke_budget.py --mode enforce` → 38.1s vs 60s budget, within, exit 0.
+- **Full unfiltered suite — GREEN, run in three disjoint file-partition batches**
+  (the box was loaded past the 10-min single-shot timeout — the two prior resume
+  sessions, iteration logs 003/004, were each reaped mid-single-shot-run with the
+  background suite killed on teardown, which is why this row stayed open; the
+  batched form is the standing fallback for that): fast in-process modules (74)
+  1427 passed / 6 skipped; slow subprocess/scaffold modules split 35 + 36 → 907
+  passed / 2 skipped and 857 passed / 8 skipped. **Union: all 145 test files, each
+  run exactly once — 3191 passed, 16 skipped, 0 failed.**

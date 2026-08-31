@@ -1,7 +1,7 @@
 +++
 id = "WI-538"
 title = "Arm the complexity sensor here at the ruled scope, and re-base the module-size ratchet to SLOC (OI-68 phase 2, 1c)"
-specref = "docs/plans/2026-08-29-complexity-sensor-plan.md#phase-2--arm-it-here-and-retire-whichever-sensor-the-ruling-retired"
+specref = ""
 workstream = "process"
 sr_refs = []
 needs = ["WI-537", "~WI-521"]
@@ -9,6 +9,54 @@ buildtier = "medium"
 safety_class = "ordinary"
 priority = 2
 +++
+
+## Deliverable
+
+Executed OI-68 phase 2 at the ruled shape **1c / 2a / 3a / 4a** — arm + re-base,
+never arm + retire. Both sensors stay armed on different axes; nothing was deleted
+and no pointer moved.
+
+1. **Armed (3a).** New `[step:complexity]` in `docs/stack.ini`
+   (`command = {py} project-trajectory/scripts/check_complexity.py --root . --mode
+   enforce`, `layer = product`, `from-stage = DevStg-Impl`) — the exact-equality
+   compare against `docs/complexity-baseline` in both directions, nonzero on
+   either. Minted no spine row: `SR-183` already carries both postures ("gated only
+   where a repo opts in"), and the opt-in is the step's presence here.
+   `check_complexity.py`'s module docstring updated from "report-only as shipped" to
+   "report-only where shipped, armed here". Shipped default stays report-only
+   (that's phase 3, a separate WI).
+
+2. **Scoped (2a).** `check_complexity.DEFAULT_INCLUDE` widened to census `tests/`
+   as well as `project-trajectory/scripts/`; `docs/complexity-baseline` re-stamped
+   to seed the 20 `tests/` functions over threshold 15 (census now 200 rows: 180
+   scripts + 20 tests). This closes WI-521 §3's sensor gap on the complexity axis;
+   WI-521 amended in place to record that, and to state honestly what is still
+   unwatched (test-tree *size* growth — no function crossing cognitive 15 — is
+   watched by neither armed sensor).
+
+3. **Re-based (1c).** `tests/test_module_size_ratchet.py` re-based from raw
+   physical lines to **SLOC** via the shared `check_complexity.module_sloc`
+   (factored out of `sloc`/`_sloc` so the size ratchet and the complexity sensor
+   read one definition of a source line). `THRESHOLD` 1500 → **1000 SLOC**; the
+   `BASELINE` dict fully re-stamped to SLOC values (trace 6005→3364, agent_loop
+   4100→2519, check_trajectory 4653→2223, bootstrap 3166→1571, integrate
+   2655→1265, agent_common 2690→1262, gen_arch_map 2230→1262, check 2466→1163,
+   intake 1990→1081 — exactly the same 9 modules, per the 900–1000 clean-gap
+   derivation on record). Per-entry raw-line history kept verbatim (a dated record
+   rewritten to numbers that never existed on its date would falsify it).
+   `traj_context.py`'s stale "1,500-line threshold" docstring generalised.
+   `docs/enforcement-audit.md` "Right-size" row updated from Reviewer-only to
+   Reviewer + Harness (this repo, partial).
+
+**Not done, deliberately:** retired no sensor (ruled out by 1c); shipped nothing
+downstream (bootstrap MAPPING, template step, PROCESS_OPTIONS layer,
+deep-module-design skill — all phase 3); minted no spine row and touched no
+registry, so no approval-brief regen. OI-68 was already `ruled` at the sitting, so
+no `open-items.toml` edit.
+
+**Verification.** `check_complexity.py --root . --mode enforce` → `OK - 200 row(s)
+over 15, unchanged from baseline`, exit 0. Full unfiltered suite green (see the log
+fragment for the paste).
 
 ## Context
 
