@@ -16,10 +16,14 @@ lane, 96 s wall) at the lane's claim commit, from the before/after cells alone:
 
     VERDICT: CLARITY rows=17
 
-Every one of the seventeen amended cells is a `Rationale` cell, and every
-amendment strips (or, at SR-175, restructures in place) the `Hat-derived
-(hat.X):` provenance label while keeping the charter clause and the obligation
-the row imposes — a builder or test acting on the BEFORE text acts identically
+Every one of the seventeen amended cells is a `Rationale` cell. Fifteen
+amendments strip (or, at SR-175, restructure in place) the `Hat-derived
+(hat.X):` provenance label and keep the charter clause beside it; two —
+SR-111 and SR-112 — remove their trailing `Hat-derived (hat.MAINTAINER):
+C-MNT-7 …` sentences entirely, which the adjudicator read as provenance
+meta-text (charter answered, citation home, "stands without the citation"),
+not as part of the obligation. In all seventeen the obligation the row imposes
+is unchanged — a builder or test acting on the BEFORE text acts identically
 on the AFTER text. The verdict, one line per row, is the lane's own record at
 `docs/reviews/wi-547-adjudicate-sr-024-sr-033-sr/001-ADJUDICATE-fb0ed7c.md`.
 
