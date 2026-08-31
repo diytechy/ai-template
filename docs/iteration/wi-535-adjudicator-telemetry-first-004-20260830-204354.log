@@ -1,0 +1,37 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 004
+# date: 2026-08-30 21:08
+# train: wi-535-adjudicator-telemetry-first
+# base: 0302c4f0618f
+# phase: DESIGN-CHECK
+# wi: WI-535
+# model: gpt-5.6-sol
+# guardrails:
+# outcome: COMMITTED
+# commits: 8102004c..90d8a778
+# tokens:
+# cost-usd:
+# wall-secs: 1501
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 5376
+# prompt-template: kit:DESIGN-CHECK
+# prompt-sha: sha256:5c081186de5c
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# ---
+Implemented and committed the WI-535 review rework in `90d8a778`.
+
+- Matches all four usage counters and requires exactly one `modelUsage` match.
+- Leaves window/percentage blank for absent or ambiguous matches.
+- Added cache-collision and ambiguity regressions.
+- Full suite: 3,190 passed, 16 skipped.
+- Enforced smoke: 28.1s / 60s.
+- Declared harness: PASS.
+- Worktree clean; commit includes `WI: WI-535`.

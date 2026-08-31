@@ -92,8 +92,8 @@ notes = """Kimi K3 (Moonshot; GA 2026-07-16; frontier-class per Artificial Analy
 [agent.OPENCODE-GROK]
 family = "OPENCODE"
 model = "opencode-go/grok-4.6"
-version = "4.5"
+version = "4.6"
 tier = "medium"
 cmd_template = "opencode run --dir . -m {model} --auto"
-notes = """Grok 4.5 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
+notes = """Grok 4.6 (xAI; GA 2026-07-16; frontier-class - slotted medium as the reviewer-pool leg per owner intent + Opus-at-medium precedent) - cross-family review leg 3; install: curl -fsSL https://opencode.ai/install | bash; sign in: opencode auth login with XAI_API_KEY (x.ai console; OpenAI-compatible) or OpenRouter (catalog slug confirmed post-auth); pathway FULLY verified 2026-07-19 (live PONG via stdin) - ENABLED, see family comment"""
 

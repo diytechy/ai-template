@@ -2238,6 +2238,14 @@ def write_session_log(iter_dir, meta, transcript):
         # for every other session.
         "heterogeneity",
         "exit-code",
+        # WI-535 (docs/plans/2026-08-29-adjudicator-session-retention-plan.md
+        # §3.3, telemetry first, retention dial off): the CLI's own session
+        # id and context occupancy/window/percent, per family — "" wherever
+        # today's one-shot call doesn't report it (family_context_telemetry).
+        "session-id",
+        "context-used",
+        "context-window",
+        "context-pct",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())
     if redacted:
@@ -2309,7 +2317,7 @@ def regenerate_index(docs_dir):
             continue
         rows.append(
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
-            "| [{}](iteration/{}) |".format(
+            "| {} | [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
                 meta.get("phase", "") or "—",
@@ -2324,6 +2332,10 @@ def regenerate_index(docs_dir):
                 meta.get("turns", "") or "—",
                 per_turn_pace(meta) or "—",
                 per_turn_context(meta) or "—",
+                # WI-535: the adjudicator-retention plan's telemetry-first
+                # column — the CLI's own reported context occupancy, "—" on
+                # every family/CLI call that doesn't report it yet.
+                "{}%".format(meta["context-pct"]) if meta.get("context-pct") else "—",
                 log.name,
                 log.name,
             )
@@ -2336,8 +2348,8 @@ def regenerate_index(docs_dir):
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
         "| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD "
-        "| Wall s | API s | Turns | s/turn | Ctx/turn | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "| Wall s | API s | Turns | s/turn | Ctx/turn | Ctx % | Log |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
         + "\n".join(rows)
         + "\n"
     )

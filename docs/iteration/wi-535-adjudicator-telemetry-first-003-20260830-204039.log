@@ -1,0 +1,34 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 003
+# date: 2026-08-30 20:43
+# train: wi-535-adjudicator-telemetry-first
+# base: 0302c4f0618f
+# phase: REVIEW-A
+# wi: WI-535
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 79176ee4..811bf203
+# tokens:
+# cost-usd:
+# wall-secs: 163
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3669
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:d617fb3b2169
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# ---
+CHANGES-REQUESTED — one MAJOR silent context-window attribution defect recorded and committed.
+
+Verdict: [003-REVIEW-A-2e85725.md](C:\Projects\ai-template-drive\wi-535-adjudicator-telemetry-first\docs\reviews\wi-535-adjudicator-telemetry-first\003-REVIEW-A-2e85725.md)  
+Commit: `811bf203`
+
+Focused tests passed. `check.py --jobs 0` summary: `RESULT: PASS`. Trace final line reported `integrity=0` with existing advisory provenance finding.
