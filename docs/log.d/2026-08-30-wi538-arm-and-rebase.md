@@ -73,6 +73,9 @@ newly seeded `tests/` rows were normalized accordingly; a regression assertion
 prevents a restamp from recreating trailing whitespace. The reader remains
 backward-compatible with historical five-field blank-reason rows.
 
+**Re-review.** `010-REVIEW-A-e26ab03.md` re-reviewed the amended requirement
+and serializer at `e26ab033`: APPROVE, 0 findings.
+
 **Verification.**
 
 - **Arming (3a).** `check_complexity.py --root . --mode enforce` →
