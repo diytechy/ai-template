@@ -33,6 +33,15 @@ Outcomes (R3): cancel / defer / draft a successor / surface an open item. Contin
 
 ## Dispositions
 
+```toml
+title = "Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0, DESIGN-CHECK green"
+workstream = "process"
+buildtier = "strong"
+safety_class = "ordinary"
+priority = 2
+supersedes = "WI-540"
+```
+
 The adjudicator session-retention layer is still wanted — WI-541
 (`docs/work/queued/WI-541-verify-retention-layer.md`, turn the dial on and
 verify on-box) blocks on it, and the whole OI-69 adjudicator program depends on
@@ -48,12 +57,3 @@ Strong tier, not the report's suggested medium: the diff is 3876 lines across
 the live `agent_loop`/`dispatch` runtime seams plus an unresolved gate failure
 that crashed a worker. The design is settled (plan §2–§5 + OI-69 a–e) — a
 build/repair, not a design fork.
-
-```toml
-title = "Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0, DESIGN-CHECK green"
-workstream = "process"
-buildtier = "strong"
-safety_class = "ordinary"
-priority = 2
-supersedes = "WI-540"
-```
