@@ -396,7 +396,8 @@ def write_baseline(path, rows, old):
     text = [DEBT_NOTE + HEADER]
     for rel, name, cog, lines in rows:
         reason = old.get((rel, name), ("", "", ""))[2]
-        text.append("\t".join((rel, name, str(cog), str(lines), reason)))
+        cells = (rel, name, str(cog), str(lines))
+        text.append("\t".join(cells + ((reason,) if reason else ())))
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write("\n".join(text) + "\n")

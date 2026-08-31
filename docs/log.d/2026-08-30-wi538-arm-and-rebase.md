@@ -63,6 +63,16 @@ function COMPLEXITY) AND which files they cover (kit scripts only vs scripts +
 `tests/`). Docstring-only; no predicate moved, ratchet + complexity tests still
 green.
 
+**Rework (REVIEW-A, MAJOR + MINOR, addressed 2026-08-30).** LLR-206 had
+retained WI-537's report-only wording as though it described this repository,
+contradicting the armed `docs/stack.ini` step delivered here. Its contract now
+distinguishes the downstream template's report-only default from this
+repository's `DevStg-Impl` enforced step and its scripts-plus-`tests/` census.
+The baseline writer now emits a blank reason as four TSV fields, and the 20
+newly seeded `tests/` rows were normalized accordingly; a regression assertion
+prevents a restamp from recreating trailing whitespace. The reader remains
+backward-compatible with historical five-field blank-reason rows.
+
 **Verification.**
 
 - **Arming (3a).** `check_complexity.py --root . --mode enforce` →

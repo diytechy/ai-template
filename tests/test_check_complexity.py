@@ -498,6 +498,7 @@ def test_restamp_writes_lf_only_debt_headed_tsv(repo):
     assert "DEBT STATEMENT, NOT AN APPROVAL" in text, "header states its stance"
     assert cc.HEADER in text.splitlines(), "the column header is present"
     assert "project-trajectory/scripts/mod.py\ttangled\t" in text
+    assert "\t\n" not in text, "a blank reason is four fields, not trailing whitespace"
     assert "\tsimple\t" not in text, "under-threshold rows are not baselined"
 
 
@@ -505,7 +506,7 @@ def test_baseline_round_trip_preserves_the_reason_column(repo):
     cc.main(["--root", str(repo), "--restamp"])
     baseline = repo / cc.BASELINE
     rows = baseline.read_text(encoding="utf-8").splitlines()
-    rows[-1] = rows[-1] + "seeded debt, not an approval"
+    rows[-1] = rows[-1] + "\tseeded debt, not an approval"
     baseline.write_text("\n".join(rows) + "\n", encoding="utf-8", newline="\n")
     parsed = cc.read_baseline(baseline)
     assert parsed[("project-trajectory/scripts/mod.py", "tangled")][2].startswith(
