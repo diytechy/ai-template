@@ -53360,3 +53360,168 @@ untouched.
 Deferred open items: none — the owner's list rides
 [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md)
 (decisions 33–39).
+
+## 2026-08-30 — WI-549: spot-check the clean close of WI-548
+
+Adjudication spot-check (`docs/process.toml [attestation] complete_review = 'sample'`)
+of the GREEN close of WI-548 (stall-guard C1–C7,
+`docs/archive/work/complete/WI-548-stall-guard-route-aware.md`). One question:
+does what shipped answer what the row asked for? A finding is a successor row,
+never a reversal — the close stands.
+
+### Method
+
+Read the WI-548 spec `## Deliverable` (C1–C7 + adopter-compat per the plan §6)
+and the plan of record `docs/plans/2026-08-30-stall-guard-plan.md`, then
+spot-checked each claimed deliverable against the shipped tree at the claim base.
+
+### What was verified present (sampled, not a re-review)
+
+- **C1** route-aware stall: `agent_loop.RoutingState.note_session(judging=)`,
+  `note_review_draw_failure` (agent_loop.py:1235/1261, called at 2390/2399/3062).
+- **C2** `EXIT_REVIEW_OWED = 9` (agent_common.py:147, re-exported agent_loop.py:210);
+  `dispatch.py:529` special-cases it (not a decided handback outcome).
+- **C3** `idle_timeout` slot in agent_session + `AGENT_SESSION_IDLE_TIMEOUT` /
+  `--session-idle-timeout` in lane.py, both `agent-resume.template.{sh,cmd}`.
+- **C4** `probe_route` / `select_with_probe` (agent_loop.py:2976/2997).
+- **C5** relaxed same-family rung: `round_relaxed`, `note_review_family`,
+  `-relaxed` verdict suffix, `# heterogeneity: relaxed` header (agent_loop.py
+  1034/1200/1257/2216/2808).
+- **C6** integrate.unload sheds `out/run-logs/` streams + `out/review-owed`
+  marker as declared residue (integrate.py:1742-1744, with prose 1729-1730).
+- Adopter-compat surfaces present in RESYNC_PACK.md and PROCESS_OPTIONS.md.
+
+- **C7** reviewer brief renders `{trunk}` / `{process_doc}` as slots
+  (reviewer.template.md:15-16), the three-dot diff with generated/telemetry
+  exclusions carried.
+- **Adopter-compat (plan §6):** exit 9 / `EXIT_REVIEW_OWED` documented at the
+  end of the alphabet in PROCESS_OPTIONS.md:706, relaxed rung 714, probe 718,
+  idle deadline 1113. RESYNC_PACK.md carries the stall-guard change-set entry
+  (line 2376, `[since 959c5996]`) PLUS the two entries the previous run owed:
+  the check_docs HTML-comment fix (2355, `[since 59f52549]`) and the opencode
+  `--dir .` fix (2365, `[since 59ab2951]`).
+- **C6 close rituals** shipped verbatim in both briefs: worker.template.md:36
+  (Deliverable-before-Context, specref cleared, trace.py --approve when spine
+  rows minted, spec_move to terminal folder) and adjudicate-disposition.template.md
+  (draft in this spec's `## Dispositions` as top-level keys, title ≤ 120,
+  adjudicator closes its OWN row — lines 42/50).
+
+### One probe resolved, not a finding
+
+The C3 deliverable says the idle slot lands in "all four launchers." Six
+launcher files exist (`agent-resume.{cmd,sh,command}` live + `.template.`
+each), and `AGENT_SESSION_IDLE_TIMEOUT` is present in only four — both
+`.command` files lack it. That is CORRECT, not a gap: the `.command` (macOS
+Finder) wrapper is a thin `exec ./agent-resume.sh "$@"` that declares **no**
+slots of its own by design (WI-274 — the dials live once; it inherits every
+slot from its twin by exec, proven by tests/test_launcher_interpreter.py).
+"Four launchers" = the four slot-carrying launchers (`.sh`/`.cmd`, live +
+template); the slot is in all four. Template/live parity is separately
+enforced by test_dogfood_sync, green at the close.
+
+### Verdict
+
+The shipped work answers what the WI-548 row asked for. Every C1–C7 deliverable
+and every adopter-compatibility surface named in the row (and the plan §6) is
+present in the shipped tree and matches the ask; the close was GREEN and
+cross-family reviewed. **No successor row, no open item, no reversal — the close
+stands.** This is the `sample` attestation (`docs/process.toml [attestation]
+complete_review`) doing its intended job: a spot-check of a success that finds
+the success genuine.
+
+Full suite not re-run: the close already recorded it green (3175 passed, 16
+skipped, 861.84 s at 777bbbfe) and this spot-check is read-only — it added no
+product code, only this log fragment and the spec close, so there is no new
+runtime surface to exercise.
+
+## 2026-08-30 — WI-535: adjudicator telemetry first, dial off
+
+Step 1 of the adjudicator session-retention plan's sequenced work
+(`docs/plans/2026-08-29-adjudicator-session-retention-plan.md#5-sequenced-work-each-a-wi-none-starts-while--exists`).
+OI-69 (step 2, the owner rulings) is already ruled, and its recommendation
+names this telemetry row as unblocked with the dial off; WI-540 (the
+retention layer proper) needs it.
+
+Deferred open items: none — telemetry-only row, no owner decision owed.
+
+### What landed
+
+- `docs/agents.toml` — `OPENCODE-GROK`'s `version` cell and `notes` prose
+  still read "4.5" after a prior session (`9ab30d64`) corrected the `model`
+  cell and the family comment to `grok-4.6`; the remaining two cells now
+  match.
+- `project-trajectory/scripts/agent_loop.py` — new
+  `family_context_telemetry(family, data)`: per family, the session id and
+  context occupancy/window/percent read straight off the process's own JSON
+  result, no mint/resume/adapter. ANTHROPIC's stream-json result already
+  carries `session_id`, and occupancy/window come from the same `usage` /
+  `modelUsage` fields `session_meta` already partially reads (occupancy =
+  input + cache-read + cache-creation + output; window = the unique `modelUsage`
+  entry whose own four counters match those same totals, so a subagent with
+  colliding input/output but different cache usage is never mistaken for the
+  session's own window — left blank when a full match is absent or ambiguous,
+  per the plan's own "never guessed" rule). OPENAI/OPENCODE return blank today: their
+  shipped one-shot templates carry no `--json`/`--format json`, so there is
+  nothing to parse until WI-540's adapter lands.
+- `session_meta` now writes four more columns: `session-id`,
+  `context-used`, `context-window`, `context-pct`.
+- `project-trajectory/scripts/agent_common.py` — `write_session_log`'s
+  header-key tuple carries the same four keys; `regenerate_index` gained a
+  `Ctx %` column in the generated `docs/iteration_index.md` table (not
+  touched directly — the trunk lane regenerates it).
+- Tests: extended
+  `tests/test_agent_loop_policy.py::test_session_meta_is_the_log_row_in_the_logs_own_column_order`
+  for the four new keys; added coverage for `family_context_telemetry`
+  (ANTHROPIC four-counter cache collision, ambiguous full matches, no usage,
+  and the non-ANTHROPIC blank path) and for `write_session_log` carrying the
+  new header keys through. The cache-collision case was driven red before the
+  selector changed: it returned the first entry's 200,000-token window instead
+  of the session's 1,000,000-token window.
+
+### Harness
+
+- Smoke tier + budget (the per-commit bar): `python -m pytest -q -n auto -m
+  smoke` → **1426 passed, 6 skipped, 23.33 s**; `python
+  scripts/check_smoke_budget.py --mode enforce` → **23.8 s vs 60 s budget →
+  within**.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` →
+  **OK — 1108 doc(s), 1587 intra-repo link(s), 0 broken (1 pre-existing
+  orphan warning)**.
+- `python project-trajectory/scripts/gen_open_items.py --check` → **0
+  pending rows; up to date**.
+- Spine validators: `python project-trajectory/scripts/trace.py` → the one
+  `FINDING` names `LLR-197`, pre-existing at the branch base and untouched
+  here; `python project-trajectory/scripts/check.py` → **RESULT: PASS**
+  (derived-stage / approval-fresh SKIP on a work branch by design,
+  concurrency-restructure §5.2). No spine row minted or re-statused by this
+  WI — no approval-brief regen owed.
+- Full unfiltered suite (`python -m pytest -q -n auto`): **3190 passed, 16
+  skipped, 663.82 s**.
+
+### Review rework verification
+
+- Driven collision characterization (`python -m pytest -q
+  tests/test_agent_loop_policy.py -k family_context_telemetry`) failed before
+  the selector change exactly as reviewed: **2 failed, 1 passed** — the cache
+  collision returned 200,000 instead of 1,000,000 and the ambiguous full match
+  returned 200,000 instead of blank. The same command after the change:
+  **3 passed**.
+- Final-tree smoke tier: `python -m pytest -q -n auto -m smoke` → **1426
+  passed, 6 skipped, 34.97 s**. An immediately following loaded-host budget
+  run passed every test but measured **107.9 s** and correctly failed the 60 s
+  ceiling; no budget or tier was changed. Its isolated rerun (`python
+  scripts/check_smoke_budget.py --mode enforce`) → **1426 passed, 6 skipped,
+  27.61 s; 28.1 s vs 60 s budget → within** — one machine, two observed load
+  conditions, neither generalized.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` →
+  **OK — 1109 docs, 1587 intra-repo links, 0 broken (1 pre-existing orphan
+  warning)**; `python project-trajectory/scripts/gen_open_items.py --check` →
+  **0 pending rows; up to date**.
+- Full unfiltered suite (`python -m pytest -q -n auto`) → **3190 passed, 16
+  skipped, 804.06 s**.
+- Declared effective-stage harness (`python
+  project-trajectory/scripts/check.py --jobs 0`) → **RESULT: PASS**; generated
+  freshness steps skipped on the work branch by design, and the reported
+  `LLR-197` provenance finding is pre-existing at the integration base.
+- No spec deviation, byte-budgeted file edit, spine-row change, or approval
+  brief regeneration.
