@@ -58,7 +58,7 @@ verified it. What the rework changes, finding by finding:
 5. MINOR (IF-174 Data over ceiling, named a runtime path) — the cell is now a
    typed pointer to the owner contract ("AdjudicatorSession record schema and
    callable API declared by Contract IF-174 in scripts/adjudicator_session",
-   99 chars vs the 160 ceiling).
+   108 chars vs the 160 ceiling).
 6. MINOR (no contract on the owner) — `adjudicator_session.py`'s header now
    carries `Contracts: IF-174` and the `Contract IF-174:` body (record schema,
    compound identity, atomic writes, per-family readers, lifecycle purity).
@@ -75,5 +75,11 @@ agent_common 1300 -> 1299 — the bookkeeping body moved into
 floor). Smoke-budget membership: 1478 collected vs the 1482 ceiling — inside
 the stamped headroom, no re-stamp owed.
 # fig: cmd="python -m pytest -q -n auto -m smoke --collect-only" rev=6210a254-dirty
+
+Posture notes: the LLR-163/TC-157 amendments touch Approved cells without
+re-statusing, so they ride as SNAPSHOT DRIFT to the next sitting (the
+check_trajectory warning's own declared option — re-attestation is a human
+act); docs/ratify/ and docs/open-items.html are trunk-owned generated families
+(docs/stack.ini [generated]), so neither is regenerated on this branch.
 
 Deferred open items: none.
