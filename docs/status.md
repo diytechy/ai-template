@@ -52,12 +52,12 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
      [process.toml](process.toml) `human_approval_through` declares.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
-  and this branch (`push = "human"`). **Two records exist in this working copy
-  only** — back them up before either branch is touched:
+  and this branch (`push = "human"`). The held lane
   `wi508-architectural-remap-HELD-for-owner-verdict` (43 commits, thirteen round
-  files, a compiled verdict that is not on trunk; held by ref rename — `OI-71`)
-  and `wi416-parked-handback-contract` (a 271-line pre-ruling draft, rows
-  disposed; delete only after deciding it is not wanted).
+  files, a compiled verdict not on trunk; `OI-71`) is **pushed to origin
+  2026-08-31** and no longer single-copy. `wi416-parked-handback-contract` still
+  is — a 271-line pre-ruling draft, rows disposed; delete only after deciding it
+  is not wanted.
 - **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** — 4
   entities · 4 crossings · 3 relationships, ids spent and watermark-held; the
   repository is the system, the template is the deliverable. Owner-owed, not
