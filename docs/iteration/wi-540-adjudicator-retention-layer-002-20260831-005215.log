@@ -1,0 +1,35 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 002
+# date: 2026-08-31 00:58
+# train: wi-540-adjudicator-retention-layer
+# base: 9abdb5d9821f
+# phase: REVIEW-A
+# wi: WI-540
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 95e57364..1fbc4ad2
+# tokens:
+# cost-usd:
+# wall-secs: 359
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3669
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:057b1181f4f9
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Review completed and committed as `1fbc4ad2`.
+
+Verdict: CHANGES-REQUESTED (6 findings), recorded in [002-REVIEW-A-bb31d58.md](C:\Projects\ai-template-drive\wi-540-adjudicator-retention-layer\docs\reviews\wi-540-adjudicator-retention-layer\002-REVIEW-A-bb31d58.md).
