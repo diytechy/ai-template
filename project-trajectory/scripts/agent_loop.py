@@ -2855,6 +2855,47 @@ def write_raw_stream(raw_dir, name, output):
         pass
 
 
+def family_context_telemetry(family, data):
+    """Session id + context occupancy/window/percent, read straight off the
+    process's OWN JSON result (WI-535, telemetry first — no mint, no resume,
+    no adapter; that's the retention layer, WI-540). Returns
+    `(session_id, occupancy, window, pct)`, every field `""` where the
+    family's plain one-shot call doesn't carry it today.
+
+    ANTHROPIC's stream-json result already carries `session_id` on every
+    call, mint or not. Occupancy is the same four usage counters
+    `session_meta` already reports, summed (plan §3.3: input + cache_read +
+    cache_creation + output). Window is the `contextWindow` of the
+    `modelUsage` entry whose own input/output counts match those same
+    top-level totals — the session's own turn, not a subagent aside drawn on
+    a different model — left blank on no exact match rather than guessed
+    (plan §2: "a mismatch is logged, never guessed"). OPENAI/OPENCODE don't
+    emit any of this from their shipped one-shot templates yet (no
+    `--json`/`--format json`); WI-540's per-family adapter is what adds it."""
+    if family != "ANTHROPIC":
+        return "", "", "", ""
+    session_id = data.get("session_id") or ""
+    usage = data.get("usage") or {}
+    usage_keys = (
+        "input_tokens",
+        "output_tokens",
+        "cache_read_input_tokens",
+        "cache_creation_input_tokens",
+    )
+    if not any(usage.get(k) is not None for k in usage_keys):
+        return session_id, "", "", ""
+    occupancy = sum(usage.get(k) or 0 for k in usage_keys)
+    window = ""
+    for entry in (data.get("modelUsage") or {}).values():
+        if entry.get("inputTokens") == usage.get("input_tokens") and entry.get(
+            "outputTokens"
+        ) == usage.get("output_tokens"):
+            window = entry.get("contextWindow", "") or ""
+            break
+    pct = round(occupancy * 100 / window) if isinstance(window, int) and window else ""
+    return session_id, occupancy, window, pct
+
+
 def session_meta(
     ctx, plan, data, session, stamp, wi_label, outcome, commits, code, wall_secs
 ):
@@ -2877,6 +2918,9 @@ def session_meta(
     prompt = plan["prompt"]
     phase = plan["phase"]
     usage = data.get("usage") or {}
+    session_id, ctx_used, ctx_window, ctx_pct = family_context_telemetry(
+        plan.get("route_family") or "", data
+    )
     tokens = ""
     if usage.get("input_tokens") is not None or usage.get("output_tokens") is not None:
         tokens = "{}+{}".format(
@@ -2922,6 +2966,15 @@ def session_meta(
         "prompt-template": prompt_source(ctx.prompt_templates, phase),
         "prompt-sha": agent_common.prompt_fingerprint(prompt),
         "exit-code": code,
+        # WI-535: the adjudicator-retention plan's telemetry-first step
+        # (docs/plans/2026-08-29-adjudicator-session-retention-plan.md §3.3) —
+        # what the process already reports about its own context, per family,
+        # with the retention dial off. Blank wherever today's one-shot call
+        # doesn't carry it (family_context_telemetry).
+        "session-id": session_id,
+        "context-used": ctx_used,
+        "context-window": ctx_window,
+        "context-pct": ctx_pct,
     }
 
 
