@@ -6,6 +6,8 @@ OI-69 (step 2, the owner rulings) is already ruled, and its recommendation
 names this telemetry row as unblocked with the dial off; WI-540 (the
 retention layer proper) needs it.
 
+Deferred open items: none — telemetry-only row, no owner decision owed.
+
 ### What landed
 
 - `docs/agents.toml` — `OPENCODE-GROK`'s `version` cell and `notes` prose
@@ -40,4 +42,20 @@ retention layer proper) needs it.
 
 ### Harness
 
-_(filled at close)_
+- Smoke tier + budget (the per-commit bar): `python -m pytest -q -n auto -m
+  smoke` → **1426 passed, 6 skipped, 23.33 s**; `python
+  scripts/check_smoke_budget.py --mode enforce` → **23.8 s vs 60 s budget →
+  within**.
+- `python project-trajectory/scripts/check_docs.py --root . --stale` →
+  **OK — 1108 doc(s), 1587 intra-repo link(s), 0 broken (1 pre-existing
+  orphan warning)**.
+- `python project-trajectory/scripts/gen_open_items.py --check` → **0
+  pending rows; up to date**.
+- Spine validators: `python project-trajectory/scripts/trace.py` → the one
+  `FINDING` names `LLR-197`, pre-existing at the branch base and untouched
+  here; `python project-trajectory/scripts/check.py` → **RESULT: PASS**
+  (derived-stage / approval-fresh SKIP on a work branch by design,
+  concurrency-restructure §5.2). No spine row minted or re-statused by this
+  WI — no approval-brief regen owed.
+- Full unfiltered suite (`python -m pytest -q -n auto`): **3190 passed, 16
+  skipped, 663.82 s**.
