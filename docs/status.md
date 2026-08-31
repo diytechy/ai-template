@@ -29,7 +29,8 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   decisions 40–46 of
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md).
   Deleting `docs/work/pause` in a reviewed commit resumes the generated frontier
-  below. **In order of weight:**
+  below; a fresh session starts at [handoff-2026-08-31.md](handoff-2026-08-31.md).
+  **In order of weight:**
   1. **The queue does not move on its own, and why is a design question** —
      plan of record
      [plans/2026-08-31-verdict-record-and-queue-blockers.md](plans/2026-08-31-verdict-record-and-queue-blockers.md):
@@ -75,8 +76,7 @@ status = directory; terminal rows under [archive/work/](archive/work/)),
   dead-symbol table in [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
   (§7 items 2/4/5 need a destination before it can archive); PROCESS.md §4's stale
   "ordinal `0`–`4`" approval dial.
-- **Conventions:** spec-of-record [specs/README.md](specs/README.md) · rubrics
-  [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
+- **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
 
 ## Current State
 
