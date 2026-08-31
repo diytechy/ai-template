@@ -52,7 +52,6 @@ import subprocess
 import sys
 import time
 import tomllib
-from dataclasses import dataclass
 from pathlib import Path
 
 # THE SHIPPED SHARED-HELPER PACKAGE (owner ruling D-8, `OI-16`, executed
@@ -505,64 +504,6 @@ def declared_policy(docs, legacy_name, default):
         if value is not None:
             return value
     return read_declared(Path(docs) / legacy_name, default)
-
-
-# --- WI-540: the adjudicator session-retention dial ---------------------------
-# The `[adjudicator]` table's parsed, validated form (plan §2/§4). The reader is
-# GENERIC — it knows nothing family-specific; the per-family reset clamp (codex
-# ≤ 85) lives with the other family tables in `adjudicator_session`, so this
-# module carries no second copy of the family vocabulary.
-ADJUDICATOR_RETAIN_DEFAULT = ("disposition", "amendment", "red-tc")
-
-
-@dataclass(frozen=True)
-class AdjudicatorConfig:
-    """The validated `[adjudicator]` dial. `enabled` is the ONE thing every
-    caller reads first: `context_reset_pct = 0` (or absent / malformed) makes it
-    False and the whole layer short-circuits to today's one-shot behaviour —
-    fail-closed-to-OFF, because a mistyped dial must never silently ARM
-    retention (the safe default is the direction that changes nothing)."""
-
-    enabled: bool
-    context_reset_pct: int
-    retain_for: tuple
-    keepwarm_minutes: int
-    reset_on_same_artifact: bool
-
-
-def _adjudicator_int(table, key):
-    """A non-negative int from the table, else 0 — a bool or wrong type reads as
-    0 (OFF), never as a truthy accident (`True` is an int subclass in Python, so
-    it is excluded explicitly, as `_coerce` does)."""
-    return value if type(value := table.get(key)) is int and value >= 0 else 0
-
-
-def adjudicator_config(docs):
-    """The `[adjudicator]` table parsed + validated into an `AdjudicatorConfig`
-    (WI-540, plan §2/§4). Absent/malformed table or `context_reset_pct = 0`
-    yields the inert config (`enabled = False`). `retain_for` keeps only string
-    entries; a non-list reads as the default set. The codex per-family clamp is
-    applied later, where the family is known (`adjudicator_session`)."""
-    table = process_config(docs).get("adjudicator")
-    if not isinstance(table, dict):
-        table = {}
-    pct = _adjudicator_int(table, "context_reset_pct")
-    raw_retain = table.get("retain_for")
-    retain = (
-        tuple(v for v in raw_retain if isinstance(v, str))
-        if isinstance(raw_retain, list)
-        else ADJUDICATOR_RETAIN_DEFAULT
-    )
-    same_artifact = table.get("reset_on_same_artifact")
-    return AdjudicatorConfig(
-        enabled=pct > 0,
-        context_reset_pct=pct,
-        retain_for=retain,
-        keepwarm_minutes=_adjudicator_int(table, "keepwarm_minutes"),
-        reset_on_same_artifact=bool(same_artifact)
-        if isinstance(same_artifact, bool)
-        else False,
-    )
 
 
 # --- SN-029: the human-approval level, as an ORDINAL ----------------------
@@ -2305,12 +2246,6 @@ def write_session_log(iter_dir, meta, transcript):
         "context-used",
         "context-window",
         "context-pct",
-        # WI-540 (the adjudicator session-retention layer, plan §4): the
-        # retained session's generation this adjudication ran under, and the
-        # reset reason if the layer crested/changed/failed. "" on every session
-        # the layer did not retain (dial off, non-adjudication).
-        "session-gen",
-        "reset-reason",
     ):
         header.append("# {}: {}".format(key, meta.get(key, "")).rstrip())
     if redacted:
@@ -2335,11 +2270,7 @@ def read_log_meta(path):
     meta = {}
     try:
         with open(str(path), encoding="utf-8", errors="replace") as fh:
-            # Bounded read of the `# key: value` header, which the loop breaks
-            # out of at the `# ---` separator regardless — the cap is only a
-            # backstop against a headerless file. Raised past the header's own
-            # length as it grows (34 keys after WI-540's two retention columns).
-            for _ in range(48):
+            for _ in range(32):
                 line = fh.readline()
                 if not line or line.startswith("# ---"):
                     break
@@ -2374,11 +2305,6 @@ def per_turn_context(meta):
     return "{:.0f}k".format(read / turns / 1000.0) if turns else ""
 
 
-def index_cell(value):
-    """A generated-index cell, with the table's declared blank glyph."""
-    return value or "—"
-
-
 def regenerate_index(docs_dir):
     """Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata
     headers — generated, never hand-maintained (the kit's standing rule), so
@@ -2391,7 +2317,7 @@ def regenerate_index(docs_dir):
             continue
         rows.append(
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} "
-            "| {} | {} | [{}](iteration/{}) |".format(
+            "| {} | [{}](iteration/{}) |".format(
                 meta.get("session", ""),
                 meta.get("date", ""),
                 meta.get("phase", "") or "—",
@@ -2410,10 +2336,6 @@ def regenerate_index(docs_dir):
                 # column — the CLI's own reported context occupancy, "—" on
                 # every family/CLI call that doesn't report it yet.
                 "{}%".format(meta["context-pct"]) if meta.get("context-pct") else "—",
-                # WI-540: the retention layer's reset reason — the operator's
-                # dial-watch signal (plan §5 step 5), "—" until the dial fires
-                # (session-gen rides the per-session log header, not this index).
-                index_cell(meta.get("reset-reason", "")),
                 log.name,
                 log.name,
             )
@@ -2426,8 +2348,8 @@ def regenerate_index(docs_dir):
         '"which session did this" pointer (process-options.md "Unattended\n'
         'operation")._\n\n'
         "| # | Date | Phase | WI | Model | Outcome | Commits | Tokens | Cost USD "
-        "| Wall s | API s | Turns | s/turn | Ctx/turn | Ctx % | Reset | Log |\n"
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
+        "| Wall s | API s | Turns | s/turn | Ctx/turn | Ctx % | Log |\n"
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n"
         + "\n".join(rows)
         + "\n"
     )

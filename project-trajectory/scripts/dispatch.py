@@ -72,15 +72,12 @@ toward the deleted dispatcher's shape, stop and escalate as a written case
 
 from __future__ import annotations
 
-import calendar
 import os
 import sys
 import time
 from pathlib import Path
 
-import adjudicator_session
 import agent_common as ac
-import agent_session
 import census
 import handback
 import intake
@@ -95,51 +92,6 @@ def _say(msg, err=False):
     print(
         "dispatch: {}".format(msg), file=sys.stderr if err else sys.stdout, flush=True
     )
-
-
-def _iso_epoch(stamp):
-    """The UTC epoch of a store `%Y-%m-%dT%H:%M:%SZ` stamp, or None. `timegm`
-    (not `mktime`) so the "Z" is honoured as UTC rather than local time."""
-    try:
-        return calendar.timegm(time.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ"))
-    except (TypeError, ValueError):
-        return None
-
-
-def _keepwarm_tick(root, table, now):
-    """WI-540 (plan §3.5, owner ruling OI-69 (c2)): keep the ANTHROPIC prompt
-    cache warm for a RETAINED adjudicator session while work is pending, pinging
-    THROUGH the blackout. A STRICT NO-OP when the dial or `keepwarm_minutes` is
-    off (shipped state) — and best-effort even when on: every failure is
-    swallowed, because a keep-warm ping must never wedge the dispatcher
-    (SN-016). `table` truthy means lanes are active (the work-pending proxy)."""
-    cfg = ac.adjudicator_config(root / "docs")
-    if not cfg.enabled or cfg.keepwarm_minutes <= 0:
-        return
-    for record in adjudicator_session.load_family(root, "ANTHROPIC"):
-        if not adjudicator_session.keepwarm_due(
-            record,
-            cfg,
-            "ANTHROPIC",
-            now,
-            _iso_epoch(record.get("last_used")),
-            bool(table),
-        ):
-            continue
-        sid = record.get("session_id")
-        if not sid:
-            continue
-        try:
-            agent_session.run_session(
-                ["claude", "-p", "--resume", sid, "--max-turns", "1"],
-                root,
-                120,
-                stdin_input="ack",
-            )
-        except OSError:
-            continue
-        record["last_used"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
-        adjudicator_session.save(root, record)
 
 
 def _branch_for(root, wid):
@@ -1186,10 +1138,6 @@ def run(root, args, worker=None, tier="all"):
     state = {"merged": 0, "stall": 0, "cycles": 0, "fatal": None}
     table = []
     while True:
-        # WI-540: keep a retained adjudicator session's prompt cache warm
-        # (plan §3.5). A no-op when the dial ships off; guarded so it can never
-        # wedge the loop.
-        _keepwarm_tick(root, table, time.time())
         # The pause is checked at the top of every tick so one appearing
         # MID-RUN stops the next claim, not just the first (§5.6: pause means
         # stop claiming; in-flight lanes finish and integrate first).

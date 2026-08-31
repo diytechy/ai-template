@@ -15,9 +15,7 @@ docs/test/perf-report.md
 docs/test/perf-metrics.json
 
 # Raw unattended-session streams (agent_loop.py); the tracked, size-bounded
-# copies live in docs/iteration/. Also covers the WI-540 adjudicator
-# session-retention store (out/adjudicator/<FAMILY>.json) and its dedicated CLI
-# homes (out/adjudicator/home/) — runtime state, per-checkout, never tracked.
+# copies live in docs/iteration/
 out/
 
 # macOS Finder metadata (appears anywhere you browse the tree in Finder)

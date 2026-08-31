@@ -1654,10 +1654,10 @@ phase = 5
 [design.LLR-163]
 sr_refs = ["SR-146"]
 title = "Argv arrays, and the adjudicator as a routed phase"
-module = "project-trajectory/scripts/agent_session.py;project-trajectory/scripts/adjudicator_session.py"
-code_symbol = "split_cmd/build_argv/resume_template"
-detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides. When retained adjudicator sessions are enabled, `resume_template` consumes the same token parser and returns a JSON-array command template; the ordinary `build_argv` prompt-transport contract therefore remains the single launch boundary while family-specific mint/resume forms stay below it."""
-rationale = """A silent coercion in a registry is a launch that does not match its declaration. An adjudicator inheriting the implementer's escalation would silently re-tier a judgement because a different row's build went badly. A retention adapter that bypassed the token parser would create a second command grammar and could change how the same prompt is transported when retention is enabled."""
+module = "project-trajectory/scripts/agent_session.py"
+code_symbol = "split_cmd/build_argv"
+detail = """`split_cmd` recognises a JSON array ONLY when the value parses as a list, so no existing template can change meaning; a non-string token raises rather than being stringified. The prompt-transport decision reads the resulting TOKENS, so it is identical for both forms. Alongside it, `ADJUDICATE` joins `agent_route.WEIGHT_PHASES` and `agent_loop.DEFAULT_PHASE_TIER` with its own `route_intent` arm: cross-family like the reviewers, tier pinned by the row's measured estimate, and deliberately deaf to the implementer's escalation overrides."""
+rationale = """A silent coercion in a registry is a launch that does not match its declaration. And an adjudicator inheriting the implementer's escalation would silently re-tier a judgement because a different row's build went badly."""
 test_refs = "TC-157"
 status = "Approved"
 component = "CMP-008"

@@ -4269,43 +4269,6 @@ side. `INTERFACES.template.md`, `registries/interfaces.template.toml` and
 `PROCESS.md` §8 say the undeclared owner warns and name the refused-header
 shape; the two template headers state the no-in-tree-endpoint rule.
 
-### The adjudicator session-retention layer — a new optional `[adjudicator]` table, default OFF (WI-540) [since 9abdb5d9]
-
-*(Anchored at the WI-540 branch's integration base; the change lands on the kit
-trunk in the commit that merges the branch, one commit after this anchor.)*
-
-**Nothing to migrate — this is an opt-in layer that ships inert.** The kit adds
-a fifth section, `[adjudicator]`, to `process.toml.template`, and a new script
-`scripts/adjudicator_session.py`. Shipped at `context_reset_pct = 0`, the whole
-layer is a no-op: every adjudication is a fresh one-shot session exactly as
-before, no session ids minted, no resume argv, no store written. So there is no
-required action for an adopter — take the kit's `process.toml.template` on
-re-sync (you already re-apply your own dial values, per the one-policy-home
-entry) and the new table arrives at `0`.
-
-**Kit-owned files — overwrite and move on:** `scripts/adjudicator_session.py`
-(new), `scripts/agent_loop.py`, `scripts/agent_common.py`, `scripts/dispatch.py`,
-`process.toml.template`, `registries/interfaces.template.toml` (if your re-sync
-range crosses it), `gitignore.template`.
-
-**What the layer does when you turn it on** (an owner decision, not a re-sync
-step): the retained adjudicator session is a bounded process launched with its
-family's *resume* form against a session the coordinator minted earlier — a
-retained transcript replayed, **not** a daemon; SN-016's no-wedge invariant is
-untouched. The dial is a percent of the model's context window at which the
-session is reset; `retain_for` scopes it to adjudication classes;
-`keepwarm_minutes` (Anthropic only) keeps the prompt cache warm through the
-blackout; `reset_on_same_artifact` (default false) trades rule-3 strictness for
-continuity across a worker round-trip on the same item. The
-`[adjudicator]` header in `process.toml.template` documents each field. Two new
-session-log columns (`session-gen`, `reset-reason`) and one `Reset` column in
-the iteration index carry the layer's telemetry; they read blank/`—` while the
-dial is off.
-
-**One line to copy by hand:** `.gitignore` already ignores `out/`, which covers
-the new `out/adjudicator/` store and its `out/adjudicator/home/` dedicated CLI
-homes — no edit needed unless your repo narrowed the `out/` ignore.
-
 ## 5. Promotion: when this pack stops being prose
 
 This pack is deliberately **not** mechanized. Re-syncs are rare, every adopter is

@@ -221,30 +221,3 @@ subagent_gate = "off"
 # `0` for a fresh adopter (this is a VALUE this repo's own instance has earned,
 # not a STRUCTURE change) and carries the full reasoning.
 backlink_coverage_min = 50
-
-[adjudicator]
-# THE ADJUDICATOR SESSION-RETENTION LAYER (WI-540, plan §2). Ships OFF here:
-# `context_reset_pct = 0` means the layer is INERT — every adjudication is a
-# fresh one-shot session, today's behaviour byte-for-byte. Turning the dial on
-# (and its on-box verification) is WI-541 (plan §5 step 4), the owner's edit of
-# this one number. The five settings the owner ruled are recorded as OI-69
-# (docs/log.d/2026-08-30-owner-rulings-oi68-oi69.md): (a1) no daemon — a
-# retained transcript a bounded process replays; (b1) `reset_on_same_artifact
-# = false`; (c2) keep-warm pings THROUGH the `12:00-19:00` blackout (Anthropic
-# only); (d1) the dial lives here; (e1) dedicated CLI homes once the dial is on.
-# The shipped template's [adjudicator] header carries the full field reasoning.
-#
-# Percent of the model's context window at which the retained session is RESET.
-# 0 = off (inert). The codex family clamps a dial above 85 to 85; claude and
-# opencode leave provider compaction on as the backstop below the dial.
-context_reset_pct = 0            # e.g. 55
-# Retain the session across these adjudication classes only (Brief cell values).
-retain_for = ["disposition", "amendment", "red-tc"]
-# ANTHROPIC only: minutes between prompt-cache keep-warm pings while the rank-1
-# queue is non-empty or a lane is active; 0 = off. Fires through the blackout
-# (OI-69 (c2)). Other families' caches live minutes and are never pinged.
-keepwarm_minutes = 0             # e.g. 50
-# Rule-3 guard: reset before re-judging an artifact already verdicted in the
-# retained session. Default false — continuity across a worker round-trip on the
-# same item is the layer's purpose (OI-69 (b1)); true restores the strict posture.
-reset_on_same_artifact = false
