@@ -17,66 +17,91 @@ Contract IF-163: the forward-only blackboard's HAND-AUTHORED bytes — everythin
 # Meta-Repo Status — Blackboard
 
 The **working surface** for developing the kit itself. **Forward-only**, held to
-the shipped S-1 budget of **120 lines** (`check_docs.py`). Backward-looking homes:
+the declared S-1 budget (`docs/status-lint`; raised 2026-08-31 to carry the
+supervisor prompt at the owner's request). Backward-looking homes:
 [log.md](log.md) (sessions, verdicts, **Decisions**), [open-items.html](open-items.html)
 (the generated **Open items** owner surface), [docs/work/](work/) (the WI registry —
 status = directory; terminal rows under [archive/work/](archive/work/)),
 [archive/](archive/README.md), and the folder map [docs/README.md](README.md).
 
-- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`) AND THREE
-  DECISIONS ARE YOURS.** The 2026-08-31 supervised run merged four rows, closed
-  one partial and disposed it; its record is the sitting in [log.md](log.md) and
-  decisions 40–46 of
+- **RESUME HERE — THE FRONTIER IS PAUSED (tracked `docs/work/pause`); THE
+  2026-08-31 RULINGS ARE LANDED AND THEIR ROWS ARE QUEUED.** `OI-70`/`OI-71`/
+  `OI-72` are ruled (the log's 2026-08-31 rulings entry); WI-552..WI-556 are
+  filed, WI-543 is re-scoped and queued (SR-163's owner, frontier head),
+  WI-541 is re-pointed to WI-551, WI-545 sequenced behind WI-552/WI-553.
+  Still open for the owner: the verdict-carrier design — plan of record
+  [plans/2026-08-31-verdict-record-and-queue-blockers.md](plans/2026-08-31-verdict-record-and-queue-blockers.md).
+  To resume the loop, paste the supervisor prompt below into a fresh session.
+  A fresh reader starts at [handoff-2026-08-31.md](handoff-2026-08-31.md), the
+  sitting in [log.md](log.md), and delegated decisions 1–46 in
   [decisions-for-review-2026-08-31.md](decisions-for-review-2026-08-31.md).
-  Deleting `docs/work/pause` in a reviewed commit resumes the generated frontier
-  below; a fresh session starts at [handoff-2026-08-31.md](handoff-2026-08-31.md).
-  **In order of weight:**
-  1. **The queue does not move on its own, and why is a design question** —
-     plan of record
-     [plans/2026-08-31-verdict-record-and-queue-blockers.md](plans/2026-08-31-verdict-record-and-queue-blockers.md):
-     is `docs/reviews/WI-<n>-REVIEW-A.md` the right verdict carrier (nothing
-     writes it, it is not declared generated, and it is the only artifact the
-     merge gate reads), three alternatives, a recommendation, eight more
-     blockers. Every run of 2026-08-31 stopped at one lane.
-  2. **Three open items are pending** — the generated block below names them and
-     [open-items.html](open-items.html) carries each one's options and
-     recommendation. `OI-70` is the one that let the rest hide.
-  3. **To confirm or revert, all recorded in the sitting and decisions 40–46:**
-     kit findings A–O; two supervisor trunk fixes (`out/agent-loop.lock` joins the
-     unload residue, with test; the approval brief regenerated on trunk); two
-     recorded re-stamps (module-size ratchet 2653 → 2655; two cognitive ceilings
-     kept at 37 / 18 with their reasons — decomposition stays the debt owner's).
-  4. **Yours as before:** the TERRA reasoning-effort dial, the re-attestation
-     brief [ratify/CURRENT.md](ratify/CURRENT.md), the ratchet pointer the debt
-     owner's successor moves. Approval authority is whatever
-     [process.toml](process.toml) `human_approval_through` declares.
 - **Standing owner acts the loop will not make:** merge-to-main + push for
   `dualplan-routing-fix`, `guardrails-fable-method`, `ConcurrencyTrainRewrite`
-  and this branch (`push = "human"`). The held lane
-  `wi508-architectural-remap-HELD-for-owner-verdict` (43 commits, thirteen round
-  files, a compiled verdict not on trunk; `OI-71`) is **pushed to origin
-  2026-08-31** and no longer single-copy. `wi416-parked-handback-contract` still
-  is — a 271-line pre-ruling draft, rows disposed; delete only after deciding it
-  is not wanted.
-- **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** — 4
-  entities · 4 crossings · 3 relationships, ids spent and watermark-held; the
-  repository is the system, the template is the deliverable. Owner-owed, not
-  re-raised: `OI-49` (b)'s named exception reads, each with a recommendation in
-  [plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md),
-  **awaiting your approving Status-change commit**; `OI-61` (c), deferred; and the
-  wording round's two banked findings about `Approved` text nobody may edit
+  and this branch (`push = "human"`). `wi416-parked-handback-contract` is still
+  single-copy — delete only after deciding it is not wanted. The held wi508
+  branch is on origin; WI-555 is the only sanctioned act on it (`OI-71`).
+- **Standing constraints:** the depth-0 frame is **LOCKED and APPROVED** (4
+  entities · 4 crossings · 3 relationships, watermark-held); owner-owed, not
+  re-raised: `OI-49` (b)'s exception reads
+  ([plans/2026-08-22-interface-exception-dossier.md](plans/2026-08-22-interface-exception-dossier.md)),
+  `OI-61` (c) deferred, and the wording round's two banked findings
   ([reviews/2026-08-24-draft-wording-round/RESUME.md](reviews/2026-08-24-draft-wording-round/RESUME.md)).
-- **Grinding the frontier:** IN SERIES, one worker per row, routed by BuildTier;
-  a full-suite run must be FOREGROUND with an explicit timeout (a backgrounded one
-  dies with the session's turn — it closed a finished row `partial`).
 - **Unfiled follow-ups** (topics, no ids): the stage-ladder program's deferred
-  codex review round; the SN-036 per-decomposition coverage record (re-derive —
-  the basis now reads `uncovered=0`); the two findings in the archived
-  [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md); the residues + §8
-  dead-symbol table in [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
-  (§7 items 2/4/5 need a destination before it can archive); PROCESS.md §4's stale
+  codex round; the SN-036 coverage record (re-derive — basis reads
+  `uncovered=0`); the archived [2026-08-01 handoff §6](archive/history/handoff-2026-08-01.md)
+  findings; the [spine-restructure-2026-08-08.md](spine-restructure-2026-08-08.md)
+  residues (§7 items 2/4/5 need a destination); PROCESS.md §4's stale
   "ordinal `0`–`4`" approval dial.
 - **Conventions:** [specs/README.md](specs/README.md) · [rubrics/README.md](rubrics/README.md) · partial closes [handbacks/](handbacks/README.md).
+- **Supervisor prompt** (owner-authorized unpause — paste into a fresh session):
+
+  ```text
+  You are the supervisor of this repository's mechanized loop, on branch
+  contract_split — the integrator's trunk is HEAD; stay on this branch, never
+  merge to main, never push (push = "human"); commit is permitted. Read
+  CLAUDE.md, the session-protocol skill, docs/status.md (RESUME HERE),
+  docs/handoff-2026-08-31.md, docs/decisions-for-review-2026-08-31.md (46
+  delegated decisions), and the memories unattended-run-2026-08-30-traps and
+  unattended-run-2026-08-31-traps. Spin up opus subagents for edits and
+  analysis to keep your own context low.
+  State at handoff: OI-70/71/72 are RULED (log.md, the 2026-08-31 rulings
+  entry) and their rows are queued: WI-543 (SR-163 mechanism, spine, frontier
+  head), WI-552/WI-553 (the OI-70 repairs), WI-554 (brief-renderer defects),
+  WI-555 (the wi508 partial close; needs WI-554), WI-556 (doctrine, quick);
+  WI-541 waits on WI-551, WI-545 on WI-552/WI-553. The scheduler's generated
+  frontier is the order of record. The wi508 row in active/ is a phantom head
+  the dispatcher skips until WI-555 clears it; the held branch is pushed to
+  origin — touch it only through WI-555's row.
+  Unpause — the owner confirms it: delete docs/work/pause in a reviewed
+  commit (regenerate docs/open-items.html in the same commit) and run the
+  real loop (agent-resume.cmd --wait-on-limit 14400, launched from PowerShell
+  by absolute path), supervising rather than replacing it: honour the
+  12:00–19:00 UTC weekday blackout, intervene only through the kit's scripts,
+  never a hand-minted id, never a hand-moved spec, never touch a tracked
+  trunk file while the loop runs. Until the WI-552-era repairs change it,
+  compile the WI-level docs/reviews/WI-<n>-REVIEW-A.md from the round files
+  (time-ordered, governing line last) after the loop's rounds APPROVE — the
+  loop does not write it. Watch and record: the worker/adjudicator close
+  ritual, the C2 REVIEW-OWED park + resume, the C4 probe lines, any -relaxed
+  verdict, the C6 unload. Merge a hand-finished lane yourself from the trunk
+  root (drains run only before exclusive claims); after merging a lane that
+  regenerated docs/ratify/CURRENT.md, regenerate it again on trunk.
+  Re-measure the smoke budget on a quiet box before the first commit
+  (python -m pytest -q -n auto -m smoke && python
+  scripts/check_smoke_budget.py --mode enforce; 60 s) and record the number.
+  Do not touch: main, the approval dial, [policies], the TERRA
+  reasoning-effort dial, any ruled open item, or WI-543's ruled scope.
+  Dispose NEEDS-HUMAN stops with the best decision the information supports,
+  through the kit's own mechanisms, recording each with its alternative in
+  docs/decisions-for-review-2026-08-31.md (continue numbering at 47). Traps:
+  agent-resume from PowerShell by absolute path; a helper printing a
+  reviewer's stream needs agent_common._utf8_console(); write big patch
+  scripts with the Write tool, not heredocs; the full suite is ~11 min — run
+  it FOREGROUND with an explicit timeout, never backgrounded. End by writing
+  the session fragment under docs/log.d/ (then trunk_step.py --compile-log on
+  trunk once committed), updating RESUME HERE with a "for the owner's
+  review" list, and stopping with the repo drained and quiet.
+  ```
 
 ## Current State
 
@@ -85,23 +110,22 @@ _GENERATED by `python project-trajectory/scripts/gen_trajectory.py --status` —
 
 - **In stage:** **DevStg-LLReqs** (stage 5 of 8, LLR definition in work) (per-phase `1=DevStg-Impl;3=DevStg-Impl;4=DevStg-Impl;5=DevStg-LLReqs`, derived current **phase=5**) — the rung this repo is IN, derived over its settled spine. [`derive_stage.py`](../project-trajectory/scripts/derive_stage.py) derives it, recorded in [`docs/stage`](stage).
 - **Spine:** **SN=27 SR=76 LLR=188 TC=186** (10 drafts) · 163 seams · 4 components.
-- **Open items** _(pending rows of [requirements/open-items.toml](requirements/open-items.toml); each item's blast radius, options and recommendation render in [open-items.html](open-items.html), the generated owner surface):_
-  - **OI-70** — rule how a lane stopped for the owner's own ruling is RECORDED and SURFACED - today it is a branch rename plus prose, invisible to open-items.html; recommendation: the hold must mint a row, because prose is exactly what failed here
-  - **OI-71** — rule what happens to the 43-commit wi508 lane held since 2026-08-30 - it carries the architectural remap program and its evidence exists in one working copy only
-  - **OI-72** — rule whether SR-163 keeps a directly-tracing TC, is covered only through its LLR arms, or has its Verification class amended - two review rounds of the same reviewer asked for opposite answers
 - **Ready frontier** _(dependency-ready WIs in build order — generated from the scheduler; a closed WI drops out automatically, so this list is never stale and never names a `done` id):_
+  - **WI-543** `P3` — SR-163's owner: the tolerant requirement-reference cell, the four-class checker warn-firs…
   - **WI-508** `P2` — The architectural remapping program: blind minimal-map re-derivation, divergences filed a…
+  - **WI-552** `P3` — The adjudicator's two exits: adjudication-row close, successor mint, OI mint with refusal…
+  - **WI-553** `P3` — The hold ban mechanized: claim-ref check, blocked_pending retired, fragment declaration c…
+  - **WI-554** `P3` — Approval-brief renderer defects: a Drafted row shown approved, a changed Method cell trun…
+  - **WI-551** `P2` — Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0…
   - **WI-536** `P2` — Agent-brief and scope: the knowledge-pack review's six byte-paid edits and two kit findin…
   - **WI-539** `P2` — Ship the complexity sensor: MAPPING row, template step, the opt-in layer, the deep-module…
-  - **WI-545** `P2` — The decomposition debt owner (cont.): three wide modules, check_trajectory's remaining fu…
-  - **WI-551** `P2` — Re-land the adjudicator session-retention layer from its preserved patch, inert at dial 0…
+  - **WI-556** `P2` — Spine-authoring doctrine: the children-coverage rule stated as trust-based prose (OI-72 r…
 <!-- END GENERATED STATUS -->
 
 - **Bar (per commit)** and the **standing rules** (claim refusal on prose ids,
-  never sanction a check to green a step, signed-claim/one-machine humility,
-  line-ending hygiene, claiming through the integrator): the `session-protocol`
-  skill §2–§3. Also: run `check_trajectory.py --strict` unfiltered before claiming
-  anything done — the pre-commit floor is warn-first and never the strict bar; and
+  never sanction a check to green a step, line-ending hygiene, claiming through
+  the integrator): the `session-protocol` skill §2–§3. Run
+  `check_trajectory.py --strict` unfiltered before claiming anything done;
   route a critique dispatch by PROVIDER, probing first.
 - **Process (kit source):** [PROCESS.md](../project-trajectory/PROCESS.md) ·
   [PROCESS_OPTIONS.md](../project-trajectory/PROCESS_OPTIONS.md) · working rules
