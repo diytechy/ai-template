@@ -1115,6 +1115,16 @@ version = "v1"
 status = "Drafted"
 notes = "No tie-back: a fragment enters through the same hook floor every governed write does, and that crossing's facing row is the hook's; this row states the mutation of the medium and stops."
 
+[interface.IF-174]
+rationale = """The adjudicator session-retention layer's mechanics have ONE home (WI-540, plan §4) so the loop and the dispatcher call the same store/adapter/reset logic instead of each carrying a copy — the exact drift this kit's single-source rule exists to prevent."""
+owner = "scripts/adjudicator_session"
+requestors = ["scripts/agent_loop", "scripts/dispatch"]
+channel = "call"
+data = "the session store (load/save/retire/mint over out/adjudicator/<FAMILY>.json), resume_template (the per-family mint/resume argv adapter), the per-family occupancy readers, drain_reason/retire_now_reason/is_clear_point (the reset rule) and keepwarm_due"
+version = "v1"
+status = "Drafted"
+notes = "Shipped INERT: docs/process.toml [adjudicator] context_reset_pct = 0 short-circuits every caller before it reaches this module (agent_common.adjudicator_config().enabled is False). The store file out/adjudicator/<FAMILY>.json is gitignored, per-checkout runtime state written atomically (write-temp + os.replace) — not a cross-repo published contract."
+
 [interface.IF-082]
 rationale = """A seam is declared per importing module, and the import that holds IF-056's derivation-loader seam moved to this split sibling - so the row is held here rather than on the facade."""
 owner = "scripts/check_trajectory"

@@ -164,6 +164,7 @@ except ImportError:  # pragma: no cover - in-process fallback
 # gen_trajectory uses.
 try:
     import adjudicate_brief
+    import adjudicator_session
     import agent_common
     import agent_route
     import agent_session
@@ -173,6 +174,7 @@ try:
 except ImportError:  # pragma: no cover - in-process fallback
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import adjudicate_brief
+    import adjudicator_session
     import agent_common
     import agent_route
     import agent_session
@@ -2110,6 +2112,94 @@ class LoopContext:
     run: LoopRun
 
 
+def adjudicator_home_root(root):
+    """The dedicated-CLI-home root for retained adjudicator sessions (OI-69 (e1)
+    — applied only once the dial is on). `AGENT_ADJUDICATOR_HOME` overrides;
+    default `out/adjudicator/home/` under the repo (gitignored). Credentials are
+    operator-PROVISIONED there (the owner's (e) answer on record) — the working
+    directory, where CLAUDE.md/AGENTS.md/skills live, is never moved."""
+    return os.environ.get("AGENT_ADJUDICATOR_HOME") or str(
+        Path(root) / "out" / "adjudicator" / "home"
+    )
+
+
+def _adjudicator_resume_record(root, cfg, family, current_wi):
+    """The record to RESUME against for this launch, or None to mint fresh (plan
+    §3.4, evaluated before every launch). Retires (soft, keeps the generation
+    count) and returns None when the session must not be resumed:
+
+    - it is already `retired` (a prior reset);
+    - `reset_on_same_artifact` is on and this row was already judged in the
+      session (the strict rule-3 guard — retire immediately, no drain);
+    - it is `draining` and this is a CLEAR POINT — this row does NOT continue a
+      chain the session already judged, so retirement need not wait.
+
+    A `draining` session whose next row DOES continue its chain (this row was
+    judged before) keeps being resumed, so a review -> worker -> return -> review
+    loop is never cut mid-way."""
+    record = adjudicator_session.load(root, family)
+    if not isinstance(record, dict):
+        return None
+    state = record.get("state")
+    judged = record.get("judged") or []
+    if state == adjudicator_session.STATE_RETIRED:
+        return None
+    if cfg.reset_on_same_artifact and current_wi in judged:
+        adjudicator_session.retire(root, record)
+        return None
+    if state == adjudicator_session.STATE_DRAINING:
+        # A row that CONTINUES a chain the session judged is pending chain work
+        # (not a clear point) — keep resuming; a row that does not is the clear
+        # point that lets the draining session retire now.
+        pending = [current_wi] if current_wi in judged else []
+        if adjudicator_session.is_clear_point(pending):
+            adjudicator_session.retire(root, record)
+            return None
+    return record
+
+
+def adjudicator_launch(root, docs, family, brief, current_wi, tmpl, session_env):
+    """Rewrite an adjudication session's launch for the retention layer (WI-540,
+    plan §3.2/§4), returning `(tmpl, session_env, adj)`.
+
+    A STRICT NO-OP when the dial is off or the row is not a retained class:
+    `(tmpl, session_env, None)` unchanged — today's one-shot behaviour
+    byte-for-byte. When on and the session's `brief` class is in `retain_for`,
+    the family's one-shot template becomes its mint-or-resume form and the launch
+    env points at the family's dedicated home; `adj` carries what the post-run
+    `adjudicator_bookkeeping` needs to update the store (the family, the row, the
+    session id it judges under, the id newly minted this launch, and the
+    governing-inputs hash the reset rule compares)."""
+    cfg = agent_common.adjudicator_config(docs)
+    fam = (family or "").upper()
+    if not cfg.enabled or not fam or brief not in cfg.retain_for:
+        return tmpl, session_env, None
+    record = _adjudicator_resume_record(root, cfg, fam, current_wi)
+    new_tmpl, mint_id = adjudicator_session.resume_template(fam, tmpl, record)
+    home_env = adjudicator_session.dedicated_home_env(
+        fam, session_env, adjudicator_home_root(root)
+    )
+    merged_env = {
+        **(session_env if session_env is not None else os.environ),
+        **home_env,
+    }
+    session_id = (record.get("session_id") if record else "") or mint_id
+    return (
+        new_tmpl,
+        merged_env,
+        {
+            "family": fam,
+            "brief": brief,
+            "wi": current_wi or "",
+            "session_id": session_id,
+            "mint_id": mint_id,
+            "route_id": None,  # filled by the caller (it owns route_id)
+            "governing_hash": adjudicator_session.governing_hash(root),
+            "resumed": bool(record),
+        },
+    )
+
+
 def route_session(ctx, i, current_wi, session, resume_reconcile, now):
     """Pick the phase + model + prompt for this worker session (managed
     routing or the single-model path; WI-210 — every loop session is a
@@ -2279,6 +2369,15 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
             file=sys.stderr,
         )
         return EXIT_PREFLIGHT
+    # WI-540: the adjudicator session-retention launch rewrite (plan §3.2/§4).
+    # A strict no-op when the dial is off or the brief class is not retained —
+    # `tmpl`/`session_env` are exactly today's and `adj` is None. The row's
+    # `route_id` is grafted onto `adj` here because route_session owns it.
+    tmpl, session_env, adj = adjudicator_launch(
+        root, docs, route_family, brief_key, current_wi, tmpl, session_env
+    )
+    if adj is not None:
+        adj["route_id"] = route_id
     return {
         "phase": phase,
         "is_review": is_review,
@@ -2298,6 +2397,10 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         # C5: this session is a review drawn with heterogeneity relaxed — a
         # typed field for the telemetry header, never a filename re-parse.
         "relaxed": relaxed,
+        # WI-540: the adjudicator retention launch metadata (plan §3), None on
+        # every session the layer does not retain — the store update and reset
+        # rule in session_bookkeeping key on its presence.
+        "adjudicator": adj,
     }
 
 
@@ -2760,6 +2863,85 @@ def session_bookkeeping(
     return build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now)
 
 
+def _adjudicator_occupancy(family, data):
+    """This adjudication's `(captured_session_id, occupancy, window, pct)` for
+    the store. ANTHROPIC reads its own final result (WI-535's
+    `family_context_telemetry`). OPENAI/OPENCODE occupancy is parsed from their
+    rollout/stream by `adjudicator_session`'s per-family readers, wired to the
+    live sources on-box in WI-541 — blank here until then, so the reset never
+    CRESTS on those families yet (their governing-hash and version-drift arms
+    still mark a session draining)."""
+    return family_context_telemetry(family, data)
+
+
+def adjudicator_bookkeeping(ctx, plan, data, timed_out, now):
+    """Update the retained adjudicator session store after one adjudication and
+    evaluate the reset rule (plan §3.3/§3.4). Returns the two derived telemetry
+    columns `{"session-gen","reset-reason"}` for the log row; a no-op returning
+    blanks when the layer did not retain this session (`plan["adjudicator"]` is
+    None — the dial-off case, byte-for-byte today's behaviour).
+
+    Called BEFORE `session_meta` (rather than inside `session_bookkeeping`, plan
+    §4's nominal home) precisely so its two columns ride the same log row; the
+    store MUTATION is the plan's session_bookkeeping step, hoisted."""
+    adj = plan.get("adjudicator")
+    if not adj:
+        return {"session-gen": "", "reset-reason": ""}
+    root = ctx.root
+    family = adj["family"]
+    cfg = agent_common.adjudicator_config(ctx.docs)
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+    captured_id, used, window, pct = _adjudicator_occupancy(family, data)
+    record = adjudicator_session.load(root, family)
+    if record is None or record.get("state") == adjudicator_session.STATE_RETIRED:
+        prior_gen = record.get("generation", 0) if isinstance(record, dict) else 0
+        record = adjudicator_session.mint(
+            family,
+            adj.get("route_id") or "",
+            adj.get("session_id") or captured_id,
+            adj.get("governing_hash") or "",
+            stamp,
+            window,
+        )
+        record["generation"] = prior_gen + 1
+    if not record.get("session_id"):
+        record["session_id"] = adj.get("session_id") or captured_id or ""
+    if isinstance(used, int):
+        record["occupancy"] = used
+    if isinstance(window, int) and window:
+        record["window"] = window
+    if pct != "":
+        record["pct"] = pct
+    record["last_used"] = stamp
+    wi = adj.get("wi") or ""
+    if wi and wi not in record["judged"]:
+        record["judged"].append(wi)
+    gen = record["generation"]
+    # The reset rule. Unusable (error/timeout) retires immediately; the
+    # same-artifact guard already fired at launch (_adjudicator_resume_record),
+    # so `next_ids` is empty here. Otherwise evaluate the drain transition.
+    is_error = bool(data.get("is_error"))
+    terminal_ok = not timed_out and not is_error
+    reason = adjudicator_session.retire_now_reason(
+        is_error, terminal_ok, cfg.reset_on_same_artifact, (), record["judged"]
+    )
+    if reason:
+        adjudicator_session.retire(root, record)
+        return {"session-gen": gen, "reset-reason": reason}
+    reset_pct, _clamped = adjudicator_session.reset_pct_for_family(cfg, family)
+    drain = adjudicator_session.drain_reason(
+        record,
+        pct if isinstance(pct, int) else "",
+        reset_pct,
+        adj.get("governing_hash") or "",
+        "",  # CLI version drift: the init-version capture is WI-541's on-box arm
+    )
+    if drain:
+        record["state"] = adjudicator_session.STATE_DRAINING
+    adjudicator_session.save(root, record)
+    return {"session-gen": gen, "reset-reason": drain or ""}
+
+
 def wait_out_blackout(lane):
     """WI-148: a declared docs/blackout window pauses NEW sessions on UTC
     weekdays. The in-flight session already wrapped normally (the pause
@@ -2975,6 +3157,14 @@ def session_meta(
         "context-used": ctx_used,
         "context-window": ctx_window,
         "context-pct": ctx_pct,
+        # WI-540: the retention layer's two derived columns (plan §4) — the
+        # generation of the retained session this adjudication ran under, and the
+        # reset reason if it crested/changed/failed. Blank on every session the
+        # layer did not retain (dial off, or a non-adjudication session).
+        "session-gen": (plan.get("adjudicator_telemetry") or {}).get("session-gen", ""),
+        "reset-reason": (plan.get("adjudicator_telemetry") or {}).get(
+            "reset-reason", ""
+        ),
     }
 
 
@@ -3463,6 +3653,13 @@ def run_iteration(ctx, i):
     # classify_outcome's docstring (single-source, WI-080 Slice D).
     outcome, errored = classify_outcome(
         reset_hint, timed_out, ctx.run.state, committed, data, code
+    )
+
+    # WI-540: update the retained adjudicator session store and evaluate the
+    # reset rule (plan §3.3/§3.4). A no-op when the dial is off; its two derived
+    # columns are stashed for session_meta to ride the same log row.
+    plan["adjudicator_telemetry"] = adjudicator_bookkeeping(
+        ctx, plan, data, timed_out, now
     )
 
     meta = session_meta(

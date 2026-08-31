@@ -47,6 +47,16 @@ BASELINE = {
     # sync_agent_skills the M-14 orphan-deletion sweep; run_dual_plan_round
     # the L-29 unfileable-plan PAGE guard.
     ("agent_loop.py", "critique_brief"): 11,
+    # WI-540 (2026-08-31): route_session newly crosses the census floor at 11
+    # (was below it) — the guarded adjudicator-retention launch rewrite (plan
+    # §3.2/§4): one call to `adjudicator_launch` and the `if adj is not None`
+    # arm that grafts the route_id it owns onto the returned metadata. The
+    # rewrite ITSELF (mint-vs-resume, dedicated home, the reset-at-launch
+    # decisions) lives in `adjudicator_launch`/`_adjudicator_resume_record`, so
+    # the branch here is only "did the layer retain this session"; the work is
+    # decomposed, not inlined. Reviewed bump, reason in
+    # docs/log.d/WI-540-adjudicator-retention-layer.md.
+    ("agent_loop.py", "route_session"): 11,
     # WI-483 slice 5 (2026-08-23): `main` DELETED, 27 -> under the limit. The
     # loop's whole startup resolution — the effective root, the five phase maps,
     # the enable-list, the declared dials, the dual-plan round, the iteration

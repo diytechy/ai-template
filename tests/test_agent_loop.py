@@ -1644,6 +1644,9 @@ def test_session_log_header_carries_the_wi535_context_columns(tmp_path):
         "context-used": 232598,
         "context-window": 1000000,
         "context-pct": 23,
+        # WI-540: the two retention-layer columns join the same header tuple.
+        "session-gen": 3,
+        "reset-reason": "crest 60% >= 55%",
     }
     path = ac.write_session_log(tmp_path, meta, "transcript\n")
     text = path.read_text(encoding="utf-8")
@@ -1651,8 +1654,11 @@ def test_session_log_header_carries_the_wi535_context_columns(tmp_path):
     assert "# context-used: 232598\n" in text
     assert "# context-window: 1000000\n" in text
     assert "# context-pct: 23\n" in text
+    assert "# session-gen: 3\n" in text
+    assert "# reset-reason: crest 60% >= 55%\n" in text
     meta_back = ac.read_log_meta(path)
     assert meta_back["context-pct"] == "23"
+    assert meta_back["reset-reason"] == "crest 60% >= 55%"
 
 
 def test_regenerate_index_renders_the_ctx_pct_column(tmp_path):
@@ -1666,13 +1672,20 @@ def test_regenerate_index_renders_the_ctx_pct_column(tmp_path):
     )
     ac.write_session_log(
         docs / "iteration",
-        {"session": "008", "stamp": "test", "context-pct": ""},
+        {
+            "session": "008",
+            "stamp": "test",
+            "context-pct": "",
+            "reset-reason": "session unusable",
+        },
         "transcript\n",
     )
     ac.regenerate_index(docs)
     text = (docs / "iteration_index.md").read_text(encoding="utf-8")
     assert "| Ctx % |" in text
+    assert "| Reset |" in text  # WI-540: the reset-reason column
     assert "| 23% |" in text
+    assert "| session unusable |" in text  # the reset reason renders in its column
     assert "| — |" in text  # the blank row still renders a placeholder, not ""
 
 
