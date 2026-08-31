@@ -437,6 +437,16 @@ def f(a):
     assert cc.sloc(found[0][1], lines, docs) == 3  # def, b = 1, return b
 
 
+def test_module_sloc_is_the_whole_file_on_the_same_rule():
+    """`module_sloc` applies the `sloc` rule over the entire file, including the
+    module docstring and top-level statements — the one definition the
+    module-size ratchet imports (OI-68 1c). Here: `MODULE = 1`, `def f`, and
+    `return a` are live; the module docstring, the blank, and the `# c` comment
+    are not."""
+    src = '"""Module doc."""\n\nMODULE = 1  # trailing\ndef f(a):\n    # c\n    return a\n'
+    assert cc.module_sloc(src) == 3
+
+
 def test_public_symbol_count_ignores_underscored_names():
     src = "X = 1\n_y = 2\ndef pub():\n    pass\ndef _priv():\n    pass\nclass K:\n    pass\n"
     assert sorted(cc._public(ast.parse(src))) == ["K", "X", "pub"]
@@ -488,6 +498,7 @@ def test_restamp_writes_lf_only_debt_headed_tsv(repo):
     assert "DEBT STATEMENT, NOT AN APPROVAL" in text, "header states its stance"
     assert cc.HEADER in text.splitlines(), "the column header is present"
     assert "project-trajectory/scripts/mod.py\ttangled\t" in text
+    assert "\t\n" not in text, "a blank reason is four fields, not trailing whitespace"
     assert "\tsimple\t" not in text, "under-threshold rows are not baselined"
 
 
@@ -495,7 +506,7 @@ def test_baseline_round_trip_preserves_the_reason_column(repo):
     cc.main(["--root", str(repo), "--restamp"])
     baseline = repo / cc.BASELINE
     rows = baseline.read_text(encoding="utf-8").splitlines()
-    rows[-1] = rows[-1] + "seeded debt, not an approval"
+    rows[-1] = rows[-1] + "\tseeded debt, not an approval"
     baseline.write_text("\n".join(rows) + "\n", encoding="utf-8", newline="\n")
     parsed = cc.read_baseline(baseline)
     assert parsed[("project-trajectory/scripts/mod.py", "tangled")][2].startswith(
