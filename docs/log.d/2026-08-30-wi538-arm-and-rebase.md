@@ -52,6 +52,17 @@ the ratchet stay valid (the file stays); only `traj_context.py`'s pinned
 Deferred open items: none — the ruling (OI-68) is on record and this phase
 executes it; it files no new question.
 
+**Rework (REVIEW-A, MINOR, addressed 2026-08-30).** The review found the ratchet's
+re-based module docstring still asserted the two sensors "cover the same files …
+and differ only in what they measure" — false once 2a widened the complexity
+sensor's `DEFAULT_INCLUDE` to `tests/` while this ratchet stayed scripts-only
+(`conftest.SCRIPTS`). Corrected the docstring to state that the shared
+`check_complexity.module_sloc` source-line definition is the ONLY axis the two
+sensors hold in common: they diverge in BOTH what they measure (module SIZE vs
+function COMPLEXITY) AND which files they cover (kit scripts only vs scripts +
+`tests/`). Docstring-only; no predicate moved, ratchet + complexity tests still
+green.
+
 **Verification.**
 
 - **Arming (3a).** `check_complexity.py --root . --mode enforce` →

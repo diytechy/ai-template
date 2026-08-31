@@ -61,10 +61,16 @@ style), which is why WI-448 could demand a reviewed bump on `bootstrap.py` after
 it shed two duplicated helper bodies and gained a MAPPING declaration block. So
 `_all_modules` now counts SLOC — non-blank, non-comment, non-docstring — via
 `check_complexity.module_sloc`, the one definition of a source line the
-complexity sensor also reads; the two sensors cover the same files (this census
-recurses into packages since 2026-08-21) and differ only in what they measure.
-Nothing was deleted and no pointer moved: the ruling was arm-and-re-base, not
-retire. The debt owner is still `WI-521`.
+complexity sensor also reads. That shared definition is the ONLY axis the two
+sensors now hold in common: they differ in BOTH what they measure AND which
+files they cover. This size ratchet measures module SIZE over the kit scripts
+only (`conftest.SCRIPTS`, recursing into packages since 2026-08-21); the
+complexity sensor measures function COMPLEXITY and, since WI-538 widened its
+`DEFAULT_INCLUDE`, also censuses `tests/`. The ruling kept this ratchet
+scripts-only on purpose, so the trees genuinely diverge — do not read the shared
+`module_sloc` as a shared census surface. Nothing was deleted and no pointer
+moved: the ruling was arm-and-re-base, not retire. The debt owner is still
+`WI-521`.
 """
 
 import ast
