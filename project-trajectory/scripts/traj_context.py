@@ -12,8 +12,9 @@ edits the frame and nothing restates it: the render model is
 
 ITS OWN MODULE rather than a seventh section of `traj_views.py`, and that was
 the ratchet's call, not a preference: the view lands at ~440 lines and would
-have pushed `traj_views` past the 1,500-line decomposition threshold
-(`tests/test_module_size_ratchet.py`), whose rule is decompose, never bump. It
+have pushed `traj_views` past the module-size decomposition threshold
+(`tests/test_module_size_ratchet.py`, now measured in SLOC), whose rule is
+decompose, never bump. It
 is a clean seam anyway — one data source, one tab block, no shared state with
 the What/When/How-SW views.
 

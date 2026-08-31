@@ -9,13 +9,14 @@ top of — the ruff C901 ratchet. Because the counting rules live in this
 docstring rather than in a third-party tool, the baseline is a property of the
 code, not of a tool version: a linter upgrade cannot silently invalidate it.
 
-REPORT-ONLY as shipped: no `[step:]` is wired into `docs/stack.ini`, so nothing
-runs this as a gate. The enforce capability exists (`--mode enforce`, exercised
-by the tests) but arming it is an opt-in act — a `[step:complexity]` step, of
-the shape below:
+REPORT-ONLY WHERE SHIPPED, ARMED HERE (OI-68 ruled 3a, 2026-08-30). Downstream
+the kit ships this report-only; arming is an opt-in `[step:]` an adopter adds
+once its own false-positive rate is known. This repo runs it ARMED at
+`DevStg-Impl` — `[step:complexity]` in `docs/stack.ini` runs `--mode enforce`,
+the exact-equality compare in both directions:
 
     [step:complexity]
-    command = {py} project-trajectory/scripts/check_complexity.py --root .
+    command = {py} project-trajectory/scripts/check_complexity.py --root . --mode enforce
 
 CENSUS UNIT. One row per module-level function and per method. A nested `def`
 or `lambda` is scored INTO its enclosing function (Sonar charges the nesting
@@ -44,7 +45,11 @@ from kitlib.config import utf8_console
 
 DEFAULT_THRESHOLD = 15
 BASELINE = "docs/complexity-baseline"
-DEFAULT_INCLUDE = ("project-trajectory/scripts/**/*.py",)
+# This repo's census surface (OI-68 ruled 2a, 2026-08-30): the kit scripts AND
+# the test tree — the larger tree, and the one no other armed sensor watches.
+# The line ratchet stays scripts-only; this sensor covers both. A downstream
+# adopter passes its own --include and the shipped step is report-only (phase 3).
+DEFAULT_INCLUDE = ("project-trajectory/scripts/**/*.py", "tests/**/*.py")
 COLUMNS = ("path", "function", "cognitive", "sloc", "reason")
 HEADER = "# " + "\t".join(COLUMNS)
 DEBT_NOTE = (
@@ -276,13 +281,31 @@ def _doc_lines(tree):
     return out
 
 
+def _sloc(lines, span, doc_lines):
+    """Non-blank, non-comment, non-docstring physical lines within `span` (an
+    iterable of 1-based line numbers). The ONE definition of a source line the
+    per-function census and the whole-module ratchet share — held here beside the
+    sensor and imported by the ratchet (OI-68 ruled 1c, 2026-08-30)."""
+    body = [lines[i - 1].strip() for i in span if i not in doc_lines]
+    return sum(1 for text in body if text and not text.startswith("#"))
+
+
 def sloc(node, lines, doc_lines):
     """Non-blank, non-comment, non-docstring physical lines of `node`. Half the
     kit-scripts tree is prose by house style, so a raw line count would be
     measuring documentation."""
-    live = [i for i in range(node.lineno, node.end_lineno + 1) if i not in doc_lines]
-    body = [lines[i - 1].strip() for i in live]
-    return sum(1 for text in body if text and not text.startswith("#"))
+    return _sloc(lines, range(node.lineno, node.end_lineno + 1), doc_lines)
+
+
+def module_sloc(text):
+    """The SLOC of a whole module — the same rule as `sloc`, over every line.
+    `tests/test_module_size_ratchet.py` imports this: the module-SIZE ratchet
+    re-based from raw physical lines (`len(text.splitlines())`) to SLOC on the
+    OI-68 1c ruling, so the size sensor and the complexity sensor read one
+    definition of a source line rather than two that could drift apart."""
+    tree = ast.parse(text)
+    lines = text.splitlines()
+    return _sloc(lines, range(1, len(lines) + 1), _doc_lines(tree))
 
 
 def _collect(node, prefix, out):

@@ -347,6 +347,18 @@ this §3** (IF-054: a hard edge on a standing debt owner would deadlock). So §3
 only what survives" is discharged — the question was raised, ruled, and re-homed.
 Nothing on the sensor gap is owed by this slice.
 
+**WI-538 EXECUTED the ruling, 2026-08-30.** The complexity sensor is now ARMED in
+this repo (`[step:complexity]`, `--mode enforce`, `docs/complexity-baseline`) and
+its census covers `tests/` as well as the kit scripts, so the test tree has an
+armed sensor for the first time — on the COMPLEXITY axis. The module-size line
+ratchet was re-based from raw physical lines to SLOC in the same WI (OI-68 1c) and
+stays scripts-only. **Residual this row still owns, stated honestly:** test-tree
+SIZE growth — a monolith that accretes fixtures or test functions without any one
+function crossing cognitive 15 — is watched by NEITHER armed sensor (the line
+ratchet is scripts-only; the complexity sensor scores functions, not files). So §3's
+test-monolith debt is real and unchanged; what closed is the AXIS question and the
+per-function complexity watch, not a size measurement of the test tree.
+
 **So this slice is the M-06 work, and the target is re-measured, not inherited.**
 `test_trace.py` **2,323** (was 2,099 at slice 2 — it grew again, with nothing
 watching), `test_trajectory_arch.py` **2,290** (was 1,993), `test_agent_loop.py`

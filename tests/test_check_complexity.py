@@ -437,6 +437,16 @@ def f(a):
     assert cc.sloc(found[0][1], lines, docs) == 3  # def, b = 1, return b
 
 
+def test_module_sloc_is_the_whole_file_on_the_same_rule():
+    """`module_sloc` applies the `sloc` rule over the entire file, including the
+    module docstring and top-level statements — the one definition the
+    module-size ratchet imports (OI-68 1c). Here: `MODULE = 1`, `def f`, and
+    `return a` are live; the module docstring, the blank, and the `# c` comment
+    are not."""
+    src = '"""Module doc."""\n\nMODULE = 1  # trailing\ndef f(a):\n    # c\n    return a\n'
+    assert cc.module_sloc(src) == 3
+
+
 def test_public_symbol_count_ignores_underscored_names():
     src = "X = 1\n_y = 2\ndef pub():\n    pass\ndef _priv():\n    pass\nclass K:\n    pass\n"
     assert sorted(cc._public(ast.parse(src))) == ["K", "X", "pub"]
