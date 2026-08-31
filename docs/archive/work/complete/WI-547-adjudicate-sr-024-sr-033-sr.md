@@ -3,11 +3,37 @@ id = "WI-547"
 title = "adjudicate: SR-024, SR-033, SR-043, SR-052, SR-053, SR-054, SR-111, SR-112, SR-129, SR-144, SR-146, SR-147, SR-149, SR-167, SR-175, SR-176, SR-177 - approved/routed cell(s) amended on merged trunk 579abf1..b057b09 (§A5.2); judge whether scope moved, then flip or draft follow-ups in ## Dispositions"
 workstream = "process"
 sr_refs = ["SR-024", "SR-033", "SR-043", "SR-052", "SR-053", "SR-054", "SR-111", "SR-112"]
-specref = "docs/requirements/system-requirements.toml"
+specref = ""
 buildtier = "strong"
 safety_class = "adjudication"
 brief = "amendment"
 +++
+
+## Deliverable
+
+Ruled by the independent adjudicator (ANTHROPIC-OPUS-STRONG, session 001 of the
+lane, 96 s wall) at the lane's claim commit, from the before/after cells alone:
+
+    VERDICT: CLARITY rows=17
+
+Every one of the seventeen amended cells is a `Rationale` cell, and every
+amendment strips (or, at SR-175, restructures in place) the `Hat-derived
+(hat.X):` provenance label while keeping the charter clause and the obligation
+the row imposes — a builder or test acting on the BEFORE text acts identically
+on the AFTER text. The verdict, one line per row, is the lane's own record at
+`docs/reviews/wi-547-adjudicate-sr-024-sr-033-sr/001-ADJUDICATE-fb0ed7c.md`.
+
+Consequence: the seventeen rows' attestation STANDS — all seventeen read
+`Approved` on trunk (the amendment never flipped them), so a CLARITY ruling
+owes no flip and no re-attest; nothing in the registries was edited by this
+row (the brief forbids it, and the ruling asks for nothing). No `##
+Dispositions` block: no scope moved, so no follow-up row is drafted.
+
+Closed by the supervising session, not the adjudicator: the amendment brief
+(`adjudicate-amendment.template.md`) carries no C6 close step — only the
+disposition brief received one in WI-548 — so the lane's spec stayed in
+`active/` after the verdict commit. Recorded as a kit finding in
+`docs/decisions-for-review-2026-08-31.md`.
 
 ## Context
 
