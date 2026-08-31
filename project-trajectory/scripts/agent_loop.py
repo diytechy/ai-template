@@ -1678,7 +1678,9 @@ def map_preflight(
     """Assemble every up-front launchability failure (default template,
     cmd-map, prompt-map files, and the managed-routing registry/enable/tier/
     prefer checks) into one list, reading each mapped prompt file once.
-    Returns (failures, prompt_templates)."""
+    Returns `(failures, prompt_templates, prompt_paths)`: the last mapping is
+    the actual file each loaded prompt came from, retained so governing-input
+    hashing cannot silently omit or misidentify an adjudication override."""
     failures = preflight(root, template, args)
     # THE SHIPPED PROMPTS (plan §8). Now that the worker / reviewer / critique
     # briefs are files, a missing or unreadable one is a launchability failure
@@ -1707,10 +1709,12 @@ def map_preflight(
     # be readable before iteration 1 (the preflight contract — a broken reviewer
     # prompt must fail up front, never mid-run). Read them once, here.
     prompt_templates = {}
+    prompt_paths = {key: prompts.template_path(key) for key in prompts.KIT_PROMPTS}
     for ph, rel in sorted(prompt_map.items()):
         p = Path(rel)
         if not p.is_absolute():
             p = root / rel
+        prompt_paths[ph] = p
         try:
             prompt_templates[ph] = p.read_text(encoding="utf-8", errors="replace")
         except OSError as exc:
@@ -1758,7 +1762,7 @@ def map_preflight(
         # the layer is off, so it changes nothing (never-breaking).
         for e in reg_errors:
             print("agent_loop: WARNING - agents.toml: {}".format(e), file=sys.stderr)
-    return failures, prompt_templates
+    return failures, prompt_templates, prompt_paths
 
 
 def default_base(root):
@@ -2094,6 +2098,7 @@ class LoopContext:
     model_map: dict
     cmd_map: dict
     prompt_templates: dict
+    adjudicator_prompt_paths: tuple
     tier_map: dict
     prefer_map: dict
     weight_map: dict
@@ -2123,12 +2128,15 @@ def adjudicator_home_root(root):
     )
 
 
-def _adjudicator_resume_record(root, cfg, family, current_wi):
+def _adjudicator_resume_record(
+    root, cfg, family, current_wi, route_id="", governing_hash_now=""
+):
     """The record to RESUME against for this launch, or None to mint fresh (plan
     §3.4, evaluated before every launch). Retires (soft, keeps the generation
     count) and returns None when the session must not be resumed:
 
     - it is already `retired` (a prior reset);
+    - its governing inputs changed and this row is a clear point;
     - `reset_on_same_artifact` is on and this row was already judged in the
       session (the strict rule-3 guard — retire immediately, no drain);
     - it is `draining` and this is a CLEAR POINT — this row does NOT continue a
@@ -2137,13 +2145,20 @@ def _adjudicator_resume_record(root, cfg, family, current_wi):
     A `draining` session whose next row DOES continue its chain (this row was
     judged before) keeps being resumed, so a review -> worker -> return -> review
     loop is never cut mid-way."""
-    record = adjudicator_session.load(root, family)
+    record = adjudicator_session.load(root, family, route_id)
     if not isinstance(record, dict):
         return None
     state = record.get("state")
     judged = record.get("judged") or []
     if state == adjudicator_session.STATE_RETIRED:
         return None
+    governing_change = adjudicator_session.drain_reason(
+        record, "", 0, governing_hash_now, ""
+    )
+    if governing_change:
+        record["state"] = adjudicator_session.STATE_DRAINING
+        adjudicator_session.save(root, record)
+        state = record["state"]
     if cfg.reset_on_same_artifact and current_wi in judged:
         adjudicator_session.retire(root, record)
         return None
@@ -2158,7 +2173,17 @@ def _adjudicator_resume_record(root, cfg, family, current_wi):
     return record
 
 
-def adjudicator_launch(root, docs, family, brief, current_wi, tmpl, session_env):
+def adjudicator_launch(
+    root,
+    docs,
+    family,
+    brief,
+    current_wi,
+    tmpl,
+    session_env,
+    route_id="",
+    template_paths=(),
+):
     """Rewrite an adjudication session's launch for the retention layer (WI-540,
     plan §3.2/§4), returning `(tmpl, session_env, adj)`.
 
@@ -2172,9 +2197,10 @@ def adjudicator_launch(root, docs, family, brief, current_wi, tmpl, session_env)
     governing-inputs hash the reset rule compares)."""
     cfg = agent_common.adjudicator_config(docs)
     fam = (family or "").upper()
-    if not cfg.enabled or not fam or brief not in cfg.retain_for:
+    if not cfg.enabled or not fam or not route_id or brief not in cfg.retain_for:
         return tmpl, session_env, None
-    record = _adjudicator_resume_record(root, cfg, fam, current_wi)
+    hash_now = adjudicator_session.governing_hash(root, template_paths)
+    record = _adjudicator_resume_record(root, cfg, fam, current_wi, route_id, hash_now)
     new_tmpl, mint_id = adjudicator_session.resume_template(fam, tmpl, record)
     home_env = adjudicator_session.dedicated_home_env(
         fam, session_env, adjudicator_home_root(root)
@@ -2193,8 +2219,8 @@ def adjudicator_launch(root, docs, family, brief, current_wi, tmpl, session_env)
             "wi": current_wi or "",
             "session_id": session_id,
             "mint_id": mint_id,
-            "route_id": None,  # filled by the caller (it owns route_id)
-            "governing_hash": adjudicator_session.governing_hash(root),
+            "route_id": route_id,
+            "governing_hash": hash_now,
             "resumed": bool(record),
         },
     )
@@ -2371,13 +2397,20 @@ def route_session(ctx, i, current_wi, session, resume_reconcile, now):
         return EXIT_PREFLIGHT
     # WI-540: the adjudicator session-retention launch rewrite (plan §3.2/§4).
     # A strict no-op when the dial is off or the brief class is not retained —
-    # `tmpl`/`session_env` are exactly today's and `adj` is None. The row's
-    # `route_id` is grafted onto `adj` here because route_session owns it.
+    # `tmpl`/`session_env` are exactly today's and `adj` is None. The actual
+    # loaded adjudication-template paths are carried out of
+    # preflight and folded into the governing hash here.
     tmpl, session_env, adj = adjudicator_launch(
-        root, docs, route_family, brief_key, current_wi, tmpl, session_env
+        root,
+        docs,
+        route_family,
+        brief_key,
+        current_wi,
+        tmpl,
+        session_env,
+        route_id=route_id,
+        template_paths=ctx.adjudicator_prompt_paths,
     )
-    if adj is not None:
-        adj["route_id"] = route_id
     return {
         "phase": phase,
         "is_review": is_review,
@@ -2863,18 +2896,7 @@ def session_bookkeeping(
     return build_bookkeeping(ctx, plan, outcome, code, commits, after, wi_label, now)
 
 
-def _adjudicator_occupancy(family, data):
-    """This adjudication's `(captured_session_id, occupancy, window, pct)` for
-    the store. ANTHROPIC reads its own final result (WI-535's
-    `family_context_telemetry`). OPENAI/OPENCODE occupancy is parsed from their
-    rollout/stream by `adjudicator_session`'s per-family readers, wired to the
-    live sources on-box in WI-541 — blank here until then, so the reset never
-    CRESTS on those families yet (their governing-hash and version-drift arms
-    still mark a session draining)."""
-    return family_context_telemetry(family, data)
-
-
-def adjudicator_bookkeeping(ctx, plan, data, timed_out, now):
+def adjudicator_bookkeeping(ctx, plan, data, timed_out, now, output=""):
     """Update the retained adjudicator session store after one adjudication and
     evaluate the reset rule (plan §3.3/§3.4). Returns the two derived telemetry
     columns `{"session-gen","reset-reason"}` for the log row; a no-op returning
@@ -2886,60 +2908,25 @@ def adjudicator_bookkeeping(ctx, plan, data, timed_out, now):
     store MUTATION is the plan's session_bookkeeping step, hoisted."""
     adj = plan.get("adjudicator")
     if not adj:
-        return {"session-gen": "", "reset-reason": ""}
-    root = ctx.root
-    family = adj["family"]
+        return adjudicator_session.empty_bookkeeping()
     cfg = agent_common.adjudicator_config(ctx.docs)
     stamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
-    captured_id, used, window, pct = _adjudicator_occupancy(family, data)
-    record = adjudicator_session.load(root, family)
-    if record is None or record.get("state") == adjudicator_session.STATE_RETIRED:
-        prior_gen = record.get("generation", 0) if isinstance(record, dict) else 0
-        record = adjudicator_session.mint(
-            family,
-            adj.get("route_id") or "",
-            adj.get("session_id") or captured_id,
-            adj.get("governing_hash") or "",
-            stamp,
-            window,
-        )
-        record["generation"] = prior_gen + 1
-    if not record.get("session_id"):
-        record["session_id"] = adj.get("session_id") or captured_id or ""
-    if isinstance(used, int):
-        record["occupancy"] = used
-    if isinstance(window, int) and window:
-        record["window"] = window
-    if pct != "":
-        record["pct"] = pct
-    record["last_used"] = stamp
-    wi = adj.get("wi") or ""
-    if wi and wi not in record["judged"]:
-        record["judged"].append(wi)
-    gen = record["generation"]
-    # The reset rule. Unusable (error/timeout) retires immediately; the
-    # same-artifact guard already fired at launch (_adjudicator_resume_record),
-    # so `next_ids` is empty here. Otherwise evaluate the drain transition.
-    is_error = bool(data.get("is_error"))
-    terminal_ok = not timed_out and not is_error
-    reason = adjudicator_session.retire_now_reason(
-        is_error, terminal_ok, cfg.reset_on_same_artifact, (), record["judged"]
+    observation = adjudicator_session.context_telemetry(
+        adj["family"],
+        data,
+        output,
+        plan.get("session_env"),
+        adj.get("session_id") or "",
     )
-    if reason:
-        adjudicator_session.retire(root, record)
-        return {"session-gen": gen, "reset-reason": reason}
-    reset_pct, _clamped = adjudicator_session.reset_pct_for_family(cfg, family)
-    drain = adjudicator_session.drain_reason(
-        record,
-        pct if isinstance(pct, int) else "",
-        reset_pct,
-        adj.get("governing_hash") or "",
-        "",  # CLI version drift: the init-version capture is WI-541's on-box arm
+    return adjudicator_session.bookkeep(
+        ctx.root,
+        adj,
+        cfg,
+        observation,
+        timed_out,
+        bool(data.get("is_error")),
+        stamp,
     )
-    if drain:
-        record["state"] = adjudicator_session.STATE_DRAINING
-    adjudicator_session.save(root, record)
-    return {"session-gen": gen, "reset-reason": drain or ""}
 
 
 def wait_out_blackout(lane):
@@ -3054,28 +3041,7 @@ def family_context_telemetry(family, data):
     this yet; WI-540's per-family adapter is what adds it."""
     if family != "ANTHROPIC":
         return "", "", "", ""
-    session_id = data.get("session_id") or ""
-    usage = data.get("usage") or {}
-    usage_fields = (
-        ("input_tokens", "inputTokens"),
-        ("output_tokens", "outputTokens"),
-        ("cache_read_input_tokens", "cacheReadInputTokens"),
-        ("cache_creation_input_tokens", "cacheCreationInputTokens"),
-    )
-    if not any(usage.get(key) is not None for key, _ in usage_fields):
-        return session_id, "", "", ""
-    usage_totals = tuple(usage.get(key) or 0 for key, _ in usage_fields)
-    occupancy = sum(usage_totals)
-    matches = [
-        entry
-        for entry in (data.get("modelUsage") or {}).values()
-        if tuple(entry.get(key) or 0 for _, key in usage_fields) == usage_totals
-    ]
-    window = ""
-    if len(matches) == 1:
-        window = matches[0].get("contextWindow", "") or ""
-    pct = round(occupancy * 100 / window) if isinstance(window, int) and window else ""
-    return session_id, occupancy, window, pct
+    return adjudicator_session.anthropic_context_telemetry(data)
 
 
 def session_meta(
@@ -3100,8 +3066,11 @@ def session_meta(
     prompt = plan["prompt"]
     phase = plan["phase"]
     usage = data.get("usage") or {}
-    session_id, ctx_used, ctx_window, ctx_pct = family_context_telemetry(
-        plan.get("route_family") or "", data
+    session_id, ctx_used, ctx_window, ctx_pct = (
+        adjudicator_session.prefer_retained_context(
+            family_context_telemetry(plan.get("route_family") or "", data),
+            plan.get("adjudicator_telemetry") or {},
+        )
     )
     tokens = ""
     if usage.get("input_tokens") is not None or usage.get("output_tokens") is not None:
@@ -3656,10 +3625,9 @@ def run_iteration(ctx, i):
     )
 
     # WI-540: update the retained adjudicator session store and evaluate the
-    # reset rule (plan §3.3/§3.4). A no-op when the dial is off; its two derived
-    # columns are stashed for session_meta to ride the same log row.
+    # reset rule (plan §3.3/§3.4). Dial-off is a no-op; derived columns ride the log.
     plan["adjudicator_telemetry"] = adjudicator_bookkeeping(
-        ctx, plan, data, timed_out, now
+        ctx, plan, data, timed_out, now, output
     )
 
     meta = session_meta(
@@ -3843,6 +3811,7 @@ class SessionSetup:
     tier_map: dict
     prefer_map: dict
     prompt_templates: dict
+    adjudicator_prompt_paths: tuple
     routing: RoutingSetup
     worker: dict
 
@@ -3863,7 +3832,7 @@ def resolve_session_setup(args, root):
         return None, code
     model_map, cmd_map, prompt_map, tier_map, prefer_map = maps
     routing = resolve_routing_setup(docs)
-    failures, prompt_templates = map_preflight(
+    failures, prompt_templates, prompt_paths = map_preflight(
         root,
         template,
         args,
@@ -3894,6 +3863,9 @@ def resolve_session_setup(args, root):
             tier_map=tier_map,
             prefer_map=prefer_map,
             prompt_templates=prompt_templates,
+            adjudicator_prompt_paths=tuple(
+                prompt_paths[key] for key in adjudicate_brief.BRIEF_PROMPTS.values()
+            ),
             routing=routing,
             worker=worker,
         ),
@@ -4262,6 +4234,7 @@ def main():
             model_map=setup.model_map,
             cmd_map=setup.cmd_map,
             prompt_templates=setup.prompt_templates,
+            adjudicator_prompt_paths=setup.adjudicator_prompt_paths,
             tier_map=setup.tier_map,
             prefer_map=setup.prefer_map,
             weight_map=setup.routing.weight_map,

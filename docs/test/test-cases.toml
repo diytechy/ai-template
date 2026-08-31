@@ -1552,13 +1552,13 @@ status = "Approved"
 phase = 5
 
 [test.TC-157]
-verifies = ["SR-146", "LLR-162", "LLR-163"]
+verifies = ["SR-146", "LLR-162", "LLR-163", "IF-174"]
 level = "Integration"
-method = """Run the prompts and routing suites: strict slot filling and its refusals, the preflight on a missing template, the catalogue's freshness gate, the digest's line-ending normalization, the argv-array form with its fall-through and refusal cases, and the ADJUDICATE phase's tier, cross-family rule and escalation deafness."""
+method = """Run the prompts and routing suites: strict slot filling and its refusals, the preflight on a missing template, the catalogue's freshness gate, the digest's line-ending normalization, the argv-array form with its fall-through and refusal cases, and the ADJUDICATE phase's tier, cross-family rule and escalation deafness. Run the adjudicator-session suite over IF-174's call surface: dial-off inertia; compound family/route store identity and atomic writes; mint/resume argv forms; provider session-id, occupancy and window readers over emitted streams and the exact Codex rollout; loaded-template hashing; lifecycle transitions; and keep-warm gating."""
 tier = "Smoke"
 expected = "Satisfies SR-146 AcceptanceCriteria"
 automated = "Yes"
-evidence = "tests/test_prompts.py;tests/test_routing_and_prompts.py"
+evidence = "tests/test_prompts.py;tests/test_routing_and_prompts.py;tests/test_adjudicator_session.py"
 status = "Approved"
 phase = 5
 

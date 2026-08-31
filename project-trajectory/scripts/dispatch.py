@@ -116,30 +116,30 @@ def _keepwarm_tick(root, table, now):
     cfg = ac.adjudicator_config(root / "docs")
     if not cfg.enabled or cfg.keepwarm_minutes <= 0:
         return
-    record = adjudicator_session.load(root, "ANTHROPIC")
-    if not adjudicator_session.keepwarm_due(
-        record,
-        cfg,
-        "ANTHROPIC",
-        now,
-        _iso_epoch((record or {}).get("last_used")),
-        bool(table),
-    ):
-        return
-    sid = record.get("session_id")
-    if not sid:
-        return
-    try:
-        agent_session.run_session(
-            ["claude", "-p", "--resume", sid, "--max-turns", "1"],
-            root,
-            120,
-            stdin_input="ack",
-        )
-    except OSError:
-        return
-    record["last_used"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
-    adjudicator_session.save(root, record)
+    for record in adjudicator_session.load_family(root, "ANTHROPIC"):
+        if not adjudicator_session.keepwarm_due(
+            record,
+            cfg,
+            "ANTHROPIC",
+            now,
+            _iso_epoch(record.get("last_used")),
+            bool(table),
+        ):
+            continue
+        sid = record.get("session_id")
+        if not sid:
+            continue
+        try:
+            agent_session.run_session(
+                ["claude", "-p", "--resume", sid, "--max-turns", "1"],
+                root,
+                120,
+                stdin_input="ack",
+            )
+        except OSError:
+            continue
+        record["last_used"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+        adjudicator_session.save(root, record)
 
 
 def _branch_for(root, wid):

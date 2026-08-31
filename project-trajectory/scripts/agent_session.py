@@ -27,7 +27,9 @@ Contracts: IF-041, IF-064 — the interface seams this module declares (process.
 of record in docs/requirements/interfaces.toml).
 
 Contract IF-064: the session-launch surface. `build_argv(template, model,
-    prompt)` returns `(argv, stdin_input)` and DECIDES prompt delivery: a
+    prompt)` returns `(argv, stdin_input)` and DECIDES prompt delivery;
+    `split_cmd(template)` is its token parser and is also the adapter-facing
+    surface for a caller that must rewrite the command before that decision. A
     template carrying a `{prompt}` placeholder gets it substituted into argv,
     except that a Windows batch shim is refused there because the shell
     re-parses it; with no placeholder the prompt is piped to the child's stdin

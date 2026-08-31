@@ -13,6 +13,8 @@ these on the shipped dial; this suite is where they are exercised.
 
 import json
 import tomllib
+from pathlib import Path
+from types import SimpleNamespace
 
 from conftest import KIT, ROOT, load_script
 
@@ -118,7 +120,7 @@ def test_store_round_trip_and_atomic_replace(tmp_path):
         "ANTHROPIC", "ANTHROPIC-OPUS-STRONG", "sid-1", "hash", "2026-01-01T00:00:00Z"
     )
     adj.save(tmp_path, record)
-    loaded = adj.load(tmp_path, "ANTHROPIC")
+    loaded = adj.load(tmp_path, "ANTHROPIC", "ANTHROPIC-OPUS-STRONG")
     assert loaded["session_id"] == "sid-1"
     assert loaded["state"] == adj.STATE_ACTIVE
     assert loaded["generation"] == 1
@@ -128,8 +130,10 @@ def test_store_round_trip_and_atomic_replace(tmp_path):
 
 def test_corrupt_store_reads_as_no_session(tmp_path):
     adj.store_dir(tmp_path).mkdir(parents=True)
-    adj.store_path(tmp_path, "ANTHROPIC").write_text("{not json", encoding="utf-8")
-    assert adj.load(tmp_path, "ANTHROPIC") is None
+    adj.store_path(tmp_path, "ANTHROPIC", "route-a").write_text(
+        "{not json", encoding="utf-8"
+    )
+    assert adj.load(tmp_path, "ANTHROPIC", "route-a") is None
 
 
 def test_retire_keeps_the_file_and_generation(tmp_path):
@@ -137,16 +141,50 @@ def test_retire_keeps_the_file_and_generation(tmp_path):
     record["generation"] = 3
     adj.save(tmp_path, record)
     adj.retire(tmp_path, record)
-    loaded = adj.load(tmp_path, "OPENAI")
+    loaded = adj.load(tmp_path, "OPENAI", "r")
     assert loaded["state"] == adj.STATE_RETIRED
     assert loaded["generation"] == 3  # kept so the next mint can increment it
 
 
 def test_clear_unlinks(tmp_path):
     adj.save(tmp_path, adj.mint("OPENCODE", "r", "s", "h", "t"))
-    adj.clear(tmp_path, "OPENCODE")
-    assert adj.load(tmp_path, "OPENCODE") is None
-    adj.clear(tmp_path, "OPENCODE")  # absent file is a no-op
+    adj.clear(tmp_path, "OPENCODE", "r")
+    assert adj.load(tmp_path, "OPENCODE", "r") is None
+    adj.clear(tmp_path, "OPENCODE", "r")  # absent file is a no-op
+
+
+def test_store_is_keyed_by_family_and_route(tmp_path):
+    first = adj.mint("OPENAI", "OPENAI-A", "sid-a", "h", "t")
+    second = adj.mint("OPENAI", "OPENAI-B", "sid-b", "h", "t")
+    adj.save(tmp_path, first)
+    adj.save(tmp_path, second)
+
+    assert adj.load(tmp_path, "OPENAI", "OPENAI-A")["session_id"] == "sid-a"
+    assert adj.load(tmp_path, "OPENAI", "OPENAI-B")["session_id"] == "sid-b"
+    assert adj.store_path(tmp_path, "OPENAI", "OPENAI-A") != adj.store_path(
+        tmp_path, "OPENAI", "OPENAI-B"
+    )
+
+
+def test_load_family_enumerates_only_that_familys_valid_records(tmp_path):
+    adj.save(tmp_path, adj.mint("ANTHROPIC", "ANTHROPIC-B", "sid-b", "h", "t"))
+    adj.save(tmp_path, adj.mint("ANTHROPIC", "ANTHROPIC-A", "sid-a", "h", "t"))
+    adj.save(tmp_path, adj.mint("OPENAI", "OPENAI-A", "sid-c", "h", "t"))
+    # A corrupt file and a misplaced one (content's route id does not key the
+    # file it sits in) are both skipped, never cross-read.
+    adj.store_dir(tmp_path).mkdir(parents=True, exist_ok=True)
+    adj.store_path(tmp_path, "ANTHROPIC", "corrupt").write_text(
+        "{not json", encoding="utf-8"
+    )
+    misplaced = adj.mint("ANTHROPIC", "ANTHROPIC-REAL", "sid-m", "h", "t")
+    adj.store_path(tmp_path, "ANTHROPIC", "ANTHROPIC-ALIAS").write_text(
+        json.dumps(misplaced), encoding="utf-8"
+    )
+
+    records = adj.load_family(tmp_path, "ANTHROPIC")
+
+    assert [r["route_id"] for r in records] == ["ANTHROPIC-A", "ANTHROPIC-B"]
+    assert adj.load_family(tmp_path, "OPENCODE") == []
 
 
 # --- the resume-argv adapter (plan §3.2) --------------------------------------
@@ -226,11 +264,30 @@ def test_anthropic_occupancy_sums_four_counters():
 
 def test_codex_occupancy_reads_last_event():
     events = [
-        {"token_count": {"info": {"last_token_usage": {"total_tokens": 100}}}},
-        {"token_count": {"info": {"last_token_usage": {"total_tokens": 250}}}},
+        {
+            "type": "event_msg",
+            "payload": {
+                "type": "token_count",
+                "info": {
+                    "last_token_usage": {"total_tokens": 100},
+                    "model_context_window": 200_000,
+                },
+            },
+        },
+        {
+            "type": "event_msg",
+            "payload": {
+                "type": "token_count",
+                "info": {
+                    "last_token_usage": {"total_tokens": 250},
+                    "model_context_window": 300_000,
+                },
+            },
+        },
         {"unrelated": True},
     ]
     assert adj.codex_occupancy(events) == 250
+    assert adj.codex_window(events) == 300_000
     assert adj.codex_occupancy([]) == 0
 
 
@@ -257,6 +314,51 @@ def test_governing_hash_changes_with_a_governing_file(tmp_path):
     assert adj.governing_hash(tmp_path) != first
     # Deterministic for an unchanged tree.
     assert adj.governing_hash(tmp_path) == adj.governing_hash(tmp_path)
+
+
+def test_governing_hash_changes_with_the_loaded_adjudication_template(tmp_path):
+    template = tmp_path / "prompts" / "adjudicate-disposition.md"
+    template.parent.mkdir()
+    template.write_text("judge one", encoding="utf-8")
+    first = adj.governing_hash(tmp_path, (template,))
+    template.write_text("judge two", encoding="utf-8")
+    assert adj.governing_hash(tmp_path, (template,)) != first
+
+
+def test_preflight_surfaces_the_loaded_adjudication_template_to_the_hash(tmp_path):
+    # The production half of the same rule: the loop's preflight is what hands
+    # `adjudicator_prompt_paths` to the launch, so the path it surfaces for a
+    # brief's prompt must be the file actually loaded — an operator override,
+    # not silently the shipped kit file — and the hash over those surfaced
+    # paths must move when the judging instruction does.
+    ab = load_script("adjudicate_brief")
+    override = tmp_path / "custom-disposition.md"
+    override.write_text("judge one", encoding="utf-8")
+    prompt_map = {"ADJUDICATE-DISPOSITION": str(override)}
+
+    def adjudication_hash():
+        _, _, paths = al.map_preflight(
+            tmp_path,
+            "",
+            SimpleNamespace(),
+            {},
+            prompt_map,
+            {},
+            {},
+            False,
+            {},
+            [],
+            [],
+            [],
+        )
+        assert Path(paths["ADJUDICATE-DISPOSITION"]) == override
+        return adj.governing_hash(
+            tmp_path, tuple(paths[key] for key in ab.BRIEF_PROMPTS.values())
+        )
+
+    first = adjudication_hash()
+    override.write_text("judge two", encoding="utf-8")
+    assert adjudication_hash() != first
 
 
 # --- the drain / reset rule (plan §3.4) ---------------------------------------
@@ -352,6 +454,7 @@ def test_launch_is_a_strict_no_op_when_dial_off(tmp_path):
         "WI-1",
         "claude -p --model {model}",
         env_in,
+        route_id="ANTHROPIC-A",
     )
     assert tmpl == "claude -p --model {model}"
     assert env is env_in  # unchanged object — byte-for-byte today's launch
@@ -371,6 +474,7 @@ def test_launch_mints_when_on_for_a_retained_class(tmp_path):
         "WI-1",
         "claude -p --model {model}",
         None,
+        route_id="ANTHROPIC-A",
     )
     assert meta is not None and meta["family"] == "ANTHROPIC" and meta["wi"] == "WI-1"
     assert "--session-id" in json.loads(tmpl)
@@ -378,9 +482,216 @@ def test_launch_mints_when_on_for_a_retained_class(tmp_path):
     assert "CLAUDE_CONFIG_DIR" in env
     # A non-retained brief class stays a no-op even with the dial on.
     _, _, none = al.adjudicator_launch(
-        tmp_path, docs, "ANTHROPIC", "red-tc", "WI-1", "claude -p", None
+        tmp_path,
+        docs,
+        "ANTHROPIC",
+        "red-tc",
+        "WI-1",
+        "claude -p",
+        None,
+        route_id="ANTHROPIC-A",
     )
     assert none is None
+
+
+def test_launch_never_resumes_another_route_of_the_same_family(tmp_path):
+    docs = _write_process_toml(
+        tmp_path,
+        '[adjudicator]\ncontext_reset_pct = 55\nretain_for = ["disposition"]\n',
+    )
+    adj.save(
+        tmp_path,
+        adj.mint("OPENAI", "OPENAI-A", "old-route-session", "h", "t"),
+    )
+
+    tmpl, _, meta = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "OPENAI",
+        "disposition",
+        "WI-2",
+        "codex exec --model {model}",
+        None,
+        route_id="OPENAI-B",
+    )
+
+    tokens = json.loads(tmpl)
+    assert "old-route-session" not in tokens
+    assert tokens[:2] == ["codex", "exec"] and "resume" not in tokens
+    assert meta["route_id"] == "OPENAI-B" and meta["resumed"] is False
+
+
+def _retention_docs(tmp_path):
+    return _write_process_toml(
+        tmp_path,
+        '[adjudicator]\ncontext_reset_pct = 55\nretain_for = ["disposition"]\n',
+    )
+
+
+def _ctx(tmp_path, docs):
+    return SimpleNamespace(root=tmp_path, docs=docs)
+
+
+def test_openai_bookkeeping_captures_thread_and_rollout_then_resumes(tmp_path):
+    docs = _retention_docs(tmp_path)
+    tmpl, env, meta = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "OPENAI",
+        "disposition",
+        "WI-1",
+        "codex exec --model {model}",
+        None,
+        route_id="OPENAI-A",
+    )
+    assert "--json" in json.loads(tmpl)
+    session_id = "019c-session-a"
+    rollout = (
+        Path(env["CODEX_HOME"])
+        / "sessions"
+        / "2026"
+        / "08"
+        / "31"
+        / ("rollout-now-{}.jsonl".format(session_id))
+    )
+    rollout.parent.mkdir(parents=True)
+    rollout.write_text(
+        json.dumps(
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "token_count",
+                    "info": {
+                        "last_token_usage": {"total_tokens": 45_000},
+                        "model_context_window": 200_000,
+                    },
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    output = json.dumps({"type": "thread.started", "thread_id": session_id})
+
+    telemetry = al.adjudicator_bookkeeping(
+        _ctx(tmp_path, docs),
+        {"adjudicator": meta, "session_env": env},
+        al.parse_json_result(output),
+        False,
+        1_000,
+        output,
+    )
+
+    record = adj.load(tmp_path, "OPENAI", "OPENAI-A")
+    assert record["session_id"] == session_id
+    assert (record["occupancy"], record["window"], record["pct"]) == (
+        45_000,
+        200_000,
+        22,
+    )
+    assert telemetry["session-id"] == session_id
+    resumed, _, resumed_meta = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "OPENAI",
+        "disposition",
+        "WI-2",
+        "codex exec --model {model}",
+        None,
+        route_id="OPENAI-A",
+    )
+    assert json.loads(resumed)[:4] == ["codex", "exec", "resume", session_id]
+    assert resumed_meta["resumed"] is True
+
+
+def test_opencode_bookkeeping_captures_stream_session_then_resumes(tmp_path):
+    docs = _retention_docs(tmp_path)
+    _, _, meta = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "OPENCODE",
+        "disposition",
+        "WI-1",
+        "opencode run -m {model}",
+        None,
+        route_id="OPENCODE-A",
+    )
+    events = [
+        {"type": "step_start", "sessionID": "ses-a"},
+        {
+            "type": "step_finish",
+            "sessionID": "ses-a",
+            "part": {"tokens": {"total": 77_000}},
+        },
+    ]
+    output = "\n".join(json.dumps(event) for event in events)
+
+    al.adjudicator_bookkeeping(
+        _ctx(tmp_path, docs),
+        {"adjudicator": meta},
+        events[-1],
+        False,
+        1_000,
+        output,
+    )
+
+    record = adj.load(tmp_path, "OPENCODE", "OPENCODE-A")
+    assert record["session_id"] == "ses-a" and record["occupancy"] == 77_000
+    resumed, _, resumed_meta = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "OPENCODE",
+        "disposition",
+        "WI-2",
+        "opencode run -m {model}",
+        None,
+        route_id="OPENCODE-A",
+    )
+    assert json.loads(resumed)[-2:] == ["--session", "ses-a"]
+    assert resumed_meta["resumed"] is True
+
+
+def test_loaded_adjudication_prompt_change_retires_at_clear_point(tmp_path):
+    docs = _retention_docs(tmp_path)
+    prompt = tmp_path / "prompts" / "adjudicate-disposition.md"
+    prompt.parent.mkdir()
+    prompt.write_text("judge one", encoding="utf-8")
+    _, _, first = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "ANTHROPIC",
+        "disposition",
+        "WI-1",
+        "claude -p --model {model}",
+        None,
+        route_id="ANTHROPIC-A",
+        template_paths=(prompt,),
+    )
+    al.adjudicator_bookkeeping(
+        _ctx(tmp_path, docs),
+        {"adjudicator": first},
+        {"session_id": first["session_id"]},
+        False,
+        1_000,
+        "",
+    )
+    prompt.write_text("judge two", encoding="utf-8")
+
+    tmpl, _, second = al.adjudicator_launch(
+        tmp_path,
+        docs,
+        "ANTHROPIC",
+        "disposition",
+        "WI-2",
+        "claude -p --model {model}",
+        None,
+        route_id="ANTHROPIC-A",
+        template_paths=(prompt,),
+    )
+
+    assert first["governing_hash"] != second["governing_hash"]
+    assert "--resume" not in json.loads(tmpl)
+    assert second["resumed"] is False
 
 
 def test_resume_record_same_artifact_guard_retires(tmp_path):
@@ -389,8 +700,11 @@ def test_resume_record_same_artifact_guard_retires(tmp_path):
     record["judged"] = ["WI-1"]
     adj.save(tmp_path, record)
     # The row about to be judged was already judged -> retire, mint fresh.
-    assert al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-1") is None
-    assert adj.load(tmp_path, "ANTHROPIC")["state"] == adj.STATE_RETIRED
+    assert (
+        al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-1", route_id="r")
+        is None
+    )
+    assert adj.load(tmp_path, "ANTHROPIC", "r")["state"] == adj.STATE_RETIRED
 
 
 def test_resume_record_draining_continuation_vs_clear_point(tmp_path):
@@ -400,10 +714,16 @@ def test_resume_record_draining_continuation_vs_clear_point(tmp_path):
     record["judged"] = ["WI-1"]
     adj.save(tmp_path, record)
     # A row continuing the session's chain keeps it resumed mid-drain.
-    assert al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-1") is not None
+    assert (
+        al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-1", route_id="r")
+        is not None
+    )
     # A row that does not continue is a clear point -> retire.
-    assert al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-9") is None
-    assert adj.load(tmp_path, "ANTHROPIC")["state"] == adj.STATE_RETIRED
+    assert (
+        al._adjudicator_resume_record(tmp_path, cfg, "ANTHROPIC", "WI-9", route_id="r")
+        is None
+    )
+    assert adj.load(tmp_path, "ANTHROPIC", "r")["state"] == adj.STATE_RETIRED
 
 
 # --- structure parity: this repo's process.toml vs the shipped template --------

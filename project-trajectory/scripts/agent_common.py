@@ -534,10 +534,7 @@ def _adjudicator_int(table, key):
     """A non-negative int from the table, else 0 — a bool or wrong type reads as
     0 (OFF), never as a truthy accident (`True` is an int subclass in Python, so
     it is excluded explicitly, as `_coerce` does)."""
-    value = table.get(key)
-    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        return 0
-    return value
+    return value if type(value := table.get(key)) is int and value >= 0 else 0
 
 
 def adjudicator_config(docs):
@@ -2377,6 +2374,11 @@ def per_turn_context(meta):
     return "{:.0f}k".format(read / turns / 1000.0) if turns else ""
 
 
+def index_cell(value):
+    """A generated-index cell, with the table's declared blank glyph."""
+    return value or "—"
+
+
 def regenerate_index(docs_dir):
     """Rebuild docs/iteration_index.md from the docs/iteration/*.log metadata
     headers — generated, never hand-maintained (the kit's standing rule), so
@@ -2411,7 +2413,7 @@ def regenerate_index(docs_dir):
                 # WI-540: the retention layer's reset reason — the operator's
                 # dial-watch signal (plan §5 step 5), "—" until the dial fires
                 # (session-gen rides the per-session log header, not this index).
-                meta.get("reset-reason", "") or "—",
+                index_cell(meta.get("reset-reason", "")),
                 log.name,
                 log.name,
             )

@@ -781,6 +781,8 @@ def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
         "context-used",
         "context-window",
         "context-pct",
+        "session-gen",
+        "reset-reason",
     ]
 
 
