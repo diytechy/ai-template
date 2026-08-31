@@ -1,0 +1,36 @@
+# agent-loop session log — written by scripts/agent_loop.py
+# session: 009
+# date: 2026-08-30 23:13
+# train: wi-538-arm-and-rebase
+# base: ea28176ff393
+# phase: REVIEW-A
+# wi: WI-538
+# model: gpt-5.6-terra
+# guardrails:
+# outcome: COMMITTED
+# commits: 04215446..ad83fc3a
+# tokens:
+# cost-usd:
+# wall-secs: 530
+# api-secs:
+# turns:
+# ttft-secs:
+# cache-read:
+# cache-create:
+# effort:
+# fast:
+# prompt-chars: 3643
+# prompt-template: kit:REVIEW-A
+# prompt-sha: sha256:76655643f283
+# timeout:
+# heterogeneity:
+# exit-code: 0
+# session-id:
+# context-used:
+# context-window:
+# context-pct:
+# ---
+Review recorded: CHANGES-REQUESTED (2 findings).
+
+Committed as `ad83fc3a`:
+[009-REVIEW-A-a9fb50e.md](C:\Projects\ai-template-drive\wi-538-arm-and-rebase\docs\reviews\wi-538-arm-and-rebase\009-REVIEW-A-a9fb50e.md)
