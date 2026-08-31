@@ -936,3 +936,75 @@ regeneration, and the brief should say so; a later lane amended a terminal
 spec (`partial/WI-521`, +12 lines) and nothing refused it; an implementer
 can write a `NNN-REVIEW-A-<sha>.md` file and the scoreboard's tripwire did
 not name it on the following round.
+
+## 45. WI-540's partial close was left to stand and its bar-inert artefact merged after a two-file repair — the disposition adjudication is the correction path, not a hand-moved spec
+
+**What happened (eleven sessions, ~2 h 35 min).** The strong Opus worker
+built the adjudicator session-retention layer (`adjudicator_session.py`, the
+`[adjudicator]` dial shipped at 0, IF-174 minted, LLR-163/TC-157 amended) in
+one 40-minute session with the `WI:` trailer but without the C6 close; the
+in-process round (OPENAI-TERRA) returned CHANGES-REQUESTED with three MAJORs
+and three MINORs and an `implementer-touched-review-path` tripwire, whose
+page-human consequence re-armed DESIGN-CHECK. That design-check on
+gpt-5.6-sol hit the **OpenAI usage limit** mid-session (ERROR, 32 min,
+398k tokens, reset 08:40 UTC); the C4 probe then fired live for the first
+time (`probe [OPENAI-SOL]: unreachable, cooled ~900s`) and the design-check
+re-routed to OPENCODE-KIMI, which committed a rework addressing all six
+findings (`223cd88a`), ran the full suite, went silent and was killed by
+the C3 idle deadline at 900 s — the second live C3 proof. The next three
+sessions (an Opus design-check, two Opus-strong builds) each verified the
+rework, then ran the full suite, which the harness's ten-minute foreground
+cap pushed into the background; each session ended its turn waiting for a
+notification that never comes, the harness killed the run, and each was
+NO-COMMIT. Three no-commit build sessions is the C1 build stall by its own
+rule; the dispatcher closed the lane `partial` ("the work so far, committed
+as-is"), and the §A3 quarantine path reverted the product diff to a
+bar-inert artefact with the diff saved as
+`docs/work/handback/wi-540-adjudicator-retention-layer.patch`. That revert
+also took `docs/id-watermark` down 174 → 173 — a mark only ever rises — so
+the reverted tree itself failed registry-integrity, the approval brief was
+stale against it, and run 6 stopped "after its quarantine".
+
+**Decided:** not to undo the partial (a hand-moved spec is forbidden and the
+rework was never reviewed), but to make the kit's own correction path
+reachable: the IF mark restored to 174 (the id is spent in this lane's
+history), `docs/ratify/CURRENT.md` regenerated with `trace.py`, and the
+artefact merged through the slot (`9bb80db9`, `WI-540=partial`); intake
+minted the disposition row WI-550, which the relaunched loop claimed first
+(an adjudication row, exclusive). The adjudicator's brief carries the C6
+close and can rule the outcome and draft the successor that picks the
+patch. The worktree held worker scratch files under `out/` (refused by
+name, correctly) plus a lane-side `out/integrate.lock`; unloaded by hand.
+**The alternatives:** leave the lane red for the owner (every relaunch
+stops at it; the queue behind it is dead until then), or restore and
+re-close the work by hand (a hand-moved spec, and unreviewed engine code on
+trunk). **Reversal cost:** none — the artefact is inert and the work is in
+the patch and the merge's ancestry.
+
+**Kit findings, for the owner:** a close that requires the full suite
+cannot complete inside one worker turn when the suite exceeds the tool's
+ten-minute cap (≈ 12 min here) — the brief must direct a bounded/batched
+form or the close will stall by construction (this is the standing lesson
+of 2026-08-30, now mechanized into a partial close of finished work); the
+§A3 bar-inert revert must leave the id watermark alone; a no-commit stall
+on a lane whose work is built and trailered is the D6 class the plan named,
+still open; `out/integrate.lock` in a lane is another loop-owned residue
+name.
+
+## 46. The pause is RE-ARMED at the session's end so the repo is drained and quiet — one reviewed deletion resumes the frontier
+
+**Decided:** write the tracked `docs/work/pause` back in a reviewed commit
+once the last lane of the sitting (WI-550) is merged and unloaded, with the
+reason naming this session's end and the owner's brief ("end with the repo
+drained and quiet"), and leave no loop process running. The frontier behind
+it, in the scheduler's order: the successor the WI-550 adjudication drafted
+(re-land the adjudicator session-retention layer from its preserved patch,
+strong), WI-536, WI-539, WI-541 (blocked on the retention layer), WI-545.
+**Why a pause and not a plain stop:** the loop has no "stop after this
+lane" switch; a run left alive would claim WI-536 next and run unsupervised
+into and past the blackout, and a killed run leaves a lane parked mid-build.
+The pause is the kit's own graceful stop (the dispatcher stops claiming at
+the next boundary), and the unpause is the owner's one-line act — the same
+shape the owner just used. **The alternative:** leave the loop running
+through the weekday blackout (it idles 12:00–19:00 UTC) and let it resume
+unsupervised at 19:00. **Reversal cost:** deleting one file in one commit.
