@@ -873,3 +873,66 @@ refresh. Merged `1553f22f`, **unloaded clean** — the lane held
 `out/agent-loop.lock` plus a stream, the exact state decision 40's fix
 covers. **The alternative:** leave it for the next barrier drain (hours
 later, the same conflict waiting). **Reversal cost:** none.
+
+## 43. WI-538's two raised cognitive ceilings were kept and REASONED, not restored — a recorded re-stamp, with the decomposition left to the debt owner
+
+**What happened.** The arming re-stamp of `docs/complexity-baseline` took
+`agent_loop.py::route_session` 35 → 37 and `run_iteration` 17 → 18 with
+blank reason cells; the post-close round (012-REVIEW-A-f1d0fd6, MAJOR) read
+that as raising a downward-only ratchet to clear a finding and offered two
+ways out: restore the ceilings and decompose the functions, or place a
+separately justified change under the applicable policy. Measured with the
+lane's own sensor: both functions read 35 / 17 at trunk `8ac501de` (before
+the stall-guard row) and 37 / 18 after it — the growth is WI-548's (the C4
+probe and C5 relaxed rung in `route_session`, the C2 review-owed end state
+in `run_iteration`), taken while the sensor was report-only.
+
+**Decided:** the kit's standing rule for a ratchet that fires on legitimate
+work — re-stamp deliberately and record the reason — applied by the
+supervisor: the two rows keep 37 / 18 and carry the measured reason in the
+baseline's own `reason` column (`3275b371`); the decomposition stays owed to
+the decomposition debt owner (WI-545, queued), which is the row that owns
+`agent_loop.py`'s size. The lane was already closed, so the loop could not
+rework it (a terminal WI is refused) and a hand-moved spec is forbidden.
+**The alternative:** restore 35 / 17 and decompose two of the loop's core
+functions inside a close — a real refactor of the engine, unplanned and
+unreviewed by the owner. **Reversal cost:** two cells; restoring the numbers
+would red the armed gate until the decomposition lands.
+
+## 44. WI-538's close was finished by the supervisor after the loop's own APPROVE: the approval brief, the baseline's serialization, and one excluded "round"
+
+**What the loop did (eleven sessions, ~2 h 50 min):** an Opus build in two
+sessions (the first with no `WI:` trailer), two sessions lost to a
+backgrounded full-suite run each (the harness kills the run with the turn;
+one short of the C1 build stall), the close with the trailer, then three
+review rounds with a rework between each — a MINOR on a docstring, a MAJOR
+on LLR-206's stale Detail plus baseline tabs, and after the router swapped
+the implementer family to gpt-5.6-terra ("2 consecutive failed review
+gates"), an APPROVE with one MINOR from an Opus reviewer. That TERRA build
+session also committed a file named like a round
+(`010-REVIEW-A-e26ab03.md`, "re-review approval") — an implementer writing
+its own approval under the review path. The drain then went RED on
+`approval-fresh`: the LLR-206 amendment (an `Approved` row) had staled
+`docs/ratify/CURRENT.md`, which the worker brief names only for minted or
+re-statused rows.
+
+**Decided:** regenerate the approval brief with the kit's generator
+(`f1d0fd67`), take the verdict rounds LAST (three more: the raised ceilings
+— decision 43; the baseline's 178 blank-reason rows still in the five-field
+form, stripped to what the tool's writer emits, `4288c3fa`; then `APPROVE
+findings=0`), compile the WI-level verdict from the six genuine rounds with
+the implementer's file excluded and the exclusion stated inside, and merge
+through the slot (`3933bb11`, unloaded clean). No adjudication was minted
+for the LLR-206 amendment — LLR-tier cells are traced, non-attesting by
+ruling. **The alternatives:** leave the lane red for the owner (the queue
+behind it stops), or count the implementer's file as a round (it is not a
+fresh-context verdict). **Reversal cost:** none; every act is a record or
+a generator's output.
+
+**Kit findings from this lane, for the owner:** the worker brief should say
+the full suite runs FOREGROUND with an explicit timeout; an amendment of an
+`Approved` cell — not only a mint or re-status — owes the approval-brief
+regeneration, and the brief should say so; a later lane amended a terminal
+spec (`partial/WI-521`, +12 lines) and nothing refused it; an implementer
+can write a `NNN-REVIEW-A-<sha>.md` file and the scoreboard's tripwire did
+not name it on the following round.
