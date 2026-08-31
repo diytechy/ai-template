@@ -21,11 +21,11 @@ store, no `[adjudicator]` table (WI-540's job):
   process's own JSON result, per family. ANTHROPIC's stream-json result
   already carries `session_id` on every call; occupancy sums the same four
   `usage` counters `session_meta` already partially reads
-  (input + cache-read + cache-creation + output); window is picked from the
-  `modelUsage` entry whose own input/output counts match those same
-  top-level totals, so a subagent's aside on a different model is never
-  mistaken for the session's own window — left blank on no exact match
-  rather than guessed, per the plan's "never guessed" rule. OPENAI/OPENCODE
+  (input + cache-read + cache-creation + output); window is picked only from
+  the unique `modelUsage` entry whose own four counters match those same
+  top-level totals, so a subagent with colliding input/output but different
+  cache usage is never mistaken for the session — left blank when a full
+  match is absent or ambiguous, per the plan's "never guessed" rule. OPENAI/OPENCODE
   return blank: their shipped one-shot templates carry no
   `--json`/`--format json`, so there is nothing to parse until WI-540's
   per-family adapter lands.
@@ -39,8 +39,8 @@ store, no `[adjudicator]` table (WI-540's job):
   already fixed in a prior session) — the last of the stale grok slug.
 - Tests: extended `test_session_meta_is_the_log_row_in_the_logs_own_column_order`
   for the four new keys; new coverage for `family_context_telemetry`
-  (ANTHROPIC exact-match window pick, ANTHROPIC with no usage at all, and
-  the non-ANTHROPIC blank path) and for `write_session_log` /
+  (ANTHROPIC four-counter collision and ambiguous-match handling,
+  ANTHROPIC with no usage at all, and the non-ANTHROPIC blank path) and for `write_session_log` /
   `regenerate_index` carrying the new columns through.
 
 Not in scope (WI-540, which `needs = ["WI-535"]`): session mint/resume, the
@@ -77,3 +77,9 @@ The stale grok slug: `docs/agents.toml`'s `OPENCODE-GROK` row had its `model`
 cell already corrected to `opencode-go/grok-4.6` and its family-comment prose
 in a prior session (`9ab30d64`, 2026-08-30), but the row's own `version` cell
 and `notes` prose still read "4.5" — the remainder of that same staleness.
+
+Independent review found that the first implementation identified the
+session's `modelUsage` entry by input/output alone even though cache-read and
+cache-creation contribute to occupancy. The rework therefore makes the same
+four-counter tuple the identity predicate as well as the occupancy source and
+requires exactly one match; this is the scoped correction to the shipped row.

@@ -2862,36 +2862,36 @@ def family_context_telemetry(family, data):
     `(session_id, occupancy, window, pct)`, every field `""` where the
     family's plain one-shot call doesn't carry it today.
 
-    ANTHROPIC's stream-json result already carries `session_id` on every
-    call, mint or not. Occupancy is the same four usage counters
-    `session_meta` already reports, summed (plan §3.3: input + cache_read +
-    cache_creation + output). Window is the `contextWindow` of the
-    `modelUsage` entry whose own input/output counts match those same
-    top-level totals — the session's own turn, not a subagent aside drawn on
-    a different model — left blank on no exact match rather than guessed
-    (plan §2: "a mismatch is logged, never guessed"). OPENAI/OPENCODE don't
-    emit any of this from their shipped one-shot templates yet (no
-    `--json`/`--format json`); WI-540's per-family adapter is what adds it."""
+    ANTHROPIC's stream-json result already carries `session_id`. Occupancy is
+    its four usage counters summed (plan §3.3: input + cache_read +
+    cache_creation + output). Window is the unique `modelUsage` entry whose
+    same four counters match; absent/ambiguous matches stay blank rather than
+    guessed (plan §2). This distinguishes the session's own turn from a
+    colliding subagent aside. Duplicate full matches remain ambiguous even if
+    their windows agree. OPENAI/OPENCODE's one-shot templates emit none of
+    this yet; WI-540's per-family adapter is what adds it."""
     if family != "ANTHROPIC":
         return "", "", "", ""
     session_id = data.get("session_id") or ""
     usage = data.get("usage") or {}
-    usage_keys = (
-        "input_tokens",
-        "output_tokens",
-        "cache_read_input_tokens",
-        "cache_creation_input_tokens",
+    usage_fields = (
+        ("input_tokens", "inputTokens"),
+        ("output_tokens", "outputTokens"),
+        ("cache_read_input_tokens", "cacheReadInputTokens"),
+        ("cache_creation_input_tokens", "cacheCreationInputTokens"),
     )
-    if not any(usage.get(k) is not None for k in usage_keys):
+    if not any(usage.get(key) is not None for key, _ in usage_fields):
         return session_id, "", "", ""
-    occupancy = sum(usage.get(k) or 0 for k in usage_keys)
+    usage_totals = tuple(usage.get(key) or 0 for key, _ in usage_fields)
+    occupancy = sum(usage_totals)
+    matches = [
+        entry
+        for entry in (data.get("modelUsage") or {}).values()
+        if tuple(entry.get(key) or 0 for _, key in usage_fields) == usage_totals
+    ]
     window = ""
-    for entry in (data.get("modelUsage") or {}).values():
-        if entry.get("inputTokens") == usage.get("input_tokens") and entry.get(
-            "outputTokens"
-        ) == usage.get("output_tokens"):
-            window = entry.get("contextWindow", "") or ""
-            break
+    if len(matches) == 1:
+        window = matches[0].get("contextWindow", "") or ""
     pct = round(occupancy * 100 / window) if isinstance(window, int) and window else ""
     return session_id, occupancy, window, pct
 

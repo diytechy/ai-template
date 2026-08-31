@@ -784,13 +784,13 @@ def test_session_meta_is_the_log_row_in_the_logs_own_column_order():
     ]
 
 
-def test_family_context_telemetry_reads_anthropics_own_result_json():
+def test_family_context_telemetry_distinguishes_cache_usage_collision():
     # WI-535 (telemetry first, dial off): no mint, no resume — just what
     # ANTHROPIC's stream-json result already reports on a plain one-shot
-    # call. The window comes from the modelUsage entry whose own input/output
-    # counts match the top-level usage totals, not the first entry in the
-    # dict — a subagent draw on a different model must not be mistaken for
-    # the session's own window.
+    # call. The window comes from the unique modelUsage entry whose four
+    # occupancy counters match the top-level usage totals. A subagent draw
+    # with colliding input/output but different cache usage must not be
+    # mistaken for the session's own window.
     al = load_script("agent_loop")
     data = {
         "session_id": "cc77a65f-c2f7-4779-bd42-0be7e188a717",
@@ -802,13 +802,17 @@ def test_family_context_telemetry_reads_anthropics_own_result_json():
         },
         "modelUsage": {
             "claude-haiku-4-5-20251001": {
-                "inputTokens": 10974,
-                "outputTokens": 19,
+                "inputTokens": 5201,
+                "outputTokens": 6529,
+                "cacheReadInputTokens": 111,
+                "cacheCreationInputTokens": 222,
                 "contextWindow": 200000,
             },
             "claude-opus-4-8": {
                 "inputTokens": 5201,
                 "outputTokens": 6529,
+                "cacheReadInputTokens": 154637,
+                "cacheCreationInputTokens": 66231,
                 "contextWindow": 1000000,
             },
         },
@@ -820,7 +824,7 @@ def test_family_context_telemetry_reads_anthropics_own_result_json():
     assert pct == round(occupancy * 100 / window)
 
 
-def test_family_context_telemetry_blank_window_on_no_usage_or_match():
+def test_family_context_telemetry_blank_without_one_unique_usage_match():
     al = load_script("agent_loop")
     # No usage at all (a plain-text/errored session): everything but a
     # captured session id stays blank, never a guess.
@@ -840,6 +844,29 @@ def test_family_context_telemetry_blank_window_on_no_usage_or_match():
         },
     }
     assert al.family_context_telemetry("ANTHROPIC", data) == ("", 15, "", "")
+
+    # Two full four-counter matches are ambiguous even if both entries carry
+    # a window. Choosing either would be a guess.
+    usage = {
+        "input_tokens": 10,
+        "output_tokens": 5,
+        "cache_read_input_tokens": 20,
+        "cache_creation_input_tokens": 3,
+    }
+    entry = {
+        "inputTokens": 10,
+        "outputTokens": 5,
+        "cacheReadInputTokens": 20,
+        "cacheCreationInputTokens": 3,
+    }
+    data = {
+        "usage": usage,
+        "modelUsage": {
+            "model-a": {**entry, "contextWindow": 200000},
+            "model-b": {**entry, "contextWindow": 1000000},
+        },
+    }
+    assert al.family_context_telemetry("ANTHROPIC", data) == ("", 38, "", "")
 
 
 def test_family_context_telemetry_blank_for_families_with_no_json_yet():
